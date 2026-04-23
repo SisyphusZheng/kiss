@@ -65,15 +65,6 @@ export function htmlTemplatePlugin(options: FrameworkOptions = {}): Plugin {
   }
 }
 
-/** Route metadata extracted from module exports */
-export interface RouteMeta {
-  title?: string
-  description?: string
-  [key: string]: unknown
-  /** Island chunk URLs for preload hints */
-  islandChunks?: string[]
-}
-
 /**
  * Extract route metadata from a module's exports.
  * Looks for `meta` export or individual `title`/`description` exports.

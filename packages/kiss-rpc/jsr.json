@@ -2,9 +2,6 @@
   "name": "@kiss/rpc",
   "version": "0.0.1",
   "exports": {
-    "./package.json": "./package.json"
-  },
-  "publish": {
-    "include": ["dist/**"]
+    ".": "./src/index.ts"
   }
 }

@@ -4,6 +4,7 @@
  * Handles page SSR rendering and API routing.
  */
 
+import { Buffer } from 'node:buffer'
 import type { Plugin, ViteDevServer } from 'vite'
 import type { FrameworkOptions, RouteEntry, IslandMeta } from './types.js'
 import { createHonoApp } from './hono-app.js'
@@ -116,10 +117,10 @@ export function devServerPlugin(options: FrameworkOptions = {}): Plugin {
         }
 
         try {
-          const { html, islands, context } = await renderPageToString(
+          const { html, islands } = await renderPageToString(
             viteServer,
             route,
-            url,
+            c.req.raw,
             { routesDir, islandsDir, componentsDir: options.componentsDir }
           )
 
@@ -138,11 +139,11 @@ export function devServerPlugin(options: FrameworkOptions = {}): Plugin {
               : undefined,
           })
 
-          return c.html(fullHtml, context.status)
+          return c.html(fullHtml)
         } catch (error) {
           console.error('[KISS] SSR Error:', error)
           const isDev = viteServer.config.mode === 'development'
-          const errorHtml = renderSsrError(error as Error, route, isDev)
+          const errorHtml = renderSsrError(error as Error, 500)
           return c.html(errorHtml, 500)
         }
       })

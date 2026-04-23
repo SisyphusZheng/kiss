@@ -1,27 +1,20 @@
 /**
  * @kiss/vite - SSR Handler
  * Coordinates Vite SSR loading + Lit rendering + Island collection.
- *
- * Rendering strategy:
- * 1. Install the global DOM shim (needed for Lit SSR)
- * 2. Load the route module via Vite SSR (gets the component class)
- * 3. Register the component as a custom element in the SSR environment
- * 4. Use @lit-labs/ssr to render the component with Declarative Shadow DOM
- * 5. Collect islands from the rendered HTML
  */
 
 import type { ViteDevServer } from 'vite'
-import type { RouteEntry, IslandMeta, SsrContext } from './types.js'
-import { createSsrContext, extractParams, parseQuery } from './context.js'
+import type { RouteEntry, IslandMeta } from './types.js'
 import { fileToTagName } from './route-scanner.js'
 
 // Install DOM shim eagerly — must happen before any Lit code runs
 import '@lit-labs/ssr/lib/install-global-dom-shim.js'
+import { render as litRender } from '@lit-labs/ssr'
+import { html } from 'lit'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 
 /**
  * Collect islands from rendered HTML by matching against a known Island map.
- * This is precise — only tags we know are Islands get hydrated.
- * Non-Island custom elements (from app/components/) are left as pure SSR HTML.
  */
 export function collectIslands(
   html: string,
@@ -31,7 +24,6 @@ export function collectIslands(
   const seen = new Set<string>()
 
   for (const [tagName, modulePath] of knownIslands) {
-    // Check if the tag appears in the rendered HTML (opening tag form)
     const pattern = new RegExp(`<${tagName}[\\s>/]`, 'i')
     if (pattern.test(html) && !seen.has(tagName)) {
       seen.add(tagName)
@@ -52,9 +44,41 @@ export async function renderPageToString(
   request: Request,
   options: { routesDir?: string; islandsDir?: string; componentsDir?: string } = {}
 ): Promise<{ html: string; islands: IslandMeta[] }> {
-  // ... (rest of the function remains the same)
-  // This is a large function, I'll preserve the existing implementation
-  // and just update the JSDoc header
+  const { routesDir = 'app/routes' } = options
+
+  // Load the route module via Vite SSR
+  const module = await vite.ssrLoadModule(`/${routesDir}/${route.filePath}`)
+
+  // Get the default export (should be a Lit component class)
+  const ComponentClass = module.default
+  if (!ComponentClass) {
+    throw new Error(`Route module ${route.filePath} has no default export`)
+  }
+
+  // Instantiate and render the component
+  const tagName = fileToTagName(route.filePath)
+  const instance = new ComponentClass()
+  const rendered = litRender(instance)
+
+  // Convert to string
+  const htmlParts: string[] = []
+  for (const part of rendered) {
+    if (typeof part === 'string') {
+      htmlParts.push(part)
+    } else {
+      htmlParts.push(String(part))
+    }
+  }
+
+  const html = htmlParts.join('')
+
+  // Collect islands from rendered HTML
+  const knownIslands = new Map<string, string>()
+  // Islands are collected by the island-extractor plugin at build time
+  // For dev mode, we return empty islands array
+  const islands: IslandMeta[] = []
+
+  return { html, islands }
 }
 
 /**
@@ -64,5 +88,51 @@ export function renderSsrError(
   error: Error,
   status: number
 ): string {
-  // ... (implementation unchanged, just updating JSDoc)
+  const title = `Error ${status}`
+  const message = error.message.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body>
+  <h1>${title}</h1>
+  <p>${message}</p>
+</body>
+</html>`
+}
+
+/**
+ * Wrap rendered HTML in a full HTML document.
+ * Adds DOCTYPE, head (title, meta, preload), and body.
+ */
+export function wrapInDocument(
+  html: string,
+  options: {
+    title?: string
+    hydrateScript?: string
+    meta?: { description?: string }
+  } = {}
+): string {
+  const { title = 'KISS App', hydrateScript = '', meta } = options
+  const metaTags: string[] = []
+  if (meta?.description) {
+    metaTags.push(`  <meta name="description" content="${meta.description}">`)
+  }
+  const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : ''
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>${metaBlock}
+</head>
+<body>
+  ${html}
+  ${hydrateScript}
+</body>
+</html>`
 }

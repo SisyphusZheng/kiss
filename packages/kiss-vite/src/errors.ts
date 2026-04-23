@@ -14,7 +14,7 @@ export class KissError extends Error {
     this.name = 'KissError'
   }
 
-  toJSON() {
+  toJSON(): { error: { code: string; message: string } } {
     return {
       error: {
         code: this.code,

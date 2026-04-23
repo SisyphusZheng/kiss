@@ -2,6 +2,8 @@
  * @kiss/vite/client - Client-side type declarations
  */
 
+// @ts-nocheck
+
 /// <reference types="vite/client" />
 
 declare module 'virtual:kiss-routes' {

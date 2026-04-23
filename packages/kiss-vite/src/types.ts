@@ -95,6 +95,15 @@ export interface IslandMeta {
   estimatedSize?: string
 }
 
+/** Metadata extracted from a route module */
+export interface RouteMeta {
+  title?: string
+  description?: string
+  [key: string]: unknown
+  /** Island chunk URLs for preload hints */
+  islandChunks?: string[]
+}
+
 export type { SsrContext } from './context.js'
 
 /** The main framework() function signature */

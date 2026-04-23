@@ -2,10 +2,9 @@
   "name": "@kiss/vite",
   "version": "0.0.1",
   "exports": {
-    "./client": "./dist/client.js",
-    "./package.json": "./package.json"
+    ".": "./src/index.ts"
   },
   "publish": {
-    "include": ["dist/**"]
+    "exclude": ["src/client/index.d.ts"]
   }
 }

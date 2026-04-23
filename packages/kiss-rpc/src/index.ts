@@ -38,7 +38,7 @@ import type { ReactiveController, ReactiveElement } from 'lit'
 export class RpcError extends Error {
   constructor(
     public readonly status: number,
-    public readonly message: string,
+    message: string,
   ) {
     super(message)
     this.name = 'RpcError'
