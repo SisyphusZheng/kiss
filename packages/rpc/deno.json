@@ -1,0 +1,18 @@
+{
+  "name": "@hvl/rpc",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "tasks": {
+    "build": "deno run -A npm:tsup",
+    "dev": "deno run -A npm:tsup --watch"
+  },
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declarationDir": "./dist"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

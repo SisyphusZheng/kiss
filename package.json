@@ -1,0 +1,21 @@
+{
+  "name": "hvl-framework",
+  "private": true,
+  "version": "0.0.0",
+  "description": "HVL - Hono + Vite + Lit Fullstack Framework",
+  "scripts": {
+    "dev": "deno task -C examples/poc dev",
+    "build": "deno task -C packages/vite build",
+    "test": "deno test --allow-read --allow-write --allow-env --allow-net",
+    "test:watch": "deno test --allow-read --allow-write --allow-env --allow-net --watch",
+    "typecheck": "deno check **/*.ts",
+    "lint": "deno lint",
+    "fmt": "deno fmt",
+    "clean": "rm -rf packages/*/dist packages/*/.tsbuildinfo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "rimraf": "^6.0.0"
+  }
+}

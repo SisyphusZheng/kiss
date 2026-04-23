@@ -1,0 +1,246 @@
+# HVL — Hono + Vite + Lit
+
+> **Web Standards 下的最小增幅渐进式全栈框架**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF)](https://vitejs.dev/)
+[![Hono](https://img.shields.io/badge/Hono-4.x-E36002)](https://hono.dev/)
+[![Lit](https://img.shields.io/badge/Lit-3.x-325CFF)](https://lit.dev/)
+[![Deno](https://img.shields.io/badge/Deno-2.x-000000)](https://deno.land/)
+
+**H**ono + **V**ite + **L**it — 三个 Web Standards 原生库的组合，以单一 Vite 插件形态提供全栈能力。
+
+```bash
+deno run -A npm:create-hvl my-app
+cd my-app && deno task dev
+```
+
+## 为什么是 HVL？
+
+| 问题 | HVL 的回答 |
+|------|-----------|
+| 框架锁定太重？ | HVL = 1 个 Vite 插件，所有组件都是标准 Custom Element |
+| 首页 JS 太大？ | 默认 0KB，Island 按需加载 ~6KB |
+| SSR 配置复杂？ | `plugins: [framework()]`，完事 |
+| 类型安全靠 codegen？ | Hono RPC 端到端类型推断，零 codegen |
+| 部署只能 Node？ | CF Workers / Deno / Bun / Node，一套代码 |
+
+## 核心特性
+
+- 🔌 **Vite 插件即框架** — `framework()` 一个函数搞定所有
+- 📄 **SSR 优先** — Lit SSR + Declarative Shadow DOM，零 JS 也有完整 HTML
+- 🏝️ **Islands 架构** — 仅交互组件发送 JS，非 Island 纯静态
+- 🔒 **端到端类型安全** — Zod 验证 → Hono RPC → 客户端自动推断
+- 🌍 **多运行时部署** — Cloudflare / Vercel / Deno / Bun / Node
+- 📈 **渐进增强** — 纯 HTML → Islands → SPA 导航 → 实时功能，每层可选
+- 🦕 **Deno 原生** — 以 Deno 为首选运行时，完全兼容 Node 生态
+
+## 快速开始
+
+### 前置要求
+
+- [Deno](https://deno.land/) 2.x+
+
+### 安装
+
+```bash
+deno run -A npm:create-hvl my-app --template standard
+cd my-app
+deno task dev
+```
+
+### 手动集成
+
+```bash
+deno add npm:@hvl/vite npm:hono npm:lit npm:zod
+```
+
+```ts
+// vite.config.ts
+import { framework } from '@hvl/vite'
+
+export default defineConfig({
+  plugins: [framework()]
+})
+```
+
+### 项目结构
+
+```
+my-app/
+├── app/
+│   ├── routes/           # 文件路由（自动扫描）
+│   │   ├── index.ts      # 首页
+│   │   ├── about.ts      # /about
+│   │   └── api/
+│   │       └── posts.ts  # API 路由（Hono）
+│   ├── islands/          # Island 组件（自动水合）
+│   │   └── counter.ts    # <my-counter>
+│   └── components/       # 普通 Lit 组件（SSR only）
+│       └── header.ts
+├── deno.json             # Deno 配置（替代 package.json）
+├── vite.config.ts        # 只需 plugins: [framework()]
+└── tsconfig.json
+```
+
+### 页面路由
+
+```ts
+// app/routes/index.ts
+import { LitElement, html, css } from 'lit'
+
+export default class HomePage extends LitElement {
+  render() {
+    return html`
+      <h1>Hello HVL!</h1>
+      <my-counter></my-counter>
+    `
+  }
+}
+```
+
+### API 路由
+
+```ts
+// app/routes/api/posts.ts
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+
+const app = new Hono()
+
+app.get('/', (c) => c.json({ data: [] }))
+
+app.post('/', zValidator('json', z.object({
+  title: z.string().min(1),
+})), (c) => {
+  const { title } = c.req.valid('json')
+  return c.json({ data: { title } }, 201)
+})
+
+export default app
+export type AppType = typeof app
+```
+
+### RPC 类型安全调用
+
+```ts
+// 在 Island 组件中
+import { hc } from '@hvl/rpc'
+import type { AppType } from '../routes/api/posts'
+
+const client = hc<AppType>('/api/posts')
+
+// ✅ 完全类型安全，自动补全
+const res = await client.$post({ json: { title: 'Hello' } })
+```
+
+### Island 组件
+
+```ts
+// app/islands/my-counter.ts
+import { LitElement, html } from 'lit'
+
+export default class MyCounter extends LitElement {
+  static properties = { count: { type: Number } }
+
+  constructor() {
+    super()
+    this.count = 0
+  }
+
+  render() {
+    return html`
+      <button @click=${() => this.count++}>+</button>
+      <span>${this.count}</span>
+      <button @click=${() => this.count--}>−</button>
+    `
+  }
+}
+```
+
+## 渐进增强层级
+
+| 层级 | JS 大小 | 能力 | 触发条件 |
+|------|---------|------|----------|
+| **Level 0** | 0 KB | 纯 HTML SSR | 默认 |
+| **Level 1** | ~6 KB | Island 交互 | 有 `<island-*>` |
+| **Level 2** | ~10 KB | SPA 导航 | 可选开启 |
+| **Level 3** | ~12 KB | 实时功能 | 可选开启 |
+| **Level 4** | 全量 | 全页 CSR | 降级逃生 |
+
+## 配置
+
+```ts
+// vite.config.ts
+framework({
+  routesDir: 'app/routes',
+  islandsDir: 'app/islands',
+  ssr: { preRender: false },
+  island: { hydrationStrategy: 'lazy' },  // eager | lazy | idle | visible
+  dev: { port: 3000, overlay: true },
+  middleware: {
+    cors: true,
+    securityHeaders: true,
+    rateLimit: false,
+  },
+})
+```
+
+## 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `deno task dev` | 启动开发服务器 |
+| `deno task build` | 构建生产产物 |
+| `deno task test` | 运行测试 |
+| `deno task typecheck` | 类型检查 |
+| `deno task lint` | 代码检查 |
+| `deno task fmt` | 格式化代码 |
+
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [架构设计](docs/architecture.md) | 数据流、请求生命周期、Island 原理、类型安全链路 |
+| [实现路线图](docs/roadmap.md) | Phase 0~4 详细任务 |
+| [API 设计规范](docs/api-design.md) | 路由约定、Zod 验证、响应格式、RPC |
+| [错误处理](docs/error-handling.md) | 类型化错误层级、三层降级 |
+| [配置管理](docs/configuration.md) | 环境变量、fail-fast、多环境 |
+| [测试策略](docs/testing-strategy.md) | 测试金字塔、CI 配置 |
+| [安全与中间件](docs/security-middleware.md) | 安全头、CORS、限流 |
+| [开发者体验](docs/dev-dx.md) | CLI、dev 模式、调试端点 |
+| [部署指南](docs/deployment.md) | 6 平台部署配置 |
+| [风险矩阵](docs/risk-matrix.md) | 关键挑战与兼容性 |
+
+## 当前状态
+
+**Phase 0 PoC** — 技术可行性验证中。
+
+核心模块已完成 ✅：
+- Route Scanner — 文件路由扫描
+- Island Transform — AST 检测 + 水合标记
+- SSR Handler — Lit 渲染 + DSD 输出
+- Error Classes — 类型化错误层级
+- RPC Client — 端到端类型安全
+- 35/35 单元测试通过
+
+## 技术栈
+
+| 层 | 技术 | 版本 | 理由 |
+|----|------|------|------|
+| 运行时 | [Deno](https://deno.land/) | ^2.x | Web Standards 原生、安全沙箱、内置工具链 |
+| HTTP | [Hono](https://hono.dev/) | ^4.x | Web Standards、零依赖、多运行时、内置 RPC |
+| UI | [Lit](https://lit.dev/) | ^3.x | Web Components 标准、5KB 运行时 |
+| Build | [Vite](https://vitejs.dev/) | ^6.x | ESM 原生、SSR 支持 |
+| SSR | @lit-labs/ssr | ^1.x | Declarative Shadow DOM |
+| 验证 | [Zod](https://zod.dev/) | ^3.x | 与 Hono 集成、RPC 类型推断 |
+| 类型 | TypeScript | ^5.x | 端到端类型安全 |
+
+## License
+
+MIT
+
+---
+
+**HVL — 最小增幅 · Web Standards · 渐进增强**

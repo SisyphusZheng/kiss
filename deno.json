@@ -1,0 +1,56 @@
+{
+  "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
+  "workspace": [
+    "./packages/vite",
+    "./packages/rpc",
+    "./examples/poc"
+  ],
+  "tasks": {
+    "dev": "deno task -C examples/poc dev",
+    "build:vite": "deno task -C packages/vite build",
+    "build:rpc": "deno task -C packages/rpc build",
+    "build": "deno task build:rpc && deno task build:vite",
+    "test": "deno test --allow-read --allow-write --allow-env --allow-net",
+    "test:watch": "deno test --allow-read --allow-write --allow-env --allow-net --watch",
+    "typecheck": "deno check **/*.ts",
+    "lint": "deno lint",
+    "fmt": "deno fmt",
+    "fmt:check": "deno fmt --check",
+    "clean": "rm -rf packages/*/dist packages/*/.tsbuildinfo"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist/**",
+    "**/node_modules/**",
+    ".deno"
+  ]
+}
