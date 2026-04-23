@@ -202,6 +202,7 @@ framework({
 
 | 文档 | 说明 |
 |------|------|
+| [⚠️ 硬约束](docs/adr-001-hard-constraints.md) | **不可违背的设计边界**：纯 ESM、3 依赖、Vite-only、无 patch |
 | [架构设计](docs/architecture.md) | 数据流、请求生命周期、Island 原理、类型安全链路 |
 | [实现路线图](docs/roadmap.md) | Phase 0~4 详细任务 |
 | [API 设计规范](docs/api-design.md) | 路由约定、Zod 验证、响应格式、RPC |

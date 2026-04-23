@@ -248,7 +248,7 @@ DATABASE_URL=postgresql://localhost:5432/mydb_dev
 | **Vercel** | `vercel.json` + Dashboard | `ORIGIN`, `JWT_SECRET` |
 | **Deno Deploy** | `deno.json` + Dashboard | `ORIGIN`, `DATABASE_URL` |
 | **Railway** | Dashboard + `railway.toml` | `ORIGIN`, `DATABASE_URL` |
-| **Node.js (PM2)** | `ecosystem.config.js` | 全部 |
+| **Node.js (PM2)** | `ecosystem.config.cjs` | 全部 |
 
 ---
 

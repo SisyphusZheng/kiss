@@ -12,10 +12,10 @@
                     │  (Playwright) │     跨浏览器验证
                     ├─────────────┤
                     │  集成测试     │  ← 中等，API + SSR
-                    │  (Vitest)    │     真实模块交互
+                    │  (Deno test) │     真实模块交互
                     ├─────────────┤
                     │  单元测试     │  ← 大量，纯逻辑
-                    │  (Vitest)    │     隔离、快速
+                    │  (Deno test) │     隔离、快速
                     └─────────────┘
 ```
 
@@ -33,9 +33,11 @@
 
 | 工具 | 用途 | 理由 |
 |------|------|------|
-| **Vitest** | 单元 + 集成 | Vite 原生，零配置，极速 |
+| **Deno test** | 单元 + 集成 | Deno 内置，零配置，极速 |
 | **Playwright** | E2E | 多浏览器，SSR 验证 |
 | **@lit-labs/testing** | Lit 组件测试 | 官方工具，Shadow DOM 支持 |
+
+> ⚠️ 测试框架已从 Vitest 迁移到 Deno 内置测试（`Deno.test()` + `jsr:@std/assert`）。详见 [ADR-001 C1](./adr-001-hard-constraints.md#c1-纯-esm零-cjs)。
 
 ### 2.2 核心模块测试矩阵
 
@@ -55,26 +57,24 @@
 
 ```typescript
 // packages/vite/__tests__/route-scanner.test.ts
-import { describe, it, expect } from 'vitest'
-import { scanRoutes } from '../src/route-scanner'
+import { assertEquals } from 'jsr:@std/assert'
+import { scanRoutes } from '../src/route-scanner.ts'
 
-describe('route-scanner', () => {
-  it('maps index.ts to /', async () => {
-    const routes = await scanRoutes('./fixtures/routes-basic')
-    expect(routes).toContainEqual({ path: '/', filePath: 'index.ts' })
-  })
+Deno.test('route-scanner: maps index.ts to /', async () => {
+  const routes = await scanRoutes('./fixtures/routes-basic')
+  assertEquals(routes.some(r => r.path === '/' && r.filePath.includes('index')), true)
+})
 
-  it('maps [id].ts to /:id', async () => {
-    const routes = await scanRoutes('./fixtures/routes-dynamic')
-    expect(routes).toContainEqual({ path: '/posts/:id', filePath: 'posts/[id].ts' })
-  })
+Deno.test('route-scanner: maps [id].ts to /:id', async () => {
+  const routes = await scanRoutes('./fixtures/routes-dynamic')
+  assertEquals(routes.some(r => r.path === '/posts/:id'), true)
+})
 
-  it('ignores _renderer and _middleware', async () => {
-    const routes = await scanRoutes('./fixtures/routes-layout')
-    const paths = routes.map(r => r.path)
-    expect(paths).not.toContain('/_renderer')
-    expect(paths).not.toContain('/_middleware')
-  })
+Deno.test('route-scanner: ignores _renderer and _middleware', async () => {
+  const routes = await scanRoutes('./fixtures/routes-layout')
+  const paths = routes.map(r => r.path)
+  assertEquals(paths.includes('/_renderer'), false)
+  assertEquals(paths.includes('/_middleware'), false)
 })
 ```
 
@@ -82,23 +82,23 @@ describe('route-scanner', () => {
 
 ```typescript
 // packages/vite/__tests__/ssr-handler.test.ts
-describe('ssr-handler', () => {
-  it('renders Lit component to HTML with DSD', async () => {
-    const html = await renderPage(TestPage, {})
-    expect(html).toContain('<template shadowroot="open"')
-    expect(html).toContain('<h1>Test Page</h1>')
-  })
+import { assertEquals, assertStringIncludes } from 'jsr:@std/assert'
 
-  it('includes Island hydrate script', async () => {
-    const html = await renderPage(PageWithIsland, {})
-    expect(html).toContain('data-islands')
-    expect(html).toContain('my-counter')
-  })
+Deno.test('ssr-handler: renders Lit component to HTML with DSD', async () => {
+  const html = await renderPage(TestPage, {})
+  assertStringIncludes(html, '<template shadowroot="open"')
+  assertStringIncludes(html, '<h1>Test Page</h1>')
+})
 
-  it('returns error boundary on render failure', async () => {
-    const html = await renderPage(BrokenPage, {})
-    expect(html).toContain('hvl-error-boundary')
-  })
+Deno.test('ssr-handler: includes Island hydrate script', async () => {
+  const html = await renderPage(PageWithIsland, {})
+  assertStringIncludes(html, 'data-islands')
+  assertStringIncludes(html, 'my-counter')
+})
+
+Deno.test('ssr-handler: returns error boundary on render failure', async () => {
+  const html = await renderPage(BrokenPage, {})
+  assertStringIncludes(html, 'hvl-error-boundary')
 })
 ```
 
@@ -106,17 +106,17 @@ describe('ssr-handler', () => {
 
 ```typescript
 // packages/vite/__tests__/island-hydrate.test.ts
-describe('island-hydrate', () => {
-  it('transforms island component with __island marker', () => {
-    const result = islandTransform(islandCode, '/app/islands/counter.ts')
-    expect(result).toContain('export const __island = true')
-    expect(result).toContain("export const __tagName = 'my-counter'")
-  })
+import { assertStringIncludes, assertEquals } from 'jsr:@std/assert'
 
-  it('skips non-island files', () => {
-    const result = islandTransform(compCode, '/app/components/header.ts')
-    expect(result).toBeNull()
-  })
+Deno.test('island-hydrate: transforms island component with __island marker', () => {
+  const result = islandTransform(islandCode, '/app/islands/counter.ts')
+  assertStringIncludes(result, 'export const __island = true')
+  assertStringIncludes(result, "export const __tagName = 'my-counter'")
+})
+
+Deno.test('island-hydrate: skips non-island files', () => {
+  const result = islandTransform(compCode, '/app/components/header.ts')
+  assertEquals(result, null)
 })
 ```
 
@@ -261,7 +261,7 @@ jobs:
 |------|------|------|
 | 类型检查 | ✅ | `tsc --noEmit` |
 | Lint | ✅ | ESLint + Prettier |
-| 单元测试覆盖率 > 80% | ✅ | Vitest --coverage |
+| 单元测试覆盖率 > 80% | ✅ | Deno test --coverage |
 | 集成测试通过 | ✅ | 关键模块交互 |
 | E2E 关键流程 | ✅ | 首页渲染、Island 水合、API 调用 |
 | Bundle 大小检查 | ⚠️ | 客户端产物不超过预期 |
@@ -277,7 +277,7 @@ jobs:
 | E2E 测试覆盖所有路径 | 仅覆盖关键用户流程 |
 | 集成测试连接真实数据库 | 使用内存 DB 或事务回滚 |
 | 跳过失败的测试 | 修复或标记为 known issue |
-| 只在 CI 跑测试 | 开发时 `vitest --watch` 实时反馈 |
+| 只在 CI 跑测试 | 开发时 `deno task test` 实时反馈 |
 
 ---
 

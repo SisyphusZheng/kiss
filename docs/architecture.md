@@ -201,20 +201,18 @@ flowchart TB
 ### 4.2 `@hvl/vite` 内部模块依赖
 
 ```
-index.ts          ← 插件入口，导出 framework()
-  ├── plugin.ts   ← 组合所有子插件为单一 Plugin[]
-  │     ├── dev-server.ts         ← configureServer
-  │     │     └── hono-app.ts     ← Hono 应用创建
-  │     │     └── ssr-handler.ts  ← SSR + Lit 渲染协调
-  │     │           └── context.ts ← 请求上下文
-  │     ├── route-scanner.ts      ← resolveId/load 虚拟模块
-  │     ├── island-transform.ts   ← transform Island 标记
-  │     ├── island-extractor.ts   ← 构建时 Island 提取
-  │     ├── build-ssr.ts          ← 服务端构建配置
-  │     ├── build-client.ts       ← 客户端构建配置
-  │     ├── html-template.ts      ← transformIndexHtml
-  │     └── ssg.ts               ← 可选 SSG 构建
-  └── types.ts     ← 公共类型定义
+index.ts              ← 插件入口，导出 framework()
+  ├── dev-server.ts   ← configureServer + virtual modules + Hono 注入
+  │     ├── hono-app.ts       ← Hono 应用创建与中间件注册
+  │     ├── route-scanner.ts  ← resolveId/load：virtual:routes + virtual:islands
+  │     └── ssr-handler.ts    ← Vite SSR 加载 + Lit 渲染协调
+  │           └── context.ts  ← 请求上下文（SsrContext）
+  ├── island-transform.ts     ← transform：Island AST 检测 + __island/__tagName 标记
+  ├── island-extractor.ts     ← 构建时 Island 依赖分析与映射表生成
+  ├── html-template.ts        ← transformIndexHtml：preload/meta/hydration 注入
+  ├── build.ts                ← 双端构建（SSR + Client），合并了 build-ssr + build-client
+  ├── errors.ts               ← 类型化错误层级（HvlError 及其子类）
+  └── types.ts                ← 公共类型定义 + re-export SsrContext from context.ts
 ```
 
 ---
@@ -399,4 +397,4 @@ flowchart LR
 
 ---
 
-*文档版本：v1.0 | 最后更新：2026-04-22*
+*文档版本：v1.1 | 最后更新：2026-04-23 | 4.2 模块依赖树同步实际代码*

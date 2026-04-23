@@ -11,8 +11,10 @@ HVL 的 API 层建立在 Hono 之上，遵循三个原则：
 | 原则 | 说明 |
 |------|------|
 | **Web Standards First** | 路由处理器返回标准 `Response`，输入使用标准 `Request`/`FormData` |
-| **类型安全贯穿** | Zod 验证 → Hono RPC → 客户端自动推断，零 codegen |
+| **类型安全贯穿** | Zod 验证（用户选择）→ Hono RPC → 客户端自动推断，零 codegen |
 | **约定优于配置** | `app/routes/api/` 目录下的文件自动注册为 API 路由 |
+
+> ⚠️ **Zod 和 @hono/zod-validator 不是框架依赖**，而是用户项目层面的选择。框架提供 Hono RPC 类型推断（`hc<AppType>()`），不强制验证方案。详见 [ADR-001 C5](./adr-001-hard-constraints.md#c5-zod--honozod-validator-不属于框架依赖)。
 
 ---
 

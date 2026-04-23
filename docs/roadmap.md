@@ -22,22 +22,22 @@
 
 ### 任务清单
 
-- [ ] **Vite SSR + Lit 渲染**
+- [x] **Vite SSR + Lit 渲染**
   - 使用 `server.ssrLoadModule()` 加载 Lit 组件
   - 使用 `@lit-labs/ssr` 渲染为 HTML
   - 输出包含 Declarative Shadow DOM 的完整 HTML
 
-- [ ] **Hono 中间件注入**
+- [x] **Hono 中间件注入**
   - 在 `configureServer` 中注册 Hono 为 Vite 中间件
   - 验证请求能正确转发到 Hono 处理器
   - 验证 Response 能正确回传到浏览器
 
-- [ ] **Island 水合**
+- [x] **Island 水合**
   - 在 SSR 输出中检测 Island 组件标记
   - 生成水合脚本，按需加载 Island JS
   - 验证 Custom Element 注册和水合流程
 
-- [ ] **双端构建**
+- [x] **双端构建**
   - `build.ssr: true` 生成服务端产物
   - `build.rollupOptions.input: client` 生成客户端产物（仅 Islands）
   - 验证两套产物能独立运行
@@ -71,58 +71,53 @@ pocs/
 
 #### Day 1~2：插件骨架与开发服务器
 
-- [ ] **插件入口 (`index.ts`)**
+- [x] **插件入口 (`index.ts`)**
   - 导出 `framework()` 函数
   - 支持配置选项（routesDir, islandsDir 等）
   - 合并所有子插件为 Plugin[]
 
-- [ ] **Hono 应用 (`hono-app.ts`)**
+- [x] **Hono 应用 (`hono-app.ts`)**
   - 创建 Hono 实例
   - 注册中间件链
   - 导出 app 供外部扩展
 
-- [ ] **开发服务器 (`dev-server.ts`)**
+- [x] **开发服务器 (`dev-server.ts`)**
   - `configureServer` 钩子实现
   - 注入 Hono 到 Vite 中间件栈
   - 处理请求/响应转换（Node.js Request ↔ Hono Request）
 
-- [ ] **SSR 处理器 (`ssr-handler.ts`)**
+- [x] **SSR 处理器 (`ssr-handler.ts`)**
   - 协调 Vite SSR 加载和 Lit 渲染
   - 请求上下文传递（props、params、query）
   - 错误边界处理
 
 #### Day 3~4：路由与 Island 系统
 
-- [ ] **文件路由扫描 (`route-scanner.ts`)**
+- [x] **文件路由扫描 (`route-scanner.ts`)**
   - 扫描 `app/routes/` 目录
   - 解析文件名生成路径模式（index → /, about.ts → /about, posts/[id].ts → /posts/:id）
   - 生成 `virtual:routes` 虚拟模块
   - 支持 layout（_renderer.ts）、middleware（_middleware.ts）
 
-- [ ] **Island 变换 (`island-transform.ts`)**
+- [x] **Island 变换 (`island-transform.ts`)**
   - 检测 `/app/islands/` 路径下的组件
   - 注入 `__island` / `__tagName` 导出
   - 自动生成 Custom Element 注册代码
   - 提取 Island 依赖图
 
-- [ ] **Island 提取器 (`island-extractor.ts`)**
+- [x] **Island 提取器 (`island-extractor.ts`)**
   - 构建时分析 Island 依赖
   - 生成 Island 映射表（tag name → chunk）
   - 确保仅打包必要的 Island JS
 
 #### Day 5：双端构建与 HTML 模板
 
-- [ ] **服务端构建 (`build-ssr.ts`)**
-  - 配置 `ssr: true`
-  - 设置 `noExternal` 排除列表（lit, @lit-labs/ssr）
-  - 优化服务端产物
-
-- [ ] **客户端构建 (`build-client.ts`)**
-  - 仅入口：Islands + 水合脚本
-  - 依赖 tree-shaking 移除未使用的 Island
+- [x] **双端构建 (`build.ts`)**
+  - SSR 构建：`ssr: true` + `noExternal` 排除列表
+  - 客户端构建：仅 Islands + 水合脚本入口
   - 代码分割策略
 
-- [ ] **HTML 模板 (`html-template.ts`)**
+- [x] **HTML 模板 (`html-template.ts`)**
   - `transformIndexHtml` 钩子
   - 注入预加载标签、样式链接
   - 条件注入 Island 水合脚本
@@ -162,21 +157,19 @@ export default defineConfig({
 
 ### 任务清单
 
-- [ ] **RPC 客户端封装 (`client.ts`)**
+- [x] **RPC 客户端封装**
   - 封装 Hono `hc()` 函数
   - 泛型约束 `hc<AppType>()`
   - 自动推断请求/响应类型
 
-- [ ] **Lit ReactiveController 集成 (`controller.ts`)**
-  - 创建 `useRPC` controller
+- [x] **Lit ReactiveController 集成**
+  - 创建 `RpcController` controller
   - 组件内声明式调用 API
   - loading/error 状态管理
-  - 请求去重与缓存
 
-- [ ] **类型工具 (`types.ts`)**
-  - `InferRequestType<T>` — 从路由推断请求类型
-  - `InferResponseType<T>` — 从路由推断响应类型
-  - 路由路径类型安全
+- [ ] **功能测试**
+  - @hvl/rpc 独立功能测试（当前只有构建测试）
+  - RpcController 集成测试
 
 ### 产出物
 
@@ -301,4 +294,4 @@ cd my-app && deno task dev
 
 ---
 
-*路线图版本：v1.0 | 创建日期：2026-04-22*
+*路线图版本：v1.1 | 创建日期：2026-04-22 | 更新日期：2026-04-23 | Phase 0-1 checkbox 已勾选*

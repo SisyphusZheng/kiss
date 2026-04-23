@@ -463,6 +463,7 @@ my-app/                                 # 用户项目
 
 | 文档 | 说明 |
 |------|------|
+| [⚠️ 硬约束 ADR-001](./adr-001-hard-constraints.md) | **不可违背的设计边界**：纯 ESM、3 依赖上限、Vite-only 构建、无 patch 脚本 |
 | [架构设计](./architecture.md) | 架构总览、Mermaid 流程图、请求生命周期、Island 原理、类型安全链路 |
 | [实现路线图](./roadmap.md) | Phase 0~4 详细任务、里程碑、成功标准 |
 | [风险矩阵](./risk-matrix.md) | 关键挑战、风险评级、兼容性降级、错误处理、性能指标、日志规范 |
