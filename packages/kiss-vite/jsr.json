@@ -5,6 +5,6 @@
     ".": "./src/index.ts"
   },
   "publish": {
-    "exclude": ["src/client/index.d.ts"]
+    "exclude": ["src/client/"]
   }
 }
