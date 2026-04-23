@@ -27,6 +27,9 @@ const DEFAULT_SSR_NO_EXTERNAL = [
   '@lit-labs/ssr',
 ]
 
+// Module-level flag to prevent re-entry across plugin instances (viteBuild spawns new plugin instances)
+let GLOBAL_BUILT = false
+
 export function buildPlugin(options: FrameworkOptions = {}): Plugin {
   const routesDir = options.routesDir || 'app/routes'
   const islandsDir = options.islandsDir || 'app/islands'
@@ -34,7 +37,6 @@ export function buildPlugin(options: FrameworkOptions = {}): Plugin {
   const ssrNoExternal = options.ssr?.noExternal || DEFAULT_SSR_NO_EXTERNAL
 
   let config: ResolvedConfig
-  let built = false
 
   return {
     name: 'kiss:build',
@@ -44,9 +46,10 @@ export function buildPlugin(options: FrameworkOptions = {}): Plugin {
     },
 
     async closeBundle() {
-      // Prevent infinite recursion — closeBundle is called for each viteBuild() too
-      if (built) return
-      built = true
+      // Prevent infinite recursion — viteBuild() spawns new plugin instances,
+      // so we use a module-level flag to prevent re-entry across all instances.
+      if (GLOBAL_BUILT) return
+      GLOBAL_BUILT = true
 
       // Only run in build mode (not dev)
       if (config.command !== 'build') return
@@ -58,45 +61,54 @@ export function buildPlugin(options: FrameworkOptions = {}): Plugin {
       const clientEntry = resolve(root, 'app/client.ts')
 
       // === Step 1: SSR Build ===
-      console.log('[KISS] Building SSR bundle...')
-      try {
-        const ssrConfig: InlineConfig = {
-          root,
-          build: {
-            ssr: true,
-            outDir: resolve(root, outDir, 'server'),
-            rollupOptions: {
-              input: {
-                server: serverEntry,
+      // Only run if serverEntry exists
+      const fs = await import('node:fs')
+      if (fs.existsSync(serverEntry)) {
+        console.log('[KISS] Building SSR bundle...')
+        try {
+          const ssrConfig: InlineConfig = {
+            root,
+            plugins: [], // Prevent KISS plugins from re-loading in nested build
+            build: {
+              ssr: true,
+              outDir: resolve(root, outDir, 'server'),
+              rollupOptions: {
+                input: {
+                  server: serverEntry,
+                },
+                output: {
+                  format: 'esm',
+                  entryFileNames: '[name].js',
+                },
               },
-              output: {
-                format: 'esm',
-                entryFileNames: '[name].js',
-              },
+              minify: false,
             },
-            // Don't minify SSR output for debuggability
-            minify: false,
-          },
-          ssr: {
-            noExternal: ssrNoExternal,
-          },
-        }
+            ssr: {
+              noExternal: ssrNoExternal,
+            },
+          }
 
-        await viteBuild(ssrConfig)
-        console.log('[KISS] SSR bundle built →', resolve(root, outDir, 'server'))
-      } catch (error) {
-        console.error('[KISS] SSR build failed:', error)
-        throw error
+          await viteBuild(ssrConfig)
+          console.log('[KISS] SSR bundle built →', resolve(root, outDir, 'server'))
+        } catch (error) {
+          console.error('[KISS] SSR build failed:', error)
+          throw error
+        }
+      } else {
+        console.log('[KISS] No server entry found, skipping SSR build')
       }
 
       // === Step 2: Client Build (Islands only) ===
-      console.log('[KISS] Building client bundle (islands)...')
-      try {
-        const clientConfig: InlineConfig = {
-          root,
-          build: {
-            outDir: resolve(root, outDir, 'client'),
-            rollupOptions: {
+      // Only run if clientEntry exists
+      if (fs.existsSync(clientEntry)) {
+        console.log('[KISS] Building client bundle (islands)...')
+        try {
+          const clientConfig: InlineConfig = {
+            root,
+            plugins: [], // Prevent KISS plugins from re-loading in nested build
+            build: {
+              outDir: resolve(root, outDir, 'client'),
+              rollupOptions: {
               input: {
                 client: clientEntry,
               },
