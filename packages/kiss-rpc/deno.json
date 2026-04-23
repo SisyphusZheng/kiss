@@ -1,5 +1,5 @@
 {
-  "name": "@kiss/rpc",
+  "name": "@kissjs/rpc",
   "version": "0.0.1",
   "exports": {
     ".": "./src/index.ts"
