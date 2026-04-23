@@ -4,7 +4,7 @@
 
 ## 核心特性
 
-- **Vite 插件即框架**：框架 = 一个 Vite 插件，用户只需 `plugins: [framework()]`，零额外配置
+- **Vite 插件即框架**：框架 = 一个 Vite 插件，用户只需 `plugins: [kiss()]`，零额外配置
 - **SSR 借用 Vite 原生能力**：`server.ssrLoadModule()` 加载组件、`build.ssr` 构建服务端、`ssr.noExternal` 控制依赖，不重新发明轮子
 - **Web Standards 全链路**：HTTP 层基于 Fetch API 标准（Hono），UI 层基于 Web Components 标准（Lit），构建层基于 ESM 标准（Vite）
 - **最小增幅**：默认输出纯 SSR HTML（零 JS），仅对 Island 组件发送客户端 JS
@@ -16,14 +16,13 @@
 ## 框架定位
 
 | 维度 | 定位 |
-| --- | --- |
+|------|------|
 | 形态 | Vite 插件（非独立框架），对 Vite 生态完全兼容 |
 | 目标用户 | 追求 Web 标准、厌恶框架锁定、重视性能的开发者 |
-| 核心差异 | 唯一一个全链路 Web Standards 的全栈框架，且以 Vite 插件形态存在 |
+| 核心差异 | **唯一**一个全链路 Web Standards 的全栈框架，且以 Vite 插件形态存在 |
 | 体积对比 | 运行时增量 < 20KB（Hono ~14KB + Lit ~6KB），vs Next.js ~300KB+ |
 | 交互模型 | 默认零 JS → 按需 Island → 按需全页 CSR |
 | 部署模型 | 边缘优先，多运行时自适应 |
-
 
 ## 可行性评估总结
 
@@ -34,15 +33,14 @@
 ## 技术栈
 
 | 层 | 技术 | 版本 | 选型理由 |
-| --- | --- | --- | --- |
+|------|------|------|----------|
 | HTTP | Hono | ^4.x | Web Standards 原生、零依赖、多运行时、内置 RPC |
 | UI | Lit | ^3.x | Web Components 标准、5KB 运行时、Shadow DOM 封装 |
 | 构建 | Vite | ^6.x | ESM 原生、极速 HMR、SSR 支持、插件生态 |
 | SSR | @lit-labs/ssr | ^1.x | Lit 官方 SSR 方案、Declarative Shadow DOM |
-| 验证 | Zod | ^3.x | 与 Hono zodValidator 集成、RPC 类型推断 |
+| 验证 | Zod | ^3.x | 与 Hono zodValidator 集成、RPC 类型推断（用户选择） |
 | 类型 | TypeScript | ^5.x | 端到端类型安全基础 |
 | 包管理 | Deno | ^2.x | 内置依赖管理、workspace 支持 |
-
 
 ## 实现方案
 
@@ -51,7 +49,7 @@
 框架以 **单一 Vite 插件** 为核心形态，所有能力通过 Vite 插件钩子实现：
 
 | 框架能力 | Vite 钩子/能力 | 实现方式 |
-| --- | --- | --- |
+|----------|---------------|----------|
 | 开发服务器 | `configureServer` | 注入 Hono 为 Vite 中间件，处理路由请求 |
 | SSR 渲染 | `server.ssrLoadModule()` | Vite 加载 Lit 组件 → `@lit-labs/ssr` 渲染 → HTML |
 | 文件路由 | `resolveId` + `load` | 虚拟模块 `virtual:routes`，扫描 `app/routes/` |
@@ -60,71 +58,45 @@
 | HMR | Vite 内置 | 组件变更 → Vite HMR → 自动重渲染 |
 | HTML 模板 | `transformIndexHtml` | 注入 Island 水合脚本、样式链接 |
 
-
 ### 架构设计
 
 ```
 用户视角：vite.config.ts
 ┌─────────────────────────────────────────┐
-│  import framework from '@hvl/vite'      │
+│  import { kiss } from '@kiss/vite'       │
 │  export default defineConfig({           │
-│    plugins: [framework()]                │
-│  })                                      │
+│    plugins: [kiss()]                  │
+│  })                                    │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│         @hvl/vite (核心插件)             │
+│         @kiss/vite (核心插件)          │
 │                                          │
 │  ┌─ configureServer ──────────────────┐  │
 │  │  Hono app ← Vite middlewares       │  │
-│  │  app.use('*', honoHandler)          │  │
-│  │  honoHandler:                       │  │
-│  │    1. 文件路由匹配                  │  │
-│  │    2. Vite SSR 加载页面组件         │  │
-│  │    3. @lit-labs/ssr 渲染 → HTML    │  │
-│  │    4. 注入 Island 水合脚本          │  │
-│  │    5. 返回 Response                 │  │
+│  │  app.use('*', pageHandler)          │  │
+│  │    ├─ 文件路由匹配                  │  │
+│  │    ├─ Vite SSR 加载页面组件         │  │
+│  │    ├─ @lit-labs/ssr 渲染 → HTML    │  │
+│  │    ├─ 收集 Island → 注入水合脚本   │  │
+│  │    └─ 返回 Response                 │  │
 │  └────────────────────────────────────┘  │
 │                                          │
 │  ┌─ resolveId + load ────────────────┐   │
 │  │  virtual:routes → 文件路由表       │   │
 │  │  virtual:islands → Island 映射表   │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 │                                          │
 │  ┌─ transform ───────────────────────┐   │
 │  │  Island 组件 AST 标记              │   │
 │  │  客户端入口代码生成                │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 │                                          │
 │  ┌─ build ───────────────────────────┐   │
 │  │  Step 1: 服务端构建 (ssr: true)    │   │
 │  │  Step 2: 客户端构建 (Islands only) │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 └──────────────────────────────────────────┘
-```
-
-```mermaid
-graph TB
-    subgraph "Dev Mode - Vite 插件驱动"
-        ViteDev[Vite Dev Server] -->|configureServer| HonoMiddleware[Hono 中间件]
-        HonoMiddleware --> FileRouter[文件路由<br/>virtual:routes]
-        FileRouter --> ViteSSR[Vite SSR<br/>ssrLoadModule]
-        ViteSSR --> LitSSR[Lit SSR 渲染<br/>@lit-labs/ssr]
-        LitSSR --> HTML[HTML + DSD]
-        HTML --> IslandScript[Island 水合脚本<br/>条件加载]
-    end
-    
-    subgraph "Build Mode - Vite 双端构建"
-        ViteBuild[Vite Build] -->|ssr: true| ServerBundle[服务端产物]
-        ViteBuild -->|client mode| ClientBundle[客户端产物<br/>仅 Islands]
-    end
-    
-    subgraph "Runtime"
-        EdgeRuntime[CF Workers / Deno / Bun] --> ServerBundle
-        NodeRuntime[Node.js] --> ServerBundle
-        Browser --> ClientBundle
-        Browser --> HTML
-    end
 ```
 
 ### 关键技术决策
@@ -153,8 +125,7 @@ async function handleSSR(vite: ViteDevServer, route: RouteMatch) {
 }
 ```
 
-**边缘运行时 vs Node.js 双层策略**：
-
+**边缘运行时 vs Node.js 双层策略：**
 - **边缘运行时**：构建时预渲染为 Declarative Shadow DOM 静态 HTML，无需 SSR 运行时
 - **Node.js 运行时**：运行时使用 `@lit-labs/ssr` 流式渲染，支持动态内容
 
@@ -164,9 +135,9 @@ Hono 不独立启动服务器，而是注册为 Vite Dev Server 的中间件：
 
 ```typescript
 // vite-plugin/src/dev-server.ts
-export function frameworkDevServer(): Plugin {
+export function devServerPlugin(): Plugin {
   return {
-    name: 'framework-dev-server',
+    name: 'kiss:dev-server',
     configureServer(server) {
       const app = new Hono()
       
@@ -201,7 +172,7 @@ export function frameworkDevServer(): Plugin {
 export function routeScannerPlugin(): Plugin {
   const virtualId = 'virtual:routes'
   return {
-    name: 'framework-route-scanner',
+    name: 'kiss-route-scanner',
     resolveId(id) { if (id === virtualId) return '\0' + virtualId },
     async load(id) {
       if (id !== '\0' + virtualId) return
@@ -222,7 +193,7 @@ export function routeScannerPlugin(): Plugin {
 ```typescript
 export function islandTransformPlugin(): Plugin {
   return {
-    name: 'framework-island-transform',
+    name: 'kiss-island-transform',
     transform(code, id) {
       if (!id.includes('/app/islands/')) return
       return `
@@ -241,9 +212,9 @@ export function islandTransformPlugin(): Plugin {
 #### 5. 双端构建
 
 ```typescript
-export function frameworkBuildPlugin(): Plugin {
+export function buildPlugin(): Plugin {
   return {
-    name: 'framework-build',
+    name: 'kiss:build',
     async build() {
       // Step 1: 服务端构建
       await build({ build: { ssr: true }, ssr: { noExternal: ['lit', '@lit-labs/ssr'] } })
@@ -265,7 +236,7 @@ const routes = app.post('/api/posts',
 export type AppType = typeof routes
 
 // 客户端：自动类型推断
-import { hc } from '@hvl/rpc'
+import { hc } from '@kiss/rpc'
 const client = hc<AppType>('/')
 const res = await client.api.posts.$post({ json: { title: 'Hello' } })
 ```
@@ -283,13 +254,13 @@ Level 4: 全页 CSR（极端交互场景，可选降级）—— 框架提供 es
 ### 包结构（精简为 2+1）
 
 ```
-framework/                              # 框架仓库根目录
+kiss/                                 # 框架仓库根目录
 ├── packages/
-│   ├── vite/                           # [核心] Vite 插件包（框架本体）
+│   ├── kiss-vite/                      # [核心] Vite 插件包（框架本体）
 │   │   ├── src/
-│   │   │   ├── index.ts                # 插件主入口，导出 framework() 函数
+│   │   │   ├── index.ts                # 插件主入口，导出 kiss() 函数
 │   │   │   ├── dev-server.ts           # configureServer：Hono 中间件注入
-│   │   │   ├── ssr-handler.ts          # Vite SSR 加载 + Lit 渲染协调
+│   │   │   ├── ssr-handler.ts         # Vite SSR 加载 + Lit 渲染协调
 │   │   │   ├── route-scanner.ts        # resolveId/load：virtual:routes 虚拟模块
 │   │   │   ├── island-transform.ts     # transform：Island AST 检测 + 注册
 │   │   │   ├── island-extractor.ts     # 构建时 Island 提取与映射表生成
@@ -300,14 +271,14 @@ framework/                              # 框架仓库根目录
 │   │   │   └── types.ts                # 公共类型定义
 │   │   ├── vite.config.build.ts        # Vite library mode 构建配置
 │   │   ├── deno.json
-│   │   └── package.json
+│   │   └── package.json                # name: @kiss/vite
 │   │
-│   ├── rpc/                            # [独立] RPC 客户端包
+│   ├── kiss-rpc/                       # [独立] RPC 客户端包
 │   │   ├── src/
 │   │   │   └── index.ts                # hc() + RpcError + RpcController + rpcFetch
 │   │   ├── vite.config.build.ts        # Vite library mode 构建配置
 │   │   ├── deno.json
-│   │   └── package.json
+│   │   └── package.json                # name: @kiss/rpc
 │   │
 │   └── create/                         # [脚手架] 项目创建工具
 │       ├── src/
@@ -316,7 +287,7 @@ framework/                              # 框架仓库根目录
 │       │       ├── minimal/            # 最小（纯 SSR）
 │       │       ├── standard/           # 标准（SSR + Islands）
 │       │       └── full/               # 完整（SSR + Islands + RPC + API）
-│       ├── package.json                # name: create-hvl
+│       ├── package.json                # name: create-kiss
 │       └── tsconfig.json
 │
 ├── examples/                           # 示例应用
@@ -350,8 +321,8 @@ my-app/                                 # 用户项目
 │   ├── server.ts                       # 服务端入口（导出 Hono app）
 │   └── client.ts                       # 客户端入口（Island 水合）
 ├── public/                             # 静态资源
-├── package.json
-├── vite.config.ts                      # 只需 plugins: [framework()]
+├── deno.json                             # Deno 配置
+├── vite.config.ts                        # 只需 plugins: [kiss()]
 └── tsconfig.json
 ```
 
@@ -395,6 +366,6 @@ my-app/                                 # 用户项目
 - Purpose: 框架架构设计决策参考、Vite 插件架构最佳实践
 - Expected outcome: Vite 插件架构遵循最佳实践
 
-- **GitHub热门项目**
+- **GitHub 热门项目**
 - Purpose: 研究 Vite 插件生态中类似的全栈框架实现（如 vite-plugin-ssr/vite-ssg）
 - Expected outcome: 借鉴成熟 Vite SSR 插件的实现模式

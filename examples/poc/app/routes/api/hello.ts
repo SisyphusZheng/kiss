@@ -8,7 +8,7 @@ const app = new Hono()
 app.get('/', (c) => {
   return c.json({
     data: {
-      message: 'Hello from HVL API!',
+      message: 'Hello from KISS API!',
       framework: 'Hono + Vite + Lit',
       version: '0.1.0',
     },

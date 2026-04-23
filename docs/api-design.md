@@ -1,12 +1,20 @@
-# HVL API 设计规范
+# KISS API 设计规范#
 
-> 框架内置 API 层的设计标准——Hono 路由、验证、错误响应、RPC 类型安全
+> 框架内置 API 层的设计标准——Hono 路由、验证、错误响应、RPC 类型安全#
 
 ---
 
-## 1. 设计哲学
+## 1. 设计哲学#
 
-HVL 的 API 层建立在 Hono 之上，遵循三个原则：
+```
+✅ 每个错误都有类型，没有裸 Error
+✅ 全局错误处理器捕获一切
+✅ 操作性错误 → 结构化响应给用户
+✅ 编程性错误 → 日志 + 通用 500
+✅ 跨边界（SSR → 浏览器 → API）错误格式统一
+```
+
+KISS 的 API 层建立在 Hono 之上，遵循三个原则：
 
 | 原则 | 说明 |
 |------|------|
@@ -14,13 +22,13 @@ HVL 的 API 层建立在 Hono 之上，遵循三个原则：
 | **类型安全贯穿** | Zod 验证（用户选择）→ Hono RPC → 客户端自动推断，零 codegen |
 | **约定优于配置** | `app/routes/api/` 目录下的文件自动注册为 API 路由 |
 
-> ⚠️ **Zod 和 @hono/zod-validator 不是框架依赖**，而是用户项目层面的选择。框架提供 Hono RPC 类型推断（`hc<AppType>()`），不强制验证方案。详见 [ADR-001 C5](./adr-001-hard-constraints.md#c5-zod--honozod-validator-不属于框架依赖)。
+> ⚠️ **Zod 和 @hono/zod-validator 不是框架依赖**，而是用户项目层面的选择。框架提供 Hono RPC 类型推断（`hc<AppType>()`），不强制验证方案。详见 [设计哲学](./design-philosophy.md)#
 
 ---
 
-## 2. 路由约定
+## 2. 路由约定#
 
-### 2.1 文件路由映射
+### 2.1 文件路由映射#
 
 ```
 app/routes/api/posts.ts       →  GET/POST   /api/posts
@@ -28,7 +36,7 @@ app/routes/api/posts/[id].ts  →  GET/PUT/DEL /api/posts/:id
 app/routes/api/auth/login.ts  →  POST        /api/auth/login
 ```
 
-### 2.2 路由文件结构
+### 2.2 路由文件结构#
 
 ```typescript
 // app/routes/api/posts.ts
@@ -58,10 +66,10 @@ app.post('/', zValidator('json', CreatePostSchema), async (c) => {
 })
 
 export default app
-export type AppType = typeof app  // ← RPC 类型推断源
+export type AppType = typeof app
 ```
 
-### 2.3 路由合并
+### 2.3 路由合并#
 
 框架自动合并 `app/routes/api/` 下所有路由文件到 Hono 实例：
 
@@ -75,9 +83,9 @@ api.route('/auth/login', loginApp)  // from api/auth/login.ts
 
 ---
 
-## 3. 请求验证
+## 3. 请求验证#
 
-### 3.1 Zod 集成
+### 3.1 Zod 集成#
 
 所有 API 输入必须通过 Zod 验证——这是框架的硬性规则。
 
@@ -97,7 +105,7 @@ app.post('/upload', zValidator('form', formSchema), handler)
 app.get('/:id', zValidator('param', z.object({ id: z.string().uuid() })), handler)
 ```
 
-### 3.2 验证失败响应
+### 3.2 验证失败响应#
 
 验证失败统一返回 422：
 
@@ -114,7 +122,7 @@ app.get('/:id', zValidator('param', z.object({ id: z.string().uuid() })), handle
 }
 ```
 
-### 3.3 自定义验证错误格式
+### 3.3 自定义验证错误格式#
 
 ```typescript
 // 框架提供全局 hook 统一格式
@@ -139,9 +147,9 @@ app.use('*', async (c, next) => {
 
 ---
 
-## 4. 响应格式
+## 4. 响应格式#
 
-### 4.1 成功响应
+### 4.1 成功响应#
 
 ```typescript
 // 单个资源
@@ -165,9 +173,9 @@ return c.json({
 return c.body(null, 204)
 ```
 
-### 4.2 错误响应
+### 4.2 错误响应#
 
-所有错误使用统一格式（详见 [error-handling.md](./error-handling.md)）：
+所有错误使用统一格式（详见 [错误处理体系](./error-handling.md)）：
 
 ```json
 {
@@ -181,9 +189,9 @@ return c.body(null, 204)
 
 ---
 
-## 5. Hono RPC 类型安全
+## 5. Hono RPC 类型安全#
 
-### 5.1 端到端类型推断
+### 5.1 端到端类型推断#
 
 ```typescript
 // 服务端：app/routes/api/posts.ts
@@ -194,8 +202,8 @@ const app = new Hono()
 export default app
 export type AppType = typeof app  // ← 这是类型推断的关键
 
-// 客户端：自动获得类型
-import { hc } from '@hvl/rpc'
+// 客户端：完全获得类型
+import { hc } from '@kiss/rpc'
 import type { AppType } from '../routes/api/posts'
 
 const client = hc<AppType>('/api/posts')
@@ -204,10 +212,9 @@ const client = hc<AppType>('/api/posts')
 const res = await client.$post({
   json: { title: 'Hello', content: 'World' }  // ← Zod schema 推断
 })
-const data = await res.json()  // ← 响应类型自动推断
 ```
 
-### 5.2 多路由类型合并
+### 5.2 多路由类型合并#
 
 ```typescript
 // 框架自动合并所有 API 路由类型
@@ -223,27 +230,27 @@ const client = hc<ApiType>('/')
 
 ---
 
-## 6. 中间件栈
+## 6. 中间件栈#
 
-### 6.1 标准中间件顺序
+### 6.1 标准中间件顺序#
 
 ```
 Request → RequestID → Logger → CORS → RateLimit → BodyParse
        → Auth → Validation → Handler → ErrorHandler → Response
 ```
 
-### 6.2 框架内置中间件
+### 6.2 框架内置中间件#
 
 ```typescript
 // 框架自动注册（用户无需手动配置）
-app.use('*', requestId())      // 1. 请求 ID
-app.use('*', logger())         // 2. 结构化日志
-app.use('/api/*', cors())      // 3. CORS
-app.use('/api/*', rateLimit()) // 4. 限流
-app.use('*', secureHeaders())  // 5. 安全头
+app.use('*', requestId()))      // 1. 请求 ID
+app.use('*', logger()))         // 2. 结构化日志
+app.use('/api/*', cors()))      // 3. CORS
+app.use('/api/*', rateLimit())) // 4. 限流
+app.use('*', secureHeaders()))  // 5. 安全头
 ```
 
-### 6.3 用户自定义中间件
+### 6.3 用户自定义中间件#
 
 ```typescript
 // app/routes/_middleware.ts — 全局中间件
@@ -262,15 +269,15 @@ app.use('/api/*', authMiddleware)
 
 ---
 
-## 7. 认证集成
+## 7. 认证集成#
 
-### 7.1 JWT 策略
+### 7.1 JWT 策略#
 
 ```typescript
-// 框架提供 @hvl/auth 插件（可选）
-import { hvlAuth } from '@hvl/auth'
+// 框架提供 @kiss/auth 插件（可选）
+import { kissAuth } from '@kiss/auth'
 
-app.use('/api/*', hvlAuth({
+app.use('/api/*', kissAuth({
   jwtSecret: process.env.JWT_SECRET,
   algorithms: ['HS256'],
   // 路由级白名单
@@ -278,12 +285,12 @@ app.use('/api/*', hvlAuth({
 }))
 ```
 
-### 7.2 会话策略
+### 7.2 会话策略#
 
 ```typescript
 // Cookie-based session（适合 SSR 优先场景）
-app.use('/api/*', hvlSession({
-  cookieName: 'hvl_session',
+app.use('/api/*', kissSession({
+  cookieName: 'kiss_session',
   secret: process.env.SESSION_SECRET,
   maxAge: 60 * 60 * 24 * 7,  // 7 days
 }))
@@ -291,9 +298,9 @@ app.use('/api/*', hvlSession({
 
 ---
 
-## 8. 分页与排序
+## 8. 分页与排序#
 
-### 8.1 标准分页参数
+### 8.1 标准分页参数#
 
 ```typescript
 const ListQuerySchema = z.object({
@@ -302,11 +309,9 @@ const ListQuerySchema = z.object({
   sort: z.enum(['created_at', 'updated_at', 'title']).default('created_at'),
   order: z.enum(['asc', 'desc']).default('desc'),
 })
-
-// GET /api/posts?page=2&per_page=10&sort=created_at&order=desc
 ```
 
-### 8.2 分页响应格式
+### 8.2 分页响应格式#
 
 ```json
 {
@@ -327,19 +332,19 @@ const ListQuerySchema = z.object({
 
 ---
 
-## 9. 版本控制
+## 9. 版本控制#
 
-### 9.1 URL 路径版本（推荐）
+### 9.1 URL 路径版本（推荐）#
 
 ```
 app/routes/api/v1/posts.ts  →  /api/v1/posts
 app/routes/api/v2/posts.ts  →  /api/v2/posts
 ```
 
-### 9.2 Header 版本（可选）
+### 9.2 Header 版本（可选）#
 
 ```typescript
-app.use('/api/*', async (c, next) => {
+app.use('*', async (c, next) => {
   const version = c.req.header('Accept-Version') || 'v1'
   c.set('apiVersion', version)
   await next()
@@ -348,7 +353,7 @@ app.use('/api/*', async (c, next) => {
 
 ---
 
-## 10. 设计反模式
+## 10. 设计反模式#
 
 | ❌ 不要 | ✅ 应该 |
 |---------|--------|
@@ -361,4 +366,4 @@ app.use('/api/*', async (c, next) => {
 
 ---
 
-*文档版本：v1.0 | 最后更新：2026-04-23*
+*文档版本：v1.1 | 最后更新：2026-04-23*

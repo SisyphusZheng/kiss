@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite'
-import { framework } from '@hvl/vite'
+import { kiss } from '@kiss/vite'
 
 export default defineConfig({
   plugins: [
-    framework({
+    kiss({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       dev: {

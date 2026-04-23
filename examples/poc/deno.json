@@ -1,5 +1,5 @@
 {
-  "name": "@hvl/example-poc",
+  "name": "@kiss/example-poc",
   "version": "0.0.1",
   "exports": {},
   "tasks": {
@@ -15,7 +15,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["@hvl/vite/client"]
+    "types": ["@kiss/vite/client"]
   },
   "include": ["app"],
   "exclude": ["node_modules", "dist"]

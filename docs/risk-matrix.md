@@ -1,4 +1,4 @@
-# HVL 风险矩阵与技术决策
+# KISS 风险矩阵与技术决策
 
 > 框架开发过程中的关键挑战、风险评估与解决方案
 
@@ -118,9 +118,9 @@ async function handleSSR(vite: ViteDevServer, route: RouteMatch): Promise<Respon
     return render(Page, route.props)
   } catch (error) {
     // 降级为 Error Boundary 占位符
-    console.error('[HVL] SSR Error:', error)
+    console.error('[KISS] SSR Error:', error)
     return new Response(
-      `<div class="hvl-error-boundary">
+      `<div class="kiss-error-boundary">
         <p>⚠️ 页面渲染出错</p>
         <details><pre>${escapeHtml(error.message)}</pre></details>
       </div>`,
@@ -139,7 +139,7 @@ async function hydrateIsland(tagName: string, loader: () => Promise<any>) {
     const mod = await loader()
     customElements.define(tagName, mod.default)
   } catch (error) {
-    console.warn(`[HVL] Island "${tagName}" hydration failed, falling back to CSR`)
+    console.warn(`[KISS] Island "${tagName}" hydration failed, falling back to CSR`)
     // 回退：重新渲染整个组件为 CSR
     const el = document.querySelector(tagName)
     if (el && !el.shadowRoot) {
@@ -154,15 +154,15 @@ async function hydrateIsland(tagName: string, loader: () => Promise<any>) {
 ### 4.3 RPC 错误
 
 ```typescript
-// @hvl/rpc/client.ts
-export class RPCError extends Error {
+// @kiss/rpc/client.ts
+export class RpcError extends Error {
   constructor(
     public status: number,
     public code: string,
     message: string
   ) {
     super(message)
-    this.name = 'RPCError'
+    this.name = 'RpcError'
   }
 }
 
@@ -201,7 +201,7 @@ const errorMap: Record<number, string> = {
 | **Shadow DOM CSS 内联** | SSR 时将 Lit 组件样式内联到 DSD `<style>` 标签 | 避免 FOUC（无样式闪烁） |
 | **SSR 静态缓存** | 边缘运行时使用构建时预渲染结果 | 零计算成本返回 HTML |
 | **代码分割** | 每个 Island 独立 chunk + 动态 import | 按需加载，首屏最小 |
-| **预连接/预加载** | HTML template 注入 `<link rel="modulepreload"> | 减少 Island 水合延迟 |
+| **预连接/预加载** | HTML template 注入 `<link rel="modulepreload">` | 减少 Island 水合延迟 |
 
 ### 5.3 构建产物预算
 
@@ -230,7 +230,7 @@ const errorMap: Record<number, string> = {
 ```typescript
 // 终端输出格式
 console.log(
-  '\x1b[36m[HVL]\x1b[0m',           // 青色前缀
+  '\x1b[36m[KISS]\x1b[0m',           // 青色前缀
   '\x1b[32mGET\x1b[0m',            // 绿色方法
   '/about',                         // 路径
   `\x1b[90m${duration}ms\x1b[0m`,   // 灰色耗时
@@ -240,9 +240,9 @@ console.log(
 )
 
 // 示例输出：
-// [HVL] GET /about 23ms
-// [HVL] GET /dashboard 45ms (counter, theme-toggle)
-// [HVL] POST /api/posts 12ms → 201 Created
+// [KISS] GET /about 23ms
+// [KISS] GET /dashboard 45ms (counter, theme-toggle)
+// [KISS] POST /api/posts 12ms → 201 Created
 ```
 
 ### 6.2 生产模式日志
@@ -258,10 +258,10 @@ console.log(
   "status": 200,
   "duration": 15,
   "islands": [],
-  "framework": "hvl"
+  "framework": "kiss"
 }
 ```
 
 ---
 
-*文档版本：v1.0 | 最后更新：2026-04-22*
+*文档版本：v1.0 | 最后更新：2026-04-23*

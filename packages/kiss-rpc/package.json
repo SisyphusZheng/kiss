@@ -1,0 +1,26 @@
+{
+  "name": "@kiss/rpc",
+  "version": "0.1.0",
+  "description": "KISS RPC client — end-to-end type-safe API communication",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "vite build --config vite.config.build.ts",
+    "dev": "vite build --config vite.config.build.ts --watch"
+  },
+  "dependencies": {
+    "hono": "^4.7.0",
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "vite-plugin-dts": "^4.5.0"
+  }
+}

@@ -32,7 +32,7 @@ export default class HomePage extends LitElement {
   render() {
     return html`
       <span class="tag">v0.1.0 PoC</span>
-      <h1>HVL Framework</h1>
+      <h1>KISS Framework</h1>
       <p>
         <strong>Hono + Vite + Lit</strong> — Web Standards 下的最小增幅渐进式全栈框架。
       </p>

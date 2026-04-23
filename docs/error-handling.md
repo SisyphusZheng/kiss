@@ -1,4 +1,4 @@
-# HVL 错误处理体系
+# KISS 错误处理体系
 
 > 类型化错误层级、全局错误处理器、SSR/水合/RPC 三层错误策略、跨边界错误映射
 
@@ -23,7 +23,7 @@
 ```typescript
 // packages/vite/src/errors.ts
 
-export class HvlError extends Error {
+export class KissError extends Error {
   constructor(
     message: string,
     public readonly code: string,
@@ -31,7 +31,7 @@ export class HvlError extends Error {
     public readonly isOperational: boolean = true,
   ) {
     super(message)
-    this.name = 'HvlError'
+    this.name = 'KissError'
   }
 
   toJSON() {
@@ -49,25 +49,25 @@ export class HvlError extends Error {
 
 ```typescript
 // HTTP 层错误
-export class NotFoundError extends HvlError {
+export class NotFoundError extends KissError {
   constructor(resource: string, id: string) {
     super(`${resource} not found: ${id}`, 'NOT_FOUND', 404)
   }
 }
 
-export class UnauthorizedError extends HvlError {
+export class UnauthorizedError extends KissError {
   constructor(message = 'Authentication required') {
     super(message, 'UNAUTHORIZED', 401)
   }
 }
 
-export class ForbiddenError extends HvlError {
+export class ForbiddenError extends KissError {
   constructor(message = 'Insufficient permissions') {
     super(message, 'FORBIDDEN', 403)
   }
 }
 
-export class ValidationError extends HvlError {
+export class ValidationError extends KissError {
   constructor(
     message: string,
     public readonly details: Array<{ field: string; message: string }>,
@@ -76,20 +76,20 @@ export class ValidationError extends HvlError {
   }
 }
 
-export class ConflictError extends HvlError {
+export class ConflictError extends KissError {
   constructor(message: string) {
     super(message, 'CONFLICT', 409)
   }
 }
 
-export class RateLimitError extends HvlError {
+export class RateLimitError extends KissError {
   constructor(public readonly retryAfter: number) {
     super('Too many requests', 'RATE_LIMITED', 429)
   }
 }
 
 // 框架内部错误
-export class SsrRenderError extends HvlError {
+export class SsrRenderError extends KissError {
   constructor(
     public readonly componentPath: string,
     public readonly cause: Error,
@@ -98,7 +98,7 @@ export class SsrRenderError extends HvlError {
   }
 }
 
-export class HydrationError extends HvlError {
+export class HydrationError extends KissError {
   constructor(
     public readonly tagName: string,
     public readonly cause: Error,
@@ -123,7 +123,7 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
   const requestId = c.get('requestId') || 'unknown'
 
   // 操作性错误 → 结构化响应
-  if (err instanceof HvlError && err.isOperational) {
+  if (err instanceof KissError && err.isOperational) {
     return c.json({
       error: {
         code: err.code,
@@ -136,7 +136,7 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
   }
 
   // 编程性错误 / 未知错误 → 日志 + 通用 500
-  console.error('[HVL] Unhandled error', {
+  console.error('[KISS] Unhandled error', {
     error: err.message,
     stack: err.stack,
     request_id: requestId,
@@ -174,7 +174,7 @@ async function renderPage(vite: ViteDevServer, route: RouteMatch): Promise<strin
   try {
     const module = await vite.ssrLoadModule(route.filePath)
     const Page = module.default
-    const { render } = await import('@lit-labs/ssr')
+    const { render } from '@lit-labs/ssr'
     return await render(Page, route.props)
   } catch (error) {
     // 开发模式：显示详细错误
@@ -198,7 +198,7 @@ async function renderPage(vite: ViteDevServer, route: RouteMatch): Promise<strin
 // 框架内置 Error Boundary Island
 import { LitElement, html } from 'lit'
 
-export class HvlErrorBoundary extends LitElement {
+export class KissErrorBoundary extends LitElement {
   static properties = {
     error: { type: Object },
   }
@@ -206,25 +206,25 @@ export class HvlErrorBoundary extends LitElement {
   render() {
     if (!this.error) return html`<slot></slot>`
     return html`
-      <div class="hvl-error" role="alert">
+      <div class="kiss-error" role="alert">
         <p>⚠️ 页面渲染出错</p>
         ${isDev ? html`<pre>${this.error.message}</pre>` : ''}
       </div>
     `
   }
 }
-customElements.define('hvl-error-boundary', HvlErrorBoundary)
+customElements.define('kiss-error-boundary', KissErrorBoundary)
 ```
 
 ### 4.3 开发模式错误覆盖层
 
 ```html
 <!-- 开发模式下的全屏错误提示 -->
-<div class="hvl-error-overlay">
+<div class="kiss-error-overlay">
   <h2>SSR Render Error</h2>
   <p>Route: /dashboard</p>
   <pre>TypeError: Cannot read properties of undefined (reading 'name')</pre>
-  <div class="hvl-error-stack">
+  <div class="kiss-error-stack">
     at render (app/routes/dashboard.ts:12:5)
     at handleSSR (packages/vite/src/ssr-handler.ts:45:8)
   </div>
@@ -255,11 +255,11 @@ async function hydrateIsland(tagName: string, loader: () => Promise<any>) {
       )
     )
   } catch (error) {
-    console.warn(`[HVL] Island <${tagName}> hydration failed:`, error)
+    console.warn(`[KISS] Island <${tagName}> hydration failed:`, error)
 
     // 降级策略：SSR HTML 仍然可见（纯展示），仅丢失交互
     elements.forEach(el => {
-      el.setAttribute('data-hvl-hydration-error', 'true')
+      el.setAttribute('data-kiss-hydration-error', 'true')
       // 标记为已降级，辅助测试和日志
     })
   }
@@ -273,10 +273,10 @@ async function hydrateIsland(tagName: string, loader: () => Promise<any>) {
 const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
     if (mutation.target instanceof HTMLElement &&
-        mutation.target.hasAttribute('data-hvl-hydration-error')) {
+        mutation.target.hasAttribute('data-kiss-hydration-error')) {
       // 上报水合错误（开发模式控制台警告，生产模式可上报）
       if (isDev) {
-        console.error(`[HVL] Hydration mismatch for <${mutation.target.tagName.toLowerCase()}>`)
+        console.error(`[KISS] Hydration mismatch for <${mutation.target.tagName.toLowerCase()}>`)
       }
     }
   }
@@ -452,19 +452,19 @@ class PostEditor extends LitElement {
 ### 8.1 开发模式
 
 ```
-[HVL] ❌ SSR Render Error
+[KISS] ❌ SSR Render Error
   Route: /dashboard
   File: app/routes/dashboard.ts:12:5
   Error: TypeError: Cannot read properties of undefined
   Stack:
     at render (app/routes/dashboard.ts:12:5)
-    at handleSSR (@hvl/vite/src/ssr-handler.ts:45:8)
+    at handleSSR (@kiss/vite/src/ssr-handler.ts:45:8)
 
-[HVL] ⚠️ Hydration failed for <my-counter>
+[KISS] ⚠️ Hydration failed for <my-counter>
   Error: Custom element already defined
   Falling back to static HTML
 
-[HVL] ❌ API Error 404
+[KISS] ❌ API Error 404
   GET /api/posts/abc123
   Request-ID: req_xyz789
   Error: Post not found: abc123
@@ -483,7 +483,7 @@ class PostEditor extends LitElement {
   "status": 404,
   "error_code": "NOT_FOUND",
   "duration_ms": 12,
-  "framework": "hvl"
+  "framework": "kiss"
 }
 ```
 

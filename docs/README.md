@@ -1,11 +1,7 @@
-# HVL — Hono + Vite + Lit 全栈框架
+# KISS — Keep It Simple, Stupid
 
 > **Web Standards 下的最小增幅渐进式全栈框架**
-
-- 后端用 Web API 标准（Hono）
-- 前端用 Web Components 标准（Lit）
-- 构建用 ESM 标准（Vite）
-- 框架本身仅是一个 **Vite 插件**
+> KISS = Keep It Simple, Stupid. 不是口号，是每个设计决策的过滤器。
 
 ---
 
@@ -14,9 +10,9 @@
 | 原则 | 说明 |
 |------|------|
 | **Web Standards** | HTTP=Fetch API，UI=Web Components，Build=ESM，三层全标准 |
-| **最小增幅** | 硬核=1个Vite插件，0KB框架运行时，Island仅加载Lit(~6KB) |
-| **渐进式** | 纯HTML → SSR → Islands → SPA，每层可选 |
-| **无锁定** | Lit组件=标准Custom Element，可脱离框架在任何环境使用 |
+| **最小增幅** | 框架=1个Vite插件，0KB框架运行时，Island仅加载Lit(~6KB) |
+| **无框架绑定** | Lit组件=标准Custom Element，可脱离框架在任何环境使用 |
+| **无Runtime绑定** | 纯ESM产物，Deno/Node/Bun/CF Workers都能跑 |
 
 ### 运行时体积对比
 
@@ -25,7 +21,7 @@
 | Next.js | ~125KB | ~130KB |
 | Fresh | ~0KB | ~8KB |
 | Qwik | ~0KB | ~2KB |
-| **HVL** | **~0KB** | **~6KB** |
+| **KISS** | **~0KB** | **~6KB** |
 
 ---
 
@@ -35,7 +31,7 @@
 |------|------|
 | 形态 | Vite 插件（非独立框架），对 Vite 生态完全兼容 |
 | 目标用户 | 追求 Web 标准、厌恶框架锁定、重视性能的开发者 |
-| 核心差异 | 唯一一个全链路 Web Standards 的全栈框架，且以 Vite 插件形态存在 |
+| 核心差异 | **唯一**全链路 Web Standards 的全栈框架，且以 Vite 插件形态存在 |
 | 体积对比 | 运行时增量 < 20KB（Hono ~14KB + Lit ~6KB），vs Next.js ~300KB+ |
 | 交互模型 | 默认零 JS → 按需 Island → 按需全页 CSR |
 | 部署模型 | 边缘优先，多运行时自适应 |
@@ -44,9 +40,9 @@
 
 ## 三、全链路 Web Standards（独有优势）
 
-> ⚡ **HVL 是唯一一个全链路 Web Standards 的全栈框架：HTTP=Fetch API，UI=Web Components，Build=ESM。其他框架最多 1/3。**
+> ⚡ **KISS 是唯一一个全链路 Web Standards 的全栈框架：HTTP=Fetch API，UI=Web Components，Build=ESM。其他框架最多 1/3。**
 
-| 标准 | Next.js | Nuxt | SvelteKit | Fresh | Qwik | Astro | **HVL** |
+| 标准 | Next.js | Nuxt | SvelteKit | Fresh | Qwik | Astro | **KISS** |
 |------|---------|------|-----------|-------|------|-------|---------|
 | Fetch API (HTTP) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Web Components (UI) | ❌(React) | ❌(Vue) | ❌(Svelte) | ❌(Preact) | ❌(Qwik) | ⚠️(可选) | ✅(Lit) |
@@ -59,7 +55,7 @@
 
 ### 设计哲学
 
-> 🏗️ **框架 = 一个 Vite 插件**。SSR 能力完全借用 Vite 内置机制，Hono 作为 Vite 中间件集成，Lit 作为 UI 渲染层。不重新发明轮子。
+> 🪶 **框架 = 一个 Vite 插件**。SSR 能力完全借用 Vite 内置机制，Hono 作为 Vite 中间件集成，Lit 作为 UI 渲染层。不重新发明轮子。
 
 ### Vite 钩子映射
 
@@ -78,40 +74,39 @@
 ```
 用户视角：vite.config.ts
 ┌─────────────────────────────────────────┐
-│  import framework from '@hvl/vite'      │
+│  import { kiss } from '@kiss/vite'      │
 │  export default defineConfig({           │
-│    plugins: [framework()]                │
-│  })                                      │
+│    plugins: [kiss()]                   │
+│  })                                    │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│         @hvl/vite (核心插件)             │
+│         @kiss/vite (核心插件)          │
 │                                          │
 │  ┌─ configureServer ──────────────────┐  │
 │  │  Hono app ← Vite middlewares       │  │
-│  │  app.use('*', honoHandler)          │  │
-│  │  honoHandler:                       │  │
-│  │    1. 文件路由匹配                  │  │
-│  │    2. Vite SSR 加载页面组件         │  │
-│  │    3. @lit-labs/ssr 渲染 → HTML    │  │
-│  │    4. 注入 Island 水合脚本          │  │
-│  │    5. 返回 Response                 │  │
+│  │  app.use('*', pageHandler)          │  │
+│  │    ├─ 文件路由匹配                  │  │
+│  │    ├─ Vite SSR 加载页面组件         │  │
+│  │    ├─ @lit-labs/ssr 渲染 → HTML    │  │
+│  │    ├─ 收集 Island → 注入水合脚本   │  │
+│  │    └─ 返回 Response                 │  │
 │  └────────────────────────────────────┘  │
 │                                          │
 │  ┌─ resolveId + load ────────────────┐   │
 │  │  virtual:routes → 文件路由表       │   │
 │  │  virtual:islands → Island 映射表   │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 │                                          │
 │  ┌─ transform ───────────────────────┐   │
 │  │  Island 组件 AST 标记              │   │
 │  │  客户端入口代码生成                │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 │                                          │
 │  ┌─ build ───────────────────────────┐   │
 │  │  Step 1: 服务端构建 (ssr: true)    │   │
 │  │  Step 2: 客户端构建 (Islands only) │   │
-│  └────────────────────────────────────┘  │
+│  └────────────────────────────────────┘   │
 └──────────────────────────────────────────┘
 ```
 
@@ -170,7 +165,7 @@ async function handleSSR(vite: ViteDevServer, route: RouteMatch) {
 // vite-plugin/src/dev-server.ts
 export function frameworkDevServer(): Plugin {
   return {
-    name: 'framework-dev-server',
+    name: 'kiss-dev-server',
     configureServer(server) {
       const app = new Hono()
       
@@ -205,7 +200,7 @@ export function frameworkDevServer(): Plugin {
 export function routeScannerPlugin(): Plugin {
   const virtualId = 'virtual:routes'
   return {
-    name: 'framework-route-scanner',
+    name: 'kiss-route-scanner',
     resolveId(id) { if (id === virtualId) return '\0' + virtualId },
     async load(id) {
       if (id !== '\0' + virtualId) return
@@ -226,7 +221,7 @@ export function routeScannerPlugin(): Plugin {
 ```typescript
 export function islandTransformPlugin(): Plugin {
   return {
-    name: 'framework-island-transform',
+    name: 'kiss-island-transform',
     transform(code, id) {
       if (!id.includes('/app/islands/')) return
       return `
@@ -247,7 +242,7 @@ export function islandTransformPlugin(): Plugin {
 ```typescript
 export function frameworkBuildPlugin(): Plugin {
   return {
-    name: 'framework-build',
+    name: 'kiss-build',
     async build() {
       // Step 1: 服务端构建
       await build({ build: { ssr: true }, ssr: { noExternal: ['lit', '@lit-labs/ssr'] } })
@@ -269,7 +264,7 @@ const routes = app.post('/api/posts',
 export type AppType = typeof routes
 
 // 客户端：自动类型推断
-import { hc } from '@hvl/rpc'
+import { hc } from '@kiss/rpc'
 const client = hc<AppType>('/')
 const res = await client.api.posts.$post({ json: { title: 'Hello' } })
 ```
@@ -332,7 +327,7 @@ const res = await client.api.posts.$post({ json: { title: 'Hello' } })
 | UI | Lit | ^3.x | Web Components 标准、5KB 运行时、Shadow DOM 封装 |
 | 构建 | Vite | ^6.x | ESM 原生、极速 HMR、SSR 支持、插件生态 |
 | SSR | @lit-labs/ssr | ^1.x | Lit 官方 SSR 方案、Declarative Shadow DOM |
-| 验证 | Zod | ^3.x | 与 Hono zodValidator 集成、RPC 类型推断 |
+| 验证 | Zod | ^3.x | 与 Hono zodValidator 集成、RPC 类型推断（用户选择） |
 | 类型 | TypeScript | ^5.x | 端到端类型安全基础 |
 | 包管理 | Deno | ^2.x | 内置依赖管理、workspace 支持 |
 
@@ -341,11 +336,11 @@ const res = await client.api.posts.$post({ json: { title: 'Hello' } })
 ## 九、包结构（精简为 2+1）
 
 ```
-framework/                              # 框架仓库根目录
+kiss/                                 # 框架仓库根目录
 ├── packages/
-│   ├── vite/                           # [核心] Vite 插件包（框架本体）
+│   ├── kiss-vite/                      # [核心] Vite 插件包（框架本体）
 │   │   ├── src/
-│   │   │   ├── index.ts                # 插件主入口，导出 framework() 函数
+│   │   │   ├── index.ts                # 插件主入口，导出 kiss() 函数
 │   │   │   ├── dev-server.ts           # configureServer：Hono 中间件注入
 │   │   │   ├── ssr-handler.ts          # Vite SSR 加载 + Lit 渲染协调
 │   │   │   ├── route-scanner.ts        # resolveId/load：virtual:routes 虚拟模块
@@ -358,14 +353,14 @@ framework/                              # 框架仓库根目录
 │   │   │   └── types.ts                # 公共类型定义
 │   │   ├── vite.config.build.ts        # Vite library mode 构建配置
 │   │   ├── deno.json
-│   │   └── package.json                # name: @hvl/vite
+│   │   └── package.json                # name: @kiss/vite
 │   │
-│   ├── rpc/                            # [独立] RPC 客户端包
+│   ├── kiss-rpc/                       # [独立] RPC 客户端包
 │   │   ├── src/
 │   │   │   └── index.ts                # hc() + RpcError + RpcController + rpcFetch
 │   │   ├── vite.config.build.ts        # Vite library mode 构建配置
 │   │   ├── deno.json
-│   │   └── package.json                # name: @hvl/rpc
+│   │   └── package.json                # name: @kiss/rpc
 │   │
 │   └── create/                         # [脚手架] 项目创建工具
 │       ├── src/
@@ -374,7 +369,7 @@ framework/                              # 框架仓库根目录
 │       │       ├── minimal/            # 最小（纯 SSR）
 │       │       ├── standard/           # 标准（SSR + Islands）
 │       │       └── full/               # 完整（SSR + Islands + RPC + API）
-│       ├── package.json                # name: create-hvl
+│       ├── package.json                # name: create-kiss
 │       └── tsconfig.json
 │
 ├── examples/                           # 示例应用
@@ -410,8 +405,8 @@ my-app/                                 # 用户项目
 │   ├── server.ts                       # 服务端入口（导出 Hono app）
 │   └── client.ts                       # 客户端入口（Island 水合）
 ├── public/                             # 静态资源
-├── package.json
-├── vite.config.ts                      # 只需 plugins: [framework()]
+├── deno.json                             # Deno 配置
+├── vite.config.ts                        # 只需 plugins: [kiss()]
 └── tsconfig.json
 ```
 
@@ -422,9 +417,9 @@ my-app/                                 # 用户项目
 | Phase | 内容 | 预期时间 |
 |-------|------|----------|
 | **Phase 0** | PoC 验证：Vite SSR + Lit 渲染、Hono 中间件、Island 水合、双端构建 | 1-2 天 |
-| **Phase 1** | `@hvl/vite` 核心包：插件入口、文件路由、开发服务器、SSR、Island、构建 | 3-5 天 |
-| **Phase 2** | `@hvl/rpc`：hc 封装、Lit ReactiveController 集成 | 1-2 天 |
-| **Phase 3** | `create-hvl` 脚手架 + 项目模板 | 1-2 天 |
+| **Phase 1** | `@kiss/vite` 核心包：插件入口、文件路由、开发服务器、SSR、Island、构建 | 3-5 天 |
+| **Phase 2** | `@kiss/rpc`：hc 封装、Lit ReactiveController 集成 | 1-2 天 |
+| **Phase 3** | `create-kiss` 脚手架 + 项目模板 | 1-2 天 |
 | **Phase 4** | 示例应用（blog/dashboard/todo）+ 文档 | 2-3 天 |
 
 ⏱️ **里程碑**：M0 PoC(1~2天) → M1 Alpha(1周) → M2 Beta(2周) → M3 RC(3周) → M4 v1.0.4(4周)
@@ -463,7 +458,7 @@ my-app/                                 # 用户项目
 
 | 文档 | 说明 |
 |------|------|
-| [⚠️ 硬约束 ADR-001](./adr-001-hard-constraints.md) | **不可违背的设计边界**：纯 ESM、3 依赖上限、Vite-only 构建、无 patch 脚本 |
+| [🎯 设计哲学](./design-philosophy.md) | **五大支柱 + 硬约束**：Web Standards 优先、最小增幅、无框架绑定、无 Runtime 绑定、渐进增强 |
 | [架构设计](./architecture.md) | 架构总览、Mermaid 流程图、请求生命周期、Island 原理、类型安全链路 |
 | [实现路线图](./roadmap.md) | Phase 0~4 详细任务、里程碑、成功标准 |
 | [风险矩阵](./risk-matrix.md) | 关键挑战、风险评级、兼容性降级、错误处理、性能指标、日志规范 |
@@ -483,4 +478,4 @@ MIT
 
 ---
 
-**HVL — 最小增幅 · Web Standards · 渐进增强**
+**KISS — Keep It Simple, Stupid · Web Standards · 最小增幅 · 渐进增强**

@@ -1,4 +1,4 @@
-# HVL 部署指南
+# KISS 部署指南
 
 > Cloudflare Pages / Vercel / Deno Deploy / Bun / Node.js 多平台部署
 
@@ -34,10 +34,10 @@ dist/
 deno task build
 
 # 启用 SSG 预渲染
-HVL_SSG=true deno task build
+KISS_SSG=true deno task build
 
 # 仅客户端构建（纯 SPA 模式）
-HVL_SPA=true deno task build
+KISS_SPA=true deno task build
 ```
 
 ---
@@ -48,7 +48,7 @@ HVL_SPA=true deno task build
 
 ```toml
 # wrangler.toml
-name = "my-hvl-app"
+name = "my-kiss-app"
 compatibility_date = "2026-04-23"
 
 [site]
@@ -63,7 +63,7 @@ command = "deno task build"
 ```typescript
 // app/server.ts — Cloudflare Workers 入口
 import { handle } from 'hono/cloudflare-pages'
-import app from './.hvl/server'
+import app from './.kiss/server'
 
 export const onRequest: PagesFunction = async (context) => {
   return handle(app, context.request)
@@ -109,7 +109,7 @@ export const onRequest: PagesFunction = async (context) => {
 
 ```typescript
 // api/ssr.ts — Vercel Serverless Function
-import app from '../.hvl/server'
+import app from '../.kiss/server'
 
 export default app
 
@@ -134,7 +134,7 @@ Vercel Dashboard → Settings → Environment Variables：
 ```typescript
 // main.ts — Deno Deploy 入口
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import app from './.hvl/server.ts'
+import app from './.kiss/server.ts'
 
 serve(app.fetch, {
   port: parseInt(Deno.env.get('PORT') || '8000'),
@@ -144,7 +144,7 @@ serve(app.fetch, {
 ### 4.2 部署命令
 
 ```bash
-deployctl deploy --project=my-hvl-app main.ts
+deployctl deploy --project=my-kiss-app main.ts
 ```
 
 ### 4.3 注意事项
@@ -162,7 +162,7 @@ deployctl deploy --project=my-hvl-app main.ts
 ```typescript
 // server.ts — Node.js 生产服务器
 import { serve } from '@hono/node-server'
-import app from './.hvl/server'
+import app from './.kiss/server'
 
 const port = parseInt(process.env.PORT || '3000')
 
@@ -170,7 +170,7 @@ serve({
   fetch: app.fetch,
   port,
 }, () => {
-  console.log(`[HVL] Server running on http://localhost:${port}`)
+  console.log(`[KISS] Server running on http://localhost:${port}`)
 })
 ```
 
@@ -180,7 +180,7 @@ serve({
 // ecosystem.config.cjs
 module.exports = {
   apps: [{
-    name: 'my-hvl-app',
+    name: 'my-kiss-app',
     script: 'dist/server/index.js',
     instances: 'max',
     exec_mode: 'cluster',
@@ -245,7 +245,7 @@ volumes:
 
 ```typescript
 // server.ts — Bun 生产服务器
-import app from './.hvl/server'
+import app from './.kiss/server'
 
 Bun.serve({
   fetch: app.fetch,
@@ -267,7 +267,7 @@ bun run dist/server/index.js
 
 ```bash
 # 构建时预渲染所有静态路由
-HVL_SSG=true deno task build
+KISS_SSG=true deno task build
 ```
 
 ### 7.2 支持平台

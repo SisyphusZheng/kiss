@@ -1,4 +1,4 @@
-# HVL 实现路线图
+# KISS 实现路线图
 
 > 从 PoC 到 v1.0 的完整实施计划
 
@@ -42,10 +42,10 @@
   - `build.rollupOptions.input: client` 生成客户端产物（仅 Islands）
   - 验证两套产物能独立运行
 
-### 产出物
+### 产出于
 
 ```
-pocs/
+docs/
 ├── ssr-lit/          # Vite SSR 加载 + Lit 渲染验证
 ├── hono-middleware/   # Hono 作为 Vite 中间件验证
 ├── island-hydrate/    # Island 检测 + 水合验证
@@ -63,7 +63,7 @@ pocs/
 
 ---
 
-## Phase 1：@hvl/vite 核心包（3~5 天）
+## Phase 1：`@kiss/vite` 核心包（3~5 天）
 
 > 🎯 目标：框架核心插件可用，开发者能创建基本项目
 
@@ -72,7 +72,7 @@ pocs/
 #### Day 1~2：插件骨架与开发服务器
 
 - [x] **插件入口 (`index.ts`)**
-  - 导出 `framework()` 函数
+  - 导出 `kiss()` 函数
   - 支持配置选项（routesDir, islandsDir 等）
   - 合并所有子插件为 Plugin[]
 
@@ -123,15 +123,15 @@ pocs/
   - 条件注入 Island 水合脚本
   - meta 标签管理
 
-### 产出物
+### 产出于
 
 ```typescript
 // 用户使用方式
-import framework from '@hvl/vite'
+import { kiss } from '@kiss/vite'
 
 export default defineConfig({
   plugins: [
-    framework({
+    kiss({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
     })
@@ -143,15 +143,15 @@ export default defineConfig({
 
 | 指标 | 标准 |
 |------|------|
-| 开发服务器 | `vite dev` 启动后页面可访问 |
+| 开发服务器 | `deno task dev` 启动后页面可访问 |
 | 文件路由 | 新增 .ts 文件自动成为路由 |
 | SSR | 页面渲染为含 DSD 的 HTML |
 | Island | 交互组件正常工作 |
-| 构建 | `vite build` 生成双端产物 |
+| 构建 | `deno task build` 生成双端产物 |
 
 ---
 
-## Phase 2：@hvl/rpc（1~2 天）
+## Phase 2：`@kiss/rpc`（1~2 天）
 
 > 🎯 目标：端到端类型安全的 RPC 通信
 
@@ -168,10 +168,10 @@ export default defineConfig({
   - loading/error 状态管理
 
 - [ ] **功能测试**
-  - @hvl/rpc 独立功能测试（当前只有构建测试）
+  - @kiss/rpc 独立功能测试（当前只有构建测试）
   - RpcController 集成测试
 
-### 产出物
+### 产出于
 
 ```typescript
 // 服务端
@@ -182,16 +182,16 @@ const routes = app.post('/api/posts',
 export type AppType = typeof routes
 
 // 客户端 — 完全类型安全
-import { hc } from '@hvl/rpc'
+import { hc } from '@kiss/rpc'
 import type { AppType } from '../server'
 
 const client = hc<AppType>('/')
-// client.api.posts.$post({ json: { title: ... } })  ← 自动补全！
+// client.api.posts.$post({ json: { title: ... })  ← 自动补全！
 ```
 
 ---
 
-## Phase 3：create-hvl 脚手架（1~2 天）
+## Phase 3：`create-kiss` 脚手架（1~2 天）
 
 > 🎯 目标：一行命令创建项目
 
@@ -205,36 +205,36 @@ const client = hc<AppType>('/')
 - [ ] **项目模板**
 
   **minimal 模板（纯 SSR）：**
-  ```
-  app/routes/index.ts          # 首页
-  app/components/header.ts     # Header
-  server.ts                    # 服务端入口
-  vite.config.ts               # framework() 插件
-  ```
+   ```
+   app/routes/index.ts          # 首页
+   app/components/header.ts     # Header
+   server.ts                    # 服务端入口
+   vite.config.ts               # kiss() 插件
+   ```
 
   **standard 模板（SSR + Islands）：**
-  ```
-  app/routes/index.ts          # 首页
-  app/routes/about.ts          # 关于页
-  app/islands/counter.ts       # 计数器 Island
-  app/islands/theme-toggle.ts  # 主题切换 Island
-  app/components/              # 布局组件
-  server.ts                    # 服务端入口
-  client.ts                    # 客户端入口
-  ```
+   ```
+   app/routes/index.ts          # 首页
+   app/routes/about.ts          # 关于页
+   app/islands/counter.ts       # 计数器 Island
+   app/islands/theme-toggle.ts  # 主题切换 Island
+   app/components/              # 布局组件
+   server.ts                    # 服务端入口
+   client.ts                    # 客户端入口
+   ```
 
   **full 模板（全功能）：**
-  ```
+   ```
   包含 standard 所有内容 +
-  app/routes/api/posts.ts      # API 路由
-  @hvl/rpc 类型安全集成
-  ```
+   app/routes/api/posts.ts      # API 路由（Hono）
+   @kiss/rpc 类型安全集成
+   ```
 
-### 产出物
+### 产出于
 
 ```bash
 # 用户使用方式
-deno run -A npm:create-hvl my-app --template standard
+deno run -A npm:create-kiss my-app --template standard
 cd my-app && deno task dev
 ```
 

@@ -1,6 +1,7 @@
-# HVL — Hono + Vite + Lit
+# KISS — Keep It Simple, Stupid
 
 > **Web Standards 下的最小增幅渐进式全栈框架**
+> KISS = Keep It Simple, Stupid. 不是口号，是每个设计决策的过滤器。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF)](https://vitejs.dev/)
@@ -8,29 +9,29 @@
 [![Lit](https://img.shields.io/badge/Lit-3.x-325CFF)](https://lit.dev/)
 [![Deno](https://img.shields.io/badge/Deno-2.x-000000)](https://deno.land/)
 
-**H**ono + **V**ite + **L**it — 三个 Web Standards 原生库的组合，以单一 Vite 插件形态提供全栈能力。
+**K**eep **I**t **S**imple, **S**tupid — 三个 Web Standards 原生库的组合，以单一 Vite 插件形态提供全栈能力。
 
 ```bash
-deno run -A npm:create-hvl my-app
+deno run -A npm:create-kiss my-app
 cd my-app && deno task dev
 ```
 
-## 为什么是 HVL？
+## 为什么是 KISS？
 
-| 问题 | HVL 的回答 |
-|------|-----------|
-| 框架锁定太重？ | HVL = 1 个 Vite 插件，所有组件都是标准 Custom Element |
+| 问题 | KISS 的回答 |
+|------|-------------|
+| 框架锁定太重？ | KISS = 1 个 Vite 插件，所有组件都是标准 Custom Element |
 | 首页 JS 太大？ | 默认 0KB，Island 按需加载 ~6KB |
-| SSR 配置复杂？ | `plugins: [framework()]`，完事 |
+| SSR 配置复杂？ | `plugins: [kiss()]` — 完事 |
 | 类型安全靠 codegen？ | Hono RPC 端到端类型推断，零 codegen |
 | 部署只能 Node？ | CF Workers / Deno / Bun / Node，一套代码 |
 
 ## 核心特性
 
-- 🔌 **Vite 插件即框架** — `framework()` 一个函数搞定所有
+- 🔌 **Vite 插件即框架** — `kiss()` 一个函数搞定所有
 - 📄 **SSR 优先** — Lit SSR + Declarative Shadow DOM，零 JS 也有完整 HTML
 - 🏝️ **Islands 架构** — 仅交互组件发送 JS，非 Island 纯静态
-- 🔒 **端到端类型安全** — Zod 验证 → Hono RPC → 客户端自动推断
+- 🔒 **端到端类型安全** — Hono RPC 类型推断，可选 Zod 验证
 - 🌍 **多运行时部署** — Cloudflare / Vercel / Deno / Bun / Node
 - 📈 **渐进增强** — 纯 HTML → Islands → SPA 导航 → 实时功能，每层可选
 - 🦕 **Deno 原生** — 以 Deno 为首选运行时，完全兼容 Node 生态
@@ -44,7 +45,7 @@ cd my-app && deno task dev
 ### 安装
 
 ```bash
-deno run -A npm:create-hvl my-app --template standard
+deno run -A npm:create-kiss my-app --template standard
 cd my-app
 deno task dev
 ```
@@ -52,15 +53,15 @@ deno task dev
 ### 手动集成
 
 ```bash
-deno add npm:@hvl/vite npm:hono npm:lit npm:zod
+deno add npm:@kiss/vite npm:hono npm:lit
 ```
 
 ```ts
 // vite.config.ts
-import { framework } from '@hvl/vite'
+import { kiss } from '@kiss/vite'
 
 export default defineConfig({
-  plugins: [framework()]
+  plugins: [kiss()]
 })
 ```
 
@@ -79,7 +80,7 @@ my-app/
 │   └── components/       # 普通 Lit 组件（SSR only）
 │       └── header.ts
 ├── deno.json             # Deno 配置（替代 package.json）
-├── vite.config.ts        # 只需 plugins: [framework()]
+├── vite.config.ts        # 只需 plugins: [kiss()]
 └── tsconfig.json
 ```
 
@@ -92,7 +93,7 @@ import { LitElement, html, css } from 'lit'
 export default class HomePage extends LitElement {
   render() {
     return html`
-      <h1>Hello HVL!</h1>
+      <h1>Hello KISS!</h1>
       <my-counter></my-counter>
     `
   }
@@ -126,7 +127,7 @@ export type AppType = typeof app
 
 ```ts
 // 在 Island 组件中
-import { hc } from '@hvl/rpc'
+import { hc } from '@kiss/rpc'
 import type { AppType } from '../routes/api/posts'
 
 const client = hc<AppType>('/api/posts')
@@ -173,7 +174,7 @@ export default class MyCounter extends LitElement {
 
 ```ts
 // vite.config.ts
-framework({
+kiss({
   routesDir: 'app/routes',
   islandsDir: 'app/islands',
   ssr: { preRender: false },
@@ -202,7 +203,7 @@ framework({
 
 | 文档 | 说明 |
 |------|------|
-| [⚠️ 硬约束](docs/adr-001-hard-constraints.md) | **不可违背的设计边界**：纯 ESM、3 依赖、Vite-only、无 patch |
+| [🎯 设计哲学](docs/design-philosophy.md) | **五大支柱 + 硬约束**：Web Standards 优先、最小增幅、无框架绑定、无 Runtime 绑定、渐进增强 |
 | [架构设计](docs/architecture.md) | 数据流、请求生命周期、Island 原理、类型安全链路 |
 | [实现路线图](docs/roadmap.md) | Phase 0~4 详细任务 |
 | [API 设计规范](docs/api-design.md) | 路由约定、Zod 验证、响应格式、RPC |
@@ -230,7 +231,19 @@ framework({
 - RPC Client — 端到端类型安全
 - 10 tests / 58 steps 通过
 
-构建：Vite library mode（纯 ESM），@hvl/vite 仅 3 个运行时依赖（hono, @lit-labs/ssr, lit）。
+构建：Vite library mode（纯 ESM），`@kiss/vite` 仅 3 个运行时依赖（hono, @lit-labs/ssr, lit）。
+
+## 设计哲学速览
+
+KISS 是唯一**全链路 Web Standards** 的全栈框架：
+
+| 层 | 标准 | KISS 做法 |
+|----|------|-----------|
+| HTTP | Fetch API | Hono 直用，不封装 |
+| UI | Web Components | Lit 直用，不抽象 |
+| 构建 | ESM | Vite 输出纯 ESM |
+
+➡️ 完整哲学见 [docs/design-philosophy.md](docs/design-philosophy.md)
 
 ## 技术栈
 
@@ -241,7 +254,7 @@ framework({
 | UI | [Lit](https://lit.dev/) | ^3.x | Web Components 标准、5KB 运行时 |
 | Build | [Vite](https://vitejs.dev/) | ^6.x | ESM 原生、SSR 支持 |
 | SSR | @lit-labs/ssr | ^1.x | Declarative Shadow DOM |
-| 验证 | [Zod](https://zod.dev/) | ^3.x | 与 Hono 集成、RPC 类型推断 |
+| 验证 | [Zod](https://zod.dev/) | ^3.x | 与 Hono 集成、RPC 类型推断（用户选择） |
 | 类型 | TypeScript | ^5.x | 端到端类型安全 |
 
 ## License
@@ -250,4 +263,4 @@ MIT
 
 ---
 
-**HVL — 最小增幅 · Web Standards · 渐进增强**
+**KISS — Keep It Simple, Stupid · Web Standards · 最小增幅 · 渐进增强**

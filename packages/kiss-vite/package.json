@@ -1,0 +1,36 @@
+{
+  "name": "@kiss/vite",
+  "version": "0.1.0",
+  "description": "KISS core Vite plugin - Hono + Vite + Lit fullstack framework",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "vite build --config vite.config.build.ts",
+    "dev": "vite build --config vite.config.build.ts --watch"
+  },
+  "dependencies": {
+    "hono": "^4.7.0",
+    "@lit-labs/ssr": "^1.0.0",
+    "lit": "^3.2.0"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.0",
+    "vite-plugin-dts": "^4.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

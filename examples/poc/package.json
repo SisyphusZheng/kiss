@@ -1,5 +1,5 @@
 {
-  "name": "@hvl/example-poc",
+  "name": "@kiss/example-poc",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hvl/vite": "workspace:*",
+    "@kiss/vite": "workspace:*",
     "hono": "^4.7.0",
     "lit": "^3.2.0",
     "@hono/zod-validator": "^0.4.0",

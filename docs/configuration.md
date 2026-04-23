@@ -1,4 +1,4 @@
-# HVL 配置管理
+# KISS 配置管理
 
 > 框架配置项、用户项目环境变量、多环境策略、启动验证
 
@@ -15,17 +15,17 @@
 
 ---
 
-## 2. 框架配置（`framework()` 选项）
+## 2. 框架配置（`kiss()` 选项）
 
 ### 2.1 完整配置项
 
 ```typescript
 // vite.config.ts
-import framework from '@hvl/vite'
+import { kiss } from '@kiss/vite'
 
 export default defineConfig({
   plugins: [
-    framework({
+    kiss({
       // 路由配置
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
@@ -169,7 +169,7 @@ function loadConfig(): RuntimeConfig {
   // 必需变量验证
   if (isProd && !process.env.ORIGIN) {
     throw new Error(
-      '[HVL] ORIGIN environment variable is required in production. ' +
+      '[KISS] ORIGIN environment variable is required in production. ' +
       'Set it to your public URL (e.g., https://example.com)'
     )
   }
@@ -191,7 +191,7 @@ function loadConfig(): RuntimeConfig {
 
 ```typescript
 // 框架导出配置访问器
-import { getConfig } from '@hvl/vite'
+import { getConfig } from '@kiss/vite'
 
 const config = getConfig()
 // config.port → number

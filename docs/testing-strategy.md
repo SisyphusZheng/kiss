@@ -1,4 +1,4 @@
-# HVL 测试策略
+# KISS 测试策略
 
 > 框架自身测试 + 用户项目测试模板、分层策略、CI 集成
 
@@ -37,7 +37,7 @@
 | **Playwright** | E2E | 多浏览器，SSR 验证 |
 | **@lit-labs/testing** | Lit 组件测试 | 官方工具，Shadow DOM 支持 |
 
-> ⚠️ 测试框架已从 Vitest 迁移到 Deno 内置测试（`Deno.test()` + `jsr:@std/assert`）。详见 [ADR-001 C1](./adr-001-hard-constraints.md#c1-纯-esm零-cjs)。
+> ⚠️ 测试框架已从 Vitest 迁移到 Deno 内置测试（`Deno.test()` + `jsr:@std/assert`）。详见 [设计哲学](./design-philosophy.md#约束检查清单)。
 
 ### 2.2 核心模块测试矩阵
 
@@ -98,7 +98,7 @@ Deno.test('ssr-handler: includes Island hydrate script', async () => {
 
 Deno.test('ssr-handler: returns error boundary on render failure', async () => {
   const html = await renderPage(BrokenPage, {})
-  assertStringIncludes(html, 'hvl-error-boundary')
+  assertStringIncludes(html, 'kiss-error-boundary')
 })
 ```
 
@@ -156,8 +156,8 @@ test('API returns typed JSON', async ({ request }) => {
 ### 3.1 框架提供的测试工具
 
 ```typescript
-// @hvl/testing — 框架测试辅助包
-import { createTestApp, renderPage, fetchApi } from '@hvl/testing'
+// @kiss/testing — 框架测试辅助包
+import { createTestApp, renderPage, fetchApi } from '@kiss/testing'
 
 // 创建测试用 Hono 应用
 const app = createTestApp({
@@ -259,9 +259,9 @@ jobs:
 
 | 检查 | 阻塞 | 说明 |
 |------|------|------|
-| 类型检查 | ✅ | `tsc --noEmit` |
-| Lint | ✅ | ESLint + Prettier |
-| 单元测试覆盖率 > 80% | ✅ | Deno test --coverage |
+| 类型检查 | ✅ | `deno check` |
+| Lint | ✅ | Deno lint + format |
+| 单元测试覆盖率 > 80% | ✅ | `deno test --coverage` |
 | 集成测试通过 | ✅ | 关键模块交互 |
 | E2E 关键流程 | ✅ | 首页渲染、Island 水合、API 调用 |
 | Bundle 大小检查 | ⚠️ | 客户端产物不超过预期 |

@@ -1,4 +1,4 @@
-# HVL 架构设计文档
+# KISS 架构设计文档
 
 > Hono + Vite + Lit 全栈框架架构详解
 
@@ -10,9 +10,9 @@
 
 ```typescript
 // vite.config.ts — 唯一配置
-import framework from '@hvl/vite'
+import { kiss } from '@kiss/vite'
 export default defineConfig({
-  plugins: [framework()]
+  plugins: [kiss()]
 })
 ```
 
@@ -20,38 +20,38 @@ export default defineConfig({
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    @hvl/vite (核心插件)                      │
+│                    @kiss/vite (核心插件)                      │
 │                                                             │
-│  ┌─ configureServer ───────────────────────────────────┐   │
-│  │  Hono app ← Vite middlewares                        │   │
-│  │                                                      │   │
-│  │  app.use('/api/*', apiMiddleware)     # API 直通    │   │
-│  │  app.use('*', pageHandler)            # 页面 SSR      │   │
-│  │    ├─ 文件路由匹配 (virtual:routes)                 │   │
-│  │    ├─ Vite SSR 加载页面组件                           │   │
-│  │    ├─ @lit-labs/ssr 渲染 → HTML                     │   │
-│  │    ├─ 收集 Island → 注入水合脚本                     │   │
-│  │    └─ 返回 Response                                  │   │
-│  └──────────────────────────────────────────────────────┘   │
+│  ┌─ configureServer ──────────────────────────────────┐  │
+│  │  Hono app ← Vite middlewares                        │  │
+│  │                                                      │  │
+│  │  app.use('/api/*', apiMiddleware)     # API 直通    │  │
+│  │  app.use('*', pageHandler)            # 页面 SSR      │  │
+│  │    ├─ 文件路由匹配 (virtual:routes)                 │  │
+│  │    ├─ Vite SSR 加载页面组件         │  │
+│  │    ├─ @lit-labs/ssr 渲染 → HTML                     │  │
+│  │    ├─ 收集 Island → 注入水合脚本          │  │
+│  │    └─ 返回 Response                                  │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                             │
-│  ┌─ resolveId + load ─────────────────────────────────┐    │
-│  │  virtual:routes  → 扫描 app/routes/ 生成路由表       │    │
-│  │  virtual:islands → 扫描 app/islands/ 生成 Island 表 │    │
-│  └─────────────────────────────────────────────────────┘    │
+│  ┌─ resolveId + load ──────────────────────────┐   │
+│  │  virtual:routes  → 扫描 app/routes/ 生成路由表       │   │
+│  │  virtual:islands → 扫描 app/islands/ 生成 Island 表   │   │
+│  └────────────────────────────────────────────────────┘   │
 │                                                             │
-│  ┌─ transform ────────────────────────────────────────┐    │
-│  │  Island 组件 AST 标记 (__island, __tagName)          │    │
-│  │  客户端入口代码自动生成                               │    │
-│  └─────────────────────────────────────────────────────┘    │
+│  ┌─ transform ───────────────────────────────┐   │
+│  │  Island 组件 AST 标记 (__island, __tagName)          │   │
+│  │  客户端入口代码自动生成                │   │
+│  └────────────────────────────────────────────┘   │
 │                                                             │
-│  ┌─ build ───────────────────────────────────────────┐     │
-│  │  Step 1: build({ ssr: true })        服务端构建     │     │
-│  │  Step 2: build({ input: client.ts })  客户端构建     │     │
-│  └───────────────────────────────────────────────────┘     │
+│  ┌─ build ─────────────────────────────────┐   │
+│  │  Step 1: 服务端构建 (ssr: true)    │   │
+│  │  Step 2: 客户端构建 (Islands only) │   │
+│  └────────────────────────────────────────────┘   │
 │                                                             │
-│  ┌─ transformIndexHtml ─────────────────────────────┐     │
-│  │  注入 Island 水合脚本、样式链接、meta 标签           │     │
-│  └──────────────────────────────────────────────────┘     │
+│  ┌─ transformIndexHtml ────────────────────────┐   │
+│  │  注入 Island 水合脚本、样式链接           │   │
+│  └────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -98,18 +98,25 @@ flowchart LR
     API_H --> Res
 ```
 
+**Dev Mode：**
+```
+Request → Vite Dev Server → Hono 中间件 → 文件路由匹配
+  → Vite SSR (ssrLoadModule) → @lit-labs/ssr 渲染 Lit 组件
+  → HTML + Declarative Shadow DOM → 注入 Island 水合脚本 → Response
+```
+
 ### 2.2 构建模式数据流
 
 ```mermaid
 flowchart TB
     subgraph Build["📦 Vite Build"]
         SB["Step 1: 服务端构建<br/>ssr: true"]
-        CB["Step 2: 客户端构建<br/>仅 Islands + 入口"]
+        CB["Step 2: 客户端构建<br/>仅 Islands"]
     end
 
     subgraph Output["产物"]
         SBundle["服务端 Bundle<br/>(SSR Entry)"]
-        CBundle["客户端 Bundle<br/>(Island JS only)"]
+        CBundle["客户端 Bundle<br/>(Island JS)"]
     end
 
     subgraph Runtime["运行时"]
@@ -123,7 +130,16 @@ flowchart TB
     Edge -->|"部署"| SBundle
     Node -->|"运行"| SBundle
     Browser -->|"加载"| CBundle
-    Browser -->|"渲染"| StaticHTML["预渲染 HTML"]
+```
+
+**Build Mode：**
+```
+Vite Build → Step 1: 服务端构建 (ssr: true)
+           → Step 2: 客户端构建 (仅 Islands + 入口)
+
+Runtime：
+  CF Workers / Deno / Bun → 服务端产物
+  Browser → 客户端产物（仅 Island JS）
 ```
 
 ---
@@ -155,11 +171,11 @@ flowchart TD
 ### 3.2 各层级输出对比
 
 | 层级 | 首页 JS | 交互能力 | 适用场景 |
-|------|---------|----------|----------|
+|-------|---------|----------|----------|
 | Level 0 | **0 KB** | 无（纯静态） | 博客文章、文档页、SEO 关键页 |
-| Level 1 | **~6KB** | Island 内部交互 | 大部分 Web 应用 |
-| Level 2 | **~10KB+** | SPA 导航 + 预加载 | 后台管理、仪表盘 |
-| Level 3 | **~12KB+** | 实时推送 | 协作工具、聊天 |
+| Level 1 | **~6 KB** | Island 内部交互 | 大部分 Web 应用 |
+| Level 2 | **~10 KB+** | SPA 导航 + 预加载 | 后台管理、仪表盘 |
+| Level 3 | **~12 KB+** | 实时推送 | 协作工具、聊天 |
 | Level 4 | **全量** | 纯 CSR | 复杂表单、富编辑器 |
 
 ---
@@ -170,14 +186,14 @@ flowchart TD
 
 ```mermaid
 flowchart TB
-    subgraph Root["framework/"]
+    subgraph Root["kiss/"]
         WS["deno.json"]
         PKG["package.json"]
         
         subgraph Packages["packages/"]
-            VP["@hvl/vite<br/>核心插件包"]
-            RP["@hvl/rpc<br/>RPC 客户端包"]
-            CR["create-hvl<br/>脚手架工具"]
+            VP["@kiss/vite<br/>核心插件包"]
+            RP["@kiss/rpc<br/>RPC 客户端包"]
+            CR["create-kiss<br/>脚手架工具"]
         end
         
         subgraph Examples["examples/"]
@@ -187,32 +203,30 @@ flowchart TB
         end
     end
 
-    RP -->|"依赖 hc() 类型推断"| VP
+    RP -->|"依赖 hc()"| VP
     CR -->|"模板使用"| VP
     CR -->|"模板使用"| RP
     BL -->|"使用"| VP
     BL -->|"使用"| RP
     DS -->|"使用"| VP
-    DS -->|"使用"| RP
     TA -->|"使用"| VP
-    TA -->|"使用"| RP
 ```
 
-### 4.2 `@hvl/vite` 内部模块依赖
+### 4.2 `@kiss/vite` 内部模块依赖
 
 ```
-index.ts              ← 插件入口，导出 framework()
-  ├── dev-server.ts   ← configureServer + virtual modules + Hono 注入
+index.ts              ← 插件入口，导出 kiss()
+  ├── dev-server.ts   ← configureServer：Hono 中间件注入
   │     ├── hono-app.ts       ← Hono 应用创建与中间件注册
-  │     ├── route-scanner.ts  ← resolveId/load：virtual:routes + virtual:islands
+  │     ├── route-scanner.ts  ← resolveId/load：virtual:routes
   │     └── ssr-handler.ts    ← Vite SSR 加载 + Lit 渲染协调
-  │           └── context.ts  ← 请求上下文（SsrContext）
-  ├── island-transform.ts     ← transform：Island AST 检测 + __island/__tagName 标记
+  ├── island-transform.ts     ← transform：Island AST 检测 + 标记
   ├── island-extractor.ts     ← 构建时 Island 依赖分析与映射表生成
-  ├── html-template.ts        ← transformIndexHtml：preload/meta/hydration 注入
-  ├── build.ts                ← 双端构建（SSR + Client），合并了 build-ssr + build-client
-  ├── errors.ts               ← 类型化错误层级（HvlError 及其子类）
-  └── types.ts                ← 公共类型定义 + re-export SsrContext from context.ts
+  ├── build.ts               ← 双端构建（SSR + Client）
+  ├── html-template.ts        ← transformIndexHtml：HTML 文档模板
+  ├── context.ts              ← 请求上下文（SsrContext）
+  ├── errors.ts              ← 类型化错误层级
+  └── types.ts                ← 公共类型定义
 ```
 
 ---
@@ -276,36 +290,34 @@ sequenceDiagram
 ### 6.1 Island 工作原理
 
 ```
-┌─────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────┐
 │                    SSR 输出的 HTML                       │
 │                                                          │
 │  <main>                                                  │
-│    <article>                                             │
-│      <h1>Hello World</h1>                                │
+│    <h1>Hello World</h1>                                │
 │      <p>这是纯静态内容，不包含任何 JS</p>                  │
-│    </article>                                            │
+│  </main>                                            │
 │                                                          │
-│    <my-counter>                                           │
+│  <my-counter>                                           │
 │      <template shadowroot="open">                        │
 │        <style>/* scoped styles */</style>                │
 │        <button>-</button><span>0</span><button>+</button> │
 │      </template>                                         │
-│      <!-- Declarative Shadow DOM：浏览器原生渲染 -->       │
-│    </my-counter>                                          │
-│  </main>                                                 │
+│      <!-- Declarative Shadow DOM ：浏览器原生渲染 -->       │
+│  </my-counter>                                          │
 │                                                          │
 │  <script type="module" data-islands>                      │
-│    import { defineIsland } from '/@hvl/hydrate'           │
-│    defineIsland('my-counter', () => import('/islands/counter.ts'))
+│    import { defineIsland } from '/@kiss/hydrate'           │
+│    defineIsland('my-counter', () => import('/islands/counter.ts')) │
 │  </script>                                                │
-└─────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
+```
 
-关键点：
+**关键点：**
 1. 非 Island 内容 = 纯 HTML，无任何 JS 依赖
 2. Island = Declarative Shadow DOM，浏览器直接渲染样式和结构
 3. 水合脚本仅在检测到 Island 时才执行
 4. 每个 Island 的 JS 独立下载、独立注册、独立水合
-```
 
 ### 6.2 Island vs Component 对比
 
@@ -351,11 +363,6 @@ flowchart LR
     ClientBundle --> CF
     ClientBundle --> Deno
     ClientBundle --> Bun
-    ClientBundle --> Node
-
-    style Source fill:#1565C0,color:#fff
-    style Build fill:#2E7D32,color:#fff
-    style Deploy fill:#F57C00,color:#fff
 ```
 
 **边缘优先策略**：
@@ -375,7 +382,7 @@ flowchart LR
         AppType["export type AppType<br/>= typeof routes"]
     end
 
-    subgraph RPC_Package["@hvl/rpc"]
+    subgraph RPC_Package["@kiss/rpc"]
         HC["hc&lt;AppType&gt;()<br/>类型封装"]
         Infer["InferRequest/ResponseType<br/>工具类型"]
         Controller["Lit ReactiveController<br/>集成"]

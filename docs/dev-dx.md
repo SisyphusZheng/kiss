@@ -1,4 +1,4 @@
-# HVL 开发者体验
+# KISS 开发者体验
 
 > CLI 设计、dev 模式体验、调试工具、错误提示、DX 约定
 
@@ -19,19 +19,19 @@
 
 ## 2. CLI 设计
 
-### 2.1 create-hvl
+### 2.1 create-kiss
 
 ```bash
 # 交互式创建
-deno run -A npm:create-hvl my-app
+deno run -A npm:create-kiss my-app
 
 # 指定模板
-deno run -A npm:create-hvl my-app --template minimal    # 纯 SSR
-deno run -A npm:create-hvl my-app --template standard   # SSR + Islands（默认）
-deno run -A npm:create-hvl my-app --template full       # 全功能
+deno run -A npm:create-kiss my-app --template minimal    # 纯 SSR
+deno run -A npm:create-kiss my-app --template standard   # SSR + Islands（默认）
+deno run -A npm:create-kiss my-app --template full       # 全功能
 
 # 静默创建（CI 用）
-deno run -A npm:create-hvl my-app --template standard --yes
+deno run -A npm:create-kiss my-app --template standard --yes
 ```
 
 ### 2.2 开发命令
@@ -69,7 +69,7 @@ deno task fmt
 ```
   ╭──────────────────────────────────────╮
   │                                      │
-  │   HVL dev server running             │
+  │   KISS dev server running             │
   │                                      │
   │   ➜  Local:   http://localhost:3000  │
   │   ➜  Network: http://192.168.1.5:3000│
@@ -93,20 +93,20 @@ deno task fmt
 ### 3.2 请求日志
 
 ```
-[HVL] GET  /              12ms
-[HVL] GET  /about          8ms
-[HVL] GET  /posts/123     23ms  (my-counter, theme-toggle)
-[HVL] POST /api/posts      5ms  → 201 Created
-[HVL] GET  /api/posts/abc  3ms  → 404 Not Found
+[KISS] GET  /              12ms
+[KISS] GET  /about          8ms
+[KISS] GET  /posts/123     23ms  (my-counter, theme-toggle)
+[KISS] POST /api/posts      5ms  → 201 Created
+[KISS] GET  /api/posts/abc  3ms  → 404 Not Found
 ```
 
 ### 3.3 文件变更反馈
 
 ```
-[HVL] ↻ Route changed: app/routes/about.ts → reloaded
-[HVL] ↻ Island changed: app/islands/counter.ts → HMR updated
-[HVL] ↻ API changed: app/routes/api/posts.ts → reloaded
-[HVL] ✗ Route error: app/routes/broken.ts
+[KISS] ↻ Route changed: app/routes/about.ts → reloaded
+[KISS] ↻ Island changed: app/islands/counter.ts → HMR updated
+[KISS] ↻ API changed: app/routes/api/posts.ts → reloaded
+[KISS] ✗ Route error: app/routes/broken.ts
        TypeError: Cannot read properties of undefined
        at line 12, column 5
 ```
@@ -132,8 +132,8 @@ deno task fmt
 │                                                    │
 │  Stack:                                            │
 │    at render (app/routes/dashboard.ts:12:5)        │
-│    at handleSSR (@hvl/vite:45:8)                   │
-│    at processRequest (@hvl/vite:28:4)              │
+│    at handleSSR (@kiss/vite:45:8)                   │
+│    at processRequest (@kiss/vite:28:4)              │
 │                                                    │
 │  [Open in Editor]                                  │
 └──────────────────────────────────────────────────┘
@@ -186,7 +186,7 @@ deno task fmt
 
 ```typescript
 // vite.config.ts
-framework({
+kiss({
   dev: {
     openInEditor: true,  // 默认启用
     editor: 'vscode',    // 'vscode' | 'cursor' | 'webstorm'
@@ -208,9 +208,9 @@ code --goto app/routes/dashboard.ts:12:5
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["@hvl/vite/client"],   // 框架类型
+    "types": ["@kiss/vite/client"],   // 框架类型
     "paths": {
-      "#imports": ["./app/.hvl/imports"]  // 自动导入
+      "#imports": ["./app/.kiss/imports"]  // 自动导入
     }
   }
 }
@@ -219,8 +219,8 @@ code --goto app/routes/dashboard.ts:12:5
 ### 5.3 IDE 类型提示
 
 ```typescript
-// 框架生成的 .hvl/imports.d.ts
-// 提供路由、Island、组件的自动补全
+// 框架生成的 .kiss/imports.d.ts
+// 提供路由、Island、组件的自动补全：
 
 declare module '#imports' {
   export { default as Counter } from '../islands/counter'
@@ -233,9 +233,9 @@ declare module '#imports' {
 
 ## 6. 调试工具
 
-### 6.1 /__hvl 调试端点
+### 6.1 /__kiss 调试端点
 
-开发模式下访问 `http://localhost:3000/__hvl` 获取框架状态：
+开发模式下访问 `http://localhost:3000/__kiss` 获取框架状态：
 
 ```json
 {

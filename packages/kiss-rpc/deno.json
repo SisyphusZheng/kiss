@@ -1,0 +1,16 @@
+{
+  "name": "@kiss/rpc",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "tasks": {
+    "build": "deno run -A npm:vite build --config vite.config.build.ts",
+    "dev": "deno run -A npm:vite build --config vite.config.build.ts --watch"
+  },
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

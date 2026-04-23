@@ -1,4 +1,4 @@
-# HVL 安全与中间件栈
+# KISS 安全与中间件栈
 
 > 安全头、CORS、限流、输入验证、中间件链顺序
 
@@ -61,7 +61,7 @@ app.use('*', secureHeaders())
 
 ```typescript
 // 用户可自定义 CSP（覆盖默认值）
-framework({
+kiss({
   middleware: {
     securityHeaders: true,
     csp: {
@@ -188,7 +188,7 @@ app.use('/api/*', async (c, next) => {
   // 如果路由使用了 zValidator，验证失败自动拦截
   // 如果路由没有验证，开发模式输出警告
   if (isDev && !c.req.route.includes('zValidator')) {
-    console.warn(`[HVL] Route ${c.req.path} has no input validation`)
+    console.warn(`[KISS] Route ${c.req.path} has no input validation`)
   }
 })
 ```
