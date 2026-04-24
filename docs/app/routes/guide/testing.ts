@@ -83,8 +83,8 @@ jobs:
           </ul>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/security-middleware">&larr; Security &amp; Middleware</wa-button>
-            <wa-button href="/kiss/guide/api-design">API Design &rarr;</wa-button>
+            <a href="/kiss/guide/security-middleware" class="nav-link">&larr; Security &amp; Middleware</a>
+            <a href="/kiss/guide/api-design" class="nav-link">API Design &rarr;</a>
           </div>
         </div>
       </app-layout>

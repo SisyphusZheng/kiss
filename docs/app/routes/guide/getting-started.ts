@@ -78,8 +78,8 @@ export const tagName = 'home-page'</code></pre>
           </div>
 
           <div class="nav-row">
-            <span></span>
-            <wa-button href="/kiss/guide/routing">Routing Guide &rarr;</wa-button>
+            
+            <a href="/kiss/guide/routing" class="nav-link">Routing Guide &rarr;</a>
           </div>
         </div>
       </app-layout>

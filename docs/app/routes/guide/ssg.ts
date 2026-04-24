@@ -62,8 +62,8 @@ export default defineConfig({
 # Output in dist/ — deploy to any static host</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/islands">&larr; Islands</wa-button>
-            <wa-button href="/kiss/guide/api-routes">API Routes &rarr;</wa-button>
+            <a href="/kiss/guide/islands" class="nav-link">&larr; Islands</a>
+            <a href="/kiss/guide/api-routes" class="nav-link">API Routes &rarr;</a>
           </div>
         </div>
       </app-layout>

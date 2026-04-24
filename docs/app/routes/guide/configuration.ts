@@ -79,8 +79,8 @@ export default defineConfig({
   vite.config.ts</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/architecture">&larr; Architecture</wa-button>
-            <wa-button href="/kiss/guide/deployment">Deployment &rarr;</wa-button>
+            <a href="/kiss/guide/architecture" class="nav-link">&larr; Architecture</a>
+            <a href="/kiss/guide/deployment" class="nav-link">Deployment &rarr;</a>
           </div>
         </div>
       </app-layout>

@@ -1,8 +1,11 @@
 import { LitElement, html, css } from '@kissjs/core'
+import './header.js'
+import './sidebar.js'
+import './footer.js'
 
 /**
  * Three-column doc layout (Fresh-style):
- * [Sidebar 240px] | [Content flex-1] | [TOC ~180px]
+ * [Sidebar 240px] | [Content flex-1]
  *
  * Homepage uses <app-layout home> for full-width centered layout.
  */

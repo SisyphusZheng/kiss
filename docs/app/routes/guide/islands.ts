@@ -81,8 +81,8 @@ export class CounterIsland extends LitElement {
           <p>Use it in any route — it gets hydrated on the client automatically.</p>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/routing">&larr; Routing</wa-button>
-            <wa-button href="/kiss/guide/ssg">SSG Guide &rarr;</wa-button>
+            <a href="/kiss/guide/routing" class="nav-link">&larr; Routing</a>
+            <a href="/kiss/guide/ssg" class="nav-link">SSG Guide &rarr;</a>
           </div>
         </div>
       </app-layout>

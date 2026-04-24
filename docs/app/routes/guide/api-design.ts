@@ -91,8 +91,8 @@ app.post('/', zValidator('json', schema), async (c) => {
 }</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/testing">&larr; Testing</wa-button>
-            <wa-button href="/kiss/guide/design-philosophy">Design Philosophy &rarr;</wa-button>
+            <a href="/kiss/guide/testing" class="nav-link">&larr; Testing</a>
+            <a href="/kiss/guide/design-philosophy" class="nav-link">Design Philosophy &rarr;</a>
           </div>
         </div>
       </app-layout>

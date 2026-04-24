@@ -64,8 +64,8 @@ export default defineConfig({
           <p>At build time, <span class="inline-code">island-transform</span> marks island modules. <span class="inline-code">island-extractor</span> builds a dependency map. The HTML template plugin injects a hydration script that lazy-loads only the island JS bundles the page needs.</p>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/design-philosophy">&larr; Philosophy</wa-button>
-            <wa-button href="/kiss/guide/configuration">Configuration &rarr;</wa-button>
+            <a href="/kiss/guide/design-philosophy" class="nav-link">&larr; Philosophy</a>
+            <a href="/kiss/guide/configuration" class="nav-link">Configuration &rarr;</a>
           </div>
         </div>
       </app-layout>

@@ -83,8 +83,8 @@ export default defineConfig({
           </ul>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/error-handling">&larr; Error Handling</wa-button>
-            <wa-button href="/kiss/guide/testing">Testing &rarr;</wa-button>
+            <a href="/kiss/guide/error-handling" class="nav-link">&larr; Error Handling</a>
+            <a href="/kiss/guide/testing" class="nav-link">Testing &rarr;</a>
           </div>
         </div>
       </app-layout>

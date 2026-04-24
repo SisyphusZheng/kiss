@@ -88,8 +88,8 @@ app.get('/api/posts/:id', async (c) => {
           </table>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/api-routes">&larr; API Routes</wa-button>
-            <wa-button href="/kiss/guide/security-middleware">Security &amp; Middleware &rarr;</wa-button>
+            <a href="/kiss/guide/api-routes" class="nav-link">&larr; API Routes</a>
+            <a href="/kiss/guide/security-middleware" class="nav-link">Security &amp; Middleware &rarr;</a>
           </div>
         </div>
       </app-layout>

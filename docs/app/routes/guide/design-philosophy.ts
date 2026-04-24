@@ -107,8 +107,8 @@ export class DesignPhilosophyPage extends LitElement {
           </table>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/getting-started">&larr; Getting Started</wa-button>
-            <wa-button href="/kiss/guide/architecture">Architecture &rarr;</wa-button>
+            <a href="/kiss/guide/getting-started" class="nav-link">&larr; Getting Started</a>
+            <a href="/kiss/guide/architecture" class="nav-link">Architecture &rarr;</a>
           </div>
         </div>
       </app-layout>

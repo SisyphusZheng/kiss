@@ -63,8 +63,8 @@ export class RoutingGuidePage extends LitElement {
           </table>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/getting-started">&larr; Getting Started</wa-button>
-            <wa-button href="/kiss/guide/islands">Islands Guide &rarr;</wa-button>
+            <a href="/kiss/guide/getting-started" class="nav-link">&larr; Getting Started</a>
+            <a href="/kiss/guide/islands" class="nav-link">Islands Guide &rarr;</a>
           </div>
         </div>
       </app-layout>

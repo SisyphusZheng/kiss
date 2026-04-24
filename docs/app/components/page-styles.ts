@@ -187,16 +187,26 @@ export const pageStyles = css`
     border-top: 1px solid #1a1a1a;
     display: flex;
     justify-content: space-between;
+    gap: 1rem;
   }
 
-  .nav-row a {
-    color: #666;
-    text-decoration: none;
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
     font-size: 0.8125rem;
-    transition: color 0.15s;
+    font-weight: 500;
+    color: #888;
+    text-decoration: none;
+    border: 1px solid #1a1a1a;
+    border-radius: 2px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    letter-spacing: 0.01em;
   }
 
-  .nav-row a:hover {
+  .nav-link:hover {
     color: #fff;
+    border-color: #333;
+    background: #111;
   }
 `

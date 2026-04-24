@@ -82,8 +82,8 @@ class MyIsland extends LitElement {
 }</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/ssg">&larr; SSG</wa-button>
-            <wa-button href="/kiss/guide/design-philosophy">Philosophy &rarr;</wa-button>
+            <a href="/kiss/guide/ssg" class="nav-link">&larr; SSG</a>
+            <a href="/kiss/guide/design-philosophy" class="nav-link">Philosophy &rarr;</a>
           </div>
         </div>
       </app-layout>

@@ -79,8 +79,8 @@ app.get('/*', serveStatic({ root: './dist/client' }))
 Deno.serve(app.fetch)</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/configuration">&larr; Configuration</wa-button>
-            <wa-button href="/kiss/styling/web-awesome">Components &rarr;</wa-button>
+            <a href="/kiss/guide/configuration" class="nav-link">&larr; Configuration</a>
+            <a href="/kiss/styling/web-awesome" class="nav-link">Components &rarr;</a>
           </div>
         </div>
       </app-layout>

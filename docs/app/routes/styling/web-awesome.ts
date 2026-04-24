@@ -84,8 +84,8 @@ export default defineConfig({
 })</code></pre>
 
           <div class="nav-row">
-            <wa-button href="/kiss/guide/deployment">&larr; Deployment</wa-button>
-            <wa-button href="https://webawesome.com/docs" target="_blank">Web Awesome Docs &rarr;</wa-button>
+            <a href="/kiss/guide/deployment" class="nav-link">&larr; Deployment</a>
+            <a href="https://webawesome.com/docs" class="nav-link">Web Awesome Docs &rarr;</a>
           </div>
         </div>
       </app-layout>
