@@ -8,7 +8,7 @@
  * Also integration-tests that generateHonoEntryCode still works.
  */
 
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert'
+import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0'
 import {
   buildEntryDescriptor,
   renderEntry,

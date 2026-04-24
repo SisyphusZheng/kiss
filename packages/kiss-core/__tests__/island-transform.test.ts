@@ -1,8 +1,10 @@
 /**
  * @kissjs/core - island-transform.ts tests (Deno)
  */
-import { assertEquals, assertNotEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@^1.0.0'
 import { islandTransformPlugin, generateHydrationScript } from '../src/island-transform.ts'
+
+type TransformFn = (code: string, id: string) => string | null
 
 Deno.test('island-transform - islandTransformPlugin', async (t) => {
   const plugin = islandTransformPlugin('app/islands')
@@ -13,28 +15,28 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
   })
 
   await t.step('injects __island marker and __tagName for island files', () => {
-    const transform = plugin.transform as Function
+    const transform = plugin.transform as unknown as TransformFn
     const result = transform(
       'export default class MyCounter extends LitElement {}',
       '/project/app/islands/my-counter.ts'
     )
-    assertEquals(result.includes('export const __island = true'), true)
-    assertEquals(result.includes("export const __tagName = 'my-counter'"), true)
+    assertEquals(result!.includes('export const __island = true'), true)
+    assertEquals(result!.includes("export const __tagName = 'my-counter'"), true)
   })
 
   await t.step('does NOT inject CJS-style registration code', () => {
-    const transform = plugin.transform as Function
+    const transform = plugin.transform as unknown as TransformFn
     const result = transform(
       'export default class MyCounter extends LitElement {}',
       '/project/app/islands/my-counter.ts'
     )
     // Should NOT contain the old CJS patterns
-    assertEquals(result.includes('exports.default'), false)
-    assertEquals(result.includes('module.exports'), false)
+    assertEquals(result!.includes('exports.default'), false)
+    assertEquals(result!.includes('module.exports'), false)
   })
 
   await t.step('skips non-island files', () => {
-    const transform = plugin.transform as Function
+    const transform = plugin.transform as unknown as TransformFn
     const result = transform(
       'export default class Header extends LitElement {}',
       '/project/app/components/header.ts'
@@ -43,7 +45,7 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
   })
 
   await t.step('warns for tag names without hyphen', () => {
-    const transform = plugin.transform as Function
+    const transform = plugin.transform as unknown as TransformFn
     // When called with proper context, it returns null for no-hyphen names
     const result = transform.call(
       { warn: () => {} },

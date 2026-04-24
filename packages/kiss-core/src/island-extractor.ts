@@ -14,9 +14,9 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite'
-import type { FrameworkOptions, IslandMeta } from './types.js'
+import type { FrameworkOptions } from './types.js'
 import { scanIslands, fileToTagName } from './route-scanner.js'
-import { join, resolve, relative } from 'node:path'
+import { join } from 'node:path'
 
 /** Island chunk mapping entry */
 export interface IslandChunkMap {
@@ -37,7 +37,7 @@ export interface IslandChunkMap {
 export function islandExtractorPlugin(options: FrameworkOptions = {}): Plugin {
   const islandsDir = options.islandsDir || 'app/islands'
   let config: ResolvedConfig
-  let islandMap: Map<string, IslandChunkMap> = new Map()
+  const islandMap: Map<string, IslandChunkMap> = new Map()
 
   return {
     name: 'kiss:island-extractor',
@@ -98,7 +98,7 @@ export function islandExtractorPlugin(options: FrameworkOptions = {}): Plugin {
  */
 function generateIslandRegistry(
   entries: IslandChunkMap[],
-  islandsDir: string
+  _islandsDir: string
 ): string {
   const imports = entries
     .map((entry, i) => {

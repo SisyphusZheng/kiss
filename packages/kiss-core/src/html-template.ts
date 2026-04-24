@@ -20,7 +20,7 @@ declare module 'vite' {
 }
 
 /** Vite plugin for HTML transform — injects preload hints, meta tags, and island hydration scripts */
-export function htmlTemplatePlugin(options: FrameworkOptions = {}): Plugin {
+export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
   return {
     name: 'kiss:html-template',
 
@@ -28,7 +28,7 @@ export function htmlTemplatePlugin(options: FrameworkOptions = {}): Plugin {
       // Run after Vite's built-in HTML transforms
       order: 'post',
 
-      handler(html, ctx) {
+      handler(_html, ctx) {
         const tags: HtmlTagDescriptor[] = []
 
         // Get the route-specific data from server context if available

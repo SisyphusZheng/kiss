@@ -27,6 +27,7 @@ import type { FrameworkOptions, RouteEntry } from './types.js'
 
 import { writeFileSync, mkdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import process from 'node:process'
 
 import { KissBuildContext } from './build-context.js'
 import { islandTransformPlugin } from './island-transform.js'
@@ -262,19 +263,19 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           const nodePath = await import('node:path')
 
           const fsModule = {
-            writeFile: async (path: string, data: string | Uint8Array) => {
+            writeFile: (path: string, data: string | Uint8Array) => {
               const dir = nodePath.dirname(path)
               if (!nodeFs.existsSync(dir)) {
                 nodeFs.mkdirSync(dir, { recursive: true })
               }
               nodeFs.writeFileSync(path, data)
             },
-            mkdir: async (path: string) => {
+            mkdir: (path: string) => {
               if (!nodeFs.existsSync(path)) {
                 nodeFs.mkdirSync(path, { recursive: true })
               }
             },
-            isDirectory: async (path: string) => {
+            isDirectory: (path: string) => {
               try {
                 return nodeFs.statSync(path).isDirectory()
               } catch {

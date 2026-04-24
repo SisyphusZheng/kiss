@@ -1,9 +1,8 @@
 /**
  * @kissjs/core - ssr-handler.ts tests (Deno)
  */
-import { assertEquals, assertNotEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@^1.0.0'
 import { wrapInDocument, renderSsrError, collectIslands } from '../src/ssr-handler.ts'
-import type { RouteEntry } from '../src/types.ts'
 
 Deno.test('ssr-handler - wrapInDocument', async (t) => {
   await t.step('wraps body in full HTML document', () => {

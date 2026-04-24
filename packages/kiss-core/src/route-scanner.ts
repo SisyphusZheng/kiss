@@ -238,7 +238,6 @@ export function generateIslandsModule(
 ): string {
   const imports = islandFiles
     .map((f, i) => {
-      const tagName = fileToTagName(f)
       return `import * as Island_${i} from '/${islandsDir}/${f}';`
     })
     .join('\n')

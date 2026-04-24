@@ -1,7 +1,7 @@
 /**
  * @kissjs/core - errors.ts tests (Deno)
  */
-import { assertEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@^1.0.0'
 import {
   KissError,
   NotFoundError,

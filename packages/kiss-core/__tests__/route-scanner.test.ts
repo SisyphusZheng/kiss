@@ -1,8 +1,8 @@
 /**
  * @kissjs/core - route-scanner.ts tests (Deno)
  */
-import { assertEquals } from 'jsr:@std/assert'
-import { join } from 'jsr:@std/path'
+import { assertEquals } from 'jsr:@std/assert@^1.0.0'
+import { join } from 'jsr:@std/path@^1.0.0'
 import { scanRoutes, scanIslands, generateRoutesModule, generateIslandsModule, fileToTagName } from '../src/route-scanner.ts'
 
 const FIXTURES_DIR = join(Deno.cwd(), 'packages/vite/__test_fixtures__')

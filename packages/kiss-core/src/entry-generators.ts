@@ -5,7 +5,7 @@
  */
 
 /** Generate the SSR entry point file content (when no custom server.ts is provided) */
-export function generateServerEntry(routesDir: string): string {
+export function generateServerEntry(_routesDir: string): string {
   return `// KISS Server Entry (auto-generated)
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
@@ -31,7 +31,6 @@ export function generateClientEntry(islandsDir: string, islandFiles: string[]): 
 
   const imports = islandFiles
     .map((f, i) => {
-      const tagName = f.replace(/\.[^.]+$/, '')
       return `import Island_${i} from './${islandsDir}/${f}';`
     })
     .join('\n')

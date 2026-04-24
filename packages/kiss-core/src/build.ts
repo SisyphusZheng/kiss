@@ -18,7 +18,6 @@ import type { KissBuildContext } from './build-context.js'
 import { build as viteBuild, type InlineConfig } from 'vite'
 import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
-import { generateServerEntry, generateClientEntry } from './entry-generators.js'
 
 /** SSR noExternal packages — Lit must be bundled into SSR output */
 const DEFAULT_SSR_NO_EXTERNAL = [

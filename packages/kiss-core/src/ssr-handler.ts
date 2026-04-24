@@ -9,7 +9,6 @@
 
 import type { ViteDevServer } from 'vite'
 import type { RouteEntry, IslandMeta } from './types.js'
-import { fileToTagName } from './route-scanner.js'
 
 // DOM shim is NOT imported here — it's the caller's responsibility.
 // SSG: injected by generateHonoEntryCode() when ssg: true
@@ -47,7 +46,7 @@ export function collectIslands(
 export async function renderPageToString(
   vite: ViteDevServer,
   route: RouteEntry,
-  request: Request,
+  _request: Request,
   options: { routesDir?: string; islandsDir?: string; componentsDir?: string } = {}
 ): Promise<{ html: string; islands: IslandMeta[] }> {
   const { routesDir = 'app/routes' } = options
@@ -78,9 +77,9 @@ export async function renderPageToString(
   const renderedHtml = await collectResult(ssrResult)
 
   // Collect islands from rendered HTML
-  const knownIslands = new Map<string, string>()
   // Islands are collected by the island-extractor plugin at build time
   // For dev mode, we return empty islands array
+  const _knownIslands = new Map<string, string>()
   const islands: IslandMeta[] = []
 
   return { html: renderedHtml, islands }
@@ -147,10 +146,9 @@ export function wrapInDocument(
     meta?: { description?: string }
     devMode?: boolean
     routeModulePath?: string
-    componentsDir?: string
   } = {}
 ): string {
-  const { title = 'KISS App', lang = 'en', hydrateScript = '', meta, devMode = false, routeModulePath, componentsDir } = options
+  const { title = 'KISS App', lang = 'en', hydrateScript = '', meta, devMode = false, routeModulePath } = options
   const metaTags: string[] = []
   if (meta?.description) {
     metaTags.push(`  <meta name="description" content="${meta.description}">`)

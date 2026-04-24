@@ -4,7 +4,7 @@
  * Tests the pure functions from entry-generators.ts (no Vite dependency).
  * buildPlugin itself requires Vite runtime and is better suited for E2E tests.
  */
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert'
+import { assertStringIncludes } from 'jsr:@std/assert@^1.0.0'
 import { generateServerEntry, generateClientEntry } from '../src/entry-generators.ts'
 
 Deno.test('build - generateServerEntry', async (t) => {

@@ -1,7 +1,7 @@
 /**
  * @kissjs/core - context.ts tests (Deno)
  */
-import { assertEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@^1.0.0'
 import { extractParams, parseQuery, createSsrContext } from '../src/context.ts'
 import type { RouteEntry } from '../src/types.ts'
 
