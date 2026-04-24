@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - Public types
+ * @kissjs/core - Public types
  */
 
 import type { Plugin } from 'vite'
@@ -15,6 +15,14 @@ export interface FrameworkOptions {
 
   /** Extra HTML to inject into <head> (e.g. CDN links) — auto-generated when ui.cdn is true */
   headExtras?: string
+
+  /** Document <html> attributes */
+  html?: {
+    /** Language attribute (default: 'en') */
+    lang?: string
+    /** Document title (default: 'KISS App') */
+    title?: string
+  }
 
   /** UI framework configuration (WebAwesome CDN injection) */
   ui?: {
@@ -68,6 +76,9 @@ export interface FrameworkOptions {
   middleware?: {
     /** Enable CORS (default: true) */
     cors?: boolean
+    /** Allowed CORS origins. Can be a string, array, or a function (origin: string) => string | undefined.
+     * Defaults to allowing localhost + same-origin. Uses Web Standards — no process.env. */
+    corsOrigin?: string | string[] | ((origin: string) => string | undefined)
     /** Enable request ID (default: true) */
     requestId?: boolean
     /** Enable structured logger (default: true) */

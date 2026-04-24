@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - Error classes
+ * @kissjs/core - Error classes
  * Type-safe error hierarchy for the KISS framework.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - context.ts tests (Deno)
+ * @kissjs/core - context.ts tests (Deno)
  */
 import { assertEquals } from 'jsr:@std/assert'
 import { extractParams, parseQuery, createSsrContext } from '../src/context.ts'

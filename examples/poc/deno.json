@@ -14,8 +14,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "types": ["@kiss/vite/client"]
+    "noEmit": true
   },
   "include": ["app"],
   "exclude": ["node_modules", "dist"]

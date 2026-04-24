@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - ssr-handler.ts tests (Deno)
+ * @kissjs/core - ssr-handler.ts tests (Deno)
  */
 import { assertEquals, assertNotEquals } from 'jsr:@std/assert'
 import { wrapInDocument, renderSSRError, collectIslands } from '../src/ssr-handler.ts'

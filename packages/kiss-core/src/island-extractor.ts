@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - Island Extractor
+ * @kissjs/core - Island Extractor
  * Build-time analysis of island dependencies and mapping table generation.
  *
  * Purpose: During production build, analyze which island components are used

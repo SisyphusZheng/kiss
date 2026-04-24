@@ -17,6 +17,7 @@ interface MiddlewareConfig {
   requestId: boolean
   logger: boolean
   cors: boolean
+  corsOrigin?: string | string[] | ((origin: string) => string | undefined)
   securityHeaders: boolean
 }
 
@@ -35,7 +36,7 @@ interface MiddlewareConfig {
  */
 export function generateHonoEntryCode(
   routes: RouteEntry[],
-  options: { routesDir?: string; islandsDir?: string; componentsDir?: string; middleware?: FrameworkOptions['middleware']; ssg?: boolean; islandTagNames?: string[]; headExtras?: string } = {},
+  options: { routesDir?: string; islandsDir?: string; componentsDir?: string; middleware?: FrameworkOptions['middleware']; ssg?: boolean; islandTagNames?: string[]; headExtras?: string; html?: { lang?: string; title?: string } } = {},
 ): string {
   const routesDir = options.routesDir || 'app/routes'
   const isSSG = options.ssg === true
@@ -45,6 +46,7 @@ export function generateHonoEntryCode(
     requestId: options.middleware?.requestId !== false,
     logger: options.middleware?.logger !== false,
     cors: options.middleware?.cors !== false,
+    corsOrigin: options.middleware?.corsOrigin,
     securityHeaders: options.middleware?.securityHeaders !== false,
   }
 
@@ -126,10 +128,12 @@ export function generateHonoEntryCode(
   // Wrap rendered HTML in a full document + inject hydration script
   // headExtras: additional <head> content (e.g. CDN links from kissUI)
   const headExtras = options.headExtras || ''
+  const htmlLang = options.html?.lang || 'en'
+  const htmlTitle = options.html?.title || 'KISS App'
   lines.push(`function wrapDocument(body, islands) {`)
   lines.push(`  const hydrate = generateHydrationScript(islands || [])`)
   lines.push(`  const headExtras = ${JSON.stringify(headExtras)}`)
-  lines.push(`  return '<!DOCTYPE html>\\n<html lang=\"en\">\\n<head>\\n  <meta charset=\"UTF-8\">\\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\\n  <title>KISS App</title>\\n' + headExtras + '\\n</head>\\n<body>\\n' + body + '\\n' + hydrate + '\\n</body>\\n</html>'`)
+  lines.push(`  return '<!DOCTYPE html>\\n<html lang="${htmlLang}">\\n<head>\\n  <meta charset=\"UTF-8\">\\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\\n  <title>${htmlTitle}</title>\\n' + headExtras + '\\n</head>\\n<body>\\n' + body + '\\n' + hydrate + '\\n</body>\\n</html>'`)
   lines.push(`}`)
   lines.push(``)
 
@@ -181,11 +185,24 @@ export function generateHonoEntryCode(
     lines.push(``)
   }
   if (mw.cors) {
-    lines.push(`// 3. CORS`)
-    lines.push(`app.use('*', cors({ origin: (origin) => {`)
-    lines.push(`  if (origin && /^http:\\/\\/localhost:\\d+$/.test(origin)) return origin`)
-    lines.push(`  return process.env.ORIGIN || origin`)
-    lines.push(`}, allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400 }))`)
+    lines.push(`// 3. CORS — Web Standards (no process.env)`)
+    if (mw.corsOrigin !== undefined) {
+      // User provided explicit origin config
+      if (typeof mw.corsOrigin === 'string') {
+        lines.push(`app.use('*', cors({ origin: ${JSON.stringify(mw.corsOrigin)}, allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400 }))`)
+      } else if (Array.isArray(mw.corsOrigin)) {
+        lines.push(`app.use('*', cors({ origin: ${JSON.stringify(mw.corsOrigin)}, allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400 }))`)
+      } else {
+        // Function: serialize it as a string
+        lines.push(`app.use('*', cors({ origin: ${mw.corsOrigin.toString()}, allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400 }))`)
+      }
+    } else {
+      // Default: allow localhost for dev, same-origin otherwise
+      lines.push(`app.use('*', cors({ origin: (origin) => {`)
+      lines.push(`  if (origin && /^http:\\/\\/localhost(:\\d+)?$/.test(origin)) return origin`)
+      lines.push(`  return origin`)
+      lines.push(`}, allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400 }))`)
+    }
     lines.push(``)
   }
   if (mw.securityHeaders) {
@@ -194,17 +211,19 @@ export function generateHonoEntryCode(
     lines.push(``)
   }
 
-  // --- Debug endpoint ---
-  const debugRoutes = JSON.stringify(
-    routes.filter(r => !r.special).map(r => ({ path: r.path, type: r.type })),
-  )
-  lines.push(`// Debug: GET /__kiss`)
-  lines.push(`app.get('/__kiss', (c) => {`)
-  lines.push(`  return c.json({`)
-  lines.push(`    routes: ${debugRoutes},`)
-  lines.push(`  })`)
-  lines.push(`})`)
-  lines.push(``)
+  // --- Debug endpoint (dev only, not included in SSG builds) ---
+  if (!isSSG) {
+    const debugRoutes = JSON.stringify(
+      routes.filter(r => !r.special).map(r => ({ path: r.path, type: r.type })),
+    )
+    lines.push(`// Debug (dev only): GET /__kiss`)
+    lines.push(`app.get('/__kiss', (c) => {`)
+    lines.push(`  return c.json({`)
+    lines.push(`    routes: ${debugRoutes},`)
+    lines.push(`  })`)
+    lines.push(`})`)
+    lines.push(``)
+  }
 
   // --- API routes ---
   for (const route of apiRoutes) {

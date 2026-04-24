@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - route-scanner.ts tests (Deno)
+ * @kissjs/core - route-scanner.ts tests (Deno)
  */
 import { assertEquals } from 'jsr:@std/assert'
 import { join } from 'jsr:@std/path'

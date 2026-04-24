@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - HTML Template Plugin
+ * @kissjs/core - HTML Template Plugin
  * Implements the `transformIndexHtml` Vite hook.
  *
  * Injects into the HTML document:

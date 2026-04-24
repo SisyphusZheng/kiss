@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - errors.ts tests (Deno)
+ * @kissjs/core - errors.ts tests (Deno)
  */
 import { assertEquals } from 'jsr:@std/assert'
 import {

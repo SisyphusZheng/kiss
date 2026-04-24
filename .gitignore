@@ -32,5 +32,4 @@ coverage/
 __test_fixtures__/
 
 # Framework internals
-.hvl/
 .kiss/

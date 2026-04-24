@@ -1,5 +1,5 @@
 /**
- * @kiss/core - Main entry
+ * @kissjs/core - Main entry
  *
  * KISS = 1 个 Vite 插件，连接 Hono + Lit + Vite。
  * 设计参考 honox，但渲染引擎固定为 Lit / Web Components。
@@ -115,6 +115,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       middleware:    resolvedOptions.middleware,
       islandTagNames,
       headExtras:    resolvedOptions.headExtras,
+      html:          resolvedOptions.html,
     })
   }
 
@@ -228,6 +229,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         ssg: true,  // inject DOM shim
         islandTagNames: ssgIslandTagNames,
         headExtras: resolvedOptions.headExtras,
+        html: resolvedOptions.html,
       })
 
       // Write temp entry file to project's .kiss/ directory (not tempdir).

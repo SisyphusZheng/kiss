@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - SSR Handler
+ * @kissjs/core - SSR Handler
  * Coordinates Vite SSR loading + Lit rendering + Island collection.
  *
  * Uses @lit-labs/ssr v3 to render Lit components with Declarative Shadow DOM.

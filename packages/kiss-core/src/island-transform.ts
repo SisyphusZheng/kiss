@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - Island transform plugin
+ * @kissjs/core - Island transform plugin
  * Detects island components and injects hydration markers.
  *
  * Phase 1 fix: The original CJS-style registration code
@@ -52,7 +52,7 @@ export function islandTransformPlugin(islandsDir: string): Plugin {
       // customElements.define() — no registration code here.
       // This keeps the transform lightweight and ESM-safe.
       const injected = `
-// --- KISS Island Markers (auto-injected by @kiss/vite) ---
+// --- KISS Island Markers (auto-injected by @kissjs/core) ---
 export const __island = true;
 export const __tagName = '${tagName}';
 // --- End KISS Island Markers ---

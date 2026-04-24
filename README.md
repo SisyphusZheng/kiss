@@ -11,11 +11,6 @@
 
 **K**eep **I**t **S**imple, **S**tupid — 三个 Web Standards 原生库的组合，以单一 Vite 插件形态提供全栈能力。
 
-```bash
-deno run -A npm:create-kiss my-app
-cd my-app && deno task dev
-```
-
 ## 为什么是 KISS？
 
 | 问题 | KISS 的回答 |
@@ -42,23 +37,15 @@ cd my-app && deno task dev
 
 - [Deno](https://deno.land/) 2.x+
 
-### 安装
-
-```bash
-deno run -A npm:create-kiss my-app --template standard
-cd my-app
-deno task dev
-```
-
 ### 手动集成
 
 ```bash
-deno add npm:@kiss/vite npm:hono npm:lit
+deno add jsr:@kissjs/core jsr:@kissjs/rpc
 ```
 
 ```ts
 // vite.config.ts
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kissjs/core'
 
 export default defineConfig({
   plugins: [kiss()]
@@ -80,16 +67,16 @@ my-app/
 │   └── components/       # 普通 Lit 组件（SSR only）
 │       └── header.ts
 ├── deno.json             # Deno 配置（替代 package.json）
-├── vite.config.ts        # 只需 plugins: [kiss()]
-└── tsconfig.json
+└── vite.config.ts        # 只需 plugins: [kiss()]
 ```
 
 ### 页面路由
 
 ```ts
 // app/routes/index.ts
-import { LitElement, html, css } from 'lit'
+import { LitElement, html, css } from '@kissjs/core'
 
+export const tagName = 'home-page'
 export default class HomePage extends LitElement {
   render() {
     return html`
@@ -104,7 +91,7 @@ export default class HomePage extends LitElement {
 
 ```ts
 // app/routes/api/posts.ts
-import { Hono } from 'hono'
+import { Hono } from '@kissjs/core'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 
@@ -127,7 +114,7 @@ export type AppType = typeof app
 
 ```ts
 // 在 Island 组件中
-import { hc } from '@kiss/rpc'
+import { hc } from 'hono/client'
 import type { AppType } from '../routes/api/posts'
 
 const client = hc<AppType>('/api/posts')
@@ -140,8 +127,9 @@ const res = await client.$post({ json: { title: 'Hello' } })
 
 ```ts
 // app/islands/my-counter.ts
-import { LitElement, html } from 'lit'
+import { LitElement, html } from '@kissjs/core'
 
+export const tagName = 'my-counter'
 export default class MyCounter extends LitElement {
   static properties = { count: { type: Number } }
 
@@ -162,13 +150,13 @@ export default class MyCounter extends LitElement {
 
 ## 渐进增强层级
 
-| 层级 | JS 大小 | 能力 | 触发条件 |
-|------|---------|------|----------|
-| **Level 0** | 0 KB | 纯 HTML SSR | 默认 |
-| **Level 1** | ~6 KB | Island 交互 | 有 `<island-*>` |
-| **Level 2** | ~10 KB | SPA 导航 | 可选开启 |
-| **Level 3** | ~12 KB | 实时功能 | 可选开启 |
-| **Level 4** | 全量 | 全页 CSR | 降级逃生 |
+| 层级 | JS 大小 | 能力 | 状态 |
+|------|---------|------|------|
+| **Level 0** | 0 KB | 纯 HTML SSR | ✅ 已实现 |
+| **Level 1** | ~6 KB | Island 交互 | ✅ 已实现 |
+| **Level 2** | ~10 KB | SPA 导航 | 🔲 计划中 |
+| **Level 3** | ~12 KB | 实时功能 | 🔲 计划中 |
+| **Level 4** | 全量 | 全页 CSR | 🔲 计划中 |
 
 ## 配置
 
@@ -179,7 +167,8 @@ kiss({
   islandsDir: 'app/islands',
   ssr: { preRender: false },
   island: { hydrationStrategy: 'lazy' },  // eager | lazy | idle | visible
-  dev: { port: 3000, overlay: true },
+  headExtras: '<link rel="stylesheet" href="...">', // 自定义 <head> 内容
+  ui: { cdn: true },  // 自动注入 WebAwesome CDN
   middleware: {
     cors: true,
     securityHeaders: true,
@@ -195,9 +184,18 @@ kiss({
 | `deno task dev` | 启动开发服务器 |
 | `deno task build` | 构建生产产物 |
 | `deno task test` | 运行测试 |
-| `deno task typecheck` | 类型检查 |
 | `deno task lint` | 代码检查 |
 | `deno task fmt` | 格式化代码 |
+
+## 包结构
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| [@kissjs/core](https://jsr.io/@kissjs/core) | 0.1.5 | 核心框架 — Vite 插件 + Lit/Hono re-export |
+| [@kissjs/rpc](https://jsr.io/@kissjs/rpc) | 0.1.2 | RPC 客户端 — Lit ReactiveController |
+| [@kissjs/ui](https://jsr.io/@kissjs/ui) | 0.1.2 | UI 插件 — WebAwesome CDN 注入 |
+
+> ⚠️ JSR 上仍有旧包 `@kissjs/vite` (v0.0.3) 和 `@kissjs/ssg` (v0.1.0)，这些是重命名前的历史遗留，请勿使用。
 
 ## 文档
 
@@ -217,21 +215,23 @@ kiss({
 
 ## 当前状态
 
-**Phase 1 完成** — 核心插件包可用。
+**Phase 1 完成** — 核心插件包可用，JSR 已发布。
 
-核心模块已完成 ✅：
-- Route Scanner — 文件路由扫描
+已实现 ✅：
+- Route Scanner — 文件路由扫描（含 _renderer / _middleware 支持）
 - Island Transform — AST 检测 + 水合标记
 - Island Extractor — 构建时 Island 依赖分析
 - SSR Handler — Lit 渲染 + DSD 输出
+- SSG — 静态站点生成（自研方案，替代 @hono/vite-ssg）
 - Build Plugin — 双端构建（SSR + Client）
 - HTML Template — 预加载/水合注入
 - Error Classes — 类型化错误层级
 - Context — 请求上下文（SsrContext）
-- RPC Client — 端到端类型安全
-- 10 tests / 58 steps 通过
+- RPC Client — Lit ReactiveController + loading/error 状态管理
+- UI Plugin — WebAwesome CDN 注入
+- 5 个测试文件覆盖核心模块
 
-构建：Vite library mode（纯 ESM），`@kiss/vite` 仅 3 个运行时依赖（hono, @lit-labs/ssr, lit）。
+运行时依赖（5 个）：hono, lit, @lit-labs/ssr, @hono/vite-dev-server, magic-string
 
 ## 设计哲学速览
 
@@ -253,7 +253,7 @@ KISS 是唯一**全链路 Web Standards** 的全栈框架：
 | HTTP | [Hono](https://hono.dev/) | ^4.x | Web Standards、零依赖、多运行时、内置 RPC |
 | UI | [Lit](https://lit.dev/) | ^3.x | Web Components 标准、5KB 运行时 |
 | Build | [Vite](https://vitejs.dev/) | ^6.x | ESM 原生、SSR 支持 |
-| SSR | @lit-labs/ssr | ^1.x | Declarative Shadow DOM |
+| SSR | @lit-labs/ssr | ^3.3.x | Declarative Shadow DOM |
 | 验证 | [Zod](https://zod.dev/) | ^3.x | 与 Hono 集成、RPC 类型推断（用户选择） |
 | 类型 | TypeScript | ^5.x | 端到端类型安全 |
 

@@ -1,5 +1,5 @@
 /**
- * @kiss/vite - island-transform.ts tests (Deno)
+ * @kissjs/core - island-transform.ts tests (Deno)
  */
 import { assertEquals, assertNotEquals } from 'jsr:@std/assert'
 import { islandTransformPlugin, generateHydrationScript } from '../src/island-transform.ts'
