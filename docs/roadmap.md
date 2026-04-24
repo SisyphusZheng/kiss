@@ -63,7 +63,7 @@ docs/
 
 ---
 
-## Phase 1：`@kiss/vite` 核心包（3~5 天）
+## Phase 1：`@kiss/core` 核心包（3~5 天）
 
 > 🎯 目标：框架核心插件可用，开发者能创建基本项目
 
@@ -127,7 +127,7 @@ docs/
 
 ```typescript
 // 用户使用方式
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 
 export default defineConfig({
   plugins: [

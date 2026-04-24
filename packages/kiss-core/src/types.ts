@@ -13,6 +13,9 @@ export interface FrameworkOptions {
   /** Directory for shared Lit components (default: 'app/components') */
   componentsDir?: string
 
+  /** Extra HTML to inject into <head> (e.g. CDN links from kissUI) */
+  headExtras?: string
+
   /** SSR configuration */
   ssr?: {
     /** Packages that should not be externalized in SSR (default: lit packages) */
@@ -78,7 +81,7 @@ export interface RouteEntry {
   /** Relative file path from routesDir */
   filePath: string
   /** Route type */
-  type: 'page' | 'api'
+  type: 'page' | 'api' | 'island'
   /** Variable name for module import */
   varName: string
   /** Special file type (renderer or middleware), if applicable */

@@ -1,6 +1,6 @@
 {
   "name": "@kiss/rpc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "KISS RPC client — end-to-end type-safe API communication",
   "type": "module",
   "module": "./dist/index.js",

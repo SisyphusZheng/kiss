@@ -1,6 +1,6 @@
 {
   "name": "@kiss/core",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "KISS core Vite plugin - Hono + Vite + Lit fullstack framework",
   "type": "module",
   "module": "./dist/index.js",
@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@hono/vite-dev-server": "^0.25.3",
-    "@hono/vite-ssg": "^0.3.3",
     "@lit-labs/ssr": "^3.3.0",
     "hono": "^4.7.0",
     "lit": "^3.2.0",

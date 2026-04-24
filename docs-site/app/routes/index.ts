@@ -1,12 +1,6 @@
 import { LitElement, html, css } from 'lit'
 import '../components/layout.js'
 
-/**
- * Landing page — introduces KISS framework.
- *
- * Web Awesome components are available globally via CDN
- * (injected by @kiss/ui plugin). Just use <wa-*> tags directly.
- */
 export class DocsHome extends LitElement {
   static styles = css`
     :host { display: block; }
@@ -117,6 +111,47 @@ export class DocsHome extends LitElement {
     .pill .check {
       color: var(--wa-color-success-600, #16a34a);
     }
+
+    .jsr-badges {
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+
+    .jsr-badges h3 {
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--wa-color-neutral-400, #a3a3a3);
+      margin: 0 0 0.75rem;
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .jsr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.625rem;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #166534;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .jsr-badge:hover {
+      background: #dcfce7;
+    }
   `
 
   render() {
@@ -130,12 +165,21 @@ export class DocsHome extends LitElement {
             HTTP = Fetch API, UI = Web Components, Build = ESM.
           </p>
           <div class="cta">
-            <wa-button variant="brand" href="/guide/getting-started">
+            <wa-button variant="brand" href="/kiss/guide/getting-started">
               Get Started
             </wa-button>
             <wa-button href="https://github.com/SisyphusZheng/kiss">
               GitHub
             </wa-button>
+          </div>
+        </div>
+
+        <div class="jsr-badges">
+          <h3>Install from JSR</h3>
+          <div class="badge-row">
+            <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core@0.1.2</a>
+            <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui@0.1.2</a>
+            <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc@0.1.2</a>
           </div>
         </div>
 

@@ -10,7 +10,7 @@
 
 ```typescript
 // vite.config.ts — 唯一配置
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 export default defineConfig({
   plugins: [kiss()]
 })
@@ -20,7 +20,7 @@ export default defineConfig({
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    @kiss/vite (核心插件)                      │
+│                    @kiss/core (核心插件)                      │
 │                                                             │
 │  ┌─ configureServer ──────────────────────────────────┐  │
 │  │  Hono app ← Vite middlewares                        │  │
@@ -191,7 +191,7 @@ flowchart TB
         PKG["package.json"]
         
         subgraph Packages["packages/"]
-            VP["@kiss/vite<br/>核心插件包"]
+            VP["@kiss/core<br/>核心插件包"]
             RP["@kiss/rpc<br/>RPC 客户端包"]
             CR["create-kiss<br/>脚手架工具"]
         end
@@ -212,7 +212,7 @@ flowchart TB
     TA -->|"使用"| VP
 ```
 
-### 4.2 `@kiss/vite` 内部模块依赖
+### 4.2 `@kiss/core` 内部模块依赖
 
 ```
 index.ts              ← 插件入口，导出 kiss()

@@ -11,8 +11,9 @@ import type { ViteDevServer } from 'vite'
 import type { RouteEntry, IslandMeta } from './types.js'
 import { fileToTagName } from './route-scanner.js'
 
-// Install DOM shim eagerly — must happen before any Lit code runs
-import '@lit-labs/ssr/lib/install-global-dom-shim.js'
+// DOM shim is NOT imported here — it's the caller's responsibility.
+// SSG: injected by generateHonoEntryCode() when ssg: true
+// Dev: browser already has DOM APIs, @hono/vite-dev-server handles SSR
 import { render as litRender } from '@lit-labs/ssr'
 import { collectResult } from '@lit-labs/ssr/lib/render-result.js'
 import { html } from 'lit'

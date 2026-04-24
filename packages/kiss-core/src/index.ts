@@ -25,7 +25,7 @@
 import type { Plugin, ResolvedConfig } from 'vite'
 import type { FrameworkOptions, RouteEntry } from './types.js'
 
-import { writeFileSync } from 'node:fs'
+import { writeFileSync, mkdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { islandTransformPlugin } from './island-transform.js'
@@ -33,7 +33,7 @@ import { islandExtractorPlugin } from './island-extractor.js'
 import { htmlTemplatePlugin } from './html-template.js'
 import { buildPlugin } from './build.js'
 import { generateHonoEntryCode } from './hono-entry.js'
-import { scanRoutes } from './route-scanner.js'
+import { scanRoutes, scanIslands, fileToTagName } from './route-scanner.js'
 
 export type {
   FrameworkOptions, RouteEntry, IslandMeta, SsrContext, SpecialFileType,
@@ -84,12 +84,16 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
   // --- 在 configResolved 时生成（同步），保证 dev server 启动前就绪 ---
   let honoEntryCode = ''
+  let scannedIslandTagNames: string[] = []
 
-  function generateEntry(routes: RouteEntry[]): string {
+  function generateEntry(routes: RouteEntry[], islandTagNames: string[] = []): string {
     return generateHonoEntryCode(routes, {
       routesDir:     resolvedOptions.routesDir,
+      islandsDir:    resolvedOptions.islandsDir,
       componentsDir: resolvedOptions.componentsDir,
       middleware:    resolvedOptions.middleware,
+      islandTagNames,
+      headExtras:    resolvedOptions.headExtras,
     })
   }
 
@@ -115,20 +119,26 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       // 真实 routes 在 buildStart（async）里扫描并重新生成，
       // @hono/vite-dev-server 懒加载 entry（首次请求时才 ssrLoadModule），
       // 所以 buildStart 一定在首次请求前执行完毕。
-      honoEntryCode = generateEntry([])
+      honoEntryCode = generateEntry([], scannedIslandTagNames)
     },
 
     async buildStart() {
       // 异步重新扫描（捕获 configResolved 时可能遗漏的变化）
-      // 同时用于打印更详细的路由信息
+      // 同时扫描 islands 目录
       try {
         const routes     = await scanRoutes(resolvedOptions.routesDir!)
-        honoEntryCode    = generateEntry(routes)
+
+        // Scan islands directory for known island tag names
+        const islandsRoot = join(process.cwd(), resolvedOptions.islandsDir || 'app/islands')
+        const islandFiles = await scanIslands(islandsRoot)
+        scannedIslandTagNames = islandFiles.map(f => fileToTagName(f))
+
+        honoEntryCode    = generateEntry(routes, scannedIslandTagNames)
         const pageCount  = routes.filter(r => r.type === 'page' && !r.special).length
         const apiCount   = routes.filter(r => r.type === 'api'  && !r.special).length
         console.log(
-          `[KISS] Routes confirmed: ${pageCount} page(s), ${apiCount} API route(s) ` +
-          `— Hono entry (${honoEntryCode.length} bytes)`,
+          `[KISS] Routes confirmed: ${pageCount} page(s), ${apiCount} API route(s), ` +
+          `${scannedIslandTagNames.length} island(s) — Hono entry (${honoEntryCode.length} bytes)`,
         )
       } catch (err) {
         console.error('[KISS] Async route scan failed:', err)
@@ -146,7 +156,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
     load(id) {
       if (id === RESOLVED_ENTRY_ID) {
-        return honoEntryCode || generateEntry([])
+        return honoEntryCode || generateEntry([], scannedIslandTagNames)
       }
     },
   }
@@ -183,16 +193,30 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
       // Generate SSG entry with DOM shim
       const routes = await scanRoutes(resolvedOptions.routesDir!)
+
+      // Scan islands for SSG entry too
+      const islandsRoot = join(root, resolvedOptions.islandsDir || 'app/islands')
+      const ssgIslandFiles = await scanIslands(islandsRoot)
+      const ssgIslandTagNames = ssgIslandFiles.map(f => fileToTagName(f))
+
       const ssgEntryCode = generateHonoEntryCode(routes, {
         routesDir: resolvedOptions.routesDir,
+        islandsDir: resolvedOptions.islandsDir,
         componentsDir: resolvedOptions.componentsDir,
         middleware: resolvedOptions.middleware,
         ssg: true,  // inject DOM shim
+        islandTagNames: ssgIslandTagNames,
+        headExtras: resolvedOptions.headExtras,
       })
 
-      // Write temp entry file
+      // Write temp entry file to project's .kiss/ directory (not tempdir).
+      // The entry MUST be under the project root so Vite SSR can resolve
+      // bare imports (e.g. @lit-labs/ssr) from the project's node_modules.
+      // Temp directories are outside the project root, causing module resolution failures.
       const KISS_SSG_ENTRY = '.kiss-ssg-entry.ts'
-      const tmpEntryPath = join(root, KISS_SSG_ENTRY)
+      const kissTmpDir = join(root, '.kiss')
+      mkdirSync(kissTmpDir, { recursive: true })
+      const tmpEntryPath = join(kissTmpDir, KISS_SSG_ENTRY)
       writeFileSync(tmpEntryPath, ssgEntryCode, 'utf-8')
 
       try {
@@ -215,8 +239,8 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         })
 
         try {
-          // Load the SSG entry module
-          const module = await server.ssrLoadModule('./' + KISS_SSG_ENTRY)
+          // Load the SSG entry module (absolute path since file is in tmpdir)
+          const module = await server.ssrLoadModule(tmpEntryPath)
           const app = module.default
 
           if (!app) {
@@ -268,11 +292,10 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       } catch (err) {
         console.error('[KISS SSG] Failed:', err)
       } finally {
-        // Clean up temp file
-        try {
-          const { unlinkSync } = await import('node:fs')
-          unlinkSync(tmpEntryPath)
-        } catch { /* ignore */ }
+      // Clean up temp file
+      try {
+        unlinkSync(tmpEntryPath)
+      } catch { /* ignore */ }
       }
     },
   }

@@ -1,6 +1,6 @@
 {
   "name": "@kissjs/ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "exports": "./src/index.ts",
   "tasks": {
     "build": "deno run -A npm:vite build --config vite.config.build.ts",

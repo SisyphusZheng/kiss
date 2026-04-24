@@ -74,14 +74,14 @@
 ```
 用户视角：vite.config.ts
 ┌─────────────────────────────────────────┐
-│  import { kiss } from '@kiss/vite'      │
+│  import { kiss } from '@kiss/core'      │
 │  export default defineConfig({           │
 │    plugins: [kiss()]                   │
 │  })                                    │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│         @kiss/vite (核心插件)          │
+│         @kiss/core (核心插件)          │
 │                                          │
 │  ┌─ configureServer ──────────────────┐  │
 │  │  Hono app ← Vite middlewares       │  │
@@ -353,7 +353,7 @@ kiss/                                 # 框架仓库根目录
 │   │   │   └── types.ts                # 公共类型定义
 │   │   ├── vite.config.build.ts        # Vite library mode 构建配置
 │   │   ├── deno.json
-│   │   └── package.json                # name: @kiss/vite
+│   │   └── package.json                # name: @kiss/core
 │   │
 │   ├── kiss-rpc/                       # [独立] RPC 客户端包
 │   │   ├── src/
@@ -417,7 +417,7 @@ my-app/                                 # 用户项目
 | Phase | 内容 | 预期时间 |
 |-------|------|----------|
 | **Phase 0** | PoC 验证：Vite SSR + Lit 渲染、Hono 中间件、Island 水合、双端构建 | 1-2 天 |
-| **Phase 1** | `@kiss/vite` 核心包：插件入口、文件路由、开发服务器、SSR、Island、构建 | 3-5 天 |
+| **Phase 1** | `@kiss/core` 核心包：插件入口、文件路由、开发服务器、SSR、Island、构建 | 3-5 天 |
 | **Phase 2** | `@kiss/rpc`：hc 封装、Lit ReactiveController 集成 | 1-2 天 |
 | **Phase 3** | `create-kiss` 脚手架 + 项目模板 | 1-2 天 |
 | **Phase 4** | 示例应用（blog/dashboard/todo）+ 文档 | 2-3 天 |

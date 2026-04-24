@@ -33,3 +33,4 @@ __test_fixtures__/
 
 # Framework internals
 .hvl/
+.kiss/

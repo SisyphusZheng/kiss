@@ -4,63 +4,15 @@ import '../../components/layout.js'
 export class GettingStartedPage extends LitElement {
   static styles = css`
     :host { display: block; }
-
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
-    }
-
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin: 0 0 0.5rem;
-    }
-
-    .subtitle {
-      color: var(--wa-color-neutral-500, #737373);
-      margin-bottom: 2rem;
-    }
-
-    .step {
-      margin-bottom: 1.75rem;
-    }
-
-    .step h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 0.5rem;
-      color: var(--wa-color-primary-700, #1d4ed8);
-    }
-
-    pre {
-      background: var(--wa-color-neutral-900, #171717);
-      color: var(--wa-color-neutral-100, #f5f5f5);
-      padding: 1rem 1.25rem;
-      border-radius: var(--wa-border-radius-lg, 8px);
-      overflow-x: auto;
-      font-size: 0.8125rem;
-      line-height: 1.6;
-      margin: 0.5rem 0;
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-
-    .inline-code {
-      background: var(--wa-color-neutral-100, #f5f5f5);
-      padding: 0.125rem 0.375rem;
-      border-radius: 4px;
-      font-size: 0.875em;
-    }
-
-    .nav-row {
-      margin-top: 2.5rem;
-      display: flex;
-      justify-content: space-between;
-    }
+    .container { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+    .subtitle { color: var(--wa-color-neutral-500, #737373); margin-bottom: 2rem; }
+    .step { margin-bottom: 1.75rem; }
+    .step h2 { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--wa-color-primary-700, #1d4ed8); }
+    pre { background: var(--wa-color-neutral-900, #171717); color: var(--wa-color-neutral-100, #f5f5f5); padding: 1rem 1.25rem; border-radius: var(--wa-border-radius-lg, 8px); overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; margin: 0.5rem 0; }
+    code { font-family: 'SF Mono', 'Fira Code', monospace; }
+    .inline-code { background: var(--wa-color-neutral-100, #f5f5f5); padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.875em; }
+    .nav-row { margin-top: 2.5rem; display: flex; justify-content: space-between; }
   `
 
   render() {
@@ -99,14 +51,25 @@ export default defineConfig({
       islandsDir: 'app/islands',
     }),
     kissUI(),
-    // SSG is built into kiss() via @hono/vite-ssg
   ]
 })</code></pre>
           </div>
 
           <div class="step">
             <h2>5. Create your first page</h2>
-            <p>Create <span class="inline-code">app/routes/index.ts</span> — it renders server-side with zero JS by default.</p>
+            <pre><code>// app/routes/index.ts
+import { LitElement, html, css } from 'lit'
+
+export class HomePage extends LitElement {
+  static styles = css\`:host { display: block; padding: 2rem; }\`
+  render() {
+    return html\`&lt;h1&gt;Hello KISS!&lt;/h1&gt;\`
+  }
+}
+
+customElements.define('home-page', HomePage)
+export default HomePage
+export const tagName = 'home-page'</code></pre>
           </div>
 
           <div class="step">
@@ -117,7 +80,7 @@ export default defineConfig({
 
           <div class="nav-row">
             <span></span>
-            <wa-button href="/guide/routing">Routing Guide &rarr;</wa-button>
+            <wa-button href="/kiss/guide/routing">Routing Guide &rarr;</wa-button>
           </div>
         </div>
       </app-layout>
@@ -126,6 +89,5 @@ export default defineConfig({
 }
 
 customElements.define('page-getting-started', GettingStartedPage)
-
 export default GettingStartedPage
 export const tagName = 'page-getting-started'

@@ -21,7 +21,7 @@
 
 ```typescript
 // vite.config.ts
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 
 export default defineConfig({
   plugins: [
@@ -191,7 +191,7 @@ function loadConfig(): RuntimeConfig {
 
 ```typescript
 // 框架导出配置访问器
-import { getConfig } from '@kiss/vite'
+import { getConfig } from '@kiss/core'
 
 const config = getConfig()
 // config.port → number

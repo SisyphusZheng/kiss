@@ -1,8 +1,5 @@
 import { LitElement, html, css } from 'lit'
 
-/**
- * Docs footer
- */
 export class DocsFooter extends LitElement {
   static styles = css`
     :host {
@@ -38,7 +35,8 @@ export class DocsFooter extends LitElement {
       <footer>
         <p>Built with <a href="https://github.com/SisyphusZheng/kiss" target="_blank">KISS Framework</a> — Web Standards all the way down</p>
         <p>
-          UI by <a href="https://webawesome.com/" target="_blank">Web Awesome</a>
+          Self-bootstrapped: this site uses @kissjs/core, @kissjs/ui, @kissjs/rpc from JSR.
+          UI by <a href="https://webawesome.com/" target="_blank">Web Awesome</a>.
         </p>
       </footer>
     `

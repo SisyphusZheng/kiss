@@ -9,7 +9,8 @@
  */
 
 import type { RouteEntry, FrameworkOptions } from './types.js'
-import { fileToTagName } from './route-scanner.js'
+import { fileToTagName, scanIslands } from './route-scanner.js'
+import { join } from 'node:path'
 
 /** Resolved middleware config with defaults applied */
 interface MiddlewareConfig {
@@ -34,7 +35,7 @@ interface MiddlewareConfig {
  */
 export function generateHonoEntryCode(
   routes: RouteEntry[],
-  options: { routesDir?: string; componentsDir?: string; middleware?: FrameworkOptions['middleware']; ssg?: boolean } = {},
+  options: { routesDir?: string; islandsDir?: string; componentsDir?: string; middleware?: FrameworkOptions['middleware']; ssg?: boolean; islandTagNames?: string[]; headExtras?: string } = {},
 ): string {
   const routesDir = options.routesDir || 'app/routes'
   const isSSG = options.ssg === true
@@ -73,9 +74,62 @@ export function generateHonoEntryCode(
   )
   // Strip Lit SSR comment markers for clean HTML output
   lines.push(`function stripLitComments(html) { return html.replace(/<!--\\/?(?:lit-part|lit-node)[^>]*-->/g, '') }`)
-  // Wrap rendered HTML in a full document
-  lines.push(`function wrapDocument(body) {`)
-  lines.push(`  return '<!DOCTYPE html>\\n<html lang="en">\\n<head>\\n  <meta charset="UTF-8">\\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\\n  <title>KISS App</title>\\n</head>\\n<body>\\n' + body + '\\n</body>\\n</html>'`)
+
+  // --- Island detection + hydration script generation ---
+  // Known island tag names and their module paths (populated at code-gen time)
+  const islandEntries = routes
+    .filter(r => r.type === 'island')
+    .map(r => ({ tagName: fileToTagName(r.filePath), filePath: r.filePath }))
+
+  // We also need to scan for islands used in page routes.
+  // Since we can't statically analyze which islands a page uses,
+  // we generate a registry of ALL known islands from the islandsDir
+  // and detect them at runtime by scanning the rendered HTML.
+  const islandsDir = options.islandsDir || 'app/islands'
+  const islandTagNames = options.islandTagNames || []
+
+  lines.push(`// Known islands registry (generated from islandsDir scan)`)
+  lines.push(`const __knownIslands = ${JSON.stringify(islandTagNames)}`)
+  lines.push(``)
+
+  // Island scanner: detect which islands appear in rendered HTML
+  lines.push(`function detectIslands(html) {`)
+  lines.push(`  const found = []`)
+  lines.push(`  for (const tag of __knownIslands) {`)
+  lines.push(`    if (new RegExp('<' + tag + '[\\\\s>/]', 'i').test(html)) {`)
+  lines.push(`      found.push(tag)`)
+  lines.push(`    }`)
+  lines.push(`  }`)
+  lines.push(`  return found`)
+  lines.push(`}`)
+
+  // Hydration script generator
+  lines.push(`function generateHydrationScript(islands) {`)
+  lines.push(`  if (islands.length === 0) return ''`)
+  lines.push(`  const loaders = islands.map(tag => {`)
+  lines.push(`    const modPath = '/${islandsDir}/' + tag + '.ts'`)
+  lines.push(`    return '\\'' + tag + '\\': () => import(\\'' + modPath + '\\')'`)
+  lines.push(`  }).join(',\\n    ')`)
+  lines.push(`  return '<script type=\"module\" data-kiss-hydrate>\\n' +`)
+  lines.push(`    '(function() {\\n' +`)
+  lines.push(`    '  const loaders = {\\n    ' + loaders + '\\n  };\\n' +`)
+  lines.push(`    '  async function hydrate(tag, loader) {\\n' +`)
+  lines.push(`    '    try { const m = await loader(); if (m.default && !customElements.get(tag)) customElements.define(tag, m.default); }\\n' +`)
+  lines.push(`    '    catch(e) { console.warn(\"[KISS] Island <\"+tag+\"> hydration failed:\", e); }\\n' +`)
+  lines.push(`    '  }\\n' +`)
+  lines.push(`    '  if (\"requestIdleCallback\" in window) requestIdleCallback(() => { for (const [t,l] of Object.entries(loaders)) hydrate(t,l); });\\n' +`)
+  lines.push(`    '  else setTimeout(() => { for (const [t,l] of Object.entries(loaders)) hydrate(t,l); }, 200);\\n' +`)
+  lines.push(`    '})();\\n' +`)
+  lines.push(`    '</script>'`)
+  lines.push(`}`)
+
+  // Wrap rendered HTML in a full document + inject hydration script
+  // headExtras: additional <head> content (e.g. CDN links from kissUI)
+  const headExtras = options.headExtras || ''
+  lines.push(`function wrapDocument(body, islands) {`)
+  lines.push(`  const hydrate = generateHydrationScript(islands || [])`)
+  lines.push(`  const headExtras = ${JSON.stringify(headExtras)}`)
+  lines.push(`  return '<!DOCTYPE html>\\n<html lang=\"en\">\\n<head>\\n  <meta charset=\"UTF-8\">\\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\\n  <title>KISS App</title>\\n' + headExtras + '\\n</head>\\n<body>\\n' + body + '\\n' + hydrate + '\\n</body>\\n</html>'`)
   lines.push(`}`)
   lines.push(``)
 
@@ -184,7 +238,8 @@ export function generateHonoEntryCode(
     )
     lines.push(`    const raw = await __ssr(tag)`)
     lines.push(`    const clean = stripLitComments(raw)`)
-    lines.push(`    return c.html(wrapDocument(clean))`)
+    lines.push(`    const islands = detectIslands(raw)`)
+    lines.push(`    return c.html(wrapDocument(clean, islands))`)
     lines.push(`  } catch (err) {`)
     lines.push(
       `    return c.html('<h1>500</h1><p>' + String(err) + '</p>', 500)`,

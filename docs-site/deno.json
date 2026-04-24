@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "exports": "./vite.config.ts",
   "imports": {
-    "@kiss/core": "jsr:@kissjs/core@^0.1.1",
-    "@kiss/ui": "jsr:@kissjs/ui@^0.1.1",
-    "@kiss/rpc": "jsr:@kissjs/rpc@^0.1.1",
+    "@kissjs/core": "jsr:@kissjs/core@^0.1.3",
+    "@kissjs/rpc": "jsr:@kissjs/rpc@^0.1.2",
+    "@kissjs/ui": "jsr:@kissjs/ui@^0.1.2",
     "lit": "npm:lit@^3.0.0",
     "hono": "npm:hono@^4.0.0",
     "vite": "npm:vite@^6.0.0"

@@ -132,8 +132,8 @@ deno task fmt
 │                                                    │
 │  Stack:                                            │
 │    at render (app/routes/dashboard.ts:12:5)        │
-│    at handleSSR (@kiss/vite:45:8)                   │
-│    at processRequest (@kiss/vite:28:4)              │
+│    at handleSSR (@kiss/core:45:8)                   │
+│    at processRequest (@kiss/core:28:4)              │
 │                                                    │
 │  [Open in Editor]                                  │
 └──────────────────────────────────────────────────┘
@@ -208,7 +208,7 @@ code --goto app/routes/dashboard.ts:12:5
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["@kiss/vite/client"],   // 框架类型
+    "types": ["@kiss/core/client"],   // 框架类型
     "paths": {
       "#imports": ["./app/.kiss/imports"]  // 自动导入
     }

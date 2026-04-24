@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import '../components/header'
 import '../components/footer'
+import '../islands/theme-toggle'
 
 /**
  * Home page - lists all blog posts
@@ -66,6 +67,7 @@ export class HomePage extends LitElement {
       <app-header></app-header>
       <main>
         <h1>Minimal Blog</h1>
+        <theme-toggle></theme-toggle>
         ${posts.map(post => html`
           <article>
             <h2><a href="/posts/${post.slug}">${post.title}</a></h2>

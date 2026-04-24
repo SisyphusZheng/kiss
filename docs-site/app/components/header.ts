@@ -1,11 +1,5 @@
 import { LitElement, html, css } from 'lit'
 
-/**
- * Docs header — top navigation bar.
- *
- * Uses Web Awesome CDN components. No imports needed —
- * <wa-*> tags are available globally after kissUI() injects the loader.
- */
 export class DocsHeader extends LitElement {
   static styles = css`
     :host {
@@ -41,14 +35,15 @@ export class DocsHeader extends LitElement {
 
     nav {
       display: flex;
-      gap: var(--wa-space-md, 1rem);
+      gap: var(--wa-space-sm, 0.5rem);
       flex: 1;
+      flex-wrap: wrap;
     }
 
     nav a {
       color: var(--wa-color-neutral-600, #525252);
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       font-weight: 500;
       padding: var(--wa-space-xs, 0.25rem) var(--wa-space-sm, 0.5rem);
       border-radius: var(--wa-border-radius-sm, 4px);
@@ -60,10 +55,6 @@ export class DocsHeader extends LitElement {
       background: var(--wa-color-primary-50, #eff6ff);
     }
 
-    nav a[active] {
-      color: var(--wa-color-primary-700, #1d4ed8);
-    }
-
     .github-link {
       font-size: 0.875rem;
     }
@@ -72,13 +63,18 @@ export class DocsHeader extends LitElement {
   render() {
     return html`
       <header class="header-inner">
-        <a class="logo" href="/">KISS</a>
+        <a class="logo" href="/kiss/">KISS</a>
         <nav>
-          <a href="/guide/getting-started">Guide</a>
-          <a href="/guide/routing">Routing</a>
-          <a href="/guide/islands">Islands</a>
-          <a href="/guide/ssg">SSG</a>
-          <a href="/styling/web-awesome">Components</a>
+          <a href="/kiss/guide/getting-started">Getting Started</a>
+          <a href="/kiss/guide/routing">Routing</a>
+          <a href="/kiss/guide/islands">Islands</a>
+          <a href="/kiss/guide/ssg">SSG</a>
+          <a href="/kiss/guide/api-routes">API</a>
+          <a href="/kiss/guide/design-philosophy">Philosophy</a>
+          <a href="/kiss/guide/architecture">Architecture</a>
+          <a href="/kiss/guide/configuration">Config</a>
+          <a href="/kiss/guide/deployment">Deploy</a>
+          <a href="/kiss/styling/web-awesome">Components</a>
         </nav>
         <wa-button
           class="github-link"

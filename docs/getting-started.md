@@ -32,7 +32,7 @@ deno init
 ### 3. Install dependencies
 
 ```bash
-deno add @kiss/vite lit hono
+deno add @kiss/core lit hono
 ```
 
 ### 4. Configure Vite
@@ -40,7 +40,7 @@ deno add @kiss/vite lit hono
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite'
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 
 export default defineConfig({
   plugins: [

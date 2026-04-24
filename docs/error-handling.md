@@ -458,7 +458,7 @@ class PostEditor extends LitElement {
   Error: TypeError: Cannot read properties of undefined
   Stack:
     at render (app/routes/dashboard.ts:12:5)
-    at handleSSR (@kiss/vite/src/ssr-handler.ts:45:8)
+    at handleSSR (@kiss/core/src/ssr-handler.ts:45:8)
 
 [KISS] ⚠️ Hydration failed for <my-counter>
   Error: Custom element already defined
