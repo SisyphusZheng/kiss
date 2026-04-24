@@ -1,10 +1,10 @@
 {
   "name": "minimal-blog",
   "version": "0.0.1",
-  "lock": false,
+  "exports": "./server.ts",
   "imports": {
-    "@kiss/vite": "../packages/kiss-vite",
-    "@kiss/rpc": "../packages/kiss-rpc",
+    "@kiss/core": "../../packages/kiss-core",
+    "@kiss/rpc": "../../packages/kiss-rpc",
     "lit": "npm:lit@^3.0.0",
     "hono": "npm:hono@^4.0.0"
   },

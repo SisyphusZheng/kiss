@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit'
-import '../../components/header.js'
-import '../../components/footer.js'
+import '../../components/header'
+import '../../components/footer'
 
 /**
  * Dynamic post page
@@ -78,3 +78,6 @@ export class PostPage extends LitElement {
 }
 
 customElements.define('post-page', PostPage)
+
+export default PostPage
+export const tagName = 'post-page'

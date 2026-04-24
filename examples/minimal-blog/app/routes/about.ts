@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit'
-import '../../components/header.js'
-import '../../components/footer.js'
+import '../components/header'
+import '../components/footer'
 
 /**
  * About page - static content
@@ -48,3 +48,6 @@ export class AboutPage extends LitElement {
 }
 
 customElements.define('about-page', AboutPage)
+
+export default AboutPage
+export const tagName = 'about-page'

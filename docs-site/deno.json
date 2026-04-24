@@ -4,7 +4,6 @@
   "exports": "./vite.config.ts",
   "imports": {
     "@kiss/core": "jsr:@kissjs/core@^0.1.1",
-    "@kiss/ssg": "jsr:@kissjs/ssg@^0.1.1",
     "@kiss/ui": "jsr:@kissjs/ui@^0.1.1",
     "@kiss/rpc": "jsr:@kissjs/rpc@^0.1.1",
     "lit": "npm:lit@^3.0.0",

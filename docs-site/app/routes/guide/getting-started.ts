@@ -82,7 +82,7 @@ export class GettingStartedPage extends LitElement {
 
           <div class="step">
             <h2>3. Add dependencies</h2>
-            <pre><code>deno add jsr:@kissjs/core jsr:@kissjs/ui jsr:@kissjs/ssg lit hono</code></pre>
+            <pre><code>deno add jsr:@kissjs/core jsr:@kissjs/ui jsr:@kissjs/rpc lit hono</code></pre>
           </div>
 
           <div class="step">
@@ -91,7 +91,6 @@ export class GettingStartedPage extends LitElement {
 import { defineConfig } from 'vite'
 import { kiss } from '@kissjs/core'
 import { kissUI } from '@kissjs/ui'
-import { kissSSG } from '@kissjs/ssg'
 
 export default defineConfig({
   plugins: [
@@ -100,7 +99,7 @@ export default defineConfig({
       islandsDir: 'app/islands',
     }),
     kissUI(),
-    kissSSG(),
+    // SSG is built into kiss() via @hono/vite-ssg
   ]
 })</code></pre>
           </div>

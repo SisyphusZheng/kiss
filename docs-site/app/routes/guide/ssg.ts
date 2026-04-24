@@ -84,24 +84,23 @@ export class SSGGuidePage extends LitElement {
           <p class="subtitle">Pre-render your routes to static HTML at build time.</p>
 
           <h2>Quick Start</h2>
-          <p>Add <span class="inline-code">kissSSG()</span> to your Vite config after <span class="inline-code">kiss()</span>:</p>
+          <p>SSG is built into <span class="inline-code">kiss()</span> via <span class="inline-code">@hono/vite-ssg</span>. No extra plugin needed:</p>
           <pre><code>// vite.config.ts
 import { kiss } from '@kissjs/core'
-import { kissSSG } from '@kissjs/ssg'
 import { kissUI } from '@kissjs/ui'
 
 export default defineConfig({
   plugins: [
     kiss({ routesDir: 'app/routes' }),
     kissUI(),
-    kissSSG(),  // Add after kiss()
+    // SSG is handled automatically by kiss() via @hono/vite-ssg
   ]
 })</code></pre>
 
           <h2>How It Works</h2>
           <p>
-            After Vite finishes the SSR + client build, <span class="inline-code">kissSSG</span> runs
-            in the <span class="inline-code">closeBundle</span> hook:
+            <span class="inline-code">kiss()</span> integrates <span class="inline-code">@hono/vite-ssg</span> internally.
+            When you run <span class="inline-code">vite build</span>, it:
           </p>
           <ol>
             <li>Scans <span class="inline-code">app/routes/</span> for page routes</li>

@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit'
-import '../components/header.js'
-import '../components/footer.js'
+import '../components/header'
+import '../components/footer'
 
 /**
  * Home page - lists all blog posts
@@ -80,3 +80,6 @@ export class HomePage extends LitElement {
 }
 
 customElements.define('home-page', HomePage)
+
+export default HomePage
+export const tagName = 'home-page'

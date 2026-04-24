@@ -35,6 +35,9 @@ export default defineConfig({
         // Lit ecosystem
         if (id === 'lit' || id.startsWith('lit/') || id.startsWith('@lit/')) return true
         if (id === '@lit-labs/ssr' || id.startsWith('@lit-labs/')) return true
+        // Hono Vite plugins — they import Node builtins, must stay external
+        if (id === '@hono/vite-dev-server' || id.startsWith('@hono/vite-dev-server/')) return true
+        if (id === '@hono/vite-ssg' || id.startsWith('@hono/vite-ssg/')) return true
         // Node builtins
         if (id.startsWith('node:')) return true
         return false

@@ -12,18 +12,21 @@
  * ```
  *
  * 插件组成（kiss() 返回的 Plugin[]）：
- *  1. kiss:config-resolved  — 扫描 routes，生成 virtual:kiss-hono-entry 代码
- *  2. kiss:virtual-entry    — 解析/加载 virtual:kiss-hono-entry 虚拟模块
+ *  1. kiss:core          — configResolved + buildStart（路由扫描 + 虚拟模块生成）
+ *  2. kiss:virtual-entry  — 解析/加载 virtual:kiss-hono-entry 虚拟模块
  *  3. @hono/vite-dev-server — dev 模式（读取 virtual:kiss-hono-entry）
- *  4. island-transform       — AST 标记 (__island, __tagName)
- *  5. island-extractor      — 构建时 island 依赖分析
- *  6. html-template         — transformIndexHtml（preload / meta / hydration）
- *  7. @hono/vite-ssg        — SSG 构建（读取 virtual:kiss-hono-entry）
- *  8. build                 — 双端构建（SSR + Client）
+ *  4. island-transform     — AST 标记 (__island, __tagName)
+ *  5. island-extractor     — 构建时 island 依赖分析
+ *  6. html-template        — transformIndexHtml（preload / meta / hydration）
+ *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段）
+ *  8. kiss:build           — 双端构建（SSR + Client）
  */
 
 import type { Plugin, ResolvedConfig } from 'vite'
 import type { FrameworkOptions, RouteEntry } from './types.js'
+
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 import { islandTransformPlugin } from './island-transform.js'
 import { islandExtractorPlugin } from './island-extractor.js'
@@ -46,7 +49,8 @@ export { getKnownIslandsMap } from './island-extractor.js'
 
 // --- Hono 官方 Vite 插件（静态 import，package.json 已声明依赖）---
 import honoDevServer from '@hono/vite-dev-server'
-import honoSsg       from '@hono/vite-ssg'
+// @hono/vite-ssg 不再直接使用——SSG 由 kiss:ssg 自定义插件实现
+// 但保留依赖声明以便用户使用 hono/ssg
 
 /**
  * KISS Framework Vite Plugin
@@ -85,6 +89,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     return generateHonoEntryCode(routes, {
       routesDir:     resolvedOptions.routesDir,
       componentsDir: resolvedOptions.componentsDir,
+      middleware:    resolvedOptions.middleware,
     })
   }
 
@@ -92,17 +97,25 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   const corePlugin: Plugin = {
     name: 'kiss:core',
 
+    config() {
+      // Override Vite's default build config:
+      // - Disable index.html as entry (we use virtual:kiss-hono-entry)
+      // - Set library mode with our virtual entry as input
+      return {
+        build: {
+          rollupOptions: {
+            input: [VIRTUAL_ENTRY_ID],
+          },
+        },
+      }
+    },
+
     configResolved(config) {
       // 生成最小兜底 entry（所有路由返回 404）
       // 真实 routes 在 buildStart（async）里扫描并重新生成，
       // @hono/vite-dev-server 懒加载 entry（首次请求时才 ssrLoadModule），
       // 所以 buildStart 一定在首次请求前执行完毕。
-      honoEntryCode = [
-        `import { Hono } from 'hono'`,
-        `const app = new Hono()`,
-        `app.all('*', () => new Response('Not Found', { status: 404 }))`,
-        `export default app`,
-      ].join('\n')
+      honoEntryCode = generateEntry([])
     },
 
     async buildStart() {
@@ -144,10 +157,125 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     injectClientScript: true,
   }) as unknown as Plugin
 
-  // --- 4. @hono/vite-ssg（SSG 构建）---
-  const ssgPlugin = honoSsg({
-    entry: VIRTUAL_ENTRY_ID,
-  }) as unknown as Plugin
+  // --- 4. 自定义 SSG 插件（替代 @hono/vite-ssg）---
+  // @hono/vite-ssg 在 generateBundle 中创建新 Vite server（空插件），
+  // 导致 virtual:kiss-hono-entry 无法解析，路由模块也无法加载。
+  //
+  // 我们的方案：在 closeBundle 阶段（构建完成后），
+  // 1. 生成带 DOM shim 的 SSG entry（真实 .ts 文件）
+  // 2. 创建 Vite SSR server（configFile: false 防止递归加载用户 vite.config）
+  // 3. 加载 entry → 拿到 Hono app → 用 hono/ssg toSSG 生成静态文件
+  // 4. 写入 dist/ 目录
+
+  let resolvedConfig: ResolvedConfig
+
+  const ssgPlugin: Plugin = {
+    name: 'kiss:ssg',
+    apply: 'build',
+
+    configResolved(config) {
+      resolvedConfig = config
+    },
+
+    async closeBundle() {
+      const root = resolvedConfig.root
+      const outDir = resolvedConfig.build.outDir
+
+      // Generate SSG entry with DOM shim
+      const routes = await scanRoutes(resolvedOptions.routesDir!)
+      const ssgEntryCode = generateHonoEntryCode(routes, {
+        routesDir: resolvedOptions.routesDir,
+        componentsDir: resolvedOptions.componentsDir,
+        middleware: resolvedOptions.middleware,
+        ssg: true,  // inject DOM shim
+      })
+
+      // Write temp entry file
+      const KISS_SSG_ENTRY = '.kiss-ssg-entry.ts'
+      const tmpEntryPath = join(root, KISS_SSG_ENTRY)
+      writeFileSync(tmpEntryPath, ssgEntryCode, 'utf-8')
+
+      try {
+        // Create Vite SSR server — CRITICAL: configFile: false
+        // Prevents loading user's vite.config.ts (which contains kiss()),
+        // avoiding infinite recursive plugin loading.
+        // Vite still resolves bare imports from node_modules via root.
+        const { createServer } = await import('vite')
+        const server = await createServer({
+          configFile: false,
+          root,
+          server: { middlewareMode: true },
+          appType: 'custom',
+          build: { ssr: true },
+          plugins: [],
+          resolve: {
+            preserveSymlinks: true,
+            extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+          },
+        })
+
+        try {
+          // Load the SSG entry module
+          const module = await server.ssrLoadModule('./' + KISS_SSG_ENTRY)
+          const app = module.default
+
+          if (!app) {
+            throw new Error(`[KISS SSG] Failed to load Hono app from ${KISS_SSG_ENTRY}`)
+          }
+
+          // Use hono/ssg to generate static files
+          const { toSSG } = await import('hono/ssg')
+          const nodeFs = await import('node:fs')
+          const nodePath = await import('node:path')
+
+          // FileSystemModule adapter for hono/ssg
+          const fsModule = {
+            writeFile: async (path: string, data: string | Uint8Array) => {
+              const dir = nodePath.dirname(path)
+              if (!nodeFs.existsSync(dir)) {
+                nodeFs.mkdirSync(dir, { recursive: true })
+              }
+              nodeFs.writeFileSync(path, data)
+            },
+            mkdir: async (path: string) => {
+              if (!nodeFs.existsSync(path)) {
+                nodeFs.mkdirSync(path, { recursive: true })
+              }
+            },
+            isDirectory: async (path: string) => {
+              try {
+                return nodeFs.statSync(path).isDirectory()
+              } catch {
+                return false
+              }
+            },
+          }
+
+          const outputDir = join(root, outDir)
+
+          const result = await toSSG(app, fsModule, {
+            dir: outputDir,
+          })
+
+          if (!result.success) {
+            throw result.error
+          }
+
+          console.log(`[KISS SSG] Static site generated → ${join(root, outDir)}`)
+        } finally {
+          await server.close()
+        }
+      } catch (err) {
+        console.error('[KISS SSG] Failed:', err)
+      } finally {
+        // Clean up temp file
+        try {
+          const { unlinkSync } = await import('node:fs')
+          unlinkSync(tmpEntryPath)
+        } catch { /* ignore */ }
+      }
+    },
+  }
 
   // --- 组装插件数组 ---
   return [

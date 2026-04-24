@@ -143,7 +143,7 @@ export function generateIslandManifest(
 
 /**
  * Get the known islands map for SSR island collection.
- * This is shared between dev-server and ssr-handler.
+ * This is used by ssr-handler and the generated Hono entry.
  */
 export function getKnownIslandsMap(
   islandFiles: string[],
