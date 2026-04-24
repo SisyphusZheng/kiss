@@ -1,6 +1,10 @@
 /**
  * @kiss/vite - SSR Handler
  * Coordinates Vite SSR loading + Lit rendering + Island collection.
+ *
+ * Uses @lit-labs/ssr v3 to render Lit components with Declarative Shadow DOM.
+ * When a custom element is imported (registered) in the SSR context,
+ * render() automatically renders its shadow DOM with <template shadowrootmode="open">.
  */
 
 import type { ViteDevServer } from 'vite'
@@ -10,6 +14,7 @@ import { fileToTagName } from './route-scanner.js'
 // Install DOM shim eagerly — must happen before any Lit code runs
 import '@lit-labs/ssr/lib/install-global-dom-shim.js'
 import { render as litRender } from '@lit-labs/ssr'
+import { collectResult } from '@lit-labs/ssr/lib/render-result.js'
 import { html } from 'lit'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 
@@ -47,6 +52,7 @@ export async function renderPageToString(
   const { routesDir = 'app/routes' } = options
 
   // Load the route module via Vite SSR
+  // This registers the custom element in the SSR global scope
   const module = await vite.ssrLoadModule(`/${routesDir}/${route.filePath}`)
 
   // Get the default export (should be a Lit component class)
@@ -55,22 +61,20 @@ export async function renderPageToString(
     throw new Error(`Route module ${route.filePath} has no default export`)
   }
 
-  // Instantiate and render the component
-  const tagName = fileToTagName(route.filePath)
-  const instance = new ComponentClass()
-  const rendered = litRender(instance)
+  // Get the custom element tag name
+  // Convention: route module exports `tagName` string, or we derive from file path
+  const tagName = module.tagName || 'kiss-' + route.filePath
+    .replace(/\.[^.]+$/, '')
+    .replace(/[\\/]/g, '-')
+    .toLowerCase()
 
-  // Convert to string
-  const htmlParts: string[] = []
-  for (const part of rendered) {
-    if (typeof part === 'string') {
-      htmlParts.push(part)
-    } else {
-      htmlParts.push(String(part))
-    }
-  }
-
-  const html = htmlParts.join('')
+  // Render the component using Lit SSR
+  // Since the custom element is registered via the module import above,
+  // render() will automatically render it with Declarative Shadow DOM.
+  // Lit html`` doesn't support dynamic tag names in element position,
+  // so we use unsafeHTML to inject the custom element tag.
+  const ssrResult = litRender(html`${unsafeHTML(`<${tagName}></${tagName}>`)}`)
+  const renderedHtml = await collectResult(ssrResult)
 
   // Collect islands from rendered HTML
   const knownIslands = new Map<string, string>()
@@ -78,7 +82,7 @@ export async function renderPageToString(
   // For dev mode, we return empty islands array
   const islands: IslandMeta[] = []
 
-  return { html, islands }
+  return { html: renderedHtml, islands }
 }
 
 /**
@@ -114,14 +118,27 @@ export function wrapInDocument(
     title?: string
     hydrateScript?: string
     meta?: { description?: string }
+    devMode?: boolean
+    routeModulePath?: string
+    componentsDir?: string
   } = {}
 ): string {
-  const { title = 'KISS App', hydrateScript = '', meta } = options
+  const { title = 'KISS App', hydrateScript = '', meta, devMode = false, routeModulePath, componentsDir } = options
   const metaTags: string[] = []
   if (meta?.description) {
     metaTags.push(`  <meta name="description" content="${meta.description}">`)
   }
   const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : ''
+
+  // Dev mode: inject Vite client + component registration
+  const devScripts = devMode
+    ? `
+  <script type="module" src="/@vite/client"></script>
+  ${routeModulePath ? `<script type="module">
+  // Register route component for client-side custom element definition
+  import '${routeModulePath}';
+</script>` : ''}`
+    : ''
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -132,7 +149,7 @@ export function wrapInDocument(
 </head>
 <body>
   ${html}
-  ${hydrateScript}
+  ${hydrateScript}${devScripts}
 </body>
 </html>`
 }

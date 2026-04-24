@@ -1,4 +1,4 @@
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 import { defineConfig } from 'vite'
 
 export default defineConfig({

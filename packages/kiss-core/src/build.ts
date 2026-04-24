@@ -1,13 +1,12 @@
 /**
- * @kiss/vite - Build plugin
+ * @kiss/core - Build plugin
  * Handles dual-end build (SSR + Client) for production.
- *
- * Phase 1: Actually executes Vite builds instead of just logging config.
  *
  * Build strategy (Web Standards aligned):
  * - SSR build: produces ESM bundle for server runtimes (Deno/Node/CF Workers)
  * - Client build: produces minimal JS — only island components + hydration
  * - Zero-JS pages output nothing to client (Level 0 progressive enhancement)
+ * - SSG is handled by the separate @kiss/ssg plugin
  *
  * The build happens in `closeBundle` so Vite's own build runs first,
  * then we kick off the secondary build(s).
@@ -16,7 +15,7 @@
 import type { Plugin, ResolvedConfig } from 'vite'
 import type { FrameworkOptions } from './types.js'
 import { build as viteBuild, type InlineConfig } from 'vite'
-import { resolve, join } from 'node:path'
+import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 
 /** SSR noExternal packages — Lit must be bundled into SSR output */
@@ -32,7 +31,6 @@ const DEFAULT_SSR_NO_EXTERNAL = [
 let GLOBAL_BUILT = false
 
 export function buildPlugin(options: FrameworkOptions = {}): Plugin {
-  const routesDir = options.routesDir || 'app/routes'
   const islandsDir = options.islandsDir || 'app/islands'
   const outDir = options.build?.outDir || 'dist'
   const ssrNoExternal = options.ssr?.noExternal || DEFAULT_SSR_NO_EXTERNAL

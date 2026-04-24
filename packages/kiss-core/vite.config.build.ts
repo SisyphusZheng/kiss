@@ -23,7 +23,6 @@ export default defineConfig({
     lib: {
       entry: {
         index: 'src/index.ts',
-        client: 'src/client/index.ts',
       },
       formats: ['es'],
     },

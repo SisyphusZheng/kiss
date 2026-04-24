@@ -1,52 +1,74 @@
 import { LitElement, html, css } from 'lit'
-import 'webawesome/components/button.js'
-import 'webawesome/components/card.js'
+import '../../components/layout.js'
 
-/**
- * Getting Started guide page
- *
- * Converted from docs/getting-started.md
- */
 export class GettingStartedPage extends LitElement {
   static styles = css`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
 
     .container {
-      max-width: 800px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: var(--size-6) var(--size-4);
+      padding: 2rem 1.5rem 3rem;
     }
 
-    pre {
-      background: var(--gray-1);
-      padding: var(--size-4);
-      border-radius: var(--radius-2);
-      overflow-x: auto;
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
     }
 
-    code {
-      font-family: var(--font-mono);
-      font-size: var(--font-size-1);
+    .subtitle {
+      color: var(--wa-color-neutral-500, #737373);
+      margin-bottom: 2rem;
     }
 
     .step {
-      margin-bottom: var(--size-6);
+      margin-bottom: 1.75rem;
     }
 
-    wa-button {
-      margin-top: var(--size-4);
+    .step h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--wa-color-primary-700, #1d4ed8);
     }
-  `;
+
+    pre {
+      background: var(--wa-color-neutral-900, #171717);
+      color: var(--wa-color-neutral-100, #f5f5f5);
+      padding: 1rem 1.25rem;
+      border-radius: var(--wa-border-radius-lg, 8px);
+      overflow-x: auto;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin: 0.5rem 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .inline-code {
+      background: var(--wa-color-neutral-100, #f5f5f5);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.875em;
+    }
+
+    .nav-row {
+      margin-top: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+  `
 
   render() {
     return html`
-      <app-header></app-header>
-      <main>
+      <app-layout>
         <div class="container">
           <h1>Getting Started</h1>
-          <p>Get started with KISS framework in 5 minutes.</p>
+          <p class="subtitle">Up and running in under 5 minutes.</p>
 
           <div class="step">
             <h2>1. Create a project</h2>
@@ -59,62 +81,52 @@ export class GettingStartedPage extends LitElement {
           </div>
 
           <div class="step">
-            <h2>3. Install dependencies</h2>
-            <pre><code>deno add @kiss/vite lit hono</code></pre>
+            <h2>3. Add dependencies</h2>
+            <pre><code>deno add jsr:@kissjs/core jsr:@kissjs/ui jsr:@kissjs/ssg lit hono</code></pre>
           </div>
 
           <div class="step">
             <h2>4. Configure Vite</h2>
             <pre><code>// vite.config.ts
 import { defineConfig } from 'vite'
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kissjs/core'
+import { kissUI } from '@kissjs/ui'
+import { kissSSG } from '@kissjs/ssg'
 
 export default defineConfig({
   plugins: [
     kiss({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
-    })
+    }),
+    kissUI(),
+    kissSSG(),
   ]
 })</code></pre>
           </div>
 
           <div class="step">
             <h2>5. Create your first page</h2>
-            <pre><code>// app/routes/index.ts
-import { LitElement, html, css } from 'lit'
+            <p>Create <span class="inline-code">app/routes/index.ts</span> — it renders server-side with zero JS by default.</p>
+          </div>
 
-export class HomePage extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-      padding: 2rem;
-    }
-  `;
+          <div class="step">
+            <h2>6. Start dev server</h2>
+            <pre><code>deno run -A npm:vite</code></pre>
+            <p>Open <span class="inline-code">localhost:5173</span> to see your page.</p>
+          </div>
 
-  render() {
-    return html`
-      <h1>Hello KISS!</h1>
-      <p>This page is server-rendered. Zero JS by default.</p>
+          <div class="nav-row">
+            <span></span>
+            <wa-button href="/guide/routing">Routing Guide &rarr;</wa-button>
+          </div>
+        </div>
+      </app-layout>
     `
   }
 }
 
-customElements.define('home-page', HomePage)</code></pre>
-          </div>
-
-          <div class="step">
-            <h2>6. Start development server</h2>
-            <pre><code>deno run -A npm:vite</code></pre>
-            <p>Open <INTERNAL_HOST_REDACTED> to see your page!</p>
-          </div>
-
-          <wa-button href="/guide/routing">Next: Routing Guide →</wa-button>
-        </div>
-      </main>
-      <app-footer></app-footer>
-    `;
-  }
-}
-
 customElements.define('page-getting-started', GettingStartedPage)
+
+export default GettingStartedPage
+export const tagName = 'page-getting-started'

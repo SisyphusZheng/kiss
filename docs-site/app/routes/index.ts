@@ -1,83 +1,134 @@
 import { LitElement, html, css } from 'lit'
-import 'webawesome/components/hero.js'
-import 'webawesome/components/button.js'
+import '../components/layout.js'
 
 /**
- * Docs home page
+ * Landing page — introduces KISS framework.
  *
- * This page introduces KISS framework and links to guides.
+ * Web Awesome components are available globally via CDN
+ * (injected by @kiss/ui plugin). Just use <wa-*> tags directly.
  */
 export class DocsHome extends LitElement {
   static styles = css`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
 
-    .container {
-      max-width: 1200px;
+    .hero {
+      max-width: 800px;
       margin: 0 auto;
-      padding: var(--size-6) var(--size-4);
+      padding: 4rem 1.5rem 2rem;
+      text-align: center;
     }
 
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: var(--size-4);
-      margin-top: var(--size-6);
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0;
+      background: linear-gradient(135deg, var(--wa-color-primary-600, #2563eb), var(--wa-color-primary-400, #60a5fa));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .feature-card {
-      padding: var(--size-4);
-      border: 1px solid var(--gray-3);
-      border-radius: var(--radius-3);
+    .hero .tagline {
+      font-size: 1.25rem;
+      color: var(--wa-color-neutral-500, #737373);
+      margin-top: 0.75rem;
+      line-height: 1.6;
     }
 
-    .feature-card h2 {
-      margin-top: 0;
-      color: var(--blue-6);
+    .hero .tagline strong {
+      color: var(--wa-color-neutral-700, #404040);
     }
 
     .cta {
-      margin-top: var(--size-6);
+      margin-top: 2rem;
+      display: flex;
+      gap: var(--wa-space-md, 1rem);
+      justify-content: center;
+    }
+
+    .features {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feature-card {
+      padding: 1.5rem;
+      border: 1px solid var(--wa-color-neutral-200, #e5e7eb);
+      border-radius: var(--wa-border-radius-lg, 8px);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--wa-color-primary-300, #93c5fd);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+    }
+
+    .feature-card .icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.375rem;
+      color: var(--wa-color-neutral-800, #262626);
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--wa-color-neutral-500, #737373);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .standards-bar {
+      max-width: 800px;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
       text-align: center;
     }
-  `;
+
+    .standards-bar .pill-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.875rem;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      background: var(--wa-color-neutral-100, #f5f5f5);
+      color: var(--wa-color-neutral-700, #404040);
+      border: 1px solid var(--wa-color-neutral-200, #e5e7eb);
+    }
+
+    .pill .check {
+      color: var(--wa-color-success-600, #16a34a);
+    }
+  `
 
   render() {
     return html`
-      <app-header></app-header>
-      <main>
-        <div class="container">
-          <wa-hero>
-            <h1 slot="heading">KISS Framework</h1>
-            <p slot="text">
-              Keep It Simple, Stupid.<br/>
-              A minimal full-stack framework built on Web Standards.
-            </p>
-          </wa-hero>
-
-          <div class="features">
-            <div class="feature-card">
-              <h2>🌐 Web Standards</h2>
-              <p>HTTP = Fetch API, UI = Web Components, Build = ESM. No new abstractions.</p>
-            </div>
-
-            <div class="feature-card">
-              <h2>🏝️ Islands</h2>
-              <p>Only interactive components load JS. Default homepage: 0 KB JS.</p>
-            </div>
-
-            <div class="feature-card">
-              <h2>🔌 Type-Safe</h2>
-              <p>End-to-end type safety with Hono RPC. No codegen needed.</p>
-            </div>
-
-            <div class="feature-card">
-              <h2>🌍 Multi-Runtime</h2>
-              <p>Same code runs on Deno, Node, Bun, Cloudflare Workers.</p>
-            </div>
-          </div>
-
+      <app-layout>
+        <div class="hero">
+          <h1>KISS</h1>
+          <p class="tagline">
+            <strong>Keep It Simple, Stupid.</strong><br>
+            A minimal full-stack framework built on Web Standards.<br>
+            HTTP = Fetch API, UI = Web Components, Build = ESM.
+          </p>
           <div class="cta">
             <wa-button variant="brand" href="/guide/getting-started">
               Get Started
@@ -87,10 +138,45 @@ export class DocsHome extends LitElement {
             </wa-button>
           </div>
         </div>
-      </main>
-      <app-footer></app-footer>
+
+        <div class="standards-bar">
+          <div class="pill-row">
+            <span class="pill"><span class="check">&#10003;</span> Fetch API</span>
+            <span class="pill"><span class="check">&#10003;</span> Web Components</span>
+            <span class="pill"><span class="check">&#10003;</span> ESM</span>
+            <span class="pill"><span class="check">&#10003;</span> Declarative Shadow DOM</span>
+            <span class="pill"><span class="check">&#10003;</span> Islands</span>
+          </div>
+        </div>
+
+        <div class="features">
+          <div class="feature-card">
+            <div class="icon">&#127760;</div>
+            <h2>Web Standards First</h2>
+            <p>No new abstractions. If you know the web platform, you know KISS.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">&#127965;</div>
+            <h2>Islands Architecture</h2>
+            <p>Only interactive components load JS. Default homepage: 0 KB.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">&#128268;</div>
+            <h2>Type-Safe RPC</h2>
+            <p>End-to-end type safety with Hono RPC. No codegen needed.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">&#127758;</div>
+            <h2>Multi-Runtime</h2>
+            <p>Same code on Deno, Node, Bun, Cloudflare Workers.</p>
+          </div>
+        </div>
+      </app-layout>
     `
   }
 }
 
 customElements.define('docs-home', DocsHome)
+
+export default DocsHome
+export const tagName = 'docs-home'

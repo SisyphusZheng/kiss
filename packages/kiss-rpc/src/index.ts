@@ -54,8 +54,8 @@ export class RpcController implements ReactiveController {
   private _loading = false
   private _error: RpcError | null = null
 
-  get loading() { return this._loading }
-  get error() { return this._error }
+  get loading(): boolean { return this._loading }
+  get error(): RpcError | null { return this._error }
 
   constructor(private host: ReactiveElement) {
     host.addController(this)

@@ -1,47 +1,47 @@
 import { LitElement, html, css } from 'lit'
 
 /**
- * Docs footer component
+ * Docs footer
  */
 export class DocsFooter extends LitElement {
   static styles = css`
     :host {
       display: block;
-      margin-top: var(--size-8);
+      margin-top: auto;
     }
 
     footer {
-      padding: var(--size-4) var(--size-6);
-      border-top: 1px solid var(--gray-3);
+      padding: var(--wa-space-lg, 1.5rem) var(--wa-space-xl, 2rem);
+      border-top: 1px solid var(--wa-color-neutral-200, #e5e7eb);
       text-align: center;
-      color: var(--gray-6);
-      font-size: var(--font-size-0);
-      background: var(--gray-1);
+      color: var(--wa-color-neutral-500, #737373);
+      font-size: 0.8125rem;
+      background: var(--wa-color-neutral-50, #fafafa);
     }
 
     p {
-      margin: var(--size-1) 0;
+      margin: var(--wa-space-xs, 0.25rem) 0;
     }
 
     a {
-      color: var(--blue-6);
+      color: var(--wa-color-primary-600, #2563eb);
       text-decoration: none;
     }
 
     a:hover {
       text-decoration: underline;
     }
-  `;
+  `
 
   render() {
     return html`
       <footer>
-        <p>Built with <a href="https://github.com/SisyphusZheng/kiss" target="_blank">KISS Framework</a></p>
+        <p>Built with <a href="https://github.com/SisyphusZheng/kiss" target="_blank">KISS Framework</a> — Web Standards all the way down</p>
         <p>
-          <a href="https://webawesome.com/" target="_blank">Web Awesome</a> by Font Awesome Team
+          UI by <a href="https://webawesome.com/" target="_blank">Web Awesome</a>
         </p>
       </footer>
-    `;
+    `
   }
 }
 

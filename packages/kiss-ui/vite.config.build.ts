@@ -1,6 +1,5 @@
 /**
- * @kiss/rpc - Vite library mode build config
- * Replaces tsup with native Vite lib mode.
+ * @kiss/ui - Vite library mode build config
  * Pure ESM output, no CJS.
  */
 import { defineConfig } from 'vite'
@@ -16,15 +15,18 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: 'src/index.ts',
-      fileName: 'index',
+      entry: {
+        index: 'src/index.ts',
+      },
       formats: ['es'],
     },
     rollupOptions: {
       external: (id) => {
-        if (id === 'hono' || id.startsWith('hono/')) return true
-        if (id === 'zod') return true
+        if (id === 'vite') return true
         return false
+      },
+      output: {
+        entryFileNames: '[name].js',
       },
     },
     outDir: 'dist',

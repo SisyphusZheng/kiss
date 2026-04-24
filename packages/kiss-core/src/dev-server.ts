@@ -137,6 +137,9 @@ export function devServerPlugin(options: FrameworkOptions = {}): Plugin {
             meta: routeMeta.description
               ? { description: routeMeta.description }
               : undefined,
+            devMode: true,
+            routeModulePath: `/${routesDir}/${route.filePath}`,
+            componentsDir: options.componentsDir,
           })
 
           return c.html(fullHtml)

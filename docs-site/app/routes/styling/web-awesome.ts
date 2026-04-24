@@ -1,115 +1,163 @@
 import { LitElement, html, css } from 'lit'
-import 'webawesome/components/button.js'
-import 'webawesome/components/card.js'
-import 'webawesome/components/badge.js'
+import '../../components/layout.js'
 
 /**
- * Web Awesome styling guide page
+ * Web Awesome components showcase.
  *
- * Shows how to use Web Awesome components with KISS.
+ * All <wa-*> components are available globally via CDN.
+ * No import needed — just use the tags directly.
  */
 export class WebAwesomePage extends LitElement {
   static styles = css`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
 
     .container {
-      max-width: 800px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: var(--size-6) var(--size-4);
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--wa-color-neutral-500, #737373);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
     }
 
     .demo-box {
-      padding: var(--size-4);
-      border: 1px solid var(--gray-3);
-      border-radius: var(--radius-3);
-      margin: var(--size-4) 0;
+      padding: 1.25rem;
+      border: 1px solid var(--wa-color-neutral-200, #e5e7eb);
+      border-radius: var(--wa-border-radius-lg, 8px);
+      margin: 0.75rem 0 1.5rem;
     }
 
     .demo-box h3 {
-      margin-top: 0;
-      color: var(--blue-6);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--wa-color-primary-700, #1d4ed8);
+    }
+
+    .demo-box .component-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
     }
 
     pre {
-      background: var(--gray-1);
-      padding: var(--size-4);
-      border-radius: var(--radius-2);
+      background: var(--wa-color-neutral-900, #171717);
+      color: var(--wa-color-neutral-100, #f5f5f5);
+      padding: 0.75rem 1rem;
+      border-radius: var(--wa-border-radius-md, 6px);
       overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: var(--font-size-1);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin: 0;
     }
 
-    .grid-demo {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--size-4);
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
     }
 
-    wa-button {
-      margin-top: var(--size-4);
+    .inline-code {
+      background: var(--wa-color-neutral-100, #f5f5f5);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.875em;
     }
-  `;
+
+    .nav-row {
+      margin-top: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+  `
 
   render() {
     return html`
-      <app-header></app-header>
-      <main>
+      <app-layout>
         <div class="container">
-          <h1>Styling with Web Awesome</h1>
-          <p>Web Awesome provides 50+ UI components.</p>
+          <h1>Web Awesome Components</h1>
+          <p class="subtitle">50+ UI components via CDN. Zero imports needed.</p>
+
+          <h2>How It Works</h2>
+          <p>
+            The <span class="inline-code">kissUI()</span> plugin injects Web Awesome's CSS and loader
+            into your <span class="inline-code">&lt;head&gt;</span>. All <span class="inline-code">&lt;wa-*&gt;</span>
+            custom elements are available globally — no per-component imports.
+          </p>
 
           <div class="demo-box">
             <h3>Buttons</h3>
-            <wa-button variant="brand">Brand</wa-button>
-            <wa-button variant="success">Success</wa-button>
-            <wa-button variant="danger">Danger</wa-button>
-
-            <pre><code>import 'webawesome/components/button.js'
-
-&lt;wa-button variant="brand"&gt;Brand&lt;/wa-button&gt;</code></pre>
+            <div class="component-row">
+              <wa-button variant="brand">Brand</wa-button>
+              <wa-button variant="success">Success</wa-button>
+              <wa-button variant="danger">Danger</wa-button>
+              <wa-button variant="default">Default</wa-button>
+            </div>
+            <pre><code>&lt;wa-button variant="brand"&gt;Brand&lt;/wa-button&gt;
+&lt;wa-button variant="danger"&gt;Danger&lt;/wa-button&gt;</code></pre>
           </div>
 
           <div class="demo-box">
             <h3>Cards</h3>
             <wa-card>
               <h2 slot="header">Card Title</h2>
-              <p>This is a Web Awesome card component.</p>
-              <wa-button slot="footer" variant="primary">
-                Action
-              </wa-button>
+              <p>Web Awesome card component with header and footer slots.</p>
+              <wa-button slot="footer" variant="brand">Action</wa-button>
             </wa-card>
-
-            <pre><code>import 'webawesome/components/card.js'
-
-&lt;wa-card&gt;
+            <pre><code>&lt;wa-card&gt;
   &lt;h2 slot="header"&gt;Title&lt;/h2&gt;
   &lt;p&gt;Content&lt;/p&gt;
+  &lt;wa-button slot="footer" variant="brand"&gt;Action&lt;/wa-button&gt;
 &lt;/wa-card&gt;</code></pre>
           </div>
 
           <div class="demo-box">
             <h3>Badges</h3>
-            <div class="grid-demo">
-              <wa-badge type="primary">Primary</wa-badge>
-              <wa-badge type="success">Success</wa-badge>
-              <wa-badge type="danger">Danger</wa-badge>
+            <div class="component-row">
+              <wa-badge variant="primary">Primary</wa-badge>
+              <wa-badge variant="success">Success</wa-badge>
+              <wa-badge variant="danger">Danger</wa-badge>
+              <wa-badge variant="warning">Warning</wa-badge>
             </div>
-
-            <pre><code>import 'webawesome/components/badge.js'
-
-&lt;wa-badge type="primary"&gt;Primary&lt;/wa-badge&gt;</code></pre>
+            <pre><code>&lt;wa-badge variant="primary"&gt;Primary&lt;/wa-badge&gt;
+&lt;wa-badge variant="danger"&gt;Danger&lt;/wa-badge&gt;</code></pre>
           </div>
 
-          <wa-button href="/">
-            ← Back to Home
-          </wa-button>
+          <h2>Setup</h2>
+          <p>Add <span class="inline-code">kissUI()</span> to your Vite config:</p>
+          <pre><code>import { kissUI } from '@kissjs/ui'
+
+export default defineConfig({
+  plugins: [
+    kissUI({ version: '3.5.0', cdn: true }),
+  ]
+})</code></pre>
+
+          <div class="nav-row">
+            <wa-button href="/guide/ssg">&larr; SSG</wa-button>
+            <wa-button href="https://webawesome.com/docs" target="_blank">Web Awesome Docs &rarr;</wa-button>
+          </div>
         </div>
-      </main>
-      <app-footer></app-footer>
-    `;
+      </app-layout>
+    `
   }
 }
 
 customElements.define('page-web-awesome', WebAwesomePage)
+
+export default WebAwesomePage
+export const tagName = 'page-web-awesome'

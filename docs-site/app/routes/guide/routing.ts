@@ -1,142 +1,128 @@
 import { LitElement, html, css } from 'lit'
-import 'webawesome/components/button.js'
-import 'webawesome/components/card.js'
+import '../../components/layout.js'
 
-/**
- * Routing Guide page
- *
- * Converted from docs/routing.md
- */
 export class RoutingGuidePage extends LitElement {
   static styles = css`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
 
     .container {
-      max-width: 800px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: var(--size-6) var(--size-4);
+      padding: 2rem 1.5rem 3rem;
     }
 
-    pre {
-      background: var(--gray-1);
-      padding: var(--size-4);
-      border-radius: var(--radius-2);
-      overflow-x: auto;
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
     }
 
-    code {
-      font-family: var(--font-mono);
-      font-size: var(--font-size-1);
+    .subtitle {
+      color: var(--wa-color-neutral-500, #737373);
+      margin-bottom: 2rem;
     }
 
-    .route-table {
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    .inline-code {
+      background: var(--wa-color-neutral-100, #f5f5f5);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.875em;
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin: var(--size-4) 0;
+      margin: 0.75rem 0 1.5rem;
+      font-size: 0.875rem;
     }
 
-    .route-table th,
-    .route-table td {
-      border: 1px solid var(--gray-3);
-      padding: var(--size-2);
+    th, td {
+      border: 1px solid var(--wa-color-neutral-200, #e5e7eb);
+      padding: 0.5rem 0.75rem;
       text-align: left;
     }
 
-    .route-table th {
-      background: var(--gray-2);
+    th {
+      background: var(--wa-color-neutral-50, #fafafa);
+      font-weight: 600;
     }
 
-    wa-button {
-      margin-top: var(--size-4);
+    .nav-row {
+      margin-top: 2.5rem;
+      display: flex;
+      justify-content: space-between;
     }
-  `;
+  `
 
   render() {
     return html`
-      <app-header></app-header>
-      <main>
+      <app-layout>
         <div class="container">
-          <h1>Routing Guide</h1>
-          <p>KISS uses <strong>file-based routing</strong>. Create a file in <code>app/routes/</code>, and it becomes a route.</p>
+          <h1>Routing</h1>
+          <p class="subtitle">File-based routing — create a file, get a route.</p>
 
-          <wa-card>
-            <h2 slot="header">Basic Routes</h2>
-            <table class="route-table">
-              <thead>
-                <tr>
-                  <th>File</th>
-                  <th>Route</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>app/routes/index.ts</code></td>
-                  <td><code>/</code></td>
-                </tr>
-                <tr>
-                  <td><code>app/routes/about.ts</code></td>
-                  <td><code>/about</code></td>
-                </tr>
-                <tr>
-                  <td><code>app/routes/contact.ts</code></td>
-                  <td><code>/contact</code></td>
-                </tr>
-              </tbody>
-            </table>
-          </wa-card>
+          <h2>Basic Routes</h2>
+          <p>Create a file in <span class="inline-code">app/routes/</span>, and it becomes a route automatically.</p>
+          <table>
+            <thead>
+              <tr><th>File</th><th>Route</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="inline-code">app/routes/index.ts</span></td><td><span class="inline-code">/</span></td></tr>
+              <tr><td><span class="inline-code">app/routes/about.ts</span></td><td><span class="inline-code">/about</span></td></tr>
+              <tr><td><span class="inline-code">app/routes/guide/getting-started.ts</span></td><td><span class="inline-code">/guide/getting-started</span></td></tr>
+            </tbody>
+          </table>
 
-          <wa-card>
-            <h2 slot="header">Dynamic Routes</h2>
-            <p>Use square brackets for dynamic segments:</p>
-            <table class="route-table">
-              <thead>
-                <tr>
-                  <th>File</th>
-                  <th>Route</th>
-                  <th>Params</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>app/routes/posts/[slug].ts</code></td>
-                  <td><code>/posts/:slug</code></td>
-                  <td><code>slug</code></td>
-                </tr>
-              </tbody>
-            </table>
+          <h2>Dynamic Routes</h2>
+          <p>Use square brackets for dynamic segments:</p>
+          <table>
+            <thead>
+              <tr><th>File</th><th>Route</th><th>Params</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="inline-code">app/routes/posts/[slug].ts</span></td>
+                <td><span class="inline-code">/posts/:slug</span></td>
+                <td><span class="inline-code">slug</span></td>
+              </tr>
+              <tr>
+                <td><span class="inline-code">app/routes/users/[id]/posts.ts</span></td>
+                <td><span class="inline-code">/users/:id/posts</span></td>
+                <td><span class="inline-code">id</span></td>
+              </tr>
+            </tbody>
+          </table>
 
-            <h3>Access params in your component:</h3>
-            <pre><code>// app/routes/posts/[slug].ts
-import { LitElement, html } from 'lit'
+          <h2>Special Files</h2>
+          <table>
+            <thead>
+              <tr><th>File</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="inline-code">_renderer.ts</span></td><td>Custom HTML wrapper for SSR</td></tr>
+              <tr><td><span class="inline-code">_middleware.ts</span></td><td>Hono middleware for the route tree</td></tr>
+            </tbody>
+          </table>
 
-export class PostPage extends LitElement {
-  static properties = {
-    slug: { type: String },
-  }
-
-  constructor() {
-    super()
-    this.slug = ''
-  }
-
-  render() {
-    return html`
-      <h1>Post: ${this.slug}</h1>
+          <div class="nav-row">
+            <wa-button href="/guide/getting-started">&larr; Getting Started</wa-button>
+            <wa-button href="/guide/islands">Islands Guide &rarr;</wa-button>
+          </div>
+        </div>
+      </app-layout>
     `
   }
 }
 
-customElements.define('post-page', PostPage)</code></pre>
-          </wa-card>
-
-          <wa-button href="/guide/islands">Next: Islands Guide →</wa-button>
-        </div>
-      </main>
-      <app-footer></app-footer>
-    `;
-  }
-}
-
 customElements.define('page-routing-guide', RoutingGuidePage)
+
+export default RoutingGuidePage
+export const tagName = 'page-routing-guide'

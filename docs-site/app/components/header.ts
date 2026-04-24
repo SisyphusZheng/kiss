@@ -1,57 +1,95 @@
 import { LitElement, html, css } from 'lit'
-import 'webawesome/components/header.js'
-import 'webawesome/components/button.js'
 
 /**
- * Docs header component
+ * Docs header — top navigation bar.
  *
- * Uses Web Awesome components for navigation.
+ * Uses Web Awesome CDN components. No imports needed —
+ * <wa-*> tags are available globally after kissUI() injects the loader.
  */
 export class DocsHeader extends LitElement {
   static styles = css`
     :host {
       display: block;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--wa-color-neutral-0, #fff);
+      border-bottom: 1px solid var(--wa-color-neutral-200, #e5e7eb);
     }
 
-    wa-header {
-      --header-background: var(--gray-0);
-      --header-border-color: var(--gray-3);
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--wa-space-md, 1rem);
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: var(--wa-space-lg, 1.5rem);
     }
 
     .logo {
-      font-size: var(--font-size-3);
-      font-weight: var(--font-weight-7);
-      color: var(--gray-9);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--wa-color-primary-600, #2563eb);
       text-decoration: none;
+      letter-spacing: -0.02em;
     }
 
-    .nav-links a {
-      margin-left: var(--size-5);
-      color: var(--gray-7);
-      text-decoration: none;
+    .logo:hover {
+      color: var(--wa-color-primary-700, #1d4ed8);
     }
 
-    .nav-links a:hover {
-      color: var(--blue-6);
+    nav {
+      display: flex;
+      gap: var(--wa-space-md, 1rem);
+      flex: 1;
     }
-  `;
+
+    nav a {
+      color: var(--wa-color-neutral-600, #525252);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: var(--wa-space-xs, 0.25rem) var(--wa-space-sm, 0.5rem);
+      border-radius: var(--wa-border-radius-sm, 4px);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    nav a:hover {
+      color: var(--wa-color-primary-600, #2563eb);
+      background: var(--wa-color-primary-50, #eff6ff);
+    }
+
+    nav a[active] {
+      color: var(--wa-color-primary-700, #1d4ed8);
+    }
+
+    .github-link {
+      font-size: 0.875rem;
+    }
+  `
 
   render() {
     return html`
-      <wa-header>
-        <a class="logo" slot="start" href="/">KISS</a>
-        <nav class="nav-links" slot="center">
+      <header class="header-inner">
+        <a class="logo" href="/">KISS</a>
+        <nav>
           <a href="/guide/getting-started">Guide</a>
-          <a href="/styling/open-props">Open Props</a>
-          <a href="/styling/web-awesome">Web Awesome</a>
+          <a href="/guide/routing">Routing</a>
+          <a href="/guide/islands">Islands</a>
+          <a href="/guide/ssg">SSG</a>
+          <a href="/styling/web-awesome">Components</a>
         </nav>
-        <div slot="end">
-          <wa-button href="https://github.com/SisyphusZheng/kiss" variant="default" size="small">
-            GitHub
-          </wa-button>
-        </div>
-      </wa-header>
-    `;
+        <wa-button
+          class="github-link"
+          href="https://github.com/SisyphusZheng/kiss"
+          variant="default"
+          size="small"
+        >
+          GitHub
+        </wa-button>
+      </header>
+    `
   }
 }
 

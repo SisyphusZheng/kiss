@@ -1,16 +1,18 @@
 {
   "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
   "workspace": [
-    "./packages/kiss-vite",
+    "./packages/kiss-core",
     "./packages/kiss-rpc",
+    "./packages/kiss-ui",
     "./examples/poc",
     "./docs-site"
   ],
   "tasks": {
     "dev": "cd examples/poc && deno task dev",
-    "build:vite": "cd packages/vite && deno task build",
-    "build:rpc": "cd packages/rpc && deno task build",
-    "build": "deno task build:rpc && deno task build:vite",
+    "build:core": "cd packages/kiss-core && deno task build",
+    "build:rpc": "cd packages/kiss-rpc && deno task build",
+    "build:ui": "cd packages/kiss-ui && deno task build",
+    "build": "deno task build:rpc && deno task build:core && deno task build:ui",
     "test": "deno test --allow-read --allow-write --allow-env --allow-net",
     "test:watch": "deno test --allow-read --allow-write --allow-env --allow-net --watch",
     "typecheck": "deno check **/*.ts",

@@ -3,12 +3,13 @@
   "version": "0.0.1",
   "exports": "./vite.config.ts",
   "imports": {
-    "@kissjs/vite": "jsr:@kissjs/vite@^0.0.1",
-    "@kissjs/rpc": "jsr:@kissjs/rpc@^0.0.1",
+    "@kiss/core": "jsr:@kissjs/core@^0.1.1",
+    "@kiss/ssg": "jsr:@kissjs/ssg@^0.1.1",
+    "@kiss/ui": "jsr:@kissjs/ui@^0.1.1",
+    "@kiss/rpc": "jsr:@kissjs/rpc@^0.1.1",
     "lit": "npm:lit@^3.0.0",
     "hono": "npm:hono@^4.0.0",
-    "vite": "npm:vite@^6.0.0",
-    "webawesome": "npm:shoelace"
+    "vite": "npm:vite@^6.0.0"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import { kiss } from '@kiss/vite'
+import { kiss } from '@kiss/core'
 
 export default defineConfig({
   plugins: [
