@@ -1,0 +1,265 @@
+/**
+ * @kissjs/core - Entry Descriptor
+ *
+ * Structured data model describing the generated Hono entry module.
+ * This is a pure data object — no code generation logic lives here.
+ *
+ * Architecture:
+ *   routes + options → buildEntryDescriptor() → EntryDescriptor
+ *   EntryDescriptor  → renderEntry()           → string (virtual module code)
+ *
+ * Separating "what to generate" from "how to render it" makes the
+ * entry pipeline testable, serializable, and diffable.
+ */
+
+import type { RouteEntry, FrameworkOptions } from './types.js'
+import { fileToTagName } from './route-scanner.js'
+
+// ─── Import declarations ───────────────────────────────────────
+
+export interface ImportDecl {
+  /** Module specifier (e.g. 'hono', 'hono/cors') */
+  from: string
+  /** Named imports (e.g. ['Hono'], ['cors']) */
+  names: string[]
+  /** Optional alias for the first name (e.g. import { logger as honoLogger }) */
+  alias?: string
+}
+
+// ─── Middleware declarations ────────────────────────────────────
+
+export type CorsOriginConfig =
+  | string
+  | string[]
+  | { type: 'function'; body: string }
+
+export interface MiddlewareDecl {
+  kind: 'requestId' | 'logger' | 'cors' | 'securityHeaders'
+  /** Comments to emit before the middleware registration */
+  comment?: string
+  /** Extra config (e.g. CORS origin) */
+  config?: {
+    corsOrigin?: CorsOriginConfig
+  }
+}
+
+// ─── Route declarations ────────────────────────────────────────
+
+export interface ApiRouteDecl {
+  kind: 'api'
+  /** URL path pattern (e.g. '/api/hello') */
+  path: string
+  /** Variable name for the imported module (e.g. '$apiHello') */
+  varName: string
+  /** Relative file path from routesDir */
+  filePath: string
+  /** Full import path for Vite SSR (e.g. '/app/routes/api/hello.ts') */
+  importPath: string
+}
+
+export interface PageRouteDecl {
+  kind: 'page'
+  /** URL path pattern */
+  path: string
+  /** Variable name for the imported module */
+  varName: string
+  /** Relative file path from routesDir */
+  filePath: string
+  /** Default custom element tag name derived from file name */
+  defaultTagName: string
+  /** Full import path for Vite SSR (e.g. '/app/routes/about.ts') */
+  importPath: string
+}
+
+export type RouteDecl = ApiRouteDecl | PageRouteDecl
+
+// ─── Island declarations ───────────────────────────────────────
+
+export interface IslandDecl {
+  /** Custom element tag name */
+  tagName: string
+  /** Module path for dynamic import (e.g. '/app/islands/counter.ts') */
+  modulePath: string
+}
+
+// ─── Document config ───────────────────────────────────────────
+
+export interface DocumentConfig {
+  /** <html> lang attribute (default: 'en') */
+  lang: string
+  /** <title> content (default: 'KISS App') */
+  title: string
+  /** Extra <head> content (e.g. CDN links) */
+  headExtras: string
+}
+
+// ─── Top-level descriptor ──────────────────────────────────────
+
+export interface EntryDescriptor {
+  /** Whether this is an SSG build (injects DOM shim) */
+  isSSG: boolean
+
+  /** External module imports */
+  imports: ImportDecl[]
+
+  /** Middleware registrations (in order) */
+  middleware: MiddlewareDecl[]
+
+  /** API route registrations */
+  apiRoutes: ApiRouteDecl[]
+
+  /** Page route registrations */
+  pageRoutes: PageRouteDecl[]
+
+  /** Known islands for runtime detection */
+  islands: IslandDecl[]
+
+  /** Document wrapping config */
+  document: DocumentConfig
+
+  /** Route info for debug endpoint (dev only) */
+  debugRoutes?: Array<{ path: string; type: string }>
+}
+
+// ─── Builder: routes + options → EntryDescriptor ───────────────
+
+/**
+ * Build a structured EntryDescriptor from scanned routes and framework options.
+ *
+ * This is a pure function — same inputs always produce the same descriptor.
+ * No side effects, no string concatenation, no code generation.
+ */
+export function buildEntryDescriptor(
+  routes: RouteEntry[],
+  options: {
+    routesDir?: string
+    islandsDir?: string
+    middleware?: FrameworkOptions['middleware']
+    ssg?: boolean
+    islandTagNames?: string[]
+    headExtras?: string
+    html?: { lang?: string; title?: string }
+  } = {},
+): EntryDescriptor {
+  const routesDir = options.routesDir || 'app/routes'
+  const islandsDir = options.islandsDir || 'app/islands'
+  const isSSG = options.ssg === true
+
+  // --- Imports ---
+  const imports: ImportDecl[] = []
+
+  // Always needed
+  imports.push({ from: 'hono', names: ['Hono'] })
+  imports.push({ from: '@lit-labs/ssr', names: ['render'] })
+  imports.push({ from: 'lit', names: ['html'] })
+  imports.push({ from: 'lit/directives/unsafe-html.js', names: ['unsafeHTML'] })
+  imports.push({ from: '@lit-labs/ssr/lib/render-result.js', names: ['collectResult'] })
+
+  // Conditional middleware imports
+  const mw = options.middleware
+  if (mw?.requestId !== false) {
+    imports.push({ from: 'hono/request-id', names: ['requestId'] })
+  }
+  if (mw?.logger !== false) {
+    imports.push({ from: 'hono/logger', names: ['logger'], alias: 'honoLogger' })
+  }
+  if (mw?.cors !== false) {
+    imports.push({ from: 'hono/cors', names: ['cors'] })
+  }
+  if (mw?.securityHeaders !== false) {
+    imports.push({ from: 'hono/secure-headers', names: ['secureHeaders'] })
+  }
+
+  // --- Middleware ---
+  const middleware: MiddlewareDecl[] = []
+
+  if (mw?.requestId !== false) {
+    middleware.push({
+      kind: 'requestId',
+      comment: '1. Request ID — base for logging and error tracking',
+    })
+  }
+  if (mw?.logger !== false) {
+    middleware.push({
+      kind: 'logger',
+      comment: '2. Logger — structured request logging',
+    })
+  }
+  if (mw?.cors !== false) {
+    // Resolve CORS origin config
+    let corsOrigin: CorsOriginConfig | undefined
+    if (mw?.corsOrigin !== undefined) {
+      if (typeof mw.corsOrigin === 'string') {
+        corsOrigin = mw.corsOrigin
+      } else if (Array.isArray(mw.corsOrigin)) {
+        corsOrigin = mw.corsOrigin
+      } else {
+        // Function: serialize to string body
+        corsOrigin = { type: 'function', body: mw.corsOrigin.toString() }
+      }
+    }
+    middleware.push({
+      kind: 'cors',
+      comment: '3. CORS — Web Standards (no process.env)',
+      config: { corsOrigin },
+    })
+  }
+  if (mw?.securityHeaders !== false) {
+    middleware.push({
+      kind: 'securityHeaders',
+      comment: '4. Security headers',
+    })
+  }
+
+  // --- Routes ---
+  const apiRoutes: ApiRouteDecl[] = routes
+    .filter(r => r.type === 'api' && !r.special)
+    .map(r => ({
+      kind: 'api' as const,
+      path: r.path,
+      varName: `$${r.varName}`,
+      filePath: r.filePath,
+      importPath: `/${routesDir}/${r.filePath}`,
+    }))
+
+  const pageRoutes: PageRouteDecl[] = routes
+    .filter(r => r.type === 'page' && !r.special)
+    .map(r => ({
+      kind: 'page' as const,
+      path: r.path,
+      varName: `$${r.varName}`,
+      filePath: r.filePath,
+      defaultTagName: fileToTagName(r.filePath),
+      importPath: `/${routesDir}/${r.filePath}`,
+    }))
+
+  // --- Islands ---
+  const islandTagNames = options.islandTagNames || []
+  const islands: IslandDecl[] = islandTagNames.map(tagName => ({
+    tagName,
+    modulePath: `/${islandsDir}/${tagName}.ts`,
+  }))
+
+  // --- Document ---
+  const document: DocumentConfig = {
+    lang: options.html?.lang || 'en',
+    title: options.html?.title || 'KISS App',
+    headExtras: options.headExtras || '',
+  }
+
+  // --- Debug routes (dev only) ---
+  const debugRoutes = isSSG ? undefined : routes
+    .filter(r => !r.special)
+    .map(r => ({ path: r.path, type: r.type }))
+
+  return {
+    isSSG,
+    imports,
+    middleware,
+    apiRoutes,
+    pageRoutes,
+    islands,
+    document,
+    debugRoutes,
+  }
+}

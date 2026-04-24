@@ -14,6 +14,7 @@
 
 import type { Plugin, ResolvedConfig } from 'vite'
 import type { FrameworkOptions } from './types.js'
+import type { KissBuildContext } from './build-context.js'
 import { build as viteBuild, type InlineConfig } from 'vite'
 import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
@@ -27,10 +28,13 @@ const DEFAULT_SSR_NO_EXTERNAL = [
   '@lit-labs/ssr',
 ]
 
-// Module-level flag to prevent re-entry across plugin instances (viteBuild spawns new plugin instances)
+// Module-level flag remains as a safety net for viteBuild() spawning new instances.
+// In normal use, the KissBuildContext.clientBuildTriggered flag is checked first.
+// This module-level flag catches the edge case where viteBuild() creates a new
+// plugin instance that doesn't share the same context object.
 let GLOBAL_BUILT = false
 
-export function buildPlugin(options: FrameworkOptions = {}): Plugin {
+export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildContext): Plugin {
   const islandsDir = options.islandsDir || 'app/islands'
   const outDir = options.build?.outDir || 'dist'
   const ssrNoExternal = options.ssr?.noExternal || DEFAULT_SSR_NO_EXTERNAL
@@ -45,9 +49,12 @@ export function buildPlugin(options: FrameworkOptions = {}): Plugin {
     },
 
     async closeBundle() {
-      // Prevent infinite recursion — viteBuild() spawns new plugin instances,
-      // so we use a module-level flag to prevent re-entry across all instances.
-      if (GLOBAL_BUILT) return
+      // Prevent infinite recursion — viteBuild() spawns new plugin instances.
+      // Two-level check:
+      //   1. KissBuildContext flag (per-kiss() instance, resettable for testing)
+      //   2. Module-level flag (safety net for viteBuild() spawning new instances)
+      if (ctx?.clientBuildTriggered || GLOBAL_BUILT) return
+      if (ctx) ctx.clientBuildTriggered = true
       GLOBAL_BUILT = true
 
       // Only run in build mode (not dev)

@@ -22,12 +22,13 @@
  *  8. kiss:build           — 双端构建（SSR + Client）
  */
 
-import type { Plugin, ResolvedConfig } from 'vite'
+import type { Plugin } from 'vite'
 import type { FrameworkOptions, RouteEntry } from './types.js'
 
 import { writeFileSync, mkdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { KissBuildContext } from './build-context.js'
 import { islandTransformPlugin } from './island-transform.js'
 import { islandExtractorPlugin } from './island-extractor.js'
 import { htmlTemplatePlugin } from './html-template.js'
@@ -64,20 +65,17 @@ import honoDevServer from '@hono/vite-dev-server'
 /**
  * KISS Framework Vite Plugin
  *
- * 架构说明：
- *   kiss() 在 configResolved 钩子中生成最小化 Hono app（404 兜底），
- *   在 buildStart（async）中扫描真实 routes 并重新生成完整的 Hono entry 代码，
- *   写入 virtual:kiss-hono-entry 虚拟模块。
+ * Architecture:
+ *   All plugins share state through a KissBuildContext instance,
+ *   which is created fresh per kiss() call (no module-level globals).
  *
- *   @hono/vite-dev-server 和 @hono/vite-ssg 都以
- *   virtual:kiss-hono-entry 作为 entry，
- *   运行时通过 Vite ssrLoadModule 懒加载该虚拟模块，拿到 Hono app。
+ *   kiss() → creates KissBuildContext → passes it to all sub-plugins
  *
- *   时序保证：
- *     configResolved（生成最小 entry）→ 虚拟模块有兜底内容
- *     buildStart（异步扫描 routes，重新生成 entry）→ 真实路由就绪
- *     configureServer（dev server 中间件注册）→ 此时 entry 已被 buildStart 更新
- *     首次请求到达 → ssrLoadModule 加载虚拟模块 → 拿到最新 entry 代码
+ *   Time sequence:
+ *     configResolved (minimal fallback entry) → virtual module has content
+ *     buildStart (async scan routes, regenerate entry) → real routes ready
+ *     configureServer (dev server middleware) → entry already updated by buildStart
+ *     first request → ssrLoadModule loads virtual module → gets latest entry
  */
 
 export function kiss(options: FrameworkOptions = {}): Plugin[] {
@@ -92,6 +90,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     ].join('\n  ')
   }
 
+  // Build the resolved options with defaults
   const resolvedOptions: FrameworkOptions = {
     ...options,
     routesDir:     options.routesDir     || 'app/routes',
@@ -100,12 +99,11 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     headExtras,    // computed value takes precedence (auto-generated from ui.cdn or user-provided)
   }
 
+  // Shared build context — replaces all closure-captured mutable variables
+  const ctx = new KissBuildContext(resolvedOptions)
+
   const VIRTUAL_ENTRY_ID   = 'virtual:kiss-hono-entry'
   const RESOLVED_ENTRY_ID  = '\0' + VIRTUAL_ENTRY_ID
-
-  // --- 在 configResolved 时生成（同步），保证 dev server 启动前就绪 ---
-  let honoEntryCode = ''
-  let scannedIslandTagNames: string[] = []
 
   function generateEntry(routes: RouteEntry[], islandTagNames: string[] = []): string {
     return generateHonoEntryCode(routes, {
@@ -124,9 +122,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     name: 'kiss:core',
 
     config() {
-      // Override Vite's default build config:
-      // - Disable index.html as entry (we use virtual:kiss-hono-entry)
-      // - Set library mode with our virtual entry as input
       return {
         build: {
           rollupOptions: {
@@ -136,31 +131,31 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       }
     },
 
-    configResolved(config) {
-      // 生成最小兜底 entry（所有路由返回 404）
-      // 真实 routes 在 buildStart（async）里扫描并重新生成，
-      // @hono/vite-dev-server 懒加载 entry（首次请求时才 ssrLoadModule），
-      // 所以 buildStart 一定在首次请求前执行完毕。
-      honoEntryCode = generateEntry([], scannedIslandTagNames)
+    configResolved() {
+      // Generate minimal fallback entry (all routes return 404)
+      // Real routes are scanned in buildStart (async) and regenerated.
+      // @hono/vite-dev-server lazy-loads entry (ssrLoadModule on first request),
+      // so buildStart always completes before the first request.
+      ctx.honoEntryCode = generateEntry([], ctx.islandTagNames)
     },
 
     async buildStart() {
-      // 异步重新扫描（捕获 configResolved 时可能遗漏的变化）
-      // 同时扫描 islands 目录
+      // Async re-scan (catch changes missed during configResolved)
+      // Also scan islands directory
       try {
-        const routes     = await scanRoutes(resolvedOptions.routesDir!)
+        const routes = await scanRoutes(resolvedOptions.routesDir!)
 
         // Scan islands directory for known island tag names
         const islandsRoot = join(process.cwd(), resolvedOptions.islandsDir || 'app/islands')
         const islandFiles = await scanIslands(islandsRoot)
-        scannedIslandTagNames = islandFiles.map(f => fileToTagName(f))
+        ctx.islandTagNames = islandFiles.map(f => fileToTagName(f))
 
-        honoEntryCode    = generateEntry(routes, scannedIslandTagNames)
-        const pageCount  = routes.filter(r => r.type === 'page' && !r.special).length
-        const apiCount   = routes.filter(r => r.type === 'api'  && !r.special).length
+        ctx.honoEntryCode = generateEntry(routes, ctx.islandTagNames)
+        const pageCount = routes.filter(r => r.type === 'page' && !r.special).length
+        const apiCount  = routes.filter(r => r.type === 'api'  && !r.special).length
         console.log(
           `[KISS] Routes confirmed: ${pageCount} page(s), ${apiCount} API route(s), ` +
-          `${scannedIslandTagNames.length} island(s) — Hono entry (${honoEntryCode.length} bytes)`,
+          `${ctx.islandTagNames.length} island(s) — Hono entry (${ctx.honoEntryCode.length} bytes)`,
         )
       } catch (err) {
         console.error('[KISS] Async route scan failed:', err)
@@ -178,7 +173,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
     load(id) {
       if (id === RESOLVED_ENTRY_ID) {
-        return honoEntryCode || generateEntry([], scannedIslandTagNames)
+        return ctx.honoEntryCode || generateEntry([], ctx.islandTagNames)
       }
     },
   }
@@ -190,28 +185,20 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   }) as unknown as Plugin
 
   // --- 4. 自定义 SSG 插件（替代 @hono/vite-ssg）---
-  // @hono/vite-ssg 在 generateBundle 中创建新 Vite server（空插件），
-  // 导致 virtual:kiss-hono-entry 无法解析，路由模块也无法加载。
-  //
-  // 我们的方案：在 closeBundle 阶段（构建完成后），
-  // 1. 生成带 DOM shim 的 SSG entry（真实 .ts 文件）
-  // 2. 创建 Vite SSR server（configFile: false 防止递归加载用户 vite.config）
-  // 3. 加载 entry → 拿到 Hono app → 用 hono/ssg toSSG 生成静态文件
-  // 4. 写入 dist/ 目录
-
-  let resolvedConfig: ResolvedConfig
-
   const ssgPlugin: Plugin = {
     name: 'kiss:ssg',
     apply: 'build',
 
     configResolved(config) {
-      resolvedConfig = config
+      ctx.resolvedConfig = config
     },
 
     async closeBundle() {
-      const root = resolvedConfig.root
-      const outDir = resolvedConfig.build.outDir
+      const config = ctx.resolvedConfig
+      if (!config) return
+
+      const root = config.root
+      const outDir = config.build.outDir
 
       // Generate SSG entry with DOM shim
       const routes = await scanRoutes(resolvedOptions.routesDir!)
@@ -232,10 +219,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         html: resolvedOptions.html,
       })
 
-      // Write temp entry file to project's .kiss/ directory (not tempdir).
-      // The entry MUST be under the project root so Vite SSR can resolve
-      // bare imports (e.g. @lit-labs/ssr) from the project's node_modules.
-      // Temp directories are outside the project root, causing module resolution failures.
+      // Write temp entry file to project's .kiss/ directory
       const KISS_SSG_ENTRY = '.kiss-ssg-entry.ts'
       const kissTmpDir = join(root, '.kiss')
       mkdirSync(kissTmpDir, { recursive: true })
@@ -243,10 +227,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       writeFileSync(tmpEntryPath, ssgEntryCode, 'utf-8')
 
       try {
-        // Create Vite SSR server — CRITICAL: configFile: false
-        // Prevents loading user's vite.config.ts (which contains kiss()),
-        // avoiding infinite recursive plugin loading.
-        // Vite still resolves bare imports from node_modules via root.
         const { createServer } = await import('vite')
         const server = await createServer({
           configFile: false,
@@ -258,14 +238,11 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           resolve: {
             preserveSymlinks: true,
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-            // Preserve user's resolve.alias (e.g. '@kissjs/core' → runtime shim)
-            // so SSG can resolve the same bare specifiers as the main build.
-            alias: resolvedConfig.resolve?.alias || [],
+            alias: config.resolve?.alias || [],
           },
         })
 
         try {
-          // Load the SSG entry module (absolute path since file is in tmpdir)
           const module = await server.ssrLoadModule(tmpEntryPath)
           const app = module.default
 
@@ -273,12 +250,10 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
             throw new Error(`[KISS SSG] Failed to load Hono app from ${KISS_SSG_ENTRY}`)
           }
 
-          // Use hono/ssg to generate static files
           const { toSSG } = await import('hono/ssg')
           const nodeFs = await import('node:fs')
           const nodePath = await import('node:path')
 
-          // FileSystemModule adapter for hono/ssg
           const fsModule = {
             writeFile: async (path: string, data: string | Uint8Array) => {
               const dir = nodePath.dirname(path)
@@ -302,10 +277,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           }
 
           const outputDir = join(root, outDir)
-
-          const result = await toSSG(app, fsModule, {
-            dir: outputDir,
-          })
+          const result = await toSSG(app, fsModule, { dir: outputDir })
 
           if (!result.success) {
             throw result.error
@@ -318,10 +290,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       } catch (err) {
         console.error('[KISS SSG] Failed:', err)
       } finally {
-      // Clean up temp file
-      try {
-        unlinkSync(tmpEntryPath)
-      } catch { /* ignore */ }
+        try {
+          unlinkSync(tmpEntryPath)
+        } catch { /* ignore */ }
       }
     },
   }
@@ -335,7 +306,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     islandExtractorPlugin(resolvedOptions),
     htmlTemplatePlugin(resolvedOptions),
     ssgPlugin,                // SSG 静态生成
-    buildPlugin(resolvedOptions),
+    buildPlugin(resolvedOptions, ctx),
   ]
 }
 
