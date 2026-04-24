@@ -1079,7 +1079,7 @@
       "npm:typescript@^5.9.0"
     ],
     "members": {
-      "docs-site": {
+      "docs": {
         "dependencies": [
           "jsr:@kissjs/core@~0.1.5",
           "npm:hono@4",

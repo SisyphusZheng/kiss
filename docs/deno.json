@@ -1,5 +1,5 @@
 {
-  "name": "@kiss/docs-site",
+  "name": "@kiss/docs",
   "version": "0.0.1",
   "exports": "./vite.config.ts",
   "imports": {

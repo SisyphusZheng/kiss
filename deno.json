@@ -6,7 +6,7 @@
     "./packages/kiss-ui",
     "./examples/poc",
     "./examples/minimal-blog",
-    "./docs-site"
+    "./docs"
   ],
   "imports": {
     "magic-string": "npm:magic-string@^0.30.0",
@@ -26,9 +26,9 @@
     "build:rpc": "cd packages/kiss-rpc && deno task build",
     "build:ui": "cd packages/kiss-ui && deno task build",
     "build": "deno task build:rpc && deno task build:core && deno task build:ui",
-    "docs:dev": "cd docs-site && deno task dev",
-    "docs:build": "cd docs-site && deno task build",
-    "docs:preview": "cd docs-site && deno task preview",
+    "docs:dev": "cd docs && deno task dev",
+    "docs:build": "cd docs && deno task build",
+    "docs:preview": "cd docs && deno task preview",
     "publish:core": "cd packages/kiss-core && deno publish --allow-dirty",
     "publish:rpc": "cd packages/kiss-rpc && deno publish --allow-dirty",
     "publish:ui": "cd packages/kiss-ui && deno publish --allow-dirty",

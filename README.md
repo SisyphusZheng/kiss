@@ -199,23 +199,29 @@ kiss({
 
 ## 文档
 
+📖 完整文档见 [KISS 文档站](https://sisyphuszheng.github.io/kiss/)
+
 | 文档 | 说明 |
 |------|------|
-| [🎯 设计哲学](docs/design-philosophy.md) | **五大支柱 + 硬约束**：Web Standards 优先、最小增幅、无框架绑定、无 Runtime 绑定、渐进增强 |
-| [架构设计](docs/architecture.md) | 数据流、请求生命周期、Island 原理、类型安全链路 |
-| [实现路线图](docs/roadmap.md) | Phase 0~4 详细任务 |
-| [API 设计规范](docs/api-design.md) | 路由约定、Zod 验证、响应格式、RPC |
-| [错误处理](docs/error-handling.md) | 类型化错误层级、三层降级 |
-| [配置管理](docs/configuration.md) | 环境变量、fail-fast、多环境 |
-| [测试策略](docs/testing-strategy.md) | 测试金字塔、CI 配置 |
-| [安全与中间件](docs/security-middleware.md) | 安全头、CORS、限流 |
-| [开发者体验](docs/dev-dx.md) | CLI、dev 模式、调试端点 |
-| [部署指南](docs/deployment.md) | 6 平台部署配置 |
-| [风险矩阵](docs/risk-matrix.md) | 关键挑战与兼容性 |
+| [🎯 设计哲学](https://sisyphuszheng.github.io/kiss/guide/design-philosophy) | **五大支柱 + 硬约束** |
+| [快速开始](https://sisyphuszheng.github.io/kiss/guide/getting-started) | 5 分钟上手 |
+| [路由](https://sisyphuszheng.github.io/kiss/guide/routing) | 文件路由、动态路由 |
+| [Islands](https://sisyphuszheng.github.io/kiss/guide/islands) | 按需加载交互组件 |
+| [SSG](https://sisyphuszheng.github.io/kiss/guide/ssg) | 静态站点生成 |
+| [API 路由](https://sisyphuszheng.github.io/kiss/guide/api-routes) | Hono 后端端点 |
+| [API 设计](https://sisyphuszheng.github.io/kiss/guide/api-design) | 类型安全 RPC、验证 |
+| [错误处理](https://sisyphuszheng.github.io/kiss/guide/error-handling) | 类型化错误层级 |
+| [安全与中间件](https://sisyphuszheng.github.io/kiss/guide/security-middleware) | 安全头、CORS |
+| [测试](https://sisyphuszheng.github.io/kiss/guide/testing) | 测试策略、CI |
+| [架构](https://sisyphuszheng.github.io/kiss/guide/architecture) | 插件组合、请求生命周期 |
+| [配置](https://sisyphuszheng.github.io/kiss/guide/configuration) | kiss() 选项 |
+| [部署](https://sisyphuszheng.github.io/kiss/guide/deployment) | 6 平台部署 |
+| [Web Awesome](https://sisyphuszheng.github.io/kiss/styling/web-awesome) | 50+ UI 组件 |
+| [路线图](./ROADMAP.md) | Phase 0~4 详细任务 |
 
 ## 当前状态
 
-**Phase 1 完成** — 核心插件包可用，JSR 已发布。
+**Phase 2 完成** — 核心插件包可用，工程化补齐，JSR 已发布。
 
 已实现 ✅：
 - Route Scanner — 文件路由扫描（含 _renderer / _middleware 支持）
@@ -243,7 +249,7 @@ KISS 是唯一**全链路 Web Standards** 的全栈框架：
 | UI | Web Components | Lit 直用，不抽象 |
 | 构建 | ESM | Vite 输出纯 ESM |
 
-➡️ 完整哲学见 [docs/design-philosophy.md](docs/design-philosophy.md)
+➡️ 完整哲学见 [设计哲学](https://sisyphuszheng.github.io/kiss/guide/design-philosophy)
 
 ## 技术栈
 

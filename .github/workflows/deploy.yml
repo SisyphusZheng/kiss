@@ -25,17 +25,17 @@ jobs:
           deno-version: v2.x
 
       - name: Install dependencies
-        working-directory: docs-site
+        working-directory: docs
         run: deno install --node-modules-dir
 
       - name: Build docs site
-        working-directory: docs-site
+        working-directory: docs
         run: deno task build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs-site/dist
+          path: docs/dist
 
   deploy:
     environment:
