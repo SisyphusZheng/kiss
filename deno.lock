@@ -1060,6 +1060,8 @@
       "docs-site": {
         "dependencies": [
           "jsr:@kissjs/core@~0.1.4",
+          "npm:hono@4",
+          "npm:lit@3",
           "npm:vite@6"
         ]
       },

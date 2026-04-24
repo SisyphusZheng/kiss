@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: docs-site
-        run: deno install
+        run: deno install --node-modules-dir
 
       - name: Build docs site
         working-directory: docs-site

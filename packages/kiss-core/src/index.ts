@@ -256,6 +256,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           resolve: {
             preserveSymlinks: true,
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+            // Preserve user's resolve.alias (e.g. '@kissjs/core' → runtime shim)
+            // so SSG can resolve the same bare specifiers as the main build.
+            alias: resolvedConfig.resolve?.alias || [],
           },
         })
 

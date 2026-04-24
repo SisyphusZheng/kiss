@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "exports": "./vite.config.ts",
   "imports": {
-    "@kissjs/core": "jsr:@kissjs/core@^0.1.4",
+    "@kissjs/core": "jsr:@kissjs/core@^0.1.5",
+    "lit": "npm:lit@^3.0.0",
+    "hono": "npm:hono@^4.0.0",
     "vite": "npm:vite@^6.0.0"
   },
   "tasks": {

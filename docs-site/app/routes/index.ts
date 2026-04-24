@@ -177,7 +177,7 @@ export class DocsHome extends LitElement {
         <div class="jsr-badges">
           <h3>Install from JSR</h3>
           <div class="badge-row">
-            <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core@0.1.4</a>
+            <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core@0.1.5</a>
             <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui@0.1.2</a>
             <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc@0.1.2</a>
           </div>
