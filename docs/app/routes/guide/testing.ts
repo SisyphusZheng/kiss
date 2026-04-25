@@ -84,7 +84,7 @@ jobs:
 
           <div class="nav-row">
             <a href="/kiss/guide/security-middleware" class="nav-link">&larr; Security &amp; Middleware</a>
-            <a href="/kiss/guide/api-design" class="nav-link">API Design &rarr;</a>
+            <a href="/kiss/guide/architecture" class="nav-link">Architecture &rarr;</a>
           </div>
         </div>
       </app-layout>

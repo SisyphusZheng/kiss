@@ -1,25 +1,24 @@
 /**
  * @kissjs/core - Main entry
  *
- * KISS = 1 个 Vite 插件，连接 Hono + Lit + Vite。
- * 设计参考 honox，但渲染引擎固定为 Lit / Web Components。
+ * KISS = Pre-rendered Islands Architecture (PIA)
+ * 1 个 Vite 插件，连接 Hono + Lit + Vite。
  *
- * 使用方式：
- * ```ts
- * // vite.config.ts
- * import { kiss } from '@kiss/core'
- * export default defineConfig({ plugins: [kiss()] })
- * ```
+ * PIA 四大支柱：
+ *   1. 构建即终态 — 所有页面构建时渲染为静态 HTML
+ *   2. 交互必隔离 — 客户端 JS 仅存在于 Island Web Component
+ *   3. 降级即内容 — Island 内部包裹语义化 HTML 降级
+ *   4. 拒绝即纪律 — 禁止 SSR 运行时 / CSR / SPA
  *
  * 插件组成（kiss() 返回的 Plugin[]）：
  *  1. kiss:core          — configResolved + buildStart（路由扫描 + 虚拟模块生成）
  *  2. kiss:virtual-entry  — 解析/加载 virtual:kiss-hono-entry 虚拟模块
- *  3. @hono/vite-dev-server — dev 模式（读取 virtual:kiss-hono-entry）
+ *  3. @hono/vite-dev-server — dev 模式（仅开发，不进入生产产物）
  *  4. island-transform     — AST 标记 (__island, __tagName)
  *  5. island-extractor     — 构建时 island 依赖分析
  *  6. html-template        — transformIndexHtml（preload / meta / hydration）
- *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段）
- *  8. kiss:build           — 双端构建（SSR + Client）
+ *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段，PIA 唯一产物）
+ *  8. kiss:build           — 客户端构建（仅 Islands）
  */
 
 import type { Plugin } from 'vite';
@@ -56,7 +55,7 @@ export {
   ValidationError,
 } from './errors.js';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
-export { collectIslands, renderSsrError, wrapInDocument } from './ssr-handler.js';
+export { renderSsrError, wrapInDocument } from './ssr-handler.js';
 export { generateHydrationScript } from './island-transform.js';
 export { getKnownIslandsMap } from './island-extractor.js';
 
@@ -71,28 +70,40 @@ export { Hono } from 'hono';
 
 // --- Hono 官方 Vite 插件（静态 import，package.json 已声明依赖）---
 import honoDevServer from '@hono/vite-dev-server';
-// @hono/vite-ssg 不再直接使用——SSG 由 kiss:ssg 自定义插件实现
-// 但保留依赖声明以便用户使用 hono/ssg
 
 /**
- * KISS Framework Vite Plugin
+ * KISS Framework Vite Plugin — PIA (Pre-rendered Islands Architecture)
  *
  * Architecture:
  *   All plugins share state through a KissBuildContext instance,
  *   which is created fresh per kiss() call (no module-level globals).
  *
- *   kiss() → creates KissBuildContext → passes it to all sub-plugins
+ *   PIA: Production output is always static HTML files + optional Island JS.
+ *   No runtime server in production.
  *
- *   Time sequence:
- *     configResolved (minimal fallback entry) → virtual module has content
- *     buildStart (async scan routes, regenerate entry) → real routes ready
- *     configureServer (dev server middleware) → entry already updated by buildStart
- *     first request → ssrLoadModule loads virtual module → gets latest entry
+ *   kiss() → creates KissBuildContext → passes it to all sub-plugins
  */
 
 export function kiss(options: FrameworkOptions = {}): Plugin[] {
-  // Auto-generate headExtras from ui.cdn option
+  // Resolve headExtras: support both new inject option and legacy ui option
   let headExtras = options.headExtras;
+
+  // New inject option: build headExtras from structured config
+  if (options.inject && !headExtras) {
+    const fragments: string[] = [];
+    for (const href of options.inject.stylesheets || []) {
+      fragments.push(`<link rel="stylesheet" href="${href}" />`);
+    }
+    for (const src of options.inject.scripts || []) {
+      fragments.push(`<script type="module" src="${src}"></script>`);
+    }
+    for (const frag of options.inject.headFragments || []) {
+      fragments.push(frag);
+    }
+    headExtras = fragments.join('\n  ');
+  }
+
+  // Legacy ui option: auto-generate WebAwesome CDN links
   if (options.ui?.cdn && !headExtras) {
     const version = options.ui.version || '3.5.0';
     const cdnBase = `https://ka-f.webawesome.com/webawesome@${version}`;
@@ -108,7 +119,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     routesDir: options.routesDir || 'app/routes',
     islandsDir: options.islandsDir || 'app/islands',
     componentsDir: options.componentsDir || 'app/components',
-    headExtras, // computed value takes precedence (auto-generated from ui.cdn or user-provided)
+    headExtras, // computed value takes precedence
   };
 
   // Shared build context — replaces all closure-captured mutable variables
@@ -134,7 +145,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     name: 'kiss:core',
 
     config(userConfig) {
-      // Save user-provided resolve.alias in original format for SSG internal server
       if (userConfig.resolve?.alias && !Array.isArray(userConfig.resolve.alias)) {
         ctx.userResolveAlias = userConfig.resolve.alias as Record<string, string>;
       }
@@ -148,20 +158,13 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     },
 
     configResolved() {
-      // Generate minimal fallback entry (all routes return 404)
-      // Real routes are scanned in buildStart (async) and regenerated.
-      // @hono/vite-dev-server lazy-loads entry (ssrLoadModule on first request),
-      // so buildStart always completes before the first request.
       ctx.honoEntryCode = generateEntry([], ctx.islandTagNames);
     },
 
     async buildStart() {
-      // Async re-scan (catch changes missed during configResolved)
-      // Also scan islands directory
       try {
         const routes = await scanRoutes(resolvedOptions.routesDir!);
 
-        // Scan islands directory for known island tag names
         const islandsRoot = join(process.cwd(), resolvedOptions.islandsDir || 'app/islands');
         const islandFiles = await scanIslands(islandsRoot);
         ctx.islandTagNames = islandFiles.map((f) => fileToTagName(f));
@@ -170,11 +173,11 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         const pageCount = routes.filter((r) => r.type === 'page' && !r.special).length;
         const apiCount = routes.filter((r) => r.type === 'api' && !r.special).length;
         console.log(
-          `[KISS] Routes confirmed: ${pageCount} page(s), ${apiCount} API route(s), ` +
-            `${ctx.islandTagNames.length} island(s) — Hono entry (${ctx.honoEntryCode.length} bytes)`,
+          `[KISS] Routes: ${pageCount} page(s), ${apiCount} API route(s), ` +
+            `${ctx.islandTagNames.length} island(s) — PIA build`,
         );
       } catch (err) {
-        console.error('[KISS] Async route scan failed:', err);
+        console.error('[KISS] Route scan failed:', err);
       }
     },
   };
@@ -194,13 +197,13 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     },
   };
 
-  // --- 3. @hono/vite-dev-server（dev 模式）---
+  // --- 3. @hono/vite-dev-server（dev 模式 only，不进入生产产物）---
   const devServerPlugin = honoDevServer({
     entry: VIRTUAL_ENTRY_ID,
     injectClientScript: true,
   });
 
-  // --- 4. 自定义 SSG 插件（替代 @hono/vite-ssg）---
+  // --- 4. 自定义 SSG 插件（PIA 唯一的生产产物生成器）---
   const ssgPlugin: Plugin = {
     name: 'kiss:ssg',
     apply: 'build',
@@ -219,7 +222,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       // Generate SSG entry with DOM shim
       const routes = await scanRoutes(resolvedOptions.routesDir!);
 
-      // Scan islands for SSG entry too
       const islandsRoot = join(root, resolvedOptions.islandsDir || 'app/islands');
       const ssgIslandFiles = await scanIslands(islandsRoot);
       const ssgIslandTagNames = ssgIslandFiles.map((f) => fileToTagName(f));
@@ -244,9 +246,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
       try {
         const { createServer } = await import('vite');
-        // config.resolve.alias is Vite's internal Alias[] (with customResolver, etc.)
-        // which is NOT compatible with createServer's resolve.alias format.
-        // Use the saved original user-provided alias instead.
         const server = await createServer({
           configFile: false,
           root,
@@ -302,7 +301,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
             throw result.error;
           }
 
-          console.log(`[KISS SSG] Static site generated → ${join(root, outDir)}`);
+          console.log(`[KISS SSG] PIA: Static site generated → ${join(root, outDir)}`);
         } finally {
           await server.close();
         }
@@ -320,12 +319,12 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   return [
     corePlugin, // configResolved + buildStart（路由扫描）
     virtualEntryPlugin, // virtual:kiss-hono-entry 提供器
-    devServerPlugin, // dev 模式 Hono 服务器
+    devServerPlugin, // dev 模式 Hono 服务器（仅开发）
     islandTransformPlugin(resolvedOptions.islandsDir!),
     islandExtractorPlugin(resolvedOptions),
     htmlTemplatePlugin(resolvedOptions),
-    ssgPlugin, // SSG 静态生成
-    buildPlugin(resolvedOptions, ctx),
+    ssgPlugin, // SSG 静态生成（PIA 唯一产物）
+    buildPlugin(resolvedOptions, ctx), // 客户端构建（仅 Islands）
   ];
 }
 

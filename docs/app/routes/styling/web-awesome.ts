@@ -70,7 +70,7 @@ export class WebAwesomePage extends LitElement {
           </div>
 
           <h2>Setup</h2>
-          <p>Enable <span class="inline-code">ui.cdn</span> in your <span class="inline-code">kiss()</span> config:</p>
+          <p>Enable WebAwesome via the <span class="inline-code">inject</span> option (recommended):</p>
           <pre><code>import { kiss } from '@kissjs/core'
 import { defineConfig } from 'vite'
 
@@ -78,10 +78,27 @@ export default defineConfig({
   plugins: [
     kiss({
       routesDir: 'app/routes',
-      ui: { cdn: true },
+      inject: {
+        stylesheets: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css'],
+        scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
+      },
     }),
   ]
 })</code></pre>
+
+          <h2>Migration from <span class="inline-code">ui</span> option</h2>
+          <p>The old <span class="inline-code">ui: { cdn: true }</span> shortcut still works but is deprecated. To migrate:</p>
+          <pre><code>// Before (deprecated)
+kiss({ ui: { cdn: true } })
+
+// After (recommended)
+kiss({
+  inject: {
+    stylesheets: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css'],
+    scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
+  },
+})</code></pre>
+          <p>The <span class="inline-code">inject</span> option is more flexible — it works with any CDN, any version, and any external resource.</p>
 
           <div class="nav-row">
             <a href="/kiss/guide/deployment" class="nav-link">&larr; Deployment</a>

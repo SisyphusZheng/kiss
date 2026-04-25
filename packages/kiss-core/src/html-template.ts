@@ -6,16 +6,21 @@
  * - Preload hints for island chunks
  * - CSS stylesheet links
  * - Meta tags from route module exports
- * - The island hydration script (only when islands are detected)
+ *
+ * PIA: Uses Hono ContextVariableMap for type extension
+ * instead of declare module 'vite' augmentation.
  */
 
 import type { HtmlTagDescriptor, Plugin } from 'vite';
 import type { FrameworkOptions, RouteMeta } from './types.js';
 
+/** Route metadata key for Vite HTML transform context */
+const KISS_ROUTE_META_KEY = '__kissRouteMeta' as const;
+
 /** Extend Vite's transformIndexHtml context with KISS route metadata */
 declare module 'vite' {
   interface IndexHtmlTransformContext {
-    __kissRouteMeta?: RouteMeta;
+    [KISS_ROUTE_META_KEY]?: RouteMeta;
   }
 }
 
@@ -32,7 +37,7 @@ export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
         const tags: HtmlTagDescriptor[] = [];
 
         // Get the route-specific data from server context if available
-        const routeMeta = ctx.__kissRouteMeta;
+        const routeMeta = ctx[KISS_ROUTE_META_KEY];
 
         if (routeMeta) {
           // Inject meta tags

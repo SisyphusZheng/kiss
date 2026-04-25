@@ -1,91 +1,22 @@
 /**
  * @kissjs/core - SSR Handler
- * Coordinates Vite SSR loading + Lit rendering + Island collection.
+ * PIA (Pre-rendered Islands Architecture): rendering is build-time only.
  *
- * Uses @lit-labs/ssr v3 to render Lit components with Declarative Shadow DOM.
- * When a custom element is imported (registered) in the SSR context,
- * render() automatically renders its shadow DOM with <template shadowrootmode="open">.
+ * This module provides:
+ * - Build-time rendering functions (used by SSG plugin and dev server)
+ * - Error page rendering
+ * - HTML document wrapping
+ *
+ * What was removed (PIA):
+ * - renderPageToString() — runtime SSR function that took ViteDevServer
+ * - collectIslands() — regex-based island detection (moved to build-time map)
+ *
+ * What remains:
+ * - renderSsrError() — error page HTML generation
+ * - wrapInDocument() — HTML document wrapping
  */
 
-import type { ViteDevServer } from 'vite';
-import type { IslandMeta, RouteEntry } from './types.js';
-
-// DOM shim is NOT imported here — it's the caller's responsibility.
-// SSG: injected by generateHonoEntryCode() when ssg: true
-// Dev: browser already has DOM APIs, @hono/vite-dev-server handles SSR
-import { render as litRender } from '@lit-labs/ssr';
-import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
-import { html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-
-/**
- * Collect islands from rendered HTML by matching against a known Island map.
- */
-export function collectIslands(
-  html: string,
-  knownIslands: Map<string, string>,
-): IslandMeta[] {
-  const islands: IslandMeta[] = [];
-  const seen = new Set<string>();
-
-  for (const [tagName, modulePath] of knownIslands) {
-    const pattern = new RegExp(`<${tagName}[\\s>/]`, 'i');
-    if (pattern.test(html) && !seen.has(tagName)) {
-      seen.add(tagName);
-      islands.push({ tagName, modulePath });
-    }
-  }
-
-  return islands;
-}
-
-/**
- * Render a page route to HTML string via Vite SSR + Lit.
- * Returns the rendered HTML and a list of collected islands.
- */
-export async function renderPageToString(
-  vite: ViteDevServer,
-  route: RouteEntry,
-  _request: Request,
-  options: { routesDir?: string; islandsDir?: string; componentsDir?: string } = {},
-): Promise<{ html: string; islands: IslandMeta[] }> {
-  const { routesDir = 'app/routes' } = options;
-
-  // Load the route module via Vite SSR
-  // This registers the custom element in the SSR global scope
-  const module = await vite.ssrLoadModule(`/${routesDir}/${route.filePath}`);
-
-  // Get the default export (should be a Lit component class)
-  const ComponentClass = module.default;
-  if (!ComponentClass) {
-    throw new Error(`Route module ${route.filePath} has no default export`);
-  }
-
-  // Get the custom element tag name
-  // Convention: route module exports `tagName` string, or we derive from file path
-  const tagName = module.tagName || 'kiss-' + route.filePath
-        .replace(/\.[^.]+$/, '')
-        .replace(/[\\/]/g, '-')
-        .toLowerCase();
-
-  // Render the component using Lit SSR
-  // Since the custom element is registered via the module import above,
-  // render() will automatically render it with Declarative Shadow DOM.
-  // Lit html`` doesn't support dynamic tag names in element position,
-  // so we use unsafeHTML to inject the custom element tag.
-  const ssrResult = litRender(html`
-    ${unsafeHTML(`<${tagName}></${tagName}>`)}
-  `);
-  const renderedHtml = await collectResult(ssrResult);
-
-  // Collect islands from rendered HTML
-  // Islands are collected by the island-extractor plugin at build time
-  // For dev mode, we return empty islands array
-  const _knownIslands = new Map<string, string>();
-  const islands: IslandMeta[] = [];
-
-  return { html: renderedHtml, islands };
-}
+import type { RouteEntry } from './types.js';
 
 /**
  * Render an error page to HTML string.

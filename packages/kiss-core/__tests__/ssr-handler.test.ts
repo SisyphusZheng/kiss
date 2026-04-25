@@ -1,8 +1,11 @@
 /**
  * @kissjs/core - ssr-handler.ts tests (Deno)
+ *
+ * PIA: collectIslands removed (moved to build-time map).
+ * Only renderSsrError and wrapInDocument remain.
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { collectIslands, renderSsrError, wrapInDocument } from '../src/ssr-handler.ts';
+import { renderSsrError, wrapInDocument } from '../src/ssr-handler.ts';
 
 Deno.test('ssr-handler - wrapInDocument', async (t) => {
   await t.step('wraps body in full HTML document', () => {
@@ -47,55 +50,5 @@ Deno.test('ssr-handler - renderSsrError', async (t) => {
     assertEquals(html.includes('Something went wrong'), true);
     // Production error page should NOT contain "SSR Render Error"
     assertEquals(html.includes('SSR Render Error'), false);
-  });
-});
-
-Deno.test('ssr-handler - collectIslands', async (t) => {
-  await t.step('collects known island tags from HTML using precise map', () => {
-    const knownIslands = new Map([
-      ['my-counter', '/app/islands/my-counter.ts'],
-      ['theme-toggle', '/app/islands/theme-toggle.ts'],
-    ]);
-    const html = '<div><my-counter></my-counter><p>hello</p></div>';
-    const islands = collectIslands(html, knownIslands);
-    assertEquals(islands.length, 1);
-    assertEquals(islands[0].tagName, 'my-counter');
-  });
-
-  await t.step('returns empty array when no islands found', () => {
-    const knownIslands = new Map([
-      ['my-counter', '/app/islands/my-counter.ts'],
-    ]);
-    const html = '<div><p>hello</p></div>';
-    const islands = collectIslands(html, knownIslands);
-    assertEquals(islands.length, 0);
-  });
-
-  await t.step('does not match non-island custom elements', () => {
-    const knownIslands = new Map([
-      ['my-counter', '/app/islands/my-counter.ts'],
-    ]);
-    const html = '<my-header></my-header><div>hello</div>';
-    const islands = collectIslands(html, knownIslands);
-    assertEquals(islands.length, 0);
-  });
-
-  await t.step('collects multiple islands', () => {
-    const knownIslands = new Map([
-      ['my-counter', '/app/islands/my-counter.ts'],
-      ['theme-toggle', '/app/islands/theme-toggle.ts'],
-    ]);
-    const html = '<my-counter count="5"></my-counter><theme-toggle></theme-toggle>';
-    const islands = collectIslands(html, knownIslands);
-    assertEquals(islands.length, 2);
-  });
-
-  await t.step('deduplicates islands', () => {
-    const knownIslands = new Map([
-      ['my-counter', '/app/islands/my-counter.ts'],
-    ]);
-    const html = '<my-counter></my-counter><my-counter></my-counter>';
-    const islands = collectIslands(html, knownIslands);
-    assertEquals(islands.length, 1);
   });
 });

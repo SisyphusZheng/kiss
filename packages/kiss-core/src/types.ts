@@ -1,5 +1,11 @@
 /**
  * @kissjs/core - Public types
+ *
+ * PIA (Pre-rendered Islands Architecture) types:
+ * - SSG is always on (no ssr.preRender option)
+ * - No CSR/SPA mode (rejected by discipline)
+ * - UI is generic head injection (not WebAwesome-specific)
+ * - Islands are the only client JS allowed
  */
 
 import type { Plugin } from 'vite';
@@ -13,7 +19,7 @@ export interface FrameworkOptions {
   /** Directory for shared Lit components (default: 'app/components') */
   componentsDir?: string;
 
-  /** Extra HTML to inject into <head> (e.g. CDN links) — auto-generated when ui.cdn is true */
+  /** Extra HTML to inject into <head> (e.g. CDN links, analytics) */
   headExtras?: string;
 
   /** Document <html> attributes */
@@ -24,7 +30,25 @@ export interface FrameworkOptions {
     title?: string;
   };
 
-  /** UI framework configuration (WebAwesome CDN injection) */
+  /**
+   * External resource injection for UI libraries.
+   * Generic mechanism — not tied to any specific UI framework.
+   * Can be used for WebAwesome, Shoelace, custom CSS, etc.
+   */
+  inject?: {
+    /** CSS stylesheet URLs to inject into <head> */
+    stylesheets?: string[];
+    /** Module script URLs to inject into <head> */
+    scripts?: string[];
+    /** Arbitrary HTML fragments to inject into <head> */
+    headFragments?: string[];
+  };
+
+  /**
+   * Legacy UI option (deprecated, use inject instead).
+   * Automatically generates headExtras from WebAwesome CDN.
+   * @deprecated Use inject.stylesheets + inject.scripts for framework-agnostic head injection
+   */
   ui?: {
     /** Enable WebAwesome CDN injection (default: false) */
     cdn?: boolean;
@@ -32,14 +56,10 @@ export interface FrameworkOptions {
     version?: string;
   };
 
-  /** SSR configuration */
+  /** SSR build configuration (build-time only, no runtime) */
   ssr?: {
-    /** Packages that should not be externalized in SSR (default: lit packages) */
+    /** Packages that should not be externalized in SSR build (default: lit packages) */
     noExternal?: string[];
-    /** Enable SSG pre-rendering (default: false) */
-    preRender?: boolean;
-    /** Specific routes to pre-render (empty = all static routes) */
-    preRenderRoutes?: string[];
   };
 
   /** Island configuration */
@@ -50,34 +70,17 @@ export interface FrameworkOptions {
     hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
   };
 
-  /** Dev server configuration */
-  dev?: {
-    /** Dev server port (default: 3000) */
-    port?: number;
-    /** Enable HMR (default: true) */
-    hmr?: boolean;
-    /** Show error overlay (default: true) */
-    overlay?: boolean;
-    /** Enable Open in Editor (default: true) */
-    openInEditor?: boolean;
-    /** Editor to open (default: 'vscode') */
-    editor?: 'vscode' | 'cursor' | 'webstorm';
-  };
-
   /** Build configuration */
   build?: {
     /** Output directory (default: 'dist') */
     outDir?: string;
-    /** SSG output directory (default: 'dist/static') */
-    ssgOutDir?: string;
   };
 
-  /** Middleware configuration */
+  /** Middleware configuration (build-time Hono + dev server only) */
   middleware?: {
     /** Enable CORS (default: true) */
     cors?: boolean;
-    /** Allowed CORS origins. Can be a string, array, or a function (origin: string) => string | undefined.
-     * Defaults to allowing localhost + same-origin. Uses Web Standards — no process.env. */
+    /** Allowed CORS origins. Web Standards — no process.env. */
     corsOrigin?: string | string[] | ((origin: string) => string | undefined);
     /** Enable request ID (default: true) */
     requestId?: boolean;
@@ -107,7 +110,7 @@ export interface RouteEntry {
   special?: SpecialFileType;
 }
 
-/** Island metadata collected during SSR */
+/** Island metadata collected during build */
 export interface IslandMeta {
   /** Custom element tag name (e.g., 'my-counter') */
   tagName: string;
@@ -128,5 +131,5 @@ export interface RouteMeta {
 
 export type { SsrContext } from './context.js';
 
-/** The main framework() function signature */
+/** The main kiss() function signature */
 export type FrameworkPlugin = (options?: FrameworkOptions) => Plugin[];

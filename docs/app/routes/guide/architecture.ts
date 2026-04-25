@@ -9,6 +9,7 @@ export class ArchitecturePage extends LitElement {
     h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 0.5rem; color: #fff; }
     .subtitle { color: #666; margin-bottom: 2.5rem; font-size: 0.9375rem; line-height: 1.6; }
     h2 { font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    p { line-height: 1.7; margin: 0.5rem 0; color: #999; }
     pre { background: #111; color: #c8c8c8; padding: 1rem 1.25rem; border-radius: 3px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; margin: 0.75rem 0; }
     code { font-family: 'SF Mono', 'Fira Code', monospace; }
     .inline-code { background: #111; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.875em; }
@@ -22,7 +23,7 @@ export class ArchitecturePage extends LitElement {
       <app-layout>
         <div class="container">
           <h1>Architecture</h1>
-          <p class="subtitle">How KISS connects Hono, Lit, and Vite into one plugin.</p>
+          <p class="subtitle">How KISS connects Hono, Lit, and Vite into one plugin — powered by DIA.</p>
 
           <h2>User Perspective</h2>
           <pre><code>// vite.config.ts — your only config
@@ -42,8 +43,8 @@ export default defineConfig({
               <tr><td>island-transform</td><td>transform</td><td>AST marking (__island, __tagName)</td></tr>
               <tr><td>island-extractor</td><td>build</td><td>Build-time island dependency analysis</td></tr>
               <tr><td>html-template</td><td>transformIndexHtml</td><td>Preload, meta, hydration injection</td></tr>
-              <tr><td>kiss:ssg</td><td>closeBundle</td><td>Static site generation</td></tr>
-              <tr><td>kiss:build</td><td>build</td><td>Dual build (SSR + Client)</td></tr>
+              <tr><td>kiss:ssg</td><td>closeBundle</td><td>Static site generation with DSD</td></tr>
+              <tr><td>kiss:build</td><td>build</td><td>Island client JS bundles</td></tr>
             </tbody>
           </table>
 
@@ -52,20 +53,37 @@ export default defineConfig({
   → Vite SSR (ssrLoadModule) → @lit-labs/ssr renders Lit
   → HTML + Declarative Shadow DOM → Inject Island hydration → Response</code></pre>
 
-          <h2>Request Lifecycle (Build/SSG)</h2>
+          <h2>Build Lifecycle (SSG)</h2>
           <pre><code>vite build → closeBundle hook:
   1. Scan routes
   2. Generate SSG entry with DOM shim
   3. Create Vite SSR server (configFile: false)
   4. Load entry → Hono app → toSSG()
-  5. Write dist/ as static HTML</code></pre>
+  5. @lit-labs/ssr renders each page with DSD
+  6. Island components → separate JS chunks
+  7. Non-Island components → zero client JS
+  8. Write dist/ as static HTML</code></pre>
+
+          <h2>DSD Output</h2>
+          <p>Every Lit component rendered by <span class="inline-code">@lit-labs/ssr</span> outputs <strong>Declarative Shadow DOM</strong>. This means the HTML contains the full component content without requiring JavaScript:</p>
+          <pre><code>&lt;!-- SSG output for a Lit component --&gt;
+&lt;app-layout&gt;
+  &lt;template shadowrootmode="open"&gt;
+    &lt;style&gt;/* scoped styles */&lt;/style&gt;
+    &lt;header&gt;...&lt;/header&gt;
+    &lt;main&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/main&gt;
+    &lt;footer&gt;...&lt;/footer&gt;
+  &lt;/template&gt;
+  &lt;!-- slotted page content --&gt;
+&lt;/app-layout&gt;</code></pre>
+          <p>Browsers with DSD support render the Shadow DOM content immediately. When Lit hydrates, it reuses the existing DOM — no flash, no duplication.</p>
 
           <h2>Island Hydration</h2>
           <p>At build time, <span class="inline-code">island-transform</span> marks island modules. <span class="inline-code">island-extractor</span> builds a dependency map. The HTML template plugin injects a hydration script that lazy-loads only the island JS bundles the page needs.</p>
 
           <div class="nav-row">
-            <a href="/kiss/guide/design-philosophy" class="nav-link">&larr; Philosophy</a>
-            <a href="/kiss/guide/configuration" class="nav-link">Configuration &rarr;</a>
+            <a href="/kiss/guide/testing" class="nav-link">&larr; Testing</a>
+            <a href="/kiss/guide/deployment" class="nav-link">Deployment &rarr;</a>
           </div>
         </div>
       </app-layout>

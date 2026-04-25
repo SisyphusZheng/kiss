@@ -1,7 +1,7 @@
 {
-  "name": "@kissjs/core",
-  "version": "0.1.5",
-  "description": "KISS core Vite plugin - Hono + Vite + Lit fullstack framework",
+  "name": "@kissjs/docs-kit",
+  "version": "0.1.0",
+  "description": "KISS documentation site component library — Lit + design tokens, Swiss Internationalism dark theme",
   "type": "module",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,11 +19,7 @@
     "dev": "vite build --config vite.config.build.ts --watch"
   },
   "dependencies": {
-    "@hono/vite-dev-server": "^0.25.3",
-    "@lit-labs/ssr": "^3.3.0",
-    "hono": "^4.7.0",
-    "lit": "^3.2.0",
-    "magic-string": "^0.30.21"
+    "lit": "^3.2.0"
   },
   "peerDependencies": {
     "vite": "^6.0.0"

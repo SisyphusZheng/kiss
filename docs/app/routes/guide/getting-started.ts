@@ -10,6 +10,7 @@ export class GettingStartedPage extends LitElement {
     .subtitle { color: #666; margin-bottom: 2.5rem; font-size: 0.9375rem; line-height: 1.6; }
     .step { margin-bottom: 1.75rem; }
     .step h2 { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: #fff; }
+    p { line-height: 1.7; margin: 0.5rem 0; color: #999; }
     pre { background: #111; color: #c8c8c8; padding: 1rem 1.25rem; border-radius: 3px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; margin: 0.5rem 0; }
     code { font-family: 'SF Mono', 'Fira Code', monospace; }
     .inline-code { background: #111; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.875em; }
@@ -48,7 +49,10 @@ export default defineConfig({
     kiss({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
-      ui: { cdn: true },
+      inject: {
+        stylesheets: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css'],
+        scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
+      },
     }),
   ]
 })</code></pre>
@@ -59,27 +63,23 @@ export default defineConfig({
             <pre><code>// app/routes/index.ts
 import { LitElement, html, css } from '@kissjs/core'
 
-export class HomePage extends LitElement {
+export const tagName = 'home-page'
+export default class HomePage extends LitElement {
   static styles = css\`:host { display: block; padding: 2rem; }\`
   render() {
     return html\`&lt;h1&gt;Hello KISS!&lt;/h1&gt;\`
   }
-}
-
-customElements.define('home-page', HomePage)
-export default HomePage
-export const tagName = 'home-page'</code></pre>
+}</code></pre>
           </div>
 
           <div class="step">
             <h2>6. Start dev server</h2>
             <pre><code>deno run -A npm:vite</code></pre>
-            <p>Open <span class="inline-code">localhost:5173</span> to see your page.</p>
+            <p>Open <span class="inline-code">localhost:5173</span> to see your page. SSG output includes Declarative Shadow DOM — content is visible even before JavaScript loads.</p>
           </div>
 
           <div class="nav-row">
-            
-            <a href="/kiss/guide/routing" class="nav-link">Routing Guide &rarr;</a>
+            <a href="/kiss/guide/design-philosophy" class="nav-link">Design Philosophy &rarr;</a>
           </div>
         </div>
       </app-layout>

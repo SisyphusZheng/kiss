@@ -81,14 +81,15 @@ app.get('/api/posts/:id', async (c) => {
               <tr><th>Layer</th><th>Scope</th><th>Strategy</th></tr>
             </thead>
             <tbody>
-              <tr><td>SSR</td><td>Server → HTML</td><td>renderSsrError() dev/prod modes</td></tr>
+              <tr><td>SSG (Build-time)</td><td>Build → HTML</td><td>renderSsrError() dev/prod modes. Errors during build, not at runtime.</td></tr>
               <tr><td>Hydration</td><td>Browser → Island</td><td>console.warn + graceful fallback</td></tr>
               <tr><td>RPC</td><td>Client → API</td><td>RpcError with typed error mapping</td></tr>
             </tbody>
           </table>
+          <p><strong>Note:</strong> "SSR" in KISS means <em>build-time rendering via @lit-labs/ssr</em>, not a runtime server. Errors occur during <span class="inline-code">vite build</span>, never in production.</p>
 
           <div class="nav-row">
-            <a href="/kiss/guide/api-routes" class="nav-link">&larr; API Routes</a>
+            <a href="/kiss/guide/configuration" class="nav-link">&larr; Configuration</a>
             <a href="/kiss/guide/security-middleware" class="nav-link">Security &amp; Middleware &rarr;</a>
           </div>
         </div>

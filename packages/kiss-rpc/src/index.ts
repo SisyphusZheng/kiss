@@ -82,7 +82,25 @@ export class RpcController implements ReactiveController {
    * )
    * ```
    */
-  async call<T>(fn: () => Promise<T>): Promise<T | null> {
+  /**
+   * Call an API endpoint with automatic loading/error handling.
+   *
+   * PIA: throws RpcError on failure instead of returning null.
+   * The error is still stored in this.error for template access,
+   * but callers who want to handle errors must catch.
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const data = await this.rpc.call(() =>
+   *     client.api.posts.$get()
+   *   )
+   * } catch (err) {
+   *   if (err instanceof RpcError) { /* handle *\/ }
+   * }
+   * ```
+   */
+  async call<T>(fn: () => Promise<T>): Promise<T> {
     this._loading = true;
     this._error = null;
     this.host.requestUpdate();
@@ -91,14 +109,16 @@ export class RpcController implements ReactiveController {
       const result = await fn();
       return result;
     } catch (err) {
+      let rpcError: RpcError;
       if (err instanceof RpcError) {
-        this._error = err;
+        rpcError = err;
       } else if (err instanceof Error) {
-        this._error = new RpcError(0, err.message);
+        rpcError = new RpcError(0, err.message);
       } else {
-        this._error = new RpcError(0, 'Unknown error');
+        rpcError = new RpcError(0, 'Unknown error');
       }
-      return null;
+      this._error = rpcError;
+      throw rpcError;
     } finally {
       this._loading = false;
       this.host.requestUpdate();

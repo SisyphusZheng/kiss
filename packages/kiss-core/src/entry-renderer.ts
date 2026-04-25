@@ -3,9 +3,10 @@
  *
  * Pure function: EntryDescriptor → string (virtual module code).
  *
- * This is the "how to render" half of the entry pipeline.
- * It is deterministic — same descriptor always produces the same code.
- * Suitable for snapshot testing.
+ * PIA changes:
+ * - Island detection uses build-time scanned list (no regex)
+ * - Removed detectIslands() regex function from generated code
+ * - Islands are determined at build time by scanning islandsDir
  */
 
 import type {
@@ -122,8 +123,7 @@ function renderPageRoute(b: CodeBuilder, route: PageRouteDecl): void {
   b.push(`    const tag = ${route.varName}.tagName || '${route.defaultTagName}'`);
   b.push(`    const raw = await __ssr(tag)`);
   b.push(`    const clean = stripLitComments(raw)`);
-  b.push(`    const islands = detectIslands(raw)`);
-  b.push(`    return c.html(wrapDocument(clean, islands))`);
+  b.push(`    return c.html(wrapDocument(clean))`);
   b.push(`  } catch (err) {`);
   b.push(`    return c.html('<h1>500</h1><p>' + String(err) + '</p>', 500)`);
   b.push(`  }`);
@@ -137,6 +137,8 @@ function renderPageRoute(b: CodeBuilder, route: PageRouteDecl): void {
  * Render an EntryDescriptor into a complete virtual module string.
  *
  * Pure function — deterministic, testable, side-effect-free.
+ *
+ * PIA: Island detection uses build-time scanned list, not runtime regex.
  */
 export function renderEntry(desc: EntryDescriptor): string {
   const b = new CodeBuilder();
@@ -157,33 +159,25 @@ export function renderEntry(desc: EntryDescriptor): string {
     `function stripLitComments(html) { return html.replace(/<!--\\/?(?:lit-part|lit-node)[^>]*-->/g, '') }`,
   );
 
-  // --- Island detection + hydration ---
+  // --- Island hydration (build-time known list, no regex) ---
   const islandTagNames = desc.islands.map((i) => i.tagName);
-  b.push(`// Known islands registry (generated from islandsDir scan)`);
-  b.push(`const __knownIslands = ${JSON.stringify(islandTagNames)}`);
-  b.blank();
 
-  b.push(`function detectIslands(html) {`);
-  b.push(`  const found = []`);
-  b.push(`  for (const tag of __knownIslands) {`);
-  b.push(`    if (new RegExp('<' + tag + '[\\\\s>/]', 'i').test(html)) {`);
-  b.push(`      found.push(tag)`);
-  b.push(`    }`);
-  b.push(`  }`);
-  b.push(`  return found`);
-  b.push(`}`);
-
-  // Hydration script generator
-  b.push(`function generateHydrationScript(islands) {`);
-  b.push(`  if (islands.length === 0) return ''`);
-  b.push(`  const loaders = islands.map(tag => {`);
-  // Build a lookup map from tagName → modulePath at render time
+  // Build lookup map from tagName → modulePath
   const islandLookup: Record<string, string> = {};
   for (const island of desc.islands) {
     islandLookup[island.tagName] = island.modulePath;
   }
-  b.push(`    const paths = ${JSON.stringify(islandLookup)}`);
-  b.push(`    const modPath = paths[tag] || '/app/islands/' + tag + '.ts'`);
+
+  b.push(`// Known islands (determined at build time by scanning islandsDir)`);
+  b.push(`const __islandMap = ${JSON.stringify(islandLookup)}`);
+  b.blank();
+
+  // Hydration script generator — uses build-time island map
+  b.push(`function generateHydrationScript() {`);
+  b.push(`  const islands = Object.keys(__islandMap)`);
+  b.push(`  if (islands.length === 0) return ''`);
+  b.push(`  const loaders = islands.map(tag => {`);
+  b.push(`    const modPath = __islandMap[tag]`);
   b.push(`    return '\\'' + tag + '\\': () => import(\\'' + modPath + '\\')'`);
   b.push(`  }).join(',\\n    ')`);
   b.push(`  return '<script type="module" data-kiss-hydrate>\\n' +`);
@@ -208,8 +202,8 @@ export function renderEntry(desc: EntryDescriptor): string {
   b.push(`}`);
 
   // Document wrapper
-  b.push(`function wrapDocument(body, islands) {`);
-  b.push(`  const hydrate = generateHydrationScript(islands || [])`);
+  b.push(`function wrapDocument(body) {`);
+  b.push(`  const hydrate = generateHydrationScript()`);
   b.push(`  const headExtras = ${JSON.stringify(desc.document.headExtras)}`);
   b.push(
     `  return '<!DOCTYPE html>\\n<html lang="${desc.document.lang}">\\n<head>\\n  <meta charset="UTF-8">\\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\\n  <title>${desc.document.title}</title>\\n' + headExtras + '\\n</head>\\n<body>\\n' + body + '\\n' + hydrate + '\\n</body>\\n</html>'`,
@@ -246,17 +240,6 @@ export function renderEntry(desc: EntryDescriptor): string {
 
   for (const mw of desc.middleware) {
     renderMiddleware(b, mw);
-  }
-
-  // --- Debug endpoint (dev only) ---
-  if (desc.debugRoutes) {
-    b.push('// Debug (dev only): GET /__kiss');
-    b.push("app.get('/__kiss', (c) => {");
-    b.push('  return c.json({');
-    b.push(`    routes: ${JSON.stringify(desc.debugRoutes)},`);
-    b.push('  })');
-    b.push('})');
-    b.blank();
   }
 
   // --- API routes ---

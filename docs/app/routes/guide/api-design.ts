@@ -91,8 +91,8 @@ app.post('/', zValidator('json', schema), async (c) => {
 }</code></pre>
 
           <div class="nav-row">
-            <a href="/kiss/guide/testing" class="nav-link">&larr; Testing</a>
-            <a href="/kiss/guide/design-philosophy" class="nav-link">Design Philosophy &rarr;</a>
+            <a href="/kiss/guide/api-routes" class="nav-link">&larr; API Routes</a>
+            <a href="/kiss/guide/ssg" class="nav-link">SSG &rarr;</a>
           </div>
         </div>
       </app-layout>
