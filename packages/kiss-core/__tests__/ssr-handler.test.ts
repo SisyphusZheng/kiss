@@ -1,7 +1,7 @@
 /**
  * @kissjs/core - ssr-handler.ts tests (Deno)
  *
- * PIA: collectIslands removed (moved to build-time map).
+ * DIA: collectIslands removed (moved to build-time map).
  * Only renderSsrError and wrapInDocument remain.
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';

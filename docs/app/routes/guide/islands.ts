@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class IslandsGuidePage extends LitElement {
   static styles = [pageStyles, css`
@@ -29,7 +30,7 @@ export class IslandsGuidePage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/islands">
         <div class="container">
           <h1>Islands Architecture</h1>
           <p class="subtitle">Add interactivity only where needed. Ship zero JS by default.</p>
@@ -90,7 +91,7 @@ Example rejections:
 
           <h2>Creating an Island</h2>
           <p>Create a file in <span class="inline-code">app/islands/</span>:</p>
-          <pre><code>// app/islands/counter.ts
+          <code-block><pre><code>// app/islands/counter.ts
 import { LitElement, html, css } from '@kissjs/core'
 
 export const tagName = 'my-counter'
@@ -109,7 +110,7 @@ export default class MyCounter extends LitElement {
       &lt;button @click=\${() => this.count--}&gt;-&lt;/button&gt;
     \`
   }
-}</code></pre>
+}</code></pre></code-block>
           <p>Use it in any route — it gets hydrated on the client automatically.</p>
 
           <h2>DSD + Islands</h2>

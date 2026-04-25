@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class ApiDesignPage extends LitElement {
   static styles = [pageStyles, css`
@@ -21,7 +22,7 @@ export class ApiDesignPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/api-design">
         <div class="container">
           <h1>API Design</h1>
           <p class="subtitle">Hono routing, type-safe RPC, validation, and error response patterns.</p>
@@ -47,7 +48,7 @@ export class ApiDesignPage extends LitElement {
 
           <h2>Type-Safe RPC</h2>
           <p>KISS leverages Hono RPC for end-to-end type safety. No code generation needed:</p>
-          <pre><code>// Server: app/routes/api/posts.ts
+          <code-block><pre><code>// Server: app/routes/api/posts.ts
 import { Hono } from 'hono'
 
 const app = new Hono()
@@ -58,19 +59,19 @@ const app = new Hono()
   })
 
 export default app
-export type AppType = typeof app</code></pre>
+export type AppType = typeof app</code></pre></code-block>
 
-          <pre><code>// Client: app/islands/post-list.ts
+          <code-block><pre><code>// Client: app/islands/post-list.ts
 import { hc } from 'hono/client'
 import type { AppType } from '../routes/api/posts.ts'
 
 const client = hc&lt;AppType&gt;('/api/posts')
 const res = await client.index.$get()
-const posts = await res.json()  // Fully typed!</code></pre>
+const posts = await res.json()  // Fully typed!</code></pre></code-block>
 
           <h2>Validation (User Choice)</h2>
           <p>Zod and <span class="inline-code">@hono/zod-validator</span> are NOT framework dependencies — they're your project-level choice:</p>
-          <pre><code>import { zValidator } from '@hono/zod-validator'
+          <code-block><pre><code>import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 
 const schema = z.object({ title: z.string(), body: z.string() })
@@ -78,17 +79,17 @@ const schema = z.object({ title: z.string(), body: z.string() })
 app.post('/', zValidator('json', schema), async (c) => {
   const data = c.req.valid('json')  // Typed!
   return c.json({ ok: true, data }, 201)
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Error Response Format</h2>
           <p>All KISS errors produce consistent JSON responses:</p>
-          <pre><code>{
+          <code-block><pre><code>{
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Title is required",
     "status": 400
   }
-}</code></pre>
+}</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/kiss/guide/api-routes" class="nav-link">&larr; API Routes</a>

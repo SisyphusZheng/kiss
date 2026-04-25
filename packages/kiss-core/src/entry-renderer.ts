@@ -3,7 +3,7 @@
  *
  * Pure function: EntryDescriptor → string (virtual module code).
  *
- * PIA changes:
+ * DIA changes:
  * - Island detection uses build-time scanned list (no regex)
  * - Removed detectIslands() regex function from generated code
  * - Islands are determined at build time by scanning islandsDir
@@ -138,7 +138,7 @@ function renderPageRoute(b: CodeBuilder, route: PageRouteDecl): void {
  *
  * Pure function — deterministic, testable, side-effect-free.
  *
- * PIA: Island detection uses build-time scanned list, not runtime regex.
+ * DIA: Island detection uses build-time scanned list, not runtime regex.
  */
 export function renderEntry(desc: EntryDescriptor): string {
   const b = new CodeBuilder();

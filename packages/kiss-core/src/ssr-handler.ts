@@ -1,13 +1,13 @@
 /**
  * @kissjs/core - SSR Handler
- * PIA (Pre-rendered Islands Architecture): rendering is build-time only.
+ * DIA (Declarative Islands Architecture): rendering is build-time only.
  *
  * This module provides:
  * - Build-time rendering functions (used by SSG plugin and dev server)
  * - Error page rendering
  * - HTML document wrapping
  *
- * What was removed (PIA):
+ * What was removed (DIA):
  * - renderPageToString() — runtime SSR function that took ViteDevServer
  * - collectIslands() — regex-based island detection (moved to build-time map)
  *

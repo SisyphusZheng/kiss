@@ -1,7 +1,7 @@
 /**
  * @kissjs/core - Public types
  *
- * PIA (Pre-rendered Islands Architecture) types:
+ * DIA (Declarative Islands Architecture) types:
  * - SSG is always on (no ssr.preRender option)
  * - No CSR/SPA mode (rejected by discipline)
  * - UI is generic head injection (not WebAwesome-specific)

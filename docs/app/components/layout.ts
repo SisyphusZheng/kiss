@@ -1,31 +1,43 @@
 /**
- * App Layout — DIA compliant.
- * TODO: Restore Shadow DOM + DSD output (Phase 4B).
- * Current: light DOM as interim measure.
+ * App Layout — DIA compliant Shadow DOM component.
+ *
+ * DSD (Declarative Shadow DOM) makes content visible without JavaScript.
+ * Shadow DOM provides style encapsulation — no global CSS leakage.
+ *
+ * DIA pillars:
+ * - 构建即终态: SSG output includes <template shadowrootmode="open">
+ * - 交互必隔离: Layout is a proper Shadow DOM component
+ * - 声明即内容: DSD ensures content is visible pre-hydration
+ * - 拒绝即纪律: No light DOM hacks, no external DOM manipulation
  */
-import { LitElement, html, css, unsafeHTML } from '@kissjs/core'
+import { LitElement, html } from '@kissjs/core'
 import { layoutStyles } from './layout-styles.js'
-import '../islands/active-highlight.js'
-import '../islands/copy-code.js'
 
 export class AppLayout extends LitElement {
-  // DIA: Render to light DOM (interim).
-  // TODO: Restore Shadow DOM — DSD makes content visible without JS.
-  // Light DOM was a misinterpretation of "降级即内容"; correct reading is DSD.
-  createRenderRoot() { return this }
+  static styles = layoutStyles
 
   static properties = {
     home: { type: Boolean, reflect: true },
+    currentPath: { type: String, attribute: 'current-path' },
   }
 
   constructor() {
     super()
     this.home = false
+    this.currentPath = ''
+  }
+
+  private _navLink(path: string, text: string) {
+    const isActive = this.currentPath === path
+    return html`<a
+      href="${path}"
+      class=${isActive ? 'active' : ''}
+      aria-current=${isActive ? 'page' : ''}
+    >${text}</a>`
   }
 
   render() {
     return html`
-      <style>${layoutStyles}</style>
       <div class="app-layout" ?home=${this.home}>
         <header class="app-header">
           <div class="header-inner">
@@ -44,30 +56,30 @@ export class AppLayout extends LitElement {
             <nav class="docs-sidebar" aria-label="Documentation navigation">
               <div class="nav-section">
                 <div class="nav-section-title">Introduction</div>
-                <a href="/kiss/guide/getting-started">Getting Started</a>
-                <a href="/kiss/guide/design-philosophy">Design Philosophy</a>
-                <a href="/kiss/guide/dia">DIA</a>
+                ${this._navLink('/kiss/guide/getting-started', 'Getting Started')}
+                ${this._navLink('/kiss/guide/design-philosophy', 'Design Philosophy')}
+                ${this._navLink('/kiss/guide/dia', 'DIA')}
               </div>
               <div class="nav-section">
                 <div class="nav-section-title">Core</div>
-                <a href="/kiss/guide/routing">Routing</a>
-                <a href="/kiss/guide/islands">Islands</a>
-                <a href="/kiss/guide/api-routes">API Routes</a>
-                <a href="/kiss/guide/api-design">API Design</a>
-                <a href="/kiss/guide/ssg">SSG</a>
+                ${this._navLink('/kiss/guide/routing', 'Routing')}
+                ${this._navLink('/kiss/guide/islands', 'Islands')}
+                ${this._navLink('/kiss/guide/api-routes', 'API Routes')}
+                ${this._navLink('/kiss/guide/api-design', 'API Design')}
+                ${this._navLink('/kiss/guide/ssg', 'SSG')}
               </div>
               <div class="nav-section">
                 <div class="nav-section-title">Guides</div>
-                <a href="/kiss/guide/configuration">Configuration</a>
-                <a href="/kiss/guide/error-handling">Error Handling</a>
-                <a href="/kiss/guide/security-middleware">Security & Middleware</a>
-                <a href="/kiss/guide/testing">Testing</a>
+                ${this._navLink('/kiss/guide/configuration', 'Configuration')}
+                ${this._navLink('/kiss/guide/error-handling', 'Error Handling')}
+                ${this._navLink('/kiss/guide/security-middleware', 'Security & Middleware')}
+                ${this._navLink('/kiss/guide/testing', 'Testing')}
               </div>
               <div class="nav-section">
                 <div class="nav-section-title">Reference</div>
-                <a href="/kiss/guide/architecture">Architecture</a>
-                <a href="/kiss/guide/deployment">Deployment</a>
-                <a href="/kiss/styling/web-awesome">Web Awesome</a>
+                ${this._navLink('/kiss/guide/architecture', 'Architecture')}
+                ${this._navLink('/kiss/guide/deployment', 'Deployment')}
+                ${this._navLink('/kiss/styling/web-awesome', 'Web Awesome')}
               </div>
             </nav>
           ` : ''}
@@ -93,8 +105,6 @@ export class AppLayout extends LitElement {
           but all content is accessible without it.
         </div>
       </noscript>
-      <active-highlight></active-highlight>
-      <copy-code></copy-code>
     `
   }
 }

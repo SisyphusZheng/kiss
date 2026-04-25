@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class ConfigurationPage extends LitElement {
   static styles = [pageStyles, css`
@@ -22,7 +23,7 @@ export class ConfigurationPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/configuration">
         <div class="container">
           <h1>Configuration</h1>
           <p class="subtitle">kiss() options and Vite config reference.</p>
@@ -42,7 +43,7 @@ export class ConfigurationPage extends LitElement {
 
           <h2>inject Option <span class="new-badge">new</span></h2>
           <p>Generic head injection — replaces the <span class="inline-code">ui</span> option. Works with any CDN or local asset:</p>
-          <pre><code>kiss({
+          <code-block><pre><code>kiss({
   inject: {
     stylesheets: [
       'https://cdn.example.com/style.css',
@@ -54,10 +55,10 @@ export class ConfigurationPage extends LitElement {
       '&lt;meta name="theme-color" content="#0a0a0a"&gt;',
     ],
   },
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Full Config Example</h2>
-          <pre><code>// vite.config.ts
+          <code-block><pre><code>// vite.config.ts
 import { kiss } from '@kissjs/core'
 import { defineConfig } from 'vite'
 
@@ -80,10 +81,10 @@ export default defineConfig({
       // ui: { cdn: true, version: '3.5.0' },
     }),
   ],
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Project Structure Convention</h2>
-          <pre><code>my-app/
+          <code-block><pre><code>my-app/
   app/
     routes/        # File-based routing
       index.ts     # /
@@ -95,7 +96,7 @@ export default defineConfig({
     components/    # Shared Lit components
       header.ts
   deno.json
-  vite.config.ts</code></pre>
+  vite.config.ts</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/kiss/guide/ssg" class="nav-link">&larr; SSG</a>

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class ApiRoutesPage extends LitElement {
   static styles = [pageStyles, css`
@@ -16,13 +17,13 @@ export class ApiRoutesPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/api-routes">
         <div class="container">
           <h1>API Routes</h1>
           <p class="subtitle">Create backend endpoints using Hono — the HTTP layer of KISS.</p>
 
           <h2>Create an API Route</h2>
-          <pre><code>// app/routes/api/posts.ts
+          <code-block><pre><code>// app/routes/api/posts.ts
 import { Hono } from 'hono'
 
 const app = new Hono()
@@ -38,10 +39,10 @@ app.post('/', async (c) => {
   return c.json({ id: 2, ...body }, 201)
 })
 
-export default app</code></pre>
+export default app</code></pre></code-block>
 
           <h2>With Validation</h2>
-          <pre><code>// app/routes/api/posts.ts
+          <code-block><pre><code>// app/routes/api/posts.ts
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
@@ -58,11 +59,11 @@ app.post('/', zValidator('json', schema), (c) => {
   return c.json({ id: 1, ...data }, 201)
 })
 
-export default app</code></pre>
+export default app</code></pre></code-block>
 
           <h2>Type-Safe RPC</h2>
           <p>Use <span class="inline-code">@kissjs/rpc</span> for end-to-end type safety:</p>
-          <pre><code>// Server: export the type
+          <code-block><pre><code>// Server: export the type
 export type AppType = typeof app
 
 // Client: in an Island
@@ -79,7 +80,7 @@ class MyIsland extends LitElement {
       this.client.api.posts.$get()
     )
   }
-}</code></pre>
+}</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/kiss/guide/islands" class="nav-link">&larr; Islands</a>

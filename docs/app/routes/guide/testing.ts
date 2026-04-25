@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class TestingPage extends LitElement {
   static styles = [pageStyles, css`
@@ -20,7 +21,7 @@ export class TestingPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/testing">
         <div class="container">
           <h1>Testing Strategy</h1>
           <p class="subtitle">Test pyramid, framework tests, and user project testing templates.</p>
@@ -39,17 +40,17 @@ export class TestingPage extends LitElement {
 
           <h2>Testing Framework</h2>
           <p>KISS uses Deno's built-in test runner — zero extra dependencies:</p>
-          <pre><code>// __tests__/context_test.ts
+          <code-block><pre><code>// __tests__/context_test.ts
 import { assertEquals } from 'jsr:@std/assert'
 import { extractParams, parseQuery } from '@kissjs/core'
 
 Deno.test('extractParams parses dynamic segments', () => {
   const params = extractParams('/users/:id', '/users/42')
   assertEquals(params, { id: '42' })
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Testing Your KISS App</h2>
-          <pre><code>// tests/api_test.ts
+          <code-block><pre><code>// tests/api_test.ts
 import { assertEquals } from 'jsr:@std/assert'
 
 Deno.test('API returns posts', async () => {
@@ -57,10 +58,10 @@ Deno.test('API returns posts', async () => {
   assertEquals(res.status, 200)
   const data = await res.json()
   assertEquals(Array.isArray(data), true)
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>CI Integration</h2>
-          <pre><code># .github/workflows/test.yml
+          <code-block><pre><code># .github/workflows/test.yml
 name: Test
 on: [push, pull_request]
 jobs:
@@ -69,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
-      - run: deno test --allow-read --allow-write</code></pre>
+      - run: deno test --allow-read --allow-write</code></pre></code-block>
 
           <h2>What KISS Tests Internally</h2>
           <ul>

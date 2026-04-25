@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class DesignPhilosophyPage extends LitElement {
   static styles = [pageStyles, css`
@@ -24,7 +25,7 @@ export class DesignPhilosophyPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/design-philosophy">
         <div class="container">
           <h1>Design Philosophy</h1>
           <p class="subtitle">KISS = Keep It Simple, Stupid. Not a slogan — a filter for every decision.</p>
@@ -104,14 +105,14 @@ export class DesignPhilosophyPage extends LitElement {
           <p>Skipping a layer = violating the design philosophy. See <a href="/kiss/guide/dia" style="color: #6a9bcc;">DIA</a> for the full decision tree.</p>
 
           <h2>Review Checklist</h2>
-          <pre><code>Before every commit, ask:
+          <code-block><pre><code>Before every commit, ask:
 1. New dependency?     → Does it violate "minimal augmentation"?
 2. Modified build?    → Does it violate "Web Standards first"?
 3. New abstraction?   → Are you reinventing the wheel?
 4. Platform code?     → Does it violate "no runtime binding"?
 5. Forced choice?     → Does it violate "no framework binding"?
 6. Added JS?          → Could a lower layer do this instead?
-7. Broke Shadow DOM?  → Is there a DSD-compatible alternative?</code></pre>
+7. Broke Shadow DOM?  → Is there a DSD-compatible alternative?</code></pre></code-block>
           <p>Any "yes" requires an ADR (Architecture Decision Record).</p>
 
           <h2>Competitive Landscape</h2>

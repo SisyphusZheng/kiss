@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class DiaPage extends LitElement {
   static styles = [pageStyles, css`
@@ -37,7 +38,7 @@ export class DiaPage extends LitElement {
 
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/dia">
         <div class="container">
           <h1>DIA — Declarative Islands Architecture</h1>
           <p class="subtitle">KISS 的架构内核。Declarative 是核心差异——DSD 让 Shadow DOM 内容声明式可达。</p>
@@ -138,7 +139,7 @@ export class DiaPage extends LitElement {
           </div>
 
           <h3>分层审查清单</h3>
-          <pre><code>每写一行代码，问自己：
+          <code-block><pre><code>每写一行代码，问自己：
 
 1. HTML5 能做吗？  → 用语义标签 + 属性
 2. CSS 能做吗？    → 用声明式样式
@@ -146,7 +147,7 @@ export class DiaPage extends LitElement {
 4. 框架能做吗？    → 用 Hono/Vite/Lit
 5. 都不行？       → 才写自研代码（Island）
 
-跳过任何一层 = 违反分层原则</code></pre>
+跳过任何一层 = 违反分层原则</code></pre></code-block>
 
           <h2>DSD：DIA 的桥梁</h2>
           <p>Declarative Shadow DOM 是 DIA 与 Web Components 之间的桥梁。它解决了"封装 vs 可达"的根本矛盾：</p>
@@ -222,13 +223,13 @@ export class DiaPage extends LitElement {
           </table>
 
           <h2>DIA 合规审查</h2>
-          <pre><code>每次提交前，审查：
+          <code-block><pre><code>每次提交前，审查：
 
 1. 新增了 JS？  → 是否低层做不了？（分层原则）
 2. 突破了 Shadow DOM？ → 是否必要？（封装原则）
 3. Island 没走决策树？ → 退回重判（纪律原则）
 4. 输出没有 DSD？  → @lit-labs/ssr 配置问题
-5. 引入了 SPA 行为？ → 违反"拒绝即纪律"</code></pre>
+5. 引入了 SPA 行为？ → 违反"拒绝即纪律"</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/kiss/guide/design-philosophy" class="nav-link">&larr; Design Philosophy</a>

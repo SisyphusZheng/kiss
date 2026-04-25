@@ -7,7 +7,7 @@
  * - CSS stylesheet links
  * - Meta tags from route module exports
  *
- * PIA: Uses Hono ContextVariableMap for type extension
+ * DIA: Uses Hono ContextVariableMap for type extension
  * instead of declare module 'vite' augmentation.
  */
 

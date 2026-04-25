@@ -1,12 +1,12 @@
 /**
  * @kissjs/core - Build plugin
- * PIA (Pre-rendered Islands Architecture): build produces only static files.
+ * DIA (Declarative Islands Architecture): build produces only static files.
  *
  * What this plugin does:
  * - Client build: produces minimal JS — only island components + hydration
  * - Zero-JS pages output nothing to client (Level 0 progressive enhancement)
  * - SSG is handled by the separate kiss:ssg plugin
- * - NO SSR runtime bundle (PIA rejects runtime server)
+ * - NO SSR runtime bundle (DIA rejects runtime server)
  *
  * The build happens in `closeBundle` so Vite's own build runs first,
  * then we kick off the secondary client build.
@@ -44,7 +44,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
 
       const root = config.root;
 
-      // PIA: Only client build (Islands). No SSR runtime bundle.
+      // DIA: Only client build (Islands). No SSR runtime bundle.
       const clientEntry = resolve(root, 'app/client.ts');
 
       if (existsSync(clientEntry)) {
@@ -85,7 +85,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         }
       } else {
         console.log('[KISS] No client entry found, skipping client build');
-        console.log('[KISS] PIA: Static pages only, zero client JS');
+        console.log('[KISS] DIA: Static pages only, zero client JS');
       }
 
       console.log('[KISS] Build complete!');

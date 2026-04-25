@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../../islands/code-block.js'
 
 export class WebAwesomePage extends LitElement {
   static styles = [pageStyles, css`
@@ -19,7 +20,7 @@ export class WebAwesomePage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/styling/web-awesome">
         <div class="container">
           <h1>Web Awesome Components</h1>
           <p class="subtitle">50+ UI components via CDN. Zero imports needed.</p>
@@ -39,8 +40,8 @@ export class WebAwesomePage extends LitElement {
               <wa-button variant="danger">Danger</wa-button>
               <wa-button variant="default">Default</wa-button>
             </div>
-            <pre><code>&lt;wa-button variant="brand"&gt;Brand&lt;/wa-button&gt;
-&lt;wa-button variant="danger"&gt;Danger&lt;/wa-button&gt;</code></pre>
+            <code-block><pre><code>&lt;wa-button variant="brand"&gt;Brand&lt;/wa-button&gt;
+&lt;wa-button variant="danger"&gt;Danger&lt;/wa-button&gt;</code></pre></code-block>
           </div>
 
           <div class="demo-box">
@@ -50,11 +51,11 @@ export class WebAwesomePage extends LitElement {
               <p>Web Awesome card component with header and footer slots.</p>
               <wa-button slot="footer" variant="brand">Action</wa-button>
             </wa-card>
-            <pre><code>&lt;wa-card&gt;
+            <code-block><pre><code>&lt;wa-card&gt;
   &lt;h2 slot="header"&gt;Title&lt;/h2&gt;
   &lt;p&gt;Content&lt;/p&gt;
   &lt;wa-button slot="footer" variant="brand"&gt;Action&lt;/wa-button&gt;
-&lt;/wa-card&gt;</code></pre>
+&lt;/wa-card&gt;</code></pre></code-block>
           </div>
 
           <div class="demo-box">
@@ -65,13 +66,13 @@ export class WebAwesomePage extends LitElement {
               <wa-badge variant="danger">Danger</wa-badge>
               <wa-badge variant="warning">Warning</wa-badge>
             </div>
-            <pre><code>&lt;wa-badge variant="primary"&gt;Primary&lt;/wa-badge&gt;
-&lt;wa-badge variant="danger"&gt;Danger&lt;/wa-badge&gt;</code></pre>
+            <code-block><pre><code>&lt;wa-badge variant="primary"&gt;Primary&lt;/wa-badge&gt;
+&lt;wa-badge variant="danger"&gt;Danger&lt;/wa-badge&gt;</code></pre></code-block>
           </div>
 
           <h2>Setup</h2>
           <p>Enable WebAwesome via the <span class="inline-code">inject</span> option (recommended):</p>
-          <pre><code>import { kiss } from '@kissjs/core'
+          <code-block><pre><code>import { kiss } from '@kissjs/core'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -84,11 +85,11 @@ export default defineConfig({
       },
     }),
   ]
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Migration from <span class="inline-code">ui</span> option</h2>
           <p>The old <span class="inline-code">ui: { cdn: true }</span> shortcut still works but is deprecated. To migrate:</p>
-          <pre><code>// Before (deprecated)
+          <code-block><pre><code>// Before (deprecated)
 kiss({ ui: { cdn: true } })
 
 // After (recommended)
@@ -97,7 +98,7 @@ kiss({
     stylesheets: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css'],
     scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
   },
-})</code></pre>
+})</code></pre></code-block>
           <p>The <span class="inline-code">inject</span> option is more flexible — it works with any CDN, any version, and any external resource.</p>
 
           <div class="nav-row">

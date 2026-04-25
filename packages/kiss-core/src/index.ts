@@ -1,10 +1,10 @@
 /**
  * @kissjs/core - Main entry
  *
- * KISS = Pre-rendered Islands Architecture (PIA)
+ * KISS = Declarative Islands Architecture (DIA)
  * 1 个 Vite 插件，连接 Hono + Lit + Vite。
  *
- * PIA 四大支柱：
+ * DIA 四大支柱：
  *   1. 构建即终态 — 所有页面构建时渲染为静态 HTML
  *   2. 交互必隔离 — 客户端 JS 仅存在于 Island Web Component
  *   3. 降级即内容 — Island 内部包裹语义化 HTML 降级
@@ -17,7 +17,7 @@
  *  4. island-transform     — AST 标记 (__island, __tagName)
  *  5. island-extractor     — 构建时 island 依赖分析
  *  6. html-template        — transformIndexHtml（preload / meta / hydration）
- *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段，PIA 唯一产物）
+ *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段，DIA 唯一产物）
  *  8. kiss:build           — 客户端构建（仅 Islands）
  */
 
@@ -72,13 +72,13 @@ export { Hono } from 'hono';
 import honoDevServer from '@hono/vite-dev-server';
 
 /**
- * KISS Framework Vite Plugin — PIA (Pre-rendered Islands Architecture)
+ * KISS Framework Vite Plugin — DIA (Declarative Islands Architecture)
  *
  * Architecture:
  *   All plugins share state through a KissBuildContext instance,
  *   which is created fresh per kiss() call (no module-level globals).
  *
- *   PIA: Production output is always static HTML files + optional Island JS.
+ *   DIA: Production output is always static HTML files + optional Island JS.
  *   No runtime server in production.
  *
  *   kiss() → creates KissBuildContext → passes it to all sub-plugins
@@ -174,7 +174,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         const apiCount = routes.filter((r) => r.type === 'api' && !r.special).length;
         console.log(
           `[KISS] Routes: ${pageCount} page(s), ${apiCount} API route(s), ` +
-            `${ctx.islandTagNames.length} island(s) — PIA build`,
+            `${ctx.islandTagNames.length} island(s) — DIA build`,
         );
       } catch (err) {
         console.error('[KISS] Route scan failed:', err);
@@ -203,7 +203,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     injectClientScript: true,
   });
 
-  // --- 4. 自定义 SSG 插件（PIA 唯一的生产产物生成器）---
+  // --- 4. 自定义 SSG 插件（DIA 唯一的生产产物生成器）---
   const ssgPlugin: Plugin = {
     name: 'kiss:ssg',
     apply: 'build',
@@ -301,7 +301,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
             throw result.error;
           }
 
-          console.log(`[KISS SSG] PIA: Static site generated → ${join(root, outDir)}`);
+          console.log(`[KISS SSG] DIA: Static site generated → ${join(root, outDir)}`);
         } finally {
           await server.close();
         }
@@ -323,7 +323,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     islandTransformPlugin(resolvedOptions.islandsDir!),
     islandExtractorPlugin(resolvedOptions),
     htmlTemplatePlugin(resolvedOptions),
-    ssgPlugin, // SSG 静态生成（PIA 唯一产物）
+    ssgPlugin, // SSG 静态生成（DIA 唯一产物）
     buildPlugin(resolvedOptions, ctx), // 客户端构建（仅 Islands）
   ];
 }

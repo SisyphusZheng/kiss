@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class SecurityMiddlewarePage extends LitElement {
   static styles = [pageStyles, css`
@@ -21,7 +22,7 @@ export class SecurityMiddlewarePage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/security-middleware">
         <div class="container">
           <h1>Security &amp; Middleware</h1>
           <p class="subtitle">Security headers, CORS, rate limiting, and middleware chain order.</p>
@@ -49,7 +50,7 @@ export class SecurityMiddlewarePage extends LitElement {
 
           <h2>Configuring CORS</h2>
           <p>CORS origin is configured via <span class="inline-code">kiss()</span> options — no <span class="inline-code">process.env</span>:</p>
-          <pre><code>// vite.config.ts
+          <code-block><pre><code>// vite.config.ts
 import { kiss } from '@kissjs/core'
 
 export default defineConfig({
@@ -62,16 +63,16 @@ export default defineConfig({
       },
     }),
   ],
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Disabling Middleware</h2>
-          <pre><code>kiss({
+          <code-block><pre><code>kiss({
   middleware: {
     logger: false,          // Disable request logging
     cors: false,            // Disable CORS entirely
     securityHeaders: false, // Disable security headers
   },
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Security Headers</h2>
           <p>KISS applies these headers via <span class="inline-code">hono/secure-headers</span>:</p>

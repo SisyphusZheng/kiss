@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class SSGGuidePage extends LitElement {
   static styles = [pageStyles, css`
@@ -20,14 +21,14 @@ export class SSGGuidePage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/ssg">
         <div class="container">
           <h1>Static Site Generation</h1>
           <p class="subtitle">Pre-render your routes to static HTML with DSD at build time.</p>
 
           <h2>Quick Start</h2>
           <p>SSG is built into <span class="inline-code">kiss()</span>. No extra plugin needed:</p>
-          <pre><code>// vite.config.ts
+          <code-block><pre><code>// vite.config.ts
 import { kiss } from '@kissjs/core'
 import { defineConfig } from 'vite'
 
@@ -41,7 +42,7 @@ export default defineConfig({
       },
     }),
   ]
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>How It Works</h2>
           <p>When you run <span class="inline-code">vite build</span>, kiss() automatically:</p>
@@ -69,7 +70,7 @@ export default defineConfig({
 
           <h2>GitHub Pages</h2>
           <p>Set <span class="inline-code">base</span> to your repo name with trailing slash:</p>
-          <pre><code>// vite.config.ts
+          <code-block><pre><code>// vite.config.ts
 export default defineConfig({
   base: '/my-repo/',
   plugins: [kiss({
@@ -78,11 +79,11 @@ export default defineConfig({
       scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
     },
   })],
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Build &amp; Deploy</h2>
-          <pre><code>deno run -A npm:vite build
-# Output in dist/ — deploy to any static host</code></pre>
+          <code-block><pre><code>deno run -A npm:vite build
+# Output in dist/ — deploy to any static host</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/kiss/guide/api-design" class="nav-link">&larr; API Design</a>

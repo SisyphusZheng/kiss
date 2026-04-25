@@ -85,7 +85,7 @@ export class RpcController implements ReactiveController {
   /**
    * Call an API endpoint with automatic loading/error handling.
    *
-   * PIA: throws RpcError on failure instead of returning null.
+   * DIA: throws RpcError on failure instead of returning null.
    * The error is still stored in this.error for template access,
    * but callers who want to handle errors must catch.
    *

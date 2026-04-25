@@ -1,17 +1,16 @@
 /**
  * Docs site global layout styles.
- * PIA: These styles are shared across all layout components using light DOM.
- * No Shadow DOM — content is visible even without JavaScript.
+ * DIA: Shadow DOM encapsulated — styles scoped to app-layout's shadow root.
+ * DSD makes content visible even without JavaScript.
  */
-export const layoutStyles = `
+import { css } from '@kissjs/core'
+
+export const layoutStyles = css`
 /* === Global Reset & Base === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  background: #0a0a0a;
-  color: #e0e0e0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.5;
+:host {
+  display: block;
 }
 
 /* === Layout === */
@@ -166,7 +165,8 @@ body {
   background: rgba(255,255,255,0.03);
 }
 
-.docs-sidebar a.active {
+.docs-sidebar a.active,
+.docs-sidebar a[aria-current="page"] {
   color: #fff;
   border-left-color: #fff;
   background: rgba(255,255,255,0.05);

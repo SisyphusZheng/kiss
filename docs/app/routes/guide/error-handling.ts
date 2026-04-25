@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class ErrorHandlingPage extends LitElement {
   static styles = [pageStyles, css`
@@ -22,7 +23,7 @@ export class ErrorHandlingPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/error-handling">
         <div class="container">
           <h1>Error Handling</h1>
           <p class="subtitle">Type-safe error hierarchy, global handlers, and cross-boundary error mapping.</p>
@@ -50,7 +51,7 @@ export class ErrorHandlingPage extends LitElement {
           </div>
 
           <h2>Using Error Classes</h2>
-          <pre><code>import { NotFoundError, ValidationError } from '@kissjs/core'
+          <code-block><pre><code>import { NotFoundError, ValidationError } from '@kissjs/core'
 
 // In an API route handler
 app.get('/api/posts/:id', async (c) => {
@@ -61,7 +62,7 @@ app.get('/api/posts/:id', async (c) => {
   if (!title) throw new ValidationError('Title is required')
 
   return c.json(post)
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>SSR Error Rendering</h2>
           <p>KISS provides <span class="inline-code">renderSsrError()</span> with dev/prod modes:</p>

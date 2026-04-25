@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class ArchitecturePage extends LitElement {
   static styles = [pageStyles, css`
@@ -20,17 +21,17 @@ export class ArchitecturePage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/architecture">
         <div class="container">
           <h1>Architecture</h1>
           <p class="subtitle">How KISS connects Hono, Lit, and Vite into one plugin — powered by DIA.</p>
 
           <h2>User Perspective</h2>
-          <pre><code>// vite.config.ts — your only config
+          <code-block><pre><code>// vite.config.ts — your only config
 import { kiss } from '@kissjs/core'
 export default defineConfig({
   plugins: [kiss()]
-})</code></pre>
+})</code></pre></code-block>
 
           <h2>Plugin Composition</h2>
           <p>The <span class="inline-code">kiss()</span> function returns an array of Vite plugins:</p>
@@ -49,12 +50,12 @@ export default defineConfig({
           </table>
 
           <h2>Request Lifecycle (Dev)</h2>
-          <pre><code>Request → Vite Dev Server → Hono middleware → Route match
+          <code-block><pre><code>Request → Vite Dev Server → Hono middleware → Route match
   → Vite SSR (ssrLoadModule) → @lit-labs/ssr renders Lit
-  → HTML + Declarative Shadow DOM → Inject Island hydration → Response</code></pre>
+  → HTML + Declarative Shadow DOM → Inject Island hydration → Response</code></pre></code-block>
 
           <h2>Build Lifecycle (SSG)</h2>
-          <pre><code>vite build → closeBundle hook:
+          <code-block><pre><code>vite build → closeBundle hook:
   1. Scan routes
   2. Generate SSG entry with DOM shim
   3. Create Vite SSR server (configFile: false)
@@ -62,11 +63,11 @@ export default defineConfig({
   5. @lit-labs/ssr renders each page with DSD
   6. Island components → separate JS chunks
   7. Non-Island components → zero client JS
-  8. Write dist/ as static HTML</code></pre>
+  8. Write dist/ as static HTML</code></pre></code-block>
 
           <h2>DSD Output</h2>
           <p>Every Lit component rendered by <span class="inline-code">@lit-labs/ssr</span> outputs <strong>Declarative Shadow DOM</strong>. This means the HTML contains the full component content without requiring JavaScript:</p>
-          <pre><code>&lt;!-- SSG output for a Lit component --&gt;
+          <code-block><pre><code>&lt;!-- SSG output for a Lit component --&gt;
 &lt;app-layout&gt;
   &lt;template shadowrootmode="open"&gt;
     &lt;style&gt;/* scoped styles */&lt;/style&gt;
@@ -75,7 +76,7 @@ export default defineConfig({
     &lt;footer&gt;...&lt;/footer&gt;
   &lt;/template&gt;
   &lt;!-- slotted page content --&gt;
-&lt;/app-layout&gt;</code></pre>
+&lt;/app-layout&gt;</code></pre></code-block>
           <p>Browsers with DSD support render the Shadow DOM content immediately. When Lit hydrates, it reuses the existing DOM — no flash, no duplication.</p>
 
           <h2>Island Hydration</h2>

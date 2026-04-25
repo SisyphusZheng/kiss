@@ -1,7 +1,7 @@
 /**
  * @kissjs/docs-kit - Documentation Site Component Library
  *
- * PIA-compliant documentation components built with Lit + design tokens.
+ * DIA-compliant documentation components built with Lit + design tokens.
  * Does NOT depend on @kissjs/core — can be used with any Lit project.
  *
  * Design: Swiss Internationalism, dark theme, minimal.

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
+import '../islands/code-block.js'
 
 export class DeploymentPage extends LitElement {
   static styles = [pageStyles, css`
@@ -21,14 +22,14 @@ export class DeploymentPage extends LitElement {
   `]
   render() {
     return html`
-      <app-layout>
+      <app-layout currentPath="/kiss/guide/deployment">
         <div class="container">
           <h1>Deployment</h1>
           <p class="subtitle">Build once, deploy anywhere — static only. DIA means no server process.</p>
 
           <h2>Build</h2>
-          <pre><code>deno run -A npm:vite build
-# Output: dist/ directory with static HTML + island JS chunks</code></pre>
+          <code-block><pre><code>deno run -A npm:vite build
+# Output: dist/ directory with static HTML + island JS chunks</code></pre></code-block>
 
           <h2>Static Deployment</h2>
           <p>DIA produces only static files. The <span class="inline-code">dist/</span> directory contains HTML (with DSD) and island JS bundles. Deploy to any static host.</p>
@@ -61,7 +62,7 @@ export class DeploymentPage extends LitElement {
           </div>
 
           <h2>GitHub Pages Setup</h2>
-          <pre><code>// vite.config.ts
+          <code-block><pre><code>// vite.config.ts
 export default defineConfig({
   base: '/my-repo/',
   plugins: [kiss({
@@ -70,7 +71,7 @@ export default defineConfig({
       scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
     },
   })],
-})</code></pre>
+})</code></pre></code-block>
 
           <p>Add a GitHub Actions workflow to build and deploy on push to main. See the <span class="inline-code">.github/workflows/deploy.yml</span> in this repo for a working example.</p>
 
