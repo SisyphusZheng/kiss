@@ -1,6 +1,6 @@
 import { LitElement, html, css } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ArchitecturePage extends LitElement {
@@ -12,7 +12,7 @@ export class ArchitecturePage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/architecture">
+      <kiss-layout currentPath="/guide/architecture">
         <div class="container">
           <h1>Architecture</h1>
           <p class="subtitle">
@@ -232,7 +232,7 @@ export default defineConfig({
             >
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

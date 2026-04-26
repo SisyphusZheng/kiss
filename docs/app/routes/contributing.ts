@@ -12,8 +12,8 @@ export class ContributingPage extends LitElement {
     css`
       .layer-diagram {
         padding: 1.25rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         margin: 1.5rem 0;
         font-size: 0.8125rem;
@@ -21,7 +21,7 @@ export class ContributingPage extends LitElement {
         font-family: "SF Mono", "Fira Code", monospace;
         white-space: pre;
         overflow-x: auto;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .commit-types {
         display: grid;
@@ -31,13 +31,13 @@ export class ContributingPage extends LitElement {
       }
       .commit-type {
         padding: 0.75rem 1rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 4px;
         font-size: 0.875rem;
       }
       .commit-type code {
-        color: var(--accent);
+        color: var(--kiss-accent);
         font-weight: 600;
       }
     `,
@@ -45,7 +45,7 @@ export class ContributingPage extends LitElement {
 
   render() {
     return html`
-      <app-layout currentPath="/contributing">
+      <kiss-layout currentPath="/contributing">
         <div class="container">
           <h1>Contributing to KISS</h1>
           <p class="subtitle">感谢你对 KISS 框架的兴趣！</p>
@@ -154,7 +154,7 @@ export class ContributingPage extends LitElement {
                   <a href="/roadmap" class="nav-link">Roadmap &rarr;</a>
                 </div>
               </div>
-            </app-layout>
+            </kiss-layout>
           `;
         }
       }

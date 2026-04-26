@@ -20,7 +20,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.24em;
-      color: var(--text-muted);
+      color: var(--kiss-text-muted);
       margin-bottom: 1.75rem;
       display: block;
     }
@@ -30,13 +30,13 @@ export class DocsHome extends LitElement {
       font-weight: 900;
       letter-spacing: -0.06em;
       margin: 0;
-      color: var(--text-primary);
+      color: var(--kiss-text-primary);
       line-height: 0.9;
     }
 
     .hero .tagline {
       font-size: 1.0625rem;
-      color: var(--text-secondary);
+      color: var(--kiss-text-secondary);
       margin-top: 2.25rem;
       line-height: 1.8;
       font-weight: 400;
@@ -55,27 +55,27 @@ export class DocsHome extends LitElement {
       align-items: center;
       gap: 0.5rem;
       padding: 0.625rem 1rem;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
+      background: var(--kiss-bg-surface);
+      border: 1px solid var(--kiss-border);
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--text-tertiary);
+      color: var(--kiss-text-tertiary);
       transition: border-color 0.2s ease, background 0.2s ease;
     }
 
     .eq-item:hover {
-      border-color: var(--border-hover);
-      background: var(--bg-elevated);
+      border-color: var(--kiss-border-hover);
+      background: var(--kiss-bg-elevated);
     }
 
     .eq-label {
-      color: var(--text-muted);
+      color: var(--kiss-text-muted);
       font-weight: 400;
     }
 
     .eq-val {
-      color: var(--text-primary);
+      color: var(--kiss-text-primary);
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
       font-size: 0.75rem;
       font-weight: 600;
@@ -100,8 +100,8 @@ export class DocsHome extends LitElement {
     }
 
     .cta-primary {
-      background: var(--text-primary);
-      color: var(--bg-base);
+      background: var(--kiss-text-primary);
+      color: var(--kiss-bg-base);
     }
 
     .cta-primary:hover {
@@ -111,13 +111,13 @@ export class DocsHome extends LitElement {
 
     .cta-secondary {
       background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
+      color: var(--kiss-text-secondary);
+      border: 1px solid var(--kiss-border);
     }
 
     .cta-secondary:hover {
-      color: var(--text-primary);
-      border-color: var(--border-hover);
+      color: var(--kiss-text-primary);
+      border-color: var(--kiss-border-hover);
       transform: translateY(-1px);
     }
 
@@ -126,7 +126,7 @@ export class DocsHome extends LitElement {
       max-width: 800px;
       margin: 0 auto;
       padding: 4rem 2rem;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--kiss-border);
     }
 
     .section-label {
@@ -134,7 +134,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.16em;
-      color: var(--text-muted);
+      color: var(--kiss-text-muted);
       margin-bottom: 1.5rem;
     }
 
@@ -152,20 +152,20 @@ export class DocsHome extends LitElement {
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 500;
-      background: var(--bg-surface);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
+      background: var(--kiss-bg-surface);
+      color: var(--kiss-text-secondary);
+      border: 1px solid var(--kiss-border);
       transition: border-color 0.2s, color 0.2s, background 0.2s;
     }
 
     .pill:hover {
-      border-color: var(--border-hover);
-      color: var(--text-primary);
-      background: var(--bg-elevated);
+      border-color: var(--kiss-border-hover);
+      color: var(--kiss-text-primary);
+      background: var(--kiss-bg-elevated);
     }
 
     .pill .check {
-      color: var(--accent);
+      color: var(--kiss-accent);
       font-size: 0.625rem;
       font-weight: 700;
     }
@@ -175,7 +175,7 @@ export class DocsHome extends LitElement {
       max-width: 800px;
       margin: 0 auto;
       padding: 4rem 2rem;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--kiss-border);
     }
 
     .features-list {
@@ -186,12 +186,12 @@ export class DocsHome extends LitElement {
 
     .feature-item {
       padding: 2rem 1.75rem;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--kiss-border);
       transition: background 0.2s ease;
     }
 
     .feature-item:nth-child(odd) {
-      border-right: 1px solid var(--border);
+      border-right: 1px solid var(--kiss-border);
     }
 
     .feature-item:nth-last-child(-n+2) {
@@ -199,20 +199,20 @@ export class DocsHome extends LitElement {
     }
 
     .feature-item:hover {
-      background: var(--bg-surface);
+      background: var(--kiss-bg-surface);
     }
 
     .feature-item h2 {
       font-size: 0.875rem;
       font-weight: 600;
       margin: 0 0 0.5rem;
-      color: var(--text-primary);
+      color: var(--kiss-text-primary);
       letter-spacing: -0.01em;
     }
 
     .feature-item p {
       font-size: 0.8125rem;
-      color: var(--text-tertiary);
+      color: var(--kiss-text-tertiary);
       margin: 0;
       line-height: 1.65;
     }
@@ -222,7 +222,7 @@ export class DocsHome extends LitElement {
       max-width: 800px;
       margin: 0 auto;
       padding: 4rem 2rem;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--kiss-border);
     }
 
     .comparison-table {
@@ -235,7 +235,7 @@ export class DocsHome extends LitElement {
     .comparison-table td {
       padding: 0.875rem 1.125rem;
       text-align: left;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--kiss-border);
     }
 
     .comparison-table th {
@@ -243,24 +243,24 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--text-muted);
+      color: var(--kiss-text-muted);
     }
 
     .comparison-table th:first-child {
-      color: var(--text-primary);
+      color: var(--kiss-text-primary);
     }
 
     .comparison-table td {
-      color: var(--text-tertiary);
+      color: var(--kiss-text-tertiary);
     }
 
     .comparison-table td:first-child {
-      color: var(--text-primary);
+      color: var(--kiss-text-primary);
       font-weight: 500;
     }
 
     .comparison-table tr:hover td {
-      background: var(--bg-surface);
+      background: var(--kiss-bg-surface);
     }
 
     /* ─── JSR ─── */
@@ -268,7 +268,7 @@ export class DocsHome extends LitElement {
       max-width: 800px;
       margin: 0 auto;
       padding: 3rem 2rem 6rem;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--kiss-border);
     }
 
     .badge-row {
@@ -281,21 +281,21 @@ export class DocsHome extends LitElement {
       display: inline-flex;
       align-items: center;
       padding: 0.5rem 1rem;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
+      background: var(--kiss-bg-surface);
+      border: 1px solid var(--kiss-border);
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--kiss-text-secondary);
       text-decoration: none;
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
       transition: all 0.2s ease;
     }
 
     .jsr-badge:hover {
-      background: var(--bg-elevated);
-      color: var(--text-primary);
-      border-color: var(--border-hover);
+      background: var(--kiss-bg-elevated);
+      color: var(--kiss-text-primary);
+      border-color: var(--kiss-border-hover);
       transform: translateY(-1px);
     }
 
@@ -331,7 +331,7 @@ export class DocsHome extends LitElement {
 
   render() {
     return html`
-      <app-layout home>
+      <kiss-layout home>
         <div class="hero">
           <div class="overline">Web Standards Framework</div>
           <h1>KISS</h1>
@@ -431,7 +431,7 @@ export class DocsHome extends LitElement {
               <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc</a>
             </div>
           </div>
-        </app-layout>
+        </kiss-layout>
       `;
     }
   }

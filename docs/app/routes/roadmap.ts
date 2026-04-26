@@ -20,25 +20,25 @@ export class RoadmapPage extends LitElement {
       .phase-table td {
         padding: 0.75rem 1rem;
         text-align: left;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
       }
       .phase-table th {
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
       .phase-table td:first-child {
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
       .status-done {
-        color: var(--accent);
+        color: var(--kiss-accent);
         font-weight: 500;
       }
       .status-wip {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-weight: 500;
       }
       .task-list {
@@ -50,14 +50,14 @@ export class RoadmapPage extends LitElement {
         padding: 0.5rem 0;
         padding-left: 1.5rem;
         position: relative;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-size: 0.875rem;
       }
       .task-list li::before {
         content: "✓";
         position: absolute;
         left: 0;
-        color: var(--accent);
+        color: var(--kiss-accent);
         font-weight: 700;
       }
       .tech-debt-table {
@@ -70,28 +70,28 @@ export class RoadmapPage extends LitElement {
       .tech-debt-table td {
         padding: 0.75rem 1rem;
         text-align: left;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
       }
       .tech-debt-table th {
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
       .priority-high {
-        color: var(--accent);
+        color: var(--kiss-accent);
       }
       .priority-medium {
-        color: var(--accent-dim);
+        color: var(--kiss-accent-dim);
       }
       .priority-low {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
       }
       .architecture-diagram {
         padding: 1.5rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         margin: 1.5rem 0;
         font-size: 0.75rem;
@@ -99,14 +99,14 @@ export class RoadmapPage extends LitElement {
         font-family: "SF Mono", "Fira Code", monospace;
         white-space: pre;
         overflow-x: auto;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
     `,
   ];
 
   render() {
     return html`
-      <app-layout currentPath="/roadmap">
+      <kiss-layout currentPath="/roadmap">
         <div class="container">
           <h1>Roadmap</h1>
           <p class="subtitle">
@@ -160,6 +160,18 @@ export class RoadmapPage extends LitElement {
                 <td>@kissjs/ui + 设计系统</td>
                 <td class="status-done">完成</td>
               </tr>
+              <tr>
+                <td>Phase 6</td>
+                <td>架构审计与修复</td>
+                <td>P0/P1 问题清零 + Dogfooding</td>
+                <td class="status-done">完成</td>
+              </tr>
+              <tr>
+                <td>Phase 7</td>
+                <td>文档站自举</td>
+                <td>docs 站使用自研 kiss-ui 组件</td>
+                <td class="status-done">完成</td>
+              </tr>
             </tbody>
           </table>
 
@@ -181,6 +193,42 @@ export class RoadmapPage extends LitElement {
             <li>文档站用 @kissjs/ui 重写 — dogfooding</li>
             <li>迁移示例文件 — examples/minimal-blog + examples/hello 迁移到 static properties</li>
             <li>发布 @kissjs/ui@0.1.4 — JSR 发布</li>
+          </ul>
+
+          <h2>Phase 6：架构审计与修复（已完成）</h2>
+
+          <h3>6A: P0 Bug 修复</h3>
+          <ul class="task-list">
+            <li>allNoExternal 未使用 — 修复 Vite SSR 模块解析</li>
+            <li>userResolveAlias 类型不匹配 — 支持 Record 和 Alias[] 两种格式</li>
+            <li>Island 扫描配置错误 — 移动到正确目录，文件名匹配 tag name</li>
+          </ul>
+
+          <h3>6B: P1 问题清理</h3>
+          <ul class="task-list">
+            <li>code-block Island 主题适配 — CSS 变量替换硬编码颜色</li>
+            <li>kiss-layout 导航补全 — 添加 Examples + Project sections</li>
+            <li>hydrationStrategy 选项移除 — 删除未实现选项</li>
+            <li>测试覆盖扩展 — kiss-rpc + kiss-ui 测试集成</li>
+            <li>kiss-docs-kit 空壳删除 — 移除未使用包</li>
+            <li>logger.ts 删除 — 移除未使用模块</li>
+            <li>README 版本更新 — core 0.1.6, rpc 0.1.3, ui 0.1.4</li>
+          </ul>
+
+          <h3>6C: 体验优化</h3>
+          <ul class="task-list">
+            <li>docs 站 dogfooding — 25 个路由使用 kiss-layout</li>
+            <li>组件导入统一 — @kissjs/ui/kiss-layout 替代本地组件</li>
+            <li>构建验证通过 — 25 pages, 3 islands detected</li>
+            <li>deno fmt/lint 通过 — 代码风格统一</li>
+          </ul>
+
+          <h2>Phase 7：文档站自举（已完成）</h2>
+          <ul class="task-list">
+            <li>docs 站完全使用 @kissjs/ui 组件 — dogfooding 验证</li>
+            <li>Island 检测验证 — code-block, counter-island, theme-toggle</li>
+            <li>SSG 构建成功 — 所有页面静态生成，交互隔离</li>
+            <li>K·I·S·S 四约束落地 — Knowledge/Isolated/Semantic/Static</li>
           </ul>
 
           <h2>已解决的技术债</h2>
@@ -261,7 +309,7 @@ export class RoadmapPage extends LitElement {
             <a href="/changelog" class="nav-link">Changelog &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

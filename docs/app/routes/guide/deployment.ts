@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class DeploymentPage extends LitElement {
@@ -15,7 +15,7 @@ export class DeploymentPage extends LitElement {
       }
       .platform-card {
         padding: 1rem 1.25rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--kiss-border);
         border-radius: 3px;
       }
       .platform-card .platform-card;
@@ -23,7 +23,7 @@ export class DeploymentPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/deployment">
+      <kiss-layout currentPath="/guide/deployment">
         <div class="container">
           <h1>Deployment</h1>
           <p class="subtitle">
@@ -172,7 +172,7 @@ export class DeploymentPage extends LitElement {
                   <a href="/styling/kiss-ui" class="nav-link">@kissjs/ui &rarr;</a>
                 </div>
               </div>
-            </app-layout>
+            </kiss-layout>
           `;
         }
       }

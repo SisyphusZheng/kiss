@@ -28,12 +28,12 @@ export const pageStyles = css`
     font-weight: 800;
     letter-spacing: -0.03em;
     margin: 0 0 0.5rem;
-    color: var(--text-primary);
+    color: var(--kiss-text-primary);
     line-height: 1.2;
   }
 
   .subtitle {
-    color: var(--text-tertiary);
+    color: var(--kiss-text-tertiary);
     margin-bottom: 3rem;
     font-size: 0.9375rem;
     line-height: 1.7;
@@ -43,50 +43,50 @@ export const pageStyles = css`
     font-size: 1.125rem;
     font-weight: 600;
     margin: 1.5rem 0 0.75rem;
-    color: var(--text-primary);
+    color: var(--kiss-text-primary);
   }
 
   h3 {
     font-size: 0.9375rem;
     font-weight: 600;
     margin: 1.5rem 0 0.5rem;
-    color: var(--accent-dim);
+    color: var(--kiss-accent-dim);
   }
 
   p {
     line-height: 1.7;
     margin: 0.5rem 0;
-    color: var(--text-secondary);
+    color: var(--kiss-text-secondary);
     font-size: 0.9375rem;
   }
 
   strong {
-    color: var(--text-primary);
+    color: var(--kiss-text-primary);
     font-weight: 600;
   }
 
   em {
-    color: var(--accent-dim);
+    color: var(--kiss-accent-dim);
     font-style: italic;
   }
 
   a {
-    color: var(--text-primary);
+    color: var(--kiss-text-primary);
     text-decoration: underline;
     text-underline-offset: 3px;
-    text-decoration-color: var(--border-hover);
+    text-decoration-color: var(--kiss-border-hover);
     text-decoration-thickness: 1px;
     transition: text-decoration-color 0.15s;
   }
 
   a:hover {
-    text-decoration-color: var(--text-primary);
+    text-decoration-color: var(--kiss-text-primary);
   }
 
   /* Code blocks */
   pre {
-    background: var(--code-bg);
-    color: var(--text-secondary);
+    background: var(--kiss-code-bg);
+    color: var(--kiss-text-secondary);
     padding: 1rem 1.25rem;
     border-radius: 3px;
     overflow-x: auto;
@@ -100,19 +100,19 @@ export const pageStyles = css`
   }
 
   .inline-code {
-    background: var(--code-bg);
+    background: var(--kiss-code-bg);
     padding: 0.125rem 0.375rem;
     border-radius: 4px;
     font-size: 0.875em;
   }
 
   p code, li code {
-    background: var(--code-bg);
+    background: var(--kiss-code-bg);
     padding: 0.125rem 0.375rem;
     border-radius: 3px;
     font-size: 0.8125rem;
-    color: var(--accent-dim);
-    border: 1px solid var(--code-border);
+    color: var(--kiss-accent-dim);
+    border: 1px solid var(--kiss-code-border);
   }
 
   /* Tables */
@@ -124,27 +124,27 @@ export const pageStyles = css`
   }
 
   th, td {
-    border: 1px solid var(--border);
+    border: 1px solid var(--kiss-border);
     padding: 0.5rem 0.75rem;
     text-align: left;
   }
 
   th {
-    background: var(--code-bg);
+    background: var(--kiss-code-bg);
     font-weight: 600;
-    color: var(--accent-dim);
+    color: var(--kiss-accent-dim);
   }
 
   td {
-    color: var(--text-secondary);
+    color: var(--kiss-text-secondary);
   }
 
   /* Callout blocks */
   .pillar {
     padding: 1.25rem 1.5rem;
     margin: 1rem 0;
-    border-left: 3px solid var(--border-hover);
-    background: var(--bg-surface);
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
     border-radius: 0 3px 3px 0;
   }
 
@@ -153,20 +153,20 @@ export const pageStyles = css`
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted);
+    color: var(--kiss-text-muted);
     margin-bottom: 0.25rem;
   }
 
   .pillar h3 {
     margin: 0 0 0.5rem;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: var(--kiss-text-primary);
   }
 
   .hard-constraint {
     display: inline-block;
-    background: var(--code-bg);
-    border: 1px solid var(--border-hover);
+    background: var(--kiss-code-bg);
+    border: 1px solid var(--kiss-border-hover);
     padding: 0.25rem 0.625rem;
     border-radius: 4px;
     font-size: 0.8125rem;
@@ -176,19 +176,19 @@ export const pageStyles = css`
   .callout {
     padding: 1rem 1.25rem;
     margin: 1rem 0;
-    border-left: 3px solid var(--border-hover);
-    background: var(--bg-surface);
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
     border-radius: 0 3px 3px 0;
   }
 
   .callout.warn {
-    border-left-color: var(--text-tertiary);
+    border-left-color: var(--kiss-text-tertiary);
   }
 
   /* Lists */
   ul, ol {
     padding-left: 1.25rem;
-    color: var(--text-secondary);
+    color: var(--kiss-text-secondary);
     line-height: 1.7;
   }
 
@@ -209,18 +209,18 @@ export const pageStyles = css`
     padding: 0.5rem 1rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--kiss-text-secondary);
     text-decoration: none;
-    border: 1px solid var(--border);
+    border: 1px solid var(--kiss-border);
     border-radius: 4px;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
     letter-spacing: 0.01em;
   }
 
   .nav-link:hover {
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-    background: var(--accent-subtle);
+    color: var(--kiss-text-primary);
+    border-color: var(--kiss-border-hover);
+    background: var(--kiss-accent-subtle);
   }
 
   /* === Responsive === */

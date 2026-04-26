@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class WebAwesomePage extends LitElement {
@@ -9,7 +9,7 @@ export class WebAwesomePage extends LitElement {
     css`
       .demo-box {
         padding: 1.25rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--kiss-border);
         border-radius: 3px;
         margin: 0.75rem 0 1.5rem;
       }
@@ -23,7 +23,7 @@ export class WebAwesomePage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/styling/web-awesome">
+      <kiss-layout currentPath="/styling/web-awesome">
         <div class="container">
           <h1>Web Awesome Components</h1>
           <p class="subtitle">50+ UI components via CDN. Zero imports needed.</p>
@@ -122,7 +122,7 @@ export class WebAwesomePage extends LitElement {
                   <a href="https://webawesome.com/docs" class="nav-link">Web Awesome Docs &rarr;</a>
                 </div>
               </div>
-            </app-layout>
+            </kiss-layout>
           `;
         }
       }

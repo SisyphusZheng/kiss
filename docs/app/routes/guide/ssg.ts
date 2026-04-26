@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class SSGGuidePage extends LitElement {
@@ -11,7 +11,7 @@ export class SSGGuidePage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/ssg">
+      <kiss-layout currentPath="/guide/ssg">
         <div class="container">
           <h1>Static Site Generation</h1>
           <p class="subtitle">Pre-render your routes to static HTML with DSD at build time.</p>
@@ -142,7 +142,7 @@ export class SSGGuidePage extends LitElement {
                     <a href="/guide/configuration" class="nav-link">Configuration &rarr;</a>
                   </div>
                 </div>
-              </app-layout>
+              </kiss-layout>
             `;
           }
         }

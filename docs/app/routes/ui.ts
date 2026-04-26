@@ -32,10 +32,10 @@ export class UIShowcase extends LitElement {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.16em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         margin-bottom: 1.5rem;
         padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
       }
 
       /* ─── Palettes ─── */
@@ -43,8 +43,8 @@ export class UIShowcase extends LitElement {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
+        background: var(--kiss-border);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         overflow: hidden;
       }
@@ -54,7 +54,7 @@ export class UIShowcase extends LitElement {
       }
 
       .palette-dark {
-        background: var(--bg-base);
+        background: var(--kiss-bg-base);
       }
 
       .palette-light {
@@ -70,11 +70,11 @@ export class UIShowcase extends LitElement {
       }
 
       .palette-dark .palette-name {
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
 
       .palette-light .palette-name {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
 
       .swatch-grid {
@@ -110,11 +110,11 @@ export class UIShowcase extends LitElement {
       }
 
       .palette-dark .swatch-label {
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
 
       .palette-light .swatch-label {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
 
       .palette-desc {
@@ -123,19 +123,19 @@ export class UIShowcase extends LitElement {
       }
 
       .palette-dark .palette-desc {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
       }
 
       .palette-dark .palette-desc strong {
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
 
       .palette-light .palette-desc {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
 
       .palette-light .palette-desc strong {
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
 
       /* ─── Typography ─── */
@@ -149,7 +149,7 @@ export class UIShowcase extends LitElement {
         align-items: baseline;
         gap: 1.5rem;
         padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
       }
 
       .type-row:last-child {
@@ -162,24 +162,24 @@ export class UIShowcase extends LitElement {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
 
       .type-sample {
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
 
       /* ─── Component Preview ─── */
       .preview-card {
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         overflow: hidden;
       }
 
       .preview-header {
         padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -188,7 +188,7 @@ export class UIShowcase extends LitElement {
       .preview-title {
         font-size: 0.8125rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
 
       .preview-badge {
@@ -198,9 +198,9 @@ export class UIShowcase extends LitElement {
         letter-spacing: 0.08em;
         padding: 0.25rem 0.5rem;
         border-radius: 3px;
-        background: var(--accent-subtle);
-        color: var(--text-secondary);
-        border: 1px solid var(--border);
+        background: var(--kiss-accent-subtle);
+        color: var(--kiss-text-secondary);
+        border: 1px solid var(--kiss-border);
       }
 
       .preview-body {
@@ -222,8 +222,8 @@ export class UIShowcase extends LitElement {
       .install-section {
         margin-top: 3.5rem;
         padding: 2rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         text-align: center;
       }
@@ -231,7 +231,7 @@ export class UIShowcase extends LitElement {
       .install-section h3 {
         font-size: 0.9375rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
         margin: 0 0 1rem;
       }
 
@@ -240,21 +240,21 @@ export class UIShowcase extends LitElement {
         align-items: center;
         gap: 0.625rem;
         padding: 0.625rem 1.25rem;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-elevated);
+        border: 1px solid var(--kiss-border);
         border-radius: 4px;
         font-family: "SF Mono", "Fira Code", "Consolas", monospace;
         font-size: 0.8125rem;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
 
       .install-cmd .prompt {
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
 
       .install-section p {
         font-size: 0.8125rem;
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         margin: 0.75rem 0 0;
       }
 
@@ -297,7 +297,7 @@ export class UIShowcase extends LitElement {
 
   render() {
     return html`
-      <app-layout current-path="/ui">
+      <kiss-layout current-path="/ui">
         <div class="container">
           <h1>Design System</h1>
           <p class="subtitle">
@@ -396,21 +396,21 @@ export class UIShowcase extends LitElement {
               </div>
               <div class="type-row">
                 <span class="type-label">Body</span>
-                <span class="type-sample" style="font-size:0.9375rem;color:var(--text-secondary)"
+                <span class="type-sample" style="font-size:0.9375rem;color:var(--kiss-text-secondary)"
                 >Body text for paragraphs.</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Caption</span>
                 <span
                   class="type-sample"
-                  style="font-size:0.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600"
+                  style="font-size:0.6875rem;color:var(--kiss-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600"
                 >Caption</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Mono</span>
                 <span
                   class="type-sample"
-                  style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--text-primary)"
+                  style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--kiss-text-primary)"
                 >deno add jsr:@kissjs/ui</span>
               </div>
             </div>
@@ -429,12 +429,12 @@ export class UIShowcase extends LitElement {
                 <kiss-button>Default</kiss-button>
                 <kiss-button variant="ghost">Ghost</kiss-button>
               </div>
-              <div class="preview-body" style="border-top:1px solid var(--border)">
+              <div class="preview-body" style="border-top:1px solid var(--kiss-border)">
                 <kiss-button variant="primary" size="sm">Small</kiss-button>
                 <kiss-button variant="primary" size="md">Default</kiss-button>
                 <kiss-button variant="primary" size="lg">Large</kiss-button>
               </div>
-              <div class="preview-body" style="border-top:1px solid var(--border)">
+              <div class="preview-body" style="border-top:1px solid var(--kiss-border)">
                 <kiss-button disabled>Disabled</kiss-button>
                 <kiss-button href="/" target="_blank">Link Button</kiss-button>
               </div>
@@ -519,7 +519,7 @@ export class UIShowcase extends LitElement {
             <a href="/guide/getting-started" class="nav-link">Getting Started &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

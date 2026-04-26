@@ -62,7 +62,6 @@ export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './ssr-handler.js';
 export { generateHydrationScript } from './island-transform.js';
 export { getKnownIslandsMap } from './island-extractor.js';
-export { logger } from './logger.js';
 
 // --- Re-export runtime APIs for zero-config user experience ---
 // Users import everything from @kissjs/core — no need to add lit/hono to their deno.json

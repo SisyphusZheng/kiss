@@ -9,7 +9,7 @@
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 import '../../islands/counter-island.js';
 
@@ -19,11 +19,11 @@ export class FullstackDemoPage extends LitElement {
     css`
       .demo-container {
         padding: 2rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 8px;
         margin: 1.5rem 0;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
       .demo-container h1 {
         font-size: 2rem;
@@ -32,53 +32,53 @@ export class FullstackDemoPage extends LitElement {
       .api-demo {
         margin-top: 1.5rem;
         padding: 1rem;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-elevated);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
       }
       .api-demo h3 {
         margin: 0 0 0.75rem;
         font-size: 0.9375rem;
-        color: var(--accent);
+        color: var(--kiss-accent);
       }
       .api-response {
         font-family: "SF Mono", "Fira Code", monospace;
         font-size: 0.8125rem;
-        color: var(--text-secondary);
-        background: var(--code-bg);
+        color: var(--kiss-text-secondary);
+        background: var(--kiss-code-bg);
         padding: 0.75rem;
         border-radius: 4px;
       }
       .counter-demo {
         margin-top: 1.5rem;
         padding: 1rem;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-elevated);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
       }
       .counter-demo h3 {
         margin: 0 0 1rem;
         font-size: 0.9375rem;
-        color: var(--accent);
+        color: var(--kiss-accent);
       }
       .deployment-diagram {
         padding: 1.25rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         margin: 1.5rem 0;
         font-size: 0.8125rem;
         line-height: 1.8;
         font-family: "SF Mono", "Fira Code", monospace;
         white-space: pre-wrap;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
     `,
   ];
 
   render() {
     return html`
-      <app-layout currentPath="/examples/fullstack">
+      <kiss-layout currentPath="/examples/fullstack">
         <div class="container">
           <h1>Fullstack Demo</h1>
           <p class="subtitle">
@@ -88,7 +88,7 @@ export class FullstackDemoPage extends LitElement {
           <h2>Live Demo</h2>
           <div class="demo-container">
             <h1>KISS Fullstack</h1>
-            <p style="color: #666; margin-bottom: 1.5rem;">
+            <p style="color: var(--kiss-text-tertiary); margin-bottom: 1.5rem;">
               SSG + API Routes + Islands — A complete fullstack example.
             </p>
 
@@ -169,7 +169,7 @@ export class FullstackDemoPage extends LitElement {
               <a href="/guide/deployment" class="nav-link">Deployment &rarr;</a>
             </div>
           </div>
-        </app-layout>
+        </kiss-layout>
       `;
     }
   }

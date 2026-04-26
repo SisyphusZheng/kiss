@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ErrorHandlingPage extends LitElement {
@@ -9,7 +9,7 @@ export class ErrorHandlingPage extends LitElement {
     css`
       .error-hierarchy {
         padding: 1rem;
-        background: var(--bg-surface);
+        background: var(--kiss-bg-surface);
         border-left: 3px solid var(--wa-color-danger-500, #ef4444);
         border-radius: 0 3px 3px;
         margin: 0.75rem 0;
@@ -20,7 +20,7 @@ export class ErrorHandlingPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/error-handling">
+      <kiss-layout currentPath="/guide/error-handling">
         <div class="container">
           <h1>Error Handling</h1>
           <p class="subtitle">
@@ -123,7 +123,7 @@ export class ErrorHandlingPage extends LitElement {
             <a href="/guide/security-middleware" class="nav-link">Security &amp; Middleware &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

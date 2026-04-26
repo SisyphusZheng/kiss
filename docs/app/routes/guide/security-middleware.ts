@@ -1,4 +1,4 @@
-import { LitElement, html, css } from '@kissjs/core'
+﻿import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
 import '../../islands/code-block.js'
@@ -6,12 +6,12 @@ import '../../islands/code-block.js'
 export class SecurityMiddlewarePage extends LitElement {
   static styles = [pageStyles, css`
 
-    .mw-chain { padding: 1rem; background: var(--bg-surface);  border-left: 3px solid var(--border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; }
+    .mw-chain { padding: 1rem; background: var(--kiss-bg-surface);  border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; }
 
 `]
   render() {
     return html`
-      <app-layout currentPath="/guide/security-middleware">
+      <kiss-layout currentPath="/guide/security-middleware">
         <div class="container">
           <h1>Security &amp; Middleware</h1>
           <p class="subtitle">Security headers, CORS, rate limiting, and middleware chain order.</p>
@@ -77,7 +77,7 @@ export default defineConfig({
             <a href="/guide/testing" class="nav-link">Testing &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `
   }
 }

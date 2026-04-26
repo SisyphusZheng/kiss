@@ -1,4 +1,4 @@
-import { LitElement, html, css } from '@kissjs/core'
+﻿import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
 import '../../islands/code-block.js'
@@ -7,19 +7,19 @@ export class IslandsGuidePage extends LitElement {
   static styles = [pageStyles, css`
 
     .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 1.5rem; }
-    .comparison-item { padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: 3px; }
+    .comparison-item { padding: 1rem 1.25rem; border: 1px solid var(--kiss-border); border-radius: 3px; }
     .comparison-item
-    .comparison-item ul { margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--text-secondary);  }
+    .comparison-item ul { margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--kiss-text-secondary);  }
     .comparison-item li { margin-bottom: 0.25rem; }
     .comparison-item.spa { border-color: var(--wa-color-danger-200, #fecaca); }
     .comparison-item.kiss { border-color: var(--wa-color-success-200, #bbf7d0); background: var(--wa-color-success-50, #f0fdf4); }
 
-    .decision-tree { padding: 1rem; background: var(--bg-surface);  border-left: 3px solid var(--border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; color: var(--text-secondary);  font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre-wrap; }
+    .decision-tree { padding: 1rem; background: var(--kiss-bg-surface);  border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; color: var(--kiss-text-secondary);  font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre-wrap; }
 
 `]
   render() {
     return html`
-      <app-layout currentPath="/guide/islands">
+      <kiss-layout currentPath="/guide/islands">
         <div class="container">
           <h1>Islands Architecture</h1>
           <p class="subtitle">Add interactivity only where needed. Ship zero JS by default.</p>
@@ -118,7 +118,7 @@ export default class MyCounter extends LitElement {
             <a href="/guide/api-routes" class="nav-link">API Routes &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `
   }
 }

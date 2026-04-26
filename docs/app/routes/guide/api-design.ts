@@ -1,4 +1,4 @@
-import { LitElement, html, css } from '@kissjs/core'
+﻿import { LitElement, html, css } from '@kissjs/core'
 import { pageStyles } from '../../components/page-styles.js'
 import '../../components/layout.js'
 import '../../islands/code-block.js'
@@ -6,12 +6,12 @@ import '../../islands/code-block.js'
 export class ApiDesignPage extends LitElement {
   static styles = [pageStyles, css`
 
-    .principle { padding: 1rem; background: var(--bg-surface);  border-left: 3px solid var(--border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.875rem; }
+    .principle { padding: 1rem; background: var(--kiss-bg-surface);  border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px; margin: 0.75rem 0; font-size: 0.875rem; }
 
 `]
   render() {
     return html`
-      <app-layout currentPath="/guide/api-design">
+      <kiss-layout currentPath="/guide/api-design">
         <div class="container">
           <h1>API Design</h1>
           <p class="subtitle">Hono routing, type-safe RPC, validation, and error response patterns.</p>
@@ -85,7 +85,7 @@ app.post('/', zValidator('json', schema), async (c) => {
             <a href="/guide/ssg" class="nav-link">SSG &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `
   }
 }

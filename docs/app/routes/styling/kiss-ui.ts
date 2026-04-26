@@ -1,6 +1,6 @@
-import { css, html, LitElement } from '@kissjs/core';
+﻿import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class KissUIPage extends LitElement {
@@ -10,12 +10,12 @@ export class KissUIPage extends LitElement {
       .callout {
         padding: 1rem 1.25rem;
         margin: 1rem 0;
-        border-left: 3px solid var(--border-hover);
-        background: var(--bg-surface);
+        border-left: 3px solid var(--kiss-border-hover);
+        background: var(--kiss-bg-surface);
         border-radius: 0 3px 3px 0;
       }
       .callout.warn {
-        border-left-color: var(--text-muted);
+        border-left-color: var(--kiss-text-muted);
       }
       .component-grid {
         display: grid;
@@ -24,8 +24,8 @@ export class KissUIPage extends LitElement {
       }
       .component-card {
         padding: 1rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
       }
       .component-card h4 {
@@ -34,14 +34,14 @@ export class KissUIPage extends LitElement {
       }
       .component-card p {
         margin: 0;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         font-size: 0.875rem;
       }
     `,
   ];
   render() {
     return html`
-      <app-layout currentPath="/styling/kiss-ui">
+      <kiss-layout currentPath="/styling/kiss-ui">
         <div class="container">
           <h1>@kissjs/ui</h1>
           <p class="subtitle">
@@ -139,7 +139,7 @@ export class MyPage extends LitElement {
           <p>
             所有组件使用 <span class="inline-code">static properties</span> 而非
             <span class="inline-code">@property</span> 装饰器，确保 Vite SSR 兼容。详见
-            <a href="/guide/ssg#ssr-compatibility" style="color: var(--text-link);">SSG 文档</a>。
+            <a href="/guide/ssg#ssr-compatibility" style="color: var(--kiss-accent);">SSG 文档</a>。
           </p>
 
           <div class="callout warn">
@@ -155,7 +155,7 @@ export class MyPage extends LitElement {
             <a href="/styling/web-awesome" class="nav-link">Web Awesome &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

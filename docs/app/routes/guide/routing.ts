@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class RoutingGuidePage extends LitElement {
@@ -11,7 +11,7 @@ export class RoutingGuidePage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/routing">
+      <kiss-layout currentPath="/guide/routing">
         <div class="container">
           <h1>Routing</h1>
           <p class="subtitle">File-based routing — create a file, get a route.</p>
@@ -117,7 +117,7 @@ export class RoutingGuidePage extends LitElement {
             <a href="/guide/islands" class="nav-link">Islands &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

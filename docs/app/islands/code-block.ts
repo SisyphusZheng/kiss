@@ -27,25 +27,25 @@ export default class CodeBlock extends LitElement {
     ::slotted(pre) {
       margin: 0;
       padding: 1.25rem;
-      background: #111;
-      border: 1px solid #222;
+      background: var(--kiss-code-bg);
+      border: 1px solid var(--kiss-code-border);
       border-radius: 2px;
       overflow-x: auto;
       font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
       font-size: 0.8125rem;
       line-height: 1.6;
-      color: #ccc;
+      color: var(--kiss-text-secondary);
       scrollbar-width: thin;
-      scrollbar-color: #222 transparent;
+      scrollbar-color: var(--kiss-scrollbar-thumb) transparent;
     }
 
     .copy-btn {
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
-      background: #222;
-      color: #888;
-      border: 1px solid #333;
+      background: var(--kiss-bg-elevated);
+      color: var(--kiss-text-tertiary);
+      border: 1px solid var(--kiss-border);
       padding: 0.25rem 0.625rem;
       font-size: 0.6875rem;
       font-family: inherit;
@@ -56,13 +56,13 @@ export default class CodeBlock extends LitElement {
     }
 
     .copy-btn:hover {
-      color: #ccc;
-      border-color: #555;
+      color: var(--kiss-text-secondary);
+      border-color: var(--kiss-border-hover);
     }
 
     .copy-btn.copied {
-      color: #fff;
-      border-color: #555;
+      color: var(--kiss-text-primary);
+      border-color: var(--kiss-border-hover);
     }
   `;
 

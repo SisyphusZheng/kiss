@@ -8,7 +8,7 @@
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '@kissjs/ui/kiss-card';
 import '@kissjs/ui/kiss-button';
 
@@ -18,8 +18,8 @@ export class HelloDemoPage extends LitElement {
     css`
       .demo-container {
         padding: 2rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 8px;
         margin: 1.5rem 0;
       }
@@ -27,10 +27,10 @@ export class HelloDemoPage extends LitElement {
         font-size: 2.5rem;
         font-weight: 800;
         margin: 0 0 1rem;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
       .demo-container .subtitle {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         font-size: 1rem;
         margin-bottom: 1.5rem;
       }
@@ -39,7 +39,7 @@ export class HelloDemoPage extends LitElement {
         gap: 1rem;
       }
       kiss-card {
-        --kiss-bg-card: var(--bg-elevated);
+        --kiss-bg-card: var(--kiss-bg-elevated);
       }
       .actions {
         display: flex;
@@ -51,7 +51,7 @@ export class HelloDemoPage extends LitElement {
 
   render() {
     return html`
-      <app-layout currentPath="/examples/hello">
+      <kiss-layout currentPath="/examples/hello">
         <div class="container">
           <h1>Hello World Demo</h1>
           <p class="subtitle">
@@ -125,7 +125,7 @@ export class HelloDemoPage extends LitElement {
             <a href="/examples/minimal-blog" class="nav-link">Minimal Blog &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

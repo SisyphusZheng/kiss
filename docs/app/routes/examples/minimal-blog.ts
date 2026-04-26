@@ -8,7 +8,7 @@
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 import '../../islands/theme-toggle.js';
 
@@ -18,7 +18,7 @@ export class MinimalBlogDemoPage extends LitElement {
     css`
       .demo-container {
         padding: 2rem;
-        background: var(--bg-base);
+        background: var(--kiss-bg-base);
         border-radius: 8px;
         margin: 1.5rem 0;
       }
@@ -38,8 +38,8 @@ export class MinimalBlogDemoPage extends LitElement {
       }
       .post-item {
         padding: 1rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
       }
       .post-item h3 {
@@ -48,7 +48,7 @@ export class MinimalBlogDemoPage extends LitElement {
       }
       .post-item p {
         margin: 0;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         font-size: 0.875rem;
       }
       .nav-highlight-demo {
@@ -59,11 +59,11 @@ export class MinimalBlogDemoPage extends LitElement {
       .nav-link-demo {
         padding: 0.5rem 1rem;
         border-radius: 4px;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .nav-link-demo.active {
-        background: var(--bg-surface);
-        color: var(--text-primary);
+        background: var(--kiss-bg-surface);
+        color: var(--kiss-text-primary);
         font-weight: 600;
       }
     `,
@@ -71,7 +71,7 @@ export class MinimalBlogDemoPage extends LitElement {
 
   render() {
     return html`
-      <app-layout currentPath="/examples/minimal-blog">
+      <kiss-layout currentPath="/examples/minimal-blog">
         <div class="container">
           <h1>Minimal Blog Demo</h1>
           <p class="subtitle">
@@ -149,7 +149,7 @@ export class MinimalBlogDemoPage extends LitElement {
               <a href="/examples/fullstack" class="nav-link">Fullstack &rarr;</a>
             </div>
           </div>
-        </app-layout>
+        </kiss-layout>
       `;
     }
   }

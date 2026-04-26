@@ -623,6 +623,23 @@ export class KissLayout extends LitElement {
                       <summary class="nav-section-title">UI</summary>
                       ${this._navLink('/ui', 'Design System')}
                     </details>
+                    <details class="nav-section" open>
+                      <summary class="nav-section-title">Examples</summary>
+                      ${this._navLink('/examples', 'Overview')} ${this._navLink(
+                        '/examples/hello',
+                        'Hello World',
+                      )} ${this._navLink('/examples/minimal-blog', 'Minimal Blog')} ${this._navLink(
+                        '/examples/fullstack',
+                        'Fullstack',
+                      )}
+                    </details>
+                    <details class="nav-section" open>
+                      <summary class="nav-section-title">Project</summary>
+                      ${this._navLink('/roadmap', 'Roadmap')} ${this._navLink(
+                        '/changelog',
+                        'Changelog',
+                      )} ${this._navLink('/contributing', 'Contributing')}
+                    </details>
                   </nav>
                 `
                 : ''}

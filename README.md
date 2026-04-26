@@ -268,9 +268,9 @@ kiss({
 
 | 包                                          | 版本  | 说明                                      |
 | ------------------------------------------- | ----- | ----------------------------------------- |
-| [@kissjs/core](https://jsr.io/@kissjs/core) | 0.1.5 | 核心框架 — Vite 插件 + Lit/Hono re-export |
-| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)   | 0.1.2 | RPC 客户端 — Lit ReactiveController       |
-| [@kissjs/ui](https://jsr.io/@kissjs/ui)     | 0.1.2 | UI 插件 — WebAwesome CDN 注入             |
+| [@kissjs/core](https://jsr.io/@kissjs/core) | 0.1.6 | 核心框架 — Vite 插件 + Lit/Hono re-export |
+| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)   | 0.1.3 | RPC 客户端 — Lit ReactiveController       |
+| [@kissjs/ui](https://jsr.io/@kissjs/ui)     | 0.1.4 | UI 插件 — WebAwesome CDN 注入             |
 
 > JSR 上有旧包 `@kissjs/vite` 和 `@kissjs/ssg`，已废弃，请勿使用。
 

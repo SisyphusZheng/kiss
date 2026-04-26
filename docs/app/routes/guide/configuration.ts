@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ConfigurationPage extends LitElement {
@@ -8,13 +8,13 @@ export class ConfigurationPage extends LitElement {
     pageStyles,
     css`
       .deprecated {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         text-decoration: line-through;
       }
       .new-badge {
         display: inline-block;
-        background: #1a3a1a;
-        color: #4ade80;
+        background: var(--kiss-accent-subtle);
+        color: var(--kiss-accent);
         padding: 0.125rem 0.375rem;
         border-radius: 3px;
         font-size: 0.6875rem;
@@ -27,7 +27,7 @@ export class ConfigurationPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/configuration">
+      <kiss-layout currentPath="/guide/configuration">
         <div class="container">
           <h1>Configuration</h1>
           <p class="subtitle">kiss() options and Vite config reference.</p>
@@ -143,7 +143,7 @@ export class ConfigurationPage extends LitElement {
                     <a href="/guide/error-handling" class="nav-link">Error Handling &rarr;</a>
                   </div>
                 </div>
-              </app-layout>
+              </kiss-layout>
             `;
           }
         }

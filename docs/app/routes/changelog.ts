@@ -12,8 +12,8 @@ export class ChangelogPage extends LitElement {
       .version-section {
         margin: 2rem 0;
         padding: 1.5rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
       }
       .version-header {
@@ -25,13 +25,13 @@ export class ChangelogPage extends LitElement {
       .version-number {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
       .version-date {
         font-size: 0.75rem;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         padding: 0.25rem 0.5rem;
-        background: var(--bg-elevated);
+        background: var(--kiss-bg-elevated);
         border-radius: 3px;
       }
       .change-category {
@@ -42,17 +42,17 @@ export class ChangelogPage extends LitElement {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         margin-bottom: 0.5rem;
       }
       .change-category.added h4 {
-        color: var(--accent);
+        color: var(--kiss-accent);
       }
       .change-category.changed h4 {
-        color: var(--accent-dim);
+        color: var(--kiss-accent-dim);
       }
       .change-category.fixed h4 {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .change-list {
         list-style: none;
@@ -63,14 +63,14 @@ export class ChangelogPage extends LitElement {
         padding: 0.375rem 0;
         padding-left: 1.25rem;
         position: relative;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-size: 0.875rem;
       }
       .change-list li::before {
         content: "•";
         position: absolute;
         left: 0;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
       .version-table {
         width: 100%;
@@ -82,25 +82,25 @@ export class ChangelogPage extends LitElement {
       .version-table td {
         padding: 0.75rem 1rem;
         text-align: left;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--kiss-border);
       }
       .version-table th {
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
       }
       .version-table td:first-child {
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
     `,
   ];
 
   render() {
     return html`
-      <app-layout currentPath="/changelog">
+      <kiss-layout currentPath="/changelog">
         <div class="container">
           <h1>Changelog</h1>
           <p class="subtitle">
@@ -280,7 +280,7 @@ export class ChangelogPage extends LitElement {
             <a href="/guide/getting-started" class="nav-link">Getting Started &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

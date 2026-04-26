@@ -28,9 +28,9 @@ export default class CounterIsland extends LitElement {
       color: var(--text-primary, inherit);
     }
     button {
-      background: var(--accent, #fff);
-      color: var(--bg-base, #000);
-      border: 1px solid var(--border, transparent);
+      background: var(--kiss-accent, #fff);
+      color: var(--kiss-bg-base, #000);
+      border: 1px solid var(--kiss-border, transparent);
       border-radius: 6px;
       padding: 0.5rem 1rem;
       font-size: 1.25rem;

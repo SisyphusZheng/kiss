@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class KissArchitecturePage extends LitElement {
@@ -10,25 +10,25 @@ export class KissArchitecturePage extends LitElement {
       .constraint {
         padding: 1.25rem 1.5rem;
         margin: 1rem 0;
-        border-left: 3px solid var(--border-hover);
-        background: var(--bg-surface);
+        border-left: 3px solid var(--kiss-border-hover);
+        background: var(--kiss-bg-surface);
         border-radius: 0 3px 3px 0;
       }
       .constraint .letter {
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
         display: inline-block;
         width: 2rem;
       }
       .constraint .constraint-name {
         font-size: 1.0625rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
       }
       .constraint .constraint-cn {
         font-size: 0.8125rem;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         margin-left: 0.5rem;
       }
       .constraint .constraint .hard-constraint {
@@ -36,8 +36,8 @@ export class KissArchitecturePage extends LitElement {
       }
       .hard-constraint {
         display: inline-block;
-        background: var(--code-bg);
-        border: 1px solid var(--border-hover);
+        background: var(--kiss-code-bg);
+        border: 1px solid var(--kiss-border-hover);
         padding: 0.25rem 0.625rem;
         border-radius: 4px;
         font-size: 0.8125rem;
@@ -50,7 +50,7 @@ export class KissArchitecturePage extends LitElement {
         display: flex;
         align-items: center;
         padding: 0.625rem 1rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--kiss-border);
         margin-bottom: -1px;
         font-size: 0.875rem;
       }
@@ -63,53 +63,53 @@ export class KissArchitecturePage extends LitElement {
       .layer .level {
         width: 2.5rem;
         font-weight: 700;
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         font-family: "SF Mono", "Fira Code", monospace;
       }
       .layer .name {
         width: 9rem;
         font-weight: 600;
-        color: var(--accent-dim);
+        color: var(--kiss-accent-dim);
       }
       .layer .desc {
         flex: 1;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .layer .example {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         font-family: "SF Mono", "Fira Code", monospace;
         font-size: 0.8125rem;
       }
 
       .decision-tree {
         padding: 1rem;
-        background: var(--bg-surface);
-        border-left: 3px solid var(--border-hover);
+        background: var(--kiss-bg-surface);
+        border-left: 3px solid var(--kiss-border-hover);
         border-radius: 0 3px 3px;
         margin: 0.75rem 0;
         font-size: 0.8125rem;
         line-height: 1.8;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-family: "SF Mono", "Fira Code", monospace;
         white-space: pre-wrap;
       }
       .dsd-diagram {
         padding: 1rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 3px;
         margin: 0.75rem 0;
         font-size: 0.8125rem;
         line-height: 1.7;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-family: "SF Mono", "Fira Code", monospace;
         white-space: pre-wrap;
       }
       .jamstack-map {
         padding: 1.25rem;
         margin: 1rem 0;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 3px;
       }
       .jamstack-map .jam-row {
@@ -121,38 +121,38 @@ export class KissArchitecturePage extends LitElement {
       .jamstack-map .jam-letter {
         font-size: 1.5rem;
         font-weight: 800;
-        color: var(--text-primary);
+        color: var(--kiss-text-primary);
         width: 2rem;
         text-align: center;
       }
       .jamstack-map .jam-label {
         font-weight: 600;
-        color: var(--accent-dim);
+        color: var(--kiss-accent-dim);
         width: 8rem;
       }
       .jamstack-map .jam-desc {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         flex: 1;
       }
       .jamstack-map .jam-kiss {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-family: "SF Mono", "Fira Code", monospace;
         font-size: 0.8125rem;
       }
       .quote-block {
         padding: 1.25rem 1.5rem;
         margin: 1.5rem 0;
-        border-left: 3px solid var(--border-hover);
-        background: var(--bg-surface);
+        border-left: 3px solid var(--kiss-border-hover);
+        background: var(--kiss-bg-surface);
         border-radius: 0 3px 3px 0;
         font-style: italic;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         line-height: 1.7;
       }
       .quote-block .attribution {
         margin-top: 0.5rem;
         font-size: 0.8125rem;
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
         font-style: normal;
       }
     `,
@@ -160,7 +160,7 @@ export class KissArchitecturePage extends LitElement {
 
   render() {
     return html`
-      <app-layout currentPath="/guide/dia">
+      <kiss-layout currentPath="/guide/dia">
         <div class="container">
           <h1>KISS Architecture</h1>
           <p class="subtitle">
@@ -629,7 +629,7 @@ export class KissArchitecturePage extends LitElement {
             <a href="/guide/routing" class="nav-link">Routing &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class TestingPage extends LitElement {
@@ -11,7 +11,7 @@ export class TestingPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/testing">
+      <kiss-layout currentPath="/guide/testing">
         <div class="container">
           <h1>Testing Strategy</h1>
           <p class="subtitle">Test pyramid, framework tests, and user project testing templates.</p>
@@ -103,7 +103,7 @@ export class TestingPage extends LitElement {
                         <a href="/guide/architecture" class="nav-link">Architecture &rarr;</a>
                       </div>
                     </div>
-                  </app-layout>
+                  </kiss-layout>
                 `;
               }
             }

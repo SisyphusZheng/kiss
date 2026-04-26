@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class DesignPhilosophyPage extends LitElement {
@@ -10,8 +10,8 @@ export class DesignPhilosophyPage extends LitElement {
       .pillar {
         padding: 1.25rem;
         margin: 1rem 0;
-        border-left: 3px solid var(--border-hover);
-        background: var(--bg-surface);
+        border-left: 3px solid var(--kiss-border-hover);
+        background: var(--kiss-bg-surface);
         border-radius: 0 3px 3px 0;
       }
       .pillar .num {
@@ -19,13 +19,13 @@ export class DesignPhilosophyPage extends LitElement {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         margin-bottom: 0.25rem;
       }
       .pillar .hard-constraint {
         display: inline-block;
-        background: var(--code-bg);
-        border: 1px solid var(--border-hover);
+        background: var(--kiss-code-bg);
+        border: 1px solid var(--kiss-border-hover);
         padding: 0.25rem 0.625rem;
         border-radius: 4px;
         font-size: 0.8125rem;
@@ -35,7 +35,7 @@ export class DesignPhilosophyPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/design-philosophy">
+      <kiss-layout currentPath="/guide/design-philosophy">
         <div class="container">
           <h1>Design Philosophy</h1>
           <p class="subtitle">
@@ -225,7 +225,7 @@ export class DesignPhilosophyPage extends LitElement {
           </table>
           <p>
             Skipping a layer = violating the design philosophy. See
-            <a href="/guide/dia" style="color: #6a9bcc;">KISS Architecture</a>
+            <a href="/guide/dia">KISS Architecture</a>
             for the full decision tree.
           </p>
 
@@ -301,7 +301,7 @@ export class DesignPhilosophyPage extends LitElement {
             <a href="/guide/dia" class="nav-link">KISS Architecture &rarr;</a>
           </div>
         </div>
-      </app-layout>
+      </kiss-layout>
     `;
   }
 }

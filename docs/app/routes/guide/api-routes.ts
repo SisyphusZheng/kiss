@@ -1,6 +1,6 @@
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ApiRoutesPage extends LitElement {
@@ -11,7 +11,7 @@ export class ApiRoutesPage extends LitElement {
   ];
   render() {
     return html`
-      <app-layout currentPath="/guide/api-routes">
+      <kiss-layout currentPath="/guide/api-routes">
         <div class="container">
           <h1>API Routes</h1>
           <p class="subtitle">Create backend endpoints using Hono — the HTTP layer of KISS.</p>
@@ -84,7 +84,7 @@ export class ApiRoutesPage extends LitElement {
                   <a href="/guide/api-design" class="nav-link">API Design &rarr;</a>
                 </div>
               </div>
-            </app-layout>
+            </kiss-layout>
           `;
         }
       }

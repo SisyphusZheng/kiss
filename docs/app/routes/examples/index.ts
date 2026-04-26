@@ -8,7 +8,7 @@
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
-import '../../components/layout.js';
+import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 import '@kissjs/ui/kiss-card';
 import '@kissjs/ui/kiss-button';
@@ -24,13 +24,13 @@ export class ExamplesPage extends LitElement {
       }
       .example-card {
         padding: 1.5rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         transition: border-color 0.2s ease;
       }
       .example-card:hover {
-        border-color: var(--border-hover);
+        border-color: var(--kiss-border-hover);
       }
       .example-card h3 {
         margin: 0 0 0.5rem;
@@ -42,25 +42,25 @@ export class ExamplesPage extends LitElement {
       .example-card .tag {
         font-size: 0.6875rem;
         padding: 0.125rem 0.375rem;
-        background: var(--code-bg);
+        background: var(--kiss-code-bg);
         border-radius: 3px;
         font-weight: 500;
       }
       .example-card .tag.k {
-        color: var(--accent);
+        color: var(--kiss-accent);
       }
       .example-card .tag.i {
-        color: var(--accent-dim);
+        color: var(--kiss-accent-dim);
       }
       .example-card .tag.s1 {
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .example-card .tag.s2 {
-        color: var(--text-tertiary);
+        color: var(--kiss-text-tertiary);
       }
       .example-card p {
         margin: 0.5rem 0 1rem;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         font-size: 0.9375rem;
       }
       .constraint-badges {
@@ -71,16 +71,16 @@ export class ExamplesPage extends LitElement {
       }
       .constraint-badge {
         padding: 0.25rem 0.5rem;
-        background: var(--bg-base);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-base);
+        border: 1px solid var(--kiss-border);
         border-radius: 4px;
         font-size: 0.75rem;
         font-family: "SF Mono", "Fira Code", monospace;
       }
       .architecture-diagram {
         padding: 1.5rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-base);
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
         border-radius: 6px;
         margin: 1.5rem 0;
       }
@@ -98,16 +98,16 @@ export class ExamplesPage extends LitElement {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--text-muted);
+        color: var(--kiss-text-muted);
         min-width: 120px;
       }
       .arch-value {
         font-size: 0.8125rem;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
       }
       .arch-divider {
         border: none;
-        border-top: 1px solid var(--border);
+        border-top: 1px solid var(--kiss-border);
         margin: 1rem 0;
       }
       .kiss-row {
@@ -122,16 +122,16 @@ export class ExamplesPage extends LitElement {
         justify-content: center;
         width: 28px;
         height: 28px;
-        border: 1px solid var(--border-hover);
+        border: 1px solid var(--kiss-border-hover);
         border-radius: 4px;
         font-size: 0.75rem;
         font-weight: 800;
-        color: var(--text-primary);
-        background: var(--bg-base);
+        color: var(--kiss-text-primary);
+        background: var(--kiss-bg-base);
       }
       .kiss-desc {
         font-size: 0.8125rem;
-        color: var(--text-secondary);
+        color: var(--kiss-text-secondary);
         margin-left: 0.25rem;
         line-height: 28px;
       }
@@ -145,7 +145,7 @@ export class ExamplesPage extends LitElement {
 
   render() {
     return html`
-      <app-layout currentPath="/examples">
+      <kiss-layout currentPath="/examples">
         <div class="container">
           <h1>Examples</h1>
           <p class="subtitle">
@@ -286,7 +286,7 @@ export class ExamplesPage extends LitElement {
               <a href="/guide/deployment" class="nav-link">Deployment &rarr;</a>
             </div>
           </div>
-        </app-layout>
+        </kiss-layout>
       `;
     }
   }
