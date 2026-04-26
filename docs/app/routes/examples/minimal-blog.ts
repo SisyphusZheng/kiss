@@ -10,7 +10,7 @@ import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
 import '../../components/layout.js';
 import '../../islands/code-block.js';
-import '../islands/theme-toggle.js';
+import '../../islands/theme-toggle.js';
 
 export class MinimalBlogDemoPage extends LitElement {
   static styles = [

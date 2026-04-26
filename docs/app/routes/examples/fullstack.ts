@@ -11,7 +11,7 @@ import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
 import '../../components/layout.js';
 import '../../islands/code-block.js';
-import '../islands/counter.js';
+import '../../islands/counter-island.js';
 
 export class FullstackDemoPage extends LitElement {
   static styles = [

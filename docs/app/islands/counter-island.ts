@@ -6,9 +6,11 @@
  * - 懒水合
  * - 独立 JS bundle
  */
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement } from '@kissjs/core';
 
-export class CounterIsland extends LitElement {
+export const tagName = 'counter-island';
+
+export default class CounterIsland extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -73,6 +75,4 @@ export class CounterIsland extends LitElement {
   }
 }
 
-customElements.define('counter-island', CounterIsland);
-
-export const tagName = 'counter-island';
+customElements.define(tagName, CounterIsland);

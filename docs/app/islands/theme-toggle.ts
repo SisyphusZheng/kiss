@@ -6,9 +6,11 @@
  * - Shadow DOM 封装
  * - 跨组件通信（CSS 自定义属性）
  */
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement } from '@kissjs/core';
 
-export class ThemeToggle extends LitElement {
+export const tagName = 'theme-toggle';
+
+export default class ThemeToggle extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
@@ -66,6 +68,4 @@ export class ThemeToggle extends LitElement {
   }
 }
 
-customElements.define('theme-toggle', ThemeToggle);
-
-export const tagName = 'theme-toggle';
+customElements.define(tagName, ThemeToggle);

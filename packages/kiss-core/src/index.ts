@@ -153,8 +153,10 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     name: 'kiss:core',
 
     config(userConfig) {
-      if (userConfig.resolve?.alias && !Array.isArray(userConfig.resolve.alias)) {
-        ctx.userResolveAlias = userConfig.resolve.alias as Record<string, string>;
+      if (userConfig.resolve?.alias) {
+        ctx.userResolveAlias = userConfig.resolve.alias as
+          | Record<string, string>
+          | import('vite').Alias[];
       }
       return {
         build: {
@@ -258,23 +260,28 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         // SSR noExternal: bundle @kissjs/ui, lit packages, and @lit-labs/ssr to avoid module resolution errors
         // Use regex patterns to match all lit-related packages
         const defaultNoExternal = [
-          // Match all lit ecosystem packages
+          // Match all lit ecosystem packages (must be bundled to avoid decorator errors)
           /^lit/,
           /^@lit/,
           /^@kissjs\/ui/,
-          // @lit-labs/ssr internal dependencies (parse5 → entities)
-          'parse5',
-          /^entities/, // entities has sub-path exports (entities/decode)
         ];
         // Add user-provided noExternal
         const userNoExternal = resolvedOptions.ssr?.noExternal || [];
         const allNoExternal = [...defaultNoExternal, ...userNoExternal];
         // If there's an alias for @kissjs/ui, add the resolved path too
-        const aliasArray = ctx.userResolveAlias;
-        if (aliasArray && Array.isArray(aliasArray)) {
-          for (const alias of aliasArray) {
-            if (alias.find === '@kissjs/ui') {
-              allNoExternal.push(alias.replacement);
+        const alias = ctx.userResolveAlias;
+        if (alias) {
+          if (Array.isArray(alias)) {
+            // Vite Alias[] format: { find: string, replacement: string }
+            for (const a of alias) {
+              if (a.find === '@kissjs/ui') {
+                allNoExternal.push(a.replacement);
+              }
+            }
+          } else {
+            // Record<string, string> format
+            if ('@kissjs/ui' in alias) {
+              allNoExternal.push(alias['@kissjs/ui']);
             }
           }
         }
@@ -286,7 +293,8 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           build: { ssr: true },
           ssr: {
             // Bundle lit ecosystem packages and @kissjs/ui to avoid decorator errors
-            noExternal: [/^lit/, /^@lit/, /^@kissjs\/ui/],
+            // Includes user-provided noExternal
+            noExternal: allNoExternal,
           },
           // Configure esbuild to support TC39 decorators used by Lit
           esbuild: {
@@ -303,7 +311,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           resolve: {
             preserveSymlinks: true,
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-            alias: aliasArray || undefined,
+            alias: alias || undefined,
           },
         });
 

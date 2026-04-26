@@ -11,7 +11,7 @@
  * - State is resettable (for testing and watch mode)
  */
 
-import type { ResolvedConfig } from 'vite';
+import type { Alias, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from './types.js';
 
 export class KissBuildContext {
@@ -31,12 +31,13 @@ export class KissBuildContext {
   resolvedConfig: ResolvedConfig | null = null;
 
   /**
-   * User-provided resolve.alias in its original format (Record<string, string>).
+   * User-provided resolve.alias in its original format.
+   * Vite accepts both Record<string, string> and Alias[].
    * Saved during the config() hook so SSG can pass it to the internal Vite SSR server.
    * (config.resolve.alias is Vite's internal Alias[] after resolution, which is
    * NOT compatible with createServer's resolve.alias input format.)
    */
-  userResolveAlias: Record<string, string> | null = null;
+  userResolveAlias: Record<string, string> | Alias[] | null = null;
 
   /** Resolved framework options with defaults applied */
   readonly options: FrameworkOptions;
