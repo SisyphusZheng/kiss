@@ -4,12 +4,11 @@
     "./packages/kiss-core",
     "./packages/kiss-rpc",
     "./packages/kiss-ui",
-    "./examples/poc",
-    "./examples/minimal-blog",
-    "./examples/fullstack",
     "./docs"
   ],
   "imports": {
+    "@lit-labs/ssr-client": "npm:@lit-labs/ssr-client@^1.1.8",
+    "@parse5/tools": "npm:@parse5/tools@^0.7.0",
     "magic-string": "npm:magic-string@^0.30.0",
     "compare-versions": "npm:compare-versions@^6.0.0",
     "@microsoft/api-extractor": "npm:@microsoft/api-extractor@^7.58.0",
@@ -19,10 +18,11 @@
     "local-pkg": "npm:local-pkg@^1.1.0",
     "debug": "npm:debug@^4.4.0",
     "kolorist": "npm:kolorist@^1.8.0",
+    "node-fetch": "npm:node-fetch@^3.3.2",
     "typescript": "npm:typescript@^5.9.0"
   },
   "tasks": {
-    "dev": "cd examples/poc && deno task dev",
+    "dev": "cd docs && deno task dev",
     "build:core": "cd packages/kiss-core && deno task build",
     "build:rpc": "cd packages/kiss-rpc && deno task build",
     "build:ui": "cd packages/kiss-ui && deno task build",

@@ -174,6 +174,13 @@ export class AppLayout extends LitElement {
                     'Fullstack',
                   )}
                 </details>
+                <details class="nav-section" open>
+                  <summary class="nav-section-title">Project</summary>
+                  ${this._navLink('/roadmap', 'Roadmap')} ${this._navLink(
+                    '/changelog',
+                    'Changelog',
+                  )} ${this._navLink('/contributing', 'Contributing')}
+                </details>
               </nav>
             `
             : ''}
