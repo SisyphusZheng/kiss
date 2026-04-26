@@ -48,7 +48,7 @@ export class KissCard extends LitElement {
         border-color: transparent;
       }
 
-      ::slotted([slot='header']) {
+      ::slotted([slot="header"]) {
         padding: var(--kiss-size-4) var(--kiss-size-5);
         border-bottom: 1px solid var(--kiss-border);
         font-size: var(--kiss-font-size-lg);
@@ -61,7 +61,7 @@ export class KissCard extends LitElement {
         padding: var(--kiss-size-5);
       }
 
-      ::slotted([slot='footer']) {
+      ::slotted([slot="footer"]) {
         padding: var(--kiss-size-3) var(--kiss-size-5);
         border-top: 1px solid var(--kiss-border);
         font-size: var(--kiss-font-size-sm);

@@ -55,9 +55,7 @@ export class KissCodeBlock extends LitElement {
         font-family: var(--kiss-font-sans);
         cursor: pointer;
         border-radius: var(--kiss-radius-sm);
-        transition:
-          color var(--kiss-transition-normal),
-          border-color var(--kiss-transition-normal);
+        transition: color var(--kiss-transition-normal), border-color var(--kiss-transition-normal);
         z-index: 1;
       }
 
@@ -80,8 +78,8 @@ export class KissCodeBlock extends LitElement {
       <slot></slot>
       <button
         class="copy-btn ${this._copyState === 'copied' ? 'copied' : ''}"
-        @click=${this._copy}
-        ?hidden=${this._copyState === 'copied'}
+        @click="${this._copy}"
+        ?hidden="${this._copyState === 'copied'}"
       >
         ${this._copyState === 'copied'
           ? 'Copied!'

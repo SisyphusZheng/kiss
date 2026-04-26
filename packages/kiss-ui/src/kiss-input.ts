@@ -113,21 +113,25 @@ export class KissInput extends LitElement {
     return html`
       <div class="input-wrapper">
         ${this.label
-          ? html`<label for="input">${this.label}${this.required ? ' *' : ''}</label>`
+          ? html`
+            <label for="input">${this.label}${this.required ? ' *' : ''}</label>
+          `
           : ''}
         <input
           id="input"
           class="input ${this.error ? 'input--error' : ''}"
-          type=${this.type}
-          placeholder=${this.placeholder}
-          value=${this.value}
-          name=${this.name}
-          ?disabled=${this.disabled}
-          ?required=${this.required}
-          @input=${this._handleInput}
+          type="${this.type}"
+          placeholder="${this.placeholder}"
+          value="${this.value}"
+          name="${this.name}"
+          ?disabled="${this.disabled}"
+          ?required="${this.required}"
+          @input="${this._handleInput}"
         />
         ${this.error
-          ? html`<span class="error-message">${this.error}</span>`
+          ? html`
+            <span class="error-message">${this.error}</span>
+          `
           : ''}
       </div>
     `;
@@ -141,7 +145,7 @@ export class KissInput extends LitElement {
         detail: { value: input.value },
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 }

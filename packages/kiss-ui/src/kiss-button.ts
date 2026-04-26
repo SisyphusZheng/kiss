@@ -139,10 +139,10 @@ export class KissButton extends LitElement {
     if (this.href) {
       return html`
         <a
-          class=${classes}
-          href=${this.href}
-          target=${this.target}
-          ?disabled=${this.disabled}
+          class="${classes}"
+          href="${this.href}"
+          target="${this.target}"
+          ?disabled="${this.disabled}"
         >
           <slot></slot>
         </a>
@@ -150,7 +150,7 @@ export class KissButton extends LitElement {
     }
 
     return html`
-      <button class=${classes} ?disabled=${this.disabled}>
+      <button class="${classes}" ?disabled="${this.disabled}">
         <slot></slot>
       </button>
     `;

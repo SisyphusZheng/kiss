@@ -42,16 +42,16 @@ import { css } from 'lit';
 export const kissDesignTokens = css`
   :host {
     /* === Spacing (from Open Props) === */
-    --kiss-size-1: 0.25rem;   /* 4px */
-    --kiss-size-2: 0.375rem;  /* 6px */
-    --kiss-size-3: 0.5rem;    /* 8px */
-    --kiss-size-4: 0.75rem;   /* 12px */
-    --kiss-size-5: 1rem;      /* 16px */
-    --kiss-size-6: 1.25rem;   /* 20px */
-    --kiss-size-7: 1.5rem;    /* 24px */
-    --kiss-size-8: 2rem;      /* 32px */
-    --kiss-size-9: 2.5rem;    /* 40px */
-    --kiss-size-10: 3rem;     /* 48px */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
 
     /* === Border Radius (Swiss: minimal, 2-6px) === */
     --kiss-radius-sm: 2px;
@@ -59,16 +59,23 @@ export const kissDesignTokens = css`
     --kiss-radius-lg: 6px;
 
     /* === Typography === */
-    --kiss-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
     --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
-    
-    --kiss-font-size-xs: 0.6875rem;  /* 11px */
-    --kiss-font-size-sm: 0.75rem;    /* 12px */
-    --kiss-font-size-md: 0.875rem;  /* 14px */
-    --kiss-font-size-lg: 1rem;       /* 16px */
-    --kiss-font-size-xl: 1.125rem;  /* 18px */
-    --kiss-font-size-2xl: 1.25rem;  /* 20px */
-    --kiss-font-size-3xl: 1.5rem;   /* 24px */
+
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
 
     --kiss-font-weight-normal: 400;
     --kiss-font-weight-medium: 500;
@@ -114,22 +121,22 @@ export const kissDesignTokens = css`
     --kiss-bg-elevated: #111;
     --kiss-bg-hover: #0e0e0e;
     --kiss-bg-card: #0a0a0a;
-    
+
     --kiss-border: #1a1a1a;
     --kiss-border-hover: #333;
-    
+
     --kiss-text-primary: #fff;
     --kiss-text-secondary: #999;
     --kiss-text-tertiary: #666;
     --kiss-text-muted: #444;
-    
+
     --kiss-accent: #fff;
     --kiss-accent-dim: #ccc;
     --kiss-accent-subtle: rgba(255, 255, 255, 0.05);
-    
+
     --kiss-code-bg: #111;
     --kiss-code-border: #1a1a1a;
-    
+
     color-scheme: dark;
   }
 
@@ -139,22 +146,22 @@ export const kissDesignTokens = css`
     --kiss-bg-elevated: #f5f5f5;
     --kiss-bg-hover: #f0f0f0;
     --kiss-bg-card: #fff;
-    
+
     --kiss-border: #e5e5e5;
     --kiss-border-hover: #ccc;
-    
+
     --kiss-text-primary: #000;
     --kiss-text-secondary: #555;
     --kiss-text-tertiary: #888;
     --kiss-text-muted: #aaa;
-    
+
     --kiss-accent: #000;
     --kiss-accent-dim: #333;
     --kiss-accent-subtle: rgba(0, 0, 0, 0.03);
-    
+
     --kiss-code-bg: #f5f5f5;
     --kiss-code-border: #e5e5e5;
-    
+
     color-scheme: light;
   }
 `;

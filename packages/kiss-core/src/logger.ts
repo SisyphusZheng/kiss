@@ -2,12 +2,12 @@ import process from 'node:process';
 
 /**
  * @kissjs/core - Logger
- * 
+ *
  * Unified logging with KISS_LOG_LEVEL environment variable control.
- * 
+ *
  * Levels: debug > info > warn > error
  * Default: info
- * 
+ *
  * Usage:
  *   KISS_LOG_LEVEL=debug  — verbose output (development)
  *   KISS_LOG_LEVEL=info   — normal output (default)
