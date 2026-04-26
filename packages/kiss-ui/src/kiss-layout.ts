@@ -483,10 +483,29 @@ export class KissLayout extends LitElement {
       static properties = {
         home: { type: Boolean, reflect: true },
         currentPath: { type: String, attribute: 'current-path' },
+        _isLight: { state: true },
       };
 
       home = false;
       currentPath = '';
+      _isLight = false;
+
+      override connectedCallback() {
+        super.connectedCallback();
+        // Read saved theme from localStorage
+        const saved = localStorage.getItem('kiss-theme');
+        if (saved === 'light') {
+          this._isLight = true;
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      }
+
+      private _handleThemeToggle() {
+        this._isLight = !this._isLight;
+        const theme = this._isLight ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('kiss-theme', theme);
+      }
 
       private _navLink(path: string, text: string) {
         const isActive = this.currentPath === path;
@@ -533,9 +552,10 @@ export class KissLayout extends LitElement {
                     `
                     : ''}
                   <button
-                    class="theme-toggle"
-                    title="Switch to light theme"
+                    class="theme-toggle ${this._isLight ? 'is-light' : ''}"
+                    title="${this._isLight ? 'Switch to dark theme' : 'Switch to light theme'}"
                     aria-label="Toggle theme"
+                    @click="${this._handleThemeToggle}"
                   >
                     <svg
                       class="icon-sun"

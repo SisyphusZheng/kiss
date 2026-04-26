@@ -122,6 +122,42 @@ export class ChangelogPage extends LitElement {
             <div class="change-category added">
               <h4>Added</h4>
               <ul class="change-list">
+                <li>Theme toggle with localStorage persistence in kiss-layout</li>
+                <li>Navigation sections for Examples + Project in kiss-layout sidebar</li>
+                <li>Test coverage for kiss-rpc and kiss-ui packages</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>Changed</h4>
+              <ul class="change-list">
+                <li>Docs site fully dogfoods @kissjs/ui/kiss-layout (25 routes migrated)</li>
+                <li>code-block Island now uses CSS variables for theme support</li>
+                <li>Removed unused kiss-docs-kit package and logger.ts module</li>
+                <li>Removed unimplemented hydrationStrategy option from types</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>Fixed</h4>
+              <ul class="change-list">
+                <li>allNoExternal now correctly passed to Vite SSR noExternal</li>
+                <li>userResolveAlias supports both Record and Alias[] formats</li>
+                <li>Island detection finds islands in app/islands/ (not routes/islands/)</li>
+                <li>Theme toggle button now has click handler bound</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.1.7</span>
+              <span class="version-date">2026-04-27</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>Added</h4>
+              <ul class="change-list">
                 <li>Logger module with <code>KISS_LOG_LEVEL</code> environment variable support</li>
                 <li>
                   @kissjs/ui component library with kiss-button, kiss-card, kiss-input, kiss-code-block,
@@ -242,6 +278,11 @@ export class ChangelogPage extends LitElement {
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>0.1.7</td>
+                <td>2026-04-27</td>
+                <td>Architecture audit + dogfooding + docs self-hosting</td>
+              </tr>
               <tr>
                 <td>0.1.6</td>
                 <td>2026-04-26</td>
