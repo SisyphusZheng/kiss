@@ -7,8 +7,7 @@ export class TestingPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
-`,
+    `,
   ];
   render() {
     return html`

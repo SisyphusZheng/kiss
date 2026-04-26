@@ -255,17 +255,55 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
       try {
         const { createServer } = await import('vite');
+        // SSR noExternal: bundle @kissjs/ui, lit packages, and @lit-labs/ssr to avoid module resolution errors
+        // Use regex patterns to match all lit-related packages
+        const defaultNoExternal = [
+          // Match all lit ecosystem packages
+          /^lit/,
+          /^@lit/,
+          /^@kissjs\/ui/,
+          // @lit-labs/ssr internal dependencies (parse5 → entities)
+          'parse5',
+          /^entities/, // entities has sub-path exports (entities/decode)
+        ];
+        // Add user-provided noExternal
+        const userNoExternal = resolvedOptions.ssr?.noExternal || [];
+        const allNoExternal = [...defaultNoExternal, ...userNoExternal];
+        // If there's an alias for @kissjs/ui, add the resolved path too
+        const aliasArray = ctx.userResolveAlias;
+        if (aliasArray && Array.isArray(aliasArray)) {
+          for (const alias of aliasArray) {
+            if (alias.find === '@kissjs/ui') {
+              allNoExternal.push(alias.replacement);
+            }
+          }
+        }
         const server = await createServer({
           configFile: false,
           root,
           server: { middlewareMode: true },
           appType: 'custom',
           build: { ssr: true },
+          ssr: {
+            // Bundle lit ecosystem packages and @kissjs/ui to avoid decorator errors
+            noExternal: [/^lit/, /^@lit/, /^@kissjs\/ui/],
+          },
+          // Configure esbuild to support TC39 decorators used by Lit
+          esbuild: {
+            // Use 'decorators-legacy' to support experimental decorators
+            // Lit uses experimental decorators, not TC39 decorators
+            tsconfigRaw: {
+              compilerOptions: {
+                experimentalDecorators: true,
+                useDefineForClassFields: false,
+              },
+            },
+          },
           plugins: [],
           resolve: {
             preserveSymlinks: true,
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-            alias: ctx.userResolveAlias || undefined,
+            alias: aliasArray || undefined,
           },
         });
 

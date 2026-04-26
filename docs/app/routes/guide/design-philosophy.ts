@@ -7,7 +7,6 @@ export class DesignPhilosophyPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .pillar {
         padding: 1.25rem;
         margin: 1rem 0;
@@ -23,8 +22,7 @@ export class DesignPhilosophyPage extends LitElement {
         color: var(--text-muted);
         margin-bottom: 0.25rem;
       }
-      .pillar
-      .hard-constraint {
+      .pillar .hard-constraint {
         display: inline-block;
         background: var(--code-bg);
         border: 1px solid var(--border-hover);
@@ -33,8 +31,7 @@ export class DesignPhilosophyPage extends LitElement {
         font-size: 0.8125rem;
         margin: 0.125rem 0;
       }
-
-`,
+    `,
   ];
   render() {
     return html`

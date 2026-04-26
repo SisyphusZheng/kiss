@@ -7,8 +7,7 @@ export class SSGGuidePage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
-`,
+    `,
   ];
   render() {
     return html`

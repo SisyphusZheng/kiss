@@ -7,22 +7,19 @@ export class WebAwesomePage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .demo-box {
         padding: 1.25rem;
         border: 1px solid var(--border);
         border-radius: 3px;
         margin: 0.75rem 0 1.5rem;
       }
-      .demo-box
-      .demo-box .component-row {
+      .demo-box .demo-box .component-row {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
         margin-bottom: 0.75rem;
       }
-
-`,
+    `,
   ];
   render() {
     return html`

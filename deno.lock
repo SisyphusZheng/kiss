@@ -10,7 +10,10 @@
     "jsr:@std/path@^1.1.4": "1.1.4",
     "npm:@hono/vite-dev-server@~0.25.3": "0.25.3_hono@4.12.14",
     "npm:@hono/zod-validator@0.4": "0.4.3_hono@4.12.14_zod@3.25.76",
+    "npm:@lit-labs/ssr-dom-shim@^1.2.0": "1.5.1",
+    "npm:@lit-labs/ssr@^3.2.0": "3.3.1",
     "npm:@lit-labs/ssr@^3.3.0": "3.3.1",
+    "npm:@lit/reactive-element@2": "2.1.2",
     "npm:@microsoft/api-extractor@^7.58.0": "7.58.7_@types+node@22.19.17",
     "npm:@rollup/pluginutils@^5.3.0": "5.3.0",
     "npm:@types/node@22": "22.19.17",
@@ -18,14 +21,19 @@
     "npm:@vue/language-core@^2.2.0": "2.2.0_typescript@5.9.3",
     "npm:compare-versions@6": "6.1.1",
     "npm:debug@^4.4.0": "4.4.3",
+    "npm:entities@4": "4.5.0",
     "npm:hono@4": "4.12.14",
     "npm:hono@^4.7.0": "4.12.14",
     "npm:kolorist@^1.8.0": "1.8.0",
-    "npm:lit@3": "3.3.2",
-    "npm:lit@^3.2.0": "3.3.2",
+    "npm:lit-element@4": "4.2.2",
+    "npm:lit-html@^3.2.0": "3.3.2",
+    "npm:lit@3": "3.2.0",
+    "npm:lit@3.2.0": "3.2.0",
+    "npm:lit@^3.2.0": "3.2.0",
     "npm:local-pkg@^1.1.0": "1.1.2",
     "npm:magic-string@0.30": "0.30.21",
     "npm:magic-string@~0.30.21": "0.30.21",
+    "npm:parse5@7": "7.3.0",
     "npm:typescript@^5.9.0": "5.9.3",
     "npm:vite-plugin-dts@^4.5.0": "4.5.4_typescript@5.9.3_vite@6.4.2__@types+node@22.19.17_@types+node@22.19.17",
     "npm:vite@*": "6.4.2_@types+node@22.19.17",
@@ -664,6 +672,9 @@
         "tapable"
       ]
     },
+    "entities@4.5.0": {
+      "integrity": "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="
+    },
     "entities@6.0.1": {
       "integrity": "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="
     },
@@ -816,8 +827,8 @@
         "@types/trusted-types"
       ]
     },
-    "lit@3.3.2": {
-      "integrity": "sha512-NF9zbsP79l4ao2SNrH3NkfmFgN/hBYSQo90saIVI1o5GpjAdCPVstVzO1MrLOakHoEhYkrtRjPK6Ob521aoYWQ==",
+    "lit@3.2.0": {
+      "integrity": "sha512-s6tI33Lf6VpDu7u4YqsSX78D28bYQulM+VAzsGch4fx2H0eLZnJsUBsPWmGYSGoKDNbjtRv02rio1o+UdPVwvw==",
       "dependencies": [
         "@lit/reactive-element",
         "lit-element",
@@ -1089,9 +1100,15 @@
     "members": {
       "docs": {
         "dependencies": [
-          "jsr:@kissjs/core@~0.1.5",
+          "npm:@lit-labs/ssr-dom-shim@^1.2.0",
+          "npm:@lit-labs/ssr@^3.2.0",
+          "npm:@lit/reactive-element@2",
+          "npm:entities@4",
           "npm:hono@4",
-          "npm:lit@3",
+          "npm:lit-element@4",
+          "npm:lit-html@^3.2.0",
+          "npm:lit@^3.2.0",
+          "npm:parse5@7",
           "npm:vite@6"
         ]
       },
@@ -1136,6 +1153,9 @@
         }
       },
       "packages/kiss-ui": {
+        "dependencies": [
+          "npm:lit@^3.2.0"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@types/node@22",

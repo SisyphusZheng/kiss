@@ -7,7 +7,6 @@ export class ErrorHandlingPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .error-hierarchy {
         padding: 1rem;
         background: var(--bg-surface);
@@ -17,8 +16,7 @@ export class ErrorHandlingPage extends LitElement {
         font-size: 0.8125rem;
         line-height: 1.8;
       }
-
-`,
+    `,
   ];
   render() {
     return html`

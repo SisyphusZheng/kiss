@@ -3,10 +3,17 @@
   "version": "0.0.1",
   "exports": "./vite.config.ts",
   "imports": {
-    "@kissjs/core": "jsr:@kissjs/core@^0.1.5",
-    "lit": "npm:lit@^3.0.0",
+    "@kissjs/core": "../packages/kiss-core/src/index.ts",
+    "lit": "npm:lit@^3.2.0",
+    "@lit/reactive-element": "npm:@lit/reactive-element@^2.0.0",
+    "lit-element": "npm:lit-element@^4.0.0",
+    "lit-html": "npm:lit-html@^3.2.0",
     "hono": "npm:hono@^4.0.0",
-    "vite": "npm:vite@^6.0.0"
+    "vite": "npm:vite@^6.0.0",
+    "@lit-labs/ssr": "npm:@lit-labs/ssr@^3.2.0",
+    "@lit-labs/ssr-dom-shim": "npm:@lit-labs/ssr-dom-shim@^1.2.0",
+    "parse5": "npm:parse5@^7.0.0",
+    "entities": "npm:entities@^4.0.0"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",

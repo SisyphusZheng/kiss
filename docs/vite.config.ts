@@ -1,4 +1,4 @@
-import { kiss } from '@kissjs/core';
+import { kiss } from '../packages/kiss-core/src/index.js';
 import { defineConfig } from 'vite';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,11 @@ export default defineConfig({
       componentsDir: 'app/components',
       html: {
         title: 'KISS',
+      },
+      // SSR configuration: bundle @kissjs/ui instead of externalizing
+      // This fixes "Unsupported decorator location: field" error in SSR
+      ssr: {
+        noExternal: ['@kissjs/ui'],
       },
       inject: {
         stylesheets: [

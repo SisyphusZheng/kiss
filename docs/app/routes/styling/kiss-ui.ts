@@ -7,7 +7,6 @@ export class KissUIPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .callout {
         padding: 1rem 1.25rem;
         margin: 1rem 0;
@@ -18,8 +17,7 @@ export class KissUIPage extends LitElement {
       .callout.warn {
         border-left-color: var(--text-muted);
       }
-
-`,
+    `,
   ];
   render() {
     return html`

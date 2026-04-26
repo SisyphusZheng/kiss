@@ -20,17 +20,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: denoland/setup-deno@v2
+      # Use Node.js for SSG build (Lit SSR has dependency resolution issues in Deno)
+      - uses: actions/setup-node@v4
         with:
-          deno-version: v2.x
+          node-version: '22'
 
       - name: Install dependencies
         working-directory: docs
-        run: deno install --node-modules-dir
+        run: npm install
 
       - name: Build docs site
         working-directory: docs
-        run: deno task build
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

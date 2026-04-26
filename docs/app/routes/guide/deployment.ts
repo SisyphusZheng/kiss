@@ -7,7 +7,6 @@ export class DeploymentPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .platform-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -19,10 +18,8 @@ export class DeploymentPage extends LitElement {
         border: 1px solid var(--border);
         border-radius: 3px;
       }
-      .platform-card
-      .platform-card
-
-`,
+      .platform-card .platform-card;
+    `,
   ];
   render() {
     return html`
@@ -30,7 +27,8 @@ export class DeploymentPage extends LitElement {
         <div class="container">
           <h1>Deployment</h1>
           <p class="subtitle">
-            Build once, deploy anywhere. KISS Architecture (S: Static) — static frontend + Serverless APIs.
+            Build once, deploy anywhere. KISS Architecture (S: Static) — static frontend + Serverless
+            APIs.
           </p>
 
           <h2>Build</h2>
@@ -71,8 +69,8 @@ export class DeploymentPage extends LitElement {
 
             <h2>Static Frontend Deployment</h2>
             <p>
-              KISS Architecture produces only static files. The <span class="inline-code">dist/</span> directory contains
-              HTML (with DSD) and island JS bundles. Deploy to any static host.
+              KISS Architecture produces only static files. The <span class="inline-code">dist/</span>
+              directory contains HTML (with DSD) and island JS bundles. Deploy to any static host.
             </p>
 
             <div class="platform-grid">
@@ -153,9 +151,9 @@ export class DeploymentPage extends LitElement {
 
                 <h2>Why No Server Mode?</h2>
                 <p>
-                  KISS Architecture's S constraint (Static) — <strong>构建产物仅为纯静态文件</strong> — means build output is the final product.
-                  There is no SSR runtime in production. This is not a limitation; it's a discipline that
-                  guarantees:
+                  KISS Architecture's S constraint (Static) — <strong>构建产物仅为纯静态文件</strong> — means
+                  build output is the final product. There is no SSR runtime in production. This is not a
+                  limitation; it's a discipline that guarantees:
                 </p>
                 <ul>
                   <li>Zero server maintenance cost</li>
