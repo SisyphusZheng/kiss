@@ -23,12 +23,10 @@
  */
 
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-button';
 
-@customElement(tagName)
 export class KissButton extends LitElement {
   static override styles = [
     kissDesignTokens,
@@ -118,19 +116,18 @@ export class KissButton extends LitElement {
     `,
   ];
 
-  @property({ type: String })
+  static properties = {
+    variant: { type: String },
+    size: { type: String },
+    disabled: { type: Boolean, reflect: true },
+    href: { type: String },
+    target: { type: String },
+  };
+
   variant: 'default' | 'primary' | 'ghost' = 'default';
-
-  @property({ type: String })
   size: 'sm' | 'md' | 'lg' = 'md';
-
-  @property({ type: Boolean, reflect: true })
   disabled = false;
-
-  @property({ type: String })
   href?: string;
-
-  @property({ type: String })
   target?: string;
 
   override render() {
@@ -156,3 +153,5 @@ export class KissButton extends LitElement {
     `;
   }
 }
+
+customElements.define(tagName, KissButton);

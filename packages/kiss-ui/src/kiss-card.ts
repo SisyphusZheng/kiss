@@ -18,12 +18,10 @@
  */
 
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-card';
 
-@customElement(tagName)
 export class KissCard extends LitElement {
   static override styles = [
     kissDesignTokens,
@@ -71,7 +69,10 @@ export class KissCard extends LitElement {
     `,
   ];
 
-  @property({ type: String })
+  static properties = {
+    variant: { type: String },
+  };
+
   variant: 'default' | 'elevated' | 'borderless' = 'default';
 
   override render() {
@@ -86,3 +87,5 @@ export class KissCard extends LitElement {
     `;
   }
 }
+
+customElements.define(tagName, KissCard);

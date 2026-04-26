@@ -8,11 +8,10 @@
     "jsr:@std/path@*": "1.1.4",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "npm:@hono/vite-dev-server@~0.25.3": "0.25.3_hono@4.12.14",
+    "npm:@hono/vite-dev-server@0.18": "0.18.3_hono@4.12.14",
     "npm:@hono/zod-validator@0.4": "0.4.3_hono@4.12.14_zod@3.25.76",
     "npm:@lit-labs/ssr-dom-shim@^1.2.0": "1.5.1",
     "npm:@lit-labs/ssr@^3.2.0": "3.3.1",
-    "npm:@lit-labs/ssr@^3.3.0": "3.3.1",
     "npm:@lit/reactive-element@2": "2.1.2",
     "npm:@microsoft/api-extractor@^7.58.0": "7.58.7_@types+node@22.19.17",
     "npm:@rollup/pluginutils@^5.3.0": "5.3.0",
@@ -32,8 +31,8 @@
     "npm:lit@^3.2.0": "3.2.0",
     "npm:local-pkg@^1.1.0": "1.1.2",
     "npm:magic-string@0.30": "0.30.21",
-    "npm:magic-string@~0.30.21": "0.30.21",
     "npm:parse5@7": "7.3.0",
+    "npm:typescript@5": "5.9.3",
     "npm:typescript@^5.9.0": "5.9.3",
     "npm:vite-plugin-dts@^4.5.0": "4.5.4_typescript@5.9.3_vite@6.4.2__@types+node@22.19.17_@types+node@22.19.17",
     "npm:vite@*": "6.4.2_@types+node@22.19.17",
@@ -221,8 +220,8 @@
         "hono"
       ]
     },
-    "@hono/vite-dev-server@0.25.3_hono@4.12.14": {
-      "integrity": "sha512-w3uQ0KQF0i/SDcJ6+d5njEFTr6pbolajrt/GxV0pliYL+4ywiBqiOFRWSpwW3mTuZ80boww7+ZxJTGTBIzyBQg==",
+    "@hono/vite-dev-server@0.18.3_hono@4.12.14": {
+      "integrity": "sha512-JztypLmq6qtQ3OAcz5vDzwXYBBymLztSbfDuNf4XTWkfppLjf6DHvYHtQZ5idOfNhUzdnbYY7/6QAKlVk6G3QQ==",
       "dependencies": [
         "@hono/node-server",
         "hono",
@@ -665,8 +664,8 @@
     "diff@8.0.4": {
       "integrity": "sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw=="
     },
-    "enhanced-resolve@5.20.1": {
-      "integrity": "sha512-Qohcme7V1inbAfvjItgw0EaxVX5q2rdVEZHRBrEQdRZTssLDGsL8Lwrznl8oQ/6kuTJONLaDcGjkNP247XEhcA==",
+    "enhanced-resolve@5.21.0": {
+      "integrity": "sha512-otxSQPw4lkOZWkHpB3zaEQs6gWYEsmX4xQF68ElXC/TWvGxGMSGOvoNbaLXm6/cS/fSfHtsEdw90y20PCd+sCA==",
       "dependencies": [
         "graceful-fs",
         "tapable"
@@ -1097,6 +1096,12 @@
       "npm:magic-string@0.30",
       "npm:typescript@^5.9.0"
     ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/node@22",
+        "npm:typescript@5"
+      ]
+    },
     "members": {
       "docs": {
         "dependencies": [
@@ -1110,7 +1115,17 @@
           "npm:lit@^3.2.0",
           "npm:parse5@7",
           "npm:vite@6"
-        ]
+        ],
+        "packageJson": {
+          "dependencies": [
+            "npm:@lit-labs/ssr@^3.2.0",
+            "npm:@types/node@22",
+            "npm:hono@4",
+            "npm:lit@^3.2.0",
+            "npm:typescript@5",
+            "npm:vite@6"
+          ]
+        }
       },
       "examples/minimal-blog": {
         "dependencies": [
@@ -1132,12 +1147,21 @@
       "packages/kiss-core": {
         "packageJson": {
           "dependencies": [
-            "npm:@hono/vite-dev-server@~0.25.3",
-            "npm:@lit-labs/ssr@^3.3.0",
+            "npm:@hono/vite-dev-server@0.18",
+            "npm:@lit-labs/ssr@^3.2.0",
             "npm:@types/node@22",
-            "npm:hono@^4.7.0",
+            "npm:hono@4",
             "npm:lit@^3.2.0",
-            "npm:magic-string@~0.30.21",
+            "npm:typescript@5",
+            "npm:vite@6"
+          ]
+        }
+      },
+      "packages/kiss-docs-kit": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@types/node@22",
+            "npm:lit@^3.2.0",
             "npm:vite-plugin-dts@^4.5.0",
             "npm:vite@^6.3.0"
           ]

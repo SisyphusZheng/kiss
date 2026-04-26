@@ -13,12 +13,10 @@
  */
 
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-input';
 
-@customElement(tagName)
 export class KissInput extends LitElement {
   static override styles = [
     kissDesignTokens,
@@ -85,28 +83,24 @@ export class KissInput extends LitElement {
     `,
   ];
 
-  @property({ type: String })
+  static properties = {
+    type: { type: String },
+    placeholder: { type: String },
+    label: { type: String },
+    value: { type: String },
+    name: { type: String },
+    disabled: { type: Boolean, reflect: true },
+    required: { type: Boolean },
+    error: { type: String },
+  };
+
   type: 'text' | 'email' | 'password' | 'number' | 'url' = 'text';
-
-  @property({ type: String })
   placeholder?: string;
-
-  @property({ type: String })
   label?: string;
-
-  @property({ type: String })
   value?: string;
-
-  @property({ type: String })
   name?: string;
-
-  @property({ type: Boolean, reflect: true })
   disabled = false;
-
-  @property({ type: Boolean })
   required = false;
-
-  @property({ type: String })
   error?: string;
 
   override render() {
@@ -149,3 +143,5 @@ export class KissInput extends LitElement {
     );
   }
 }
+
+customElements.define(tagName, KissInput);

@@ -359,9 +359,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           const basePath = ctx.resolvedConfig?.base || '/';
           const islandChunkMap = buildIslandChunkMap(root, outDir, ctx.islandTagNames, basePath);
           if (Object.keys(islandChunkMap).length > 0) {
-            console.log('[KISS SSG] Island chunk map:', islandChunkMap);
             rewriteHtmlFiles(outputDir, islandChunkMap);
-            console.log('[KISS SSG] Hydration paths rewritten in SSG output');
           }
         } finally {
           await server.close();

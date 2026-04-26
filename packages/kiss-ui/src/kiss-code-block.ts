@@ -13,12 +13,10 @@
  */
 
 import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-code-block';
 
-@customElement(tagName)
 export class KissCodeBlock extends LitElement {
   static override styles = [
     kissDesignTokens,
@@ -110,3 +108,5 @@ export class KissCodeBlock extends LitElement {
     }
   }
 }
+
+customElements.define(tagName, KissCodeBlock);

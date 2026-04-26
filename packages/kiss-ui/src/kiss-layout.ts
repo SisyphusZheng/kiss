@@ -20,12 +20,10 @@
  */
 
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-layout';
 
-@customElement(tagName)
 export class KissLayout extends LitElement {
   static override styles = [
     kissDesignTokens,
@@ -482,11 +480,13 @@ export class KissLayout extends LitElement {
         `,
       ];
 
-      @property({ type: Boolean, reflect: true })
-      home = false;
+  static properties = {
+    home: { type: Boolean, reflect: true },
+    currentPath: { type: String, attribute: 'current-path' },
+  };
 
-      @property({ type: String, attribute: 'current-path' })
-      currentPath = '';
+  home = false;
+  currentPath = '';
 
       private _navLink(path: string, text: string) {
         const isActive = this.currentPath === path;
@@ -646,3 +646,5 @@ export class KissLayout extends LitElement {
         `;
       }
     }
+
+customElements.define(tagName, KissLayout);
