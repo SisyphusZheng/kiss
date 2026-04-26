@@ -13,6 +13,7 @@ export const pageStyles = css`
 
   .container {
     max-width: 720px;
+    margin: 0 auto;
     padding: 3rem 3rem 5rem;
   }
 
@@ -221,7 +222,7 @@ export const pageStyles = css`
   /* === Responsive === */
   @media (max-width: 900px) {
     .container {
-      padding: 2rem 1.5rem 3rem;
+      padding: 2rem 1.5rem 3rem !important;
     }
 
     h1 {
@@ -240,6 +241,7 @@ export const pageStyles = css`
       padding: 1rem;
       font-size: 0.75rem;
       border-radius: 4px;
+      overflow-x: auto;
     }
 
     table {
@@ -263,11 +265,17 @@ export const pageStyles = css`
       text-align: center;
       justify-content: center;
     }
+
+    /* Force responsive padding on containers that override in page styles */
+    .step, .concept-block {
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 
   @media (max-width: 480px) {
     .container {
-      padding: 1.5rem 1rem 2.5rem;
+      padding: 1.5rem 1rem 2.5rem !important;
     }
 
     h1 {
@@ -291,6 +299,15 @@ export const pageStyles = css`
       padding: 0.875rem;
       font-size: 0.6875rem;
       margin: 0.75rem 0;
+      overflow-x: auto;
+    }
+
+    code {
+      font-size: 0.75rem;
+    }
+
+    ul, ol {
+      padding-left: 1rem;
     }
   }
 `;

@@ -9,9 +9,9 @@
  * The theme-toggle button uses composedPath() event delegation to cross
  * the Shadow DOM boundary. KISS Architecture: L2 > L4.
  *
- * Mobile navigation: <details>/<summary> in header (L0 HTML).
- * Sidebar is always in DOM — CSS controls visibility per viewport.
- * KISS Architecture: L0 (structure) + L1 (responsive) = no JS needed.
+ * Mobile navigation: <details>/<summary> in header-right (L0 HTML).
+ * Sidebar slides in from left via CSS transform (L1).
+ * KISS Architecture: L0 (structure) + L1 (animation) = no JS needed.
  */
 import { html, LitElement } from '@kissjs/core';
 import { layoutStyles } from './layout-styles.js';
@@ -46,19 +46,6 @@ export class AppLayout extends LitElement {
       <div class="app-layout" ?home="${this.home}">
         <header class="app-header">
           <div class="header-inner">
-            ${!this.home
-              ? html`
-                <details class="mobile-menu">
-                  <summary class="mobile-menu-btn" aria-label="Toggle navigation">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                      <line x1="3" y1="4.5" x2="15" y2="4.5"/>
-                      <line x1="3" y1="9" x2="15" y2="9"/>
-                      <line x1="3" y1="13.5" x2="15" y2="13.5"/>
-                    </svg>
-                  </summary>
-                </details>
-              `
-              : ''}
             <a class="logo" href="/">KISS<span class="logo-sub">framework</span></a>
             <nav class="header-nav">
               <a href="/guide/getting-started">Docs</a>
@@ -66,6 +53,19 @@ export class AppLayout extends LitElement {
               <a href="https://jsr.io/@kissjs/core">JSR</a>
             </nav>
             <div class="header-right">
+              ${!this.home
+                ? html`
+                  <details class="mobile-menu">
+                    <summary class="mobile-menu-btn" aria-label="Toggle navigation">
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <line x1="3" y1="4.5" x2="15" y2="4.5"/>
+                        <line x1="3" y1="9" x2="15" y2="9"/>
+                        <line x1="3" y1="13.5" x2="15" y2="13.5"/>
+                      </svg>
+                    </summary>
+                  </details>
+                `
+                : ''}
               <button
                 class="theme-toggle"
                 title="Switch to light theme"

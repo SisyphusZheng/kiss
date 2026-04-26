@@ -3,14 +3,18 @@
  *
  * Design principles (from Design Philosophy & KISS Architecture):
  * - L0 HTML5 first: <details>/<summary> for collapsible UI, no JS
- * - L1 CSS: responsive layout, theme via custom properties
+ * - L1 CSS: responsive layout, theme via custom properties, transform animations
  * - Maximum whitespace — let content breathe
  * - Typography-driven hierarchy, not color
  * - Academic restraint: nothing decorative without purpose
  * - Swiss International Style: pure B&W, geometric precision
  *
- * Theme: Pure B&W via CSS custom properties on :root.
- * Dark and Light — toggled by [data-theme] attribute.
+ * Mobile navigation architecture:
+ * - Hamburger button in header-right (L0 <details>/<summary>)
+ * - Sidebar slides in from left via CSS transform (L1)
+ * - Semi-transparent backdrop with opacity transition (L1)
+ * - Zero JavaScript — :has() selector controls open/close state
+ * - Performance: will-change + transform (GPU compositing, no reflow)
  */
 import { css } from '@kissjs/core';
 
@@ -81,12 +85,12 @@ export const layoutStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     cursor: pointer;
     padding: 0;
     list-style: none;
@@ -112,6 +116,7 @@ export const layoutStyles = css`
   .mobile-menu[open] .mobile-menu-btn {
     color: var(--text-primary);
     background: var(--accent-subtle);
+    border-color: var(--border-hover);
   }
 
   /* === Logo === */
@@ -242,7 +247,7 @@ export const layoutStyles = css`
     display: block;
   }
 
-  /* === Sidebar === */
+  /* === Sidebar (Desktop) === */
   .docs-sidebar {
     width: 240px;
     flex-shrink: 0;
@@ -326,14 +331,23 @@ export const layoutStyles = css`
     font-weight: 500;
   }
 
-  /* === Mobile Backdrop === */
+  /* === Mobile Backdrop (always exists, opacity-controlled) === */
   .mobile-backdrop {
-    display: none;
+    position: fixed;
+    inset: 0;
+    top: 56px;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 80;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
   }
 
-  /* === Mobile Responsive (L1: CSS @media + :has()) === */
+  /* === Mobile Responsive (L1: CSS @media + :has() + transform) === */
   @media (max-width: 900px) {
-    /* Show hamburger button */
+    /* Show hamburger button in header-right */
     .mobile-menu {
       display: block;
     }
@@ -353,49 +367,47 @@ export const layoutStyles = css`
       display: none;
     }
 
-    /* Header right stays on the end */
+    /* Header right: tighter gap on mobile */
     .header-right {
-      margin-left: auto;
       gap: 0.375rem;
     }
 
-    /* Sidebar: full-screen overlay panel from top — L0 + L1, zero JS */
+    /* Sidebar: slide-in drawer from left — L0 + L1, zero JS */
+    /* Performance: transform + will-change = GPU compositing, no reflow */
     .docs-sidebar {
-      display: none;
       position: fixed;
       top: 56px;
       left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
+      width: min(300px, 80vw);
       height: calc(100vh - 56px);
       z-index: 90;
       background: var(--bg-base);
-      border-right: none;
+      border-right: 1px solid var(--border);
       border-bottom: none;
-      padding: 0.75rem 1rem;
+      padding: 1rem 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+
+      /* Slide animation */
+      transform: translateX(-101%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+
+      /* Shadow when open */
+      box-shadow: none;
     }
 
-    /* Backdrop: semi-transparent overlay behind sidebar */
-    .mobile-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      top: 56px;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 80;
-    }
-
-    /* L1: :has() selector — when hamburger is open, show sidebar + backdrop */
-    /* KISS Architecture: L0 (details/summary) + L1 (:has()) = zero JS menu */
+    /* L1: :has() selector — when hamburger is open, slide sidebar in */
+    /* KISS Architecture: L0 (details/summary) + L1 (:has() + transform) = zero JS menu */
     .app-layout:has(.mobile-menu[open]) .docs-sidebar {
-      display: block;
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
     }
 
+    /* Backdrop: fade in when menu open */
     .app-layout:has(.mobile-menu[open]) .mobile-backdrop {
-      display: block;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .nav-section {
@@ -403,12 +415,12 @@ export const layoutStyles = css`
     }
 
     .nav-section summary {
-      padding: 0.375rem 0.75rem;
+      padding: 0.5rem 1rem;
       font-size: 0.6875rem;
     }
 
     .docs-sidebar a {
-      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+      padding: 0.5rem 1rem 0.5rem 1.75rem;
       font-size: 0.875rem;
     }
 
@@ -439,6 +451,10 @@ export const layoutStyles = css`
     .github-link {
       padding: 0.375rem;
       border: none;
+    }
+
+    .header-inner {
+      padding: 0 0.75rem;
     }
   }
 
