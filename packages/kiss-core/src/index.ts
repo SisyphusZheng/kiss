@@ -316,7 +316,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           // Post-process: rewrite Island hydration paths from source to built chunks
           // This must happen AFTER client build (kiss:build) has produced the JS files
           // and AFTER SSG has generated the HTML files.
-          const { buildIslandChunkMap, rewriteHtmlFiles } = await import('./build.js');
+          const { buildIslandChunkMap, rewriteHtmlFiles } = await import('./ssg-postprocess.js');
           const basePath = ctx.resolvedConfig?.base || '/';
           const islandChunkMap = buildIslandChunkMap(root, outDir, ctx.islandTagNames, basePath);
           if (Object.keys(islandChunkMap).length > 0) {
