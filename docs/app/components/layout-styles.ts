@@ -1,15 +1,19 @@
 /**
- * Docs site global layout styles.
- * KISS Architecture (K·I·S·S) — Shadow DOM encapsulated, styles scoped to app-layout's shadow root.
- * DSD makes content visible even without JavaScript.
+ * KISS Docs — Layout Styles
  *
- * Theme system: Pure B&W — Dark (default) / Light.
- * All colors use CSS custom properties that inherit from :root.
+ * Design principles:
+ * - Maximum whitespace — let content breathe
+ * - Subtle borders, never heavy
+ * - Typography-driven hierarchy, not color
+ * - Academic restraint: nothing decorative without purpose
+ *
+ * Theme: Pure B&W via CSS custom properties on :root.
+ * Dark and Light — toggled by [data-theme] attribute.
  */
 import { css } from '@kissjs/core';
 
 export const layoutStyles = css`
-  /* === Global Reset & Base === */
+  /* === Reset === */
   *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -20,21 +24,25 @@ export const layoutStyles = css`
     display: block;
   }
 
-  /* === Layout === */
+  /* === Layout Shell === */
   .app-layout {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     background: var(--bg-base);
     color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  .app-layout .layout-body {
+  .layout-body {
     display: flex;
     flex: 1;
   }
 
-  .app-layout .layout-main {
+  .layout-main {
     flex: 1;
     min-width: 0;
   }
@@ -43,75 +51,51 @@ export const layoutStyles = css`
     display: block;
   }
 
-  @media (max-width: 900px) {
-    .docs-sidebar {
-      display: block;
-      width: 100%;
-      height: auto;
-      position: relative;
-      top: 0;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-    }
-
-    .docs-sidebar .nav-section {
-      margin-bottom: 0.5rem;
-    }
-
-    .docs-sidebar .nav-section summary {
-      padding: 0.25rem 0.5rem;
-    }
-
-    .docs-sidebar a {
-      padding: 0.25rem 0.5rem 0.25rem 1.5rem;
-    }
-  }
-
   /* === Header === */
   .app-header {
-    display: block;
     position: sticky;
     top: 0;
     z-index: 100;
-    background: var(--bg-surface);
+    background: var(--bg-base);
     border-bottom: 1px solid var(--border);
   }
 
-  .app-header .header-inner {
+  .header-inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
     display: flex;
     align-items: center;
-    height: 56px;
+    height: 60px;
     gap: 2rem;
   }
 
-  .app-header .logo {
-    font-size: 1rem;
+  .logo {
+    font-size: 0.875rem;
     font-weight: 800;
     color: var(--text-primary);
     text-decoration: none;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
+    transition: opacity 0.15s;
   }
 
-  .app-header .logo:hover {
-    opacity: 0.7;
+  .logo:hover {
+    opacity: 0.6;
   }
 
-  .app-header .logo-sub {
-    font-size: 0.6875rem;
+  .logo-sub {
+    font-size: 0.625rem;
     font-weight: 400;
     color: var(--text-muted);
-    margin-left: 0.375rem;
-    letter-spacing: 0.02em;
+    margin-left: 0.5rem;
+    letter-spacing: 0.04em;
+    text-transform: none;
   }
 
   .app-header nav {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.125rem;
     flex: 1;
   }
 
@@ -120,23 +104,23 @@ export const layoutStyles = css`
     text-decoration: none;
     font-size: 0.8125rem;
     font-weight: 500;
-    padding: 0.375rem 0.75rem;
+    padding: 0.5rem 0.875rem;
     letter-spacing: 0.01em;
     transition: color 0.15s;
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
   .app-header nav a:hover {
     color: var(--text-primary);
   }
 
-  .app-header .header-right {
+  .header-right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  .app-header .github-link {
+  .github-link {
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.75rem;
@@ -144,11 +128,11 @@ export const layoutStyles = css`
     letter-spacing: 0.02em;
     padding: 0.375rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: 4px;
     transition: color 0.15s, border-color 0.15s;
   }
 
-  .app-header .github-link:hover {
+  .github-link:hover {
     color: var(--text-secondary);
     border-color: var(--border-hover);
   }
@@ -158,8 +142,8 @@ export const layoutStyles = css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -167,6 +151,7 @@ export const layoutStyles = css`
     color: var(--text-tertiary);
     cursor: pointer;
     font-size: 1rem;
+    line-height: 1;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
 
@@ -178,31 +163,30 @@ export const layoutStyles = css`
 
   /* === Sidebar === */
   .docs-sidebar {
-    display: block;
-    width: 240px;
+    width: 256px;
     flex-shrink: 0;
     border-right: 1px solid var(--border);
-    padding: 1.5rem 0;
+    padding: 2rem 0;
     overflow-y: auto;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 60px);
     position: sticky;
-    top: 56px;
+    top: 60px;
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
-  .docs-sidebar .nav-section {
-    margin-bottom: 1.25rem;
+  .nav-section {
+    margin-bottom: 1.5rem;
   }
 
-  .docs-sidebar .nav-section summary {
-    font-size: 0.6875rem;
+  .nav-section summary {
+    font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: var(--text-muted);
-    padding: 0 1.25rem;
-    margin-bottom: 0.375rem;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -211,22 +195,26 @@ export const layoutStyles = css`
     user-select: none;
   }
 
-  .docs-sidebar .nav-section summary::-webkit-details-marker {
+  .nav-section summary::-webkit-details-marker {
     display: none;
   }
 
-  .docs-sidebar .nav-section summary::before {
-    content: "▸";
-    font-size: 0.625rem;
+  .nav-section summary::before {
+    content: "▾";
+    font-size: 0.5rem;
     transition: transform 0.15s;
     display: inline-block;
   }
 
-  .docs-sidebar .nav-section[open] summary::before {
-    transform: rotate(90deg);
+  .nav-section[open] summary::before {
+    transform: rotate(0deg);
   }
 
-  .docs-sidebar .nav-section summary:hover {
+  .nav-section:not([open]) summary::before {
+    transform: rotate(-90deg);
+  }
+
+  .nav-section summary:hover {
     color: var(--text-tertiary);
   }
 
@@ -235,7 +223,7 @@ export const layoutStyles = css`
     color: var(--text-tertiary);
     text-decoration: none;
     font-size: 0.8125rem;
-    padding: 0.3rem 1.25rem;
+    padding: 0.35rem 1.5rem;
     transition: color 0.15s, background 0.15s;
     border-left: 2px solid transparent;
   }
@@ -250,22 +238,43 @@ export const layoutStyles = css`
     color: var(--text-primary);
     border-left-color: var(--text-primary);
     background: var(--accent-subtle);
-    font-weight: 600;
+    font-weight: 500;
+  }
+
+  /* === Mobile Sidebar === */
+  @media (max-width: 900px) {
+    .docs-sidebar {
+      display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+      top: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem;
+    }
+
+    .nav-section {
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-section summary {
+      padding: 0.25rem 0.5rem;
+    }
+
+    .docs-sidebar a {
+      padding: 0.25rem 0.5rem 0.25rem 1.5rem;
+    }
   }
 
   /* === Footer === */
-  .app-footer {
-    display: block;
-    margin-top: auto;
-  }
-
   .app-footer footer {
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 2rem;
     border-top: 1px solid var(--border);
     text-align: center;
-    color: var(--text-tertiary);
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
     background: var(--bg-base);
   }
 
@@ -274,7 +283,7 @@ export const layoutStyles = css`
   }
 
   .app-footer a {
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     text-decoration: none;
     transition: color 0.15s;
   }
@@ -286,7 +295,7 @@ export const layoutStyles = css`
   .app-footer .divider {
     display: inline-block;
     width: 1px;
-    height: 10px;
+    height: 8px;
     background: var(--border-hover);
     vertical-align: middle;
     margin: 0 0.75rem;

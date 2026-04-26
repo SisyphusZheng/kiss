@@ -1,7 +1,6 @@
 /**
- * @kissjs/ui — Design System Showcase
- * Pure B&W — Two palettes: Dark / Light. Nothing else.
- * Route: /ui
+ * @kissjs/ui — Design System
+ * Two palettes. Zero noise.
  */
 import { css, html, LitElement } from '@kissjs/core';
 import '../components/layout.js';
@@ -13,12 +12,12 @@ export class UIShowcase extends LitElement {
     }
 
     .container {
-      max-width: 960px;
-      padding: 3rem 2.5rem 4rem;
+      max-width: 800px;
+      padding: 3rem 3rem 5rem;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 900;
       letter-spacing: -0.04em;
       margin: 0 0 0.5rem;
@@ -28,9 +27,9 @@ export class UIShowcase extends LitElement {
 
     .subtitle {
       color: var(--text-secondary);
-      margin-bottom: 3rem;
+      margin-bottom: 3.5rem;
       font-size: 0.9375rem;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     .subtitle strong {
@@ -38,142 +37,146 @@ export class UIShowcase extends LitElement {
       font-weight: 600;
     }
 
-    /* Section */
+    /* ─── Section ─── */
     .section {
-      margin-bottom: 3.5rem;
+      margin-bottom: 4rem;
     }
 
     .section-title {
-      font-size: 0.6875rem;
+      font-size: 0.625rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.16em;
       color: var(--text-muted);
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border);
     }
 
-    /* === Palette Preview === */
+    /* ─── Palettes ─── */
     .palette-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    .palette-card {
+      gap: 1px;
+      background: var(--border);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
     }
 
-    .palette-header {
-      padding: 0.75rem 1.25rem;
-      font-size: 0.75rem;
+    .palette-card {
+      padding: 1.5rem;
+    }
+
+    .palette-dark {
+      background: #000;
+    }
+
+    .palette-light {
+      background: #fff;
+    }
+
+    .palette-name {
+      font-size: 0.625rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .palette-dark .palette-header {
-      background: #000;
-      color: #fff;
-      border-color: #1a1a1a;
-    }
-
-    .palette-light .palette-header {
-      background: #fff;
-      color: #000;
-      border-color: #e5e5e5;
-    }
-
-    .palette-body {
-      padding: 1.25rem;
-    }
-
-    .palette-dark .palette-body {
-      background: #000;
-    }
-
-    .palette-light .palette-body {
-      background: #fff;
-    }
-
-    .swatch-row {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      letter-spacing: 0.12em;
       margin-bottom: 1rem;
     }
 
+    .palette-dark .palette-name {
+      color: #555;
+    }
+
+    .palette-light .palette-name {
+      color: #999;
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .swatch-item {
+      text-align: center;
+    }
+
     .swatch {
-      width: 48px;
-      height: 48px;
-      border-radius: 6px;
-      border: 1px solid rgba(128, 128, 128, 0.2);
-      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 4px;
+      margin-bottom: 0.375rem;
+    }
+
+    .palette-dark .swatch {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .palette-light .swatch {
+      border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .swatch-label {
       font-size: 0.5625rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 0.25rem;
-      text-align: center;
+      letter-spacing: 0.04em;
     }
 
     .palette-dark .swatch-label {
-      color: #666;
+      color: #555;
     }
 
     .palette-light .swatch-label {
       color: #999;
     }
 
-    .palette-sample {
-      line-height: 1.7;
-      font-size: 0.8125rem;
+    .palette-desc {
+      font-size: 0.75rem;
+      line-height: 1.6;
     }
 
-    .palette-dark .palette-sample {
-      color: #999;
+    .palette-dark .palette-desc {
+      color: #666;
     }
 
-    .palette-dark .palette-sample strong {
+    .palette-dark .palette-desc strong {
       color: #fff;
     }
 
-    .palette-light .palette-sample {
-      color: #555;
+    .palette-light .palette-desc {
+      color: #888;
     }
 
-    .palette-light .palette-sample strong {
+    .palette-light .palette-desc strong {
       color: #000;
     }
 
-    /* === Typography Scale === */
+    /* ─── Typography ─── */
     .type-scale {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
     }
 
     .type-row {
       display: flex;
       align-items: baseline;
       gap: 1.5rem;
-      padding: 0.5rem 0;
+      padding: 0.75rem 0;
       border-bottom: 1px solid var(--border);
     }
 
+    .type-row:last-child {
+      border-bottom: none;
+    }
+
     .type-label {
-      min-width: 80px;
-      font-size: 0.625rem;
+      min-width: 72px;
+      font-size: 0.5625rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       color: var(--text-muted);
     }
 
@@ -181,16 +184,16 @@ export class UIShowcase extends LitElement {
       color: var(--text-primary);
     }
 
-    /* === Component Preview === */
+    /* ─── Component Preview ─── */
     .preview-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
     }
 
     .preview-header {
-      padding: 1rem 1.25rem;
+      padding: 0.875rem 1.25rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -198,18 +201,18 @@ export class UIShowcase extends LitElement {
     }
 
     .preview-title {
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       font-weight: 600;
       color: var(--text-primary);
     }
 
     .preview-badge {
-      font-size: 0.625rem;
+      font-size: 0.5625rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      padding: 0.25rem 0.625rem;
-      border-radius: 100px;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
       background: var(--accent-subtle);
       color: var(--text-secondary);
       border: 1px solid var(--border);
@@ -220,24 +223,24 @@ export class UIShowcase extends LitElement {
     }
 
     .preview-body {
-      padding: 1.5rem 1.25rem;
+      padding: 1.25rem;
       display: flex;
-      gap: 0.75rem;
+      gap: 0.625rem;
       flex-wrap: wrap;
       align-items: flex-start;
     }
 
-    /* Demo Buttons — Pure B&W */
+    /* ─── Demo Buttons ─── */
     .demo-btn {
       display: inline-flex;
       align-items: center;
-      padding: 0.5rem 1.25rem;
+      padding: 0.5rem 1.125rem;
       font-size: 0.8125rem;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 4px;
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       border: none;
       font-family: inherit;
     }
@@ -272,39 +275,36 @@ export class UIShowcase extends LitElement {
     }
 
     .demo-btn-sm {
-      padding: 0.375rem 0.875rem;
+      padding: 0.375rem 0.75rem;
       font-size: 0.75rem;
     }
 
     .demo-btn-lg {
-      padding: 0.75rem 1.75rem;
+      padding: 0.625rem 1.5rem;
       font-size: 0.9375rem;
     }
 
-    /* Demo Cards */
+    /* ─── Demo Cards ─── */
     .demo-cards-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     .demo-card {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
       padding: 1.5rem;
-      transition: border-color 0.2s;
-    }
-
-    .demo-card:hover {
-      border-color: var(--border-hover);
     }
 
     .demo-card h4 {
-      font-size: 0.9375rem;
+      font-size: 0.875rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin: 0 0 0.5rem;
+      margin: 0 0 0.375rem;
     }
 
     .demo-card p {
@@ -323,23 +323,25 @@ export class UIShowcase extends LitElement {
     }
 
     .demo-card .card-tag {
-      font-size: 0.6875rem;
+      font-size: 0.625rem;
       color: var(--text-secondary);
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
-    /* Demo Input */
+    /* ─── Demo Input ─── */
     .demo-input {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.625rem 1rem;
+      border-radius: 4px;
+      padding: 0.5rem 0.875rem;
       color: var(--text-primary);
       font-size: 0.8125rem;
       font-family: inherit;
       width: 100%;
-      max-width: 320px;
-      transition: border-color 0.2s;
+      max-width: 280px;
+      transition: border-color 0.15s;
       outline: none;
     }
 
@@ -351,18 +353,18 @@ export class UIShowcase extends LitElement {
       border-color: var(--text-primary);
     }
 
-    /* Install */
+    /* ─── Install ─── */
     .install-section {
-      margin-top: 3rem;
+      margin-top: 3.5rem;
       padding: 2rem;
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       text-align: center;
     }
 
     .install-section h3 {
-      font-size: 1rem;
+      font-size: 0.9375rem;
       font-weight: 600;
       color: var(--text-primary);
       margin: 0 0 1rem;
@@ -371,13 +373,13 @@ export class UIShowcase extends LitElement {
     .install-cmd {
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1.5rem;
+      gap: 0.625rem;
+      padding: 0.625rem 1.25rem;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       color: var(--text-primary);
     }
 
@@ -388,12 +390,12 @@ export class UIShowcase extends LitElement {
     .install-section p {
       font-size: 0.8125rem;
       color: var(--text-tertiary);
-      margin: 1rem 0 0;
+      margin: 0.75rem 0 0;
     }
 
-    /* Nav */
+    /* ─── Nav ─── */
     .nav-row {
-      margin-top: 3rem;
+      margin-top: 4rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       display: flex;
@@ -409,7 +411,7 @@ export class UIShowcase extends LitElement {
       color: var(--text-secondary);
       text-decoration: none;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
 
@@ -423,6 +425,10 @@ export class UIShowcase extends LitElement {
       .palette-row {
         grid-template-columns: 1fr;
       }
+
+      .demo-cards-row {
+        grid-template-columns: 1fr;
+      }
     }
   `;
 
@@ -433,74 +439,72 @@ export class UIShowcase extends LitElement {
           <h1>Design System</h1>
           <p class="subtitle">
             <strong>Two palettes. Zero noise.</strong><br>
-            Dark and Light. Black and White. That's it.
+            Dark and Light. Black and White. Nothing else.
           </p>
 
           <!-- Palettes -->
           <div class="section">
             <div class="section-title">Palettes</div>
             <div class="palette-row">
-              <!-- Dark -->
               <div class="palette-card palette-dark">
-                <div class="palette-header">Dark</div>
-                <div class="palette-body">
-                  <div class="swatch-row">
-                    <div>
-                      <div class="swatch" style="background:#000"></div>
-                      <div class="swatch-label">Base</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#0a0a0a"></div>
-                      <div class="swatch-label">Surface</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#111"></div>
-                      <div class="swatch-label">Elevated</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#fff"></div>
-                      <div class="swatch-label">Text</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#999"></div>
-                      <div class="swatch-label">Muted</div>
-                    </div>
+                <div class="palette-name">Dark</div>
+                <div class="swatch-grid">
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#000"></div>
+                    <div class="swatch-label">Base</div>
                   </div>
-                  <p class="palette-sample">
-                    <strong>Pure black</strong> foundation. White for emphasis. Gray for hierarchy.
-                  </p>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#0a0a0a"></div>
+                    <div class="swatch-label">Surface</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#fff"></div>
+                    <div class="swatch-label">Primary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#999"></div>
+                    <div class="swatch-label">Secondary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#666"></div>
+                    <div class="swatch-label">Tertiary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#444"></div>
+                    <div class="swatch-label">Muted</div>
+                  </div>
                 </div>
+                <p class="palette-desc"><strong>Black</strong> foundation. White for emphasis. Gray for hierarchy.</p>
               </div>
-              <!-- Light -->
               <div class="palette-card palette-light">
-                <div class="palette-header">Light</div>
-                <div class="palette-body">
-                  <div class="swatch-row">
-                    <div>
-                      <div class="swatch" style="background:#fff"></div>
-                      <div class="swatch-label">Base</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#fafafa"></div>
-                      <div class="swatch-label">Surface</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#f5f5f5"></div>
-                      <div class="swatch-label">Elevated</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#000"></div>
-                      <div class="swatch-label">Text</div>
-                    </div>
-                    <div>
-                      <div class="swatch" style="background:#555"></div>
-                      <div class="swatch-label">Muted</div>
-                    </div>
+                <div class="palette-name">Light</div>
+                <div class="swatch-grid">
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#fff"></div>
+                    <div class="swatch-label">Base</div>
                   </div>
-                  <p class="palette-sample">
-                    <strong>Pure white</strong> foundation. Black for emphasis. Gray for hierarchy.
-                  </p>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#fafafa"></div>
+                    <div class="swatch-label">Surface</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#000"></div>
+                    <div class="swatch-label">Primary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#555"></div>
+                    <div class="swatch-label">Secondary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#888"></div>
+                    <div class="swatch-label">Tertiary</div>
+                  </div>
+                  <div class="swatch-item">
+                    <div class="swatch" style="background:#aaa"></div>
+                    <div class="swatch-label">Muted</div>
+                  </div>
                 </div>
+                <p class="palette-desc"><strong>White</strong> foundation. Black for emphasis. Gray for hierarchy.</p>
               </div>
             </div>
           </div>
@@ -511,46 +515,37 @@ export class UIShowcase extends LitElement {
             <div class="type-scale">
               <div class="type-row">
                 <span class="type-label">Display</span>
-                <span class="type-sample" style="font-size:3rem;font-weight:900;letter-spacing:-0.04em"
-                >KISS UI</span>
+                <span class="type-sample" style="font-size:2.5rem;font-weight:900;letter-spacing:-0.04em">KISS UI</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H1</span>
-                <span class="type-sample" style="font-size:2rem;font-weight:800;letter-spacing:-0.03em"
-                >Heading One</span>
+                <span class="type-sample" style="font-size:1.75rem;font-weight:800;letter-spacing:-0.03em">Heading One</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H2</span>
-                <span class="type-sample" style="font-size:1.25rem;font-weight:600">Heading Two</span>
+                <span class="type-sample" style="font-size:1.125rem;font-weight:600">Heading Two</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Body</span>
-                <span class="type-sample" style="font-size:0.9375rem;color:var(--text-secondary)"
-                >Body text for paragraphs and content blocks.</span>
+                <span class="type-sample" style="font-size:0.9375rem;color:var(--text-secondary)">Body text for paragraphs.</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Caption</span>
-                <span
-                  class="type-sample"
-                  style="font-size:0.75rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600"
-                >Caption / Label</span>
+                <span class="type-sample" style="font-size:0.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Caption</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Mono</span>
-                <span
-                  class="type-sample"
-                  style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--text-primary)"
-                >deno add jsr:@kissjs/ui</span>
+                <span class="type-sample" style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--text-primary)">deno add jsr:@kissjs/ui</span>
               </div>
             </div>
           </div>
 
           <!-- Buttons -->
           <div class="section">
-            <div class="section-title">Components — Button</div>
+            <div class="section-title">Button</div>
             <div class="preview-card">
               <div class="preview-header">
-                <span class="preview-title">Button Variants</span>
+                <span class="preview-title">Variants</span>
                 <span class="preview-badge">Available</span>
               </div>
               <div class="preview-body">
@@ -568,19 +563,19 @@ export class UIShowcase extends LitElement {
 
           <!-- Cards -->
           <div class="section">
-            <div class="section-title">Components — Card</div>
+            <div class="section-title">Card</div>
             <div class="demo-cards-row">
               <div class="demo-card">
-                <h4>Island Component</h4>
-                <p>Interactive islands with automatic hydration and Shadow DOM encapsulation.</p>
+                <h4>Island</h4>
+                <p>Interactive islands with hydration and Shadow DOM.</p>
                 <div class="card-footer">
                   <span class="card-tag">Interactive</span>
                   <button class="demo-btn demo-btn-primary demo-btn-sm">Use</button>
                 </div>
               </div>
               <div class="demo-card">
-                <h4>Static Component</h4>
-                <p>Zero-JS rendered via DSD. Content visible before any JavaScript loads.</p>
+                <h4>Static</h4>
+                <p>Zero-JS rendered via DSD. Visible before JS loads.</p>
                 <div class="card-footer">
                   <span class="card-tag">0 KB JS</span>
                   <button class="demo-btn demo-btn-secondary demo-btn-sm">Use</button>
@@ -588,7 +583,7 @@ export class UIShowcase extends LitElement {
               </div>
               <div class="demo-card">
                 <h4>API Route</h4>
-                <p>Server-side logic with Hono RPC. Type-safe from server to client.</p>
+                <p>Server logic with Hono RPC. Type-safe end to end.</p>
                 <div class="card-footer">
                   <span class="card-tag">Type-Safe</span>
                   <button class="demo-btn demo-btn-secondary demo-btn-sm">Use</button>
@@ -599,14 +594,14 @@ export class UIShowcase extends LitElement {
 
           <!-- Input -->
           <div class="section">
-            <div class="section-title">Components — Input</div>
+            <div class="section-title">Input</div>
             <div class="preview-card">
               <div class="preview-header">
                 <span class="preview-title">Text Input</span>
                 <span class="preview-badge planned">Planned</span>
               </div>
-              <div class="preview-body" style="flex-direction:column;gap:1rem">
-                <input class="demo-input" type="text" placeholder="Enter your email..." />
+              <div class="preview-body" style="flex-direction:column;gap:0.75rem">
+                <input class="demo-input" type="text" placeholder="Enter email..." />
                 <input class="demo-input" type="text" value="hello@kissjs.org" readonly />
               </div>
             </div>
@@ -614,14 +609,13 @@ export class UIShowcase extends LitElement {
 
           <!-- Install -->
           <div class="install-section">
-            <h3>Get Started with @kissjs/ui</h3>
+            <h3>Install @kissjs/ui</h3>
             <div class="install-cmd">
               <span class="prompt">$</span> deno add jsr:@kissjs/ui
             </div>
-            <p>Works with Deno, Node, and Bun. Zero config needed.</p>
+            <p>Deno, Node, Bun. Zero config.</p>
           </div>
 
-          <!-- Nav -->
           <div class="nav-row">
             <a href="/styling/kiss-ui" class="nav-link">&larr; @kissjs/ui Docs</a>
             <a href="/guide/getting-started" class="nav-link">Getting Started &rarr;</a>

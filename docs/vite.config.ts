@@ -28,9 +28,10 @@ export default defineConfig({
         ],
         headFragments: [
           // DSD polyfill for browsers without native Declarative Shadow DOM support.
-          // Must load synchronously before any custom element definitions.
-          // Browsers with native DSD (Chrome 90+, Safari 16.4+, Firefox 123+) skip this.
           '<script>if(!HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"))document.write(\'<script src="https://unpkg.com/@webcomponents/template-shadowroot@0.2.1/template-shadowroot.js"><\\/script>\')</script>',
+          // Theme system: Pure B&W — Dark / Light
+          '<style>:root,[data-theme="dark"]{--bg-base:#000;--bg-surface:#0a0a0a;--bg-elevated:#111;--bg-hover:#0e0e0e;--bg-card:#0a0a0a;--border:#1a1a1a;--border-hover:#333;--text-primary:#fff;--text-secondary:#999;--text-tertiary:#666;--text-muted:#444;--accent:#fff;--accent-dim:#ccc;--accent-subtle:rgba(255,255,255,0.05);--code-bg:#111;--code-border:#1a1a1a;--scrollbar-track:transparent;--scrollbar-thumb:#222;color-scheme:dark}[data-theme="light"]{--bg-base:#fff;--bg-surface:#fafafa;--bg-elevated:#f5f5f5;--bg-hover:#f0f0f0;--bg-card:#fff;--border:#e5e5e5;--border-hover:#ccc;--text-primary:#000;--text-secondary:#555;--text-tertiary:#888;--text-muted:#aaa;--accent:#000;--accent-dim:#333;--accent-subtle:rgba(0,0,0,0.03);--code-bg:#f5f5f5;--code-border:#e5e5e5;--scrollbar-track:transparent;--scrollbar-thumb:#ccc;color-scheme:light}body{margin:0;background:var(--bg-base);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>',
+          '<script>(function(){var s=localStorage.getItem("kiss-theme");var p=window.matchMedia("(prefers-color-scheme:light)").matches;var t=s||(p?"light":"dark");document.documentElement.setAttribute("data-theme",t)})()</script>',
         ],
       },
     }),

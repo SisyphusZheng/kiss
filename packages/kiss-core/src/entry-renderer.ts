@@ -160,9 +160,6 @@ export function renderEntry(desc: EntryDescriptor): string {
   );
 
   // --- Island hydration (build-time known list, no regex) ---
-  const islandTagNames = desc.islands.map((i) => i.tagName);
-
-  // Build lookup map from tagName → modulePath
   const islandLookup: Record<string, string> = {};
   for (const island of desc.islands) {
     islandLookup[island.tagName] = island.modulePath;

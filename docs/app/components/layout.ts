@@ -37,12 +37,12 @@ export class AppLayout extends LitElement {
     this._onThemeChange = () => {
       this.theme = document.documentElement.getAttribute('data-theme') || 'dark';
     };
-    window.addEventListener('kiss-theme-change', this._onThemeChange);
+    globalThis.addEventListener('kiss-theme-change', this._onThemeChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener('kiss-theme-change', this._onThemeChange);
+    globalThis.removeEventListener('kiss-theme-change', this._onThemeChange);
   }
 
   private _onThemeChange:
@@ -56,7 +56,7 @@ export class AppLayout extends LitElement {
     localStorage.setItem('kiss-theme', next);
     this.theme = next;
     // Notify other components
-    window.dispatchEvent(new CustomEvent('kiss-theme-change'));
+    globalThis.dispatchEvent(new CustomEvent('kiss-theme-change'));
   }
 
   private _navLink(path: string, text: string) {
