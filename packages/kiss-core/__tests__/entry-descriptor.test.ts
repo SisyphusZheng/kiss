@@ -148,11 +148,16 @@ Deno.test('renderEntry: SSG mode omits /__kiss debug endpoint', () => {
   assertEquals(code.includes('/__kiss'), false);
 });
 
-Deno.test('renderEntry: dev mode includes /__kiss debug endpoint', () => {
+Deno.test('renderEntry: dev mode includes debug route data', () => {
   const desc = buildEntryDescriptor(sampleRoutes);
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, '/__kiss');
+  // Debug endpoint was removed in Phase 4A audit (security: leaked route info).
+  // Instead, debugRoutes are available in the descriptor for tooling consumption.
+  assertEquals(desc.debugRoutes !== undefined, true);
+  assertEquals(desc.debugRoutes!.length, 3); // 3 non-special routes
+  // Generated code should NOT contain /__kiss (removed for security)
+  assertEquals(code.includes('/__kiss'), false);
 });
 
 Deno.test('renderEntry: API routes are registered with app.all', () => {
@@ -169,7 +174,9 @@ Deno.test('renderEntry: page routes use SSR helper', () => {
 
   assertStringIncludes(code, "app.get('/'");
   assertStringIncludes(code, 'await __ssr(tag)');
-  assertStringIncludes(code, 'wrapDocument(clean, islands)');
+  // Island hydration is now handled by SSG post-processing (Phase 4E),
+  // wrapDocument only takes body (no islands parameter)
+  assertStringIncludes(code, 'wrapDocument(clean)');
 });
 
 Deno.test('renderEntry: no process.env call in output', () => {

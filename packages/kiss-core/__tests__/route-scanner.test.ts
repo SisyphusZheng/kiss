@@ -13,7 +13,7 @@ import {
 
 const FIXTURES_DIR = join(Deno.cwd(), 'packages/vite/__test_fixtures__');
 
-Deno.test('route-scanner', async (t) => {
+Deno.test('route-scanner', { permissions: { read: true, write: true } }, async (t) => {
   // Setup fixtures
   await setupFixtures();
 
