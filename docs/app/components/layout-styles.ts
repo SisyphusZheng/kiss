@@ -86,14 +86,15 @@ export const layoutStyles = css`
   .app-header .logo {
     font-size: 1rem;
     font-weight: 800;
-    color: #fff;
+    color: #00e87b;
     text-decoration: none;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .app-header .logo:hover {
-    color: #888;
+    color: #00ff88;
+    text-shadow: 0 0 12px rgba(0, 232, 123, 0.4);
   }
 
   .app-header .logo-sub {
@@ -122,7 +123,7 @@ export const layoutStyles = css`
   }
 
   .app-header nav a:hover {
-    color: #fff;
+    color: #00e87b;
   }
 
   .app-header .header-right {
@@ -219,9 +220,9 @@ export const layoutStyles = css`
 
   .docs-sidebar a.active,
   .docs-sidebar a[aria-current="page"] {
-    color: #fff;
-    border-left-color: #fff;
-    background: rgba(255, 255, 255, 0.05);
+    color: #00e87b;
+    border-left-color: #00e87b;
+    background: rgba(0, 232, 123, 0.05);
   }
 
   /* === Footer === */

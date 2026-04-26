@@ -46,6 +46,7 @@ export class AppLayout extends LitElement {
             <a class="logo" href="/">KISS<span class="logo-sub">framework</span></a>
             <nav>
               <a href="/guide/getting-started">Docs</a>
+              <a href="/ui">UI</a>
               <a href="https://jsr.io/@kissjs/core">JSR</a>
             </nav>
             <div class="header-right">
@@ -92,6 +93,10 @@ export class AppLayout extends LitElement {
                     '/styling/web-awesome',
                     'Web Awesome',
                   )}
+                </details>
+                <details class="nav-section" open>
+                  <summary class="nav-section-title">UI</summary>
+                  ${this._navLink('/ui', 'Design System')}
                 </details>
               </nav>
             `

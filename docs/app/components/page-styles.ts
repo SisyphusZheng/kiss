@@ -62,14 +62,14 @@ export const pageStyles = css`
   }
 
   a {
-    color: #ccc;
-    text-decoration: underline;
+    color: #00e87b;
+    text-decoration: none;
     text-underline-offset: 2px;
     transition: color 0.15s;
   }
 
   a:hover {
-    color: #fff;
+    color: #00ff88;
   }
 
   /* Code blocks */
