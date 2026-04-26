@@ -20,7 +20,7 @@ export const tagName = 'kiss-code-block';
 
 @customElement(tagName)
 export class KissCodeBlock extends LitElement {
-  static styles = [
+  static override styles = [
     kissDesignTokens,
     css`
       :host {
@@ -75,7 +75,7 @@ export class KissCodeBlock extends LitElement {
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
 
-  render() {
+  override render() {
     return html`
       <slot></slot>
       <button

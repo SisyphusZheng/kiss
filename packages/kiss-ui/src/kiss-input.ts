@@ -20,7 +20,7 @@ export const tagName = 'kiss-input';
 
 @customElement(tagName)
 export class KissInput extends LitElement {
-  static styles = [
+  static override styles = [
     kissDesignTokens,
     css`
       :host {
@@ -109,7 +109,7 @@ export class KissInput extends LitElement {
   @property({ type: String })
   error?: string;
 
-  render() {
+  override render() {
     return html`
       <div class="input-wrapper">
         ${this.label

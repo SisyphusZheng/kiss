@@ -25,7 +25,7 @@ export const tagName = 'kiss-card';
 
 @customElement(tagName)
 export class KissCard extends LitElement {
-  static styles = [
+  static override styles = [
     kissDesignTokens,
     css`
       :host {
@@ -74,7 +74,7 @@ export class KissCard extends LitElement {
   @property({ type: String })
   variant: 'default' | 'elevated' | 'borderless' = 'default';
 
-  render() {
+  override render() {
     return html`
       <div class="card card--${this.variant}">
         <slot name="header"></slot>

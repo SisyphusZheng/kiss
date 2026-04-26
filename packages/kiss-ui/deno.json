@@ -19,6 +19,10 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
+  "imports": {
+    "lit": "npm:lit@^3.2.0",
+    "lit/decorators.js": "npm:lit@^3.2.0/decorators.js"
+  },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

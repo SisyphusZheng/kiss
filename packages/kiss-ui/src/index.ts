@@ -31,7 +31,8 @@ export { KissCodeBlock, tagName as kissCodeBlockTagName } from './kiss-code-bloc
 export { KissLayout, tagName as kissLayoutTagName } from './kiss-layout.js';
 
 // Vite plugin for Web Awesome CDN injection
-export { kissUI, KissUIOptions } from './kiss-ui-plugin.js';
+export { kissUI } from './kiss-ui-plugin.js';
+export type { KissUIOptions } from './kiss-ui-plugin.js';
 
 // Default export: plugin
 export { kissUI as default } from './kiss-ui-plugin.js';

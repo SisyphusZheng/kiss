@@ -30,7 +30,7 @@ export const tagName = 'kiss-button';
 
 @customElement(tagName)
 export class KissButton extends LitElement {
-  static styles = [
+  static override styles = [
     kissDesignTokens,
     css`
       :host {
@@ -133,7 +133,7 @@ export class KissButton extends LitElement {
   @property({ type: String })
   target?: string;
 
-  render() {
+  override render() {
     const classes = `btn btn--${this.variant} btn--${this.size}`;
 
     if (this.href) {

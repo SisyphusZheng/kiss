@@ -27,7 +27,7 @@ export const tagName = 'kiss-layout';
 
 @customElement(tagName)
 export class KissLayout extends LitElement {
-  static styles = [
+  static override styles = [
     kissDesignTokens,
     css`
       :host {
@@ -493,7 +493,7 @@ export class KissLayout extends LitElement {
     `;
   }
 
-  render() {
+  override render() {
     return html`
       <div class="app-layout" ?home="${this.home}">
         <header class="app-header">
