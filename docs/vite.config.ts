@@ -19,6 +19,9 @@ export default defineConfig({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       componentsDir: 'app/components',
+      html: {
+        title: 'KISSJS',
+      },
       inject: {
         stylesheets: [
           'https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css',
