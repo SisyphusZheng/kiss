@@ -217,4 +217,80 @@ export const pageStyles = css`
     border-color: var(--border-hover);
     background: var(--accent-subtle);
   }
+
+  /* === Responsive === */
+  @media (max-width: 900px) {
+    .container {
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.625rem;
+    }
+
+    .subtitle {
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      margin: 2rem 0 0.5rem;
+    }
+
+    pre {
+      padding: 1rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+    }
+
+    table {
+      font-size: 0.75rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.625rem;
+    }
+
+    .pillar, .callout {
+      padding: 1rem;
+    }
+
+    .nav-row {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-link {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 1.5rem 1rem 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.375rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    p {
+      font-size: 0.875rem;
+    }
+
+    pre {
+      padding: 0.875rem;
+      font-size: 0.6875rem;
+      margin: 0.75rem 0;
+    }
+  }
 `;

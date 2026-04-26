@@ -372,6 +372,24 @@ export class UIShowcase extends LitElement {
     }
 
     /* ─── Mobile ─── */
+    @media (max-width: 900px) {
+      .section {
+        margin-bottom: 2.5rem;
+      }
+
+      .type-row {
+        gap: 1rem;
+      }
+
+      .preview-body {
+        padding: 1rem;
+      }
+
+      .install-section {
+        padding: 1.5rem 1rem;
+      }
+    }
+
     @media (max-width: 640px) {
       .palette-row {
         grid-template-columns: 1fr;
@@ -379,6 +397,20 @@ export class UIShowcase extends LitElement {
 
       .demo-cards-row {
         grid-template-columns: 1fr;
+      }
+
+      .swatch-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+      }
+
+      .demo-input {
+        max-width: 100%;
+      }
+
+      .install-cmd {
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
       }
     }
   `];

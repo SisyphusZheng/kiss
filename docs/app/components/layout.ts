@@ -95,6 +95,7 @@ export class AppLayout extends LitElement {
             </div>
           </div>
         </header>
+        <div class="mobile-backdrop"></div>
         <div class="layout-body">
           ${!this.home
             ? html`

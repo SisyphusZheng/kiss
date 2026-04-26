@@ -81,16 +81,16 @@ export const layoutStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 6px;
     background: transparent;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 0;
     list-style: none;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
 
   .mobile-menu-btn::-webkit-details-marker {
@@ -101,9 +101,17 @@ export const layoutStyles = css`
     content: "";
   }
 
-  .mobile-menu-btn:hover {
+  .mobile-menu-btn:hover,
+  .mobile-menu-btn:focus-visible {
     color: var(--text-primary);
     border-color: var(--border-hover);
+    background: var(--accent-subtle);
+  }
+
+  /* Active state when menu is open */
+  .mobile-menu[open] .mobile-menu-btn {
+    color: var(--text-primary);
+    background: var(--accent-subtle);
   }
 
   /* === Logo === */
@@ -158,6 +166,7 @@ export const layoutStyles = css`
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left: auto;
   }
 
   /* === GitHub Link === */
@@ -317,6 +326,11 @@ export const layoutStyles = css`
     font-weight: 500;
   }
 
+  /* === Mobile Backdrop === */
+  .mobile-backdrop {
+    display: none;
+  }
+
   /* === Mobile Responsive (L1: CSS @media + :has()) === */
   @media (max-width: 900px) {
     /* Show hamburger button */
@@ -324,7 +338,7 @@ export const layoutStyles = css`
       display: block;
     }
 
-    /* Header adjustments */
+    /* Header: compact layout */
     .header-inner {
       padding: 0 1rem;
       gap: 0.75rem;
@@ -339,7 +353,13 @@ export const layoutStyles = css`
       display: none;
     }
 
-    /* Sidebar: overlay on mobile — L0 + L1, zero JS */
+    /* Header right stays on the end */
+    .header-right {
+      margin-left: auto;
+      gap: 0.375rem;
+    }
+
+    /* Sidebar: full-screen overlay panel from top — L0 + L1, zero JS */
     .docs-sidebar {
       display: none;
       position: fixed;
@@ -353,44 +373,72 @@ export const layoutStyles = css`
       background: var(--bg-base);
       border-right: none;
       border-bottom: none;
-      padding: 1rem 1.25rem;
+      padding: 0.75rem 1rem;
       overflow-y: auto;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* Semi-transparent backdrop behind sidebar overlay */
-    .app-layout:has(.mobile-menu[open]) .layout-body::before {
-      content: "";
+    /* Backdrop: semi-transparent overlay behind sidebar */
+    .mobile-backdrop {
+      display: none;
       position: fixed;
       inset: 0;
       top: 56px;
       background: rgba(0, 0, 0, 0.5);
       z-index: 80;
-      pointer-events: none;
     }
 
-    /* L1: :has() selector — when hamburger is open, show sidebar overlay */
+    /* L1: :has() selector — when hamburger is open, show sidebar + backdrop */
     /* KISS Architecture: L0 (details/summary) + L1 (:has()) = zero JS menu */
     .app-layout:has(.mobile-menu[open]) .docs-sidebar {
       display: block;
     }
 
+    .app-layout:has(.mobile-menu[open]) .mobile-backdrop {
+      display: block;
+    }
+
     .nav-section {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.375rem;
     }
 
     .nav-section summary {
-      padding: 0.25rem 0.5rem;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.6875rem;
     }
 
     .docs-sidebar a {
-      padding: 0.375rem 0.5rem 0.375rem 1.25rem;
+      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
       font-size: 0.875rem;
     }
 
     /* Layout main fills full width on mobile */
     .layout-main {
       width: 100%;
+    }
+
+    /* Footer compact on mobile */
+    .app-footer footer {
+      padding: 1.5rem 1rem;
+    }
+
+    .app-footer .divider {
+      display: none;
+    }
+
+    .app-footer p {
+      line-height: 1.8;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .logo-sub {
+      display: none;
+    }
+
+    .github-link {
+      padding: 0.375rem;
+      border: none;
     }
   }
 
