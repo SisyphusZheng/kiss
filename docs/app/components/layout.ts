@@ -8,6 +8,10 @@
  * This component is NOT an Island — it has no client-side JS.
  * The theme-toggle button uses composedPath() event delegation to cross
  * the Shadow DOM boundary. KISS Architecture: L2 > L4.
+ *
+ * Mobile navigation: <details>/<summary> in header (L0 HTML).
+ * Sidebar is always in DOM — CSS controls visibility per viewport.
+ * KISS Architecture: L0 (structure) + L1 (responsive) = no JS needed.
  */
 import { html, LitElement } from '@kissjs/core';
 import { layoutStyles } from './layout-styles.js';
@@ -42,8 +46,21 @@ export class AppLayout extends LitElement {
       <div class="app-layout" ?home="${this.home}">
         <header class="app-header">
           <div class="header-inner">
+            ${!this.home
+              ? html`
+                <details class="mobile-menu">
+                  <summary class="mobile-menu-btn" aria-label="Toggle navigation">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                      <line x1="3" y1="4.5" x2="15" y2="4.5"/>
+                      <line x1="3" y1="9" x2="15" y2="9"/>
+                      <line x1="3" y1="13.5" x2="15" y2="13.5"/>
+                    </svg>
+                  </summary>
+                </details>
+              `
+              : ''}
             <a class="logo" href="/">KISS<span class="logo-sub">framework</span></a>
-            <nav>
+            <nav class="header-nav">
               <a href="/guide/getting-started">Docs</a>
               <a href="/ui">UI</a>
               <a href="https://jsr.io/@kissjs/core">JSR</a>
@@ -69,22 +86,19 @@ export class AppLayout extends LitElement {
                   <path d="M13.5 9.14A5.5 5.5 0 0 1 6.86 2.5 5.5 5.5 0 1 0 13.5 9.14Z"/>
                 </svg>
               </button>
-              <a class="github-link" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
+              <a class="github-link" href="https://github.com/SisyphusZheng/kiss">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                <span class="github-text">GitHub</span>
+              </a>
             </div>
           </div>
         </header>
         <div class="layout-body">
           ${!this.home
             ? html`
-              <details class="mobile-nav-wrapper">
-                <summary class="mobile-nav-btn" aria-label="Toggle navigation">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <line x1="3" y1="4.5" x2="15" y2="4.5"/>
-                    <line x1="3" y1="9" x2="15" y2="9"/>
-                    <line x1="3" y1="13.5" x2="15" y2="13.5"/>
-                  </svg>
-                </summary>
-                <nav class="docs-sidebar" aria-label="Documentation navigation">
+              <nav class="docs-sidebar" aria-label="Documentation navigation">
                 <details class="nav-section" open>
                   <summary class="nav-section-title">Introduction</summary>
                   ${this._navLink('/guide/getting-started', 'Getting Started')} ${this
@@ -126,7 +140,6 @@ export class AppLayout extends LitElement {
                   ${this._navLink('/ui', 'Design System')}
                 </details>
               </nav>
-              </details>
             `
             : ''}
           <main class="layout-main">

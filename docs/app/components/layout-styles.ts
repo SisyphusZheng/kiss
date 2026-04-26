@@ -1,11 +1,13 @@
 /**
  * KISS Docs — Layout Styles
  *
- * Design principles:
+ * Design principles (from Design Philosophy & KISS Architecture):
+ * - L0 HTML5 first: <details>/<summary> for collapsible UI, no JS
+ * - L1 CSS: responsive layout, theme via custom properties
  * - Maximum whitespace — let content breathe
- * - Subtle borders, never heavy
  * - Typography-driven hierarchy, not color
  * - Academic restraint: nothing decorative without purpose
+ * - Swiss International Style: pure B&W, geometric precision
  *
  * Theme: Pure B&W via CSS custom properties on :root.
  * Dark and Light — toggled by [data-theme] attribute.
@@ -66,10 +68,45 @@ export const layoutStyles = css`
     padding: 0 2rem;
     display: flex;
     align-items: center;
-    height: 60px;
-    gap: 2rem;
+    height: 56px;
+    gap: 1.5rem;
   }
 
+  /* === Mobile Menu (L0: <details>/<summary>) === */
+  .mobile-menu {
+    display: none; /* hidden on desktop */
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    list-style: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .mobile-menu-btn::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-menu-btn::marker {
+    content: "";
+  }
+
+  .mobile-menu-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+
+  /* === Logo === */
   .logo {
     font-size: 0.875rem;
     font-weight: 800;
@@ -78,6 +115,7 @@ export const layoutStyles = css`
     letter-spacing: 0.15em;
     text-transform: uppercase;
     transition: opacity 0.15s;
+    white-space: nowrap;
   }
 
   .logo:hover {
@@ -93,34 +131,40 @@ export const layoutStyles = css`
     text-transform: none;
   }
 
-  .app-header nav {
+  /* === Header Nav === */
+  .header-nav {
     display: flex;
     gap: 0.125rem;
     flex: 1;
   }
 
-  .app-header nav a {
+  .header-nav a {
     color: var(--text-tertiary);
     text-decoration: none;
     font-size: 0.8125rem;
     font-weight: 500;
-    padding: 0.5rem 0.875rem;
+    padding: 0.375rem 0.75rem;
     letter-spacing: 0.01em;
     transition: color 0.15s;
     border-radius: 4px;
   }
 
-  .app-header nav a:hover {
+  .header-nav a:hover {
     color: var(--text-primary);
   }
 
+  /* === Header Right === */
   .header-right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
+  /* === GitHub Link === */
   .github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.75rem;
@@ -135,6 +179,10 @@ export const layoutStyles = css`
   .github-link:hover {
     color: var(--text-secondary);
     border-color: var(--border-hover);
+  }
+
+  .github-link svg {
+    flex-shrink: 0;
   }
 
   /* === Theme Toggle === */
@@ -187,20 +235,20 @@ export const layoutStyles = css`
 
   /* === Sidebar === */
   .docs-sidebar {
-    width: 256px;
+    width: 240px;
     flex-shrink: 0;
     border-right: 1px solid var(--border);
-    padding: 2rem 0;
+    padding: 1.5rem 0;
     overflow-y: auto;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 56px);
     position: sticky;
-    top: 60px;
+    top: 56px;
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
   .nav-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
 
   .nav-section summary {
@@ -209,18 +257,22 @@ export const layoutStyles = css`
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--text-muted);
-    padding: 0 1.5rem;
-    margin-bottom: 0.5rem;
+    padding: 0 1.25rem;
+    margin-bottom: 0.375rem;
     cursor: pointer;
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
     user-select: none;
   }
 
   .nav-section summary::-webkit-details-marker {
     display: none;
+  }
+
+  .nav-section summary::marker {
+    content: "";
   }
 
   .nav-section summary::before {
@@ -247,7 +299,7 @@ export const layoutStyles = css`
     color: var(--text-tertiary);
     text-decoration: none;
     font-size: 0.8125rem;
-    padding: 0.35rem 1.5rem;
+    padding: 0.3rem 1.25rem;
     transition: color 0.15s, background 0.15s;
     border-left: 2px solid transparent;
   }
@@ -265,53 +317,31 @@ export const layoutStyles = css`
     font-weight: 500;
   }
 
-  /* === Mobile Navigation === */
-  .mobile-nav-wrapper {
-    display: none; /* hidden on desktop */
-  }
-
-  .mobile-nav-btn {
-    display: none; /* hidden on desktop */
-  }
-
+  /* === Mobile Responsive (L1: CSS @media + :has()) === */
   @media (max-width: 900px) {
-    /* Hamburger button — always visible on mobile */
-    .mobile-nav-wrapper {
+    /* Show hamburger button */
+    .mobile-menu {
       display: block;
     }
 
-    .mobile-nav-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: transparent;
-      color: var(--text-tertiary);
-      cursor: pointer;
-      padding: 0;
-      list-style: none;
-      transition: color 0.15s, border-color 0.15s;
+    /* Header adjustments */
+    .header-inner {
+      padding: 0 1rem;
+      gap: 0.75rem;
     }
 
-    .mobile-nav-btn::-webkit-details-marker {
+    /* Hide header nav and github text on mobile */
+    .header-nav {
       display: none;
     }
 
-    .mobile-nav-btn:hover {
-      color: var(--text-primary);
-      border-color: var(--border-hover);
-    }
-
-    /* Sidebar hidden by default, shown when details is open */
-    .mobile-nav-wrapper:not([open]) .docs-sidebar {
+    .github-text {
       display: none;
     }
 
-    .mobile-nav-wrapper[open] .docs-sidebar {
-      display: block;
+    /* Sidebar: hidden by default on mobile */
+    .docs-sidebar {
+      display: none;
       width: 100%;
       height: auto;
       position: relative;
@@ -321,37 +351,28 @@ export const layoutStyles = css`
       padding: 1rem;
     }
 
-    /* Collapse nav sections on mobile by default */
-    .mobile-nav-wrapper .nav-section {
+    /* L1: :has() selector — when hamburger is open, show sidebar */
+    /* KISS Architecture: L0 (details/summary) + L1 (:has()) = zero JS menu */
+    .app-layout:has(.mobile-menu[open]) .docs-sidebar {
+      display: block;
+    }
+
+    .nav-section {
       margin-bottom: 0.5rem;
     }
 
-    .mobile-nav-wrapper .nav-section summary {
+    .nav-section summary {
       padding: 0.25rem 0.5rem;
     }
 
-    .mobile-nav-wrapper .docs-sidebar a {
-      padding: 0.25rem 0.5rem 0.25rem 1.5rem;
-    }
-
-    /* Header adjustments */
-    .header-inner {
-      padding: 0 1rem;
-      gap: 0.75rem;
-    }
-
-    .app-header nav {
-      display: none;
-    }
-
-    .github-link {
-      display: none;
+    .docs-sidebar a {
+      padding: 0.25rem 0.5rem 0.25rem 1.25rem;
     }
   }
 
   /* === Footer === */
   .app-footer footer {
-    padding: 2.5rem 2rem;
+    padding: 2rem;
     border-top: 1px solid var(--border);
     text-align: center;
     color: var(--text-muted);
