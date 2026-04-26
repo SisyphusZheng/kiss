@@ -19,7 +19,20 @@ export default defineConfig({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       componentsDir: 'app/components',
-      ui: { cdn: true },
+      inject: {
+        stylesheets: [
+          'https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css',
+        ],
+        scripts: [
+          'https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js',
+        ],
+        headFragments: [
+          // DSD polyfill for browsers without native Declarative Shadow DOM support.
+          // Must load synchronously before any custom element definitions.
+          // Browsers with native DSD (Chrome 90+, Safari 16.4+, Firefox 123+) skip this.
+          '<script>if(!HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"))document.write(\'<script src="https://unpkg.com/@webcomponents/template-shadowroot@0.2.1/template-shadowroot.js"><\\/script>\')</script>',
+        ],
+      },
     }),
   ],
   resolve: {

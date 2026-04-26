@@ -6,14 +6,14 @@
 
 ## 里程碑概览
 
-| 阶段 | 名称 | 核心目标 | 状态 |
-|------|------|----------|------|
-| Phase 0 | PoC | 技术可行性验证 | 完成 |
-| Phase 1 | Alpha | 核心插件包可用 | 完成 |
-| Phase 2 | 工程化补齐 | P0/P1 修复 + 架构重构 | 完成 |
-| Phase 3 | 文档整合 | docs-site → docs | 完成 |
+| 阶段    | 名称                   | 核心目标                                    | 状态   |
+| ------- | ---------------------- | ------------------------------------------- | ------ |
+| Phase 0 | PoC                    | 技术可行性验证                              | 完成   |
+| Phase 1 | Alpha                  | 核心插件包可用                              | 完成   |
+| Phase 2 | 工程化补齐             | P0/P1 修复 + 架构重构                       | 完成   |
+| Phase 3 | 文档整合               | docs-site → docs                            | 完成   |
 | Phase 4 | KISS Architecture 落地 | K·I·S·S 四约束 + Jamstack 对齐 + 文档站改造 | 进行中 |
-| Phase 5 | UI 革命 | @kissjs/ui 自有组件库 + 全栈示例 | 待开始 |
+| Phase 5 | UI 革命                | @kissjs/ui 自有组件库 + 全栈示例            | 待开始 |
 
 ---
 
@@ -83,8 +83,8 @@
 - [x] **删除 active-highlight Island** — 已被 aria-current + CSS 替代
 - [x] **code-block Island 验证** — Shadow DOM + Clipboard API + DSD 输出 + 客户端构建
 - [x] **Island 客户端构建** — 自动生成入口（无需 app/client.ts），SSG 后路径重写
-- [ ] **验证 DSD polyfill** — @webcomponents/template-shadowroot 在旧浏览器回退
-- [ ] **无 JS 降级测试** — 禁用 JS 验证 DSD 内容可见（S 约束验证）
+- [x] **验证 DSD polyfill** — @webcomponents/template-shadowroot 条件加载（仅旧浏览器）
+- [x] **无 JS 降级测试** — SSG 输出 DSD 内容 JS 加载前可见（S 约束验证通过）
 
 ### 4F: 测试与验证（待开始）
 
@@ -112,29 +112,26 @@
 
 ## 已解决的技术债
 
-| 问题 | 状态 |
-|------|------|
-| hono-entry.ts 全字符串拼接 | 已重构为 EntryDescriptor + renderEntry |
-| 8 插件闭包共享可变状态 | 已提取 KissBuildContext |
-| SSR 运行时模式 | 已移除 |
-| GLOBAL_BUILT 模块级变量 | 已移除 |
-| Island 正则检测 | 已改为构建时 map |
-| CORS process.env | 已改为配置驱动 |
-| RPC call() 返回 null | 已改为抛出 RpcError |
-| FrameworkOptions.ui 硬编码 WebAwesome | 已新增 inject 通用选项 |
-| DIA 四支柱 → 五支柱 | 已更新（新增"API 即后端"） |
-| DIA → KISS Architecture | 已重定义（K·I·S·S 四约束） |
+| 问题                                  | 状态                                   |
+| ------------------------------------- | -------------------------------------- |
+| hono-entry.ts 全字符串拼接            | 已重构为 EntryDescriptor + renderEntry |
+| 8 插件闭包共享可变状态                | 已提取 KissBuildContext                |
+| SSR 运行时模式                        | 已移除                                 |
+| GLOBAL_BUILT 模块级变量               | 已移除                                 |
+| Island 正则检测                       | 已改为构建时 map                       |
+| CORS process.env                      | 已改为配置驱动                         |
+| RPC call() 返回 null                  | 已改为抛出 RpcError                    |
+| FrameworkOptions.ui 硬编码 WebAwesome | 已新增 inject 通用选项                 |
+| DIA 四支柱 → 五支柱                   | 已更新（新增"API 即后端"）             |
+| DIA → KISS Architecture               | 已重定义（K·I·S·S 四约束）             |
 
 ## 仍存在的技术债
 
-| 问题 | 优先级 |
-|------|--------|
-| entry-renderer.ts 生成的代码仍使用字符串拼接（非 MagicString source map） | 中 |
-| html-template.ts 仍使用 declare module 'vite' 扩展 | 低 |
-| layout.ts 使用 light DOM（应恢复 Shadow DOM + DSD） | 高（Phase 4E） |
-| active-highlight Island 做 CSS 能做的事 | 高（Phase 4E） |
-| copy-code Island 突破 Shadow DOM 边界 | 高（Phase 4E） |
-| 文档站内联样式碎片（每个页面重复 pillar/table/code-block 样式） | 中（Phase 5） |
+| 问题                                                                      | 优先级        |
+| ------------------------------------------------------------------------- | ------------- |
+| entry-renderer.ts 生成的代码仍使用字符串拼接（非 MagicString source map） | 中            |
+| html-template.ts 仍使用 declare module 'vite' 扩展                        | 低            |
+| 文档站内联样式碎片（每个页面重复 pillar/table/code-block 样式）           | 中（Phase 5） |
 
 ---
 
@@ -179,4 +176,4 @@
 
 ---
 
-_路线图版本：v8.0 | 更新日期：2026-04-25 | KISS Architecture K·I·S·S_
+_路线图版本：v9.0 | 更新日期：2026-04-26 | KISS Architecture K·I·S·S_

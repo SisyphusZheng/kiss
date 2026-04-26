@@ -231,31 +231,49 @@ export function rewriteHtmlFiles(
       const currentPathMatch = content.match(/currentpath="([^"]*)"/);
       if (currentPathMatch) {
         const currentPage = currentPathMatch[1];
-        // Set aria-current="page" and class="active" on the matching sidebar link
-        // The sidebar links are rendered as: <a href="/kiss/guide/dia" class="" aria-current="">
+
+        // Step 1: Remove all empty aria-current="" attributes (Lit SSR artifact for undefined)
+        // Non-active links should not have aria-current at all
+        if (content.includes('aria-current=""')) {
+          content = content.replaceAll('aria-current=""', '');
+          modified = true;
+        }
+
+        // Step 2: Find the sidebar link matching current page and add active state
+        // Sidebar links are inside <nav class="docs-sidebar">, format:
+        //   <a href="/kiss/guide/dia" class="" >Design Philosophy</a>
+        // After step 1, aria-current="" is removed, so we only need to add class="active" + aria-current="page"
         const linkPattern = `href="${currentPage}"`;
-        const linkIdx = content.indexOf(linkPattern);
-        if (linkIdx !== -1) {
-          // Find the <a tag before this href
-          const beforeHref = content.substring(Math.max(0, linkIdx - 100), linkIdx);
-          const aTagStart = beforeHref.lastIndexOf('<a');
-          if (aTagStart !== -1) {
+        // Find ALL occurrences — we want the one inside the sidebar (second occurrence typically)
+        let searchFrom = 0;
+        while (true) {
+          const linkIdx = content.indexOf(linkPattern, searchFrom);
+          if (linkIdx === -1) break;
+
+          // Find the <a tag before this href (search up to 200 chars back for multi-line tags)
+          const searchBack = Math.max(0, linkIdx - 200);
+          const beforeHref = content.substring(searchBack, linkIdx);
+          const aTagOffset = beforeHref.lastIndexOf('<a');
+          if (aTagOffset !== -1) {
+            const aTagStart = searchBack + aTagOffset;
             const aTagEnd = content.indexOf('>', linkIdx);
             if (aTagEnd !== -1) {
-              const fullLink = content.substring(
-                Math.max(0, linkIdx - 100) + aTagStart,
-                aTagEnd + 1,
-              );
-              // Replace class="" with class="active" and aria-current="" with aria-current="page"
-              const updatedLink = fullLink
-                .replace(/class=""/, 'class="active"')
-                .replace(/aria-current=""/, 'aria-current="page"');
-              if (updatedLink !== fullLink) {
-                content = content.replace(fullLink, updatedLink);
-                modified = true;
+              const fullLink = content.substring(aTagStart, aTagEnd + 1);
+              // Only modify links that have class="" (sidebar links, not header nav links)
+              if (fullLink.includes('class=""')) {
+                const updatedLink = fullLink
+                  .replace('class=""', 'class="active"')
+                  // Add aria-current="page" as an attribute on the <a tag
+                  .replace(/(<a\s)/, '$1aria-current="page" ');
+                if (updatedLink !== fullLink) {
+                  content = content.replace(fullLink, updatedLink);
+                  modified = true;
+                }
+                break; // Only modify the first sidebar match
               }
             }
           }
+          searchFrom = linkIdx + linkPattern.length;
         }
       }
 
