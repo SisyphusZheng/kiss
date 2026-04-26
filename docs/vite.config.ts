@@ -27,6 +27,8 @@ export default defineConfig({
           'https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js',
         ],
         headFragments: [
+          // Favicon
+          '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />',
           // DSD polyfill for browsers without native Declarative Shadow DOM support.
           '<script>if(!HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"))document.write(\'<script src="https://unpkg.com/@webcomponents/template-shadowroot@0.2.1/template-shadowroot.js"><\\/script>\')</script>',
           // Theme system: Pure B&W — Dark / Light
