@@ -7,7 +7,6 @@ export class ConfigurationPage extends LitElement {
   static styles = [
     pageStyles,
     css`
-
       .deprecated {
         color: var(--text-tertiary);
         text-decoration: line-through;
@@ -24,8 +23,7 @@ export class ConfigurationPage extends LitElement {
         letter-spacing: 0.03em;
         vertical-align: middle;
       }
-
-`,
+    `,
   ];
   render() {
     return html`

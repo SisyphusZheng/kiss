@@ -13,9 +13,9 @@
 
 **KISS** 同时是哲学和架构：
 
-| 含义 | 解释 |
-|------|------|
-| **哲学** | Keep It Simple, Stupid — 简单即力量，每个决策都经过"够不够简单"的过滤 |
+| 含义     | 解释                                                                              |
+| -------- | --------------------------------------------------------------------------------- |
+| **哲学** | Keep It Simple, Stupid — 简单即力量，每个决策都经过"够不够简单"的过滤             |
 | **架构** | **K**nowledge · **I**solated · **S**emantic · **S**tatic — 四个不可违抗的架构约束 |
 
 两个含义精神一致：约束就是简单。
@@ -24,22 +24,22 @@
 
 KISS 框架实现的正是 KISS 架构——一个融合了 Jamstack 部署模型与声明式岛屿交互范式的全栈架构风格。
 
-| 字母 | 约束 | 含义 |
-|------|------|------|
-| **K** | Knowledge（知识） | 所有内容在构建时预渲染为语义 HTML 静态文件。页面骨架、正文、导航在 JS 执行前即可见 |
-| **I** | Isolated（隔离） | 任何客户端 JS 只能存在于独立 Island 组件的 Shadow DOM 内部。一个 Island 的失败不影响其他部分 |
-| **S** | Semantic（语义） | 每个 Island 包裹原生 HTML 元素（`<form>`、`<a>`、`<details>`），禁用 JS 时提供等价基线功能 |
-| **S** | Static（静态） | 构建产物仅为纯静态文件，无持久服务端进程。可部署到任何 CDN 或静态托管，零运行时锁定 |
+| 字母  | 约束              | 含义                                                                                         |
+| ----- | ----------------- | -------------------------------------------------------------------------------------------- |
+| **K** | Knowledge（知识） | 所有内容在构建时预渲染为语义 HTML 静态文件。页面骨架、正文、导航在 JS 执行前即可见           |
+| **I** | Isolated（隔离）  | 任何客户端 JS 只能存在于独立 Island 组件的 Shadow DOM 内部。一个 Island 的失败不影响其他部分 |
+| **S** | Semantic（语义）  | 每个 Island 包裹原生 HTML 元素（`<form>`、`<a>`、`<details>`），禁用 JS 时提供等价基线功能   |
+| **S** | Static（静态）    | 构建产物仅为纯静态文件，无持久服务端进程。可部署到任何 CDN 或静态托管，零运行时锁定          |
 
 ## 三范式继承
 
 KISS 架构继承了三个已有范式的核心思想，将它们组合成一套严格、可验证、不可关闭的架构规则：
 
-| 范式 | KISS 继承了什么 | KISS 的强化 |
-|------|-----------------|-------------|
-| **Jamstack** | 静态优先、前后端分离的部署模型 | 固化为不可配置的框架规则，而非最佳实践建议 |
-| **Islands Architecture** | 静态海洋中的独立交互岛屿 | 要求所有 Island 必须是 Shadow DOM 内的 Web Component，跨岛通信只能通过声明式机制 |
-| **Progressive Enhancement** | 内容优先，增强在后 | 从开发者最佳实践提升为框架层面的可验证约束——Island 内部没有语义降级元素，就不符合 KISS 规范 |
+| 范式                        | KISS 继承了什么                | KISS 的强化                                                                                 |
+| --------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------- |
+| **Jamstack**                | 静态优先、前后端分离的部署模型 | 固化为不可配置的框架规则，而非最佳实践建议                                                  |
+| **Islands Architecture**    | 静态海洋中的独立交互岛屿       | 要求所有 Island 必须是 Shadow DOM 内的 Web Component，跨岛通信只能通过声明式机制            |
+| **Progressive Enhancement** | 内容优先，增强在后             | 从开发者最佳实践提升为框架层面的可验证约束——Island 内部没有语义降级元素，就不符合 KISS 规范 |
 
 KISS 架构不发明新的渲染算法或通信协议。它识别出三个范式各自领域中被验证有效的约束，组合成不可违抗的架构规则，通过 KISS 框架强制执行。
 
@@ -49,11 +49,11 @@ KISS 架构不发明新的渲染算法或通信协议。它识别出三个范式
 
 KISS 架构与 Jamstack 天然 1:1 对齐：
 
-| Jamstack | KISS 实现 | Web Standard |
-|----------|-----------|--------------|
-| **M**arkup | SSG + DSD — 零 JS 默认输出 | Declarative Shadow DOM |
-| **A**PIs | API Routes — Hono + RPC | Fetch API |
-| **J**avaScript | Islands — Shadow DOM + lazy hydration | Web Components |
+| Jamstack       | KISS 实现                             | Web Standard           |
+| -------------- | ------------------------------------- | ---------------------- |
+| **M**arkup     | SSG + DSD — 零 JS 默认输出            | Declarative Shadow DOM |
+| **A**PIs       | API Routes — Hono + RPC               | Fetch API              |
+| **J**avaScript | Islands — Shadow DOM + lazy hydration | Web Components         |
 
 ### DSD：封装与可达的桥梁
 
@@ -66,24 +66,24 @@ Declarative Shadow DOM 解决了"封装 vs 可达"的根本矛盾：
 
 ## 为什么是 KISS
 
-| 问题 | KISS 的回答 |
-|------|-------------|
-| 框架锁定太重？ | 1 个 Vite 插件，所有组件都是标准 Custom Element |
-| 首页 JS 太大？ | 默认 0KB，Island 按需加载 ~6KB |
-| SSR 运维太重？ | 没有 SSR 运行时。构建产出纯静态文件 |
-| Shadow DOM 破坏了 SEO？ | DSD 让 Shadow DOM 内容声明式可达 |
-| 类型安全靠 codegen？ | Hono RPC 端到端类型推断，零 codegen |
-| 部署只能 Node？ | CDN / GitHub Pages / Nginx，任何静态托管 |
-| 动态数据怎么办？ | API Routes 部署为 Serverless，前端通过 RPC 调用 |
+| 问题                    | KISS 的回答                                     |
+| ----------------------- | ----------------------------------------------- |
+| 框架锁定太重？          | 1 个 Vite 插件，所有组件都是标准 Custom Element |
+| 首页 JS 太大？          | 默认 0KB，Island 按需加载 ~6KB                  |
+| SSR 运维太重？          | 没有 SSR 运行时。构建产出纯静态文件             |
+| Shadow DOM 破坏了 SEO？ | DSD 让 Shadow DOM 内容声明式可达                |
+| 类型安全靠 codegen？    | Hono RPC 端到端类型推断，零 codegen             |
+| 部署只能 Node？         | CDN / GitHub Pages / Nginx，任何静态托管        |
+| 动态数据怎么办？        | API Routes 部署为 Serverless，前端通过 RPC 调用 |
 
 ## 渐进增强
 
 KISS 只有两层：
 
-| 层级 | JS 大小 | 能力 | 状态 |
-|------|---------|------|------|
-| **Level 0** | 0 KB | HTML + DSD（构建时预渲染，Shadow DOM 封装） | 已实现 |
-| **Level 1** | ~6 KB/Island | Island 交互 + 懒水合 | 已实现 |
+| 层级        | JS 大小      | 能力                                        | 状态   |
+| ----------- | ------------ | ------------------------------------------- | ------ |
+| **Level 0** | 0 KB         | HTML + DSD（构建时预渲染，Shadow DOM 封装） | 已实现 |
+| **Level 1** | ~6 KB/Island | Island 交互 + 懒水合                        | 已实现 |
 
 没有 Level 2 SPA、Level 3 实时、Level 4 CSR。这不是疏忽，是架构约束（S — Static）。
 
@@ -266,11 +266,11 @@ kiss({
 
 ## 包结构
 
-| 包 | 版本 | 说明 |
-|---|------|------|
+| 包                                          | 版本  | 说明                                      |
+| ------------------------------------------- | ----- | ----------------------------------------- |
 | [@kissjs/core](https://jsr.io/@kissjs/core) | 0.1.5 | 核心框架 — Vite 插件 + Lit/Hono re-export |
-| [@kissjs/rpc](https://jsr.io/@kissjs/rpc) | 0.1.2 | RPC 客户端 — Lit ReactiveController |
-| [@kissjs/ui](https://jsr.io/@kissjs/ui) | 0.1.2 | UI 插件 — WebAwesome CDN 注入 |
+| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)   | 0.1.2 | RPC 客户端 — Lit ReactiveController       |
+| [@kissjs/ui](https://jsr.io/@kissjs/ui)     | 0.1.2 | UI 插件 — WebAwesome CDN 注入             |
 
 > JSR 上有旧包 `@kissjs/vite` 和 `@kissjs/ssg`，已废弃，请勿使用。
 
@@ -280,14 +280,14 @@ kiss({
 
 ## 技术栈
 
-| 层 | 技术 | 版本 | 用途 |
-|----|------|------|------|
-| 运行时 | Deno | ^2.x | 首选运行时 |
-| HTTP | Hono | ^4.x | 构建时路由匹配 + dev server + API Routes |
-| UI | Lit | ^3.x | Web Component 渲染引擎 |
-| Build | Vite | ^6.x | 构建工具 |
-| SSR | @lit-labs/ssr | ^3.3.x | 构建时渲染 + DSD 输出 |
-| 类型 | TypeScript | ^5.x | 端到端类型安全 |
+| 层     | 技术          | 版本   | 用途                                     |
+| ------ | ------------- | ------ | ---------------------------------------- |
+| 运行时 | Deno          | ^2.x   | 首选运行时                               |
+| HTTP   | Hono          | ^4.x   | 构建时路由匹配 + dev server + API Routes |
+| UI     | Lit           | ^3.x   | Web Component 渲染引擎                   |
+| Build  | Vite          | ^6.x   | 构建工具                                 |
+| SSR    | @lit-labs/ssr | ^3.3.x | 构建时渲染 + DSD 输出                    |
+| 类型   | TypeScript    | ^5.x   | 端到端类型安全                           |
 
 运行时依赖（5 个）：hono, lit, @lit-labs/ssr, @hono/vite-dev-server, magic-string
 

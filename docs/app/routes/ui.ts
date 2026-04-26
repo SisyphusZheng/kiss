@@ -2,12 +2,17 @@
  * @kissjs/ui — Design System
  * Two palettes. Zero noise.
  *
- * Uses pageStyles for consistent layout with other doc pages.
- * Only UI-specific component demos have custom styles here.
+ * Dogfooding: Uses actual kiss-button, kiss-card, kiss-input components.
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../components/page-styles.js';
 import '../components/layout.js';
+
+// Import KISS UI components for dogfooding
+import '@kissjs/ui/kiss-button';
+import '@kissjs/ui/kiss-card';
+import '@kissjs/ui/kiss-input';
+import '@kissjs/ui/kiss-code-block';
 
 export class UIShowcase extends LitElement {
   static styles = [pageStyles, css`
@@ -196,10 +201,6 @@ export class UIShowcase extends LitElement {
       border: 1px solid var(--border);
     }
 
-    .preview-badge.planned {
-      color: var(--text-muted);
-    }
-
     .preview-body {
       padding: 1.25rem;
       display: flex;
@@ -208,127 +209,11 @@ export class UIShowcase extends LitElement {
       align-items: flex-start;
     }
 
-    /* ─── Demo Buttons ─── */
-    .demo-btn {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.5rem 1.125rem;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      border-radius: 4px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      border: none;
-      font-family: inherit;
-    }
-
-    .demo-btn-primary {
-      background: var(--text-primary);
-      color: var(--bg-base);
-    }
-
-    .demo-btn-primary:hover {
-      opacity: 0.85;
-    }
-
-    .demo-btn-secondary {
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-
-    .demo-btn-secondary:hover {
-      color: var(--text-primary);
-      border-color: var(--border-hover);
-    }
-
-    .demo-btn-ghost {
-      background: transparent;
-      color: var(--text-tertiary);
-    }
-
-    .demo-btn-ghost:hover {
-      color: var(--text-primary);
-    }
-
-    .demo-btn-sm {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.75rem;
-    }
-
-    .demo-btn-lg {
-      padding: 0.625rem 1.5rem;
-      font-size: 0.9375rem;
-    }
-
-    /* ─── Demo Cards ─── */
-    .demo-cards-row {
+    /* ─── Cards Grid ─── */
+    .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .demo-card {
-      background: var(--bg-surface);
-      padding: 1.5rem;
-    }
-
-    .demo-card h4 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 0.375rem;
-    }
-
-    .demo-card p {
-      font-size: 0.8125rem;
-      color: var(--text-tertiary);
-      margin: 0 0 1rem;
-      line-height: 1.5;
-    }
-
-    .demo-card .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 0.75rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .demo-card .card-tag {
-      font-size: 0.625rem;
-      color: var(--text-secondary);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    /* ─── Demo Input ─── */
-    .demo-input {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 0.5rem 0.875rem;
-      color: var(--text-primary);
-      font-size: 0.8125rem;
-      font-family: inherit;
-      width: 100%;
-      max-width: 280px;
-      transition: border-color 0.15s;
-      outline: none;
-    }
-
-    .demo-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .demo-input:focus {
-      border-color: var(--text-primary);
+      gap: 1rem;
     }
 
     /* ─── Install ─── */
@@ -395,17 +280,9 @@ export class UIShowcase extends LitElement {
         grid-template-columns: 1fr;
       }
 
-      .demo-cards-row {
-        grid-template-columns: 1fr;
-      }
-
       .swatch-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 0.5rem;
-      }
-
-      .demo-input {
-        max-width: 100%;
       }
 
       .install-cmd {
@@ -536,7 +413,7 @@ export class UIShowcase extends LitElement {
             </div>
           </div>
 
-          <!-- Buttons -->
+          <!-- Buttons (Dogfooding kiss-button) -->
           <div class="section">
             <div class="section-title">Button</div>
             <div class="preview-card">
@@ -545,60 +422,82 @@ export class UIShowcase extends LitElement {
                 <span class="preview-badge">Available</span>
               </div>
               <div class="preview-body">
-                <button class="demo-btn demo-btn-primary">Primary</button>
-                <button class="demo-btn demo-btn-secondary">Secondary</button>
-                <button class="demo-btn demo-btn-ghost">Ghost</button>
+                <kiss-button variant="primary">Primary</kiss-button>
+                <kiss-button>Default</kiss-button>
+                <kiss-button variant="ghost">Ghost</kiss-button>
               </div>
               <div class="preview-body" style="border-top:1px solid var(--border)">
-                <button class="demo-btn demo-btn-primary demo-btn-sm">Small</button>
-                <button class="demo-btn demo-btn-primary">Default</button>
-                <button class="demo-btn demo-btn-primary demo-btn-lg">Large</button>
+                <kiss-button variant="primary" size="sm">Small</kiss-button>
+                <kiss-button variant="primary" size="md">Default</kiss-button>
+                <kiss-button variant="primary" size="lg">Large</kiss-button>
+              </div>
+              <div class="preview-body" style="border-top:1px solid var(--border)">
+                <kiss-button disabled>Disabled</kiss-button>
+                <kiss-button href="/" target="_blank">Link Button</kiss-button>
               </div>
             </div>
           </div>
 
-          <!-- Cards -->
+          <!-- Cards (Dogfooding kiss-card) -->
           <div class="section">
             <div class="section-title">Card</div>
-            <div class="demo-cards-row">
-              <div class="demo-card">
-                <h4>Island</h4>
+            <div class="cards-grid">
+              <kiss-card>
+                <h3 slot="header">Island</h3>
                 <p>Interactive islands with hydration and Shadow DOM.</p>
-                <div class="card-footer">
-                  <span class="card-tag">Interactive</span>
-                  <button class="demo-btn demo-btn-primary demo-btn-sm">Use</button>
+                <div slot="footer">
+                  <kiss-button size="sm">Use</kiss-button>
                 </div>
-              </div>
-              <div class="demo-card">
-                <h4>Static</h4>
+              </kiss-card>
+              <kiss-card>
+                <h3 slot="header">Static</h3>
                 <p>Zero-JS rendered via DSD. Visible before JS loads.</p>
-                <div class="card-footer">
-                  <span class="card-tag">0 KB JS</span>
-                  <button class="demo-btn demo-btn-secondary demo-btn-sm">Use</button>
+                <div slot="footer">
+                  <kiss-button size="sm">Use</kiss-button>
                 </div>
-              </div>
-              <div class="demo-card">
-                <h4>API Route</h4>
+              </kiss-card>
+              <kiss-card variant="elevated">
+                <h3 slot="header">API Route</h3>
                 <p>Server logic with Hono RPC. Type-safe end to end.</p>
-                <div class="card-footer">
-                  <span class="card-tag">Type-Safe</span>
-                  <button class="demo-btn demo-btn-secondary demo-btn-sm">Use</button>
+                <div slot="footer">
+                  <kiss-button size="sm">Use</kiss-button>
                 </div>
-              </div>
+              </kiss-card>
             </div>
           </div>
 
-          <!-- Input -->
+          <!-- Input (Dogfooding kiss-input) -->
           <div class="section">
             <div class="section-title">Input</div>
             <div class="preview-card">
               <div class="preview-header">
                 <span class="preview-title">Text Input</span>
-                <span class="preview-badge planned">Planned</span>
+                <span class="preview-badge">Available</span>
               </div>
               <div class="preview-body" style="flex-direction:column;gap:0.75rem">
-                <input class="demo-input" type="text" placeholder="Enter email..." />
-                <input class="demo-input" type="text" value="hello@kissjs.org" readonly />
+                <kiss-input placeholder="Enter email..." label="Email"></kiss-input>
+                <kiss-input type="password" placeholder="Password" label="Password" required></kiss-input>
+                <kiss-input value="hello@kissjs.org" label="Read-only" disabled></kiss-input>
+              </div>
+            </div>
+          </div>
+
+          <!-- Code Block (Dogfooding kiss-code-block) -->
+          <div class="section">
+            <div class="section-title">Code Block</div>
+            <div class="preview-card">
+              <div class="preview-header">
+                <span class="preview-title">With Copy Button</span>
+                <span class="preview-badge">Available</span>
+              </div>
+              <div class="preview-body">
+                <kiss-code-block>
+                  <pre><code>import '@kissjs/ui';
+
+// Use components
+&lt;kiss-button variant="primary"&gt;Click me&lt;/kiss-button&gt;
+&lt;kiss-card&gt;Content&lt;/kiss-card&gt;</code></pre>
+                </kiss-code-block>
               </div>
             </div>
           </div>
