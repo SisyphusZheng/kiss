@@ -23,6 +23,7 @@
     "npm:entities@4": "4.5.0",
     "npm:hono@4": "4.12.14",
     "npm:hono@^4.7.0": "4.12.14",
+    "npm:jsr@*": "0.14.3",
     "npm:kolorist@^1.8.0": "1.8.0",
     "npm:lit-element@4": "4.2.2",
     "npm:lit-html@^3.2.0": "3.3.2",
@@ -809,6 +810,14 @@
         "graceful-fs"
       ]
     },
+    "jsr@0.14.3": {
+      "integrity": "sha512-PGxnDepx7vwJoZQe2SHbyBiFfpGwsOKmX4kn/wZZqfMafV7fjXqTxSaX6lp9QHYkSTLKkER+P/wmrZY3gVJNzg==",
+      "dependencies": [
+        "node-stream-zip",
+        "semiver"
+      ],
+      "bin": true
+    },
     "kolorist@1.8.0": {
       "integrity": "sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ=="
     },
@@ -890,6 +899,9 @@
         "fetch-blob",
         "formdata-polyfill"
       ]
+    },
+    "node-stream-zip@1.15.0": {
+      "integrity": "sha512-LN4fydt9TqhZhThkZIVQnF9cwjU3qmUH9h78Mx/K7d3VvfRqqwthLwJEUOEL0QPZ0XQmNN7be5Ggit5+4dq3Bw=="
     },
     "parse5@7.3.0": {
       "integrity": "sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==",
@@ -986,6 +998,9 @@
         "fsevents"
       ],
       "bin": true
+    },
+    "semiver@1.1.0": {
+      "integrity": "sha512-QNI2ChmuioGC1/xjyYwyZYADILWyW6AmS1UH6gDj/SFUUUS4MBAWs/7mxnkRPc/F4iHezDP+O8t0dO8WHiEOdg=="
     },
     "semver@7.7.4": {
       "integrity": "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==",
