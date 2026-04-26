@@ -28,6 +28,7 @@ export { KissButton, tagName as kissButtonTagName } from './kiss-button.js';
 export { KissCard, tagName as kissCardTagName } from './kiss-card.js';
 export { KissInput, tagName as kissInputTagName } from './kiss-input.js';
 export { KissCodeBlock, tagName as kissCodeBlockTagName } from './kiss-code-block.js';
+export { KissLayout, tagName as kissLayoutTagName } from './kiss-layout.js';
 
 // Vite plugin for Web Awesome CDN injection
 export { kissUI, KissUIOptions } from './kiss-ui-plugin.js';

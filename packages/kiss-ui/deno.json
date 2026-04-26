@@ -7,6 +7,7 @@
     "./kiss-card": "./src/kiss-card.ts",
     "./kiss-input": "./src/kiss-input.ts",
     "./kiss-code-block": "./src/kiss-code-block.ts",
+    "./kiss-layout": "./src/kiss-layout.ts",
     "./design-tokens": "./src/design-tokens.ts"
   },
   "tasks": {
