@@ -20,12 +20,12 @@ export class DocsHome extends LitElement {
       align-items: center;
       gap: 0.5rem;
       padding: 0.375rem 1rem;
-      background: #111;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 100px;
       font-size: 0.75rem;
       font-weight: 500;
-      color: #666;
+      color: var(--text-tertiary);
       margin-bottom: 2rem;
     }
 
@@ -33,7 +33,7 @@ export class DocsHome extends LitElement {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #00e87b;
+      background: var(--text-primary);
     }
 
     .hero h1 {
@@ -41,20 +41,13 @@ export class DocsHome extends LitElement {
       font-weight: 900;
       letter-spacing: -0.05em;
       margin: 0;
-      color: #fff;
+      color: var(--text-primary);
       line-height: 0.95;
-    }
-
-    .hero h1 .accent {
-      background: linear-gradient(135deg, #00e87b, #00c9ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
 
     .hero .tagline {
       font-size: 1.125rem;
-      color: #888;
+      color: var(--text-secondary);
       margin-top: 1.5rem;
       line-height: 1.7;
       font-weight: 400;
@@ -64,7 +57,7 @@ export class DocsHome extends LitElement {
     }
 
     .hero .tagline strong {
-      color: #ddd;
+      color: var(--text-primary);
       font-weight: 600;
     }
 
@@ -81,21 +74,21 @@ export class DocsHome extends LitElement {
       align-items: center;
       gap: 0.375rem;
       padding: 0.5rem 1rem;
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.8125rem;
       font-weight: 500;
-      color: #999;
+      color: var(--text-tertiary);
     }
 
     .eq-item .eq-label {
-      color: #444;
+      color: var(--text-muted);
       font-weight: 400;
     }
 
     .eq-item .eq-val {
-      color: #00e87b;
+      color: var(--text-primary);
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
       font-size: 0.8125rem;
       font-weight: 600;
@@ -121,25 +114,24 @@ export class DocsHome extends LitElement {
     }
 
     .cta-primary {
-      background: #00e87b;
-      color: #000;
+      background: var(--text-primary);
+      color: var(--bg-base);
     }
 
     .cta-primary:hover {
-      background: #00ff88;
-      box-shadow: 0 0 20px rgba(0, 232, 123, 0.3);
+      opacity: 0.85;
     }
 
     .cta-secondary {
       background: transparent;
-      color: #888;
-      border: 1px solid #222;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
     .cta-secondary:hover {
-      color: #fff;
-      border-color: #444;
-      background: #111;
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: var(--accent-subtle);
     }
 
     /* === Standards === */
@@ -147,8 +139,8 @@ export class DocsHome extends LitElement {
       max-width: 960px;
       margin: 0 auto;
       padding: 3rem 2rem;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
     .standards .label {
@@ -157,7 +149,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #333;
+      color: var(--text-muted);
       margin-bottom: 1.25rem;
     }
 
@@ -176,19 +168,19 @@ export class DocsHome extends LitElement {
       border-radius: 6px;
       font-size: 0.8125rem;
       font-weight: 500;
-      background: #0a0a0a;
-      color: #aaa;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
       transition: border-color 0.2s, color 0.2s;
     }
 
     .pill:hover {
-      border-color: #333;
-      color: #fff;
+      border-color: var(--border-hover);
+      color: var(--text-primary);
     }
 
     .pill .check {
-      color: #00e87b;
+      color: var(--text-primary);
       font-size: 0.75rem;
       font-weight: 700;
     }
@@ -205,7 +197,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #333;
+      color: var(--text-muted);
       margin-bottom: 1.5rem;
     }
 
@@ -213,40 +205,40 @@ export class DocsHome extends LitElement {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1px;
-      background: #1a1a1a;
-      border: 1px solid #1a1a1a;
+      background: var(--border);
+      border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
     }
 
     .feature-card {
       padding: 2rem;
-      background: #0a0a0a;
+      background: var(--bg-surface);
       transition: background 0.2s;
     }
 
     .feature-card:hover {
-      background: #0e0e0e;
+      background: var(--bg-hover);
     }
 
     .feature-card .icon {
       font-size: 1.25rem;
       margin-bottom: 1rem;
-      opacity: 0.7;
-      color: #00e87b;
+      opacity: 0.6;
+      color: var(--text-primary);
     }
 
     .feature-card h2 {
       font-size: 0.9375rem;
       font-weight: 600;
       margin: 0 0 0.625rem;
-      color: #fff;
+      color: var(--text-primary);
       letter-spacing: -0.01em;
     }
 
     .feature-card p {
       font-size: 0.8125rem;
-      color: #666;
+      color: var(--text-tertiary);
       margin: 0;
       line-height: 1.6;
     }
@@ -256,7 +248,7 @@ export class DocsHome extends LitElement {
       max-width: 960px;
       margin: 0 auto;
       padding: 4rem 2rem;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
     }
 
     .comparison .label {
@@ -264,7 +256,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #333;
+      color: var(--text-muted);
       margin-bottom: 1.5rem;
     }
 
@@ -272,8 +264,8 @@ export class DocsHome extends LitElement {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1px;
-      background: #1a1a1a;
-      border: 1px solid #1a1a1a;
+      background: var(--border);
+      border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -284,25 +276,25 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      background: #111;
+      background: var(--bg-elevated);
     }
 
     .col-header.highlight {
-      color: #00e87b;
+      color: var(--text-primary);
     }
     .col-header.dim {
-      color: #333;
+      color: var(--text-muted);
     }
 
     .cell {
       padding: 0.75rem 1.25rem;
-      background: #0a0a0a;
+      background: var(--bg-surface);
       font-size: 0.8125rem;
-      color: #555;
+      color: var(--text-tertiary);
     }
 
     .cell.highlight {
-      color: #ccc;
+      color: var(--text-primary);
       font-weight: 500;
     }
 
@@ -311,7 +303,7 @@ export class DocsHome extends LitElement {
       max-width: 960px;
       margin: 0 auto;
       padding: 3rem 2rem 4rem;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
     }
 
     .jsr .label {
@@ -320,7 +312,7 @@ export class DocsHome extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #333;
+      color: var(--text-muted);
       margin-bottom: 1rem;
     }
 
@@ -335,21 +327,21 @@ export class DocsHome extends LitElement {
       display: inline-flex;
       align-items: center;
       padding: 0.5rem 1rem;
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.8125rem;
       font-weight: 600;
-      color: #888;
+      color: var(--text-secondary);
       text-decoration: none;
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
       transition: all 0.2s ease;
     }
 
     .jsr-badge:hover {
-      background: #111;
-      color: #fff;
-      border-color: #333;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
     }
 
     /* === Responsive === */
@@ -391,101 +383,104 @@ export class DocsHome extends LitElement {
             <span class="dot"></span>
             Built with KISS Framework
           </div>
-          <h1><span class="accent">KISS</span></h1>
+          <h1>KISS</h1>
           <p class="tagline">
             <strong>Keep It Simple, Stupid.</strong><br>
             A minimal full-stack framework built on Web Standards.
           </p>
           <div class="equation">
-            <span class="eq-item"><span class="eq-label">HTTP =</span> <span class="eq-val">Fetch API</span></span>
-            <span class="eq-item"><span class="eq-label">UI =</span> <span class="eq-val">Web Components</span></span>
-            <span class="eq-item"><span class="eq-label">Build =</span> <span class="eq-val">ESM</span></span>
+            <span class="eq-item"><span class="eq-label">HTTP =</span> <span class="eq-val"
+              >Fetch API</span></span>
+            <span class="eq-item"><span class="eq-label">UI =</span> <span class="eq-val"
+              >Web Components</span></span>
+            <span class="eq-item"><span class="eq-label">Build =</span> <span class="eq-val"
+              >ESM</span></span>
+            </div>
+            <div class="cta">
+              <a class="cta-primary" href="/guide/getting-started">Get Started</a>
+              <a class="cta-secondary" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
+            </div>
           </div>
-          <div class="cta">
-            <a class="cta-primary" href="/guide/getting-started">Get Started</a>
-            <a class="cta-secondary" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
-          </div>
-        </div>
 
-        <div class="standards">
-          <div class="label">Web Standards Coverage</div>
-          <div class="pill-row">
-            <span class="pill"><span class="check">&#10003;</span> Fetch API</span>
-            <span class="pill"><span class="check">&#10003;</span> Web Components</span>
-            <span class="pill"><span class="check">&#10003;</span> ESM</span>
-            <span class="pill"><span class="check">&#10003;</span> Declarative Shadow DOM</span>
-            <span class="pill"><span class="check">&#10003;</span> Islands</span>
+          <div class="standards">
+            <div class="label">Web Standards Coverage</div>
+            <div class="pill-row">
+              <span class="pill"><span class="check">&#10003;</span> Fetch API</span>
+              <span class="pill"><span class="check">&#10003;</span> Web Components</span>
+              <span class="pill"><span class="check">&#10003;</span> ESM</span>
+              <span class="pill"><span class="check">&#10003;</span> Declarative Shadow DOM</span>
+              <span class="pill"><span class="check">&#10003;</span> Islands</span>
+            </div>
           </div>
-        </div>
 
-        <div class="features">
-          <div class="section-label">Why KISS</div>
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="icon">&#9672;</div>
-              <h2>Web Standards First</h2>
-              <p>No new abstractions. If you know the web platform, you know KISS.</p>
-            </div>
-            <div class="feature-card">
-              <div class="icon">&#9674;</div>
-              <h2>Islands Architecture</h2>
-              <p>Only interactive components load JS. Default homepage: 0 KB.</p>
-            </div>
-            <div class="feature-card">
-              <div class="icon">&#9670;</div>
-              <h2>Type-Safe RPC</h2>
-              <p>End-to-end type safety with Hono RPC. No codegen needed.</p>
-            </div>
-            <div class="feature-card">
-              <div class="icon">&#9651;</div>
-              <h2>Multi-Runtime</h2>
-              <p>Same code on Deno, Node, Bun, Cloudflare Workers.</p>
-            </div>
-            <div class="feature-card">
-              <div class="icon">&#9656;</div>
-              <h2>SSG Built-In</h2>
-              <p>Pre-render to static HTML at build time. Zero config.</p>
-            </div>
-            <div class="feature-card">
-              <div class="icon">&#9633;</div>
-              <h2>Zero Lock-In</h2>
-              <p>Your code works without KISS. Hono, Lit, Vite are all standard.</p>
+          <div class="features">
+            <div class="section-label">Why KISS</div>
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="icon">&#9672;</div>
+                <h2>Web Standards First</h2>
+                <p>No new abstractions. If you know the web platform, you know KISS.</p>
+              </div>
+              <div class="feature-card">
+                <div class="icon">&#9674;</div>
+                <h2>Islands Architecture</h2>
+                <p>Only interactive components load JS. Default homepage: 0 KB.</p>
+              </div>
+              <div class="feature-card">
+                <div class="icon">&#9670;</div>
+                <h2>Type-Safe RPC</h2>
+                <p>End-to-end type safety with Hono RPC. No codegen needed.</p>
+              </div>
+              <div class="feature-card">
+                <div class="icon">&#9651;</div>
+                <h2>Multi-Runtime</h2>
+                <p>Same code on Deno, Node, Bun, Cloudflare Workers.</p>
+              </div>
+              <div class="feature-card">
+                <div class="icon">&#9656;</div>
+                <h2>SSG Built-In</h2>
+                <p>Pre-render to static HTML at build time. Zero config.</p>
+              </div>
+              <div class="feature-card">
+                <div class="icon">&#9633;</div>
+                <h2>Zero Lock-In</h2>
+                <p>Your code works without KISS. Hono, Lit, Vite are all standard.</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="comparison">
-          <div class="label">Full-Chain Web Standards</div>
-          <div class="comparison-grid">
-            <div class="col-header highlight">KISS</div>
-            <div class="col-header dim">Astro</div>
-            <div class="col-header dim">Next.js</div>
-            <div class="cell highlight">Fetch API</div>
-            <div class="cell">Fetch API</div>
-            <div class="cell">Custom API</div>
-            <div class="cell highlight">Web Components</div>
-            <div class="cell">Islands (custom)</div>
-            <div class="cell">React only</div>
-            <div class="cell highlight">ESM</div>
-            <div class="cell">ESM</div>
-            <div class="cell">ESM + Custom</div>
+          <div class="comparison">
+            <div class="label">Full-Chain Web Standards</div>
+            <div class="comparison-grid">
+              <div class="col-header highlight">KISS</div>
+              <div class="col-header dim">Astro</div>
+              <div class="col-header dim">Next.js</div>
+              <div class="cell highlight">Fetch API</div>
+              <div class="cell">Fetch API</div>
+              <div class="cell">Custom API</div>
+              <div class="cell highlight">Web Components</div>
+              <div class="cell">Islands (custom)</div>
+              <div class="cell">React only</div>
+              <div class="cell highlight">ESM</div>
+              <div class="cell">ESM</div>
+              <div class="cell">ESM + Custom</div>
+            </div>
           </div>
-        </div>
 
-        <div class="jsr">
-          <div class="label">Install from JSR</div>
-          <div class="badge-row">
-            <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core</a>
-            <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui</a>
-            <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc</a>
+          <div class="jsr">
+            <div class="label">Install from JSR</div>
+            <div class="badge-row">
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core</a>
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui</a>
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc</a>
+            </div>
           </div>
-        </div>
-      </app-layout>
-    `;
+        </app-layout>
+      `;
+    }
   }
-}
 
-customElements.define('docs-home', DocsHome);
+  customElements.define('docs-home', DocsHome);
 
-export default DocsHome;
-export const tagName = 'docs-home';
+  export default DocsHome;
+  export const tagName = 'docs-home';

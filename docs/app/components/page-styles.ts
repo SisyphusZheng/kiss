@@ -1,7 +1,8 @@
-import { css, html, LitElement } from '@kissjs/core';
+import { css } from '@kissjs/core';
 
 /**
  * Shared page styles for all doc content pages.
+ * Uses CSS custom properties for theme support (Dark / Light).
  */
 export const pageStyles = css`
   :host {
@@ -18,12 +19,12 @@ export const pageStyles = css`
     font-weight: 800;
     letter-spacing: -0.03em;
     margin: 0 0 0.5rem;
-    color: #fff;
+    color: var(--text-primary);
     line-height: 1.15;
   }
 
   .subtitle {
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 2.5rem;
     font-size: 0.9375rem;
     line-height: 1.6;
@@ -34,7 +35,7 @@ export const pageStyles = css`
     font-size: 1.25rem;
     font-weight: 600;
     margin: 2.5rem 0 0.75rem;
-    color: #fff;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
   }
 
@@ -42,47 +43,49 @@ export const pageStyles = css`
     font-size: 1rem;
     font-weight: 600;
     margin: 1.5rem 0 0.5rem;
-    color: #ccc;
+    color: var(--accent-dim);
   }
 
   p {
     line-height: 1.7;
     margin: 0.5rem 0;
-    color: #999;
+    color: var(--text-secondary);
   }
 
   strong {
-    color: #ccc;
+    color: var(--text-primary);
     font-weight: 600;
   }
 
   em {
-    color: #bbb;
+    color: var(--accent-dim);
     font-style: italic;
   }
 
   a {
-    color: #00e87b;
-    text-decoration: none;
+    color: var(--text-primary);
+    text-decoration: underline;
     text-underline-offset: 2px;
-    transition: color 0.15s;
+    text-decoration-color: var(--border-hover);
+    transition: color 0.15s, text-decoration-color 0.15s;
   }
 
   a:hover {
-    color: #00ff88;
+    color: var(--text-primary);
+    text-decoration-color: var(--text-primary);
   }
 
   /* Code blocks */
   pre {
-    background: #111;
-    color: #c8c8c8;
+    background: var(--code-bg);
+    color: var(--text-secondary);
     padding: 1.25rem 1.5rem;
     border-radius: 3px;
     overflow-x: auto;
     font-size: 0.8125rem;
     line-height: 1.65;
     margin: 1rem 0;
-    border: 1px solid #1a1a1a;
+    border: 1px solid var(--code-border);
   }
 
   code {
@@ -90,12 +93,12 @@ export const pageStyles = css`
   }
 
   p code, li code {
-    background: #111;
+    background: var(--code-bg);
     padding: 0.125rem 0.375rem;
     border-radius: 2px;
     font-size: 0.8125rem;
-    color: #ccc;
-    border: 1px solid #1a1a1a;
+    color: var(--accent-dim);
+    border: 1px solid var(--code-border);
   }
 
   /* Tables */
@@ -107,27 +110,27 @@ export const pageStyles = css`
   }
 
   th, td {
-    border: 1px solid #1a1a1a;
+    border: 1px solid var(--border);
     padding: 0.625rem 0.875rem;
     text-align: left;
   }
 
   th {
-    background: #111;
+    background: var(--bg-elevated);
     font-weight: 600;
-    color: #ccc;
+    color: var(--accent-dim);
   }
 
   td {
-    color: #888;
+    color: var(--text-secondary);
   }
 
   /* Pillar blocks */
   .pillar {
     padding: 1.25rem 1.5rem;
     margin: 1rem 0;
-    border-left: 3px solid #333;
-    background: #0f0f0f;
+    border-left: 3px solid var(--border-hover);
+    background: var(--bg-surface);
     border-radius: 0 3px 3px 0;
   }
 
@@ -136,32 +139,32 @@ export const pageStyles = css`
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #555;
+    color: var(--text-muted);
     margin-bottom: 0.375rem;
   }
 
   .pillar h3 {
     margin: 0 0 0.5rem;
     font-size: 1.0625rem;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   /* Hard constraint tags */
   .hard-constraint {
     display: inline-block;
-    background: #111;
-    border: 1px solid #222;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     padding: 0.25rem 0.625rem;
     border-radius: 2px;
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-secondary);
     margin: 0.125rem 0.125rem;
   }
 
   /* Lists */
   ul, ol {
     padding-left: 1.25rem;
-    color: #888;
+    color: var(--text-secondary);
     line-height: 1.7;
   }
 
@@ -173,20 +176,20 @@ export const pageStyles = css`
   .callout {
     padding: 1rem 1.25rem;
     margin: 1rem 0;
-    border-left: 3px solid #333;
-    background: #0f0f0f;
+    border-left: 3px solid var(--border-hover);
+    background: var(--bg-surface);
     border-radius: 0 3px 3px 0;
   }
 
   .callout.warn {
-    border-left-color: #555;
+    border-left-color: var(--text-tertiary);
   }
 
   /* Page navigation */
   .nav-row {
     margin-top: 3rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #1a1a1a;
+    border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     gap: 1rem;
@@ -198,17 +201,17 @@ export const pageStyles = css`
     padding: 0.5rem 1rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #888;
+    color: var(--text-secondary);
     text-decoration: none;
-    border: 1px solid #1a1a1a;
+    border: 1px solid var(--border);
     border-radius: 2px;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
     letter-spacing: 0.01em;
   }
 
   .nav-link:hover {
-    color: #fff;
-    border-color: #333;
-    background: #111;
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--accent-subtle);
   }
 `;

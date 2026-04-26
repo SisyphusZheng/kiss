@@ -19,12 +19,44 @@ export class AppLayout extends LitElement {
   static properties = {
     home: { type: Boolean, reflect: true },
     currentPath: { type: String, attribute: 'current-path' },
+    theme: { state: true },
   };
 
   constructor() {
     super();
     this.home = false;
     this.currentPath = '';
+    this.theme = 'dark';
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Read initial theme
+    this.theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    // Listen for theme changes from other components
+    this._onThemeChange = () => {
+      this.theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    };
+    window.addEventListener('kiss-theme-change', this._onThemeChange);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('kiss-theme-change', this._onThemeChange);
+  }
+
+  private _onThemeChange:
+    | (() => void)
+    | undefined;
+
+  private _toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('kiss-theme', next);
+    this.theme = next;
+    // Notify other components
+    window.dispatchEvent(new CustomEvent('kiss-theme-change'));
   }
 
   private _navLink(path: string, text: string) {
@@ -39,6 +71,8 @@ export class AppLayout extends LitElement {
   }
 
   render() {
+    const isDark = this.theme === 'dark';
+
     return html`
       <div class="app-layout" ?home="${this.home}">
         <header class="app-header">
@@ -50,6 +84,14 @@ export class AppLayout extends LitElement {
               <a href="https://jsr.io/@kissjs/core">JSR</a>
             </nav>
             <div class="header-right">
+              <button
+                class="theme-toggle"
+                @click="${this._toggleTheme}"
+                title="Switch to ${isDark ? 'light' : 'dark'} theme"
+                aria-label="Toggle theme"
+              >
+                ${isDark ? '☀' : '☾'}
+              </button>
               <a class="github-link" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
             </div>
           </div>

@@ -1,7 +1,7 @@
 /**
  * @kissjs/ui — Design System Showcase
- * A live demo page for the KISS UI component library.
- * Route: /ui/
+ * Pure B&W — Two palettes: Dark / Light. Nothing else.
+ * Route: /ui
  */
 import { css, html, LitElement } from '@kissjs/core';
 import '../components/layout.js';
@@ -22,19 +22,19 @@ export class UIShowcase extends LitElement {
       font-weight: 900;
       letter-spacing: -0.04em;
       margin: 0 0 0.5rem;
-      color: #fff;
+      color: var(--text-primary);
       line-height: 1.1;
     }
 
     .subtitle {
-      color: #666;
+      color: var(--text-secondary);
       margin-bottom: 3rem;
       font-size: 0.9375rem;
       line-height: 1.6;
     }
 
     .subtitle strong {
-      color: #00e87b;
+      color: var(--text-primary);
       font-weight: 600;
     }
 
@@ -48,71 +48,150 @@ export class UIShowcase extends LitElement {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #333;
+      color: var(--text-muted);
       margin-bottom: 1.25rem;
       padding-bottom: 0.75rem;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid var(--border);
     }
 
-    .section-title .tag {
-      color: #00e87b;
-      margin-left: 0.5rem;
-      font-weight: 600;
-    }
-
-    /* Design Tokens Grid */
-    .tokens-grid {
+    /* === Palette Preview === */
+    .palette-row {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
     }
 
-    .token-card {
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
+    .palette-card {
+      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      transition: border-color 0.2s;
+      overflow: hidden;
     }
 
-    .token-card:hover {
-      border-color: #333;
+    .palette-header {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
     }
 
-    .token-swatch {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      margin: 0 auto 0.75rem;
-      border: 1px solid #1a1a1a;
+    .palette-dark .palette-header {
+      background: #000;
+      color: #fff;
+      border-color: #1a1a1a;
     }
 
-    .token-name {
-      font-size: 0.6875rem;
+    .palette-light .palette-header {
+      background: #fff;
+      color: #000;
+      border-color: #e5e5e5;
+    }
+
+    .palette-body {
+      padding: 1.25rem;
+    }
+
+    .palette-dark .palette-body {
+      background: #000;
+    }
+
+    .palette-light .palette-body {
+      background: #fff;
+    }
+
+    .swatch-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .swatch {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      border: 1px solid rgba(128, 128, 128, 0.2);
+      position: relative;
+    }
+
+    .swatch-label {
+      font-size: 0.5625rem;
       font-weight: 600;
-      color: #aaa;
-      letter-spacing: 0.02em;
-    }
-
-    .token-value {
-      font-size: 0.625rem;
-      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       margin-top: 0.25rem;
-      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      text-align: center;
     }
 
-    /* Component Preview */
+    .palette-dark .swatch-label {
+      color: #666;
+    }
+
+    .palette-light .swatch-label {
+      color: #999;
+    }
+
+    .palette-sample {
+      line-height: 1.7;
+      font-size: 0.8125rem;
+    }
+
+    .palette-dark .palette-sample {
+      color: #999;
+    }
+
+    .palette-dark .palette-sample strong {
+      color: #fff;
+    }
+
+    .palette-light .palette-sample {
+      color: #555;
+    }
+
+    .palette-light .palette-sample strong {
+      color: #000;
+    }
+
+    /* === Typography Scale === */
+    .type-scale {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .type-row {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .type-label {
+      min-width: 80px;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .type-sample {
+      color: var(--text-primary);
+    }
+
+    /* === Component Preview === */
     .preview-card {
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
     }
 
     .preview-header {
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -121,7 +200,7 @@ export class UIShowcase extends LitElement {
     .preview-title {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .preview-badge {
@@ -131,15 +210,13 @@ export class UIShowcase extends LitElement {
       letter-spacing: 0.08em;
       padding: 0.25rem 0.625rem;
       border-radius: 100px;
-      background: rgba(0, 232, 123, 0.1);
-      color: #00e87b;
-      border: 1px solid rgba(0, 232, 123, 0.2);
+      background: var(--accent-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
     .preview-badge.planned {
-      background: rgba(255, 255, 255, 0.03);
-      color: #555;
-      border-color: #222;
+      color: var(--text-muted);
     }
 
     .preview-body {
@@ -150,7 +227,7 @@ export class UIShowcase extends LitElement {
       align-items: flex-start;
     }
 
-    /* Demo Buttons */
+    /* Demo Buttons — Pure B&W */
     .demo-btn {
       display: inline-flex;
       align-items: center;
@@ -166,42 +243,32 @@ export class UIShowcase extends LitElement {
     }
 
     .demo-btn-primary {
-      background: #00e87b;
-      color: #000;
+      background: var(--text-primary);
+      color: var(--bg-base);
     }
 
     .demo-btn-primary:hover {
-      background: #00ff88;
-      box-shadow: 0 0 16px rgba(0, 232, 123, 0.3);
+      opacity: 0.85;
     }
 
     .demo-btn-secondary {
       background: transparent;
-      color: #888;
-      border: 1px solid #222;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
     .demo-btn-secondary:hover {
-      color: #fff;
-      border-color: #444;
+      color: var(--text-primary);
+      border-color: var(--border-hover);
     }
 
     .demo-btn-ghost {
       background: transparent;
-      color: #666;
+      color: var(--text-tertiary);
     }
 
     .demo-btn-ghost:hover {
-      color: #fff;
-    }
-
-    .demo-btn-danger {
-      background: #ff3b3b;
-      color: #fff;
-    }
-
-    .demo-btn-danger:hover {
-      background: #ff5555;
+      color: var(--text-primary);
     }
 
     .demo-btn-sm {
@@ -222,28 +289,27 @@ export class UIShowcase extends LitElement {
     }
 
     .demo-card {
-      background: #0f0f0f;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1.5rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
     }
 
     .demo-card:hover {
-      border-color: #333;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-color: var(--border-hover);
     }
 
     .demo-card h4 {
       font-size: 0.9375rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-primary);
       margin: 0 0 0.5rem;
     }
 
     .demo-card p {
       font-size: 0.8125rem;
-      color: #666;
+      color: var(--text-tertiary);
       margin: 0 0 1rem;
       line-height: 1.5;
     }
@@ -253,73 +319,44 @@ export class UIShowcase extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding-top: 0.75rem;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
     }
 
     .demo-card .card-tag {
       font-size: 0.6875rem;
-      color: #00e87b;
+      color: var(--text-secondary);
       font-weight: 600;
     }
 
     /* Demo Input */
     .demo-input {
-      background: #0a0a0a;
-      border: 1px solid #222;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 0.625rem 1rem;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.8125rem;
       font-family: inherit;
       width: 100%;
       max-width: 320px;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
       outline: none;
     }
 
     .demo-input::placeholder {
-      color: #444;
+      color: var(--text-muted);
     }
 
     .demo-input:focus {
-      border-color: #00e87b;
-      box-shadow: 0 0 0 3px rgba(0, 232, 123, 0.1);
-    }
-
-    /* Typography Scale */
-    .type-scale {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .type-row {
-      display: flex;
-      align-items: baseline;
-      gap: 1.5rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #1a1a1a;
-    }
-
-    .type-label {
-      min-width: 80px;
-      font-size: 0.625rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #333;
-    }
-
-    .type-sample {
-      color: #fff;
+      border-color: var(--text-primary);
     }
 
     /* Install */
     .install-section {
       margin-top: 3rem;
       padding: 2rem;
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
       text-align: center;
     }
@@ -327,7 +364,7 @@ export class UIShowcase extends LitElement {
     .install-section h3 {
       font-size: 1rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-primary);
       margin: 0 0 1rem;
     }
 
@@ -336,21 +373,21 @@ export class UIShowcase extends LitElement {
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1.5rem;
-      background: #111;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
       border-radius: 6px;
       font-family: "SF Mono", "Fira Code", "Consolas", monospace;
       font-size: 0.875rem;
-      color: #00e87b;
+      color: var(--text-primary);
     }
 
     .install-cmd .prompt {
-      color: #444;
+      color: var(--text-muted);
     }
 
     .install-section p {
       font-size: 0.8125rem;
-      color: #666;
+      color: var(--text-tertiary);
       margin: 1rem 0 0;
     }
 
@@ -358,7 +395,7 @@ export class UIShowcase extends LitElement {
     .nav-row {
       margin-top: 3rem;
       padding-top: 1.5rem;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
     }
@@ -369,17 +406,23 @@ export class UIShowcase extends LitElement {
       padding: 0.5rem 1rem;
       font-size: 0.8125rem;
       font-weight: 500;
-      color: #888;
+      color: var(--text-secondary);
       text-decoration: none;
-      border: 1px solid #1a1a1a;
+      border: 1px solid var(--border);
       border-radius: 6px;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
 
     .nav-link:hover {
-      color: #fff;
-      border-color: #333;
-      background: #111;
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: var(--accent-subtle);
+    }
+
+    @media (max-width: 640px) {
+      .palette-row {
+        grid-template-columns: 1fr;
+      }
     }
   `;
 
@@ -387,70 +430,94 @@ export class UIShowcase extends LitElement {
     return html`
       <app-layout current-path="/ui">
         <div class="container">
-          <h1>@kissjs/ui</h1>
+          <h1>Design System</h1>
           <p class="subtitle">
-            A <strong>native Web Components</strong> library built on Lit + Open Props.
-            Zero framework lock-in, full Shadow DOM encapsulation.
+            <strong>Two palettes. Zero noise.</strong><br>
+            Dark and Light. Black and White. That's it.
           </p>
 
-          <!-- Design Tokens -->
+          <!-- Palettes -->
           <div class="section">
-            <div class="section-title">Design Tokens <span class="tag">Colors</span></div>
-            <div class="tokens-grid">
-              <div class="token-card">
-                <div class="token-swatch" style="background:#00e87b"></div>
-                <div class="token-name">Brand</div>
-                <div class="token-value">#00e87b</div>
+            <div class="section-title">Palettes</div>
+            <div class="palette-row">
+              <!-- Dark -->
+              <div class="palette-card palette-dark">
+                <div class="palette-header">Dark</div>
+                <div class="palette-body">
+                  <div class="swatch-row">
+                    <div>
+                      <div class="swatch" style="background:#000"></div>
+                      <div class="swatch-label">Base</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#0a0a0a"></div>
+                      <div class="swatch-label">Surface</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#111"></div>
+                      <div class="swatch-label">Elevated</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#fff"></div>
+                      <div class="swatch-label">Text</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#999"></div>
+                      <div class="swatch-label">Muted</div>
+                    </div>
+                  </div>
+                  <p class="palette-sample">
+                    <strong>Pure black</strong> foundation. White for emphasis. Gray for hierarchy.
+                  </p>
+                </div>
               </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#00c9ff"></div>
-                <div class="token-name">Info</div>
-                <div class="token-value">#00c9ff</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#ff3b3b"></div>
-                <div class="token-name">Danger</div>
-                <div class="token-value">#ff3b3b</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#ffaa00"></div>
-                <div class="token-name">Warning</div>
-                <div class="token-value">#ffaa00</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#fff"></div>
-                <div class="token-name">Text</div>
-                <div class="token-value">#ffffff</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#888"></div>
-                <div class="token-name">Muted</div>
-                <div class="token-value">#888888</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#0a0a0a;border-color:#222"></div>
-                <div class="token-name">Surface</div>
-                <div class="token-value">#0a0a0a</div>
-              </div>
-              <div class="token-card">
-                <div class="token-swatch" style="background:#000;border-color:#222"></div>
-                <div class="token-name">Base</div>
-                <div class="token-value">#000000</div>
+              <!-- Light -->
+              <div class="palette-card palette-light">
+                <div class="palette-header">Light</div>
+                <div class="palette-body">
+                  <div class="swatch-row">
+                    <div>
+                      <div class="swatch" style="background:#fff"></div>
+                      <div class="swatch-label">Base</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#fafafa"></div>
+                      <div class="swatch-label">Surface</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#f5f5f5"></div>
+                      <div class="swatch-label">Elevated</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#000"></div>
+                      <div class="swatch-label">Text</div>
+                    </div>
+                    <div>
+                      <div class="swatch" style="background:#555"></div>
+                      <div class="swatch-label">Muted</div>
+                    </div>
+                  </div>
+                  <p class="palette-sample">
+                    <strong>Pure white</strong> foundation. Black for emphasis. Gray for hierarchy.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Typography -->
           <div class="section">
-            <div class="section-title">Design Tokens <span class="tag">Typography</span></div>
+            <div class="section-title">Typography</div>
             <div class="type-scale">
               <div class="type-row">
                 <span class="type-label">Display</span>
-                <span class="type-sample" style="font-size:3rem;font-weight:900;letter-spacing:-0.04em">KISS UI</span>
+                <span class="type-sample" style="font-size:3rem;font-weight:900;letter-spacing:-0.04em"
+                >KISS UI</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H1</span>
-                <span class="type-sample" style="font-size:2rem;font-weight:800;letter-spacing:-0.03em">Heading One</span>
+                <span class="type-sample" style="font-size:2rem;font-weight:800;letter-spacing:-0.03em"
+                >Heading One</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H2</span>
@@ -458,22 +525,29 @@ export class UIShowcase extends LitElement {
               </div>
               <div class="type-row">
                 <span class="type-label">Body</span>
-                <span class="type-sample" style="font-size:0.9375rem;color:#999">Body text for paragraphs and content blocks.</span>
+                <span class="type-sample" style="font-size:0.9375rem;color:var(--text-secondary)"
+                >Body text for paragraphs and content blocks.</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Caption</span>
-                <span class="type-sample" style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Caption / Label</span>
+                <span
+                  class="type-sample"
+                  style="font-size:0.75rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600"
+                >Caption / Label</span>
               </div>
               <div class="type-row">
                 <span class="type-label">Mono</span>
-                <span class="type-sample" style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:#00e87b">npm install @kissjs/ui</span>
+                <span
+                  class="type-sample"
+                  style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--text-primary)"
+                >deno add jsr:@kissjs/ui</span>
               </div>
             </div>
           </div>
 
           <!-- Buttons -->
           <div class="section">
-            <div class="section-title">Components <span class="tag">Button</span></div>
+            <div class="section-title">Components — Button</div>
             <div class="preview-card">
               <div class="preview-header">
                 <span class="preview-title">Button Variants</span>
@@ -483,9 +557,8 @@ export class UIShowcase extends LitElement {
                 <button class="demo-btn demo-btn-primary">Primary</button>
                 <button class="demo-btn demo-btn-secondary">Secondary</button>
                 <button class="demo-btn demo-btn-ghost">Ghost</button>
-                <button class="demo-btn demo-btn-danger">Danger</button>
               </div>
-              <div class="preview-body" style="border-top:1px solid #1a1a1a">
+              <div class="preview-body" style="border-top:1px solid var(--border)">
                 <button class="demo-btn demo-btn-primary demo-btn-sm">Small</button>
                 <button class="demo-btn demo-btn-primary">Default</button>
                 <button class="demo-btn demo-btn-primary demo-btn-lg">Large</button>
@@ -495,7 +568,7 @@ export class UIShowcase extends LitElement {
 
           <!-- Cards -->
           <div class="section">
-            <div class="section-title">Components <span class="tag">Card</span></div>
+            <div class="section-title">Components — Card</div>
             <div class="demo-cards-row">
               <div class="demo-card">
                 <h4>Island Component</h4>
@@ -526,7 +599,7 @@ export class UIShowcase extends LitElement {
 
           <!-- Input -->
           <div class="section">
-            <div class="section-title">Components <span class="tag">Input</span></div>
+            <div class="section-title">Components — Input</div>
             <div class="preview-card">
               <div class="preview-header">
                 <span class="preview-title">Text Input</span>

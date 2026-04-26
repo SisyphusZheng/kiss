@@ -2,6 +2,9 @@
  * Docs site global layout styles.
  * KISS Architecture (K·I·S·S) — Shadow DOM encapsulated, styles scoped to app-layout's shadow root.
  * DSD makes content visible even without JavaScript.
+ *
+ * Theme system: Pure B&W — Dark (default) / Light.
+ * All colors use CSS custom properties that inherit from :root.
  */
 import { css } from '@kissjs/core';
 
@@ -22,6 +25,8 @@ export const layoutStyles = css`
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background: var(--bg-base);
+    color: var(--text-primary);
   }
 
   .app-layout .layout-body {
@@ -46,7 +51,7 @@ export const layoutStyles = css`
       position: relative;
       top: 0;
       border-right: none;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid var(--border);
       padding: 0.75rem 1rem;
     }
 
@@ -69,8 +74,8 @@ export const layoutStyles = css`
     position: sticky;
     top: 0;
     z-index: 100;
-    background: #0a0a0a;
-    border-bottom: 1px solid #1a1a1a;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
   }
 
   .app-header .header-inner {
@@ -86,21 +91,20 @@ export const layoutStyles = css`
   .app-header .logo {
     font-size: 1rem;
     font-weight: 800;
-    color: #00e87b;
+    color: var(--text-primary);
     text-decoration: none;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .app-header .logo:hover {
-    color: #00ff88;
-    text-shadow: 0 0 12px rgba(0, 232, 123, 0.4);
+    opacity: 0.7;
   }
 
   .app-header .logo-sub {
     font-size: 0.6875rem;
     font-weight: 400;
-    color: #444;
+    color: var(--text-muted);
     margin-left: 0.375rem;
     letter-spacing: 0.02em;
   }
@@ -112,7 +116,7 @@ export const layoutStyles = css`
   }
 
   .app-header nav a {
-    color: #666;
+    color: var(--text-tertiary);
     text-decoration: none;
     font-size: 0.8125rem;
     font-weight: 500;
@@ -123,30 +127,53 @@ export const layoutStyles = css`
   }
 
   .app-header nav a:hover {
-    color: #00e87b;
+    color: var(--text-primary);
   }
 
   .app-header .header-right {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .app-header .github-link {
-    color: #555;
+    color: var(--text-muted);
     text-decoration: none;
     font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.02em;
     padding: 0.375rem 0.75rem;
-    border: 1px solid #222;
+    border: 1px solid var(--border);
     border-radius: 2px;
     transition: color 0.15s, border-color 0.15s;
   }
 
   .app-header .github-link:hover {
-    color: #ccc;
-    border-color: #444;
+    color: var(--text-secondary);
+    border-color: var(--border-hover);
+  }
+
+  /* === Theme Toggle === */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .theme-toggle:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--accent-subtle);
   }
 
   /* === Sidebar === */
@@ -154,14 +181,14 @@ export const layoutStyles = css`
     display: block;
     width: 240px;
     flex-shrink: 0;
-    border-right: 1px solid #1a1a1a;
+    border-right: 1px solid var(--border);
     padding: 1.5rem 0;
     overflow-y: auto;
     height: calc(100vh - 56px);
     position: sticky;
     top: 56px;
     scrollbar-width: thin;
-    scrollbar-color: #222 transparent;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
   .docs-sidebar .nav-section {
@@ -173,7 +200,7 @@ export const layoutStyles = css`
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #444;
+    color: var(--text-muted);
     padding: 0 1.25rem;
     margin-bottom: 0.375rem;
     cursor: pointer;
@@ -200,12 +227,12 @@ export const layoutStyles = css`
   }
 
   .docs-sidebar .nav-section summary:hover {
-    color: #888;
+    color: var(--text-tertiary);
   }
 
   .docs-sidebar a {
     display: block;
-    color: #777;
+    color: var(--text-tertiary);
     text-decoration: none;
     font-size: 0.8125rem;
     padding: 0.3rem 1.25rem;
@@ -214,15 +241,16 @@ export const layoutStyles = css`
   }
 
   .docs-sidebar a:hover {
-    color: #ccc;
-    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    background: var(--accent-subtle);
   }
 
   .docs-sidebar a.active,
   .docs-sidebar a[aria-current="page"] {
-    color: #00e87b;
-    border-left-color: #00e87b;
-    background: rgba(0, 232, 123, 0.05);
+    color: var(--text-primary);
+    border-left-color: var(--text-primary);
+    background: var(--accent-subtle);
+    font-weight: 600;
   }
 
   /* === Footer === */
@@ -233,12 +261,12 @@ export const layoutStyles = css`
 
   .app-footer footer {
     padding: 2rem 1.5rem;
-    border-top: 1px solid #222;
+    border-top: 1px solid var(--border);
     text-align: center;
-    color: #666;
+    color: var(--text-tertiary);
     font-size: 0.75rem;
     letter-spacing: 0.02em;
-    background: #000;
+    background: var(--bg-base);
   }
 
   .app-footer p {
@@ -246,20 +274,20 @@ export const layoutStyles = css`
   }
 
   .app-footer a {
-    color: #999;
+    color: var(--text-secondary);
     text-decoration: none;
     transition: color 0.15s;
   }
 
   .app-footer a:hover {
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .app-footer .divider {
     display: inline-block;
     width: 1px;
     height: 10px;
-    background: #333;
+    background: var(--border-hover);
     vertical-align: middle;
     margin: 0 0.75rem;
   }
@@ -267,10 +295,10 @@ export const layoutStyles = css`
   /* === Noscript === */
   .noscript-warning {
     padding: 1rem;
-    background: #1a1a1a;
-    color: #999;
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
     text-align: center;
     font-size: 0.8125rem;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border);
   }
 `;
