@@ -2,30 +2,73 @@ name: Publish to JSR
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths:
+      - 'packages/*/deno.json'
 
 jobs:
-  publish:
+  detect-and-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit to compare
 
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
+      - name: Check version changes
+        id: check
+        run: |
+          changed=""
+          
+          # Check kiss-core
+          core_old=$(git show HEAD~1:packages/kiss-core/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
+          core_new=$(grep '"version"' packages/kiss-core/deno.json | cut -d'"' -f4)
+          if [ "$core_old" != "$core_new" ]; then
+            echo "core_changed=true" >> $GITHUB_OUTPUT
+            echo "📦 @kissjs/core: $core_old → $core_new"
+            changed="$changed core"
+          fi
+          
+          # Check kiss-rpc
+          rpc_old=$(git show HEAD~1:packages/kiss-rpc/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
+          rpc_new=$(grep '"version"' packages/kiss-rpc/deno.json | cut -d'"' -f4)
+          if [ "$rpc_old" != "$rpc_new" ]; then
+            echo "rpc_changed=true" >> $GITHUB_OUTPUT
+            echo "📦 @kissjs/rpc: $rpc_old → $rpc_new"
+            changed="$changed rpc"
+          fi
+          
+          # Check kiss-ui
+          ui_old=$(git show HEAD~1:packages/kiss-ui/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
+          ui_new=$(grep '"version"' packages/kiss-ui/deno.json | cut -d'"' -f4)
+          if [ "$ui_old" != "$ui_new" ]; then
+            echo "ui_changed=true" >> $GITHUB_OUTPUT
+            echo "📦 @kissjs/ui: $ui_old → $ui_new"
+            changed="$changed ui"
+          fi
+          
+          if [ -z "$changed" ]; then
+            echo "ℹ️ No version changes detected"
+          fi
+
       - name: Publish @kissjs/core
+        if: steps.check.outputs.core_changed == 'true'
         working-directory: packages/kiss-core
         run: deno publish
 
       - name: Publish @kissjs/rpc
+        if: steps.check.outputs.rpc_changed == 'true'
         working-directory: packages/kiss-rpc
         run: deno publish
 
       - name: Publish @kissjs/ui
+        if: steps.check.outputs.ui_changed == 'true'
         working-directory: packages/kiss-ui
         run: deno publish
