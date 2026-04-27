@@ -6,13 +6,16 @@
  * Phase 1 enhancement: support for _renderer.ts (layout) and
  * _middleware.ts (Hono middleware) special files.
  *
+ * Phase 2 enhancement: support for package islands auto-detection.
+ * Packages can export an `islands` array in their main entry.
+ *
  * Convention (minimal augmentation):
  * - _renderer.ts: exports a LitElement class used as the page layout wrapper
  * - _middleware.ts: exports a Hono middleware function applied before the route
  * - Files starting with _ are not route handlers but are loaded by the framework
  */
 
-import type { RouteEntry, SpecialFileType } from './types.js';
+import type { PackageIslandMeta, RouteEntry, SpecialFileType } from './types.js';
 import { readdir, stat } from 'node:fs/promises';
 import { join, posix, sep } from 'node:path';
 
@@ -294,4 +297,54 @@ export async function scanIslands(islandsDir: string): Promise<string[]> {
   }
 
   return files.sort();
+}
+
+/**
+ * Scan package exports for island metadata.
+ * Packages should export an `islands` array in their main entry.
+ *
+ * Example package export:
+ * ```ts
+ * // @kissjs/ui/index.ts
+ * export const islands = [
+ *   { tagName: 'kiss-theme-toggle', modulePath: '@kissjs/ui/kiss-theme-toggle', strategy: 'eager' }
+ * ] as const;
+ * ```
+ *
+ * @param packageNames - List of package names to scan (e.g., ['@kissjs/ui'])
+ * @returns Array of PackageIslandMeta
+ */
+export async function scanPackageIslands(
+  packageNames: string[],
+): Promise<PackageIslandMeta[]> {
+  const allIslands: PackageIslandMeta[] = [];
+
+  for (const pkg of packageNames) {
+    try {
+      // Dynamic import the package
+      const mod = await import(pkg);
+      if (mod.islands && Array.isArray(mod.islands)) {
+        // Validate each island has required fields
+        for (const island of mod.islands) {
+          if (island.tagName && island.modulePath) {
+            allIslands.push({
+              tagName: island.tagName,
+              modulePath: island.modulePath,
+              strategy: island.strategy || 'lazy',
+            });
+          } else {
+            console.warn(
+              `[KISS] Invalid island in ${pkg}: missing tagName or modulePath`,
+              island,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Package not found or import error - warn but don't break build
+      console.warn(`[KISS] Failed to scan package islands from "${pkg}":`, e);
+    }
+  }
+
+  return allIslands;
 }

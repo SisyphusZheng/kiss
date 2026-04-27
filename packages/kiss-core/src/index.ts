@@ -26,7 +26,7 @@
  */
 
 import type { Plugin } from 'vite';
-import type { FrameworkOptions, RouteEntry } from './types.js';
+import type { FrameworkOptions, PackageIslandMeta, RouteEntry } from './types.js';
 
 import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -38,7 +38,7 @@ import { islandExtractorPlugin } from './island-extractor.js';
 import { htmlTemplatePlugin } from './html-template.js';
 import { buildPlugin } from './build.js';
 import { generateHonoEntryCode } from './hono-entry.js';
-import { fileToTagName, scanIslands, scanRoutes } from './route-scanner.js';
+import { fileToTagName, scanIslands, scanPackageIslands, scanRoutes } from './route-scanner.js';
 
 export type {
   FrameworkOptions,
@@ -135,13 +135,14 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   const VIRTUAL_ENTRY_ID = 'virtual:kiss-hono-entry';
   const RESOLVED_ENTRY_ID = '\0' + VIRTUAL_ENTRY_ID;
 
-  function generateEntry(routes: RouteEntry[], islandTagNames: string[] = []): string {
+  function generateEntry(routes: RouteEntry[], islandTagNames: string[] = [], packageIslands: PackageIslandMeta[] = []): string {
     return generateHonoEntryCode(routes, {
       routesDir: resolvedOptions.routesDir,
       islandsDir: resolvedOptions.islandsDir,
       componentsDir: resolvedOptions.componentsDir,
       middleware: resolvedOptions.middleware,
       islandTagNames,
+      packageIslands,
       headExtras: resolvedOptions.headExtras,
       html: resolvedOptions.html,
     });
@@ -167,7 +168,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     },
 
     configResolved() {
-      ctx.honoEntryCode = generateEntry([], ctx.islandTagNames);
+      ctx.honoEntryCode = generateEntry([], ctx.islandTagNames, ctx.packageIslands);
     },
 
     async buildStart() {
@@ -178,12 +179,21 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         const islandFiles = await scanIslands(islandsRoot);
         ctx.islandTagNames = islandFiles.map((f) => fileToTagName(f));
 
-        ctx.honoEntryCode = generateEntry(routes, ctx.islandTagNames);
+        // Scan package islands if configured
+        if (resolvedOptions.packageIslands && resolvedOptions.packageIslands.length > 0) {
+          ctx.packageIslands = await scanPackageIslands(resolvedOptions.packageIslands);
+          if (ctx.packageIslands.length > 0) {
+            console.log(`[KISS] Package islands: ${ctx.packageIslands.map((i) => i.tagName).join(', ')}`);
+          }
+        }
+
+        ctx.honoEntryCode = generateEntry(routes, ctx.islandTagNames, ctx.packageIslands);
         const pageCount = routes.filter((r) => r.type === 'page' && !r.special).length;
         const apiCount = routes.filter((r) => r.type === 'api' && !r.special).length;
+        const totalIslands = ctx.islandTagNames.length + ctx.packageIslands.length;
         console.log(
           `[KISS] Routes: ${pageCount} page(s), ${apiCount} API route(s), ` +
-            `${ctx.islandTagNames.length} island(s) — KISS Architecture`,
+            `${totalIslands} island(s) — KISS Architecture`,
         );
       } catch (err) {
         console.error('[KISS] Route scan failed:', err);
@@ -201,7 +211,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
 
     load(id) {
       if (id === RESOLVED_ENTRY_ID) {
-        return ctx.honoEntryCode || generateEntry([], ctx.islandTagNames);
+        return ctx.honoEntryCode || generateEntry([], ctx.islandTagNames, ctx.packageIslands);
       }
     },
   };
@@ -243,6 +253,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         middleware: resolvedOptions.middleware,
         ssg: true, // inject DOM shim
         islandTagNames: ssgIslandTagNames,
+        packageIslands: ctx.packageIslands,
         headExtras: resolvedOptions.headExtras,
         html: resolvedOptions.html,
       });

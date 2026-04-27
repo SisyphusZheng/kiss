@@ -12,14 +12,17 @@
  */
 
 import type { Alias, ResolvedConfig } from 'vite';
-import type { FrameworkOptions } from './types.js';
+import type { FrameworkOptions, PackageIslandMeta } from './types.js';
 
 export class KissBuildContext {
   /** The generated Hono entry module code (virtual module content) */
   honoEntryCode: string = '';
 
-  /** Island tag names discovered during route scanning */
+  /** Island tag names discovered during route scanning (local islands) */
   islandTagNames: string[] = [];
+
+  /** Package islands discovered from npm/JSR packages */
+  packageIslands: PackageIslandMeta[] = [];
 
   /** Whether the SSR+client build has completed */
   buildCompleted: boolean = false;
@@ -50,6 +53,7 @@ export class KissBuildContext {
   reset(): void {
     this.honoEntryCode = '';
     this.islandTagNames = [];
+    this.packageIslands = [];
     this.buildCompleted = false;
     this.clientBuildTriggered = false;
     this.resolvedConfig = null;

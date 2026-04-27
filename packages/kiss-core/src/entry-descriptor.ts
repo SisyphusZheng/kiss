@@ -12,7 +12,7 @@
  * entry pipeline testable, serializable, and diffable.
  */
 
-import type { FrameworkOptions, RouteEntry } from './types.js';
+import type { FrameworkOptions, PackageIslandMeta, RouteEntry } from './types.js';
 import { fileToTagName } from './route-scanner.js';
 
 // ─── Import declarations ───────────────────────────────────────
@@ -146,6 +146,7 @@ export function buildEntryDescriptor(
     middleware?: FrameworkOptions['middleware'];
     ssg?: boolean;
     islandTagNames?: string[];
+    packageIslands?: PackageIslandMeta[];
     headExtras?: string;
     html?: { lang?: string; title?: string };
   } = {},
@@ -244,10 +245,22 @@ export function buildEntryDescriptor(
 
   // --- Islands ---
   const islandTagNames = options.islandTagNames || [];
-  const islands: IslandDecl[] = islandTagNames.map((tagName) => ({
+  const packageIslands = options.packageIslands || [];
+
+  // Local islands
+  const localIslands: IslandDecl[] = islandTagNames.map((tagName) => ({
     tagName,
     modulePath: `/${islandsDir}/${tagName}.ts`,
   }));
+
+  // Package islands (from npm/JSR packages)
+  const packageIslandDecls: IslandDecl[] = packageIslands.map((island) => ({
+    tagName: island.tagName,
+    modulePath: island.modulePath,
+  }));
+
+  // Merge all islands
+  const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];
 
   // --- Document ---
   const document: DocumentConfig = {

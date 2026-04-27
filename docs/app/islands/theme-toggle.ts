@@ -42,7 +42,7 @@ export default class ThemeToggle extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    const saved = localStorage.getItem('theme');
+    const saved = localStorage.getItem('kiss-theme');
     if (saved) {
       this.theme = saved;
       this.applyTheme();
@@ -51,7 +51,7 @@ export default class ThemeToggle extends LitElement {
 
   toggleTheme() {
     this.theme = this.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('theme', this.theme);
+    localStorage.setItem('kiss-theme', this.theme);
     this.applyTheme();
   }
 

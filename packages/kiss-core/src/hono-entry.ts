@@ -14,7 +14,7 @@
  *   - renderEntry: snapshot test the generated code
  */
 
-import type { FrameworkOptions, RouteEntry } from './types.js';
+import type { FrameworkOptions, PackageIslandMeta, RouteEntry } from './types.js';
 import { buildEntryDescriptor } from './entry-descriptor.js';
 import { renderEntry } from './entry-renderer.js';
 
@@ -30,6 +30,7 @@ export interface HonoEntryOptions {
   middleware?: FrameworkOptions['middleware'];
   ssg?: boolean;
   islandTagNames?: string[];
+  packageIslands?: PackageIslandMeta[];
   headExtras?: string;
   html?: { lang?: string; title?: string };
 }

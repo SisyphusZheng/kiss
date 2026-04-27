@@ -22,7 +22,7 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
-import type { FrameworkOptions } from './types.js';
+import type { FrameworkOptions, PackageIslandMeta } from './types.js';
 import type { KissBuildContext } from './build-context.js';
 import { build as viteBuild, type InlineConfig } from 'vite';
 import { join, resolve } from 'node:path';
@@ -59,41 +59,63 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
       if (config.command !== 'build') return;
 
       const root = config.root;
-      const islands = ctx?.islandTagNames || [];
+      const localIslands = ctx?.islandTagNames || [];
+      const packageIslands = ctx?.packageIslands || [];
 
       // KISS Architecture: Only client build (Islands). No SSR runtime bundle.
       // If no islands found, skip client build entirely (S constraint: zero JS).
-      if (islands.length === 0) {
+      if (localIslands.length === 0 && packageIslands.length === 0) {
         console.log('[KISS] No islands found, skipping client build');
         console.log('[KISS] KISS Architecture: Static pages only, zero client JS');
         console.log('[KISS] Build complete!');
         return;
       }
 
-      console.log(`[KISS] Building client bundle for ${islands.length} island(s)...`);
+      const totalIslands = localIslands.length + packageIslands.length;
+      console.log(`[KISS] Building client bundle for ${totalIslands} island(s)...`);
+      if (localIslands.length > 0) {
+        console.log(`  - Local islands: ${localIslands.length}`);
+      }
+      if (packageIslands.length > 0) {
+        console.log(`  - Package islands: ${packageIslands.length}`);
+      }
 
       // Auto-generate client entry from Island list
       const kissTmpDir = join(root, '.kiss');
       mkdirSync(kissTmpDir, { recursive: true });
       const clientEntryPath = join(kissTmpDir, '.kiss-client-entry.ts');
 
-      // Generate imports and registrations for all scanned islands
-      const islandImports = islands.map((tagName, i) => {
+      // Generate imports and registrations for local islands
+      const localIslandImports = localIslands.map((tagName, i) => {
         const modulePath = resolve(root, `${islandsDir}/${tagName}.ts`);
         return `import Island_${i} from '${modulePath.replace(/\\/g, '/')}';`;
       }).join('\n');
 
-      const islandRegistrations = islands.map((tagName, i) => {
+      const localIslandRegistrations = localIslands.map((tagName, i) => {
         return `if (!customElements.get('${tagName}')) customElements.define('${tagName}', Island_${i});`;
       }).join('\n');
+
+      // Generate imports and registrations for package islands
+      const packageIslandImports = packageIslands.map((island, i) => {
+        const idx = localIslands.length + i;
+        return `import Island_${idx} from '${island.modulePath}';`;
+      }).join('\n');
+
+      const packageIslandRegistrations = packageIslands.map((island, i) => {
+        const idx = localIslands.length + i;
+        return `if (!customElements.get('${island.tagName}')) customElements.define('${island.tagName}', Island_${idx});`;
+      }).join('\n');
+
+      const allImports = [localIslandImports, packageIslandImports].filter(Boolean).join('\n');
+      const allRegistrations = [localIslandRegistrations, packageIslandRegistrations].filter(Boolean).join('\n');
 
       const clientEntryCode =
         `// KISS Client Entry (auto-generated — KISS Architecture: Islands only)
 // DO NOT EDIT — changes will be overwritten
-${islandImports}
+${allImports}
 
 // Register all island custom elements
-${islandRegistrations}
+${allRegistrations}
 `;
 
       writeFileSync(clientEntryPath, clientEntryCode, 'utf-8');
@@ -123,6 +145,12 @@ ${islandRegistrations}
                     const match = id.match(/\/([^/]+)\.(ts|js)$/);
                     if (match) {
                       return `island-${match[1]}`;
+                    }
+                  }
+                  // Package islands - split by modulePath
+                  for (const island of packageIslands) {
+                    if (id.includes(island.modulePath)) {
+                      return `island-${island.tagName}`;
                     }
                   }
                 },

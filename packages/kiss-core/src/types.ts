@@ -10,6 +10,16 @@
 
 import type { Plugin } from 'vite';
 
+/** Package Island metadata exported from npm/JSR packages */
+export interface PackageIslandMeta {
+  /** Custom element tag name (e.g., 'kiss-theme-toggle') */
+  tagName: string;
+  /** Module path for import (e.g., '@kissjs/ui/kiss-theme-toggle') */
+  modulePath: string;
+  /** Hydration strategy (default: 'lazy') */
+  strategy?: 'eager' | 'lazy' | 'idle' | 'visible';
+}
+
 /** Framework configuration options */
 export interface FrameworkOptions {
   /** Directory for file-based routes (default: 'app/routes') */
@@ -18,6 +28,13 @@ export interface FrameworkOptions {
   islandsDir?: string;
   /** Directory for shared Lit components (default: 'app/components') */
   componentsDir?: string;
+
+  /**
+   * Package islands to auto-import from npm/JSR packages.
+   * Each package should export an `islands` array in its main entry.
+   * Example: ['@kissjs/ui'] will import islands from '@kissjs/ui/islands'
+   */
+  packageIslands?: string[];
 
   /** Extra HTML to inject into <head> (e.g. CDN links, analytics) */
   headExtras?: string;

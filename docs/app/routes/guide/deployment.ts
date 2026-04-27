@@ -18,7 +18,16 @@ export class DeploymentPage extends LitElement {
         border: 1px solid var(--kiss-border);
         border-radius: 3px;
       }
-      .platform-card .platform-card;
+      .platform-card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 0.9375rem;
+        color: var(--kiss-text-primary);
+      }
+      .platform-card p {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--kiss-text-secondary);
+      }
     `,
   ];
   render() {
