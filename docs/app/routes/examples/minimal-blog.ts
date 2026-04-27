@@ -10,7 +10,7 @@ import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../../components/page-styles.js';
 import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
-import '../../islands/theme-toggle.js';
+import '../../islands/kiss-theme-toggle.js';
 
 export class MinimalBlogDemoPage extends LitElement {
   static styles = [
@@ -82,7 +82,7 @@ export class MinimalBlogDemoPage extends LitElement {
           <div class="demo-container">
             <div class="demo-header">
               <h1>My Blog</h1>
-              <theme-toggle></theme-toggle>
+              <kiss-theme-toggle></kiss-theme-toggle>
             </div>
             <div class="nav-highlight-demo">
               <a class="nav-link-demo active" aria-current="page">Home</a>

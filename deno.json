@@ -4,6 +4,7 @@
     "./packages/kiss-core",
     "./packages/kiss-rpc",
     "./packages/kiss-ui",
+    "./packages/create-kiss",
     "./docs"
   ],
   "imports": {

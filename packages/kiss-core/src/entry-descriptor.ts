@@ -89,6 +89,30 @@ export interface IslandDecl {
   modulePath: string;
 }
 
+// ─── Special file declarations (v0.3.0) ─────────────────────────
+
+/** Renderer declaration — wraps page SSR output (like Next.js layout.tsx) */
+export interface RendererDecl {
+  /** Variable name for the imported module */
+  varName: string;
+  /** Directory scope (e.g. '/guide') — applies to this dir and subdirs */
+  scope: string;
+  /** Full import path for Vite SSR */
+  importPath: string;
+  /** Nesting depth (root=0, deeper dirs have higher depth) */
+  depth: number;
+}
+
+/** Middleware scope declaration — Hono middleware mounted to directory prefix */
+export interface MiddlewareScopeDecl {
+  /** Variable name for the imported module */
+  varName: string;
+  /** Directory scope (e.g. '/api') */
+  scope: string;
+  /** Full import path for Vite SSR */
+  importPath: string;
+}
+
 // ─── Document config ───────────────────────────────────────────
 
 /** HTML document wrapping configuration */
@@ -122,6 +146,12 @@ export interface EntryDescriptor {
 
   /** Known islands for runtime detection */
   islands: IslandDecl[];
+
+  /** Renderer declarations (from _renderer.ts files) — v0.3.0 */
+  renderers: RendererDecl[];
+
+  /** Middleware scope declarations (from _middleware.ts files) — v0.3.0 */
+  middlewareScopes: MiddlewareScopeDecl[];
 
   /** Document wrapping config */
   document: DocumentConfig;
@@ -247,6 +277,31 @@ export function buildEntryDescriptor(
       importPath: `/${routesDir}/${r.filePath}`,
     }));
 
+  // --- Special files: _renderer.ts / _middleware.ts (v0.3.0) ---
+  const specialRoutes = routes.filter((r) => r.type === 'special');
+
+  const renderers: RendererDecl[] = specialRoutes
+    .filter((r) => r.special === 'renderer')
+    .map((r) => {
+      const scope = r.path.replace(/\/?_renderer$/, '') || '/';
+      const depth = scope === '/' ? 0 : scope.split('/').filter(Boolean).length;
+      return {
+        varName: `$${r.varName}`,
+        scope,
+        importPath: `/${routesDir}/${r.filePath}`,
+        depth,
+      };
+    })
+    .sort((a, b) => b.depth - a.depth); // Outer first (root=0, then deeper)
+
+  const middlewareScopes: MiddlewareScopeDecl[] = specialRoutes
+    .filter((r) => r.special === 'middleware')
+    .map((r) => ({
+      varName: `$${r.varName}`,
+      scope: r.path.replace(/\/?_middleware$/, '') || '/',
+      importPath: `/${routesDir}/${r.filePath}`,
+    }));
+
   // --- Islands ---
   const islandTagNames = options.islandTagNames || [];
   const packageIslands = options.packageIslands || [];
@@ -285,6 +340,8 @@ export function buildEntryDescriptor(
     apiRoutes,
     pageRoutes,
     islands,
+    renderers,
+    middlewareScopes,
     document,
     hydrationStrategy: options.hydrationStrategy || 'lazy',
     debugRoutes,

@@ -16,7 +16,9 @@ import type {
   EntryDescriptor,
   ImportDecl,
   MiddlewareDecl,
+  MiddlewareScopeDecl,
   PageRouteDecl,
+  RendererDecl,
 } from './entry-descriptor.js';
 
 // ─── Code builder helper ───────────────────────────────────────
@@ -81,10 +83,13 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
         const originStr = renderCorsOrigin(corsOrigin);
         b.push(`app.use('*', cors({ origin: ${originStr}, ${CORS_ALLOW} }))`);
       } else {
-        // Default: allow localhost for dev, same-origin otherwise
+        // v0.3.0: Tightened default — only allow localhost.
+        // Production deployments MUST explicitly configure corsOrigin.
+        // Returning '*' with credentials:true violates the Fetch spec.
         b.push("app.use('*', cors({ origin: (origin) => {");
         b.push('  if (origin && /^http:\\/\\/localhost(:\\d+)?$/.test(origin)) return origin');
-        b.push('  return origin');
+        b.push('  // In production, set middleware.corsOrigin explicitly');
+        b.push('  return undefined');
         b.push(`}, ${CORS_ALLOW} }))`);
       }
       break;
@@ -117,14 +122,32 @@ function renderApiRoute(b: CodeBuilder, route: ApiRouteDecl): void {
 
 // ─── Page route rendering ──────────────────────────────────────
 
-function renderPageRoute(b: CodeBuilder, route: PageRouteDecl): void {
+function renderPageRoute(b: CodeBuilder, route: PageRouteDecl, renderers: RendererDecl[]): void {
+  // Find renderers whose scope matches this route's path prefix
+  const matchingRenderers = renderers.filter((r) => {
+    if (r.scope === '/') return true;
+    return route.path === r.scope || route.path.startsWith(r.scope + '/');
+  });
+
   b.push(`// Page: ${route.path} (${route.filePath})`);
   b.push(`app.get('${route.path}', async (c) => {`);
   b.push(`  try {`);
   b.push(`    const tag = ${route.varName}.tagName || '${route.defaultTagName}'`);
   b.push(`    const raw = await __ssr(tag)`);
   b.push(`    const clean = stripLitComments(raw)`);
-  b.push(`    return c.html(wrapDocument(clean, c.req.path))`);
+
+  // Wrap with renderers from outer to inner (v0.3.0)
+  if (matchingRenderers.length > 0) {
+    b.push(`    // Renderer wrapping (outer → inner)`);
+    b.push(`    let wrapped = clean`);
+    for (const renderer of matchingRenderers) {
+      b.push(`    wrapped = ${renderer.varName}.default.wrap(wrapped, c)`);
+    }
+    b.push(`    return c.html(wrapDocument(wrapped, c.req.path))`);
+  } else {
+    b.push(`    return c.html(wrapDocument(clean, c.req.path))`);
+  }
+
   b.push(`  } catch (err) {`);
   b.push(`    return c.html('<h1>500</h1><p>' + String(err) + '</p>', 500)`);
   b.push(`  }`);
@@ -212,6 +235,13 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const route of [...desc.apiRoutes, ...desc.pageRoutes]) {
     b.push(`import * as ${route.varName} from '${route.importPath}'`);
   }
+  // Import special file modules (v0.3.0)
+  for (const renderer of desc.renderers) {
+    b.push(`import * as ${renderer.varName} from '${renderer.importPath}'`);
+  }
+  for (const mwScope of desc.middlewareScopes) {
+    b.push(`import * as ${mwScope.varName} from '${mwScope.importPath}'`);
+  }
   b.blank();
 
   // --- SSR helper ---
@@ -244,6 +274,13 @@ export function renderEntry(desc: EntryDescriptor): string {
     renderMiddleware(b, mw);
   }
 
+  // --- Middleware scopes (v0.3.0: _middleware.ts files) ---
+  for (const mwScope of desc.middlewareScopes) {
+    b.push(`// Middleware scope: ${mwScope.scope} (${mwScope.importPath})`);
+    b.push(`app.use('${mwScope.scope}/*', ${mwScope.varName}.default)`);
+    b.blank();
+  }
+
   // --- API routes ---
   for (const route of desc.apiRoutes) {
     renderApiRoute(b, route);
@@ -251,7 +288,7 @@ export function renderEntry(desc: EntryDescriptor): string {
 
   // --- Page routes ---
   for (const route of desc.pageRoutes) {
-    renderPageRoute(b, route);
+    renderPageRoute(b, route, desc.renderers);
   }
 
   // --- Export ---

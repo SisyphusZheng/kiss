@@ -43,14 +43,14 @@ export default defineConfig({
           // Theme system: Pure B&W — Dark / Light
           '<style>:root,[data-theme="dark"]{--kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255,255,255,0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;color-scheme:dark}[data-theme="light"]{--kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0,0,0,0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;color-scheme:light}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>',
           // Init theme from localStorage or prefers-color-scheme
-          '<script>(function(){var s=localStorage.getItem("kiss-theme");var p=window.matchMedia("(prefers-color-scheme:light)").matches;var t=s||(p?"light":"dark");document.documentElement.setAttribute("data-theme",t)})()</script>',
+          // v0.3.0: Extracted to public/theme-init.js for readability and testability
+          '<script src="/theme-init.js"></script>',
           // Mobile sidebar: close on backdrop click — L2 (browser API)
-          // KISS Architecture: L0 <details> + L1 :has() opens sidebar,
-          // L2 backdrop click closes it by removing [open] attribute
-          '<script>document.addEventListener("click",function(e){var p=e.composedPath();for(var i=0;i<p.length;i++){if(p[i].classList&&p[i].classList.contains("mobile-backdrop")){document.querySelectorAll("kiss-layout").forEach(function(el){var sr=el.shadowRoot;if(sr){var d=sr.querySelector("details.mobile-menu");if(d&&d.open)d.removeAttribute("open")}});break}}})</script>',
+          // v0.3.0: Extracted to public/mobile-sidebar.js
+          '<script src="/mobile-sidebar.js"></script>',
           // :has() fallback for older browsers (Safari < 15.4, Firefox < 121)
-          // KISS Architecture: L2 fallback when L1 CSS selector not available
-          '<script>(function(){try{var s=document.createElement("style");s.innerHTML=":has(*){}";document.head.appendChild(s);var w=s.sheet.cssRules.length>0;if(!w){document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll("kiss-layout").forEach(function(el){var sr=el.shadowRoot;if(sr){var d=sr.querySelector("details.mobile-menu");if(d){d.addEventListener("toggle",function(){if(this.open)el.classList.add("sidebar-open");else el.classList.remove("sidebar-open")})}}})})}document.head.removeChild(s)}catch(e){console.warn(":has() detection failed:",e)}})()</script>',
+          // v0.3.0: Extracted to public/has-fallback.js
+          '<script src="/has-fallback.js"></script>',
         ],
       },
     }),

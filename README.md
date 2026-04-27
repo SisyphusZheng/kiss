@@ -101,7 +101,15 @@ L4  自研代码          — Island 水合、RPC、插件逻辑
 
 ## 快速开始
 
-### 安装
+### 创建项目
+
+```bash
+deno run -A jsr:@kissjs/create my-app
+cd my-app
+deno task dev
+```
+
+### 手动安装
 
 ```bash
 deno add jsr:@kissjs/core jsr:@kissjs/rpc

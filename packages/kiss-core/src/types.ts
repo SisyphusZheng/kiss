@@ -127,16 +127,6 @@ export interface RouteEntry {
   special?: SpecialFileType;
 }
 
-/** Island metadata collected during build */
-export interface IslandMeta {
-  /** Custom element tag name (e.g., 'my-counter') */
-  tagName: string;
-  /** Module path for dynamic import */
-  modulePath: string;
-  /** Estimated client JS size */
-  estimatedSize?: string;
-}
-
 /** Metadata extracted from a route module */
 export interface RouteMeta {
   title?: string;

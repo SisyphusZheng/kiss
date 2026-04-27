@@ -27,6 +27,7 @@ import type { KissBuildContext } from './build-context.js';
 import { build as viteBuild, type InlineConfig } from 'vite';
 import { join, resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { generateClientEntry, type ClientIslandEntry } from './entry-generators.js';
 
 // Re-export SSG post-processing functions (pure fs operations, no Vite dependency)
 export { buildIslandChunkMap, rewriteHtmlFiles } from './ssg-postprocess.js';
@@ -85,39 +86,19 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
       mkdirSync(kissTmpDir, { recursive: true });
       const clientEntryPath = join(kissTmpDir, '.kiss-client-entry.ts');
 
-      // Generate imports and registrations for local islands
-      const localIslandImports = localIslands.map((tagName, i) => {
-        const modulePath = resolve(root, `${islandsDir}/${tagName}.ts`);
-        return `import Island_${i} from '${modulePath.replace(/\\/g, '/')}';`;
-      }).join('\n');
+      // Build unified island entry list (local + package)
+      const islandEntries: ClientIslandEntry[] = [
+        ...localIslands.map((tagName) => ({
+          tagName,
+          modulePath: resolve(root, `${islandsDir}/${tagName}.ts`).replace(/\\/g, '/'),
+        })),
+        ...packageIslands.map((island) => ({
+          tagName: island.tagName,
+          modulePath: island.modulePath,
+        })),
+      ];
 
-      const localIslandRegistrations = localIslands.map((tagName, i) => {
-        return `if (!customElements.get('${tagName}')) customElements.define('${tagName}', Island_${i});`;
-      }).join('\n');
-
-      // Generate imports and registrations for package islands
-      const packageIslandImports = packageIslands.map((island, i) => {
-        const idx = localIslands.length + i;
-        return `import Island_${idx} from '${island.modulePath}';`;
-      }).join('\n');
-
-      const packageIslandRegistrations = packageIslands.map((island, i) => {
-        const idx = localIslands.length + i;
-        return `if (!customElements.get('${island.tagName}')) customElements.define('${island.tagName}', Island_${idx});`;
-      }).join('\n');
-
-      const allImports = [localIslandImports, packageIslandImports].filter(Boolean).join('\n');
-      const allRegistrations = [localIslandRegistrations, packageIslandRegistrations].filter(Boolean).join('\n');
-
-      const clientEntryCode =
-        `// KISS Client Entry (auto-generated — KISS Architecture: Islands only)
-// DO NOT EDIT — changes will be overwritten
-${allImports}
-
-// Register all island custom elements
-${allRegistrations}
-`;
-
+      const clientEntryCode = generateClientEntry(islandEntries);
       writeFileSync(clientEntryPath, clientEntryCode, 'utf-8');
 
       try {
@@ -139,6 +120,9 @@ ${allRegistrations}
                 format: 'esm',
                 entryFileNames: 'islands/[name].js',
                 chunkFileNames: 'islands/[name]-[hash].js',
+                // Generate manifest for SSG post-processing (v0.3.0)
+                // Replaces string-grep approach in ssg-postprocess.ts
+                manifest: true,
                 // Split each island into its own chunk for per-page loading
                 manualChunks(id: string) {
                   if (id.includes(`/${islandsDir}/`)) {

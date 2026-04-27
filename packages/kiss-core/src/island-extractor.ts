@@ -15,29 +15,14 @@
 
 import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from './types.js';
+import type { IslandDecl } from './entry-descriptor.js';
 import { fileToTagName, scanIslands } from './route-scanner.js';
 import { join } from 'node:path';
 
-/** Island chunk mapping entry */
-export interface IslandChunkMap {
-  /** Custom element tag name */
-  tagName: string;
-  /** Source module path (relative to project root) */
-  modulePath: string;
-  /** Output chunk file name (set after client build) */
-  chunkFile?: string;
-  /** Estimated size in bytes (after client build) */
-  estimatedSize?: number;
-}
-
-/**
- * Create the island extractor plugin.
- * Runs during build to analyze island usage and generate the chunk map.
- */
 export function islandExtractorPlugin(options: FrameworkOptions = {}): Plugin {
   const islandsDir = options.islandsDir || 'app/islands';
   let config: ResolvedConfig;
-  const islandMap: Map<string, IslandChunkMap> = new Map();
+  const islandMap: Map<string, IslandDecl> = new Map();
 
   return {
     name: 'kiss:island-extractor',
@@ -73,35 +58,4 @@ export function islandExtractorPlugin(options: FrameworkOptions = {}): Plugin {
   };
 }
 
-/**
- * Generate the island manifest JSON.
- * Used by the HTML template to inject per-page island scripts.
- */
-export function generateIslandManifest(
-  islandMap: Map<string, IslandChunkMap>,
-): string {
-  const manifest: Record<string, { modulePath: string; chunkFile?: string }> = {};
-  for (const [tagName, entry] of islandMap) {
-    manifest[tagName] = {
-      modulePath: entry.modulePath,
-      chunkFile: entry.chunkFile,
-    };
-  }
-  return JSON.stringify(manifest, null, 2);
-}
 
-/**
- * Get the known islands map for SSR island collection.
- * This is used by ssr-handler and the generated Hono entry.
- */
-export function getKnownIslandsMap(
-  islandFiles: string[],
-  islandsDir: string,
-): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const file of islandFiles) {
-    const tagName = fileToTagName(file);
-    map.set(tagName, `/${islandsDir}/${file}`);
-  }
-  return map;
-}

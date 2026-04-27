@@ -3,31 +3,46 @@
  * Pure functions that generate auto-entry code strings.
  * No Vite dependency — safe to import in tests.
  *
- * KISS Architecture: generateServerEntry() removed — no runtime server.
- * Only generateClientEntry() remains for Island client bundle.
+ * v0.3.0: Unified client entry generation — build.ts and tests
+ * both use generateClientEntry, eliminating duplicate implementations.
  */
 
-/** Generate the client entry point file content (when no custom client.ts is provided).
- * Imports all island components and registers them as custom elements. */
-export function generateClientEntry(islandsDir: string, islandFiles: string[]): string {
-  if (islandFiles.length === 0) {
+import type { PackageIslandMeta } from './types.js';
+
+/** Island entry for client bundle generation */
+export interface ClientIslandEntry {
+  /** Custom element tag name */
+  tagName: string;
+  /** Absolute or relative module path for import */
+  modulePath: string;
+}
+
+/**
+ * Generate the client entry point file content.
+ *
+ * Imports all island components and registers them as custom elements.
+ * Handles both local islands (absolute paths) and package islands
+ * (JSR/npm module paths).
+ */
+export function generateClientEntry(islands: ClientIslandEntry[]): string {
+  if (islands.length === 0) {
     return '// KISS Client Entry — No islands detected, zero client JS needed\n';
   }
 
-  const imports = islandFiles
-    .map((f, i) => {
-      return `import Island_${i} from './${islandsDir}/${f}';`;
+  const imports = islands
+    .map((island, i) => {
+      return `import Island_${i} from '${island.modulePath}';`;
     })
     .join('\n');
 
-  const registrations = islandFiles
-    .map((f, i) => {
-      const tagName = f.replace(/\.[^.]+$/, '');
-      return `if (!customElements.get('${tagName}')) customElements.define('${tagName}', Island_${i});`;
+  const registrations = islands
+    .map((island, i) => {
+      return `if (!customElements.get('${island.tagName}')) customElements.define('${island.tagName}', Island_${i});`;
     })
-    .join('\n  ');
+    .join('\n');
 
   return `// KISS Client Entry (auto-generated — KISS Architecture: Islands only)
+// DO NOT EDIT — changes will be overwritten
 ${imports}
 
 // Register all island custom elements

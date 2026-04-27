@@ -8,7 +8,8 @@
  * - Minimal framework overhead — only what's needed for SSR + Islands
  */
 
-import type { IslandMeta, RouteEntry } from './types.js';
+import type { RouteEntry } from './types.js';
+import type { IslandDecl } from './entry-descriptor.js';
 
 /**
  * Resolved SSR context passed through the rendering pipeline.
@@ -24,7 +25,7 @@ export interface SsrContext {
   /** Parsed query/search parameters */
   query: Record<string, string>;
   /** Islands collected during SSR rendering */
-  islands: IslandMeta[];
+  islands: IslandDecl[];
   /** HTTP status code (default: 200) */
   status: number;
   /** Custom data bag — for loaders, middleware, etc. */
