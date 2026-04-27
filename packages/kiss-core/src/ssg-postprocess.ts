@@ -66,13 +66,13 @@ export function buildIslandChunkMap(
 
 /**
  * Walk all HTML files in dist and rewrite hydration script Island paths.
- * Also applies aria-current="page" + class="active" to the matching sidebar link.
  *
  * Before: import('/app/islands/code-block.ts')
  * After:  import('/client/islands/island-code-block-abc123.js')
  *
- * Before: <a href="/kiss/guide/dia" class="" aria-current="">
- * After:  <a href="/kiss/guide/dia" class="active" aria-current="page">
+ * v0.3.0: Removed sidebar active-link highlighting — this is application
+ * responsibility. Use <kiss-layout currentPath="..."> which renders
+ * aria-current="page" directly in SSR output.
  */
 export function rewriteHtmlFiles(
   dir: string,
@@ -98,57 +98,6 @@ export function rewriteHtmlFiles(
         if (content.includes(sourcePattern2)) {
           content = content.replaceAll(sourcePattern2, `import('${chunkPath}')`);
           modified = true;
-        }
-      }
-
-      // 2. Apply sidebar active highlight based on file's URL path
-      // Extract currentpath from the <app-layout> element
-      const currentPathMatch = content.match(/currentpath="([^"]*)"/);
-      if (currentPathMatch) {
-        const currentPage = currentPathMatch[1];
-
-        // Step 1: Remove all empty aria-current="" attributes (Lit SSR artifact for undefined)
-        // Non-active links should not have aria-current at all
-        if (content.includes('aria-current=""')) {
-          content = content.replaceAll('aria-current=""', '');
-          modified = true;
-        }
-
-        // Step 2: Find the sidebar link matching current page and add active state
-        // Sidebar links are inside <nav class="docs-sidebar">, format:
-        //   <a href="/kiss/guide/dia" class="" >Design Philosophy</a>
-        // After step 1, aria-current="" is removed, so we only need to add class="active" + aria-current="page"
-        const linkPattern = `href="${currentPage}"`;
-        // Find ALL occurrences — we want the one inside the sidebar (second occurrence typically)
-        let searchFrom = 0;
-        while (true) {
-          const linkIdx = content.indexOf(linkPattern, searchFrom);
-          if (linkIdx === -1) break;
-
-          // Find the <a tag before this href (search up to 200 chars back for multi-line tags)
-          const searchBack = Math.max(0, linkIdx - 200);
-          const beforeHref = content.substring(searchBack, linkIdx);
-          const aTagOffset = beforeHref.lastIndexOf('<a');
-          if (aTagOffset !== -1) {
-            const aTagStart = searchBack + aTagOffset;
-            const aTagEnd = content.indexOf('>', linkIdx);
-            if (aTagEnd !== -1) {
-              const fullLink = content.substring(aTagStart, aTagEnd + 1);
-              // Only modify links that have class="" (sidebar links, not header nav links)
-              if (fullLink.includes('class=""')) {
-                const updatedLink = fullLink
-                  .replace('class=""', 'class="active"')
-                  // Add aria-current="page" as an attribute on the <a tag
-                  .replace(/(<a\s)/, '$1aria-current="page" ');
-                if (updatedLink !== fullLink) {
-                  content = content.replace(fullLink, updatedLink);
-                  modified = true;
-                }
-                break; // Only modify the first sidebar match
-              }
-            }
-          }
-          searchFrom = linkIdx + linkPattern.length;
         }
       }
 

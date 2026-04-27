@@ -83,6 +83,8 @@ export interface FrameworkOptions {
   island?: {
     /** Auto-detect islands in islandsDir (default: true) */
     autoDetect?: boolean;
+    /** Hydration strategy for all Islands (default: 'lazy') */
+    hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
   };
 
   /** Build configuration */

@@ -126,6 +126,9 @@ export interface EntryDescriptor {
   /** Document wrapping config */
   document: DocumentConfig;
 
+  /** Hydration strategy for Islands (default: 'lazy') */
+  hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
+
   /** Route info for debug endpoint (dev only) */
   debugRoutes?: Array<{ path: string; type: string }>;
 }
@@ -149,6 +152,7 @@ export function buildEntryDescriptor(
     packageIslands?: PackageIslandMeta[];
     headExtras?: string;
     html?: { lang?: string; title?: string };
+    hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
   } = {},
 ): EntryDescriptor {
   const routesDir = options.routesDir || 'app/routes';
@@ -282,6 +286,7 @@ export function buildEntryDescriptor(
     pageRoutes,
     islands,
     document,
+    hydrationStrategy: options.hydrationStrategy || 'lazy',
     debugRoutes,
   };
 }

@@ -33,6 +33,7 @@ export interface HonoEntryOptions {
   packageIslands?: PackageIslandMeta[];
   headExtras?: string;
   html?: { lang?: string; title?: string };
+  hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
 }
 
 /**

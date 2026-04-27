@@ -146,6 +146,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       packageIslands,
       headExtras: resolvedOptions.headExtras,
       html: resolvedOptions.html,
+      hydrationStrategy: resolvedOptions.island?.hydrationStrategy || 'lazy',
     });
   }
 
@@ -257,6 +258,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         packageIslands: ctx.packageIslands,
         headExtras: resolvedOptions.headExtras,
         html: resolvedOptions.html,
+        hydrationStrategy: resolvedOptions.island?.hydrationStrategy || 'lazy',
       });
 
       // Write temp entry file to project's .kiss/ directory
