@@ -1,0 +1,34 @@
+name: Publish to JSR (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Packages to publish (comma-separated: core,rpc,ui)'
+        required: true
+        default: 'core,rpc,ui'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Publish @kissjs/core
+        if: contains(github.event.inputs.packages, 'core')
+        working-directory: packages/kiss-core
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+
+      - name: Publish @kissjs/rpc
+        if: contains(github.event.inputs.packages, 'rpc')
+        working-directory: packages/kiss-rpc
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+
+      - name: Publish @kissjs/ui
+        if: contains(github.event.inputs.packages, 'ui')
+        working-directory: packages/kiss-ui
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}
