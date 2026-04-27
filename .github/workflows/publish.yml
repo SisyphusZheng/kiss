@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,14 +60,14 @@ jobs:
       - name: Publish @kissjs/core
         if: steps.check.outputs.core_changed == 'true'
         working-directory: packages/kiss-core
-        run: deno publish
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}
 
       - name: Publish @kissjs/rpc
         if: steps.check.outputs.rpc_changed == 'true'
         working-directory: packages/kiss-rpc
-        run: deno publish
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}
 
       - name: Publish @kissjs/ui
         if: steps.check.outputs.ui_changed == 'true'
         working-directory: packages/kiss-ui
-        run: deno publish
+        run: deno publish --token ${{ secrets.JSR_TOKEN }} --allow-slow-types

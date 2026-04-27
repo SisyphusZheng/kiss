@@ -11,6 +11,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -31,4 +33,4 @@ jobs:
       - name: Publish @kissjs/ui
         if: contains(github.event.inputs.packages, 'ui')
         working-directory: packages/kiss-ui
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish --token ${{ secrets.JSR_TOKEN }} --allow-slow-types
