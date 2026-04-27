@@ -437,7 +437,7 @@ export class KissLayout extends LitElement {
     `,
   ];
 
-  static properties = {
+  static override properties = {
     home: { type: Boolean, reflect: true },
     currentPath: { type: String, attribute: 'current-path' },
   };

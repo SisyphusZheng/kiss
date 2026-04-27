@@ -82,7 +82,7 @@ export class KissThemeToggle extends LitElement {
     `,
   ];
 
-  static properties = {
+  static override properties = {
     _isLight: { state: true },
   };
 

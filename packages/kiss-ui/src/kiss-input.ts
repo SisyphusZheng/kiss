@@ -83,7 +83,7 @@ export class KissInput extends LitElement {
     `,
   ];
 
-  static properties = {
+  static override properties = {
     type: { type: String },
     placeholder: { type: String },
     label: { type: String },

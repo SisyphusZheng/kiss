@@ -69,7 +69,7 @@ export class KissCard extends LitElement {
     `,
   ];
 
-  static properties = {
+  static override properties = {
     variant: { type: String },
   };
 

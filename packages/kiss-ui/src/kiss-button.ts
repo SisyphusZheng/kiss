@@ -116,7 +116,7 @@ export class KissButton extends LitElement {
     `,
   ];
 
-  static properties = {
+  static override properties = {
     variant: { type: String },
     size: { type: String },
     disabled: { type: Boolean, reflect: true },

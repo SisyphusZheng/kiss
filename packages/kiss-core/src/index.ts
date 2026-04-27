@@ -43,6 +43,7 @@ import { fileToTagName, scanIslands, scanPackageIslands, scanRoutes } from './ro
 export type {
   FrameworkOptions,
   IslandMeta,
+  PackageIslandMeta,
   RouteEntry,
   SpecialFileType,
   SsrContext,
