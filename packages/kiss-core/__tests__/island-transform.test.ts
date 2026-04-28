@@ -61,7 +61,10 @@ Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t)
   await t.step('imports and activates lit-element-hydrate-support', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertEquals(code.includes("import '@lit-labs/ssr-client/lit-element-hydrate-support.js'"), true);
+    assertEquals(
+      code.includes("import '@lit-labs/ssr-client/lit-element-hydrate-support.js'"),
+      true,
+    );
     assertEquals(code.includes("import { LitElement } from 'lit'"), true);
     assertEquals(code.includes('litElementHydrateSupport({ LitElement })'), true);
   });
@@ -69,11 +72,13 @@ Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t)
   await t.step('registers custom elements', () => {
     const islands = [
       { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
-      { tagName: 'theme-toggle', modulePath: '@kissjs/ui/kiss-theme-toggle' },
+      { tagName: 'theme-toggle', modulePath: '@kissjs/ui/kiss-theme-toggle', isPackage: true },
     ];
     const code = generateClientEntry(islands, 'lazy');
+    // Local islands are registered with customElements.define()
     assertEquals(code.includes("customElements.define('my-counter'"), true);
-    assertEquals(code.includes("customElements.define('theme-toggle'"), true);
+    // Package islands use dynamic import (self-register in their module)
+    assertEquals(code.includes("import('@kissjs/ui/kiss-theme-toggle')"), true);
   });
 
   await t.step('waits for customElements.whenDefined before hydrating', () => {

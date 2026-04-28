@@ -57,16 +57,28 @@ export function generateClientEntry(
   // Package islands (from @kissjs/ui etc.) self-register via customElements.define()
   // in their bundled output — we only need a side-effect import.
   // Local islands use `export default class` — we import the class and register.
+  //
+  // CRITICAL ORDERING: litElementHydrateSupport({LitElement}) must run BEFORE
+  // any customElements.define() calls. In ESM, all static imports execute
+  // before module-level code. If package islands use static imports, their
+  // customElements.define() side effects run before litElementHydrateSupport().
+  // Solution: use dynamic import() for package islands so they execute AFTER
+  // the hydration support is activated.
   let localIdx = 0;
-  const imports = islands
+  const staticImports = islands
+    .filter((island) => !island.isPackage)
     .map((island) => {
-      if (island.isPackage) {
-        return `import '${island.modulePath}';`;
-      }
       const idx = localIdx++;
       return `import Island_${idx} from '${island.modulePath}';`;
     })
     .join('\n');
+
+  const packageIslands = islands.filter((island) => island.isPackage);
+  const dynamicImports = packageIslands.length > 0
+    ? packageIslands
+      .map((island) => `  import('${island.modulePath}');`)
+      .join('\n')
+    : '';
 
   localIdx = 0;
   const registrations = islands
@@ -83,6 +95,17 @@ export function generateClientEntry(
 
   const strategyCode = generateStrategyCode(strategy);
 
+  const activateHydration = `// Activate hydration support FIRST — must patch LitElement before any
+// customElements.define() calls. Package islands use dynamic import()
+// to ensure they register AFTER this patch is applied.
+import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
+import { LitElement } from 'lit';
+litElementHydrateSupport({ LitElement });`;
+
+  const packageImportBlock = dynamicImports
+    ? `\n// --- Dynamic import for package islands (after LitElement patch) ---\n${dynamicImports}\n`
+    : '';
+
   return `// KISS Client Entry (auto-generated — KISS Architecture: Islands only)
 // DO NOT EDIT — changes will be overwritten
 //
@@ -90,20 +113,13 @@ export function generateClientEntry(
 // removing defer-hydration triggers internal hydrate() with correct args.
 // We do NOT call hydrate() directly — that requires (result, container, options).
 
-import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
-import { LitElement } from 'lit';
+${activateHydration}
 
-// Activate hydration support — patches LitElement so that removing
-// defer-hydration triggers internal hydrate(result, renderRoot, options).
-// Without this call, litElementHydrateSupport is only defined on globalThis
-// but never applied, causing LitElement to re-render (not hydrate) SSR DOM.
-litElementHydrateSupport({ LitElement });
+${staticImports}
 
-${imports}
-
-// --- Register all island custom elements ---
+// --- Register local island custom elements ---
 ${registrations}
-
+${packageImportBlock}
 // --- Hydration: remove defer-hydration to trigger LitElement's patched lifecycle ---
 // lit-element-hydrate-support adds 'defer-hydration' to observedAttributes.
 // When we remove it, attributeChangedCallback fires → connectedCallback →
