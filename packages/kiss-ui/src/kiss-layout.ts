@@ -537,13 +537,10 @@ export class KissLayout extends LitElement {
                 </details>
                 <details class="nav-section" open>
                   <summary class="nav-section-title">Reference</summary>
-                  ${this._navLink('/guide/architecture', 'Architecture')} ${this._navLink(
-                    '/guide/deployment',
-                    'Deployment',
-                  )} ${this._navLink('/styling/kiss-ui', '@kissjs/ui')} ${this._navLink(
-                    '/styling/web-awesome',
-                    'Web Awesome',
-                  )}
+                  ${this._navLink('/guide/deployment', 'Deployment')} ${this._navLink(
+                    '/styling/kiss-ui',
+                    '@kissjs/ui',
+                  )} ${this._navLink('/styling/web-awesome', 'Web Awesome')}
                 </details>
                 <details class="nav-section" open>
                   <summary class="nav-section-title">UI</summary>

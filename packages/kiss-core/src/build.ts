@@ -122,6 +122,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
                 chunkFileNames: 'islands/[name]-[hash].js',
                 // Generate manifest for SSG post-processing (v0.3.0)
                 // Replaces string-grep approach in ssg-postprocess.ts
+                // @ts-ignore — @types/rollup may not include manifest yet
                 manifest: true,
                 // Split each island into its own chunk for per-page loading
                 manualChunks(id: string) {
