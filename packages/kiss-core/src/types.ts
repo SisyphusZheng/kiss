@@ -113,6 +113,57 @@ export interface FrameworkOptions {
 /** Special file types in the routes directory */
 export type SpecialFileType = 'renderer' | 'middleware';
 
+/**
+ * KissRenderer — interface for _renderer.ts files.
+ *
+ * Renderers wrap page SSR output, like Next.js layout.tsx or SvelteKit +layout.svelte.
+ * They apply to their directory and all subdirectories.
+ * Multiple renderers are composed outer → inner (root first, deeper dirs later).
+ *
+ * Usage:
+ * ```ts
+ * // app/routes/_renderer.ts
+ * import type { KissRenderer } from '@kissjs/core';
+ *
+ * const renderer: KissRenderer = {
+ *   wrap(html, ctx) {
+ *     return `<div class="layout"><nav>...</nav><main>${html}</main></div>`;
+ *   }
+ * };
+ * export default renderer;
+ * ```
+ */
+export interface KissRenderer {
+  /**
+   * Wrap page HTML with layout chrome.
+   * @param html - The page's SSR-rendered HTML
+   * @param ctx - Request context (provides c.req.path etc.)
+   * @returns Wrapped HTML string (or Promise for async operations)
+   */
+  wrap(html: string, ctx: { req: { path: string }; [key: string]: unknown }): string | Promise<string>;
+}
+
+/**
+ * KissMiddleware — interface for _middleware.ts files.
+ *
+ * Middleware is mounted as Hono middleware on the directory prefix.
+ * Like Next.js middleware.ts or SvelteKit hooks.server.ts.
+ *
+ * Usage:
+ * ```ts
+ * // app/routes/api/_middleware.ts
+ * import type { KissMiddleware } from '@kissjs/core';
+ * import type { MiddlewareHandler } from 'hono';
+ *
+ * const middleware: MiddlewareHandler = async (c, next) => {
+ *   console.log('API request:', c.req.path);
+ *   await next();
+ * };
+ * export default middleware;
+ * ```
+ */
+export type KissMiddleware = import('hono').MiddlewareHandler;
+
 /** Resolved route entry from file-based routing */
 export interface RouteEntry {
   /** URL path pattern (e.g., '/', '/about', '/posts/:id') */

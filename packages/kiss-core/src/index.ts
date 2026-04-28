@@ -19,8 +19,7 @@
  *  2. kiss:virtual-entry  — 解析/加载 virtual:kiss-hono-entry 虚拟模块
  *  3. @hono/vite-dev-server — dev 模式（仅开发，不进入生产产物）
  *  4. island-transform     — AST 标记 (__island, __tagName)
- *  5. island-extractor     — 构建时 island 依赖分析
- *  6. html-template        — transformIndexHtml（preload / meta / hydration）
+ *  5. html-template        — transformIndexHtml（preload / meta / hydration）
  *  7. kiss:ssg             — SSG 静态生成（closeBundle 阶段，K+S 约束的产物）
  *  8. kiss:build           — 客户端构建（仅 Islands，I 约束）
  */
@@ -34,7 +33,6 @@ import process from 'node:process';
 
 import { KissBuildContext } from './build-context.js';
 import { islandTransformPlugin } from './island-transform.js';
-import { islandExtractorPlugin } from './island-extractor.js';
 import { htmlTemplatePlugin } from './html-template.js';
 import { buildPlugin } from './build.js';
 import { generateHonoEntryCode } from './hono-entry.js';
@@ -42,6 +40,8 @@ import { fileToTagName, scanIslands, scanPackageIslands, scanRoutes } from './ro
 
 export type {
   FrameworkOptions,
+  KissMiddleware,
+  KissRenderer,
   PackageIslandMeta,
   RouteEntry,
   SpecialFileType,
@@ -405,7 +405,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     virtualEntryPlugin, // virtual:kiss-hono-entry 提供器
     devServerPlugin, // dev 模式 Hono 服务器（仅开发）
     islandTransformPlugin(resolvedOptions.islandsDir!),
-    islandExtractorPlugin(resolvedOptions),
     htmlTemplatePlugin(resolvedOptions),
     buildPlugin(resolvedOptions, ctx), // 客户端构建（仅 Islands，I 约束）— 先于 SSG
     ssgPlugin, // SSG 静态生成（K+S 约束产物）+ 路径重写

@@ -1,0 +1,192 @@
+/**
+ * @kissjs/core - CLI: SSG Build
+ *
+ * Standalone SSG rendering + post-processing.
+ * Reads the SSR entry from .kiss/, creates a Vite SSR server,
+ * renders all pages to static HTML, then post-processes island paths.
+ *
+ * This is Phase 3 of the KISS build pipeline:
+ *   Phase 1 (vite build): SSR bundle + .kiss/ metadata
+ *   Phase 2 (build-client.ts): Client island chunks
+ *   Phase 3 (this script): SSG rendering + post-processing
+ *
+ * Must run AFTER build-client so island chunk paths are available
+ * for the post-processing step (source paths → built chunk paths).
+ *
+ * Usage:
+ *   deno run -A jsr:@kissjs/core/cli/build-ssg
+ *   deno task build:ssg
+ */
+
+import { join } from 'node:path';
+import { readFileSync, unlinkSync } from 'node:fs';
+import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
+
+interface BuildSSGOptions {
+  root?: string;
+  outDir?: string;
+  routesDir?: string;
+  islandsDir?: string;
+  middleware?: FrameworkOptions['middleware'];
+  ssr?: FrameworkOptions['ssr'];
+  islandTagNames?: string[];
+  packageIslands?: PackageIslandMeta[];
+  headExtras?: string;
+  html?: { lang?: string; title?: string };
+  hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
+  resolveAlias?: Record<string, string> | import('vite').Alias[];
+  base?: string;
+}
+
+async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
+  const root = options.root || process.cwd();
+  const outDir = options.outDir || 'dist';
+  const routesDir = options.routesDir || 'app/routes';
+  const islandsDir = options.islandsDir || 'app/islands';
+
+  // Read island metadata from Phase 1
+  const metadataPath = join(root, '.kiss', 'build-metadata.json');
+  let islandTagNames = options.islandTagNames || [];
+  let packageIslands = options.packageIslands || [];
+
+  try {
+    const raw = readFileSync(metadataPath, 'utf-8');
+    const metadata = JSON.parse(raw);
+    if (islandTagNames.length === 0) islandTagNames = metadata.islandTagNames || [];
+    if (packageIslands.length === 0) packageIslands = metadata.packageIslands || [];
+  } catch {
+    console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
+  }
+
+  // Generate SSG entry code
+  const { scanRoutes } = await import('../route-scanner.js');
+  const { scanIslands, fileToTagName } = await import('../route-scanner.js');
+  const { generateHonoEntryCode } = await import('../hono-entry.js');
+
+  const routes = await scanRoutes(routesDir);
+  const islandsRoot = join(root, islandsDir);
+  const ssgIslandTagNames = islandTagNames.length > 0
+    ? islandTagNames
+    : (await scanIslands(islandsRoot)).map((f) => fileToTagName(f));
+
+  const ssgEntryCode = generateHonoEntryCode(routes, {
+    routesDir,
+    islandsDir,
+    middleware: options.middleware,
+    ssg: true,
+    islandTagNames: ssgIslandTagNames,
+    packageIslands,
+    headExtras: options.headExtras,
+    html: options.html,
+    hydrationStrategy: options.hydrationStrategy || 'lazy',
+  });
+
+  // Write temp entry file
+  const kissTmpDir = join(root, '.kiss');
+  const tmpEntryPath = join(kissTmpDir, '.kiss-ssg-entry.ts');
+  const { mkdirSync, writeFileSync } = await import('node:fs');
+  mkdirSync(kissTmpDir, { recursive: true });
+  writeFileSync(tmpEntryPath, ssgEntryCode, 'utf-8');
+
+  try {
+    const { createServer } = await import('vite');
+
+    // SSR noExternal: bundle lit ecosystem + @kissjs/ui
+    const defaultNoExternal = [/^lit/, /^@lit/, /^@kissjs\/ui/];
+    const userNoExternal = options.ssr?.noExternal || [];
+    const allNoExternal = [...defaultNoExternal, ...userNoExternal];
+
+    // Handle alias
+    const alias = options.resolveAlias;
+    if (alias) {
+      if (Array.isArray(alias)) {
+        for (const a of alias) {
+          if (a.find === '@kissjs/ui') allNoExternal.push(a.replacement);
+        }
+      } else if ('@kissjs/ui' in alias) {
+        allNoExternal.push(alias['@kissjs/ui']);
+      }
+    }
+
+    const server = await createServer({
+      configFile: false,
+      root,
+      server: { middlewareMode: true },
+      appType: 'custom',
+      build: { ssr: true },
+      ssr: { noExternal: allNoExternal },
+      esbuild: {
+        tsconfigRaw: {
+          compilerOptions: {
+            experimentalDecorators: true,
+            useDefineForClassFields: false,
+          },
+        },
+      },
+      plugins: [],
+      resolve: {
+        preserveSymlinks: true,
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+        alias: alias || undefined,
+      },
+    });
+
+    try {
+      const module = await server.ssrLoadModule(tmpEntryPath);
+      const app = module.default;
+
+      if (!app) {
+        throw new Error(`[KISS SSG] Failed to load Hono app from .kiss-ssg-entry.ts`);
+      }
+
+      const { toSSG } = await import('hono/ssg');
+      const nodeFs = await import('node:fs');
+      const nodePath = await import('node:path');
+
+      const fsModule = {
+        writeFile: async (path: string, data: string | Uint8Array) => {
+          const dir = nodePath.dirname(path);
+          if (!nodeFs.existsSync(dir)) nodeFs.mkdirSync(dir, { recursive: true });
+          nodeFs.writeFileSync(path, data);
+        },
+        mkdir: async (path: string) => {
+          if (!nodeFs.existsSync(path)) nodeFs.mkdirSync(path, { recursive: true });
+        },
+        isDirectory: (path: string) => {
+          try { return nodeFs.statSync(path).isDirectory(); } catch { return false; }
+        },
+      };
+
+      const outputDir = join(root, outDir);
+      const result = await toSSG(app, fsModule, { dir: outputDir });
+
+      if (!result.success) throw result.error;
+
+      console.log(`[KISS SSG] Static site generated → ${outputDir}`);
+
+      // Post-process: rewrite island paths
+      const { buildIslandChunkMap, rewriteHtmlFiles } = await import('../ssg-postprocess.js');
+      const basePath = options.base || '/';
+      const islandChunkMap = buildIslandChunkMap(root, outDir, islandTagNames, basePath);
+      if (Object.keys(islandChunkMap).length > 0) {
+        rewriteHtmlFiles(outputDir, islandChunkMap);
+      }
+    } finally {
+      await server.close();
+    }
+  } catch (err) {
+    throw new Error(`[KISS SSG] Failed: ${err instanceof Error ? err.message : String(err)}`);
+  } finally {
+    try { unlinkSync(tmpEntryPath); } catch { /* ignore */ }
+  }
+}
+
+// CLI entry point
+if (import.meta.main) {
+  buildSSG().catch((err) => {
+    console.error('[KISS SSG] Failed:', err);
+    process.exit(1);
+  });
+}
+
+export { buildSSG };

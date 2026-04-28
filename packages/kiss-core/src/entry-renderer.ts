@@ -6,7 +6,8 @@
  * KISS Architecture (v0.3.0):
  * - API routes use Hono standard app.route() (not app.all + fetch transform)
  * - Hydration uses generateHydrationScript from island-transform.ts
- * - HTML wrapping uses wrapInDocument from ssr-handler.ts
+ *   (single source of truth — includes hydrate() + removeAttribute('defer-hydration'))
+ * - HTML document wrapping follows wrapInDocument pattern from ssr-handler.ts
  * - No duplicate implementations — single source of truth
  */
 
@@ -20,6 +21,7 @@ import type {
   PageRouteDecl,
   RendererDecl,
 } from './entry-descriptor.js';
+import { generateHydrationScript } from './island-transform.js';
 
 // ─── Code builder helper ───────────────────────────────────────
 
@@ -163,7 +165,13 @@ function renderPageRoute(b: CodeBuilder, route: PageRouteDecl, renderers: Render
  * Pure function — deterministic, testable, side-effect-free.
  *
  * v0.3.0: Uses generateHydrationScript (island-transform.ts) and
- * wrapInDocument (ssr-handler.ts) — single source of truth.
+ * follows wrapInDocument pattern (ssr-handler.ts) — single source of truth.
+ *
+ * Hydration lifecycle:
+ *   1. SSR outputs `<tag defer-hydration>` (see __ssr helper)
+ *   2. Client hydration script calls hydrate(el) from @lit-labs/ssr-client
+ *   3. Then removes defer-hydration attribute
+ *   This creates a closed loop: defer → hydrate → removeAttribute
  */
 export function renderEntry(desc: EntryDescriptor): string {
   const b = new CodeBuilder();
@@ -194,87 +202,30 @@ export function renderEntry(desc: EntryDescriptor): string {
   b.push(`const __islandMap = ${JSON.stringify(islandLookup)}`);
   b.blank();
 
-  // Hydration script generator
-  // Strategy code is stored as a Record for O(1) lookup instead of if/else chains.
-  // Each strategy is a self-contained JS snippet that calls hydrateIsland().
-  const strategy = desc.hydrationStrategy || 'lazy';
-  b.push(`function generateHydrationScript() {`);
-  b.push(`  const islands = Object.entries(__islandMap).map(([tagName, modulePath]) => ({ tagName, modulePath }))`);
-  b.push(`  if (islands.length === 0) return ''`);
-  b.push(`  const strategy = '${strategy}'`);
-  b.push(`  const islandDefs = islands`);
-  b.push(`    .map(i => "  '" + i.tagName + "': () => import('" + i.modulePath + "')")`);
-  b.push(`    .join(',\\n')`);
-  b.blank();
-  b.push(`  // Strategy lookup table — O(1) dispatch, no if/else chain`);
-  b.push(`  const strategies = {`);
-  b.push(`    eager() {`);
-  b.push(`      for (const [tagName, loader] of Object.entries(islandLoaders)) {`);
-  b.push(`        hydrateIsland(tagName, loader)`);
-  b.push(`      }`);
-  b.push(`    },`);
-  b.blank();
-  b.push(`    lazy() {`);
-  b.push(`      const hydrateAll = () => {`);
-  b.push(`        for (const [tagName, loader] of Object.entries(islandLoaders)) {`);
-  b.push(`          hydrateIsland(tagName, loader)`);
-  b.push(`        }`);
-  b.push(`      }`);
-  b.push(`      if ('requestIdleCallback' in window) {`);
-  b.push(`        requestIdleCallback(hydrateAll)`);
-  b.push(`      } else {`);
-  b.push(`        setTimeout(hydrateAll, 200)`);
-  b.push(`      }`);
-  b.push(`    },`);
-  b.blank();
-  b.push(`    idle() {`);
-  b.push(`      const run = () => {`);
-  b.push(`        for (const [tagName, loader] of Object.entries(islandLoaders)) {`);
-  b.push(`          hydrateIsland(tagName, loader)`);
-  b.push(`        }`);
-  b.push(`      }`);
-  b.push(`      if ('requestIdleCallback' in window) {`);
-  b.push(`        requestIdleCallback(run)`);
-  b.push(`      } else {`);
-  b.push(`        window.addEventListener('load', run)`);
-  b.push(`      }`);
-  b.push(`    },`);
-  b.blank();
-  b.push(`    visible() {`);
-  b.push(`      const observer = new IntersectionObserver((entries) => {`);
-  b.push(`        for (const entry of entries) {`);
-  b.push(`          if (!entry.isIntersecting) continue`);
-  b.push(`          const tagName = entry.target.tagName.toLowerCase()`);
-  b.push(`          if (islandLoaders[tagName]) {`);
-  b.push(`            hydrateIsland(tagName, islandLoaders[tagName])`);
-  b.push(`            observer.unobserve(entry.target)`);
-  b.push(`          }`);
-  b.push(`        }`);
-  b.push(`      })`);
-  b.push(`      for (const tagName of Object.keys(islandLoaders)) {`);
-  b.push(`        document.querySelectorAll(tagName).forEach(el => observer.observe(el))`);
-  b.push(`      }`);
-  b.push(`    }`);
-  b.push(`  }`);
-  b.blank();
-  b.push(`  const strategyFn = strategies[strategy] || strategies.lazy`);
-  b.push(`  const strategyCode = strategyFn.toString()`);
-  b.push(`  const hydrateFn = hydrateIsland.toString()`);
-  b.blank();
-  b.push(`  return '<script type=\"module\" data-kiss-hydrate>' +`);
-  b.push(`    '\\n// KISS Island Hydration Script' +`);
-  b.push(`    '\\n(function() {' +`);
-  b.push(`    '\\n  const islandLoaders = {' + '\\n    ' + islandDefs + '\\n  };' +`);
-  b.push(`    '\\n  ' + hydrateFn +`);
-  b.push(`    '\\n  (' + strategyCode + ')()' +`);
-  b.push(`    '\\n})();' +`);
-  b.push(`    '\\n</script>'`);
-  b.push(`}`);
+  // --- Hydration script ---
+  // Single source of truth: generateHydrationScript from island-transform.ts
+  // This function produces a complete <script> tag that:
+  // 1. Imports hydrate() from @lit-labs/ssr-client
+  // 2. Loads island modules via dynamic import()
+  // 3. Waits for customElements.whenDefined()
+  // 4. Calls hydrate(el) to properly hydrate SSR output
+  // 5. Removes defer-hydration attribute after hydration
+  // 6. Applies the configured strategy (eager/lazy/idle/visible)
+  const hydrationScript = generateHydrationScript(
+    desc.islands,
+    desc.hydrationStrategy || 'lazy',
+  );
+  b.push(`// Hydration script — generated by generateHydrationScript() in island-transform.ts`);
+  b.push(`// Contains: hydrate() from @lit-labs/ssr-client + defer-hydration removal + strategy dispatch`);
+  b.push(`const __hydrationScript = ${JSON.stringify(hydrationScript)}`);
   b.blank();
 
-  // Document wrapper — uses wrapInDocument pattern from ssr-handler.ts
+  // --- Document wrapper ---
+  // Follows wrapInDocument pattern from ssr-handler.ts.
+  // Note: This is generated code (runs during SSG), not a direct call to
+  // wrapInDocument — the generated code must be self-contained to avoid
+  // pulling in @kissjs/core's build-time code (node:fs, Vite internals).
   b.push(`function wrapDocument(body, currentPath) {`);
-  b.push(`  const hydrate = generateHydrationScript()`);
   b.push(`  const headExtras = ${JSON.stringify(desc.document.headExtras)}`);
   b.push(`  const lang = ${JSON.stringify(desc.document.lang)}`);
   b.push(`  const title = ${JSON.stringify(desc.document.title)}`);
@@ -289,7 +240,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   b.push(`    '</head>',`);
   b.push(`    '<body data-current-path=\"' + currentPath + '\">',`);
   b.push(`    body,`);
-  b.push(`    hydrate,`);
+  b.push(`    __hydrationScript,`);
   b.push(`    '</body>',`);
   b.push(`    '</html>'`);
   b.push(`  ].join('\\n')`);
@@ -313,10 +264,12 @@ export function renderEntry(desc: EntryDescriptor): string {
   // unsafeHTML must be in expression position (NOT in element position <${...}>),
   // otherwise Lit throws "Unexpected final partIndex" error.
   // tag validation: only hyphenated Custom Element names are valid.
+  // defer-hydration: marks SSR output for Lit hydration (see hydration script above).
   const BT = '\x60'; // backtick: `
   const DI = '\x24{'; // ${
   const DC = '}'; // }
   b.push('// SSR helper: render a custom element tag to HTML string');
+  b.push('// Outputs <tag defer-hydration> so the hydration script can find and hydrate it');
   b.push('async function __ssr(tag) {');
   b.push('  // Validate tag name — must be a valid Custom Element (contains hyphen)');
   b.push('  if (!tag || !tag.includes("-")) {');

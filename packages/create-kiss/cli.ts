@@ -23,6 +23,13 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [kiss({
     html: { title: 'My KISS App' },
+    // Use pre-built UI components from @kissjs/ui
+    // (JSR distributes compiled JS — no decorator errors)
+    packageIslands: ['@kissjs/ui'],
+    // SSR must bundle @kissjs/ui (decorators need compilation)
+    ssr: {
+      noExternal: ['@kissjs/ui'],
+    },
   })],
 });
 `,

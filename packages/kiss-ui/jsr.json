@@ -1,19 +1,21 @@
 {
   "name": "@kissjs/ui",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "exports": {
-    ".": "./src/index.ts",
-    "./kiss-button": "./src/kiss-button.ts",
-    "./kiss-card": "./src/kiss-card.ts",
-    "./kiss-input": "./src/kiss-input.ts",
-    "./kiss-code-block": "./src/kiss-code-block.ts",
-    "./kiss-layout": "./src/kiss-layout.ts",
-    "./kiss-theme-toggle": "./src/kiss-theme-toggle.ts",
-    "./kiss-ui-plugin": "./src/kiss-ui-plugin.ts",
-    "./design-tokens": "./src/design-tokens.ts"
+    ".": "./dist/index.js",
+    "./kiss-button": "./dist/kiss-button.js",
+    "./kiss-card": "./dist/kiss-card.js",
+    "./kiss-input": "./dist/kiss-input.js",
+    "./kiss-code-block": "./dist/kiss-code-block.js",
+    "./kiss-layout": "./dist/kiss-layout.js",
+    "./kiss-theme-toggle": "./dist/kiss-theme-toggle.js",
+    "./kiss-ui-plugin": "./dist/kiss-ui-plugin.js",
+    "./design-tokens": "./dist/design-tokens.js"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "__tests__"],
+  "publish": {
+    "include": ["dist/**", "deno.json", "jsr.json", "README.md", "LICENSE"]
+  },
+  "exclude": ["node_modules", "src", "__tests__"],
   "test": {
     "compatibility": {
       "deno": ">=2.0.0",

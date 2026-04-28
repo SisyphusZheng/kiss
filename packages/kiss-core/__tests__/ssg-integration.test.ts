@@ -164,21 +164,15 @@ Deno.test('SSG integration', { permissions: { read: true, write: true } }, async
     assertEquals(html.includes("import('/app/islands/theme-toggle.ts')"), false);
   });
 
-  await t.step('rewriteHtmlFiles - applies aria-current="page" on current page link', () => {
-    // Read index.html — currentpath="/" should make Home link active
+  await t.step('rewriteHtmlFiles - no longer applies aria-current (moved to component)', () => {
+    // v0.3.0: sidebar active link highlighting was removed from rewriteHtmlFiles
+    // and moved to <kiss-layout currentPath="..."> component.
+    // rewriteHtmlFiles now ONLY rewrites island source paths → built chunk paths.
+    // This test verifies that rewriteHtmlFiles does NOT add aria-current or class="active".
     const indexHtml = Deno.readTextFileSync(join(FIXTURES_DIR, 'dist', 'index.html'));
 
-    // The Home link should have aria-current="page" and class="active"
-    assertStringIncludes(indexHtml, 'aria-current="page"');
-    assertStringIncludes(indexHtml, 'class="active"');
-
-    // Empty aria-current="" should be removed from all links
-    assertEquals(indexHtml.includes('aria-current=""'), false);
-
-    // Read about page — currentpath="/about" should make About link active
-    const aboutHtml = Deno.readTextFileSync(join(FIXTURES_DIR, 'dist', 'about', 'index.html'));
-    assertStringIncludes(aboutHtml, 'aria-current="page"');
-    assertEquals(aboutHtml.includes('aria-current=""'), false);
+    // rewriteHtmlFiles should NOT inject aria-current — that's the component's job
+    assertEquals(indexHtml.includes('class="active"'), false);
   });
 
   await t.step('rewriteHtmlFiles - preserves DSD output (S constraint)', () => {

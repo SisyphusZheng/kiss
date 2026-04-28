@@ -67,7 +67,12 @@ jobs:
         working-directory: packages/kiss-rpc
         run: deno publish --token ${{ secrets.JSR_TOKEN }}
 
+      - name: Build @kissjs/ui
+        if: steps.check.outputs.ui_changed == 'true'
+        working-directory: packages/kiss-ui
+        run: deno task build
+
       - name: Publish @kissjs/ui
         if: steps.check.outputs.ui_changed == 'true'
         working-directory: packages/kiss-ui
-        run: deno publish --token ${{ secrets.JSR_TOKEN }} --allow-slow-types
+        run: deno publish --token ${{ secrets.JSR_TOKEN }}

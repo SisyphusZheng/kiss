@@ -60,6 +60,21 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
       if (config.command !== 'build') return;
 
       const root = config.root;
+
+      // Write build metadata for CLI scripts (build-client.ts / build-ssg.ts)
+      // This is the bridge between Phase 1 (vite build) and Phase 2/3 (CLI)
+      const kissTmpDir = join(root, '.kiss');
+      mkdirSync(kissTmpDir, { recursive: true });
+      const metadataPath = join(kissTmpDir, 'build-metadata.json');
+      const metadata = {
+        islandTagNames: ctx?.islandTagNames || [],
+        packageIslands: ctx?.packageIslands || [],
+        root,
+        outDir,
+        base,
+      };
+      writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
+
       const localIslands = ctx?.islandTagNames || [];
       const packageIslands = ctx?.packageIslands || [];
 
