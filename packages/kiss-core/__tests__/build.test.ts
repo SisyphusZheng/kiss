@@ -43,11 +43,10 @@ Deno.test('build - generateClientEntry', async (t) => {
     assertStringIncludes(code, 'KISS Architecture');
   });
 
-  await t.step('imports hydrate from @lit-labs/ssr-client', () => {
+  await t.step('imports lit-element-hydrate-support from @lit-labs/ssr-client', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertStringIncludes(code, '@lit-labs/ssr-client');
-    assertStringIncludes(code, 'hydrate');
+    assertStringIncludes(code, '@lit-labs/ssr-client/lit-element-hydrate-support.js');
   });
 
   await t.step('waits for whenDefined before hydrating', () => {

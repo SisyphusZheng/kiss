@@ -58,10 +58,10 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
 });
 
 Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t) => {
-  await t.step('imports hydrate from @lit-labs/ssr-client', () => {
+  await t.step('imports lit-element-hydrate-support from @lit-labs/ssr-client', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertEquals(code.includes("import { hydrate } from '@lit-labs/ssr-client'"), true);
+    assertEquals(code.includes("import '@lit-labs/ssr-client/lit-element-hydrate-support.js'"), true);
   });
 
   await t.step('registers custom elements', () => {
@@ -81,12 +81,13 @@ Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t)
     assertEquals(code.includes('Promise.all'), true);
   });
 
-  await t.step('hydrates elements with defer-hydration', () => {
+  await t.step('removes defer-hydration to trigger LitElement hydration', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'eager');
     assertEquals(code.includes('[defer-hydration]'), true);
-    assertEquals(code.includes('hydrate(el)'), true);
     assertEquals(code.includes("removeAttribute('defer-hydration')"), true);
+    // We do NOT call hydrate(el) directly — lit-element-hydrate-support handles it
+    assertEquals(code.includes('hydrate(el)'), false);
   });
 
   await t.step('supports eager strategy', () => {

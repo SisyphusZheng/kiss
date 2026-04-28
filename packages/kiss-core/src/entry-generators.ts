@@ -3,20 +3,22 @@
  * Pure functions that generate auto-entry code strings.
  * No Vite dependency — safe to import in tests.
  *
- * v0.3.0: Client entry includes Lit hydration logic.
- * The client entry is built by Vite (Phase 2), which bundles
- * @lit-labs/ssr-client's hydrate() into the output. This avoids
- * bare module imports in static HTML — Vite resolves everything.
- *
- * Hydration lifecycle:
+ * Hydration lifecycle (corrected):
  *   1. SSR outputs `<tag defer-hydration>` with `<!--lit-part-->` markers
  *   2. Client entry registers custom elements (customElements.define)
- *   3. Waits for elements to upgrade (customElements.whenDefined)
- *   4. Calls Lit's hydrate(el) — re-associates template expressions with DOM
- *   5. Removes defer-hydration attribute
+ *   3. Imports lit-element-hydrate-support (side effect — patches LitElement)
+ *   4. Waits for elements to upgrade (customElements.whenDefined)
+ *   5. Removes `defer-hydration` attribute on each island element
+ *   6. LitElement's patched attributeChangedCallback detects the removal
+ *   7. Patched connectedCallback fires → update() → hydrate(value, renderRoot, options)
+ *   8. Lit's hydrate() re-associates <!--lit-part--> markers with live DOM
  *
- * This creates a TRUE hydration loop: defer → define → hydrate → removeAttribute
- * SSR HTML is preserved (not destroyed by client-render), giving real first-paint perf.
+ * Key insight: We do NOT call hydrate() directly.
+ * The correct hydrate(result, container, options) requires the TemplateResult
+ * which only exists inside each component's render(). Calling hydrate(el) with
+ * just a DOM element is wrong — it interprets the element as the TemplateResult.
+ * Instead, lit-element-hydrate-support patches LitElement to call hydrate()
+ * internally with the correct arguments after defer-hydration is removed.
  */
 
 /** Island entry for client bundle generation */
@@ -37,9 +39,9 @@ export type HydrationStrategy = 'eager' | 'lazy' | 'idle' | 'visible';
  *
  * This entry is built by Vite's client build (Phase 2).
  * It does three things:
- * 1. Imports and registers all island custom elements
- * 2. Imports hydrate() from @lit-labs/ssr-client (bundled by Vite)
- * 3. Hydrates SSR-rendered elements based on the configured strategy
+ * 1. Imports lit-element-hydrate-support (side effect — patches LitElement for hydration)
+ * 2. Imports and registers all island custom elements
+ * 3. Removes defer-hydration attributes based on the configured strategy
  *
  * The built output is a self-contained JS module that browsers can load
  * via <script type="module" src="..."> — no import maps needed.
@@ -84,33 +86,31 @@ export function generateClientEntry(
   return `// KISS Client Entry (auto-generated — KISS Architecture: Islands only)
 // DO NOT EDIT — changes will be overwritten
 //
-// Hydration: uses Lit's hydrate() from @lit-labs/ssr-client.
-// Vite bundles this import — no bare module specifiers in output.
-// SSR HTML preserves <!--lit-part--> markers for hydration.
+// Hydration: lit-element-hydrate-support patches LitElement so that
+// removing defer-hydration triggers internal hydrate() with correct args.
+// We do NOT call hydrate() directly — that requires (result, container, options).
 
-import { hydrate } from '@lit-labs/ssr-client';
+import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
 
 ${imports}
 
 // --- Register all island custom elements ---
 ${registrations}
 
-// --- Hydration: re-associate Lit templates with SSR DOM ---
-// Must wait for custom elements to upgrade before hydrating.
-// Lit's hydrate() reads <!--lit-part--> comments left by SSR
-// to re-bind template expressions + event listeners to existing DOM.
-// This preserves SSR HTML instead of destroying it (client-render).
+// --- Hydration: remove defer-hydration to trigger LitElement's patched lifecycle ---
+// lit-element-hydrate-support adds 'defer-hydration' to observedAttributes.
+// When we remove it, attributeChangedCallback fires → connectedCallback →
+// update() → hydrate(this.render(), this.renderRoot, this.renderOptions).
+// This is the ONLY correct way to hydrate — hydrate() needs the TemplateResult.
 
 Promise.all([${whenDefinedList}]).then(() => {
   function __kissHydrateAll() {
     document.querySelectorAll('[defer-hydration]').forEach(el => {
-      hydrate(el);
       el.removeAttribute('defer-hydration');
     });
   }
 
   function __kissHydrateElement(el) {
-    hydrate(el);
     el.removeAttribute('defer-hydration');
   }
 
@@ -122,10 +122,10 @@ ${strategyCode}
 /**
  * Generate strategy dispatch code.
  *
- * - eager: hydrate all islands immediately after element upgrade
- * - lazy: hydrate on requestIdleCallback (or setTimeout fallback)
- * - idle: hydrate on requestIdleCallback or window load
- * - visible: hydrate individual islands as they scroll into view
+ * - eager: remove defer-hydration on all islands immediately
+ * - lazy: remove defer-hydration on requestIdleCallback (or setTimeout fallback)
+ * - idle: remove defer-hydration on requestIdleCallback or window load
+ * - visible: remove defer-hydration on individual islands as they scroll into view
  */
 function generateStrategyCode(strategy: HydrationStrategy): string {
   switch (strategy) {
