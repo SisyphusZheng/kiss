@@ -25,5 +25,5 @@
   "publish": {
     "include": ["dist/**", "deno.json", "jsr.json", "README.md", "LICENSE"]
   },
-  "exclude": ["node_modules", "src", "__tests__"]
+  "exclude": ["node_modules", "src"]
 }

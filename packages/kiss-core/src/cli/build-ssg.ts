@@ -106,6 +106,7 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       'data-uri-to-buffer',
       'formdata-polyfill',
       'domexception',
+      'node-domexception',
     ];
     const userNoExternal = options.ssr?.noExternal || [];
     const allNoExternal = [...defaultNoExternal, ...userNoExternal];

@@ -26,4 +26,4 @@ jobs:
         run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write
 
       - name: Run kiss-ui tests
-        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write
+        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env

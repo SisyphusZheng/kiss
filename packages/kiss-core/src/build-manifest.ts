@@ -19,7 +19,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 
 /** File size info for a single artifact */
-interface ArtifactInfo {
+export interface ArtifactInfo {
   name: string;
   path: string;
   sizeBytes: number;
