@@ -13,14 +13,14 @@
 
 ## v0.3.0 变更
 
-### Breaking Changes
+### 破坏性变更
 
 - `@kissjs/ui` JSR 分发 `dist/` 编译产物（不再分发含 decorator 的 `src/`）
 - `packageIslands` 现在完全可用 — JSR 消费者不再需要 alias 绕路
 - `island-extractor.ts` 已删除（死代码）
 - `entry-renderer.ts` hydration 脚本改调 `generateHydrationScript`（含 `hydrate()` + `removeAttribute`）
 
-### 新功能
+### 新增功能
 
 - **KissRenderer / KissMiddleware 接口**：`_renderer.ts` 和 `_middleware.ts` 有了 TypeScript 接口约束
 - **CLI 构建脚本**：`build:client` + `build:ssg` 独立 deno task，支持逐步构建
