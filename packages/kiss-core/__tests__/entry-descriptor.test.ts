@@ -160,23 +160,29 @@ Deno.test('renderEntry: dev mode includes debug route data', () => {
   assertEquals(code.includes('/__kiss'), false);
 });
 
-Deno.test('renderEntry: API routes are registered with app.all', () => {
+Deno.test('renderEntry: API routes are registered with app.route', () => {
   const desc = buildEntryDescriptor(sampleRoutes);
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "app.all('/api/hello'");
+  // v0.3.0: API routes use app.route() (Hono standard) not app.all + fetch transform
+  assertStringIncludes(code, "app.route('/api/hello'");
   assertStringIncludes(code, '$apiHello');
 });
 
-Deno.test('renderEntry: page routes use SSR helper', () => {
+Deno.test('renderEntry: page routes use SSR helper and wrapInDocument', () => {
   const desc = buildEntryDescriptor(sampleRoutes);
   const code = renderEntry(desc);
 
   assertStringIncludes(code, "app.get('/'");
   assertStringIncludes(code, 'await __ssr(tag)');
-  // Island hydration is now handled by SSG post-processing (Phase 4E),
-  // wrapDocument only takes body (no islands parameter)
-  assertStringIncludes(code, 'wrapDocument(clean)');
+  // v0.3.0: Uses wrapInDocument from ssr-handler.ts (single source of truth)
+  // No inline HTML wrapping, no stripLitComments
+  assertStringIncludes(code, 'wrapInDocument(');
+  // Hydration is handled by the Vite-built client entry, not inline scripts
+  assertEquals(code.includes('generateHydrationScript'), false);
+  assertEquals(code.includes('stripLitComments'), false);
+  // <!--lit-part--> comments are preserved for Lit hydration
+  assertEquals(code.includes('stripLitComments'), false);
 });
 
 Deno.test('renderEntry: no process.env call in output', () => {
@@ -207,8 +213,10 @@ Deno.test('renderEntry: document config renders correctly', () => {
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'lang="zh-CN"');
-  assertStringIncludes(code, '<title>测试</title>');
+  // v0.3.0: wrapInDocument is called at runtime, not inlined HTML.
+  // The generated code passes config as parameters.
+  assertStringIncludes(code, 'lang: "zh-CN"');
+  assertStringIncludes(code, 'title: "测试"');
   assertStringIncludes(code, 'cdn.example.com');
 });
 
@@ -222,7 +230,7 @@ Deno.test('generateHonoEntryCode: end-to-end produces runnable code', () => {
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'export default app');
-  assertStringIncludes(code, "app.all('/api/hello'");
+  assertStringIncludes(code, "app.route('/api/hello'");
   assertStringIncludes(code, "app.get('/'");
   assertStringIncludes(code, "app.get('/about'");
   // No process.env call in non-comment lines

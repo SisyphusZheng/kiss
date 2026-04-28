@@ -17,7 +17,7 @@
 import { build as viteBuild, type InlineConfig } from 'vite';
 import { resolve, join } from 'node:path';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { generateClientEntry, type ClientIslandEntry } from '../entry-generators.js';
+import { generateClientEntry, type ClientIslandEntry, type HydrationStrategy } from '../entry-generators.js';
 
 interface BuildMetadata {
   islandTagNames: string[];
@@ -28,6 +28,7 @@ interface BuildMetadata {
   resolveAlias: Record<string, string> | Array<{ find: string; replacement: string }> | null;
   ssrNoExternal: (string | { source: string; flags: string })[];
   islandsDir: string;
+  hydrationStrategy?: HydrationStrategy;
 }
 
 async function buildClient(): Promise<void> {
@@ -75,7 +76,7 @@ async function buildClient(): Promise<void> {
     })),
   ];
 
-  const clientEntryCode = generateClientEntry(islandEntries);
+  const clientEntryCode = generateClientEntry(islandEntries, metadata.hydrationStrategy || 'lazy');
   writeFileSync(clientEntryPath, clientEntryCode, 'utf-8');
 
   // Restore RegExp from JSON serialization

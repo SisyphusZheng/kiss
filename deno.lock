@@ -9,6 +9,7 @@
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "npm:@hono/vite-dev-server@~0.25.3": "0.25.3_hono@4.12.14",
+    "npm:@lit-labs/ssr-client@^1.1.0": "1.1.8",
     "npm:@lit-labs/ssr-client@^1.1.8": "1.1.8",
     "npm:@lit-labs/ssr-dom-shim@^1.2.0": "1.5.1",
     "npm:@lit-labs/ssr@^3.2.0": "3.3.1",
@@ -1112,6 +1113,7 @@
         "packageJson": {
           "dependencies": [
             "npm:@hono/vite-dev-server@~0.25.3",
+            "npm:@lit-labs/ssr-client@^1.1.0",
             "npm:@lit-labs/ssr@^3.3.0",
             "npm:@types/node@22",
             "npm:hono@^4.7.0",

@@ -19,7 +19,7 @@
  */
 
 import { join } from 'node:path';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync, existsSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
 
 interface BuildSSGOptions {
@@ -164,9 +164,38 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
 
       console.log(`[KISS SSG] Static site generated → ${outputDir}`);
 
-      // Post-process: rewrite island paths
-      const { buildIslandChunkMap, rewriteHtmlFiles } = await import('../ssg-postprocess.js');
       const basePath = options.base || '/';
+
+      // Inject client script tag into all HTML files
+      // The client entry (built in Phase 2) contains:
+      // - Custom element registration
+      // - Lit hydrate() from @lit-labs/ssr-client
+      // - Hydration strategy dispatch
+      const clientManifestPath = join(root, outDir, 'client', '.vite', 'manifest.json');
+      if (existsSync(clientManifestPath)) {
+        try {
+          const manifestRaw = readFileSync(clientManifestPath, 'utf-8');
+          const manifest = JSON.parse(manifestRaw);
+          // Find the client entry in the manifest
+          // The key is the source path of .kiss/.kiss-client-entry.ts
+          for (const [src, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
+            if (src.includes('.kiss-client-entry') && entry.file) {
+              const scriptSrc = `${basePath}client/${entry.file}`;
+              const { injectClientScript } = await import('../ssg-postprocess.js');
+              injectClientScript(outputDir, scriptSrc);
+              console.log(`[KISS SSG] Client script injected: ${scriptSrc}`);
+              break;
+            }
+          }
+        } catch (err) {
+          console.warn('[KISS SSG] Could not read client manifest for script injection:', err);
+        }
+      } else {
+        console.warn('[KISS SSG] No client manifest found — run build:client (Phase 2) first');
+      }
+
+      // Post-process: rewrite island paths (fallback for any inline references)
+      const { buildIslandChunkMap, rewriteHtmlFiles } = await import('../ssg-postprocess.js');
       const islandChunkMap = buildIslandChunkMap(root, outDir, islandTagNames, basePath);
       if (Object.keys(islandChunkMap).length > 0) {
         rewriteHtmlFiles(outputDir, islandChunkMap);

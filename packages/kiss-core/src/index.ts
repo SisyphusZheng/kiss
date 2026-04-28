@@ -58,7 +58,9 @@ export {
 } from './errors.js';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './ssr-handler.js';
-export { generateHydrationScript } from './island-transform.js';
+// generateHydrationScript is internal — hydration logic is now in the
+// Vite-built client entry (entry-generators.ts::generateClientEntry).
+// Kept as internal export for testing/backward compat only.
 
 // --- Re-export runtime APIs for zero-config user experience ---
 // Users import everything from @kissjs/core — no need to add lit/hono to their deno.json

@@ -5,11 +5,15 @@
  *
  * KISS Architecture (v0.3.0):
  * - API routes use Hono standard app.route() (not app.all + fetch transform)
- * - Hydration uses generateHydrationScript from island-transform.ts
- *   (single source of truth — self-contained, no bare module imports)
+ * - Hydration is handled by the client entry (built by Vite in Phase 2),
+ *   which uses Lit's hydrate() from @lit-labs/ssr-client.
+ *   No inline script in SSG HTML — the client entry is a Vite-built module
+ *   referenced via <script type="module" src="...">.
  * - HTML document wrapping delegates to wrapInDocument from ssr-handler.ts
  *   (imported at runtime — single source of truth, no duplicate HTML logic)
- * - No duplicate implementations — single source of truth
+ * - NO stripLitComments: <!--lit-part--> markers are ESSENTIAL for Lit hydration.
+ *   Removing them breaks hydrate()'s ability to re-associate template
+ *   expressions with DOM nodes, forcing client-render (destroying SSR output).
  */
 
 import type {
@@ -22,7 +26,6 @@ import type {
   PageRouteDecl,
   RendererDecl,
 } from './entry-descriptor.js';
-import { generateHydrationScript } from './island-transform.js';
 
 // ─── Code builder helper ───────────────────────────────────────
 
@@ -129,7 +132,7 @@ function renderPageRoute(
   b: CodeBuilder,
   route: PageRouteDecl,
   renderers: RendererDecl[],
-  docConfig: { title: string; lang: string; headExtras: string; hydrateScriptVar: string },
+  docConfig: { title: string; lang: string; headExtras: string },
 ): void {
   // Find renderers whose scope matches this route's path prefix
   const matchingRenderers = renderers.filter((r) => {
@@ -142,26 +145,29 @@ function renderPageRoute(
   b.push(`  try {`);
   b.push(`    const tag = ${route.varName}.tagName || '${route.defaultTagName}'`);
   b.push(`    const raw = await __ssr(tag)`);
-  b.push(`    const clean = stripLitComments(raw)`);
+  // NOTE: DO NOT strip <!--lit-part--> comments!
+  // They are essential for Lit's hydrate() to re-associate template
+  // expressions with DOM nodes. Removing them breaks hydration and
+  // forces client-render (destroying SSR HTML and losing first-paint perf).
+  b.push(`    const html = raw`);
+  b.blank();
 
   // Wrap with renderers from outer to inner (v0.3.0)
   if (matchingRenderers.length > 0) {
     b.push(`    // Renderer wrapping (outer → inner)`);
-    b.push(`    let wrapped = clean`);
+    b.push(`    let wrapped = html`);
     for (const renderer of matchingRenderers) {
       b.push(`    wrapped = ${renderer.varName}.default.wrap(wrapped, c)`);
     }
     b.push(`    return c.html(wrapInDocument(wrapped, {`);
     b.push(`      title: ${JSON.stringify(docConfig.title)},`);
     b.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
-    b.push(`      hydrateScript: ${docConfig.hydrateScriptVar},`);
     b.push(`      headExtras: ${JSON.stringify(docConfig.headExtras)},`);
     b.push(`    }))`);
   } else {
-    b.push(`    return c.html(wrapInDocument(clean, {`);
+    b.push(`    return c.html(wrapInDocument(html, {`);
     b.push(`      title: ${JSON.stringify(docConfig.title)},`);
     b.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
-    b.push(`      hydrateScript: ${docConfig.hydrateScriptVar},`);
     b.push(`      headExtras: ${JSON.stringify(docConfig.headExtras)},`);
     b.push(`    }))`);
   }
@@ -180,15 +186,19 @@ function renderPageRoute(
  *
  * Pure function — deterministic, testable, side-effect-free.
  *
- * v0.3.0: Uses generateHydrationScript (island-transform.ts) and
- * delegates to wrapInDocument (ssr-handler.ts) — single source of truth.
+ * v0.3.0: Hydration is handled by the Vite-built client entry (Phase 2),
+ * not by inline scripts in SSG HTML. The client entry:
+ *   1. Imports and registers all island custom elements
+ *   2. Imports hydrate() from @lit-labs/ssr-client (bundled by Vite)
+ *   3. Waits for customElements.whenDefined()
+ *   4. Calls hydrate(el) on elements with defer-hydration
+ *   5. Removes defer-hydration attribute
  *
- * Hydration lifecycle:
- *   1. SSR outputs `<tag defer-hydration>` (see __ssr helper)
- *   2. Client hydration script processes DSD templates inline
- *   3. Then removes defer-hydration attribute
- *   This creates a closed loop: defer → hydrate → removeAttribute
- *   No external module imports — browser-safe out of the box.
+ * SSR output preserves <!--lit-part--> comments for hydration.
+ * No inline scripts, no bare module imports — browser-safe.
+ *
+ * The client script <script> tag is injected by build-ssg.ts (Phase 3)
+ * after reading the Vite client build manifest.
  */
 export function renderEntry(desc: EntryDescriptor): string {
   const b = new CodeBuilder();
@@ -204,12 +214,10 @@ export function renderEntry(desc: EntryDescriptor): string {
     b.push(renderImport(imp));
   }
 
-  // --- Utility functions ---
-  b.push(
-    `function stripLitComments(html) { return html.replace(/<!--\\/?(?:lit-part|lit-node)[^>]*-->/g, '') }`,
-  );
-
   // --- Island hydration (build-time known list) ---
+  // This map is used by the SSR helper to know which custom elements
+  // to render. The CLIENT-SIDE hydration is handled by the client entry
+  // (built separately by Vite in Phase 2).
   const islandLookup: Record<string, string> = {};
   for (const island of desc.islands) {
     islandLookup[island.tagName] = island.modulePath;
@@ -219,27 +227,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   b.push(`const __islandMap = ${JSON.stringify(islandLookup)}`);
   b.blank();
 
-  // --- Hydration script ---
-  // Single source of truth: generateHydrationScript from island-transform.ts
-  // This function produces a complete <script> tag that:
-  // 1. Contains inline hydrate() — no external module imports (browser-safe)
-  // 2. Loads island modules via dynamic import()
-  // 3. Waits for customElements.whenDefined()
-  // 4. Hydrates SSR output (DSD template processing + removeAttribute)
-  // 5. Applies the configured strategy (eager/lazy/idle/visible)
-  const hydrationScript = generateHydrationScript(
-    desc.islands,
-    desc.hydrationStrategy || 'lazy',
-  );
-  b.push(`// Hydration script — generated by generateHydrationScript() in island-transform.ts`);
-  b.push(`// Self-contained: inline hydrate(), no bare module imports, works in browsers`);
-  b.push(`const __hydrationScript = ${JSON.stringify(hydrationScript)}`);
-  b.blank();
-
   // --- Document wrapper ---
   // Uses wrapInDocument from ssr-handler.ts (single source of truth).
   // Import via @kissjs/core — during SSR build, Vite resolves this to
-  // the local source via resolve.alias (see index.ts ssgPlugin).
+  // the local source via resolve.alias.
   // This eliminates the duplicate HTML wrapping that was previously inlined.
   b.push(`import { wrapInDocument } from '@kissjs/core';`);
   b.blank();
@@ -261,12 +252,15 @@ export function renderEntry(desc: EntryDescriptor): string {
   // unsafeHTML must be in expression position (NOT in element position <${...}>),
   // otherwise Lit throws "Unexpected final partIndex" error.
   // tag validation: only hyphenated Custom Element names are valid.
-  // defer-hydration: marks SSR output for Lit hydration (see hydration script above).
+  // defer-hydration: marks SSR output for Lit hydration (handled by client entry).
+  //
+  // IMPORTANT: The SSR output includes <!--lit-part--> comments.
+  // DO NOT strip them — they are essential for Lit's hydrate() to work.
   const BT = '\x60'; // backtick: `
   const DI = '\x24{'; // ${
   const DC = '}'; // }
   b.push('// SSR helper: render a custom element tag to HTML string');
-  b.push('// Outputs <tag defer-hydration> so the hydration script can find and hydrate it');
+  b.push('// Outputs <tag defer-hydration> so the client entry can hydrate it');
   b.push('async function __ssr(tag) {');
   b.push('  // Validate tag name — must be a valid Custom Element (contains hyphen)');
   b.push('  if (!tag || !tag.includes("-")) {');
@@ -306,7 +300,6 @@ export function renderEntry(desc: EntryDescriptor): string {
     title: desc.document.title,
     lang: desc.document.lang,
     headExtras: desc.document.headExtras,
-    hydrateScriptVar: '__hydrationScript',
   };
   for (const route of desc.pageRoutes) {
     renderPageRoute(b, route, desc.renderers, docConfig);

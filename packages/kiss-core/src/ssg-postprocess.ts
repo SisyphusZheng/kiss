@@ -92,10 +92,46 @@ export function buildIslandChunkMap(
 }
 
 /**
+ * Inject client script tag into all HTML files.
+ *
+ * After SSG rendering, each HTML file needs a <script> tag that loads
+ * the Vite-built client entry. This entry:
+ * 1. Registers all island custom elements
+ * 2. Imports and calls Lit's hydrate() from @lit-labs/ssr-client
+ * 3. Applies the configured hydration strategy (eager/lazy/idle/visible)
+ *
+ * The script src is determined by reading the Vite client build manifest.
+ */
+export function injectClientScript(dir: string, scriptSrc: string): void {
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      injectClientScript(fullPath, scriptSrc);
+    } else if (entry.name.endsWith('.html')) {
+      let content = readFileSync(fullPath, 'utf-8');
+      const scriptTag = `<script type="module" src="${scriptSrc}"></script>`;
+      // Only inject if not already present
+      if (!content.includes(scriptTag)) {
+        // Insert before </body>
+        content = content.replace('</body>', `  ${scriptTag}\n</body>`);
+        writeFileSync(fullPath, content, 'utf-8');
+      }
+    }
+  }
+}
+
+/**
  * Walk all HTML files in dist and rewrite hydration script Island paths.
  *
  * Before: import('/app/islands/code-block.ts')
  * After:  import('/client/islands/island-code-block-abc123.js')
+ *
+ * NOTE: With the v0.3.0 hydration architecture (hydration logic in the
+ * Vite-built client entry, not inline scripts), this function is mostly
+ * a fallback. The client entry resolves island imports during the Vite
+ * build, so path rewriting is not needed for hydration scripts.
+ * It remains for backward compat and any residual source path references.
  */
 export function rewriteHtmlFiles(
   dir: string,

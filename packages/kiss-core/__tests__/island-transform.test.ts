@@ -3,6 +3,7 @@
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import { generateHydrationScript, islandTransformPlugin } from '../src/island-transform.ts';
+import { generateClientEntry } from '../src/entry-generators.ts';
 
 type TransformFn = (code: string, id: string) => string | null;
 
@@ -56,7 +57,7 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
   });
 });
 
-Deno.test('island-transform - generateHydrationScript', async (t) => {
+Deno.test('island-transform - generateHydrationScript (legacy)', async (t) => {
   await t.step('generates hydration script with island loaders', () => {
     const islands = [
       { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
@@ -73,28 +74,67 @@ Deno.test('island-transform - generateHydrationScript', async (t) => {
     const script = generateHydrationScript([]);
     assertEquals(script, '');
   });
+});
+
+Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t) => {
+  await t.step('imports hydrate from @lit-labs/ssr-client', () => {
+    const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
+    const code = generateClientEntry(islands, 'lazy');
+    assertEquals(code.includes("import { hydrate } from '@lit-labs/ssr-client'"), true);
+  });
+
+  await t.step('registers custom elements', () => {
+    const islands = [
+      { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
+      { tagName: 'theme-toggle', modulePath: '@kissjs/ui/kiss-theme-toggle' },
+    ];
+    const code = generateClientEntry(islands, 'lazy');
+    assertEquals(code.includes("customElements.define('my-counter'"), true);
+    assertEquals(code.includes("customElements.define('theme-toggle'"), true);
+  });
+
+  await t.step('waits for customElements.whenDefined before hydrating', () => {
+    const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
+    const code = generateClientEntry(islands, 'lazy');
+    assertEquals(code.includes('customElements.whenDefined'), true);
+    assertEquals(code.includes('Promise.all'), true);
+  });
+
+  await t.step('hydrates elements with defer-hydration', () => {
+    const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
+    const code = generateClientEntry(islands, 'eager');
+    assertEquals(code.includes('[defer-hydration]'), true);
+    assertEquals(code.includes('hydrate(el)'), true);
+    assertEquals(code.includes("removeAttribute('defer-hydration')"), true);
+  });
 
   await t.step('supports eager strategy', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
-    const script = generateHydrationScript(islands, 'eager');
-    assertEquals(script.includes('hydrate all islands immediately'), true);
+    const code = generateClientEntry(islands, 'eager');
+    assertEquals(code.includes('hydrate all islands immediately'), true);
+  });
+
+  await t.step('supports lazy strategy', () => {
+    const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
+    const code = generateClientEntry(islands, 'lazy');
+    assertEquals(code.includes('requestIdleCallback'), true);
   });
 
   await t.step('supports visible strategy', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
-    const script = generateHydrationScript(islands, 'visible');
-    assertEquals(script.includes('IntersectionObserver'), true);
+    const code = generateClientEntry(islands, 'visible');
+    assertEquals(code.includes('IntersectionObserver'), true);
   });
 
   await t.step('supports idle strategy', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
-    const script = generateHydrationScript(islands, 'idle');
-    assertEquals(script.includes('requestIdleCallback'), true);
+    const code = generateClientEntry(islands, 'idle');
+    assertEquals(code.includes('requestIdleCallback'), true);
   });
 
-  await t.step('includes progressive enhancement fallback', () => {
-    const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
-    const script = generateHydrationScript(islands, 'lazy');
-    assertEquals(script.includes('data-kiss-hydration-error'), true);
+  await t.step('returns no-client-JS comment for empty islands', () => {
+    const code = generateClientEntry([]);
+    assertEquals(code.includes('No islands detected'), true);
+    assertEquals(code.includes('hydrate'), false);
   });
 });
