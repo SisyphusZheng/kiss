@@ -22,13 +22,13 @@
  * ```
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-button';
 
 export class KissButton extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -138,7 +138,7 @@ export class KissButton extends LitElement {
   /** Button type: 'submit', 'button', or 'reset' (default: 'button'). Only applies in button mode (no href). */
   type: 'submit' | 'button' | 'reset' = 'button';
 
-  override render() {
+  override render(): TemplateResult {
     const classes = `btn btn--${this.variant} btn--${this.size}`;
 
     if (this.href) {

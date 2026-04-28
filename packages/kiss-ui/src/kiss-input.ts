@@ -12,13 +12,13 @@
  * ```
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-input';
 
 export class KissInput extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -111,7 +111,7 @@ export class KissInput extends LitElement {
   /** Error message displayed below the input (also applies error styling) */
   error?: string;
 
-  override render() {
+  override render(): TemplateResult {
     return html`
       <div class="input-wrapper">
         ${this.label

@@ -21,7 +21,7 @@
  * ```
  */
 
-import { css } from '@kissjs/core';
+import { css, type CSSResult } from '@kissjs/core';
 
 /**
  * KISS Design Tokens CSS
@@ -39,7 +39,7 @@ import { css } from '@kissjs/core';
  * - shadow: box-shadow
  * - transition: animation timing
  */
-export const kissDesignTokens = css`
+export const kissDesignTokens: CSSResult = css`
   :host {
     /* === Spacing (from Open Props) === */
     --kiss-size-1: 0.25rem; /* 4px */

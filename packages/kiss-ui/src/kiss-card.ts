@@ -17,13 +17,13 @@
  * ```
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-card';
 
 export class KissCard extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -76,7 +76,7 @@ export class KissCard extends LitElement {
   /** Card variant: 'default' (bordered), 'elevated' (shadow, no border), or 'borderless' */
   variant: 'default' | 'elevated' | 'borderless' = 'default';
 
-  override render() {
+  override render(): TemplateResult {
     return html`
       <div class="card card--${this.variant}">
         <slot name="header"></slot>

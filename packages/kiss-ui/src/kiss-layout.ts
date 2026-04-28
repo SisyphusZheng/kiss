@@ -24,13 +24,13 @@
  * ```
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-layout';
 
 export class KissLayout extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -458,7 +458,7 @@ export class KissLayout extends LitElement {
     `;
   }
 
-  override render() {
+  override render(): TemplateResult {
     return html`
       <div class="app-layout" ?home="${this.home}">
         <header class="app-header">

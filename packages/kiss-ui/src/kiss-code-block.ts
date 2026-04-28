@@ -12,13 +12,13 @@
  * ```
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-code-block';
 
 export class KissCodeBlock extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -71,7 +71,7 @@ export class KissCodeBlock extends LitElement {
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
 
-  override render() {
+  override render(): TemplateResult {
     return html`
       <slot></slot>
       <button

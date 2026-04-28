@@ -65,6 +65,7 @@ export { generateHydrationScript } from './island-transform.js';
 // --- Re-export runtime APIs for zero-config user experience ---
 // Users import everything from @kissjs/core — no need to add lit/hono to their deno.json
 export { css, html, LitElement, nothing, svg } from 'lit';
+export type { CSSResult, TemplateResult } from 'lit';
 export { unsafeHTML } from 'lit/directives/unsafe-html.js';
 export { classMap } from 'lit/directives/class-map.js';
 export { styleMap } from 'lit/directives/style-map.js';

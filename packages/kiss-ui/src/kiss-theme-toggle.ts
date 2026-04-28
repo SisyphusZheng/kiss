@@ -20,13 +20,13 @@
  * - Requires eager hydration (theme should be applied immediately)
  */
 
-import { css, html, LitElement } from '@kissjs/core';
+import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-theme-toggle';
 
 export class KissThemeToggle extends LitElement {
-  static override styles = [
+  static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
       :host {
@@ -105,7 +105,7 @@ export class KissThemeToggle extends LitElement {
     localStorage.setItem('kiss-theme', theme);
   }
 
-  override render() {
+  override render(): TemplateResult {
     return html`
       <button
         class="theme-toggle ${this._isLight ? 'is-light' : ''}"
