@@ -333,68 +333,68 @@ export class DocsHome extends LitElement {
     return html`
       <kiss-layout home>
         <div class="hero">
-          <div class="overline">Web Standards Framework</div>
+          <div class="overline">Web 标准框架</div>
           <h1>KISS</h1>
           <p class="tagline">
-            Keep It Simple, Stupid. A minimal full-stack framework built entirely on Web Standards.
+            保持愚蠢，保持简单。一个完全基于 Web 标准构建的极简全栈框架。
           </p>
           <div class="equation">
             <span class="eq-item"><span class="eq-label">HTTP =</span> <span class="eq-val"
               >Fetch API</span></span>
             <span class="eq-item"><span class="eq-label">UI =</span> <span class="eq-val"
               >Web Components</span></span>
-            <span class="eq-item"><span class="eq-label">Build =</span> <span class="eq-val"
+            <span class="eq-item"><span class="eq-label">构建 =</span> <span class="eq-val"
               >ESM</span></span>
             </div>
             <div class="cta">
-              <a class="cta-primary" href="/guide/getting-started">Get Started</a>
+              <a class="cta-primary" href="/guide/getting-started">快速上手</a>
               <a class="cta-secondary" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
             </div>
           </div>
 
           <div class="standards">
-            <div class="section-label">Web Standards Coverage</div>
+            <div class="section-label">Web 标准覆盖</div>
             <div class="pill-row">
               <span class="pill"><span class="check">&#10003;</span> Fetch API</span>
               <span class="pill"><span class="check">&#10003;</span> Web Components</span>
               <span class="pill"><span class="check">&#10003;</span> ESM</span>
-              <span class="pill"><span class="check">&#10003;</span> Declarative Shadow DOM</span>
-              <span class="pill"><span class="check">&#10003;</span> Islands</span>
+              <span class="pill"><span class="check">&#10003;</span> 声明式 Shadow DOM</span>
+              <span class="pill"><span class="check">&#10003;</span> Islands 架构</span>
             </div>
           </div>
 
           <div class="features">
-            <div class="section-label">Why KISS</div>
+            <div class="section-label">为什么选 KISS</div>
             <div class="features-list">
               <div class="feature-item">
-                <h2>Web Standards First</h2>
-                <p>No new abstractions. If you know the web platform, you know KISS.</p>
+                <h2>Web 标准优先</h2>
+                <p>没有新的抽象。如果你懂 Web 平台，你就懂 KISS。</p>
               </div>
               <div class="feature-item">
-                <h2>Islands Architecture</h2>
-                <p>Only interactive components load JS. Default homepage: 0 KB.</p>
+                <h2>Islands 架构</h2>
+                <p>只有交互式组件才加载 JS。默认首页：0 KB。</p>
               </div>
               <div class="feature-item">
-                <h2>Type-Safe RPC</h2>
-                <p>End-to-end type safety with Hono RPC. No codegen needed.</p>
+                <h2>类型安全 RPC</h2>
+                <p>基于 Hono RPC 的端到端类型安全。无需代码生成。</p>
               </div>
               <div class="feature-item">
-                <h2>Multi-Runtime</h2>
-                <p>Same code on Deno, Node, Bun, Cloudflare Workers.</p>
+                <h2>多运行时</h2>
+                <p>同一套代码运行在 Deno、Node、Bun、Cloudflare Workers。</p>
               </div>
               <div class="feature-item">
-                <h2>SSG Built-In</h2>
-                <p>Pre-render to static HTML at build time. Zero config.</p>
+                <h2>SSG 内置</h2>
+                <p>构建时预渲染为静态 HTML。零配置。</p>
               </div>
               <div class="feature-item">
-                <h2>Zero Lock-In</h2>
-                <p>Your code works without KISS. Hono, Lit, Vite are all standard.</p>
+                <h2>零锁定</h2>
+                <p>你的代码在没有 KISS 时也能运行。Hono、Lit、Vite 都是标准工具。</p>
               </div>
             </div>
           </div>
 
           <div class="comparison">
-            <div class="section-label">Full-Chain Web Standards</div>
+            <div class="section-label">全链路 Web 标准</div>
             <table class="comparison-table">
               <thead>
                 <tr>
@@ -407,24 +407,24 @@ export class DocsHome extends LitElement {
                 <tr>
                   <td>Fetch API</td>
                   <td>Fetch API</td>
-                  <td>Custom API</td>
+                  <td>自定义 API</td>
                 </tr>
                 <tr>
                   <td>Web Components</td>
-                  <td>Islands (custom)</td>
-                  <td>React only</td>
+                  <td>Islands（自定义）</td>
+                  <td>仅 React</td>
                 </tr>
                 <tr>
                   <td>ESM</td>
                   <td>ESM</td>
-                  <td>ESM + Custom</td>
+                  <td>ESM + 自定义</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="jsr">
-            <div class="section-label">Install from JSR</div>
+            <div class="section-label">从 JSR 安装</div>
             <div class="badge-row">
               <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core</a>
               <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui</a>

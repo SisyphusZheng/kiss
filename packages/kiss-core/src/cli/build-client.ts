@@ -15,9 +15,13 @@
  */
 
 import { build as viteBuild, type InlineConfig } from 'vite';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { generateClientEntry, type ClientIslandEntry, type HydrationStrategy } from '../entry-generators.js';
+import {
+  type ClientIslandEntry,
+  generateClientEntry,
+  type HydrationStrategy,
+} from '../entry-generators.js';
 
 interface BuildMetadata {
   islandTagNames: string[];
@@ -118,7 +122,9 @@ async function buildClient(): Promise<void> {
       },
     },
     // Pass user's resolve alias from Phase 1 so island imports resolve correctly
-    resolve: metadata.resolveAlias ? { alias: metadata.resolveAlias as Record<string, string> } : undefined,
+    resolve: metadata.resolveAlias
+      ? { alias: metadata.resolveAlias as Record<string, string> }
+      : undefined,
     // SSR noExternal: ensures packages like @kissjs/ui (with decorators)
     // are bundled by Vite instead of left as bare imports
     ssr: {

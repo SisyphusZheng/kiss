@@ -102,16 +102,15 @@ export class ChangelogPage extends LitElement {
     return html`
       <kiss-layout currentPath="/changelog">
         <div class="container">
-          <h1>Changelog</h1>
+          <h1>更新日志</h1>
           <p class="subtitle">
-            All notable changes to KISS are documented here.
+            KISS 的所有重要变更都记录在这里。
           </p>
 
           <p>
-            The format is based on
-            <a href="https://keepachangelog.com/en/1.0.0/" target="_blank">Keep a Changelog</a>, and this
-            project adheres to
-            <a href="https://semver.org/spec/v2.0.0.html" target="_blank">Semantic Versioning</a>.
+            格式基于
+            <a href="https://keepachangelog.com/zh-CN/1.0.0/" target="_blank">Keep a Changelog</a>，本项目遵循
+            <a href="https://semver.org/lang/zh-CN/" target="_blank">语义化版本 2.0.0</a>。
           </p>
 
           <div class="version-section">
@@ -121,11 +120,10 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category added">
-              <h4>Added</h4>
+              <h4>新增</h4>
               <ul class="change-list">
                 <li>
-                  <strong>Package Islands Auto-Detection</strong>: Automatically detect and register
-                  Islands from npm/JSR packages
+                  <strong>Package Islands 自动检测</strong>：自动检测并注册来自 npm/JSR 包的 Islands
                 </li>
                 <li>
                   <code>packageIslands</code> configuration option to specify which packages to scan
@@ -144,11 +142,11 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category changed">
-              <h4>Changed</h4>
+              <h4>变更</h4>
               <ul class="change-list">
                 <li>
-                  <strong>BREAKING</strong>: <code>kiss-layout</code> theme toggle logic removed — use
-                  <code>kiss-theme-toggle</code> Island instead
+                  <strong>破坏性变更</strong>：<code>kiss-layout</code> 主题切换逻辑已移除 — 请使用
+                  <code>kiss-theme-toggle</code> Island
                 </li>
                 <li>
                   <code>kiss-layout</code> simplified to static component (no client-side state)
@@ -163,9 +161,9 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category fixed">
-              <h4>Fixed</h4>
+              <h4>修复</h4>
               <ul class="change-list">
-                <li>Theme toggle now uses proper Island hydration (DSD + client-side state)</li>
+                <li>主题切换现在使用正确的 Island hydration (DSD + 客户端状态)</li>
               </ul>
             </div>
           </div>
@@ -177,27 +175,26 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category added">
-              <h4>Added</h4>
+              <h4>新增</h4>
               <ul class="change-list">
-                <li>Logger module with <code>KISS_LOG_LEVEL</code> environment variable support</li>
+                <li>Logger 模块支持 <code>KISS_LOG_LEVEL</code> 环境变量</li>
                 <li>
-                  @kissjs/ui component library with kiss-button, kiss-card, kiss-input, kiss-code-block,
-                  kiss-layout
+                  @kissjs/ui 组件库：kiss-button, kiss-card, kiss-input, kiss-code-block, kiss-layout
                 </li>
-                <li>design-tokens CSS custom properties for Swiss International Style</li>
-                <li>examples/hello minimal example demonstrating KISS basics</li>
-                <li>Documentation site dogfooding: /ui page uses real KISS UI components</li>
-                <li>SSR Compatibility documentation in /guide/ssg</li>
+                <li>design-tokens CSS 自定义属性（瑞士国际主义风格）</li>
+                <li>examples/hello 最小示例：演示 KISS 基础</li>
+                <li>文档站 dogfooding：/ui 页面使用真实 KISS UI 组件</li>
+                <li>SSR 兼容性文档（/guide/ssg）</li>
               </ul>
             </div>
 
             <div class="change-category changed">
-              <h4>Changed</h4>
+              <h4>变更</h4>
               <ul class="change-list">
-                <li>@kissjs/ui version bumped to 0.1.4</li>
-                <li>Documentation site now imports @kissjs/ui components</li>
-                <li>Migrated all examples to static properties + customElements.define() pattern</li>
-                <li>Removed experimentalDecorators config from packages/kiss-ui/deno.json</li>
+                <li>@kissjs/ui 版本升级至 0.1.4</li>
+                <li>文档站现在导入 @kissjs/ui 组件</li>
+                <li>迁移所有示例到 static properties + customElements.define() 模式</li>
+                <li>移除 packages/kiss-ui/deno.json 中的 experimentalDecorators 配置</li>
               </ul>
             </div>
           </div>
@@ -209,29 +206,29 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category added">
-              <h4>Added</h4>
+              <h4>新增</h4>
               <ul class="change-list">
-                <li>Pure black & white design system with theme toggle</li>
-                <li>/ui design system showcase page</li>
-                <li>Mobile-responsive sidebar with hamburger menu</li>
-                <li>CSS :has() selector for sidebar toggle (zero JS)</li>
+                <li>纯黑白色设计系统 + 主题切换</li>
+                <li>/ui 设计系统展示页面</li>
+                <li>移动端响应式侧边栏 + 汉堡菜单</li>
+                <li>CSS :has() 选择器实现侧边栏切换（零 JS）</li>
               </ul>
             </div>
 
             <div class="change-category changed">
-              <h4>Changed</h4>
+              <h4>变更</h4>
               <ul class="change-list">
-                <li>Consolidated page styles (pageStyles) — eliminated 840 lines of duplicate CSS</li>
-                <li>Removed all !important hacks from page styles</li>
-                <li>Sidebar now uses slide-in animation with backdrop blur</li>
+                <li>合并页面样式（pageStyles）— 消除 840 行重复 CSS</li>
+                <li>移除页面样式中所有 !important  hack</li>
+                <li>侧边栏现在使用滑入动画 + 背景模糊</li>
               </ul>
             </div>
 
             <div class="change-category fixed">
-              <h4>Fixed</h4>
+              <h4>修复</h4>
               <ul class="change-list">
-                <li>Backdrop click now closes sidebar (L2 script)</li>
-                <li>Mobile responsive layout improvements</li>
+                <li>点击背景现在可以关闭侧边栏（L2 脚本）</li>
+                <li>移动端响应式布局改进</li>
               </ul>
             </div>
           </div>
@@ -243,19 +240,19 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category added">
-              <h4>Added</h4>
+              <h4>新增</h4>
               <ul class="change-list">
-                <li>KISS Architecture documentation (K·I·S·S four constraints)</li>
-                <li>DSD (Declarative Shadow DOM) output support</li>
-                <li>Jamstack alignment documentation</li>
+                <li>KISS 架构文档（K·I·S·S 四约束）</li>
+                <li>DSD（声明式 Shadow DOM）输出支持</li>
+                <li>Jamstack 对齐文档</li>
               </ul>
             </div>
 
             <div class="change-category changed">
-              <h4>Changed</h4>
+              <h4>变更</h4>
               <ul class="change-list">
-                <li>Rebranded from DIA to KISS Architecture</li>
-                <li>Updated README with dual meaning (Philosophy + Architecture)</li>
+                <li>从 DIA 重新品牌为 KISS Architecture</li>
+                <li>更新 README 包含双重含义（理念 + 架构）</li>
               </ul>
             </div>
           </div>
@@ -267,35 +264,35 @@ export class ChangelogPage extends LitElement {
             </div>
 
             <div class="change-category added">
-              <h4>Added</h4>
+              <h4>新增</h4>
               <ul class="change-list">
-                <li>inject option for custom stylesheets/scripts injection</li>
-                <li>API Routes deployment documentation</li>
+                <li>inject 选项：自定义样式表/脚本注入</li>
+                <li>API Routes 部署文档</li>
               </ul>
             </div>
 
             <div class="change-category changed">
-              <h4>Changed</h4>
+              <h4>变更</h4>
               <ul class="change-list">
-                <li>Marked ui option as deprecated (use inject instead)</li>
+                <li>标记 ui 选项已弃用（请使用 inject）</li>
               </ul>
             </div>
 
             <div class="change-category fixed">
-              <h4>Fixed</h4>
+              <h4>修复</h4>
               <ul class="change-list">
-                <li>RPC call() now throws RpcError instead of returning null</li>
+                <li>RPC call() 现在抛出 RpcError 而不是返回 null</li>
               </ul>
             </div>
           </div>
 
-          <h2>Version History</h2>
+          <h2>版本历史</h2>
           <table class="version-table">
             <thead>
               <tr>
-                <th>Version</th>
-                <th>Date</th>
-                <th>Highlights</th>
+                <th>版本</th>
+                <th>日期</th>
+                <th>亮点</th>
               </tr>
             </thead>
             <tbody>
@@ -343,8 +340,8 @@ export class ChangelogPage extends LitElement {
           </table>
 
           <div class="nav-row">
-            <a href="/roadmap" class="nav-link">&larr; Roadmap</a>
-            <a href="/guide/getting-started" class="nav-link">Getting Started &rarr;</a>
+            <a href="/roadmap" class="nav-link">&larr; 开发计划</a>
+            <a href="/guide/getting-started" class="nav-link">快速上手 &rarr;</a>
           </div>
         </div>
       </kiss-layout>

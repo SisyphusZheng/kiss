@@ -16,7 +16,7 @@
  */
 
 import { join, resolve } from 'node:path';
-import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 
 /** File size info for a single artifact */
 interface ArtifactInfo {
@@ -197,14 +197,18 @@ export function printBuildManifest(options: {
   // Check total JS budget
   if (clientData.totalJsBytes > TOTAL_JS_BUDGET_KB * 1024) {
     warnings.push(
-      `⚠️  Total JS (${formatSize(clientData.totalJsBytes)}) exceeds ${TOTAL_JS_BUDGET_KB} KB budget`,
+      `⚠️  Total JS (${
+        formatSize(clientData.totalJsBytes)
+      }) exceeds ${TOTAL_JS_BUDGET_KB} KB budget`,
     );
   }
 
   // Check page sizes
   for (const page of htmlPages) {
     if (page.sizeBytes > PAGE_BUDGET_KB * 1024) {
-      warnings.push(`⚠️  ${page.path} (${page.sizeKB}) exceeds ${PAGE_BUDGET_KB} KB — consider compression`);
+      warnings.push(
+        `⚠️  ${page.path} (${page.sizeKB}) exceeds ${PAGE_BUDGET_KB} KB — consider compression`,
+      );
     }
   }
 
@@ -223,7 +227,9 @@ export function printBuildManifest(options: {
   // ─── Print table ───
   console.log('');
   console.log('╔═══════════════════════════════════════════════════════════════╗');
-  console.log(`║  KISS Build Manifest — Phase ${phase} @ ${timestamp.slice(11, 19)}              ║`);
+  console.log(
+    `║  KISS Build Manifest — Phase ${phase} @ ${timestamp.slice(11, 19)}              ║`,
+  );
   console.log('╚═══════════════════════════════════════════════════════════════╝');
 
   // Island chunks (Phase 2+)
@@ -235,9 +241,7 @@ export function printBuildManifest(options: {
 
     for (const island of manifest.islands) {
       // Truncate long hash names for display
-      const displayName = island.name.length > 30
-        ? island.name.slice(0, 27) + '...'
-        : island.name;
+      const displayName = island.name.length > 30 ? island.name.slice(0, 27) + '...' : island.name;
       console.log(`  │ ${displayName.padEnd(26)} │ ${island.sizeKB.padEnd(8)} │`);
     }
 
@@ -256,7 +260,11 @@ export function printBuildManifest(options: {
 
   // HTML pages (Phase 3 only)
   if (phase === 3 && manifest.htmlPages.length > 0) {
-    console.log(`\n  📄 HTML Pages (${manifest.htmlPages.length} files, ${formatSize(manifest.totalHtmlBytes)} total):`);
+    console.log(
+      `\n  📄 HTML Pages (${manifest.htmlPages.length} files, ${
+        formatSize(manifest.totalHtmlBytes)
+      } total):`,
+    );
 
     // Group pages by directory depth for cleaner display
     const maxShow = 15;
@@ -273,7 +281,9 @@ export function printBuildManifest(options: {
   // headExtras
   if (manifest.headExtrasSize > 0) {
     console.log(
-      `\n  🔧 headExtras: ${formatSize(manifest.headExtrasSize)} (${manifest.headExtrasSize} bytes injected)`,
+      `\n  🔧 headExtras: ${
+        formatSize(manifest.headExtrasSize)
+      } (${manifest.headExtrasSize} bytes injected)`,
     );
   }
 

@@ -80,25 +80,25 @@ export class FullstackDemoPage extends LitElement {
     return html`
       <kiss-layout currentPath="/examples/fullstack">
         <div class="container">
-          <h1>Fullstack Demo</h1>
+          <h1>全栈示例</h1>
           <p class="subtitle">
             K + I + S + S 四约束：静态前端 + Serverless API
           </p>
 
-          <h2>Live Demo</h2>
+          <h2>在线演示</h2>
           <div class="demo-container">
-            <h1>KISS Fullstack</h1>
+            <h1>KISS 全栈示例</h1>
             <p style="color: var(--kiss-text-tertiary); margin-bottom: 1.5rem;">
-              SSG + API Routes + Islands — A complete fullstack example.
+              SSG + API Routes + Islands —— 完整的全栈示例。
             </p>
 
             <div class="counter-demo">
-              <h3>Interactive Island Demo</h3>
+              <h3>交互式 Island 演示</h3>
               <counter-island></counter-island>
             </div>
 
             <div class="api-demo">
-              <h3>API Routes Demo</h3>
+              <h3>API Routes 演示</h3>
               <div class="api-response">
                 GET /api/hello → { "message": "Hello from KISS API!" } GET /api/time → { "time":
                 "2026-04-26T...", "timestamp": 1745678... } GET /api/echo/:text → { "echo": "your-text" }
@@ -108,13 +108,13 @@ export class FullstackDemoPage extends LitElement {
 
           <h2>部署架构</h2>
           <div class="deployment-diagram">
-            ┌─────────────────────────────────────────────────────────────────┐ │ Full-Stack Deployment │
-            │ │ │ ┌──────────────────┐ ┌──────────────────┐ │ │ │ Static dist/ │ │ API Routes │ │ │ │ │ │
+            ┌─────────────────────────────────────────────────────────────────┐ │ 全栈部署 │
+            │ │ │ ┌──────────────────┐ ┌──────────────────┐ │ │ │ 静态 dist/ │ │ API 路由 │ │ │ │ │ │
             │ │ │ │ index.html │ │ /api/hello │ │ │ │ + DSD │ │ /api/time │ │ │ │ + Island JS │ │
             /api/echo │ │ │ │ │ │ │ │ │ └──────────────────┘ └──────────────────┘ │ │ │ │ │ │ ▼ ▼ │ │
             ┌──────────────────┐ ┌──────────────────┐ │ │ │ CDN / │ │ Serverless │ │ │ │ GitHub Pages │ │
             Deno Deploy │ │ │ │ Cloudflare │ │ CF Workers │ │ │ │ Pages │ │ Vercel Edge │ │ │
-            └──────────────────┘ └──────────────────┘ │ │ │ │ S Constraint: 静态文件 + Serverless API │
+            └──────────────────┘ └──────────────────┘ │ │ │ │ S 约束： 静态文件 + Serverless API │
             └─────────────────────────────────────────────────────────────────┘
           </div>
 
@@ -151,7 +151,7 @@ export class FullstackDemoPage extends LitElement {
             </tbody>
           </table>
 
-          <h2>API Routes 代码</h2>
+          <h2>API Routes 示例代码</h2>
           <code-block
           ><pre><code>// app/routes/api/index.ts
             import { Hono } from 'hono'
@@ -166,7 +166,7 @@ export class FullstackDemoPage extends LitElement {
 
             <div class="nav-row">
               <a href="/examples/minimal-blog" class="nav-link">&larr; Minimal Blog</a>
-              <a href="/guide/deployment" class="nav-link">Deployment &rarr;</a>
+              <a href="/guide/deployment" class="nav-link">部署 &rarr;</a>
             </div>
           </div>
         </kiss-layout>

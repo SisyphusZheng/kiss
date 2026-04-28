@@ -13,19 +13,18 @@ export class RoutingGuidePage extends LitElement {
     return html`
       <kiss-layout currentPath="/guide/routing">
         <div class="container">
-          <h1>Routing</h1>
-          <p class="subtitle">File-based routing — create a file, get a route.</p>
+          <h1>路由</h1>
+          <p class="subtitle">基于文件的路由——创建一个文件，就得到一个路由。</p>
 
-          <h2>Basic Routes</h2>
+          <h2>基础路由</h2>
           <p>
-            Create a file in <span class="inline-code">app/routes/</span>, and it becomes a route
-            automatically.
+            在 <span class="inline-code">app/routes/</span> 下创建一个文件，它会自动变为路由。
           </p>
           <table>
             <thead>
               <tr>
-                <th>File</th>
-                <th>Route</th>
+                <th>文件</th>
+                <th>路由</th>
               </tr>
             </thead>
             <tbody>
@@ -44,14 +43,14 @@ export class RoutingGuidePage extends LitElement {
             </tbody>
           </table>
 
-          <h2>Dynamic Routes</h2>
-          <p>Use square brackets for dynamic segments:</p>
+          <h2>动态路由</h2>
+          <p>使用方括号表示动态片段：</p>
           <table>
             <thead>
               <tr>
-                <th>File</th>
-                <th>Route</th>
-                <th>Params</th>
+                <th>文件</th>
+                <th>路由</th>
+                <th>参数</th>
               </tr>
             </thead>
             <tbody>
@@ -68,52 +67,52 @@ export class RoutingGuidePage extends LitElement {
             </tbody>
           </table>
 
-          <h2>Special Files</h2>
+          <h2>特殊文件</h2>
           <table>
             <thead>
               <tr>
-                <th>File</th>
-                <th>Purpose</th>
+                <th>文件</th>
+                <th>用途</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><span class="inline-code">_renderer.ts</span></td>
-                <td>Custom HTML wrapper for SSR</td>
+                <td>SSR 的自定义 HTML 包装器</td>
               </tr>
               <tr>
                 <td><span class="inline-code">_middleware.ts</span></td>
-                <td>Hono middleware for the route tree</td>
+                <td>路由树的 Hono 中间件</td>
               </tr>
             </tbody>
           </table>
 
-          <h2>Route Module Convention</h2>
-          <p>Every route module must export:</p>
+          <h2>路由模块约定</h2>
+          <p>每个路由模块必须导出：</p>
           <table>
             <thead>
               <tr>
-                <th>Export</th>
-                <th>Type</th>
-                <th>Description</th>
+                <th>导出</th>
+                <th>类型</th>
+                <th>说明</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><span class="inline-code">default</span></td>
                 <td>LitElement class</td>
-                <td>The page component</td>
+                <td>页面组件</td>
               </tr>
               <tr>
                 <td><span class="inline-code">tagName</span></td>
                 <td>string</td>
-                <td>Custom element tag name</td>
+                <td>自定义元素标签名</td>
               </tr>
             </tbody>
           </table>
 
           <div class="nav-row">
-            <a href="/guide/architecture" class="nav-link">&larr; KISS Architecture</a>
+            <a href="/guide/architecture" class="nav-link">&larr; KISS 架构</a>
             <a href="/guide/islands" class="nav-link">Islands &rarr;</a>
           </div>
         </div>

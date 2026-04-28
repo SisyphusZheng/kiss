@@ -1,14 +1,14 @@
 /**
- * @kissjs/ui — Design System
- * Two palettes. Zero noise.
+ * @kissjs/ui —— 设计系统
+ * 双色板。零噪音。
  *
- * Dogfooding: Uses actual kiss-button, kiss-card, kiss-input components.
+ * Dogfooding: 使用实际的 kiss-button、kiss-card、kiss-input 组件。
  */
 import { css, html, LitElement } from '@kissjs/core';
 import { pageStyles } from '../components/page-styles.js';
 import '@kissjs/ui/kiss-layout';
 
-// Import KISS UI components for dogfooding
+// 导入 KISS UI 组件用于 dogfooding
 import '@kissjs/ui/kiss-button';
 import '@kissjs/ui/kiss-card';
 import '@kissjs/ui/kiss-input';
@@ -299,78 +299,78 @@ export class UIShowcase extends LitElement {
     return html`
       <kiss-layout current-path="/ui">
         <div class="container">
-          <h1>Design System</h1>
+          <h1>设计系统</h1>
           <p class="subtitle">
-            <strong>Two palettes. Zero noise.</strong><br>
-            Dark and Light. Black and White. Nothing else.
+            <strong>双色板。零噪音。</strong><br>
+            深色和浅色。没有别的。
           </p>
 
           <!-- Palettes -->
           <div class="section">
-            <div class="section-title">Palettes</div>
+            <div class="section-title">色板</div>
             <div class="palette-row">
               <div class="palette-card palette-dark">
-                <div class="palette-name">Dark</div>
+                <div class="palette-name">深色</div>
                 <div class="swatch-grid">
                   <div class="swatch-item">
                     <div class="swatch" style="background:#000"></div>
-                    <div class="swatch-label">Base</div>
+                    <div class="swatch-label">基底</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#0a0a0a"></div>
-                    <div class="swatch-label">Surface</div>
+                    <div class="swatch-label">表面</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#fff"></div>
-                    <div class="swatch-label">Primary</div>
+                    <div class="swatch-label">主色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#999"></div>
-                    <div class="swatch-label">Secondary</div>
+                    <div class="swatch-label">次色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#666"></div>
-                    <div class="swatch-label">Tertiary</div>
+                    <div class="swatch-label">第三色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#444"></div>
-                    <div class="swatch-label">Muted</div>
+                    <div class="swatch-label">静默</div>
                   </div>
                 </div>
                 <p class="palette-desc">
-                  <strong>Black</strong> foundation. White for emphasis. Gray for hierarchy.
+                  <strong>黑色</strong> 基底。白色强调。灰色分层。
                 </p>
               </div>
               <div class="palette-card palette-light">
-                <div class="palette-name">Light</div>
+                <div class="palette-name">浅色</div>
                 <div class="swatch-grid">
                   <div class="swatch-item">
                     <div class="swatch" style="background:#fff"></div>
-                    <div class="swatch-label">Base</div>
+                    <div class="swatch-label">基底</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#fafafa"></div>
-                    <div class="swatch-label">Surface</div>
+                    <div class="swatch-label">表面</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#000"></div>
-                    <div class="swatch-label">Primary</div>
+                    <div class="swatch-label">主色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#555"></div>
-                    <div class="swatch-label">Secondary</div>
+                    <div class="swatch-label">次色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#888"></div>
-                    <div class="swatch-label">Tertiary</div>
+                    <div class="swatch-label">第三色</div>
                   </div>
                   <div class="swatch-item">
                     <div class="swatch" style="background:#aaa"></div>
-                    <div class="swatch-label">Muted</div>
+                    <div class="swatch-label">静默</div>
                   </div>
                 </div>
                 <p class="palette-desc">
-                  <strong>White</strong> foundation. Black for emphasis. Gray for hierarchy.
+                  <strong>白色</strong> 基底。黑色强调。灰色分层。
                 </p>
               </div>
             </div>
@@ -378,92 +378,92 @@ export class UIShowcase extends LitElement {
 
           <!-- Typography -->
           <div class="section">
-            <div class="section-title">Typography</div>
+            <div class="section-title">字体排版</div>
             <div class="type-scale">
               <div class="type-row">
-                <span class="type-label">Display</span>
+                <span class="type-label">展示</span>
                 <span class="type-sample" style="font-size:2.5rem;font-weight:900;letter-spacing:-0.04em"
-                >KISS UI</span>
+                  >KISS UI</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H1</span>
                 <span class="type-sample" style="font-size:1.75rem;font-weight:800;letter-spacing:-0.03em"
-                >Heading One</span>
+                  >一级标题</span>
               </div>
               <div class="type-row">
                 <span class="type-label">H2</span>
-                <span class="type-sample" style="font-size:1.125rem;font-weight:600">Heading Two</span>
+                <span class="type-sample" style="font-size:1.125rem;font-weight:600">二级标题</span>
               </div>
               <div class="type-row">
-                <span class="type-label">Body</span>
+                <span class="type-label">正文</span>
                 <span class="type-sample" style="font-size:0.9375rem;color:var(--kiss-text-secondary)"
-                >Body text for paragraphs.</span>
+                  >正文段落示例。</span>
               </div>
               <div class="type-row">
-                <span class="type-label">Caption</span>
+                <span class="type-label">说明</span>
                 <span
                   class="type-sample"
                   style="font-size:0.6875rem;color:var(--kiss-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600"
-                >Caption</span>
+                  >说明文字</span>
               </div>
               <div class="type-row">
-                <span class="type-label">Mono</span>
+                <span class="type-label">等宽</span>
                 <span
                   class="type-sample"
                   style="font-size:0.8125rem;font-family:'SF Mono','Fira Code','Consolas',monospace;color:var(--kiss-text-primary)"
-                >deno add jsr:@kissjs/ui</span>
+                  >deno add jsr:@kissjs/ui</span>
               </div>
             </div>
           </div>
 
           <!-- Buttons (Dogfooding kiss-button) -->
           <div class="section">
-            <div class="section-title">Button</div>
+            <div class="section-title">按钮</div>
             <div class="preview-card">
               <div class="preview-header">
-                <span class="preview-title">Variants</span>
-                <span class="preview-badge">Available</span>
+                <span class="preview-title">变体</span>
+                <span class="preview-badge">可用</span>
               </div>
               <div class="preview-body">
-                <kiss-button variant="primary">Primary</kiss-button>
-                <kiss-button>Default</kiss-button>
-                <kiss-button variant="ghost">Ghost</kiss-button>
+                <kiss-button variant="primary">主要按钮</kiss-button>
+                <kiss-button>默认按钮</kiss-button>
+                <kiss-button variant="ghost">幽灵按钮</kiss-button>
               </div>
               <div class="preview-body" style="border-top:1px solid var(--kiss-border)">
-                <kiss-button variant="primary" size="sm">Small</kiss-button>
-                <kiss-button variant="primary" size="md">Default</kiss-button>
-                <kiss-button variant="primary" size="lg">Large</kiss-button>
+                <kiss-button variant="primary" size="sm">小号</kiss-button>
+                <kiss-button variant="primary" size="md">中号</kiss-button>
+                <kiss-button variant="primary" size="lg">大号</kiss-button>
               </div>
               <div class="preview-body" style="border-top:1px solid var(--kiss-border)">
-                <kiss-button disabled>Disabled</kiss-button>
-                <kiss-button href="/" target="_blank">Link Button</kiss-button>
+                <kiss-button disabled>禁用状态</kiss-button>
+                <kiss-button href="/" target="_blank">链接按钮</kiss-button>
               </div>
             </div>
           </div>
 
           <!-- Cards (Dogfooding kiss-card) -->
           <div class="section">
-            <div class="section-title">Card</div>
+            <div class="section-title">卡片</div>
             <div class="cards-grid">
               <kiss-card>
                 <h3 slot="header">Island</h3>
-                <p>Interactive islands with hydration and Shadow DOM.</p>
+                <p>带 hydration 的交互式组件和 Shadow DOM。</p>
                 <div slot="footer">
-                  <kiss-button size="sm">Use</kiss-button>
+                  <kiss-button size="sm">使用</kiss-button>
                 </div>
               </kiss-card>
               <kiss-card>
-                <h3 slot="header">Static</h3>
-                <p>Zero-JS rendered via DSD. Visible before JS loads.</p>
+                <h3 slot="header">静态</h3>
+                <p>通过 DSD 零 JS 渲染。JS 加载前可见。</p>
                 <div slot="footer">
-                  <kiss-button size="sm">Use</kiss-button>
+                  <kiss-button size="sm">使用</kiss-button>
                 </div>
               </kiss-card>
               <kiss-card variant="elevated">
                 <h3 slot="header">API Route</h3>
-                <p>Server logic with Hono RPC. Type-safe end to end.</p>
+                <p>带 Hono RPC 的 Serverless 函数。类型安全。</p>
                 <div slot="footer">
-                  <kiss-button size="sm">Use</kiss-button>
+                  <kiss-button size="sm">使用</kiss-button>
                 </div>
               </kiss-card>
             </div>
@@ -471,35 +471,38 @@ export class UIShowcase extends LitElement {
 
           <!-- Input (Dogfooding kiss-input) -->
           <div class="section">
-            <div class="section-title">Input</div>
+            <div class="section-title">输入框</div>
             <div class="preview-card">
               <div class="preview-header">
-                <span class="preview-title">Text Input</span>
-                <span class="preview-badge">Available</span>
+                <span class="preview-title">文本输入</span>
+                <span class="preview-badge">可用</span>
               </div>
               <div class="preview-body" style="flex-direction:column;gap:0.75rem">
-                <kiss-input placeholder="Enter email..." label="Email"></kiss-input>
-                <kiss-input type="password" placeholder="Password" label="Password" required></kiss-input>
-                <kiss-input value="hello@kissjs.org" label="Read-only" disabled></kiss-input>
+                <kiss-input placeholder="输入邮箱..." label="邮箱"></kiss-input>
+                <kiss-input type="password" placeholder="密码" label="密码" required></kiss-input>
+                <kiss-input value="hello@kissjs.org" label="只读" disabled></kiss-input>
               </div>
             </div>
           </div>
 
           <!-- Code Block (Dogfooding kiss-code-block) -->
           <div class="section">
-            <div class="section-title">Code Block</div>
+            <div class="section-title">代码块</div>
             <div class="preview-card">
               <div class="preview-header">
-                <span class="preview-title">With Copy Button</span>
-                <span class="preview-badge">Available</span>
+                <span class="preview-title">带复制按钮</span>
+                <span class="preview-badge">可用</span>
               </div>
               <div class="preview-body">
                 <kiss-code-block>
                   <pre><code>import '@kissjs/ui';
 
-                  // Use components
-                  &lt;kiss-button variant="primary"&gt;Click me&lt;/kiss-button&gt;
-                  &lt;kiss-card&gt;Content&lt;/kiss-card&gt;</code></pre>
+// 使用组件
+&lt;kiss-button variant="primary"&gt;点我&lt;/kiss-button&gt;
+&lt;kiss-card&gt;
+  &lt;h3 slot="header"&gt;标题&lt;/h3&gt;
+  &lt;p&gt;卡片内容&lt;/p&gt;
+&lt;/kiss-card&gt;</code></pre>
                 </kiss-code-block>
               </div>
             </div>
@@ -507,16 +510,16 @@ export class UIShowcase extends LitElement {
 
           <!-- Install -->
           <div class="install-section">
-            <h3>Install @kissjs/ui</h3>
+            <h3>安装 @kissjs/ui</h3>
             <div class="install-cmd">
               <span class="prompt">$</span> deno add jsr:@kissjs/ui
             </div>
-            <p>Deno, Node, Bun. Zero config.</p>
+            <p>Deno、Node、Bun。零配置。</p>
           </div>
 
           <div class="nav-row">
-            <a href="/styling/kiss-ui" class="nav-link">&larr; @kissjs/ui Docs</a>
-            <a href="/guide/getting-started" class="nav-link">Getting Started &rarr;</a>
+            <a href="/guide/deployment" class="nav-link">&larr; 部署</a>
+            <a href="/styling/kiss-ui" class="nav-link">Kiss UI 文档 &rarr;</a>
           </div>
         </div>
       </kiss-layout>

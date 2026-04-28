@@ -112,11 +112,17 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
           ? 'Content-Security-Policy-Report-Only'
           : 'Content-Security-Policy';
         if (cspConfig.nonce) {
-          b.push(`// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`);
+          b.push(
+            `// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`,
+          );
           b.push(`app.use('*', async (c, next) => {`);
           b.push(`  const nonce = crypto.randomUUID().replace(/-/g, '')`);
           b.push(`  c.set('cspNonce', nonce)`);
-          b.push(`  const policy = ${JSON.stringify(cspConfig.policy)} + "; script-src 'nonce-' + nonce"`);
+          b.push(
+            `  const policy = ${
+              JSON.stringify(cspConfig.policy)
+            } + "; script-src 'nonce-' + nonce"`,
+          );
           b.push(`  await next()`);
           b.push(`  c.header('${headerName}', policy)`);
           b.push(`})`);
@@ -289,10 +295,13 @@ export function renderEntry(desc: EntryDescriptor): string {
   b.push('async function __ssr(tag) {');
   b.push('  // Validate tag name — must be a valid Custom Element (contains hyphen)');
   b.push('  if (!tag || !tag.includes("-")) {');
-  b.push('    throw new Error("[KISS] Invalid custom element tag: " + String(tag) + ". Must contain a hyphen.")');
+  b.push(
+    '    throw new Error("[KISS] Invalid custom element tag: " + String(tag) + ". Must contain a hyphen.")',
+  );
   b.push('  }');
   b.push(
-    '  const tpl = html' + BT + DI + 'unsafeHTML(' + BT + '<' + DI + 'tag' + DC + ' defer-hydration></' + DI +
+    '  const tpl = html' + BT + DI + 'unsafeHTML(' + BT + '<' + DI + 'tag' + DC +
+      ' defer-hydration></' + DI +
       'tag' + DC + '>' + BT + ')' + DC + BT,
   );
   b.push('  const result = litRender(tpl)');

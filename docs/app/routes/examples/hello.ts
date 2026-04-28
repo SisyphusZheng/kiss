@@ -61,28 +61,27 @@ export class HelloDemoPage extends LitElement {
           <h2>Live Demo</h2>
           <div class="demo-container">
             <h1>Hello, KISS!</h1>
-            <p class="subtitle">Minimal full-stack framework built entirely on Web Standards.</p>
+            <p class="subtitle">完全基于 Web 标准构建的极简全栈框架。</p>
             <div class="actions">
-              <kiss-button variant="primary" href="https://jsr.io/@kissjs/core">Get Started</kiss-button>
+              <kiss-button variant="primary" href="https://jsr.io/@kissjs/core">快速上手</kiss-button>
               <kiss-button href="https://github.com/SisyphusZheng/kiss">GitHub</kiss-button>
             </div>
             <div class="cards">
               <kiss-card>
                 <h3 slot="header">SSG + DSD</h3>
                 <p>
-                  Static Site Generation with Declarative Shadow DOM. Content visible before JavaScript
-                  loads.
+                  带声明式 Shadow DOM 的静态站点生成。内容在 JavaScript 加载前就可见。
                 </p>
               </kiss-card>
               <kiss-card>
-                <h3 slot="header">Islands Architecture</h3>
+                <h3 slot="header">Islands 架构</h3>
                 <p>
-                  Interactive components hydrate on demand. Zero-JS by default, progressive enhancement.
+                  交互式组件按需 hydration。默认零 JS，渐进增强。
                 </p>
               </kiss-card>
               <kiss-card>
                 <h3 slot="header">API Routes</h3>
-                <p>Serverless endpoints with Hono RPC. Type-safe from server to client.</p>
+                <p>带 Hono RPC 的 Serverless 端点。服务端到客户端类型安全。</p>
               </kiss-card>
             </div>
           </div>

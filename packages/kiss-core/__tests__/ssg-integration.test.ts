@@ -15,9 +15,9 @@ import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'jsr:@std/path@^1.0.0';
 import {
   buildIslandChunkMap,
-  rewriteHtmlFiles,
   injectClientScript,
   injectCspMeta,
+  rewriteHtmlFiles,
 } from '../src/ssg-postprocess.ts';
 
 // ─── Test fixtures ─────────────────────────────────────────────

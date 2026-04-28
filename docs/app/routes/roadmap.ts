@@ -108,9 +108,9 @@ export class RoadmapPage extends LitElement {
     return html`
       <kiss-layout currentPath="/roadmap">
         <div class="container">
-          <h1>Roadmap</h1>
+          <h1>开发路线图</h1>
           <p class="subtitle">
-            KISS Architecture: Knowledge · Isolated · Semantic · Static — 从 PoC 到 v1.0
+            KISS 架构：Knowledge · Isolated · Semantic · Static — 从 PoC 到 v1.0
           </p>
 
           <h2>里程碑概览</h2>
@@ -305,8 +305,8 @@ export class RoadmapPage extends LitElement {
           </div>
 
           <div class="nav-row">
-            <a href="/examples" class="nav-link">&larr; Examples</a>
-            <a href="/changelog" class="nav-link">Changelog &rarr;</a>
+            <a href="/examples" class="nav-link">&larr; 示例</a>
+            <a href="/changelog" class="nav-link">更新日志 &rarr;</a>
           </div>
         </div>
       </kiss-layout>

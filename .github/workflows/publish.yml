@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Need previous commit to compare
+          fetch-depth: 2 # Need previous commit to compare
 
       - uses: denoland/setup-deno@v2
         with:
@@ -25,7 +25,7 @@ jobs:
         id: check
         run: |
           changed=""
-          
+
           # Check kiss-core
           core_old=$(git show HEAD~1:packages/kiss-core/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
           core_new=$(grep '"version"' packages/kiss-core/deno.json | cut -d'"' -f4)
@@ -34,7 +34,7 @@ jobs:
             echo "📦 @kissjs/core: $core_old → $core_new"
             changed="$changed core"
           fi
-          
+
           # Check kiss-rpc
           rpc_old=$(git show HEAD~1:packages/kiss-rpc/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
           rpc_new=$(grep '"version"' packages/kiss-rpc/deno.json | cut -d'"' -f4)
@@ -43,7 +43,7 @@ jobs:
             echo "📦 @kissjs/rpc: $rpc_old → $rpc_new"
             changed="$changed rpc"
           fi
-          
+
           # Check kiss-ui
           ui_old=$(git show HEAD~1:packages/kiss-ui/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
           ui_new=$(grep '"version"' packages/kiss-ui/deno.json | cut -d'"' -f4)
@@ -52,7 +52,7 @@ jobs:
             echo "📦 @kissjs/ui: $ui_old → $ui_new"
             changed="$changed ui"
           fi
-          
+
           if [ -z "$changed" ]; then
             echo "ℹ️ No version changes detected"
           fi

@@ -110,11 +110,11 @@ export interface FrameworkOptions {
     /**
      * Content Security Policy configuration.
      * When set, a Content-Security-Policy header is added.
-     * 
+     *
      * For production with islands, you typically need:
      * - script-src: 'self' (for Vite-built client entry)
      * - style-src: 'self' 'unsafe-inline' (Lit uses inline styles)
-     * 
+     *
      * Nonce support: set `nonce: true` to auto-generate a per-request nonce
      * and add it to both the CSP header and <script> tags.
      */
@@ -159,7 +159,10 @@ export interface KissRenderer {
    * @param ctx - Request context (provides c.req.path etc.)
    * @returns Wrapped HTML string (or Promise for async operations)
    */
-  wrap(html: string, ctx: { req: { path: string }; [key: string]: unknown }): string | Promise<string>;
+  wrap(
+    html: string,
+    ctx: { req: { path: string }; [key: string]: unknown },
+  ): string | Promise<string>;
 }
 
 /**

@@ -6,6 +6,7 @@
 
 Official Hono × Vite development integration plugin.
 Provides:
+
 - **Middleware Mode**: Vite handles static assets; Hono handles API/SSR routes via Vite's `server.middlewareMode`
 - **HMR (Hot Module Replacement)**: Instant updates during development without full page reloads
 - **Entry Point Injection**: Auto-injects client-side `<script>` for module reloading
@@ -25,26 +26,26 @@ packages/kiss-core/vite.config.build.ts →  external: ['@hono/vite-dev-server']
 
 To replace `@hono/vite-dev-server`, KISS would need a custom Vite plugin that:
 
-| Feature | Lines of Code | Complexity | Maintenance Risk |
-|---------|-------------:|-----------:|-----------------|
-| Middleware mode setup | ~20 | Medium | Vite API changes between versions |
-| HMR client injection | ~15 | High | Must track Vite's HMR protocol changes |
-| SSR transform pipeline | ~30 | Very High | Must handle ESM/CJS interop, source maps |
-| Request forwarding (Vite→Hono) | ~25 | Medium | Edge cases with streaming, headers |
-| Error overlay integration | ~10 | Low | Nice-to-have but expected |
-| **Total** | **~100 lines** | **High** | **Ongoing** |
+| Feature                        |  Lines of Code | Complexity | Maintenance Risk                         |
+| ------------------------------ | -------------: | ---------: | ---------------------------------------- |
+| Middleware mode setup          |            ~20 |     Medium | Vite API changes between versions        |
+| HMR client injection           |            ~15 |       High | Must track Vite's HMR protocol changes   |
+| SSR transform pipeline         |            ~30 |  Very High | Must handle ESM/CJS interop, source maps |
+| Request forwarding (Vite→Hono) |            ~25 |     Medium | Edge cases with streaming, headers       |
+| Error overlay integration      |            ~10 |        Low | Nice-to-have but expected                |
+| **Total**                      | **~100 lines** |   **High** | **Ongoing**                              |
 
 ### Cost-Benefit Analysis
 
-| Factor | Keep Plugin | Remove & Reimplement |
-|--------|:-----------:|:-------------------:|
-| Bundle size impact | **0** (dev-only) | **0** |
-| Dependency count | +1 npm dep | -1 npm dep |
-| Code to maintain | ~5 lines (usage) | ~100 lines (impl) |
-| HMR reliability | Battle-tested (Hono team) | Custom = bugs |
-| Vite version compat | Maintained by authors | We track breaking changes |
-| DX quality | Excellent (instant reload) | Degraded or broken |
-| **Verdict** | **✅ Win** | **❌ Lose** |
+| Factor              |        Keep Plugin         |   Remove & Reimplement    |
+| ------------------- | :------------------------: | :-----------------------: |
+| Bundle size impact  |      **0** (dev-only)      |           **0**           |
+| Dependency count    |         +1 npm dep         |        -1 npm dep         |
+| Code to maintain    |      ~5 lines (usage)      |     ~100 lines (impl)     |
+| HMR reliability     | Battle-tested (Hono team)  |       Custom = bugs       |
+| Vite version compat |   Maintained by authors    | We track breaking changes |
+| DX quality          | Excellent (instant reload) |    Degraded or broken     |
+| **Verdict**         |         **✅ Win**         |        **❌ Lose**        |
 
 ## Honest Counter-arguments (Why ANALYSIS Marked This P3)
 
@@ -53,7 +54,7 @@ To replace `@hono/vite-dev-server`, KISS would need a custom Vite plugin that:
    - From Hono's own org (not a random package)
    - Already a transitive dep of `hono` ecosystem users likely have
 
-2. **"Locks us to Hono"** — True, but KISS *is* a Hono framework.
+2. **"Locks us to Hono"** — True, but KISS _is_ a Hono framework.
    Replacing Hono would require rewriting everything regardless of this plugin.
 
 3. **"Could break on Vite major bumps"** — True, but:
@@ -82,4 +83,4 @@ In `vite build`, the import is tree-shaken and the package never touched.
 
 ---
 
-*Evaluated: 2026-04-28 | Version reviewed: @hono/vite-dev-server@^0.25.3*
+_Evaluated: 2026-04-28 | Version reviewed: @hono/vite-dev-server@^0.25.3_

@@ -58,9 +58,14 @@ export {
 } from './errors.js';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './ssr-handler.js';
-export { rewriteHtmlFiles, buildIslandChunkMap, injectClientScript, injectCspMeta } from './ssg-postprocess.js';
+export {
+  buildIslandChunkMap,
+  injectClientScript,
+  injectCspMeta,
+  rewriteHtmlFiles,
+} from './ssg-postprocess.js';
 export { printBuildManifest, scanClientBuild, scanSSGOutput } from './build-manifest.js';
-export type { BuildManifest, ArtifactInfo } from './build-manifest.js';
+export type { ArtifactInfo, BuildManifest } from './build-manifest.js';
 // generateHydrationScript was removed in v0.3.0 — hydration logic is now
 // in the Vite-built client entry (entry-generators.ts::generateClientEntry).
 // The inline <script> approach couldn't import @lit-labs/ssr-client
@@ -133,7 +138,11 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   const VIRTUAL_ENTRY_ID = 'virtual:kiss-hono-entry';
   const RESOLVED_ENTRY_ID = '\0' + VIRTUAL_ENTRY_ID;
 
-  function generateEntry(routes: RouteEntry[], islandTagNames: string[] = [], packageIslands: PackageIslandMeta[] = []): string {
+  function generateEntry(
+    routes: RouteEntry[],
+    islandTagNames: string[] = [],
+    packageIslands: PackageIslandMeta[] = [],
+  ): string {
     return generateHonoEntryCode(routes, {
       routesDir: resolvedOptions.routesDir,
       islandsDir: resolvedOptions.islandsDir,
@@ -182,7 +191,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         if (resolvedOptions.packageIslands && resolvedOptions.packageIslands.length > 0) {
           ctx.packageIslands = await scanPackageIslands(resolvedOptions.packageIslands);
           if (ctx.packageIslands.length > 0) {
-            console.log(`[KISS] Package islands: ${ctx.packageIslands.map((i) => i.tagName).join(', ')}`);
+            console.log(
+              `[KISS] Package islands: ${ctx.packageIslands.map((i) => i.tagName).join(', ')}`,
+            );
           }
         }
 
@@ -196,7 +207,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         );
       } catch (err) {
         // Route scanning failure is always fatal — empty builds should not pass CI
-        throw new Error(`[KISS] Route scan failed: ${err instanceof Error ? err.message : String(err)}`);
+        throw new Error(
+          `[KISS] Route scan failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     },
   };

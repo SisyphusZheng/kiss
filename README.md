@@ -316,12 +316,12 @@ export default middleware;
 
 ## 包结构
 
-| 包                                          | 版本  | 说明                                            |
-| ------------------------------------------- | ----- | ----------------------------------------------- |
-| [@kissjs/core](https://jsr.io/@kissjs/core)   | 0.3.0 | 核心框架 — Vite 插件 + Lit/Hono re-export       |
-| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)     | 0.2.1 | RPC 客户端 — Lit ReactiveController             |
-| [@kissjs/ui](https://jsr.io/@kissjs/ui)       | 0.3.0 | UI 组件库 — kiss-layout, kiss-theme-toggle 等   |
-| [@kissjs/create](https://jsr.io/@kissjs/create) | 0.3.0 | 项目脚手架 — 一键创建 KISS 应用              |
+| 包                                              | 版本  | 说明                                          |
+| ----------------------------------------------- | ----- | --------------------------------------------- |
+| [@kissjs/core](https://jsr.io/@kissjs/core)     | 0.3.0 | 核心框架 — Vite 插件 + Lit/Hono re-export     |
+| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)       | 0.2.1 | RPC 客户端 — Lit ReactiveController           |
+| [@kissjs/ui](https://jsr.io/@kissjs/ui)         | 0.3.0 | UI 组件库 — kiss-layout, kiss-theme-toggle 等 |
+| [@kissjs/create](https://jsr.io/@kissjs/create) | 0.3.0 | 项目脚手架 — 一键创建 KISS 应用               |
 
 > JSR 上有旧包 `@kissjs/vite` 和 `@kissjs/ssg`，已废弃，请勿使用。
 

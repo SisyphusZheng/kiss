@@ -8,227 +8,224 @@ export class ArchitecturePage extends LitElement {
     pageStyles,
     css`
 
-`,
+:`,
   ];
   render() {
     return html`
       <kiss-layout currentPath="/guide/architecture">
         <div class="container">
-          <h1>Architecture</h1>
+          <h1>架构设计</h1>
           <p class="subtitle">
-            How KISS Framework implements the K·I·S·S Architecture constraints —
-            connecting Hono, Lit, and Vite into one plugin.
+            KISS 框架如何实现 K·I·S·S 架构约束——
+            将 Hono、Lit 和 Vite 融合为一个插件。
           </p>
 
-          <h2>User Perspective</h2>
+          <h2>用户视角</h2>
           <code-block
-            ><pre><code>// vite.config.ts — your only config
-import { kiss } from '@kissjs/core'
+            ><pre><code>// vite.config.ts —— 你唯一的配置
+import { kiss } from '@kissjs/core';
 export default defineConfig({
   plugins: [kiss()]
 })</code></pre></code-block
           >
 
-          <h2>KISS Architecture = Jamstack, Web Standards Native</h2>
+          <h2>KISS 架构 = Jamstack，原生 Web 标准</h2>
           <p>
-            The K·I·S·S constraints align 1:1 with Jamstack's three pillars,
-            implemented entirely through Web Standards:
+            K·I·S·S 约束与 Jamstack 三大支柱一一对应，
+            完全通过 Web 标准实现：
           </p>
           <table>
             <thead>
               <tr>
                 <th>Jamstack</th>
-                <th>KISS Constraint</th>
-                <th>Implementation</th>
-                <th>Web Standard</th>
+                <th>KISS 约束</th>
+                <th>实现方式</th>
+                <th>Web 标准</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><strong>M</strong>arkup</td>
-                <td>K + S (Knowledge + Semantic)</td>
-                <td>SSG + DSD — zero-JS static HTML</td>
-                <td>Declarative Shadow DOM</td>
+                <td>K + S（知识 + 语义）</td>
+                <td>SSG + DSD —— 零 JS 静态 HTML</td>
+                <td>声明式 Shadow DOM</td>
               </tr>
               <tr>
                 <td><strong>A</strong>PIs</td>
-                <td>S (Static — Serverless extension)</td>
-                <td>API Routes — Hono handlers + RPC</td>
+                <td>S（Static —— Serverless 扩展）</td>
+                <td>API Routes —— Hono handlers + RPC</td>
                 <td>Fetch API</td>
               </tr>
               <tr>
                 <td><strong>J</strong>avaScript</td>
-                <td>I (Isolated)</td>
-                <td>Islands — Shadow DOM + lazy hydration</td>
+                <td>I（Isolated）</td>
+                <td>Islands —— Shadow DOM + 懒 Hydration</td>
                 <td>Web Components</td>
               </tr>
             </tbody>
           </table>
           <p>
-            No other framework covers all three Jamstack dimensions with native
-            Web Standards.
+            没有其他框架用原生 Web 标准覆盖 Jamstack 的全部三个维度。
           </p>
 
-          <h2>Plugin Composition</h2>
+          <h2>插件组合</h2>
           <p>
-            The <span class="inline-code">kiss()</span> function returns an
-            array of Vite plugins, each enforcing a specific KISS constraint:
+            <span class="inline-code">kiss()</span> 函数返回一组
+            Vite 插件，每个强制一个特定的 KISS 约束：
           </p>
           <table>
             <thead>
               <tr>
-                <th>Plugin</th>
+                <th>插件</th>
                 <th>Hook</th>
-                <th>Role</th>
-                <th>Constraint</th>
+                <th>职责</th>
+                <th>约束</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>kiss:core</td>
                 <td>configResolved + buildStart</td>
-                <td>Route scanning + virtual module generation</td>
-                <td>K (Knowledge)</td>
+                <td>路由扫描 + 虚拟模块生成</td>
+                <td>K（知识）</td>
               </tr>
               <tr>
                 <td>kiss:virtual-entry</td>
                 <td>resolveId + load</td>
-                <td>Provide virtual:kiss-hono-entry</td>
+                <td>提供 virtual:kiss-hono-entry</td>
                 <td>—</td>
               </tr>
               <tr>
                 <td>@hono/vite-dev-server</td>
                 <td>configureServer</td>
-                <td>Dev mode Hono middleware</td>
+                <td>开发模式 Hono 中间件</td>
                 <td>—</td>
               </tr>
               <tr>
                 <td>island-transform</td>
                 <td>transform</td>
-                <td>AST marking (__island, __tagName)</td>
-                <td>I (Isolated)</td>
+                <td>AST 标记（__island, __tagName）</td>
+                <td>I（隔离）</td>
               </tr>
               <tr>
                 <td>island-extractor</td>
                 <td>build</td>
-                <td>Build-time island dependency analysis</td>
-                <td>I (Isolated)</td>
+                <td>构建时 Island 依赖分析</td>
+                <td>I（隔离）</td>
               </tr>
               <tr>
                 <td>html-template</td>
                 <td>transformIndexHtml</td>
-                <td>Preload, meta, hydration injection</td>
-                <td>I (Isolated)</td>
+                <td>Preload、meta、hydration 注入</td>
+                <td>I（隔离）</td>
               </tr>
               <tr>
                 <td>kiss:ssg</td>
                 <td>closeBundle</td>
-                <td>Static site generation with DSD</td>
-                <td>K + S (Knowledge + Static)</td>
+                <td>带 DSD 的静态站点生成</td>
+                <td>K + S（知识 + 静态）</td>
               </tr>
               <tr>
                 <td>kiss:build</td>
                 <td>build</td>
-                <td>Island client JS bundles</td>
-                <td>I (Isolated)</td>
+                <td>Island 客户端 JS 打包</td>
+                <td>I（隔离）</td>
               </tr>
             </tbody>
           </table>
 
-          <h2>Request Lifecycle (Dev)</h2>
+          <h2>请求生命周期（开发模式）</h2>
           <code-block
-            ><pre><code>Request → Vite Dev Server → Hono middleware → Route match
-  → Vite SSR (ssrLoadModule) → @lit-labs/ssr renders Lit
-  → HTML + Declarative Shadow DOM → Inject Island hydration → Response</code></pre></code-block
+            ><pre><code>请求 → Vite Dev Server → Hono 中间件 → 路由匹配
+  → Vite SSR (ssrLoadModule) → @lit-labs/ssr 渲染 Lit
+  → HTML + 声明式 Shadow DOM → 注入 Island hydration → 响应</code></pre></code-block
           >
 
-          <h2>Build Lifecycle (SSG)</h2>
+          <h2>构建生命周期（SSG）</h2>
           <code-block
             ><pre><code>vite build → closeBundle hook:
-  1. Scan routes                             ← K: all routes known at build time
-  2. Generate SSG entry with DOM shim
-  3. Create Vite SSR server (configFile: false)
-  4. Load entry → Hono app → toSSG()
-  5. @lit-labs/ssr renders each page with DSD ← K: content encoded in HTML
-  6. Island components → separate JS chunks    ← I: isolated JS bundles
-  7. Non-Island components → zero client JS    ← I: no JS where not needed
-  8. Write dist/ as static HTML                ← S: static output only</code></pre></code-block
+  1. 扫描路由                             ← K：所有路由在构建时已知
+  2. 生成带 DOM shim 的 SSG 入口
+  3. 创建 Vite SSR 服务器（configFile: false）
+  4. 加载入口 → Hono app → toSSG()
+  5. @lit-labs/ssr 用 DSD 渲染每页 ← K：内容编码在 HTML 中
+  6. Island 组件 → 独立 JS chunks    ← I：隔离的 JS 包
+  7. 非 Island 组件 → 零客户端 JS    ← I：不需要的地方无 JS
+  8. 写入 dist/ 为静态 HTML      ← S：仅静态输出</code></pre></code-block
           >
 
-          <h2>Full-Stack Deployment</h2>
+          <h2>全栈部署</h2>
           <p>
-            KISS Architecture's S constraint (Static) means you deploy two
-            things independently:
+            KISS 架构的 S 约束（Static）意味着你独立部署两样东西：
           </p>
           <table>
             <thead>
               <tr>
-                <th>Component</th>
-                <th>Content</th>
-                <th>Constraint</th>
-                <th>Deploy To</th>
+                <th>组件</th>
+                <th>内容</th>
+                <th>约束</th>
+                <th>部署到</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><strong>dist/</strong> (static)</td>
+                <td><strong>dist/</strong>（静态）</td>
                 <td>HTML + DSD + Island JS</td>
                 <td>K + I + S</td>
                 <td>CDN / GitHub Pages / S3</td>
               </tr>
               <tr>
-                <td><strong>API Routes</strong> (dynamic)</td>
-                <td>Hono handlers</td>
-                <td>S (Serverless)</td>
-                <td>Serverless (Deno Deploy / CF Workers)</td>
+                <td><strong>API Routes</strong>（动态）</td>
+                <td>Hono Handlers</td>
+                <td>S（Serverless）</td>
+                <td>Serverless（Deno Deploy / CF Workers）</td>
               </tr>
             </tbody>
           </table>
           <p>
-            Static files go to CDN for global performance. API Routes deploy as
-            Serverless functions. Zero coupling between the two. This is the
-            Jamstack model enforced by the S constraint.
+            静态文件走 CDN 获得全球性能。API Routes 部署为
+            Serverless 函数。两者零耦合。这就是
+            S 约束强制执行的 Jamstack 模型。
           </p>
 
-          <h2>DSD Output</h2>
+          <h2>DSD 输出</h2>
           <p>
-            Every Lit component rendered by
-            <span class="inline-code">@lit-labs/ssr</span> outputs
-            <strong>Declarative Shadow DOM</strong>. This satisfies the K
-            constraint (content knowledge at build time) and the S constraint
-            (semantic baseline without JS):
+            每个由
+            <span class="inline-code">@lit-labs/ssr</span> 渲染的
+            Lit 组件都输出
+            <strong>声明式 Shadow DOM</strong>。这满足了 K
+            约束（构建时内容知识）和 S 约束
+            （无 JS 的语义基线）：
           </p>
           <code-block
-            ><pre><code>&lt;!-- SSG output for a Lit component --&gt;
+            ><pre><code>&lt;!-- SSG 输出的 Lit 组件 --&gt;
 &lt;app-layout&gt;
   &lt;template shadowrootmode="open"&gt;
-    &lt;style&gt;/* scoped styles */&lt;/style&gt;
+    &lt;style&gt;/* 作用域样式 */&lt;/style&gt;
     &lt;header&gt;...&lt;/header&gt;
     &lt;main&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/main&gt;
     &lt;footer&gt;...&lt;/footer&gt;
   &lt;/template&gt;
-  &lt;!-- slotted page content --&gt;
+  &lt;!-- 插槽页面内容 --&gt;
 &lt;/app-layout&gt;</code></pre></code-block
           >
           <p>
-            Browsers with DSD support render the Shadow DOM content immediately.
-            When Lit hydrates, it reuses the existing DOM — no flash, no
-            duplication.
+            支持 DSD 的浏览器立即渲染 Shadow DOM 内容。
+            当 Lit hydration 时，它复用现有 DOM —— 无闪烁，无重复。
           </p>
 
           <h2>Island Hydration</h2>
           <p>
-            At build time, <span class="inline-code">island-transform</span>
-            marks island modules. <span class="inline-code">island-extractor</span
-            > builds a dependency map. The HTML template plugin injects a
-            hydration script that lazy-loads only the island JS bundles the page
-            needs. This enforces the I constraint — only Islands get JS.
+            构建时，<span class="inline-code">island-transform</span>
+            标记 island 模块。<span class="inline-code">island-extractor</span>
+            > 构建依赖映射。HTML 模板插件注入
+            hydration 脚本，只懒加载页面需要的 island JS 包。这强制执行 I 约束——只有 Islands 获得 JS。
           </p>
 
           <div class="nav-row">
-            <a href="/guide/testing" class="nav-link">&larr; Testing</a>
+            <a href="/guide/testing" class="nav-link">&larr; 测试</a>
             <a href="/guide/deployment" class="nav-link"
-              >Deployment &rarr;</a
+              >部署 &rarr;</a
             >
           </div>
         </div>

@@ -11,7 +11,7 @@ export class ErrorHandlingPage extends LitElement {
         padding: 1rem;
         background: var(--kiss-bg-surface);
         border-left: 3px solid var(--wa-color-danger-500, #ef4444);
-        border-radius: 0 3px 3px;
+        border-radius: 0 3px 3px 0;
         margin: 0.75rem 0;
         font-size: 0.8125rem;
         line-height: 1.8;
@@ -22,23 +22,23 @@ export class ErrorHandlingPage extends LitElement {
     return html`
       <kiss-layout currentPath="/guide/error-handling">
         <div class="container">
-          <h1>Error Handling</h1>
+          <h1>错误处理</h1>
           <p class="subtitle">
-            Type-safe error hierarchy, global handlers, and cross-boundary error mapping.
+            类型安全的错误层级、全局处理器、跨边界错误映射。
           </p>
 
-          <h2>Design Philosophy</h2>
+          <h2>设计哲学</h2>
           <ul>
-            <li>Every error has a type — no bare <span class="inline-code">Error</span></li>
-            <li>Global error handler catches everything</li>
-            <li>Operational errors → structured response to users</li>
-            <li>Programming errors → log + generic 500</li>
-            <li>Unified error format across SSR → Browser → API boundaries</li>
+            <li>每个错误都有类型——不使用裸 <span class="inline-code">Error</span></li>
+            <li>全局错误处理器捕获一切</li>
+            <li>操作性错误 → 结构化响应给用户</li>
+            <li>编程错误 → 日志 + 通用 500</li>
+            <li>统一的错误格式跨 SSR → 浏览器 → API 边界</li>
           </ul>
 
-          <h2>Error Class Hierarchy</h2>
+          <h2>错误类层级</h2>
           <div class="error-hierarchy">
-            <strong>KissError</strong> (base: code, statusCode, message)<br>
+            <strong>KissError</strong> (基类: code, statusCode, message)<br>
             ├── <strong>NotFoundError</strong> (404)<br>
             ├── <strong>UnauthorizedError</strong> (401)<br>
             ├── <strong>ForbiddenError</strong> (403)<br>
@@ -49,78 +49,77 @@ export class ErrorHandlingPage extends LitElement {
             └── <strong>HydrationError</strong> (500)
           </div>
 
-          <h2>Using Error Classes</h2>
-          <code-block
-          ><pre><code>import { NotFoundError, ValidationError } from '@kissjs/core'
+          <h2>使用错误类</h2>
+          <code-block>
+            ><pre><code>import { NotFoundError, ValidationError } from '@kissjs/core';
 
-          // In an API route handler
-          app.get('/api/posts/:id', async (c) => {
-            const post = await findPost(c.req.param('id'))
-            if (!post) throw new NotFoundError('Post not found')
+// 在 API 路由处理器中
+app.get('/api/posts/:id', async (c) => {
+  const post = await findPost(c.req.param('id'));
+  if (!post) throw new NotFoundError('Post not found');
 
-            const { title } = await c.req.json()
-            if (!title) throw new ValidationError('Title is required')
+  const { title } = await c.req.json();
+  if (!title) throw new ValidationError('Title is required');
 
-            return c.json(post)
-          })</code></pre></code-block>
+  return c.json(post);
+})</code></pre></code-block>
 
-          <h2>SSR Error Rendering</h2>
-          <p>KISS provides <span class="inline-code">renderSsrError()</span> with dev/prod modes:</p>
+          <h2>SSR 错误渲染</h2>
+          <p>KISS 提供 <span class="inline-code">renderSsrError()</span>，支持开发/生产模式：</p>
           <table>
             <thead>
               <tr>
-                <th>Mode</th>
-                <th>Behavior</th>
+                <th>模式</th>
+                <th>行为</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Dev</td>
-                <td>Full error message + stack trace for debugging</td>
+                <td>开发</td>
+                <td>完整错误消息 + 堆栈跟踪用于调试</td>
               </tr>
               <tr>
-                <td>Prod</td>
-                <td>Safe generic error page — no internal details exposed</td>
+                <td>生产</td>
+                <td>安全的通用错误页面——不暴露内部细节</td>
               </tr>
             </tbody>
           </table>
 
-          <h2>Three-Layer Error Strategy</h2>
+          <h2>三层错误策略</h2>
           <table>
             <thead>
               <tr>
-                <th>Layer</th>
-                <th>Scope</th>
-                <th>Strategy</th>
+                <th>层级</th>
+                <th>范围</th>
+                <th>策略</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>SSG (Build-time)</td>
-                <td>Build → HTML</td>
-                <td>renderSsrError() dev/prod modes. Errors during build, not at runtime.</td>
+                <td><strong>SSG（构建时）</strong></td>
+                <td>构建 → HTML</td>
+                <td>renderSsrError() 开发/生产模式。错误在构建时发生，不在运行时。</td>
               </tr>
               <tr>
-                <td>Hydration</td>
-                <td>Browser → Island</td>
-                <td>console.warn + graceful fallback</td>
+                <td><strong>Hydration</strong></td>
+                <td>浏览器 → Island</td>
+                <td>console.warn + 优雅回退</td>
               </tr>
               <tr>
-                <td>RPC</td>
-                <td>Client → API</td>
-                <td>RpcError with typed error mapping</td>
+                <td><strong>RPC</strong></td>
+                <td>客户端 → API</td>
+                <td>RpcError 带类型化错误映射</td>
               </tr>
             </tbody>
           </table>
           <p>
-            <strong>Note:</strong> "SSR" in KISS means <em>build-time rendering via @lit-labs/ssr</em>,
-            not a runtime server. Errors occur during <span class="inline-code">vite build</span>, never
-            in production.
+            <strong>注意：</strong> KISS 中的"SSR"指的是<span class="inline-code">@lit-labs/ssr</span> 的<em>构建时渲染</em>，
+            不是运行时服务器。错误在 <span class="inline-code">vite build</span> 期间发生，从不在生产环境中。
           </p>
 
           <div class="nav-row">
-            <a href="/guide/configuration" class="nav-link">&larr; Configuration</a>
-            <a href="/guide/security-middleware" class="nav-link">Security &amp; Middleware &rarr;</a>
+            <a href="/guide/configuration" class="nav-link">&larr; 配置</a>
+            <a href="/guide/security-middleware" class="nav-link">安全 &amp; 中间件 &rarr;</a>
           </div>
         </div>
       </kiss-layout>

@@ -19,7 +19,7 @@
  */
 
 import { join } from 'node:path';
-import { readFileSync, unlinkSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
 
 interface BuildSSGOptions {
@@ -153,7 +153,11 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
           if (!nodeFs.existsSync(path)) nodeFs.mkdirSync(path, { recursive: true });
         },
         isDirectory: (path: string) => {
-          try { return nodeFs.statSync(path).isDirectory(); } catch { return false; }
+          try {
+            return nodeFs.statSync(path).isDirectory();
+          } catch {
+            return false;
+          }
         },
       };
 
@@ -215,7 +219,9 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
   } catch (err) {
     throw new Error(`[KISS SSG] Failed: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
-    try { unlinkSync(tmpEntryPath); } catch { /* ignore */ }
+    try {
+      unlinkSync(tmpEntryPath);
+    } catch { /* ignore */ }
   }
 }
 

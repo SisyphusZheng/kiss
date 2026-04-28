@@ -91,12 +91,12 @@ export class MinimalBlogDemoPage extends LitElement {
             </div>
             <div class="post-list">
               <div class="post-item">
-                <h3>Understanding KISS Architecture</h3>
-                <p>How K·I·S·S constraints enforce Jamstack principles...</p>
+                <h3>理解 KISS 架构</h3>
+                <p>K·I·S·S 约束如何强制执行 Jamstack 原则...</p>
               </div>
               <div class="post-item">
-                <h3>DSD: The Missing Bridge</h3>
-                <p>Declarative Shadow DOM solves the encapsulation vs reachability dilemma...</p>
+                <h3>DSD：缺失的桥梁</h3>
+                <p>声明式 Shadow DOM 解决了封装性与可访问性之间的两难...</p>
               </div>
             </div>
           </div>

@@ -4,7 +4,7 @@
  * v0.3.0: generateClientEntry now takes ClientIslandEntry[] + strategy.
  * It includes Lit hydration logic (hydrate from @lit-labs/ssr-client).
  */
-import { assertStringIncludes, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { generateClientEntry } from '../src/entry-generators.ts';
 
 Deno.test('build - generateClientEntry', async (t) => {
@@ -46,8 +46,8 @@ Deno.test('build - generateClientEntry', async (t) => {
   await t.step('imports hydrate from @lit-labs/ssr-client', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertStringIncludes(code, "@lit-labs/ssr-client");
-    assertStringIncludes(code, "hydrate");
+    assertStringIncludes(code, '@lit-labs/ssr-client');
+    assertStringIncludes(code, 'hydrate');
   });
 
   await t.step('waits for whenDefined before hydrating', () => {

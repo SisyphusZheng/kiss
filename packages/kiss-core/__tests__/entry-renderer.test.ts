@@ -9,7 +9,12 @@
  * - Full code structure validation
  */
 
-import { assertEquals, assertExists, assertStringIncludes, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import {
+  assertEquals,
+  assertExists,
+  assertFalse,
+  assertStringIncludes,
+} from 'jsr:@std/assert@^1.0.0';
 import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '../src/hono-entry.ts';
 import type { RouteEntry } from '../src/types.ts';
 
@@ -23,11 +28,26 @@ const basicRoutes: RouteEntry[] = [
 const withSpecialRoutes: RouteEntry[] = [
   { path: '/', filePath: 'index.ts', type: 'page', varName: 'pageIndex' },
   { path: '/guide', filePath: 'guide/index.ts', type: 'page', varName: 'guideIndex' },
-  { path: '/guide/getting-started', filePath: 'guide/getting-started.ts', type: 'page', varName: 'guideGettingStarted' },
+  {
+    path: '/guide/getting-started',
+    filePath: 'guide/getting-started.ts',
+    type: 'page',
+    varName: 'guideGettingStarted',
+  },
   { path: '/api/data', filePath: 'api/data.ts', type: 'api', varName: 'apiData' },
   { path: '/_renderer', filePath: '_renderer.ts', type: 'special', varName: 'specialRenderer' },
-  { path: '/guide/_renderer', filePath: 'guide/_renderer.ts', type: 'special', varName: 'guideRenderer' },
-  { path: '/api/_middleware', filePath: 'api/_middleware.ts', type: 'special', varName: 'apiMiddleware' },
+  {
+    path: '/guide/_renderer',
+    filePath: 'guide/_renderer.ts',
+    type: 'special',
+    varName: 'guideRenderer',
+  },
+  {
+    path: '/api/_middleware',
+    filePath: 'api/_middleware.ts',
+    type: 'special',
+    varName: 'apiMiddleware',
+  },
 ];
 
 // ─── CSP Tests ───────────────────────────────────────────────
@@ -123,7 +143,7 @@ Deno.test('buildEntryDescriptor: special routes are separated from page/api', ()
   // Special routes should NOT be in apiRoutes or pageRoutes
   assertEquals(desc.apiRoutes.some((r) => r.type === 'special'), false);
   assertEquals(desc.pageRoutes.some((r) => r.type === 'special'), false);
-  
+
   // They should be in specialRoutes
   assertEquals(desc.specialRoutes?.length, 3); // _renderer ×2 + _middleware ×1
 });
@@ -191,8 +211,10 @@ Deno.test('renderEntry: no bare process.env references', () => {
   const codeLines = code
     .split('\n')
     .filter((l) => !l.trimStart().startsWith('//') && !l.trimStart().startsWith('*'));
-  assertFalse(codeLines.some((l) => l.includes('process.env')),
-    'Generated code must not contain process.env calls');
+  assertFalse(
+    codeLines.some((l) => l.includes('process.env')),
+    'Generated code must not contain process.env calls',
+  );
 });
 
 Deno.test('renderEntry: app.route for API routes (not app.all)', () => {
@@ -216,7 +238,7 @@ Deno.test('renderEntry: imports Hono and SSR dependencies', () => {
   const code = renderEntry(desc);
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
-  assertStringIncludes(code, "@lit-labs/ssr");
+  assertStringIncludes(code, '@lit-labs/ssr');
 });
 
 Deno.test('renderEntry: SSG mode includes DOM shim', () => {

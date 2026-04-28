@@ -34,158 +34,157 @@ export class DeploymentPage extends LitElement {
     return html`
       <kiss-layout currentPath="/guide/deployment">
         <div class="container">
-          <h1>Deployment</h1>
+          <h1>部署</h1>
           <p class="subtitle">
-            Build once, deploy anywhere. KISS Architecture (S: Static) — static frontend + Serverless
-            APIs.
+            构建一次，随处部署。KISS 架构（S：静态）—— 静态前端 + Serverless APIs。
           </p>
 
-          <h2>Build</h2>
-          <code-block
-          ><pre><code>deno run -A npm:vite build
-            # Output: dist/ directory with static HTML + island JS chunks</code></pre></code-block>
+          <h2>构建</h2>
+          <code-block>
+            <pre><code>deno run -A npm:vite build
+  # 输出：dist/ 目录，包含静态 HTML + island JS 块</code></pre></code-block>
 
-            <h2>Full-Stack Architecture</h2>
-            <p>KISS Architecture's S constraint means two independent deployment targets:</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Component</th>
-                  <th>Content</th>
-                  <th>Deploy To</th>
-                  <th>Scaling</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Static Frontend</strong></td>
-                  <td>dist/ (HTML + DSD + Island JS)</td>
-                  <td>CDN / GitHub Pages / S3</td>
-                  <td>Global edge cache</td>
-                </tr>
-                <tr>
-                  <td><strong>API Routes</strong></td>
-                  <td>Hono handlers</td>
-                  <td>Serverless functions</td>
-                  <td>Auto-scale on demand</td>
-                </tr>
-              </tbody>
-            </table>
-            <p>
-              Static files and API functions are decoupled. Frontend deploys to the cheapest possible
-              hosting; APIs deploy to Serverless platforms and scale independently.
-            </p>
+          <h2>全栈架构</h2>
+          <p>KISS 架构的 S 约束意味着两个独立的部署目标：</p>
+          <table>
+            <thead>
+              <tr>
+                <th>组件</th>
+                <th>内容</th>
+                <th>部署到</th>
+                <th>扩展</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>静态前端</strong></td>
+                <td>dist/（HTML + DSD + Island JS）</td>
+                <td>CDN / GitHub Pages / S3</td>
+                <td>全局边缘缓存</td>
+              </tr>
+              <tr>
+                <td><strong>API Routes</strong></td>
+                <td>Hono handlers</td>
+                <td>Serverless functions</td>
+                <td>按需自动扩展</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            静态文件和 API 函数解耦。前端部署到最便宜的主机；
+            API 部署到 Serverless 平台，独立扩展。
+          </p>
 
-            <h2>Static Frontend Deployment</h2>
-            <p>
-              KISS Architecture produces only static files. The <span class="inline-code">dist/</span>
-              directory contains HTML (with DSD) and island JS bundles. Deploy to any static host.
-            </p>
+          <h2>静态前端部署</h2>
+          <p>
+            KISS 架构只生成静态文件。<span class="inline-code">dist/</span>
+            目录包含 HTML（带 DSD）和 island JS 包。部署到任何静态主机。
+          </p>
 
-            <div class="platform-grid">
-              <div class="platform-card">
-                <h3>GitHub Pages</h3>
-                <p>Set base to /repo-name/ in vite.config.ts</p>
-              </div>
-              <div class="platform-card">
-                <h3>Cloudflare Pages</h3>
-                <p>Point to dist/ directory</p>
-              </div>
-              <div class="platform-card">
-                <h3>Vercel</h3>
-                <p>Framework: Other, output: dist/</p>
-              </div>
-              <div class="platform-card">
-                <h3>Netlify</h3>
-                <p>Publish directory: dist/</p>
-              </div>
-              <div class="platform-card">
-                <h3>S3 + CloudFront</h3>
-                <p>Upload dist/ to S3 bucket</p>
-              </div>
-              <div class="platform-card">
-                <h3>Any static host</h3>
-                <p>Just upload dist/</p>
-              </div>
+          <div class="platform-grid">
+            <div class="platform-card">
+              <h3>GitHub Pages</h3>
+              <p>在 vite.config.ts 中设置 base 为 /repo-name/</p>
             </div>
-
-            <h2>API Routes Deployment</h2>
-            <p>
-              Hono API routes can be deployed as Serverless functions to any platform that supports
-              JavaScript:
-            </p>
-            <div class="platform-grid">
-              <div class="platform-card">
-                <h3>Deno Deploy</h3>
-                <p>Native Hono support, zero config</p>
-              </div>
-              <div class="platform-card">
-                <h3>Cloudflare Workers</h3>
-                <p>Hono adapter built-in</p>
-              </div>
-              <div class="platform-card">
-                <h3>Vercel Edge Functions</h3>
-                <p>Hono adapter available</p>
-              </div>
-              <div class="platform-card">
-                <h3>AWS Lambda</h3>
-                <p>Via @hono/aws-lambda adapter</p>
-              </div>
+            <div class="platform-card">
+              <h3>Cloudflare Pages</h3>
+              <p>指向 dist/ 目录</p>
             </div>
+            <div class="platform-card">
+              <h3>Vercel</h3>
+              <p>Framework: Other，output: dist/</p>
+            </div>
+            <div class="platform-card">
+              <h3>Netlify</h3>
+              <p>Publish directory: dist/</p>
+            </div>
+            <div class="platform-card">
+              <h3>S3 + CloudFront</h3>
+              <p>上传 dist/ 到 S3 桶</p>
+            </div>
+            <div class="platform-card">
+              <h3>任何静态主机</h3>
+              <p>只需上传 dist/</p>
+            </div>
+          </div>
 
-            <h3>API Route Example</h3>
-            <code-block
-            ><pre><code>// app/routes/api/posts.ts
-              import { Hono } from '@kissjs/core'
+          <h2>API Routes 部署</h2>
+          <p>
+            Hono API routes 可以作为 Serverless 函数部署到任何支持
+            JavaScript 的平台：
+          </p>
+          <div class="platform-grid">
+            <div class="platform-card">
+              <h3>Deno Deploy</h3>
+              <p>原生 Hono 支持，零配置</p>
+            </div>
+            <div class="platform-card">
+              <h3>Cloudflare Workers</h3>
+              <p>Hono 内置 adapter</p>
+            </div>
+            <div class="platform-card">
+              <h3>Vercel Edge Functions</h3>
+              <p>Hono adapter 可用</p>
+            </div>
+            <div class="platform-card">
+              <h3>AWS Lambda</h3>
+              <p>通过 @hono/aws-lambda adapter</p>
+            </div>
+          </div>
 
-              const app = new Hono()
-              app.get('/', (c) => c.json({ posts: [] }))
+          <h3>API Route 示例</h3>
+          <code-block>
+            <pre><code>// app/routes/api/posts.ts
+import { Hono } from 'hono';
 
-              export default app
-              export type AppType = typeof app</code></pre></code-block>
+const app = new Hono();
 
-              <h2>GitHub Pages Setup</h2>
-              <code-block
-              ><pre><code>// vite.config.ts
-                export default defineConfig({
-                  base: '/my-repo/',
-                  plugins: [kiss()],
-                })</code></pre></code-block>
+app.get('/', (c) => c.json({ posts: [] }));
 
-                <p>
-                  Add a GitHub Actions workflow to build and deploy on push to main. See the <span
-                    class="inline-code"
-                  >.github/workflows/deploy.yml</span> in this repo for a working example.
-                </p>
+export default app;
+export type AppType = typeof app;</code></pre></code-block>
 
-                <h2>Why No Server Mode?</h2>
-                <p>
-                  KISS Architecture's S constraint (Static) — <strong>构建产物仅为纯静态文件</strong> — means
-                  build output is the final product. There is no SSR runtime in production. This is not a
-                  limitation; it's a discipline that guarantees:
-                </p>
-                <ul>
-                  <li>Zero server maintenance cost</li>
-                  <li>CDN-grade performance globally</li>
-                  <li>Content available without JavaScript (DSD)</li>
-                  <li>Deployable to the cheapest possible hosting</li>
-                  <li>Static and dynamic scale independently</li>
-                </ul>
-                <p>
-                  Dynamic data belongs in API Routes, not in a monolithic server. This is the Jamstack way — and
-                  KISS Architecture enforces it as the S constraint, not convention.
-                </p>
+          <h2>GitHub Pages 设置</h2>
+          <code-block>
+            <pre><code>// vite.config.ts
+export default defineConfig({
+  base: '/my-repo/',
+  plugins: [kiss()],
+})</code></pre></code-block>
 
-                <div class="nav-row">
-                  <a href="/guide/architecture" class="nav-link">&larr; Architecture</a>
-                  <a href="/styling/kiss-ui" class="nav-link">@kissjs/ui &rarr;</a>
-                </div>
-              </div>
-            </kiss-layout>
-          `;
-        }
-      }
+          <p>
+            添加一个 GitHub Actions workflow 在推送 main 时构建并部署。参见本仓库的 <span
+              class="inline-code">.github/workflows/deploy.yml</span> 获取完整示例。
+          </p>
 
-      customElements.define('page-deployment', DeploymentPage);
-      export default DeploymentPage;
-      export const tagName = 'page-deployment';
+          <h2>为什么没有 Server 模式？</h2>
+          <p>
+            KISS 架构的 S 约束——<strong>构建产物仅为纯静态文件</strong>——意味着
+            构建输出就是最终产品。生产环境中没有 SSR 运行时。这不是
+            限制；这是一种确保以下目标的规范：
+          </p>
+          <ul>
+            <li>零服务器维护成本</li>
+            <li>全球 CDN 级性能</li>
+            <li>无需 JavaScript 即可访问内容（DSD）</li>
+            <li>部署到最便宜的主机</li>
+            <li>静态和动态独立扩展</li>
+          </ul>
+          <p>
+            动态数据属于 API Routes，不属于单体服务器。这就是 Jamstack 的方式——
+            KISS 架构将其作为 S 约束强制执行，而非约定。
+          </p>
+
+          <div class="nav-row">
+            <a href="/guide/architecture" class="nav-link">&larr; 架构</a>
+            <a href="/guide/testing" class="nav-link">测试 &rarr;</a>
+          </div>
+        </div>
+      </kiss-layout>
+    `;
+  }
+}
+
+customElements.define('page-deployment', DeploymentPage);
+export default DeploymentPage;
+export const tagName = 'page-deployment';
