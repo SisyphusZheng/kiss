@@ -1,1 +1,16 @@
-{"name": "@kissjs/create", "version": "0.3.0", "exports": {".": "./cli.ts"}, "include": ["cli.ts"], "exclude": ["node_modules", "__tests__"], "dependencies": {}, "test": {"compatibility": {"deno": ">=2.0.0"}}}
+{
+  "name": "@kissjs/create",
+  "version": "0.3.0",
+  "exports": {
+    ".": "./cli.ts"
+  },
+  "publish": {
+    "include": ["cli.ts", "deno.json", "jsr.json", "README.md"]
+  },
+  "exclude": ["node_modules", "__tests__"],
+  "test": {
+    "compatibility": {
+      "deno": ">=2.0.0"
+    }
+  }
+}

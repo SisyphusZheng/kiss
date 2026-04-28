@@ -5,14 +5,9 @@
  * Produces dist/client/islands/*.js + manifest for SSG post-processing.
  *
  * This is Phase 2 of the KISS build pipeline:
- *   Phase 1 (vite build): SSR bundle + .kiss/ metadata
+ *   Phase 1 (vite build): SSR bundle + .kiss/build-metadata.json
  *   Phase 2 (this script): Client island chunks
  *   Phase 3 (build-ssg.ts): SSG rendering + post-processing
- *
- * Extracting this from closeBundle fixes:
- *   - Watch mode: no nested viteBuild() inside Vite hooks
- *   - Error stacks: single Vite instance, clear traceability
- *   - Observability: each phase runs independently with clear logging
  *
  * Usage:
  *   deno run -A jsr:@kissjs/core/cli/build-client
@@ -24,21 +19,23 @@ import { resolve, join } from 'node:path';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { generateClientEntry, type ClientIslandEntry } from '../entry-generators.js';
 
-interface BuildClientOptions {
-  root?: string;
-  outDir?: string;
-  islandsDir?: string;
-  resolveAlias?: Record<string, string> | import('vite').Alias[];
+interface BuildMetadata {
+  islandTagNames: string[];
+  packageIslands: Array<{ tagName: string; modulePath: string }>;
+  root: string;
+  outDir: string;
+  base: string;
+  resolveAlias: Record<string, string> | Array<{ find: string; replacement: string }> | null;
+  ssrNoExternal: (string | { source: string; flags: string })[];
+  islandsDir: string;
 }
 
-async function buildClient(options: BuildClientOptions = {}): Promise<void> {
-  const root = options.root || process.cwd();
-  const outDir = options.outDir || 'dist';
-  const islandsDir = options.islandsDir || 'app/islands';
+async function buildClient(): Promise<void> {
+  const root = process.cwd();
 
   // Read island metadata from Phase 1 output
   const metadataPath = join(root, '.kiss', 'build-metadata.json');
-  let metadata: { islandTagNames: string[]; packageIslands: Array<{ tagName: string; modulePath: string }> };
+  let metadata: BuildMetadata;
 
   try {
     const raw = readFileSync(metadataPath, 'utf-8');
@@ -49,6 +46,8 @@ async function buildClient(options: BuildClientOptions = {}): Promise<void> {
     return;
   }
 
+  const outDir = metadata.outDir || 'dist';
+  const islandsDir = metadata.islandsDir || 'app/islands';
   const localIslands = metadata.islandTagNames || [];
   const packageIslands = metadata.packageIslands || [];
 
@@ -79,6 +78,16 @@ async function buildClient(options: BuildClientOptions = {}): Promise<void> {
   const clientEntryCode = generateClientEntry(islandEntries);
   writeFileSync(clientEntryPath, clientEntryCode, 'utf-8');
 
+  // Restore RegExp from JSON serialization
+  // JSON.stringify turns RegExp into {} — we need to reconstruct them
+  const noExternalPatterns = (metadata.ssrNoExternal || []).map((item) => {
+    if (typeof item === 'string') return item;
+    if (item && typeof item === 'object' && 'source' in item && 'flags' in item) {
+      return new RegExp(item.source, item.flags);
+    }
+    return item;
+  });
+
   const clientOutDir = resolve(root, outDir, 'client');
   const clientConfig: InlineConfig = {
     configFile: false,
@@ -107,7 +116,13 @@ async function buildClient(options: BuildClientOptions = {}): Promise<void> {
         },
       },
     },
-    resolve: options.resolveAlias ? { alias: options.resolveAlias } : undefined,
+    // Pass user's resolve alias from Phase 1 so island imports resolve correctly
+    resolve: metadata.resolveAlias ? { alias: metadata.resolveAlias as Record<string, string> } : undefined,
+    // SSR noExternal: ensures packages like @kissjs/ui (with decorators)
+    // are bundled by Vite instead of left as bare imports
+    ssr: {
+      noExternal: noExternalPatterns.length > 0 ? noExternalPatterns : undefined,
+    },
   };
 
   try {

@@ -8,10 +8,11 @@
     "jsr:@std/path@*": "1.1.4",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "npm:@hono/vite-dev-server@0.18": "0.18.3_hono@4.12.14",
+    "npm:@hono/vite-dev-server@~0.25.3": "0.25.3_hono@4.12.14",
     "npm:@lit-labs/ssr-client@^1.1.8": "1.1.8",
     "npm:@lit-labs/ssr-dom-shim@^1.2.0": "1.5.1",
     "npm:@lit-labs/ssr@^3.2.0": "3.3.1",
+    "npm:@lit-labs/ssr@^3.3.0": "3.3.1",
     "npm:@lit/reactive-element@2": "2.1.2",
     "npm:@types/node@22": "22.19.17",
     "npm:entities@4": "4.5.0",
@@ -209,8 +210,8 @@
         "hono"
       ]
     },
-    "@hono/vite-dev-server@0.18.3_hono@4.12.14": {
-      "integrity": "sha512-JztypLmq6qtQ3OAcz5vDzwXYBBymLztSbfDuNf4XTWkfppLjf6DHvYHtQZ5idOfNhUzdnbYY7/6QAKlVk6G3QQ==",
+    "@hono/vite-dev-server@0.25.3_hono@4.12.14": {
+      "integrity": "sha512-w3uQ0KQF0i/SDcJ6+d5njEFTr6pbolajrt/GxV0pliYL+4ywiBqiOFRWSpwW3mTuZ80boww7+ZxJTGTBIzyBQg==",
       "dependencies": [
         "@hono/node-server",
         "hono",
@@ -1110,12 +1111,11 @@
       "packages/kiss-core": {
         "packageJson": {
           "dependencies": [
-            "npm:@hono/vite-dev-server@0.18",
-            "npm:@lit-labs/ssr@^3.2.0",
+            "npm:@hono/vite-dev-server@~0.25.3",
+            "npm:@lit-labs/ssr@^3.3.0",
             "npm:@types/node@22",
-            "npm:hono@4",
+            "npm:hono@^4.7.0",
             "npm:lit@^3.2.0",
-            "npm:typescript@5",
             "npm:vite@6"
           ]
         }
@@ -1123,21 +1123,17 @@
       "packages/kiss-rpc": {
         "packageJson": {
           "dependencies": [
-            "npm:hono@^4.7.0",
-            "npm:lit@^3.2.0",
             "npm:vite-plugin-dts@^4.5.0"
           ]
         }
       },
       "packages/kiss-ui": {
         "dependencies": [
-          "jsr:@kissjs/core@~0.2.1",
           "npm:lit@^3.2.0"
         ],
         "packageJson": {
           "dependencies": [
             "npm:@types/node@22",
-            "npm:vite-plugin-dts@^4.5.0",
             "npm:vite@^6.3.0"
           ]
         }

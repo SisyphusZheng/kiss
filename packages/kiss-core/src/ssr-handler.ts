@@ -77,6 +77,7 @@ export function wrapInDocument(
     meta?: { description?: string };
     devMode?: boolean;
     routeModulePath?: string;
+    headExtras?: string;
   } = {},
 ): string {
   const {
@@ -86,6 +87,7 @@ export function wrapInDocument(
     meta,
     devMode = false,
     routeModulePath,
+    headExtras = '',
   } = options;
   const metaTags: string[] = [];
   if (meta?.description) {
@@ -113,6 +115,7 @@ export function wrapInDocument(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>${metaBlock}
+  ${headExtras}
 </head>
 <body>
   ${html}

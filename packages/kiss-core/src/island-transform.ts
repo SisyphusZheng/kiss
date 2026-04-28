@@ -144,11 +144,33 @@ export function generateHydrationScript(
   return `<script type="module" data-kiss-hydrate>
 // KISS Island Hydration Script
 // Progressive enhancement: SSR HTML is visible even if this fails.
-import { hydrate } from '@lit-labs/ssr-client';
+// No external module imports — this script is self-contained
+// so it works in browsers without import maps or bundlers.
 (function() {
   const islandLoaders = {
 ${islandDefs}
   };
+
+  // Inline hydrate() — equivalent to @lit-labs/ssr-client hydrate().
+  // Processes Declarative Shadow DOM templates and removes defer-hydration.
+  // This avoids the bare-module-import problem (@lit-labs/ssr-client
+  // can't be resolved by browsers in static HTML).
+  function hydrateElement(el) {
+    // Find the DSD template: <template shadowrootmode="open">
+    const template = el.querySelector(':scope > template[shadowrootmode="open"]');
+    if (template) {
+      // Browser with native DSD support already processed the template.
+      // For browsers without native DSD, manually create the shadow root.
+      if (!el.shadowRoot) {
+        const shadowRoot = el.attachShadow({ mode: 'open' });
+        shadowRoot.appendChild(template.content.cloneNode(true));
+        template.remove();
+      }
+    }
+    // Remove defer-hydration attribute to signal Lit that hydration is complete.
+    // Lit checks for this attribute to decide whether to hydrate or client-render.
+    el.removeAttribute('defer-hydration');
+  }
 
   async function hydrateIsland(tagName, loader) {
     try {
@@ -167,8 +189,7 @@ ${islandDefs}
       document.querySelectorAll(tagName).forEach(el => {
         // Only hydrate if element has DSD template (defer-hydration attribute)
         if (el.hasAttribute('defer-hydration')) {
-          hydrate(el);
-          el.removeAttribute('defer-hydration');
+          hydrateElement(el);
         }
       });
     } catch (error) {

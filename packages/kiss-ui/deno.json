@@ -20,7 +20,6 @@
     "skipLibCheck": true
   },
   "imports": {
-    "@kissjs/core": "jsr:@kissjs/core@^0.3.0",
     "lit": "npm:lit@^3.2.0"
   },
   "publish": {

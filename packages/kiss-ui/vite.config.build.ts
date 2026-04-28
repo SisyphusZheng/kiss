@@ -2,9 +2,14 @@
  * @kiss/ui - Vite library mode build config
  * Pure ESM output, no CJS. Multi-entry for per-component imports.
  *
- * v0.3.0: Simplified build — no dts plugin (causes issues in Deno).
- * Externalizes lit and @kissjs/core so consumers resolve them from
- * their own dependency tree.
+ * v0.3.0: Key change — compiled dist/ replaces @kissjs/core imports
+ * with direct lit imports. This matches industry standard (Shoelace,
+ * Material Web, Lit official components) — consumers only need lit
+ * as a peer dependency, not @kissjs/core.
+ *
+ * How: Vite resolve.alias maps '@kissjs/core' → 'lit' at build time.
+ * Since @kissjs/core re-exports everything from lit, this is a safe
+ * substitution that removes the unnecessary indirection.
  */
 import { defineConfig } from 'vite';
 
@@ -31,7 +36,9 @@ export default defineConfig({
         '@lit/reactive-element',
         'lit-html',
         'lit-element',
-        '@kissjs/core',
+        // NOTE: @kissjs/core is NOT externalized here.
+        // Instead, the resolve.alias below maps it to 'lit' at build time,
+        // so compiled output only imports from 'lit'.
         'vite',
       ],
       output: {
@@ -43,5 +50,12 @@ export default defineConfig({
     emptyOutDir: true,
     minify: false,
     sourcemap: true,
+  },
+  resolve: {
+    alias: {
+      // @kissjs/core re-exports lit — replace with direct lit import
+      // in compiled output so consumers don't need @kissjs/core
+      '@kissjs/core': 'lit',
+    },
   },
 });
