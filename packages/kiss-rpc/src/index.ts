@@ -32,7 +32,18 @@
  * @module
  */
 
-import type { ReactiveController, ReactiveElement } from 'lit';
+// Local type declarations — avoid pulling lit into rpc package dependency
+// These minimal interfaces match what Lit's ReactiveControllerHost provides.
+interface ReactiveController {
+  hostConnected?(): void;
+  hostDisconnected?(): void;
+}
+
+interface ReactiveElement {
+  addController(controller: ReactiveController): void;
+  removeController(controller: ReactiveController): void;
+  requestUpdate(): void;
+}
 
 /**
  * RPC Error — thrown when an API call fails.

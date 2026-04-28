@@ -12,6 +12,7 @@ import { RpcController, RpcError } from '../src/index.ts';
 import {
   assert,
   assertEquals,
+  assertExists,
   // assertFalse, // not used
   assertInstanceOf,
   // assertRejects, // not used
@@ -119,7 +120,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
   const _capturedSignal: AbortSignal | null = null;
   void _capturedSignal;
   const callPromise = ctrl.call((signal) => {
-    capturedSignal = signal;
+    _capturedSignal = signal;
     return hanging;
   });
 
@@ -132,7 +133,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
     assert(false, 'Should have thrown after abort');
   } catch (err) {
     // Should be an abort error or RpcError wrapping it
-    assert(err instanceof Error || err instanceof DomException, 'Abort should produce an error');
+    assert(err instanceof Error || err instanceof DOMException, 'Abort should produce an error');
   }
 
   assertEquals(ctrl.loading, false, 'Loading should reset after abort');
