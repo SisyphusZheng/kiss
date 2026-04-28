@@ -35,7 +35,13 @@ const withSpecialRoutes: RouteEntry[] = [
     varName: 'guideGettingStarted',
   },
   { path: '/api/data', filePath: 'api/data.ts', type: 'api', varName: 'apiData' },
-  { path: '/_renderer', filePath: '_renderer.ts', type: 'special', special: 'renderer', varName: 'specialRenderer' },
+  {
+    path: '/_renderer',
+    filePath: '_renderer.ts',
+    type: 'special',
+    special: 'renderer',
+    varName: 'specialRenderer',
+  },
   {
     path: '/guide/_renderer',
     filePath: 'guide/_renderer.ts',

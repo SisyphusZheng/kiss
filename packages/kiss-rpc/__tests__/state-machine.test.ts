@@ -117,7 +117,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
   });
 
   // This variable intentionally captures the signal for potential future assertions
-  const _capturedSignal: AbortSignal | null = null;
+  let _capturedSignal: AbortSignal | null = null;
   void _capturedSignal;
   const callPromise = ctrl.call((signal) => {
     _capturedSignal = signal;
