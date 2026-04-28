@@ -12,7 +12,7 @@
  * Run: deno test --allow-read packages/kiss-core/__tests__/ssg-smoke.test.ts
  */
 
-import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'jsr:@std/path@^1.0.0';
 import { existsSync } from 'node:fs';
 

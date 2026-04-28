@@ -19,6 +19,7 @@
  * SSR HTML is preserved (not destroyed by client-render), giving real first-paint perf.
  */
 
+// deno-lint-ignore no-unused-imports
 import type { PackageIslandMeta } from './types.js';
 
 /** Island entry for client bundle generation */

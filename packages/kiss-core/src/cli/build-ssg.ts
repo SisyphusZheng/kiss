@@ -19,6 +19,7 @@
  */
 
 import { join } from 'node:path';
+import process from 'node:process';
 import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
 
@@ -144,11 +145,13 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       const nodePath = await import('node:path');
 
       const fsModule = {
+        // deno-lint-ignore require-await
         writeFile: async (path: string, data: string | Uint8Array) => {
           const dir = nodePath.dirname(path);
           if (!nodeFs.existsSync(dir)) nodeFs.mkdirSync(dir, { recursive: true });
           nodeFs.writeFileSync(path, data);
         },
+        // deno-lint-ignore require-await
         mkdir: async (path: string) => {
           if (!nodeFs.existsSync(path)) nodeFs.mkdirSync(path, { recursive: true });
         },

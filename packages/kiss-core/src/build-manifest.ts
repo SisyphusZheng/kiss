@@ -16,7 +16,7 @@
  */
 
 import { join, resolve } from 'node:path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 
 /** File size info for a single artifact */
 interface ArtifactInfo {

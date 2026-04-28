@@ -237,7 +237,7 @@ Deno.test('SSG integration', { permissions: { read: true, write: true } }, async
     assertEquals(metaIdx < headEnd, true);
   });
 
-  await t.step('injectCspMeta - report-only mode uses correct header name', () => {
+  await t.step('injectCspMeta - report-only mode uses correct header name', async () => {
     // Clean up: use a fresh HTML file for this sub-test
     const reportOnlyDir = join(FIXTURES_DIR, 'dist', 'report-test');
     await Deno.mkdir(reportOnlyDir, { recursive: true });

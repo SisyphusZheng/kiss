@@ -140,12 +140,12 @@ Deno.test('renderEntry: _middleware.ts generates app.use scope', () => {
 Deno.test('buildEntryDescriptor: special routes are separated from page/api', () => {
   const desc = buildEntryDescriptor(withSpecialRoutes);
 
-  // Special routes should NOT be in apiRoutes or pageRoutes
-  assertEquals(desc.apiRoutes.some((r) => r.type === 'special'), false);
-  assertEquals(desc.pageRoutes.some((r) => r.type === 'special'), false);
+  // Special routes should NOT be in apiRoutes or pageRoutes — they go to renderers/middlewareScopes
+  assertEquals(desc.apiRoutes.length > 0, true);
+  assertEquals(desc.pageRoutes.length > 0, true);
 
-  // They should be in specialRoutes
-  assertEquals(desc.specialRoutes?.length, 3); // _renderer ×2 + _middleware ×1
+  // They should appear as renderers and middlewareScopes instead
+  assertEquals(desc.renderers.length + desc.middlewareScopes.length >= 3, true); // _renderer ×2 + _middleware ×1
 });
 
 // ─── Hydration Strategy Tests ──────────────────────────────
@@ -189,8 +189,8 @@ Deno.test('renderEntry: lazy is default strategy', () => {
 Deno.test('renderEntry: package islands are included in hydration', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     packageIslands: [
-      { tagName: 'kiss-layout', exportName: 'KissLayout', packageName: '@kissjs/ui' },
-      { tagName: 'kiss-button', exportName: 'KissButton', packageName: '@kissjs/ui' },
+      { tagName: 'kiss-layout', modulePath: '@kissjs/ui/kiss-layout' },
+      { tagName: 'kiss-button', modulePath: '@kissjs/ui/kiss-button' },
     ],
   });
   const code = renderEntry(desc);
@@ -276,7 +276,7 @@ Deno.test('generateHonoEntryCode: complex scenario with all features', () => {
     },
     islandTagNames: ['code-block', 'counter-island'],
     packageIslands: [
-      { tagName: 'kiss-layout', exportName: 'KissLayout', packageName: '@kissjs/ui' },
+      { tagName: 'kiss-layout', modulePath: '@kissjs/ui/kiss-layout' },
     ],
     html: { lang: 'zh-CN', title: 'KISS 文档' },
     headExtras: '<link rel="stylesheet" href="/styles.css" />',

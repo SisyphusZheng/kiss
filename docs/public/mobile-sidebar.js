@@ -1,5 +1,6 @@
 // KISS Mobile Sidebar — L2 (browser API)
 // Closes sidebar on backdrop click using composedPath() to penetrate Shadow DOM.
+// deno-lint-ignore no-var no-inner-declarations
 document.addEventListener('click', function (e) {
   var path = e.composedPath();
   for (var i = 0; i < path.length; i++) {

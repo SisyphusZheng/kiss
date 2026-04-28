@@ -1,5 +1,6 @@
 // KISS :has() Fallback — L2 (browser API)
 // For older browsers (Safari < 15.4, Firefox < 121) that don't support :has().
+// deno-lint-ignore no-var no-inner-declarations
 (function () {
   try {
     var style = document.createElement('style');

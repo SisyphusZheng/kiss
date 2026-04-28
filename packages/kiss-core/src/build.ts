@@ -42,6 +42,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
       if (!base.endsWith('/')) base += '/';
     },
 
+    // deno-lint-ignore require-await
     async closeBundle() {
       // Only run in build mode (not dev)
       if (config.command !== 'build') return;

@@ -12,9 +12,9 @@ import { RpcController, RpcError } from '../src/index.ts';
 import {
   assert,
   assertEquals,
-  assertFalse,
+  // assertFalse, // not used
   assertInstanceOf,
-  assertRejects,
+  // assertRejects, // not used
 } from 'jsr:@std/assert@^1.0.0';
 
 class MockHost {
@@ -111,11 +111,11 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
   const ctrl = new RpcController(host as never);
 
   // Create a hanging promise
-  const hanging = new Promise<never>((_, reject) => {
+  const hanging = new Promise<never>((_, _reject) => {
     // Will be rejected when aborted
   });
 
-  let capturedSignal: AbortSignal | null = null;
+  let _capturedSignal: AbortSignal | null = null;
   const callPromise = ctrl.call((signal) => {
     capturedSignal = signal;
     return hanging;

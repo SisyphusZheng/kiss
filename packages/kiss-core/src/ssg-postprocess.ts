@@ -90,7 +90,7 @@ export function buildIslandChunkMap(
 
       // Manifest keys are source paths, values have file: output path
       // e.g. { "src/islands/code-block.ts": { "file": "islands/island-code-block-abc.js", ... } }
-      for (const [srcPath, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
+      for (const [_srcPath, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
         if (!entry.file) continue;
         // Match island tagName from chunk name: island-<tagName>-hash.js
         const chunkMatch = entry.file.match(/^islands\/island-(.+?)-[A-Za-z0-9]+\.js$/);

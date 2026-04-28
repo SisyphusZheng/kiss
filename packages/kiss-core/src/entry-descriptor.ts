@@ -38,7 +38,7 @@ export type CorsOriginConfig =
 /** CSP configuration for Content-Security-Policy header */
 export interface CspConfig {
   /** CSP policy string (e.g. "default-src 'self'; script-src 'self'") */
-  policy: string;
+  policy?: string;
   /** Auto-generate nonce for <script> tags (default: false) */
   nonce?: boolean;
   /** Report-only mode (default: false) */
