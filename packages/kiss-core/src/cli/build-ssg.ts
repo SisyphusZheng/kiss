@@ -59,6 +59,20 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     if (!metadataResolveAlias && metadata.resolveAlias) {
       metadataResolveAlias = metadata.resolveAlias as Record<string, string>;
     }
+    // Read headExtras/html/middleware/hydrationStrategy from metadata
+    // (written by Phase 1 build.ts) when not provided via CLI options
+    if (!options.headExtras && metadata.headExtras) {
+      options.headExtras = metadata.headExtras;
+    }
+    if (!options.html && metadata.html) {
+      options.html = metadata.html;
+    }
+    if (!options.middleware && metadata.middleware) {
+      options.middleware = metadata.middleware;
+    }
+    if (!options.hydrationStrategy && metadata.hydrationStrategy) {
+      options.hydrationStrategy = metadata.hydrationStrategy;
+    }
   } catch {
     console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
   }

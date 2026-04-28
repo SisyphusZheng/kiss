@@ -104,14 +104,14 @@ async function buildClient(): Promise<void> {
     build: {
       outDir: clientOutDir,
       emptyOutDir: true,
+      // @ts-ignore — Vite's own manifest option (not Rollup's)
+      manifest: true,
       rollupOptions: {
         input: { client: clientEntryPath },
         output: {
           format: 'esm',
           entryFileNames: 'islands/[name].js',
           chunkFileNames: 'islands/[name]-[hash].js',
-          // @ts-ignore — @types/rollup may not include manifest yet
-          manifest: true,
           manualChunks(id: string) {
             if (id.includes(`/${islandsDir}/`)) {
               const match = id.match(/\/([^/]+)\.(ts|js)$/);
