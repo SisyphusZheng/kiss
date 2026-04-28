@@ -125,12 +125,31 @@ ${packageImportBlock}
 // When we remove it, attributeChangedCallback fires → connectedCallback →
 // update() → hydrate(this.render(), this.renderRoot, this.renderOptions).
 // This is the ONLY correct way to hydrate — hydrate() needs the TemplateResult.
+//
+// CRITICAL: document.querySelectorAll() does NOT pierce Shadow DOM.
+// SSR-rendered elements (like counter-island inside page-fullstack-demo's
+// shadow root) won't be found by a top-level querySelectorAll.
+// We must recursively walk all shadow roots.
 
 Promise.all([${whenDefinedList}]).then(() => {
-  function __kissHydrateAll() {
-    document.querySelectorAll('[defer-hydration]').forEach(el => {
-      el.removeAttribute('defer-hydration');
+  function __kissFindDeferred(root) {
+    const deferred = [];
+    // Check direct children with defer-hydration
+    root.querySelectorAll('[defer-hydration]').forEach(el => {
+      deferred.push(el);
     });
+    // Recurse into shadow roots of all custom elements
+    root.querySelectorAll('*').forEach(el => {
+      if (el.shadowRoot) {
+        deferred.push(...__kissFindDeferred(el.shadowRoot));
+      }
+    });
+    return deferred;
+  }
+
+  function __kissHydrateAll() {
+    const all = __kissFindDeferred(document);
+    all.forEach(el => el.removeAttribute('defer-hydration'));
   }
 
   function __kissHydrateElement(el) {

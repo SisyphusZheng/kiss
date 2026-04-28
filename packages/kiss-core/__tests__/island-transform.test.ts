@@ -93,6 +93,8 @@ Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t)
     const code = generateClientEntry(islands, 'eager');
     assertEquals(code.includes('[defer-hydration]'), true);
     assertEquals(code.includes("removeAttribute('defer-hydration')"), true);
+    // Must recursively find elements in Shadow DOM (querySelectorAll doesn't pierce)
+    assertEquals(code.includes('shadowRoot'), true);
     // We do NOT call hydrate(el) directly — lit-element-hydrate-support handles it
     assertEquals(code.includes('hydrate(el)'), false);
   });
