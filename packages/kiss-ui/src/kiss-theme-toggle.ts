@@ -5,22 +5,30 @@
  * Swiss International Style: Pure B&W, minimal.
  *
  * Features:
- * - Reads saved theme from localStorage
+ * - Accepts initial theme via `theme` attribute (avoids localStorage race)
+ * - Falls back to reading localStorage if no attribute is set
  * - Toggles between dark and light themes
  * - Updates document.documentElement data-theme attribute
  * - Persists preference to localStorage
  *
  * Usage:
  * ```html
+ * <!-- SSR-rendered with known theme (avoids FOUC + race condition) -->
+ * <kiss-theme-toggle theme="light"></kiss-theme-toggle>
+ *
+ * <!-- Or without attribute (falls back to localStorage) -->
  * <kiss-theme-toggle></kiss-theme-toggle>
  * ```
  *
  * KISS Architecture:
  * - This is an Island component (has Shadow DOM + hydration)
  * - Requires eager hydration (theme should be applied immediately)
+ * - The `theme` attribute lets the SSR pipeline pass the resolved theme
+ *   from the head inline script, avoiding a race between connectedCallback
+ *   reading localStorage and the head script having already set data-theme.
  */
 
-import { css, html, LitElement, type CSSResult, type TemplateResult } from '@kissjs/core';
+import { css, html, LitElement, nothing, type CSSResult, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-theme-toggle';
@@ -83,18 +91,39 @@ export class KissThemeToggle extends LitElement {
   ];
 
   static override properties = {
+    /** Initial theme from SSR/head script. Avoids localStorage race. */
+    theme: { type: String, reflect: true },
     _isLight: { state: true },
   };
+
+  /** Initial theme attribute — set by SSR or head inline script */
+  theme?: string;
 
   /** Whether the current theme is light (false = dark) */
   _isLight = false;
 
   override connectedCallback() {
     super.connectedCallback();
-    // Read saved theme from localStorage
-    const saved = localStorage.getItem('kiss-theme');
-    if (saved === 'light') {
+
+    // Priority: `theme` attribute > document.documentElement > localStorage > default
+    // The `theme` attribute is set by SSR/head inline script, which runs
+    // BEFORE this connectedCallback. This eliminates the race condition.
+    if (this.theme === 'light') {
       this._isLight = true;
+    } else if (this.theme === 'dark') {
+      this._isLight = false;
+    } else if (document.documentElement.dataset.theme === 'light') {
+      // Check the <html data-theme="..."> attribute set by the head inline script.
+      // This is the standard path: the head script reads localStorage and sets
+      // data-theme BEFORE any LitElement connects.
+      this._isLight = true;
+    } else {
+      // Fallback: read from localStorage directly (edge case where neither
+      // attribute nor data-theme is set)
+      const saved = localStorage.getItem('kiss-theme');
+      if (saved === 'light') {
+        this._isLight = true;
+      }
     }
   }
 

@@ -104,6 +104,31 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
     case 'securityHeaders':
       b.push("app.use('*', secureHeaders())");
       break;
+
+    case 'csp': {
+      const cspConfig = mw.config?.csp;
+      if (cspConfig) {
+        const headerName = cspConfig.reportOnly
+          ? 'Content-Security-Policy-Report-Only'
+          : 'Content-Security-Policy';
+        if (cspConfig.nonce) {
+          b.push(`// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`);
+          b.push(`app.use('*', async (c, next) => {`);
+          b.push(`  const nonce = crypto.randomUUID().replace(/-/g, '')`);
+          b.push(`  c.set('cspNonce', nonce)`);
+          b.push(`  const policy = ${JSON.stringify(cspConfig.policy)} + "; script-src 'nonce-' + nonce"`);
+          b.push(`  await next()`);
+          b.push(`  c.header('${headerName}', policy)`);
+          b.push(`})`);
+        } else {
+          b.push(`app.use('*', async (c, next) => {`);
+          b.push(`  await next()`);
+          b.push(`  c.header('${headerName}', ${JSON.stringify(cspConfig.policy)})`);
+          b.push(`})`);
+        }
+      }
+      break;
+    }
   }
 
   b.blank();

@@ -58,9 +58,12 @@ export {
 } from './errors.js';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './ssr-handler.js';
-// generateHydrationScript is internal — hydration logic is now in the
-// Vite-built client entry (entry-generators.ts::generateClientEntry).
-// Kept as internal export for testing/backward compat only.
+export { rewriteHtmlFiles, buildIslandChunkMap, injectClientScript, injectCspMeta } from './ssg-postprocess.js';
+// generateHydrationScript was removed in v0.3.0 — hydration logic is now
+// in the Vite-built client entry (entry-generators.ts::generateClientEntry).
+// The inline <script> approach couldn't import @lit-labs/ssr-client
+// (bare module specifier), and the inline hydrateElement() was not real
+// Lit hydration (just DSD polyfill + removeAttribute).
 
 // --- Re-export runtime APIs for zero-config user experience ---
 // Users import everything from @kissjs/core — no need to add lit/hono to their deno.json

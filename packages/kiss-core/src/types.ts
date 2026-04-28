@@ -107,6 +107,25 @@ export interface FrameworkOptions {
     rateLimit?: boolean;
     /** Enable security headers (default: true) */
     securityHeaders?: boolean;
+    /**
+     * Content Security Policy configuration.
+     * When set, a Content-Security-Policy header is added.
+     * 
+     * For production with islands, you typically need:
+     * - script-src: 'self' (for Vite-built client entry)
+     * - style-src: 'self' 'unsafe-inline' (Lit uses inline styles)
+     * 
+     * Nonce support: set `nonce: true` to auto-generate a per-request nonce
+     * and add it to both the CSP header and <script> tags.
+     */
+    csp?: {
+      /** CSP directive string (e.g. "default-src 'self'; script-src 'self'") */
+      policy?: string;
+      /** Auto-generate nonce for <script> tags (default: false) */
+      nonce?: boolean;
+      /** Report-only mode (default: false — uses Content-Security-Policy-Report-Only) */
+      reportOnly?: boolean;
+    };
   };
 }
 

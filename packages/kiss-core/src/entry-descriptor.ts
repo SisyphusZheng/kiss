@@ -35,14 +35,25 @@ export type CorsOriginConfig =
   | string[]
   | { type: 'function'; body: string };
 
+/** CSP configuration for Content-Security-Policy header */
+export interface CspConfig {
+  /** CSP policy string (e.g. "default-src 'self'; script-src 'self'") */
+  policy: string;
+  /** Auto-generate nonce for <script> tags (default: false) */
+  nonce?: boolean;
+  /** Report-only mode (default: false) */
+  reportOnly?: boolean;
+}
+
 /** Middleware registration declaration for the Hono entry */
 export interface MiddlewareDecl {
-  kind: 'requestId' | 'logger' | 'cors' | 'securityHeaders';
+  kind: 'requestId' | 'logger' | 'cors' | 'securityHeaders' | 'csp';
   /** Comments to emit before the middleware registration */
   comment?: string;
-  /** Extra config (e.g. CORS origin) */
+  /** Extra config (e.g. CORS origin, CSP policy) */
   config?: {
     corsOrigin?: CorsOriginConfig;
+    csp?: CspConfig;
   };
 }
 
@@ -252,6 +263,13 @@ export function buildEntryDescriptor(
     middleware.push({
       kind: 'securityHeaders',
       comment: '4. Security headers',
+    });
+  }
+  if (mw?.csp) {
+    middleware.push({
+      kind: 'csp',
+      comment: '5. Content Security Policy',
+      config: { csp: mw.csp },
     });
   }
 

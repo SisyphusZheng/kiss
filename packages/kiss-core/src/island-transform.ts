@@ -2,16 +2,14 @@
  * @kissjs/core - Island transform plugin
  * Detects island components and injects hydration markers.
  *
- * Phase 1 fix: The original CJS-style registration code
- * (`exports.default || module.exports?.default`) doesn't work in ESM.
- * Now we use a simple, correct approach: the hydration script (generated
- * by generateHydrationScript) handles ALL customElements.define() calls.
- * The transform only injects metadata markers (__island, __tagName).
+ * v0.3.0: This plugin ONLY injects __island and __tagName metadata markers.
+ * Hydration is handled by the Vite-built client entry (entry-generators.ts),
+ * which uses Lit's hydrate() from @lit-labs/ssr-client (bundled by Vite).
  *
- * This is the "minimal augmentation" approach:
- * - SSR transform: only inject metadata (zero runtime overhead)
- * - Hydration script: handles registration (standard customElements API)
- * - No framework runtime between SSR and hydration
+ * The old generateHydrationScript() that produced inline <script> tags
+ * has been removed — inline scripts can't import @lit-labs/ssr-client
+ * (bare module specifier), and the inline hydrateElement() was not a
+ * real Lit hydration (just DSD polyfill + removeAttribute).
  *
  * Web Standards alignment:
  * - Uses standard customElements.define() API
@@ -49,8 +47,8 @@ export function islandTransformPlugin(islandsDir: string): Plugin {
         return null;
       }
 
-      // Inject only metadata markers. The hydration script handles
-      // customElements.define() — no registration code here.
+      // Inject only metadata markers. The Vite-built client entry handles
+      // customElements.define() + Lit hydrate() — no registration code here.
       // This keeps the transform lightweight and ESM-safe.
       const injected = `
 // --- KISS Island Markers (auto-injected by @kissjs/core) ---
@@ -62,146 +60,4 @@ export const __tagName = '${tagName}';
       return code + '\n' + injected;
     },
   };
-}
-
-/**
- * Generate the client-side island hydration script.
- * This is injected into the HTML for island hydration.
- *
- * This is the ONLY place where customElements.define() is called for islands.
- * It uses standard dynamic import() to load island modules and register them.
- *
- * Progressive enhancement: SSR HTML (with DSD) is visible even if
- * this script fails. The island components degrade to static HTML.
- */
-export function generateHydrationScript(
-  islands: Array<{ tagName: string; modulePath: string }>,
-  strategy: 'eager' | 'lazy' | 'idle' | 'visible' = 'lazy',
-): string {
-  if (islands.length === 0) return '';
-
-  const islandDefs = islands
-    .map(
-      (i) => `  '${i.tagName}': () => import('${i.modulePath}')`,
-    )
-    .join(',\n');
-
-  const strategyCode = {
-    eager: `
-      // Eager: hydrate all islands immediately
-      for (const [tagName, loader] of Object.entries(islandLoaders)) {
-        hydrateIsland(tagName, loader);
-      }
-    `,
-    lazy: `
-      // Lazy: hydrate on requestIdleCallback
-      const hydrateAll = () => {
-        for (const [tagName, loader] of Object.entries(islandLoaders)) {
-          hydrateIsland(tagName, loader);
-        }
-      };
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(hydrateAll);
-      } else {
-        setTimeout(hydrateAll, 200);
-      }
-    `,
-    idle: `
-      // Idle: wait for page to be idle
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          for (const [tagName, loader] of Object.entries(islandLoaders)) {
-            hydrateIsland(tagName, loader);
-          }
-        });
-      } else {
-        window.addEventListener('load', () => {
-          for (const [tagName, loader] of Object.entries(islandLoaders)) {
-            hydrateIsland(tagName, loader);
-          }
-        });
-      }
-    `,
-    visible: `
-      // Visible: hydrate when island scrolls into view
-      const observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const tagName = entry.target.tagName.toLowerCase();
-            if (islandLoaders[tagName]) {
-              hydrateIsland(tagName, islandLoaders[tagName]);
-              observer.unobserve(entry.target);
-            }
-          }
-        }
-      });
-      for (const tagName of Object.keys(islandLoaders)) {
-        document.querySelectorAll(tagName).forEach(el => observer.observe(el));
-      }
-    `,
-  }[strategy];
-
-  return `<script type="module" data-kiss-hydrate>
-// KISS Island Hydration Script
-// Progressive enhancement: SSR HTML is visible even if this fails.
-// No external module imports — this script is self-contained
-// so it works in browsers without import maps or bundlers.
-(function() {
-  const islandLoaders = {
-${islandDefs}
-  };
-
-  // Inline hydrate() — equivalent to @lit-labs/ssr-client hydrate().
-  // Processes Declarative Shadow DOM templates and removes defer-hydration.
-  // This avoids the bare-module-import problem (@lit-labs/ssr-client
-  // can't be resolved by browsers in static HTML).
-  function hydrateElement(el) {
-    // Find the DSD template: <template shadowrootmode="open">
-    const template = el.querySelector(':scope > template[shadowrootmode="open"]');
-    if (template) {
-      // Browser with native DSD support already processed the template.
-      // For browsers without native DSD, manually create the shadow root.
-      if (!el.shadowRoot) {
-        const shadowRoot = el.attachShadow({ mode: 'open' });
-        shadowRoot.appendChild(template.content.cloneNode(true));
-        template.remove();
-      }
-    }
-    // Remove defer-hydration attribute to signal Lit that hydration is complete.
-    // Lit checks for this attribute to decide whether to hydrate or client-render.
-    el.removeAttribute('defer-hydration');
-  }
-
-  async function hydrateIsland(tagName, loader) {
-    try {
-      const mod = await loader();
-      const ElementClass = mod.default;
-      if (!ElementClass) {
-        console.warn('[KISS] Island module has no default export:', tagName);
-        return;
-      }
-      if (!customElements.get(tagName)) {
-        customElements.define(tagName, ElementClass);
-      }
-      // Wait for upgrade of existing elements
-      await customElements.whenDefined(tagName);
-      // Hydrate all instances of this island
-      document.querySelectorAll(tagName).forEach(el => {
-        // Only hydrate if element has DSD template (defer-hydration attribute)
-        if (el.hasAttribute('defer-hydration')) {
-          hydrateElement(el);
-        }
-      });
-    } catch (error) {
-      console.warn('[KISS] Island <' + tagName + '> hydration failed:', error);
-      // Progressive enhancement: SSR HTML still visible
-      document.querySelectorAll(tagName).forEach(el => {
-        el.setAttribute('data-kiss-hydration-error', 'true');
-      });
-    }
-  }
-
-${strategyCode}
-})();
-</script>`;
 }

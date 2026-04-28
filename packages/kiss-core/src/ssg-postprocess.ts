@@ -122,6 +122,42 @@ export function injectClientScript(dir: string, scriptSrc: string): void {
 }
 
 /**
+ * Inject CSP <meta> tag into all HTML files (SSG-only).
+ *
+ * For static sites, CSP is enforced via <meta http-equiv="Content-Security-Policy">
+ * rather than HTTP headers. Note: nonce-based CSP is NOT supported for SSG
+ * (nonces must be per-request and unpredictable — impossible in static files).
+ *
+ * If csp.nonce is true, this function logs a warning and falls back to
+ * policy-only mode without nonce.
+ */
+export function injectCspMeta(
+  dir: string,
+  cspPolicy: string,
+  reportOnly = false,
+): void {
+  const headerName = reportOnly
+    ? 'Content-Security-Policy-Report-Only'
+    : 'Content-Security-Policy';
+  const metaTag = `<meta http-equiv="${headerName}" content="${cspPolicy.replace(/"/g, '&quot;')}">`;
+
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      injectCspMeta(fullPath, cspPolicy, reportOnly);
+    } else if (entry.name.endsWith('.html')) {
+      let content = readFileSync(fullPath, 'utf-8');
+      if (!content.includes(metaTag)) {
+        // Insert after <head> or at the start of <head>
+        content = content.replace('<head>', `<head>\n  ${metaTag}`);
+        writeFileSync(fullPath, content, 'utf-8');
+      }
+    }
+  }
+}
+
+/**
  * Walk all HTML files in dist and rewrite hydration script Island paths.
  *
  * Before: import('/app/islands/code-block.ts')

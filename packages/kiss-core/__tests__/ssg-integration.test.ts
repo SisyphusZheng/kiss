@@ -13,7 +13,12 @@
 
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'jsr:@std/path@^1.0.0';
-import { buildIslandChunkMap, rewriteHtmlFiles } from '../src/ssg-postprocess.ts';
+import {
+  buildIslandChunkMap,
+  rewriteHtmlFiles,
+  injectClientScript,
+  injectCspMeta,
+} from '../src/ssg-postprocess.ts';
 
 // ─── Test fixtures ─────────────────────────────────────────────
 
@@ -194,6 +199,58 @@ Deno.test('SSG integration', { permissions: { read: true, write: true } }, async
     // Hydration script must exist with rewritten paths
     assertStringIncludes(html, 'data-kiss-hydrate');
     assertStringIncludes(html, '/kiss/client/islands/');
+  });
+
+  await t.step('injectClientScript - adds <script type="module"> before </body>', () => {
+    injectClientScript(join(FIXTURES_DIR, 'dist'), '/client/islands/client.js');
+
+    const html = Deno.readTextFileSync(join(FIXTURES_DIR, 'dist', 'index.html'));
+    assertStringIncludes(html, '<script type="module" src="/client/islands/client.js"></script>');
+    // Script should be before </body>
+    const bodyIdx = html.indexOf('</body>');
+    const scriptIdx = html.indexOf('/client/islands/client.js');
+    assertEquals(scriptIdx < bodyIdx, true);
+  });
+
+  await t.step('injectClientScript - does not duplicate existing script', () => {
+    injectClientScript(join(FIXTURES_DIR, 'dist'), '/client/islands/client.js');
+
+    const html = Deno.readTextFileSync(join(FIXTURES_DIR, 'dist', 'index.html'));
+    // Count occurrences — should be exactly 1
+    const count = (html.match(/\/client\/islands\/client\.js/g) || []).length;
+    assertEquals(count, 1);
+  });
+
+  await t.step('injectCspMeta - adds <meta http-equiv="Content-Security-Policy"> to head', () => {
+    injectCspMeta(
+      join(FIXTURES_DIR, 'dist'),
+      "default-src 'self'; script-src 'self'",
+      false,
+    );
+
+    const html = Deno.readTextFileSync(join(FIXTURES_DIR, 'dist', 'index.html'));
+    assertStringIncludes(html, '<meta http-equiv="Content-Security-Policy"');
+    assertStringIncludes(html, "default-src 'self'");
+    // Meta should be inside <head>
+    const headEnd = html.indexOf('</head>');
+    const metaIdx = html.indexOf('Content-Security-Policy');
+    assertEquals(metaIdx < headEnd, true);
+  });
+
+  await t.step('injectCspMeta - report-only mode uses correct header name', () => {
+    // Clean up: use a fresh HTML file for this sub-test
+    const reportOnlyDir = join(FIXTURES_DIR, 'dist', 'report-test');
+    await Deno.mkdir(reportOnlyDir, { recursive: true });
+    await Deno.writeTextFile(
+      join(reportOnlyDir, 'index.html'),
+      '<!DOCTYPE html><html><head></head><body>test</body></html>',
+    );
+
+    injectCspMeta(reportOnlyDir, "default-src 'self'", true);
+
+    const html = Deno.readTextFileSync(join(reportOnlyDir, 'index.html'));
+    assertStringIncludes(html, 'Content-Security-Policy-Report-Only');
+    assertEquals(html.includes('Content-Security-Policy"'), false);
   });
 
   // Cleanup

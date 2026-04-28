@@ -254,6 +254,48 @@ kiss({
 });
 ```
 
+## 特殊路由文件
+
+### `_renderer.ts` — Layout 渲染器
+
+在路由目录下放置 `_renderer.ts`，可以包裹该目录及子目录下所有页面路由的 SSR 输出。类似 Next.js 的 `layout.tsx` 或 SvelteKit 的 `+layout.svelte`。
+
+```ts
+// app/routes/_renderer.ts
+import type { KissRenderer } from '@kissjs/core';
+
+const renderer: KissRenderer = {
+  wrap(html, ctx) {
+    // ctx.req.path 提供当前路径（可用于 active 导航高亮）
+    return `<div class="layout">
+  <nav>...</nav>
+  <main>${html}</main>
+</div>`;
+  },
+};
+
+export default renderer;
+```
+
+多层 renderer 从外到内组合（根目录 → 子目录），与 Next.js layout 嵌套一致。
+
+### `_middleware.ts` — 路由中间件
+
+在路由目录下放置 `_middleware.ts`，会作为 Hono middleware 挂载到该目录前缀下的所有路由。类似 Next.js 的 `middleware.ts`。
+
+```ts
+// app/routes/api/_middleware.ts
+import type { KissMiddleware } from '@kissjs/core';
+import type { MiddlewareHandler } from 'hono';
+
+const middleware: MiddlewareHandler = async (c, next) => {
+  console.log('API request:', c.req.path);
+  await next();
+};
+
+export default middleware;
+```
+
 ## 工作原理
 
 ```
@@ -276,9 +318,10 @@ kiss({
 
 | 包                                          | 版本  | 说明                                            |
 | ------------------------------------------- | ----- | ----------------------------------------------- |
-| [@kissjs/core](https://jsr.io/@kissjs/core) | 0.2.1 | 核心框架 — Vite 插件 + Lit/Hono re-export       |
-| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)   | 0.1.3 | RPC 客户端 — Lit ReactiveController             |
-| [@kissjs/ui](https://jsr.io/@kissjs/ui)     | 0.2.0 | UI 组件库 — kiss-layout, kiss-theme-toggle 等   |
+| [@kissjs/core](https://jsr.io/@kissjs/core)   | 0.3.0 | 核心框架 — Vite 插件 + Lit/Hono re-export       |
+| [@kissjs/rpc](https://jsr.io/@kissjs/rpc)     | 0.2.1 | RPC 客户端 — Lit ReactiveController             |
+| [@kissjs/ui](https://jsr.io/@kissjs/ui)       | 0.3.0 | UI 组件库 — kiss-layout, kiss-theme-toggle 等   |
+| [@kissjs/create](https://jsr.io/@kissjs/create) | 0.3.0 | 项目脚手架 — 一键创建 KISS 应用              |
 
 > JSR 上有旧包 `@kissjs/vite` 和 `@kissjs/ssg`，已废弃，请勿使用。
 

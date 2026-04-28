@@ -2,7 +2,7 @@
  * @kissjs/core - island-transform.ts tests (Deno)
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { generateHydrationScript, islandTransformPlugin } from '../src/island-transform.ts';
+import { islandTransformPlugin } from '../src/island-transform.ts';
 import { generateClientEntry } from '../src/entry-generators.ts';
 
 type TransformFn = (code: string, id: string) => string | null;
@@ -54,25 +54,6 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
       '/project/app/islands/counter.ts',
     );
     assertEquals(result, null);
-  });
-});
-
-Deno.test('island-transform - generateHydrationScript (legacy)', async (t) => {
-  await t.step('generates hydration script with island loaders', () => {
-    const islands = [
-      { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
-      { tagName: 'theme-toggle', modulePath: '/app/islands/theme-toggle.ts' },
-    ];
-    const script = generateHydrationScript(islands, 'lazy');
-    assertEquals(script.includes('<script type="module" data-kiss-hydrate>'), true);
-    assertEquals(script.includes("'my-counter'"), true);
-    assertEquals(script.includes("'theme-toggle'"), true);
-    assertEquals(script.includes('hydrateIsland'), true);
-  });
-
-  await t.step('returns empty string for no islands', () => {
-    const script = generateHydrationScript([]);
-    assertEquals(script, '');
   });
 });
 
