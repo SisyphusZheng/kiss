@@ -1,1 +1,16 @@
-{"name": "@kissjs/rpc", "version": "0.2.1", "description": "KISS RPC — Lit ReactiveController for type-safe Hono RPC calls", "type": "module", "main": "./src/index.ts", "types": "./src/index.ts", "exports": {".": {"types": "./src/index.ts", "import": "./src/index.ts"}}, "files": ["src"], "scripts": {"build": "vite build --config vite.config.build.ts", "dev": "vite build --config vite.config.build.ts --watch"}, "peerDependencies": {"lit": "^3.2.0"}, "devDependencies": {"vite-plugin-dts": "^4.5.0"}}
+{
+  "name": "@kissjs/rpc",
+  "version": "0.2.1",
+  "description": "KISS RPC — Lit ReactiveController for type-safe Hono RPC calls",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": { "types": "./src/index.ts", "import": "./src/index.ts" } },
+  "files": ["src"],
+  "scripts": {
+    "build": "vite build --config vite.config.build.ts",
+    "dev": "vite build --config vite.config.build.ts --watch"
+  },
+  "peerDependencies": { "lit": "^3.2.0" },
+  "devDependencies": { "vite-plugin-dts": "^4.5.0" }
+}

@@ -2,12 +2,14 @@
  * @kissjs/rpc — Smoke tests
  */
 import { RpcController, RpcError } from '../src/index.ts';
-import { assertEquals, assertInstanceOf, assertRejects, assert } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertInstanceOf, assertRejects } from 'jsr:@std/assert@^1.0.0';
 
 class MockHost {
   controllers: unknown[] = [];
-  addController(ctrl: unknown) { this.controllers.push(ctrl); }
-  requestUpdate() { /* no-op */ }
+  addController(ctrl: unknown) {
+    this.controllers.push(ctrl);
+  }
+  requestUpdate() {/* no-op */}
 }
 
 Deno.test('RpcError — creates with status and message', () => {

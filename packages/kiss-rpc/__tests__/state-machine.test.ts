@@ -10,23 +10,27 @@
  */
 import { RpcController, RpcError } from '../src/index.ts';
 import {
+  assert,
   assertEquals,
+  assertFalse,
   assertInstanceOf,
   assertRejects,
-  assert,
-  assertFalse,
 } from 'jsr:@std/assert@^1.0.0';
 
 class MockHost {
   controllers: unknown[] = [];
-  addController(ctrl: unknown) { this.controllers.push(ctrl); }
-  requestUpdate() { /* no-op */ }
+  addController(ctrl: unknown) {
+    this.controllers.push(ctrl);
+  }
+  requestUpdate() {/* no-op */}
   updateCount = 0;
 }
 
 /** Host that tracks requestUpdate calls */
 class TrackingHost extends MockHost {
-  override requestUpdate() { this.updateCount++; }
+  override requestUpdate() {
+    this.updateCount++;
+  }
 }
 
 // ─── State Machine Tests ──────────────────────────────────
@@ -92,7 +96,7 @@ Deno.test('RpcController — abort signal is passed to caller', async () => {
   const ctrl = new RpcController(host as never);
 
   let receivedSignal: AbortSignal | undefined;
-  
+
   await ctrl.call((signal) => {
     receivedSignal = signal;
     return Promise.resolve('ok');
@@ -126,8 +130,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
     assert(false, 'Should have thrown after abort');
   } catch (err) {
     // Should be an abort error or RpcError wrapping it
-    assert(err instanceof Error || err instanceof DomException,
-      'Abort should produce an error');
+    assert(err instanceof Error || err instanceof DomException, 'Abort should produce an error');
   }
 
   assertEquals(ctrl.loading, false, 'Loading should reset after abort');
@@ -136,7 +139,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
 Deno.test('RpcController — hostDisconnected clears abort', () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
-  
+
   ctrl.abort();
   ctrl.hostDisconnected();
 
@@ -197,7 +200,7 @@ Deno.test('RpcController — rapid sequential calls handle state correctly', asy
   // All should succeed (they're independent calls)
   const successes = results.filter((r) => r.status === 'fulfilled');
   assertEquals(successes.length, 3);
-  
+
   // Final state should be idle
   assertEquals(ctrl.loading, false);
 });

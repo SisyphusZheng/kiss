@@ -50,7 +50,9 @@ export default class MyGreeting extends LitElement {
   name = 'World';
 
   override render() {
-    return html`<p>Hello, ${this.name}!</p>`;
+    return html`
+      <p>Hello, ${this.name}!</p>
+    `;
   }
 }
 ```
