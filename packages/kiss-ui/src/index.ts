@@ -2,7 +2,7 @@
  * @kissjs/ui - KISS UI Component Library
  *
  * Swiss International Style: Pure B&W, minimal, typography-driven.
- * Built on Lit + Open Props design tokens.
+ * Built on Lit + design tokens CSS custom properties.
  *
  * Components:
  * - kiss-button: Button with variants (default, primary, ghost)
@@ -20,6 +20,8 @@
  * // Or import specific components
  * import { KissButton } from '@kissjs/ui/kiss-button';
  * ```
+ *
+ * @module @kissjs/ui
  */
 
 import type { PackageIslandMeta } from '@kissjs/core';

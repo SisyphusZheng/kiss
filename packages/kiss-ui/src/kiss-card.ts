@@ -73,6 +73,7 @@ export class KissCard extends LitElement {
     variant: { type: String },
   };
 
+  /** Card variant: 'default' (bordered), 'elevated' (shadow, no border), or 'borderless' */
   variant: 'default' | 'elevated' | 'borderless' = 'default';
 
   override render() {

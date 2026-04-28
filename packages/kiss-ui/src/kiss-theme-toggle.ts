@@ -86,6 +86,7 @@ export class KissThemeToggle extends LitElement {
     _isLight: { state: true },
   };
 
+  /** Whether the current theme is light (false = dark) */
   _isLight = false;
 
   override connectedCallback() {

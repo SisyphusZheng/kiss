@@ -113,7 +113,7 @@ export class RoutingGuidePage extends LitElement {
           </table>
 
           <div class="nav-row">
-            <a href="/guide/dia" class="nav-link">&larr; KISS Architecture</a>
+            <a href="/guide/architecture" class="nav-link">&larr; KISS Architecture</a>
             <a href="/guide/islands" class="nav-link">Islands &rarr;</a>
           </div>
         </div>

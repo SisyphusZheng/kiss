@@ -230,7 +230,7 @@ export class DesignPhilosophyPage extends LitElement {
           </table>
           <p>
             Skipping a layer = violating the design philosophy. See
-            <a href="/guide/dia">KISS Architecture</a>
+            <a href="/guide/architecture">KISS Architecture</a>
             for the full decision tree.
           </p>
 
@@ -303,7 +303,7 @@ export class DesignPhilosophyPage extends LitElement {
 
           <div class="nav-row">
             <a href="/guide/getting-started" class="nav-link">&larr; Getting Started</a>
-            <a href="/guide/dia" class="nav-link">KISS Architecture &rarr;</a>
+            <a href="/guide/architecture" class="nav-link">KISS Architecture &rarr;</a>
           </div>
         </div>
       </kiss-layout>

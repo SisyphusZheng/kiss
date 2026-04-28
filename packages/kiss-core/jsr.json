@@ -1,13 +1,21 @@
 {
   "name": "@kissjs/core",
-  "version": "0.1.6",
+  "version": "0.2.1",
   "exports": {
     ".": "./src/index.ts"
   },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "__tests__"],
   "dependencies": {
     "lit": "npm:lit@^3.2.0",
     "hono": "npm:hono@^4.7.0",
     "@lit-labs/ssr": "npm:@lit-labs/ssr@^3.3.0",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3"
+  },
+  "test": {
+    "compatibility": {
+      "deno": ">=2.0.0",
+      "node": ">=18.0.0"
+    }
   }
 }

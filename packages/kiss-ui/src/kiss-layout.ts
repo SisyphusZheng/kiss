@@ -442,7 +442,9 @@ export class KissLayout extends LitElement {
     currentPath: { type: String, attribute: 'current-path' },
   };
 
+  /** Whether to show the home layout (no sidebar, full-width) */
   home = false;
+  /** Current URL path, used to highlight the active navigation link */
   currentPath = '';
 
   private _navLink(path: string, text: string) {
@@ -511,7 +513,7 @@ export class KissLayout extends LitElement {
                   ${this._navLink('/guide/getting-started', 'Getting Started')} ${this._navLink(
                     '/guide/design-philosophy',
                     'Design Philosophy',
-                  )} ${this._navLink('/guide/dia', 'KISS Architecture')}
+                  )} ${this._navLink('/guide/architecture', 'KISS Architecture')}
                 </details>
                 <details class="nav-section" open>
                   <summary class="nav-section-title">Core</summary>

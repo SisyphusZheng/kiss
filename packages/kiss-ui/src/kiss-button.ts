@@ -122,13 +122,21 @@ export class KissButton extends LitElement {
     disabled: { type: Boolean, reflect: true },
     href: { type: String },
     target: { type: String },
+    type: { type: String },
   };
 
+  /** Button variant style: 'default' (outlined), 'primary' (filled), or 'ghost' (no border) */
   variant: 'default' | 'primary' | 'ghost' = 'default';
+  /** Button size: 'sm', 'md' (default), or 'lg' */
   size: 'sm' | 'md' | 'lg' = 'md';
+  /** Whether the button is disabled */
   disabled = false;
+  /** If set, renders as an anchor link instead of a button */
   href?: string;
+  /** Target attribute for link mode (e.g. '_blank') */
   target?: string;
+  /** Button type: 'submit', 'button', or 'reset' (default: 'button'). Only applies in button mode (no href). */
+  type: 'submit' | 'button' | 'reset' = 'button';
 
   override render() {
     const classes = `btn btn--${this.variant} btn--${this.size}`;
@@ -147,7 +155,7 @@ export class KissButton extends LitElement {
     }
 
     return html`
-      <button class="${classes}" ?disabled="${this.disabled}">
+      <button class="${classes}" ?disabled="${this.disabled}" type="${this.type}">
         <slot></slot>
       </button>
     `;

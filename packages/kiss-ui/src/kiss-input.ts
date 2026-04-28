@@ -94,13 +94,21 @@ export class KissInput extends LitElement {
     error: { type: String },
   };
 
+  /** Input type: 'text', 'email', 'password', 'number', or 'url' (default: 'text') */
   type: 'text' | 'email' | 'password' | 'number' | 'url' = 'text';
+  /** Placeholder text shown when input is empty */
   placeholder?: string;
+  /** Label text displayed above the input */
   label?: string;
+  /** Current value of the input */
   value?: string;
+  /** Name attribute for form submission */
   name?: string;
+  /** Whether the input is disabled */
   disabled = false;
+  /** Whether the input is required (shows * after label) */
   required = false;
+  /** Error message displayed below the input (also applies error styling) */
   error?: string;
 
   override render() {
