@@ -123,6 +123,14 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       }
     }
 
+    // Polyfill CJS globals for node-domexception in Deno ESM environment
+    // node-domexception uses `module.exports` (CJS), which Deno's ESM
+    // module-runner can't handle. Provide minimal polyfill before Vite loads.
+    if (typeof (globalThis as Record<string, unknown>).module === 'undefined') {
+      (globalThis as Record<string, unknown>).module = { exports: {} };
+      (globalThis as Record<string, unknown>).exports = {};
+    }
+
     const server = await createServer({
       configFile: false,
       root,
