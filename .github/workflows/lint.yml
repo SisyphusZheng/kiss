@@ -16,8 +16,8 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Check formatting
-        run: deno fmt --check
+      - name: Check formatting (packages only, skip docs/ due to Deno fmt panic on tagged templates with HTML entities)
+        run: deno fmt --check packages/
 
       - name: Run linter
         run: deno lint
