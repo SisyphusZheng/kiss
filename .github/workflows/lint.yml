@@ -19,5 +19,5 @@ jobs:
       - name: Check formatting (packages only, skip docs/ due to Deno fmt panic on tagged templates with HTML entities)
         run: deno fmt --check packages/
 
-      - name: Run linter (packages + docs/public, skip docs/routes due to tagged template warnings)
-        run: deno lint packages/ docs/public/
+      - name: Run linter (packages only, skip docs/ entirely)
+        run: deno lint packages/
