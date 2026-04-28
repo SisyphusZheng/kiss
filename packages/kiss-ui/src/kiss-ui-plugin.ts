@@ -1,5 +1,8 @@
 /**
- * @kissjs/ui - Web Awesome CDN injection plugin
+ * @kissjs/ui — Vite plugin for design tokens + component styles
+ *
+ * Injects KISS design tokens and component CSS at build time.
+ * Works with Islands architecture — styles only load for islands that use them.
  *
  * Usage:
  * ```ts
