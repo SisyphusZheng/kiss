@@ -70,7 +70,8 @@ export class FullstackDemoPage extends LitElement {
         font-size: 0.8125rem;
         line-height: 1.8;
         font-family: "SF Mono", "Fira Code", monospace;
-        white-space: pre-wrap;
+        white-space: pre;
+        overflow-x: auto;
         color: var(--kiss-text-secondary);
       }
     `,

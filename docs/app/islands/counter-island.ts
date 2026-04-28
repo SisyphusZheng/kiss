@@ -56,20 +56,12 @@ export default class CounterIsland extends LitElement {
     this.count = 0;
   }
 
-  increment() {
-    this.count++;
-  }
-
-  decrement() {
-    this.count--;
-  }
-
   render() {
     return html`
       <div class="counter">
-        <button @click="${this.decrement}">−</button>
+        <button @click="${() => this.count--}">−</button>
         <span class="count">${this.count}</span>
-        <button @click="${this.increment}">+</button>
+        <button @click="${() => this.count++}">+</button>
       </div>
     `;
   }
