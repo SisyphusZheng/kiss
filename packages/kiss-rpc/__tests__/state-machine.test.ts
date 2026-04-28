@@ -111,17 +111,16 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
 
-  // Create a hanging promise
-  const hanging = new Promise<never>((_, _reject) => {
-    // Will be rejected when aborted
-  });
-
-  // This variable intentionally captures the signal for potential future assertions
-  let _capturedSignal: AbortSignal | null = null;
+  // Create a promise that respects AbortSignal
+  let _capturedSignal: AbortSignal | undefined;
   void _capturedSignal;
   const callPromise = ctrl.call((signal) => {
     _capturedSignal = signal;
-    return hanging;
+    return new Promise<never>((_resolve, reject) => {
+      signal?.addEventListener('abort', () => {
+        reject(new DOMException('The operation was aborted.', 'AbortError'));
+      });
+    });
   });
 
   // Abort the controller
@@ -132,8 +131,9 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
     await callPromise;
     assert(false, 'Should have thrown after abort');
   } catch (err) {
-    // Should be an abort error or RpcError wrapping it
-    assert(err instanceof Error || err instanceof DOMException, 'Abort should produce an error');
+    // Should be an RpcError wrapping the abort
+    assertInstanceOf(err, RpcError);
+    assertEquals((err as RpcError).code, 'ABORTED');
   }
 
   assertEquals(ctrl.loading, false, 'Loading should reset after abort');
