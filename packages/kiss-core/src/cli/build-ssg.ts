@@ -200,6 +200,15 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       if (Object.keys(islandChunkMap).length > 0) {
         rewriteHtmlFiles(outputDir, islandChunkMap);
       }
+
+      // Build observability: full manifest with HTML pages + budget warnings
+      const { printBuildManifest } = await import('../build-manifest.js');
+      printBuildManifest({
+        root,
+        outDir,
+        phase: 3,
+        headExtras: options.headExtras,
+      });
     } finally {
       await server.close();
     }

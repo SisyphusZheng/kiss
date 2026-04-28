@@ -28,6 +28,11 @@ import type { PackageIslandMeta } from '@kissjs/core';
 
 // Design tokens (CSS custom properties)
 export { kissDesignTokens } from './design-tokens.js';
+// Individual token sub-modules (for partial imports)
+export { kissSpacingTokens } from './tokens/spacing.js';
+export { kissTypographyTokens } from './tokens/typography.js';
+export { kissColorTokens } from './tokens/colors.js';
+export { kissEffectTokens } from './tokens/effects.js';
 
 // Components
 export { KissButton, tagName as kissButtonTagName } from './kiss-button.js';

@@ -342,6 +342,8 @@ export default middleware;
 
 运行时依赖（5 个）：hono, lit, @lit-labs/ssr, @hono/vite-dev-server, magic-string
 
+> **@hono/vite-dev-server 为什么保留？** → 见 [ADR #0001](docs/decisions/0001-keep-hono-vite-dev-server.md)（零生产足迹、~100行替代代码的 DX 权衡）
+
 ## 当前状态
 
 v0.2.0 已发布。包内 Island 自动检测 + kiss-theme-toggle Island。文档站自举验证通过。

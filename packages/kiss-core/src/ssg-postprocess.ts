@@ -8,10 +8,59 @@
  * build.ts with manifest:true) instead of grep-ing JS file contents.
  * This is deterministic and immune to false positives from comments
  * or third-party code containing tagName strings.
+ *
+ * v0.3.1: HTML insertion uses robust regex-based helpers instead of
+ * naive string replace(). Handles edge cases like whitespace around
+ * tags, attributes on target tags, and varying case — without requiring
+ * a heavy HTML parser dependency (parse5 ~200KB). The tradeoff:
+ *   - ✅ Zero dependencies beyond Node.js builtins
+ *   - ✅ Handles all well-formed HTML5 output from Hono toSSG()
+ *   - ⚠️  Not a general-purpose parser — only handles our specific
+ *     insertion patterns (after <head>, before </body>, path rewrites)
  */
 
 import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+// ─── Lightweight HTML Insertion Helpers ───────────────────────────────
+// These handle the edge cases that naive .replace() misses:
+//   - <head lang="en">  (attributes on target tag)
+//   - </body>  (whitespace before/inside close tag)
+//   - <HEAD>, </BODY>  (case variance in legacy HTML)
+//
+// We DON'T use parse5 because:
+//   1. SSG output from Hono/toSSG() is always well-formed HTML5
+//   2. Our operations are 3 specific insertions, not arbitrary DOM manipulation
+//   3. Adding 200KB+ dependency violates KISS philosophy
+
+/** Insert content immediately after <head> opening tag (handles attributes) */
+function insertAfterHead(html: string, content: string): string {
+  // Match <head> with optional attributes, case-insensitive
+  const headMatch = html.match(/<head(\s[^>]*)?>/i);
+  if (!headMatch) {
+    // Fallback: try inserting at start of document (before <html>)
+    // This handles edge cases where <head> might be omitted
+    return html.startsWith('<!') || html.startsWith('<html')
+      ? html.replace(/(<(?:!DOCTYPE|html)[^>]*>)/i, `$1\n<head>\n  ${content}\n</head>`)
+      : `<head>\n  ${content}\n</head>\n${html}`;
+  }
+  const headEnd = headMatch.index! + headMatch[0].length;
+  return html.slice(0, headEnd) + `\n  ${content}` + html.slice(headEnd);
+}
+
+/** Insert content immediately before </body> closing tag */
+function insertBeforeBodyClose(html: string, content: string): string {
+  // Match </body> with optional whitespace inside/close
+  const bodyCloseMatch = html.match(/<\/body\s*>/i);
+  if (!bodyCloseMatch) {
+    // No </body> found — append at end
+    return html + `\n${content}\n`;
+  }
+  const idx = bodyCloseMatch.index!;
+  return html.slice(0, idx) + `${content}\n` + html.slice(idx);
+}
+
+// ─── Public API ────────────────────────────────────────────────────────
 
 /**
  * Scan client build output to build tagName → chunk path mapping.
@@ -100,7 +149,7 @@ export function buildIslandChunkMap(
  * 2. Imports and calls Lit's hydrate() from @lit-labs/ssr-client
  * 3. Applies the configured hydration strategy (eager/lazy/idle/visible)
  *
- * The script src is determined by reading the Vite client build manifest.
+ * Uses insertBeforeBodyClose() for robustness against whitespace/case issues.
  */
 export function injectClientScript(dir: string, scriptSrc: string): void {
   const entries = readdirSync(dir, { withFileTypes: true });
@@ -110,11 +159,10 @@ export function injectClientScript(dir: string, scriptSrc: string): void {
       injectClientScript(fullPath, scriptSrc);
     } else if (entry.name.endsWith('.html')) {
       let content = readFileSync(fullPath, 'utf-8');
-      const scriptTag = `<script type="module" src="${scriptSrc}"></script>`;
-      // Only inject if not already present
-      if (!content.includes(scriptTag)) {
-        // Insert before </body>
-        content = content.replace('</body>', `  ${scriptTag}\n</body>`);
+      const scriptTag = `  <script type="module" src="${scriptSrc}"></script>`;
+      // Only inject if not already present (check both quoted variants)
+      if (!content.includes(scriptSrc)) {
+        content = insertBeforeBodyClose(content, scriptTag);
         writeFileSync(fullPath, content, 'utf-8');
       }
     }
@@ -130,6 +178,8 @@ export function injectClientScript(dir: string, scriptSrc: string): void {
  *
  * If csp.nonce is true, this function logs a warning and falls back to
  * policy-only mode without nonce.
+ *
+ * Uses insertAfterHead() for robustness against <head> attributes.
  */
 export function injectCspMeta(
   dir: string,
@@ -139,7 +189,8 @@ export function injectCspMeta(
   const headerName = reportOnly
     ? 'Content-Security-Policy-Report-Only'
     : 'Content-Security-Policy';
-  const metaTag = `<meta http-equiv="${headerName}" content="${cspPolicy.replace(/"/g, '&quot;')}">`;
+  const escapedPolicy = cspPolicy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const metaTag = `  <meta http-equiv="${headerName}" content="${escapedPolicy}">`;
 
   const entries = readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -148,9 +199,9 @@ export function injectCspMeta(
       injectCspMeta(fullPath, cspPolicy, reportOnly);
     } else if (entry.name.endsWith('.html')) {
       let content = readFileSync(fullPath, 'utf-8');
-      if (!content.includes(metaTag)) {
-        // Insert after <head> or at the start of <head>
-        content = content.replace('<head>', `<head>\n  ${metaTag}`);
+      // Check if already injected (by header name, not full policy — policy may change)
+      if (!content.includes(`http-equiv="${headerName}"`)) {
+        content = insertAfterHead(content, metaTag);
         writeFileSync(fullPath, content, 'utf-8');
       }
     }

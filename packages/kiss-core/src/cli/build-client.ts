@@ -129,6 +129,10 @@ async function buildClient(): Promise<void> {
   try {
     await viteBuild(clientConfig);
     console.log('[KISS] Client bundle built →', clientOutDir);
+
+    // Build observability: print manifest with island sizes
+    const { printBuildManifest } = await import('../build-manifest.js');
+    printBuildManifest({ root, outDir, phase: 2 });
   } catch (error) {
     console.error('[KISS] Client build failed:', error);
     throw error;

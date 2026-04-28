@@ -59,6 +59,8 @@ export {
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './ssr-handler.js';
 export { rewriteHtmlFiles, buildIslandChunkMap, injectClientScript, injectCspMeta } from './ssg-postprocess.js';
+export { printBuildManifest, scanClientBuild, scanSSGOutput } from './build-manifest.js';
+export type { BuildManifest, ArtifactInfo } from './build-manifest.js';
 // generateHydrationScript was removed in v0.3.0 — hydration logic is now
 // in the Vite-built client entry (entry-generators.ts::generateClientEntry).
 // The inline <script> approach couldn't import @lit-labs/ssr-client
