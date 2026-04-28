@@ -22,18 +22,30 @@ jobs:
         with:
           deno-version: v2.x
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Install dependencies
         working-directory: docs
-        run: deno install
+        run: |
+          deno install
+          npm install --legacy-peer-deps
 
-      - name: Build docs site
+      - name: Phase 1 — SSR bundle
         working-directory: docs
-        run: deno run -A npm:vite build
+        run: npx vite build
+
+      - name: Phase 2 — Client island chunks
+        working-directory: docs
+        run: deno run -A ../packages/kiss-core/src/cli/build-client.ts
+
+      - name: Phase 3 — SSG static HTML
+        working-directory: docs
+        run: deno run -A --unstable-kv ../packages/kiss-core/src/cli/build-ssg.ts
 
       - name: Deploy to gh-pages branch
         run: |
-          # Create a fresh git repo from the dist directory and force-push
-          # This avoids any contamination from the source repo
           cd docs/dist
           git init
           git config user.name "github-actions[bot]"

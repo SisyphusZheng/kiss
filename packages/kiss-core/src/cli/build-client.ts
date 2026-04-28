@@ -74,10 +74,12 @@ async function buildClient(): Promise<void> {
     ...localIslands.map((tagName: string) => ({
       tagName,
       modulePath: resolve(root, `${islandsDir}/${tagName}.ts`).replace(/\\/g, '/'),
+      isPackage: false,
     })),
     ...packageIslands.map((island: { tagName: string; modulePath: string }) => ({
       tagName: island.tagName,
       modulePath: island.modulePath,
+      isPackage: true,
     })),
   ];
 

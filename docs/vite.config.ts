@@ -11,7 +11,6 @@ import { fileURLToPath } from 'node:url';
 // NOTE: __dirname is unavailable in Deno ESM — use import.meta instead.
 const __dir = dirname(fileURLToPath(import.meta.url));
 const runtimeShim = resolve(__dir, 'app/.kiss-runtime.ts');
-const kissUISrc = resolve(__dir, '../packages/kiss-ui/src');
 
 export default defineConfig({
   base: '/',
@@ -58,9 +57,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@kissjs/core': runtimeShim,
-      // Monorepo development: resolve @kissjs/ui to local source
-      // (JSR consumers get pre-compiled dist/ — no alias needed)
-      '@kissjs/ui': kissUISrc,
     },
   },
 });

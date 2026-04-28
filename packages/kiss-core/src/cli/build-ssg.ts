@@ -49,12 +49,16 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
   const metadataPath = join(root, '.kiss', 'build-metadata.json');
   let islandTagNames = options.islandTagNames || [];
   let packageIslands = options.packageIslands || [];
+  let metadataResolveAlias = options.resolveAlias;
 
   try {
     const raw = readFileSync(metadataPath, 'utf-8');
     const metadata = JSON.parse(raw);
     if (islandTagNames.length === 0) islandTagNames = metadata.islandTagNames || [];
     if (packageIslands.length === 0) packageIslands = metadata.packageIslands || [];
+    if (!metadataResolveAlias && metadata.resolveAlias) {
+      metadataResolveAlias = metadata.resolveAlias as Record<string, string>;
+    }
   } catch {
     console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
   }
@@ -92,13 +96,22 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
   try {
     const { createServer } = await import('vite');
 
-    // SSR noExternal: bundle lit ecosystem + @kissjs/ui
-    const defaultNoExternal = [/^lit/, /^@lit/, /^@kissjs\/ui/];
+    // SSR noExternal: bundle lit ecosystem + @kissjs/ui + node-fetch (Deno compat)
+    const defaultNoExternal = [
+      /^lit/,
+      /^@lit/,
+      /^@kissjs\/ui/,
+      'node-fetch',
+      'fetch-blob',
+      'data-uri-to-buffer',
+      'formdata-polyfill',
+      'domexception',
+    ];
     const userNoExternal = options.ssr?.noExternal || [];
     const allNoExternal = [...defaultNoExternal, ...userNoExternal];
 
-    // Handle alias
-    const alias = options.resolveAlias;
+    // Handle alias — prefer CLI options, then fallback to metadata from Phase 1
+    const alias = metadataResolveAlias;
     if (alias) {
       if (Array.isArray(alias)) {
         for (const a of alias) {

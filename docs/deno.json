@@ -5,21 +5,24 @@
   "imports": {
     "@kissjs/core": "../packages/kiss-core/src/index.ts",
     "@kissjs/ui": "../packages/kiss-ui/src/index.ts",
-    "lit": "npm:lit@^3.2.0",
-    "@lit/reactive-element": "npm:@lit/reactive-element@^2.0.0",
-    "lit-element": "npm:lit-element@^4.0.0",
-    "lit-html": "npm:lit-html@^3.2.0",
-    "hono": "npm:hono@^4.0.0",
-    "vite": "npm:vite@^6.0.0",
-    "@lit-labs/ssr": "npm:@lit-labs/ssr@^3.2.0",
-    "@lit-labs/ssr-dom-shim": "npm:@lit-labs/ssr-dom-shim@^1.2.0",
-    "@lit-labs/ssr-client": "npm:@lit-labs/ssr-client@^1.1.8",
-    "parse5": "npm:parse5@^7.0.0",
-    "entities": "npm:entities@^4.0.0"
+    "lit": "npm:lit@^3",
+    "@lit/reactive-element": "npm:@lit/reactive-element@^2",
+    "lit-element": "npm:lit-element@^4",
+    "lit-html": "npm:lit-html@^3",
+    "hono": "npm:hono@^4",
+    "vite": "npm:vite@^6",
+    "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25",
+    "@lit-labs/ssr": "npm:@lit-labs/ssr@^3",
+    "@lit-labs/ssr-dom-shim": "npm:@lit-labs/ssr-dom-shim@^1",
+    "@lit-labs/ssr-client": "npm:@lit-labs/ssr-client@^1",
+    "parse5": "npm:parse5@^7",
+    "entities": "npm:entities@^4"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",
-    "build": "deno run -A npm:vite build",
-    "preview": "deno run -A npm:vite preview"
+    "build": "npx vite build",
+    "preview": "npx vite preview",
+    "build:client": "npx tsx ../packages/kiss-core/src/cli/build-client.ts",
+    "build:ssg": "npx tsx ../packages/kiss-core/src/cli/build-ssg.ts"
   }
 }

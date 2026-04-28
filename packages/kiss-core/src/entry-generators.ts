@@ -25,6 +25,8 @@ export interface ClientIslandEntry {
   tagName: string;
   /** Absolute or relative module path for import */
   modulePath: string;
+  /** True if this island comes from a package (e.g. @kissjs/ui) — uses side-effect import */
+  isPackage?: boolean;
 }
 
 /** Hydration strategy for island components */
@@ -50,15 +52,26 @@ export function generateClientEntry(
     return '// KISS Client Entry — No islands detected, zero client JS needed\n';
   }
 
+  // Package islands (from @kissjs/ui etc.) self-register via customElements.define()
+  // in their bundled output — we only need a side-effect import.
+  // Local islands use `export default class` — we import the class and register.
+  let localIdx = 0;
   const imports = islands
-    .map((island, i) => {
-      return `import Island_${i} from '${island.modulePath}';`;
+    .map((island) => {
+      if (island.isPackage) {
+        return `import '${island.modulePath}';`;
+      }
+      const idx = localIdx++;
+      return `import Island_${idx} from '${island.modulePath}';`;
     })
     .join('\n');
 
+  localIdx = 0;
   const registrations = islands
-    .map((island, i) => {
-      return `if (!customElements.get('${island.tagName}')) customElements.define('${island.tagName}', Island_${i});`;
+    .filter((island) => !island.isPackage)
+    .map((island) => {
+      const idx = localIdx++;
+      return `if (!customElements.get('${island.tagName}')) customElements.define('${island.tagName}', Island_${idx});`;
     })
     .join('\n');
 
