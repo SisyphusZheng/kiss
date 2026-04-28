@@ -28,7 +28,7 @@
  *   reading localStorage and the head script having already set data-theme.
  */
 
-import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
+import { css, type CSSResult, html, LitElement, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-theme-toggle';
