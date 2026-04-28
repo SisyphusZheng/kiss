@@ -58,10 +58,12 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
 });
 
 Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t) => {
-  await t.step('imports lit-element-hydrate-support from @lit-labs/ssr-client', () => {
+  await t.step('imports and activates lit-element-hydrate-support', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
     assertEquals(code.includes("import '@lit-labs/ssr-client/lit-element-hydrate-support.js'"), true);
+    assertEquals(code.includes("import { LitElement } from 'lit'"), true);
+    assertEquals(code.includes('litElementHydrateSupport({ LitElement })'), true);
   });
 
   await t.step('registers custom elements', () => {

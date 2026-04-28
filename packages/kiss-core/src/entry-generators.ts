@@ -91,6 +91,13 @@ export function generateClientEntry(
 // We do NOT call hydrate() directly — that requires (result, container, options).
 
 import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
+import { LitElement } from 'lit';
+
+// Activate hydration support — patches LitElement so that removing
+// defer-hydration triggers internal hydrate(result, renderRoot, options).
+// Without this call, litElementHydrateSupport is only defined on globalThis
+// but never applied, causing LitElement to re-render (not hydrate) SSR DOM.
+litElementHydrateSupport({ LitElement });
 
 ${imports}
 
