@@ -187,7 +187,7 @@ export function injectCspMeta(
   reportOnly = false,
 ): void {
   const headerName = reportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy';
-  const escapedPolicy = cspPolicy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const escapedPolicy = cspPolicy.replace(/"/g, '&quot;');
   const metaTag = `  <meta http-equiv="${headerName}" content="${escapedPolicy}">`;
 
   const entries = readdirSync(dir, { withFileTypes: true });

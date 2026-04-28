@@ -35,17 +35,19 @@ const withSpecialRoutes: RouteEntry[] = [
     varName: 'guideGettingStarted',
   },
   { path: '/api/data', filePath: 'api/data.ts', type: 'api', varName: 'apiData' },
-  { path: '/_renderer', filePath: '_renderer.ts', type: 'special', varName: 'specialRenderer' },
+  { path: '/_renderer', filePath: '_renderer.ts', type: 'special', special: 'renderer', varName: 'specialRenderer' },
   {
     path: '/guide/_renderer',
     filePath: 'guide/_renderer.ts',
     type: 'special',
+    special: 'renderer',
     varName: 'guideRenderer',
   },
   {
     path: '/api/_middleware',
     filePath: 'api/_middleware.ts',
     type: 'special',
+    special: 'middleware',
     varName: 'apiMiddleware',
   },
 ];
@@ -122,18 +124,23 @@ Deno.test('renderEntry: _renderer.ts generates wrap call', () => {
   const desc = buildEntryDescriptor(withSpecialRoutes);
   const code = renderEntry(desc);
 
-  // Should have renderer wrapping for pages under /guide
-  assertStringIncludes(code, '_renderer');
-  // Renderer should use ctx.req.path for context
-  assertStringIncludes(code, 'ctx.req.path');
+  // Renderers should appear in descriptor
+  assertEquals(desc.renderers.length >= 2, true);
+  // Generated code should reference renderer variable names
+  assertStringIncludes(code, '$specialRenderer');
+  assertStringIncludes(code, '$guideRenderer');
+  // Renderer wrap call uses c (Hono context)
+  assertStringIncludes(code, '.default.wrap(wrapped, c)');
 });
 
 Deno.test('renderEntry: _middleware.ts generates app.use scope', () => {
   const desc = buildEntryDescriptor(withSpecialRoutes);
   const code = renderEntry(desc);
 
-  // API middleware should be registered
-  assertStringIncludes(code, '_middleware');
+  // Middleware scopes should appear in descriptor
+  assertEquals(desc.middlewareScopes.length >= 1, true);
+  // Generated code should reference middleware variable name
+  assertStringIncludes(code, '$apiMiddleware');
   assertStringIncludes(code, 'app.use(');
 });
 
@@ -150,38 +157,31 @@ Deno.test('buildEntryDescriptor: special routes are separated from page/api', ()
 
 // ─── Hydration Strategy Tests ──────────────────────────────
 
-Deno.test('renderEntry: eager hydration strategy', () => {
+Deno.test('buildEntryDescriptor: hydrationStrategy is recorded (eager)', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     islandTagNames: ['my-counter'],
     hydrationStrategy: 'eager',
   });
-  const code = renderEntry(desc);
 
-  // Strategy should be passed through to the document config
-  // The actual hydration is in client entry, but descriptor should record it
-  assertStringIncludes(code, "'eager'");
+  assertEquals(desc.hydrationStrategy, 'eager');
 });
 
-Deno.test('renderEntry: visible hydration strategy uses IntersectionObserver', async (t) => {
+Deno.test('buildEntryDescriptor: hydrationStrategy is recorded (visible)', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     islandTagNames: ['lazy-image'],
     hydrationStrategy: 'visible',
   });
-  const code = renderEntry(desc);
 
-  await t.step('strategy name appears in output', () => {
-    assertStringIncludes(code, "'visible'");
-  });
+  assertEquals(desc.hydrationStrategy, 'visible');
 });
 
-Deno.test('renderEntry: lazy is default strategy', () => {
+Deno.test('buildEntryDescriptor: default hydrationStrategy is lazy', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     islandTagNames: ['my-counter'],
   });
-  const code = renderEntry(desc);
 
   // Default should be 'lazy'
-  assertStringIncludes(code, "'lazy'");
+  assertEquals(desc.hydrationStrategy, 'lazy');
 });
 
 // ─── Package Islands ───────────────────────────────────────

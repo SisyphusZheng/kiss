@@ -16,3 +16,6 @@ export { classMap } from 'lit/directives/class-map.js';
 export { styleMap } from 'lit/directives/style-map.js';
 export { createRef, ref } from 'lit/directives/ref.js';
 export { Hono } from 'hono';
+
+// SSR runtime (used by generated Hono entry)
+export { wrapInDocument } from '../../packages/kiss-core/src/ssr-handler.js';
