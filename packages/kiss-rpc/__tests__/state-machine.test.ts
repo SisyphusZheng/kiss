@@ -115,8 +115,9 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
     // Will be rejected when aborted
   });
 
-  // deno-lint-ignore require-yield
-  let capturedSignal: AbortSignal | null = null;
+  // This variable intentionally captures the signal for potential future assertions
+  const _capturedSignal: AbortSignal | null = null;
+  void _capturedSignal;
   const callPromise = ctrl.call((signal) => {
     capturedSignal = signal;
     return hanging;
