@@ -72,14 +72,18 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     }
     if (!options.hydrationStrategy && metadata.hydrationStrategy) {
       options.hydrationStrategy = metadata.hydrationStrategy;
+      // v0.3.0+: hydrationStrategy is deprecated — client entry uses Lit's hydrate()
+      // from @lit-labs/ssr-client exclusively. The value is accepted for backward
+      // compat but has no effect on the actual hydration behavior.
+      console.warn('[KISS] hydrationStrategy is deprecated since v0.3.0 and has no effect. ' +
+        'The client entry always uses Lit hydrate() from @lit-labs/ssr-client.');
     }
   } catch {
     console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
   }
 
   // Generate SSG entry code
-  const { scanRoutes } = await import('../route-scanner.js');
-  const { scanIslands, fileToTagName } = await import('../route-scanner.js');
+  const { scanRoutes, scanIslands, fileToTagName } = await import('../route-scanner.js');
   const { generateHonoEntryCode } = await import('../hono-entry.js');
 
   const routes = await scanRoutes(routesDir);

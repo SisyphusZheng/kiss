@@ -25,11 +25,11 @@ export default class CounterIsland extends LitElement {
       font-weight: 700;
       min-width: 3rem;
       text-align: center;
-      color: var(--text-primary, inherit);
+      color: var(--kiss-text-primary, inherit);
     }
     button {
-      background: var(--kiss-accent, #fff);
-      color: var(--kiss-bg-base, #000);
+      background: var(--kiss-bg-elevated, #111);
+      color: var(--kiss-text-primary, #fff);
       border: 1px solid var(--kiss-border, transparent);
       border-radius: 6px;
       padding: 0.5rem 1rem;
@@ -47,7 +47,7 @@ export default class CounterIsland extends LitElement {
     }
   `;
 
-  static properties = {
+  static override properties = {
     count: { type: Number },
   };
 

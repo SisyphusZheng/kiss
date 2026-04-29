@@ -32,6 +32,26 @@ export default defineConfig({
     ssr: {
       noExternal: ['@kissjs/ui'],
     },
+    inject: {
+      headFragments: [
+        // Design tokens — enable dark/light theme support.
+        // See https://kiss.js.org/styling/kiss-ui for full token reference.
+        \`<style>
+[data-theme="dark"] {
+  --kiss-bg-base: #000; --kiss-text-primary: #fff;
+  --kiss-text-secondary: #999; --kiss-text-tertiary: #666;
+  --kiss-border: #333; --kiss-border-hover: #555;
+  --kiss-code-bg: #111; --kiss-code-border: #222;
+}
+[data-theme="light"], :root {
+  --kiss-bg-base: #fff; --kiss-text-primary: #000;
+  --kiss-text-secondary: #666; --kiss-text-tertiary: #999;
+  --kiss-border: #e5e5e5; --kiss-border-hover: #ccc;
+  --kiss-code-bg: #f8f8f8; --kiss-code-border: #e5e5e5;
+}
+</style>\`,
+      ],
+    },
   })],
 });
 `,
@@ -42,8 +62,8 @@ export default class HomePage extends LitElement {
   static styles = css\`
     :host { display: block; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
     h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    p { color: #666; }
-  \`;
+    p { color: var(--kiss-text-secondary, #666); }
+    \`;
 
   render() {
     return html\`

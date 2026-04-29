@@ -124,11 +124,11 @@ export class KissInput extends LitElement {
           class="input ${this.error ? 'input--error' : ''}"
           type="${this.type}"
           placeholder="${this.placeholder}"
-          value="${this.value}"
+          .value="${this.value}"
           name="${this.name}"
           ?disabled="${this.disabled}"
           ?required="${this.required}"
-          @input="${this._handleInput}"
+          @input="${(e: Event) => this._handleInput(e)}"
         />
         ${this.error
           ? html`

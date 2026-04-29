@@ -66,8 +66,17 @@ export class KissCodeBlock extends LitElement {
         color: var(--kiss-text-primary);
         border-color: var(--kiss-border-hover);
       }
+
+      .copy-btn.failed {
+        color: var(--kiss-error, #e55);
+        border-color: var(--kiss-error, #e55);
+      }
     `,
   ];
+
+  static override properties = {
+    _copyState: { state: true },
+  };
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
 
@@ -75,14 +84,13 @@ export class KissCodeBlock extends LitElement {
     return html`
       <slot></slot>
       <button
-        class="copy-btn ${this._copyState === 'copied' ? 'copied' : ''}"
-        @click="${this._copy}"
-        ?hidden="${this._copyState === 'copied'}"
+        class="copy-btn ${this._copyState === 'copied' ? 'copied' : ''} ${this._copyState === 'failed' ? 'failed' : ''}"
+        @click="${() => this._copy()}"
       >
         ${this._copyState === 'copied'
-          ? 'Copied!'
+          ? '✓ Copied!'
           : this._copyState === 'failed'
-          ? 'Failed'
+          ? '✗ Failed'
           : 'Copy'}
       </button>
     `;
@@ -93,17 +101,13 @@ export class KissCodeBlock extends LitElement {
       const text = this.textContent || '';
       await navigator.clipboard.writeText(text);
       this._copyState = 'copied';
-      this.requestUpdate();
       setTimeout(() => {
         this._copyState = 'idle';
-        this.requestUpdate();
       }, 2000);
     } catch {
       this._copyState = 'failed';
-      this.requestUpdate();
       setTimeout(() => {
         this._copyState = 'idle';
-        this.requestUpdate();
       }, 2000);
     }
   }

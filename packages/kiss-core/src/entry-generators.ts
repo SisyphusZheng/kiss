@@ -98,9 +98,12 @@ export function generateClientEntry(
   const activateHydration = `// Activate hydration support FIRST — must patch LitElement before any
 // customElements.define() calls. Package islands use dynamic import()
 // to ensure they register AFTER this patch is applied.
-import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
-import { LitElement } from 'lit';
-litElementHydrateSupport({ LitElement });`;
+//
+// The side-effect import auto-patches LitElement with hydration support:
+// it adds 'defer-hydration' to observedAttributes and patches
+// connectedCallback/attributeChangedCallback to call hydrate() internally
+// when defer-hydration is removed. No manual litElementHydrateSupport() call needed.
+import '@lit-labs/ssr-client/lit-element-hydrate-support.js';`;
 
   const packageImportBlock = dynamicImports
     ? `\n// --- Dynamic import for package islands (after LitElement patch) ---\n${dynamicImports}\n`
@@ -194,12 +197,16 @@ function generateStrategyCode(strategy: HydrationStrategy): string {
     case 'visible':
       return `  // Visible: hydrate each island when it scrolls into view
   // Uses __kissFindDeferred to traverse Shadow DOM (document.querySelectorAll doesn't pierce it)
-  const __kissObserver = new IntersectionObserver((entries) => {
+  const __kissObserver = new IntersectionObserver((entries, observer) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
         __kissHydrateElement(entry.target);
-        __kissObserver.unobserve(entry.target);
+        observer.unobserve(entry.target);
       }
+    }
+    // Disconnect observer when all islands are hydrated
+    if (document.querySelectorAll('[defer-hydration]').length === 0) {
+      observer.disconnect();
     }
   });
   __kissFindDeferred(document).forEach(el => __kissObserver.observe(el));`;

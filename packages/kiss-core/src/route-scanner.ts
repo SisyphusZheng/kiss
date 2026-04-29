@@ -125,9 +125,7 @@ export async function scanRoutes(
       if (specialType) {
         // Add as a special entry — not a route handler, but loadable
         entries.push({
-          path: filePathToRoutePath(
-            relativePath.replace(/^_renderer/, '_renderer').replace(/^_middleware/, '_middleware'),
-          ),
+          path: filePathToRoutePath(relativePath),
           filePath: relativePath.split(sep).join(posix.sep),
           type: 'special', // Not a page or API route — renderer/middleware only
           varName: `Special_${specialType}_${baseDir.replace(/[\\/]/g, '_') || 'root'}`,
@@ -173,14 +171,7 @@ export function generateRoutesModule(routes: RouteEntry[], routesDir: string): s
   const specialFiles = routes.filter((r) => r.special);
 
   const imports = routes
-    .map((r) => {
-      if (r.special) {
-        // Special files are imported but not added to the routes array
-        const varName = r.varName;
-        return `import * as ${varName} from '/${routesDir}/${r.filePath}';`;
-      }
-      return `import * as ${r.varName} from '/${routesDir}/${r.filePath}';`;
-    })
+    .map((r) => `import * as ${r.varName} from '/${routesDir}/${r.filePath}';`)
     .join('\n');
 
   const routeDefs = regularRoutes

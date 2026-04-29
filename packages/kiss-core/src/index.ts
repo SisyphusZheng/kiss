@@ -102,10 +102,14 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   if (options.inject && !headExtras) {
     const fragments: string[] = [];
     for (const href of options.inject.stylesheets || []) {
-      fragments.push(`<link rel="stylesheet" href="${href}" />`);
+      // Escape URL to prevent attribute breakout in injected <link>
+      const safeHref = href.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      fragments.push(`<link rel="stylesheet" href="${safeHref}" />`);
     }
     for (const src of options.inject.scripts || []) {
-      fragments.push(`<script type="module" src="${src}"></script>`);
+      // Escape URL to prevent attribute breakout in injected <script>
+      const safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      fragments.push(`<script type="module" src="${safeSrc}"></script>`);
     }
     for (const frag of options.inject.headFragments || []) {
       fragments.push(frag);
@@ -121,6 +125,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       `<link rel="stylesheet" href="${cdnBase}/styles/webawesome.css" />`,
       `<script type="module" src="${cdnBase}/webawesome.loader.js"></script>`,
     ].join('\n  ');
+  }
+  if (options.ui?.cdn && headExtras) {
+    console.warn('[KISS] Both inject and ui.cdn options provided. ui.cdn is ignored in favor of inject.');
   }
 
   // Build the resolved options with defaults
@@ -243,6 +250,8 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     virtualEntryPlugin, // virtual:kiss-hono-entry 提供器
     devServerPlugin, // dev 模式 Hono 服务器（仅开发）
     islandTransformPlugin(resolvedOptions.islandsDir!),
+    // NOTE: htmlTemplatePlugin is currently a no-op (returns empty tags).
+    // Kept as registration point for future per-route HTML injection (title/meta/preload).
     htmlTemplatePlugin(resolvedOptions),
     buildPlugin(resolvedOptions, ctx), // Phase 1: metadata 写出
   ];

@@ -355,6 +355,19 @@ export class KissLayout extends LitElement {
             pointer-events: auto;
           }
 
+          /* :has() fallback for browsers without :has() support
+             (Safari < 15.4, Firefox < 121).
+             has-fallback.js adds .sidebar-open to the host element. */
+          :host(.sidebar-open) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+          }
+
+          :host(.sidebar-open) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
           .nav-section {
             margin-bottom: var(--kiss-size-2);
           }

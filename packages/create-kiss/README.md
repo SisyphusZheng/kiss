@@ -26,7 +26,7 @@ my-app/
 The template includes:
 
 - **`packageIslands: ['@kissjs/ui']`** — pre-built UI components from JSR
-- **`ssr: { noExternal: ['@kissjs/ui'] }`** — ensures decorators are compiled
+- **`ssr: { noExternal: ['@kissjs/ui'] }`** — ensures UI components are bundled for SSR (Vite bundles them instead of externalizing)
 - A home page with an embedded counter island
 
 ## Build pipeline

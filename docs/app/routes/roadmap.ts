@@ -272,7 +272,7 @@ export class RoadmapPage extends LitElement {
             <thead>
               <tr>
                 <th>问题</th>
-                <th>优先级</th>
+                <th>状态</th>
               </tr>
             </thead>
             <tbody>
@@ -281,28 +281,50 @@ export class RoadmapPage extends LitElement {
                 <td class="priority-medium">中</td>
               </tr>
               <tr>
-                <td>html-template.ts declare module 扩展</td>
+                <td>packageIslands 客户端构建依赖 Vite alias，包内 Island 必须从 @kissjs/core 导入</td>
+                <td class="priority-medium">中</td>
+              </tr>
+              <tr>
+                <td>kiss-docs-kit 空壳（无 exports，用途不明）</td>
+                <td class="priority-medium">中</td>
+              </tr>
+              <tr>
+                <td>部分 guide 页面仍有硬编码颜色值</td>
                 <td class="priority-low">低</td>
               </tr>
               <tr>
-                <td>文档站内联样式碎片</td>
+                <td>无 packageIslands 集成测试</td>
                 <td class="priority-medium">中</td>
               </tr>
             </tbody>
           </table>
 
           <h2>架构概览</h2>
-          <div class="architecture-diagram">
-            用户视角：vite.config.ts ┌─────────────────────────────────────────┐ │ import { kiss } from
-            '@kissjs/core' │ │ export default defineConfig({ │ │ plugins: [kiss()] │ │ }) │
-            └──────────────┬──────────────────────────┘ │ ┌──────────────▼──────────────────────────┐ │
-            @kissjs/core (8 子插件) │ │ │ │ 1. kiss:core — 路由扫描 (K) │ │ 2. kiss:virtual-entry —
-            虚拟模块 │ │ 3. @hono/vite-dev-server — dev only │ │ 4. island-transform — AST 标记 (I) │ │ 5.
-            island-extractor — 依赖分析 (I) │ │ 6. html-template — HTML 注入 (I) │ │ 7. kiss:ssg — SSG
-            产物 (K+S) │ │ 8. kiss:build — Island JS (I) │ └──────────────┬──────────────────────────┘ │
-            ┌──────────▼──────────┐ │ 两个独立部署目标 │ │ │ │ dist/ (静态前端) │ ← K+I+S 约束 │ API
-            Routes (Serverless) │ ← S 约束 └──────────────────────┘
-          </div>
+          <div class="architecture-diagram">用户视角：vite.config.ts
+&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+&#x2502;  import { kiss } from '@kissjs/core'  &#x2502;
+&#x2502;  export default defineConfig({         &#x2502;
+&#x2502;    plugins: [kiss()]                   &#x2502;
+&#x2502;  })                                    &#x2502;
+&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+               &#x2502;
+&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+&#x2502;     @kissjs/core (6 &#x5B50;&#x63D2;&#x4EF6;)              &#x2502;
+&#x2502;                                          &#x2502;
+&#x2502;  1. kiss:core — &#x8DEF;&#x7531;&#x626B;&#x63CF; (K)            &#x2502;
+&#x2502;  2. kiss:virtual-entry — &#x865A;&#x62DF;&#x6A21;&#x5757;       &#x2502;
+&#x2502;  3. @hono/vite-dev-server — dev only    &#x2502;
+&#x2502;  4. island-transform — AST &#x6807;&#x8BB0; (I)     &#x2502;
+&#x2502;  5. html-template — HTML &#x6CE8;&#x5165; (&#x9884;&#x7559;)    &#x2502;
+&#x2502;  6. kiss:build — &#x5143;&#x6570;&#x636E; (K+S)          &#x2502;
+&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+               &#x2502;
+&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+&#x2502;  &#x4E24;&#x4E2A;&#x72EC;&#x7ACB;&#x90E8;&#x7F72;&#x76EE;&#x6807;      &#x2502;
+&#x2502;                       &#x2502;
+&#x2502;  dist/ (&#x9759;&#x6001;&#x524D;&#x7AEF;)     &#x2502; &larr; K+I+S &#x7EA6;&#x675F;
+&#x2502;  API Routes (Serverless) &larr; S &#x7EA6;&#x675F;
+&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</div>
 
           <div class="nav-row">
             <a href="/examples" class="nav-link">&larr; 示例</a>

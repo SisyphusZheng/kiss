@@ -91,7 +91,13 @@ export function wrapInDocument(
   } = options;
   const metaTags: string[] = [];
   if (meta?.description) {
-    metaTags.push(`  <meta name="description" content="${meta.description}">`);
+    // Escape HTML attribute special characters to prevent injection
+    const safeDesc = meta.description
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    metaTags.push(`  <meta name="description" content="${safeDesc}">`);
   }
   const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : '';
 

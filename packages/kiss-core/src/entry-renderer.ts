@@ -93,7 +93,7 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
         // Production deployments MUST explicitly configure corsOrigin.
         // Returning '*' with credentials:true violates the Fetch spec.
         b.push("app.use('*', cors({ origin: (origin) => {");
-        b.push('  if (origin && /^http:\\/\\/localhost(:\\d+)?$/.test(origin)) return origin');
+        b.push('  if (origin && /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin)) return origin');
         b.push('  // In production, set middleware.corsOrigin explicitly');
         b.push('  return undefined');
         b.push(`}, ${CORS_ALLOW} }))`);
@@ -112,17 +112,27 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
           ? 'Content-Security-Policy-Report-Only'
           : 'Content-Security-Policy';
         if (cspConfig.nonce) {
+          // Build a policy template that uses NONCE_PLACEHOLDER, then at
+          // runtime replace it with the actual nonce value.
+          // This avoids the three bugs in the old string-concatenation approach:
+          //   1. Missing closing quote on nonce value ('nonce-abc vs 'nonce-abc')
+          //   2. Duplicate script-src directive (CSP ignores the second one)
+          //   3. Resulting silent security bypass (nonce never takes effect)
+          const basePolicy: string = cspConfig.policy || '';
+          const hasScriptSrc = /script-src/i.test(basePolicy);
+          const policyTemplate = hasScriptSrc
+            ? basePolicy.replace(
+                /script-src\s+([^;]*)/i,
+                "script-src 'nonce-NONCE_PLACEHOLDER' $1",
+              )
+            : basePolicy + "; script-src 'nonce-NONCE_PLACEHOLDER'";
           b.push(
             `// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`,
           );
           b.push(`app.use('*', async (c, next) => {`);
           b.push(`  const nonce = crypto.randomUUID().replace(/-/g, '')`);
           b.push(`  c.set('cspNonce', nonce)`);
-          b.push(
-            `  const policy = ${
-              JSON.stringify(cspConfig.policy)
-            } + "; script-src 'nonce-' + nonce"`,
-          );
+          b.push(`  const policy = ${JSON.stringify(policyTemplate)}.replace('NONCE_PLACEHOLDER', nonce)`);
           b.push(`  await next()`);
           b.push(`  c.header('${headerName}', policy)`);
           b.push(`})`);
@@ -204,7 +214,15 @@ function renderPageRoute(
   }
 
   b.push(`  } catch (err) {`);
-  b.push(`    return c.html('<h1>500</h1><p>' + String(err) + '</p>', 500)`);
+  // In production SSG output, avoid leaking internal stack traces, file
+  // paths, and implementation details. Show a generic message instead.
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) {
+    b.push(`    return c.html('<h1>500 Internal Server Error</h1>', 500)`);
+  } else {
+    b.push(`    const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`);
+    b.push(`    return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
+  }
   b.push(`  }`);
   b.push(`})`);
   b.blank();

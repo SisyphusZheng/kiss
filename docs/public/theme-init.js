@@ -3,6 +3,7 @@
 // Reads saved theme from localStorage or prefers-color-scheme.
 // deno-lint-ignore no-var no-window
 (function () {
+  if (typeof document === 'undefined') return;
   var saved = localStorage.getItem('kiss-theme');
   var prefersLight = globalThis.matchMedia('(prefers-color-scheme: light)').matches;
   var theme = saved || (prefersLight ? 'light' : 'dark');

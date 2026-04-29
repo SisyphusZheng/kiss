@@ -66,10 +66,14 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         }),
         islandsDir: options.islandsDir || 'app/islands',
         routesDir: options.routesDir || 'app/routes',
+        componentsDir: options.componentsDir || 'app/components',
         middleware: options.middleware || null,
         headExtras: options.headExtras || '',
         html: options.html || {},
-        hydrationStrategy: options.island?.hydrationStrategy || 'lazy',
+        // NOTE: hydrationStrategy was removed in v0.3.0 — client entry now
+        // uses Lit's hydrate() from @lit-labs/ssr-client exclusively.
+        // Retaining the key only for backward compat with old metadata readers;
+        // value is always 'lazy' (the only supported strategy).
       };
       const metadataPath = join(kissTmpDir, 'build-metadata.json');
       writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');

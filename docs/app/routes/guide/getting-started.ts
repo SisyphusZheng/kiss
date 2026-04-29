@@ -42,8 +42,8 @@ export default defineConfig({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       inject: {
-        stylesheets: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css'],
-        scripts: ['https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js'],
+        stylesheets: ['https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css'],
+        scripts: ['https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js'],
       },
     }),
   ],

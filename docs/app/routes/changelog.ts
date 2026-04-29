@@ -115,6 +115,42 @@ export class ChangelogPage extends LitElement {
 
           <div class="version-section">
             <div class="version-header">
+              <span class="version-number">0.3.0</span>
+              <span class="version-date">2026-04-29</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li><strong>Package Islands 自动检测</strong>：通过 packageIslands 配置自动扫描并注册来自 npm/JSR 包的 Islands</li>
+                <li><strong>kiss-theme-toggle Island</strong>：Dark/Light 主题切换组件，从 kiss-layout 中提取为独立 Island（DSD + hydration）</li>
+                <li><strong>KissBuildContext 架构重构</strong>：替代闭包共享可变状态，提升构建管道的可测试性</li>
+                <li><strong>EntryDescriptor + renderEntry 模板化</strong>：替代 hono-entry.ts 的字符串拼接</li>
+                <li>Vite manifest 集成：build.ts 使用 build.manifest:true 生成客户端入口映射</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li><strong>kiss-layout 简化为纯静态组件</strong>：移除 _isLight 属性、localStorage 读取、_handleThemeToggle 方法</li>
+                <li>L2 全局主题切换脚本已删除：由 kiss-theme-toggle Island hydration 替代</li>
+                <li>客户端构建自动化生成包内 Island 导入和注册代码</li>
+                <li>SSG post-processing 使用 insertBeforeBodyClose/insertAfterHead 辅助函数，替代 naive string replace</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li>Island chunk 检测从 grep JS 文件内容改为读取 Rollup manifest（确定性、无误报）</li>
+                <li>HTML 插入操作增强鲁棒性：处理标签属性、大小写差异、空白变体</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
               <span class="version-number">0.2.0</span>
               <span class="version-date">2026-04-27</span>
             </div>
@@ -296,6 +332,11 @@ export class ChangelogPage extends LitElement {
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>0.3.0</td>
+                <td>2026-04-29</td>
+                <td>Package Islands auto-detection + kiss-theme-toggle Island + build pipeline refactor</td>
+              </tr>
               <tr>
                 <td>0.2.0</td>
                 <td>2026-04-27</td>

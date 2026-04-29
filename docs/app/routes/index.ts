@@ -1,7 +1,9 @@
 import { css, html, LitElement } from '@kissjs/core';
 import '@kissjs/ui/kiss-layout';
 
-export class DocsHome extends LitElement {
+export const tagName = 'docs-home';
+
+export default class DocsHome extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -439,4 +441,3 @@ export class DocsHome extends LitElement {
   customElements.define('docs-home', DocsHome);
 
   export default DocsHome;
-  export const tagName = 'docs-home';

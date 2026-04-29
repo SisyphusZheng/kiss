@@ -185,7 +185,19 @@ export function injectCspMeta(
   dir: string,
   cspPolicy: string,
   reportOnly = false,
+  nonce = false,
 ): void {
+  // SSG outputs static HTML files — CSP nonces must be per-request and
+  // unpredictable, which is impossible in static files. If nonce mode is
+  // requested, warn the user and fall back to policy-only mode.
+  if (nonce) {
+    console.warn(
+      '[KISS] CSP nonce is not supported for SSG static output. ' +
+      'Falling back to policy-only Content-Security-Policy meta tag. ' +
+      'For per-request nonces, use a server-side middleware instead.',
+    );
+  }
+
   const headerName = reportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy';
   const escapedPolicy = cspPolicy.replace(/"/g, '&quot;');
   const metaTag = `  <meta http-equiv="${headerName}" content="${escapedPolicy}">`;

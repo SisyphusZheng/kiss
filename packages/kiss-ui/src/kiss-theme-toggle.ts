@@ -125,6 +125,10 @@ export class KissThemeToggle extends LitElement {
           this._isLight = true;
         }
       }
+
+      // Sync data-theme attribute on this host element so that
+      // :host([data-theme="light"]) CSS selectors work correctly.
+      this.setAttribute('data-theme', this._isLight ? 'light' : 'dark');
     }
 
     private _handleToggle() {
@@ -132,6 +136,28 @@ export class KissThemeToggle extends LitElement {
       const theme = this._isLight ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('kiss-theme', theme);
+      // Propagate data-theme to all KISS component host elements.
+      // Shadow DOM `:host([data-theme="light"])` selectors only match
+      // when the host element itself has the attribute — CSS custom
+      // properties declared on `:host` shadow the inherited `:root` values.
+      this._propagateTheme(theme);
+    }
+
+    /** Propagate data-theme to all KISS UI components in the document */
+    private _propagateTheme(theme: string) {
+      const kissTags = [
+        'kiss-layout',
+        'kiss-button',
+        'kiss-card',
+        'kiss-input',
+        'kiss-code-block',
+        'kiss-theme-toggle',
+      ];
+      for (const tag of kissTags) {
+        document.querySelectorAll(tag).forEach((el) => {
+          el.setAttribute('data-theme', theme);
+        });
+      }
     }
 
     override render(): TemplateResult {
@@ -140,7 +166,7 @@ export class KissThemeToggle extends LitElement {
           class="theme-toggle ${this._isLight ? 'is-light' : ''}"
           title="${this._isLight ? 'Switch to dark theme' : 'Switch to light theme'}"
           aria-label="Toggle theme"
-          @click="${this._handleToggle}"
+          @click="${() => this._handleToggle()}"
         >
           <svg
             class="icon-sun"

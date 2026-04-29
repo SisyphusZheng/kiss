@@ -15,8 +15,8 @@
     "@lit-labs/ssr": "npm:@lit-labs/ssr@^3",
     "@lit-labs/ssr-dom-shim": "npm:@lit-labs/ssr-dom-shim@^1",
     "@lit-labs/ssr-client": "npm:@lit-labs/ssr-client@^1",
-    "parse5": "npm:parse5@^7",
-    "entities": "npm:entities@^6"
+    "parse5": "npm:parse5@7.0.0",
+    "entities": "npm:entities@6.0.0"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",

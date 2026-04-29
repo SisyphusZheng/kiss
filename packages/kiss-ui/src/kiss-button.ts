@@ -103,7 +103,8 @@ export class KissButton extends LitElement {
       }
 
       /* States */
-      .btn:disabled {
+      .btn:disabled,
+      .btn[aria-disabled="true"] {
         opacity: 0.5;
         cursor: not-allowed;
         pointer-events: none;
@@ -142,12 +143,16 @@ export class KissButton extends LitElement {
     const classes = `btn btn--${this.variant} btn--${this.size}`;
 
     if (this.href) {
+      // disabled anchor: remove href and use aria-disabled (disabled is not valid on <a>)
+      const hrefAttr = this.disabled ? undefined : this.href;
       return html`
         <a
           class="${classes}"
-          href="${this.href}"
+          href="${hrefAttr}"
           target="${this.target}"
-          ?disabled="${this.disabled}"
+          aria-disabled="${this.disabled || undefined}"
+          rel="${this.target === '_blank' ? 'noopener noreferrer' : undefined}"
+          @click="${this.disabled ? (e: Event) => e.preventDefault() : undefined}"
         >
           <slot></slot>
         </a>

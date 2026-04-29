@@ -1,8 +1,15 @@
 /**
- * @kissjs/ui — Vite plugin for design tokens + component styles
+ * @kissjs/ui — Vite plugin for Web Awesome CDN injection (convenience only)
  *
- * Injects KISS design tokens and component CSS at build time.
- * Works with Islands architecture — styles only load for islands that use them.
+ * **This is an OPTIONAL convenience plugin**, not part of the KISS core architecture.
+ * It exists solely for users who want a one-liner Web Awesome setup.
+ *
+ * The KISS-recommended approach is to use `kiss({ inject: { stylesheets: [...], scripts: [...] } })`
+ * from @kissjs/core, which gives full control over headFragments ordering and works
+ * with any CSS framework (not just Web Awesome).
+ *
+ * This plugin is intentionally NOT used by the KISS docs site itself —
+ * the docs use kiss() with inject option directly.
  *
  * Usage:
  * ```ts
@@ -10,7 +17,7 @@
  * import { kissUI } from '@kissjs/ui'
  *
  * export default defineConfig({
- *   plugins: [kissUI()]
+ *   plugins: [kissUI()]  // One-liner Web Awesome CDN
  * })
  * ```
  */

@@ -33,6 +33,7 @@ interface BuildMetadata {
   resolveAlias: Record<string, string> | Array<{ find: string; replacement: string }> | null;
   ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[];
   islandsDir: string;
+  /** @deprecated Since v0.3.0 — client entry always uses Lit hydrate() from @lit-labs/ssr-client */
   hydrationStrategy?: HydrationStrategy;
 }
 
