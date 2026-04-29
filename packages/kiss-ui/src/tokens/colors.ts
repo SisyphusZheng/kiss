@@ -33,7 +33,10 @@
  *   - Both MUST stay in sync — editing the object keeps them in sync
  */
 
-import { css, unsafeCSS } from '@kissjs/core';
+// Import from 'lit' directly (not '@kissjs/core') to avoid circular dependency
+// in Vite config bundling. This module is infrastructure — it must work in
+// Node.js contexts (vite.config.ts) where @kissjs/core isn't resolvable.
+import { css, unsafeCSS } from 'lit';
 
 // ============================================================
 // SINGLE SOURCE OF TRUTH — Color Token Values
@@ -129,8 +132,9 @@ export const kissColorTokens = css`
  * }
  * ```
  */
-export const kissRootColorCSS =
-  `:root,[data-theme="dark"]{${declarations(kissDarkColors)};color-scheme:dark}[data-theme="light"]{${declarations(kissLightColors)};color-scheme:light}`;
+export const kissRootColorCSS = `:root,[data-theme="dark"]{${
+  declarations(kissDarkColors)
+};color-scheme:dark}[data-theme="light"]{${declarations(kissLightColors)};color-scheme:light}`;
 
 /**
  * Minified CSS for scaffolding (create-kiss template).

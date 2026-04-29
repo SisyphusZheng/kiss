@@ -40,7 +40,7 @@ export { KissCard, tagName as kissCardTagName } from './kiss-card.js';
 export { KissInput, tagName as kissInputTagName } from './kiss-input.js';
 export { KissCodeBlock, tagName as kissCodeBlockTagName } from './kiss-code-block.js';
 export { KissLayout, tagName as kissLayoutTagName } from './kiss-layout.js';
-export type { NavItem, NavSection, HeaderNavLink } from './kiss-layout.js';
+export type { HeaderNavLink, NavItem, NavSection } from './kiss-layout.js';
 export { KissThemeToggle, tagName as kissThemeToggleTagName } from './kiss-theme-toggle.js';
 
 // Vite plugin for Web Awesome CDN injection (convenience only)

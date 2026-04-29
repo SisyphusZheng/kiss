@@ -6,8 +6,8 @@
 import { assertExists } from 'jsr:@std/assert@^1.0.0';
 import type {
   FrameworkOptions,
-  KissRenderer,
   KissMiddleware,
+  KissRenderer,
   PackageIslandMeta,
   RouteEntry,
   SpecialFileType,
@@ -77,7 +77,8 @@ Deno.test('types: PackageIslandMeta has required fields', () => {
 Deno.test('types: SsrContext has expected properties', () => {
   // SsrContext is created by createSsrContext() — just verify the type exists
   type _Check = SsrContext extends { route: RouteEntry; url: URL; params: Record<string, string> }
-    ? true : never;
+    ? true
+    : never;
   const check: _Check = true;
   assertExists(check);
 });

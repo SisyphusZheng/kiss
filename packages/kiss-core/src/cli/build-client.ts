@@ -92,7 +92,10 @@ async function buildClient(): Promise<void> {
   const noExternalPatterns = (metadata.ssrNoExternal || []).map((item) => {
     if (typeof item === 'string') return item;
     if (item && typeof item === 'object' && (item as Record<string, unknown>).__type === 'RegExp') {
-      return new RegExp((item as { source: string; flags: string }).source, (item as { source: string; flags: string }).flags);
+      return new RegExp(
+        (item as { source: string; flags: string }).source,
+        (item as { source: string; flags: string }).flags,
+      );
     }
     return item;
   });

@@ -9,7 +9,7 @@
  * Run: deno check packages/kiss-rpc/__tests__/type-compat.ts
  */
 
-import type { ReactiveControllerHost, ReactiveController as LitReactiveController } from 'lit';
+import type { ReactiveController as LitReactiveController, ReactiveControllerHost } from 'lit';
 
 // Local interface mirrors (must stay in sync with src/index.ts)
 interface ReactiveController {

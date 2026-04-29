@@ -46,7 +46,9 @@ Deno.test('generateClientEntry lazy strategy uses requestIdleCallback', () => {
 
 Deno.test('generateClientEntry idle strategy waits for page idle', () => {
   const code = generateClientEntry([LOCAL_ISLAND], 'idle');
-  assertExists(code.includes('requestIdleCallback') || code.includes('window.addEventListener("load"'));
+  assertExists(
+    code.includes('requestIdleCallback') || code.includes('window.addEventListener("load"'),
+  );
 });
 
 // ─── Visible Strategy ──────────────────────────────────────
@@ -68,7 +70,7 @@ Deno.test('generateClientEntry visible strategy uses IntersectionObserver', () =
 
 Deno.test('generateClientEntry registers local island with customElements.define', () => {
   const code = generateClientEntry([LOCAL_ISLAND]);
-  assertExists(code.includes('customElements.define(\'my-counter\''));
+  assertExists(code.includes("customElements.define('my-counter'"));
   assertExists(code.includes("import Island_0 from './islands/my-counter.ts'"));
 });
 
@@ -92,7 +94,7 @@ Deno.test('generateClientEntry handles mixed local and package islands', () => {
   const code = generateClientEntry([LOCAL_ISLAND, PACKAGE_ISLAND]);
 
   // Local island: static import + define
-  assertExists(code.includes('customElements.define(\'my-counter\''));
+  assertExists(code.includes("customElements.define('my-counter'"));
 
   // Package island: dynamic import
   assertExists(code.includes("import('@kissjs/ui/kiss-theme-toggle')"));

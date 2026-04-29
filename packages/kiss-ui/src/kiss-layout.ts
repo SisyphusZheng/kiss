@@ -393,8 +393,8 @@ export class KissLayout extends LitElement {
           }
 
           /* :has() fallback for browsers without :has() support
-             (Safari < 15.4, Firefox < 121).
-             has-fallback.js adds .sidebar-open to the host element. */
+            (Safari < 15.4, Firefox < 121).
+            has-fallback.js adds .sidebar-open to the host element. */
           :host(.sidebar-open) .docs-sidebar {
             transform: translateX(0);
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
@@ -595,14 +595,15 @@ export class KissLayout extends LitElement {
       return html`
         <nav class="docs-sidebar" aria-label="Documentation navigation">
           ${nav.map(
-            (section) => html`
-              <details class="nav-section" open>
-                <summary class="nav-section-title">${section.section}</summary>
-                ${section.items.map(
-                  (item) => this._navLink(item.path, item.label),
-                )}
-              </details>
-            `,
+            (section) =>
+              html`
+                <details class="nav-section" open>
+                  <summary class="nav-section-title">${section.section}</summary>
+                  ${section.items.map(
+                    (item) => this._navLink(item.path, item.label),
+                  )}
+                </details>
+              `,
           )}
         </nav>
       `;
@@ -613,7 +614,10 @@ export class KissLayout extends LitElement {
       return html`
         <nav class="header-nav">
           ${links.map(
-            (link) => html`<a href="${link.href}">${link.label}</a>`,
+            (link) =>
+              html`
+                <a href="${link.href}">${link.label}</a>
+              `,
           )}
         </nav>
       `;
@@ -624,7 +628,8 @@ export class KissLayout extends LitElement {
         <div class="app-layout" ?home="${this.home}">
           <header class="app-header">
             <div class="header-inner">
-              <a class="logo" href="/">${this.logoText}<span class="logo-sub">${this.logoSub}</span></a>
+              <a class="logo" href="/">${this.logoText}<span class="logo-sub">${this
+                .logoSub}</span></a>
               ${this._renderHeaderNav()}
               <div class="header-right">
                 ${!this.home
@@ -670,8 +675,8 @@ export class KissLayout extends LitElement {
           <div class="app-footer">
             <footer>
               <p>
-                Built with <a href="${this.githubUrl}" target="_blank"
-                  rel="noopener noreferrer">KISS Framework</a>
+                Built with <a href="${this.githubUrl}" target="_blank" rel="noopener noreferrer"
+                >KISS Framework</a>
                 <span class="divider"></span>
                 Self-bootstrapped from JSR
                 <span class="divider"></span>

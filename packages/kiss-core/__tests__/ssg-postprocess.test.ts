@@ -12,7 +12,7 @@ import {
 } from '../src/ssg-postprocess.ts';
 
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 
@@ -23,7 +23,9 @@ function makeTempDir(): string {
 }
 
 function cleanup(dir: string) {
-  try { rmSync(dir, { recursive: true }); } catch { /* ignore */ }
+  try {
+    rmSync(dir, { recursive: true });
+  } catch { /* ignore */ }
 }
 
 // ─── buildIslandChunkMap ──────────────────────────────────────
@@ -41,7 +43,9 @@ Deno.test('buildIslandChunkMap returns empty map when no client dir', () => {
     // No client/ subdir
     const result = buildIslandChunkMap(tmp, outDir, ['counter-island']);
     assertEquals(Object.keys(result).length, 0);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('buildIslandChunkMap scans manifest.json for island chunks', () => {
@@ -66,8 +70,10 @@ Deno.test('buildIslandChunkMap scans manifest.json for island chunks', () => {
     // Paths should include the island file name
     assertExists(result['counter-island'].includes('counter'));
     assertExists(result['kiss-theme-toggle'].includes('theme'));
-  } finally { cleanup(tmp); }
-});;
+  } finally {
+    cleanup(tmp);
+  }
+});
 
 Deno.test('buildIslandChunkMap falls back to directory scan without manifest', () => {
   const tmp = makeTempDir();
@@ -79,7 +85,9 @@ Deno.test('buildIslandChunkMap falls back to directory scan without manifest', (
 
     const result = buildIslandChunkMap(tmp, 'dist', ['counter-island']);
     assertExists(result['counter-island']);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('buildIslandChunkMap respects basePath option', () => {
@@ -95,7 +103,9 @@ Deno.test('buildIslandChunkMap respects basePath option', () => {
     const result = buildIslandChunkMap(tmp, 'dist', ['counter-island'], '/my-app/');
     // Path should start with custom basePath
     assertExists(result['counter-island'].startsWith('/my-app/'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 // ─── injectClientScript ──────────────────────────────────────
@@ -111,7 +121,9 @@ Deno.test('injectClientScript adds script tag to HTML files', () => {
     const content = readFileSync(htmlPath, 'utf-8');
     assertExists(content.includes('/client/islands/client.js'));
     assertExists(content.includes('<script type="module"'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('injectClientScript does not duplicate existing injection', () => {
@@ -133,7 +145,9 @@ Deno.test('injectClientScript does not duplicate existing injection', () => {
     // The original one + the check for existence (no new injection)
     // Actually it checks content.includes(scriptSrc) before injecting
     assertEquals(count <= 1, true);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('injectClientScript recurses into subdirectories', () => {
@@ -147,7 +161,9 @@ Deno.test('injectClientScript recurses into subdirectories', () => {
 
     assertExists(readFileSync(join(tmp, 'index.html'), 'utf-8').includes('/client.js'));
     assertExists(readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8').includes('/client.js'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 // ─── injectCspMeta ──────────────────────────────────────────
@@ -163,7 +179,9 @@ Deno.test('injectCspMeta adds CSP meta tag to HTML files', () => {
     const content = readFileSync(htmlPath, 'utf-8');
     assertExists(content.includes('Content-Security-Policy'));
     assertExists(content.includes("default-src 'self'"));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('injectCspMeta uses Report-Only header in report-only mode', () => {
@@ -177,7 +195,9 @@ Deno.test('injectCspMeta uses Report-Only header in report-only mode', () => {
     const content = readFileSync(htmlPath, 'utf-8');
     assertExists(content.includes('Content-Security-Policy-Report-Only'));
     assertFalse(content.includes('"Content-Security-Policy"'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('injectCspMeta escapes quotes in policy', () => {
@@ -191,7 +211,9 @@ Deno.test('injectCspMeta escapes quotes in policy', () => {
     const content = readFileSync(htmlPath, 'utf-8');
     // Quotes should be escaped as &quot;
     assertExists(content.includes('&quot;'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('injectCspMeta does not duplicate on repeated calls', () => {
@@ -206,7 +228,9 @@ Deno.test('injectCspMeta does not duplicate on repeated calls', () => {
     const content = readFileSync(htmlPath, 'utf-8');
     const count = (content.match(/Content-Security-Policy/g) || []).length;
     assertEquals(count, 1);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 // ─── rewriteHtmlFiles ───────────────────────────────────────
@@ -227,9 +251,11 @@ Deno.test('rewriteHtmlFiles rewrites island source paths', () => {
     rewriteHtmlFiles(tmp, chunkMap);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes("/client/islands/island-counter-abc.js"));
-    assertFalse(content.includes("/app/islands/counter-island.ts"));
-  } finally { cleanup(tmp); }
+    assertExists(content.includes('/client/islands/island-counter-abc.js'));
+    assertFalse(content.includes('/app/islands/counter-island.ts'));
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('rewriteHtmlFiles handles both /app/ and app/ patterns', () => {
@@ -249,5 +275,7 @@ Deno.test('rewriteHtmlFiles handles both /app/ and app/ patterns', () => {
 
     const content = readFileSync(htmlPath, 'utf-8');
     assertExists(content.includes('/client/islands/island-theme.js'));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });

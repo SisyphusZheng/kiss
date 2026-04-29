@@ -18,11 +18,11 @@ function extractTemplate(key: string): string {
   const marker = `'${key}': \``;
   const startIdx = cliSource.indexOf(marker);
   if (startIdx === -1) throw new Error(`Template '${key}' not found`);
-  
+
   let contentStart = startIdx + marker.length;
   let depth = 1;
   let i = contentStart;
-  
+
   while (i < cliSource.length && depth > 0) {
     if (cliSource[i] === '`') {
       // Check if escaped
@@ -34,7 +34,7 @@ function extractTemplate(key: string): string {
     }
     i++;
   }
-  
+
   return cliSource.slice(contentStart, i);
 }
 

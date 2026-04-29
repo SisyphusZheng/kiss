@@ -14,7 +14,7 @@ import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0'
 
 const COMPONENT_FILES = [
   'kiss-button',
-  'kiss-card', 
+  'kiss-card',
   'kiss-input',
   'kiss-code-block',
   'kiss-layout',
@@ -32,12 +32,13 @@ for (const name of COMPONENT_FILES) {
 
   Deno.test(`kiss-${name}: exports LitElement subclass`, async () => {
     const mod = await import(`../src/${name}.ts`);
-    const className = Object.keys(mod).find((k) =>
-      k !== 'tagName' && typeof mod[k] === 'function'
-    );
+    const className = Object.keys(mod).find((k) => k !== 'tagName' && typeof mod[k] === 'function');
     assertExists(className, `${name} should export a class`);
     const Cls = mod[className as keyof typeof mod];
-    assertExists(Cls.prototype.connectedCallback || Cls.prototype.render, `${name} class should be a LitElement`);
+    assertExists(
+      Cls.prototype.connectedCallback || Cls.prototype.render,
+      `${name} class should be a LitElement`,
+    );
   });
 }
 
@@ -47,9 +48,10 @@ Deno.test('design-tokens: kissDesignTokens is CSSResult', async () => {
   const { kissDesignTokens } = await import('../src/design-tokens.ts');
   assertExists(kissDesignTokens);
   // CSSResult has a cssText property or styles property
-  assertEquals(typeof kissDesignTokens.cssText === 'string' ||
-    typeof kissDesignTokens === 'string' ||
-    Symbol.for('css') in (kissDesignTokens as object),
+  assertEquals(
+    typeof kissDesignTokens.cssText === 'string' ||
+      typeof kissDesignTokens === 'string' ||
+      Symbol.for('css') in (kissDesignTokens as object),
     true,
     'kissDesignTokens should be a CSSResult',
   );
@@ -73,7 +75,10 @@ Deno.test('design-tokens: colors include dark/light theme variables', async () =
   const { kissColorTokens } = await import('../src/tokens/colors.ts');
   const tokenStr = String(kissColorTokens);
   // Should contain CSS custom properties for theming
-  assertExists(tokenStr.includes('--') || tokenStr.includes('css'), 'Color tokens should be valid CSS');
+  assertExists(
+    tokenStr.includes('--') || tokenStr.includes('css'),
+    'Color tokens should be valid CSS',
+  );
 });
 
 // ─── Index Re-exports ──────────────────────────────────────

@@ -104,12 +104,14 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     const fragments: string[] = [];
     for (const href of options.inject.stylesheets || []) {
       // Escape URL to prevent attribute breakout in injected <link>
-      const safeHref = href.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeHref = href.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
       fragments.push(`<link rel="stylesheet" href="${safeHref}" />`);
     }
     for (const src of options.inject.scripts || []) {
       // Escape URL to prevent attribute breakout in injected <script>
-      const safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
       fragments.push(`<script type="module" src="${safeSrc}"></script>`);
     }
     for (const frag of options.inject.headFragments || []) {
@@ -128,7 +130,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     ].join('\n  ');
   }
   if (options.ui?.cdn && headExtras) {
-    console.warn('[KISS] Both inject and ui.cdn options provided. ui.cdn is ignored in favor of inject.');
+    console.warn(
+      '[KISS] Both inject and ui.cdn options provided. ui.cdn is ignored in favor of inject.',
+    );
   }
 
   // Build the resolved options with defaults

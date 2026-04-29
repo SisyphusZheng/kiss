@@ -4,7 +4,7 @@
  * v0.3.0: generateClientEntry now takes ClientIslandEntry[] + strategy.
  * It includes Lit hydration logic (hydrate from @lit-labs/ssr-client).
  */
-import { assertEquals, assertStringIncludes, assertExists } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { generateClientEntry } from '../src/entry-generators.ts';
 import { buildPlugin } from '../src/build.ts';
 import { join } from 'node:path';
@@ -12,8 +12,33 @@ import { readFileSync, rmSync } from 'node:fs';
 
 const KISS_TMP = join(Deno.cwd(), '.kiss');
 
+/**
+ * Call a Vite ObjectHook that may be a plain function or { handler, order? }.
+ * Avoids TS2349 "not all constituents are callable".
+ */
+// deno-lint-ignore no-explicit-any
+function callHook(hook: unknown, ...args: any[]): void {
+  if (typeof hook === 'function') {
+    hook(...args);
+  } else if (hook && typeof hook === 'object' && 'handler' in hook) {
+    (hook as { handler: (...a: any[]) => any }).handler(...args);
+  }
+}
+
+async function callAsyncHook(hook: unknown, ...args: any[]): Promise<void> {
+  let result: unknown;
+  if (typeof hook === 'function') {
+    result = hook(...args);
+  } else if (hook && typeof hook === 'object' && 'handler' in hook) {
+    result = (hook as { handler: (...a: any[]) => any }).handler(...args);
+  }
+  if (result instanceof Promise) await result;
+}
+
 function cleanup() {
-  try { rmSync(KISS_TMP, { recursive: true, force: true }); } catch { /* ignore */ }
+  try {
+    rmSync(KISS_TMP, { recursive: true, force: true });
+  } catch { /* ignore */ }
 }
 
 function makeConfig(command: 'build' | 'serve', base = '/'): Record<string, unknown> {
@@ -79,7 +104,7 @@ Deno.test('build - generateClientEntry', async (t) => {
 Deno.test('buildPlugin - configResolved', () => {
   const plugin = buildPlugin();
   const config = makeConfig('build', '/base/');
-  plugin.configResolved?.(config as never);
+  callHook(plugin.configResolved, config);
   // If we reach here without error, the hook ran.
   // We can't directly inspect `base` (it's closed over), but closeBundle will use it.
   assertEquals(typeof plugin.name, 'string');
@@ -90,8 +115,8 @@ Deno.test('buildPlugin - closeBundle (build mode, no islands)', async (t) => {
   cleanup();
   const plugin = buildPlugin({}, undefined);
   const config = makeConfig('build');
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('writes build-metadata.json', () => {
     const metaPath = join(KISS_TMP, 'build-metadata.json');
@@ -120,8 +145,8 @@ Deno.test('buildPlugin - closeBundle (build mode, with islands)', async (t) => {
   };
   const plugin = buildPlugin({}, ctx as never);
   const config = makeConfig('build');
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('writes islandTagNames and packageIslands', () => {
     const metaPath = join(KISS_TMP, 'build-metadata.json');
@@ -143,8 +168,8 @@ Deno.test('buildPlugin - closeBundle (dev mode, skips write)', async (t) => {
   cleanup();
   const plugin = buildPlugin({}, undefined);
   const config = makeConfig('serve'); // dev mode
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('does NOT write build-metadata.json in dev mode', () => {
     // In dev mode, closeBundle returns early — file should not exist
@@ -168,8 +193,8 @@ Deno.test('buildPlugin - custom outDir and options', async (t) => {
   };
   const plugin = buildPlugin(options, undefined);
   const config = makeConfig('build');
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('writes custom options to metadata', () => {
     const metaPath = join(KISS_TMP, 'build-metadata.json');
@@ -192,8 +217,8 @@ Deno.test('buildPlugin - ssr.noExternal RegExp serialization', async (t) => {
   };
   const plugin = buildPlugin(options as never, undefined);
   const config = makeConfig('build');
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('serializes RegExp as __type objects', () => {
     const metaPath = join(KISS_TMP, 'build-metadata.json');
@@ -212,8 +237,8 @@ Deno.test('buildPlugin - base without trailing slash', async (t) => {
   cleanup();
   const plugin = buildPlugin({}, undefined);
   const config = makeConfig('build', '/base'); // no trailing slash
-  plugin.configResolved?.(config as never);
-  await plugin.closeBundle?.();
+  callHook(plugin.configResolved, config);
+  await callAsyncHook(plugin.closeBundle);
 
   await t.step('ensures base ends with /', () => {
     const metaPath = join(KISS_TMP, 'build-metadata.json');

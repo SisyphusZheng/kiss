@@ -4,7 +4,12 @@
  * Tests that kiss() plugin factory returns a valid plugin array
  * with correct structure and re-exports.
  */
-import { assertEquals, assertExists, assertArrayIncludes, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import {
+  assertArrayIncludes,
+  assertEquals,
+  assertExists,
+  assertStringIncludes,
+} from 'jsr:@std/assert@^1.0.0';
 import { kiss } from '../src/index.ts';
 
 // Verify re-exports exist (compile-time)
@@ -181,7 +186,10 @@ Deno.test('kiss() corePlugin.configResolved sets honoEntryCode', () => {
   const corePlugin = plugins.find((p) => p.name === 'kiss:core')!;
   assertExists(corePlugin.configResolved);
   // Should not throw when called with fake config
-  corePlugin.configResolved!({} as never);
+  // Use type assertion to avoid TS2349 (ObjectHook may not be callable)
+  if (typeof corePlugin.configResolved === 'function') {
+    corePlugin.configResolved({} as never);
+  }
   assertEquals(true, true);
 });
 
@@ -192,7 +200,11 @@ Deno.test('kiss() virtualEntryPlugin.resolveId matches VIRTUAL_ENTRY_ID', () => 
   const virtualPlugin = plugins.find((p) => p.name === 'kiss:virtual-entry')!;
   assertExists(virtualPlugin.resolveId);
   // The resolved ID includes '\0' prefix — we just verify it returns non-null for the ID
-  const result = virtualPlugin.resolveId!('virtual:kiss-hono-entry', undefined as never, {} as never);
+  const result = (virtualPlugin.resolveId as Function)(
+    'virtual:kiss-hono-entry',
+    undefined as never,
+    {} as never,
+  );
   assertExists(result);
 });
 
@@ -201,7 +213,7 @@ Deno.test('kiss() virtualEntryPlugin.load returns code for resolved ID', () => {
   const virtualPlugin = plugins.find((p) => p.name === 'kiss:virtual-entry')!;
   assertExists(virtualPlugin.load);
   // '\0virtual:kiss-hono-entry' is the resolved ID
-  const code = virtualPlugin.load!('\0virtual:kiss-hono-entry' as never);
+  const code = (virtualPlugin.load as Function)('\0virtual:kiss-hono-entry' as never);
   assertExists(code);
   assertStringIncludes(code as string, 'hono');
 });

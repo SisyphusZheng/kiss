@@ -61,7 +61,9 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         // can replicate the same module resolution
         resolveAlias: ctx?.userResolveAlias || null,
         ssrNoExternal: (options.ssr?.noExternal || []).map((item) => {
-          if (item instanceof RegExp) return { __type: 'RegExp', source: item.source, flags: item.flags };
+          if (item instanceof RegExp) {
+            return { __type: 'RegExp', source: item.source, flags: item.flags };
+          }
           return item;
         }),
         islandsDir: options.islandsDir || 'app/islands',

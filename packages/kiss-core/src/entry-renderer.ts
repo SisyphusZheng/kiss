@@ -93,7 +93,9 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
         // Production deployments MUST explicitly configure corsOrigin.
         // Returning '*' with credentials:true violates the Fetch spec.
         b.push("app.use('*', cors({ origin: (origin) => {");
-        b.push('  if (origin && /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin)) return origin');
+        b.push(
+          '  if (origin && /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin)) return origin',
+        );
         b.push('  // In production, set middleware.corsOrigin explicitly');
         b.push('  return undefined');
         b.push(`}, ${CORS_ALLOW} }))`);
@@ -122,9 +124,9 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
           const hasScriptSrc = /script-src/i.test(basePolicy);
           const policyTemplate = hasScriptSrc
             ? basePolicy.replace(
-                /script-src\s+([^;]*)/i,
-                "script-src 'nonce-NONCE_PLACEHOLDER' $1",
-              )
+              /script-src\s+([^;]*)/i,
+              "script-src 'nonce-NONCE_PLACEHOLDER' $1",
+            )
             : basePolicy + "; script-src 'nonce-NONCE_PLACEHOLDER'";
           b.push(
             `// CSP with auto-nonce: generates a per-request nonce and adds it to script tags`,
@@ -132,7 +134,11 @@ function renderMiddleware(b: CodeBuilder, mw: MiddlewareDecl): void {
           b.push(`app.use('*', async (c, next) => {`);
           b.push(`  const nonce = crypto.randomUUID().replace(/-/g, '')`);
           b.push(`  c.set('cspNonce', nonce)`);
-          b.push(`  const policy = ${JSON.stringify(policyTemplate)}.replace('NONCE_PLACEHOLDER', nonce)`);
+          b.push(
+            `  const policy = ${
+              JSON.stringify(policyTemplate)
+            }.replace('NONCE_PLACEHOLDER', nonce)`,
+          );
           b.push(`  await next()`);
           b.push(`  c.header('${headerName}', policy)`);
           b.push(`})`);
@@ -220,7 +226,9 @@ function renderPageRoute(
   if (isProd) {
     b.push(`    return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   } else {
-    b.push(`    const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`);
+    b.push(
+      `    const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`,
+    );
     b.push(`    return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
   }
   b.push(`  }`);

@@ -4,10 +4,10 @@
  * Tests build manifest scanning and formatting using temp directories.
  */
 import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { scanClientBuild, scanSSGOutput, printBuildManifest } from '../src/build-manifest.ts';
+import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build-manifest.ts';
 
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 
@@ -18,7 +18,9 @@ function makeTempDir(): string {
 }
 
 function cleanup(dir: string) {
-  try { rmSync(dir, { recursive: true }); } catch { /* ignore */ }
+  try {
+    rmSync(dir, { recursive: true });
+  } catch { /* ignore */ }
 }
 
 // ─── scanClientBuild ─────────────────────────────────
@@ -36,8 +38,16 @@ Deno.test('scanClientBuild finds island chunks', () => {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
 
-    writeFileSync(join(islandsDir, 'island-counter-abc123.js'), '// counter chunk 1024 bytes'.padEnd(1024, ' '), 'utf-8');
-    writeFileSync(join(islandsDir, 'island-theme-def456.js'), '// theme chunk 512 bytes'.padEnd(512, ' '), 'utf-8');
+    writeFileSync(
+      join(islandsDir, 'island-counter-abc123.js'),
+      '// counter chunk 1024 bytes'.padEnd(1024, ' '),
+      'utf-8',
+    );
+    writeFileSync(
+      join(islandsDir, 'island-theme-def456.js'),
+      '// theme chunk 512 bytes'.padEnd(512, ' '),
+      'utf-8',
+    );
     writeFileSync(join(islandsDir, 'client.js'), '// client entry'.padEnd(100, ' '), 'utf-8');
 
     const result = scanClientBuild(tmp);
@@ -48,7 +58,9 @@ Deno.test('scanClientBuild finds island chunks', () => {
     assertExists(result.clientEntry);
     assertEquals(result.clientEntry!.name, 'client.js');
     assertExists(result.totalJsBytes > 7000);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('scanClientBuild skips non-js files', () => {
@@ -63,7 +75,9 @@ Deno.test('scanClientBuild skips non-js files', () => {
 
     const result = scanClientBuild(tmp);
     assertEquals(result.islands.length, 1);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 // ─── scanSSGOutput ──────────────────────────────────
@@ -90,7 +104,9 @@ Deno.test('scanSSGOutput finds HTML files recursively', () => {
     assertExists(result.find((f) => f.name === 'index.html'));
     assertExists(result.find((f) => f.name === 'about.html'));
     assertExists(result.find((f) => f.path.includes('post.html')));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 // ─── printBuildManifest ───────────────────────
@@ -105,7 +121,9 @@ Deno.test('printBuildManifest: Phase 2 (no islands, no HTML)', () => {
     assertEquals(manifest.htmlPages.length, 0);
     assertEquals(manifest.totalJsBytes, 0);
     assertEquals(manifest.headExtrasSize, 0);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: Phase 3 with HTML pages', () => {
@@ -122,7 +140,9 @@ Deno.test('printBuildManifest: Phase 3 with HTML pages', () => {
     assertExists(manifest.htmlPages.find((p) => p.name === 'index.html'));
     assertExists(manifest.htmlPages.find((p) => p.name === 'about.html'));
     assertEquals(manifest.totalHtmlBytes > 0, true);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: headExtras non-zero', () => {
@@ -135,7 +155,9 @@ Deno.test('printBuildManifest: headExtras non-zero', () => {
       headExtras: '<meta name="theme-color" content="#000">',
     });
     assertEquals(manifest.headExtrasSize > 0, true);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: island budget warning', () => {
@@ -147,7 +169,9 @@ Deno.test('printBuildManifest: island budget warning', () => {
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
     assertExists(manifest.warnings.find((w) => w.includes('exceeds') && w.includes('big-island')));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: total JS budget warning', () => {
@@ -160,7 +184,9 @@ Deno.test('printBuildManifest: total JS budget warning', () => {
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
     assertExists(manifest.warnings.find((w) => w.includes('Total JS')));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: HTML page budget warning', () => {
@@ -168,11 +194,17 @@ Deno.test('printBuildManifest: HTML page budget warning', () => {
   try {
     const distDir = join(tmp, 'dist');
     mkdirSync(distDir, { recursive: true });
-    writeFileSync(join(distDir, 'huge.html'), '<html>' + 'x'.repeat(101 * 1024) + '</html>', 'utf-8');
+    writeFileSync(
+      join(distDir, 'huge.html'),
+      '<html>' + 'x'.repeat(101 * 1024) + '</html>',
+      'utf-8',
+    );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
     assertExists(manifest.warnings.find((w) => w.includes('huge.html') && w.includes('exceeds')));
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: no warnings when within budget', () => {
@@ -188,7 +220,9 @@ Deno.test('printBuildManifest: no warnings when within budget', () => {
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
     assertEquals(manifest.warnings.length, 0);
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
 
 Deno.test('printBuildManifest: returns correct timestamp format', () => {
@@ -198,5 +232,7 @@ Deno.test('printBuildManifest: returns correct timestamp format', () => {
     assertExists(manifest.timestamp);
     assertEquals(typeof manifest.timestamp, 'string');
     assertStringIncludes(manifest.timestamp, 'T');
-  } finally { cleanup(tmp); }
+  } finally {
+    cleanup(tmp);
+  }
 });
