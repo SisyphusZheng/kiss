@@ -8,13 +8,9 @@ import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build
 
 import { join } from 'node:path';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { randomUUID } from 'node:crypto';
 
 function makeTempDir(): string {
-  const dir = join(tmpdir(), `kiss-test-${randomUUID().slice(0, 8)}`);
-  mkdirSync(dir, { recursive: true });
-  return dir;
+  return Deno.makeTempDirSync({ prefix: 'kiss-test-' });
 }
 
 function cleanup(dir: string) {

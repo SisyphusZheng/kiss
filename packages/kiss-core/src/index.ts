@@ -28,7 +28,6 @@ import type { Plugin } from 'vite';
 import type { FrameworkOptions, PackageIslandMeta, RouteEntry } from './types.js';
 
 import { join } from 'node:path';
-import process from 'node:process';
 import { KissError } from './errors.js';
 
 import { KissBuildContext } from './build-context.js';
@@ -195,7 +194,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       try {
         const routes = await scanRoutes(resolvedOptions.routesDir!);
 
-        const islandsRoot = join(process.cwd(), resolvedOptions.islandsDir || 'app/islands');
+        const islandsRoot = join(Deno.cwd(), resolvedOptions.islandsDir || 'app/islands');
         const islandFiles = await scanIslands(islandsRoot);
         ctx.islandTagNames = islandFiles.map((f) => fileToTagName(f));
 
