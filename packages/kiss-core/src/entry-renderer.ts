@@ -16,6 +16,8 @@
  *   expressions with DOM nodes, forcing client-render (destroying SSR output).
  */
 
+import process from 'node:process';
+
 import type {
   ApiRouteDecl,
   CorsOriginConfig,
@@ -222,7 +224,7 @@ function renderPageRoute(
   b.push(`  } catch (err) {`);
   // In production SSG output, avoid leaking internal stack traces, file
   // paths, and implementation details. Show a generic message instead.
-  const isProd = Deno.env.get('NODE_ENV') === 'production';
+  const isProd = process.env.NODE_ENV === 'production';
   if (isProd) {
     b.push(`    return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   } else {
