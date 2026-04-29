@@ -334,7 +334,9 @@ Deno.test('injectCspMeta warns when nonce=true', () => {
 
     const origWarn = console.warn;
     let warnMsg = '';
-    console.warn = (...args: any[]) => { warnMsg = args.join(' '); };
+    console.warn = (...args: any[]) => {
+      warnMsg = args.join(' ');
+    };
 
     injectCspMeta(tmp, "default-src 'self'", false, true);
 
@@ -424,7 +426,7 @@ Deno.test('buildIslandChunkMap skips manifest entries without file field', () =>
     const viteDir = join(tmp, 'dist', 'client', '.vite');
     mkdirSync(viteDir, { recursive: true });
     const manifest = {
-      'src/something.ts': { css: ['style.css'] },  // no 'file' field
+      'src/something.ts': { css: ['style.css'] }, // no 'file' field
       'src/islands/counter.ts': { file: 'islands/island-counter-abc123.js' },
     };
     writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');

@@ -142,9 +142,11 @@ Deno.test('RpcController — call() handles pre-aborted signal', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   // Start a call, then immediately abort before the async fn resolves
-  const callPromise = ctrl.call(() => new Promise<string>((resolve) => {
-    setTimeout(() => resolve('late'), 10000);
-  }));
+  const callPromise = ctrl.call(() =>
+    new Promise<string>((resolve) => {
+      setTimeout(() => resolve('late'), 10000);
+    })
+  );
   // Abort right away — the next call will have an aborted signal
   ctrl.abort();
   try {
@@ -214,9 +216,11 @@ Deno.test('RpcController — retries on 5xx errors then succeeds', async () => {
 Deno.test('RpcController — abort during call produces ABORTED error', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
-  const callPromise = ctrl.call(() => new Promise<never>((_resolve, reject) => {
-    setTimeout(() => reject(new DOMException('Aborted', 'AbortError')), 100);
-  }));
+  const callPromise = ctrl.call(() =>
+    new Promise<never>((_resolve, reject) => {
+      setTimeout(() => reject(new DOMException('Aborted', 'AbortError')), 100);
+    })
+  );
   ctrl.abort();
   try {
     await callPromise;

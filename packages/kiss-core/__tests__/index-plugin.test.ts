@@ -326,7 +326,9 @@ Deno.test('kiss() corePlugin.buildStart scans routes and islands', async () => {
 
     Deno.chdir(origCwd);
   } finally {
-    try { Deno.removeSync(tmp, { recursive: true }); } catch { /* ignore */ }
+    try {
+      Deno.removeSync(tmp, { recursive: true });
+    } catch { /* ignore */ }
   }
 });
 
@@ -350,7 +352,9 @@ Deno.test('kiss() corePlugin.buildStart handles empty directories gracefully', a
 
     Deno.chdir(origCwd);
   } finally {
-    try { Deno.removeSync(tmp, { recursive: true }); } catch { /* ignore */ }
+    try {
+      Deno.removeSync(tmp, { recursive: true });
+    } catch { /* ignore */ }
   }
 });
 
@@ -383,7 +387,9 @@ Deno.test('kiss() corePlugin.buildStart with packageIslands config', async () =>
 
     Deno.chdir(origCwd);
   } finally {
-    try { Deno.removeSync(tmp, { recursive: true }); } catch { /* ignore */ }
+    try {
+      Deno.removeSync(tmp, { recursive: true });
+    } catch { /* ignore */ }
   }
 });
 
@@ -394,7 +400,9 @@ Deno.test('kiss() ui.cdn with headExtras triggers warning branch', () => {
   // it should warn and ui.cdn is ignored
   const origWarn = console.warn;
   let warnMsg = '';
-  console.warn = (...args: any[]) => { warnMsg = args.join(' '); };
+  console.warn = (...args: any[]) => {
+    warnMsg = args.join(' ');
+  };
 
   const plugins = kiss({
     headExtras: '<meta name="custom" />',

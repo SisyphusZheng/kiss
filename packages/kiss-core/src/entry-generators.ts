@@ -124,40 +124,39 @@ ${dynamicImports}
 // shadow root) won't be found by a top-level querySelectorAll.
 // We must recursively walk all shadow roots.
 
+// --- Shadow DOM traversal utility (shared by main + fallback paths) ---
+function __kissFindDeferred(root) {
+  const deferred = [];
+  root.querySelectorAll('[defer-hydration]').forEach(el => {
+    deferred.push(el);
+  });
+  root.querySelectorAll('*').forEach(el => {
+    if (el.shadowRoot) {
+      deferred.push(...__kissFindDeferred(el.shadowRoot));
+    }
+  });
+  return deferred;
+}
+
+function __kissHydrateAll() {
+  const all = __kissFindDeferred(document);
+  all.forEach(el => el.removeAttribute('defer-hydration'));
+}
+
+function __kissHydrateElement(el) {
+  el.removeAttribute('defer-hydration');
+}
+
 __islandPromises.then(() => {
   Promise.all([${whenDefinedList}]).then(() => {
-  function __kissFindDeferred(root) {
-    const deferred = [];
-    // Check direct children with defer-hydration
-    root.querySelectorAll('[defer-hydration]').forEach(el => {
-      deferred.push(el);
-    });
-    // Recurse into shadow roots of all custom elements
-    root.querySelectorAll('*').forEach(el => {
-      if (el.shadowRoot) {
-        deferred.push(...__kissFindDeferred(el.shadowRoot));
-      }
-    });
-    return deferred;
-  }
-
-  function __kissHydrateAll() {
-    const all = __kissFindDeferred(document);
-    all.forEach(el => el.removeAttribute('defer-hydration'));
-  }
-
-  function __kissHydrateElement(el) {
-    el.removeAttribute('defer-hydration');
-  }
 
 ${strategyCode}
   });
 }).catch(err => {
   console.warn('[KISS] Island loading failed, hydration may be incomplete:', err);
-  // Attempt hydration for any islands that DID load
+  // Attempt hydration for any islands that DID load (using Shadow DOM traversal)
   Promise.all([${whenDefinedList}]).then(() => {
-    const deferred = document.querySelectorAll('[defer-hydration]');
-    deferred.forEach(el => el.removeAttribute('defer-hydration'));
+    __kissHydrateAll();
   }).catch(() => { /* best effort */ });
 });
 `;

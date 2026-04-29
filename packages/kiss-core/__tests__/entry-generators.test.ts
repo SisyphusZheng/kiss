@@ -58,20 +58,27 @@ Deno.test('generateClientEntry visible strategy uses IntersectionObserver', () =
   assertExists(code.includes('IntersectionObserver'));
   assertExists(code.includes('__kissFindDeferred')); // Must traverse Shadow DOM
   assertExists(code.includes('__kissHydrateElement'));
-  // Should NOT use document.querySelectorAll (doesn't pierce Shadow DOM)
-  assertEquals(
+  // Should NOT use top-level document.querySelectorAll('[defer-hydration]')
+  // (__kissFindDeferred uses root.querySelectorAll inside the recursive function,
+  // which is correct — it traverses Shadow DOM. But direct document.querySelectorAll
+  // at the top level would miss shadow-rooted islands.)
+  assertFalse(
     code.includes("document.querySelectorAll('[defer-hydration]')"),
-    false,
-    'visible strategy must NOT use document.querySelectorAll',
+    'visible strategy must NOT use top-level document.querySelectorAll',
   );
 });
 
 // ─── Local Island Registration ─────────────────────────────
 
-Deno.test('generateClientEntry registers local island with customElements.define', () => {
+Deno.test('generateClientEntry registers local island via dynamic import', () => {
   const code = generateClientEntry([LOCAL_ISLAND]);
-  assertExists(code.includes("customElements.define('my-counter'"));
-  assertExists(code.includes("import Island_0 from './islands/my-counter.ts'"));
+  // All islands (local + package) use dynamic import() for correct hydration ordering
+  assertExists(code.includes("import('./islands/my-counter.ts')"));
+  // No static import for islands
+  assertFalse(
+    code.includes("import Island_0 from './islands/my-counter.ts'"),
+    'Local islands must use dynamic import() not static import',
+  );
 });
 
 // ─── Package Island Dynamic Import ─────────────────────────
@@ -93,11 +100,15 @@ Deno.test('generateClientEntry uses dynamic import for package islands', () => {
 Deno.test('generateClientEntry handles mixed local and package islands', () => {
   const code = generateClientEntry([LOCAL_ISLAND, PACKAGE_ISLAND]);
 
-  // Local island: static import + define
-  assertExists(code.includes("customElements.define('my-counter'"));
-
-  // Package island: dynamic import
+  // Both local and package islands use dynamic import()
+  assertExists(code.includes("import('./islands/my-counter.ts')"));
   assertExists(code.includes("import('@kissjs/ui/kiss-theme-toggle')"));
+
+  // No static import for either type
+  assertFalse(
+    code.includes("import Island_0 from './islands/my-counter.ts'"),
+    'Local islands must use dynamic import()',
+  );
 });
 
 // ─── Hydration Support Import ──────────────────────────────
@@ -140,14 +151,17 @@ Deno.test('generateClientEntry creates whenDefined list for all islands', () => 
 
 // ─── No package islands (packageImportBlock empty) ────────
 
-Deno.test('generateClientEntry local-only islands have no dynamic import block', () => {
+Deno.test('generateClientEntry all islands use dynamic import', () => {
   const code = generateClientEntry([LOCAL_ISLAND, {
     tagName: 'code-block',
     modulePath: './islands/code-block.ts',
     isPackage: false,
   }]);
-  // No "Dynamic import for package islands" comment when no package islands
-  assertEquals(code.includes('Dynamic import for package islands'), false);
+  // Both local islands use dynamic import()
+  assertExists(code.includes("import('./islands/my-counter.ts')"));
+  assertExists(code.includes("import('./islands/code-block.ts')"));
+  // No static import declarations for islands
+  assertFalse(code.includes('import Island_'), 'No static island imports');
 });
 
 // ─── Multiple package islands ─────────────────────────────
@@ -159,8 +173,8 @@ Deno.test('generateClientEntry multiple package islands all use dynamic import',
   ]);
   assertExists(code.includes("import('@kissjs/ui/kiss-button')"));
   assertExists(code.includes("import('@kissjs/ui/kiss-card')"));
-  // No static customElements.define() call for package islands
-  // (they self-register via side-effect import)
+  // All islands self-register via side-effect of dynamic import —
+  // no explicit customElements.define() in the generated entry
   assertEquals(code.includes("customElements.define('kiss-"), false);
   assertEquals(code.includes("customElements.define('kiss-card"), false);
 });

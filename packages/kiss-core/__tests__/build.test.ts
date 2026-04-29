@@ -5,7 +5,12 @@
  * v0.3.0: generateClientEntry now takes ClientIslandEntry[] + strategy.
  * It includes Lit hydration logic (hydrate from @lit-labs/ssr-client).
  */
-import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import {
+  assertEquals,
+  assertExists,
+  assertFalse,
+  assertStringIncludes,
+} from 'jsr:@std/assert@^1.0.0';
 import { generateClientEntry } from '../src/entry-generators.ts';
 import { buildPlugin } from '../src/build.ts';
 import { join } from 'node:path';
@@ -54,27 +59,30 @@ Deno.test('build - generateClientEntry', async (t) => {
     assertEquals(code.includes('hydrate'), false);
   });
 
-  await t.step('generates imports for island files', () => {
+  await t.step('generates dynamic imports for island files', () => {
     const islands = [
       { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
       { tagName: 'theme-toggle', modulePath: '/app/islands/theme-toggle.ts' },
     ];
     const code = generateClientEntry(islands, 'lazy');
-    assertStringIncludes(code, "import Island_0 from '/app/islands/my-counter.ts'");
-    assertStringIncludes(code, "import Island_1 from '/app/islands/theme-toggle.ts'");
+    // All islands use dynamic import() for correct hydration ordering
+    assertStringIncludes(code, "import('/app/islands/my-counter.ts')");
+    assertStringIncludes(code, "import('/app/islands/theme-toggle.ts')");
   });
 
-  await t.step('generates customElements.define() registrations', () => {
+  await t.step('islands self-register via dynamic import side effects', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertStringIncludes(code, "customElements.get('my-counter')");
-    assertStringIncludes(code, "customElements.define('my-counter'");
+    // No explicit customElements.define() — islands self-register via dynamic import
+    assertFalse(code.includes("customElements.define('my-counter'"));
+    assertFalse(code.includes("customElements.get('my-counter')"));
   });
 
-  await t.step('guards against duplicate registration', () => {
+  await t.step('no duplicate registration guards needed', () => {
     const islands = [{ tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' }];
     const code = generateClientEntry(islands, 'lazy');
-    assertStringIncludes(code, "if (!customElements.get('my-counter'))");
+    // No explicit customElements.define() — no duplicate guard needed
+    assertFalse(code.includes("if (!customElements.get('my-counter'))"));
   });
 
   await t.step('includes KISS Architecture comment', () => {

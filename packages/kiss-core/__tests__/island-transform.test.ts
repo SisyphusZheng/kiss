@@ -107,16 +107,17 @@ Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t)
     );
   });
 
-  await t.step('registers custom elements', () => {
+  await t.step('registers custom elements via dynamic import', () => {
     const islands = [
       { tagName: 'my-counter', modulePath: '/app/islands/my-counter.ts' },
       { tagName: 'theme-toggle', modulePath: '@kissjs/ui/kiss-theme-toggle', isPackage: true },
     ];
     const code = generateClientEntry(islands, 'lazy');
-    // Local islands are registered with customElements.define()
-    assertEquals(code.includes("customElements.define('my-counter'"), true);
-    // Package islands use dynamic import (self-register in their module)
+    // All islands (local + package) use dynamic import() — they self-register
+    assertEquals(code.includes("import('/app/islands/my-counter.ts')"), true);
     assertEquals(code.includes("import('@kissjs/ui/kiss-theme-toggle')"), true);
+    // No explicit customElements.define() in generated entry
+    assertEquals(code.includes("customElements.define('my-counter'"), false);
   });
 
   await t.step('waits for customElements.whenDefined before hydrating', () => {

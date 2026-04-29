@@ -442,7 +442,12 @@ Deno.test('kiss-input: connectedCallback sets internals', async () => {
   });
   instance.value = undefined;
   // Skip super.connectedCallback() — just test our own logic
-  (instance as any)._internals = { setFormValue: (val: string) => { setFormValueCalled = true; assertEquals(val, ''); } };
+  (instance as any)._internals = {
+    setFormValue: (val: string) => {
+      setFormValueCalled = true;
+      assertEquals(val, '');
+    },
+  };
   // Directly call the form value sync logic
   (instance as any)._internals.setFormValue(instance.value ?? '');
   assertEquals(setFormValueCalled, true);
@@ -452,7 +457,11 @@ Deno.test('kiss-input: connectedCallback with existing value', async () => {
   const { KissInput } = await import('../src/kiss-input.ts');
   const instance = new KissInput();
   let capturedValue = '';
-  (instance as any)._internals = { setFormValue: (val: string) => { capturedValue = val; } };
+  (instance as any)._internals = {
+    setFormValue: (val: string) => {
+      capturedValue = val;
+    },
+  };
   instance.value = 'hello';
   (instance as any)._internals.setFormValue(instance.value ?? '');
   assertEquals(capturedValue, 'hello');
@@ -566,7 +575,10 @@ Deno.test('kiss-code-block: _copy success path (mocked clipboard)', async () => 
   });
   // Mock setTimeout to fire immediately
   const origSetTimeout = globalThis.setTimeout;
-  globalThis.setTimeout = ((cb: () => void) => { cb(); return 0 as any; }) as any;
+  globalThis.setTimeout = ((cb: () => void) => {
+    cb();
+    return 0 as any;
+  }) as any;
   await (instance as any)._copy();
   globalThis.setTimeout = origSetTimeout;
   assertEquals(writtenText, 'const x = 1;');
@@ -578,7 +590,9 @@ Deno.test('kiss-code-block: _copy failure path (mocked clipboard)', async () => 
   const instance = new KissCodeBlock();
   (globalThis as any).navigator = {
     clipboard: {
-      writeText: async () => { throw new Error('Clipboard denied'); },
+      writeText: async () => {
+        throw new Error('Clipboard denied');
+      },
     },
   };
   Object.defineProperty(instance, 'textContent', {
@@ -586,7 +600,10 @@ Deno.test('kiss-code-block: _copy failure path (mocked clipboard)', async () => 
     configurable: true,
   });
   const origSetTimeout = globalThis.setTimeout;
-  globalThis.setTimeout = ((cb: () => void) => { cb(); return 0 as any; }) as any;
+  globalThis.setTimeout = ((cb: () => void) => {
+    cb();
+    return 0 as any;
+  }) as any;
   await (instance as any)._copy();
   globalThis.setTimeout = origSetTimeout;
   assertEquals((instance as any)._copyState, 'idle');
@@ -676,7 +693,9 @@ Deno.test('kiss-theme-toggle: connectedCallback reads document data-theme', asyn
   };
   (globalThis as any).localStorage = {
     getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => { _data[key] = value; },
+    setItem: (key: string, value: string) => {
+      _data[key] = value;
+    },
   };
   const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
   const instance = new KissThemeToggle();
@@ -789,7 +808,9 @@ Deno.test('kiss-theme-toggle: _propagateTheme isolates failures (I-constraint)',
   // Create an element that throws on setAttribute
   const failingElement = {
     tagName: 'KISS-BAD',
-    setAttribute: () => { throw new Error('Cannot set attribute'); },
+    setAttribute: () => {
+      throw new Error('Cannot set attribute');
+    },
     hasAttribute: () => false,
     shadowRoot: null,
   };
@@ -800,7 +821,9 @@ Deno.test('kiss-theme-toggle: _propagateTheme isolates failures (I-constraint)',
     shadowRoot: null,
   };
   let okSetAttrCalled = false;
-  okElement.setAttribute = () => { okSetAttrCalled = true; };
+  okElement.setAttribute = () => {
+    okSetAttrCalled = true;
+  };
 
   (globalThis as any).document = {
     documentElement: { setAttribute: () => {} },
@@ -863,7 +886,9 @@ Deno.test('kiss-theme-toggle: connectedCallback full path with theme=light', asy
   };
   (globalThis as any).localStorage = {
     getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => { _data[key] = value; },
+    setItem: (key: string, value: string) => {
+      _data[key] = value;
+    },
   };
   const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
   const instance = new KissThemeToggle();
@@ -871,7 +896,7 @@ Deno.test('kiss-theme-toggle: connectedCallback full path with theme=light', asy
 
   // Override super.connectedCallback to no-op (avoids LitElement DOM dependency)
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
@@ -894,14 +919,16 @@ Deno.test('kiss-theme-toggle: connectedCallback full path with theme=dark', asyn
   };
   (globalThis as any).localStorage = {
     getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => { _data[key] = value; },
+    setItem: (key: string, value: string) => {
+      _data[key] = value;
+    },
   };
   const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
   const instance = new KissThemeToggle();
   instance.theme = 'dark';
 
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
@@ -923,14 +950,16 @@ Deno.test('kiss-theme-toggle: connectedCallback reads document.documentElement.d
   };
   (globalThis as any).localStorage = {
     getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => { _data[key] = value; },
+    setItem: (key: string, value: string) => {
+      _data[key] = value;
+    },
   };
   const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
   const instance = new KissThemeToggle();
   // No theme attribute set — should fall through to document.documentElement.dataset.theme
 
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
@@ -946,7 +975,7 @@ Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', as
   localStorage.setItem('kiss-theme', 'light');
   (globalThis as any).document = {
     documentElement: {
-      dataset: {},  // No data-theme set
+      dataset: {}, // No data-theme set
       setAttribute: () => {},
     },
     querySelectorAll: () => [],
@@ -955,7 +984,7 @@ Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', as
   const instance = new KissThemeToggle();
 
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
@@ -982,7 +1011,7 @@ Deno.test('kiss-theme-toggle: connectedCallback defaults to dark theme', async (
   const instance = new KissThemeToggle();
 
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
@@ -1012,12 +1041,12 @@ Deno.test('kiss-input: connectedCallback with attachInternals mock', async () =>
 
   // Override super.connectedCallback
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.connectedCallback();
     assertEquals(setFormValueCalled, true);
-    assertEquals(capturedValue, '');  // value is undefined, so '' via ??
+    assertEquals(capturedValue, ''); // value is undefined, so '' via ??
   } finally {
     Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
   }
@@ -1029,11 +1058,13 @@ Deno.test('kiss-input: connectedCallback with existing value', async () => {
   let capturedValue = '';
 
   (instance as any).attachInternals = () => ({
-    setFormValue: (val: string) => { capturedValue = val; },
+    setFormValue: (val: string) => {
+      capturedValue = val;
+    },
   });
 
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function() {};
+  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 
   try {
     instance.value = 'hello world';
@@ -1049,7 +1080,9 @@ Deno.test('kiss-input: _handleInput syncs form value via internals', async () =>
   const instance = new KissInput();
   let lastFormValue = '';
   (instance as any)._internals = {
-    setFormValue: (val: string) => { lastFormValue = val; },
+    setFormValue: (val: string) => {
+      lastFormValue = val;
+    },
   };
 
   const mockEvent = { target: { value: 'typed text' } } as any;
@@ -1065,10 +1098,13 @@ Deno.test('kiss-layout: _navLink with active and icon', async () => {
   const { KissLayout } = await import('../src/kiss-layout.ts');
   const instance = new KissLayout();
   // Set navItems with active and icon to cover branches
-  instance.setAttribute('nav-items', JSON.stringify([
-    { label: 'Home', href: '/', active: true, icon: 'home' },
-    { label: 'About', href: '/about' },
-  ]));
+  instance.setAttribute(
+    'nav-items',
+    JSON.stringify([
+      { label: 'Home', href: '/', active: true, icon: 'home' },
+      { label: 'About', href: '/about' },
+    ]),
+  );
   const result = instance.render();
   assertExists(result);
 });
