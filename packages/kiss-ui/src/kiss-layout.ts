@@ -39,6 +39,12 @@
 
 import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
+// CRITICAL: kiss-layout's template uses <kiss-theme-toggle>, so we MUST import it
+// so that the SSR renderer can recursively render its DSD shadow root.
+// Without this import, SSR outputs <kiss-theme-toggle></kiss-theme-toggle> without
+// DSD, which means the theme toggle button is never rendered server-side and
+// cannot hydrate on the client.
+import './kiss-theme-toggle.js';
 
 export const tagName = 'kiss-layout';
 

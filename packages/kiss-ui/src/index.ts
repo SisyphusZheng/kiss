@@ -48,11 +48,22 @@ export { kissUI } from './kiss-ui-plugin.js';
 export type { KissUIOptions } from './kiss-ui-plugin.js';
 
 // Island metadata for auto-detection by @kissjs/core
-// These components are Islands (have Shadow DOM + hydration)
+// These components are Islands (have Shadow DOM + hydration).
+// Any component that appears in SSR output with defer-hydration MUST be
+// listed here so the client entry can register it. Otherwise the element
+// never upgrades and the DSD shadow root remains "frozen".
 export const islands: PackageIslandMeta[] = [
   {
     tagName: 'kiss-theme-toggle',
     modulePath: '@kissjs/ui/kiss-theme-toggle',
     strategy: 'eager', // Theme should be applied immediately
+  },
+  {
+    tagName: 'kiss-button',
+    modulePath: '@kissjs/ui/kiss-button',
+  },
+  {
+    tagName: 'kiss-layout',
+    modulePath: '@kissjs/ui/kiss-layout',
   },
 ];

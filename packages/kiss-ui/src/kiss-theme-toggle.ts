@@ -158,16 +158,28 @@ export class KissThemeToggle extends LitElement {
      * ```
      */
     private _propagateTheme(theme: string) {
-      // All KISS built-in components (kiss-* prefix)
-      document.querySelectorAll('*').forEach((el) => {
-        if (el.tagName && el.tagName.toLowerCase().startsWith('kiss-')) {
-          el.setAttribute('data-theme', theme);
-        }
-      });
-      // User custom components that opt in with data-kiss attribute
-      document.querySelectorAll('[data-kiss]').forEach((el) => {
-        el.setAttribute('data-theme', theme);
-      });
+      // CRITICAL: document.querySelectorAll() does NOT pierce Shadow DOM.
+      // KISS components like kiss-layout live inside other components' shadow roots
+      // (e.g. page-fullstack-demo's shadow root). We must recursively walk all
+      // shadow roots to find and update every KISS component.
+      const propagate = (root: Document | ShadowRoot) => {
+        root.querySelectorAll('*').forEach((el) => {
+          const tag = el.tagName?.toLowerCase();
+          // All KISS built-in components (kiss-* prefix)
+          if (tag?.startsWith('kiss-')) {
+            el.setAttribute('data-theme', theme);
+          }
+          // User custom components that opt in with data-kiss attribute
+          if (el.hasAttribute?.('data-kiss')) {
+            el.setAttribute('data-theme', theme);
+          }
+          // Recurse into shadow roots (DSD + Lit hydration creates them)
+          if (el.shadowRoot) {
+            propagate(el.shadowRoot);
+          }
+        });
+      };
+      propagate(document);
     }
 
     override render(): TemplateResult {
