@@ -39,3 +39,8 @@ __test_fixtures__/
 
 # Vite cache
 .vite/
+
+# Test output files
+test-*.txt
+cov-*.txt
+ui-test*.txt

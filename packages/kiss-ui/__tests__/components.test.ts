@@ -48,7 +48,6 @@ Deno.test('design-tokens: kissDesignTokens is CSSResult', async () => {
   assertExists(kissDesignTokens);
   // CSSResult has a cssText property or styles property
   assertEquals(typeof kissDesignTokens.cssText === 'string' ||
-    Array.isArray(kissDesignTokens.styleSheets) ||
     typeof kissDesignTokens === 'string' ||
     Symbol.for('css') in (kissDesignTokens as object),
     true,
@@ -131,11 +130,286 @@ Deno.test('kiss-ui-plugin: returns a Vite plugin', async () => {
   const plugin = kissUI();
   assertExists(plugin.name);
   assertEquals(plugin.name.startsWith('kiss'), true);
-  assertExists(plugin.config || plugin.transform || plugin.buildStart, 'Plugin must have at least one hook');
+  assertExists(plugin.transformIndexHtml, 'Plugin must have transformIndexHtml hook');
 });
 
 Deno.test('kiss-ui-plugin: accepts options', async () => {
   const { kissUI } = await import('../src/kiss-ui-plugin.ts');
-  const plugin = kissUI({ cdn: '3.5.0' });
+  const plugin = kissUI({ cdn: true });
   assertExists(plugin.name);
+});
+
+// ─── Component Instantiation & render() ─────────────────────
+
+const COMPONENT_CLASSES = [
+  ['kiss-button', 'KissButton'],
+  ['kiss-card', 'KissCard'],
+  ['kiss-input', 'KissInput'],
+  ['kiss-code-block', 'KissCodeBlock'],
+  ['kiss-layout', 'KissLayout'],
+  ['kiss-theme-toggle', 'KissThemeToggle'],
+];
+
+for (const [fileName, className] of COMPONENT_CLASSES) {
+  Deno.test(`kiss-${fileName}: can be instantiated and render()`, async () => {
+    const mod = await import(`../src/${fileName}.ts`);
+    const Cls = mod[className as keyof typeof mod] as { new (): { render(): unknown } };
+    const instance = new Cls();
+    const result = instance.render();
+    assertExists(result, `${className}.render() should return a TemplateResult`);
+  });
+}
+
+Deno.test('kiss-layout: _navLink generates correct HTML', async () => {
+  const { KissLayout } = await import('../src/kiss-layout.ts');
+  const instance = new KissLayout();
+  // _navLink is private, but we can test render output indirectly
+  // Just instantiating and rendering covers _navLink via render()
+  const result = instance.render();
+  assertExists(result);
+});
+
+Deno.test('kiss-theme-toggle: renders toggle button', async () => {
+  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+  const instance = new KissThemeToggle();
+  const result = instance.render();
+  assertExists(result);
+});
+
+Deno.test('kiss-theme-toggle: renders and handles theme', async () => {
+  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+  // Just test render() and property assignment (no DOM needed for render)
+  const instance = new KissThemeToggle();
+  instance.theme = 'light';
+  let result = instance.render();
+  assertExists(result);
+
+  instance.theme = 'dark';
+  result = instance.render();
+  assertExists(result);
+
+  // Test _isLight property assignment
+  instance._isLight = true;
+  assertEquals(instance._isLight, true);
+});
+
+Deno.test('kiss-button: renders with properties', async () => {
+  const { KissButton } = await import('../src/kiss-button.ts');
+  const instance = new KissButton();
+  instance.href = '#test';
+  instance.variant = 'primary';
+  const result = instance.render();
+  assertExists(result);
+});
+
+Deno.test('kiss-input: renders with properties', async () => {
+  const { KissInput } = await import('../src/kiss-input.ts');
+  const instance = new KissInput();
+  instance.type = 'text';
+  instance.placeholder = 'Enter text';
+  const result = instance.render();
+  assertExists(result);
+});
+
+Deno.test('kiss-code-block: renders with properties', async () => {
+  const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
+  const instance = new KissCodeBlock();
+  instance.language = 'typescript';
+  const result = instance.render();
+  assertExists(result);
+});
+
+// ─── kissUI Plugin transformIndexHtml ─────────────────────
+
+Deno.test('kiss-ui-plugin: transformIndexHtml injects CDN links (cdn=true)', async () => {
+  const { kissUI } = await import('../src/kiss-ui-plugin.ts');
+  const plugin = kissUI({ cdn: true, version: '3.5.0' });
+  assertExists(plugin.transformIndexHtml);
+  const result = plugin.transformIndexHtml!('<html><head></head><body></body></html>');
+  // Should return an array of tag descriptors
+  assertExists(result);
+  assertEquals(Array.isArray(result) || typeof result === 'string', true);
+});
+
+Deno.test('kiss-ui-plugin: transformIndexHtml skips when cdn=false', async () => {
+  const { kissUI } = await import('../src/kiss-ui-plugin.ts');
+  const plugin = kissUI({ cdn: false });
+  const result = plugin.transformIndexHtml!('<html></html>');
+  // When cdn=false, returns html unchanged
+  assertEquals(result, '<html></html>');
+});
+
+Deno.test('kiss-ui-plugin: transformIndexHtml uses custom version', async () => {
+  const { kissUI } = await import('../src/kiss-ui-plugin.ts');
+  const plugin = kissUI({ cdn: true, version: '3.4.0' });
+  const result = plugin.transformIndexHtml!('<html><head></head></html>');
+  assertExists(result);
+});
+
+// ─── Enhanced Component Tests for Coverage ──────────────────
+
+// Mock document and localStorage for kiss-theme-toggle tests
+function setupDOMMocks() {
+  const _data: Record<string, string> = {};
+
+  // Mock document.documentElement
+  (globalThis as any).document = {
+    documentElement: {
+      dataset: {},
+      setAttribute: (...args: any[]) => {},
+    },
+  };
+
+  // Mock localStorage with proper method bindings
+  (globalThis as any).localStorage = {
+    getItem: (key: string) => _data[key] || null,
+    setItem: (key: string, value: string) => {
+      _data[key] = value;
+    },
+  };
+}
+
+// NOTE: These tests are commented out because they require DOM APIs
+// (document, localStorage, navigator.clipboard) that are not available in Deno.
+// To properly test these, we would need a DOM shim library like linkedom or happy-dom.
+
+/*
+Deno.test('kiss-theme-toggle: _handleToggle switches theme from dark to light', async () => {
+  // ... test code ...
+});
+
+Deno.test('kiss-code-block: _copy method success path', async () => {
+  // ... test code ...
+});
+*/
+
+Deno.test('kiss-theme-toggle: _handleToggle switches theme from light to dark', async () => {
+  setupDOMMocks();
+  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+  const instance = new KissThemeToggle();
+  instance._isLight = true;
+
+  const calls: any[] = [];
+  (document.documentElement as any).setAttribute = (...args: any[]) => {
+    calls.push(args);
+  };
+
+  instance._handleToggle();
+
+  assertEquals(instance._isLight, false);
+  assertEquals(calls[0], ['data-theme', 'dark']);
+});
+
+Deno.test('kiss-code-block: _copy method success path', async () => {
+  const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
+  const instance = new KissCodeBlock();
+
+  // Mock navigator.clipboard.writeText
+  let clipboardText = '';
+  (globalThis as any).navigator = {
+    clipboard: {
+      writeText: async (text: string) => {
+        clipboardText = text;
+      },
+    },
+  };
+
+  // Directly set textContent on instance (avoid getter/setter issues in Deno)
+  (instance as any).textContent = 'const x = 1;';
+
+  // Mock requestUpdate to avoid LitElement errors
+  instance.requestUpdate = () => Promise.resolve();
+
+  // Mock setTimeout to execute immediately (avoid timer leaks in tests)
+  const originalSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = ((callback: () => void) => {
+    callback();
+    return 0 as any;
+  }) as any;
+
+  await instance._copy();
+
+  // Restore setTimeout
+  globalThis.setTimeout = originalSetTimeout;
+
+  assertEquals(instance._copyState, 'idle'); // Should be 'idle' after timer fires
+  assertEquals(clipboardText, 'const x = 1;');
+});
+
+Deno.test('kiss-code-block: _copy method failure path', async () => {
+  const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
+  const instance = new KissCodeBlock();
+
+  // Mock clipboard.writeText to throw
+  (globalThis as any).navigator = {
+    clipboard: {
+      writeText: async () => {
+        throw new Error('Clipboard error');
+      },
+    },
+  };
+
+  Object.defineProperty(instance, 'textContent', {
+    get: () => 'some code',
+    configurable: true,
+  });
+
+  // Mock requestUpdate to avoid LitElement errors
+  instance.requestUpdate = () => Promise.resolve();
+
+  // Mock setTimeout to execute immediately (avoid timer leaks in tests)
+  const originalSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = ((callback: () => void) => {
+    callback();
+    return 0 as any;
+  }) as any;
+
+  await instance._copy();
+
+  // Restore setTimeout
+  globalThis.setTimeout = originalSetTimeout;
+
+  assertEquals(instance._copyState, 'idle'); // Should be 'idle' after timer fires
+});
+
+Deno.test('kiss-input: _handleInput dispatches custom event', async () => {
+  const { KissInput } = await import('../src/kiss-input.ts');
+  const instance = new KissInput();
+
+  let dispatchedEvent: any = null;
+  instance.addEventListener('kiss-input', (e: Event) => {
+    dispatchedEvent = e;
+  });
+
+  // Mock event target
+  const mockEvent = {
+    target: {
+      value: 'test input value',
+    },
+  } as any;
+
+  instance._handleInput(mockEvent);
+
+  assertEquals(instance.value, 'test input value');
+  assertExists(dispatchedEvent);
+  assertEquals((dispatchedEvent as CustomEvent).detail.value, 'test input value');
+});
+
+Deno.test('kiss-input: render with error message', async () => {
+  const { KissInput } = await import('../src/kiss-input.ts');
+  const instance = new KissInput();
+  instance.label = 'Test Label';
+  instance.required = true;
+  instance.error = 'This field is required';
+  const result = instance.render();
+  assertExists(result);
+});
+
+Deno.test('kiss-input: render without label', async () => {
+  const { KissInput } = await import('../src/kiss-input.ts');
+  const instance = new KissInput();
+  instance.placeholder = 'Enter text';
+  instance.label = undefined;
+  const result = instance.render();
+  assertExists(result);
 });

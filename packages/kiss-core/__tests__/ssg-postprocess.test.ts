@@ -75,7 +75,7 @@ Deno.test('buildIslandChunkMap falls back to directory scan without manifest', (
     // Create islands/ dir with chunk files but no manifest
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'island-counter-abc123.js'), '// counter', 'utf-8');
+    writeFileSync(join(islandsDir, 'island-counter-island-abc123.js'), '// counter', 'utf-8');
 
     const result = buildIslandChunkMap(tmp, 'dist', ['counter-island']);
     assertExists(result['counter-island']);
@@ -88,7 +88,7 @@ Deno.test('buildIslandChunkMap respects basePath option', () => {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
     mkdirSync(viteDir, { recursive: true });
     const manifest = {
-      'src/islands/counter.ts': { file: 'islands/island-counter-abc.js' },
+      'src/islands/counter-island.ts': { file: 'islands/island-counter-island-abc.js' },
     };
     writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
 
