@@ -5,6 +5,7 @@
  * We do NOT call main() because it invokes Deno.exit() which
  * kills the Deno test process.
  */
+// deno-lint-ignore-file no-unused-vars prefer-const
 import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

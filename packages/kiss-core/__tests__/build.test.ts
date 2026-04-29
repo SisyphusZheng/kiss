@@ -4,6 +4,7 @@
  * v0.3.0: generateClientEntry now takes ClientIslandEntry[] + strategy.
  * It includes Lit hydration logic (hydrate from @lit-labs/ssr-client).
  */
+// deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { generateClientEntry } from '../src/entry-generators.ts';
 import { buildPlugin } from '../src/build.ts';
@@ -16,7 +17,6 @@ const KISS_TMP = join(Deno.cwd(), '.kiss');
  * Call a Vite ObjectHook that may be a plain function or { handler, order? }.
  * Avoids TS2349 "not all constituents are callable".
  */
-// deno-lint-ignore no-explicit-any
 function callHook(hook: unknown, ...args: any[]): void {
   if (typeof hook === 'function') {
     hook(...args);

@@ -4,6 +4,7 @@
  * Tests that kiss() plugin factory returns a valid plugin array
  * with correct structure and re-exports.
  */
+// deno-lint-ignore-file no-unused-vars ban-types
 import {
   assertArrayIncludes,
   assertEquals,

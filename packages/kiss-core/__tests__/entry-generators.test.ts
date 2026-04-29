@@ -4,7 +4,7 @@
  * Tests generateClientEntry code generation for all hydration strategies.
  */
 import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { generateClientEntry, type HydrationStrategy } from '../src/entry-generators.ts';
+import { generateClientEntry } from '../src/entry-generators.ts';
 
 const LOCAL_ISLAND = {
   tagName: 'my-counter',

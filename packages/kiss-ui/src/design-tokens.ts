@@ -38,7 +38,7 @@
 import { css, type CSSResult } from '@kissjs/core';
 import { kissSpacingTokens } from './tokens/spacing.js';
 import { kissTypographyTokens } from './tokens/typography.js';
-import { kissColorTokens, kissRootColorCSS, kissScaffoldColorCSS } from './tokens/colors.js';
+import { kissColorTokens } from './tokens/colors.js';
 import { kissEffectTokens } from './tokens/effects.js';
 
 /**

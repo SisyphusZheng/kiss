@@ -15,6 +15,12 @@ import type {
 } from '../src/types.ts';
 import type { HydrationStrategy } from '../src/entry-generators.ts';
 
+// Compile-time type existence checks (lint compliance: consume the imported types)
+type _KissMiddleware = KissMiddleware;
+type _KissRenderer = KissRenderer;
+type _SpecialFileType = SpecialFileType;
+type _HydrationStrategy = HydrationStrategy;
+
 // These are compile-time assertions — if the types don't exist or have
 // wrong shapes, this file won't compile.
 

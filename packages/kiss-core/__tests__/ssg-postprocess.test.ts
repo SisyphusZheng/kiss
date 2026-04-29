@@ -12,7 +12,7 @@ import {
 } from '../src/ssg-postprocess.ts';
 
 import { join } from 'node:path';
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 

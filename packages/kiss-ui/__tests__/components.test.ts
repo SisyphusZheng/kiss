@@ -8,6 +8,7 @@
  * - Vite plugin exports
  * - Index re-exports completeness
  */
+// deno-lint-ignore-file no-explicit-any no-unused-vars ban-types require-await
 import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 
 // ─── Component Export Shape ──────────────────────────────────

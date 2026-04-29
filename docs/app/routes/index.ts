@@ -438,6 +438,4 @@ export default class DocsHome extends LitElement {
     }
   }
 
-  customElements.define('docs-home', DocsHome);
-
-  export default DocsHome;
+customElements.define('docs-home', DocsHome);
