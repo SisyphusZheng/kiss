@@ -334,7 +334,7 @@ Deno.test('injectCspMeta warns when nonce=true', () => {
 
     const origWarn = console.warn;
     let warnMsg = '';
-    console.warn = (...args: any[]) => {
+    console.warn = (...args: unknown[]) => {
       warnMsg = args.join(' ');
     };
 
@@ -458,7 +458,7 @@ Deno.test('rewriteHtmlFiles does not write when no matches', () => {
   try {
     const htmlPath = join(tmp, 'clean.html');
     writeFileSync(htmlPath, '<html><body><p>No imports here</p></body></html>', 'utf-8');
-    const origMtime = Deno.statSync(htmlPath).mtime;
+    const _origMtime = Deno.statSync(htmlPath).mtime;
 
     // Small delay to ensure mtime would differ if file was written
     const chunkMap = { 'counter': '/client/island-counter.js' };

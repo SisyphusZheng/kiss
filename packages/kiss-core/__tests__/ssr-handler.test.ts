@@ -97,7 +97,11 @@ Deno.test('ssr-handler - renderSsrError', async (t) => {
   await t.step('accepts RouteEntry instead of status number', () => {
     const error = new Error('Render failed');
     // In production mode, status defaults to 500 when RouteEntry is passed
-    const html = renderSsrError(error, { type: 'page', path: '/test' } as any, false);
+    const html = renderSsrError(
+      error,
+      { type: 'page', path: '/test' } as Record<string, unknown>,
+      false,
+    );
     assertEquals(html.includes('Error 500'), true);
     assertEquals(html.includes('Render failed'), true);
   });

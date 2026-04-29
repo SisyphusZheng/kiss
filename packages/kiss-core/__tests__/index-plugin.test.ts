@@ -239,7 +239,7 @@ Deno.test('kiss() applies default routesDir and islandsDir', () => {
 
 // ─── kiss() buildStart hook (requires filesystem) ──────────
 
-Deno.test('kiss() corePlugin.buildStart is callable', async () => {
+Deno.test('kiss() corePlugin.buildStart is callable', () => {
   const plugins = kiss();
   const corePlugin = plugins.find((p) => p.name === 'kiss:core')!;
   assertExists(corePlugin.buildStart, 'core plugin must have buildStart');
@@ -400,7 +400,7 @@ Deno.test('kiss() ui.cdn with headExtras triggers warning branch', () => {
   // it should warn and ui.cdn is ignored
   const origWarn = console.warn;
   let warnMsg = '';
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     warnMsg = args.join(' ');
   };
 
@@ -421,8 +421,8 @@ Deno.test('kiss() virtualEntryPlugin.load fallback when ctx.honoEntryCode is emp
   const plugins = kiss();
   const virtualPlugin = plugins.find((p) => p.name === 'kiss:virtual-entry')!;
   // First call configResolved to set honoEntryCode
-  if (typeof (plugins[0] as any).configResolved === 'function') {
-    (plugins[0] as any).configResolved({} as never);
+  if (typeof (plugins[0] as Record<string, unknown>).configResolved === 'function') {
+    (plugins[0] as Record<string, unknown>).configResolved({} as never);
   }
   // load should return code
   const code = (virtualPlugin.load as Function)('\0virtual:kiss-hono-entry' as never);
