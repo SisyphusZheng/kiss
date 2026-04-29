@@ -22,6 +22,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
+import { SsrRenderError } from '../errors.js';
 
 interface BuildSSGOptions {
   root?: string;
@@ -72,11 +73,9 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     }
     if (!options.hydrationStrategy && metadata.hydrationStrategy) {
       options.hydrationStrategy = metadata.hydrationStrategy;
-      // v0.3.0+: hydrationStrategy is deprecated — client entry uses Lit's hydrate()
-      // from @lit-labs/ssr-client exclusively. The value is accepted for backward
-      // compat but has no effect on the actual hydration behavior.
-      console.warn('[KISS] hydrationStrategy is deprecated since v0.3.0 and has no effect. ' +
-        'The client entry always uses Lit hydrate() from @lit-labs/ssr-client.');
+      // v0.3.0 note: hydrationStrategy controls WHEN defer-hydration is removed
+      // (eager/lazy/idle/visible), not HOW hydration works (always Lit hydrate()).
+      // The strategy IS functional — it's not deprecated, just rarely changed from 'lazy'.
     }
   } catch {
     console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
@@ -176,7 +175,7 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       const app = module.default;
 
       if (!app) {
-        throw new Error(`[KISS SSG] Failed to load Hono app from .kiss-ssg-entry.ts`);
+        throw new SsrRenderError('.kiss-ssg-entry.ts', new Error('Failed to load Hono app'));
       }
 
       const { toSSG } = await import('hono/ssg');
@@ -259,7 +258,8 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       await server.close();
     }
   } catch (err) {
-    throw new Error(`[KISS SSG] Failed: ${err instanceof Error ? err.message : String(err)}`);
+    const cause = err instanceof Error ? err : new Error(String(err));
+    throw new SsrRenderError('SSG pipeline', cause);
   } finally {
     try {
       unlinkSync(tmpEntryPath);

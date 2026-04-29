@@ -4,20 +4,39 @@
  * Minimal input field following Swiss International Style.
  * Clean borders, subtle focus states.
  *
+ * Features:
+ * - Form-associated: participates in native <form> submission
+ * - Supports label, placeholder, error, disabled, required
+ * - Dispatches 'kiss-input' custom event on value change
+ *
  * Usage:
  * ```html
  * <kiss-input placeholder="Enter text"></kiss-input>
  * <kiss-input type="email" label="Email"></kiss-input>
  * <kiss-input type="password" label="Password" required></kiss-input>
+ * <form onsubmit="console.log(new FormData(this))">
+ *   <kiss-input name="username" label="Username"></kiss-input>
+ *   <button type="submit">Submit</button>
+ * </form>
  * ```
+ *
+ * KISS Architecture (S — Semantic):
+ * Form-associated custom elements integrate with native <form>,
+ * maintaining progressive enhancement and semantic correctness.
  */
 
-import { css, type CSSResult, html, LitElement, type TemplateResult } from '@kissjs/core';
+import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-input';
 
 export class KissInput extends LitElement {
+  /** Enable form association for native <form> participation */
+  static formAssociated = true;
+
+  /** Element internals for form participation */
+  private _internals?: ElementInternals;
+
   static override styles: CSSResult[] = [
     kissDesignTokens,
     css`
@@ -111,6 +130,25 @@ export class KissInput extends LitElement {
   /** Error message displayed below the input (also applies error styling) */
   error?: string;
 
+  override connectedCallback() {
+    super.connectedCallback();
+    // Initialize ElementInternals for form participation
+    this._internals = this.attachInternals();
+    this._internals.setFormValue(this.value ?? '');
+  }
+
+  /** Called by the browser when the form is reset */
+  formResetCallback() {
+    this.value = '';
+    this.error = undefined;
+    this._internals?.setFormValue('');
+  }
+
+  /** Called by the browser when the form's disabled state changes */
+  formDisabledCallback(disabled: boolean) {
+    this.disabled = disabled;
+  }
+
   override render(): TemplateResult {
     return html`
       <div class="input-wrapper">
@@ -142,6 +180,8 @@ export class KissInput extends LitElement {
   private _handleInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.value = input.value;
+    // Sync form value for native <form> submission
+    this._internals?.setFormValue(input.value);
     this.dispatchEvent(
       new CustomEvent('kiss-input', {
         detail: { value: input.value },

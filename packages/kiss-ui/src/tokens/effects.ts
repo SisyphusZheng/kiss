@@ -5,7 +5,7 @@
  * Minimal, purposeful — no decorative shadows.
  */
 
-import { css } from 'lit';
+import { css } from '@kissjs/core';
 
 /** Shadow/effect CSS custom properties */
 export const kissEffectTokens = css`

@@ -14,12 +14,16 @@
  * v0.3.1: Tokens are organized into sub-modules for maintainability:
  *   tokens/spacing.ts   — spacing scale, radius, z-index, transitions
  *   tokens/typography.ts — font families, sizes, weights, line-height
- *   tokens/colors.ts     — dark/light theme color palettes
+ *   tokens/colors.ts     — dark/light theme color palettes (SINGLE SOURCE OF TRUTH)
  *   tokens/effects.ts    — box shadows
  *
  * This file combines all tokens into a single CSSResult for convenience.
  * Import individual token modules if you only need a subset:
  *   import { kissColorTokens } from '@kissjs/ui/tokens/colors.js';
+ *
+ * DRY: Page-level CSS can be imported from colors.ts:
+ *   import { kissRootColorCSS } from '@kissjs/ui/tokens/colors.js';
+ *   // or: import { kissRootColorCSS } from '@kissjs/ui/design-tokens.js';
  *
  * Usage:
  * ```css
@@ -31,10 +35,10 @@
  * ```
  */
 
-import { css, type CSSResult } from 'lit';
+import { css, type CSSResult } from '@kissjs/core';
 import { kissSpacingTokens } from './tokens/spacing.js';
 import { kissTypographyTokens } from './tokens/typography.js';
-import { kissColorTokens } from './tokens/colors.js';
+import { kissColorTokens, kissRootColorCSS, kissScaffoldColorCSS } from './tokens/colors.js';
 import { kissEffectTokens } from './tokens/effects.js';
 
 /**
@@ -48,5 +52,12 @@ export const kissDesignTokens: CSSResult = css`
     ${kissColorTokens}
     ${kissEffectTokens};
 `;
+
+/**
+ * Page-level color CSS for :root injection.
+ * Use this in vite.config.ts headFragments instead of hand-writing values.
+ * Generated from kissDarkColors/kissLightColors — SINGLE SOURCE OF TRUTH.
+ */
+export { kissRootColorCSS, kissScaffoldColorCSS } from './tokens/colors.js';
 
 export default kissDesignTokens;

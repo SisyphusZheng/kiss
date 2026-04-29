@@ -26,6 +26,7 @@ export default defineConfig({
         'kiss-code-block': 'src/kiss-code-block.ts',
         'design-tokens': 'src/design-tokens.ts',
         'kiss-ui-plugin': 'src/kiss-ui-plugin.ts',
+        'tokens/colors': 'src/tokens/colors.ts',
       },
       formats: ['es'],
     },

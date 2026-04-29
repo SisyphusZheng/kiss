@@ -5,8 +5,8 @@
  * Swiss International Style: Pure B&W, minimal.
  *
  * Features:
- * - Sticky header with navigation
- * - Collapsible sidebar with sections
+ * - Sticky header with configurable navigation
+ * - Collapsible sidebar with data-driven sections
  * - Mobile hamburger menu (L0 details/summary)
  * - Theme toggle via kiss-theme-toggle Island
  * - Footer with links
@@ -14,20 +14,57 @@
  * KISS Architecture:
  * - This is a STATIC component (no hydration needed)
  * - Theme toggle is handled by kiss-theme-toggle Island
- * - No interactive properties = no client JS
+ * - Navigation is data-driven via navItems property (no hardcoded links)
  *
- * Usage:
+ * Usage (data-driven navigation):
+ * ```html
+ * <kiss-layout current-path="/guide/getting-started"
+ *   nav-items='[{"section":"Guide","items":[{"path":"/guide/getting-started","label":"Getting Started"}]}]'>
+ * </kiss-layout>
+ * ```
+ *
+ * Usage (default KISS docs navigation, no nav-items attribute):
  * ```html
  * <kiss-layout current-path="/guide/getting-started">
  *   <main>Content here</main>
  * </kiss-layout>
  * ```
+ *
+ * NavItems schema:
+ * ```ts
+ * interface NavItem { path: string; label: string }
+ * interface NavSection { section: string; items: NavItem[] }
+ * ```
  */
 
-import { css, type CSSResult, html, LitElement, type TemplateResult } from '@kissjs/core';
+import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-layout';
+
+/** A single navigation link */
+export interface NavItem {
+  /** URL path for the link */
+  path: string;
+  /** Display label */
+  label: string;
+}
+
+/** A navigation section with a title and links */
+export interface NavSection {
+  /** Section title (shown as collapsible header) */
+  section: string;
+  /** Links in this section */
+  items: NavItem[];
+}
+
+/** Header navigation link */
+export interface HeaderNavLink {
+  /** URL path or external URL */
+  href: string;
+  /** Display label */
+  label: string;
+}
 
 export class KissLayout extends LitElement {
   static override styles: CSSResult[] = [
@@ -453,12 +490,94 @@ export class KissLayout extends LitElement {
     static override properties = {
       home: { type: Boolean, reflect: true },
       currentPath: { type: String, attribute: 'current-path' },
+      navItems: { type: Array, attribute: 'nav-items' },
+      headerNav: { type: Array, attribute: 'header-nav' },
+      logoText: { type: String, attribute: 'logo-text' },
+      logoSub: { type: String, attribute: 'logo-sub' },
+      githubUrl: { type: String, attribute: 'github-url' },
     };
 
     /** Whether to show the home layout (no sidebar, full-width) */
     home = false;
     /** Current URL path, used to highlight the active navigation link */
     currentPath = '';
+    /** Sidebar navigation sections (data-driven; falls back to default KISS docs nav) */
+    navItems?: NavSection[];
+    /** Header navigation links (data-driven; falls back to default) */
+    headerNav?: HeaderNavLink[];
+    /** Logo text (default: "KISS") */
+    logoText = 'KISS';
+    /** Logo subtitle (default: "framework") */
+    logoSub = 'framework';
+    /** GitHub repository URL (default: KISS repo) */
+    githubUrl = 'https://github.com/SisyphusZheng/kiss';
+
+    /** Default KISS docs navigation — single source of truth for the docs site */
+    private static readonly DEFAULT_NAV: NavSection[] = [
+      {
+        section: 'Introduction',
+        items: [
+          { path: '/guide/getting-started', label: 'Getting Started' },
+          { path: '/guide/design-philosophy', label: 'Design Philosophy' },
+          { path: '/guide/architecture', label: 'KISS Architecture' },
+        ],
+      },
+      {
+        section: 'Core',
+        items: [
+          { path: '/guide/routing', label: 'Routing' },
+          { path: '/guide/islands', label: 'Islands' },
+          { path: '/guide/api-routes', label: 'API Routes' },
+          { path: '/guide/api-design', label: 'API Design' },
+          { path: '/guide/ssg', label: 'SSG' },
+        ],
+      },
+      {
+        section: 'Guides',
+        items: [
+          { path: '/guide/configuration', label: 'Configuration' },
+          { path: '/guide/error-handling', label: 'Error Handling' },
+          { path: '/guide/security-middleware', label: 'Security & Middleware' },
+          { path: '/guide/testing', label: 'Testing' },
+        ],
+      },
+      {
+        section: 'Reference',
+        items: [
+          { path: '/guide/deployment', label: 'Deployment' },
+          { path: '/styling/kiss-ui', label: '@kissjs/ui' },
+          { path: '/styling/web-awesome', label: 'Web Awesome' },
+        ],
+      },
+      {
+        section: 'UI',
+        items: [{ path: '/ui', label: 'Design System' }],
+      },
+      {
+        section: 'Examples',
+        items: [
+          { path: '/examples', label: 'Overview' },
+          { path: '/examples/hello', label: 'Hello World' },
+          { path: '/examples/minimal-blog', label: 'Minimal Blog' },
+          { path: '/examples/fullstack', label: 'Fullstack' },
+        ],
+      },
+      {
+        section: 'Project',
+        items: [
+          { path: '/roadmap', label: 'Roadmap' },
+          { path: '/changelog', label: 'Changelog' },
+          { path: '/contributing', label: 'Contributing' },
+        ],
+      },
+    ];
+
+    /** Default header navigation links */
+    private static readonly DEFAULT_HEADER_NAV: HeaderNavLink[] = [
+      { href: '/guide/getting-started', label: 'Docs' },
+      { href: '/ui', label: 'UI' },
+      { href: 'https://jsr.io/@kissjs/core', label: 'JSR' },
+    ];
 
     private _navLink(path: string, text: string) {
       const isActive = this.currentPath === path;
@@ -471,17 +590,42 @@ export class KissLayout extends LitElement {
       `;
     }
 
+    private _renderSidebarNav(): TemplateResult | typeof nothing {
+      const nav = this.navItems || KissLayout.DEFAULT_NAV;
+      return html`
+        <nav class="docs-sidebar" aria-label="Documentation navigation">
+          ${nav.map(
+            (section) => html`
+              <details class="nav-section" open>
+                <summary class="nav-section-title">${section.section}</summary>
+                ${section.items.map(
+                  (item) => this._navLink(item.path, item.label),
+                )}
+              </details>
+            `,
+          )}
+        </nav>
+      `;
+    }
+
+    private _renderHeaderNav(): TemplateResult | typeof nothing {
+      const links = this.headerNav || KissLayout.DEFAULT_HEADER_NAV;
+      return html`
+        <nav class="header-nav">
+          ${links.map(
+            (link) => html`<a href="${link.href}">${link.label}</a>`,
+          )}
+        </nav>
+      `;
+    }
+
     override render(): TemplateResult {
       return html`
         <div class="app-layout" ?home="${this.home}">
           <header class="app-header">
             <div class="header-inner">
-              <a class="logo" href="/">KISS<span class="logo-sub">framework</span></a>
-              <nav class="header-nav">
-                <a href="/guide/getting-started">Docs</a>
-                <a href="/ui">UI</a>
-                <a href="https://jsr.io/@kissjs/core">JSR</a>
-              </nav>
+              <a class="logo" href="/">${this.logoText}<span class="logo-sub">${this.logoSub}</span></a>
+              ${this._renderHeaderNav()}
               <div class="header-right">
                 ${!this.home
                   ? html`
@@ -505,7 +649,7 @@ export class KissLayout extends LitElement {
                   `
                   : ''}
                 <kiss-theme-toggle></kiss-theme-toggle>
-                <a class="github-link" href="https://github.com/SisyphusZheng/kiss">
+                <a class="github-link" href="${this.githubUrl}">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                     <path
                       d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
@@ -518,67 +662,7 @@ export class KissLayout extends LitElement {
           </header>
           <div class="mobile-backdrop"></div>
           <div class="layout-body">
-            ${!this.home
-              ? html`
-                <nav class="docs-sidebar" aria-label="Documentation navigation">
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Introduction</summary>
-                    ${this._navLink('/guide/getting-started', 'Getting Started')} ${this._navLink(
-                      '/guide/design-philosophy',
-                      'Design Philosophy',
-                    )} ${this._navLink('/guide/architecture', 'KISS Architecture')}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Core</summary>
-                    ${this._navLink('/guide/routing', 'Routing')} ${this._navLink(
-                      '/guide/islands',
-                      'Islands',
-                    )} ${this._navLink('/guide/api-routes', 'API Routes')} ${this._navLink(
-                      '/guide/api-design',
-                      'API Design',
-                    )} ${this._navLink('/guide/ssg', 'SSG')}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Guides</summary>
-                    ${this._navLink('/guide/configuration', 'Configuration')} ${this._navLink(
-                      '/guide/error-handling',
-                      'Error Handling',
-                    )} ${this._navLink(
-                      '/guide/security-middleware',
-                      'Security & Middleware',
-                    )} ${this._navLink('/guide/testing', 'Testing')}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Reference</summary>
-                    ${this._navLink('/guide/deployment', 'Deployment')} ${this._navLink(
-                      '/styling/kiss-ui',
-                      '@kissjs/ui',
-                    )} ${this._navLink('/styling/web-awesome', 'Web Awesome')}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">UI</summary>
-                    ${this._navLink('/ui', 'Design System')}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Examples</summary>
-                    ${this._navLink('/examples', 'Overview')} ${this._navLink(
-                      '/examples/hello',
-                      'Hello World',
-                    )} ${this._navLink('/examples/minimal-blog', 'Minimal Blog')} ${this._navLink(
-                      '/examples/fullstack',
-                      'Fullstack',
-                    )}
-                  </details>
-                  <details class="nav-section" open>
-                    <summary class="nav-section-title">Project</summary>
-                    ${this._navLink('/roadmap', 'Roadmap')} ${this._navLink(
-                      '/changelog',
-                      'Changelog',
-                    )} ${this._navLink('/contributing', 'Contributing')}
-                  </details>
-                </nav>
-              `
-              : ''}
+            ${!this.home ? this._renderSidebarNav() : nothing}
             <main class="layout-main">
               <slot></slot>
             </main>
@@ -586,8 +670,8 @@ export class KissLayout extends LitElement {
           <div class="app-footer">
             <footer>
               <p>
-                Built with <a href="https://github.com/SisyphusZheng/kiss" target="_blank"
-                >KISS Framework</a>
+                Built with <a href="${this.githubUrl}" target="_blank"
+                  rel="noopener noreferrer">KISS Framework</a>
                 <span class="divider"></span>
                 Self-bootstrapped from JSR
                 <span class="divider"></span>

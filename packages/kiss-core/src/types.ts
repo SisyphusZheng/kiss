@@ -81,10 +81,13 @@ export interface FrameworkOptions {
 
   /** Island configuration */
   island?: {
-    /** Auto-detect islands in islandsDir (default: true) */
-    autoDetect?: boolean;
-    /** Hydration strategy for all Islands (default: 'lazy') */
-  /** @deprecated Since v0.3.0 — client entry always uses Lit hydrate() from @lit-labs/ssr-client */
+    /** Hydration strategy for all Islands (default: 'lazy')
+     *  Controls WHEN defer-hydration is removed (not HOW hydration works).
+     *  'lazy' (default): remove on requestIdleCallback
+     *  'eager': remove immediately
+     *  'idle': remove on requestIdleCallback or window load
+     *  'visible': remove when island scrolls into view
+     */
     hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
   };
 

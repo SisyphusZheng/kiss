@@ -10,7 +10,8 @@
     "./kiss-layout": "./dist/kiss-layout.js",
     "./kiss-theme-toggle": "./dist/kiss-theme-toggle.js",
     "./kiss-ui-plugin": "./dist/kiss-ui-plugin.js",
-    "./design-tokens": "./dist/design-tokens.js"
+    "./design-tokens": "./dist/design-tokens.js",
+    "./tokens/colors": "./dist/tokens/colors.js"
   },
   "tasks": {
     "build": "deno run -A npm:vite build --config vite.config.build.ts",

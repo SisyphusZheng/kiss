@@ -204,8 +204,8 @@ function generateStrategyCode(strategy: HydrationStrategy): string {
         observer.unobserve(entry.target);
       }
     }
-    // Disconnect observer when all islands are hydrated
-    if (document.querySelectorAll('[defer-hydration]').length === 0) {
+    // Disconnect observer when no deferred elements remain (traverse Shadow DOM)
+    if (__kissFindDeferred(document).length === 0) {
       observer.disconnect();
     }
   });

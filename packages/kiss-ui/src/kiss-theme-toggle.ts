@@ -143,21 +143,31 @@ export class KissThemeToggle extends LitElement {
       this._propagateTheme(theme);
     }
 
-    /** Propagate data-theme to all KISS UI components in the document */
+    /** Propagate data-theme to all KISS UI components in the document.
+     *
+     * Uses convention-based selectors instead of a hardcoded tag list:
+     *   1. All elements with `kiss-` prefixed tag names (KISS built-in components)
+     *   2. All elements with `[data-kiss]` attribute (user custom components)
+     *
+     * This ensures custom components using kissDesignTokens are also themed,
+     * without requiring the theme toggle to know about every component.
+     *
+     * Convention for user components:
+     * ```html
+     * <my-widget data-kiss>...</my-widget>
+     * ```
+     */
     private _propagateTheme(theme: string) {
-      const kissTags = [
-        'kiss-layout',
-        'kiss-button',
-        'kiss-card',
-        'kiss-input',
-        'kiss-code-block',
-        'kiss-theme-toggle',
-      ];
-      for (const tag of kissTags) {
-        document.querySelectorAll(tag).forEach((el) => {
+      // All KISS built-in components (kiss-* prefix)
+      document.querySelectorAll('*').forEach((el) => {
+        if (el.tagName && el.tagName.toLowerCase().startsWith('kiss-')) {
           el.setAttribute('data-theme', theme);
-        });
-      }
+        }
+      });
+      // User custom components that opt in with data-kiss attribute
+      document.querySelectorAll('[data-kiss]').forEach((el) => {
+        el.setAttribute('data-theme', theme);
+      });
     }
 
     override render(): TemplateResult {

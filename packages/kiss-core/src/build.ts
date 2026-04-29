@@ -70,10 +70,9 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         middleware: options.middleware || null,
         headExtras: options.headExtras || '',
         html: options.html || {},
-        // NOTE: hydrationStrategy was removed in v0.3.0 — client entry now
-        // uses Lit's hydrate() from @lit-labs/ssr-client exclusively.
-        // Retaining the key only for backward compat with old metadata readers;
-        // value is always 'lazy' (the only supported strategy).
+        // hydrationStrategy controls WHEN defer-hydration is removed (not HOW).
+        // It IS functional — see build-ssg.ts for usage.
+        hydrationStrategy: options.island?.hydrationStrategy || 'lazy',
       };
       const metadataPath = join(kissTmpDir, 'build-metadata.json');
       writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');

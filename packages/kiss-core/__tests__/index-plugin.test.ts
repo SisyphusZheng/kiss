@@ -39,8 +39,8 @@ Deno.test('kiss() returns an array of plugins', () => {
   const plugins = kiss();
   assertExists(plugins);
   assertEquals(Array.isArray(plugins), true);
-  // Core: core, virtual-entry, dev-server, island-transform, html-template, build
-  assertEquals(plugins.length, 6);
+  // v0.3.1: 5 plugins (html-template removed — was a no-op)
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() plugins have names starting with kiss:', () => {
@@ -58,11 +58,10 @@ Deno.test('kiss() includes required plugin types', () => {
   const plugins = kiss();
   const names = plugins.map((p) => p.name);
 
-  // Must include these plugins
+  // Must include these plugins (html-template removed in v0.3.1)
   assertArrayIncludes(names, ['kiss:core']);
   assertArrayIncludes(names, ['kiss:virtual-entry']);
   assertArrayIncludes(names, ['kiss:island-transform']);
-  assertArrayIncludes(names, ['kiss:html-template']);
   assertArrayIncludes(names, ['kiss:build']);
 
   // External dev server
@@ -80,7 +79,7 @@ Deno.test('kiss() accepts options without error', () => {
     middleware: { corsOrigin: '*' },
   });
 
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() core plugin has config hook defined', () => {
@@ -101,7 +100,7 @@ Deno.test('kiss() inject.stylesheets → headExtras', () => {
   const plugins = kiss({
     inject: { stylesheets: ['https://cdn.example.com/app.css'] },
   });
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
   // headExtras computed internally; plugin array created successfully = branch covered
   assertEquals(true, true);
 });
@@ -110,14 +109,14 @@ Deno.test('kiss() inject.scripts → headExtras', () => {
   const plugins = kiss({
     inject: { scripts: ['https://cdn.example.com/app.js'] },
   });
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() inject.headFragments → headExtras', () => {
   const plugins = kiss({
     inject: { headFragments: ['<meta name="theme-color" content="#000">'] },
   });
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() inject all combined', () => {
@@ -128,7 +127,7 @@ Deno.test('kiss() inject all combined', () => {
       headFragments: ['<meta charset="utf-8">'],
     },
   });
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() legacy ui.cdn → headExtras', () => {
@@ -136,7 +135,7 @@ Deno.test('kiss() legacy ui.cdn → headExtras', () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     ui: { cdn: true, version: '3.5.0' },
   } as never);
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 Deno.test('kiss() headExtras takes precedence over inject', () => {
@@ -144,7 +143,7 @@ Deno.test('kiss() headExtras takes precedence over inject', () => {
     headExtras: '<meta name="override" />',
     inject: { stylesheets: ['https://example.com/style.css'] },
   });
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
 });
 
 // ─── kiss() config hook (captures userConfig.resolve.alias) ───
@@ -211,14 +210,15 @@ Deno.test('kiss() virtualEntryPlugin.load returns code for resolved ID', () => {
 
 Deno.test('kiss() with packageIslands option (empty array)', () => {
   const plugins = kiss({ packageIslands: [] });
-  assertEquals(plugins.length, 6);
+  // v0.3.1: 5 plugins (html-template removed — was a no-op)
+  assertEquals(plugins.length, 5);
 });
 
 // ─── kiss() default dirs ────────────────────────────────────
 
 Deno.test('kiss() applies default routesDir and islandsDir', () => {
   const plugins = kiss();
-  assertEquals(plugins.length, 6);
+  assertEquals(plugins.length, 5);
   // Defaults are applied internally; success = branch covered
   assertEquals(true, true);
 });

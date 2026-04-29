@@ -1,4 +1,5 @@
 import { kiss } from '../packages/kiss-core/src/index.js';
+import { kissRootColorCSS } from '../packages/kiss-ui/src/tokens/colors.js';
 import { defineConfig } from 'vite';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,11 @@ import { fileURLToPath } from 'node:url';
 // NOTE: __dirname is unavailable in Deno ESM — use import.meta instead.
 const __dir = dirname(fileURLToPath(import.meta.url));
 const runtimeShim = resolve(__dir, 'app/.kiss-runtime.ts');
+
+// DRY: All color token values come from a single source of truth.
+// kissRootColorCSS is generated from kissDarkColors/kissLightColors in tokens/colors.ts.
+// Do NOT hand-write color values here — edit the source objects instead.
+const colorTokensStyle = `<style>${kissRootColorCSS}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>`;
 
 export default defineConfig({
   base: '/',
@@ -43,7 +49,8 @@ export default defineConfig({
           // DSD polyfill for browsers without native Declarative Shadow DOM support.
           '<script>if(!HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"))document.write(\'<script src="https://unpkg.com/@webcomponents/template-shadowroot@0.2.1/template-shadowroot.js"><\\/script>\')</script>',
           // Theme system: Pure B&W — Dark / Light
-          '<style>:root,[data-theme="dark"]{--kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255,255,255,0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;color-scheme:dark}[data-theme="light"]{--kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0,0,0,0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;color-scheme:light}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>',
+          // DRY: CSS values come from @kissjs/ui/tokens/colors.ts (single source of truth)
+          colorTokensStyle,
           // Init theme from localStorage or prefers-color-scheme
           '<script src="/theme-init.js"></script>',
           // Mobile sidebar: close on backdrop click

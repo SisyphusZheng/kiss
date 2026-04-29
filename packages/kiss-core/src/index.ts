@@ -5,7 +5,8 @@
  * 融合 Jamstack 部署模型与声明式岛屿交互范式的全栈架构风格。
  *
  * K — Knowledge: 所有内容在构建时预渲染为语义 HTML 静态文件
- * I — Isolated: 客户端 JS 仅存在于 Island Web Component 的 Shadow DOM 内部
+ * I — Isolated: 客户端交互 JS 仅存在于 Island Web Component 的 Shadow DOM 内部
+ *     （豁免：L2 基础设施脚本如主题初始化、可访问性 polyfill 不属于 I 约束范围）
  * S — Semantic: 每个 Island 包裹原生 HTML 元素，DSD 让内容声明式可见
  * S — Static: 构建产物仅为纯静态文件，动态数据通过 API Routes（Hono + RPC）获取
  *
@@ -28,10 +29,10 @@ import type { FrameworkOptions, PackageIslandMeta, RouteEntry } from './types.js
 
 import { join } from 'node:path';
 import process from 'node:process';
+import { KissError } from './errors.js';
 
 import { KissBuildContext } from './build-context.js';
 import { islandTransformPlugin } from './island-transform.js';
-import { htmlTemplatePlugin } from './html-template.js';
 import { buildPlugin } from './build.js';
 import { generateHonoEntryCode } from './hono-entry.js';
 import { fileToTagName, scanIslands, scanPackageIslands, scanRoutes } from './route-scanner.js';
@@ -74,7 +75,7 @@ export type { ArtifactInfo, BuildManifest } from './build-manifest.js';
 
 // --- Re-export runtime APIs for zero-config user experience ---
 // Users import everything from @kissjs/core — no need to add lit/hono to their deno.json
-export { css, html, LitElement, nothing, svg } from 'lit';
+export { css, html, LitElement, nothing, svg, unsafeCSS } from 'lit';
 export type { CSSResult, TemplateResult } from 'lit';
 export { unsafeHTML } from 'lit/directives/unsafe-html.js';
 export { classMap } from 'lit/directives/class-map.js';
@@ -214,8 +215,11 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         );
       } catch (err) {
         // Route scanning failure is always fatal — empty builds should not pass CI
-        throw new Error(
-          `[KISS] Route scan failed: ${err instanceof Error ? err.message : String(err)}`,
+        throw new KissError(
+          `Route scan failed: ${err instanceof Error ? err.message : String(err)}`,
+          'ROUTE_SCAN_ERROR',
+          500,
+          false,
         );
       }
     },
@@ -250,9 +254,6 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     virtualEntryPlugin, // virtual:kiss-hono-entry 提供器
     devServerPlugin, // dev 模式 Hono 服务器（仅开发）
     islandTransformPlugin(resolvedOptions.islandsDir!),
-    // NOTE: htmlTemplatePlugin is currently a no-op (returns empty tags).
-    // Kept as registration point for future per-route HTML injection (title/meta/preload).
-    htmlTemplatePlugin(resolvedOptions),
     buildPlugin(resolvedOptions, ctx), // Phase 1: metadata 写出
   ];
 }

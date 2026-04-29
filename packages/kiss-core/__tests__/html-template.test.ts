@@ -1,29 +1,11 @@
 /**
  * @kissjs/core - html-template.ts tests (Deno)
+ *
+ * html-template.ts was refactored: the Vite plugin (which was a no-op)
+ * was removed. Only extractRouteMeta() remains as a utility function.
  */
-import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
-import { htmlTemplatePlugin, extractRouteMeta } from '../src/html-template.ts';
-
-// ─── htmlTemplatePlugin ────────────────────────────────────────
-
-Deno.test('htmlTemplatePlugin returns a Vite plugin with correct name', () => {
-  const plugin = htmlTemplatePlugin();
-  assertEquals(plugin.name, 'kiss:html-template');
-});
-
-Deno.test('htmlTemplatePlugin has transformIndexHtml hook defined', () => {
-  const plugin = htmlTemplatePlugin();
-  // transformIndexHtml exists (may be function or object shape depending on Vite version)
-  assertExists(plugin.transformIndexHtml);
-});
-
-Deno.test('htmlTemplatePlugin accepts options without error', () => {
-  const plugin = htmlTemplatePlugin({
-    routesDir: 'app/routes',
-    islandsDir: 'app/islands',
-  });
-  assertEquals(plugin.name, 'kiss:html-template');
-});
+import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { extractRouteMeta } from '../src/html-template.ts';
 
 // ─── extractRouteMeta ─────────────────────────────────────────
 

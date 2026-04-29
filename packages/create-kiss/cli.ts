@@ -20,7 +20,12 @@ const TPL = {
 }
 `,
   'vite.config.ts': `import { kiss } from '@kissjs/core';
+import { kissRootColorCSS } from '@kissjs/ui/tokens/colors.js';
 import { defineConfig } from 'vite';
+
+// DRY: All color token values come from @kissjs/ui/tokens/colors.ts
+// (single source of truth). Do NOT hand-write color values here.
+const colorTokensStyle = '<style>' + kissRootColorCSS + 'body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>';
 
 export default defineConfig({
   plugins: [kiss({
@@ -34,22 +39,8 @@ export default defineConfig({
     },
     inject: {
       headFragments: [
-        // Design tokens — enable dark/light theme support.
-        // See https://kiss.js.org/styling/kiss-ui for full token reference.
-        \`<style>
-[data-theme="dark"] {
-  --kiss-bg-base: #000; --kiss-text-primary: #fff;
-  --kiss-text-secondary: #999; --kiss-text-tertiary: #666;
-  --kiss-border: #333; --kiss-border-hover: #555;
-  --kiss-code-bg: #111; --kiss-code-border: #222;
-}
-[data-theme="light"], :root {
-  --kiss-bg-base: #fff; --kiss-text-primary: #000;
-  --kiss-text-secondary: #666; --kiss-text-tertiary: #999;
-  --kiss-border: #e5e5e5; --kiss-border-hover: #ccc;
-  --kiss-code-bg: #f8f8f8; --kiss-code-border: #e5e5e5;
-}
-</style>\`,
+        // Design tokens — DRY: values from @kissjs/ui/tokens/colors.ts
+        colorTokensStyle,
       ],
     },
   })],

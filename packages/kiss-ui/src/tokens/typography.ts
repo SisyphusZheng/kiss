@@ -5,7 +5,7 @@
  * Line heights follow the golden ratio for optimal readability.
  */
 
-import { css } from 'lit';
+import { css } from '@kissjs/core';
 
 /** Typography CSS custom properties */
 export const kissTypographyTokens = css`

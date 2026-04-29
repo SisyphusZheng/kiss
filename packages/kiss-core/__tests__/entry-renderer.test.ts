@@ -90,7 +90,9 @@ Deno.test('renderEntry: CSP with nonce generates per-request nonce', () => {
 
   assertStringIncludes(code, 'crypto.randomUUID()');
   assertStringIncludes(code, "c.set('cspNonce'");
-  assertStringIncludes(code, "script-src 'nonce-' + nonce");
+  // v0.3.1: NONCE_PLACEHOLDER template approach (fixes missing closing quote bug)
+  assertStringIncludes(code, "NONCE_PLACEHOLDER");
+  assertStringIncludes(code, ".replace('NONCE_PLACEHOLDER', nonce)");
 });
 
 Deno.test('renderEntry: CSP report-only mode', () => {

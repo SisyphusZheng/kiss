@@ -1,53 +1,23 @@
 /**
- * @kissjs/core - HTML Template Plugin
- * Implements the `transformIndexHtml` Vite hook.
+ * @kissjs/core - Route metadata extraction utilities
  *
- * Current status: minimal shell. The meta tag / preload hint injection
- * was designed around a __kissRouteMeta context property that is never
- * set by any code path. SSG uses wrapInDocument() directly (bypassing
- * Vite's HTML transform), and dev mode doesn't propagate route metadata
- * to this hook either.
+ * Formerly the html-template Vite plugin (which was a no-op).
+ * The plugin registration has been removed (minimal augmentation:
+ * don't register plugins that do nothing).
  *
- * This plugin is kept as a registration point for future dev-server
- * route awareness (e.g., per-route title/description/preload injection).
- * When that feature is implemented, add the injection logic here.
- *
- * KISS Architecture: Uses Hono ContextVariableMap for type extension
- * instead of declare module 'vite' augmentation.
+ * extractRouteMeta() remains as a utility for future SSG metadata extraction.
  */
 
-import type { HtmlTagDescriptor, Plugin } from 'vite';
-import type { FrameworkOptions } from './types.js';
-
-/** Vite plugin for HTML transform — placeholder for future per-route HTML injection */
-export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
-  return {
-    name: 'kiss:html-template',
-
-    transformIndexHtml: {
-      // Run after Vite's built-in HTML transforms
-      order: 'post',
-
-      // Currently returns empty tags — no injection happens.
-      // TODO: Implement when dev-server gains route-awareness:
-      //   1. Read route metadata from transform context
-      //   2. Inject <title>, <meta description>, <link rel="modulepreload">
-      handler() {
-        return [];
-      },
-    },
-  };
-}
+import type { RouteMeta } from './types.js';
 
 /**
  * Extract route metadata from a module's exports.
  * Looks for `meta` export or individual `title`/`description` exports.
  *
- * Used by SSG pipeline (build-ssg.ts → hono-entry.ts) to build docConfig,
- * NOT by htmlTemplatePlugin (which currently does nothing).
+ * Used by SSG pipeline (build-ssg.ts → hono-entry.ts) to build docConfig.
  */
-export function extractRouteMeta(module: Record<string, unknown>): import('./types.js').RouteMeta {
-  const meta: import('./types.js').RouteMeta = {};
+export function extractRouteMeta(module: Record<string, unknown>): RouteMeta {
+  const meta: RouteMeta = {};
 
   // Check for a `meta` export object
   const modMeta = module.meta;
