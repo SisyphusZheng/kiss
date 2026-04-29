@@ -2,22 +2,24 @@
  * @kissjs/core - HTML Template Plugin
  * Implements the `transformIndexHtml` Vite hook.
  *
- * Injects into the HTML document:
- * - Preload hints for island chunks
- * - CSS stylesheet links
- * - Meta tags from route module exports
+ * Current status: minimal shell. The meta tag / preload hint injection
+ * was designed around a __kissRouteMeta context property that is never
+ * set by any code path. SSG uses wrapInDocument() directly (bypassing
+ * Vite's HTML transform), and dev mode doesn't propagate route metadata
+ * to this hook either.
+ *
+ * This plugin is kept as a registration point for future dev-server
+ * route awareness (e.g., per-route title/description/preload injection).
+ * When that feature is implemented, add the injection logic here.
  *
  * KISS Architecture: Uses Hono ContextVariableMap for type extension
  * instead of declare module 'vite' augmentation.
  */
 
 import type { HtmlTagDescriptor, Plugin } from 'vite';
-import type { FrameworkOptions, RouteMeta } from './types.js';
+import type { FrameworkOptions } from './types.js';
 
-/** Route metadata key for Vite HTML transform context */
-const KISS_ROUTE_META_KEY = '__kissRouteMeta' as const;
-
-/** Vite plugin for HTML transform — injects preload hints, meta tags, and island hydration scripts */
+/** Vite plugin for HTML transform — placeholder for future per-route HTML injection */
 export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
   return {
     name: 'kiss:html-template',
@@ -26,53 +28,12 @@ export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
       // Run after Vite's built-in HTML transforms
       order: 'post',
 
-      handler(_html, ctx) {
-        const tags: HtmlTagDescriptor[] = [];
-
-        // NOTE: __kissRouteMeta is currently never set by any KISS code path.
-        // The SSG pipeline uses wrapInDocument() directly (not Vite's HTML transform).
-        // This code path is only active during `vite dev` — and even there,
-        // route meta is not propagated to the HTML transform context yet.
-        // Kept as a forward-compatible hook: once dev-server route awareness
-        // is implemented, this will pick up per-route title/description/preload.
-        const routeMeta = (ctx as unknown as Record<string, unknown>)[KISS_ROUTE_META_KEY] as
-          | RouteMeta
-          | undefined;
-
-        if (routeMeta) {
-          // Inject meta tags
-          if (routeMeta.title) {
-            tags.push({
-              tag: 'title',
-              children: routeMeta.title,
-              injectTo: 'head',
-            });
-          }
-
-          if (routeMeta.description) {
-            tags.push({
-              tag: 'meta',
-              attrs: { name: 'description', content: routeMeta.description },
-              injectTo: 'head',
-            });
-          }
-
-          // Inject preload hints for island chunks
-          if (routeMeta.islandChunks) {
-            for (const chunk of routeMeta.islandChunks) {
-              tags.push({
-                tag: 'link',
-                attrs: {
-                  rel: 'modulepreload',
-                  href: chunk,
-                },
-                injectTo: 'head',
-              });
-            }
-          }
-        }
-
-        return tags;
+      // Currently returns empty tags — no injection happens.
+      // TODO: Implement when dev-server gains route-awareness:
+      //   1. Read route metadata from transform context
+      //   2. Inject <title>, <meta description>, <link rel="modulepreload">
+      handler() {
+        return [];
       },
     },
   };
@@ -81,9 +42,12 @@ export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
 /**
  * Extract route metadata from a module's exports.
  * Looks for `meta` export or individual `title`/`description` exports.
+ *
+ * Used by SSG pipeline (build-ssg.ts → hono-entry.ts) to build docConfig,
+ * NOT by htmlTemplatePlugin (which currently does nothing).
  */
-export function extractRouteMeta(module: Record<string, unknown>): RouteMeta {
-  const meta: RouteMeta = {};
+export function extractRouteMeta(module: Record<string, unknown>): import('./types.js').RouteMeta {
+  const meta: import('./types.js').RouteMeta = {};
 
   // Check for a `meta` export object
   const modMeta = module.meta;

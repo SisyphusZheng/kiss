@@ -76,8 +76,8 @@ function collectFiles(
           sizeBytes: stat.size,
           sizeKB: formatSize(stat.size),
         });
-      } catch {
-        // Skip unreadable files (ENOENT: race with concurrent delete, EACCES: permissions)
+      } catch (e) {
+        console.warn(`[KISS] Cannot stat ${relPath}: ${(e as Error).message}`);
       }
     }
   }
@@ -112,8 +112,8 @@ export function scanClientBuild(
           sizeKB: formatSize(stat.size),
         });
         totalJsBytes += stat.size;
-      } catch {
-        // Skip unreadable files (ENOENT: race with concurrent delete, EACCES: permissions)
+      } catch (e) {
+        console.warn(`[KISS] Cannot stat island ${file}: ${(e as Error).message}`);
       }
     }
   }
@@ -130,8 +130,8 @@ export function scanClientBuild(
         sizeKB: formatSize(stat.size),
       };
       totalJsBytes += stat.size;
-    } catch {
-      // Skip unreadable files
+    } catch (e) {
+      console.warn(`[KISS] Cannot stat client entry: ${(e as Error).message}`);
     }
   }
 
@@ -148,8 +148,8 @@ export function scanClientBuild(
       try {
         const stat = statSync(fullPath);
         totalJsBytes += stat.size;
-      } catch {
-        // Skip unreadable files
+      } catch (e) {
+        console.warn(`[KISS] Cannot stat shared chunk ${file}: ${(e as Error).message}`);
       }
     }
   }

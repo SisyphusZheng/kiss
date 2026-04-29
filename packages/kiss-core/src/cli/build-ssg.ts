@@ -155,9 +155,6 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       esbuild: {
         tsconfigRaw: {
           compilerOptions: {
-            // Kept for consumer compatibility — some users may still use decorators.
-            // KISS itself uses static properties + customElements.define() (see ADR).
-            experimentalDecorators: true,
             useDefineForClassFields: false,
           },
         },

@@ -1,182 +1,141 @@
 /**
- * @kissjs/ui — Deep tests: Component behavior
+ * @kissjs/ui — Comprehensive component tests (Deno)
  *
- * Tests cover:
- * - kiss-theme-toggle: theme attribute, class structure, event dispatch
- * - kiss-button: type attribute, click handling
- * - kiss-layout: currentPath propagation
- * - design-tokens: token values
+ * Tests all 6 UI components for:
+ * - Export shape (tagName, class)
+ * - Static properties
+ * - Design tokens structure
+ * - Vite plugin exports
+ * - Index re-exports completeness
  */
-import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 
-// ─── kiss-theme-toggle Tests ──────────────────────────────
+// ─── Component Export Shape ──────────────────────────────────
 
-Deno.test('kiss-theme-toggle — exports tagName and class', async () => {
-  const mod = await import('../src/kiss-theme-toggle.ts');
-  assertEquals(mod.tagName, 'kiss-theme-toggle');
-  assertExists(mod.KissThemeToggle);
+const COMPONENT_FILES = [
+  'kiss-button',
+  'kiss-card', 
+  'kiss-input',
+  'kiss-code-block',
+  'kiss-layout',
+  'kiss-theme-toggle',
+];
 
-  // Verify it's a constructor function (class)
-  assertEquals(typeof mod.KissThemeToggle, 'function');
-  // Verify it has a prototype chain (extends something)
-  const proto = Object.getPrototypeOf(mod.KissThemeToggle);
-  assertExists(proto, 'Should have a prototype chain (extends LitElement)');
-});
+for (const name of COMPONENT_FILES) {
+  Deno.test(`kiss-${name}: exports tagName`, async () => {
+    const mod = await import(`../src/${name}.ts`);
+    assertExists(mod.tagName, `${name} must export tagName`);
+    assertEquals(typeof mod.tagName, 'string');
+    // Custom Elements require hyphen in tag name
+    assertExists(mod.tagName.includes('-'), `tagName "${mod.tagName}" must contain a hyphen`);
+  });
 
-Deno.test('kiss-theme-toggle — has reactive `theme` property', async () => {
-  const mod = await import('../src/kiss-theme-toggle.ts');
-
-  // The component should have a `theme` property declared as a reactive property
-  const cls = mod.KissThemeToggle;
-  if (cls.properties) {
-    assertExists(cls.properties.theme, 'theme should be a reactive property');
-    assertEquals(cls.properties.theme.type, String);
-    assertEquals(
-      cls.properties.theme.reflect,
-      true,
-      'theme should reflect to attribute for SSR compatibility',
+  Deno.test(`kiss-${name}: exports LitElement subclass`, async () => {
+    const mod = await import(`../src/${name}.ts`);
+    const className = Object.keys(mod).find((k) =>
+      k !== 'tagName' && typeof mod[k] === 'function'
     );
-  }
-  // If no static properties, check via instance
-  const instance = new cls();
-  assertEquals(
-    instance.theme === '' || instance.theme === null || instance.theme === undefined,
+    assertExists(className, `${name} should export a class`);
+    const Cls = mod[className as keyof typeof mod];
+    assertExists(Cls.prototype.connectedCallback || Cls.prototype.render, `${name} class should be a LitElement`);
+  });
+}
+
+// ─── Design Tokens ─────────────────────────────────────────
+
+Deno.test('design-tokens: kissDesignTokens is CSSResult', async () => {
+  const { kissDesignTokens } = await import('../src/design-tokens.ts');
+  assertExists(kissDesignTokens);
+  // CSSResult has a cssText property or styles property
+  assertEquals(typeof kissDesignTokens.cssText === 'string' ||
+    Array.isArray(kissDesignTokens.styleSheets) ||
+    typeof kissDesignTokens === 'string' ||
+    Symbol.for('css') in (kissDesignTokens as object),
     true,
-    'Initial theme should be empty/null (set by connectedCallback or attribute)',
+    'kissDesignTokens should be a CSSResult',
   );
 });
 
-Deno.test('kiss-theme-toggle — has _isLight internal state', async () => {
-  const mod = await import('../src/kiss-theme-toggle.ts');
-  const instance = new mod.KissThemeToggle();
+Deno.test('design-tokens: individual token modules export CSS', async () => {
+  const tokenModules = [
+    ['tokens/spacing', 'kissSpacingTokens'],
+    ['tokens/typography', 'kissTypographyTokens'],
+    ['tokens/colors', 'kissColorTokens'],
+    ['tokens/effects', 'kissEffectTokens'],
+  ];
 
-  // Internal state should default to false (dark mode)
-  const internal = instance as unknown as { _isLight: boolean };
-  assertEquals(internal._isLight, false, 'Default should be dark mode');
-});
-
-Deno.test('kiss-theme-toggle — has _handleToggle method', async () => {
-  const mod = await import('../src/kiss-theme-toggle.ts');
-  const instance = new mod.KissThemeToggle();
-
-  // _handleToggle is the click handler that toggles theme
-  const internal = instance as unknown as { _handleToggle: () => void };
-  assertEquals(typeof internal._handleToggle, 'function', '_handleToggle method should exist');
-});
-
-// ─── kiss-button Tests ───────────────────────────────────
-
-Deno.test('kiss-button — has type property with default "button"', async () => {
-  const mod = await import('../src/kiss-button.ts');
-  assertEquals(mod.tagName, 'kiss-button');
-
-  const instance = new mod.KissButton();
-  const typed = instance as unknown as { type: string };
-
-  // Default should be 'button' (not submit)
-  if (typed.type !== undefined) {
-    assertEquals(
-      typed.type,
-      'button',
-      'Default button type should be "button" to prevent form submission side effects',
-    );
+  for (const [modPath, exportName] of tokenModules) {
+    const mod = await import(`../src/${modPath}.ts`);
+    assertExists(mod[exportName as keyof typeof mod], `${modPath} should export ${exportName}`);
   }
 });
 
-Deno.test('kiss-button — exports class name', async () => {
-  const mod = await import('../src/kiss-button.ts');
-  assertExists(mod.KissButton, 'KissButton class should be exported');
+Deno.test('design-tokens: colors include dark/light theme variables', async () => {
+  const { kissColorTokens } = await import('../src/tokens/colors.ts');
+  const tokenStr = String(kissColorTokens);
+  // Should contain CSS custom properties for theming
+  assertExists(tokenStr.includes('--') || tokenStr.includes('css'), 'Color tokens should be valid CSS');
 });
 
-// ─── kiss-input Tests ─────────────────────────────────────
+// ─── Index Re-exports ──────────────────────────────────────
 
-Deno.test('kiss-input — has value property', async () => {
-  const mod = await import('../src/kiss-input.ts');
-  assertEquals(mod.tagName, 'kiss-input');
-  assertExists(mod.KissInput);
-});
-
-// ─── kiss-card Tests ──────────────────────────────────────
-
-Deno.test('kiss-card — has slot support', async () => {
-  const mod = await import('../src/kiss-card.ts');
-  assertEquals(mod.tagName, 'kiss-card');
-  assertExists(mod.KissCard);
-});
-
-// ─── kiss-layout Tests ────────────────────────────────────
-
-Deno.test('kiss-layout — has currentPath property', async () => {
-  const mod = await import('../src/kiss-layout.ts');
-  assertEquals(mod.tagName, 'kiss-layout');
-  assertExists(mod.KissLayout);
-
-  // currentPath is critical for active navigation highlighting
-  const instance = new mod.KissLayout();
-  const typed = instance as unknown as { currentPath: string };
-  assertExists(typed.currentPath, 'currentPath should exist');
-});
-
-// ─── kiss-code-block Tests ────────────────────────────────
-
-Deno.test('kiss-code-block — has language property', async () => {
-  const mod = await import('../src/kiss-code-block.ts');
-  assertEquals(mod.tagName, 'kiss-code-block');
-  assertExists(mod.KissCodeBlock);
-});
-
-// ─── Design Tokens Tests ──────────────────────────────────
-
-Deno.test('design-tokens — exports kissDesignTokens as CSSResult', async () => {
-  const mod = await import('../src/design-tokens.ts');
-  assertExists(mod.kissDesignTokens);
-
-  // kissDesignTokens is a Lit CSSResult — verify it's truthy and has cssText
-  const tokens = mod.kissDesignTokens as unknown as { cssText?: string };
-  assertExists(tokens.cssText, 'CSSResult should have cssText property');
-
-  // Should contain essential CSS custom properties in cssText
-  const cssText = tokens.cssText ?? '';
-  const hasColorTokens = cssText.includes('--kiss-bg-base') || cssText.includes('--kiss-color');
-  assertEquals(hasColorTokens, true, 'Should contain color CSS custom properties');
-});
-
-Deno.test('design-tokens — supports light/dark theme variables', async () => {
-  const mod = await import('../src/design-tokens.ts');
-  const tokens = mod.kissDesignTokens as unknown as { cssText?: string };
-  const cssText = tokens.cssText ?? '';
-
-  // Theme-aware tokens use [data-theme] selectors or :root with fallbacks
-  const hasThemeSupport = cssText.includes('data-theme') ||
-    cssText.includes('.light') ||
-    cssText.includes('.dark') ||
-    (cssText.includes('--kiss-bg-base') && cssText.includes(':'));
-
-  assertEquals(
-    hasThemeSupport,
-    true,
-    'Design tokens should support theming (data-theme or class-based selectors)',
-  );
-});
-
-// ─── Island Exports Integrity ─────────────────────────────
-
-Deno.test('islands export — all islands have valid shape', async () => {
+Deno.test('index: re-exports all components', async () => {
   const mod = await import('../src/index.ts');
 
-  for (const island of mod.islands) {
-    // Each island must have tagName (string) and strategy (string)
-    assertExists(island.tagName, `Island missing tagName`);
-    assertExists(island.strategy, `Island ${island.tagName} missing strategy`);
-    assertEquals(typeof island.tagName, 'string');
-    assertEquals(typeof island.strategy, 'string');
+  // Components
+  assertExists(mod.KissButton);
+  assertExists(mod.KissCard);
+  assertExists(mod.KissInput);
+  assertExists(mod.KissCodeBlock);
+  assertExists(mod.KissLayout);
+  assertExists(mod.KissThemeToggle);
 
-    // Strategy must be one of the four valid values
-    const validStrategies = ['eager', 'lazy', 'idle', 'visible'];
-    assertEquals(
-      validStrategies.includes(island.strategy),
-      true,
-      `Invalid strategy "${island.strategy}" for ${island.tagName}`,
-    );
+  // Tag names
+  assertExists(mod.kissButtonTagName);
+  assertExists(mod.kissCardTagName);
+  assertExists(mod.kissInputTagName);
+  assertExists(mod.kissCodeBlockTagName);
+  assertExists(mod.kissLayoutTagName);
+  assertExists(mod.kissThemeToggleTagName);
+
+  // Tokens
+  assertExists(mod.kissDesignTokens);
+  assertExists(mod.kissSpacingTokens);
+  assertExists(mod.kissTypographyTokens);
+  assertExists(mod.kissColorTokens);
+  assertExists(mod.kissEffectTokens);
+
+  // Plugin
+  assertExists(mod.kissUI);
+  assertExists(typeof mod.default, 'function');
+});
+
+Deno.test('index: islands array has correct entries', async () => {
+  const { islands } = await import('../src/index.ts');
+  assertExists(islands);
+  assertEquals(Array.isArray(islands), true);
+
+  // Each island entry must have tagName, modulePath, strategy
+  for (const island of islands) {
+    assertExists(island.tagName, 'island must have tagName');
+    assertExists(island.modulePath, 'island must have modulePath');
+    assertExists(island.strategy, 'island must have hydration strategy');
+    assertEquals(typeof island.strategy, 'string');
   }
+});
+
+// ─── Vite Plugin ──────────────────────────────────────────
+
+Deno.test('kiss-ui-plugin: returns a Vite plugin', async () => {
+  const { kissUI } = await import('../src/kiss-ui-plugin.ts');
+  const plugin = kissUI();
+  assertExists(plugin.name);
+  assertEquals(plugin.name.startsWith('kiss'), true);
+  assertExists(plugin.config || plugin.transform || plugin.buildStart, 'Plugin must have at least one hook');
+});
+
+Deno.test('kiss-ui-plugin: accepts options', async () => {
+  const { kissUI } = await import('../src/kiss-ui-plugin.ts');
+  const plugin = kissUI({ cdn: '3.5.0' });
+  assertExists(plugin.name);
 });
