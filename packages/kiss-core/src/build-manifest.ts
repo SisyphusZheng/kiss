@@ -76,7 +76,9 @@ function collectFiles(
           sizeBytes: stat.size,
           sizeKB: formatSize(stat.size),
         });
-      } catch { /* skip unreadable files */ }
+      } catch {
+        // Skip unreadable files (ENOENT: race with concurrent delete, EACCES: permissions)
+      }
     }
   }
   return results;
@@ -110,7 +112,9 @@ export function scanClientBuild(
           sizeKB: formatSize(stat.size),
         });
         totalJsBytes += stat.size;
-      } catch { /* skip */ }
+      } catch {
+        // Skip unreadable files (ENOENT: race with concurrent delete, EACCES: permissions)
+      }
     }
   }
 
@@ -126,7 +130,9 @@ export function scanClientBuild(
         sizeKB: formatSize(stat.size),
       };
       totalJsBytes += stat.size;
-    } catch { /* skip */ }
+    } catch {
+      // Skip unreadable files
+    }
   }
 
   // Include shared chunks (non-island .js files in islands/)
@@ -142,7 +148,9 @@ export function scanClientBuild(
       try {
         const stat = statSync(fullPath);
         totalJsBytes += stat.size;
-      } catch { /* skip */ }
+      } catch {
+        // Skip unreadable files
+      }
     }
   }
 

@@ -12,6 +12,8 @@ const TPL = {
   "tasks": {
     "dev": "deno run -A npm:vite",
     "build": "deno run -A npm:vite build",
+    "build:client": "deno run -A jsr:@kissjs/core/cli/build-client",
+    "build:ssg": "deno run -A jsr:@kissjs/core/cli/build-ssg",
     "preview": "deno run -A npm:vite preview"
   },
   "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"] }
@@ -87,8 +89,12 @@ async function main() {
   const dir = name;
   try {
     await Deno.mkdir(dir, { recursive: true });
-  } catch {
-    console.error(`Directory "${dir}" already exists.`);
+  } catch (e) {
+    if (e instanceof Deno.errors.AlreadyExists) {
+      console.error(`Directory "${dir}" already exists.`);
+    } else {
+      console.error(`Failed to create directory "${dir}": ${e}`);
+    }
     Deno.exit(1);
   }
 

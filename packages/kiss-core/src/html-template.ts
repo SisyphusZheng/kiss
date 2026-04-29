@@ -29,7 +29,12 @@ export function htmlTemplatePlugin(_options: FrameworkOptions = {}): Plugin {
       handler(_html, ctx) {
         const tags: HtmlTagDescriptor[] = [];
 
-        // Get the route-specific data from server context if available
+        // NOTE: __kissRouteMeta is currently never set by any KISS code path.
+        // The SSG pipeline uses wrapInDocument() directly (not Vite's HTML transform).
+        // This code path is only active during `vite dev` — and even there,
+        // route meta is not propagated to the HTML transform context yet.
+        // Kept as a forward-compatible hook: once dev-server route awareness
+        // is implemented, this will pick up per-route title/description/preload.
         const routeMeta = (ctx as unknown as Record<string, unknown>)[KISS_ROUTE_META_KEY] as
           | RouteMeta
           | undefined;

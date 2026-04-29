@@ -193,6 +193,7 @@ function generateStrategyCode(strategy: HydrationStrategy): string {
 
     case 'visible':
       return `  // Visible: hydrate each island when it scrolls into view
+  // Uses __kissFindDeferred to traverse Shadow DOM (document.querySelectorAll doesn't pierce it)
   const __kissObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -201,7 +202,7 @@ function generateStrategyCode(strategy: HydrationStrategy): string {
       }
     }
   });
-  document.querySelectorAll('[defer-hydration]').forEach(el => __kissObserver.observe(el));`;
+  __kissFindDeferred(document).forEach(el => __kissObserver.observe(el));`;
 
     default:
       return `  __kissHydrateAll();`;
