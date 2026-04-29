@@ -96,14 +96,18 @@ export function generateClientEntry(
   const strategyCode = generateStrategyCode(strategy);
 
   const activateHydration = `// Activate hydration support FIRST — must patch LitElement before any
-// customElements.define() calls. Package islands use dynamic import()
-// to ensure they register AFTER this patch is applied.
+// customElements.define() calls.
 //
-// The side-effect import auto-patches LitElement with hydration support:
-// it adds 'defer-hydration' to observedAttributes and patches
-// connectedCallback/attributeChangedCallback to call hydrate() internally
-// when defer-hydration is removed. No manual litElementHydrateSupport() call needed.
-import '@lit-labs/ssr-client/lit-element-hydrate-support.js';`;
+// CRITICAL: @lit-labs/ssr-client/lit-element-hydrate-support.js only DEFINES
+// globalThis.litElementHydrateSupport — it does NOT call it. We must
+// explicitly call it with LitElement to apply the patch. Without this call:
+//   - 'defer-hydration' is not in observedAttributes
+//   - connectedCallback is NOT blocked by defer-hydration
+//   - update() uses render() instead of hydrate()
+//   - Result: DSD content + Lit render = DUPLICATE CONTENT
+import {LitElement} from 'lit';
+import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
+globalThis.litElementHydrateSupport({LitElement});`;
 
   const packageImportBlock = dynamicImports
     ? `\n// --- Dynamic import for package islands (after LitElement patch) ---\n${dynamicImports}\n`
