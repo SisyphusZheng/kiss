@@ -79,7 +79,7 @@ export class FullstackDemoPage extends LitElement {
 
   render() {
     return html`
-      <kiss-layout currentPath="/examples/fullstack">
+      <kiss-layout current-path="/examples/fullstack">
         <div class="container">
           <h1>全栈示例</h1>
           <p class="subtitle">

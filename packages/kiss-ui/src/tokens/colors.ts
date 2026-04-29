@@ -2,7 +2,7 @@
  * @kissjs/ui - Design Tokens: Color Themes
  *
  * KISS Design System: Pure B&W (Swiss International Style).
- * Dark theme by default, Light via data-theme attribute.
+ * Light theme by default, Dark via data-theme attribute.
  *
  * Token naming: --kiss-{category}-{variant}
  *
@@ -18,9 +18,9 @@
  * it shadows (overrides) the inherited value from `:root`.
  *
  * KISS theme strategy:
- *   1. `:host` declares dark-theme defaults — provides fallback
+ *   1. `:host` declares light-theme defaults — provides fallback
  *      for standalone usage (without global <style>).
- *   2. `:host([data-theme="light"])` overrides for light theme.
+ *   2. `:host([data-theme="dark"])` overrides for dark theme.
  *   3. The kiss-theme-toggle Island propagates `data-theme` to
  *      both `<html>` AND every KISS component host element,
  *      so both `:root` vars (for light DOM) and `:host([data-theme])`
@@ -44,7 +44,7 @@ import { css, unsafeCSS } from 'lit';
 // Edit these values to change ALL color tokens everywhere.
 // The CSS outputs are generated from these objects.
 
-/** Dark theme color values (default) */
+/** Light theme color values (default) */
 export const kissDarkColors = {
   '--kiss-bg-base': '#000',
   '--kiss-bg-surface': '#0a0a0a',
@@ -67,7 +67,7 @@ export const kissDarkColors = {
   '--kiss-scrollbar-thumb': '#222',
 } as const;
 
-/** Light theme color values */
+/** Dark theme color values */
 export const kissLightColors = {
   '--kiss-bg-base': '#fff',
   '--kiss-bg-surface': '#fafafa',
@@ -104,14 +104,14 @@ function declarations(values: Readonly<Record<string, string>>): string {
 /** Color theme CSS custom properties for Shadow DOM components (:host) */
 export const kissColorTokens = css`
   :host,
-  :host([data-theme="dark"]) {
-    ${unsafeCSS(declarations(kissDarkColors))};
-    color-scheme: dark;
-  }
-
   :host([data-theme="light"]) {
     ${unsafeCSS(declarations(kissLightColors))};
     color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    ${unsafeCSS(declarations(kissDarkColors))};
+    color-scheme: dark;
   }
 `;
 
@@ -132,9 +132,9 @@ export const kissColorTokens = css`
  * }
  * ```
  */
-export const kissRootColorCSS = `:root,[data-theme="dark"]{${
-  declarations(kissDarkColors)
-};color-scheme:dark}[data-theme="light"]{${declarations(kissLightColors)};color-scheme:light}`;
+export const kissRootColorCSS = `:root,[data-theme="light"]{${
+  declarations(kissLightColors)
+};color-scheme:light}[data-theme="dark"]{${declarations(kissDarkColors)};color-scheme:dark}`;
 
 /**
  * Minified CSS for scaffolding (create-kiss template).

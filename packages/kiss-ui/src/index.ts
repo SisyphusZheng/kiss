@@ -61,9 +61,11 @@ export const islands: PackageIslandMeta[] = [
   {
     tagName: 'kiss-button',
     modulePath: '@kissjs/ui/kiss-button',
+    strategy: 'lazy',
   },
   {
     tagName: 'kiss-layout',
     modulePath: '@kissjs/ui/kiss-layout',
+    strategy: 'lazy',
   },
 ];

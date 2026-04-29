@@ -145,7 +145,7 @@ export class ExamplesPage extends LitElement {
 
   render() {
     return html`
-      <kiss-layout currentPath="/examples">
+      <kiss-layout current-path="/examples">
         <div class="container">
           <h1>Examples</h1>
           <p class="subtitle">

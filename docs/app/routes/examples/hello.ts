@@ -51,7 +51,7 @@ export class HelloDemoPage extends LitElement {
 
   render() {
     return html`
-      <kiss-layout currentPath="/examples/hello">
+      <kiss-layout current-path="/examples/hello">
         <div class="container">
           <h1>Hello World Demo</h1>
           <p class="subtitle">

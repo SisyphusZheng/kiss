@@ -71,7 +71,7 @@ export class MinimalBlogDemoPage extends LitElement {
 
   render() {
     return html`
-      <kiss-layout currentPath="/examples/minimal-blog">
+      <kiss-layout current-path="/examples/minimal-blog">
         <div class="container">
           <h1>Minimal Blog Demo</h1>
           <p class="subtitle">
