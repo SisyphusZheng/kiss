@@ -1325,6 +1325,9 @@
         }
       },
       "packages/kiss-rpc": {
+        "dependencies": [
+          "npm:lit@3"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:vite-plugin-dts@^4.5.0"

@@ -157,7 +157,7 @@ Deno.test('kiss() corePlugin.config captures resolve.alias', () => {
   const plugins = kiss();
   const corePlugin = plugins.find((p) => p.name === 'kiss:core')!;
   assertExists(corePlugin.config);
-  const result = corePlugin.config!({
+  const result = (corePlugin.config as Function)({
     resolve: { alias: { '@/*': '/src/*' } },
   } as never);
   assertExists(result);
@@ -172,7 +172,7 @@ Deno.test('kiss() corePlugin.config captures resolve.alias', () => {
 Deno.test('kiss() corePlugin.config returns rollupOptions with virtual entry', () => {
   const plugins = kiss();
   const corePlugin = plugins.find((p) => p.name === 'kiss:core')!;
-  const result = corePlugin.config!({} as never) as Record<string, unknown>;
+  const result = (corePlugin.config as Function)({} as never) as Record<string, unknown>;
   const build = result.build as Record<string, unknown>;
   const rollupOptions = build.rollupOptions as Record<string, unknown>;
   const input = rollupOptions.input as string[];

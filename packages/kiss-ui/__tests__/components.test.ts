@@ -111,7 +111,7 @@ Deno.test('index: re-exports all components', async () => {
 
   // Plugin
   assertExists(mod.kissUI);
-  assertExists(typeof mod.default, 'function');
+  // No default export — kissUI is the main entry point
 });
 
 Deno.test('index: islands array has correct entries', async () => {
@@ -193,9 +193,9 @@ Deno.test('kiss-theme-toggle: renders and handles theme', async () => {
   result = instance.render();
   assertExists(result);
 
-  // Test _isLight property assignment
-  instance._isLight = true;
-  assertEquals(instance._isLight, true);
+  // Test _isLight property assignment (private — use as any)
+  (instance as any)._isLight = true;
+  assertEquals((instance as any)._isLight, true);
 });
 
 Deno.test('kiss-button: renders with properties', async () => {
@@ -219,7 +219,8 @@ Deno.test('kiss-input: renders with properties', async () => {
 Deno.test('kiss-code-block: renders with properties', async () => {
   const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
   const instance = new KissCodeBlock();
-  instance.language = 'typescript';
+  // language is not a declared reactive property — set via any for test
+  (instance as any).language = 'typescript';
   const result = instance.render();
   assertExists(result);
 });
@@ -230,7 +231,9 @@ Deno.test('kiss-ui-plugin: transformIndexHtml injects CDN links (cdn=true)', asy
   const { kissUI } = await import('../src/kiss-ui-plugin.ts');
   const plugin = kissUI({ cdn: true, version: '3.5.0' });
   assertExists(plugin.transformIndexHtml);
-  const result = plugin.transformIndexHtml!('<html><head></head><body></body></html>');
+  const result = (plugin.transformIndexHtml as Function)(
+    '<html><head></head><body></body></html>',
+  );
   // Should return an array of tag descriptors
   assertExists(result);
   assertEquals(Array.isArray(result) || typeof result === 'string', true);
@@ -239,7 +242,7 @@ Deno.test('kiss-ui-plugin: transformIndexHtml injects CDN links (cdn=true)', asy
 Deno.test('kiss-ui-plugin: transformIndexHtml skips when cdn=false', async () => {
   const { kissUI } = await import('../src/kiss-ui-plugin.ts');
   const plugin = kissUI({ cdn: false });
-  const result = plugin.transformIndexHtml!('<html></html>');
+  const result = (plugin.transformIndexHtml as Function)('<html></html>');
   // When cdn=false, returns html unchanged
   assertEquals(result, '<html></html>');
 });
@@ -247,7 +250,7 @@ Deno.test('kiss-ui-plugin: transformIndexHtml skips when cdn=false', async () =>
 Deno.test('kiss-ui-plugin: transformIndexHtml uses custom version', async () => {
   const { kissUI } = await import('../src/kiss-ui-plugin.ts');
   const plugin = kissUI({ cdn: true, version: '3.4.0' });
-  const result = plugin.transformIndexHtml!('<html><head></head></html>');
+  const result = (plugin.transformIndexHtml as Function)('<html><head></head></html>');
   assertExists(result);
 });
 
@@ -294,16 +297,16 @@ Deno.test('kiss-theme-toggle: _handleToggle switches theme from light to dark', 
   setupDOMMocks();
   const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
   const instance = new KissThemeToggle();
-  instance._isLight = true;
+  (instance as any)._isLight = true;
 
   const calls: any[] = [];
   (document.documentElement as any).setAttribute = (...args: any[]) => {
     calls.push(args);
   };
 
-  instance._handleToggle();
+  (instance as any)._handleToggle();
 
-  assertEquals(instance._isLight, false);
+  assertEquals((instance as any)._isLight, false);
   assertEquals(calls[0], ['data-theme', 'dark']);
 });
 
@@ -337,12 +340,12 @@ Deno.test('kiss-code-block: _copy method success path', async () => {
     return 0 as any;
   }) as any;
 
-  await instance._copy();
+  await (instance as any)._copy();
 
   globalThis.setTimeout = originalSetTimeout;
 
   assertEquals(clipboardText, 'const x = 1;');
-  assertEquals(instance._copyState, 'idle');
+  assertEquals((instance as any)._copyState, 'idle');
 });
 
 Deno.test('kiss-code-block: _copy method failure path', async () => {
@@ -373,12 +376,12 @@ Deno.test('kiss-code-block: _copy method failure path', async () => {
     return 0 as any;
   }) as any;
 
-  await instance._copy();
+  await (instance as any)._copy();
 
   // Restore setTimeout
   globalThis.setTimeout = originalSetTimeout;
 
-  assertEquals(instance._copyState, 'idle'); // Should be 'idle' after timer fires
+  assertEquals((instance as any)._copyState, 'idle'); // Should be 'idle' after timer fires
 });
 
 Deno.test('kiss-input: _handleInput dispatches custom event', async () => {
@@ -397,7 +400,7 @@ Deno.test('kiss-input: _handleInput dispatches custom event', async () => {
     },
   } as any;
 
-  instance._handleInput(mockEvent);
+  (instance as any)._handleInput(mockEvent);
 
   assertEquals(instance.value, 'test input value');
   assertExists(dispatchedEvent);

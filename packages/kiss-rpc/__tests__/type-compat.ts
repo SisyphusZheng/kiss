@@ -21,6 +21,7 @@ interface ReactiveElement {
   addController(controller: ReactiveController): void;
   removeController(controller: ReactiveController): void;
   requestUpdate(): void;
+  readonly updateComplete: Promise<boolean>;
 }
 
 // --- Compile-time assertions ---
