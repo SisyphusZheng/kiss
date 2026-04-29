@@ -421,8 +421,10 @@ Deno.test('kiss() virtualEntryPlugin.load fallback when ctx.honoEntryCode is emp
   const plugins = kiss();
   const virtualPlugin = plugins.find((p) => p.name === 'kiss:virtual-entry')!;
   // First call configResolved to set honoEntryCode
-  if (typeof (plugins[0] as Record<string, unknown>).configResolved === 'function') {
-    (plugins[0] as Record<string, unknown>).configResolved({} as never);
+  // deno-lint-ignore no-explicit-any
+  if (typeof (plugins[0] as any).configResolved === 'function') {
+    // deno-lint-ignore no-explicit-any
+    (plugins[0] as any).configResolved({} as never);
   }
   // load should return code
   const code = (virtualPlugin.load as Function)('\0virtual:kiss-hono-entry' as never);
