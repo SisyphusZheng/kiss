@@ -101,9 +101,17 @@ async function buildClient(): Promise<void> {
   });
 
   const clientOutDir = resolve(root, outDir, 'client');
+  // base must match the deployed URL prefix for client assets.
+  // The SSG output places client JS at /client/islands/*.js,
+  // so the client build's base must be '/client/' so that
+  // Vite generates correct dynamic-import URLs (__vite__mapDeps).
+  // Without this, preload links point to /islands/*.js (404)
+  // instead of /client/islands/*.js.
+  const clientBase = metadata.base || '/';
   const clientConfig: InlineConfig = {
     configFile: false,
     root,
+    base: `${clientBase}client/`,
     logLevel: 'warn',
     build: {
       outDir: clientOutDir,

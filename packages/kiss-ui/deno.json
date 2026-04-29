@@ -1,6 +1,6 @@
 {
   "name": "@kissjs/ui",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "exports": {
     ".": "./dist/index.js",
     "./kiss-button": "./dist/kiss-button.js",

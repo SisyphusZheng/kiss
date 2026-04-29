@@ -46,8 +46,12 @@ export default defineConfig({
         headFragments: [
           // Favicon
           '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />',
-          // DSD polyfill for browsers without native Declarative Shadow DOM support.
-          '<script>if(!HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"))document.write(\'<script src="https://unpkg.com/@webcomponents/template-shadowroot@0.2.1/template-shadowroot.js"><\\/script>\')</script>',
+          // DSD (Declarative Shadow DOM) polyfill removed — all modern browsers
+          // (Chrome 90+, Safari 16.4+, Firefox 123+) support native DSD.
+          // The old document.write() polyfill caused:
+          //   1. "parser-blocking, cross-site script" browser warnings
+          //   2. "Cannot use import statement outside a module" SyntaxError
+          //   3. document.write() is hostile to modern browsers and CSP
           // Theme system: Pure B&W — Dark / Light
           // DRY: CSS values come from @kissjs/ui/tokens/colors.ts (single source of truth)
           colorTokensStyle,
