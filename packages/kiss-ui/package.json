@@ -41,6 +41,10 @@
     "./design-tokens": {
       "types": "./dist/design-tokens.d.ts",
       "import": "./dist/design-tokens.js"
+    },
+    "./tokens/colors": {
+      "types": "./dist/tokens/colors.d.ts",
+      "import": "./dist/tokens/colors.js"
     }
   },
   "files": ["dist"],
