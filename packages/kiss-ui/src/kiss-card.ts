@@ -28,21 +28,18 @@ export class KissCard extends LitElement {
     css`
       :host {
         display: block;
-      }
-
-      .card {
         background: var(--kiss-bg-card);
         border: 1px solid var(--kiss-border);
         border-radius: var(--kiss-radius-lg);
         overflow: hidden;
       }
 
-      .card--elevated {
+      :host([variant="elevated"]) {
         box-shadow: var(--kiss-shadow-md);
         border-color: transparent;
       }
 
-      .card--borderless {
+      :host([variant="borderless"]) {
         border-color: transparent;
       }
 
@@ -70,7 +67,7 @@ export class KissCard extends LitElement {
   ];
 
   static override properties = {
-    variant: { type: String },
+    variant: { type: String, reflect: true },
   };
 
   /** Card variant: 'default' (bordered), 'elevated' (shadow, no border), or 'borderless' */
@@ -78,13 +75,13 @@ export class KissCard extends LitElement {
 
   override render(): TemplateResult {
     return html`
-      <div class="card card--${this.variant}">
+      <article part="base">
         <slot name="header"></slot>
         <div class="card-body">
           <slot></slot>
         </div>
         <slot name="footer"></slot>
-      </div>
+      </article>
     `;
   }
 }

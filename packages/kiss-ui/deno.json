@@ -24,7 +24,7 @@
     "lit": "npm:lit@^3.2.0"
   },
   "publish": {
-    "include": ["dist/**", "deno.json", "jsr.json", "README.md", "LICENSE"]
+    "include": ["dist/**", "deno.json", "jsr.json", "LICENSE"]
   },
   "exclude": ["node_modules", "src"]
 }

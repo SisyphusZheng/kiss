@@ -32,6 +32,7 @@ Thumbs.db
 
 # Testing
 coverage/
+.coverage/
 __test_fixtures__/
 
 # Framework internals
@@ -40,7 +41,12 @@ __test_fixtures__/
 # Vite cache
 .vite/
 
-# Test output files
+# Test / build / lint / coverage output files
 test-*.txt
 cov-*.txt
 ui-test*.txt
+lint-*.txt
+coverage-*.txt
+coverage-output.txt
+.git-commit-msg.txt
+docs/vite-build-*.txt

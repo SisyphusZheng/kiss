@@ -64,6 +64,16 @@ export const islands: PackageIslandMeta[] = [
     strategy: 'lazy',
   },
   {
+    tagName: 'kiss-input',
+    modulePath: '@kissjs/ui/kiss-input',
+    strategy: 'lazy', // Form interaction needs JS hydration
+  },
+  {
+    tagName: 'kiss-code-block',
+    modulePath: '@kissjs/ui/kiss-code-block',
+    strategy: 'lazy', // Copy button needs JS
+  },
+  {
     tagName: 'kiss-layout',
     modulePath: '@kissjs/ui/kiss-layout',
     strategy: 'lazy',

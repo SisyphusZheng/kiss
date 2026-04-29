@@ -4,7 +4,7 @@
 > 融合 Jamstack 部署模型与声明式岛屿交互范式的全栈架构风格。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-91%25-yellow)](https://github.com/SisyphusZheng/openzhi/actions)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-yellow)](https://github.com/SisyphusZheng/openzhi/actions)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF)](https://vitejs.dev/)
 [![Hono](https://img.shields.io/badge/Hono-4.x-E36002)](https://hono.dev/)
 [![Lit](https://img.shields.io/badge/Lit-3.x-325CFF)](https://lit.dev/)
@@ -127,10 +127,10 @@ export default defineConfig({
   plugins: [kiss({
     inject: {
       stylesheets: [
-        'https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/styles.css',
+        'https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css',
       ],
       scripts: [
-        'https://cdn.jsdelivr.net/npm/@awesome-webcomponents/webawesome@3.5.0/dist/webawesome.loader.js',
+        'https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js',
       ],
     },
   })],
@@ -341,13 +341,15 @@ export default middleware;
 | SSR    | @lit-labs/ssr | ^3.3.x | 构建时渲染 + DSD 输出                    |
 | 类型   | TypeScript    | ^5.x   | 端到端类型安全                           |
 
-运行时依赖（5 个）：hono, lit, @lit-labs/ssr, @hono/vite-dev-server, magic-string
+运行时依赖（6 个）：hono, lit, @lit-labs/ssr, @lit-labs/ssr-client, @hono/vite-dev-server, magic-string
 
 > **@hono/vite-dev-server 为什么保留？** → 见 [ADR #0001](docs/decisions/0001-keep-hono-vite-dev-server.md)（零生产足迹、~100行替代代码的 DX 权衡）
 
 ## 当前状态
 
 v0.3.0 已发布。CLI 三步构建 + KissRenderer + Package Islands 完整支持。文档站自举验证通过。
+
+> @kissjs/create 0.3.0 已通过 CI 自动发布到 JSR。
 
 ## License
 

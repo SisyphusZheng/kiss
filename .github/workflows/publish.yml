@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,6 +54,15 @@ jobs:
             changed="$changed ui"
           fi
 
+          # Check create-kiss
+          create_old=$(git show HEAD~1:packages/create-kiss/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
+          create_new=$(grep '"version"' packages/create-kiss/deno.json | cut -d'"' -f4)
+          if [ "$create_old" != "$create_new" ]; then
+            echo "create_changed=true" >> $GITHUB_OUTPUT
+            echo "📦 @kissjs/create: $create_old → $create_new"
+            changed="$changed create"
+          fi
+
           if [ -z "$changed" ]; then
             echo "ℹ️ No version changes detected"
           fi
@@ -60,12 +70,12 @@ jobs:
       - name: Publish @kissjs/core
         if: steps.check.outputs.core_changed == 'true'
         working-directory: packages/kiss-core
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish
 
       - name: Publish @kissjs/rpc
         if: steps.check.outputs.rpc_changed == 'true'
         working-directory: packages/kiss-rpc
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish
 
       - name: Build @kissjs/ui
         if: steps.check.outputs.ui_changed == 'true'
@@ -75,4 +85,9 @@ jobs:
       - name: Publish @kissjs/ui
         if: steps.check.outputs.ui_changed == 'true'
         working-directory: packages/kiss-ui
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish
+
+      - name: Publish @kissjs/create
+        if: steps.check.outputs.create_changed == 'true'
+        working-directory: packages/create-kiss
+        run: deno publish

@@ -4,15 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: 'Packages to publish (comma-separated: core,rpc,ui)'
+        description: 'Packages to publish (comma-separated: core,rpc,ui,create)'
         required: true
-        default: 'core,rpc,ui'
+        default: 'core,rpc,ui,create'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -20,17 +21,27 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Build @kissjs/ui (if publishing ui)
+        if: contains(github.event.inputs.packages, 'ui')
+        working-directory: packages/kiss-ui
+        run: deno task build
+
       - name: Publish @kissjs/core
         if: contains(github.event.inputs.packages, 'core')
         working-directory: packages/kiss-core
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish
 
       - name: Publish @kissjs/rpc
         if: contains(github.event.inputs.packages, 'rpc')
         working-directory: packages/kiss-rpc
-        run: deno publish --token ${{ secrets.JSR_TOKEN }}
+        run: deno publish
 
       - name: Publish @kissjs/ui
         if: contains(github.event.inputs.packages, 'ui')
         working-directory: packages/kiss-ui
-        run: deno publish --token ${{ secrets.JSR_TOKEN }} --allow-slow-types
+        run: deno publish --allow-slow-types
+
+      - name: Publish @kissjs/create
+        if: contains(github.event.inputs.packages, 'create')
+        working-directory: packages/create-kiss
+        run: deno publish

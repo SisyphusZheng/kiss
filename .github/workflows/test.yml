@@ -20,10 +20,13 @@ jobs:
         run: deno install --node-modules-dir
 
       - name: Run kiss-core tests
-        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env
+        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env --coverage
 
       - name: Run kiss-rpc tests
-        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write
+        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write --coverage
 
       - name: Run kiss-ui tests
-        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env
+        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env --coverage
+
+      - name: Run create-kiss tests
+        run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env --coverage
