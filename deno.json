@@ -19,7 +19,6 @@
     "build": "deno task build:rpc && deno task build:core && deno task build:ui",
     "build:client": "deno run -A packages/kiss-core/src/cli/build-client.ts",
     "build:ssg": "deno run -A packages/kiss-core/src/cli/build-ssg.ts",
-    "docs:dev": "cd docs && deno task dev",
     "docs:build": "cd docs && deno task build",
     "docs:preview": "cd docs && deno task preview",
     "publish:core": "cd packages/kiss-core && deno publish --allow-dirty",

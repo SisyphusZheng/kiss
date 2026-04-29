@@ -27,9 +27,6 @@ export class KissBuildContext {
   /** Whether the SSR+client build has completed */
   buildCompleted: boolean = false;
 
-  /** Whether the client-side build has been triggered (prevents re-entry across plugin instances) */
-  clientBuildTriggered: boolean = false;
-
   /** Vite resolved config (set in configResolved hook) */
   resolvedConfig: ResolvedConfig | null = null;
 
@@ -55,7 +52,6 @@ export class KissBuildContext {
     this.islandTagNames = [];
     this.packageIslands = [];
     this.buildCompleted = false;
-    this.clientBuildTriggered = false;
     this.resolvedConfig = null;
     this.userResolveAlias = null;
   }

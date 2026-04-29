@@ -31,7 +31,7 @@ interface BuildMetadata {
   outDir: string;
   base: string;
   resolveAlias: Record<string, string> | Array<{ find: string; replacement: string }> | null;
-  ssrNoExternal: (string | { source: string; flags: string })[];
+  ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[];
   islandsDir: string;
   hydrationStrategy?: HydrationStrategy;
 }
@@ -87,11 +87,11 @@ async function buildClient(): Promise<void> {
   writeFileSync(clientEntryPath, clientEntryCode, 'utf-8');
 
   // Restore RegExp from JSON serialization
-  // JSON.stringify turns RegExp into {} — we need to reconstruct them
+  // JSON.stringify turns RegExp into {} — we reconstruct via __type marker
   const noExternalPatterns = (metadata.ssrNoExternal || []).map((item) => {
     if (typeof item === 'string') return item;
-    if (item && typeof item === 'object' && 'source' in item && 'flags' in item) {
-      return new RegExp(item.source, item.flags);
+    if (item && typeof item === 'object' && (item as Record<string, unknown>).__type === 'RegExp') {
+      return new RegExp((item as { source: string; flags: string }).source, (item as { source: string; flags: string }).flags);
     }
     return item;
   });

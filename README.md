@@ -346,7 +346,7 @@ export default middleware;
 
 ## 当前状态
 
-v0.2.0 已发布。包内 Island 自动检测 + kiss-theme-toggle Island。文档站自举验证通过。
+v0.3.0 已发布。CLI 三步构建 + KissRenderer + Package Islands 完整支持。文档站自举验证通过。
 
 ## License
 

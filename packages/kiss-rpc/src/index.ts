@@ -32,8 +32,18 @@
  * @module
  */
 
-// Local type declarations — avoid pulling lit into rpc package dependency
-// These minimal interfaces match what Lit's ReactiveControllerHost provides.
+// Local type declarations — avoid pulling lit into rpc package dependency.
+// These minimal interfaces match a SUBSET of Lit's ReactiveControllerHost.
+//
+// Drift protection: if Lit adds required methods to ReactiveControllerHost,
+// this local subset will still compile (it's a structural subset), but
+// RpcController won't implement the new methods. This is acceptable because
+// RpcController only uses addController/removeController/requestUpdate.
+//
+// To detect drift, run periodically:
+//   import type { ReactiveControllerHost } from 'lit';
+//   const _check: ReactiveControllerHost = null as unknown as ReactiveElement;
+// If this fails, the local interface is out of date.
 interface ReactiveController {
   hostConnected?(): void;
   hostDisconnected?(): void;

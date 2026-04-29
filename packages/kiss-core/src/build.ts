@@ -15,7 +15,6 @@
  * This eliminates:
  *   - Watch mode breakage from nested viteBuild() inside Vite hooks
  *   - Cross-instance error stacks that are impossible to debug
- *   - ctx.clientBuildTriggered recursion guard (no longer needed)
  *
  * The old closeBundle logic lives in cli/build-client.ts and cli/build-ssg.ts.
  */
@@ -62,7 +61,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         // can replicate the same module resolution
         resolveAlias: ctx?.userResolveAlias || null,
         ssrNoExternal: (options.ssr?.noExternal || []).map((item) => {
-          if (item instanceof RegExp) return { source: item.source, flags: item.flags };
+          if (item instanceof RegExp) return { __type: 'RegExp', source: item.source, flags: item.flags };
           return item;
         }),
         islandsDir: options.islandsDir || 'app/islands',

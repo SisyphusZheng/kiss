@@ -1,15 +1,15 @@
 # KISS Framework 当前状态
 
-> 最后更新: 2026-04-28
+> 最后更新: 2026-04-29
 
 ## JSR 发布状态
 
 | 包             | 版本  | JSR 状态   | 说明                                                |
 | -------------- | ----- | ---------- | --------------------------------------------------- |
-| @kissjs/core   | 0.3.0 | ⏳ CI 待发 | 核心框架 — hydration 闭环 + KissRenderer + CLI 构建 |
+| @kissjs/core   | 0.3.0 | ✅ 已发布  | 核心框架 — hydration 闭环 + KissRenderer + CLI 构建 |
 | @kissjs/rpc    | 0.2.1 | ✅ 已发布  | RPC 客户端                                          |
-| @kissjs/ui     | 0.3.0 | ⏳ CI 待发 | UI 组件库 — JSR 分发 dist/ 编译产物                 |
-| @kissjs/create | 0.2.0 | ⏳ CI 待发 | 项目脚手架                                          |
+| @kissjs/ui     | 0.3.0 | ✅ 已发布  | UI 组件库 — JSR 分发 dist/ 编译产物                 |
+| @kissjs/create | 0.3.0 | ⏳ CI 待发 | 项目脚手架                                          |
 
 ## v0.3.0 变更
 
