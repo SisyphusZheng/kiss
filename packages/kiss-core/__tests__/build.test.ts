@@ -1,10 +1,10 @@
+// deno-lint-ignore-file no-explicit-any
 /**
  * @kissjs/core - build / entry-generators tests (Deno)
  *
  * v0.3.0: generateClientEntry now takes ClientIslandEntry[] + strategy.
  * It includes Lit hydration logic (hydrate from @lit-labs/ssr-client).
  */
-// deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { generateClientEntry } from '../src/entry-generators.ts';
 import { buildPlugin } from '../src/build.ts';
