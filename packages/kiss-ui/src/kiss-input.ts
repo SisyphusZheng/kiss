@@ -99,6 +99,12 @@ export class KissInput extends LitElement {
         font-size: var(--kiss-font-size-xs);
         color: var(--kiss-text-tertiary);
       }
+
+      /* KISS S-constraint: <small role="alert"> is semantic + accessible */
+      small[role="alert"] {
+        font-size: var(--kiss-font-size-xs);
+        color: var(--kiss-text-tertiary);
+      }
     `,
   ];
 
@@ -150,6 +156,9 @@ export class KissInput extends LitElement {
   }
 
   override render(): TemplateResult {
+    // KISS S-constraint: use aria-describedby + aria-errormessage for
+    // accessible error association; <small role="alert"> is semantic.
+    const errorId = this.error ? 'input-error' : undefined;
     return html`
       <div class="input-wrapper">
         ${this.label
@@ -166,11 +175,14 @@ export class KissInput extends LitElement {
           name="${this.name}"
           ?disabled="${this.disabled}"
           ?required="${this.required}"
+          aria-invalid="${this.error ? 'true' : 'false'}"
+          aria-describedby="${errorId ?? ''}"
+          aria-errormessage="${errorId ?? ''}"
           @input="${(e: Event) => this._handleInput(e)}"
         />
         ${this.error
           ? html`
-            <span class="error-message">${this.error}</span>
+            <small id="input-error" role="alert" class="error-message">${this.error}</small>
           `
           : ''}
       </div>
@@ -182,11 +194,14 @@ export class KissInput extends LitElement {
     this.value = input.value;
     // Sync form value for native <form> submission
     this._internals?.setFormValue(input.value);
+    // KISS I-constraint: composed:false keeps events within Shadow DOM.
+    // Parent islands must listen via `addEventListener('kiss-input', ...)` on
+    // the <kiss-input> host element — NOT by capturing from the light DOM.
     this.dispatchEvent(
       new CustomEvent('kiss-input', {
         detail: { value: input.value },
         bubbles: true,
-        composed: true,
+        composed: false,
       }),
     );
   }

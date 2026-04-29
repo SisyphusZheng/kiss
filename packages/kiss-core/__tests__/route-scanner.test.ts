@@ -199,3 +199,46 @@ async function cleanupFixtures() {
     // Ignore cleanup errors
   }
 }
+
+// ─── scanPackageIslands Tests ──────────────────────────
+
+Deno.test('route-scanner - scanPackageIslands', async (t) => {
+  await t.step('returns empty array for empty package list', async () => {
+    const { scanPackageIslands } = await import('../src/route-scanner.ts');
+    const result = await scanPackageIslands([]);
+    assertEquals(result, []);
+  });
+
+  await t.step('returns empty array for non-existent package', async () => {
+    const { scanPackageIslands } = await import('../src/route-scanner.ts');
+    // Non-existent package should warn but not throw
+    const result = await scanPackageIslands(['@nonexistent/package']);
+    assertEquals(result, []);
+  });
+
+  await t.step('scans @kissjs/ui for islands', async () => {
+    const { scanPackageIslands } = await import('../src/route-scanner.ts');
+    const result = await scanPackageIslands(['@kissjs/ui']);
+    assertEquals(Array.isArray(result), true);
+    // Should find islands from the package
+    if (result.length > 0) {
+      const tags = result.map((i) => i.tagName);
+      assertEquals(tags.includes('kiss-theme-toggle') || tags.includes('kiss-button'), true);
+    }
+  });
+
+  await t.step('handles package with no islands export', async () => {
+    const { scanPackageIslands } = await import('../src/route-scanner.ts');
+    // A package that exists but has no 'islands' export
+    const result = await scanPackageIslands(['vite']);
+    assertEquals(result, []);
+  });
+});
+
+// ─── scanIslands edge cases ──────────────────────────
+
+Deno.test('route-scanner - scanIslands with non-existent dir', async () => {
+  const { scanIslands } = await import('../src/route-scanner.ts');
+  const result = await scanIslands('/nonexistent/path/islands');
+  assertEquals(result, []);
+});

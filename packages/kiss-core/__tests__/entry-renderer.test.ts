@@ -305,3 +305,118 @@ Deno.test('generateHonoEntryCode: complex scenario with all features', () => {
   const codeLines = code.split('\n').filter((l) => !l.trimStart().startsWith('//'));
   assertFalse(codeLines.some((l) => l.includes('process.env')));
 });
+
+// ─── Additional Branch Coverage ──────────────────────────
+
+Deno.test('renderEntry: CSP nonce with existing script-src in policy', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      csp: {
+        policy: "default-src 'self'; script-src 'self' 'unsafe-inline'",
+        nonce: true,
+      },
+    },
+  });
+  const code = renderEntry(desc);
+
+  // When script-src already exists, nonce is injected into existing directive
+  assertStringIncludes(code, 'NONCE_PLACEHOLDER');
+  assertStringIncludes(code, "script-src 'nonce-NONCE_PLACEHOLDER'");
+});
+
+Deno.test('renderEntry: CSP nonce without existing script-src', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      csp: {
+        policy: "default-src 'self'",
+        nonce: true,
+      },
+    },
+  });
+  const code = renderEntry(desc);
+
+  // When no script-src, one is appended
+  assertStringIncludes(code, 'NONCE_PLACEHOLDER');
+  assertStringIncludes(code, "script-src 'nonce-NONCE_PLACEHOLDER'");
+});
+
+Deno.test('renderEntry: CORS with array origins', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      corsOrigin: ['http://localhost:3000', 'http://localhost:3001'],
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'cors');
+  assertStringIncludes(code, 'localhost:3000');
+});
+
+Deno.test('renderEntry: CORS default (no corsOrigin) generates localhost regex', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      cors: true,
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'cors');
+  assertStringIncludes(code, 'localhost');
+});
+
+Deno.test('renderEntry: securityHeaders middleware', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      securityHeaders: true,
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'secureHeaders');
+});
+
+Deno.test('renderEntry: requestId middleware', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      requestId: true,
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'requestId');
+});
+
+Deno.test('renderEntry: logger middleware', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      logger: true,
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'honoLogger');
+});
+
+Deno.test('renderEntry: no middleware generates clean app', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      requestId: false,
+      logger: false,
+      cors: false,
+      securityHeaders: false,
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertEquals(code.includes('cors'), false);
+  assertEquals(code.includes('secureHeaders'), false);
+  assertEquals(code.includes('requestId'), false);
+  assertEquals(code.includes('honoLogger'), false);
+});
+
+Deno.test('renderEntry: SSG mode disabled by default', () => {
+  const desc = buildEntryDescriptor(basicRoutes);
+  const code = renderEntry(desc);
+
+  assertEquals(code.includes('install-global-dom-shim'), false);
+});

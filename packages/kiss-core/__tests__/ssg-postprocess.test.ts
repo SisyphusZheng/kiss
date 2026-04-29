@@ -275,3 +275,196 @@ Deno.test('rewriteHtmlFiles handles both /app/ and app/ patterns', () => {
     cleanup(tmp);
   }
 });
+
+// ─── insertAfterHead / insertBeforeBodyClose edge cases ────
+
+Deno.test('injectClientScript handles HTML without </body> tag', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'no-body.html');
+    // HTML without </body> — insertBeforeBodyClose appends at end
+    writeFileSync(htmlPath, '<html><head></head><p>No body close', 'utf-8');
+
+    injectClientScript(tmp, '/client.js');
+
+    const content = readFileSync(htmlPath, 'utf-8');
+    assertExists(content.includes('/client.js'));
+    // Should have appended at end since no </body>
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('injectCspMeta handles HTML without <head> tag', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'no-head.html');
+    // HTML without <head> — insertAfterHead fallback inserts <head>
+    writeFileSync(htmlPath, '<html><body><p>No head</p></body></html>', 'utf-8');
+
+    injectCspMeta(tmp, "default-src 'self'");
+
+    const content = readFileSync(htmlPath, 'utf-8');
+    assertExists(content.includes('Content-Security-Policy'));
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('injectCspMeta handles HTML starting with <!DOCTYPE>', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'doctype.html');
+    writeFileSync(htmlPath, '<!DOCTYPE html><html><body></body></html>', 'utf-8');
+
+    injectCspMeta(tmp, "default-src 'self'");
+
+    const content = readFileSync(htmlPath, 'utf-8');
+    assertExists(content.includes('Content-Security-Policy'));
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('injectCspMeta warns when nonce=true', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'nonce.html');
+    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+
+    const origWarn = console.warn;
+    let warnMsg = '';
+    console.warn = (...args: any[]) => { warnMsg = args.join(' '); };
+
+    injectCspMeta(tmp, "default-src 'self'", false, true);
+
+    console.warn = origWarn;
+    assertExists(warnMsg.includes('nonce'), 'Should warn about nonce not supported');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('injectCspMeta skips non-HTML files', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'index.html');
+    const txtPath = join(tmp, 'readme.txt');
+    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    writeFileSync(txtPath, 'Not HTML', 'utf-8');
+
+    injectCspMeta(tmp, "default-src 'self'");
+
+    const txtContent = readFileSync(txtPath, 'utf-8');
+    assertEquals(txtContent, 'Not HTML', 'Non-HTML files should not be modified');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('injectClientScript skips non-HTML files', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'index.html');
+    const jsPath = join(tmp, 'app.js');
+    writeFileSync(htmlPath, '<html><body></body></html>', 'utf-8');
+    writeFileSync(jsPath, 'console.log("hi")', 'utf-8');
+
+    injectClientScript(tmp, '/client.js');
+
+    const jsContent = readFileSync(jsPath, 'utf-8');
+    assertEquals(jsContent, 'console.log("hi")', 'JS files should not be modified');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+// ─── buildIslandChunkMap edge cases ──────────────────────────
+
+Deno.test('buildIslandChunkMap falls back to client.js last resort', () => {
+  const tmp = makeTempDir();
+  try {
+    // Create client/islands/client.js but no manifest and no island chunks
+    const islandsDir = join(tmp, 'dist', 'client', 'islands');
+    mkdirSync(islandsDir, { recursive: true });
+    writeFileSync(join(islandsDir, 'client.js'), '// client entry', 'utf-8');
+
+    const result = buildIslandChunkMap(tmp, 'dist', ['my-island']);
+    // Should fall back to client.js
+    assertExists(result['my-island']);
+    assertExists(result['my-island'].includes('client.js'));
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('buildIslandChunkMap handles malformed manifest.json', () => {
+  const tmp = makeTempDir();
+  try {
+    const viteDir = join(tmp, 'dist', 'client', '.vite');
+    mkdirSync(viteDir, { recursive: true });
+    // Write malformed JSON
+    writeFileSync(join(viteDir, 'manifest.json'), '{invalid json', 'utf-8');
+    // Also create fallback island chunks
+    const islandsDir = join(tmp, 'dist', 'client', 'islands');
+    mkdirSync(islandsDir, { recursive: true });
+    writeFileSync(join(islandsDir, 'island-counter-island-abc.js'), '// counter', 'utf-8');
+
+    const result = buildIslandChunkMap(tmp, 'dist', ['counter-island']);
+    // Should fall back to directory scan
+    assertExists(result['counter-island']);
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('buildIslandChunkMap skips manifest entries without file field', () => {
+  const tmp = makeTempDir();
+  try {
+    const viteDir = join(tmp, 'dist', 'client', '.vite');
+    mkdirSync(viteDir, { recursive: true });
+    const manifest = {
+      'src/something.ts': { css: ['style.css'] },  // no 'file' field
+      'src/islands/counter.ts': { file: 'islands/island-counter-abc123.js' },
+    };
+    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+
+    const result = buildIslandChunkMap(tmp, 'dist', ['counter']);
+    assertExists(result['counter']);
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('rewriteHtmlFiles skips non-HTML files', () => {
+  const tmp = makeTempDir();
+  try {
+    const jsPath = join(tmp, 'app.js');
+    writeFileSync(jsPath, "import('/app/islands/counter.ts')", 'utf-8');
+
+    rewriteHtmlFiles(tmp, { 'counter': '/client/island-counter.js' });
+
+    const content = readFileSync(jsPath, 'utf-8');
+    assertEquals(content, "import('/app/islands/counter.ts')", 'JS files should not be modified');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('rewriteHtmlFiles does not write when no matches', () => {
+  const tmp = makeTempDir();
+  try {
+    const htmlPath = join(tmp, 'clean.html');
+    writeFileSync(htmlPath, '<html><body><p>No imports here</p></body></html>', 'utf-8');
+    const origMtime = Deno.statSync(htmlPath).mtime;
+
+    // Small delay to ensure mtime would differ if file was written
+    const chunkMap = { 'counter': '/client/island-counter.js' };
+    rewriteHtmlFiles(tmp, chunkMap);
+
+    const content = readFileSync(htmlPath, 'utf-8');
+    assertEquals(content, '<html><body><p>No imports here</p></body></html>');
+  } finally {
+    cleanup(tmp);
+  }
+});

@@ -55,6 +55,45 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
     );
     assertEquals(result, null);
   });
+
+  await t.step('errors for tag names with unsafe characters', () => {
+    const transform = plugin.transform as unknown as TransformFn;
+    let errorThrown = false;
+    const mockContext = {
+      error: (msg: string) => {
+        errorThrown = true;
+        // In Vite, this.error() throws — simulate by throwing
+        throw new Error(msg);
+      },
+      warn: () => {},
+    };
+    try {
+      // "UPPER.ts" → fileToTagName gives "UPPER" (no hyphen, but has uppercase)
+      // Wait — no hyphen triggers warn first. Use "my-mod.ts" → "my.mod" (has dot)
+      // Actually: "my-mod.ts" → fileToTagName strips .ts → "my-mod" which IS safe.
+      // Let's use a filename that has a hyphen AND unsafe chars:
+      // "my-MOD.ts" → "my-MOD" — has hyphen AND uppercase, triggers error()
+      transform.call(
+        mockContext,
+        'export default class MyMod extends LitElement {}',
+        '/project/app/islands/my-MOD.ts',
+      );
+    } catch (e) {
+      // Expected: this.error() throws for uppercase chars
+      assertEquals((e as Error).message.includes('unsafe characters'), true);
+    }
+    assertEquals(errorThrown, true, 'this.error() should have been called');
+  });
+
+  await t.step('handles Windows-style paths', () => {
+    const winPlugin = islandTransformPlugin('app\\islands');
+    const transform = winPlugin.transform as unknown as TransformFn;
+    const result = transform(
+      'export default class MyCounter extends LitElement {}',
+      'C:\\project\\app\\islands\\my-counter.ts',
+    );
+    assertEquals(result!.includes('export const __island = true'), true);
+  });
 });
 
 Deno.test('entry-generators - generateClientEntry (v0.3.0 hydration)', async (t) => {

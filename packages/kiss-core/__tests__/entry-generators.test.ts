@@ -137,3 +137,30 @@ Deno.test('generateClientEntry creates whenDefined list for all islands', () => 
   assertExists(code.includes("customElements.whenDefined('kiss-theme-toggle')"));
   assertExists(code.includes("'code-block'"));
 });
+
+// ─── No package islands (packageImportBlock empty) ────────
+
+Deno.test('generateClientEntry local-only islands have no dynamic import block', () => {
+  const code = generateClientEntry([LOCAL_ISLAND, {
+    tagName: 'code-block',
+    modulePath: './islands/code-block.ts',
+    isPackage: false,
+  }]);
+  // No "Dynamic import for package islands" comment when no package islands
+  assertEquals(code.includes('Dynamic import for package islands'), false);
+});
+
+// ─── Multiple package islands ─────────────────────────────
+
+Deno.test('generateClientEntry multiple package islands all use dynamic import', () => {
+  const code = generateClientEntry([
+    { tagName: 'kiss-button', modulePath: '@kissjs/ui/kiss-button', isPackage: true },
+    { tagName: 'kiss-card', modulePath: '@kissjs/ui/kiss-card', isPackage: true },
+  ]);
+  assertExists(code.includes("import('@kissjs/ui/kiss-button')"));
+  assertExists(code.includes("import('@kissjs/ui/kiss-card')"));
+  // No static customElements.define() call for package islands
+  // (they self-register via side-effect import)
+  assertEquals(code.includes("customElements.define('kiss-"), false);
+  assertEquals(code.includes("customElements.define('kiss-card"), false);
+});

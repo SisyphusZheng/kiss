@@ -116,10 +116,17 @@ export class KissThemeToggle extends LitElement {
         // Check the <html data-theme="..."> attribute set by the head inline script.
         // This is the standard path: the head script reads localStorage and sets
         // data-theme BEFORE any LitElement connects.
+        //
+        // L2 EXEMPTION: reading document.documentElement.dataset is a platform API
+        // (browser infrastructure), not a cross-Island dependency. Allowed under
+        // the KISS L2 infrastructure exemption rule.
         this._isLight = true;
       } else {
         // Fallback: read from localStorage directly (edge case where neither
         // attribute nor data-theme is set)
+        //
+        // L2 EXEMPTION: localStorage is a browser platform API (infrastructure).
+        // Not a cross-Island dependency — allowed under KISS L2 exemption.
         const saved = localStorage.getItem('kiss-theme');
         if (saved === 'light') {
           this._isLight = true;
@@ -134,6 +141,8 @@ export class KissThemeToggle extends LitElement {
     private _handleToggle() {
       this._isLight = !this._isLight;
       const theme = this._isLight ? 'light' : 'dark';
+      // L2 EXEMPTION: document.documentElement.setAttribute and localStorage.setItem
+      // are browser platform APIs (infrastructure). Not cross-Island dependencies.
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('kiss-theme', theme);
       // Propagate data-theme to all KISS component host elements.
@@ -162,20 +171,30 @@ export class KissThemeToggle extends LitElement {
       // KISS components like kiss-layout live inside other components' shadow roots
       // (e.g. page-fullstack-demo's shadow root). We must recursively walk all
       // shadow roots to find and update every KISS component.
+      //
+      // I-CONSTRAINT ISOLATION: each element is wrapped in try/catch so that
+      // one Island's setAttribute failure does NOT prevent other Islands from
+      // receiving the theme update.
       const propagate = (root: Document | ShadowRoot) => {
         root.querySelectorAll('*').forEach((el) => {
-          const tag = el.tagName?.toLowerCase();
-          // All KISS built-in components (kiss-* prefix)
-          if (tag?.startsWith('kiss-')) {
-            el.setAttribute('data-theme', theme);
-          }
-          // User custom components that opt in with data-kiss attribute
-          if (el.hasAttribute?.('data-kiss')) {
-            el.setAttribute('data-theme', theme);
-          }
-          // Recurse into shadow roots (DSD + Lit hydration creates them)
-          if (el.shadowRoot) {
-            propagate(el.shadowRoot);
+          try {
+            const tag = el.tagName?.toLowerCase();
+            // All KISS built-in components (kiss-* prefix)
+            if (tag?.startsWith('kiss-')) {
+              el.setAttribute('data-theme', theme);
+            }
+            // User custom components that opt in with data-kiss attribute
+            if (el.hasAttribute?.('data-kiss')) {
+              el.setAttribute('data-theme', theme);
+            }
+            // Recurse into shadow roots (DSD + Lit hydration creates them)
+            if (el.shadowRoot) {
+              propagate(el.shadowRoot);
+            }
+          } catch {
+            // Isolation: silently skip elements that fail (e.g. cross-origin,
+            // already disconnected, or Shadow DOM access restrictions).
+            // One Island's failure must not cascade to others.
           }
         });
       };
