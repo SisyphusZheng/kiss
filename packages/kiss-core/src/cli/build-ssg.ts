@@ -170,10 +170,6 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       },
     });
 
-    // Clean up CJS polyfill — don't leave global pollution
-    delete (globalThis as Record<string, unknown>).module;
-    delete (globalThis as Record<string, unknown>).exports;
-
     try {
       const module = await server.ssrLoadModule(tmpEntryPath);
       const app = module.default;
@@ -265,6 +261,10 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     const cause = err instanceof Error ? err : new Error(String(err));
     throw new SsrRenderError('SSG pipeline', cause);
   } finally {
+    // Clean up CJS polyfill — don't leave global pollution
+    delete (globalThis as Record<string, unknown>).module;
+    delete (globalThis as Record<string, unknown>).exports;
+
     try {
       unlinkSync(tmpEntryPath);
     } catch { /* ignore */ }
