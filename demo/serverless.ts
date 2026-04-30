@@ -7,13 +7,18 @@
  *   GET /health  → uptime
  */
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import apiApp from './app/routes/api/ping.ts';
 
 const app = new Hono();
 
 // CORS: allow the docs site to call this API from the browser
-app.use('/api/*', cors({ origin: ['https://kiss.js.org', 'https://kiss-demo-api.sisyphuszheng.deno.net'] }));
+app.use('/api/*', async (c, next) => {
+  await next();
+  c.res.headers.set('Access-Control-Allow-Origin', '*');
+  c.res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  c.res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+});
+app.options('/api/*', (c) => c.newResponse(null, 204));
 
 app.route('/api', apiApp);
 app.get('/health', (c) => c.json({ ok: true }));
