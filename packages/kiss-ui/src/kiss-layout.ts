@@ -553,6 +553,14 @@ export class KissLayout extends LitElement {
         ],
       },
       {
+        section: 'Architecture',
+        items: [
+          { path: '/guide/kiss-compiler', label: 'KISS Compiler' },
+          { path: '/guide/pwa', label: 'PWA Support' },
+          { path: '/roadmap', label: 'Roadmap' },
+        ],
+      },
+      {
         section: 'UI',
         items: [{ path: '/ui', label: 'Design System' }],
       },
@@ -566,9 +574,15 @@ export class KissLayout extends LitElement {
         ],
       },
       {
+        section: 'Blog',
+        items: [
+          { path: '/blog', label: 'All Posts' },
+          { path: '/blog/kiss-compiler', label: 'KISS Compiler' },
+        ],
+      },
+      {
         section: 'Project',
         items: [
-          { path: '/roadmap', label: 'Roadmap' },
           { path: '/changelog', label: 'Changelog' },
           { path: '/contributing', label: 'Contributing' },
         ],
@@ -579,6 +593,7 @@ export class KissLayout extends LitElement {
     private static readonly DEFAULT_HEADER_NAV: HeaderNavLink[] = [
       { href: '/guide/getting-started', label: 'Docs' },
       { href: '/ui', label: 'UI' },
+      { href: '/blog', label: 'Blog' },
       { href: 'https://jsr.io/@kissjs/core', label: 'JSR' },
     ];
 
