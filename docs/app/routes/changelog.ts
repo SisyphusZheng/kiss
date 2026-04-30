@@ -146,6 +146,10 @@ export class ChangelogPage extends LitElement {
             <div class="change-category fixed">
               <h4>修复</h4>
               <ul class="change-list">
+                <li><strong>主题切换按钮点击无响应（v0.2.x 历史问题）</strong>：kiss-theme-toggle 在 Shadow DOM 中事件的 composedPath() 未正确穿透，导致点击事件被吞；data-theme 未传播到所有嵌套组件的 host 元素。根因：@lit-labs/ssr 渲染后 hydration 顺序错误 — litElementHydrateSupport({LitElement}) 在 customElements.define() 之前未执行</li>
+                <li><strong>Island 计数器重复渲染（v0.2.x 历史问题）</strong>：静态 import 导致 customElements.define() 在 hydration 补丁执行前运行，Lit 对已定义的元素做 DSD 水合时先全量渲染再 patch，造成两次渲染。修复：改为动态 import() 确保 hydration 补丁先执行</li>
+                <li><strong>Island chunk 404</strong>：build-client.ts 未设置 base='/client/'，Vite 生成的 __vite__mapDeps 指向 /islands/*.js 而非 /client/islands/*.js</li>
+                <li><strong>DSD polyfill 报错</strong>：template-shadowroot document.write() polyfill 在 ESM 环境下报 "Cannot use import statement outside module"，移除（现代浏览器已原生支持 DSD）</li>
                 <li><strong>P0 — kiss-input 显示 "undefined" 字符串</strong>：.value="${this.value ?? ''}"，避免未设置值时显示文本 "undefined"</li>
                 <li><strong>P0 — @kissjs/core 缺少 CLI exports</strong>：deno.json 和 jsr.json 未导出 cli/build-client 和 cli/build-ssg，导致 create-kiss 脚手架创建的项目无法运行 deno task build:client/build:ssg</li>
                 <li><strong>P0 — dist/tokens/colors.js 缺失</strong>：deno.json 已声明导出但构建产出中不存在（build 重新执行后修复）</li>
@@ -377,6 +381,62 @@ export class ChangelogPage extends LitElement {
               </ul>
             </div>
           </div>
+
+          <h2>上游依赖 / 兼容性问题</h2>
+          <table class="version-table">
+            <thead>
+              <tr>
+                <th>问题</th>
+                <th>根源</th>
+                <th>影响</th>
+                <th>缓解方案</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Deno fmt dprint-core panic</td>
+                <td>dprint-core 0.67.4 在处理嵌套 Lit 模板字面量（含 HTML 实体 &lt; 等）时 panic</td>
+                <td>docs/ 中 Lit tagged template 无法格式化</td>
+                <td>CI 中 fmt --check 跳过 docs/，仅检查 packages/</td>
+              </tr>
+              <tr>
+                <td>node-domexception CJS 兼容</td>
+                <td>node-domexception@1.0.0 使用 module.exports (CJS)，Deno 的 ESM 运行时无法直接加载</td>
+                <td>SSG 构建失败：ReferenceError: module is not defined</td>
+                <td>globalThis.module / exports polyfill，用完后 finally 清理</td>
+              </tr>
+              <tr>
+                <td>parse5 / entities 版本锁</td>
+                <td>entities@6 与 parse5@7 的兼容性要求，需同步升级</td>
+                <td>依赖安装失败</td>
+                <td>升级 entities 到 ^6</td>
+              </tr>
+              <tr>
+                <td>Lit SSR + hydration 时序</td>
+                <td>@lit-labs/ssr-client 的 litElementHydrateSupport() 必须在 customElements.define() 之前执行，否则已注册的元素会全量渲染再 patch（双重渲染）</td>
+                <td>Island 组件双重渲染 / hydration 不匹配</td>
+                <td>动态 import() 确保 hydration 补丁先于任何组件注册执行</td>
+              </tr>
+              <tr>
+                <td>@kissjs/core → lit resolve alias</td>
+                <td>Vite lib mode 构建中将 @kissjs/core 映射为 lit，使编译产物直接依赖 lit 而非 @kissjs/core</td>
+                <td>@kissjs/ui 的 dist 消费者无需安装 @kissjs/core</td>
+                <td>resolve.alias + build.ts serializeAlias 传递到 CLI 构建</td>
+              </tr>
+              <tr>
+                <td>Window CRLF vs Unix LF</td>
+                <td>Windows Git 自动转换行尾导致 deno fmt CI 失败</td>
+                <td>多平台协作者间格式冲突</td>
+                <td>.gitattributes eol=lf 统一行尾</td>
+              </tr>
+              <tr>
+                <td>tsup → Vite lib mode</td>
+                <td>tsup 不支持 Deno 的 node: 前缀保留</td>
+                <td>Node 原生模块导入失败</td>
+                <td>迁移至 Vite lib format: 'es'，天然保留 node: 前缀</td>
+              </tr>
+            </tbody>
+          </table>
 
           <h2>版本历史</h2>
           <table class="version-table">
