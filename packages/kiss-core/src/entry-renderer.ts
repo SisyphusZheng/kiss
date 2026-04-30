@@ -308,11 +308,29 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
   b.blank();
 
+  // --- Register page components in SSR customElements registry ---
+  // This is essential for Lit SSR's renderValue to find and render Shadow DOM.
+  // Without registration, <unsafeHTML> produces bare tags without DSD content.
+  // Each SSR route module exports { default: ComponentClass, tagName: string }.
+  for (const route of desc.pageRoutes) {
+    const tag = `\${${route.varName}.tagName || '${route.defaultTagName}'}`;
+    b.push(`if (!customElements.get(${route.varName}.tagName || '${route.defaultTagName}')) {`);
+    b.push(
+      `  customElements.define(${route.varName}.tagName || '${route.defaultTagName}', ${route.varName}.default)`,
+    );
+    b.push(`}`);
+  }
+  b.blank();
+
   // --- SSR helper ---
   // unsafeHTML must be in expression position (NOT in element position <${...}>),
   // otherwise Lit throws "Unexpected final partIndex" error.
   // tag validation: only hyphenated Custom Element names are valid.
   // defer-hydration: marks SSR output for Lit hydration (handled by client entry).
+  //
+  // Components MUST be registered via customElements.define() before SSR rendering,
+  // otherwise Lit SSR's renderValue treats them as plain HTML (no Shadow DOM output).
+  // Registration is done above for all page route components.
   //
   // IMPORTANT: The SSR output includes <!--lit-part--> comments.
   // DO NOT strip them — they are essential for Lit's hydrate() to work.
@@ -320,7 +338,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   const DOLLAR_BRACE = '\x24{'; // ${
   const CLOSE_BRACE = '}'; // }
   b.push('// SSR helper: render a custom element tag to HTML string');
-  b.push('// Outputs <tag defer-hydration> so the client entry can hydrate it');
+  b.push('// Outputs <tag defer-hydration> with Shadow DOM for the client to hydrate');
   b.push('async function __ssr(tag) {');
   b.push('  // Validate tag name — must be a valid Custom Element (contains hyphen)');
   b.push('  if (!tag || !tag.includes("-")) {');

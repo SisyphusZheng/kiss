@@ -175,6 +175,9 @@ Deno.test('renderEntry: page routes use SSR helper and wrapInDocument', () => {
 
   assertStringIncludes(code, "app.get('/'");
   assertStringIncludes(code, 'await __ssr(tag)');
+  // v0.3.4: SSR automatically registers page components for Shadow DOM rendering
+  assertStringIncludes(code, 'customElements.define(');
+  assertStringIncludes(code, 'customElements.get(');
   // v0.3.0: Uses wrapInDocument from ssr-handler.ts (single source of truth)
   // No inline HTML wrapping, no stripLitComments
   assertStringIncludes(code, 'wrapInDocument(');
