@@ -121,7 +121,7 @@ export class KissLayout extends LitElement {
         padding: 0 var(--kiss-size-8);
         display: flex;
         align-items: center;
-        height: 56px;
+        height: var(--kiss-layout-header-height, 56px);
         gap: var(--kiss-size-6);
       }
 
@@ -257,9 +257,9 @@ export class KissLayout extends LitElement {
           border-right: 1px solid var(--kiss-border);
           padding: var(--kiss-size-6) 0;
           overflow-y: auto;
-          height: calc(100vh - 56px);
+          height: calc(100vh - var(--kiss-layout-header-height, 56px));
           position: sticky;
-          top: 56px;
+          top: var(--kiss-layout-header-height, 56px);
           scrollbar-width: thin;
         }
 
@@ -337,7 +337,7 @@ export class KissLayout extends LitElement {
         .mobile-backdrop {
           position: fixed;
           inset: 0;
-          top: 56px;
+          top: var(--kiss-layout-header-height, 56px);
           background: rgba(0, 0, 0, 0.4);
           z-index: 80;
           opacity: 0;
@@ -371,10 +371,10 @@ export class KissLayout extends LitElement {
 
           .docs-sidebar {
             position: fixed;
-            top: 56px;
+            top: var(--kiss-layout-header-height, 56px);
             left: 0;
             width: min(300px, 80vw);
-            height: calc(100vh - 56px);
+            height: calc(100vh - var(--kiss-layout-header-height, 56px));
             z-index: 90;
             background: var(--kiss-bg-base);
             border-right: 1px solid var(--kiss-border);

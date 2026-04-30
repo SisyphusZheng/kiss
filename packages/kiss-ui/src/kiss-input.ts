@@ -25,7 +25,7 @@
  * maintaining progressive enhancement and semantic correctness.
  */
 
-import { css, type CSSResult, html, LitElement, type TemplateResult } from '@kissjs/core';
+import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-input';
@@ -92,18 +92,12 @@ export class KissInput extends LitElement {
       }
 
       .input--error {
-        border-color: var(--kiss-text-tertiary);
+        border-color: var(--kiss-error, #e55);
       }
 
       .error-message {
         font-size: var(--kiss-font-size-xs);
-        color: var(--kiss-text-tertiary);
-      }
-
-      /* KISS S-constraint: <small role="alert"> is semantic + accessible */
-      small[role="alert"] {
-        font-size: var(--kiss-font-size-xs);
-        color: var(--kiss-text-tertiary);
+        color: var(--kiss-error, #e55);
       }
     `,
   ];
@@ -171,13 +165,13 @@ export class KissInput extends LitElement {
           class="input ${this.error ? 'input--error' : ''}"
           type="${this.type}"
           placeholder="${this.placeholder}"
-          .value="${this.value}"
+          .value="${this.value ?? ''}"
           name="${this.name}"
           ?disabled="${this.disabled}"
           ?required="${this.required}"
-          aria-invalid="${this.error ? 'true' : 'false'}"
-          aria-describedby="${errorId ?? ''}"
-          aria-errormessage="${errorId ?? ''}"
+          aria-invalid="${this.error ? 'true' : nothing}"
+          aria-describedby="${errorId || nothing}"
+          aria-errormessage="${errorId || nothing}"
           @input="${(e: Event) => this._handleInput(e)}"
         />
         ${this.error

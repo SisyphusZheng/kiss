@@ -255,11 +255,18 @@ export class RpcController implements ReactiveController {
           break;
         }
 
-        // Wait before retry
+        // Wait before retry — race against abort so ctrl.abort()
+        // cancels immediately instead of waiting for the full delay
         const delay = typeof this._options.retryDelay === 'function'
           ? this._options.retryDelay(attempt)
           : this._options.retryDelay;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(resolve, delay);
+          signal.addEventListener('abort', () => {
+            clearTimeout(timer);
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }, { once: true });
+        });
       }
     }
 

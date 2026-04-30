@@ -79,6 +79,16 @@ export class KissCodeBlock extends LitElement {
   };
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
+  private _copyTimer: number | undefined;
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clear pending timer if component disconnects before timeout fires
+    if (this._copyTimer !== undefined) {
+      clearTimeout(this._copyTimer);
+      this._copyTimer = undefined;
+    }
+  }
 
   override render(): TemplateResult {
     return html`
@@ -103,13 +113,15 @@ export class KissCodeBlock extends LitElement {
       const text = this.textContent || '';
       await navigator.clipboard.writeText(text);
       this._copyState = 'copied';
-      setTimeout(() => {
+      this._copyTimer = setTimeout(() => {
         this._copyState = 'idle';
+        this._copyTimer = undefined;
       }, 2000);
     } catch {
       this._copyState = 'failed';
-      setTimeout(() => {
+      this._copyTimer = setTimeout(() => {
         this._copyState = 'idle';
+        this._copyTimer = undefined;
       }, 2000);
     }
   }

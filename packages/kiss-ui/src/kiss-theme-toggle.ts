@@ -185,21 +185,20 @@ export class KissThemeToggle extends LitElement {
       // I-CONSTRAINT ISOLATION: each element is wrapped in try/catch so that
       // one Island's setAttribute failure does NOT prevent other Islands from
       // receiving the theme update.
-      const propagate = (root: Document | ShadowRoot) => {
+      const propagate = (root: Document | ShadowRoot, depth = 0) => {
+        // Safety: limit recursion depth to avoid stack overflow on
+        // deeply nested component compositions
+        if (depth > 10) return;
         root.querySelectorAll('*').forEach((el) => {
           try {
             const tag = el.tagName?.toLowerCase();
             // All KISS built-in components (kiss-* prefix)
-            if (tag?.startsWith('kiss-')) {
-              el.setAttribute('data-theme', theme);
-            }
-            // User custom components that opt in with data-kiss attribute
-            if (el.hasAttribute?.('data-kiss')) {
+            if (tag?.startsWith('kiss-') || el.hasAttribute?.('data-kiss')) {
               el.setAttribute('data-theme', theme);
             }
             // Recurse into shadow roots (DSD + Lit hydration creates them)
             if (el.shadowRoot) {
-              propagate(el.shadowRoot);
+              propagate(el.shadowRoot, depth + 1);
             }
           } catch {
             // Isolation: silently skip elements that fail (e.g. cross-origin,

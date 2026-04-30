@@ -44,7 +44,7 @@ import { css, unsafeCSS } from 'lit';
 // Edit these values to change ALL color tokens everywhere.
 // The CSS outputs are generated from these objects.
 
-/** Light theme color values (default) */
+/** Dark theme color values (default) */
 export const kissDarkColors = {
   '--kiss-bg-base': '#000',
   '--kiss-bg-surface': '#0a0a0a',
@@ -67,7 +67,7 @@ export const kissDarkColors = {
   '--kiss-scrollbar-thumb': '#222',
 } as const;
 
-/** Dark theme color values */
+/** Light theme color values */
 export const kissLightColors = {
   '--kiss-bg-base': '#fff',
   '--kiss-bg-surface': '#fafafa',

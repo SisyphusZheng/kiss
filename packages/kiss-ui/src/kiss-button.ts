@@ -22,7 +22,7 @@
  * ```
  */
 
-import { css, type CSSResult, html, LitElement, type TemplateResult } from '@kissjs/core';
+import { css, type CSSResult, html, LitElement, nothing, type TemplateResult } from '@kissjs/core';
 import { kissDesignTokens } from './design-tokens.js';
 
 export const tagName = 'kiss-button';
@@ -139,6 +139,11 @@ export class KissButton extends LitElement {
   /** Button type: 'submit', 'button', or 'reset' (default: 'button'). Only applies in button mode (no href). */
   type: 'submit' | 'button' | 'reset' = 'button';
 
+  /** Prevent default on disabled anchor clicks */
+  private _preventClick(e: Event) {
+    e.preventDefault();
+  }
+
   override render(): TemplateResult {
     const classes = `btn btn--${this.variant} btn--${this.size}`;
 
@@ -148,11 +153,11 @@ export class KissButton extends LitElement {
       return html`
         <a
           class="${classes}"
-          href="${hrefAttr}"
-          target="${this.target}"
-          aria-disabled="${this.disabled || undefined}"
-          rel="${this.target === '_blank' ? 'noopener noreferrer' : undefined}"
-          @click="${this.disabled ? (e: Event) => e.preventDefault() : undefined}"
+          href="${hrefAttr ?? nothing}"
+          target="${this.target || nothing}"
+          aria-disabled="${this.disabled || nothing}"
+          rel="${this.target === '_blank' ? 'noopener noreferrer' : nothing}"
+          @click="${this.disabled ? this._preventClick : nothing}"
         >
           <slot></slot>
         </a>
