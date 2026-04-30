@@ -289,7 +289,8 @@ export class RoadmapPage extends LitElement {
           <h2>Phase 10：v0.4.0 PWA + 生态（进行中）</h2>
           <ul class="task-list">
             <li>PWA 支持 — 自动生成 manifest.json + sw.js（CacheFirst 策略）</li>
-            <li>博客模块 — 文档站新增 /blog/* 路由，dogfooding</li>
+            <li><code>@kissjs/blog</code> 设计完成 — <code>docs/decisions/0004-blog-system.md</code></li>
+            <li>博客系统实现在 <code>.kiss</code> compiler 之后（depends on Phase 11）</li>
             <li>腾讯在线文档同步 — 变更记录发布到 docs.qq.com</li>
             <li>v0.3.x 全量修复 — 35+ 项代码审查问题已清零</li>
           </ul>
