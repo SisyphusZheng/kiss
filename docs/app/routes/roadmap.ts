@@ -293,6 +293,7 @@ export class RoadmapPage extends LitElement {
             <li>博客系统实现在 <code>.kiss</code> compiler 之后（depends on Phase 11）</li>
             <li>腾讯在线文档同步 — 变更记录发布到 docs.qq.com</li>
             <li>v0.3.x 全量修复 — 35+ 项代码审查问题已清零</li>
+            <li>SSG 新项目 DSD 缺失 — 纯路由组件 SSR 输出空壳标签 <code>&lt;df-home defer-hydration&gt;&lt;/df-home&gt;</code>，未渲染 Shadow DOM。docs 站点因使用 <code>kiss-layout</code> 绕过此问题。根因在 <code>entry-descriptor.ts</code> 生成的 SSR 渲染代码中 Lit SSR <code>render()</code> 未被正确调用或 resolveAlias 导致 shim 不完整</li>
           </ul>
 
           <h2>Phase 11：v1.0 .kiss Compiler（规划中）</h2>
