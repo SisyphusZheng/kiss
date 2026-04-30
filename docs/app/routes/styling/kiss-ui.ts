@@ -60,7 +60,7 @@ export class KissUIPage extends LitElement {
 
           <h2>可用组件</h2>
           <p>
-            <span class="inline-code">@kissjs/ui</span> v0.1.4+ 提供以下 Web Components：
+            <span class="inline-code">@kissjs/ui</span> v0.3.3+ 提供以下 Web Components：
           </p>
 
           <div class="component-grid">
@@ -145,7 +145,7 @@ export class MyPage extends LitElement {
           <div class="callout warn">
             <p>
               <strong>历史说明</strong> — v0.1.0-0.1.3 是 WebAwesome CDN loader。v0.1.4+
-              是自有 Web Components 组件库。如需 WebAwesome，改用
+              开始自有 Web Components 组件库（当前 v0.3.3）。如需 WebAwesome，改用
               <span class="inline-code">inject</span> 选项手动注入 CDN。
             </p>
           </div>
