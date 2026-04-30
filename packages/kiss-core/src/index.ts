@@ -203,6 +203,24 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
           | Record<string, string>
           | import('vite').Alias[];
       }
+      // Auto-inject runtime shim if user didn't provide @kissjs/core alias
+      // This prevents build-time code (node:fs, Vite plugins) from leaking
+      // into the client/SSR bundle.
+      const userAlias = userConfig.resolve?.alias as Record<string, string> | undefined;
+      if (!userAlias || !userAlias['@kissjs/core']) {
+        return {
+          resolve: {
+            alias: {
+              '@kissjs/core': new URL('./kiss-runtime.js', import.meta.url).pathname,
+            },
+          },
+          build: {
+            rollupOptions: {
+              input: [VIRTUAL_ENTRY_ID],
+            },
+          },
+        };
+      }
       return {
         build: {
           rollupOptions: {

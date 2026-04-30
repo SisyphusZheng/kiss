@@ -84,12 +84,15 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         // can replicate the same module resolution
         // Priority: ctx.userResolveAlias (from config hook) → config.resolve.alias (from configResolved)
         resolveAlias: serializeAlias(ctx?.userResolveAlias || config.resolve?.alias),
-        ssrNoExternal: (options.ssr?.noExternal || []).map((item) => {
-          if (item instanceof RegExp) {
-            return { __type: 'RegExp', source: item.source, flags: item.flags };
-          }
-          return item;
-        }),
+        // Priority: options.ssr (from kiss() plugin options) → config.ssr (from Vite config)
+        ssrNoExternal: ((options.ssr?.noExternal ||
+          (config.ssr as { noExternal?: (string | RegExp)[] } | undefined)?.noExternal) || [])
+          .map((item) => {
+            if (item instanceof RegExp) {
+              return { __type: 'RegExp', source: item.source, flags: item.flags };
+            }
+            return item;
+          }),
         islandsDir: options.islandsDir || 'app/islands',
         routesDir: options.routesDir || 'app/routes',
         componentsDir: options.componentsDir || 'app/components',
