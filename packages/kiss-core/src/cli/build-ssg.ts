@@ -148,6 +148,9 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       (globalThis as Record<string, unknown>).exports = {};
     }
 
+    const { readdirSync, readFileSync, writeFileSync, existsSync } = await import('node:fs');
+    const { join, resolve, dirname } = await import('node:path');
+
     const server = await createServer({
       configFile: false,
       root,
@@ -225,6 +228,22 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
 
       console.log(`[KISS SSG] Static site generated → ${outputDir}`);
 
+      // Find HTML files recursively in output directory
+      function findHtmlFiles(dir: string): string[] {
+        const results: string[] = [];
+        try {
+          for (const entry of readdirSync(dir)) {
+            const fullPath = join(dir, entry.name);
+            if (entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' && entry.name !== 'server') {
+              results.push(...findHtmlFiles(fullPath));
+            } else if (entry.name.endsWith('.html')) {
+              results.push(fullPath);
+            }
+          }
+        } catch { /* ignore */ }
+        return results;
+      }
+
       const basePath = options.base || '/';
 
       // Inject client script tag into all HTML files
@@ -270,6 +289,71 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
         phase: 3,
         headExtras: options.headExtras,
       });
+
+      // Generate PWA files (manifest.json + sw.js) if options include PWA config
+      const pwa = (options as Record<string, unknown>).pwa as
+        | { name?: string; shortName?: string; themeColor?: string; backgroundColor?: string }
+        | undefined;
+      if (pwa) {
+        const manifest = {
+          name: pwa.name || 'KISS App',
+          short_name: pwa.shortName || 'KISS',
+          start_url: basePath,
+          display: 'standalone' as const,
+          theme_color: pwa.themeColor || '#000000',
+          background_color: pwa.backgroundColor || '#ffffff',
+          icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        };
+        writeFileSync(join(outputDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+        console.log('[KISS SSG] PWA manifest.json generated');
+
+        // Simple CacheFirst service worker
+        const swCode = `const CACHE = 'kiss-v1';
+const PRECACHE = ['/', '/index.html'];
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
+  self.skipWaiting();
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(clients.claim());
+});
+self.addEventListener('fetch', (e) => {
+  if (e.request.url.includes('/api/')) {
+    e.respondWith(networkFirst(e.request));
+  } else {
+    e.respondWith(cacheFirst(e.request));
+  }
+});
+async function cacheFirst(req) {
+  const cached = await caches.match(req);
+  return cached || fetch(req).then((r) => { caches.open(CACHE).then((c) => c.put(req, r)); return r; });
+}
+async function networkFirst(req) {
+  try {
+    const res = await fetch(req);
+    caches.open(CACHE).then((c) => c.put(req, res.clone()));
+    return res;
+  } catch { return caches.match(req); }
+}`;
+        writeFileSync(join(outputDir, 'sw.js'), swCode);
+        console.log('[KISS SSG] PWA sw.js generated');
+
+        // Inject manifest link + sw registration into HTML files
+        const manifestLink = '<link rel="manifest" href="/manifest.json">';
+        const swScript = '<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script>';
+        const htmlFiles = findHtmlFiles(outputDir);
+        for (const htmlPath of htmlFiles) {
+          let html = readFileSync(htmlPath, 'utf-8');
+          if (!html.includes('rel="manifest"')) {
+            html = html.replace('</head>', `${manifestLink}</head>`);
+          }
+          if (!html.includes('serviceWorker')) {
+            html = html.replace('</body>', `${swScript}</body>`);
+          }
+          writeFileSync(htmlPath, html);
+        }
+        console.log(`[KISS SSG] PWA: injected manifest + sw into ${htmlFiles.length} HTML files`);
+      }
     } finally {
       await server.close();
     }

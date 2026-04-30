@@ -115,7 +115,7 @@ export class ChangelogPage extends LitElement {
 
           <div class="version-section">
             <div class="version-header">
-              <span class="version-number">0.3.3</span>
+              <span class="version-number">0.3.4</span>
               <span class="version-date">2026-04-30</span>
             </div>
 
@@ -449,7 +449,7 @@ export class ChangelogPage extends LitElement {
             </thead>
             <tbody>
               <tr>
-                <td>0.3.3</td>
+                <td>0.3.4</td>
                 <td>2026-04-30</td>
                 <td>Code audit fixes + upstream compat docs + version bump + release</td>
               </tr>

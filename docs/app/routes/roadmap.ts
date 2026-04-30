@@ -180,15 +180,21 @@ export class RoadmapPage extends LitElement {
               </tr>
               <tr>
                 <td>Phase 9</td>
-                <td>v0.3.3 — 代码审查</td>
+                <td>v0.3.4 — 代码审查</td>
                 <td>全量 audit + CI 并行 + 35+ 项修复</td>
                 <td class="status-done">完成</td>
               </tr>
               <tr>
                 <td>Phase 10</td>
-                <td>v0.4.0 — 稳定性</td>
-                <td>P0 清零、API 稳定、文档完善</td>
+                <td>v0.4.0 — PWA + 生态</td>
+                <td>PWA 支持、博客模块、在线文档</td>
                 <td>进行中</td>
+              </tr>
+              <tr>
+                <td>Phase 11</td>
+                <td>v1.0 — .kiss Compiler</td>
+                <td>零运行时编译器、消灭 Lit</td>
+                <td>规划中</td>
               </tr>
             </tbody>
           </table>
@@ -268,7 +274,7 @@ export class RoadmapPage extends LitElement {
             <li>build-client.ts base=/client/ 修复 Island chunk URL</li>
           </ul>
 
-          <h2>Phase 9：v0.3.3 代码审查（已完成）</h2>
+          <h2>Phase 9：v0.3.4 代码审查（已完成）</h2>
           <ul class="task-list">
             <li>三轮迭代审查 + 两轮 agent 深搜 — 35+ 项修复</li>
             <li>P0: kiss-input undefined 字符串, CLI exports 缺失, SSG CJS polyfill 时序</li>
@@ -280,12 +286,23 @@ export class RoadmapPage extends LitElement {
             <li>JSR publish typecheck 修复 — noExternalPatterns 类型断言</li>
           </ul>
 
-          <h2>Phase 10：v0.4.0 稳定性（进行中）</h2>
+          <h2>Phase 10：v0.4.0 PWA + 生态（进行中）</h2>
           <ul class="task-list">
-            <li>P0 清零 — 所有已知 P0 问题已修复并验证</li>
-            <li>API 稳定性 — 冻结公有 API 迎接 v1.0</li>
-            <li>文档完善 — 架构/指南/API 文档全覆盖</li>
-            <li>Upstream 兼容矩阵 — 记录已知依赖问题</li>
+            <li>PWA 支持 — 自动生成 manifest.json + sw.js（CacheFirst 策略）</li>
+            <li>博客模块 — 文档站新增 /blog/* 路由，dogfooding</li>
+            <li>腾讯在线文档同步 — 变更记录发布到 docs.qq.com</li>
+            <li>v0.3.x 全量修复 — 35+ 项代码审查问题已清零</li>
+          </ul>
+
+          <h2>Phase 11：v1.0 .kiss Compiler（规划中）</h2>
+          <p class="subtitle">彻底消灭 Lit，零运行时 Web Components。</p>
+          <ul class="task-list">
+            <li>发明 <code>.kiss</code> 文件格式 — 声明式组件（template + script + style）</li>
+            <li>编译器：<code>.kiss → vanilla Custom Element</code>（0 runtime deps）</li>
+            <li>消除：Lit 58kb gzip、@lit-labs/ssr、hydration、CJS polyfill</li>
+            <li>SSR 变为同步 string concat：<code>template.innerHTML</code></li>
+            <li>保留 Lit 作为可选 fallback（<code>compiler: 'auto'</code>）</li>
+            <li>详见证：<code>docs/decisions/0002-kiss-compiler-eliminate-lit.md</code></li>
           </ul>
 
           <h2>已解决的技术债</h2>
