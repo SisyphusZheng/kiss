@@ -36,6 +36,12 @@ export default defineConfig({
       ssr: {
         noExternal: ['@kissjs/ui'],
       },
+      pwa: {
+        name: 'KISS Framework',
+        shortName: 'KISS',
+        themeColor: '#000000',
+        backgroundColor: '#ffffff',
+      },
       inject: {
         stylesheets: [
           'https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css',

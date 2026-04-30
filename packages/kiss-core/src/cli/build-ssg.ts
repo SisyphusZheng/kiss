@@ -38,6 +38,7 @@ interface BuildSSGOptions {
   hydrationStrategy?: 'eager' | 'lazy' | 'idle' | 'visible';
   resolveAlias?: Record<string, string> | import('vite').Alias[];
   base?: string;
+  pwa?: { name?: string; shortName?: string; themeColor?: string; backgroundColor?: string };
 }
 
 async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
@@ -73,10 +74,13 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     }
     if (!options.hydrationStrategy && metadata.hydrationStrategy) {
       options.hydrationStrategy = metadata.hydrationStrategy;
-      // v0.3.0 note: hydrationStrategy controls WHEN defer-hydration is removed
-      // (eager/lazy/idle/visible), not HOW hydration works (always Lit hydrate()).
-      // The strategy IS functional — it's not deprecated, just rarely changed from 'lazy'.
     }
+    if (!options.pwa && metadata.pwa) {
+      options.pwa = metadata.pwa;
+    }
+    // v0.3.0 note: hydrationStrategy controls WHEN defer-hydration is removed
+    // (eager/lazy/idle/visible), not HOW hydration works (always Lit hydrate()).
+    // The strategy IS functional — it's not deprecated, just rarely changed from 'lazy'.
   } catch {
     console.log('[KISS] No .kiss/build-metadata.json found — using provided island list');
   }

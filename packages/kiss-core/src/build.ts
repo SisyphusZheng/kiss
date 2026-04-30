@@ -96,6 +96,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         middleware: options.middleware || null,
         headExtras: options.headExtras || '',
         html: options.html || {},
+        pwa: options.pwa || null,
         // hydrationStrategy controls WHEN defer-hydration is removed (not HOW).
         // It IS functional — see build-ssg.ts for usage.
         hydrationStrategy: options.island?.hydrationStrategy || 'lazy',

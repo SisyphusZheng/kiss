@@ -97,6 +97,19 @@ export interface FrameworkOptions {
     outDir?: string;
   };
 
+  /**
+   * PWA configuration. When set, build:ssg generates:
+   * - manifest.json (Web App Manifest)
+   * - sw.js (CacheFirst service worker)
+   * - Injects manifest link + sw registration into all HTML pages
+   */
+  pwa?: {
+    name?: string;
+    shortName?: string;
+    themeColor?: string;
+    backgroundColor?: string;
+  };
+
   /** Middleware configuration (build-time Hono + dev server only) */
   middleware?: {
     /** Enable CORS (default: true) */
