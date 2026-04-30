@@ -20,7 +20,7 @@
 
 import { join } from 'node:path';
 import process from 'node:process';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readdirSync, readFileSync, unlinkSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
 import { SsrRenderError } from '../errors.js';
 
@@ -39,6 +39,27 @@ interface BuildSSGOptions {
   resolveAlias?: Record<string, string> | import('vite').Alias[];
   base?: string;
   pwa?: { name?: string; shortName?: string; themeColor?: string; backgroundColor?: string };
+}
+
+/** Recursively find all .html files in a directory (excluding client/, server/, hidden dirs). */
+function findHtmlFiles(dir: string): string[] {
+  const results: string[] = [];
+  try {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = join(dir, entry.name);
+      if (
+        entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'client' &&
+        entry.name !== 'server'
+      ) {
+        results.push(...findHtmlFiles(fullPath));
+      } else if (entry.name.endsWith('.html')) {
+        results.push(fullPath);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return results;
 }
 
 async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
@@ -152,7 +173,7 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       (globalThis as Record<string, unknown>).exports = {};
     }
 
-    const { readdirSync, readFileSync, writeFileSync, existsSync } = await import('node:fs');
+    const { readFileSync, writeFileSync, existsSync } = await import('node:fs');
     const { join, _resolve, _dirname } = await import('node:path');
 
     const server = await createServer({
@@ -230,32 +251,13 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
         console.log('[KISS SSG] 404 page → dist/404.html (GitHub Pages)');
       }
 
-      function findHtmlFiles(dir: string): string[] {
-        const results: string[] = [];
-        try {
-          for (const entry of readdirSync(dir, { withFileTypes: true })) {
-            const fullPath = join(dir, entry.name);
-            if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'client' && entry.name !== 'server') {
-              results.push(...findHtmlFiles(fullPath));
-            } else if (entry.name.endsWith('.html')) {
-              results.push(fullPath);
-            }
-          }
-        } catch { /* ignore */ }
-        return results;
-      }
-
       // Convert flat HTML files to clean URLs: about.html → about/index.html
-      // This ensures both /about and /about.html work locally and on any static host.
-      try {
-        const allFiles = nodeFs.readdirSync(outputDir);
-        const allHtmlFiles = findHtmlFiles(outputDir);
-      } catch (e) {
-      }
       const allHtmlFiles = findHtmlFiles(outputDir);
       for (const filePath of allHtmlFiles) {
         const rel = nodePath.relative(outputDir, filePath);
-        if (rel.endsWith('index.html') || rel === '404.html' || rel.includes(nodePath.sep)) continue;
+        if (rel.endsWith('index.html') || rel === '404.html' || rel.includes(nodePath.sep)) {
+          continue;
+        }
         const baseName = rel.replace(/\.html$/, '');
         const dirPath = join(outputDir, baseName);
         const indexPath = join(dirPath, 'index.html');

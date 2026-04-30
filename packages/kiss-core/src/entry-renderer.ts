@@ -313,7 +313,6 @@ export function renderEntry(desc: EntryDescriptor): string {
   // Without registration, <unsafeHTML> produces bare tags without DSD content.
   // Each SSR route module exports { default: ComponentClass, tagName: string }.
   for (const route of desc.pageRoutes) {
-    const tag = `\${${route.varName}.tagName || '${route.defaultTagName}'}`;
     b.push(`if (!customElements.get(${route.varName}.tagName || '${route.defaultTagName}')) {`);
     b.push(
       `  customElements.define(${route.varName}.tagName || '${route.defaultTagName}', ${route.varName}.default)`,
