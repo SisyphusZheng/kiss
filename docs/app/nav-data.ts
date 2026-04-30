@@ -72,6 +72,7 @@ export const SIDEBAR_NAV: NavSection[] = [
   {
     section: 'Examples',
     items: [
+      { path: '/demo', label: 'Live Demo' },
       { path: '/examples', label: 'Overview' },
       { path: '/examples/hello', label: 'Hello World' },
       { path: '/examples/minimal-blog', label: 'Minimal Blog' },
@@ -98,5 +99,6 @@ export const HEADER_NAV: HeaderNavItem[] = [
   { href: '/guide/getting-started', label: 'Docs' },
   { href: '/ui', label: 'UI' },
   { href: '/blog', label: 'Blog' },
+  { href: '/demo', label: 'Demo' },
   { href: 'https://jsr.io/@kissjs/core', label: 'JSR' },
 ];

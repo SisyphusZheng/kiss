@@ -42,26 +42,6 @@ jobs:
         working-directory: docs
         run: npx tsx ../packages/kiss-core/src/cli/build-ssg.ts
 
-      - name: Install demo dependencies
-        working-directory: demo-app
-        run: npm install
-
-      - name: Demo Phase 1 — SSR bundle
-        working-directory: demo-app
-        run: npx vite build
-
-      - name: Demo Phase 2 — Client island chunks
-        working-directory: demo-app
-        run: npx tsx ../packages/kiss-core/src/cli/build-client.ts
-
-      - name: Demo Phase 3 — SSG static HTML
-        working-directory: demo-app
-        run: npx tsx ../packages/kiss-core/src/cli/build-ssg.ts
-
-      - name: Combine docs + demo output
-        run: |
-          cp -r demo-app/dist docs/dist/demo
-
       - name: Deploy to gh-pages branch
         run: |
           cd docs/dist
