@@ -36,7 +36,7 @@ export class SecurityMiddlewarePage extends LitElement {
           </table>
 
           <h2>配置 CORS</h2>
-          <p>CORS 源通过 <span class="inline-code">kiss()</span> 选项配置——无需 <span class="inline-code">process.env</span>：</p>
+          <p>CORS 源通过 <span class="inline-code">kiss()</span> 选项配置——无需环境变量：</p>
           <code-block><pre><code>// vite.config.ts
 import { kiss } from '@kissjs/core';
 

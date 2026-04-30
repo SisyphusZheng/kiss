@@ -184,8 +184,7 @@ export default defineConfig({
           </p>
 
           <div class="nav-row">
-            <a href="/guide/architecture" class="nav-link">&larr; 架构</a>
-            <a href="/guide/testing" class="nav-link">测试 &rarr;</a>
+            <a href="/guide/testing" class="nav-link">&larr; 测试</a>
           </div>
         </div>
       </kiss-layout>

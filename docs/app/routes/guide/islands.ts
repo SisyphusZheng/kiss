@@ -9,8 +9,8 @@ export class IslandsGuidePage extends LitElement {
     .comparison-item { padding: 1rem 1.25rem; border: 1px solid var(--kiss-border); border-radius: 3px; }
     .comparison-item ul { margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--kiss-text-secondary);  }
     .comparison-item li { margin-bottom: 0.25rem; }
-    .comparison-item.spa { border-color: var(--wa-color-danger-200, #fecaca); }
-    .comparison-item.kiss { border-color: var(--wa-color-success-200, #bbf7d0); background: var(--wa-color-success-50, #f0fdf4); }
+    .comparison-item.spa { border-color: var(--kiss-border, #fecaca); }
+    .comparison-item.kiss { border-color: var(--kiss-accent, #bbf7d0); background: var(--kiss-bg-surface, #f0fdf4); }
 
     .decision-tree { padding: 1rem; background: var(--kiss-bg-surface); border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px 0; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; color: var(--kiss-text-secondary);  font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre-wrap; }
 

@@ -129,8 +129,11 @@ export default defineConfig({
 
           <h2>构建 &amp; 部署</h2>
           <code-block>
-            <pre><code>deno run -A npm:vite build
-  # 输出在 dist/ —— 部署到任何静态托管服务</code></pre></code-block>
+            <pre><code># KISS 三阶段构建（推荐）
+deno task build          # Phase 1 — SSR bundle
+deno task build:client   # Phase 2 — Island client chunks
+deno task build:ssg      # Phase 3 — Static HTML
+# 输出在 dist/ —— 部署到任何静态托管服务</code></pre></code-block>
 
           <div class="nav-row">
             <a href="/guide/api-design" class="nav-link">&larr; API 设计</a>

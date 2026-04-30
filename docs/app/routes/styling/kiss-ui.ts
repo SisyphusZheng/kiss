@@ -89,7 +89,7 @@ export class KissUIPage extends LitElement {
           <h2>使用示例</h2>
           <code-block
             ><pre><code>// app/routes/index.ts
-import { html, LitElement } from 'lit';
+import { html, LitElement } from '@kissjs/core';
 import '@kissjs/ui/kiss-button';
 import '@kissjs/ui/kiss-card';
 

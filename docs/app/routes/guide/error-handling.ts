@@ -10,7 +10,7 @@ export class ErrorHandlingPage extends LitElement {
       .error-hierarchy {
         padding: 1rem;
         background: var(--kiss-bg-surface);
-        border-left: 3px solid var(--wa-color-danger-500, #ef4444);
+        border-left: 3px solid var(--kiss-error, #ef4444);
         border-radius: 0 3px 3px 0;
         margin: 0.75rem 0;
         font-size: 0.8125rem;

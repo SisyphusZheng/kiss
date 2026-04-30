@@ -96,7 +96,7 @@ jobs:
 
           <div class="nav-row">
             <a href="/guide/security-middleware" class="nav-link">&larr; 安全 &amp; 中间件</a>
-            <a href="/guide/architecture" class="nav-link">架构 &rarr;</a>
+            <a href="/guide/deployment" class="nav-link">部署 &rarr;</a>
           </div>
         </div>
       </kiss-layout>

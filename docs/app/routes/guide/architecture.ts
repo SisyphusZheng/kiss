@@ -6,9 +6,6 @@ import '../../islands/code-block.js';
 export class ArchitecturePage extends LitElement {
   static override styles = [
     pageStyles,
-    css`
-
-:`,
   ];
   override render() {
     return html`
@@ -215,10 +212,8 @@ Phase 3: deno task build:ssg（静态 HTML）
           </p>
 
           <div class="nav-row">
-            <a href="/guide/testing" class="nav-link">&larr; 测试</a>
-            <a href="/guide/deployment" class="nav-link"
-              >部署 &rarr;</a
-            >
+            <a href="/guide/design-philosophy" class="nav-link">&larr; 设计哲学</a>
+            <a href="/guide/routing" class="nav-link">路由 &rarr;</a>
           </div>
         </div>
       </kiss-layout>
