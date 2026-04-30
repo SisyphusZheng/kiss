@@ -1,0 +1,19 @@
+{
+  ".kiss/.kiss-client-entry.ts": {
+    "file": "islands/client.js",
+    "name": "client",
+    "src": ".kiss/.kiss-client-entry.ts",
+    "isEntry": true,
+    "imports": [
+      "_island-counter-island-A4MIGGhb.js"
+    ],
+    "dynamicImports": [
+      "_island-counter-island-A4MIGGhb.js"
+    ]
+  },
+  "_island-counter-island-A4MIGGhb.js": {
+    "file": "islands/island-counter-island-A4MIGGhb.js",
+    "name": "island-counter-island",
+    "isDynamicEntry": true
+  }
+}
