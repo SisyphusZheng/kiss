@@ -87,17 +87,10 @@ async function buildClient(): Promise<void> {
       // fall back to tagName.ts for backward compat
       modulePath: resolve(
         root,
-        localIslandFiles[i] ? `${islandsDir}/${localIslandFiles[i]}` : `${islandsDir}/${tagName}.ts`,
+        localIslandFiles[i]
+          ? `${islandsDir}/${localIslandFiles[i]}`
+          : `${islandsDir}/${tagName}.ts`,
       ).replace(/\\/g, '/'),
-      isPackage: false,
-    })),
-    ...packageIslands.map((island: { tagName: string; modulePath: string }) => ({
-      tagName: island.tagName,
-      modulePath: island.modulePath,
-      isPackage: true,
-    })),
-      tagName,
-      modulePath: resolve(root, `${islandsDir}/${tagName}.ts`).replace(/\\/g, '/'),
       isPackage: false,
     })),
     ...packageIslands.map((island: { tagName: string; modulePath: string }) => ({

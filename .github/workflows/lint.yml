@@ -14,7 +14,7 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: "2"
+          deno-version: '2'
 
       # TODO: Include docs/ once upstream Deno fmt bug is fixed.
       # Bug: Deno fmt panics on html-tagged template literals containing HTML entities.

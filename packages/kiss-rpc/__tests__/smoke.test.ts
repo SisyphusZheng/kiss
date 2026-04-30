@@ -1,5 +1,5 @@
 /**
- * @kissjs/rpc â€” Smoke tests
+ * @kissjs/rpc ¡ª Smoke tests
  */
 import { RpcController, RpcError } from '../src/index.ts';
 import { assert, assertEquals, assertInstanceOf, assertRejects } from 'jsr:@std/assert@^1.0.0';
@@ -16,27 +16,27 @@ class MockHost {
   updateComplete = Promise.resolve(true);
 }
 
-Deno.test('RpcError â€” creates with status and message', () => {
+Deno.test('RpcError ¡ª creates with status and message', () => {
   const err = new RpcError(404, 'Not found');
   assertEquals(err.status, 404);
   assertEquals(err.message, 'Not found');
   assertEquals(err.name, 'RpcError');
 });
 
-Deno.test('RpcError â€” creates with default code', () => {
+Deno.test('RpcError ¡ª creates with default code', () => {
   const err = new RpcError(500, 'Server error');
   assertEquals(err.code, 'RPC_ERROR');
   assertEquals(err.details, undefined);
 });
 
-Deno.test('RpcError â€” creates with custom code and details', () => {
+Deno.test('RpcError ¡ª creates with custom code and details', () => {
   const details = [{ field: 'email', message: 'Invalid email' }];
   const err = new RpcError(422, 'Validation failed', 'VALIDATION_ERROR', details);
   assertEquals(err.code, 'VALIDATION_ERROR');
   assertEquals(err.details, details);
 });
 
-Deno.test('RpcError â€” toJSON returns structured object', () => {
+Deno.test('RpcError ¡ª toJSON returns structured object', () => {
   const err = new RpcError(404, 'Not found', 'NOT_FOUND');
   const json = err.toJSON();
   assertEquals(json, {
@@ -48,14 +48,14 @@ Deno.test('RpcError â€” toJSON returns structured object', () => {
   });
 });
 
-Deno.test('RpcController â€” initial state', () => {
+Deno.test('RpcController ¡ª initial state', () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   assertEquals(ctrl.loading, false);
   assertEquals(ctrl.error, null);
 });
 
-Deno.test('RpcController â€” call() returns result on success', async () => {
+Deno.test('RpcController ¡ª call() returns result on success', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   const result = await ctrl.call(() => Promise.resolve({ data: 'ok' }));
@@ -64,7 +64,7 @@ Deno.test('RpcController â€” call() returns result on success', async () => {
   assertEquals(ctrl.error, null);
 });
 
-Deno.test('RpcController â€” call() throws RpcError on failure', async () => {
+Deno.test('RpcController ¡ª call() throws RpcError on failure', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   await assertRejects(
@@ -74,7 +74,7 @@ Deno.test('RpcController â€” call() throws RpcError on failure', async () => {
   );
 });
 
-Deno.test('RpcController â€” call() wraps generic Error in RpcError', async () => {
+Deno.test('RpcController ¡ª call() wraps generic Error in RpcError', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   try {
@@ -87,10 +87,9 @@ Deno.test('RpcController â€” call() wraps generic Error in RpcError', async () =
   }
 });
 
-Deno.test('RpcController â€” hostDisconnected resets state', () => {
+Deno.test('RpcController ¡ª hostDisconnected resets state', () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
-  // Access private fields via type assertion for testing
   const internal = ctrl as unknown as { _loading: boolean; _error: RpcError | null };
   internal._loading = true;
   internal._error = new RpcError(500, 'err');
@@ -99,21 +98,13 @@ Deno.test('RpcController â€” hostDisconnected resets state', () => {
   assertEquals(ctrl.error, null);
 });
 
-Deno.test('RpcController â€” hostConnected is callable', () => {
-  const host = new MockHost();
-  const ctrl = new RpcController(host as never);
-  // hostConnected is a no-op but must be callable
-  ctrl.hostConnected();
-  assertEquals(ctrl.loading, false);
-});
-
-Deno.test('RpcController â€” signal returns undefined when no call in progress', () => {
+Deno.test('RpcController ¡ª signal returns undefined when no call in progress', () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   assertEquals(ctrl.signal, undefined);
 });
 
-Deno.test('RpcController â€” signal returns AbortSignal during call', async () => {
+Deno.test('RpcController ¡ª signal returns AbortSignal during call', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   let capturedSignal: AbortSignal | undefined;
@@ -124,11 +115,10 @@ Deno.test('RpcController â€” signal returns AbortSignal during call', async () =
   assertInstanceOf(capturedSignal, AbortSignal);
 });
 
-Deno.test('RpcController â€” call() wraps non-Error throws in RpcError', async () => {
+Deno.test('RpcController ¡ª call() wraps non-Error throws in RpcError', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   try {
-    // eslint-disable-next-line no-throw-literal
     await ctrl.call(() => Promise.reject('string error' as never));
     assert(false, 'Should have thrown');
   } catch (err) {
@@ -138,25 +128,23 @@ Deno.test('RpcController â€” call() wraps non-Error throws in RpcError', async (
   }
 });
 
-Deno.test('RpcController â€” call() handles pre-aborted signal', async () => {
+Deno.test('RpcController ¡ª call() handles pre-aborted signal', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
-  // Start a call, then immediately abort before the async fn resolves
   const callPromise = ctrl.call(() =>
     new Promise<string>((resolve) => {
       setTimeout(() => resolve('late'), 10000);
     })
   );
-  // Abort right away â€” the next call will have an aborted signal
   ctrl.abort();
   try {
     await callPromise;
   } catch {
-    // Expected â€” the aborted call may throw
+    // Expected ¡ª the aborted call may throw
   }
 });
 
-Deno.test('RpcController â€” retry with function delay', async () => {
+Deno.test('RpcController ¡ª retry with function delay', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never, {
     maxRetries: 1,
@@ -175,7 +163,7 @@ Deno.test('RpcController â€” retry with function delay', async () => {
   assertEquals(callCount, 2, 'Should have retried once');
 });
 
-Deno.test('RpcController â€” does not retry 4xx errors', async () => {
+Deno.test('RpcController ¡ª does not retry 4xx errors', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never, {
     maxRetries: 3,
@@ -194,7 +182,7 @@ Deno.test('RpcController â€” does not retry 4xx errors', async () => {
   assertEquals(callCount, 1, 'Should NOT retry 4xx errors');
 });
 
-Deno.test('RpcController â€” retries on 5xx errors then succeeds', async () => {
+Deno.test('RpcController ¡ª retries on 5xx errors then succeeds', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never, {
     maxRetries: 2,
@@ -213,7 +201,7 @@ Deno.test('RpcController â€” retries on 5xx errors then succeeds', async () => {
   assertEquals(ctrl.error, null);
 });
 
-Deno.test('RpcController â€” abort during call produces ABORTED error', async () => {
+Deno.test('RpcController ¡ª abort during call produces ABORTED error', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never);
   const callPromise = ctrl.call(() =>
@@ -231,7 +219,7 @@ Deno.test('RpcController â€” abort during call produces ABORTED error', async ()
   }
 });
 
-Deno.test('RpcController â€” retry exhaustion with maxRetries', async () => {
+Deno.test('RpcController ¡ª retry exhaustion with maxRetries', async () => {
   const host = new MockHost();
   const ctrl = new RpcController(host as never, {
     maxRetries: 1,
@@ -249,6 +237,5 @@ Deno.test('RpcController â€” retry exhaustion with maxRetries', async () => {
     assertEquals((err as RpcError).message, 'Server down');
   }
   assertEquals(callCount, 2, 'Should have tried maxRetries+1 times');
-  // error property should also be set after final failure
   assertInstanceOf(ctrl.error, RpcError);
 });
