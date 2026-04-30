@@ -7,33 +7,65 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-
       - name: Install dependencies
         run: deno install --node-modules-dir
-
-      - name: Run type check (compiler)
+      - name: Run type check
         run: deno check packages/kiss-core/src/index.ts packages/kiss-rpc/src/index.ts packages/kiss-ui/src/index.ts
 
+  test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Install dependencies
+        run: deno install --node-modules-dir
       - name: Build kiss-ui (needed for scanPackageIslands test)
         working-directory: packages/kiss-ui
         run: deno task build
-
       - name: Run kiss-core tests
         run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env
 
+  test-rpc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Install dependencies
+        run: deno install --node-modules-dir
       - name: Run kiss-rpc tests
         run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write
 
+  test-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Install dependencies
+        run: deno install --node-modules-dir
       - name: Run kiss-ui tests
         run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env
 
+  test-create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Install dependencies
+        run: deno install --node-modules-dir
       - name: Run create-kiss tests
         run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env

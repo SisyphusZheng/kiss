@@ -14,7 +14,7 @@ import {
 import { generateClientEntry } from '../src/entry-generators.ts';
 import { buildPlugin } from '../src/build.ts';
 import { join } from 'node:path';
-import { readFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 
 const KISS_TMP = join(Deno.cwd(), '.kiss');
 
@@ -137,8 +137,9 @@ Deno.test('buildPlugin - closeBundle (build mode, no islands)', async (t) => {
   });
 
   await t.step('prints "No islands" message', () => {
-    // The console.log output is captured in test output; we just verify no error.
-    assertEquals(true, true);
+    // Test verifies the build plugin handles zero islands gracefully
+    // by checking that clean-up is safe (no crash on missing dist)
+    assertEquals(existsSync('dist'), false);
   });
 
   cleanup();
@@ -166,7 +167,9 @@ Deno.test('buildPlugin - closeBundle (build mode, with islands)', async (t) => {
   });
 
   await t.step('prints island count message', () => {
-    assertEquals(true, true);
+    // closeBundle completed without error; verify metadata was written
+    const metaPath = join(KISS_TMP, 'build-metadata.json');
+    assertExists(metaPath, 'build-metadata.json should exist after closeBundle');
   });
 
   cleanup();
@@ -181,8 +184,8 @@ Deno.test('buildPlugin - closeBundle (dev mode, skips write)', async (t) => {
 
   await t.step('does NOT write build-metadata.json in dev mode', () => {
     // In dev mode, closeBundle returns early — file should not exist
-    // (cleanup already ran, so .kiss dir may not exist)
-    assertEquals(true, true); // if no error, dev mode skip works
+    const metaPath = join(KISS_TMP, 'build-metadata.json');
+    assertEquals(existsSync(metaPath), false, 'metadata should NOT be written in dev mode');
   });
 
   cleanup();

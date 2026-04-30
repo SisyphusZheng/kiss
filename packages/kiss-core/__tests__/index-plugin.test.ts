@@ -108,8 +108,8 @@ Deno.test('kiss() inject.stylesheets → headExtras', () => {
     inject: { stylesheets: ['https://cdn.example.com/app.css'] },
   });
   assertEquals(plugins.length, 5);
-  // headExtras computed internally; plugin array created successfully = branch covered
-  assertEquals(true, true);
+  // headExtras computed internally from inject.stylesheets
+  // Verification: plugin construction succeeds for inject-only config
 });
 
 Deno.test('kiss() inject.scripts → headExtras', () => {
@@ -233,8 +233,7 @@ Deno.test('kiss() with packageIslands option (empty array)', () => {
 Deno.test('kiss() applies default routesDir and islandsDir', () => {
   const plugins = kiss();
   assertEquals(plugins.length, 5);
-  // Defaults are applied internally; success = branch covered
-  assertEquals(true, true);
+  // Defaults applied internally via resolvedOptions
 });
 
 // ─── kiss() buildStart hook (requires filesystem) ──────────
