@@ -75,6 +75,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
       // Write build metadata — this is the bridge to Phase 2/3 CLI scripts
       const metadata = {
         islandTagNames: ctx?.islandTagNames || [],
+        islandFiles: ctx?.islandFiles || [],
         packageIslands: ctx?.packageIslands || [],
         root,
         outDir,

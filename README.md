@@ -4,8 +4,7 @@
 > 融合 Jamstack 部署模型与声明式岛屿交互范式的全栈架构风格。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/SisyphusZheng/openzhi/actions)
-<!-- Note: coverage badge is manually maintained. Update after running `deno task test` with --coverage flag -->
+[![CI](https://github.com/SisyphusZheng/kiss/actions/workflows/test.yml/badge.svg)](https://github.com/SisyphusZheng/kiss/actions/workflows/test.yml)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF)](https://vitejs.dev/)
 [![Hono](https://img.shields.io/badge/Hono-4.x-E36002)](https://hono.dev/)
 [![Lit](https://img.shields.io/badge/Lit-3.x-325CFF)](https://lit.dev/)

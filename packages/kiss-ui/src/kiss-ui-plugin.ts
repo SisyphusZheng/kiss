@@ -31,8 +31,9 @@ export interface KissUIOptions {
   version?: string;
 
   /**
-   * Use CDN (default: true)
-   * Set to false to use npm package instead
+   * Inject Web Awesome via CDN (default: true).
+   * Set to false to disable CDN injection — import the package manually
+   * via npm or use kiss({ inject }) for full control.
    */
   cdn?: boolean;
 }

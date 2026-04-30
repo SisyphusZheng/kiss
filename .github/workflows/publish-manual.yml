@@ -19,7 +19,7 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: "2"
 
       - name: Build @kissjs/ui (if publishing ui)
         if: contains(github.event.inputs.packages, 'ui')

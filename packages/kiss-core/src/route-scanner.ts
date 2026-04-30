@@ -294,9 +294,13 @@ export function fileToTagName(fileName: string): string {
 }
 
 /**
- * Scan islands directory for island files.
+ * Scan islands directory recursively for island files.
+ * Returns paths relative to islandsDir (e.g., ['my-counter.ts', 'posts/index.ts']).
  */
-export async function scanIslands(islandsDir: string): Promise<string[]> {
+export async function scanIslands(
+  islandsDir: string,
+  relativeDir: string = '',
+): Promise<string[]> {
   const files: string[] = [];
   let entries: string[];
 
@@ -308,8 +312,22 @@ export async function scanIslands(islandsDir: string): Promise<string[]> {
 
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
-    if (/\.(ts|tsx|js|jsx)$/.test(entry)) {
-      files.push(entry);
+
+    const fullPath = join(islandsDir, entry);
+    let fileStat;
+    try {
+      fileStat = await stat(fullPath);
+    } catch {
+      continue;
+    }
+
+    const relativePath = relativeDir ? join(relativeDir, entry) : entry;
+
+    if (fileStat.isDirectory()) {
+      const subFiles = await scanIslands(fullPath, relativePath);
+      files.push(...subFiles);
+    } else if (/\.(ts|tsx|js|jsx)$/.test(entry)) {
+      files.push(relativePath);
     }
   }
 

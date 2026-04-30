@@ -144,8 +144,6 @@ export class RpcController implements ReactiveController {
     };
   }
 
-  hostConnected() {}
-
   hostDisconnected() {
     this.abort();
     this._loading = false;

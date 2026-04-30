@@ -26,6 +26,7 @@ import {
 
 interface BuildMetadata {
   islandTagNames: string[];
+  islandFiles: string[];
   packageIslands: Array<{ tagName: string; modulePath: string }>;
   root: string;
   outDir: string;
@@ -56,6 +57,7 @@ async function buildClient(): Promise<void> {
   const outDir = metadata.outDir || 'dist';
   const islandsDir = metadata.islandsDir || 'app/islands';
   const localIslands = metadata.islandTagNames || [];
+  const localIslandFiles = metadata.islandFiles || [];
   const packageIslands = metadata.packageIslands || [];
 
   // Debug: log resolve aliases for CI troubleshooting
@@ -79,7 +81,21 @@ async function buildClient(): Promise<void> {
   const clientEntryPath = join(kissTmpDir, '.kiss-client-entry.ts');
 
   const islandEntries: ClientIslandEntry[] = [
-    ...localIslands.map((tagName: string) => ({
+    ...localIslands.map((tagName: string, i: number) => ({
+      tagName,
+      // Use file path if available (supports subdirectory islands),
+      // fall back to tagName.ts for backward compat
+      modulePath: resolve(
+        root,
+        localIslandFiles[i] ? `${islandsDir}/${localIslandFiles[i]}` : `${islandsDir}/${tagName}.ts`,
+      ).replace(/\\/g, '/'),
+      isPackage: false,
+    })),
+    ...packageIslands.map((island: { tagName: string; modulePath: string }) => ({
+      tagName: island.tagName,
+      modulePath: island.modulePath,
+      isPackage: true,
+    })),
       tagName,
       modulePath: resolve(root, `${islandsDir}/${tagName}.ts`).replace(/\\/g, '/'),
       isPackage: false,

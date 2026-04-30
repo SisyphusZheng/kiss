@@ -170,6 +170,10 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       },
     });
 
+    // Clean up CJS polyfill — don't leave global pollution
+    delete (globalThis as Record<string, unknown>).module;
+    delete (globalThis as Record<string, unknown>).exports;
+
     try {
       const module = await server.ssrLoadModule(tmpEntryPath);
       const app = module.default;

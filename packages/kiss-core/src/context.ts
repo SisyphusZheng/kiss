@@ -52,7 +52,11 @@ export function extractParams(
     if (part.startsWith(':')) {
       const paramName = part.slice(1);
       if (i < pathParts.length) {
-        params[paramName] = decodeURIComponent(pathParts[i]);
+        try {
+          params[paramName] = decodeURIComponent(pathParts[i]);
+        } catch {
+          params[paramName] = pathParts[i]; // fallback: raw on malformed encoding
+        }
       }
     }
   }

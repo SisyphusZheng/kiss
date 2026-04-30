@@ -233,6 +233,7 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
         const islandsRoot = join(process.cwd(), resolvedOptions.islandsDir || 'app/islands');
         const islandFiles = await scanIslands(islandsRoot);
         ctx.islandTagNames = islandFiles.map((f) => fileToTagName(f));
+        ctx.islandFiles = islandFiles;
 
         // Scan package islands if configured
         if (resolvedOptions.packageIslands && resolvedOptions.packageIslands.length > 0) {

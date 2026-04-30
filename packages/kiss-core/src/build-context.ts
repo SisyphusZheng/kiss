@@ -21,6 +21,9 @@ export class KissBuildContext {
   /** Island tag names discovered during route scanning (local islands) */
   islandTagNames: string[] = [];
 
+  /** Relative file paths for local islands (e.g., 'my-counter.ts', 'posts/index.ts') */
+  islandFiles: string[] = [];
+
   /** Package islands discovered from npm/JSR packages */
   packageIslands: PackageIslandMeta[] = [];
 
@@ -50,6 +53,7 @@ export class KissBuildContext {
   reset(): void {
     this.honoEntryCode = '';
     this.islandTagNames = [];
+    this.islandFiles = [];
     this.packageIslands = [];
     this.buildCompleted = false;
     this.resolvedConfig = null;
