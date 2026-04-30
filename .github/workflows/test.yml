@@ -27,22 +27,13 @@ jobs:
         run: deno task build
 
       - name: Run kiss-core tests
-        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
+        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env
 
       - name: Run kiss-rpc tests
-        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write --coverage=coverage
+        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write
 
       - name: Run kiss-ui tests
-        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
+        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env
 
       - name: Run create-kiss tests
-        run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
-
-      - name: Generate coverage report
-        run: deno coverage coverage/ --lcov > coverage.lcov
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.lcov
+        run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env
