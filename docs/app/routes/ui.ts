@@ -15,7 +15,7 @@ import '@kissjs/ui/kiss-input';
 import '@kissjs/ui/kiss-code-block';
 
 export class UIShowcase extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       :host {
@@ -295,7 +295,7 @@ export class UIShowcase extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout current-path="/ui">
         <div class="container">

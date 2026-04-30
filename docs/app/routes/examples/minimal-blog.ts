@@ -13,7 +13,7 @@ import '../../islands/code-block.js';
 // kiss-theme-toggle is registered via packageIslands (no local import needed)
 
 export class MinimalBlogDemoPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .demo-container {
@@ -69,7 +69,7 @@ export class MinimalBlogDemoPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout current-path="/examples/minimal-blog">
         <div class="container">

@@ -4,12 +4,12 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ApiRoutesPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/api-routes">
         <div class="container">

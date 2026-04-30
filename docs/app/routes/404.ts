@@ -6,7 +6,7 @@ import { pageStyles } from '../components/page-styles.js';
 import '@kissjs/ui/kiss-layout';
 
 export class NotFoundPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .error-code {
@@ -38,7 +38,7 @@ export class NotFoundPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout>
         <div class="container" style="text-align:center;padding-top:4rem">

@@ -4,10 +4,10 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class TestingPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/testing">
         <div class="container">

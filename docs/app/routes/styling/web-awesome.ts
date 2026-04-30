@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class WebAwesomePage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .demo-box {
@@ -21,7 +21,7 @@ export class WebAwesomePage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/styling/web-awesome">
         <div class="container">

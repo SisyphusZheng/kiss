@@ -7,7 +7,7 @@ import '@kissjs/ui/kiss-layout';
 import '../islands/code-block.js';
 
 export class ContributingPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .layer-diagram {
@@ -43,7 +43,7 @@ export class ContributingPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/contributing">
         <div class="container">

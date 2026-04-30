@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout'
 import '../../islands/code-block.js'
 
 export class IslandsGuidePage extends LitElement {
-  static styles = [pageStyles, css`
+  static override styles = [pageStyles, css`
     .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 1.5rem; }
     .comparison-item { padding: 1rem 1.25rem; border: 1px solid var(--kiss-border); border-radius: 3px; }
     .comparison-item ul { margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--kiss-text-secondary);  }
@@ -15,7 +15,7 @@ export class IslandsGuidePage extends LitElement {
     .decision-tree { padding: 1rem; background: var(--kiss-bg-surface); border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px 0; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; color: var(--kiss-text-secondary);  font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre-wrap; }
 
   `]
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/islands">
         <div class="container">
@@ -90,7 +90,7 @@ export default class MyCounter extends LitElement {
     this.count = 0
   }
 
-  render() {
+  override render() {
     return html\`
       &lt;button @click=\${() => this.count++}&gt;+&lt;/button&gt;
       &lt;span&gt;\${this.count}&lt;/span&gt;
@@ -116,7 +116,7 @@ import { LitElement, html, css } from 'lit'
 export const tagName = 'my-counter'
 export default class MyCounter extends LitElement {
   static properties = { count: { type: Number } }
-  render() {
+  override render() {
     return html\`&lt;button @click=\${() => this.count++}&gt;Count: \${this.count}&lt;/button&gt;\`
   }
 }

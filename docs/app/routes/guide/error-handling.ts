@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ErrorHandlingPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .error-hierarchy {
@@ -18,7 +18,7 @@ export class ErrorHandlingPage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/error-handling">
         <div class="container">

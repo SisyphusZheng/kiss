@@ -13,7 +13,7 @@ import '@kissjs/ui/kiss-card';
 import '@kissjs/ui/kiss-button';
 
 export class HelloDemoPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .demo-container {
@@ -49,7 +49,7 @@ export class HelloDemoPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout current-path="/examples/hello">
         <div class="container">

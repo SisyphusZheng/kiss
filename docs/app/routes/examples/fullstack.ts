@@ -14,7 +14,7 @@ import '../../islands/code-block.js';
 import '../../islands/counter-island.js';
 
 export class FullstackDemoPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .demo-container {
@@ -77,7 +77,7 @@ export class FullstackDemoPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout current-path="/examples/fullstack">
         <div class="container">

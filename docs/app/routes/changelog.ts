@@ -6,7 +6,7 @@ import { pageStyles } from '../components/page-styles.js';
 import '@kissjs/ui/kiss-layout';
 
 export class ChangelogPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .version-section {
@@ -98,7 +98,7 @@ export class ChangelogPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/changelog">
         <div class="container">
@@ -150,12 +150,12 @@ export class ChangelogPage extends LitElement {
                 <li><strong>Island 计数器重复渲染（v0.2.x 历史问题）</strong>：静态 import 导致 customElements.define() 在 hydration 补丁执行前运行，Lit 对已定义的元素做 DSD 水合时先全量渲染再 patch，造成两次渲染。修复：改为动态 import() 确保 hydration 补丁先执行</li>
                 <li><strong>Island chunk 404</strong>：build-client.ts 未设置 base='/client/'，Vite 生成的 __vite__mapDeps 指向 /islands/*.js 而非 /client/islands/*.js</li>
                 <li><strong>DSD polyfill 报错</strong>：template-shadowroot document.write() polyfill 在 ESM 环境下报 "Cannot use import statement outside module"，移除（现代浏览器已原生支持 DSD）</li>
-                <li><strong>P0 — kiss-input 显示 "undefined" 字符串</strong>：.value="${this.value ?? ''}"，避免未设置值时显示文本 "undefined"</li>
+                <li><strong>P0 — kiss-input 显示 "undefined" 字符串</strong>：.value="\${this.value ?? ''}"，避免未设置值时显示文本 "undefined"</li>
                 <li><strong>P0 — @kissjs/core 缺少 CLI exports</strong>：deno.json 和 jsr.json 未导出 cli/build-client 和 cli/build-ssg，导致 create-kiss 脚手架创建的项目无法运行 deno task build:client/build:ssg</li>
                 <li><strong>P0 — dist/tokens/colors.js 缺失</strong>：deno.json 已声明导出但构建产出中不存在（build 重新执行后修复）</li>
                 <li><strong>P0 — SSG 构建崩溃（globalThis.module 删早）</strong>：CJS polyfill 在 ssrLoadModule 被删除，导致 node-domexception 报 ReferenceError</li>
                 <li><strong>P1 — 暗色模式阴影不可见</strong>：effects.ts 中 rgba(0,0,0,...) 阴影在黑色背景上不可见，添加 [data-theme="dark"] 亮色阴影变体</li>
-                <li><strong>P1 — kiss-button href/target 渲染 "undefined"</strong>：href=${hrefAttr} / target=${this.target} 在未设置时渲染字面量 "undefined"，改用 nothing sentinel</li>
+                <li><strong>P1 — kiss-button href/target 渲染 "undefined"</strong>：href=\${hrefAttr} / target=\${this.target} 在未设置时渲染字面量 "undefined"，改用 nothing sentinel</li>
                 <li><strong>P1 — kiss-button 每次 render 创建新箭头函数</strong>：disabled 时的 @click 内联箭头函数提取为类方法 _preventClick</li>
                 <li><strong>P1 — kiss-input 错误状态 ARIA 默认值</strong>：aria-invalid="false" / aria-errormessage="" 始终存在，改用 nothing sentinel</li>
                 <li><strong>P1 — kiss-code-block setTimeout 无清理</strong>：添加 _copyTimer + disconnectedCallback 清除超时</li>

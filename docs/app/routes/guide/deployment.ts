@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class DeploymentPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .platform-grid {
@@ -30,7 +30,7 @@ export class DeploymentPage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/deployment">
         <div class="container">

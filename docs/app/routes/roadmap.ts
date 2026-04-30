@@ -7,7 +7,7 @@ import '@kissjs/ui/kiss-layout';
 import '../islands/code-block.js';
 
 export class RoadmapPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .phase-table {
@@ -104,7 +104,7 @@ export class RoadmapPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/roadmap">
         <div class="container">

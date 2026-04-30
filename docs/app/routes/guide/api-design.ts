@@ -4,10 +4,10 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ApiDesignPage extends LitElement {
-  static styles = [pageStyles, css`
+  static override styles = [pageStyles, css`
     .principle { padding: 1rem; background: var(--kiss-bg-surface);  border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px 0; margin: 0.75rem 0; font-size: 0.875rem; }
   `];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/api-design">
         <div class="container">

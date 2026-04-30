@@ -4,11 +4,11 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class GettingStartedPage extends LitElement {
-  static styles = [pageStyles, css`
+  static override styles = [pageStyles, css`
     .step { margin-bottom: 1.75rem; }
     .step h2 { font-size: 1rem; margin: 0 0 0.5rem; }
   `];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/getting-started">
         <div class="container">
@@ -58,7 +58,7 @@ import { LitElement, html, css } from '@kissjs/core';
 export const tagName = 'home-page';
 export default class HomePage extends LitElement {
   static styles = css\`:host { display: block; padding: 2rem; }\`;
-  render() {
+  override render() {
     return html\`&lt;h1&gt;Hello KISS!&lt;/h1&gt;\`;
   }
 }</code></pre></code-block>

@@ -14,7 +14,7 @@ import '@kissjs/ui/kiss-card';
 import '@kissjs/ui/kiss-button';
 
 export class ExamplesPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .example-grid {
@@ -143,7 +143,7 @@ export class ExamplesPage extends LitElement {
     `,
   ];
 
-  render() {
+  override render() {
     return html`
       <kiss-layout current-path="/examples">
         <div class="container">

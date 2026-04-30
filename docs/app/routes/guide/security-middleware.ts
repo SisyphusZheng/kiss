@@ -4,10 +4,10 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class SecurityMiddlewarePage extends LitElement {
-  static styles = [pageStyles, css`
+  static override styles = [pageStyles, css`
     .mw-chain { padding: 1rem; background: var(--kiss-bg-surface); border-left: 3px solid var(--kiss-border-hover); border-radius: 0 3px 3px 0; margin: 0.75rem 0; font-size: 0.8125rem; line-height: 1.8; }
   `];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/security-middleware">
         <div class="container">

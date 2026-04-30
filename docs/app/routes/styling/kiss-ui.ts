@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class KissUIPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .callout {
@@ -39,7 +39,7 @@ export class KissUIPage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/styling/kiss-ui">
         <div class="container">
@@ -94,7 +94,7 @@ import '@kissjs/ui/kiss-button';
 import '@kissjs/ui/kiss-card';
 
 export class MyPage extends LitElement {
-  render() {
+  override render() {
     return html\`
       &lt;kiss-button variant="primary"&gt;Click me&lt;/kiss-button&gt;
       &lt;kiss-card&gt;

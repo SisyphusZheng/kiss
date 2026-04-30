@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class ConfigurationPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .deprecated {
@@ -25,7 +25,7 @@ export class ConfigurationPage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/configuration">
         <div class="container">

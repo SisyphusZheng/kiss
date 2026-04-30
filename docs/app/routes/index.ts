@@ -331,7 +331,7 @@ export default class DocsHome extends LitElement {
     }
   `;
 
-  render() {
+  override render() {
     return html`
       <kiss-layout home>
         <div class="hero">

@@ -4,7 +4,7 @@ import '@kissjs/ui/kiss-layout';
 import '../../islands/code-block.js';
 
 export class DesignPhilosophyPage extends LitElement {
-  static styles = [
+  static override styles = [
     pageStyles,
     css`
       .pillar {
@@ -33,7 +33,7 @@ export class DesignPhilosophyPage extends LitElement {
       }
     `,
   ];
-  render() {
+  override render() {
     return html`
       <kiss-layout currentPath="/guide/design-philosophy">
         <div class="container">
