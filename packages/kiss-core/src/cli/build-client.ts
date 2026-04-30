@@ -119,7 +119,7 @@ async function buildClient(): Promise<void> {
     configFile: false,
     root,
     base: `${clientBase}client/`,
-    logLevel: 'info',
+    logLevel: 'warn',
     build: {
       outDir: clientOutDir,
       emptyOutDir: true,

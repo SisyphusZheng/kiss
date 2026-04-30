@@ -25,6 +25,28 @@ import type { KissBuildContext } from './build-context.js';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
+/**
+ * Serialize resolve.alias for JSON storage.
+ * Handles both Record<string, string> and Alias[] formats.
+ * Alias[] entries with RegExp `find` are converted to a marker object.
+ */
+function serializeAlias(
+  alias: Record<string, string> | import('vite').Alias[] | undefined | null,
+): Record<string, string> | null {
+  if (!alias) return null;
+  // Already a simple object map
+  if (!Array.isArray(alias)) return alias;
+  // Convert Alias[] to Record<string, string>
+  const result: Record<string, string> = {};
+  for (const entry of alias) {
+    if (typeof entry.find === 'string') {
+      result[entry.find] = entry.replacement;
+    }
+    // Skip RegExp find patterns — they can't be JSON-serialized
+  }
+  return Object.keys(result).length > 0 ? result : null;
+}
+
 /** Vite plugin: writes build metadata for CLI build pipeline */
 export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildContext): Plugin {
   const outDir = options.build?.outDir || 'dist';
@@ -59,7 +81,7 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         base,
         // Pass user's resolve alias and ssr.noExternal so CLI scripts
         // can replicate the same module resolution
-        resolveAlias: ctx?.userResolveAlias || null,
+        resolveAlias: serializeAlias(ctx?.userResolveAlias),
         ssrNoExternal: (options.ssr?.noExternal || []).map((item) => {
           if (item instanceof RegExp) {
             return { __type: 'RegExp', source: item.source, flags: item.flags };

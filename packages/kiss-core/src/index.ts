@@ -195,7 +195,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     name: 'kiss:core',
 
     config(userConfig) {
-      if (userConfig.resolve?.alias) {
+      // Also read resolve.alias in config() as a fallback —
+      // some Vite versions merge config before calling this hook.
+      if (userConfig.resolve?.alias && !ctx.userResolveAlias) {
         ctx.userResolveAlias = userConfig.resolve.alias as
           | Record<string, string>
           | import('vite').Alias[];
@@ -209,7 +211,14 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
       };
     },
 
-    configResolved() {
+    configResolved(resolvedConfig) {
+      // Read resolve.alias from the fully resolved config —
+      // this is the reliable source because Vite merges user config
+      // + plugin config before this hook.
+      if (resolvedConfig.resolve?.alias && !ctx.userResolveAlias) {
+        // resolvedConfig.resolve.alias is always Alias[] after merging
+        ctx.userResolveAlias = resolvedConfig.resolve.alias;
+      }
       ctx.honoEntryCode = generateEntry([], ctx.islandTagNames, ctx.packageIslands);
     },
 
