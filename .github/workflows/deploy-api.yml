@@ -10,17 +10,17 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with:
           deno-version: '2'
-      - name: Deploy to Deno Deploy
-        uses: denoland/deployctl@v1
-        with:
-          project: kiss-demo-api
-          entrypoint: serverless.ts
-          root: demo
+      - name: Deploy to Deno Deploy (new platform)
+        working-directory: demo
+        run: |
+          deno deploy \
+            --app=kiss-demo-api \
+            --prod \
+            --org=kiss \
+            --token="${{ secrets.DENO_DEPLOY_TOKEN }}" \
+            .
