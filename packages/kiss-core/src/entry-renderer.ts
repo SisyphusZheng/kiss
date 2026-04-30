@@ -321,6 +321,22 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
   b.blank();
 
+  // --- Register island components in SSR customElements registry ---
+  // Islands need to be registered for Lit SSR's renderValue to produce DSD.
+  // Without registration, <unsafeHTML> renders bare tags without Shadow DOM.
+  // Uses a static import per island module (known at build time).
+  for (const island of desc.islands) {
+    const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
+    b.push(`import * as ${varName} from '${island.modulePath}'`);
+  }
+  for (const island of desc.islands) {
+    const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
+    b.push(`if (!customElements.get('${island.tagName}')) {`);
+    b.push(`  customElements.define('${island.tagName}', ${varName}.default)`);
+    b.push(`}`);
+  }
+  b.blank();
+
   // --- SSR helper ---
   // unsafeHTML must be in expression position (NOT in element position <${...}>),
   // otherwise Lit throws "Unexpected final partIndex" error.
