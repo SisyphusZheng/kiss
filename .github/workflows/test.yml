@@ -42,12 +42,7 @@ jobs:
         working-directory: packages/kiss-ui
         run: deno task build
       - name: Run kiss-core tests
-        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-core
-          path: coverage/
+        run: deno test packages/kiss-core/__tests__/ --allow-read --allow-write --allow-env
 
   test-rpc:
     runs-on: ubuntu-latest
@@ -64,12 +59,7 @@ jobs:
       - name: Install dependencies
         run: deno install --node-modules-dir
       - name: Run kiss-rpc tests
-        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write --coverage=coverage
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-rpc
-          path: coverage/
+        run: deno test packages/kiss-rpc/__tests__/ --allow-read --allow-write
 
   test-ui:
     runs-on: ubuntu-latest
@@ -86,12 +76,7 @@ jobs:
       - name: Install dependencies
         run: deno install --node-modules-dir
       - name: Run kiss-ui tests
-        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-ui
-          path: coverage/
+        run: deno test packages/kiss-ui/__tests__/ --allow-read --allow-write --allow-env
 
   test-create:
     runs-on: ubuntu-latest
@@ -108,33 +93,4 @@ jobs:
       - name: Install dependencies
         run: deno install --node-modules-dir
       - name: Run create-kiss tests
-        run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env --coverage=coverage
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-create
-          path: coverage/
-
-  coverage:
-    needs: [test-core, test-rpc, test-ui, test-create]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: '2'
-      - name: Download all coverage
-        uses: actions/download-artifact@v4
-        with:
-          pattern: coverage-*
-          merge-multiple: true
-          path: coverage
-      - name: Generate coverage report
-        run: deno coverage coverage/ --lcov > coverage.lcov
-      - name: Print coverage summary
-        run: deno coverage coverage/
-      - name: Upload lcov report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-lcov
-          path: coverage.lcov
+        run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env
