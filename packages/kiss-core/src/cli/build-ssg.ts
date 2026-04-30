@@ -99,6 +99,9 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     if (!options.pwa && metadata.pwa) {
       options.pwa = metadata.pwa;
     }
+    if (!options.base && metadata.base) {
+      options.base = metadata.base as string;
+    }
     // v0.3.0 note: hydrationStrategy controls WHEN defer-hydration is removed
     // (eager/lazy/idle/visible), not HOW hydration works (always Lit hydrate()).
     // The strategy IS functional — it's not deprecated, just rarely changed from 'lazy'.
@@ -364,9 +367,9 @@ async function networkFirst(req) {
         console.log('[KISS SSG] PWA sw.js generated');
 
         // Inject manifest link + sw registration into HTML files
-        const manifestLink = '<link rel="manifest" href="/manifest.json">';
+        const manifestLink = `<link rel="manifest" href="${basePath}manifest.json">`;
         const swScript =
-          '<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script>';
+          `<script>addEventListener("load",()=>{navigator.serviceWorker?.register("${basePath}sw.js")})</script>`;
         const htmlFiles = findHtmlFiles(outputDir);
         for (const htmlPath of htmlFiles) {
           let html = readFileSync(htmlPath, 'utf-8');
