@@ -41,8 +41,16 @@ export class DeploymentPage extends LitElement {
 
           <h2>构建</h2>
           <code-block>
-            <pre><code>deno run -A npm:vite build
-  # 输出：dist/ 目录，包含静态 HTML + island JS 块</code></pre></code-block>
+            <pre><code># KISS 三阶段构建管线
+deno task build          # Phase 1 — SSR bundle
+deno task build:client   # Phase 2 — Island client chunks
+deno task build:ssg      # Phase 3 — Static HTML + 404 page
+# 输出：dist/ 目录，包含静态 HTML + island JS + 404.html</code></pre></code-block>
+          <p>
+            KISS 的 S 约束（静态）确保构建输出就是最终产品。三阶段管线
+            分布验证：每一阶段产出下一阶段的输入，<span class="inline-code">.kiss/build-metadata.json</span>
+            在阶段间传递配置。
+          </p>
 
           <h2>全栈架构</h2>
           <p>KISS 架构的 S 约束意味着两个独立的部署目标：</p>
