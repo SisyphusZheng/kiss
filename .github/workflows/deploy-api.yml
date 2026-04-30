@@ -15,12 +15,13 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: '2'
-      - name: Deploy to Deno Deploy (new platform)
-        working-directory: demo
+      - name: Deploy to Deno Deploy
         run: |
+          # Copy to a clean dir (no workspace config)
+          cp -r demo /tmp/kiss-api
+          cd /tmp/kiss-api
           deno deploy \
             --app=kiss-demo-api \
             --prod \
-            --org=kiss \
             --token="${{ secrets.DENO_DEPLOY_TOKEN }}" \
             .
