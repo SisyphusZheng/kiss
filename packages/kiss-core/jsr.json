@@ -2,7 +2,9 @@
   "name": "@kissjs/core",
   "version": "0.3.2",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cli/build-client": "./src/cli/build-client.ts",
+    "./cli/build-ssg": "./src/cli/build-ssg.ts"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "__tests__"],
