@@ -20,7 +20,7 @@
 
 import { join } from 'node:path';
 import process from 'node:process';
-import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync } from 'node:fs';
 import type { FrameworkOptions, PackageIslandMeta } from '../types.js';
 import { SsrRenderError } from '../errors.js';
 
@@ -149,7 +149,7 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
     }
 
     const { readdirSync, readFileSync, writeFileSync, existsSync } = await import('node:fs');
-    const { join, resolve, dirname } = await import('node:path');
+    const { join, _resolve, _dirname } = await import('node:path');
 
     const server = await createServer({
       configFile: false,
@@ -229,6 +229,7 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
       console.log(`[KISS SSG] Static site generated → ${outputDir}`);
 
       // Find HTML files recursively in output directory
+      // deno-lint-ignore no-inner-declarations
       function findHtmlFiles(dir: string): string[] {
         const results: string[] = [];
         try {
