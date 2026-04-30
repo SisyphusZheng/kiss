@@ -329,7 +329,8 @@ export function renderEntry(desc: EntryDescriptor): string {
   );
   b.push('  }');
   b.push(
-    '  const tpl = html' + BACKTICK + DOLLAR_BRACE + 'unsafeHTML(' + BACKTICK + '<' + DOLLAR_BRACE + 'tag' + CLOSE_BRACE +
+    '  const tpl = html' + BACKTICK + DOLLAR_BRACE + 'unsafeHTML(' + BACKTICK + '<' + DOLLAR_BRACE +
+      'tag' + CLOSE_BRACE +
       ' defer-hydration></' + DOLLAR_BRACE +
       'tag' + CLOSE_BRACE + '>' + BACKTICK + ')' + CLOSE_BRACE + BACKTICK,
   );

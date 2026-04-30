@@ -115,7 +115,7 @@ export function scanClientBuild(
           };
         } else {
           // Island chunk or shared chunk
-          const isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
+          const _isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
           islands.push({
             name: file,
             path: `islands/${file}`,

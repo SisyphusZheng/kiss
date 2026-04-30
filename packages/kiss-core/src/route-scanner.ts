@@ -281,8 +281,8 @@ export const islandTagNames = islands.map(i => i.tagName);
  */
 export function fileToTagName(fileName: string): string {
   return fileName
-    .replace(/\.[^.]+$/, '')    // Remove extension
-    .replace(/[\\/]/g, '-')     // Replace path separators with hyphens
+    .replace(/\.[^.]+$/, '') // Remove extension
+    .replace(/[\\/]/g, '-') // Replace path separators with hyphens
     .toLowerCase();
 }
 
