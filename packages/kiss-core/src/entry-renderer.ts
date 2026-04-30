@@ -230,7 +230,7 @@ function renderPageRoute(
   b.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   b.push(`    } else {`);
   b.push(
-    `      const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`,
+    `      const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')`,
   );
   b.push(`      return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
   b.push(`    }`);

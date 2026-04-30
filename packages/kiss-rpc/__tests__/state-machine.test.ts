@@ -112,10 +112,7 @@ Deno.test('RpcController — abort cancels in-flight request', async () => {
   const ctrl = new RpcController(host as never);
 
   // Create a promise that respects AbortSignal
-  let _capturedSignal: AbortSignal | undefined;
-  void _capturedSignal;
   const callPromise = ctrl.call((signal) => {
-    _capturedSignal = signal;
     return new Promise<never>((_resolve, reject) => {
       signal?.addEventListener('abort', () => {
         reject(new DOMException('The operation was aborted.', 'AbortError'));

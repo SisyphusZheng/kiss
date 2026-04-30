@@ -25,11 +25,23 @@ jobs:
       - name: Check version changes
         id: check
         run: |
+          # Helper: read version from a JSON file using python3 (robust, not fragile grep)
+          get_ver() {
+            python3 -c "import sys,json; f=open('${1}','r'); print(json.load(f).get('version','0.0.0')); f.close()" 2>/dev/null || echo "0.0.0"
+          }
+          get_ver_commit() {
+            python3 -c "import sys,json; print(json.load(sys.stdin).get('version','0.0.0'))" 2>/dev/null || echo "0.0.0"
+          }
+
           changed=""
 
           # Check kiss-core
-          core_old=$(git show HEAD~1:packages/kiss-core/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
-          core_new=$(grep '"version"' packages/kiss-core/deno.json | cut -d'"' -f4)
+          if git show HEAD~1:packages/kiss-core/deno.json >/dev/null 2>&1; then
+            core_old=$(git show HEAD~1:packages/kiss-core/deno.json | get_ver_commit)
+          else
+            core_old="0.0.0"
+          fi
+          core_new=$(get_ver packages/kiss-core/deno.json)
           if [ "$core_old" != "$core_new" ]; then
             echo "core_changed=true" >> $GITHUB_OUTPUT
             echo "📦 @kissjs/core: $core_old → $core_new"
@@ -37,8 +49,12 @@ jobs:
           fi
 
           # Check kiss-rpc
-          rpc_old=$(git show HEAD~1:packages/kiss-rpc/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
-          rpc_new=$(grep '"version"' packages/kiss-rpc/deno.json | cut -d'"' -f4)
+          if git show HEAD~1:packages/kiss-rpc/deno.json >/dev/null 2>&1; then
+            rpc_old=$(git show HEAD~1:packages/kiss-rpc/deno.json | get_ver_commit)
+          else
+            rpc_old="0.0.0"
+          fi
+          rpc_new=$(get_ver packages/kiss-rpc/deno.json)
           if [ "$rpc_old" != "$rpc_new" ]; then
             echo "rpc_changed=true" >> $GITHUB_OUTPUT
             echo "📦 @kissjs/rpc: $rpc_old → $rpc_new"
@@ -46,8 +62,12 @@ jobs:
           fi
 
           # Check kiss-ui
-          ui_old=$(git show HEAD~1:packages/kiss-ui/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
-          ui_new=$(grep '"version"' packages/kiss-ui/deno.json | cut -d'"' -f4)
+          if git show HEAD~1:packages/kiss-ui/deno.json >/dev/null 2>&1; then
+            ui_old=$(git show HEAD~1:packages/kiss-ui/deno.json | get_ver_commit)
+          else
+            ui_old="0.0.0"
+          fi
+          ui_new=$(get_ver packages/kiss-ui/deno.json)
           if [ "$ui_old" != "$ui_new" ]; then
             echo "ui_changed=true" >> $GITHUB_OUTPUT
             echo "📦 @kissjs/ui: $ui_old → $ui_new"
@@ -55,8 +75,12 @@ jobs:
           fi
 
           # Check create-kiss
-          create_old=$(git show HEAD~1:packages/create-kiss/deno.json 2>/dev/null | grep '"version"' | cut -d'"' -f4 || echo "0.0.0")
-          create_new=$(grep '"version"' packages/create-kiss/deno.json | cut -d'"' -f4)
+          if git show HEAD~1:packages/create-kiss/deno.json >/dev/null 2>&1; then
+            create_old=$(git show HEAD~1:packages/create-kiss/deno.json | get_ver_commit)
+          else
+            create_old="0.0.0"
+          fi
+          create_new=$(get_ver packages/create-kiss/deno.json)
           if [ "$create_old" != "$create_new" ]; then
             echo "create_changed=true" >> $GITHUB_OUTPUT
             echo "📦 @kissjs/create: $create_old → $create_new"

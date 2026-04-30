@@ -258,7 +258,10 @@ Deno.test('kiss-ui-plugin: transformIndexHtml uses custom version', async () => 
 // ─── Enhanced Component Tests for Coverage ──────────────────
 
 // Mock document and localStorage for kiss-theme-toggle tests
-function setupDOMMocks() {
+// Returns a restore function to undo the mocks
+function setupDOMMocks(): () => void {
+  const savedDoc = (globalThis as any).document;
+  const savedLocalStorage = (globalThis as any).localStorage;
   const _data: Record<string, string> = {};
 
   // Mock document.documentElement
@@ -278,6 +281,11 @@ function setupDOMMocks() {
       _data[key] = value;
     },
   };
+
+  return () => {
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLocalStorage;
+  };
 }
 
 // NOTE: These tests are commented out because they require DOM APIs
@@ -295,20 +303,24 @@ Deno.test('kiss-code-block: _copy method success path', async () => {
 */
 
 Deno.test('kiss-theme-toggle: _handleToggle switches theme from light to dark', async () => {
-  setupDOMMocks();
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  (instance as any)._isLight = true;
+  const restore = setupDOMMocks();
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    (instance as any)._isLight = true;
 
-  const calls: any[] = [];
-  (document.documentElement as any).setAttribute = (...args: any[]) => {
-    calls.push(args);
-  };
+    const calls: any[] = [];
+    (document.documentElement as any).setAttribute = (...args: any[]) => {
+      calls.push(args);
+    };
 
-  (instance as any)._handleToggle();
+    (instance as any)._handleToggle();
 
-  assertEquals((instance as any)._isLight, false);
-  assertEquals(calls[0], ['data-theme', 'dark']);
+    assertEquals((instance as any)._isLight, false);
+    assertEquals(calls[0], ['data-theme', 'dark']);
+  } finally {
+    restore();
+  }
 });
 
 Deno.test('kiss-code-block: _copy method success path', async () => {
@@ -350,39 +362,44 @@ Deno.test('kiss-code-block: _copy method success path', async () => {
 });
 
 Deno.test('kiss-code-block: _copy method failure path', async () => {
-  const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
-  const instance = new KissCodeBlock();
+  const savedNavigator = (globalThis as any).navigator;
+  try {
+    const { KissCodeBlock } = await import('../src/kiss-code-block.ts');
+    const instance = new KissCodeBlock();
 
-  // Mock clipboard.writeText to throw
-  (globalThis as any).navigator = {
-    clipboard: {
-      writeText: async () => {
-        throw new Error('Clipboard error');
+    // Mock clipboard.writeText to throw
+    (globalThis as any).navigator = {
+      clipboard: {
+        writeText: async () => {
+          throw new Error('Clipboard error');
+        },
       },
-    },
-  };
+    };
 
-  Object.defineProperty(instance, 'textContent', {
-    get: () => 'some code',
-    configurable: true,
-  });
+    Object.defineProperty(instance, 'textContent', {
+      get: () => 'some code',
+      configurable: true,
+    });
 
-  // Mock requestUpdate to avoid LitElement errors
-  instance.requestUpdate = () => Promise.resolve();
+    // Mock requestUpdate to avoid LitElement errors
+    instance.requestUpdate = () => Promise.resolve();
 
-  // Mock setTimeout to execute immediately (avoid timer leaks in tests)
-  const originalSetTimeout = globalThis.setTimeout;
-  globalThis.setTimeout = ((callback: () => void) => {
-    callback();
-    return 0 as any;
-  }) as any;
+    // Mock setTimeout to execute immediately (avoid timer leaks in tests)
+    const originalSetTimeout = globalThis.setTimeout;
+    globalThis.setTimeout = ((callback: () => void) => {
+      callback();
+      return 0 as any;
+    }) as any;
 
-  await (instance as any)._copy();
+    await (instance as any)._copy();
 
-  // Restore setTimeout
-  globalThis.setTimeout = originalSetTimeout;
+    // Restore setTimeout
+    globalThis.setTimeout = originalSetTimeout;
 
-  assertEquals((instance as any)._copyState, 'idle'); // Should be 'idle' after timer fires
+    assertEquals((instance as any)._copyState, 'idle'); // Should be 'idle' after timer fires
+  } finally {
+    (globalThis as any).navigator = savedNavigator;
+  }
 });
 
 Deno.test('kiss-input: _handleInput dispatches custom event', async () => {
@@ -659,55 +676,69 @@ Deno.test('kiss-button: anchor with same-origin target', async () => {
 // ─── kiss-theme-toggle Enhanced Coverage ──────────────────
 
 Deno.test('kiss-theme-toggle: connectedCallback with theme=light', async () => {
-  setupDOMMocks();
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  instance.theme = 'light';
-  // Don't call connectedCallback (needs document.createElement from LitElement)
-  // Instead, test the logic directly by replicating what connectedCallback does
-  if (instance.theme === 'light') {
-    (instance as any)._isLight = true;
+  const restore = setupDOMMocks();
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    instance.theme = 'light';
+    // Don't call connectedCallback (needs document.createElement from LitElement)
+    // Instead, test the logic directly by replicating what connectedCallback does
+    if (instance.theme === 'light') {
+      (instance as any)._isLight = true;
+    }
+    assertEquals((instance as any)._isLight, true);
+  } finally {
+    restore();
   }
-  assertEquals((instance as any)._isLight, true);
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback with theme=dark', async () => {
-  setupDOMMocks();
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  instance.theme = 'dark';
-  if (instance.theme === 'dark') {
-    (instance as any)._isLight = false;
+  const restore = setupDOMMocks();
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    instance.theme = 'dark';
+    if (instance.theme === 'dark') {
+      (instance as any)._isLight = false;
+    }
+    assertEquals((instance as any)._isLight, false);
+  } finally {
+    restore();
   }
-  assertEquals((instance as any)._isLight, false);
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback reads document data-theme', async () => {
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   const _data: Record<string, string> = {};
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: { theme: 'light' },
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  (globalThis as any).localStorage = {
-    getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => {
-      _data[key] = value;
-    },
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // Simulate the connectedCallback logic without actually calling it
-  if (!instance.theme && (globalThis as any).document.documentElement.dataset.theme === 'light') {
-    (instance as any)._isLight = true;
+  try {
+    (globalThis as any).document = {
+      documentElement: {
+        dataset: { theme: 'light' },
+        setAttribute: () => {},
+      },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => _data[key] || null,
+      setItem: (key: string, value: string) => {
+        _data[key] = value;
+      },
+    };
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    // Simulate the connectedCallback logic without actually calling it
+    if (!instance.theme && (globalThis as any).document.documentElement.dataset.theme === 'light') {
+      (instance as any)._isLight = true;
+    }
+    assertEquals((instance as any)._isLight, true);
+  } finally {
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
   }
-  assertEquals((instance as any)._isLight, true);
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', async () => {
-  // Use real localStorage (available in Deno) and restore after test
   const orig = localStorage.getItem('kiss-theme');
   localStorage.setItem('kiss-theme', 'light');
   const savedDoc = (globalThis as any).document;
@@ -715,18 +746,20 @@ Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', as
     documentElement: { dataset: {}, setAttribute: () => {} },
     querySelectorAll: () => [],
   };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // Simulate localStorage fallback logic
-  const saved = localStorage.getItem('kiss-theme');
-  if (saved === 'light') {
-    (instance as any)._isLight = true;
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    // Simulate localStorage fallback logic
+    const saved = localStorage.getItem('kiss-theme');
+    if (saved === 'light') {
+      (instance as any)._isLight = true;
+    }
+    assertEquals((instance as any)._isLight, true);
+  } finally {
+    (globalThis as any).document = savedDoc;
+    if (orig === null) localStorage.removeItem('kiss-theme');
+    else localStorage.setItem('kiss-theme', orig);
   }
-  assertEquals((instance as any)._isLight, true);
-  // Restore
-  (globalThis as any).document = savedDoc;
-  if (orig === null) localStorage.removeItem('kiss-theme');
-  else localStorage.setItem('kiss-theme', orig);
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback defaults to dark', async () => {
@@ -737,12 +770,14 @@ Deno.test('kiss-theme-toggle: connectedCallback defaults to dark', async () => {
     documentElement: { dataset: {}, setAttribute: () => {} },
     querySelectorAll: () => [],
   };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  assertEquals((instance as any)._isLight, false);
-  // Restore
-  (globalThis as any).document = savedDoc;
-  if (orig !== null) localStorage.setItem('kiss-theme', orig);
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    assertEquals((instance as any)._isLight, false);
+  } finally {
+    (globalThis as any).document = savedDoc;
+    if (orig !== null) localStorage.setItem('kiss-theme', orig);
+  }
 });
 
 Deno.test('kiss-theme-toggle: _handleToggle switches dark→light', async () => {
@@ -755,243 +790,280 @@ Deno.test('kiss-theme-toggle: _handleToggle switches dark→light', async () => 
     },
     querySelectorAll: () => [],
   };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  (instance as any)._isLight = false; // Start dark
-  (instance as any)._handleToggle();
-  assertEquals((instance as any)._isLight, true);
-  assertEquals(localStorage.getItem('kiss-theme'), 'light');
-  // Restore
-  (globalThis as any).document = savedDoc;
-  if (orig === null) localStorage.removeItem('kiss-theme');
-  else localStorage.setItem('kiss-theme', orig);
+  try {
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    (instance as any)._isLight = false; // Start dark
+    (instance as any)._handleToggle();
+    assertEquals((instance as any)._isLight, true);
+    assertEquals(localStorage.getItem('kiss-theme'), 'light');
+  } finally {
+    (globalThis as any).document = savedDoc;
+    if (orig === null) localStorage.removeItem('kiss-theme');
+    else localStorage.setItem('kiss-theme', orig);
+  }
 });
 
 Deno.test('kiss-theme-toggle: _propagateTheme with mock DOM', async () => {
-  // Create mock elements that simulate KISS component convention
-  const mockKissElement = {
-    tagName: 'KISS-BUTTON',
-    setAttribute: () => {},
-    hasAttribute: (attr: string) => attr === 'data-kiss',
-    shadowRoot: null,
-  };
-  const mockDataKissElement = {
-    tagName: 'MY-WIDGET',
-    setAttribute: () => {},
-    hasAttribute: (attr: string) => attr === 'data-kiss',
-    shadowRoot: null,
-  };
-  const mockRegularElement = {
-    tagName: 'DIV',
-    setAttribute: () => {},
-    hasAttribute: () => false,
-    shadowRoot: null,
-  };
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
+  try {
+    // Create mock elements that simulate KISS component convention
+    const mockKissElement = {
+      tagName: 'KISS-BUTTON',
+      setAttribute: () => {},
+      hasAttribute: (attr: string) => attr === 'data-kiss',
+      shadowRoot: null,
+    };
+    const mockDataKissElement = {
+      tagName: 'MY-WIDGET',
+      setAttribute: () => {},
+      hasAttribute: (attr: string) => attr === 'data-kiss',
+      shadowRoot: null,
+    };
+    const mockRegularElement = {
+      tagName: 'DIV',
+      setAttribute: () => {},
+      hasAttribute: () => false,
+      shadowRoot: null,
+    };
 
-  (globalThis as any).document = {
-    documentElement: { setAttribute: () => {} },
-    querySelectorAll: () => [mockKissElement, mockDataKissElement, mockRegularElement],
-  };
-  (globalThis as any).localStorage = {
-    getItem: () => null,
-    setItem: () => {},
-  };
+    (globalThis as any).document = {
+      documentElement: { setAttribute: () => {} },
+      querySelectorAll: () => [mockKissElement, mockDataKissElement, mockRegularElement],
+    };
+    (globalThis as any).localStorage = {
+      getItem: () => null,
+      setItem: () => {},
+    };
 
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // Should not throw even with mock DOM
-  (instance as any)._propagateTheme('light');
-  assertEquals(true, true);
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    // Should not throw even with mock DOM
+    (instance as any)._propagateTheme('light');
+    assertEquals(true, true);
+  } finally {
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
+  }
 });
 
 Deno.test('kiss-theme-toggle: _propagateTheme isolates failures (I-constraint)', async () => {
-  // Create an element that throws on setAttribute
-  const failingElement = {
-    tagName: 'KISS-BAD',
-    setAttribute: () => {
-      throw new Error('Cannot set attribute');
-    },
-    hasAttribute: () => false,
-    shadowRoot: null,
-  };
-  const okElement = {
-    tagName: 'KISS-GOOD',
-    setAttribute: () => {},
-    hasAttribute: () => false,
-    shadowRoot: null,
-  };
-  let okSetAttrCalled = false;
-  okElement.setAttribute = () => {
-    okSetAttrCalled = true;
-  };
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
+  try {
+    // Create an element that throws on setAttribute
+    const failingElement = {
+      tagName: 'KISS-BAD',
+      setAttribute: () => {
+        throw new Error('Cannot set attribute');
+      },
+      hasAttribute: () => false,
+      shadowRoot: null,
+    };
+    const okElement = {
+      tagName: 'KISS-GOOD',
+      setAttribute: () => {},
+      hasAttribute: () => false,
+      shadowRoot: null,
+    };
+    let okSetAttrCalled = false;
+    okElement.setAttribute = () => {
+      okSetAttrCalled = true;
+    };
 
-  (globalThis as any).document = {
-    documentElement: { setAttribute: () => {} },
-    querySelectorAll: () => [failingElement, okElement],
-  };
-  (globalThis as any).localStorage = {
-    getItem: () => null,
-    setItem: () => {},
-  };
+    (globalThis as any).document = {
+      documentElement: { setAttribute: () => {} },
+      querySelectorAll: () => [failingElement, okElement],
+    };
+    (globalThis as any).localStorage = {
+      getItem: () => null,
+      setItem: () => {},
+    };
 
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // Should NOT throw — failing element is caught, ok element still updated
-  (instance as any)._propagateTheme('dark');
-  assertEquals(okSetAttrCalled, true, 'OK element should still be updated');
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    // Should NOT throw — failing element is caught, ok element still updated
+    (instance as any)._propagateTheme('dark');
+    assertEquals(okSetAttrCalled, true, 'OK element should still be updated');
+  } finally {
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
+  }
 });
 
 Deno.test('kiss-theme-toggle: _propagateTheme recurses into shadowRoots', async () => {
-  const innerElement = {
-    tagName: 'KISS-INNER',
-    setAttribute: () => {},
-    hasAttribute: () => false,
-    shadowRoot: null,
-  };
-  const parentWithShadow = {
-    tagName: 'KISS-PARENT',
-    setAttribute: () => {},
-    hasAttribute: () => false,
-    shadowRoot: {
-      querySelectorAll: () => [innerElement],
-    },
-  };
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
+  try {
+    const innerElement = {
+      tagName: 'KISS-INNER',
+      setAttribute: () => {},
+      hasAttribute: () => false,
+      shadowRoot: null,
+    };
+    const parentWithShadow = {
+      tagName: 'KISS-PARENT',
+      setAttribute: () => {},
+      hasAttribute: () => false,
+      shadowRoot: {
+        querySelectorAll: () => [innerElement],
+      },
+    };
 
-  (globalThis as any).document = {
-    documentElement: { setAttribute: () => {} },
-    querySelectorAll: () => [parentWithShadow],
-  };
-  (globalThis as any).localStorage = {
-    getItem: () => null,
-    setItem: () => {},
-  };
+    (globalThis as any).document = {
+      documentElement: { setAttribute: () => {} },
+      querySelectorAll: () => [parentWithShadow],
+    };
+    (globalThis as any).localStorage = {
+      getItem: () => null,
+      setItem: () => {},
+    };
 
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // Should not throw — recursion into shadowRoot
-  (instance as any)._propagateTheme('light');
-  assertEquals(true, true);
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    // Should not throw — recursion into shadowRoot
+    (instance as any)._propagateTheme('light');
+    assertEquals(true, true);
+  } finally {
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
+  }
 });
 
 // ─── kiss-theme-toggle connectedCallback via direct call ────
 
 Deno.test('kiss-theme-toggle: connectedCallback full path with theme=light', async () => {
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   const _data: Record<string, string> = {};
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: {},
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  (globalThis as any).localStorage = {
-    getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => {
-      _data[key] = value;
-    },
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  instance.theme = 'light';
-
-  // Override super.connectedCallback to no-op (avoids LitElement DOM dependency)
-  const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
-
   try {
-    instance.connectedCallback();
-    assertEquals((instance as any)._isLight, true);
-    // Should set data-theme attribute on itself
-    assertEquals(instance.getAttribute('data-theme'), 'light');
+    (globalThis as any).document = {
+      documentElement: { dataset: {}, setAttribute: () => {} },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => _data[key] || null,
+      setItem: (key: string, value: string) => {
+        _data[key] = value;
+      },
+    };
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    instance.theme = 'light';
+
+    const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
+    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
+
+    try {
+      instance.connectedCallback();
+      assertEquals((instance as any)._isLight, true);
+      assertEquals(instance.getAttribute('data-theme'), 'light');
+    } finally {
+      Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    }
   } finally {
-    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
   }
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback full path with theme=dark', async () => {
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   const _data: Record<string, string> = {};
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: {},
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  (globalThis as any).localStorage = {
-    getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => {
-      _data[key] = value;
-    },
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  instance.theme = 'dark';
-
-  const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
-
   try {
-    instance.connectedCallback();
-    assertEquals((instance as any)._isLight, false);
-    assertEquals(instance.getAttribute('data-theme'), 'dark');
+    (globalThis as any).document = {
+      documentElement: { dataset: {}, setAttribute: () => {} },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => _data[key] || null,
+      setItem: (key: string, value: string) => {
+        _data[key] = value;
+      },
+    };
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+    instance.theme = 'dark';
+
+    const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
+    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
+
+    try {
+      instance.connectedCallback();
+      assertEquals((instance as any)._isLight, false);
+      assertEquals(instance.getAttribute('data-theme'), 'dark');
+    } finally {
+      Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    }
   } finally {
-    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
   }
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback reads document.documentElement.dataset', async () => {
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   const _data: Record<string, string> = {};
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: { theme: 'light' },
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  (globalThis as any).localStorage = {
-    getItem: (key: string) => _data[key] || null,
-    setItem: (key: string, value: string) => {
-      _data[key] = value;
-    },
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-  // No theme attribute set — should fall through to document.documentElement.dataset.theme
-
-  const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
-
   try {
-    instance.connectedCallback();
-    assertEquals((instance as any)._isLight, true);
-    assertEquals(instance.getAttribute('data-theme'), 'light');
+    (globalThis as any).document = {
+      documentElement: { dataset: { theme: 'light' }, setAttribute: () => {} },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => _data[key] || null,
+      setItem: (key: string, value: string) => {
+        _data[key] = value;
+      },
+    };
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+
+    const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
+    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
+
+    try {
+      instance.connectedCallback();
+      assertEquals((instance as any)._isLight, true);
+      assertEquals(instance.getAttribute('data-theme'), 'light');
+    } finally {
+      Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    }
   } finally {
-    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
   }
 });
 
 Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', async () => {
   const orig = localStorage.getItem('kiss-theme');
   localStorage.setItem('kiss-theme', 'light');
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: {}, // No data-theme set
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-
-  const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
-
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   try {
-    instance.connectedCallback();
-    assertEquals((instance as any)._isLight, true);
-    assertEquals(instance.getAttribute('data-theme'), 'light');
+    (globalThis as any).document = {
+      documentElement: { dataset: {}, setAttribute: () => {} },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = localStorage;
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+
+    const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
+    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
+
+    try {
+      instance.connectedCallback();
+      assertEquals((instance as any)._isLight, true);
+      assertEquals(instance.getAttribute('data-theme'), 'light');
+    } finally {
+      Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    }
   } finally {
-    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
     if (orig === null) localStorage.removeItem('kiss-theme');
     else localStorage.setItem('kiss-theme', orig);
   }
@@ -1000,25 +1072,30 @@ Deno.test('kiss-theme-toggle: connectedCallback reads localStorage fallback', as
 Deno.test('kiss-theme-toggle: connectedCallback defaults to dark theme', async () => {
   const orig = localStorage.getItem('kiss-theme');
   localStorage.removeItem('kiss-theme');
-  (globalThis as any).document = {
-    documentElement: {
-      dataset: {},
-      setAttribute: () => {},
-    },
-    querySelectorAll: () => [],
-  };
-  const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
-  const instance = new KissThemeToggle();
-
-  const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
-  Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
-
+  const savedDoc = (globalThis as any).document;
+  const savedLS = (globalThis as any).localStorage;
   try {
-    instance.connectedCallback();
-    assertEquals((instance as any)._isLight, false);
-    assertEquals(instance.getAttribute('data-theme'), 'dark');
+    (globalThis as any).document = {
+      documentElement: { dataset: {}, setAttribute: () => {} },
+      querySelectorAll: () => [],
+    };
+    (globalThis as any).localStorage = localStorage;
+    const { KissThemeToggle } = await import('../src/kiss-theme-toggle.ts');
+    const instance = new KissThemeToggle();
+
+    const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
+    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
+
+    try {
+      instance.connectedCallback();
+      assertEquals((instance as any)._isLight, false);
+      assertEquals(instance.getAttribute('data-theme'), 'dark');
+    } finally {
+      Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    }
   } finally {
-    Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = origConnected;
+    (globalThis as any).document = savedDoc;
+    (globalThis as any).localStorage = savedLS;
     if (orig !== null) localStorage.setItem('kiss-theme', orig);
   }
 });
@@ -1039,7 +1116,6 @@ Deno.test('kiss-input: connectedCallback with attachInternals mock', async () =>
     },
   });
 
-  // Override super.connectedCallback
   const origConnected = Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback;
   Object.getPrototypeOf(Object.getPrototypeOf(instance)).connectedCallback = function () {};
 

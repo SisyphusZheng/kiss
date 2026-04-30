@@ -1326,7 +1326,7 @@
       },
       "packages/kiss-rpc": {
         "dependencies": [
-          "npm:lit@3"
+          "npm:lit@^3.2.0"
         ],
         "packageJson": {
           "dependencies": [

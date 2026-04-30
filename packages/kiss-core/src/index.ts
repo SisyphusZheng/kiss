@@ -104,7 +104,8 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
    * Covers the 4 critical characters: &, ", <, >
    */
   const escapeHtmlAttr = (str: string): string =>
-    str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
   /**
    * Validate that a URL does not use a dangerous protocol (javascript:, data:).

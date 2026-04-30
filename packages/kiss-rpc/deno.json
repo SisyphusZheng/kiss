@@ -5,7 +5,7 @@
     ".": "./src/index.ts"
   },
   "imports": {
-    "lit": "npm:lit@^3"
+    "lit": "npm:lit@^3.2.0"
   },
   "tasks": {
     "build": "deno run -A npm:vite build --config vite.config.build.ts",

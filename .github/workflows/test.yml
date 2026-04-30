@@ -16,8 +16,21 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
       - name: Install dependencies
         run: deno install --node-modules-dir
+
+      - name: Run type check (compiler)
+        run: deno check packages/kiss-core/src/index.ts packages/kiss-rpc/src/index.ts packages/kiss-ui/src/index.ts
 
       - name: Build kiss-ui (needed for scanPackageIslands test)
         working-directory: packages/kiss-ui
@@ -34,3 +47,12 @@ jobs:
 
       - name: Run create-kiss tests
         run: deno test packages/create-kiss/__tests__/ --allow-read --allow-write --allow-env --coverage
+
+      - name: Generate coverage report
+        run: deno coverage --lcov > coverage.lcov
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.lcov

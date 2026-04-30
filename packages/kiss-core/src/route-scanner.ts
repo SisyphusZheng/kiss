@@ -114,7 +114,14 @@ export async function scanRoutes(
 
     const fullPath = join(routesDir, file);
     const relativePath = baseDir ? join(baseDir, file) : file;
-    const fileStat = await stat(fullPath);
+    let fileStat;
+    try {
+      fileStat = await stat(fullPath);
+    } catch {
+      // File disappeared between readdir and stat (e.g. watch mode deletion)
+      // Skip gracefully instead of crashing the build
+      continue;
+    }
 
     if (fileStat.isDirectory()) {
       // Recurse into subdirectories
