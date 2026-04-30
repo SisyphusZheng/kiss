@@ -159,7 +159,9 @@ async function buildClient(): Promise<void> {
     // SSR noExternal: ensures packages like @kissjs/ui (with decorators)
     // are bundled by Vite instead of left as bare imports
     ssr: {
-      noExternal: noExternalPatterns.length > 0 ? noExternalPatterns : undefined,
+      noExternal: (noExternalPatterns.length > 0 ? noExternalPatterns : undefined) as
+        | (string | RegExp)[]
+        | undefined,
     },
   };
 
