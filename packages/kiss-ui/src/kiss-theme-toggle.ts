@@ -127,9 +127,15 @@ export class KissThemeToggle extends LitElement {
         //
         // L2 EXEMPTION: localStorage is a browser platform API (infrastructure).
         // Not a cross-Island dependency — allowed under KISS L2 exemption.
-        const saved = localStorage.getItem('kiss-theme');
-        if (saved === 'light') {
-          this._isLight = true;
+        // try-catch: localStorage may throw in private browsing mode or when
+        // storage is disabled by browser policy.
+        try {
+          const saved = localStorage.getItem('kiss-theme');
+          if (saved === 'light') {
+            this._isLight = true;
+          }
+        } catch {
+          // Silently ignore — default to dark theme
         }
       }
 
@@ -144,7 +150,11 @@ export class KissThemeToggle extends LitElement {
       // L2 EXEMPTION: document.documentElement.setAttribute and localStorage.setItem
       // are browser platform APIs (infrastructure). Not cross-Island dependencies.
       document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('kiss-theme', theme);
+      try {
+        localStorage.setItem('kiss-theme', theme);
+      } catch {
+        // Silently ignore — localStorage may be unavailable in private browsing
+      }
       // Propagate data-theme to all KISS component host elements.
       // Shadow DOM `:host([data-theme="light"])` selectors only match
       // when the host element itself has the attribute — CSS custom

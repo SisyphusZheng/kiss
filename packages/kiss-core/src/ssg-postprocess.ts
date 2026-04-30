@@ -206,7 +206,7 @@ export function injectCspMeta(
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
     if (entry.isDirectory()) {
-      injectCspMeta(fullPath, cspPolicy, reportOnly);
+      injectCspMeta(fullPath, cspPolicy, reportOnly, nonce);
     } else if (entry.name.endsWith('.html')) {
       let content = readFileSync(fullPath, 'utf-8');
       // Check if already injected (by header name, not full policy — policy may change)

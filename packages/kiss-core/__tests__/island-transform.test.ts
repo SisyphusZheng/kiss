@@ -68,18 +68,15 @@ Deno.test('island-transform - islandTransformPlugin', async (t) => {
       warn: () => {},
     };
     try {
-      // "UPPER.ts" → fileToTagName gives "UPPER" (no hyphen, but has uppercase)
-      // Wait — no hyphen triggers warn first. Use "my-mod.ts" → "my.mod" (has dot)
-      // Actually: "my-mod.ts" → fileToTagName strips .ts → "my-mod" which IS safe.
-      // Let's use a filename that has a hyphen AND unsafe chars:
-      // "my-MOD.ts" → "my-MOD" — has hyphen AND uppercase, triggers error()
+      // "my-mod!.ts" → fileToTagName strips .ts → "my-mod!" — has hyphen AND
+      // exclamation mark, triggers error() for unsafe characters
       transform.call(
         mockContext,
         'export default class MyMod extends LitElement {}',
-        '/project/app/islands/my-MOD.ts',
+        '/project/app/islands/my-mod!.ts',
       );
     } catch (e) {
-      // Expected: this.error() throws for uppercase chars
+      // Expected: this.error() throws for unsafe chars
       assertEquals((e as Error).message.includes('unsafe characters'), true);
     }
     assertEquals(errorThrown, true, 'this.error() should have been called');

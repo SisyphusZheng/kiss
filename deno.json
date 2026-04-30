@@ -16,7 +16,7 @@
     "build:core": "cd packages/kiss-core && deno task build",
     "build:rpc": "cd packages/kiss-rpc && deno task build",
     "build:ui": "cd packages/kiss-ui && deno task build",
-    "build": "deno task build:rpc && deno task build:core && deno task build:ui",
+    "build": "deno task build:rpc && deno task build:core && deno task build:ui && deno task build:client && deno task build:ssg",
     "build:client": "deno run -A packages/kiss-core/src/cli/build-client.ts",
     "build:ssg": "deno run -A packages/kiss-core/src/cli/build-ssg.ts",
     "docs:build": "cd docs && deno task build",

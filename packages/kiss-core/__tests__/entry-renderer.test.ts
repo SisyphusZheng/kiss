@@ -72,9 +72,11 @@ Deno.test('renderEntry: CSP without nonce generates header middleware', () => {
 
   assertStringIncludes(code, 'Content-Security-Policy');
   assertStringIncludes(code, "default-src 'self'; script-src 'self'");
-  // No nonce when not configured
+  // No nonce middleware when not configured — c.get('cspNonce') returns undefined
   assertEquals(code.includes('crypto.randomUUID()'), false);
-  assertEquals(code.includes('cspNonce'), false);
+  // cspNonce is always passed to wrapInDocument but will be undefined
+  // when no CSP nonce middleware is configured
+  assertStringIncludes(code, "cspNonce: c.get('cspNonce')");
 });
 
 Deno.test('renderEntry: CSP with nonce generates per-request nonce', () => {

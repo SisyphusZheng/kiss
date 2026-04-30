@@ -16,8 +16,6 @@
  *   expressions with DOM nodes, forcing client-render (destroying SSR output).
  */
 
-import process from 'node:process';
-
 import type {
   ApiRouteDecl,
   CorsOriginConfig,
@@ -212,27 +210,30 @@ function renderPageRoute(
     b.push(`      title: ${JSON.stringify(docConfig.title)},`);
     b.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
     b.push(`      headExtras: ${JSON.stringify(docConfig.headExtras)},`);
+    b.push(`      cspNonce: c.get('cspNonce'),`);
     b.push(`    }))`);
   } else {
     b.push(`    return c.html(wrapInDocument(html, {`);
     b.push(`      title: ${JSON.stringify(docConfig.title)},`);
     b.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
     b.push(`      headExtras: ${JSON.stringify(docConfig.headExtras)},`);
+    b.push(`      cspNonce: c.get('cspNonce'),`);
     b.push(`    }))`);
   }
 
   b.push(`  } catch (err) {`);
-  // In production SSG output, avoid leaking internal stack traces, file
-  // paths, and implementation details. Show a generic message instead.
-  const isProd = process.env.NODE_ENV === 'production';
-  if (isProd) {
-    b.push(`    return c.html('<h1>500 Internal Server Error</h1>', 500)`);
-  } else {
-    b.push(
-      `    const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`,
-    );
-    b.push(`    return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
-  }
+  // Use import.meta.env.PROD for runtime environment detection.
+  // process.env.NODE_ENV was previously evaluated at code-generation time
+  // (build machine), which meant CI without NODE_ENV=production would leak
+  // stack traces in production.
+  b.push(`    if (import.meta.env.PROD) {`);
+  b.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
+  b.push(`    } else {`);
+  b.push(
+    `      const safeErr = String(err.stack || err).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')`,
+  );
+  b.push(`      return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`);
+  b.push(`    }`);
   b.push(`  }`);
   b.push(`})`);
   b.blank();
@@ -315,9 +316,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   //
   // IMPORTANT: The SSR output includes <!--lit-part--> comments.
   // DO NOT strip them — they are essential for Lit's hydrate() to work.
-  const BT = '\x60'; // backtick: `
-  const DI = '\x24{'; // ${
-  const DC = '}'; // }
+  const BACKTICK = '\x60'; // backtick: `
+  const DOLLAR_BRACE = '\x24{'; // ${
+  const CLOSE_BRACE = '}'; // }
   b.push('// SSR helper: render a custom element tag to HTML string');
   b.push('// Outputs <tag defer-hydration> so the client entry can hydrate it');
   b.push('async function __ssr(tag) {');
@@ -328,9 +329,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   );
   b.push('  }');
   b.push(
-    '  const tpl = html' + BT + DI + 'unsafeHTML(' + BT + '<' + DI + 'tag' + DC +
-      ' defer-hydration></' + DI +
-      'tag' + DC + '>' + BT + ')' + DC + BT,
+    '  const tpl = html' + BACKTICK + DOLLAR_BRACE + 'unsafeHTML(' + BACKTICK + '<' + DOLLAR_BRACE + 'tag' + CLOSE_BRACE +
+      ' defer-hydration></' + DOLLAR_BRACE +
+      'tag' + CLOSE_BRACE + '>' + BACKTICK + ')' + CLOSE_BRACE + BACKTICK,
   );
   b.push('  const result = litRender(tpl)');
   b.push('  return await collectResult(result)');

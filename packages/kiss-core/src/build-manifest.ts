@@ -96,60 +96,36 @@ export function scanClientBuild(
   let clientEntry: ArtifactInfo | null = null;
   let totalJsBytes = 0;
 
-  // Scan islands/ subdirectory
+  // Scan islands/ subdirectory (single pass — avoid redundant directory scans)
   const islandsDir = join(clientDir, 'islands');
   if (existsSync(islandsDir)) {
     const files = readdirSync(islandsDir);
     for (const file of files) {
-      if (!file.endsWith('.js') || file === 'client.js') continue;
+      if (!file.endsWith('.js')) continue;
       const fullPath = join(islandsDir, file);
       try {
-        const stat = statSync(fullPath);
-        islands.push({
-          name: file,
-          path: `islands/${file}`,
-          sizeBytes: stat.size,
-          sizeKB: formatSize(stat.size),
-        });
-        totalJsBytes += stat.size;
+        const fileStat = statSync(fullPath);
+        if (file === 'client.js') {
+          // Client entry (shared hydration runtime)
+          clientEntry = {
+            name: 'client.js',
+            path: 'islands/client.js',
+            sizeBytes: fileStat.size,
+            sizeKB: formatSize(fileStat.size),
+          };
+        } else {
+          // Island chunk or shared chunk
+          const isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
+          islands.push({
+            name: file,
+            path: `islands/${file}`,
+            sizeBytes: fileStat.size,
+            sizeKB: formatSize(fileStat.size),
+          });
+        }
+        totalJsBytes += fileStat.size;
       } catch (e) {
-        console.warn(`[KISS] Cannot stat island ${file}: ${(e as Error).message}`);
-      }
-    }
-  }
-
-  // Find client entry (client.js)
-  const clientEntryPath = join(islandsDir, 'client.js');
-  if (existsSync(clientEntryPath)) {
-    try {
-      const stat = statSync(clientEntryPath);
-      clientEntry = {
-        name: 'client.js',
-        path: 'islands/client.js',
-        sizeBytes: stat.size,
-        sizeKB: formatSize(stat.size),
-      };
-      totalJsBytes += stat.size;
-    } catch (e) {
-      console.warn(`[KISS] Cannot stat client entry: ${(e as Error).message}`);
-    }
-  }
-
-  // Include shared chunks (non-island .js files in islands/)
-  if (existsSync(islandsDir)) {
-    const files = readdirSync(islandsDir);
-    for (const file of files) {
-      if (
-        !file.endsWith('.js') ||
-        file === 'client.js' ||
-        islands.some((i) => i.name === file)
-      ) continue;
-      const fullPath = join(islandsDir, file);
-      try {
-        const stat = statSync(fullPath);
-        totalJsBytes += stat.size;
-      } catch (e) {
-        console.warn(`[KISS] Cannot stat shared chunk ${file}: ${(e as Error).message}`);
+        console.warn(`[KISS] Cannot stat ${file}: ${(e as Error).message}`);
       }
     }
   }

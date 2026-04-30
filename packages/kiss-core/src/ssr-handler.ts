@@ -19,6 +19,31 @@
 import type { RouteEntry } from './types.js';
 
 /**
+ * Escape a string for safe insertion into an HTML text content.
+ * Covers the 5 characters that matter: &, <, >, ", '
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * Escape a string for safe insertion into an HTML attribute value.
+ * Covers the 4 critical characters: &, ", <, >
+ */
+function escapeHtmlAttr(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
  * Render an error page to HTML string.
  * In dev mode, shows detailed error information for debugging.
  * In production, shows a generic safe error page.
@@ -78,6 +103,8 @@ export function wrapInDocument(
     devMode?: boolean;
     routeModulePath?: string;
     headExtras?: string;
+    /** CSP nonce — if provided, added to all <script> tags for CSP compliance */
+    cspNonce?: string;
   } = {},
 ): string {
   const {
@@ -88,7 +115,13 @@ export function wrapInDocument(
     devMode = false,
     routeModulePath,
     headExtras = '',
+    cspNonce,
   } = options;
+  const nonceAttr = cspNonce ? ` nonce="${cspNonce}"` : '';
+  // Escape dynamic values to prevent XSS injection
+  const safeTitle = escapeHtml(title);
+  const safeLang = escapeHtmlAttr(lang);
+  const safeHeadExtras = headExtras; // headExtras is developer-provided HTML — do NOT escape
   const metaTags: string[] = [];
   if (meta?.description) {
     // Escape HTML attribute special characters to prevent injection
@@ -104,10 +137,10 @@ export function wrapInDocument(
   // Dev mode: inject Vite client + component registration
   const devScripts = devMode
     ? `
-  <script type="module" src="/@vite/client"></script>
+  <script type="module" src="/@vite/client"${nonceAttr}></script>
   ${
       routeModulePath
-        ? `<script type="module">
+        ? `<script type="module"${nonceAttr}>
   // Register route component for client-side custom element definition
   import '${routeModulePath}';
 </script>`
@@ -116,12 +149,12 @@ export function wrapInDocument(
     : '';
 
   return `<!DOCTYPE html>
-<html lang="${lang}">
+<html lang="${safeLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>${metaBlock}
-  ${headExtras}
+  <title>${safeTitle}</title>${metaBlock}
+  ${safeHeadExtras}
 </head>
 <body>
   ${html}

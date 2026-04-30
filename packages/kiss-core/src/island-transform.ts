@@ -50,12 +50,12 @@ export function islandTransformPlugin(islandsDir: string): Plugin {
       // Security: reject characters that could break out of the injected
       // string literal or cause XSS (quotes, backslashes, angle brackets,
       // control chars). Only allow lowercase letters, digits, and hyphens.
+      // Note: this.error() throws in Vite/Rollup, so no return needed after it.
       if (!/^[a-z0-9-]+$/.test(tagName)) {
         this.error(
           `Island tag name "${tagName}" contains unsafe characters. ` +
             `Only lowercase letters, digits, and hyphens are allowed.`,
         );
-        return null;
       }
 
       // Inject only metadata markers. The Vite-built client entry handles

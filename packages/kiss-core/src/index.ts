@@ -99,19 +99,41 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
   // Resolve headExtras: support both new inject option and legacy ui option
   let headExtras = options.headExtras;
 
+  /**
+   * Escape a string for safe insertion into an HTML attribute value.
+   * Covers the 4 critical characters: &, ", <, >
+   */
+  const escapeHtmlAttr = (str: string): string =>
+    str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  /**
+   * Validate that a URL does not use a dangerous protocol (javascript:, data:).
+   * Returns the URL if safe, throws KissError otherwise.
+   */
+  const validateSafeUrl = (url: string, context: string): string => {
+    const trimmed = url.trim().toLowerCase();
+    if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:')) {
+      throw new KissError(
+        `Unsafe URL in ${context}: "${url}" — javascript: and data: protocols are not allowed`,
+        'UNSAFE_URL',
+        400,
+        false,
+      );
+    }
+    return url;
+  };
+
   // New inject option: build headExtras from structured config
   if (options.inject && !headExtras) {
     const fragments: string[] = [];
     for (const href of options.inject.stylesheets || []) {
-      // Escape URL to prevent attribute breakout in injected <link>
-      const safeHref = href.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+      validateSafeUrl(href, 'inject.stylesheets');
+      const safeHref = escapeHtmlAttr(href);
       fragments.push(`<link rel="stylesheet" href="${safeHref}" />`);
     }
     for (const src of options.inject.scripts || []) {
-      // Escape URL to prevent attribute breakout in injected <script>
-      const safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+      validateSafeUrl(src, 'inject.scripts');
+      const safeSrc = escapeHtmlAttr(src);
       fragments.push(`<script type="module" src="${safeSrc}"></script>`);
     }
     for (const frag of options.inject.headFragments || []) {
@@ -192,6 +214,9 @@ export function kiss(options: FrameworkOptions = {}): Plugin[] {
     },
 
     async buildStart() {
+      // Reset context for watch mode — each build must start with fresh state
+      ctx.reset();
+
       try {
         const routes = await scanRoutes(resolvedOptions.routesDir!);
 

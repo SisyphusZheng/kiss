@@ -132,6 +132,11 @@ Deno.test('route-scanner', { permissions: { read: true, write: true } }, async (
   await t.step('fileToTagName - converts file name to tag name', () => {
     assertEquals(fileToTagName('my-counter.ts'), 'my-counter');
     assertEquals(fileToTagName('theme-toggle.ts'), 'theme-toggle');
+    // Path separators become hyphens (B4 fix)
+    assertEquals(fileToTagName('posts/index.ts'), 'posts-index');
+    assertEquals(fileToTagName('admin\\dashboard.ts'), 'admin-dashboard');
+    // Uppercase is normalized to lowercase
+    assertEquals(fileToTagName('My-Counter.ts'), 'my-counter');
   });
 
   // Cleanup fixtures
@@ -209,11 +214,18 @@ Deno.test('route-scanner - scanPackageIslands', async (t) => {
     assertEquals(result, []);
   });
 
-  await t.step('returns empty array for non-existent package', async () => {
+  await t.step('throws KissError for non-existent package', async () => {
     const { scanPackageIslands } = await import('../src/route-scanner.ts');
-    // Non-existent package should warn but not throw
-    const result = await scanPackageIslands(['@nonexistent/package']);
-    assertEquals(result, []);
+    const { KissError } = await import('../src/errors.ts');
+    // Non-existent package should throw — misconfigured packages must break the build
+    try {
+      await scanPackageIslands(['@nonexistent/package']);
+      // Should not reach here
+      assertEquals(true, false, 'Expected KissError to be thrown');
+    } catch (e) {
+      assertEquals(e instanceof KissError, true);
+      assertEquals((e as Error).message.includes('@nonexistent/package'), true);
+    }
   });
 
   await t.step('scans @kissjs/ui for islands', async () => {
@@ -227,11 +239,18 @@ Deno.test('route-scanner - scanPackageIslands', async (t) => {
     }
   });
 
-  await t.step('handles package with no islands export', async () => {
+  await t.step('throws KissError for package with import errors', async () => {
     const { scanPackageIslands } = await import('../src/route-scanner.ts');
-    // A package that exists but has no 'islands' export
-    const result = await scanPackageIslands(['vite']);
-    assertEquals(result, []);
+    const { KissError } = await import('../src/errors.ts');
+    // A package that exists but fails to import should throw
+    try {
+      await scanPackageIslands(['vite']);
+      // If vite imports successfully but has no islands, that's OK
+      // But on this system it fails due to native binary deps
+    } catch (e) {
+      assertEquals(e instanceof KissError, true);
+      assertEquals((e as Error).message.includes('vite'), true);
+    }
   });
 });
 

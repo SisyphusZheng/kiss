@@ -16,6 +16,7 @@
  */
 
 import type { PackageIslandMeta, RouteEntry, SpecialFileType } from './types.js';
+import { KissError } from './errors.js';
 import { readdir, stat } from 'node:fs/promises';
 import { join, posix, sep } from 'node:path';
 
@@ -165,6 +166,10 @@ export async function scanRoutes(
 /**
  * Generate the virtual:routes module code.
  * Includes special file imports (_renderer, _middleware).
+ *
+ * @deprecated Use buildEntryDescriptor() + renderEntry() instead.
+ *   This function is kept for backward compat and tests only — the main
+ *   entry pipeline now uses the structured EntryDescriptor approach.
  */
 export function generateRoutesModule(routes: RouteEntry[], routesDir: string): string {
   const regularRoutes = routes.filter((r) => !r.special);
@@ -228,6 +233,10 @@ ${middlewareDefs || '  // No _middleware.ts files found'}
 
 /**
  * Generate the virtual:islands module code.
+ *
+ * @deprecated Use buildEntryDescriptor() + renderEntry() instead.
+ *   This function is kept for backward compat and tests only — the main
+ *   entry pipeline now uses the structured EntryDescriptor approach.
  */
 export function generateIslandsModule(
   islandsDir: string,
@@ -260,11 +269,21 @@ export const islandTagNames = islands.map(i => i.tagName);
 }
 
 /**
- * Convert a file name to a Custom Element tag name.
- * e.g., 'my-counter.ts' → 'my-counter', 'theme-toggle.ts' → 'theme-toggle'
+ * Convert a file name (or relative path) to a valid Custom Element tag name.
+ * - Removes file extension
+ * - Replaces path separators (/ and \) with hyphens
+ * - Converts to lowercase
+ *
+ * Examples:
+ *   'my-counter.ts'        → 'my-counter'
+ *   'posts/index.ts'       → 'posts-index'
+ *   'admin\\dashboard.ts'  → 'admin-dashboard'
  */
 export function fileToTagName(fileName: string): string {
-  return fileName.replace(/\.[^.]+$/, '');
+  return fileName
+    .replace(/\.[^.]+$/, '')    // Remove extension
+    .replace(/[\\/]/g, '-')     // Replace path separators with hyphens
+    .toLowerCase();
 }
 
 /**
@@ -332,8 +351,17 @@ export async function scanPackageIslands(
         }
       }
     } catch (e) {
-      // Package not found or import error - warn but don't break build
-      console.warn(`[KISS] Failed to scan package islands from "${pkg}":`, e);
+      // Package scan failure is fatal — misconfigured packages should break
+      // the build, not silently produce a broken site. This is consistent
+      // with how route scanning failures are handled (throw KissError).
+      throw new KissError(
+        `Failed to scan package islands from "${pkg}": ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+        'PACKAGE_SCAN_ERROR',
+        500,
+        false,
+      );
     }
   }
 
