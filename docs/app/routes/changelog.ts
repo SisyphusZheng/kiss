@@ -115,6 +115,62 @@ export class ChangelogPage extends LitElement {
 
           <div class="version-section">
             <div class="version-header">
+              <span class="version-number">0.3.1</span>
+              <span class="version-date">2026-04-30</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li><strong>scanIslands 递归扫描</strong>：支持 app/islands/posts/index.ts 等子目录结构</li>
+                <li><strong>CI 并行化</strong>：test.yml 拆分为 typecheck + 4 个并行 test job</li>
+                <li><strong>CI 缓存</strong>：所有 job 添加 actions/cache，减少依赖安装时间</li>
+                <li>移动端侧边栏 nav link 点击自动关闭（@kissjs/ui 文档站）</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li><strong>三阶段构建管线文档化</strong>：架构文档插件表更新为 v0.3.0 实际插件列表，构建生命周期从 closeBundle 嵌套 Vite 改为三阶段 CLI 描述</li>
+                <li><strong>deno-version 锁定</strong>：所有 workflow 从 v2.x 改为 "2"，防止 Deno 3.0 意外破坏构建</li>
+                <li><strong>kissDesignTokens 导出 tokens 子路径</strong>：@kissjs/ui/tokens/colors, effects, spacing, typography 独立导出</li>
+                <li><strong>kiss-error CSS 变量</strong>：组件错误状态统一使用可配置的 --kiss-error 变量</li>
+                <li><strong>kiss-layout 可配置 header 高度</strong>：56px 硬编码替换为 --kiss-layout-header-height CSS 变量</li>
+                <li>README 包版本号更新至 0.3.2 / 0.2.3</li>
+                <li>README coverage badge 替换为 CI badge</li>
+                <li>@kissjs/ui-plugin 的 cdn:false 配置项 JSDoc 修正：不再误导性地说"使用 npm 替代"</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li><strong>P0 — kiss-input 显示 "undefined" 字符串</strong>：.value="${this.value ?? ''}"，避免未设置值时显示文本 "undefined"</li>
+                <li><strong>P0 — @kissjs/core 缺少 CLI exports</strong>：deno.json 和 jsr.json 未导出 cli/build-client 和 cli/build-ssg，导致 create-kiss 脚手架创建的项目无法运行 deno task build:client/build:ssg</li>
+                <li><strong>P0 — dist/tokens/colors.js 缺失</strong>：deno.json 已声明导出但构建产出中不存在（build 重新执行后修复）</li>
+                <li><strong>P0 — SSG 构建崩溃（globalThis.module 删早）</strong>：CJS polyfill 在 ssrLoadModule 被删除，导致 node-domexception 报 ReferenceError</li>
+                <li><strong>P1 — 暗色模式阴影不可见</strong>：effects.ts 中 rgba(0,0,0,...) 阴影在黑色背景上不可见，添加 [data-theme="dark"] 亮色阴影变体</li>
+                <li><strong>P1 — kiss-button href/target 渲染 "undefined"</strong>：href=${hrefAttr} / target=${this.target} 在未设置时渲染字面量 "undefined"，改用 nothing sentinel</li>
+                <li><strong>P1 — kiss-button 每次 render 创建新箭头函数</strong>：disabled 时的 @click 内联箭头函数提取为类方法 _preventClick</li>
+                <li><strong>P1 — kiss-input 错误状态 ARIA 默认值</strong>：aria-invalid="false" / aria-errormessage="" 始终存在，改用 nothing sentinel</li>
+                <li><strong>P1 — kiss-code-block setTimeout 无清理</strong>：添加 _copyTimer + disconnectedCallback 清除超时</li>
+                <li><strong>P1 — colors.ts 注释颠倒</strong>：kissDarkColors / kissLightColors 的 JSDoc Light/Dark 标签互换</li>
+                <li><strong>P1 — kiss-rpc 重试延迟不响应 abort</strong>：await new Promise(setTimeout) 不监听 signal.aborted，改为 race 模式</li>
+                <li><strong>P1 — kiss-theme-toggle 无限递归</strong>：_propagateTheme 无递归深度限制，添加 depth 参数 + 最大 10 层</li>
+                <li><strong>P2 — vite-plugin-dts 隐式依赖</strong>：@kissjs/rpc 的 devDependencies 中包含 vite-plugin-dts，但 @kissjs/core 也使用但未声明</li>
+                <li><strong>P2 — build-ssg.ts 全局污染未清理</strong>：CJS polyfill（globalThis.module/exports）用完未 delete</li>
+                <li><strong>P2 — ssg-smoke 测试 silent pass</strong>：7 个测试在无构建产出时 return 而非跳过，改为 Deno.test({ ignore })</li>
+                <li><strong>P0/P1 — 8 个 assertEquals(true, true) 僵尸断言</strong>：替换为有意义断言或移除</li>
+                <li><strong>types.ts JSDoc 错误</strong>：packageIslands 注释说 '@kissjs/ui/islands'，实际实现是 import(pkg).islands</li>
+                <li><strong>context.ts decodeURIComponent 无保护</strong>：遇畸形编码抛 URIError，添加 try-catch 回退</li>
+                <li><strong>RpcController.hostConnected() 死代码</strong>：空方法 + 对应测试一并移除</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
               <span class="version-number">0.3.0</span>
               <span class="version-date">2026-04-29</span>
             </div>
@@ -332,6 +388,11 @@ export class ChangelogPage extends LitElement {
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>0.3.1</td>
+                <td>2026-04-30</td>
+                <td>Code audit fixes + 3-phase build pipeline documentation + CLI exports + recursive scanIslands</td>
+              </tr>
               <tr>
                 <td>0.3.0</td>
                 <td>2026-04-29</td>
