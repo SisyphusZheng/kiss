@@ -234,7 +234,10 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
         try {
           for (const entry of readdirSync(dir)) {
             const fullPath = join(dir, entry.name);
-            if (entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' && entry.name !== 'server') {
+            if (
+              entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' &&
+              entry.name !== 'server'
+            ) {
               results.push(...findHtmlFiles(fullPath));
             } else if (entry.name.endsWith('.html')) {
               results.push(fullPath);
@@ -340,7 +343,8 @@ async function networkFirst(req) {
 
         // Inject manifest link + sw registration into HTML files
         const manifestLink = '<link rel="manifest" href="/manifest.json">';
-        const swScript = '<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script>';
+        const swScript =
+          '<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script>';
         const htmlFiles = findHtmlFiles(outputDir);
         for (const htmlPath of htmlFiles) {
           let html = readFileSync(htmlPath, 'utf-8');
