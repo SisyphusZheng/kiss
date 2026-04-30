@@ -230,19 +230,12 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
         console.log('[KISS SSG] 404 page → dist/404.html (GitHub Pages)');
       }
 
-      console.log(`[KISS SSG] Static site generated → ${outputDir}`);
-
-      // Find HTML files recursively in output directory
-      // deno-lint-ignore no-inner-declarations
       function findHtmlFiles(dir: string): string[] {
         const results: string[] = [];
         try {
-          for (const entry of readdirSync(dir)) {
+          for (const entry of readdirSync(dir, { withFileTypes: true })) {
             const fullPath = join(dir, entry.name);
-            if (
-              entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' &&
-              entry.name !== 'server'
-            ) {
+            if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'client' && entry.name !== 'server') {
               results.push(...findHtmlFiles(fullPath));
             } else if (entry.name.endsWith('.html')) {
               results.push(fullPath);
@@ -251,6 +244,28 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
         } catch { /* ignore */ }
         return results;
       }
+
+      // Convert flat HTML files to clean URLs: about.html → about/index.html
+      // This ensures both /about and /about.html work locally and on any static host.
+      try {
+        const allFiles = nodeFs.readdirSync(outputDir);
+        const allHtmlFiles = findHtmlFiles(outputDir);
+      } catch (e) {
+      }
+      const allHtmlFiles = findHtmlFiles(outputDir);
+      for (const filePath of allHtmlFiles) {
+        const rel = nodePath.relative(outputDir, filePath);
+        if (rel.endsWith('index.html') || rel === '404.html' || rel.includes(nodePath.sep)) continue;
+        const baseName = rel.replace(/\.html$/, '');
+        const dirPath = join(outputDir, baseName);
+        const indexPath = join(dirPath, 'index.html');
+        if (existsSync(dirPath)) continue;
+        nodeFs.mkdirSync(dirPath, { recursive: true });
+        nodeFs.renameSync(filePath, indexPath);
+        console.log(`[KISS SSG] Clean URL: /${baseName} → ${baseName}/index.html`);
+      }
+
+      console.log(`[KISS SSG] Static site generated → ${outputDir}`);
 
       const basePath = options.base || '/';
 
