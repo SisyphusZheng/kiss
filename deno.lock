@@ -1320,6 +1320,7 @@
             "npm:@types/node@22",
             "npm:hono@^4.7.0",
             "npm:lit@^3.2.0",
+            "npm:vite-plugin-dts@^4.5.0",
             "npm:vite@6"
           ]
         }
