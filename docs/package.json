@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "cd ../packages/kiss-ui && deno task build",
     "build": "vite build",
     "preview": "vite preview",
     "postinstall": "cd .. && ln -sf docs/node_modules node_modules || true"

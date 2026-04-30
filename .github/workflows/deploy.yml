@@ -26,17 +26,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build @kissjs/ui package
-        working-directory: packages/kiss-ui
-        run: deno task build
-
       - name: Install Node.js dependencies
         working-directory: docs
         run: npm install
 
       - name: Phase 1 — SSR bundle
         working-directory: docs
-        run: npx vite build
+        run: npm run build
 
       - name: Phase 2 — Client island chunks
         working-directory: docs
