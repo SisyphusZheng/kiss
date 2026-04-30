@@ -45,6 +45,10 @@ jobs:
         working-directory: docs
         run: npx vite build
 
+      - name: Debug — show build metadata
+        working-directory: docs
+        run: cat .kiss/build-metadata.json | head -20
+
       - name: Phase 2 — Client island chunks
         working-directory: docs
         run: npx tsx ../packages/kiss-core/src/cli/build-client.ts

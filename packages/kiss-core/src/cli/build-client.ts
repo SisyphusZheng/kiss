@@ -58,6 +58,13 @@ async function buildClient(): Promise<void> {
   const localIslands = metadata.islandTagNames || [];
   const packageIslands = metadata.packageIslands || [];
 
+  // Debug: log resolve aliases for CI troubleshooting
+  if (metadata.resolveAlias) {
+    console.log('[KISS] resolveAlias:', JSON.stringify(metadata.resolveAlias, null, 2));
+  } else {
+    console.log('[KISS] WARNING: no resolveAlias in build metadata — island imports may fail');
+  }
+
   if (localIslands.length === 0 && packageIslands.length === 0) {
     console.log('[KISS] No islands found — zero client JS output');
     return;
@@ -112,7 +119,7 @@ async function buildClient(): Promise<void> {
     configFile: false,
     root,
     base: `${clientBase}client/`,
-    logLevel: 'warn',
+    logLevel: 'info',
     build: {
       outDir: clientOutDir,
       emptyOutDir: true,
