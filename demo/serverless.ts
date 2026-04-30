@@ -11,7 +11,7 @@ import apiApp from './app/routes/api/ping.ts';
 
 const app = new Hono();
 
-// CORS: allow the docs site to call this API from the browser
+// CORS: manual headers (avoid hono/cors middleware for Deno Deploy compat)
 app.use('/api/*', async (c, next) => {
   await next();
   c.res.headers.set('Access-Control-Allow-Origin', '*');
