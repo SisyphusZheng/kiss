@@ -50,3 +50,5 @@ coverage-*.txt
 coverage-output.txt
 .git-commit-msg.txt
 docs/vite-build-*.txt
+/node_modules
+node_modules
