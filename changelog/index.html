@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KISS</title>
+  <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css" />
+  <script type="module" src="https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>:root,[data-theme="light"]{--kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;color-scheme:light}[data-theme="dark"]{--kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;color-scheme:dark}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>
+  <script src="/theme-init.js"></script>
+  <script src="/mobile-sidebar.js"></script>
+  <script src="/has-fallback.js"></script>
+<link rel="manifest" href="/manifest.json"></head>
+<body>
+  <!--lit-part BRUAAAUVAAA=--><!--lit-part vT/oktWct+E=--><page-changelog  defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  :host {
+    display: block;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.5rem;
+    color: var(--kiss-text-primary);
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    color: var(--kiss-text-tertiary);
+    margin-bottom: 3rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--kiss-text-primary);
+  }
+
+  h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--kiss-accent-dim);
+  }
+
+  p {
+    line-height: 1.7;
+    margin: 0.5rem 0;
+    color: var(--kiss-text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  strong {
+    color: var(--kiss-text-primary);
+    font-weight: 600;
+  }
+
+  em {
+    color: var(--kiss-accent-dim);
+    font-style: italic;
+  }
+
+  a {
+    color: var(--kiss-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--kiss-border-hover);
+    text-decoration-thickness: 1px;
+    transition: text-decoration-color 0.15s;
+  }
+
+  a:hover {
+    text-decoration-color: var(--kiss-text-primary);
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--kiss-code-bg);
+    color: var(--kiss-text-secondary);
+    padding: 1rem 1.25rem;
+    border-radius: 3px;
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    margin: 0.75rem 0;
+  }
+
+  code {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  }
+
+  .inline-code {
+    background: var(--kiss-code-bg);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.875em;
+  }
+
+  p code, li code {
+    background: var(--kiss-code-bg);
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.8125rem;
+    color: var(--kiss-accent-dim);
+    border: 1px solid var(--kiss-code-border);
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  th, td {
+    border: 1px solid var(--kiss-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  th {
+    background: var(--kiss-code-bg);
+    font-weight: 600;
+    color: var(--kiss-accent-dim);
+  }
+
+  td {
+    color: var(--kiss-text-secondary);
+  }
+
+  /* Callout blocks */
+  .pillar {
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .pillar .num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--kiss-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .pillar h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: var(--kiss-text-primary);
+  }
+
+  .hard-constraint {
+    display: inline-block;
+    background: var(--kiss-code-bg);
+    border: 1px solid var(--kiss-border-hover);
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    margin: 0.125rem 0;
+  }
+
+  .callout {
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .callout.warn {
+    border-left-color: var(--kiss-text-tertiary);
+  }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 1.25rem;
+    color: var(--kiss-text-secondary);
+    line-height: 1.7;
+  }
+
+  li {
+    margin: 0.375rem 0;
+  }
+
+  /* Page nav */
+  .nav-row {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--kiss-text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--kiss-border);
+    border-radius: 4px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-link:hover {
+    color: var(--kiss-text-primary);
+    border-color: var(--kiss-border-hover);
+    background: var(--kiss-accent-subtle);
+  }
+
+  /* === Responsive === */
+  @media (max-width: 900px) {
+    .container {
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.625rem;
+    }
+
+    .subtitle {
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    pre {
+      padding: 0.875rem 1rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+    }
+
+    table {
+      font-size: 0.75rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.625rem;
+    }
+
+    .pillar, .callout {
+      padding: 1rem;
+    }
+
+    .nav-row {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-link {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 1.5rem 1rem 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.375rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    p {
+      font-size: 0.875rem;
+    }
+
+    pre {
+      padding: 0.75rem;
+      font-size: 0.6875rem;
+      margin: 0.5rem 0;
+    }
+
+    code {
+      font-size: 0.75rem;
+    }
+
+    ul, ol {
+      padding-left: 1rem;
+    }
+
+    .hard-constraint {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.5rem;
+    }
+  }
+
+      .version-section {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: var(--kiss-bg-surface);
+        border: 1px solid var(--kiss-border);
+        border-radius: 6px;
+      }
+      .version-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .version-number {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--kiss-text-primary);
+      }
+      .version-date {
+        font-size: 0.75rem;
+        color: var(--kiss-text-muted);
+        padding: 0.25rem 0.5rem;
+        background: var(--kiss-bg-elevated);
+        border-radius: 3px;
+      }
+      .change-category {
+        margin: 1rem 0;
+      }
+      .change-category h4 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--kiss-text-muted);
+        margin-bottom: 0.5rem;
+      }
+      .change-category.added h4 {
+        color: var(--kiss-accent);
+      }
+      .change-category.changed h4 {
+        color: var(--kiss-accent-dim);
+      }
+      .change-category.fixed h4 {
+        color: var(--kiss-text-secondary);
+      }
+      .change-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .change-list li {
+        padding: 0.375rem 0;
+        padding-left: 1.25rem;
+        position: relative;
+        color: var(--kiss-text-secondary);
+        font-size: 0.875rem;
+      }
+      .change-list li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: var(--kiss-text-muted);
+      }
+      .version-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        font-size: 0.875rem;
+      }
+      .version-table th,
+      .version-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--kiss-border);
+      }
+      .version-table th {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--kiss-text-muted);
+      }
+      .version-table td:first-child {
+        font-weight: 600;
+        color: var(--kiss-text-primary);
+      }
+    </style><!--lit-part ZRdcWWjwI2E=-->
+      <!--lit-node 0--><kiss-layout  currentpath="/changelog" defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: block;
+      }
+
+      /* === Layout Shell === */
+      .app-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: var(--kiss-bg-base);
+        color: var(--kiss-text-primary);
+        font-family: var(--kiss-font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .layout-body {
+        display: flex;
+        flex: 1;
+      }
+
+      .layout-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .app-layout[home] .layout-body {
+        display: block;
+      }
+
+      /* === Header === */
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: var(--kiss-z-sticky);
+        background: var(--kiss-bg-base);
+        border-bottom: 1px solid var(--kiss-border);
+      }
+
+      .header-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 var(--kiss-size-8);
+        display: flex;
+        align-items: center;
+        height: var(--kiss-layout-header-height, 56px);
+        gap: var(--kiss-size-6);
+      }
+
+      /* === Mobile Menu (L0: details/summary) === */
+      .mobile-menu {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        padding: 0;
+        list-style: none;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .mobile-menu-btn::-webkit-details-marker {
+          display: none;
+        }
+
+        .mobile-menu-btn::marker {
+          content: "";
+        }
+
+        .mobile-menu-btn:hover,
+        .mobile-menu-btn:focus-visible {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .mobile-menu[open] .mobile-menu-btn {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          border-color: var(--kiss-border-hover);
+        }
+
+        /* === Logo === */
+        .logo {
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-extrabold);
+          color: var(--kiss-text-primary);
+          text-decoration: none;
+          letter-spacing: var(--kiss-letter-spacing-widest);
+          text-transform: uppercase;
+          transition: opacity var(--kiss-transition-normal);
+          white-space: nowrap;
+        }
+
+        .logo:hover {
+          opacity: 0.6;
+        }
+
+        .logo-sub {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-normal);
+          color: var(--kiss-text-muted);
+          margin-left: var(--kiss-size-2);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          text-transform: none;
+        }
+
+        /* === Header Nav === */
+        .header-nav {
+          display: flex;
+          gap: 0.125rem;
+          flex: 1;
+        }
+
+        .header-nav a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-medium);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          transition: color var(--kiss-transition-normal);
+          border-radius: var(--kiss-radius-md);
+        }
+
+        .header-nav a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        /* === Header Right === */
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          margin-left: auto;
+        }
+
+        /* === GitHub Link === */
+        .github-link {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          color: var(--kiss-text-muted);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-medium);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          border: 1px solid var(--kiss-border);
+          border-radius: var(--kiss-radius-md);
+          transition: color var(--kiss-transition-normal), border-color var(--kiss-transition-normal);
+        }
+
+        .github-link:hover {
+          color: var(--kiss-text-secondary);
+          border-color: var(--kiss-border-hover);
+        }
+
+        .github-link svg {
+          flex-shrink: 0;
+        }
+
+        /* === Sidebar (Desktop) === */
+        .docs-sidebar {
+          width: 240px;
+          flex-shrink: 0;
+          border-right: 1px solid var(--kiss-border);
+          padding: var(--kiss-size-6) 0;
+          overflow-y: auto;
+          height: calc(100vh - var(--kiss-layout-header-height, 56px));
+          position: sticky;
+          top: var(--kiss-layout-header-height, 56px);
+          scrollbar-width: thin;
+        }
+
+        .nav-section {
+          margin-bottom: var(--kiss-size-5);
+        }
+
+        .nav-section summary {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-bold);
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          color: var(--kiss-text-muted);
+          padding: 0 var(--kiss-size-5);
+          margin-bottom: var(--kiss-size-2);
+          cursor: pointer;
+          list-style: none;
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          user-select: none;
+        }
+
+        .nav-section summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .nav-section summary::marker {
+          content: "";
+        }
+
+        .nav-section summary::before {
+          content: "▾";
+          font-size: 0.5rem;
+          transition: transform var(--kiss-transition-normal);
+          display: inline-block;
+        }
+
+        .nav-section[open] summary::before {
+          transform: rotate(0deg);
+        }
+
+        .nav-section:not([open]) summary::before {
+          transform: rotate(-90deg);
+        }
+
+        .nav-section summary:hover {
+          color: var(--kiss-text-tertiary);
+        }
+
+        .docs-sidebar a {
+          display: block;
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          padding: 0.3rem var(--kiss-size-5);
+          transition: color var(--kiss-transition-normal), background var(--kiss-transition-normal);
+          border-left: 2px solid transparent;
+        }
+
+        .docs-sidebar a:hover {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .docs-sidebar a.active,
+        .docs-sidebar a[aria-current="page"] {
+          color: var(--kiss-text-primary);
+          border-left-color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          font-weight: var(--kiss-font-weight-medium);
+        }
+
+        /* === Mobile Backdrop === */
+        .mobile-backdrop {
+          position: fixed;
+          inset: 0;
+          top: var(--kiss-layout-header-height, 56px);
+          background: var(--kiss-backdrop, rgba(0, 0, 0, 0.4));
+          z-index: 80;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity var(--kiss-transition-slow);
+          backdrop-filter: blur(2px);
+        }
+
+        /* === Mobile Responsive === */
+        @media (max-width: 900px) {
+          .mobile-menu {
+            display: block;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-4);
+            gap: var(--kiss-size-3);
+          }
+
+          .header-nav {
+            display: none;
+          }
+
+          .github-text {
+            display: none;
+          }
+
+          .header-right {
+            gap: var(--kiss-size-2);
+          }
+
+          .docs-sidebar {
+            position: fixed;
+            top: var(--kiss-layout-header-height, 56px);
+            left: 0;
+            width: min(300px, 80vw);
+            height: calc(100vh - var(--kiss-layout-header-height, 56px));
+            z-index: 90;
+            background: var(--kiss-bg-base);
+            border-right: 1px solid var(--kiss-border);
+            border-bottom: none;
+            padding: var(--kiss-size-4) 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transform: translateX(-101%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            box-shadow: none;
+          }
+
+          .app-layout:has(.mobile-menu[open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+          }
+
+          .app-layout:has(.mobile-menu[open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          :host([menu-open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: var(--kiss-shadow-sidebar, 4px 0 24px rgba(0, 0, 0, 0.3));
+          }
+
+          :host([menu-open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .nav-section {
+            margin-bottom: var(--kiss-size-2);
+          }
+
+          .nav-section summary {
+            padding: var(--kiss-size-2) var(--kiss-size-4);
+            font-size: var(--kiss-font-size-xs);
+          }
+
+          .docs-sidebar a {
+            padding: var(--kiss-size-2) var(--kiss-size-4) var(--kiss-size-2) var(--kiss-size-7);
+            font-size: var(--kiss-font-size-sm);
+          }
+
+          .layout-main {
+            width: 100%;
+          }
+
+          .app-footer footer {
+            padding: var(--kiss-size-6) var(--kiss-size-4);
+          }
+
+          .app-footer .divider {
+            display: none;
+          }
+
+          .app-footer p {
+            line-height: 1.8;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .logo-sub {
+            display: none;
+          }
+
+          .github-link {
+            padding: var(--kiss-size-2);
+            border: none;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-3);
+          }
+        }
+
+        /* === Footer === */
+        .app-footer footer {
+          padding: var(--kiss-size-8);
+          border-top: 1px solid var(--kiss-border);
+          text-align: center;
+          color: var(--kiss-text-muted);
+          font-size: var(--kiss-font-size-xs);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          background: var(--kiss-bg-base);
+        }
+
+        .app-footer p {
+          margin: 0.25rem 0;
+        }
+
+        .app-footer a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          transition: color var(--kiss-transition-normal);
+        }
+
+        .app-footer a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        .app-footer .divider {
+          display: inline-block;
+          width: 1px;
+          height: 8px;
+          background: var(--kiss-border-hover);
+          vertical-align: middle;
+          margin: 0 var(--kiss-size-3);
+        }
+      </style><!--lit-part AIQQHfD4RiQ=-->
+        <!--lit-node 0--><div class="app-layout" >
+          <header class="app-header">
+            <div class="header-inner">
+              <a class="logo" href="/"><!--lit-part-->KISS<!--/lit-part--><span class="logo-sub"><!--lit-part-->framework<!--/lit-part--></span></a>
+              <!--lit-part iwsltJwalY8=-->
+        <nav class="header-nav">
+          <!--lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/guide/getting-started"><!--lit-part-->Docs<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/ui"><!--lit-part-->UI<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/blog"><!--lit-part-->Blog<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="https://jsr.io/@kissjs/core"><!--lit-part-->JSR<!--/lit-part--></a>
+              <!--/lit-part--><!--/lit-part-->
+        </nav>
+      <!--/lit-part-->
+              <div class="header-right">
+                <!--lit-part g+/qhbO2TdI=-->
+                    <details class="mobile-menu">
+                      <summary class="mobile-menu-btn" aria-label="Toggle navigation">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 18 18"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        >
+                          <line x1="3" y1="4.5" x2="15" y2="4.5" />
+                          <line x1="3" y1="9" x2="15" y2="9" />
+                          <line x1="3" y1="13.5" x2="15" y2="13.5" />
+                        </svg>
+                      </summary>
+                    </details>
+                  <!--/lit-part-->
+                <!--lit-node 10--><kiss-theme-toggle defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: inline-block;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        font-size: 0;
+        line-height: 1;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .theme-toggle:hover {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .theme-toggle svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .theme-toggle .icon-sun {
+          display: block;
+        }
+
+        .theme-toggle .icon-moon {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-sun {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-moon {
+          display: block;
+        }
+      </style><!--lit-part cT0CU1oOnag=-->
+        <!--lit-node 0--><button
+          class="theme-toggle "
+          title="Switch to light theme"
+          aria-label="Toggle theme"
+          
+        >
+          <svg
+            class="icon-sun"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <line x1="8" y1="1" x2="8" y2="3" />
+            <line x1="8" y1="13" x2="8" y2="15" />
+            <line x1="1" y1="8" x2="3" y2="8" />
+            <line x1="13" y1="8" x2="15" y2="8" />
+            <line x1="3.05" y1="3.05" x2="4.46" y2="4.46" />
+            <line x1="11.54" y1="11.54" x2="12.95" y2="12.95" />
+            <line x1="3.05" y1="12.95" x2="4.46" y2="11.54" />
+            <line x1="11.54" y1="4.46" x2="12.95" y2="3.05" />
+          </svg>
+          <svg
+            class="icon-moon"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <path d="M13.5 9.14A5.5 5.5 0 0 1 6.86 2.5 5.5 5.5 0 1 0 13.5 9.14Z" />
+          </svg>
+        </button>
+      <!--/lit-part--></template></kiss-theme-toggle>
+                <!--lit-node 11--><a class="github-link" href="https://github.com/SisyphusZheng/kiss">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                      d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                    />
+                  </svg>
+                  <span class="github-text">GitHub</span>
+                </a>
+              </div>
+            </div>
+          </header>
+          <div class="mobile-backdrop"></div>
+          <div class="layout-body">
+            <!--lit-part VmG9LeMELQ4=-->
+        <nav class="docs-sidebar" aria-label="Documentation navigation">
+          <!--lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Introduction<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/getting-started"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Getting Started<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/design-philosophy"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Design Philosophy<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/architecture"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Architecture<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Core<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/routing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Routing<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/islands"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Islands<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/api-routes"
+          class=""
+          aria-current=""
+        ><!--lit-part-->API Routes<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/api-design"
+          class=""
+          aria-current=""
+        ><!--lit-part-->API Design<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/ssg"
+          class=""
+          aria-current=""
+        ><!--lit-part-->SSG<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Guides<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/configuration"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Configuration<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/error-handling"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Error Handling<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/security-middleware"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Security &amp; Middleware<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/testing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Testing<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Reference<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/deployment"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Deployment<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/styling/kiss-ui"
+          class=""
+          aria-current=""
+        ><!--lit-part-->@kissjs/ui<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/styling/web-awesome"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Web Awesome<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Architecture<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/kiss-compiler"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Compiler<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/pwa"
+          class=""
+          aria-current=""
+        ><!--lit-part-->PWA Support<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/roadmap"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Roadmap<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->UI<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/ui"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Design System<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Examples<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Overview<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/hello"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Hello World<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/minimal-blog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Minimal Blog<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/fullstack"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Fullstack<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Blog<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/blog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->All Posts<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/blog/kiss-compiler"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Compiler<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Project<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/changelog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Changelog<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/contributing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Contributing<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--/lit-part-->
+        </nav>
+      <!--/lit-part-->
+            <main class="layout-main">
+              <slot></slot>
+            </main>
+          </div>
+          <div class="app-footer">
+            <footer>
+              <p>
+                Built with <!--lit-node 23--><a href="https://github.com/SisyphusZheng/kiss" target="_blank" rel="noopener noreferrer"
+                >KISS Framework</a>
+                <span class="divider"></span>
+                Self-bootstrapped from JSR
+                <span class="divider"></span>
+                KISS Architecture — K·I·S·S
+              </p>
+            </footer>
+          </div>
+        </div>
+      <!--/lit-part--></template>
+        <div class="container">
+          <h1>更新日志</h1>
+          <p class="subtitle">
+            KISS 的所有重要变更都记录在这里。
+          </p>
+
+          <p>
+            格式基于
+            <a href="https://keepachangelog.com/zh-CN/1.0.0/" target="_blank">Keep a Changelog</a>，本项目遵循
+            <a href="https://semver.org/lang/zh-CN/" target="_blank">语义化版本 2.0.0</a>。
+          </p>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.3.4</span>
+              <span class="version-date">2026-04-30</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li><strong>scanIslands 递归扫描</strong>：支持 app/islands/posts/index.ts 等子目录结构</li>
+                <li><strong>CI 并行化</strong>：test.yml 拆分为 typecheck + 4 个并行 test job</li>
+                <li><strong>CI 缓存</strong>：所有 job 添加 actions/cache，减少依赖安装时间</li>
+                <li>移动端侧边栏 nav link 点击自动关闭（@kissjs/ui 文档站）</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li><strong>三阶段构建管线文档化</strong>：架构文档插件表更新为 v0.3.0 实际插件列表，构建生命周期从 closeBundle 嵌套 Vite 改为三阶段 CLI 描述</li>
+                <li><strong>deno-version 锁定</strong>：所有 workflow 从 v2.x 改为 "2"，防止 Deno 3.0 意外破坏构建</li>
+                <li><strong>kissDesignTokens 导出 tokens 子路径</strong>：@kissjs/ui/tokens/colors, effects, spacing, typography 独立导出</li>
+                <li><strong>kiss-error CSS 变量</strong>：组件错误状态统一使用可配置的 --kiss-error 变量</li>
+                <li><strong>kiss-layout 可配置 header 高度</strong>：56px 硬编码替换为 --kiss-layout-header-height CSS 变量</li>
+                <li>README 包版本号更新至 0.3.2 / 0.2.3</li>
+                <li>README coverage badge 替换为 CI badge</li>
+                <li>@kissjs/ui-plugin 的 cdn:false 配置项 JSDoc 修正：不再误导性地说"使用 npm 替代"</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li><strong>主题切换按钮点击无响应（v0.2.x 历史问题）</strong>：kiss-theme-toggle 在 Shadow DOM 中事件的 composedPath() 未正确穿透，导致点击事件被吞；data-theme 未传播到所有嵌套组件的 host 元素。根因：@lit-labs/ssr 渲染后 hydration 顺序错误 — litElementHydrateSupport({LitElement}) 在 customElements.define() 之前未执行</li>
+                <li><strong>Island 计数器重复渲染（v0.2.x 历史问题）</strong>：静态 import 导致 customElements.define() 在 hydration 补丁执行前运行，Lit 对已定义的元素做 DSD 水合时先全量渲染再 patch，造成两次渲染。修复：改为动态 import() 确保 hydration 补丁先执行</li>
+                <li><strong>Island chunk 404</strong>：build-client.ts 未设置 base='/client/'，Vite 生成的 __vite__mapDeps 指向 /islands/*.js 而非 /client/islands/*.js</li>
+                <li><strong>DSD polyfill 报错</strong>：template-shadowroot document.write() polyfill 在 ESM 环境下报 "Cannot use import statement outside module"，移除（现代浏览器已原生支持 DSD）</li>
+                <li><strong>P0 — kiss-input 显示 "undefined" 字符串</strong>：.value="${this.value ?? ''}"，避免未设置值时显示文本 "undefined"</li>
+                <li><strong>P0 — @kissjs/core 缺少 CLI exports</strong>：deno.json 和 jsr.json 未导出 cli/build-client 和 cli/build-ssg，导致 create-kiss 脚手架创建的项目无法运行 deno task build:client/build:ssg</li>
+                <li><strong>P0 — dist/tokens/colors.js 缺失</strong>：deno.json 已声明导出但构建产出中不存在（build 重新执行后修复）</li>
+                <li><strong>P0 — SSG 构建崩溃（globalThis.module 删早）</strong>：CJS polyfill 在 ssrLoadModule 被删除，导致 node-domexception 报 ReferenceError</li>
+                <li><strong>P1 — 暗色模式阴影不可见</strong>：effects.ts 中 rgba(0,0,0,...) 阴影在黑色背景上不可见，添加 [data-theme="dark"] 亮色阴影变体</li>
+                <li><strong>P1 — kiss-button href/target 渲染 "undefined"</strong>：href=${hrefAttr} / target=${this.target} 在未设置时渲染字面量 "undefined"，改用 nothing sentinel</li>
+                <li><strong>P1 — kiss-button 每次 render 创建新箭头函数</strong>：disabled 时的 @click 内联箭头函数提取为类方法 _preventClick</li>
+                <li><strong>P1 — kiss-input 错误状态 ARIA 默认值</strong>：aria-invalid="false" / aria-errormessage="" 始终存在，改用 nothing sentinel</li>
+                <li><strong>P1 — kiss-code-block setTimeout 无清理</strong>：添加 _copyTimer + disconnectedCallback 清除超时</li>
+                <li><strong>P1 — colors.ts 注释颠倒</strong>：kissDarkColors / kissLightColors 的 JSDoc Light/Dark 标签互换</li>
+                <li><strong>P1 — kiss-rpc 重试延迟不响应 abort</strong>：await new Promise(setTimeout) 不监听 signal.aborted，改为 race 模式</li>
+                <li><strong>P1 — kiss-theme-toggle 无限递归</strong>：_propagateTheme 无递归深度限制，添加 depth 参数 + 最大 10 层</li>
+                <li><strong>P2 — vite-plugin-dts 隐式依赖</strong>：@kissjs/rpc 的 devDependencies 中包含 vite-plugin-dts，但 @kissjs/core 也使用但未声明</li>
+                <li><strong>P2 — build-ssg.ts 全局污染未清理</strong>：CJS polyfill（globalThis.module/exports）用完未 delete</li>
+                <li><strong>P2 — ssg-smoke 测试 silent pass</strong>：7 个测试在无构建产出时 return 而非跳过，改为 Deno.test({ ignore })</li>
+                <li><strong>P0/P1 — 8 个 assertEquals(true, true) 僵尸断言</strong>：替换为有意义断言或移除</li>
+                <li><strong>types.ts JSDoc 错误</strong>：packageIslands 注释说 '@kissjs/ui/islands'，实际实现是 import(pkg).islands</li>
+                <li><strong>context.ts decodeURIComponent 无保护</strong>：遇畸形编码抛 URIError，添加 try-catch 回退</li>
+                <li><strong>RpcController.hostConnected() 死代码</strong>：空方法 + 对应测试一并移除</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.3.0</span>
+              <span class="version-date">2026-04-29</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li><strong>Package Islands 自动检测</strong>：通过 packageIslands 配置自动扫描并注册来自 npm/JSR 包的 Islands</li>
+                <li><strong>kiss-theme-toggle Island</strong>：Dark/Light 主题切换组件，从 kiss-layout 中提取为独立 Island（DSD + hydration）</li>
+                <li><strong>KissBuildContext 架构重构</strong>：替代闭包共享可变状态，提升构建管道的可测试性</li>
+                <li><strong>EntryDescriptor + renderEntry 模板化</strong>：替代 hono-entry.ts 的字符串拼接</li>
+                <li>Vite manifest 集成：build.ts 使用 build.manifest:true 生成客户端入口映射</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li><strong>kiss-layout 简化为纯静态组件</strong>：移除 _isLight 属性、localStorage 读取、_handleThemeToggle 方法</li>
+                <li>L2 全局主题切换脚本已删除：由 kiss-theme-toggle Island hydration 替代</li>
+                <li>客户端构建自动化生成包内 Island 导入和注册代码</li>
+                <li>SSG post-processing 使用 insertBeforeBodyClose/insertAfterHead 辅助函数，替代 naive string replace</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li>Island chunk 检测从 grep JS 文件内容改为读取 Rollup manifest（确定性、无误报）</li>
+                <li>HTML 插入操作增强鲁棒性：处理标签属性、大小写差异、空白变体</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.2.0</span>
+              <span class="version-date">2026-04-27</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li>
+                  <strong>Package Islands 自动检测</strong>：自动检测并注册来自 npm/JSR 包的 Islands
+                </li>
+                <li>
+                  <code>packageIslands</code> configuration option to specify which packages to scan
+                </li>
+                <li>
+                  <code>scanPackageIslands()</code> function to dynamically import packages and read
+                  <code>islands</code> export
+                </li>
+                <li>
+                  <code>kiss-theme-toggle</code> Island for theme switching (Dark/Light)
+                </li>
+                <li>
+                  Package Island metadata type: <code>PackageIslandMeta</code>
+                </li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li>
+                  <strong>破坏性变更</strong>：<code>kiss-layout</code> 主题切换逻辑已移除 — 请使用
+                  <code>kiss-theme-toggle</code> Island
+                </li>
+                <li>
+                  <code>kiss-layout</code> simplified to static component (no client-side state)
+                </li>
+                <li>
+                  L2 theme toggle script removed (replaced by Island hydration)
+                </li>
+                <li>
+                  Client build now auto-generates import and registration code for package Islands
+                </li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li>主题切换现在使用正确的 Island hydration (DSD + 客户端状态)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.1.7</span>
+              <span class="version-date">2026-04-27</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li>Logger 模块支持 <code>KISS_LOG_LEVEL</code> 环境变量</li>
+                <li>
+                  @kissjs/ui 组件库：kiss-button, kiss-card, kiss-input, kiss-code-block, kiss-layout
+                </li>
+                <li>design-tokens CSS 自定义属性（瑞士国际主义风格）</li>
+                <li>examples/hello 最小示例：演示 KISS 基础</li>
+                <li>文档站 dogfooding：/ui 页面使用真实 KISS UI 组件</li>
+                <li>SSR 兼容性文档（/guide/ssg）</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li>@kissjs/ui 版本升级至 0.1.4</li>
+                <li>文档站现在导入 @kissjs/ui 组件</li>
+                <li>迁移所有示例到 static properties + customElements.define() 模式</li>
+                <li>移除 packages/kiss-ui/deno.json 中的 experimentalDecorators 配置</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.1.6</span>
+              <span class="version-date">2026-04-26</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li>纯黑白色设计系统 + 主题切换</li>
+                <li>/ui 设计系统展示页面</li>
+                <li>移动端响应式侧边栏 + 汉堡菜单</li>
+                <li>CSS :has() 选择器实现侧边栏切换（零 JS）</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li>合并页面样式（pageStyles）— 消除 840 行重复 CSS</li>
+                <li>移除页面样式中所有 !important  hack</li>
+                <li>侧边栏现在使用滑入动画 + 背景模糊</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li>点击背景现在可以关闭侧边栏（L2 脚本）</li>
+                <li>移动端响应式布局改进</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.1.5</span>
+              <span class="version-date">2026-04-20</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li>KISS 架构文档（K·I·S·S 四约束）</li>
+                <li>DSD（声明式 Shadow DOM）输出支持</li>
+                <li>Jamstack 对齐文档</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li>从 DIA 重新品牌为 KISS Architecture</li>
+                <li>更新 README 包含双重含义（理念 + 架构）</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="version-section">
+            <div class="version-header">
+              <span class="version-number">0.1.4</span>
+              <span class="version-date">2026-04-15</span>
+            </div>
+
+            <div class="change-category added">
+              <h4>新增</h4>
+              <ul class="change-list">
+                <li>inject 选项：自定义样式表/脚本注入</li>
+                <li>API Routes 部署文档</li>
+              </ul>
+            </div>
+
+            <div class="change-category changed">
+              <h4>变更</h4>
+              <ul class="change-list">
+                <li>标记 ui 选项已弃用（请使用 inject）</li>
+              </ul>
+            </div>
+
+            <div class="change-category fixed">
+              <h4>修复</h4>
+              <ul class="change-list">
+                <li>RPC call() 现在抛出 RpcError 而不是返回 null</li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>上游依赖 / 兼容性问题</h2>
+          <table class="version-table">
+            <thead>
+              <tr>
+                <th>问题</th>
+                <th>根源</th>
+                <th>影响</th>
+                <th>缓解方案</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Deno fmt dprint-core panic</td>
+                <td>dprint-core 0.67.4 在处理嵌套 Lit 模板字面量（含 HTML 实体 &lt; 等）时 panic</td>
+                <td>docs/ 中 Lit tagged template 无法格式化</td>
+                <td>CI 中 fmt --check 跳过 docs/，仅检查 packages/</td>
+              </tr>
+              <tr>
+                <td>node-domexception CJS 兼容</td>
+                <td>node-domexception@1.0.0 使用 module.exports (CJS)，Deno 的 ESM 运行时无法直接加载</td>
+                <td>SSG 构建失败：ReferenceError: module is not defined</td>
+                <td>globalThis.module / exports polyfill，用完后 finally 清理</td>
+              </tr>
+              <tr>
+                <td>parse5 / entities 版本锁</td>
+                <td>entities@6 与 parse5@7 的兼容性要求，需同步升级</td>
+                <td>依赖安装失败</td>
+                <td>升级 entities 到 ^6</td>
+              </tr>
+              <tr>
+                <td>Lit SSR + hydration 时序</td>
+                <td>@lit-labs/ssr-client 的 litElementHydrateSupport() 必须在 customElements.define() 之前执行，否则已注册的元素会全量渲染再 patch（双重渲染）</td>
+                <td>Island 组件双重渲染 / hydration 不匹配</td>
+                <td>动态 import() 确保 hydration 补丁先于任何组件注册执行</td>
+              </tr>
+              <tr>
+                <td>@kissjs/core → lit resolve alias</td>
+                <td>Vite lib mode 构建中将 @kissjs/core 映射为 lit，使编译产物直接依赖 lit 而非 @kissjs/core</td>
+                <td>@kissjs/ui 的 dist 消费者无需安装 @kissjs/core</td>
+                <td>resolve.alias + build.ts serializeAlias 传递到 CLI 构建</td>
+              </tr>
+              <tr>
+                <td>Window CRLF vs Unix LF</td>
+                <td>Windows Git 自动转换行尾导致 deno fmt CI 失败</td>
+                <td>多平台协作者间格式冲突</td>
+                <td>.gitattributes eol=lf 统一行尾</td>
+              </tr>
+              <tr>
+                <td>tsup → Vite lib mode</td>
+                <td>tsup 不支持 Deno 的 node: 前缀保留</td>
+                <td>Node 原生模块导入失败</td>
+                <td>迁移至 Vite lib format: 'es'，天然保留 node: 前缀</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2>版本历史</h2>
+          <table class="version-table">
+            <thead>
+              <tr>
+                <th>版本</th>
+                <th>日期</th>
+                <th>亮点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>0.3.4</td>
+                <td>2026-04-30</td>
+                <td>Code audit fixes + upstream compat docs + version bump + release</td>
+              </tr>
+              <tr>
+                <td>0.3.0</td>
+                <td>2026-04-29</td>
+                <td>Package Islands auto-detection + kiss-theme-toggle Island + build pipeline refactor</td>
+              </tr>
+              <tr>
+                <td>0.2.0</td>
+                <td>2026-04-27</td>
+                <td>Package Islands auto-detection + kiss-theme-toggle Island</td>
+              </tr>
+              <tr>
+                <td>0.1.7</td>
+                <td>2026-04-27</td>
+                <td>Architecture audit + dogfooding + docs self-hosting</td>
+              </tr>
+              <tr>
+                <td>0.1.6</td>
+                <td>2026-04-26</td>
+                <td>Design system + mobile responsive</td>
+              </tr>
+              <tr>
+                <td>0.1.5</td>
+                <td>2026-04-20</td>
+                <td>KISS Architecture branding</td>
+              </tr>
+              <tr>
+                <td>0.1.4</td>
+                <td>2026-04-15</td>
+                <td>inject option + API Routes docs</td>
+              </tr>
+              <tr>
+                <td>0.1.3</td>
+                <td>2026-04-10</td>
+                <td>@kissjs/rpc + @kissjs/ui</td>
+              </tr>
+              <tr>
+                <td>0.1.2</td>
+                <td>2026-04-05</td>
+                <td>Island AST transform</td>
+              </tr>
+              <tr>
+                <td>0.1.1</td>
+                <td>2026-04-01</td>
+                <td>Initial JSR release</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="nav-row">
+            <a href="/roadmap" class="nav-link">&larr; 开发计划</a>
+            <a href="/guide/getting-started" class="nav-link">快速上手 &rarr;</a>
+          </div>
+        </div>
+      </kiss-layout>
+    <!--/lit-part--></template></page-changelog><!--/lit-part--><?><!--/lit-part-->
+  
+  <script type="module" src="/client/islands/client.js"></script>
+<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script></body>
+</html>

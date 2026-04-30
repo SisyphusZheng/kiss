@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KISS</title>
+  <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css" />
+  <script type="module" src="https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>:root,[data-theme="light"]{--kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;color-scheme:light}[data-theme="dark"]{--kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;color-scheme:dark}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>
+  <script src="/theme-init.js"></script>
+  <script src="/mobile-sidebar.js"></script>
+  <script src="/has-fallback.js"></script>
+<link rel="manifest" href="/manifest.json"></head>
+<body>
+  <!--lit-part BRUAAAUVAAA=--><!--lit-part i3KvkiMD9H8=--><docs-home  defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+    :host {
+      display: block;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 12rem 2rem 6rem;
+      text-align: left;
+    }
+
+    .hero .overline {
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.24em;
+      color: var(--kiss-text-muted);
+      margin-bottom: 1.75rem;
+      display: block;
+    }
+
+    .hero h1 {
+      font-size: 5.5rem;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      margin: 0;
+      color: var(--kiss-text-primary);
+      line-height: 0.9;
+    }
+
+    .hero .tagline {
+      font-size: 1.0625rem;
+      color: var(--kiss-text-secondary);
+      margin-top: 2.25rem;
+      line-height: 1.8;
+      font-weight: 400;
+      max-width: 480px;
+    }
+
+    .hero .equation {
+      margin-top: 3rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .eq-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: var(--kiss-bg-surface);
+      border: 1px solid var(--kiss-border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--kiss-text-tertiary);
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .eq-item:hover {
+      border-color: var(--kiss-border-hover);
+      background: var(--kiss-bg-elevated);
+    }
+
+    .eq-label {
+      color: var(--kiss-text-muted);
+      font-weight: 400;
+    }
+
+    .eq-val {
+      color: var(--kiss-text-primary);
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .cta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .cta a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.75rem 1.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .cta-primary {
+      background: var(--kiss-text-primary);
+      color: var(--kiss-bg-base);
+    }
+
+    .cta-primary:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .cta-secondary {
+      background: transparent;
+      color: var(--kiss-text-secondary);
+      border: 1px solid var(--kiss-border);
+    }
+
+    .cta-secondary:hover {
+      color: var(--kiss-text-primary);
+      border-color: var(--kiss-border-hover);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Standards ─── */
+    .standards {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      border-top: 1px solid var(--kiss-border);
+    }
+
+    .section-label {
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--kiss-text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--kiss-bg-surface);
+      color: var(--kiss-text-secondary);
+      border: 1px solid var(--kiss-border);
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .pill:hover {
+      border-color: var(--kiss-border-hover);
+      color: var(--kiss-text-primary);
+      background: var(--kiss-bg-elevated);
+    }
+
+    .pill .check {
+      color: var(--kiss-accent);
+      font-size: 0.625rem;
+      font-weight: 700;
+    }
+
+    /* ─── Features ─── */
+    .features {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      border-top: 1px solid var(--kiss-border);
+    }
+
+    .features-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .feature-item {
+      padding: 2rem 1.75rem;
+      border-bottom: 1px solid var(--kiss-border);
+      transition: background 0.2s ease;
+    }
+
+    .feature-item:nth-child(odd) {
+      border-right: 1px solid var(--kiss-border);
+    }
+
+    .feature-item:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+
+    .feature-item:hover {
+      background: var(--kiss-bg-surface);
+    }
+
+    .feature-item h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--kiss-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .feature-item p {
+      font-size: 0.8125rem;
+      color: var(--kiss-text-tertiary);
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    /* ─── Comparison ─── */
+    .comparison {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      border-top: 1px solid var(--kiss-border);
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 0.875rem 1.125rem;
+      text-align: left;
+      border-bottom: 1px solid var(--kiss-border);
+    }
+
+    .comparison-table th {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--kiss-text-muted);
+    }
+
+    .comparison-table th:first-child {
+      color: var(--kiss-text-primary);
+    }
+
+    .comparison-table td {
+      color: var(--kiss-text-tertiary);
+    }
+
+    .comparison-table td:first-child {
+      color: var(--kiss-text-primary);
+      font-weight: 500;
+    }
+
+    .comparison-table tr:hover td {
+      background: var(--kiss-bg-surface);
+    }
+
+    /* ─── JSR ─── */
+    .jsr {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+      border-top: 1px solid var(--kiss-border);
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .jsr-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background: var(--kiss-bg-surface);
+      border: 1px solid var(--kiss-border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--kiss-text-secondary);
+      text-decoration: none;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      transition: all 0.2s ease;
+    }
+
+    .jsr-badge:hover {
+      background: var(--kiss-bg-elevated);
+      color: var(--kiss-text-primary);
+      border-color: var(--kiss-border-hover);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 5rem 1.5rem 3rem;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+      }
+
+      .features-list {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-item:nth-child(odd) {
+        border-right: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero .equation {
+        flex-direction: column;
+      }
+    }
+  </style><!--lit-part uejF22Yy0wI=-->
+      <!--lit-node 0--><kiss-layout  home defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: block;
+      }
+
+      /* === Layout Shell === */
+      .app-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: var(--kiss-bg-base);
+        color: var(--kiss-text-primary);
+        font-family: var(--kiss-font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .layout-body {
+        display: flex;
+        flex: 1;
+      }
+
+      .layout-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .app-layout[home] .layout-body {
+        display: block;
+      }
+
+      /* === Header === */
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: var(--kiss-z-sticky);
+        background: var(--kiss-bg-base);
+        border-bottom: 1px solid var(--kiss-border);
+      }
+
+      .header-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 var(--kiss-size-8);
+        display: flex;
+        align-items: center;
+        height: var(--kiss-layout-header-height, 56px);
+        gap: var(--kiss-size-6);
+      }
+
+      /* === Mobile Menu (L0: details/summary) === */
+      .mobile-menu {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        padding: 0;
+        list-style: none;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .mobile-menu-btn::-webkit-details-marker {
+          display: none;
+        }
+
+        .mobile-menu-btn::marker {
+          content: "";
+        }
+
+        .mobile-menu-btn:hover,
+        .mobile-menu-btn:focus-visible {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .mobile-menu[open] .mobile-menu-btn {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          border-color: var(--kiss-border-hover);
+        }
+
+        /* === Logo === */
+        .logo {
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-extrabold);
+          color: var(--kiss-text-primary);
+          text-decoration: none;
+          letter-spacing: var(--kiss-letter-spacing-widest);
+          text-transform: uppercase;
+          transition: opacity var(--kiss-transition-normal);
+          white-space: nowrap;
+        }
+
+        .logo:hover {
+          opacity: 0.6;
+        }
+
+        .logo-sub {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-normal);
+          color: var(--kiss-text-muted);
+          margin-left: var(--kiss-size-2);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          text-transform: none;
+        }
+
+        /* === Header Nav === */
+        .header-nav {
+          display: flex;
+          gap: 0.125rem;
+          flex: 1;
+        }
+
+        .header-nav a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-medium);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          transition: color var(--kiss-transition-normal);
+          border-radius: var(--kiss-radius-md);
+        }
+
+        .header-nav a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        /* === Header Right === */
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          margin-left: auto;
+        }
+
+        /* === GitHub Link === */
+        .github-link {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          color: var(--kiss-text-muted);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-medium);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          border: 1px solid var(--kiss-border);
+          border-radius: var(--kiss-radius-md);
+          transition: color var(--kiss-transition-normal), border-color var(--kiss-transition-normal);
+        }
+
+        .github-link:hover {
+          color: var(--kiss-text-secondary);
+          border-color: var(--kiss-border-hover);
+        }
+
+        .github-link svg {
+          flex-shrink: 0;
+        }
+
+        /* === Sidebar (Desktop) === */
+        .docs-sidebar {
+          width: 240px;
+          flex-shrink: 0;
+          border-right: 1px solid var(--kiss-border);
+          padding: var(--kiss-size-6) 0;
+          overflow-y: auto;
+          height: calc(100vh - var(--kiss-layout-header-height, 56px));
+          position: sticky;
+          top: var(--kiss-layout-header-height, 56px);
+          scrollbar-width: thin;
+        }
+
+        .nav-section {
+          margin-bottom: var(--kiss-size-5);
+        }
+
+        .nav-section summary {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-bold);
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          color: var(--kiss-text-muted);
+          padding: 0 var(--kiss-size-5);
+          margin-bottom: var(--kiss-size-2);
+          cursor: pointer;
+          list-style: none;
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          user-select: none;
+        }
+
+        .nav-section summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .nav-section summary::marker {
+          content: "";
+        }
+
+        .nav-section summary::before {
+          content: "▾";
+          font-size: 0.5rem;
+          transition: transform var(--kiss-transition-normal);
+          display: inline-block;
+        }
+
+        .nav-section[open] summary::before {
+          transform: rotate(0deg);
+        }
+
+        .nav-section:not([open]) summary::before {
+          transform: rotate(-90deg);
+        }
+
+        .nav-section summary:hover {
+          color: var(--kiss-text-tertiary);
+        }
+
+        .docs-sidebar a {
+          display: block;
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          padding: 0.3rem var(--kiss-size-5);
+          transition: color var(--kiss-transition-normal), background var(--kiss-transition-normal);
+          border-left: 2px solid transparent;
+        }
+
+        .docs-sidebar a:hover {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .docs-sidebar a.active,
+        .docs-sidebar a[aria-current="page"] {
+          color: var(--kiss-text-primary);
+          border-left-color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          font-weight: var(--kiss-font-weight-medium);
+        }
+
+        /* === Mobile Backdrop === */
+        .mobile-backdrop {
+          position: fixed;
+          inset: 0;
+          top: var(--kiss-layout-header-height, 56px);
+          background: var(--kiss-backdrop, rgba(0, 0, 0, 0.4));
+          z-index: 80;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity var(--kiss-transition-slow);
+          backdrop-filter: blur(2px);
+        }
+
+        /* === Mobile Responsive === */
+        @media (max-width: 900px) {
+          .mobile-menu {
+            display: block;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-4);
+            gap: var(--kiss-size-3);
+          }
+
+          .header-nav {
+            display: none;
+          }
+
+          .github-text {
+            display: none;
+          }
+
+          .header-right {
+            gap: var(--kiss-size-2);
+          }
+
+          .docs-sidebar {
+            position: fixed;
+            top: var(--kiss-layout-header-height, 56px);
+            left: 0;
+            width: min(300px, 80vw);
+            height: calc(100vh - var(--kiss-layout-header-height, 56px));
+            z-index: 90;
+            background: var(--kiss-bg-base);
+            border-right: 1px solid var(--kiss-border);
+            border-bottom: none;
+            padding: var(--kiss-size-4) 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transform: translateX(-101%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            box-shadow: none;
+          }
+
+          .app-layout:has(.mobile-menu[open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+          }
+
+          .app-layout:has(.mobile-menu[open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          :host([menu-open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: var(--kiss-shadow-sidebar, 4px 0 24px rgba(0, 0, 0, 0.3));
+          }
+
+          :host([menu-open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .nav-section {
+            margin-bottom: var(--kiss-size-2);
+          }
+
+          .nav-section summary {
+            padding: var(--kiss-size-2) var(--kiss-size-4);
+            font-size: var(--kiss-font-size-xs);
+          }
+
+          .docs-sidebar a {
+            padding: var(--kiss-size-2) var(--kiss-size-4) var(--kiss-size-2) var(--kiss-size-7);
+            font-size: var(--kiss-font-size-sm);
+          }
+
+          .layout-main {
+            width: 100%;
+          }
+
+          .app-footer footer {
+            padding: var(--kiss-size-6) var(--kiss-size-4);
+          }
+
+          .app-footer .divider {
+            display: none;
+          }
+
+          .app-footer p {
+            line-height: 1.8;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .logo-sub {
+            display: none;
+          }
+
+          .github-link {
+            padding: var(--kiss-size-2);
+            border: none;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-3);
+          }
+        }
+
+        /* === Footer === */
+        .app-footer footer {
+          padding: var(--kiss-size-8);
+          border-top: 1px solid var(--kiss-border);
+          text-align: center;
+          color: var(--kiss-text-muted);
+          font-size: var(--kiss-font-size-xs);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          background: var(--kiss-bg-base);
+        }
+
+        .app-footer p {
+          margin: 0.25rem 0;
+        }
+
+        .app-footer a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          transition: color var(--kiss-transition-normal);
+        }
+
+        .app-footer a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        .app-footer .divider {
+          display: inline-block;
+          width: 1px;
+          height: 8px;
+          background: var(--kiss-border-hover);
+          vertical-align: middle;
+          margin: 0 var(--kiss-size-3);
+        }
+      </style><!--lit-part AIQQHfD4RiQ=-->
+        <!--lit-node 0--><div class="app-layout" home>
+          <header class="app-header">
+            <div class="header-inner">
+              <a class="logo" href="/"><!--lit-part-->KISS<!--/lit-part--><span class="logo-sub"><!--lit-part-->framework<!--/lit-part--></span></a>
+              <!--lit-part iwsltJwalY8=-->
+        <nav class="header-nav">
+          <!--lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/guide/getting-started"><!--lit-part-->Docs<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/ui"><!--lit-part-->UI<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/blog"><!--lit-part-->Blog<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="https://jsr.io/@kissjs/core"><!--lit-part-->JSR<!--/lit-part--></a>
+              <!--/lit-part--><!--/lit-part-->
+        </nav>
+      <!--/lit-part-->
+              <div class="header-right">
+                <!--lit-part--><!--/lit-part-->
+                <!--lit-node 10--><kiss-theme-toggle defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: inline-block;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        font-size: 0;
+        line-height: 1;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .theme-toggle:hover {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .theme-toggle svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .theme-toggle .icon-sun {
+          display: block;
+        }
+
+        .theme-toggle .icon-moon {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-sun {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-moon {
+          display: block;
+        }
+      </style><!--lit-part cT0CU1oOnag=-->
+        <!--lit-node 0--><button
+          class="theme-toggle "
+          title="Switch to light theme"
+          aria-label="Toggle theme"
+          
+        >
+          <svg
+            class="icon-sun"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <line x1="8" y1="1" x2="8" y2="3" />
+            <line x1="8" y1="13" x2="8" y2="15" />
+            <line x1="1" y1="8" x2="3" y2="8" />
+            <line x1="13" y1="8" x2="15" y2="8" />
+            <line x1="3.05" y1="3.05" x2="4.46" y2="4.46" />
+            <line x1="11.54" y1="11.54" x2="12.95" y2="12.95" />
+            <line x1="3.05" y1="12.95" x2="4.46" y2="11.54" />
+            <line x1="11.54" y1="4.46" x2="12.95" y2="3.05" />
+          </svg>
+          <svg
+            class="icon-moon"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <path d="M13.5 9.14A5.5 5.5 0 0 1 6.86 2.5 5.5 5.5 0 1 0 13.5 9.14Z" />
+          </svg>
+        </button>
+      <!--/lit-part--></template></kiss-theme-toggle>
+                <!--lit-node 11--><a class="github-link" href="https://github.com/SisyphusZheng/kiss">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                      d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                    />
+                  </svg>
+                  <span class="github-text">GitHub</span>
+                </a>
+              </div>
+            </div>
+          </header>
+          <div class="mobile-backdrop"></div>
+          <div class="layout-body">
+            <!--lit-part--><!--/lit-part-->
+            <main class="layout-main">
+              <slot></slot>
+            </main>
+          </div>
+          <div class="app-footer">
+            <footer>
+              <p>
+                Built with <!--lit-node 23--><a href="https://github.com/SisyphusZheng/kiss" target="_blank" rel="noopener noreferrer"
+                >KISS Framework</a>
+                <span class="divider"></span>
+                Self-bootstrapped from JSR
+                <span class="divider"></span>
+                KISS Architecture — K·I·S·S
+              </p>
+            </footer>
+          </div>
+        </div>
+      <!--/lit-part--></template>
+        <div class="hero">
+          <div class="overline">Web 标准框架</div>
+          <h1>KISS</h1>
+          <p class="tagline">
+            保持愚蠢，保持简单。一个完全基于 Web 标准构建的极简全栈框架。
+          </p>
+          <div class="equation">
+            <span class="eq-item"><span class="eq-label">HTTP =</span> <span class="eq-val"
+              >Fetch API</span></span>
+            <span class="eq-item"><span class="eq-label">UI =</span> <span class="eq-val"
+              >Web Components</span></span>
+            <span class="eq-item"><span class="eq-label">构建 =</span> <span class="eq-val"
+              >ESM</span></span>
+            </div>
+            <div class="cta">
+              <a class="cta-primary" href="/guide/getting-started">快速上手</a>
+              <a class="cta-secondary" href="https://github.com/SisyphusZheng/kiss">GitHub</a>
+            </div>
+          </div>
+
+          <div class="standards">
+            <div class="section-label">Web 标准覆盖</div>
+            <div class="pill-row">
+              <span class="pill"><span class="check">&#10003;</span> Fetch API</span>
+              <span class="pill"><span class="check">&#10003;</span> Web Components</span>
+              <span class="pill"><span class="check">&#10003;</span> ESM</span>
+              <span class="pill"><span class="check">&#10003;</span> 声明式 Shadow DOM</span>
+              <span class="pill"><span class="check">&#10003;</span> Islands 架构</span>
+            </div>
+          </div>
+
+          <div class="features">
+            <div class="section-label">为什么选 KISS</div>
+            <div class="features-list">
+              <div class="feature-item">
+                <h2>Web 标准优先</h2>
+                <p>没有新的抽象。如果你懂 Web 平台，你就懂 KISS。</p>
+              </div>
+              <div class="feature-item">
+                <h2>Islands 架构</h2>
+                <p>只有交互式组件才加载 JS。默认首页：0 KB。</p>
+              </div>
+              <div class="feature-item">
+                <h2>类型安全 RPC</h2>
+                <p>基于 Hono RPC 的端到端类型安全。无需代码生成。</p>
+              </div>
+              <div class="feature-item">
+                <h2>多运行时</h2>
+                <p>同一套代码运行在 Deno、Node、Bun、Cloudflare Workers。</p>
+              </div>
+              <div class="feature-item">
+                <h2>SSG 内置</h2>
+                <p>构建时预渲染为静态 HTML。零配置。</p>
+              </div>
+              <div class="feature-item">
+                <h2>零锁定</h2>
+                <p>你的代码在没有 KISS 时也能运行。Hono、Lit、Vite 都是标准工具。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison">
+            <div class="section-label">全链路 Web 标准</div>
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>KISS</th>
+                  <th>Astro</th>
+                  <th>Next.js</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Fetch API</td>
+                  <td>Fetch API</td>
+                  <td>自定义 API</td>
+                </tr>
+                <tr>
+                  <td>Web Components</td>
+                  <td>Islands（自定义）</td>
+                  <td>仅 React</td>
+                </tr>
+                <tr>
+                  <td>ESM</td>
+                  <td>ESM</td>
+                  <td>ESM + 自定义</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="jsr">
+            <div class="section-label">从 JSR 安装</div>
+            <div class="badge-row">
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/core">@kissjs/core</a>
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/ui">@kissjs/ui</a>
+              <a class="jsr-badge" href="https://jsr.io/@kissjs/rpc">@kissjs/rpc</a>
+            </div>
+          </div>
+        </kiss-layout>
+      <!--/lit-part--></template></docs-home><!--/lit-part--><?><!--/lit-part-->
+  
+  <script type="module" src="/client/islands/client.js"></script>
+<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script></body>
+</html>

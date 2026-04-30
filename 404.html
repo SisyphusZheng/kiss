@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KISS</title>
+  <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.5.0/styles/webawesome.css" />
+  <script type="module" src="https://ka-f.webawesome.com/webawesome@3.5.0/webawesome.loader.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>:root,[data-theme="light"]{--kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;color-scheme:light}[data-theme="dark"]{--kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;color-scheme:dark}body{margin:0;background:var(--kiss-bg-base);color:var(--kiss-text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>
+  <script src="/theme-init.js"></script>
+  <script src="/mobile-sidebar.js"></script>
+  <script src="/has-fallback.js"></script>
+<link rel="manifest" href="/manifest.json"></head>
+<body>
+  <!--lit-part BRUAAAUVAAA=--><!--lit-part ESvz+5k6f5g=--><page-not-found  defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  :host {
+    display: block;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.5rem;
+    color: var(--kiss-text-primary);
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    color: var(--kiss-text-tertiary);
+    margin-bottom: 3rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--kiss-text-primary);
+  }
+
+  h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--kiss-accent-dim);
+  }
+
+  p {
+    line-height: 1.7;
+    margin: 0.5rem 0;
+    color: var(--kiss-text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  strong {
+    color: var(--kiss-text-primary);
+    font-weight: 600;
+  }
+
+  em {
+    color: var(--kiss-accent-dim);
+    font-style: italic;
+  }
+
+  a {
+    color: var(--kiss-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--kiss-border-hover);
+    text-decoration-thickness: 1px;
+    transition: text-decoration-color 0.15s;
+  }
+
+  a:hover {
+    text-decoration-color: var(--kiss-text-primary);
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--kiss-code-bg);
+    color: var(--kiss-text-secondary);
+    padding: 1rem 1.25rem;
+    border-radius: 3px;
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    margin: 0.75rem 0;
+  }
+
+  code {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  }
+
+  .inline-code {
+    background: var(--kiss-code-bg);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.875em;
+  }
+
+  p code, li code {
+    background: var(--kiss-code-bg);
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.8125rem;
+    color: var(--kiss-accent-dim);
+    border: 1px solid var(--kiss-code-border);
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  th, td {
+    border: 1px solid var(--kiss-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  th {
+    background: var(--kiss-code-bg);
+    font-weight: 600;
+    color: var(--kiss-accent-dim);
+  }
+
+  td {
+    color: var(--kiss-text-secondary);
+  }
+
+  /* Callout blocks */
+  .pillar {
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .pillar .num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--kiss-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .pillar h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: var(--kiss-text-primary);
+  }
+
+  .hard-constraint {
+    display: inline-block;
+    background: var(--kiss-code-bg);
+    border: 1px solid var(--kiss-border-hover);
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    margin: 0.125rem 0;
+  }
+
+  .callout {
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    border-left: 3px solid var(--kiss-border-hover);
+    background: var(--kiss-bg-surface);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .callout.warn {
+    border-left-color: var(--kiss-text-tertiary);
+  }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 1.25rem;
+    color: var(--kiss-text-secondary);
+    line-height: 1.7;
+  }
+
+  li {
+    margin: 0.375rem 0;
+  }
+
+  /* Page nav */
+  .nav-row {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--kiss-text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--kiss-border);
+    border-radius: 4px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-link:hover {
+    color: var(--kiss-text-primary);
+    border-color: var(--kiss-border-hover);
+    background: var(--kiss-accent-subtle);
+  }
+
+  /* === Responsive === */
+  @media (max-width: 900px) {
+    .container {
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.625rem;
+    }
+
+    .subtitle {
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    pre {
+      padding: 0.875rem 1rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+    }
+
+    table {
+      font-size: 0.75rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.625rem;
+    }
+
+    .pillar, .callout {
+      padding: 1rem;
+    }
+
+    .nav-row {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-link {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 1.5rem 1rem 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.375rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    p {
+      font-size: 0.875rem;
+    }
+
+    pre {
+      padding: 0.75rem;
+      font-size: 0.6875rem;
+      margin: 0.5rem 0;
+    }
+
+    code {
+      font-size: 0.75rem;
+    }
+
+    ul, ol {
+      padding-left: 1rem;
+    }
+
+    .hard-constraint {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.5rem;
+    }
+  }
+
+      .error-code {
+        font-size: 5rem;
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        color: var(--kiss-text-primary);
+        margin: 2rem 0 0.5rem;
+        line-height: 1;
+      }
+      .error-message {
+        color: var(--kiss-text-tertiary);
+        font-size: 0.9375rem;
+        margin-bottom: 2rem;
+      }
+      .home-link {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        border: 1px solid var(--kiss-border);
+        border-radius: 4px;
+        color: var(--kiss-text-primary);
+        text-decoration: none;
+        font-size: 0.8125rem;
+        transition: border-color 0.15s;
+      }
+      .home-link:hover {
+        border-color: var(--kiss-text-primary);
+      }
+    </style><!--lit-part 226ymV2u2oc=-->
+      <!--lit-node 0--><kiss-layout defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: block;
+      }
+
+      /* === Layout Shell === */
+      .app-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: var(--kiss-bg-base);
+        color: var(--kiss-text-primary);
+        font-family: var(--kiss-font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .layout-body {
+        display: flex;
+        flex: 1;
+      }
+
+      .layout-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .app-layout[home] .layout-body {
+        display: block;
+      }
+
+      /* === Header === */
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: var(--kiss-z-sticky);
+        background: var(--kiss-bg-base);
+        border-bottom: 1px solid var(--kiss-border);
+      }
+
+      .header-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 var(--kiss-size-8);
+        display: flex;
+        align-items: center;
+        height: var(--kiss-layout-header-height, 56px);
+        gap: var(--kiss-size-6);
+      }
+
+      /* === Mobile Menu (L0: details/summary) === */
+      .mobile-menu {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        padding: 0;
+        list-style: none;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .mobile-menu-btn::-webkit-details-marker {
+          display: none;
+        }
+
+        .mobile-menu-btn::marker {
+          content: "";
+        }
+
+        .mobile-menu-btn:hover,
+        .mobile-menu-btn:focus-visible {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .mobile-menu[open] .mobile-menu-btn {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          border-color: var(--kiss-border-hover);
+        }
+
+        /* === Logo === */
+        .logo {
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-extrabold);
+          color: var(--kiss-text-primary);
+          text-decoration: none;
+          letter-spacing: var(--kiss-letter-spacing-widest);
+          text-transform: uppercase;
+          transition: opacity var(--kiss-transition-normal);
+          white-space: nowrap;
+        }
+
+        .logo:hover {
+          opacity: 0.6;
+        }
+
+        .logo-sub {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-normal);
+          color: var(--kiss-text-muted);
+          margin-left: var(--kiss-size-2);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          text-transform: none;
+        }
+
+        /* === Header Nav === */
+        .header-nav {
+          display: flex;
+          gap: 0.125rem;
+          flex: 1;
+        }
+
+        .header-nav a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          font-weight: var(--kiss-font-weight-medium);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          transition: color var(--kiss-transition-normal);
+          border-radius: var(--kiss-radius-md);
+        }
+
+        .header-nav a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        /* === Header Right === */
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          margin-left: auto;
+        }
+
+        /* === GitHub Link === */
+        .github-link {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          color: var(--kiss-text-muted);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-medium);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          padding: var(--kiss-size-2) var(--kiss-size-3);
+          border: 1px solid var(--kiss-border);
+          border-radius: var(--kiss-radius-md);
+          transition: color var(--kiss-transition-normal), border-color var(--kiss-transition-normal);
+        }
+
+        .github-link:hover {
+          color: var(--kiss-text-secondary);
+          border-color: var(--kiss-border-hover);
+        }
+
+        .github-link svg {
+          flex-shrink: 0;
+        }
+
+        /* === Sidebar (Desktop) === */
+        .docs-sidebar {
+          width: 240px;
+          flex-shrink: 0;
+          border-right: 1px solid var(--kiss-border);
+          padding: var(--kiss-size-6) 0;
+          overflow-y: auto;
+          height: calc(100vh - var(--kiss-layout-header-height, 56px));
+          position: sticky;
+          top: var(--kiss-layout-header-height, 56px);
+          scrollbar-width: thin;
+        }
+
+        .nav-section {
+          margin-bottom: var(--kiss-size-5);
+        }
+
+        .nav-section summary {
+          font-size: var(--kiss-font-size-xs);
+          font-weight: var(--kiss-font-weight-bold);
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          color: var(--kiss-text-muted);
+          padding: 0 var(--kiss-size-5);
+          margin-bottom: var(--kiss-size-2);
+          cursor: pointer;
+          list-style: none;
+          display: flex;
+          align-items: center;
+          gap: var(--kiss-size-2);
+          user-select: none;
+        }
+
+        .nav-section summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .nav-section summary::marker {
+          content: "";
+        }
+
+        .nav-section summary::before {
+          content: "▾";
+          font-size: 0.5rem;
+          transition: transform var(--kiss-transition-normal);
+          display: inline-block;
+        }
+
+        .nav-section[open] summary::before {
+          transform: rotate(0deg);
+        }
+
+        .nav-section:not([open]) summary::before {
+          transform: rotate(-90deg);
+        }
+
+        .nav-section summary:hover {
+          color: var(--kiss-text-tertiary);
+        }
+
+        .docs-sidebar a {
+          display: block;
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          font-size: var(--kiss-font-size-sm);
+          padding: 0.3rem var(--kiss-size-5);
+          transition: color var(--kiss-transition-normal), background var(--kiss-transition-normal);
+          border-left: 2px solid transparent;
+        }
+
+        .docs-sidebar a:hover {
+          color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .docs-sidebar a.active,
+        .docs-sidebar a[aria-current="page"] {
+          color: var(--kiss-text-primary);
+          border-left-color: var(--kiss-text-primary);
+          background: var(--kiss-accent-subtle);
+          font-weight: var(--kiss-font-weight-medium);
+        }
+
+        /* === Mobile Backdrop === */
+        .mobile-backdrop {
+          position: fixed;
+          inset: 0;
+          top: var(--kiss-layout-header-height, 56px);
+          background: var(--kiss-backdrop, rgba(0, 0, 0, 0.4));
+          z-index: 80;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity var(--kiss-transition-slow);
+          backdrop-filter: blur(2px);
+        }
+
+        /* === Mobile Responsive === */
+        @media (max-width: 900px) {
+          .mobile-menu {
+            display: block;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-4);
+            gap: var(--kiss-size-3);
+          }
+
+          .header-nav {
+            display: none;
+          }
+
+          .github-text {
+            display: none;
+          }
+
+          .header-right {
+            gap: var(--kiss-size-2);
+          }
+
+          .docs-sidebar {
+            position: fixed;
+            top: var(--kiss-layout-header-height, 56px);
+            left: 0;
+            width: min(300px, 80vw);
+            height: calc(100vh - var(--kiss-layout-header-height, 56px));
+            z-index: 90;
+            background: var(--kiss-bg-base);
+            border-right: 1px solid var(--kiss-border);
+            border-bottom: none;
+            padding: var(--kiss-size-4) 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transform: translateX(-101%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            box-shadow: none;
+          }
+
+          .app-layout:has(.mobile-menu[open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+          }
+
+          .app-layout:has(.mobile-menu[open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          :host([menu-open]) .docs-sidebar {
+            transform: translateX(0);
+            box-shadow: var(--kiss-shadow-sidebar, 4px 0 24px rgba(0, 0, 0, 0.3));
+          }
+
+          :host([menu-open]) .mobile-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          .nav-section {
+            margin-bottom: var(--kiss-size-2);
+          }
+
+          .nav-section summary {
+            padding: var(--kiss-size-2) var(--kiss-size-4);
+            font-size: var(--kiss-font-size-xs);
+          }
+
+          .docs-sidebar a {
+            padding: var(--kiss-size-2) var(--kiss-size-4) var(--kiss-size-2) var(--kiss-size-7);
+            font-size: var(--kiss-font-size-sm);
+          }
+
+          .layout-main {
+            width: 100%;
+          }
+
+          .app-footer footer {
+            padding: var(--kiss-size-6) var(--kiss-size-4);
+          }
+
+          .app-footer .divider {
+            display: none;
+          }
+
+          .app-footer p {
+            line-height: 1.8;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .logo-sub {
+            display: none;
+          }
+
+          .github-link {
+            padding: var(--kiss-size-2);
+            border: none;
+          }
+
+          .header-inner {
+            padding: 0 var(--kiss-size-3);
+          }
+        }
+
+        /* === Footer === */
+        .app-footer footer {
+          padding: var(--kiss-size-8);
+          border-top: 1px solid var(--kiss-border);
+          text-align: center;
+          color: var(--kiss-text-muted);
+          font-size: var(--kiss-font-size-xs);
+          letter-spacing: var(--kiss-letter-spacing-wide);
+          background: var(--kiss-bg-base);
+        }
+
+        .app-footer p {
+          margin: 0.25rem 0;
+        }
+
+        .app-footer a {
+          color: var(--kiss-text-tertiary);
+          text-decoration: none;
+          transition: color var(--kiss-transition-normal);
+        }
+
+        .app-footer a:hover {
+          color: var(--kiss-text-primary);
+        }
+
+        .app-footer .divider {
+          display: inline-block;
+          width: 1px;
+          height: 8px;
+          background: var(--kiss-border-hover);
+          vertical-align: middle;
+          margin: 0 var(--kiss-size-3);
+        }
+      </style><!--lit-part AIQQHfD4RiQ=-->
+        <!--lit-node 0--><div class="app-layout" >
+          <header class="app-header">
+            <div class="header-inner">
+              <a class="logo" href="/"><!--lit-part-->KISS<!--/lit-part--><span class="logo-sub"><!--lit-part-->framework<!--/lit-part--></span></a>
+              <!--lit-part iwsltJwalY8=-->
+        <nav class="header-nav">
+          <!--lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/guide/getting-started"><!--lit-part-->Docs<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/ui"><!--lit-part-->UI<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="/blog"><!--lit-part-->Blog<!--/lit-part--></a>
+              <!--/lit-part--><!--lit-part a634+kCqlDY=-->
+                <!--lit-node 0--><a href="https://jsr.io/@kissjs/core"><!--lit-part-->JSR<!--/lit-part--></a>
+              <!--/lit-part--><!--/lit-part-->
+        </nav>
+      <!--/lit-part-->
+              <div class="header-right">
+                <!--lit-part g+/qhbO2TdI=-->
+                    <details class="mobile-menu">
+                      <summary class="mobile-menu-btn" aria-label="Toggle navigation">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 18 18"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        >
+                          <line x1="3" y1="4.5" x2="15" y2="4.5" />
+                          <line x1="3" y1="9" x2="15" y2="9" />
+                          <line x1="3" y1="13.5" x2="15" y2="13.5" />
+                        </svg>
+                      </summary>
+                    </details>
+                  <!--/lit-part-->
+                <!--lit-node 10--><kiss-theme-toggle defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+  
+  :host {
+    /* === Spacing Scale (4px base unit) === */
+    --kiss-size-1: 0.25rem; /* 4px */
+    --kiss-size-2: 0.375rem; /* 6px */
+    --kiss-size-3: 0.5rem; /* 8px */
+    --kiss-size-4: 0.75rem; /* 12px */
+    --kiss-size-5: 1rem; /* 16px */
+    --kiss-size-6: 1.25rem; /* 20px */
+    --kiss-size-7: 1.5rem; /* 24px */
+    --kiss-size-8: 2rem; /* 32px */
+    --kiss-size-9: 2.5rem; /* 40px */
+    --kiss-size-10: 3rem; /* 48px */
+
+    /* === Border Radius (Swiss: minimal) === */
+    --kiss-radius-sm: 2px;
+    --kiss-radius-md: 4px;
+    --kiss-radius-lg: 6px;
+
+    /* === Transitions === */
+    --kiss-transition-fast: 0.1s ease;
+    --kiss-transition-normal: 0.15s ease;
+    --kiss-transition-slow: 0.25s ease;
+
+    /* === Z-Index Scale === */
+    --kiss-z-dropdown: 100;
+    --kiss-z-sticky: 200;
+    --kiss-z-fixed: 300;
+    --kiss-z-modal-backdrop: 400;
+    --kiss-z-modal: 500;
+    --kiss-z-popover: 600;
+    --kiss-z-tooltip: 700;
+  }
+ 
+  :host {
+    /* === Font Families === */
+    --kiss-font-sans:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+    --kiss-font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+
+    /* === Font Sizes (modular scale ~1.125) === */
+    --kiss-font-size-xs: 0.6875rem; /* 11px */
+    --kiss-font-size-sm: 0.75rem; /* 12px */
+    --kiss-font-size-md: 0.875rem; /* 14px */
+    --kiss-font-size-lg: 1rem; /* 16px */
+    --kiss-font-size-xl: 1.125rem; /* 18px */
+    --kiss-font-size-2xl: 1.25rem; /* 20px */
+    --kiss-font-size-3xl: 1.5rem; /* 24px */
+
+    /* === Font Weights === */
+    --kiss-font-weight-normal: 400;
+    --kiss-font-weight-medium: 500;
+    --kiss-font-weight-semibold: 600;
+    --kiss-font-weight-bold: 700;
+    --kiss-font-weight-extrabold: 800;
+
+    /* === Line Heights === */
+    --kiss-line-height-tight: 1.2;
+    --kiss-line-height-normal: 1.5;
+    --kiss-line-height-relaxed: 1.7;
+
+    /* === Letter Spacing === */
+    --kiss-letter-spacing-tight: -0.03em;
+    --kiss-letter-spacing-normal: 0;
+    --kiss-letter-spacing-wide: 0.02em;
+    --kiss-letter-spacing-wider: 0.05em;
+    --kiss-letter-spacing-widest: 0.15em;
+  }
+
+    
+  :host,
+  :host([data-theme="light"]) {
+    --kiss-bg-base:#fff;--kiss-bg-surface:#fafafa;--kiss-bg-elevated:#f5f5f5;--kiss-bg-hover:#f0f0f0;--kiss-bg-card:#fff;--kiss-border:#e5e5e5;--kiss-border-hover:#ccc;--kiss-text-primary:#000;--kiss-text-secondary:#555;--kiss-text-tertiary:#888;--kiss-text-muted:#aaa;--kiss-accent:#000;--kiss-accent-dim:#333;--kiss-accent-subtle:rgba(0, 0, 0, 0.03);--kiss-code-bg:#f5f5f5;--kiss-code-border:#e5e5e5;--kiss-error:#c44;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#ccc;
+    color-scheme: light;
+  }
+
+  :host([data-theme="dark"]) {
+    --kiss-bg-base:#000;--kiss-bg-surface:#0a0a0a;--kiss-bg-elevated:#111;--kiss-bg-hover:#0e0e0e;--kiss-bg-card:#0a0a0a;--kiss-border:#1a1a1a;--kiss-border-hover:#333;--kiss-text-primary:#fff;--kiss-text-secondary:#999;--kiss-text-tertiary:#666;--kiss-text-muted:#444;--kiss-accent:#fff;--kiss-accent-dim:#ccc;--kiss-accent-subtle:rgba(255, 255, 255, 0.05);--kiss-code-bg:#111;--kiss-code-border:#1a1a1a;--kiss-error:#e55;--kiss-scrollbar-track:transparent;--kiss-scrollbar-thumb:#222;
+    color-scheme: dark;
+  }
+
+    
+  :host {
+    /* === Box Shadows (subtle, Swiss restraint) === */
+    --kiss-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --kiss-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --kiss-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Dark mode: invert shadow color for elevation on black backgrounds */
+  :host([data-theme="dark"]) {
+    --kiss-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.06);
+    --kiss-shadow-md: 0 2px 8px rgba(255, 255, 255, 0.09);
+    --kiss-shadow-lg: 0 4px 24px rgba(255, 255, 255, 0.12);
+  }
+;
+
+      :host {
+        display: inline-block;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--kiss-border);
+        border-radius: var(--kiss-radius-md);
+        background: transparent;
+        color: var(--kiss-text-tertiary);
+        cursor: pointer;
+        font-size: 0;
+        line-height: 1;
+        transition:
+          color var(--kiss-transition-normal),
+          border-color var(--kiss-transition-normal),
+          background var(--kiss-transition-normal);
+        }
+
+        .theme-toggle:hover {
+          color: var(--kiss-text-primary);
+          border-color: var(--kiss-border-hover);
+          background: var(--kiss-accent-subtle);
+        }
+
+        .theme-toggle svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .theme-toggle .icon-sun {
+          display: block;
+        }
+
+        .theme-toggle .icon-moon {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-sun {
+          display: none;
+        }
+
+        .theme-toggle.is-light .icon-moon {
+          display: block;
+        }
+      </style><!--lit-part cT0CU1oOnag=-->
+        <!--lit-node 0--><button
+          class="theme-toggle "
+          title="Switch to light theme"
+          aria-label="Toggle theme"
+          
+        >
+          <svg
+            class="icon-sun"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <circle cx="8" cy="8" r="3" />
+            <line x1="8" y1="1" x2="8" y2="3" />
+            <line x1="8" y1="13" x2="8" y2="15" />
+            <line x1="1" y1="8" x2="3" y2="8" />
+            <line x1="13" y1="8" x2="15" y2="8" />
+            <line x1="3.05" y1="3.05" x2="4.46" y2="4.46" />
+            <line x1="11.54" y1="11.54" x2="12.95" y2="12.95" />
+            <line x1="3.05" y1="12.95" x2="4.46" y2="11.54" />
+            <line x1="11.54" y1="4.46" x2="12.95" y2="3.05" />
+          </svg>
+          <svg
+            class="icon-moon"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          >
+            <path d="M13.5 9.14A5.5 5.5 0 0 1 6.86 2.5 5.5 5.5 0 1 0 13.5 9.14Z" />
+          </svg>
+        </button>
+      <!--/lit-part--></template></kiss-theme-toggle>
+                <!--lit-node 11--><a class="github-link" href="https://github.com/SisyphusZheng/kiss">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                      d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                    />
+                  </svg>
+                  <span class="github-text">GitHub</span>
+                </a>
+              </div>
+            </div>
+          </header>
+          <div class="mobile-backdrop"></div>
+          <div class="layout-body">
+            <!--lit-part VmG9LeMELQ4=-->
+        <nav class="docs-sidebar" aria-label="Documentation navigation">
+          <!--lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Introduction<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/getting-started"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Getting Started<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/design-philosophy"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Design Philosophy<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/architecture"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Architecture<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Core<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/routing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Routing<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/islands"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Islands<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/api-routes"
+          class=""
+          aria-current=""
+        ><!--lit-part-->API Routes<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/api-design"
+          class=""
+          aria-current=""
+        ><!--lit-part-->API Design<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/ssg"
+          class=""
+          aria-current=""
+        ><!--lit-part-->SSG<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Guides<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/configuration"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Configuration<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/error-handling"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Error Handling<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/security-middleware"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Security &amp; Middleware<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/testing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Testing<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Reference<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/deployment"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Deployment<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/styling/kiss-ui"
+          class=""
+          aria-current=""
+        ><!--lit-part-->@kissjs/ui<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/styling/web-awesome"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Web Awesome<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Architecture<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/kiss-compiler"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Compiler<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/guide/pwa"
+          class=""
+          aria-current=""
+        ><!--lit-part-->PWA Support<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/roadmap"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Roadmap<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->UI<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/ui"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Design System<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Examples<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Overview<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/hello"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Hello World<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/minimal-blog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Minimal Blog<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/examples/fullstack"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Fullstack<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Blog<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/blog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->All Posts<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/blog/kiss-compiler"
+          class=""
+          aria-current=""
+        ><!--lit-part-->KISS Compiler<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--lit-part Mb2LdSJJEhM=-->
+                <details class="nav-section" open>
+                  <summary class="nav-section-title"><!--lit-part-->Project<!--/lit-part--></summary>
+                  <!--lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/changelog"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Changelog<!--/lit-part--></a>
+      <!--/lit-part--><!--lit-part t0mIxs2BP9k=-->
+        <!--lit-node 0--><a
+          href="/contributing"
+          class=""
+          aria-current=""
+        ><!--lit-part-->Contributing<!--/lit-part--></a>
+      <!--/lit-part--><!--/lit-part-->
+                </details>
+              <!--/lit-part--><!--/lit-part-->
+        </nav>
+      <!--/lit-part-->
+            <main class="layout-main">
+              <slot></slot>
+            </main>
+          </div>
+          <div class="app-footer">
+            <footer>
+              <p>
+                Built with <!--lit-node 23--><a href="https://github.com/SisyphusZheng/kiss" target="_blank" rel="noopener noreferrer"
+                >KISS Framework</a>
+                <span class="divider"></span>
+                Self-bootstrapped from JSR
+                <span class="divider"></span>
+                KISS Architecture — K·I·S·S
+              </p>
+            </footer>
+          </div>
+        </div>
+      <!--/lit-part--></template>
+        <div class="container" style="text-align:center;padding-top:4rem">
+          <div class="error-code">404</div>
+          <p class="error-message">
+            This page does not exist — or has moved to a different route.
+          </p>
+          <a href="/" class="home-link">&larr; Back to home</a>
+        </div>
+      </kiss-layout>
+    <!--/lit-part--></template></page-not-found><!--/lit-part--><?><!--/lit-part-->
+  
+  <script type="module" src="/client/islands/client.js"></script>
+<script>addEventListener("load",()=>{navigator.serviceWorker?.register("/sw.js")})</script></body>
+</html>

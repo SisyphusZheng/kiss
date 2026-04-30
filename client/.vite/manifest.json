@@ -1,0 +1,102 @@
+{
+  "../packages/kiss-ui/dist/kiss-button.js": {
+    "file": "islands/kiss-button-DF6WQKPH.js",
+    "name": "kiss-button",
+    "src": "../packages/kiss-ui/dist/kiss-button.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "_design-tokens-B_mcQL4h-CZC2FRwC.js"
+    ]
+  },
+  "../packages/kiss-ui/dist/kiss-code-block.js": {
+    "file": "islands/kiss-code-block-DTdcyBWZ.js",
+    "name": "kiss-code-block",
+    "src": "../packages/kiss-ui/dist/kiss-code-block.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "_design-tokens-B_mcQL4h-CZC2FRwC.js"
+    ]
+  },
+  "../packages/kiss-ui/dist/kiss-input.js": {
+    "file": "islands/kiss-input-BXPWWTdI.js",
+    "name": "kiss-input",
+    "src": "../packages/kiss-ui/dist/kiss-input.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "_design-tokens-B_mcQL4h-CZC2FRwC.js"
+    ]
+  },
+  "../packages/kiss-ui/dist/kiss-layout.js": {
+    "file": "islands/kiss-layout-DkHrxQpc.js",
+    "name": "kiss-layout",
+    "src": "../packages/kiss-ui/dist/kiss-layout.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "_design-tokens-B_mcQL4h-CZC2FRwC.js",
+      "../packages/kiss-ui/dist/kiss-theme-toggle.js"
+    ]
+  },
+  "../packages/kiss-ui/dist/kiss-theme-toggle.js": {
+    "file": "islands/kiss-theme-toggle-JboMqG81.js",
+    "name": "kiss-theme-toggle",
+    "src": "../packages/kiss-ui/dist/kiss-theme-toggle.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "_design-tokens-B_mcQL4h-CZC2FRwC.js"
+    ]
+  },
+  ".kiss/.kiss-client-entry.ts": {
+    "file": "islands/client.js",
+    "name": "client",
+    "src": ".kiss/.kiss-client-entry.ts",
+    "isEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js"
+    ],
+    "dynamicImports": [
+      "_island-api-consumer-BlPm8Uni.js",
+      "app/islands/code-block.ts",
+      "app/islands/counter-island.ts",
+      "../packages/kiss-ui/dist/kiss-theme-toggle.js",
+      "../packages/kiss-ui/dist/kiss-button.js",
+      "../packages/kiss-ui/dist/kiss-input.js",
+      "../packages/kiss-ui/dist/kiss-code-block.js",
+      "../packages/kiss-ui/dist/kiss-layout.js"
+    ]
+  },
+  "_design-tokens-B_mcQL4h-CZC2FRwC.js": {
+    "file": "islands/design-tokens-B_mcQL4h-CZC2FRwC.js",
+    "name": "design-tokens-B_mcQL4h",
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js"
+    ]
+  },
+  "_island-api-consumer-BlPm8Uni.js": {
+    "file": "islands/island-api-consumer-BlPm8Uni.js",
+    "name": "island-api-consumer",
+    "isDynamicEntry": true
+  },
+  "app/islands/code-block.ts": {
+    "file": "islands/island-code-block-Dql4tlDO.js",
+    "name": "island-code-block",
+    "src": "app/islands/code-block.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js"
+    ]
+  },
+  "app/islands/counter-island.ts": {
+    "file": "islands/island-counter-island-Dcf4Lv9G.js",
+    "name": "island-counter-island",
+    "src": "app/islands/counter-island.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_island-api-consumer-BlPm8Uni.js"
+    ]
+  }
+}
