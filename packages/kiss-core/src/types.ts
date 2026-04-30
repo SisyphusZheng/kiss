@@ -32,7 +32,7 @@ export interface FrameworkOptions {
   /**
    * Package islands to auto-import from npm/JSR packages.
    * Each package should export an `islands` array in its main entry.
-   * Example: ['@kissjs/ui'] will import islands from '@kissjs/ui/islands'
+   * Example: ['@kissjs/ui'] will scan package.main.islands array
    */
   packageIslands?: string[];
 
