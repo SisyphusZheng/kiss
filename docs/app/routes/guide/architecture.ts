@@ -108,28 +108,10 @@ export default defineConfig({
                 <td>I（隔离）</td>
               </tr>
               <tr>
-                <td>island-extractor</td>
-                <td>build</td>
-                <td>构建时 Island 依赖分析</td>
-                <td>I（隔离）</td>
-              </tr>
-              <tr>
-                <td>html-template</td>
-                <td>transformIndexHtml</td>
-                <td>Preload、meta、hydration 注入</td>
-                <td>I（隔离）</td>
-              </tr>
-              <tr>
-                <td>kiss:ssg</td>
-                <td>closeBundle</td>
-                <td>带 DSD 的静态站点生成</td>
-                <td>K + S（知识 + 静态）</td>
-              </tr>
-              <tr>
                 <td>kiss:build</td>
-                <td>build</td>
-                <td>Island 客户端 JS 打包</td>
-                <td>I（隔离）</td>
+                <td>closeBundle</td>
+                <td>构建元数据写入 + Phase 1 完成</td>
+                <td>K + S（知识 + 静态）</td>
               </tr>
             </tbody>
           </table>
@@ -141,17 +123,27 @@ export default defineConfig({
   → HTML + 声明式 Shadow DOM → 注入 Island hydration → 响应</code></pre></code-block
           >
 
-          <h2>构建生命周期（SSG）</h2>
+          <h2>构建生命周期（SSG — 三阶段管线）</h2>
           <code-block
-            ><pre><code>vite build → closeBundle hook:
-  1. 扫描路由                             ← K：所有路由在构建时已知
-  2. 生成带 DOM shim 的 SSG 入口
-  3. 创建 Vite SSR 服务器（configFile: false）
-  4. 加载入口 → Hono app → toSSG()
-  5. @lit-labs/ssr 用 DSD 渲染每页 ← K：内容编码在 HTML 中
-  6. Island 组件 → 独立 JS chunks    ← I：隔离的 JS 包
-  7. 非 Island 组件 → 零客户端 JS    ← I：不需要的地方无 JS
-  8. 写入 dist/ 为静态 HTML      ← S：仅静态输出</code></pre></code-block
+            ><pre><code>Phase 1: vite build（SSR bundle）
+  → kiss() 插件扫描路由 + Islands
+  → @lit-labs/ssr 渲染所有页面为带 DSD 的 HTML
+  → 写出 .kiss/build-metadata.json（供后续阶段使用）
+  产出：dist/server/entry.js（SSR bundle）
+
+Phase 2: deno task build:client（Island JS）
+  → 读取 Phase 1 元数据
+  → Vite 独立构建客户端入口
+  → 每个 Island 产出独立 JS chunk
+  产出：dist/client/islands/*.js
+
+Phase 3: deno task build:ssg（静态 HTML）
+  → 读取 Phase 1 + Phase 2 元数据
+  → 渲染所有页面为纯静态 HTML
+  → 注入 Island hydration 脚本
+  → CSP nonce 元标签注入
+  → 后处理（rewrite island 路径、打包清单）
+  产出：dist/*.html（部署到 CDN）</code></pre></code-block
           >
 
           <h2>全栈部署</h2>
