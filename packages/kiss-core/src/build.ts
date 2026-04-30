@@ -81,7 +81,8 @@ export function buildPlugin(options: FrameworkOptions = {}, ctx?: KissBuildConte
         base,
         // Pass user's resolve alias and ssr.noExternal so CLI scripts
         // can replicate the same module resolution
-        resolveAlias: serializeAlias(ctx?.userResolveAlias),
+        // Priority: ctx.userResolveAlias (from config hook) → config.resolve.alias (from configResolved)
+        resolveAlias: serializeAlias(ctx?.userResolveAlias || config.resolve?.alias),
         ssrNoExternal: (options.ssr?.noExternal || []).map((item) => {
           if (item instanceof RegExp) {
             return { __type: 'RegExp', source: item.source, flags: item.flags };
