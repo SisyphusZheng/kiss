@@ -1,6 +1,6 @@
 {
   "name": "@kissjs/rpc",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "KISS RPC — Lit ReactiveController for type-safe Hono RPC calls",
   "type": "module",
   "main": "./src/index.ts",
