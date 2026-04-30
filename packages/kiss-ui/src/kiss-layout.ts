@@ -338,7 +338,7 @@ export class KissLayout extends LitElement {
           position: fixed;
           inset: 0;
           top: var(--kiss-layout-header-height, 56px);
-          background: rgba(0, 0, 0, 0.4);
+          background: var(--kiss-backdrop, rgba(0, 0, 0, 0.4));
           z-index: 80;
           opacity: 0;
           pointer-events: none;
@@ -398,15 +398,12 @@ export class KissLayout extends LitElement {
             pointer-events: auto;
           }
 
-          /* :has() fallback for browsers without :has() support
-            (Safari < 15.4, Firefox < 121).
-            has-fallback.js adds .sidebar-open to the host element. */
-          :host(.sidebar-open) .docs-sidebar {
+          :host([menu-open]) .docs-sidebar {
             transform: translateX(0);
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--kiss-shadow-sidebar, 4px 0 24px rgba(0, 0, 0, 0.3));
           }
 
-          :host(.sidebar-open) .mobile-backdrop {
+          :host([menu-open]) .mobile-backdrop {
             opacity: 1;
             pointer-events: auto;
           }

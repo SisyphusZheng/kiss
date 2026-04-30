@@ -9,14 +9,7 @@
  * - Concurrent call handling
  */
 import { RpcController, RpcError } from '../src/index.ts';
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  // assertFalse, // not used
-  assertInstanceOf,
-  // assertRejects, // not used
-} from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertExists, assertInstanceOf } from 'jsr:@std/assert@^1.0.0';
 
 class MockHost {
   controllers: unknown[] = [];

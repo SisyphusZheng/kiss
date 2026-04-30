@@ -22,6 +22,25 @@ const DOCS_DIST = join(ROOT, 'docs', 'dist');
 // Check if build output exists — if not, skip these smoke tests
 const HAS_BUILD = existsSync(join(DOCS_DIST, 'server', 'entry.js'));
 
+/** Recursively find HTML files in a directory (shared by multiple tests). */
+function findHtmlFiles(dir: string): string[] {
+  const results: string[] = [];
+  try {
+    for (const entry of Deno.readDirSync(dir)) {
+      const fullPath = join(dir, entry.name);
+      if (
+        entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' &&
+        entry.name !== 'server'
+      ) {
+        results.push(...findHtmlFiles(fullPath));
+      } else if (entry.name.endsWith('.html')) {
+        results.push(fullPath);
+      }
+    }
+  } catch { /* ignore */ }
+  return results;
+}
+
 // ─── Phase 1: SSR Bundle Verification ──────────────────────
 
 Deno.test({
@@ -91,24 +110,6 @@ Deno.test({
   name: 'SSG smoke: phase 3 — HTML files generated',
   ignore: !HAS_BUILD,
   fn: () => {
-    function findHtmlFiles(dir: string): string[] {
-      const results: string[] = [];
-      try {
-        for (const entry of Deno.readDirSync(dir)) {
-          const fullPath = join(dir, entry.name);
-          if (
-            entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' &&
-            entry.name !== 'server'
-          ) {
-            results.push(...findHtmlFiles(fullPath));
-          } else if (entry.name.endsWith('.html')) {
-            results.push(fullPath);
-          }
-        }
-      } catch { /* ignore */ }
-      return results;
-    }
-
     const htmlFiles = findHtmlFiles(DOCS_DIST);
     assert(htmlFiles.length > 0, 'Should have at least one HTML file');
     console.log(`✅ Phase 3: ${htmlFiles.length} HTML file(s) generated`);
@@ -133,24 +134,6 @@ Deno.test({
   name: 'SSG smoke: phase 3 — client script injected in HTML',
   ignore: !HAS_BUILD,
   fn: () => {
-    function findHtmlFiles(dir: string): string[] {
-      const results: string[] = [];
-      try {
-        for (const entry of Deno.readDirSync(dir)) {
-          const fullPath = join(dir, entry.name);
-          if (
-            entry.isDirectory && !entry.name.startsWith('.') && entry.name !== 'client' &&
-            entry.name !== 'server'
-          ) {
-            results.push(...findHtmlFiles(fullPath));
-          } else if (entry.name.endsWith('.html')) {
-            results.push(fullPath);
-          }
-        }
-      } catch { /* ignore */ }
-      return results;
-    }
-
     const htmlFiles = findHtmlFiles(DOCS_DIST);
     if (htmlFiles.length === 0) return;
 
@@ -179,10 +162,7 @@ Deno.test({
       indexHtml.includes('shadowrootmode=') ||
       indexHtml.includes('<template shadowroot');
 
-    if (hasDsd) {
-      console.log('✅ Phase 3: DSD output preserved (S constraint satisfied)');
-    } else {
-      console.log('ℹ️ No DSD in index.html (may use different rendering approach)');
-    }
+    assert(hasDsd, 'SSG output should preserve Declarative Shadow DOM (S constraint)');
+    console.log('✅ Phase 3: DSD output preserved (S constraint satisfied)');
   },
 });
