@@ -28,15 +28,18 @@ jobs:
 
       - name: Build @kissjs/ui package
         working-directory: packages/kiss-ui
-        run: |
-          npm install --legacy-peer-deps
-          npm run build
+        run: deno task build
 
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         working-directory: docs
-        run: |
-          deno install
-          npm install --legacy-peer-deps
+        run: npm install
+
+      # Symlink docs/node_modules → repo root so that CLI scripts
+      # (packages/kiss-core/src/cli/*.ts) can resolve 'vite', 'hono' etc.
+      # tsx/Node.js resolves from the script's location upward;
+      # without this symlink, they can't find docs/node_modules.
+      - name: Symlink node_modules for monorepo resolution
+        run: ln -s docs/node_modules node_modules
 
       - name: Phase 1 — SSR bundle
         working-directory: docs
@@ -44,11 +47,11 @@ jobs:
 
       - name: Phase 2 — Client island chunks
         working-directory: docs
-        run: deno run -A ../packages/kiss-core/src/cli/build-client.ts
+        run: npx tsx ../packages/kiss-core/src/cli/build-client.ts
 
       - name: Phase 3 — SSG static HTML
         working-directory: docs
-        run: deno run -A --unstable-kv ../packages/kiss-core/src/cli/build-ssg.ts
+        run: npx tsx ../packages/kiss-core/src/cli/build-ssg.ts
 
       - name: Deploy to gh-pages branch
         run: |
