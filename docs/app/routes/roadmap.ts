@@ -172,6 +172,24 @@ export class RoadmapPage extends LitElement {
                 <td>docs 站使用自研 kiss-ui 组件</td>
                 <td class="status-done">完成</td>
               </tr>
+              <tr>
+                <td>Phase 8</td>
+                <td>v0.3.x — 工程重构</td>
+                <td>Package Islands + 3-phase build + KISS renderer</td>
+                <td class="status-done">完成</td>
+              </tr>
+              <tr>
+                <td>Phase 9</td>
+                <td>v0.3.3 — 代码审查</td>
+                <td>全量 audit + CI 并行 + 35+ 项修复</td>
+                <td class="status-done">完成</td>
+              </tr>
+              <tr>
+                <td>Phase 10</td>
+                <td>v0.4.0 — 稳定性</td>
+                <td>P0 清零、API 稳定、文档完善</td>
+                <td>进行中</td>
+              </tr>
             </tbody>
           </table>
 
@@ -223,12 +241,51 @@ export class RoadmapPage extends LitElement {
             <li>deno fmt/lint 通过 — 代码风格统一</li>
           </ul>
 
-          <h2>Phase 7：文档站自举（已完成）</h2>
+          <h2>Phase 8：v0.3.0 工程重构（已完成）</h2>
           <ul class="task-list">
-            <li>docs 站完全使用 @kissjs/ui 组件 — dogfooding 验证</li>
-            <li>Island 检测验证 — code-block, counter-island, theme-toggle</li>
-            <li>SSG 构建成功 — 所有页面静态生成，交互隔离</li>
-            <li>K·I·S·S 四约束落地 — Knowledge/Isolated/Semantic/Static</li>
+            <li>Package Islands 自动检测 — npm/JSR 包可导出 Islands</li>
+            <li>KissRenderer 实现 — 替代 Hono 默认 Renderer</li>
+            <li>KissBuildContext 架构 — 替代闭包共享可变状态</li>
+            <li>EntryDescriptor + renderEntry 模板化 — 替代 hono-entry.ts 字符串拼接</li>
+            <li>hydrationStrategy 四策略 — eager / lazy / idle / visible</li>
+            <li>@kissjs/ui 构建产出去 @kissjs/core 依赖 — 依赖反转</li>
+          </ul>
+
+          <h3>8A: 三阶段构建管线</h3>
+          <ul class="task-list">
+            <li>Phase 1: vite build → SSR bundle + .kiss/build-metadata.json</li>
+            <li>Phase 2: build:client → dist/client/islands/*.js</li>
+            <li>Phase 3: build:ssg → dist/*.html + 静态 SSG</li>
+            <li>消除 closeBundle 嵌套 Vite 导致 watch 模式 breakage</li>
+            <li>Vite manifest 集成 — build.manifest:true 确定性 chunk 检测</li>
+          </ul>
+
+          <h3>8B: hydration 修复</h3>
+          <ul class="task-list">
+            <li>litElementHydrateSupport 在 customElements.define 之前执行</li>
+            <li>动态 import() 确保 hydration 补丁先于组件注册</li>
+            <li>DSD polyfill 移除（现代浏览器已原生支持）</li>
+            <li>build-client.ts base=/client/ 修复 Island chunk URL</li>
+          </ul>
+
+          <h2>Phase 9：v0.3.3 代码审查（已完成）</h2>
+          <ul class="task-list">
+            <li>三轮迭代审查 + 两轮 agent 深搜 — 35+ 项修复</li>
+            <li>P0: kiss-input undefined 字符串, CLI exports 缺失, SSG CJS polyfill 时序</li>
+            <li>P1: 暗色模式阴影, kiss-button nothing/arrow, kiss-rpc abort race, kiss-theme-toggle 递归</li>
+            <li>CI 并行化 (typecheck + 4 test job) + actions/cache</li>
+            <li>deno-version 锁定 "2" — 防止 Deno 3.0 意外破坏</li>
+            <li>scanIslands 递归扫描 — 支持子目录 Island</li>
+            <li>coverge 自动化 + CI badge 替换手动 badge</li>
+            <li>JSR publish typecheck 修复 — noExternalPatterns 类型断言</li>
+          </ul>
+
+          <h2>Phase 10：v0.4.0 稳定性（进行中）</h2>
+          <ul class="task-list">
+            <li>P0 清零 — 所有已知 P0 问题已修复并验证</li>
+            <li>API 稳定性 — 冻结公有 API 迎接 v1.0</li>
+            <li>文档完善 — 架构/指南/API 文档全覆盖</li>
+            <li>Upstream 兼容矩阵 — 记录已知依赖问题</li>
           </ul>
 
           <h2>已解决的技术债</h2>
@@ -241,28 +298,32 @@ export class RoadmapPage extends LitElement {
             </thead>
             <tbody>
               <tr>
-                <td>hono-entry.ts 全字符串拼接</td>
+                <td>8 插件闭包共享可变状态</td>
+                <td class="status-done">已重构为 KissBuildContext</td>
+              </tr>
+              <tr>
+                <td>entry-renderer.ts 字符串拼接</td>
                 <td class="status-done">已重构为 EntryDescriptor + renderEntry</td>
               </tr>
               <tr>
-                <td>8 插件闭包共享可变状态</td>
-                <td class="status-done">已提取 KissBuildContext</td>
-              </tr>
-              <tr>
-                <td>SSR 运行时模式</td>
-                <td class="status-done">已移除</td>
-              </tr>
-              <tr>
-                <td>GLOBAL_BUILT 模块级变量</td>
-                <td class="status-done">已移除</td>
-              </tr>
-              <tr>
                 <td>Island 正则检测</td>
-                <td class="status-done">已改为构建时 map</td>
+                <td class="status-done">已改为 Rollup manifest</td>
               </tr>
               <tr>
-                <td>DIA → KISS Architecture</td>
-                <td class="status-done">已重定义（K·I·S·S 四约束）</td>
+                <td>CI 串行执行</td>
+                <td class="status-done">已拆为 5 并行 job</td>
+              </tr>
+              <tr>
+                <td>deno-version 浮动</td>
+                <td class="status-done">已锁定 "2"</td>
+              </tr>
+              <tr>
+                <td>8 个 assertEquals(true,true) 僵尸断言</td>
+                <td class="status-done">已替换</td>
+              </tr>
+              <tr>
+                <td>ssg-smoke 静默跳过</td>
+                <td class="status-done">已改为 Deno.test({ ignore })</td>
               </tr>
             </tbody>
           </table>
@@ -272,28 +333,28 @@ export class RoadmapPage extends LitElement {
             <thead>
               <tr>
                 <th>问题</th>
-                <th>状态</th>
+                <th>优先级</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>entry-renderer.ts 字符串拼接（非 MagicString）</td>
+                <td>移动端 <code>&lt;details&gt;</code> hack — 无程序化关闭</td>
                 <td class="priority-medium">中</td>
               </tr>
               <tr>
-                <td>packageIslands 客户端构建依赖 Vite alias，包内 Island 必须从 @kissjs/core 导入</td>
-                <td class="priority-medium">中</td>
-              </tr>
-              <tr>
-                <td>kiss-docs-kit 空壳（无 exports，用途不明）</td>
-                <td class="priority-medium">中</td>
-              </tr>
-              <tr>
-                <td>部分 guide 页面仍有硬编码颜色值</td>
+                <td>@kissjs/ui-plugin cdn:false 无操作选项</td>
                 <td class="priority-low">低</td>
               </tr>
               <tr>
-                <td>无 packageIslands 集成测试</td>
+                <td>index-plugin.test.ts 10个冗余 plugins.length 测试</td>
+                <td class="priority-low">低</td>
+              </tr>
+              <tr>
+                <td>kiss-card 不在 islands 数组中 — SSR-only 设计未文档化</td>
+                <td class="priority-low">低</td>
+              </tr>
+              <tr>
+                <td>无 Codecov / 覆盖率 badge 自动化</td>
                 <td class="priority-medium">中</td>
               </tr>
             </tbody>

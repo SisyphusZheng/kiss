@@ -207,6 +207,22 @@ async function buildSSG(options: BuildSSGOptions = {}): Promise<void> {
 
       if (!result.success) throw result.error;
 
+      // Rename 404/index.html → 404.html for GitHub Pages compatibility
+      const _404Dir = join(outputDir, '404');
+      const _404Html = join(outputDir, '404.html');
+      const _404Index = join(_404Dir, 'index.html');
+      if (existsSync(_404Index)) {
+        const { renameSync } = await import('node:fs');
+        renameSync(_404Index, _404Html);
+        if (existsSync(_404Dir)) {
+          const { rmdirSync } = await import('node:fs');
+          try {
+            rmdirSync(_404Dir);
+          } catch { /* non-empty dir, ignore */ }
+        }
+        console.log('[KISS SSG] 404 page → dist/404.html (GitHub Pages)');
+      }
+
       console.log(`[KISS SSG] Static site generated → ${outputDir}`);
 
       const basePath = options.base || '/';
