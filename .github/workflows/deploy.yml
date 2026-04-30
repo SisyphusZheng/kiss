@@ -34,13 +34,6 @@ jobs:
         working-directory: docs
         run: npm install
 
-      # Symlink docs/node_modules → repo root so that CLI scripts
-      # (packages/kiss-core/src/cli/*.ts) can resolve 'vite', 'hono' etc.
-      # tsx/Node.js resolves from the script's location upward;
-      # without this symlink, they can't find docs/node_modules.
-      - name: Symlink node_modules for monorepo resolution
-        run: ln -s docs/node_modules node_modules
-
       - name: Phase 1 — SSR bundle
         working-directory: docs
         run: npx vite build

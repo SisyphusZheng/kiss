@@ -192,7 +192,7 @@ Deno.test('printBuildManifest: HTML page budget warning', () => {
     mkdirSync(distDir, { recursive: true });
     writeFileSync(
       join(distDir, 'huge.html'),
-      '<html>' + 'x'.repeat(101 * 1024) + '</html>',
+      '<html>' + 'x'.repeat(161 * 1024) + '</html>',
       'utf-8',
     );
 

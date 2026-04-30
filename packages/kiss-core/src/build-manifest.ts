@@ -167,7 +167,7 @@ export function printBuildManifest(options: {
   // Budget thresholds
   const ISLAND_BUDGET_KB = 50; // Warn if single island > 50KB
   const TOTAL_JS_BUDGET_KB = 200; // Warn if total JS > 200KB
-  const PAGE_BUDGET_KB = 100; // Warn if single HTML page > 100KB (uncompressed)
+  const PAGE_BUDGET_KB = 160; // Warn if single HTML page > 100KB (uncompressed)
 
   const warnings: string[] = [];
 

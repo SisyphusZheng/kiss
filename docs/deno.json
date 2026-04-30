@@ -20,7 +20,7 @@
   },
   "tasks": {
     "dev": "deno run -A npm:vite",
-    "build": "npx vite build",
+    "build": "cd ../packages/kiss-ui && deno task build && npx vite build",
     "preview": "npx vite preview",
     "build:client": "npx tsx ../packages/kiss-core/src/cli/build-client.ts",
     "build:ssg": "npx tsx ../packages/kiss-core/src/cli/build-ssg.ts"
