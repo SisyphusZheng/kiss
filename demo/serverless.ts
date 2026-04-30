@@ -11,7 +11,7 @@ import apiApp from './app/routes/api/ping.ts';
 
 const app = new Hono();
 
-// CORS: manual headers (avoids hono/cors middleware dependency)
+// CORS: manual headers (no hono/cors middleware needed)
 app.use('/api/*', async (c, next) => {
   await next();
   c.res.headers.set('Access-Control-Allow-Origin', '*');
