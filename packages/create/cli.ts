@@ -126,6 +126,7 @@ node_modules/
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
     "entities": "npm:entities@^4.5.0",
     "hono": "npm:hono@4.12.23",
+    "marked": "npm:marked@15.0.12",
     "@openelement/app": "jsr:@openelement/app@^${v.app}",
     "@openelement/app/vite": "jsr:@openelement/app@^${v.app}/vite",
     "@openelement/core": "jsr:@openelement/core@^${v.core}",
