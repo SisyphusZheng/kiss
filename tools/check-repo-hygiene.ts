@@ -61,6 +61,12 @@ const forbiddenRootTracked = [
   /^hub-index\//,
 ];
 
+const forbiddenUntrackedResidue = [
+  /^\.github\/workflows\/[^/]+\.ya?ml$/,
+  /^ocr\.exe$/,
+  /^hub-submission\.json$/,
+];
+
 const activeScanExtensions = /\.(ts|tsx|js|jsx|json|md|yml|yaml)$/;
 const activeScanRoots = [
   'deno.json',
@@ -109,6 +115,25 @@ async function gitFiles(): Promise<string[]> {
     .map(normalize);
 }
 
+async function gitOthers(): Promise<string[]> {
+  const command = new Deno.Command('git', {
+    args: ['-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard', '-z'],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const output = await command.output();
+  if (!output.success) {
+    throw new Error(
+      new TextDecoder().decode(output.stderr).trim() || 'git ls-files --others failed',
+    );
+  }
+  return new TextDecoder()
+    .decode(output.stdout)
+    .split('\0')
+    .filter(Boolean)
+    .map(normalize);
+}
+
 async function exists(path: string): Promise<boolean> {
   try {
     await Deno.stat(path);
@@ -140,6 +165,12 @@ for (const file of files) {
   if (!(await exists(file))) continue;
   if (forbiddenRootTracked.some((pattern) => pattern.test(file))) {
     failures.push({ path: file, message: 'generated or archived root artifact is tracked' });
+  }
+}
+
+for (const file of await gitOthers()) {
+  if (forbiddenUntrackedResidue.some((pattern) => pattern.test(file))) {
+    failures.push({ path: file, message: 'untracked workflow or root tool residue is present' });
   }
 }
 

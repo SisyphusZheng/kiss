@@ -105,6 +105,12 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
+    name: 'text-integrity:check',
+    command: ['deno', 'task', 'text-integrity:check'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [/^README/, /^docs\//, /^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
+  },
+  {
     name: 'test',
     command: ['deno', 'task', 'test'],
     tiers: ['ci', 'release'],

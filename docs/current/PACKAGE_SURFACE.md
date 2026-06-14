@@ -24,7 +24,7 @@ graph collapse.
 | `@openelement/ssg`          | foundation     | Adapter-agnostic SSG engine (entry descriptor, render pipeline, route scanner, postprocess). |
 | `@openelement/core`         | foundation     | Low-level implementation kernel, now including `StyleSheet`.                                 |
 | `@openelement/router`       | foundation     | Route support behind Framework.                                                              |
-| `@openelement/signal`       | foundation     | Signal implementation behind protocols; default remains `alien-signals`.                     |
+| `@openelement/signal`       | foundation     | Signal implementation behind protocols; default is `@preact/signals-core`.                   |
 | `@openelement/content`      | foundation     | Content support behind Framework recipes.                                                    |
 | `@openelement/adapter-vite` | foundation     | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                  |
 
@@ -47,10 +47,13 @@ publish order:
 `StyleSheet` now lives in `@openelement/core/style-sheet` and is re-exported
 from `@openelement/element`. SSG engine is extracted into `@openelement/ssg` as
 an adapter-agnostic build engine that depends only on protocol, core, router,
-and content — never on Vite. `@openelement/adapter-vite` delegates SSG
+and content, never on Vite. `@openelement/adapter-vite` delegates SSG
 orchestration to it and keeps only Vite-specific glue (generated-data-resolver,
 package-resolver, CLI entry points).
-The canonical authoring import is `@openelement/element`.
+
+The canonical authoring import is `@openelement/element`. The default signal
+engine is `@preact/signals-core`; `alien-signals` remains available through
+`@openelement/signal/alien-engine`.
 
 ## Governance
 

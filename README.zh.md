@@ -4,9 +4,12 @@
 
 **JSX-first Web Components 平台。当前包线：`0.40.0`（`v0.40.0`）。当前执行线：`v0.40.0` Elements + Preact + Repository Slimming。**
 
-openElement 用 Web Components、JSX/VNode 渲染、渐进式 islands、API routes，以及 Vite + Nitro 输出构建静态优先应用。Shadow/DSD 是默认组件渲染模式；light DOM 是显式 opt-in。
+openElement 用 Web Components、JSX/VNode 渲染、渐进式 islands、API routes
+以及 Vite + Nitro 输出构建静态优先应用。Shadow/DSD 是默认组件渲染模式；
+light DOM 是显式 opt-in。
 
-强制项目流程：[docs/governance/PROJECT_WORKFLOW.md](./docs/governance/PROJECT_WORKFLOW.md)。
+强制项目流程：
+[`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md)。
 
 ## 快速开始
 
@@ -22,16 +25,25 @@ deno task dev
 openElement = Elements + UI + Framework + Protocols
 ```
 
-| 产品      | Surface                                   | 角色                                                               |
-| --------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| Elements  | `@openelement/element`, `OpenElement`     | 原生 Web Components authoring facade。                             |
-| UI        | `@openelement/ui`                         | 基于 Elements 模型的一方 `open-*` 组件库。                         |
-| Framework | `@openelement/app`, `@openelement/create` | 页面、布局、islands、API routes、Vite + Nitro build/runtime 输出。 |
-| Protocols | `@openelement/protocol`                   | Runtime-free 的可替换边界和 conformance contracts。                |
+| 产品      | Surface                                   | 角色                                                              |
+| --------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| Elements  | `@openelement/element`, `OpenElement`     | 原生 Web Components authoring layer，对标 Lit 和 FAST。           |
+| UI        | `@openelement/ui`                         | 基于 Elements 模型的一方 `open-*` 组件库。                        |
+| Framework | `@openelement/app`, `@openelement/create` | Pages、layouts、islands、API routes、Vite + Nitro build/runtime。 |
+| Protocols | `@openelement/protocol`                   | Runtime-free replacement boundaries 和 conformance contracts。    |
 
-v0.40.x 当前 workspace 收敛为 11 个包。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters、独立 runtime/style-sheet/ssg 包已退出当前包图；历史细节保留在 git history 和 release evidence 中。
+支持包包括 `@openelement/core`、`@openelement/adapter-vite`、
+`@openelement/signal`、`@openelement/router`、`@openelement/content` 和
+`@openelement/ssg`。它们支撑四个产品，但不是独立的一线产品。
 
-v1.0 目标是稳定的四产品平台，冻结 Elements、UI、Framework、Protocols 的公开契约。
+v0.40.x 当前 workspace 收敛为 11 个包。Hub、RPC、CEM、compat-check、
+Lit/React/vanilla interop adapters，以及 standalone runtime/style-sheet/i18n
+包已退出当前包图；`@openelement/ssg` 保留为 adapter-agnostic SSG engine。
+`@preact/signals-core` 是默认 signal engine，`alien-signals` 作为可选 engine
+保留。
+
+v1.0 目标是稳定的四产品平台，冻结 Elements、UI、Framework、Protocols
+的公开契约。
 
 ## 示例
 

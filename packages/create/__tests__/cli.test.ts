@@ -163,7 +163,7 @@ Deno.test('create-open: vite.config.ts includes packageIslands config', () => {
   const viteConfig = extractTemplate('vite.config.ts');
   assert(viteConfig.includes('@openelement/ui'));
   assert(viteConfig.includes("packageIslands: ['@openelement/ui']"));
-  // v0.21.6: Hardcoded JSR URL aliases removed 鈥?plugin auto-generates them
+  // v0.21.6: plugin auto-generates JSR URL aliases.
   assertFalse(viteConfig.includes('lessUiAliases'));
   assertFalse(viteConfig.includes('https://jsr.io/@openelement/ui/'));
 });

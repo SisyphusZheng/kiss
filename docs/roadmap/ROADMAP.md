@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.0 Elements + Preact + Repository Slimming; 11-package cleanup train consolidated into v0.40.0.\
+> Current package line: v0.40.0 Elements + Preact + Repository Slimming; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-14.
 
@@ -9,7 +9,7 @@ Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
 ## Product Position
 
-openElement is a four-product Web Components platform:
+openElement is a four-product Web Components full-stack framework:
 
 ```text
 openElement = Elements + UI + Framework + Protocols
@@ -21,7 +21,7 @@ keeping shadow/DSD as the default render mode and explicit light DOM opt-in.
 UI is the first-party `open-*` component library built on the Elements model.
 Framework is the application layer powered by Vite + Nitro. Protocols is the
 runtime-free replacement boundary for renderers, routes, islands, adapters,
-runtime, cache, data, and signals.
+runtime, cache, data, sessions, forms, and signals.
 
 Historical positioning note: earlier ADRs used the phrase DSD-first to protect
 shadow/DSD output as the default. ADR-0096 refines that into Web Components
@@ -29,8 +29,18 @@ application framework identity, with shadow/DSD as the default render mode and
 light DOM as first-class opt-in.
 
 Vite + Nitro remain default Framework engines, not first-class products.
-`@openelement/core`, `@openelement/adapter-vite`, `@openelement/signal`, and
-advanced feature packages support the four products without replacing them.
+`@openelement/core`, `@openelement/adapter-vite`, `@openelement/signal`,
+`@openelement/ssg`, and advanced feature packages support the four products
+without replacing them.
+
+Distribution policy is npm-first. npm is the only planned registry truth for
+future releases; JSR is not part of the required release closure path. Deno
+support is proven through `npm:` consumer smoke, and browser-safe exports are
+verified through jsDelivr smoke from npm artifacts. GitHub remains the canonical
+source, issue/PR surface, CI runner, and npm trusted publishing bridge for the
+near term because it gives the lowest-cost path to discoverability and release
+provenance. Codeberg/Forgejo are a future source-sovereignty target, not a
+v0.41-v1.0 blocker.
 
 ## Version Ladder
 
@@ -57,9 +67,17 @@ advanced feature packages support the four products without replacing them.
 | v0.37.6 | Vite + Nitro Runtime Proof                         | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro                                                        | Done                     |
 | v0.38.0 | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                            | Done                     |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
-| v0.40.0 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Done (local)             |
-| v0.41.0 | v1.0 Freeze Candidate                              | Freeze public APIs, complete protocol conformance, harden UI scope, migration docs, and release gates                                                            | Planned                  |
-| v1.0.0  | Stable Four-Product Platform                       | API freeze for elements, UI, protocol, and framework with workflow evidence in release gates                                                                     | Vision                   |
+| v0.40.0 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Release-ready            |
+| v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
+| v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
+| v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
+| v0.44.0 | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                          | Planned                  |
+| v0.45.0 | Session + Auth Recipes                             | Add signed session primitives and official auth recipes without becoming an auth platform                                                                        | Planned                  |
+| v0.46.0 | Database + Storage Recipes                         | Prove SQLite/libSQL, Postgres, D1, KV/R2-style recipes without selecting a default database                                                                      | Planned                  |
+| v0.47.0 | Deployment Hardening                               | Harden Node, Workers, npm, jsDelivr, Deno `npm:`, cache headers, ISR/SWR, and runtime smoke gates                                                                | Planned                  |
+| v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
+| v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
+| v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
 
 ## v0.36.0 - Rendering Runtime, Deployment & Deferred Refactors
 
@@ -259,8 +277,8 @@ Complete daisyUI interactive component coverage and migrate protocol types.
 - navbar: DsdElement thin shell, responsive collapse menu
 - footer: pure CSS component (no interaction, just layout)
 - indicator: pure CSS component (badge positioning on avatars/icons)
-- skeleton: already in v0.37.4 daisy-classes.css 鈥?no additional work
-- loading: already in v0.37.4 daisy-classes.css 鈥?no additional work
+- skeleton: already in v0.37.4 daisy-classes.css; no additional work
+- loading: already in v0.37.4 daisy-classes.css; no additional work
 - chat bubble: pure CSS component
 - toggle (theme switch wrapper): DsdElement thin shell
 
@@ -367,9 +385,8 @@ The product-surface jobs are:
   `DsdElement` alias;
 - add Preact as the only heavy-framework island priority, reflecting the
   Fresh/Deno lineage without making Preact the identity of openElement;
-- evaluate `@preact/signals-core` as a `SignalEngine` implementation candidate
-  behind `@openelement/signal` and `@openelement/protocol/signals`
-  conformance, not as an immediate default-engine swap.
+- use `@preact/signals-core` as the default `SignalEngine` behind
+  `@openelement/signal`, with `alien-signals` retained as an optional engine.
 
 The Repository Slimming jobs are:
 
@@ -381,38 +398,165 @@ The Repository Slimming jobs are:
   v0.40 execution plan;
 - reduce the workspace package graph from 21 packages to the 11-package current
   surface in `docs/current/PACKAGE_SURFACE.md`;
-- reduce hook and CI orchestration to AutoFlow3 entry points while keeping JSR
-  publish and post-publish smoke as release evidence.
+- reduce hook and CI orchestration to AutoFlow3 entry points. v0.40 still
+  records the historical JSR publish shape, but v0.41 replaces release closure
+  with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr
+  smoke.
 
 Current implementation removes Hub/RPC/CEM/compat-check/interop adapter
-packages and collapses standalone runtime/style-sheet/ssg packages into the
-11-package surface. Workflows stay at four active files, active docs stay at
-current truth plus ADR, roadmap/status, release evidence, and archive index,
-and `deno task package-surface:check` verifies the 11-package surface. Nitro Node and Workers proofs remain part of the v0.40 gate
-matrix. ADR-0102 also adds `@openelement/element` as the first-class Elements
-package.
+packages and collapses standalone runtime/style-sheet/i18n packages while
+retaining `@openelement/ssg` as the adapter-agnostic SSG engine. Workflows stay
+at four active files, active docs stay at current truth plus ADR,
+roadmap/status, release evidence, and archive index, and
+`deno task package-surface:check` verifies the 11-package surface. Nitro Node
+and Workers proofs remain part of the v0.40 gate matrix. ADR-0102 also adds
+`@openelement/element` as the first-class Elements package.
 
 The v0.40 non-goals are explicit: Hub remains frozen, Vue/React/Svelte island
 expansion stays out of scope, Web Awesome remains out of the current UI
-strategy, Fresh is not adopted as a router/server runtime, and no Preact runtime
-may leak into `@openelement/core` or Elements as a required public dependency. Further package deletion, package merges, new
-packages, default runtime changes, and default signal-engine changes still
-require ADR-backed human approval.
+strategy, Fresh is not adopted as a router/server runtime, and no Preact
+runtime may leak into `@openelement/core` or Elements as a required public
+dependency. Further package deletion, package merges, new packages, default
+runtime changes, and future default signal-engine changes still require
+ADR-backed human approval.
 
-## v0.41.0 - v1.0 Freeze Candidate
+## v0.41.0 - npm-only Distribution
 
-Turn the v0.40 productized surface into a release candidate for v1.0. The line
-must complete protocol conformance coverage, freeze the supported UI component
-scope, verify Preact island behavior through consumer smoke, decide whether
-the Preact signal engine candidate becomes default or remains optional, and
-finish migration docs for Elements, Framework, UI, and Protocols.
+Replace JSR release closure with npm as the single registry truth. The line
+keeps GitHub as the canonical source, issue/PR surface, CI runner, and npm
+trusted publishing bridge because that is the lowest-cost path with the best JS
+ecosystem discoverability. Codeberg/Forgejo are recorded as future
+source-sovereignty options, not as v0.41 blockers.
 
-## v1.0.0 - Stable Four-Product Platform
+Core work:
 
-API freeze for the stable Elements, UI, Framework, and Protocols surfaces.
-AutoFlow evidence becomes part of default release gates, but ADR and human
-review continue to govern public API, package, license, security, database, tag,
-release, and publish decisions.
+- write the npm-only distribution ADR;
+- remove JSR publish, JSR metadata wait, and JSR consumer smoke from required
+  release closure;
+- build an npm artifact pipeline for the 11-package graph, using `deno pack`
+  unless a package proves it needs a narrower custom pack step;
+- add tarball inspection for exports, types, files, license, repository
+  metadata, and absence of `jsr:` specifiers;
+- add npm trusted publishing through GitHub Actions;
+- add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
+  consumer smoke.
+
+Exit criteria:
+
+- npm is sufficient to install and build a generated openElement app;
+- Deno consumes the release through `npm:@openelement/*`;
+- browser-safe exports are verified through jsDelivr npm URLs;
+- release notes do not claim package availability until npm publish and all
+  post-publish smoke checks pass.
+
+## v0.42.0 - Server Primitives
+
+Move from application framework toward full-stack framework by adding the
+server primitives that pages, API routes, actions, and adapters share.
+
+Core work:
+
+- add `@openelement/app/server` as the public server authoring surface;
+- define request handler, middleware, route action, response helper, and request
+  context boundaries;
+- ensure page routes and API routes share the same context model;
+- prove Node and Workers runtime paths through Nitro;
+- avoid choosing a hosting provider or replacing Nitro as the default runtime
+  engine.
+
+## v0.43.0 - Data + Cache Primitives
+
+Add data and cache contracts without becoming an ORM.
+
+Core work:
+
+- add `@openelement/app/data` for loader/action data flow;
+- strengthen protocol data/cache contracts for typed results, redirects,
+  errors, notFound, cache keys, revalidation, and invalidation;
+- keep memory/file cache adapters as test baselines;
+- provide D1, Postgres, and libSQL recipes as smoke-tested integrations, not
+  default database choices.
+
+## v0.44.0 - Forms + Mutations
+
+Make the write path usable with and without client JavaScript.
+
+Core work:
+
+- add `@openelement/app/forms`;
+- support progressive-enhancement form submissions;
+- define action result serialization and validation error shapes;
+- allow client islands to receive and enhance server action results;
+- keep validation libraries external and recipe-based.
+
+## v0.45.0 - Session + Auth Recipes
+
+Add session primitives and official auth recipes without becoming an auth
+platform.
+
+Core work:
+
+- add `@openelement/app/session`;
+- provide signed cookie/session primitives;
+- define how request context exposes session and authenticated user state;
+- add official username/password and OAuth-style recipes;
+- keep user tables, RBAC, provider ownership, and account policy outside the
+  framework.
+
+## v0.46.0 - Database + Storage Recipes
+
+Prove real storage paths through recipes while keeping database ownership
+outside the framework.
+
+Core work:
+
+- add smoke-backed recipes for SQLite/libSQL, Postgres, Cloudflare D1, and
+  KV/R2-style object storage;
+- document that migrations belong to the chosen database/tooling stack;
+- prevent database dependencies from entering `core`, `element`, or `ui`.
+
+## v0.47.0 - Deployment Hardening
+
+Turn full-stack capability into repeatable deployment evidence.
+
+Core work:
+
+- harden Node and Cloudflare Workers presets;
+- make Nitro output proof part of release evidence;
+- verify CDN/cache headers, ISR/SWR, static asset manifests, and island chunk
+  manifests;
+- keep npm, jsDelivr, Deno `npm:`, Node, and Workers smoke in the release gate.
+
+## v0.48.0 - Product DX + Docs Freeze
+
+Freeze the learning path and starter story before API freeze.
+
+Core work:
+
+- restructure docs around Getting Started, Elements, UI, App/server, Data/cache,
+  Forms/actions, Session/auth, Deploy, and Migration;
+- add minimal app, blog app, and full-stack app starter templates;
+- ensure docs examples are backed by smoke tests or snapshots;
+- remove future-tense claims from current docs.
+
+## v0.49.0 - v1.0 Freeze Candidate
+
+Make the final pre-v1 breaking pass.
+
+Core work:
+
+- freeze public package graph and exports;
+- freeze server, data, forms, session, and cache protocols;
+- remove or explicitly mark experimental public APIs;
+- audit external consumers, install size, dependency graph, and release gates.
+
+## v1.0.0 - Stable Web Components Full-stack Framework
+
+API freeze for npm-first Elements, UI, Framework, and Protocols with proven
+server, data, forms, session, cache, auth recipe, and database recipe paths.
+AutoFlow evidence remains part of default release gates, while ADR and human
+review govern public API, package, license, security, database, tag, release,
+and publish decisions.
 
 ## Explicit Non-Goals
 

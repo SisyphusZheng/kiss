@@ -20,10 +20,10 @@ automation.
 - Keep an 11-package current graph documented in `docs/current/PACKAGE_SURFACE.md`.
 - Promote `@openelement/element` into the canonical component-authoring facade.
 - Remove standalone `@openelement/runtime`, `@openelement/style-sheet`, and
-  `@openelement/ssg` from the current package graph.
+  `@openelement/i18n` from the current package graph.
 - Move `StyleSheet` into `@openelement/core/style-sheet` and re-export it from
   `@openelement/element`.
-- Extract SSG engine into `@openelement/ssg` as an adapter-agnostic build engine.
+- Retain `@openelement/ssg` as the adapter-agnostic SSG build engine.
 - Keep Preact island support as optional `@openelement/app/preact`.
 - Switch default signal engine to `@preact/signals-core`; keep
   `alien-signals` as an optional engine via `@openelement/signal/alien-engine`.
@@ -61,15 +61,15 @@ All workstreams are complete in v0.40.0.
 - [x] Remove SOP/NextVersion language from `.github` issue/PR/agent templates.
 - [x] Remove historical `docs/mockups/` and `docs/conversation/` from `deno.json` excludes.
 
-### v0.40.0 - Package Graph Collapse To 12
+### v0.40.0 - Package Graph Collapse To 11
 
 - [x] Remove standalone `@openelement/style-sheet`.
 - [x] Move `StyleSheet` into `@openelement/core/style-sheet`.
 - [x] Promote `@openelement/element` as the authoring facade.
 - [x] Remove standalone `@openelement/runtime`.
 - [x] Extract SSG engine into `@openelement/ssg` as adapter-agnostic build engine; `adapter-vite` delegates SSG orchestration.
-- [x] Remove old standalone `@openelement/ssg` (now revived as internal engine).
-- [x] Update workspace, import map, release order, package count (12), publish order, and checks.
+- [x] Remove standalone `@openelement/i18n`; current i18n support lives under `@openelement/app/i18n`.
+- [x] Update workspace, import map, release order, package count (11), publish order, and checks.
 - [x] Rename public packages and directories to singular: `element`, `protocol`, `signal`.
 
 ### v0.40.0 - Preact Island Proof
@@ -97,6 +97,39 @@ All workstreams are complete in v0.40.0.
 - [x] Add `type-safety:check` gate to AutoFlow3 push/ci/release tiers.
 - [x] Publish closure still requires JSR package truth and post-publish smoke evidence.
 
+### v0.40.0 - Post-Cleanup Truth Audit Follow-Up
+
+The 2026-06-15 repo read-through found that the implementation was ahead of the
+planning layer. The follow-up is now part of v0.40.0 closure:
+
+- [x] Reconcile ADR-0105 with the actual v0.40.0 package graph:
+      `@openelement/ssg` is retained as the adapter-agnostic SSG engine,
+      `@openelement/i18n` is removed from the workspace and moved under
+      `@openelement/app/i18n`, and `@preact/signals-core` is the default signal
+      engine after ADR-0104.
+- [x] Remove the SSG contradiction in this plan: current truth is retained
+      `@openelement/ssg`, removed standalone runtime/style-sheet/i18n.
+- [x] Update `docs/current/PACKAGE_SURFACE.md` so the `@openelement/signal`
+      row matches ADR-0104 and implementation truth: default
+      `@preact/signals-core`, optional `alien-signals` engine.
+- [x] Update README and README.zh package wording to use the singular package
+      names and the real support-package set: `core`, `adapter-vite`, `signal`,
+      `router`, `content`, and `ssg`; remove stale `i18n` and standalone-SSG
+      removal wording.
+- [x] Rewrite current website architecture pages so they describe the
+      11-package v0.40 graph instead of the historical 20-package graph.
+- [x] Clean mojibake in active current-truth docs and current website routes.
+      Historical release evidence may keep original text unless it is rendered
+      as current truth.
+- [x] Add a text-integrity gate that catches mojibake and stale current-product
+      vocabulary in active source/docs/www routes.
+- [x] Remove local audit-tool residue: untracked `.github/workflows/opencode.yml`,
+      root `ocr.exe`, empty `packages/i18n/`, and empty `fixtures/`.
+- [x] Keep `workflow:check-slimming` strict and let repo hygiene reject local
+      root/workflow residue before CI-like gates run.
+- [x] Add docs-truth coverage for package graph, retained/removed packages, and
+      signal-engine default.
+
 ## Acceptance
 
 - The workspace has exactly 11 current packages.
@@ -106,7 +139,7 @@ All workstreams are complete in v0.40.0.
   AutoFlow3.
 - Root has no tracked generated artifacts or tracked `bench/`.
 - Active code does not import removed packages.
-- Preact remains optional and does not enter `core` or `elements` as a required
+- Preact remains optional and does not enter `core` or `element` as a required
   dependency.
 - `nitro:proof:node` and `nitro:proof:workers` still pass.
 - Release evidence records package removals and the cleanup-train approval

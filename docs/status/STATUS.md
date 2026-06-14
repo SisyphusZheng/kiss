@@ -11,13 +11,17 @@ v0.40.0 is released as the product-line cleanup release. It keeps the public
 target at `openElement = Elements + UI + Framework + Protocols`, makes the
 active package line `0.40.0`, and narrows the workspace to 11 packages. Hub,
 RPC, CEM, compat-check, Lit/React/vanilla interop adapters, and standalone
-runtime/style-sheet/ssg packages are removed from the current package graph.
-Hub routes and registry data are also removed from the website output.
+runtime/style-sheet/i18n packages are removed from the current package graph.
+`@openelement/ssg` remains as the adapter-agnostic SSG engine. Hub routes and
+registry data are also removed from the website output.
 
 Public package names are singular: `@openelement/element`,
 `@openelement/protocol`, and `@openelement/signal`. Active code, tests, tools,
 and www active code enforce 0 explicit `any` through the `type-safety:check`
 gate.
+
+The default signal engine is `@preact/signals-core`. `alien-signals` remains
+available as an optional engine through `@openelement/signal/alien-engine`.
 
 ADR-0101 is the governance boundary for this line. ADR-0105 approves the
 v0.40.0 breaking cleanup train consolidated into the v0.40.0 release. AutoFlow3
@@ -26,14 +30,15 @@ decide minor/major product scope, public API, package topology, default runtime,
 default signal engine, security/auth/database ownership, or release policy
 without human ADR or approved version-plan evidence.
 
-Local v0.40.0 evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
+Local v0.40.0 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
 `build`, `graph:check`, `arch:check`, `repo:hygiene`, `workflow:check`,
 `workflow:check-slimming`, `docs:check-public`, `docs:check-current`,
 `docs:check-strategy`, `package-surface:check`,
 `signals:check-protocol-boundary`, `type-safety:check`, `autoflow:push`,
 `autoflow:ci`, `nitro:proof:node`, `nitro:proof:workers`, `consumer:local`,
-`consumer:core-smoke`, and `publish:dry-run`. JSR publish and post-publish
-smoke evidence are required for final release closure.
+`consumer:core-smoke`, and `publish:dry-run`. Distribution closure is completed
+by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
+line and runs the post-publish consumer smoke.
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
 
@@ -215,9 +220,17 @@ built-in cell generation.
 | v0.37.6 | Vite + Nitro Runtime Proof                         | Done                | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro     |
 | v0.38.0 | Product Surface Reset and Hardening                | Done                | Reset public package/API/product surface based on protocol and Nitro runtime evidence                         |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | Done                | ADR-0099, public docs integrity, Elements direction, Preact handoff, starter/deploy/consumer gates            |
-| v0.40.0 | Elements + Preact + Repository Slimming            | Done (local)        | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
-| v0.41.0 | v1.0 Freeze Candidate                              | Planned             | API freeze candidate, protocol conformance, UI hardening, migration docs, and release-gate proof              |
-| v1.0.0  | Stable Four-Product Platform                       | Vision              | API freeze for Elements, UI, Framework, and Protocols with workflow evidence in release gates                 |
+| v0.40.0 | Elements + Preact + Repository Slimming            | Release-ready       | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
+| v0.41.0 | npm-only Distribution                              | Planned             | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
+| v0.42.0 | Server Primitives                                  | Planned             | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                     |
+| v0.43.0 | Data + Cache Primitives                            | Planned             | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                             |
+| v0.44.0 | Forms + Mutations                                  | Planned             | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff       |
+| v0.45.0 | Session + Auth Recipes                             | Planned             | Add signed session primitives and official auth recipes without becoming an auth platform                     |
+| v0.46.0 | Database + Storage Recipes                         | Planned             | Prove SQLite/libSQL, Postgres, D1, KV/R2-style recipes without selecting a default database                   |
+| v0.47.0 | Deployment Hardening                               | Planned             | Harden Node, Workers, npm, jsDelivr, Deno `npm:`, cache headers, ISR/SWR, and runtime smoke gates             |
+| v0.48.0 | Product DX + Docs Freeze                           | Planned             | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                |
+| v0.49.0 | v1.0 Freeze Candidate                              | Planned             | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates            |
+| v1.0.0  | Stable Web Components Full-stack Framework         | Vision              | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache, and recipes             |
 
 ## Current Product Center
 
@@ -242,7 +255,7 @@ DSD/shadow is a default Elements render mode, not the product name.
 
 | Mode                 | State       | Notes                                                                                        |
 | -------------------- | ----------- | -------------------------------------------------------------------------------------------- |
-| SSG                  | shipped     | default production rendering; implementation now lives inside `@openelement/adapter-vite`    |
+| SSG                  | shipped     | default production rendering; engine lives in `@openelement/ssg`                             |
 | DSD                  | shipped     | `renderDsd()` outputs declarative shadow roots                                               |
 | Streaming DSD        | evidence    | `renderDsdStream()` is tested through Web `Response` consumption; not default server runtime |
 | Static zero-JS       | doctrine    | static routes emit no framework JS unless islands, hydration, or client-only are explicit    |
@@ -261,8 +274,8 @@ DSD/shadow is a default Elements render mode, not the product name.
 ## Package Version State
 
 The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.0**. Published package availability still depends on JSR
-publish and post-publish smoke evidence before release closure.
+to local version **0.40.0**. Published package availability is completed by the
+`main` branch JSR publish workflow and its post-publish consumer smoke.
 
 Package governance for v0.40:
 
@@ -306,8 +319,8 @@ The workspace package count is now 11.
 5. **Default engine bridge** - Vite owns module graph, plugin orchestration,
    client bundling, and HMR; Nitro owns production runtime, deployment output,
    platform presets, cache/storage, and route-rule plumbing.
-6. **Supporting implementation surfaces** - core, adapter-vite, router,
-   content, i18n, and signals support the four products without becoming
+6. **Supporting implementation surfaces** - core, adapter-vite, ssg, router,
+   content, and signal support the four products without becoming
    separate product lines.
 
 ## Future Product Direction
@@ -337,8 +350,8 @@ The workspace package count is now 11.
 - Governance convergence before v1.0: gate tiers (fast dev gate for PRs,
   full release gate for publishing), AutoFlow feature scope freeze, Hub scope
   deferred to post-v1.0. See `docs/roadmap/ROADMAP.md` v0.38.x for details.
-- JSR publish is a v0.39+ release exit gate under ADR-0100. Release notes must
-  not claim closure unless publish evidence or an ADR-approved exception exists.
+- JSR publish remains the v0.40 release distribution gate under ADR-0100.
+  v0.41 is planned to replace this path with npm-only distribution.
 
 ## Key Decisions
 
@@ -377,9 +390,9 @@ The workspace package count is now 11.
   subtrees stay in Islands.
 - **Package graph gate.** `graph:check` verifies zero cycles, unified versions,
   and declared imports.
-- **JSR publish exit gate restored.** `publish:dry-run` remains a local release
-  gate, and live or CI JSR publish evidence is required for v0.39+ version
-  closure. See ADR-0100.
+- **JSR publish exit gate restored for v0.40.** `publish:dry-run` remains a
+  local release gate, and the `main` branch publish workflow provides v0.40
+  distribution closure. v0.41 is planned to move release truth to npm.
 - **SSG ownership.** `@openelement/ssg` owns SSG render, postprocess, route
   scanning, entry generation, generated data resolution, and SSG-specific Vite
   plugin logic.
@@ -420,7 +433,7 @@ deno task nitro:proof:workers
 deno task publish:dry-run
 ```
 
-Live JSR publish and post-publish JSR consumer smoke run after
-repository-controlled gates, dev/main CI, merge, and tag/release work. For
-v0.39+ release closure, JSR publish evidence is required unless a later ADR
-approves an explicit exception.
+Live JSR publish and post-publish JSR consumer smoke run from the `main` branch
+after repository-controlled gates, dev CI, merge, and release work. This remains
+the v0.40 distribution closure path; v0.41 is planned to replace it with
+npm-only release truth.

@@ -74,6 +74,7 @@
     "signals:check-protocol-boundary": "deno run --allow-read tools/check-signal-protocol-boundary.ts",
     "arch:check": "deno run --allow-read --allow-run tools/check-architecture-contract.ts",
     "type-safety:check": "deno run --allow-read tools/check-type-safety.ts",
+    "text-integrity:check": "deno run --allow-read --allow-run=git tools/check-text-integrity.ts",
     "dist:check-object-object": "deno run --allow-read tools/check-dist-no-object-object.ts",
     "graph:check": "deno run --allow-read tools/check-package-graph.ts",
     "graph:check-imports": "deno run --allow-read --allow-write --allow-run tools/check-import-map.ts",
