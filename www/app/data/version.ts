@@ -1,2 +1,2 @@
-// Current public line: v0.39
-export const OPENELEMENT_VERSION = 'v0.39.0';
+// Current public line: v0.40.1
+export const OPENELEMENT_VERSION = 'v0.40.1';
