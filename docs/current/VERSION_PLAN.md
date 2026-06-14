@@ -1,4 +1,4 @@
-# v0.40.1 Version Plan - Product-Line Cleanup
+# v0.40.2 Version Plan - Product-Line Cleanup
 
 ## Objective
 
@@ -9,8 +9,8 @@ the product shape:
 openElement = Elements + UI + Framework + Protocols
 ```
 
-The current local package line is `v0.40.1`. All cleanup-train work is
-consolidated into the v0.40.1 release. The cleanup was manually approved as a
+The current local package line is `v0.40.2`. All cleanup-train work is
+consolidated into the v0.40.2 release. The cleanup was manually approved as a
 breaking train under ADR-0105 with approval id
 `ADR-0105/v0.40.x-cleanup-train`; it is not executed as normal AutoFlow patch
 automation.
@@ -49,9 +49,9 @@ automation.
 
 ## Workstreams
 
-All workstreams are complete in v0.40.1.
+All workstreams are complete in v0.40.2.
 
-### v0.40.1 - Governance And Repo Hygiene
+### v0.40.2 - Governance And Repo Hygiene
 
 - [x] Add v0.40.x cleanup-train governance.
 - [x] Make pre-push run `autoflow:push` on all branches.
@@ -61,7 +61,7 @@ All workstreams are complete in v0.40.1.
 - [x] Remove SOP/NextVersion language from `.github` issue/PR/agent templates.
 - [x] Remove historical `docs/mockups/` and `docs/conversation/` from `deno.json` excludes.
 
-### v0.40.1 - Package Graph Collapse To 11
+### v0.40.2 - Package Graph Collapse To 11
 
 - [x] Remove standalone `@openelement/style-sheet`.
 - [x] Move `StyleSheet` into `@openelement/core/style-sheet`.
@@ -72,14 +72,14 @@ All workstreams are complete in v0.40.1.
 - [x] Update workspace, import map, release order, package count (11), publish order, and checks.
 - [x] Rename public packages and directories to singular: `element`, `protocol`, `signal`.
 
-### v0.40.1 - Preact Island Proof
+### v0.40.2 - Preact Island Proof
 
 - [x] Add optional `@openelement/app/preact`.
 - [x] Record island metadata and hydration strategies through the existing island protocol.
 - [x] Prove DSD opt-out metadata.
 - [x] Browser-level client upgrade proof is deferred to a future release-candidate gate.
 
-### v0.40.1 - Signal Candidate And Code Clean
+### v0.40.2 - Signal Candidate And Code Clean
 
 - [x] Switch default signal engine from `alien-signals` to `@preact/signals-core`. `alien-signals` remains available as optional engine via `@openelement/signal/alien-engine` and runtime `setSignalEngine()`.
 - [x] Add optional `@openelement/signal/preact-engine`.
@@ -88,7 +88,7 @@ All workstreams are complete in v0.40.1.
 - [x] Enforce 0 explicit `any` in active code, tests, tools, and www active code.
 - [x] Clean mojibake in active source/tools as gates expose it.
 
-### v0.40.1 - Release Hardening
+### v0.40.2 - Release Hardening
 
 - [x] Add package graph and repo hygiene checks for the 11-package target.
 - [x] Add hook-policy coverage proving package/tool/hook changes trigger `arch:check`.
@@ -97,12 +97,12 @@ All workstreams are complete in v0.40.1.
 - [x] Add `type-safety:check` gate to AutoFlow3 push/ci/release tiers.
 - [x] Publish closure still requires JSR package truth and post-publish smoke evidence.
 
-### v0.40.1 - Post-Cleanup Truth Audit Follow-Up
+### v0.40.2 - Post-Cleanup Truth Audit Follow-Up
 
 The 2026-06-15 repo read-through found that the implementation was ahead of the
-planning layer. The follow-up is now part of v0.40.1 closure:
+planning layer. The follow-up is now part of v0.40.2 closure:
 
-- [x] Reconcile ADR-0105 with the actual v0.40.1 package graph:
+- [x] Reconcile ADR-0105 with the actual v0.40.2 package graph:
       `@openelement/ssg` is retained as the adapter-agnostic SSG engine,
       `@openelement/i18n` is removed from the workspace and moved under
       `@openelement/app/i18n`, and `@preact/signals-core` is the default signal
@@ -143,7 +143,7 @@ planning layer. The follow-up is now part of v0.40.1 closure:
   dependency.
 - `nitro:proof:node` and `nitro:proof:workers` still pass.
 - Release evidence records package removals and the cleanup-train approval
-  before v0.40.1 closure.
+  before v0.40.2 closure.
 - No explicit `any` in active TS/TSX code, tests, tools, or www active code.
 
 ## Test Matrix
