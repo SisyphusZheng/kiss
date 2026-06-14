@@ -39,14 +39,16 @@ openElement = Elements + UI + Framework + Protocols
 | Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, islands, API routes, Vite + Nitro build/runtime output. |
 | Protocols | `@openelement/protocol`                   | Runtime-free replacement boundaries and conformance contracts.          |
 
-Supporting packages such as `@openelement/core`, `adapter-vite`, `signals`,
-`router`, `content`, and `i18n` are advanced or implementation surfaces. They
-support the four products; they are not separate first-class product lines.
+Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
+`@openelement/signal`, `@openelement/router`, `@openelement/content`, and
+`@openelement/ssg` are advanced or implementation surfaces. They support the
+four products; they are not separate first-class product lines.
 
 In v0.40.x, the active workspace is the 11-package cleanup-train product line.
 Hub, RPC, CEM, compat-check, Lit/React/vanilla interop adapters, and standalone
-runtime/style-sheet/ssg packages are removed from the current package graph;
-historical details remain in git history and release evidence.
+runtime/style-sheet/i18n packages are removed from the current package graph;
+`@openelement/ssg` is retained as the adapter-agnostic SSG engine. Historical
+details remain in git history and release evidence.
 
 ## Why openElement
 
@@ -90,9 +92,11 @@ while reserving minor/major product decisions for human-approved ADR and
 version-plan evidence.
 
 v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
-adapters, and standalone runtime/style-sheet/ssg packages from the current
-product line, keeps Vite + Nitro as the Framework base, and keeps Preact island
-work bounded behind the v0.40 plan.
+adapters, and standalone runtime/style-sheet/i18n packages from the current
+product line, keeps `@openelement/ssg` as the adapter-agnostic SSG engine,
+keeps Vite + Nitro as the Framework base, and keeps Preact island work bounded
+behind the v0.40 plan. `@preact/signals-core` is the default signal engine;
+`alien-signals` remains optional.
 
 The v1.0 target is a stable four-product platform with frozen Elements, UI,
 Framework, and Protocols contracts.

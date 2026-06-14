@@ -15,8 +15,8 @@ default signal engine, or release policy.
 
 The v0.40 repository still carried too much historical surface after the first
 cleanup pass. In particular, `@openelement/element` was still thin, while
-`@openelement/runtime`, `@openelement/style-sheet`, and `@openelement/ssg`
-remained standalone packages that blurred the product line.
+standalone runtime/style-sheet/i18n surfaces and old interop packages blurred
+the product line.
 
 ## Decision
 
@@ -35,32 +35,37 @@ The approved cleanup target is an 11-package package graph:
 - `@openelement/signal`
 - `@openelement/router`
 - `@openelement/content`
-- `@openelement/i18n`
+- `@openelement/ssg`
 
 The following packages are removed from the current package graph:
 
 - `@openelement/runtime`
 - `@openelement/style-sheet`
-- `@openelement/ssg`
+- `@openelement/i18n`
 
-`@openelement/element` remains plural and becomes the canonical component
-authoring facade. It re-exports `OpenElement`, `StyleSheet`,
-signals, island helpers, JSX runtime helpers, and key authoring types.
+`@openelement/element` uses the singular public package name and becomes the
+canonical component-authoring facade. It re-exports `OpenElement`,
+`StyleSheet`, signals, island helpers, JSX runtime helpers, and key authoring
+types.
 
 `StyleSheet` moves to `@openelement/core/style-sheet` and is re-exported from
 `@openelement/element`.
 
-SSG implementation moves inside `@openelement/adapter-vite` as build-pipeline
-internals. There is no standalone public `@openelement/ssg` package in the
-v0.40.x current graph.
+`@openelement/ssg` is retained as the adapter-agnostic SSG engine. It owns route
+scanning, entry descriptors, rendering, and postprocess behavior. The
+`@openelement/adapter-vite` package keeps Vite-specific plugin and CLI glue and
+delegates SSG orchestration to `@openelement/ssg`.
+
+The standalone `@openelement/i18n` package is removed from the current graph.
+Current i18n support lives under `@openelement/app/i18n`.
 
 Preact islands are supported through optional `@openelement/app/preact`. Fresh
 is a comparison target for Preact island semantics, not an adopted router or
 server runtime.
 
-`alien-signals` remains the default signal engine in v0.40.x.
-`@openelement/signal/preact-engine` is only an optional candidate backed by
-`@preact/signals-core`.
+ADR-0104 and the v0.40.0 implementation make `@preact/signals-core` the default
+signal engine. `alien-signals` remains available as an optional engine through
+`@openelement/signal/alien-engine`.
 
 ## AutoFlow Boundary
 
@@ -83,7 +88,7 @@ changes, or default engine changes are ordinary patch work.
   hygiene checks.
 - `autoflow:push` must include `arch:check` for package, tool, hook, workflow,
   and root config changes.
-- `core` and `elements` must not require `@preact/signals-core`.
+- `core` and `element` must not require `@preact/signals-core`.
 - Historical ADR and release evidence may still mention removed packages as
   history; active truth lives in current docs, ADRs, roadmap/status, checks, and
   release evidence.
