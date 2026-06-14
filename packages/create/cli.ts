@@ -123,6 +123,7 @@ node_modules/
     'deno.json': `{
   "imports": {
     "alien-signals": "npm:alien-signals@^3.2.0",
+    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
     "entities": "npm:entities@^4.5.0",
     "hono": "npm:hono@4.12.23",

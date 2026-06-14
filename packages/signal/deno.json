@@ -1,6 +1,6 @@
 {
   "name": "@openelement/signal",
-  "version": "0.40.1",
+  "version": "0.40.2",
   "exports": {
     ".": "./src/index.ts",
     "./framework": "./src/framework.ts",
@@ -8,7 +8,7 @@
     "./preact-engine": "./src/preact-engine.ts"
   },
   "imports": {
-    "@openelement/protocol/signals": "jsr:@openelement/protocol@^0.40.1/signals",
+    "@openelement/protocol/signals": "jsr:@openelement/protocol@^0.40.2/signals",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "alien-signals": "npm:alien-signals@^3.2.0"
   },

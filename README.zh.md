@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-**JSX-first Web Components 全栈框架。当前包线：`0.40.1`（`v0.40.1`）。当前执行线：Elements + Preact + Repository Slimming。**
+**JSX-first Web Components 全栈框架。当前包线：`0.40.2`（`v0.40.2`）。当前执行线：Elements + Preact + Repository Slimming。**
 
 openElement 使用 Web Components、JSX/VNode 渲染、渐进式 islands、API routes，以及 Vite + Nitro 输出，构建静态优先的全栈应用。Shadow/DSD 是默认组件渲染模式；light DOM 是显式 opt-in。
 
