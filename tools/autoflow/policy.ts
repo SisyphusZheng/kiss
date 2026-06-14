@@ -135,6 +135,21 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/create\//, /^packages\/app\//, /^packages\/adapter-vite\//],
   },
   {
+    name: 'consumer:packaged',
+    command: ['deno', 'task', 'consumer:packaged'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [
+      /^packages\/create\//,
+      /^packages\/app\//,
+      /^packages\/adapter-vite\//,
+      /^packages\/content\//,
+      /^packages\/signal\//,
+      /^packages\/ssg\//,
+      /^tools\/consumer-local\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'publish:dry-run',
     command: ['deno', 'task', 'publish:dry-run'],
     tiers: ['release'],

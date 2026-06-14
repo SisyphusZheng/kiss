@@ -97,7 +97,7 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    13,
+    14,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map
@@ -106,6 +106,7 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   assertEquals(denoJson.imports['@deno/vite-plugin'], 'npm:@deno/vite-plugin');
   assertEquals(denoJson.imports['entities'], 'npm:entities@^4.5.0');
   assertEquals(denoJson.imports['hono'], 'npm:hono@4.12.23');
+  assertEquals(denoJson.imports['hono/'], 'npm:hono@4.12.23/');
   assertEquals(denoJson.imports['marked'], 'npm:marked@15.0.12');
   assertEquals(denoJson.imports['@openelement/app'], 'jsr:@openelement/app@^${v.app}');
   assertEquals(denoJson.imports['@openelement/app/vite'], 'jsr:@openelement/app@^${v.app}/vite');

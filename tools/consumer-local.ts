@@ -24,6 +24,7 @@ function vitePath(path: string): string {
 const tmpRoot = Deno.makeTempDirSync({ prefix: 'openelement-consumer-local-' });
 const projectName = 'consumer-test-app';
 const keepTemp = Deno.env.get('OPEN_ELEMENT_KEEP_CONSUMER_LOCAL') === '1';
+const packagedImportMapCheckOnly = Deno.args.includes('--packaged-import-map-check');
 let exitCode = 0;
 
 function cleanup(): void {
@@ -76,6 +77,7 @@ console.log(`Project generated at ${appDir}`);
 // Step 2: Patch deno.json imports to point to local workspace source
 const denoJsonPath = join(appDir, 'deno.json');
 const denoJson = JSON.parse(readFileSync(denoJsonPath, 'utf-8'));
+const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 
 denoJson.imports['@openelement/app'] = pathToFileURL(
   join(repoRoot, 'packages', 'app', 'src', 'index.ts'),
@@ -401,6 +403,35 @@ if (!freshnessHtml.includes('Freshness proof')) {
   Deno.exit(1);
 }
 
+const serverEntryPath = join(appDir, 'dist', 'server', 'entry.js');
+if (!existsSync(serverEntryPath)) {
+  console.error('dist/server/entry.js not found; SSR bundle was not generated');
+  console.error(stdout);
+  console.error(stderr);
+  cleanup();
+  Deno.exit(1);
+}
+
+const serverEntry = readFileSync(serverEntryPath, 'utf-8');
+const missingGeneratedImports = findMissingGeneratedImports(serverEntry, generatedImportMap);
+if (missingGeneratedImports.length > 0) {
+  console.error(
+    'Generated starter import map does not cover SSR bundle bare imports. ' +
+      'This would fail after immutable package publish.',
+  );
+  for (const specifier of missingGeneratedImports) {
+    console.error(`- ${specifier}`);
+  }
+  cleanup();
+  Deno.exit(1);
+}
+
+if (packagedImportMapCheckOnly) {
+  console.log('Packaged starter import-map smoke passed.');
+  cleanup();
+  Deno.exit(0);
+}
+
 console.log(
   'Local consumer build passed; pages, app shell, island, API route, asset, and ISR intent surface verified.',
 );
@@ -583,3 +614,51 @@ else console.log('Generated app Nitro node smoke passed.');
 // Cleanup
 cleanup();
 if (exitCode !== 0) Deno.exit(exitCode);
+
+function findMissingGeneratedImports(
+  source: string,
+  importMap: Record<string, string>,
+): string[] {
+  const specifiers = extractBareImportSpecifiers(source);
+  return [...specifiers].filter((specifier) => !isMappedSpecifier(specifier, importMap)).sort();
+}
+
+function extractBareImportSpecifiers(source: string): Set<string> {
+  const specifiers = new Set<string>();
+  const patterns = [
+    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
+    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
+    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) {
+      const specifier = match[1];
+      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
+        specifiers.add(specifier);
+      }
+    }
+  }
+
+  return specifiers;
+}
+
+function isBareSpecifier(specifier: string): boolean {
+  return !specifier.startsWith('.') &&
+    !specifier.startsWith('/') &&
+    !specifier.startsWith('file:') &&
+    !specifier.startsWith('http:') &&
+    !specifier.startsWith('https:') &&
+    !specifier.startsWith('data:') &&
+    !specifier.startsWith('node:') &&
+    !specifier.startsWith('npm:') &&
+    !specifier.startsWith('jsr:');
+}
+
+function isMappedSpecifier(
+  specifier: string,
+  importMap: Record<string, string>,
+): boolean {
+  if (Object.hasOwn(importMap, specifier)) return true;
+  return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
+}

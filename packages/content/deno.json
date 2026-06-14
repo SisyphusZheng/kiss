@@ -1,6 +1,6 @@
 {
   "name": "@openelement/content",
-  "version": "0.40.2",
+  "version": "0.40.3",
   "exports": {
     ".": "./src/index.ts",
     "./blog-data": "./src/blog/blog-data.ts",
@@ -14,8 +14,8 @@
     "gray-matter": "npm:gray-matter@^4.0.3",
     "@mdx-js/mdx": "npm:@mdx-js/mdx@^3.1.1",
     "section-matter": "npm:section-matter@^1.0.0",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.2/logger",
-    "@openelement/protocol/build-types": "jsr:@openelement/protocol@^0.40.2/build-types",
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.3/logger",
+    "@openelement/protocol/build-types": "jsr:@openelement/protocol@^0.40.3/build-types",
     "typescript": "npm:typescript@^5.9.0",
     "vite": "npm:vite@8.0.10"
   },
