@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.2 Elements + Preact + Repository Slimming; next line is npm-only distribution.\
+> Current package line: v0.40.3 Elements + Preact + Repository Slimming; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-14.
 
@@ -67,7 +67,7 @@ v0.41-v1.0 blocker.
 | v0.37.6 | Vite + Nitro Runtime Proof                         | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro                                                        | Done                     |
 | v0.38.0 | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                            | Done                     |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
-| v0.40.2 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Release-ready            |
+| v0.40.3 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Release-ready            |
 | v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
@@ -363,17 +363,17 @@ Preact-first v0.40 proof. The earlier Vue adapter plan is superseded for the
 pre-1.0 path; Vue, React, Svelte, and other heavy island adapters stay frozen
 unless a later ADR reopens them.
 
-## v0.40.2 - Elements + Preact + Repository Slimming
+## v0.40.3 - Elements + Preact + Repository Slimming
 
 Productize the four-product matrix while keeping scope narrow enough for a
-credible v1.0 path. The local package line is now `0.40.2`.
+credible v1.0 path. The local package line is now `0.40.3`.
 
 ADR-0101 also makes v0.40 the product-line reset. The previous v0.39
 architecture state is frozen on `arch/v0.39-line`; `dev` continues as the
 focused product-line branch. Active planning moves from separate SOP and
 NextVersion dossiers to `docs/current/VERSION_PLAN.md`.
 
-v0.40.2 has two equal exit requirements:
+v0.40.3 has two equal exit requirements:
 
 - the product surface becomes real and narrow;
 - the repository shape stops contradicting that product story.

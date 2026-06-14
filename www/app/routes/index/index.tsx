@@ -1,7 +1,7 @@
 /**
- * Homepage - openElement v0.40.2.
+ * Homepage - openElement v0.40.3.
  * Strategic anchor: openElement = Elements + UI + Framework + Protocols.
- * Active execution: v0.40.2.
+ * Active execution: v0.40.3.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -62,7 +62,7 @@ export class DocsHome extends OpenElement {
         <section class='hero'>
           <div class='hero-inner'>
             <div class='hero-left'>
-              <p class='eyebrow'>openElement 0.40.2 / v0.40.2 active</p>
+              <p class='eyebrow'>openElement 0.40.3 / v0.40.3 active</p>
               <h1 class='giant-headline'>
                 THE OPEN<br />
                 <span class='glow-line'>ELEMENT.</span>
