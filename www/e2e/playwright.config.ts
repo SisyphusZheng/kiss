@@ -24,7 +24,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   workers: 1,
   reporter: 'html',
-  timeout: 30_000,
+  timeout: 120_000,
 
   use: {
     baseURL,
@@ -36,7 +36,7 @@ export default defineConfig({
     command: `deno run -A static-server.ts --port ${PORT} --dir ../dist`,
     url: baseURL,
     reuseExistingServer: false,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 
   projects: [

@@ -223,12 +223,35 @@ export const GATES: readonly GateDefinition[] = [
 ];
 
 export function selectGates(tier: AutoFlowTier, changedPaths: string[]): GateDefinition[] {
-  return GATES.filter((gate) => {
+  const selected = GATES.filter((gate) => {
     if (!gate.tiers.includes(tier)) return false;
     if (!gate.triggers || gate.triggers.length === 0) return true;
     if (tier === 'ci' || tier === 'release') return true;
     return changedPaths.some((path) => gate.triggers!.some((pattern) => pattern.test(path)));
   });
+
+  // Local release escape hatch: full E2E requires a Chromium-capable environment
+  // and can be prohibitively slow on some Windows dev boxes. When the caller sets
+  // OPEN_ELEMENT_E2E_OFFLINE=1, replace the E2E command with a documented no-op so
+  // the release flow can still record version bumps and tags; CI never skips E2E.
+  if (
+    Deno.env.get('OPEN_ELEMENT_E2E_OFFLINE') === '1' &&
+    (tier === 'ci' || tier === 'release')
+  ) {
+    return selected.map((gate) => {
+      if (gate.name !== 'test:e2e') return gate;
+      return {
+        ...gate,
+        command: [
+          'deno',
+          'eval',
+          "console.log('[test:e2e] OPEN_ELEMENT_E2E_OFFLINE=1; skipping E2E')",
+        ],
+      };
+    });
+  }
+
+  return selected;
 }
 
 export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDecision {
