@@ -5,11 +5,11 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.3 Released (Elements + Preact + Repository Slimming)
+## Current Version Line: v0.40.4 Released (Elements + Preact + Repository Slimming)
 
-v0.40.3 is released as the product-line cleanup release. It keeps the public
+v0.40.4 is released as the product-line cleanup release. It keeps the public
 target at `openElement = Elements + UI + Framework + Protocols`, makes the
-active package line `0.40.3`, and narrows the workspace to 11 packages. Hub,
+active package line `0.40.4`, and narrows the workspace to 11 packages. Hub,
 RPC, CEM, compat-check, Lit/React/vanilla interop adapters, and standalone
 runtime/style-sheet/i18n packages are removed from the current package graph.
 `@openelement/ssg` remains as the adapter-agnostic SSG engine. Hub routes and
@@ -24,13 +24,13 @@ The default signal engine is `@preact/signals-core`. `alien-signals` remains
 available as an optional engine through `@openelement/signal/alien-engine`.
 
 ADR-0101 is the governance boundary for this line. ADR-0105 approves the
-v0.40.3 breaking cleanup train consolidated into the v0.40.3 release. AutoFlow3
+v0.40.4 breaking cleanup train consolidated into the v0.40.4 release. AutoFlow3
 is the workflow, gate, evidence, and release-state control plane, but it cannot
 decide minor/major product scope, public API, package topology, default runtime,
 default signal engine, security/auth/database ownership, or release policy
 without human ADR or approved version-plan evidence.
 
-Local v0.40.3 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
+Local v0.40.4 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
 `build`, `graph:check`, `arch:check`, `repo:hygiene`, `workflow:check`,
 `workflow:check-slimming`, `docs:check-public`, `docs:check-current`,
 `docs:check-strategy`, `package-surface:check`,
@@ -144,7 +144,7 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.3. It proceeds from v0.39.0
+The active implementation line is now v0.40.4. It proceeds from v0.39.0
 framework RC evidence while shrinking the current product line and gate surface.
 
 Governing docs:
@@ -153,7 +153,7 @@ Governing docs:
 - `docs/current/PACKAGE_SURFACE.md`
 - `docs/roadmap/ROADMAP.md`
 - `docs/archive/README.md`
-- `docs/release/v0.40.3-product-line-cleanup.md`
+- `docs/release/v0.40.4-product-line-cleanup.md`
 - `docs/adr/ADR-0091-four-product-platform-roadmap.md`
 - `docs/adr/ADR-0092-dsdelement-render-mode.md`
 - `docs/adr/ADR-0093-ssr-isr-runtime-contract.md`
@@ -220,7 +220,7 @@ built-in cell generation.
 | v0.37.6 | Vite + Nitro Runtime Proof                         | Done                | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro     |
 | v0.38.0 | Product Surface Reset and Hardening                | Done                | Reset public package/API/product surface based on protocol and Nitro runtime evidence                         |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | Done                | ADR-0099, public docs integrity, Elements direction, Preact handoff, starter/deploy/consumer gates            |
-| v0.40.3 | Elements + Preact + Repository Slimming            | Release-ready       | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
+| v0.40.4 | Elements + Preact + Repository Slimming            | Release-ready       | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
 | v0.41.0 | npm-only Distribution                              | Planned             | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
 | v0.42.0 | Server Primitives                                  | Planned             | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                     |
 | v0.43.0 | Data + Cache Primitives                            | Planned             | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                             |
@@ -274,7 +274,7 @@ DSD/shadow is a default Elements render mode, not the product name.
 ## Package Version State
 
 The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.3**. Published package availability is completed by the
+to local version **0.40.4**. Published package availability is completed by the
 `main` branch JSR publish workflow and its post-publish consumer smoke.
 
 Package governance for v0.40:
@@ -384,7 +384,7 @@ The workspace package count is now 11.
   island adapter proof for the pre-1.0 path; Vue, React, Svelte, and generic
   heavy-island expansion are frozen, and Web Awesome is out of scope.
 - **Signal engine default.** `@preact/signals-core` is the default engine
-  (since v0.40.3). `alien-signals` remains available as an optional engine
+  (since v0.40.4). `alien-signals` remains available as an optional engine
   via `@openelement/signal/alien-engine` and runtime `setSignalEngine()`.
 - **No DOM diff.** Signal writes trigger scoped rerender behavior; complex
   subtrees stay in Islands.
