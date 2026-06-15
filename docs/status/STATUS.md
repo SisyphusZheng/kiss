@@ -5,23 +5,23 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.5 Released (Audit-Driven Quality Cleanup)
+## Current Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
-v0.40.5 is released as the audit-driven quality cleanup release. It addresses
+v0.40.6 is released as the audit-driven quality cleanup release. It addresses
 the findings from the 2026-06-15 architecture audit
 (`docs/audit/2026-06-15-architecture-audit.md`) without changing the v0.40.4
 public product surface or package graph. The release adds test hardening for
 `element` and `ui`, splits over-large source files, unifies error handling,
 cleans up runtime assertions, and simplifies `adapter-vite` internals.
 
-ADR-0106 approves the v0.40.5 audit-driven cleanup scope and binds it to the
+ADR-0106 approves the v0.40.6 audit-driven cleanup scope and binds it to the
 v0.40.x cleanup-train authority from ADR-0105. AutoFlow3 is the workflow, gate,
 evidence, and release-state control plane, but it cannot decide minor/major
 product scope, public API, package topology, default runtime, default signal
 engine, security/auth/database ownership, or release policy without human ADR
 or approved version-plan evidence.
 
-Local v0.40.5 release-readiness evidence passes: `fmt:check`, `lint`,
+Local v0.40.6 release-readiness evidence passes: `fmt:check`, `lint`,
 `typecheck`, `test`, `build`, `graph:check`, `arch:check`, `repo:hygiene`,
 `workflow:check`, `workflow:check-slimming`, `docs:check-public`,
 `docs:check-current`, `docs:check-strategy`, `package-surface:check`,
@@ -166,7 +166,7 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.5. It proceeds from the v0.40.4
+The active implementation line is now v0.40.6. It proceeds from the v0.40.4
 product-line cleanup release and focuses on closing the quality gaps identified
 by the 2026-06-15 architecture audit.
 
@@ -300,7 +300,7 @@ DSD/shadow is a default Elements render mode, not the product name.
 ## Package Version State
 
 The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.5**. Published package availability is completed by the
+to local version **0.40.6**. Published package availability is completed by the
 `main` branch JSR publish workflow and its post-publish consumer smoke.
 
 Package governance for v0.40:

@@ -1,4 +1,4 @@
-# v0.40.5 Version Plan - Audit-Driven Quality Cleanup
+# v0.40.6 Version Plan - Audit-Driven Quality Cleanup
 
 ## Objective
 
@@ -11,7 +11,7 @@ ADR-0105 and recorded in ADR-0106.
 
 ## Context
 
-v0.40.5 continues the product line established by v0.40.4:
+v0.40.6 continues the product line established by v0.40.4:
 
 ```text
 openElement = Elements + UI + Framework + Protocols
@@ -19,7 +19,7 @@ openElement = Elements + UI + Framework + Protocols
 
 The current 11-package graph is documented in `docs/current/PACKAGE_SURFACE.md`.
 v0.40.4 completed the Package Graph Collapse To 11, the Preact island proof, the
-SignalEngine default switch under ADR-0104, and release hardening. v0.40.5 does
+SignalEngine default switch under ADR-0104, and release hardening. v0.40.6 does
 not revisit those decisions; it only cleans up the internal quality gaps that
 the audit exposed.
 
@@ -45,27 +45,27 @@ the audit exposed.
 
 - ADR-0101 is the product-line reset and AutoFlow3 authority boundary.
 - ADR-0105 approves the v0.40.x breaking cleanup train.
-- ADR-0106 approves the audit-driven quality cleanup scope for v0.40.5.
-- AutoFlow3 patch automation must refuse v0.40.5 execution unless the release
+- ADR-0106 approves the audit-driven quality cleanup scope for v0.40.6.
+- AutoFlow3 patch automation must refuse v0.40.6 execution unless the release
   state references the approved plan id `ADR-0105/v0.40.x-cleanup-train` or
-  `ADR-0105+ADR-0106/v0.40.5-audit-cleanup`.
+  `ADR-0105+ADR-0106/v0.40.6-audit-cleanup`.
 
 ## Workstreams
 
-### v0.40.5 - Audit Documentation
+### v0.40.6 - Audit Documentation
 
 - [x] Add `docs/audit/2026-06-15-architecture-audit.md`.
 - [x] Reference the audit and ADR-0106 in `docs/status/STATUS.md`.
 - [x] Archive the v0.40.4 plan to `docs/release/v0.40.4-plan.md`.
 
-### v0.40.5 - Element Test Hardening
+### v0.40.6 - Element Test Hardening
 
 - [x] Add unit tests for `OpenElement` lifecycle, DSD/CSR switching, signal
       hydration, prop reflection, and error boundaries.
 - [x] Achieve `element` test/source ratio ≥ 0.7:1 (22 tests, ~1188 lines of
       tests vs ~1648 lines of source).
 
-### v0.40.5 - UI Component Tests
+### v0.40.6 - UI Component Tests
 
 - [x] Add rendering and interaction tests for each `open-*` component.
 - [x] Add missing `open-dropdown`, `open-modal`, and `open-tabs` entries to
@@ -73,7 +73,7 @@ the audit exposed.
 - [x] Achieve `ui` test/source ratio ≥ 0.25:1 (67 tests, ~1264 lines of tests
       vs ~4544 lines of source).
 
-### v0.40.5 - File Size Reduction
+### v0.40.6 - File Size Reduction
 
 - [x] Split `packages/ssg/src/route-scanner.ts` into
       `route-scanner-ast.ts` + `route-scanner-fs.ts` + orchestrator
@@ -86,7 +86,7 @@ the audit exposed.
       `build-constants.ts` (`build-ssg.ts` reduced from ~526 to ~492 lines).
 - [x] Ensure all public exports remain unchanged.
 
-### v0.40.5 - Error Handling Unification
+### v0.40.6 - Error Handling Unification
 
 - [x] Introduce a shared `formatError(e: unknown): string` utility in
       `packages/core/src/errors.ts`.
@@ -95,7 +95,7 @@ the audit exposed.
 - [x] Convert remaining bare `throw new Error(...)` calls in the touched files
       to framework error types where appropriate.
 
-### v0.40.5 - Runtime Assertion Cleanup
+### v0.40.6 - Runtime Assertion Cleanup
 
 - [x] Replace `shadowRoot!` assertions in `element/src/open-element.ts` with a
       local `root` variable guarded by an early return.
@@ -103,14 +103,14 @@ the audit exposed.
 - [x] Add runtime guard for `openElement.module` in
       `ssg/src/entry-descriptor.ts` and remove the non-null assertion chain.
 
-### v0.40.5 - Naming Debt Cleanup
+### v0.40.6 - Naming Debt Cleanup
 
 - [x] Verify no `less:` virtual module prefixes remain in active source.
 - [x] Verify no `lessjs` / `LessJS` references remain in active source comments
       or identifiers (only the architecture-contract checker retains the
       legacy-name detection regex by design).
 
-### v0.40.5 - Adapter-Vite Simplification
+### v0.40.6 - Adapter-Vite Simplification
 
 - [x] Move alias normalization into `packages/adapter-vite/src/alias-utils.ts`.
 - [x] Move build constants into `packages/adapter-vite/src/build-constants.ts`.
@@ -119,7 +119,7 @@ the audit exposed.
 - [x] Move the HTML sanitizer specifier into a shared constant.
 - [x] No change to the public Vite plugin API.
 
-### v0.40.5 - Logging Cleanup
+### v0.40.6 - Logging Cleanup
 
 - [x] Replace `console.*` calls in `router/src/client-router.ts`,
       `adapter-vite/src/cli/build.ts`, `create/cli.ts`,
@@ -210,6 +210,6 @@ deno task publish:dry-run
 
 ## Release Evidence
 
-- `docs/release/v0.40.5.md` summarizing audit-driven changes.
+- `docs/release/v0.40.6.md` summarizing audit-driven changes.
 - Updated `docs/status/STATUS.md` active line section.
 - JSR publish dry-run and post-publish consumer smoke evidence.

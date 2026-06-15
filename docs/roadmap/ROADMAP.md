@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.5 Audit-Driven Quality Cleanup; next line is npm-only distribution.\
+> Current package line: v0.40.6 Audit-Driven Quality Cleanup; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-15.
 
@@ -68,7 +68,7 @@ v0.41-v1.0 blocker.
 | v0.38.0 | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                            | Done                     |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
 | v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
-| v0.40.5 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | In Progress              |
+| v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
 | v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
@@ -80,7 +80,7 @@ v0.41-v1.0 blocker.
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
 
-## v0.40.5 - Audit-Driven Quality Cleanup
+## v0.40.6 - Audit-Driven Quality Cleanup
 
 Patch release to close the internal quality gaps identified by the 2026-06-15
 architecture audit (`docs/audit/2026-06-15-architecture-audit.md`). Executed
