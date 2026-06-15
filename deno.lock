@@ -2315,6 +2315,11 @@
           "jsr:@openelement/signal@~0.40.5"
         ]
       },
+      "packages/create": {
+        "dependencies": [
+          "jsr:@openelement/core@~0.40.5"
+        ]
+      },
       "packages/element": {
         "dependencies": [
           "jsr:@openelement/core@~0.40.5",

@@ -6,9 +6,9 @@ export interface ReleasePackageStep {
 export const RELEASE_PACKAGE_ORDER: ReleasePackageStep[] = [
   { pkg: '@openelement/protocol', dir: 'packages/protocol' },
   { pkg: '@openelement/signal', dir: 'packages/signal' },
-  { pkg: '@openelement/create', dir: 'packages/create' },
   { pkg: '@openelement/core', dir: 'packages/core' },
   { pkg: '@openelement/content', dir: 'packages/content' },
+  { pkg: '@openelement/create', dir: 'packages/create' },
   { pkg: '@openelement/element', dir: 'packages/element' },
   { pkg: '@openelement/router', dir: 'packages/router' },
   { pkg: '@openelement/ssg', dir: 'packages/ssg' },
