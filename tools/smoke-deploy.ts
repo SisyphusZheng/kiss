@@ -5,6 +5,18 @@
  * contain the `[object Object]` rendering artifact.
  */
 
+// If Cloudflare credentials are not present, deploy:pages is skipped and there
+// is nothing to smoke-test. Exit successfully so local release runs without
+// credentials do not fail. CI provides the credentials and will run the smoke.
+const API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN');
+const ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
+if (!API_TOKEN || !ACCOUNT_ID) {
+  console.log(
+    '[smoke:deploy] CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set; skipping deploy smoke.',
+  );
+  Deno.exit(0);
+}
+
 const BASE_URL = Deno.env.get('DEPLOY_SMOKE_BASE_URL') ?? 'https://openelement.pages.dev';
 const PATHS = ['/', '/guide', '/blog'];
 

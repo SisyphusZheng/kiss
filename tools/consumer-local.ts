@@ -94,6 +94,9 @@ denoJson.imports['@openelement/core/errors'] = pathToFileURL(
 denoJson.imports['@openelement/core/logger'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'logger.ts'),
 ).href;
+denoJson.imports['@openelement/core/prop'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'prop.ts'),
+).href;
 denoJson.imports['@openelement/core/render-ir'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'render-ir.ts'),
 ).href;
@@ -156,6 +159,14 @@ denoJson.imports['@openelement/ui'] = pathToFileURL(
 denoJson.imports['@openelement/ui/'] = pathToFileURL(
   join(repoRoot, 'packages', 'ui', 'src') + '/',
 ).href;
+// Router is a transitive dependency of @openelement/app; local source overrides
+// must include it so the generated starter import map resolves the SSR bundle.
+denoJson.imports['@openelement/router'] = pathToFileURL(
+  join(repoRoot, 'packages', 'router', 'src', 'index.ts'),
+).href;
+denoJson.imports['@openelement/router/'] = pathToFileURL(
+  join(repoRoot, 'packages', 'router', 'src') + '/',
+).href;
 denoJson.imports['lit'] = 'npm:lit@^3.2.0';
 denoJson.imports['vite'] = 'npm:vite@8.0.10';
 denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
@@ -193,6 +204,10 @@ const aliases = [
   {
     find: '@openelement/core/logger',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'logger.ts')),
+  },
+  {
+    find: '@openelement/core/prop',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'prop.ts')),
   },
   {
     find: '@openelement/core/render-ir',
@@ -289,6 +304,14 @@ const aliases = [
   {
     find: '@openelement/ui',
     replacement: vitePath(uiSrc),
+  },
+  {
+    find: '@openelement/router/',
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src') + '/'),
+  },
+  {
+    find: '@openelement/router',
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'index.ts')),
   },
   {
     find: '@openelement/app/vite',
