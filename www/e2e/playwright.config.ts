@@ -31,12 +31,12 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  // Auto-start a simple static file server for www/dist/
+  // Auto-start a Deno static file server for www/dist/
   webServer: {
-    command: `npx -y serve@14.2.0 ../dist -l ${PORT} --no-clipboard`,
+    command: `deno run -A static-server.ts --port ${PORT} --dir ../dist`,
     url: baseURL,
     reuseExistingServer: false,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 
   projects: [
