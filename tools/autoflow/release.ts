@@ -169,36 +169,40 @@ export function createReleasePlan(
       name: 'push main',
       command: ['git', 'push', 'origin', 'main'],
     },
-    {
-      name: 'publish JSR packages',
-      command: [
-        'deno',
-        'run',
-        '--allow-read',
-        '--allow-run',
-        '--allow-net',
-        'tools/run-package-graph-task.ts',
-        'publish',
-      ],
-    },
-    {
-      name: 'wait for JSR metadata',
-      command: [
-        'deno',
-        'run',
-        '--allow-read',
-        '--allow-net',
-        'tools/wait-jsr-release-metadata.ts',
-        '--timeout-minutes',
-        '300',
-        '--interval-seconds',
-        '15',
-      ],
-    },
-    {
-      name: 'post-publish consumer smoke',
-      command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
-    },
+    ...(canPublishToJsr()
+      ? [
+        {
+          name: 'publish JSR packages',
+          command: [
+            'deno',
+            'run',
+            '--allow-read',
+            '--allow-run',
+            '--allow-net',
+            'tools/run-package-graph-task.ts',
+            'publish',
+          ],
+        },
+        {
+          name: 'wait for JSR metadata',
+          command: [
+            'deno',
+            'run',
+            '--allow-read',
+            '--allow-net',
+            'tools/wait-jsr-release-metadata.ts',
+            '--timeout-minutes',
+            '300',
+            '--interval-seconds',
+            '15',
+          ],
+        },
+        {
+          name: 'post-publish consumer smoke',
+          command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
+        },
+      ]
+      : []),
     {
       name: 'deploy:pages',
       command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
@@ -239,15 +243,33 @@ export function createReleasePlan(
       name: 'push tag',
       command: ['git', 'push', 'origin', tag],
     },
-    {
-      name: 'create GitHub release',
-      command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
-    },
+    ...(canCreateGitHubRelease()
+      ? [
+        {
+          name: 'create GitHub release',
+          command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
+        },
+      ]
+      : []),
   ];
 }
 
 export function createPatchReleasePlan(targetVersion: string): ReleaseCommandStep[] {
   return createReleasePlan(targetVersion);
+}
+
+function canPublishToJsr(): boolean {
+  // Local runs need an explicit token; CI can use OIDC via id-token: write.
+  return Boolean(
+    Deno.env.get('DENO_AUTH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
+  );
+}
+
+function canCreateGitHubRelease(): boolean {
+  // gh release create needs a GitHub token. In CI it is provided automatically.
+  return Boolean(
+    Deno.env.get('GITHUB_TOKEN') || Deno.env.get('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
+  );
 }
 
 export async function assertCleanWorktree(): Promise<void> {
