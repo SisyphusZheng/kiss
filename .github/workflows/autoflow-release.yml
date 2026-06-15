@@ -33,6 +33,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-deno-workspace
+      - name: Install Playwright browsers
+        run: deno run -A npm:playwright@1.59.1 install --with-deps chromium
       - name: AutoFlow3 CI gate
         run: deno task autoflow:ci
 
