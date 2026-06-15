@@ -51,21 +51,33 @@ export const GATES: readonly GateDefinition[] = [
     tiers: ['push', 'ci', 'release'],
   },
   {
+    name: 'package-surface:check',
+    command: ['deno', 'task', 'package-surface:check'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [/^packages\//, /^deno\.json$/, /^tools\/lib\/package-graph\.ts$/],
+  },
+  {
+    name: 'workflow:check-slimming',
+    command: ['deno', 'task', 'workflow:check-slimming'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [/^\.github\/workflows\//, /^tools\/check-workflow-slimming\.ts$/],
+  },
+  {
     name: 'repo:hygiene',
     command: ['deno', 'task', 'repo:hygiene'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^tools\//, /^deno\.json$/, /^README/, /^docs\/current\//],
   },
   {
     name: 'workflow:check',
     command: ['deno', 'task', 'workflow:check'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [/^docs\//, /^deno\.json$/],
   },
   {
     name: 'docs:check-public',
     command: ['deno', 'task', 'docs:check-public'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
   },
   {
     name: 'docs:check-current',
@@ -82,7 +94,7 @@ export const GATES: readonly GateDefinition[] = [
   {
     name: 'arch:check',
     command: ['deno', 'task', 'arch:check'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [
       /^packages\//,
       /^tools\//,
@@ -95,19 +107,19 @@ export const GATES: readonly GateDefinition[] = [
   {
     name: 'signals:check-protocol-boundary',
     command: ['deno', 'task', 'signals:check-protocol-boundary'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [/^packages\/core\//, /^packages\/protocol\//, /^packages\/signal\//],
   },
   {
     name: 'type-safety:check',
     command: ['deno', 'task', 'type-safety:check'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
     name: 'text-integrity:check',
     command: ['deno', 'task', 'text-integrity:check'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [/^README/, /^docs\//, /^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
@@ -123,10 +135,40 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^(packages|tools)\//, /^deno\.json$/],
   },
   {
+    name: 'test:e2e',
+    command: ['deno', 'task', 'test:e2e'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
+  },
+  {
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
     triggers: [/^(packages|www)\//, /^deno\.json$/],
+  },
+  {
+    name: 'nitro:proof:node',
+    command: ['deno', 'task', 'nitro:proof:node'],
+    tiers: ['release'],
+    triggers: [
+      /^packages\/adapter-vite\//,
+      /^packages\/app\//,
+      /^packages\/ssg\//,
+      /^tools\/nitro-proof\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
+    name: 'nitro:proof:workers',
+    command: ['deno', 'task', 'nitro:proof:workers'],
+    tiers: ['release'],
+    triggers: [
+      /^packages\/adapter-vite\//,
+      /^packages\/app\//,
+      /^packages\/ssg\//,
+      /^tools\/nitro-proof\.ts$/,
+      /^deno\.json$/,
+    ],
   },
   {
     name: 'consumer:local',
@@ -137,7 +179,7 @@ export const GATES: readonly GateDefinition[] = [
   {
     name: 'consumer:packaged',
     command: ['deno', 'task', 'consumer:packaged'],
-    tiers: ['push', 'ci', 'release'],
+    tiers: ['ci', 'release'],
     triggers: [
       /^packages\/create\//,
       /^packages\/app\//,
@@ -150,10 +192,33 @@ export const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    name: 'consumer:core-smoke',
+    command: ['deno', 'task', 'consumer:core-smoke'],
+    tiers: ['release'],
+    triggers: [/^packages\/core\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
+  },
+  {
     name: 'publish:dry-run',
     command: ['deno', 'task', 'publish:dry-run'],
     tiers: ['release'],
-    triggers: [/^packages\//, /^deno\.json$/, /^tools\/package-release-order\.ts$/],
+    triggers: [
+      /^packages\//,
+      /^deno\.json$/,
+      /^tools\/run-package-graph-task\.ts$/,
+      /^tools\/lib\/package-graph\.ts$/,
+    ],
+  },
+  {
+    name: 'deploy:pages',
+    command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
+    tiers: ['release'],
+    triggers: [/^www\//, /^packages\//, /^tools\/deploy-pages\.ts$/],
+  },
+  {
+    name: 'smoke:deploy',
+    command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
+    tiers: ['release'],
+    triggers: [/^www\//, /^packages\//, /^tools\/smoke-deploy\.ts$/],
   },
 ];
 
@@ -204,7 +269,7 @@ export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDe
     input.packageTopologyChanged ||
     input.changedPaths.some((path) =>
       /^packages\/[^/]+\/deno\.json$/.test(path) || path === 'deno.json' ||
-      path === 'tools/package-release-order.ts'
+      path === 'tools/lib/package-graph.ts'
     )
   ) {
     blockers.push('package topology or release graph changed');
@@ -248,7 +313,7 @@ export function isV040CleanupTrainChange(changedPaths: string[]): boolean {
   return changedPaths.some((path) =>
     path === 'deno.json' ||
     path === 'deno.lock' ||
-    path === 'tools/package-release-order.ts' ||
+    path === 'tools/lib/package-graph.ts' ||
     path === 'tools/project-constants.ts' ||
     path === 'tools/check-package-surface.ts' ||
     path.startsWith('packages/') ||

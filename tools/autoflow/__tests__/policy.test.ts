@@ -67,21 +67,31 @@ Deno.test('policy: dev tier remains fast', () => {
   assertEquals(gates, ['fmt:check', 'lint']);
 });
 
-Deno.test('policy: push tier includes architecture check for package source changes', () => {
+Deno.test('policy: push tier stays fast for package source changes', () => {
   const gates = selectGates('push', ['packages/core/src/index.ts']).map((gate) => gate.name);
+  assertFalse(gates.includes('arch:check'));
+  assertFalse(gates.includes('test'));
+  assert(gates.includes('package-surface:check'));
+});
+
+Deno.test('policy: ci tier includes architecture check for package source changes', () => {
+  const gates = selectGates('ci', ['packages/core/src/index.ts']).map((gate) => gate.name);
   assert(gates.includes('arch:check'));
 });
 
-Deno.test('policy: push tier includes architecture check for tool and hook changes', () => {
-  const toolGates = selectGates('push', ['tools/autoflow/policy.ts']).map((gate) => gate.name);
-  const hookGates = selectGates('push', ['.githooks/pre-push']).map((gate) => gate.name);
+Deno.test('policy: ci tier includes architecture check for tool and hook changes', () => {
+  const toolGates = selectGates('ci', ['tools/autoflow/policy.ts']).map((gate) => gate.name);
+  const hookGates = selectGates('ci', ['.githooks/pre-push']).map((gate) => gate.name);
   assert(toolGates.includes('arch:check'));
   assert(hookGates.includes('arch:check'));
 });
 
-Deno.test('policy: release tier includes publish dry-run', () => {
+Deno.test('policy: release tier includes publish dry-run and nitro proofs', () => {
   const gates = selectGates('release', ['packages/core/src/index.ts']).map((gate) => gate.name);
   assert(gates.includes('publish:dry-run'));
+  assert(gates.includes('nitro:proof:node'));
+  assert(gates.includes('nitro:proof:workers'));
+  assert(gates.includes('consumer:core-smoke'));
 });
 
 Deno.test('mod3: parse approved plan for release command', () => {
@@ -89,6 +99,7 @@ Deno.test('mod3: parse approved plan for release command', () => {
     command: 'release',
     dryRun: true,
     approvedPlan: 'ADR-0101/v0.40',
+    targetVersion: undefined,
   });
 });
 

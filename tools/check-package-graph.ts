@@ -11,55 +11,14 @@
  */
 
 import { PACKAGE_COUNT, PACKAGE_VERSION } from './project-constants.ts';
-import { RELEASE_PACKAGE_ORDER } from './package-release-order.ts';
-
-interface PackageInfo {
-  name: string;
-  version: string;
-  deps: string[];
-  dir: string;
-  importKeys: Set<string>;
-  importValues: Record<string, string>;
-}
-
-interface PublishStep {
-  pkg: string;
-  dir: string;
-  index: number;
-}
-
-function readPublishOrder(): PublishStep[] {
-  return RELEASE_PACKAGE_ORDER.map((step, index) => ({ ...step, index }));
-}
-
-async function readPackageInfo(dir: string): Promise<PackageInfo | null> {
-  const denoJsonPath = `${dir}/deno.json`;
-  let raw: string;
-  try {
-    raw = await Deno.readTextFile(denoJsonPath);
-  } catch {
-    return null;
-  }
-
-  const json = JSON.parse(raw);
-  const name: string = json.name ?? '';
-  const version: string = json.version ?? '';
-  const imports: Record<string, string> = json.imports ?? {};
-
-  const deps: string[] = [];
-  for (const key of Object.keys(imports)) {
-    if (key.startsWith('@openelement/')) deps.push(key);
-  }
-
-  return {
-    name,
-    version,
-    deps,
-    dir,
-    importKeys: new Set(Object.keys(imports)),
-    importValues: imports,
-  };
-}
+import {
+  buildDependencyGraph,
+  detectCycles,
+  type PackageInfo,
+  readPackages,
+  releasePublishOrder,
+  topologicalSort,
+} from './lib/package-graph.ts';
 
 function normalizeDep(dep: string, self: string): string | null {
   const prefix = '@openelement/';
@@ -69,99 +28,6 @@ function normalizeDep(dep: string, self: string): string | null {
   const slashIdx = rest.indexOf('/');
   const base = slashIdx === -1 ? dep : prefix + rest.slice(0, slashIdx);
   return base === self ? null : base;
-}
-
-function buildGraph(packages: PackageInfo[]): Map<string, string[]> {
-  const graph = new Map<string, string[]>();
-  for (const pkg of packages) {
-    const normalized = pkg.deps
-      .map((dep) => normalizeDep(dep, pkg.name))
-      .filter((dep): dep is string => dep !== null);
-    graph.set(pkg.name, [...new Set(normalized)]);
-  }
-  return graph;
-}
-
-function detectCycles(graph: Map<string, string[]>): string[][] {
-  const cycles: string[][] = [];
-  const visited = new Set<string>();
-  const recStack = new Set<string>();
-
-  function dfs(node: string, path: string[]): void {
-    visited.add(node);
-    recStack.add(node);
-    path.push(node);
-
-    for (const neighbor of graph.get(node) ?? []) {
-      if (!visited.has(neighbor)) {
-        dfs(neighbor, [...path]);
-      } else if (recStack.has(neighbor)) {
-        const cycleStart = path.indexOf(neighbor);
-        if (cycleStart !== -1) {
-          const cycle = path.slice(cycleStart);
-          cycle.push(neighbor);
-          cycles.push(cycle);
-        }
-      }
-    }
-
-    recStack.delete(node);
-  }
-
-  for (const node of graph.keys()) {
-    if (!visited.has(node)) dfs(node, []);
-  }
-
-  return cycles;
-}
-
-function topologicalSort(graph: Map<string, string[]>): string[] {
-  const inDegree = new Map<string, number>();
-  const allNodes = [...graph.keys()];
-  const nodeSet = new Set(allNodes);
-  const dependents = new Map<string, string[]>();
-
-  for (const node of allNodes) {
-    inDegree.set(node, 0);
-    dependents.set(node, []);
-  }
-
-  for (const [node, deps] of graph) {
-    for (const dep of deps) {
-      if (nodeSet.has(dep)) {
-        inDegree.set(node, (inDegree.get(node) ?? 0) + 1);
-        dependents.get(dep)!.push(node);
-      }
-    }
-  }
-
-  const queue: string[] = [];
-  for (const [node, degree] of inDegree) {
-    if (degree === 0) queue.push(node);
-  }
-
-  const sorted: string[] = [];
-  while (queue.length > 0) {
-    queue.sort();
-    const node = queue.shift()!;
-    sorted.push(node);
-
-    for (const neighbor of dependents.get(node) ?? []) {
-      const newDegree = (inDegree.get(neighbor) ?? 1) - 1;
-      inDegree.set(neighbor, newDegree);
-      if (newDegree === 0) queue.push(neighbor);
-    }
-  }
-
-  if (sorted.length !== allNodes.length) {
-    const remaining = allNodes.filter((node) => !sorted.includes(node));
-    throw new Error(
-      `Graph has a cycle involving: ${remaining.join(', ')}. ` +
-        `Sorted ${sorted.length}/${allNodes.length} nodes.`,
-    );
-  }
-
-  return sorted;
 }
 
 async function collectTsFiles(dir: string): Promise<string[]> {
@@ -330,24 +196,13 @@ function validateInternalJsrRanges(
 async function main(): Promise<void> {
   const failures: string[] = [];
 
-  const publishSteps = readPublishOrder();
-  const publishOrder = publishSteps.map((step) => step.pkg);
+  const packages = await readPackages();
+  const publishSteps = releasePublishOrder(packages);
+  const publishOrder = publishSteps.map((pkg) => pkg.name);
 
   console.log(`Publish order (${publishOrder.length} packages):`);
-  for (const step of publishSteps) {
-    console.log(`  ${step.index + 1}. ${step.pkg} (${step.dir})`);
-  }
-
-  const packageDirs: string[] = [];
-  for await (const entry of Deno.readDir('packages')) {
-    if (entry.isDirectory) packageDirs.push(`packages/${entry.name}`);
-  }
-  packageDirs.sort();
-
-  const packages: PackageInfo[] = [];
-  for (const dir of packageDirs) {
-    const info = await readPackageInfo(dir);
-    if (info?.name) packages.push(info);
+  for (const [index, step] of publishSteps.entries()) {
+    console.log(`  ${index + 1}. ${step.name} (${step.dir})`);
   }
 
   console.log(`\nRead ${packages.length} packages:`);
@@ -370,7 +225,7 @@ async function main(): Promise<void> {
     console.log(`  PASS: all packages and internal JSR ranges use ${releaseVersion}.`);
   }
 
-  const graph = buildGraph(packages);
+  const graph = buildDependencyGraph(packages);
 
   console.log('\n--- Cycle Detection ---');
   const cycles = detectCycles(graph);
@@ -441,7 +296,7 @@ async function main(): Promise<void> {
     const graphNames = new Set(packages.map((pkg) => pkg.name));
     for (const pkg of publishOrder) {
       if (!graphNames.has(pkg)) {
-        const msg = `"${pkg}" is in RELEASE_PACKAGE_ORDER but not found in packages/.`;
+        const msg = `"${pkg}" is in the derived publish order but not found in packages/.`;
         console.error(`  FAIL: ${msg}`);
         failures.push(msg);
       }
@@ -450,7 +305,8 @@ async function main(): Promise<void> {
     const publishNames = new Set(publishOrder);
     for (const pkg of packages) {
       if (!publishNames.has(pkg.name)) {
-        const msg = `"${pkg.name}" exists in packages/ but is missing from RELEASE_PACKAGE_ORDER.`;
+        const msg =
+          `"${pkg.name}" exists in packages/ but is missing from the derived publish order.`;
         console.error(`  FAIL: ${msg}`);
         failures.push(msg);
       }

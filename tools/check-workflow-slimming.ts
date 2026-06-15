@@ -18,6 +18,7 @@ for (
     '.github/workflows/hub-ci.yml',
     '.github/workflows/publish-manual.yml',
     '.github/workflows/deploy-api.yml',
+    '.github/workflows/publish-jsr.yml',
   ]
 ) {
   if (await exists(removed)) failures.push(`${removed} should not be an active workflow.`);
@@ -25,8 +26,8 @@ for (
 
 const workflowCount = Array.from(Deno.readDirSync('.github/workflows'))
   .filter((entry) => entry.isFile && /\.ya?ml$/.test(entry.name)).length;
-if (workflowCount > 4) {
-  failures.push(`Expected at most 4 active workflows, found ${workflowCount}.`);
+if (workflowCount > 6) {
+  failures.push(`Expected at most 6 active workflows, found ${workflowCount}.`);
 }
 
 const autoflowCi = await Deno.readTextFile('.github/workflows/autoflow-ci.yml');

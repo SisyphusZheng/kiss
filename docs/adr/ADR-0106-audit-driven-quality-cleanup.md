@@ -1,4 +1,4 @@
-# ADR-0106: Audit-Driven Quality Cleanup for v0.40.5
+# ADR-0106: Audit-Driven Quality Cleanup for v0.40.6
 
 Date: 2026-06-15
 
@@ -40,13 +40,13 @@ automation.
 
 ## Decision
 
-v0.40.5 is approved as an audit-driven quality cleanup release under the
+v0.40.6 is approved as an audit-driven quality cleanup release under the
 v0.40.x cleanup train.
 
 The approved work is limited to:
 
 - Adding tests to `element` and `ui` until their test-to-source ratios meet the
-  v0.40.5 targets.
+  v0.40.6 targets.
 - Splitting over-large source files into smaller internal modules without
   changing public exports.
 - Extracting shared utilities for error formatting, safe file-system traversal,
@@ -72,7 +72,7 @@ The following are explicitly out of scope:
 
 ## AutoFlow Boundary
 
-AutoFlow3 patch automation may execute the v0.40.5 release only when the release
+AutoFlow3 patch automation may execute the v0.40.6 release only when the release
 state or command references the approved plan id:
 
 ```text
@@ -82,19 +82,19 @@ ADR-0105/v0.40.x-cleanup-train
 or, for clarity, the combined id:
 
 ```text
-ADR-0105+ADR-0106/v0.40.5-audit-cleanup
+ADR-0105+ADR-0106/v0.40.6-audit-cleanup
 ```
 
 AutoFlow3 may run gates, produce evidence, classify changes, and execute an
 approved release flow. It must refuse any change that adds or removes packages,
 modifies public exports, changes default engines, or introduces new product
-features under the v0.40.5 plan.
+features under the v0.40.6 plan.
 
 ## Consequences
 
 - The audit report becomes a persistent architecture artifact under
   `docs/audit/`.
-- v0.40.5 closes the largest quality gaps identified by the audit without
+- v0.40.6 closes the largest quality gaps identified by the audit without
   expanding the v0.40.x scope beyond internal cleanup.
 - `package-surface:check` and `graph:check` must confirm that the public surface
   and package graph remain identical to v0.40.4.

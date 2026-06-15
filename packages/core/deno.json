@@ -3,6 +3,7 @@
   "version": "0.40.6",
   "exports": {
     ".": "./src/index.ts",
+    "./prop": "./src/prop.ts",
     "./errors": "./src/errors.ts",
     "./context": "./src/context.ts",
     "./logger": "./src/logger.ts",

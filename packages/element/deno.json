@@ -9,6 +9,7 @@
     "@openelement/core/errors": "jsr:@openelement/core@^0.40.6/errors",
     "@openelement/core/jsx-runtime": "jsr:@openelement/core@^0.40.6/jsx-runtime",
     "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger",
+    "@openelement/core/prop": "jsr:@openelement/core@^0.40.6/prop",
     "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.6/style-sheet",
     "@openelement/protocol": "jsr:@openelement/protocol@^0.40.6",
     "@openelement/signal": "jsr:@openelement/signal@^0.40.6"

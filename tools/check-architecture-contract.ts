@@ -70,16 +70,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'Static prop runtime writes element attributes and properties.',
   },
   {
-    file: 'packages/element/src/prop.ts',
-    fragment: 'instance as unknown as Record<PropertyKey, unknown>',
-    reason: 'Static prop runtime reads dynamic property keys.',
-  },
-  {
-    file: 'packages/element/src/prop.ts',
-    fragment: 'instance as unknown as {',
-    reason: 'Static prop runtime writes element attributes and properties.',
-  },
-  {
     file: 'packages/element/src/open-element.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',

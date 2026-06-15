@@ -130,38 +130,11 @@ the audit exposed.
       remains self-contained; `signal/src/engine.ts` keeps a minimal console
       logger to avoid a core dependency in the signal foundation.
 
-### v0.40.4 - Post-Cleanup Truth Audit Follow-Up
+### v0.40.4 Post-Cleanup Truth Audit Follow-Up
 
-The 2026-06-15 repo read-through found that the implementation was ahead of the
-planning layer. The follow-up is now part of v0.40.4 closure:
-
-- [x] Reconcile ADR-0105 with the actual v0.40.4 package graph:
-      `@openelement/ssg` is retained as the adapter-agnostic SSG engine,
-      `@openelement/i18n` is removed from the workspace and moved under
-      `@openelement/app/i18n`, and `@preact/signals-core` is the default signal
-      engine after ADR-0104.
-- [x] Remove the SSG contradiction in this plan: current truth is retained
-      `@openelement/ssg`, removed standalone runtime/style-sheet/i18n.
-- [x] Update `docs/current/PACKAGE_SURFACE.md` so the `@openelement/signal`
-      row matches ADR-0104 and implementation truth: default
-      `@preact/signals-core`, optional `alien-signals` engine.
-- [x] Update README and README.zh package wording to use the singular package
-      names and the real support-package set: `core`, `adapter-vite`, `signal`,
-      `router`, `content`, and `ssg`; remove stale `i18n` and standalone-SSG
-      removal wording.
-- [x] Rewrite current website architecture pages so they describe the
-      11-package v0.40 graph instead of the historical 20-package graph.
-- [x] Clean mojibake in active current-truth docs and current website routes.
-      Historical release evidence may keep original text unless it is rendered
-      as current truth.
-- [x] Add a text-integrity gate that catches mojibake and stale current-product
-      vocabulary in active source/docs/www routes.
-- [x] Remove local audit-tool residue: untracked `.github/workflows/opencode.yml`,
-      root `ocr.exe`, empty `packages/i18n/`, and empty `fixtures/`.
-- [x] Keep `workflow:check-slimming` strict and let repo hygiene reject local
-      root/workflow residue before CI-like gates run.
-- [x] Add docs-truth coverage for package graph, retained/removed packages, and
-      signal-engine default.
+The v0.40.4 truth-reconciliation work is recorded in
+`docs/adr/ADR-0105-v040x-cleanup-train-exception.md` and the archived
+`docs/release/v0.40.4-plan.md`. This plan no longer repeats those closure items.
 
 ## Acceptance
 

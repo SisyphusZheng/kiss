@@ -7,7 +7,7 @@
  * wait for the package-level metadata rather than sleeping for a fixed delay.
  */
 
-import { RELEASE_PACKAGE_ORDER } from './package-release-order.ts';
+import { readPackages, sortPackages } from './lib/package-graph.ts';
 
 interface Options {
   version: string;
@@ -219,8 +219,9 @@ export async function waitForJsrPackageMetadata(
 
 async function main(): Promise<void> {
   const options = await buildOptions();
+  const packages = sortPackages(await readPackages());
   await waitForJsrPackageMetadata({
-    packageNames: RELEASE_PACKAGE_ORDER.map((step) => step.pkg),
+    packageNames: packages.map((pkg) => pkg.name),
     version: options.version,
     timeoutMs: options.timeoutMs,
     intervalMs: options.intervalMs,

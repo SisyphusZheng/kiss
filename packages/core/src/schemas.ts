@@ -304,13 +304,14 @@ export interface RouteEntry {
 
 export type { SsrContext } from './context.js';
 
-// --- Component layer & hydration ----------------------------------
+// --- Component layer & hydration (sourced from protocol) ----------
 
-export type ComponentLayer = 'dsd-static' | 'dsd-interactive' | 'pure-island' | 'light-dom';
-
-export type HydrationStrategy = 'load' | 'idle' | 'visible' | 'only';
-
-export type StrategySource = 'directive' | 'island-options' | 'manifest' | 'default';
+import type {
+  ComponentLayer,
+  HydrationStrategy,
+  StrategySource,
+} from '@openelement/protocol/renderer';
+export type { ComponentLayer, HydrationStrategy, StrategySource };
 
 export interface HydrateEventDescriptor {
   selector: string;

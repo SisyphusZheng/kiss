@@ -29,7 +29,7 @@ order: 10
           </p>
           <h3>Reality check: CEM adoption is still low</h3>
           <p>
-            Many popular Web Component libraries (e.g. <code>@shoelace-style/shoelace</code>)
+            Some third-party Web Component libraries (e.g. <code>@example/third-party-wc</code>)
             <strong>do not ship</strong> a <code>custom-elements.json</code> file. Without CEM,
             auto-detection returns no results for these packages, and they rely on explicit
             <code>packageIslands</code> declarations in <code>vite.config.ts</code>.
@@ -103,10 +103,9 @@ for debugging and audit purposes.
 
           <h2>Current Site Results</h2>
           <p>
-            Although v0.18.0 detection is live, the third-party packages used on this site -
-            <code>@shoelace-style/shoelace</code> and <code>media-chrome</code> -
-            <strong>do not ship</strong> <code>custom-elements.json</code>. So auto-detection
-            returns no results for them. They continue to rely on explicit
+            The www example site now uses <code>@openelement/ui</code>, which ships a
+            <code>custom-elements.json</code> manifest and is auto-detected as
+            <code>ssr-capable</code>. Third-party packages without a CEM still require explicit
             <code>packageIslands</code> declarations in <code>vite.config.ts</code>.
           </p>
 

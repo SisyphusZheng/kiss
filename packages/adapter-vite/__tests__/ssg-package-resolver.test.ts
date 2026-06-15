@@ -189,8 +189,8 @@ Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers from JSR 
   const jsrSource = [
     `import * as marked from 'npm:marked@12.0.0';`,
     `import type { Tokens } from 'npm:marked@12.0.0';`,
-    `import { LitElement } from 'npm:lit@3.3.2';`,
-    `import { something } from 'npm:@lit/reactive-element@2.1.0';`,
+    `import { h } from 'npm:preact@10.29.2';`,
+    `import { signal } from 'npm:@preact/signals-core@1.14.2';`,
     `import { ctx } from 'npm:@openelement/core@0.21.10/context';`,
     `import 'npm:marked@12.0.0';`,
     `const dynamic = import('npm:gray-matter@4.0.3');`,
@@ -210,8 +210,8 @@ Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers from JSR 
 
   // npm: specifiers stripped to bare packages (version and prefix removed)
   assertEquals(result.includes("from 'marked'"), true);
-  assertEquals(result.includes("from 'lit'"), true);
-  assertEquals(result.includes("from '@lit/reactive-element'"), true);
+  assertEquals(result.includes("from 'preact'"), true);
+  assertEquals(result.includes("from '@preact/signals-core'"), true);
   assertEquals(result.includes("from '@openelement/core/context'"), true);
   assertEquals(result.includes("import 'marked'"), true);
   assertEquals(result.includes("import('gray-matter')"), true);
@@ -222,8 +222,8 @@ Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers from JSR 
   // npm: prefix and version should NOT remain
   assertEquals(result.replace("'npm:not-a-real-import@1.0.0'", '').includes('npm:'), false);
   assertEquals(result.includes('@12.0.0'), false);
-  assertEquals(result.includes('@3.3.2'), false);
-  assertEquals(result.includes('@2.1.0'), false);
+  assertEquals(result.includes('@10.29.2'), false);
+  assertEquals(result.includes('@1.14.2'), false);
 });
 
 Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers during workspace transforms', async () => {

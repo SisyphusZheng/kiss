@@ -329,7 +329,7 @@ Deno.test('openPlugin: accepts empty packageIslands', () => {
 
 Deno.test('openPlugin: accepts multiple packageIslands', () => {
   const plugins = createOpenPlugin({
-    packageIslands: ['@openelement/ui', '@shoelace-style/shoelace'],
+    packageIslands: ['@openelement/ui', '@openelement/core'],
   });
   assertExists(plugins);
 });

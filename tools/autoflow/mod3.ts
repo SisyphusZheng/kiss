@@ -9,8 +9,8 @@ import {
 import {
   assertBranch,
   assertCleanWorktree,
-  createPatchReleasePlan,
   createReleaseEvidence,
+  createReleasePlan,
   nextPatchVersion,
   releaseTag,
   runReleaseStep,
@@ -23,6 +23,7 @@ export interface CliOptions {
   command: string;
   dryRun: boolean;
   approvedPlan?: string;
+  targetVersion?: string;
 }
 
 export interface GateResult {
@@ -36,7 +37,9 @@ export function parseArgs(args: string[]): CliOptions {
   const dryRun = args.includes('--dry-run');
   const approvalIndex = args.indexOf('--approved-plan');
   const approvedPlan = approvalIndex === -1 ? undefined : args[approvalIndex + 1];
-  return { command, dryRun, approvedPlan };
+  const targetIndex = args.indexOf('--to');
+  const targetVersion = targetIndex === -1 ? undefined : args[targetIndex + 1];
+  return { command, dryRun, approvedPlan, targetVersion };
 }
 
 async function gitOutput(args: string[]): Promise<string | undefined> {
@@ -120,14 +123,18 @@ async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
   }
 }
 
-async function executePatchRelease(dryRun: boolean): Promise<void> {
-  const targetVersion = nextPatchVersion(PACKAGE_VERSION);
-  const evidence = createReleaseEvidence('patch-release', PACKAGE_VERSION, targetVersion);
-  const plan = createPatchReleasePlan(targetVersion);
+async function executeReleasePlan(
+  kind: 'patch-release' | 'approved-release',
+  targetVersion: string,
+  approvalId: string | undefined,
+  dryRun: boolean,
+): Promise<void> {
+  const evidence = createReleaseEvidence(kind, PACKAGE_VERSION, targetVersion, approvalId);
+  const plan = createReleasePlan(targetVersion, approvalId);
 
   if (dryRun) {
     console.log(
-      `Patch release dry-run complete for ${releaseTag(targetVersion)}; planned steps:`,
+      `${kind} dry-run complete for ${releaseTag(targetVersion)}; planned steps:`,
     );
     for (const step of plan) {
       console.log(`- ${step.name}${step.command ? `: ${step.command.join(' ')}` : ''}`);
@@ -164,6 +171,11 @@ async function executePatchRelease(dryRun: boolean): Promise<void> {
   }
 }
 
+async function executePatchRelease(dryRun: boolean): Promise<void> {
+  const targetVersion = nextPatchVersion(PACKAGE_VERSION);
+  await executeReleasePlan('patch-release', targetVersion, undefined, dryRun);
+}
+
 async function runPatchRelease(
   dryRun: boolean,
   approvedPlan: string | undefined,
@@ -191,8 +203,14 @@ function runMinorPlan(): void {
 
 async function runApprovedRelease(
   approvedPlan: string | undefined,
+  targetVersion: string | undefined,
   dryRun: boolean,
 ): Promise<void> {
+  if (!targetVersion) {
+    console.error('Approved release requires a target version: --to <version>');
+    Deno.exit(1);
+  }
+
   const decision = evaluateVersionAuthority('minor', approvedPlan);
   console.log(`AutoFlow3 release (${AUTOFLOW3_POLICY_VERSION})`);
   console.log(`Policy: ${decision.allowed ? 'allowed' : 'blocked'}`);
@@ -201,12 +219,7 @@ async function runApprovedRelease(
   if (!decision.allowed) Deno.exit(1);
 
   await runTier('release', dryRun);
-  if (!dryRun) {
-    console.error(
-      'Approved minor/major release execution is not enabled until release-state persistence lands.',
-    );
-    Deno.exit(1);
-  }
+  await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 
 export async function main(args: string[]): Promise<void> {
@@ -229,11 +242,11 @@ export async function main(args: string[]): Promise<void> {
       runMinorPlan();
       break;
     case 'release':
-      await runApprovedRelease(options.approvedPlan, options.dryRun);
+      await runApprovedRelease(options.approvedPlan, options.targetVersion, options.dryRun);
       break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/mod3.ts <dev|push|ci|patch-release|minor-plan|release> [--dry-run] [--approved-plan ID]',
+        'Usage: deno run tools/autoflow/mod3.ts <dev|push|ci|patch-release|minor-plan|release> [--dry-run] [--approved-plan ID] [--to VERSION]',
       );
       Deno.exit(1);
   }

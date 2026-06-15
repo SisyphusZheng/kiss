@@ -2,14 +2,14 @@
 
 **审计日期**：2026-06-15\
 **审计对象**：openElement (`c:\Users\Administrator\WorkBuddy\Claw\src-tmp`)\
-**当前版本**：v0.40.4\
+**当前版本**：v0.40.6（清理前基线）\
 **审计维度**：代码质量、架构整洁度、冗余、市场定位、技术债、测试与治理
 
 ---
 
 ## 1. 执行摘要
 
-openElement 是一个以 **Deno/JSR 为原生土壤、JSX-first、原生 Web Components 为核心** 的静态优先应用框架。当前版本 v0.40.4 的核心主题是"产品线清理"（Product-Line Cleanup），将 workspace 从 20 个包收缩为 **11 个包**，并确立了四大产品矩阵：
+openElement 是一个以 **Deno/JSR 为原生土壤、JSX-first、原生 Web Components 为核心** 的静态优先应用框架。当前版本：v0.40.6（清理前基线） 的核心主题是"产品线清理"（Product-Line Cleanup），将 workspace 从 20 个包收缩为 **11 个包**，并确立了四大产品矩阵：
 
 ```text
 openElement = Elements + UI + Framework + Protocols

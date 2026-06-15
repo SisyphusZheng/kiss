@@ -121,15 +121,9 @@ export default defineConfig({
           githubUrl: 'https://github.com/open-element/openelement',
         },
       },
-      packageIslands: ['@openelement/ui', '@shoelace-style/shoelace'],
+      packageIslands: ['@openelement/ui'],
       ssr: {
-        noExternal: [
-          '@openelement/ui',
-          '@shoelace-style/shoelace',
-          'media-chrome',
-          'react',
-          'react-dom',
-        ],
+        noExternal: ['@openelement/ui'],
       },
       pwa: {
         name: 'openElement Framework',

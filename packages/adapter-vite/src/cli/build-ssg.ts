@@ -224,35 +224,16 @@ async function buildSSG(
       // Without noExternal, it leaks as a bare import that Deno can resolve
       // locally (via workspace import map) but CF Pages cannot.
       'alien-signals',
-      // NOTE: Shoelace (@shoelace-style/shoelace) is NOT added here because
-      // its transitive deps (@shoelace-style/localize, etc.) cannot be resolved
-      // by Rolldown in Deno's nodeModulesDir:"manual" layout. Shoelace components
-      // are browser-only and should stay as bare imports resolved by Deno at
-      // import(entry.js) time, same as hono.
     ];
     // ADR-0047: External packages are externalized, not bundled.
     // ADR-0054: AST-based exports resolution covers ALL subpath exports
     // so Rolldown externalizes them correctly via manifest.specifiers.
     // Consumer template deno.json declares these packages so Deno can
     // resolve them at runtime when buildSSG() executes import(entry.js).
-    // Shoelace packages cannot be inlined (Rolldown resolution failure) but must
-    // be resolvable at import(entry.js) time.
-    // Lit/React runtime packages stay external unless the user explicitly
-    // requests adapter-specific bundling through options.ssr.noExternal.
+    // Hono stays external unless the user explicitly requests adapter-specific
+    // bundling through options.ssr.noExternal.
     const ssrExternalDefaults = [
-      'entities',
       'hono',
-      'lit',
-      '@lit/reactive-element',
-      'lit-element',
-      'lit-html',
-      'react',
-      'react-dom',
-      'react-dom/server',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-      '@shoelace-style/shoelace',
-      '@shoelace-style/localize',
     ];
 
     // Step 0: Deno pre-resolution + AST subpath discovery (ADR-0047 + ADR-0054)

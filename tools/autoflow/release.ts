@@ -79,7 +79,7 @@ export function createReleaseEvidence(
     status: 'planned',
     startedAt: now,
     approvalId,
-    steps: createPatchReleasePlan(targetVersion).map((step) => ({
+    steps: createReleasePlan(targetVersion, approvalId).map((step) => ({
       name: step.name,
       command: step.command,
       cwd: step.cwd,
@@ -88,9 +88,15 @@ export function createReleaseEvidence(
   };
 }
 
-export function createPatchReleasePlan(targetVersion: string): ReleaseCommandStep[] {
+export function createReleasePlan(
+  targetVersion: string,
+  approvalId?: string,
+): ReleaseCommandStep[] {
   const tag = releaseTag(targetVersion);
   const note = releaseNoteFile(targetVersion);
+  const commitMessage = approvalId
+    ? `chore(release): ${tag} (${approvalId})`
+    : `chore(release): ${tag}`;
   return [
     {
       name: 'bump patch version',
@@ -141,7 +147,7 @@ export function createPatchReleasePlan(targetVersion: string): ReleaseCommandSte
     },
     {
       name: 'commit release bump',
-      command: ['git', 'commit', '-m', `chore(release): ${tag}`],
+      command: ['git', 'commit', '-m', commitMessage],
     },
     {
       name: 'push dev',
@@ -194,6 +200,14 @@ export function createPatchReleasePlan(targetVersion: string): ReleaseCommandSte
       command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
     },
     {
+      name: 'deploy:pages',
+      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
+    },
+    {
+      name: 'smoke:deploy',
+      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
+    },
+    {
       name: 'stage release evidence',
       command: ['git', 'add', evidenceFile(targetVersion), note],
     },
@@ -230,6 +244,10 @@ export function createPatchReleasePlan(targetVersion: string): ReleaseCommandSte
       command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
     },
   ];
+}
+
+export function createPatchReleasePlan(targetVersion: string): ReleaseCommandStep[] {
+  return createReleasePlan(targetVersion);
 }
 
 export async function assertCleanWorktree(): Promise<void> {

@@ -11,6 +11,7 @@ custom-dist/
 npm/
 packages/adapter-vite/__fixtures__/nitro-proof/.output-*/
 packages/adapter-vite/__fixtures__/nitro-proof/.wrangler/
+packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
 *.tsbuildinfo
 .tsbuildinfo
 
@@ -53,7 +54,7 @@ docs/autoflow/cells/*/state.json
 .vite/
 
 # Generated data modules (typed stubs are tracked as .d.ts)
-www/app/data/_generated-blog-data.ts
+www/app/data/_generated-*.ts
 
 # Test / build / lint / coverage output files
 test-*.txt
@@ -90,3 +91,13 @@ lighthouse-result*.json
 www/.openElement/
 .openElement/
 .codebuddy/settings.local.json
+
+# Root-level audit artifact
+/audit-ast.json
+
+# Coverage variants
+.coverage-*/
+
+# Vite virtual assets
+assets/_virtual_*
+

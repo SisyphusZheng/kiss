@@ -1,5 +1,5 @@
-import { RELEASE_PACKAGE_ORDER } from './package-release-order.ts';
 import { PACKAGE_COUNT } from './project-constants.ts';
+import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const retainedPackages = [
   '@openelement/app',
@@ -32,24 +32,25 @@ const removedPackages = [
 
 const failures: string[] = [];
 
-const releasePackages = RELEASE_PACKAGE_ORDER.map((step) => step.pkg).sort();
+const packages = releasePublishOrder(await readPackages());
+const releasePackages = packages.map((pkg) => pkg.name).sort();
 if (PACKAGE_COUNT !== retainedPackages.length) {
   failures.push(`PACKAGE_COUNT is ${PACKAGE_COUNT}, expected ${retainedPackages.length}.`);
 }
 if (JSON.stringify(releasePackages) !== JSON.stringify(retainedPackages)) {
   failures.push(
-    `RELEASE_PACKAGE_ORDER mismatch. expected=${retainedPackages.join(', ')} actual=${
+    `Release package order mismatch. expected=${retainedPackages.join(', ')} actual=${
       releasePackages.join(', ')
     }`,
   );
 }
 
-for (const step of RELEASE_PACKAGE_ORDER) {
+for (const pkg of packages) {
   try {
-    const info = await Deno.stat(step.dir);
-    if (!info.isDirectory) failures.push(`${step.dir} is not a directory.`);
+    const info = await Deno.stat(pkg.dir);
+    if (!info.isDirectory) failures.push(`${pkg.dir} is not a directory.`);
   } catch {
-    failures.push(`${step.dir} is missing.`);
+    failures.push(`${pkg.dir} is missing.`);
   }
 }
 

@@ -5,16 +5,13 @@
  * a hand-maintained 19-package publish or typecheck chain.
  */
 
-import { RELEASE_PACKAGE_ORDER } from './package-release-order.ts';
 import { waitForJsrPackageMetadata } from './wait-jsr-release-metadata.ts';
-
-interface PackageInfo {
-  name: string;
-  version: string;
-  dir: string;
-  deps: string[];
-  exports: unknown;
-}
+import {
+  type PackageInfo,
+  readPackages,
+  releasePublishOrder,
+  sortPackages,
+} from './lib/package-graph.ts';
 
 const COMMANDS = new Set(['typecheck', 'publish', 'publish:dry-run']);
 const JSR_PUBLISH_TIMEOUT_MS = 45 * 60 * 1000;
@@ -25,123 +22,6 @@ const JSR_PROPAGATION_DELAY_MS = 5_000;
 const JSR_METADATA_TIMEOUT_MS = 10_000;
 const JSR_PACKAGE_METADATA_TIMEOUT_MS = 30 * 60 * 1000;
 const JSR_PACKAGE_METADATA_INTERVAL_MS = 15_000;
-
-function normalizeDep(specifier: string, self: string): string | null {
-  const prefix = '@openelement/';
-  if (!specifier.startsWith(prefix)) return null;
-  const rest = specifier.slice(prefix.length);
-  const slashIndex = rest.indexOf('/');
-  const base = slashIndex === -1 ? specifier : prefix + rest.slice(0, slashIndex);
-  return base === self ? null : base;
-}
-
-async function readPackage(dir: string): Promise<PackageInfo | null> {
-  const path = `${dir}/deno.json`;
-  try {
-    const json = JSON.parse(await Deno.readTextFile(path));
-    if (!json.name) return null;
-    const imports: Record<string, string> = json.imports ?? {};
-    const deps = Object.keys(imports)
-      .map((specifier) => normalizeDep(specifier, json.name))
-      .filter((specifier): specifier is string => specifier !== null);
-    return {
-      name: json.name,
-      version: json.version ?? '',
-      dir,
-      deps: [...new Set(deps)],
-      exports: json.exports,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function readPackages(): Promise<PackageInfo[]> {
-  const packages: PackageInfo[] = [];
-  for await (const entry of Deno.readDir('packages')) {
-    if (!entry.isDirectory) continue;
-    const info = await readPackage(`packages/${entry.name}`);
-    if (info) packages.push(info);
-  }
-  return packages.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function sortPackages(packages: PackageInfo[]): PackageInfo[] {
-  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
-  const inDegree = new Map(packages.map((pkg) => [pkg.name, 0]));
-  const dependents = new Map(packages.map((pkg) => [pkg.name, [] as string[]]));
-
-  for (const pkg of packages) {
-    for (const dep of pkg.deps) {
-      if (!byName.has(dep)) continue;
-      inDegree.set(pkg.name, (inDegree.get(pkg.name) ?? 0) + 1);
-      dependents.get(dep)!.push(pkg.name);
-    }
-  }
-
-  const queue = packages
-    .filter((pkg) => inDegree.get(pkg.name) === 0)
-    .map((pkg) => pkg.name)
-    .sort();
-  const sorted: PackageInfo[] = [];
-
-  while (queue.length > 0) {
-    const name = queue.shift()!;
-    sorted.push(byName.get(name)!);
-    for (const dependent of dependents.get(name) ?? []) {
-      const next = (inDegree.get(dependent) ?? 1) - 1;
-      inDegree.set(dependent, next);
-      if (next === 0) {
-        queue.push(dependent);
-        queue.sort();
-      }
-    }
-  }
-
-  if (sorted.length !== packages.length) {
-    const unresolved = packages
-      .map((pkg) => pkg.name)
-      .filter((name) => !sorted.some((pkg) => pkg.name === name));
-    throw new Error(`Package graph has a cycle or unresolved nodes: ${unresolved.join(', ')}`);
-  }
-
-  return sorted;
-}
-
-function readReleasePublishOrder(): string[] {
-  return RELEASE_PACKAGE_ORDER.map((step) => step.pkg);
-}
-
-function orderForRelease(packages: PackageInfo[]): PackageInfo[] {
-  const releaseOrder = readReleasePublishOrder();
-
-  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
-  if (releaseOrder.length !== packages.length || releaseOrder.some((name) => !byName.has(name))) {
-    throw new Error(
-      'Release package order no longer matches packages/*/deno.json. ' +
-        'Run deno task graph:check for details.',
-    );
-  }
-
-  const ordered = releaseOrder.map((name) => byName.get(name)!);
-  assertDependencyFirst(ordered);
-  return ordered;
-}
-
-function assertDependencyFirst(packages: PackageInfo[]): void {
-  const position = new Map(packages.map((pkg, index) => [pkg.name, index]));
-  for (const pkg of packages) {
-    for (const dep of pkg.deps) {
-      const depIndex = position.get(dep);
-      if (depIndex === undefined) continue;
-      if (depIndex > position.get(pkg.name)!) {
-        throw new Error(
-          `Package publish order is invalid: ${pkg.name} appears before dependency ${dep}.`,
-        );
-      }
-    }
-  }
-}
 
 function exportEntries(pkg: PackageInfo): string[] {
   if (typeof pkg.exports === 'string') return [pkg.exports];
@@ -596,7 +476,7 @@ async function main(): Promise<void> {
 
   const allPackages = await readPackages();
   const orderedPackages = command.startsWith('publish')
-    ? orderForRelease(allPackages)
+    ? releasePublishOrder(allPackages)
     : sortPackages(allPackages);
   const packages = filterPackagesWithDependencies(orderedPackages, only);
   if (packages.length === 0) throw new Error('No packages found under packages/.');

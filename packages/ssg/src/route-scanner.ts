@@ -437,7 +437,7 @@ function isBrowserOnlyPackageImportError(error: unknown): boolean {
 
 /** Result of scanning node_modules for CEM manifests */
 export interface CemScanResult {
-  /** Package name (e.g. '@shoelace-style/shoelace') */
+  /** Package name (e.g. '@openelement/ui') */
   packageName: string;
   /** Absolute path to custom-elements.json */
   cemPath: string;

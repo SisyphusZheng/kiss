@@ -299,7 +299,7 @@ function ensureTsExtension(path: string): string {
  * source can also use explicit `npm:` specifiers so fresh Deno consumers do not
  * need root import-map aliases. Vite doesn't understand `npm:` so we strip the
  * prefix and version, leaving a bare specifier like `marked` or
- * `@lit/reactive-element`.
+ * `@preact/signals-core`.
  *
  * Handles:
  */

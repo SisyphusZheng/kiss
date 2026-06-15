@@ -19,8 +19,11 @@ import type {
   DsdOptions,
   DsdRenderMetrics,
   HydrationHint,
+  RendererProtocol,
   RenderError,
   RenderErrorSeverity,
+  RenderHooks,
+  RenderInput,
   RenderOutput,
   RenderPhase,
 } from '@openelement/protocol/renderer';
@@ -28,8 +31,11 @@ export type {
   DsdOptions,
   DsdRenderMetrics,
   HydrationHint,
+  RendererProtocol,
   RenderError,
   RenderErrorSeverity,
+  RenderHooks,
+  RenderInput,
   RenderOutput,
   RenderPhase,
 };
@@ -52,31 +58,6 @@ export interface DsdComponentConstructor extends CustomElementConstructor {
   tagName?: string;
   renderMode?: 'shadow' | 'light';
   observedAttributes?: string[];
-}
-
-// --- Renderer protocol -------------------------------------------
-
-export interface RendererProtocol {
-  name: string;
-  isTemplate?: (value: unknown) => boolean;
-  render?: (value: unknown, tagName: string) => Promise<string>;
-  extractStyles?: (componentClass: CustomElementConstructor) => string | undefined;
-}
-
-// --- Render input / output / hooks --------------------------------
-
-export interface RenderInput {
-  tagName: string;
-  componentClass: CustomElementConstructor;
-  props: Record<string, unknown>;
-  dsdOptions?: DsdOptions;
-  nestingDepth: number;
-}
-
-export interface RenderHooks {
-  beforeRender?: (input: RenderInput) => void;
-  afterRender?: (output: RenderOutput) => void;
-  onError?: (error: RenderError) => void;
 }
 
 // --- DSD component model -----------------------------------------

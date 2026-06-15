@@ -89,8 +89,14 @@ architectural decision, its context, and consequences.
 | 0097 | JSR Best-Effort Release Gate                             | Accepted                                         |
 | 0098 | EntryDescriptor Route Manifest Contract                  | Accepted                                         |
 | 0099 | Four-Product Matrix and Elements Reset                   | Accepted; heavy-island scope superseded by 0101  |
-| 0100 | JSR Publish Exit Gate Restored                           | Accepted; supersedes 0097 for current releases   |
+| 0100 | JSR Publish Exit Gate Restored                           | Accepted; superseded by 0107 for v0.41+          |
 | 0101 | Product-Line Reset and AutoFlow3 Governance Boundary     | Accepted                                         |
+| 0102 | Elements Package Product Surface                         | Accepted                                         |
+| 0103 | Archive-Candidate Package Reduction                      | Accepted                                         |
+| 0104 | Signal Engine Default Policy                             | Accepted                                         |
+| 0105 | v0.40.x Cleanup Train Exception                          | Accepted                                         |
+| 0106 | Audit-Driven Quality Cleanup for v0.40.6                 | Accepted                                         |
+| 0107 | npm-Only Distribution                                    | Accepted                                         |
 
 ## Superseded / Historical
 

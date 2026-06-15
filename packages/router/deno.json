@@ -10,7 +10,7 @@
     "./page-loader": "./src/page-loader.ts"
   },
   "imports": {
-    "marked": "npm:marked@15.0.4",
+    "marked": "npm:marked@^15",
     "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger",
     "@openelement/protocol": "jsr:@openelement/protocol@^0.40.6"
   },

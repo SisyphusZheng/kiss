@@ -25,7 +25,7 @@ order: 10
           </p>
           <h3>但前提是这个包有 CEM 文件</h3>
           <p>
-            目前很多 Web Component 包（如 <code>@shoelace-style/shoelace</code>）<strong>不发布</strong>
+            例如某个未发布 CEM 的第三方包（如 <code>@example/third-party-wc</code>）<strong>不发布</strong>
             <code>custom-elements.json</code>。没有 CEM，检测结果为空，这些包会按照 <code>packageIslands</code>
             里的显式声明来处理。
           </p>
@@ -97,11 +97,10 @@ for (const pkg of node_modules)
 
           <h2>当前站点的实际结果</h2>
           <p>
-            虽然 v0.18.0 的检测能力已经就绪，但当前 www 示例站点使用的第三方包
-            <code>@shoelace-style/shoelace</code> 和 <code>media-chrome</code>
-            <strong>都没有发布</strong> <code>custom-elements.json</code>。
-            因此自动检测在它们上不会返回结果--它们仍然依赖
-            <code>vite.config.ts</code> 中 <code>packageIslands</code> 的显式声明。
+            当前 www 示例站点使用的 <code>@openelement/ui</code> 自带
+            <code>custom-elements.json</code>，因此会被自动检测并分类为
+            <code>ssr-capable</code>。如果引入没有 CEM 的第三方包，则需要通过
+            <code>vite.config.ts</code> 中 <code>packageIslands</code> 显式声明。
           </p>
 
           <h2>对比：有 CEM vs 无 CEM</h2>
