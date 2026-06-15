@@ -14,7 +14,7 @@
 
 import type { Plugin } from 'vite';
 
-import { OpenElementError } from '@openelement/core/errors';
+import { formatError, OpenElementError } from '@openelement/core/errors';
 import { transform as esbuildTransform } from 'esbuild';
 
 /** Virtual module ID prefix for JSR remote resolution */
@@ -159,7 +159,7 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
         clearTimeout(timeoutId);
         throw new OpenElementError(
           `Failed to load @openelement/core module from JSR: ${filePath}. ` +
-            `URL: ${url}. Error: ${err instanceof Error ? err.message : String(err)}`,
+            `URL: ${url}. Error: ${formatError(err)}`,
           'JSR_FETCH_ERROR',
           500,
           false,
@@ -178,7 +178,7 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
       } catch (err) {
         throw new OpenElementError(
           `Failed to compile @openelement/core module from JSR: ${filePath}. ` +
-            `Error: ${err instanceof Error ? err.message : String(err)}`,
+            `Error: ${formatError(err)}`,
           'JSR_COMPILE_ERROR',
           500,
           false,

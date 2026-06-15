@@ -26,6 +26,7 @@ import {
 } from './render-schemas.js';
 import { getDefaultRegistry } from './adapter-registry.js';
 import { createLogger } from './logger.js';
+import { formatError } from './errors.js';
 import { DsdRenderCollector } from './dsd-collector.js';
 import { type DsdComponentConstructor } from './render-schemas.js';
 import { escapeAttrValue } from './html-escape.js';
@@ -52,7 +53,7 @@ export function classifyError(
   err: unknown,
   recoverable = false,
 ): RenderError {
-  const message = err instanceof Error ? err.message : String(err);
+  const message = formatError(err);
   return {
     code: codeForRenderError(phase, message),
     severity: recoverable ? 'warning' : 'error',
@@ -98,7 +99,7 @@ function instantiateComponent(
     }
     return instance;
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = formatError(err);
     log.error(`Failed to instantiate <${tagName}>:`, errMsg);
     return null;
   }
@@ -126,9 +127,7 @@ function injectProps(
       (instance as Record<string, unknown>)[key] = value;
     } catch (e) {
       log.debug(
-        `Cannot set read-only property "${key}" on <${tagName}>: ${
-          e instanceof Error ? e.message : String(e)
-        }`,
+        `Cannot set read-only property "${key}" on <${tagName}>: ${formatError(e)}`,
       );
     }
   }
@@ -275,7 +274,7 @@ export async function renderDsd(
     try {
       hooks.beforeRender(renderInput);
     } catch (e) {
-      log.debug(`beforeRender hook threw: ${e instanceof Error ? e.message : String(e)}`);
+      log.debug(`beforeRender hook threw: ${formatError(e)}`);
     }
   }
 
@@ -385,7 +384,7 @@ export async function renderDsd(
           hooks?.onError?.(styleErr);
           log.debug(
             `extractStyles failed for <${tagName}> via '${adapter.name}' adapter: ${
-              e instanceof Error ? e.message : String(e)
+              formatError(e)
             }`,
           );
         }
@@ -445,7 +444,7 @@ export async function renderDsd(
     try {
       hooks.afterRender(output);
     } catch (e) {
-      log.debug(`afterRender hook threw: ${e instanceof Error ? e.message : String(e)}`);
+      log.debug(`afterRender hook threw: ${formatError(e)}`);
     }
   }
 

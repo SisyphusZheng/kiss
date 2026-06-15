@@ -11,7 +11,7 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   assertExists(mod.manifest, 'manifest export should exist');
   assertEquals(typeof mod.manifest, 'object');
   assertEquals(mod.manifest.packageName, '@openelement/ui');
-  assertEquals(mod.manifest.declarations.length, 10);
+  assertEquals(mod.manifest.declarations.length, 13);
   assertEquals(mod.manifest.declarations[0].tagName, 'open-card');
   assertEquals(mod.manifest.declarations[1].tagName, 'open-callout');
   assertEquals(mod.manifest.declarations[2].tagName, 'open-step-card');
@@ -21,7 +21,10 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   assertEquals(mod.manifest.declarations[6].tagName, 'open-code-block');
   assertEquals(mod.manifest.declarations[7].tagName, 'open-dialog');
   assertEquals(mod.manifest.declarations[8].tagName, 'open-layout');
-  assertEquals(mod.manifest.declarations[9].tagName, 'open-hero-ping');
+  assertEquals(mod.manifest.declarations[9].tagName, 'open-dropdown');
+  assertEquals(mod.manifest.declarations[10].tagName, 'open-modal');
+  assertEquals(mod.manifest.declarations[11].tagName, 'open-tabs');
+  assertEquals(mod.manifest.declarations[12].tagName, 'open-hero-ping');
 });
 
 Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
@@ -42,10 +45,13 @@ Deno.test('open-ui - all components export tagName', async () => {
     'open-card',
     'open-code-block',
     'open-dialog',
+    'open-dropdown',
     'open-hero-ping',
     'open-input',
     'open-layout',
+    'open-modal',
     'open-step-card',
+    'open-tabs',
     'open-theme-toggle',
   ];
   for (const name of components) {

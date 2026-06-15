@@ -1,19 +1,760 @@
-import { assertEquals, assertInstanceOf } from 'jsr:@std/assert@1';
+/**
+ * @openelement/element — OpenElement base class unit tests.
+ *
+ * Covers the core lifecycle and rendering contracts of OpenElement:
+ *   - instantiation and base static properties
+ *   - shadow DOM default rendering
+ *   - light DOM opt-in
+ *   - DSD hydration path
+ *   - CSR path
+ *   - static styles / adoptedStyleSheets
+ *   - signal-driven re-rendering
+ *   - event binding and hydration
+ *   - static props reactivity
+ *   - onRenderError fallback
+ *   - formAssociated / ElementInternals
+ *   - params attribute parsing
+ *
+ * Deno's test runner does not provide a real browser DOM, so the file installs
+ * a minimal DOM harness when `globalThis.HTMLElement` is missing. Tests that
+ * depend on DOM features guard themselves with `hasDOM` and return early when
+ * the harness is unavailable.
+ */
+
+import {
+  assertEquals,
+  assertExists,
+  assertInstanceOf,
+  assertStringIncludes,
+} from 'jsr:@std/assert@1';
 import { OpenElement } from '@openelement/element';
+import { ErrorBoundary } from '@openelement/element';
 import { jsx } from '@openelement/core/jsx-runtime';
 import type { VNode } from '@openelement/core';
+import { signal } from '@openelement/signal';
+import type { Signal } from '@openelement/protocol/signals';
+import { StyleSheet } from '@openelement/core/style-sheet';
 
 const hasDOM = typeof customElements !== 'undefined';
+
+// ─── Minimal DOM harness for Deno test environment ─────────────────
+
+type TestNode = TestElement | TestTextNode | TestShadowRoot | TestDocumentFragment;
+
+class TestEvent {
+  type: string;
+  bubbles: boolean;
+  composed: boolean;
+  defaultPrevented = false;
+  target: EventTarget | null = null;
+  currentTarget: EventTarget | null = null;
+  #stopPropagation = false;
+  #stopImmediatePropagation = false;
+
+  constructor(type: string, init?: { bubbles?: boolean; composed?: boolean }) {
+    this.type = type;
+    this.bubbles = init?.bubbles ?? false;
+    this.composed = init?.composed ?? false;
+  }
+
+  stopPropagation(): void {
+    this.#stopPropagation = true;
+  }
+
+  stopImmediatePropagation(): void {
+    this.#stopImmediatePropagation = true;
+  }
+
+  preventDefault(): void {
+    this.defaultPrevented = true;
+  }
+
+  get _stopPropagation(): boolean {
+    return this.#stopPropagation;
+  }
+
+  get _stopImmediatePropagation(): boolean {
+    return this.#stopImmediatePropagation;
+  }
+}
+
+class TestClassList {
+  #classes = new Set<string>();
+
+  toggle(token: string, force?: boolean): boolean {
+    if (force === true) {
+      this.#classes.add(token);
+      return true;
+    }
+    if (force === false) {
+      this.#classes.delete(token);
+      return false;
+    }
+    if (this.#classes.has(token)) {
+      this.#classes.delete(token);
+      return false;
+    }
+    this.#classes.add(token);
+    return true;
+  }
+
+  contains(token: string): boolean {
+    return this.#classes.has(token);
+  }
+
+  toString(): string {
+    return Array.from(this.#classes).join(' ');
+  }
+}
+
+class TestStyle {
+  #props: Record<string, string> = {};
+
+  setProperty(key: string, value: string): void {
+    this.#props[key] = value;
+  }
+
+  getPropertyValue(key: string): string {
+    return this.#props[key] ?? '';
+  }
+
+  [key: string]: unknown;
+}
+
+class TestNodeBase {
+  parentNode: TestNode | null = null;
+  childNodes: TestNode[] = [];
+  #listeners = new Map<string, Set<EventListener>>();
+
+  get firstChild(): TestNode | null {
+    return this.childNodes[0] ?? null;
+  }
+
+  get lastChild(): TestNode | null {
+    return this.childNodes.at(-1) ?? null;
+  }
+
+  appendChild(child: TestNode): TestNode {
+    if (child.parentNode) {
+      child.parentNode.removeChild(child);
+    }
+    child.parentNode = this as unknown as TestNode;
+    this.childNodes.push(child);
+    return child;
+  }
+
+  removeChild(child: TestNode): TestNode {
+    const idx = this.childNodes.indexOf(child);
+    if (idx === -1) {
+      throw new Error('Node not found');
+    }
+    this.childNodes.splice(idx, 1);
+    child.parentNode = null;
+    return child;
+  }
+
+  insertBefore(newChild: TestNode, refChild: TestNode | null): TestNode {
+    if (newChild.parentNode) {
+      newChild.parentNode.removeChild(newChild);
+    }
+    if (refChild === null) {
+      return this.appendChild(newChild);
+    }
+    const idx = this.childNodes.indexOf(refChild);
+    if (idx === -1) {
+      throw new Error('Reference node not found');
+    }
+    newChild.parentNode = this as unknown as TestNode;
+    this.childNodes.splice(idx, 0, newChild);
+    return newChild;
+  }
+
+  addEventListener(type: string, listener: EventListener): void {
+    let set = this.#listeners.get(type);
+    if (!set) {
+      set = new Set();
+      this.#listeners.set(type, set);
+    }
+    set.add(listener);
+  }
+
+  removeEventListener(type: string, listener: EventListener): void {
+    this.#listeners.get(type)?.delete(listener);
+  }
+
+  dispatchEvent(event: Event): boolean {
+    const listeners = this.#listeners.get(event.type);
+    const testEvent = event as unknown as TestEvent;
+    for (const listener of listeners ?? []) {
+      listener(event);
+      if (testEvent._stopImmediatePropagation) break;
+    }
+    return !event.defaultPrevented;
+  }
+}
+
+class TestTextNode extends TestNodeBase {
+  nodeType = 3;
+  #text: string;
+
+  constructor(text: string) {
+    super();
+    this.#text = String(text);
+  }
+
+  get textContent(): string {
+    return this.#text;
+  }
+
+  set textContent(value: string) {
+    this.#text = String(value);
+  }
+
+  get data(): string {
+    return this.#text;
+  }
+
+  set data(value: string) {
+    this.#text = String(value);
+  }
+
+  get innerHTML(): string {
+    return this.#text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+}
+
+class TestDocumentFragment extends TestNodeBase {
+  nodeType = 11;
+
+  get innerHTML(): string {
+    return this.childNodes.map((c) => (c as TestElement | TestTextNode).innerHTML ?? '').join('');
+  }
+}
+
+class TestShadowRoot extends TestNodeBase {
+  nodeType = 11;
+  mode: string;
+  host: TestElement;
+  adoptedStyleSheets: unknown[] = [];
+
+  constructor(host: TestElement, init: ShadowRootInit) {
+    super();
+    this.host = host;
+    this.mode = init.mode;
+  }
+
+  querySelector(selector: string): TestElement | null {
+    return querySelectorImpl(this.childNodes, selector);
+  }
+
+  querySelectorAll(selector: string): TestElement[] {
+    return querySelectorAllImpl(this.childNodes, selector);
+  }
+
+  get innerHTML(): string {
+    return this.childNodes.map((c) => (c as TestElement | TestTextNode).innerHTML ?? '').join('');
+  }
+}
+
+class TestElement extends TestNodeBase {
+  nodeType = 1;
+  tagName: string;
+  localName: string;
+  #attributes = new Map<string, string>();
+  #shadowRoot: TestShadowRoot | null = null;
+  classList = new TestClassList();
+  style = new Proxy(new TestStyle(), {
+    get(target, prop) {
+      if (prop === 'setProperty') return target.setProperty.bind(target);
+      if (prop === 'getPropertyValue') return target.getPropertyValue.bind(target);
+      if (typeof prop === 'string') return target.getPropertyValue(prop);
+      return (target as Record<string, unknown>)[prop as unknown as string];
+    },
+    set(target, prop, value) {
+      if (typeof prop === 'string') {
+        target.setProperty(prop, String(value));
+      }
+      return true;
+    },
+  }) as unknown as CSSStyleDeclaration;
+  dataset: Record<string, string> = {};
+  private _isConnected = false;
+
+  constructor(tag: string) {
+    super();
+    this.localName = tag.toLowerCase();
+    this.tagName = tag.toUpperCase();
+  }
+
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  set isConnected(value: boolean) {
+    this._isConnected = value;
+  }
+
+  get shadowRoot(): ShadowRoot | null {
+    return this.#shadowRoot as unknown as ShadowRoot | null;
+  }
+
+  getAttribute(name: string): string | null {
+    return this.#attributes.get(name) ?? null;
+  }
+
+  setAttribute(name: string, value: string): void {
+    const old = this.#attributes.get(name) ?? null;
+    this.#attributes.set(name, String(value));
+    const ctor = this.constructor as typeof HTMLElement & { observedAttributes?: string[] };
+    const el = this as unknown as HTMLElement & {
+      attributeChangedCallback?(n: string, o: string | null, v: string | null): void;
+    };
+    if (
+      ctor.observedAttributes?.includes(name) && typeof el.attributeChangedCallback === 'function'
+    ) {
+      el.attributeChangedCallback(name, old, String(value));
+    }
+  }
+
+  hasAttribute(name: string): boolean {
+    return this.#attributes.has(name);
+  }
+
+  removeAttribute(name: string): void {
+    const old = this.#attributes.get(name) ?? null;
+    this.#attributes.delete(name);
+    const ctor = this.constructor as typeof HTMLElement & { observedAttributes?: string[] };
+    const el = this as unknown as HTMLElement & {
+      attributeChangedCallback?(n: string, o: string | null, v: string | null): void;
+    };
+    if (
+      ctor.observedAttributes?.includes(name) && typeof el.attributeChangedCallback === 'function'
+    ) {
+      el.attributeChangedCallback(name, old, null);
+    }
+  }
+
+  attachShadow(init: ShadowRootInit): ShadowRoot {
+    const root = new TestShadowRoot(this, init);
+    this.#shadowRoot = root;
+    return root as unknown as ShadowRoot;
+  }
+
+  get innerHTML(): string {
+    return this.childNodes.map((c) => {
+      if (c instanceof TestTextNode) return c.innerHTML;
+      if (c instanceof TestElement) return c.outerHTML;
+      if (c instanceof TestDocumentFragment) return c.innerHTML;
+      return '';
+    }).join('');
+  }
+
+  set innerHTML(html: string) {
+    while (this.childNodes.length > 0) {
+      this.removeChild(this.childNodes[0]);
+    }
+    const parsed = parseHtmlFragment(html);
+    for (const node of parsed) {
+      this.appendChild(node);
+    }
+  }
+
+  get outerHTML(): string {
+    const attrs = Array.from(this.#attributes.entries())
+      .map(([k, v]) => ` ${k}="${v.replace(/"/g, '&quot;')}"`)
+      .join('');
+    const children = this.childNodes.map((c) => {
+      if (c instanceof TestTextNode) return c.innerHTML;
+      if (c instanceof TestElement) return c.outerHTML;
+      if (c instanceof TestDocumentFragment) return c.innerHTML;
+      return '';
+    }).join('');
+    return `<${this.localName}${attrs}>${children}</${this.localName}>`;
+  }
+
+  get textContent(): string {
+    return this.childNodes.map((c) => {
+      if (c instanceof TestTextNode) return c.textContent;
+      if (c instanceof TestElement) return c.textContent;
+      return '';
+    }).join('');
+  }
+
+  set textContent(value: string) {
+    while (this.childNodes.length > 0) {
+      this.removeChild(this.childNodes[0]);
+    }
+    if (value !== '') {
+      this.appendChild(new TestTextNode(value));
+    }
+  }
+
+  querySelector(selector: string): TestElement | null {
+    return querySelectorImpl(this.childNodes, selector);
+  }
+
+  querySelectorAll(selector: string): TestElement[] {
+    return querySelectorAllImpl(this.childNodes, selector);
+  }
+
+  getAttributeNames(): string[] {
+    return Array.from(this.#attributes.keys());
+  }
+
+  attachInternals(): ElementInternals {
+    return {
+      setFormValue: () => {},
+      setValidity: () => {},
+      reportValidity: () => true,
+      checkValidity: () => true,
+      states: new Set(),
+    } as unknown as ElementInternals;
+  }
+}
+
+class TestDocument extends TestNodeBase {
+  nodeType = 9;
+  documentElement: TestElement;
+  body: TestElement;
+  head: TestElement;
+  adoptedStyleSheets: unknown[] = [];
+
+  constructor() {
+    super();
+    this.documentElement = this.createElement('html');
+    this.head = this.createElement('head');
+    this.body = this.createElement('body');
+    this.documentElement.appendChild(this.head);
+    this.documentElement.appendChild(this.body);
+  }
+
+  createElement(tag: string): TestElement {
+    return new TestElement(tag);
+  }
+
+  createElementNS(_ns: string, tag: string): TestElement {
+    return new TestElement(tag);
+  }
+
+  createTextNode(text: string): TestTextNode {
+    return new TestTextNode(text);
+  }
+
+  createDocumentFragment(): TestDocumentFragment {
+    return new TestDocumentFragment();
+  }
+
+  querySelector(selector: string): TestElement | null {
+    return this.body.querySelector(selector);
+  }
+
+  querySelectorAll(selector: string): TestElement[] {
+    return this.body.querySelectorAll(selector);
+  }
+}
+
+class TestCustomElementRegistry {
+  #defs = new Map<string, CustomElementConstructor>();
+
+  define(name: string, ctor: CustomElementConstructor): void {
+    if (this.#defs.has(name)) {
+      throw new Error(`CustomElementRegistry already has "${name}" defined.`);
+    }
+    this.#defs.set(name, ctor);
+    (ctor as unknown as { __localName?: string }).__localName = name;
+  }
+
+  get(name: string): CustomElementConstructor | undefined {
+    return this.#defs.get(name);
+  }
+
+  upgrade(element: TestElement): void {
+    const ctor = this.#defs.get(element.localName);
+    if (!ctor) return;
+    Object.setPrototypeOf(element, ctor.prototype);
+    const el = element as unknown as HTMLElement & { connectedCallback?(): void };
+    if (typeof el.connectedCallback === 'function') {
+      el.connectedCallback();
+    }
+  }
+}
+
+function querySelectorImpl(nodes: TestNode[], selector: string): TestElement | null {
+  for (const node of nodes) {
+    if (node instanceof TestElement) {
+      if (matchesSelector(node, selector)) return node;
+      const found = node.querySelector(selector);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function querySelectorAllImpl(nodes: TestNode[], selector: string): TestElement[] {
+  const results: TestElement[] = [];
+  for (const node of nodes) {
+    if (node instanceof TestElement) {
+      if (matchesSelector(node, selector)) results.push(node);
+      results.push(...node.querySelectorAll(selector));
+    }
+  }
+  return results;
+}
+
+function matchesSelector(el: TestElement, selector: string): boolean {
+  selector = selector.trim();
+  if (selector.startsWith('[') && selector.endsWith(']')) {
+    const attr = selector.slice(1, -1);
+    return el.hasAttribute(attr);
+  }
+  if (selector.startsWith('.')) {
+    return el.classList.contains(selector.slice(1));
+  }
+  return el.localName === selector.toLowerCase();
+}
+
+function parseHtmlFragment(html: string): TestNode[] {
+  const nodes: TestNode[] = [];
+  let i = 0;
+  while (i < html.length) {
+    const open = html.indexOf('<', i);
+    if (open === -1) {
+      if (i < html.length) {
+        nodes.push(new TestTextNode(html.slice(i)));
+      }
+      break;
+    }
+    if (open > i) {
+      nodes.push(new TestTextNode(html.slice(i, open)));
+    }
+    const close = html.indexOf('>', open);
+    if (close === -1) break;
+    const tagContent = html.slice(open + 1, close);
+    i = close + 1;
+
+    if (tagContent.startsWith('!--')) {
+      const end = html.indexOf('-->', i);
+      i = end === -1 ? html.length : end + 3;
+      continue;
+    }
+
+    if (tagContent.startsWith('/')) {
+      // Closing tag handled by recursive parser
+      continue;
+    }
+
+    const isClosing = tagContent.endsWith('/');
+    const parts = (isClosing ? tagContent.slice(0, -1) : tagContent).split(/\s+/);
+    const tag = parts[0];
+    const attrs: Record<string, string> = {};
+    const attrString = parts.slice(1).join(' ');
+    const attrRegex = /([a-zA-Z0-9-:@]+)(?:="([^"]*)"|=([^\s]*))?/g;
+    let match: RegExpExecArray | null;
+    while ((match = attrRegex.exec(attrString)) !== null) {
+      const key = match[1];
+      const value = match[2] ?? match[3] ?? '';
+      attrs[key] = value;
+    }
+
+    if (tag === 'template' && attrs['shadowrootmode']) {
+      const template = new TestElement('template');
+      for (const [k, v] of Object.entries(attrs)) {
+        template.setAttribute(k, v);
+      }
+      const endTag = `</template>`;
+      const endIdx = html.indexOf(endTag, i);
+      if (endIdx !== -1) {
+        template.innerHTML = html.slice(i, endIdx);
+        i = endIdx + endTag.length;
+      }
+      nodes.push(template);
+      continue;
+    }
+
+    if (isClosing || ['br', 'hr', 'img', 'input', 'meta', 'link'].includes(tag.toLowerCase())) {
+      const el = new TestElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+      }
+      nodes.push(el);
+      continue;
+    }
+
+    const { node, nextIndex } = parseElement(html, i, tag, attrs);
+    nodes.push(node);
+    i = nextIndex;
+  }
+  return nodes;
+}
+
+function parseElement(
+  html: string,
+  start: number,
+  tag: string,
+  attrs: Record<string, string>,
+): { node: TestElement; nextIndex: number } {
+  const el = new TestElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    el.setAttribute(k, v);
+  }
+  let i = start;
+  const endTag = `</${tag}>`;
+  while (i < html.length) {
+    const nextOpen = html.indexOf('<', i);
+    if (nextOpen === -1) break;
+    const nextClose = html.indexOf('>', nextOpen);
+    if (nextClose === -1) break;
+    const nextTag = html.slice(nextOpen + 1, nextClose);
+
+    if (html.slice(nextOpen, nextOpen + endTag.length).toLowerCase() === endTag.toLowerCase()) {
+      if (nextOpen > i) {
+        el.appendChild(new TestTextNode(html.slice(i, nextOpen)));
+      }
+      return { node: el, nextIndex: nextClose + 1 };
+    }
+
+    if (nextOpen > i) {
+      el.appendChild(new TestTextNode(html.slice(i, nextOpen)));
+    }
+
+    if (nextTag.startsWith('!--')) {
+      const end = html.indexOf('-->', nextClose);
+      i = end === -1 ? html.length : end + 3;
+      continue;
+    }
+
+    const selfClosing = nextTag.endsWith('/');
+    const parts = (selfClosing ? nextTag.slice(0, -1) : nextTag).split(/\s+/);
+    const childTag = parts[0];
+    const childAttrs: Record<string, string> = {};
+    const childAttrString = parts.slice(1).join(' ');
+    const attrRegex = /([a-zA-Z0-9-:@]+)(?:="([^"]*)"|=([^\s]*))?/g;
+    let match: RegExpExecArray | null;
+    while ((match = attrRegex.exec(childAttrString)) !== null) {
+      const key = match[1];
+      const value = match[2] ?? match[3] ?? '';
+      childAttrs[key] = value;
+    }
+
+    if (
+      selfClosing || ['br', 'hr', 'img', 'input', 'meta', 'link'].includes(childTag.toLowerCase())
+    ) {
+      const child = new TestElement(childTag);
+      for (const [k, v] of Object.entries(childAttrs)) {
+        child.setAttribute(k, v);
+      }
+      el.appendChild(child);
+      i = nextClose + 1;
+      continue;
+    }
+
+    const { node: child, nextIndex } = parseElement(html, nextClose + 1, childTag, childAttrs);
+    el.appendChild(child);
+    i = nextIndex;
+  }
+  return { node: el, nextIndex: i };
+}
+
+let installedHarness = false;
+function installDomHarness(): void {
+  if (installedHarness || typeof globalThis.HTMLElement !== 'undefined') return;
+  installedHarness = true;
+
+  const doc = new TestDocument();
+  const registry = new TestCustomElementRegistry();
+
+  Object.defineProperty(globalThis, 'HTMLElement', {
+    configurable: true,
+    value: TestElement,
+  });
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: doc,
+  });
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: registry,
+  });
+  Object.defineProperty(globalThis, 'Event', {
+    configurable: true,
+    value: TestEvent,
+  });
+  Object.defineProperty(globalThis, 'requestAnimationFrame', {
+    configurable: true,
+    value: (cb: () => void) => cb(),
+  });
+  Object.defineProperty(globalThis, 'CSSStyleSheet', {
+    configurable: true,
+    value: class {
+      cssRules: { cssText: string }[] = [];
+      replaceSync(text: string): void {
+        this.cssRules = text.split('}')
+          .map((r) => r.trim())
+          .filter((r) => r.length > 0)
+          .map((r) => ({ cssText: `${r}}` }));
+      }
+    },
+  });
+}
+
+installDomHarness();
+
+// ─── Helpers ───────────────────────────────────────────────────────
+
+function uniqueTag(prefix: string): string {
+  return `test-${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function flushEffects(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+// ─── 1. Instantiation and base properties ──────────────────────────
 
 Deno.test('OpenElement is instantiable', () => {
   const el = new OpenElement();
   assertInstanceOf(el, OpenElement);
 });
 
+Deno.test('OpenElement.render() returns null by default', () => {
+  const el = new OpenElement();
+  assertEquals(el.render(), null);
+});
+
+Deno.test('OpenElement exposes base static contract', () => {
+  assertEquals(OpenElement.renderMode, undefined);
+  assertEquals(OpenElement.formAssociated, undefined);
+  assertEquals(OpenElement.delegatesFocus, undefined);
+});
+
+// ─── 2. Shadow DOM default rendering ───────────────────────────────
+
+Deno.test('OpenElement creates a shadow root and renders by default', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('shadow-default');
+  class ShadowElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('p', { children: 'shadow content' });
+    }
+  }
+  customElements.define(tagName, ShadowElement);
+
+  const el = document.createElement(tagName) as ShadowElement;
+  document.body.appendChild(el);
+
+  assertExists(el.shadowRoot);
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'shadow content');
+
+  document.body.removeChild(el);
+});
+
+// ─── 3. Light DOM explicit opt-in ──────────────────────────────────
+
 Deno.test('OpenElement keeps explicit light DOM opt-in behavior', () => {
   if (!hasDOM) return;
 
-  const tagName = `test-open-element-light-${Math.random().toString(36).slice(2, 7)}`;
+  const tagName = uniqueTag('open-element-light');
   class LightOpenElement extends OpenElement {
     static override renderMode = 'light' as const;
 
@@ -28,6 +769,404 @@ Deno.test('OpenElement keeps explicit light DOM opt-in behavior', () => {
 
   assertEquals(el.shadowRoot, null);
   assertEquals(el.innerHTML, '<span>open light</span>');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement light DOM updates via update()', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('light-update');
+  let value = 'a';
+  class LightUpdateElement extends OpenElement {
+    static override renderMode = 'light' as const;
+
+    override render(): VNode | null {
+      return jsx('em', { children: value });
+    }
+  }
+  customElements.define(tagName, LightUpdateElement);
+
+  const el = document.createElement(tagName) as LightUpdateElement;
+  document.body.appendChild(el);
+  assertEquals(el.innerHTML, '<em>a</em>');
+
+  value = 'b';
+  el.update();
+  assertEquals(el.innerHTML, '<em>b</em>');
+
+  document.body.removeChild(el);
+});
+
+// ─── 4. DSD hydration path ─────────────────────────────────────────
+
+Deno.test('OpenElement hydrates pre-populated DSD shadow DOM', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('dsd-hydrate');
+  let hydrated = false;
+  class DsdElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('section', { children: 'dsd content' });
+    }
+
+    protected override onDsdHydrated(): void {
+      hydrated = true;
+    }
+  }
+  customElements.define(tagName, DsdElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><section>dsd content</section></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as DsdElement;
+  customElements.upgrade(el);
+
+  assertExists(el.shadowRoot);
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'dsd content');
+  assertEquals(hydrated, true);
+});
+
+// ─── 5. CSR path ───────────────────────────────────────────────────
+
+Deno.test('OpenElement CSR path creates shadow root and calls onCsrRendered', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('csr');
+  let rendered = false;
+  class CsrElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('div', { children: 'csr content' });
+    }
+
+    protected override onCsrRendered(): void {
+      rendered = true;
+    }
+  }
+  customElements.define(tagName, CsrElement);
+
+  const el = document.createElement(tagName) as CsrElement;
+  document.body.appendChild(el);
+
+  assertExists(el.shadowRoot);
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'csr content');
+  assertEquals(rendered, true);
+
+  document.body.removeChild(el);
+});
+
+// ─── 6. Static styles / adoptedStyleSheets ─────────────────────────
+
+Deno.test('OpenElement applies static styles via adoptedStyleSheets', () => {
+  if (!hasDOM) return;
+
+  const sheet = new StyleSheet();
+  sheet.replaceSync(':host { display: block; }');
+
+  const tagName = uniqueTag('styled');
+  class StyledElement extends OpenElement {
+    static override styles = sheet;
+
+    override render(): VNode | null {
+      return jsx('b', { children: 'styled' });
+    }
+  }
+  customElements.define(tagName, StyledElement);
+
+  const el = document.createElement(tagName) as StyledElement;
+  document.body.appendChild(el);
+
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+  assertExists(root);
+  assertEquals(root.adoptedStyleSheets.length, 1);
+  assertEquals(root.adoptedStyleSheets[0], sheet);
+
+  document.body.removeChild(el);
+});
+
+// ─── 7. Signal-driven re-rendering ─────────────────────────────────
+
+Deno.test('OpenElement re-renders when a signal value changes', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('signal-render');
+  const count = signal(0);
+  class SignalElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('output', { children: String(count.value) });
+    }
+  }
+  customElements.define(tagName, SignalElement);
+
+  const el = document.createElement(tagName) as SignalElement;
+  document.body.appendChild(el);
+
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, '0');
+
+  count.value = 1;
+  await flushEffects();
+  el.update();
+
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, '1');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement signal hydration binds data-signal markers', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('signal-hydrate');
+  const count = signal(42);
+  class SignalHydrateElement extends OpenElement {
+    constructor() {
+      super();
+      this.registerSignal('count', count as Signal<unknown>);
+    }
+
+    override render(): VNode | null {
+      return jsx('span', { 'data-signal': 'count', children: String(count.value) });
+    }
+  }
+  customElements.define(tagName, SignalHydrateElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><span data-signal="count">42</span></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as SignalHydrateElement;
+  customElements.upgrade(el);
+
+  const span = el.shadowRoot?.querySelector('span') as TestElement | null;
+  assertExists(span);
+  assertEquals(span.textContent, '42');
+
+  count.value = 100;
+  await flushEffects();
+  assertEquals(span.textContent, '100');
+});
+
+// ─── 8. Event binding and hydration ────────────────────────────────
+
+Deno.test('OpenElement binds click events in CSR render', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('event-csr');
+  let clicked = false;
+  class EventElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('button', {
+        onClick: () => {
+          clicked = true;
+        },
+        children: 'click me',
+      });
+    }
+  }
+  customElements.define(tagName, EventElement);
+
+  const el = document.createElement(tagName) as EventElement;
+  document.body.appendChild(el);
+
+  const btn = el.shadowRoot?.querySelector('button') as TestElement | null;
+  assertExists(btn);
+  btn.dispatchEvent(new Event('click'));
+  assertEquals(clicked, true);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement hydrates event markers in DSD shadow DOM', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('event-dsd');
+  let clicked = false;
+  class EventDsdElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('button', {
+        'data-eid': 'e0',
+        onClick: () => {
+          clicked = true;
+        },
+        children: 'hydrated',
+      });
+    }
+  }
+  customElements.define(tagName, EventDsdElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><button data-eid="e0">hydrated</button></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as EventDsdElement;
+  customElements.upgrade(el);
+
+  const btn = el.shadowRoot?.querySelector('button') as TestElement | null;
+  assertExists(btn);
+  btn.dispatchEvent(new Event('click'));
+  assertEquals(clicked, true);
+});
+
+// ─── 9. Props system (static props) ────────────────────────────────
+
+Deno.test('OpenElement static props initialize from attributes', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props');
+  class StaticPropsElement extends OpenElement {
+    static props = {
+      label: String,
+      count: Number,
+      active: Boolean,
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, StaticPropsElement);
+
+  const el = document.createElement(tagName) as StaticPropsElement;
+  el.setAttribute('label', 'hello');
+  el.setAttribute('count', '7');
+  el.setAttribute('active', '');
+  document.body.appendChild(el);
+
+  const elProps = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(elProps.label.value, 'hello');
+  assertEquals(elProps.count.value, 7);
+  assertEquals(elProps.active.value, true);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement static props react to attribute changes', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props-change');
+  class StaticPropsChangeElement extends OpenElement {
+    static props = {
+      count: Number,
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, StaticPropsChangeElement);
+
+  const el = document.createElement(tagName) as StaticPropsChangeElement;
+  document.body.appendChild(el);
+
+  el.setAttribute('count', '5');
+  const elProps = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(elProps.count.value, 5);
+
+  document.body.removeChild(el);
+});
+
+// ─── 10. Error boundary / onRenderError ────────────────────────────
+
+Deno.test('OpenElement onRenderError renders fallback on render failure', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('render-error');
+  class BrokenElement extends OpenElement {
+    override render(): VNode | null {
+      throw new Error('boom');
+    }
+
+    protected override onRenderError(_error: unknown): VNode | null {
+      return jsx('div', { children: 'fallback' });
+    }
+  }
+  customElements.define(tagName, BrokenElement);
+
+  const el = document.createElement(tagName) as BrokenElement;
+  document.body.appendChild(el);
+
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'fallback');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('ErrorBoundary catches and displays fallback UI', () => {
+  class Boundary extends ErrorBoundary {
+    override render(): VNode | null {
+      if (this.hasError) {
+        return this.onError(this.error!);
+      }
+      return jsx('div', { children: 'ok' });
+    }
+  }
+
+  const boundary = new Boundary();
+  boundary.catchError(new Error('child failed'));
+
+  assertEquals(boundary.hasError, true);
+  assertExists(boundary.error);
+  assertStringIncludes(boundary.error!.message, 'child failed');
+  assertEquals(boundary.retryCount, 0);
+});
+
+// ─── 11. formAssociated / ElementInternals ─────────────────────────
+
+Deno.test('OpenElement attaches ElementInternals when formAssociated', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('form-el');
+  class FormElement extends OpenElement {
+    static override formAssociated = true;
+
+    override render(): VNode | null {
+      return jsx('input', {});
+    }
+  }
+  customElements.define(tagName, FormElement);
+
+  const el = document.createElement(tagName) as FormElement;
+  document.body.appendChild(el);
+
+  assertExists((el as unknown as { _internals?: ElementInternals })._internals);
+
+  document.body.removeChild(el);
+});
+
+// ─── 12. params attribute parsing ──────────────────────────────────
+
+Deno.test('OpenElement parses params attribute into reactive params property', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('params');
+  class ParamsElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ParamsElement);
+
+  const el = document.createElement(tagName) as ParamsElement;
+  el.setAttribute('params', JSON.stringify({ id: '42', slug: 'hello' }));
+  document.body.appendChild(el);
+
+  assertEquals(el.params, { id: '42', slug: 'hello' });
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement params setter is reactive', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('params-setter');
+  class ParamsSetterElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ParamsSetterElement);
+
+  const el = document.createElement(tagName) as ParamsSetterElement;
+  document.body.appendChild(el);
+
+  el.params = { page: '2' };
+  assertEquals(el.params, { page: '2' });
 
   document.body.removeChild(el);
 });

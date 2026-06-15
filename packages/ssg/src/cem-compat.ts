@@ -4,6 +4,7 @@ import type {
   HydrationStrategy,
 } from '@openelement/core';
 import { isValidTagName } from '@openelement/core';
+import { formatError } from '@openelement/core/errors';
 
 export interface OpenElementExtensions {
   ssr?: boolean;
@@ -113,7 +114,7 @@ export function parseCem(json: string): CemParseResult {
   } catch (error) {
     errors.push({
       code: 'CEM_PARSE_ERROR',
-      message: `Invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      message: `Invalid JSON: ${formatError(error)}`,
     });
     return { success: false, errors, warnings };
   }

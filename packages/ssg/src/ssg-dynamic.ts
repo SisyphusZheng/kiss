@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
 import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/core/errors';
 import type { SsgPageOutput } from './ssg-render.ts';
 import { collectPageOutput, type PageDiagnostic, resolveDynamicRoutePath } from './ssg-helpers.ts';
 
@@ -54,9 +55,7 @@ export async function expandDynamicRoutes(
         paramsList = await getStaticPaths(route.path);
       } catch (e) {
         log.warn(
-          `Failed to get static paths for ${route.path}: ${
-            e instanceof Error ? e.message : String(e)
-          }`,
+          `Failed to get static paths for ${route.path}: ${formatError(e)}`,
         );
         continue;
       }
@@ -77,9 +76,7 @@ export async function expandDynamicRoutes(
           );
         } catch (e) {
           log.warn(
-            `Skipping unsafe dynamic route ${route.path}: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
+            `Skipping unsafe dynamic route ${route.path}: ${formatError(e)}`,
           );
           continue;
         }
@@ -102,9 +99,7 @@ export async function expandDynamicRoutes(
           );
         } catch (e) {
           log.warn(
-            `Failed to render dynamic route ${resolvedPath}: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
+            `Failed to render dynamic route ${resolvedPath}: ${formatError(e)}`,
           );
         }
       }

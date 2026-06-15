@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
 import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/core/errors';
 import type { SsgPageOutput, SsgRenderEvidence } from './ssg-render.ts';
 import {
   collectPageOutput,
@@ -84,9 +85,7 @@ export async function expandI18nLocales(
           );
         } catch (e) {
           log.warn(
-            `i18n: skipping unsafe dynamic route ${route.path}: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
+            `i18n: skipping unsafe dynamic route ${route.path}: ${formatError(e)}`,
           );
           continue;
         }
@@ -111,9 +110,7 @@ export async function expandI18nLocales(
           log.info(`i18n: ${localePath}/index.html`);
         } catch (e) {
           log.warn(
-            `i18n: failed for locale ${locale} on ${resolvedPath}: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
+            `i18n: failed for locale ${locale} on ${resolvedPath}: ${formatError(e)}`,
           );
         }
       }

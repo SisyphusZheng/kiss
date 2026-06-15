@@ -25,6 +25,7 @@ export type {
   SsgPageInput,
   SsgRenderOptions,
 } from '@openelement/protocol/ssg-contracts';
+import { formatError } from '@openelement/core/errors';
 
 // ─── Sequential Renderer (baseline) ────────────────────────────
 
@@ -58,7 +59,7 @@ export async function renderSequential(
         path: page.path,
         html: '',
         durationMs: Math.round(performance.now() - pageStart),
-        error: err instanceof Error ? err.message : String(err),
+        error: formatError(err),
       });
     }
   }
@@ -105,7 +106,7 @@ export async function renderParallel(
             path: page.path,
             html: '',
             durationMs: Math.round(performance.now() - pageStart),
-            error: err instanceof Error ? err.message : String(err),
+            error: formatError(err),
           } as ParallelRenderPageOutput;
         }
       }),

@@ -1,6 +1,6 @@
 # Package Surface Inventory
 
-This is the v0.40.3 11-package product-line truth table.
+This is the v0.40.5 11-package product-line truth table.
 
 <!-- 11-package -->
 
@@ -9,12 +9,12 @@ openElement = Elements + UI + Framework + Protocols
 ```
 
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
-ADR-0105 approves the v0.40.3 breaking cleanup train and the 14-to-11 package
+ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-11 package
 graph collapse.
 
 ## Current 11-package surface
 
-| Package                     | Class          | v0.40.3 decision                                                                             |
+| Package                     | Class          | v0.40.4 decision                                                                             |
 | --------------------------- | -------------- | -------------------------------------------------------------------------------------------- |
 | `@openelement/app`          | product-facing | Framework authoring API, including optional Preact island proof under `./preact`.            |
 | `@openelement/create`       | product-facing | Starter and consumer entry.                                                                  |
@@ -30,7 +30,7 @@ graph collapse.
 
 ## Removed from current graph
 
-v0.40.3 removes historical and collapsed packages from the current workspace and
+v0.40.4 removes historical and collapsed packages from the current workspace and
 publish order:
 
 - `@openelement/i18n` (moved to `@openelement/app/i18n`)
@@ -57,7 +57,7 @@ engine is `@preact/signals-core`; `alien-signals` remains available through
 
 ## Governance
 
-The v0.40.3 cleanup train is manually approved breaking work consolidated into
-the v0.40.3 release, not normal AutoFlow patch automation. AutoFlow3 patch
+The v0.40.4 cleanup train is manually approved breaking work consolidated into
+the v0.40.4 release, not normal AutoFlow patch automation. AutoFlow3 patch
 release must refuse this train unless the release state references approval id
 `ADR-0105/v0.40.x-cleanup-train`.

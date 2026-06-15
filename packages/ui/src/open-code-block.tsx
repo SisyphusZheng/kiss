@@ -23,7 +23,10 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { openPropsTokenSheet } from './open-props-tokens.js';
+import { createLogger } from '@openelement/core/logger';
 export const tagName = 'open-code-block';
+
+const log = createLogger('ui');
 
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
@@ -261,7 +264,7 @@ export class OpenCodeBlock extends OpenElement {
         this._copyTimer = undefined;
       }, 2000);
     } catch (e) {
-      console.warn('[open-code-block] Clipboard write failed:', e);
+      log.warn('Clipboard write failed:', e);
       this._internals?.states.add('failed');
       this._internals?.states.delete('copied');
       this._updateCopyButtonDOM();

@@ -12,13 +12,15 @@
 
 import { build as viteBuild } from 'vite';
 import process from 'node:process';
+import { createLogger } from '@openelement/core/logger';
 
 if (import.meta.main) {
   try {
     await viteBuild({ configLoader: 'native' });
     process.exit(0);
   } catch (error) {
-    console.error('Build failed:', error);
+    const log = createLogger('adapter-vite');
+    log.error('Build failed:', error);
     process.exit(1);
   }
 }

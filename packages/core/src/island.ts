@@ -1,4 +1,5 @@
 import { ERROR_PREFIX } from '@openelement/core';
+import { formatError } from './errors.js';
 /**
  * @openelement/core - defineIsland() wrapper
  *
@@ -161,7 +162,7 @@ export function bindSsrProps(el: HTMLElement): void {
       // Some properties may be read-only - safe to skip, but log for debuggability
       log.debug(
         `Cannot set read-only property "${key}" on <${el.tagName.toLowerCase()}>: ${
-          e instanceof Error ? e.message : String(e)
+          formatError(e)
         }`,
       );
     }
@@ -401,9 +402,7 @@ export function defineIsland<T extends CustomElementConstructor>(
       } catch (e) {
         // Already defined - safe to ignore in SSR contexts
         log.debug(
-          `customElements.define("${tagName}") skipped: ${
-            e instanceof Error ? e.message : String(e)
-          }`,
+          `customElements.define("${tagName}") skipped: ${formatError(e)}`,
         );
       }
     }

@@ -97,7 +97,7 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    14,
+    17,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map
@@ -106,7 +106,13 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   assertEquals(denoJson.imports['@deno/vite-plugin'], 'npm:@deno/vite-plugin');
   assertEquals(denoJson.imports['entities'], 'npm:entities@^4.5.0');
   assertEquals(denoJson.imports['hono'], 'npm:hono@4.12.23');
-  assertEquals(denoJson.imports['hono/'], 'npm:hono@4.12.23/');
+  assertEquals(denoJson.imports['hono/cors'], 'npm:hono@4.12.23/cors');
+  assertEquals(denoJson.imports['hono/logger'], 'npm:hono@4.12.23/logger');
+  assertEquals(denoJson.imports['hono/request-id'], 'npm:hono@4.12.23/request-id');
+  assertEquals(
+    denoJson.imports['hono/secure-headers'],
+    'npm:hono@4.12.23/secure-headers',
+  );
   assertEquals(denoJson.imports['marked'], 'npm:marked@15.0.12');
   assertEquals(denoJson.imports['@openelement/app'], 'jsr:@openelement/app@^${v.app}');
   assertEquals(denoJson.imports['@openelement/app/vite'], 'jsr:@openelement/app@^${v.app}/vite');
@@ -417,6 +423,14 @@ Deno.test('create-open: generated project builds through the one-command pipelin
       {
         find: '@openelement/core/jsx-dev-runtime',
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts')),
+      },
+      {
+        find: '@openelement/core/errors',
+        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'errors.ts')),
+      },
+      {
+        find: '@openelement/core/logger',
+        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'logger.ts')),
       },
       {
         find: '@openelement/core',

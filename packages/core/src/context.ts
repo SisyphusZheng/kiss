@@ -10,6 +10,7 @@
 
 import type { RouteEntry } from './schemas.js';
 import { createLogger } from './logger.js';
+import { formatError } from './errors.js';
 
 /**
  * Minimal island descriptor used in SSR context.
@@ -72,9 +73,7 @@ export function extractParams(
     return (match?.pathname?.groups ?? {}) as Record<string, string>;
   } catch (err) {
     log.error(
-      `URLPattern failed for pattern "${pattern}" on pathname "${pathname}": ${
-        err instanceof Error ? err.message : String(err)
-      }`,
+      `URLPattern failed for pattern "${pattern}" on pathname "${pathname}": ${formatError(err)}`,
     );
     return {};
   }

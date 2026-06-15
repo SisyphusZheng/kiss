@@ -9,6 +9,7 @@
 
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createLogger } from '@openelement/core/logger';
 
 // ??? Package versions ??????????????????????????????????????????
 // ADR 0016: Handle both local (file://) and JSR remote (https://) execution.
@@ -19,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 // - Remote: query JSR Registry API for latest version (zero hardcoding)
 
 const JSR_SCOPE = '@openelement';
+const log = createLogger('create');
 const PKG_DIR_MAP: Record<string, string> = {
   core: 'core',
   adapterVite: 'adapter-vite',
@@ -127,7 +129,10 @@ node_modules/
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
     "entities": "npm:entities@^4.5.0",
     "hono": "npm:hono@4.12.23",
-    "hono/": "npm:hono@4.12.23/",
+    "hono/cors": "npm:hono@4.12.23/cors",
+    "hono/logger": "npm:hono@4.12.23/logger",
+    "hono/request-id": "npm:hono@4.12.23/request-id",
+    "hono/secure-headers": "npm:hono@4.12.23/secure-headers",
     "marked": "npm:marked@15.0.12",
     "@openelement/app": "jsr:@openelement/app@^${v.app}",
     "@openelement/app/vite": "jsr:@openelement/app@^${v.app}/vite",
@@ -373,13 +378,13 @@ export default defineIsland(tagName, {
 async function main() {
   const name = Deno.args[0];
   if (!name) {
-    console.error('Usage: deno run -A jsr:@openelement/create <project-name>');
+    log.error('Usage: deno run -A jsr:@openelement/create <project-name>');
     Deno.exit(1);
   }
 
   // H-14 fix: Validate project name format to prevent path traversal
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-    console.error(
+    log.error(
       `Invalid project name: "${name}". Project name must only contain letters, numbers, underscores, and hyphens.`,
     );
     Deno.exit(1);
@@ -395,7 +400,7 @@ async function main() {
     relativeTarget.startsWith(`..${sep}`) ||
     isAbsolute(relativeTarget)
   ) {
-    console.error(
+    log.error(
       `Refusing to create project outside the current directory: ${name}`,
     );
     Deno.exit(1);
@@ -403,11 +408,11 @@ async function main() {
 
   try {
     await Deno.stat(targetDir);
-    console.error(`Directory "${name}" already exists.`);
+    log.error(`Directory "${name}" already exists.`);
     Deno.exit(1);
   } catch (e) {
     if (!(e instanceof Deno.errors.NotFound)) {
-      console.error(`Failed to inspect target directory "${name}": ${e}`);
+      log.error(`Failed to inspect target directory "${name}": ${e}`);
       Deno.exit(1);
     }
   }
@@ -418,7 +423,7 @@ async function main() {
   try {
     await Deno.mkdir(targetDir, { recursive: true });
   } catch (e) {
-    console.error(`Failed to create directory "${name}": ${e}`);
+    log.error(`Failed to create directory "${name}": ${e}`);
     Deno.exit(1);
   }
 

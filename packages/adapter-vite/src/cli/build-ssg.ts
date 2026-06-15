@@ -16,7 +16,7 @@
 
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type Alias, normalizePath } from 'vite';
+import { normalizePath } from 'vite';
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type {
@@ -33,6 +33,12 @@ import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.js
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
 import { optionalPackageStubsPlugin } from '../optional-package-stubs.js';
+import { normalizeViteAliases } from '../alias-utils.js';
+import {
+  DEFAULT_ADAPTER_VERSION_FALLBACK,
+  SSR_CHUNK_SIZE_WARNING_LIMIT_KB,
+  SSR_EXTERNAL_PATHS,
+} from '../build-constants.js';
 
 const log = createLogger('ssg');
 
@@ -46,9 +52,9 @@ function getJsrPackageVersion(metaUrl: string): string {
     const denoJson = JSON.parse(
       Deno.readTextFileSync(new URL('../deno.json', import.meta.url)),
     );
-    return denoJson.version || '0.35.1';
+    return denoJson.version || DEFAULT_ADAPTER_VERSION_FALLBACK;
   } catch {
-    return '0.35.1';
+    return DEFAULT_ADAPTER_VERSION_FALLBACK;
   }
 }
 
@@ -60,45 +66,6 @@ function getLocalOpenElementPackageRoot(metaUrl: string): string | null {
   } catch {
     return null;
   }
-}
-
-function normalizeAliasReplacement(root: string, replacement: string): string {
-  return replacement.startsWith('/') || /^[A-Za-z]:/.test(replacement) ||
-      replacement.startsWith('file:') || replacement.startsWith('\0')
-    ? replacement
-    : resolve(root, replacement);
-}
-
-function normalizeViteAliases(
-  aliases: Record<string, string> | Alias[] | null | undefined,
-  root: string,
-): Alias[] | undefined {
-  if (!aliases) return undefined;
-  if (Array.isArray(aliases)) {
-    return sortAliasEntries(
-      aliases.map((alias) =>
-        typeof alias.replacement === 'string'
-          ? { ...alias, replacement: normalizeAliasReplacement(root, alias.replacement) }
-          : alias
-      ),
-    );
-  }
-  return sortAliasEntries(
-    Object.entries(aliases).map(([find, replacement]) => ({
-      find,
-      replacement: normalizeAliasReplacement(root, replacement),
-    })),
-  );
-}
-
-function aliasSpecificity(find: unknown): number {
-  return typeof find === 'string' ? find.length : 0;
-}
-
-function sortAliasEntries<T extends Alias>(aliases: T[]): T[] {
-  return [...aliases].sort((a, b) => {
-    return aliasSpecificity(b.find) - aliasSpecificity(a.find);
-  });
 }
 
 interface BuildSSGOptions {
@@ -370,7 +337,7 @@ async function buildSSG(
       build: {
         ssr: true,
         outDir: ssrOutDir,
-        chunkSizeWarningLimit: 1500,
+        chunkSizeWarningLimit: SSR_CHUNK_SIZE_WARNING_LIMIT_KB,
         rollupOptions: {
           input: { entry: VIRTUAL_SSG_ENTRY_ID },
           // v0.21: Suppress IMPORT_IS_UNDEFINED for revalidate; the generated
@@ -384,9 +351,7 @@ async function buildSSG(
             // Workspace sources may use explicit npm: specifiers that Rolldown
             // rewrites to bare imports while bundling. Re-emit known externals
             // as Deno-resolvable npm: imports for fresh JSR consumers.
-            paths: {
-              'sanitize-html': 'npm:sanitize-html@^2.17.4',
-            },
+            paths: SSR_EXTERNAL_PATHS,
             // ADR-0044: customElements polyfill must run before ESM imports.
             // Uses Map-backed define()/get(); renderDsdByName() looks up
             // components via customElements.get(tagName) during SSG rendering.

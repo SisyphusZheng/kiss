@@ -16,6 +16,7 @@ import { scanNavData } from './nav/scanner.ts';
 import { writeNavModule } from './nav/writer.ts';
 import { writeSearchIndex } from './search/writer.ts';
 import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/core/errors';
 import process from 'node:process';
 import { join, relative, resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -91,9 +92,7 @@ export function openContent(
           log.info(`Blog: wrote _generated-blog-data.ts (${result.posts.length} post(s))`);
         } catch (err) {
           log.warn(
-            `Failed to write _generated-blog-data.ts: ${
-              err instanceof Error ? err.message : String(err)
-            }`,
+            `Failed to write _generated-blog-data.ts: ${formatError(err)}`,
           );
         }
       }
@@ -127,9 +126,7 @@ export function openContent(
           log.info('Search: wrote search-index.json from route metadata');
         } catch (err) {
           log.warn(
-            `Failed to write _generated-nav.ts: ${
-              err instanceof Error ? err.message : String(err)
-            }`,
+            `Failed to write _generated-nav.ts: ${formatError(err)}`,
           );
         }
 

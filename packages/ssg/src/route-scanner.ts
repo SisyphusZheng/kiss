@@ -19,14 +19,14 @@
  * This file discovers islands but does NOT import them (static scan only):
  *
  * 1. Local island files:
- *    - Scanned by `scanIslands()` (lines 212-257)
- *    - Metadata read by `scanIslandMeta()` (lines 284-319)
+ *    - Scanned by `scanIslands()`
+ *    - Metadata read by `scanIslandMeta()` (static, no import)
  *    - SSR decision: `openElement.ssr` field (static read, no import)
  *
  * 2. Package manifest islands:
- *    - Discovered by `scanPackageManifests()` (lines 334-383)
+ *    - Discovered by `scanPackageManifests()`
  *    - Imports package module to read `manifest` export
- *    - Browser-only packages: caught by try/catch (line 345-349)
+ *    - Browser-only packages: caught by try/catch
  *    - SSR decision: `manifest.declarations[].openElement.ssr` field
  *
  * 3. CEM manifests (v0.18.0):
@@ -50,6 +50,12 @@
  *
  * Rationale: route modules and island modules are ESM .ts files. Static AST
  * extraction avoids module execution and avoids source regex heuristics.
+ *
+ * ─── v0.40.5: Internal module split ─────────────────────────
+ *
+ * AST helpers live in `route-scanner-ast.ts` and file-system helpers live in
+ * `route-scanner-fs.ts`. This file remains the orchestrator and re-exports the
+ * original public API unchanged.
  */
 
 import type {
@@ -58,74 +64,15 @@ import type {
   RouteEntry,
   SpecialFileType,
 } from '@openelement/core';
-import { OpenElementError } from '@openelement/core/errors';
+import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
-import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, posix, sep } from 'node:path';
-import * as ts from 'typescript';
 import { classifyCemManifest, parseCem } from './cem-compat.ts';
+import { readRouteTagNameFromModule, readStaticOpenElementExport } from './route-scanner-ast.ts';
+import type { LocalIslandMeta } from './route-scanner-ast.ts';
+import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
 const log = createLogger('core');
-
-/**
- * Read `export const tagName = '...'` from source text via AST.
- * This avoids importing the module (which can fail for modules that
- * depend on Vite generated-entry modules).
- */
-function readRouteTagName(source: string, fileName: string): string | undefined {
-  return readStaticStringExport(source, 'tagName', fileName);
-}
-
-/**
- * Read tagName from a route file using static AST scanning.
- */
-async function readRouteTagNameFromModule(filePath: string): Promise<string | undefined> {
-  let source: string;
-  try {
-    source = await readFile(filePath, 'utf-8');
-  } catch {
-    return undefined;
-  }
-  return readRouteTagName(source, filePath);
-}
-
-function readStaticStringExport(
-  source: string,
-  exportName: string,
-  fileName: string,
-): string | undefined {
-  const sourceFile = ts.createSourceFile(
-    fileName,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    fileName.endsWith('.tsx') || fileName.endsWith('.jsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  );
-
-  for (const statement of sourceFile.statements) {
-    if (!ts.isVariableStatement(statement)) continue;
-    const isExported = statement.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword);
-    if (!isExported) continue;
-
-    for (const declaration of statement.declarationList.declarations) {
-      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== exportName) continue;
-      if (!declaration.initializer) return undefined;
-
-      const value = unwrapStaticOpenElementExpression(declaration.initializer);
-      if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) {
-        return value.text;
-      }
-      throw new OpenElementError(
-        `Invalid static ${exportName} export: expected a string literal.`,
-        'STATIC_METADATA_ERROR',
-        500,
-        false,
-      );
-    }
-  }
-
-  return undefined;
-}
 
 /**
  * Convert a file path to a URL path pattern.
@@ -219,15 +166,10 @@ export async function scanRoutes(
   baseDir: string = '',
 ): Promise<RouteEntry[]> {
   const entries: RouteEntry[] = [];
-  let files: string[];
+  const files = await safeReadDir(routesDir);
 
-  try {
-    files = await readdir(routesDir);
-  } catch (e) {
-    // Directory doesn't exist yet - return empty
-    log.debug(
-      `Routes directory "${routesDir}" not found: ${e instanceof Error ? e.message : String(e)}`,
-    );
+  if (files === undefined) {
+    log.debug(`Routes directory "${routesDir}" not found`);
     return entries;
   }
 
@@ -236,14 +178,9 @@ export async function scanRoutes(
 
     const fullPath = join(routesDir, file);
     const relativePath = baseDir ? join(baseDir, file) : file;
-    let fileStat;
-    try {
-      fileStat = await stat(fullPath);
-    } catch (e) {
-      // File disappeared between readdir and stat (e.g. watch mode deletion)
-      log.debug(
-        `File vanished before stat: ${fullPath}${e instanceof Error ? `: ${e.message}` : ''}`,
-      );
+    const fileStat = await safeStat(fullPath);
+    if (!fileStat) {
+      log.debug(`File vanished before stat: ${fullPath}`);
       continue;
     }
 
@@ -334,15 +271,10 @@ export async function scanIslands(
   relativeDir: string = '',
 ): Promise<string[]> {
   const files: string[] = [];
-  let entries: string[];
+  const entries = await safeReadDir(islandsDir);
 
-  try {
-    entries = await readdir(islandsDir);
-  } catch (e) {
-    // Directory doesn't exist yet - return empty
-    log.debug(
-      `Islands directory "${islandsDir}" not found: ${e instanceof Error ? e.message : String(e)}`,
-    );
+  if (entries === undefined) {
+    log.debug(`Islands directory "${islandsDir}" not found`);
     return files;
   }
 
@@ -350,15 +282,9 @@ export async function scanIslands(
     if (entry.startsWith('.')) continue;
 
     const fullPath = join(islandsDir, entry);
-    let fileStat;
-    try {
-      fileStat = await stat(fullPath);
-    } catch (e) {
-      log.debug(
-        `Island file vanished before stat: ${fullPath}${
-          e instanceof Error ? `: ${e.message}` : ''
-        }`,
-      );
+    const fileStat = await safeStat(fullPath);
+    if (!fileStat) {
+      log.debug(`Island file vanished before stat: ${fullPath}`);
       continue;
     }
 
@@ -375,18 +301,11 @@ export async function scanIslands(
   return files.sort();
 }
 
-export interface LocalIslandMeta {
-  tagName: string;
-  filePath: string;
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: 'load' | 'idle' | 'visible' | 'only';
-  reason?: string;
-}
+export type { LocalIslandMeta } from './route-scanner-ast.ts';
 
 /**
- * v0.25: AST-verified — reads island metadata by dynamically importing the module
- * and reading the `less` export directly, instead of regex-scanning source text.
+ * v0.25: AST-verified — reads island metadata by statically scanning the module
+ * source for `export const openElement = defineIslandConfig({ ... })`.
  *
  * Supported form:
  *   export const openElement = defineIslandConfig({ ssr: false, dsd: false, hydrate: 'only' })
@@ -397,8 +316,7 @@ export interface LocalIslandMeta {
  * - Destructured/re-exported values
  * - Canonical defineIslandConfig(...) calls
  *
- * If a module cannot be imported (e.g. browser-only code that throws at the
- * top level), its metadata is silently skipped.
+ * If a module cannot be read, its metadata is silently skipped.
  */
 export async function scanIslandMeta(
   islandsDir: string,
@@ -410,15 +328,9 @@ export async function scanIslandMeta(
     const tagName = fileToTagName(filePath);
     const fullPath = join(islandsDir, filePath);
 
-    let source = '';
-    try {
-      source = await readFile(fullPath, 'utf-8');
-    } catch (e) {
-      log.debug(
-        `Unable to read island module for metadata: ${fullPath}${
-          e instanceof Error ? `: ${e.message}` : ''
-        }`,
-      );
+    const source = await safeReadFile(fullPath);
+    if (source === undefined) {
+      log.debug(`Unable to read island module for metadata: ${fullPath}`);
       continue;
     }
 
@@ -446,145 +358,6 @@ export async function scanIslandMeta(
   }
 
   return meta;
-}
-
-/**
- * v0.33.0: Static AST extraction of
- * `export const openElement = defineIslandConfig({ ... })`.
- *
- * The scanner intentionally does not execute island modules. It accepts only a
- * defineIslandConfig() call with boolean `ssr`/`dsd` and string `hydrate`
- * literal values. Dynamic metadata is rejected instead of guessed.
- */
-function readStaticOpenElementExport(source: string): {
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: LocalIslandMeta['hydrate'];
-} | null {
-  const sourceFile = ts.createSourceFile(
-    'island.ts',
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS,
-  );
-
-  for (const statement of sourceFile.statements) {
-    if (!ts.isVariableStatement(statement)) continue;
-    const isExported = statement.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword);
-    if (!isExported) continue;
-
-    for (const declaration of statement.declarationList.declarations) {
-      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'openElement') continue;
-      if (!declaration.initializer) {
-        throw staticOpenElementError('openElement export must have an initializer');
-      }
-
-      const initializer = unwrapStaticOpenElementExpression(declaration.initializer);
-      if (!ts.isCallExpression(initializer)) {
-        throw staticOpenElementError(
-          `openElement export must call defineIslandConfig(...), got ${
-            ts.SyntaxKind[initializer.kind]
-          }`,
-        );
-      }
-
-      const callee = unwrapStaticOpenElementExpression(initializer.expression);
-      if (!ts.isIdentifier(callee) || callee.text !== 'defineIslandConfig') {
-        throw staticOpenElementError('openElement export must call defineIslandConfig(...)');
-      }
-      if (initializer.arguments.length !== 1) {
-        throw staticOpenElementError('defineIslandConfig() requires exactly one object argument');
-      }
-      const config = unwrapStaticOpenElementExpression(initializer.arguments[0]);
-      if (!ts.isObjectLiteralExpression(config)) {
-        throw staticOpenElementError(
-          `defineIslandConfig() argument must be a static object literal, got ${
-            ts.SyntaxKind[config.kind]
-          }`,
-        );
-      }
-
-      return readOpenElementObjectLiteral(config);
-    }
-  }
-
-  return null;
-}
-
-function unwrapStaticOpenElementExpression(expression: ts.Expression): ts.Expression {
-  let current = expression;
-  while (
-    ts.isAsExpression(current) ||
-    ts.isSatisfiesExpression(current) ||
-    ts.isParenthesizedExpression(current)
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
-
-function readOpenElementObjectLiteral(object: ts.ObjectLiteralExpression): {
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: LocalIslandMeta['hydrate'];
-} {
-  const meta: {
-    ssr?: boolean;
-    dsd?: boolean;
-    hydrate?: LocalIslandMeta['hydrate'];
-  } = {};
-
-  for (const property of object.properties) {
-    if (!ts.isPropertyAssignment(property)) {
-      throw staticOpenElementError(
-        `unsupported openElement metadata syntax: ${ts.SyntaxKind[property.kind]}`,
-      );
-    }
-    if (property.name.kind === ts.SyntaxKind.ComputedPropertyName) {
-      throw staticOpenElementError('computed openElement metadata keys are not supported');
-    }
-
-    const key = propertyNameToString(property.name);
-    if (!key || !['ssr', 'dsd', 'hydrate'].includes(key)) {
-      throw staticOpenElementError(`unsupported openElement metadata key "${String(key)}"`);
-    }
-
-    const value = unwrapStaticOpenElementExpression(property.initializer);
-    if (key === 'ssr' || key === 'dsd') {
-      if (value.kind !== ts.SyntaxKind.TrueKeyword && value.kind !== ts.SyntaxKind.FalseKeyword) {
-        throw staticOpenElementError(`openElement.${key} must be a boolean literal`);
-      }
-      meta[key] = value.kind === ts.SyntaxKind.TrueKeyword;
-      continue;
-    }
-
-    if (!ts.isStringLiteral(value) && !ts.isNoSubstitutionTemplateLiteral(value)) {
-      throw staticOpenElementError('openElement.hydrate must be a string literal');
-    }
-    if (!['load', 'idle', 'visible', 'only'].includes(value.text)) {
-      throw staticOpenElementError(`openElement.hydrate has unsupported value "${value.text}"`);
-    }
-    meta.hydrate = value.text as LocalIslandMeta['hydrate'];
-  }
-
-  return meta;
-}
-
-function propertyNameToString(name: ts.PropertyName): string | null {
-  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-    return name.text;
-  }
-  return null;
-}
-
-function staticOpenElementError(message: string): OpenElementError {
-  return new OpenElementError(
-    `Invalid static island metadata export "openElement": ${message}. Accepted shape: export const openElement = defineIslandConfig({ ssr?: boolean, dsd?: boolean, hydrate?: "load" | "idle" | "visible" | "only" }).`,
-    'ISLAND_METADATA_ERROR',
-    500,
-    false,
-  );
 }
 
 /**
@@ -618,9 +391,7 @@ export async function scanPackageManifests(
         continue;
       }
       throw new OpenElementError(
-        `Failed to scan package manifest from "${pkg}": ${
-          e instanceof Error ? e.message : String(e)
-        }`,
+        `Failed to scan package manifest from "${pkg}": ${formatError(e)}`,
         'PACKAGE_SCAN_ERROR',
         500,
         false,
@@ -656,7 +427,7 @@ export async function scanPackageManifests(
  * for matching runtime error strings from failed dynamic imports.
  */
 function isBrowserOnlyPackageImportError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = formatError(error);
   return /\b(window|document|HTMLElement|customElements|navigator)\b.*\bis not defined\b/i.test(
     message,
   );
@@ -692,13 +463,8 @@ export async function scanCemManifests(
 ): Promise<CemScanResult[]> {
   const results: CemScanResult[] = [];
 
-  let entries: string[];
-  try {
-    entries = await readdir(nodeModulesDir);
-  } catch {
-    // node_modules directory doesn't exist - nothing to scan
-    return results;
-  }
+  const entries = await safeReadDir(nodeModulesDir);
+  if (!entries) return results;
 
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
@@ -706,12 +472,8 @@ export async function scanCemManifests(
     if (entry.startsWith('@')) {
       // Scoped package directory - recurse one level
       const scopeDir = join(nodeModulesDir, entry);
-      let scopedEntries: string[];
-      try {
-        scopedEntries = await readdir(scopeDir);
-      } catch {
-        continue;
-      }
+      const scopedEntries = await safeReadDir(scopeDir);
+      if (!scopedEntries) continue;
       for (const scopedEntry of scopedEntries) {
         if (scopedEntry.startsWith('.')) continue;
         const packageName = `${entry}/${scopedEntry}`;
@@ -738,12 +500,8 @@ async function tryReadCemFile(
   cemPath: string,
   packageName: string,
 ): Promise<CemScanResult | null> {
-  try {
-    const json = await readFile(cemPath, 'utf-8');
-    return { packageName, cemPath, json };
-  } catch {
-    return null;
-  }
+  const json = await safeReadFile(cemPath);
+  return json === undefined ? null : { packageName, cemPath, json };
 }
 
 /**

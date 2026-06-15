@@ -280,6 +280,80 @@ export const manifest: OpenElementPackageManifest = {
         export: 'OpenLayout',
       },
     },
+    {
+      tagName: 'open-dropdown',
+      className: 'OpenDropdown',
+      superclassName: 'DsdElement',
+      description: 'Dropdown toggle with trigger slot and content slot',
+      slots: [
+        { name: 'trigger', description: 'Click target to toggle the dropdown' },
+        { name: '', description: 'Dropdown content (shown when open)' },
+      ],
+      cssParts: [
+        { name: 'dropdown', description: 'The dropdown wrapper' },
+        { name: 'content', description: 'The dropdown content area' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-dropdown',
+        export: 'OpenDropdown',
+      },
+    },
+    {
+      tagName: 'open-modal',
+      className: 'OpenModal',
+      superclassName: 'DsdElement',
+      description: 'Modal dialog using signal-driven open attribute',
+      attributes: [
+        {
+          name: 'open',
+          type: 'boolean',
+          default: 'false',
+          description: 'Whether the modal is open',
+        },
+      ],
+      slots: [
+        { name: '', description: 'Modal body content' },
+      ],
+      cssParts: [
+        { name: 'modal', description: 'The modal root' },
+        { name: 'backdrop', description: 'The backdrop element' },
+        { name: 'content', description: 'The content area' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-modal',
+        export: 'OpenModal',
+      },
+    },
+    {
+      tagName: 'open-tabs',
+      className: 'OpenTabs',
+      superclassName: 'DsdElement',
+      description: 'Tab interface with tab and panel slots',
+      slots: [
+        { name: 'tab', description: 'Tab button labels (multiple)' },
+        { name: 'panel', description: 'Tab panel content (multiple, one per tab)' },
+      ],
+      cssParts: [
+        { name: 'tabs', description: 'The tab button container' },
+        { name: 'panel', description: 'The active panel content' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-tabs',
+        export: 'OpenTabs',
+      },
+    },
     // -- Island-style DsdElement component --
     {
       tagName: 'open-hero-ping',
@@ -350,6 +424,21 @@ export const manifest: OpenElementPackageManifest = {
       path: './open-theme-toggle.js',
       exports: [{ name: 'OpenThemeToggle', path: './open-theme-toggle.js' }],
       declarations: ['open-theme-toggle'],
+    },
+    {
+      path: './open-dropdown.js',
+      exports: [{ name: 'OpenDropdown', path: './open-dropdown.js' }],
+      declarations: ['open-dropdown'],
+    },
+    {
+      path: './open-modal.js',
+      exports: [{ name: 'OpenModal', path: './open-modal.js' }],
+      declarations: ['open-modal'],
+    },
+    {
+      path: './open-tabs.js',
+      exports: [{ name: 'OpenTabs', path: './open-tabs.js' }],
+      declarations: ['open-tabs'],
     },
   ],
 };

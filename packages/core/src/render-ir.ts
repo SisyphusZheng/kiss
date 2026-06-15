@@ -18,6 +18,7 @@ import { isSignalLike, unwrapSignalLike } from './signal-like.ts';
 import { isComponentCtor, isComponentFn, isVNode, type RenderFn, type VNode } from './vnode.ts';
 import { renderDsd } from './render-dsd.js';
 import { createLogger } from './logger.js';
+import { formatError } from './errors.js';
 
 export type RenderNode =
   | { kind: 'text'; value: string }
@@ -232,7 +233,7 @@ export async function renderToNode(
     } catch (err) {
       createLogger('render').error(
         `render failed for <${String(tag)}>:` +
-          ` ${err instanceof Error ? err.message : String(err)}`,
+          ` ${formatError(err)}`,
       );
       return fragmentNode([]);
     }
@@ -266,7 +267,7 @@ export async function renderToNode(
     } catch (err) {
       createLogger('render').error(
         `renderDsd failed for registered CE <${tagName}>:` +
-          ` ${err instanceof Error ? err.message : String(err)}`,
+          ` ${formatError(err)}`,
       );
     }
   }

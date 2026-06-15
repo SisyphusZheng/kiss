@@ -34,10 +34,12 @@ import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { type Context, createContext, provideContext } from '@openelement/core';
 import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
+import { createLogger } from '@openelement/core/logger';
 import '.\/open-theme-toggle.js';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
+const log = createLogger('ui');
 
 function isSafeLayoutUrl(url: string): boolean {
   const trimmed = url.trim();
@@ -647,7 +649,7 @@ export class OpenLayout extends OpenElement {
       if (raw) return JSON.parse(raw);
       return [];
     } catch (e) {
-      console.warn('[open-layout] Failed to parse nav-items JSON:', e);
+      log.warn('Failed to parse nav-items JSON:', e);
       return [];
     }
   }
@@ -660,7 +662,7 @@ export class OpenLayout extends OpenElement {
       if (raw) return JSON.parse(raw);
       return [];
     } catch (e) {
-      console.warn('[open-layout] Failed to parse header-nav JSON:', e);
+      log.warn('Failed to parse header-nav JSON:', e);
       return [];
     }
   }
@@ -1366,7 +1368,7 @@ export class OpenLayout extends OpenElement {
       }
       opts.onAfterSwap?.(pathname, locale);
     }).catch((err) => {
-      console.warn('[open-layout] content load failed:', err);
+      log.warn('content load failed:', err);
       location.reload();
     });
   }
@@ -1423,7 +1425,7 @@ export class OpenLayout extends OpenElement {
 
       globalThis.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
-      console.warn('[open-layout] SPA navigation failed, reloading:', e);
+      log.warn('SPA navigation failed, reloading:', e);
       globalThis.location.reload();
     }
   }

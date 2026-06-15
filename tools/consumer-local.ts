@@ -426,6 +426,23 @@ if (missingGeneratedImports.length > 0) {
   Deno.exit(1);
 }
 
+const denoInfoResult = await runCommand([
+  'info',
+  '--config',
+  denoJsonPath,
+  serverEntryPath,
+], appDir);
+if (denoInfoResult.code !== 0) {
+  console.error(
+    'Generated starter import map cannot resolve the SSR bundle with real Deno resolution. ' +
+      'This would fail after immutable package publish.',
+  );
+  console.error(denoInfoResult.stdout);
+  console.error(denoInfoResult.stderr);
+  cleanup();
+  Deno.exit(1);
+}
+
 if (packagedImportMapCheckOnly) {
   console.log('Packaged starter import-map smoke passed.');
   cleanup();

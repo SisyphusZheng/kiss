@@ -1,9 +1,9 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.3 Elements + Preact + Repository Slimming; next line is npm-only distribution.\
+> Current package line: v0.40.5 Audit-Driven Quality Cleanup; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
-> Updated: 2026-06-14.
+> Updated: 2026-06-15.
 
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
@@ -67,7 +67,8 @@ v0.41-v1.0 blocker.
 | v0.37.6 | Vite + Nitro Runtime Proof                         | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro                                                        | Done                     |
 | v0.38.0 | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                            | Done                     |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
-| v0.40.3 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Release-ready            |
+| v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
+| v0.40.5 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | In Progress              |
 | v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
@@ -78,6 +79,32 @@ v0.41-v1.0 blocker.
 | v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+
+## v0.40.5 - Audit-Driven Quality Cleanup
+
+Patch release to close the internal quality gaps identified by the 2026-06-15
+architecture audit (`docs/audit/2026-06-15-architecture-audit.md`). Executed
+under the v0.40.x cleanup-train authority from ADR-0105 and recorded in
+ADR-0106.
+
+Scope:
+
+- Test hardening for `element` and `ui` to close the most critical coverage gaps.
+- Split over-large source files into smaller internal modules without changing
+  public exports.
+- Unify error formatting and error handling across packages.
+- Reduce unsafe non-null assertions and type assertions at SSR/DSD boundaries.
+- Remove historical `less` / `LessJS` naming debt from internal identifiers,
+  comments, and virtual module prefixes.
+- Simplify `adapter-vite` internals without changing the public Vite plugin API.
+- Clean up ad-hoc `console.*` usage.
+
+Non-goals:
+
+- No public API changes.
+- No package additions or removals.
+- No default runtime / signal-engine / renderer changes.
+- No new product features.
 
 ## v0.36.0 - Rendering Runtime, Deployment & Deferred Refactors
 
@@ -363,17 +390,17 @@ Preact-first v0.40 proof. The earlier Vue adapter plan is superseded for the
 pre-1.0 path; Vue, React, Svelte, and other heavy island adapters stay frozen
 unless a later ADR reopens them.
 
-## v0.40.3 - Elements + Preact + Repository Slimming
+## v0.40.4 - Elements + Preact + Repository Slimming
 
 Productize the four-product matrix while keeping scope narrow enough for a
-credible v1.0 path. The local package line is now `0.40.3`.
+credible v1.0 path. The local package line is now `0.40.4`.
 
 ADR-0101 also makes v0.40 the product-line reset. The previous v0.39
 architecture state is frozen on `arch/v0.39-line`; `dev` continues as the
 focused product-line branch. Active planning moves from separate SOP and
 NextVersion dossiers to `docs/current/VERSION_PLAN.md`.
 
-v0.40.3 has two equal exit requirements:
+v0.40.4 has two equal exit requirements:
 
 - the product surface becomes real and narrow;
 - the repository shape stops contradicting that product story.

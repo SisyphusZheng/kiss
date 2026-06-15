@@ -499,16 +499,24 @@ export function buildEntryDescriptor(
   const packageIslandDecls: IslandDecl[] = packageManifests.flatMap((pkg) =>
     pkg.declarations
       .filter((d) => d.openElement?.module)
-      .map((d) => ({
-        tagName: d.tagName,
-        modulePath: d.openElement!.module!,
-        isPackage: true,
-        source: 'package',
-        hydrate:
-          (d.openElement?.hydrate || options.upgradeStrategy || 'idle') as IslandDecl['hydrate'],
-        ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
-        dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
-      }))
+      .map((d) => {
+        const modulePath = d.openElement?.module;
+        if (!modulePath) {
+          throw new Error(
+            `Package manifest declaration "${d.tagName}" is missing openElement.module`,
+          );
+        }
+        return {
+          tagName: d.tagName,
+          modulePath,
+          isPackage: true,
+          source: 'package',
+          hydrate:
+            (d.openElement?.hydrate || options.upgradeStrategy || 'idle') as IslandDecl['hydrate'],
+          ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
+          dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
+        };
+      })
   );
 
   // Merge all islands

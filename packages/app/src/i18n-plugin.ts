@@ -14,6 +14,7 @@
 import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from '@openelement/protocol/build-types';
 import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/core/errors';
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -83,9 +84,7 @@ export function openI18n(
         log.info(`I18n: wrote _generated-i18n-data.ts (${i18nData.locales.join(', ')})`);
       } catch (err) {
         log.warn(
-          `Failed to write _generated-i18n-data.ts: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
+          `Failed to write _generated-i18n-data.ts: ${formatError(err)}`,
         );
       }
 

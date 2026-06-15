@@ -48,6 +48,7 @@
  */
 
 import type { ReactiveHost } from '@openelement/core';
+import { formatError } from '@openelement/core/errors';
 import type { StyleSheetLike } from '@openelement/core/style-sheet';
 import { disposeProps, handlePropAttributeChange, initializeProps } from './prop.js';
 import {
@@ -56,12 +57,18 @@ import {
   initializeStaticProps,
   syncStaticPropsFromAttributes,
 } from './prop.js';
-import { isVNode, type VNode } from '@openelement/core';
-import { renderToDom } from '@openelement/core';
-import { collectEventBindings, hydrateEventMarkers } from '@openelement/core';
+import { type VNode } from '@openelement/core';
 import type { Signal } from '@openelement/protocol/signals';
-import { effect, signal } from '@openelement/signal';
+import { signal } from '@openelement/signal';
 import { createLogger } from '@openelement/core/logger';
+import {
+  disposeRenderBindings,
+  renderErrorFallback,
+  renderIntoLightDom,
+  renderIntoShadowRoot,
+  type VNodeCacheAccess,
+} from './open-element-render.js';
+import { hydrateExistingDom, hydrateSignals } from './open-element-hydration.js';
 
 /**
  * SSR-safe base class for OpenElement.
@@ -325,112 +332,19 @@ export class OpenElement extends _Base implements ReactiveHost {
    *
    * Effects are tracked in #effectDisposers for batch cleanup.
    * VNode event marker listeners are tracked in #eventCleanups.
+   *
+   * Implementation lives in open-element-hydration.ts.
    */
   private _hydrateSignals(): void {
     if (!this.shadowRoot) return;
-
-    // --- Signal → textContent: data-signal="signalName" ---
-    const signalEls = this.shadowRoot.querySelectorAll('[data-signal]');
-    for (const el of signalEls) {
-      const name = el.getAttribute('data-signal');
-      if (!name) continue;
-      const sig = this.signalRegistry.get(name);
-      if (!sig) continue;
-
-      // Skip textContent if this element has attribute or class binding.
-      if (
-        el.hasAttribute('data-signal-attr') ||
-        el.hasAttribute('data-signal-class')
-      ) continue;
-
-      (el as HTMLElement).textContent = String(sig.value);
-      const dispose = effect(() => {
-        (el as HTMLElement).textContent = String(sig.value);
-      });
-      this.#effectDisposers.add(dispose);
-    }
-
-    // --- Signal → CSS class: data-signal-class="className" (v0.28.1) ---
-    // Toggles a CSS class based on signal truthiness.
-    // Truthy (non-empty string / non-zero) → add class. Falsy → remove.
-    const classSigEls = this.shadowRoot.querySelectorAll('[data-signal][data-signal-class]');
-    for (const el of classSigEls) {
-      const name = el.getAttribute('data-signal');
-      const className = el.getAttribute('data-signal-class');
-      if (!name || !className) continue;
-      const sig = this.signalRegistry.get(name);
-      if (!sig) continue;
-
-      el.classList.toggle(className, !!sig.value);
-      const dispose = effect(() => {
-        el.classList.toggle(className, !!sig.value);
-      });
-      this.#effectDisposers.add(dispose);
-    }
-
-    const attrSigEls = this.shadowRoot.querySelectorAll('[data-signal][data-signal-attr]');
-    for (const el of attrSigEls) {
-      const name = el.getAttribute('data-signal');
-      const attrSpec = el.getAttribute('data-signal-attr');
-      if (!name || !attrSpec) continue;
-      const sig = this.signalRegistry.get(name);
-      if (!sig) continue;
-
-      const attrNames = attrSpec.split(',').map((a) => a.trim()).filter(Boolean);
-      if (attrNames.length === 0) continue;
-
-      const val = String(sig.value);
-      for (const an of attrNames) {
-        el.setAttribute(an, val);
-      }
-
-      const dispose = effect(() => {
-        const v = String(sig.value);
-        for (const an of attrNames) {
-          el.setAttribute(an, v);
-        }
-      });
-      this.#effectDisposers.add(dispose);
-    }
-
-    // --- Signal → VNode rendering: data-signal-render="signalName" (v0.30.1 / ADR-0081) ---
-    // Signal value is VNode | VNode[] — renderToDom handles event binding + XSS escape.
-    const renderEls = this.shadowRoot.querySelectorAll('[data-signal-render]');
-    for (const el of renderEls) {
-      const name = el.getAttribute('data-signal-render');
-      if (!name) continue;
-      const sig = this.signalRegistry.get(name);
-      if (!sig) continue;
-
-      const renderTarget = () => {
-        while (el.firstChild) el.removeChild(el.firstChild);
-        const v = sig.value;
-        if (v != null) {
-          const nodes = Array.isArray(v) ? v : [v];
-          for (const node of nodes) {
-            el.appendChild(renderToDom(node, undefined, this.#effectDisposers));
-          }
-        }
-      };
-      renderTarget();
-      this.#effectDisposers.add(effect(() => renderTarget()));
-    }
-
-    // v0.28.1: Cache VNode so SSR and hydration use the same event IDs.
-    // render() may have been called at build time for SSR — reuse cached VNode
-    // if available, otherwise call render() once and cache for hydration.
-    if (!this.#vnodeCacheValid) {
-      this.#vnodeCache = this.render();
-      this.#vnodeCacheValid = true;
-    }
-    const vnode = this.#vnodeCache;
-    if (isVNode(vnode)) {
-      hydrateEventMarkers(this.shadowRoot, collectEventBindings(vnode), this.#eventCleanups, this);
-    }
-    // Chromium DSD layout fix: force reflow without DOM rebuild
-    requestAnimationFrame(() => {
-      void (this as HTMLElement).offsetHeight;
-    });
+    hydrateSignals(
+      this,
+      this.shadowRoot,
+      this.signalRegistry,
+      this.#effectDisposers,
+      this.#eventCleanups,
+      this.#cacheAccess(),
+    );
   }
 
   /**
@@ -438,17 +352,17 @@ export class OpenElement extends _Base implements ReactiveHost {
    *
    * v0.28 (ADR-0067): Delegates to _hydrateSignals().
    * _walkAndBind position matching is DELETED.
+   *
+   * Implementation lives in open-element-hydration.ts.
    */
   private _hydrateExistingDom(): void {
-    if (!this.shadowRoot) return;
-
-    // Dispose previous effects and events
-    for (const d of this.#effectDisposers) d();
-    this.#effectDisposers.clear();
-    for (const f of this.#eventCleanups) f();
-    this.#eventCleanups = [];
-
-    this._hydrateSignals();
+    this.#eventCleanups = hydrateExistingDom(
+      this,
+      this.signalRegistry,
+      this.#effectDisposers,
+      this.#eventCleanups,
+      this.#cacheAccess(),
+    );
   }
 
   /**
@@ -496,43 +410,19 @@ export class OpenElement extends _Base implements ReactiveHost {
    */
   protected onRenderError(error: unknown): VNode | null {
     createLogger('dsd').error(
-      `<${this.tagName.toLowerCase()}> render/hydrate failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `<${this.tagName.toLowerCase()}> render/hydrate failed: ${formatError(error)}`,
     );
     return null;
   }
 
   private _renderErrorFallback(error: unknown): void {
-    const ctor = this.constructor as typeof OpenElement;
-    const isLightDom = ctor.renderMode === 'light';
-    if (!this.shadowRoot && !isLightDom) this.createRenderRoot();
-    const target = isLightDom ? this : this.shadowRoot;
-    if (!target) return;
-
-    let fallback: VNode | null;
-    try {
-      fallback = this.onRenderError(error);
-    } catch (fallbackError) {
-      createLogger('dsd').error(
-        `<${this.tagName.toLowerCase()}> onRenderError failed: ${
-          fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
-        }`,
-      );
-      fallback = null;
-    }
-
-    for (const d of this.#effectDisposers) d();
-    this.#effectDisposers.clear();
-    for (const f of this.#eventCleanups) f();
-    this.#eventCleanups = [];
-
-    if (fallback != null) {
-      while (target.firstChild) {
-        target.removeChild(target.firstChild);
-      }
-      target.appendChild(renderToDom(fallback, undefined, this.#effectDisposers));
-    }
+    this.#eventCleanups = renderErrorFallback(
+      this,
+      error,
+      this.#effectDisposers,
+      this.#eventCleanups,
+      (err) => this.onRenderError(err),
+    );
   }
 
   /**
@@ -540,10 +430,7 @@ export class OpenElement extends _Base implements ReactiveHost {
    * Aborts all hydration event listeners for cleanup.
    */
   disconnectedCallback(): void {
-    for (const d of this.#effectDisposers) d();
-    this.#effectDisposers.clear();
-    for (const f of this.#eventCleanups) f();
-    this.#eventCleanups = [];
+    this.#eventCleanups = disposeRenderBindings(this.#effectDisposers, this.#eventCleanups);
     disposeProps(this);
     disposeStaticProps(this);
   }
@@ -642,42 +529,36 @@ export class OpenElement extends _Base implements ReactiveHost {
   }
 
   private _renderIntoLightDom(): void {
-    this._disposeRenderBindings();
-
-    const result = this.render();
-    this.#vnodeCache = result;
-    this.#vnodeCacheValid = true;
-
-    while (this.firstChild) {
-      this.removeChild(this.firstChild);
-    }
-
-    if (result != null) {
-      this.appendChild(renderToDom(result, undefined, this.#effectDisposers));
-    }
+    this.#eventCleanups = renderIntoLightDom(
+      this,
+      this.#effectDisposers,
+      this.#eventCleanups,
+      this.#cacheAccess(),
+    );
   }
 
   private _renderIntoShadowRoot(): void {
-    if (!this.shadowRoot) return;
-
-    this._disposeRenderBindings();
-
-    const result = this.render();
-    this.#vnodeCache = result;
-    this.#vnodeCacheValid = true;
-    if (result != null) {
-      while (this.shadowRoot!.firstChild) {
-        this.shadowRoot!.removeChild(this.shadowRoot!.firstChild);
-      }
-      this.shadowRoot!.appendChild(renderToDom(result, undefined, this.#effectDisposers));
-    }
+    this.#eventCleanups = renderIntoShadowRoot(
+      this,
+      this.#effectDisposers,
+      this.#eventCleanups,
+      this.#cacheAccess(),
+    );
   }
 
-  private _disposeRenderBindings(): void {
-    for (const d of this.#effectDisposers) d();
-    this.#effectDisposers.clear();
-    for (const f of this.#eventCleanups) f();
-    this.#eventCleanups = [];
+  /**
+   * Accessor for the private VNode cache used by extracted render/hydration
+   * helpers. Keeps #vnodeCache / #vnodeCacheValid encapsulated while allowing
+   * the logic to live in separate modules.
+   */
+  #cacheAccess(): VNodeCacheAccess {
+    return {
+      get: () => ({ vnode: this.#vnodeCache, valid: this.#vnodeCacheValid }),
+      set: (vnode: unknown) => {
+        this.#vnodeCache = vnode;
+        this.#vnodeCacheValid = true;
+      },
+    };
   }
 
   /**

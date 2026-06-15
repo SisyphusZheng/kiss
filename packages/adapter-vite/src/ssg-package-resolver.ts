@@ -1,4 +1,5 @@
 import type { Alias, Plugin } from 'vite';
+import { formatError } from '@openelement/core/errors';
 
 const VIRTUAL_OPENELEMENT_PACKAGE_PREFIX = '\0openelement:ssg-pkg/';
 // Packages resolved by this plugin for JSR consumer SSG builds.
@@ -232,7 +233,7 @@ export function createOpenJsrPackageResolverPlugin(
         } catch (error) {
           throw new Error(
             `[openElement/SSG] Failed to read local @openelement/${packageName}/${filePath} ` +
-              `from ${localPath}: ${error instanceof Error ? error.message : String(error)}`,
+              `from ${localPath}: ${formatError(error)}`,
           );
         }
       }

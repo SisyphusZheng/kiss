@@ -22,6 +22,13 @@ export const ErrorCode = {
 /** Error message prefix for all openElement errors. */
 export const ERROR_PREFIX = '[openElement]';
 
+// ─── Error formatting helper ────────────────────────────────────────
+
+/** Format an unknown thrown value as a human-readable string. */
+export function formatError(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 // ─── Types ──────────────────────────────────────────────────────────
 
 export type ErrorSeverity = 'error' | 'warning';

@@ -16,6 +16,7 @@ interface NavigationLike extends EventTarget {
 }
 
 import { normalizeLocalePath } from './locale-path.ts';
+import { createLogger } from '@openelement/core/logger';
 
 interface NavigationNavigateEvent extends Event {
   canIntercept: boolean;
@@ -29,6 +30,8 @@ const LOCALE_LABELS: Record<string, string> = {
   zh: '\u4E2D\u6587',
   en: 'EN',
 };
+
+const log = createLogger('router');
 
 export interface RouterStartOptions {
   /** Called when navigation destination is resolved. Caller fetches + swaps. */
@@ -272,7 +275,7 @@ export class Router {
       }
       opts.onAfterSwap?.(pathname, locale);
     }).catch((err) => {
-      console.warn('[openelement/router] content load failed:', err);
+      log.warn('content load failed:', err);
       // Fallback: full page reload
       location.reload();
     });

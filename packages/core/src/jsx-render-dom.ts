@@ -15,6 +15,7 @@ import { eventTypeFromProp } from './event-hydration.ts';
 import { trustRenderHtml } from './security.ts';
 import { effect } from '@openelement/signal';
 import { createLogger } from './logger.js';
+import { formatError } from './errors.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -326,9 +327,7 @@ export function renderToDom(
       return renderToDom(result, signal, disposers);
     } catch (err) {
       createLogger('dom-render').error(
-        `renderToDom() failed for <${String(tag)}>: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
       );
       return document.createTextNode('');
     }
@@ -339,9 +338,7 @@ export function renderToDom(
       return renderToDom(result, signal, disposers);
     } catch (err) {
       createLogger('dom-render').error(
-        `renderToDom() failed for <${String(tag)}>: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
       );
       return document.createTextNode('');
     }

@@ -17,7 +17,7 @@ import type {
 
 import { join } from 'node:path';
 import process from 'node:process';
-import { OpenElementError } from '@openelement/core/errors';
+import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 
 const log = createLogger('adapter-vite');
@@ -260,9 +260,7 @@ export function createOpenPlugin(
         } catch (err) {
           // CEM detection is best-effort - never fail the build
           log.debug(
-            `CEM auto-detection failed (non-fatal): ${
-              err instanceof Error ? err.message : String(err)
-            }`,
+            `CEM auto-detection failed (non-fatal): ${formatError(err)}`,
           );
           ctx.phase1.cemClassifications = [];
         }
@@ -293,7 +291,7 @@ export function createOpenPlugin(
         );
       } catch (err) {
         throw new OpenElementError(
-          `Route scan failed: ${err instanceof Error ? err.message : String(err)}`,
+          `Route scan failed: ${formatError(err)}`,
           'ROUTE_SCAN_ERROR',
           500,
           false,

@@ -17,6 +17,7 @@
 import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/core/errors';
 
 const log = createLogger('core');
 
@@ -57,7 +58,10 @@ export function insertAfterHead(html: string, content: string): string {
       ? html.replace(/(<(?:!DOCTYPE|html)[^>]*>)/i, `$1\n<head>\n  ${content}\n</head>`)
       : `<head>\n  ${content}\n</head>\n${html}`;
   }
-  const headEnd = headMatch.index! + headMatch[0].length;
+  if (headMatch.index === undefined) {
+    throw new Error('insertAfterHead: matched <head> but index is undefined');
+  }
+  const headEnd = headMatch.index + headMatch[0].length;
   return html.slice(0, headEnd) + `\n  ${content}` + html.slice(headEnd);
 }
 
@@ -67,7 +71,10 @@ function insertBeforeBodyClose(html: string, content: string): string {
   if (!bodyCloseMatch) {
     return html + `\n${content}\n`;
   }
-  const idx = bodyCloseMatch.index!;
+  if (bodyCloseMatch.index === undefined) {
+    throw new Error('insertBeforeBodyClose: matched </body> but index is undefined');
+  }
+  const idx = bodyCloseMatch.index;
   return html.slice(0, idx) + `${content}\n` + html.slice(idx);
 }
 
@@ -113,7 +120,7 @@ export function buildIslandChunkMap(
   } catch (e) {
     // Malformed manifest - warn and return empty map
     log.warn(
-      `Could not parse client manifest: ${e instanceof Error ? e.message : String(e)}`,
+      `Could not parse client manifest: ${formatError(e)}`,
     );
   }
 
