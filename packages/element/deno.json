@@ -1,18 +1,18 @@
 {
   "name": "@openelement/element",
-  "version": "0.40.6",
+  "version": "0.40.7",
   "exports": {
     ".": "./src/index.ts"
   },
   "imports": {
-    "@openelement/core": "jsr:@openelement/core@^0.40.6",
-    "@openelement/core/errors": "jsr:@openelement/core@^0.40.6/errors",
-    "@openelement/core/jsx-runtime": "jsr:@openelement/core@^0.40.6/jsx-runtime",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger",
-    "@openelement/core/prop": "jsr:@openelement/core@^0.40.6/prop",
-    "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.6/style-sheet",
-    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.6",
-    "@openelement/signal": "jsr:@openelement/signal@^0.40.6"
+    "@openelement/core": "jsr:@openelement/core@^0.40.7",
+    "@openelement/core/errors": "jsr:@openelement/core@^0.40.7/errors",
+    "@openelement/core/jsx-runtime": "jsr:@openelement/core@^0.40.7/jsx-runtime",
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger",
+    "@openelement/core/prop": "jsr:@openelement/core@^0.40.7/prop",
+    "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.7/style-sheet",
+    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.7",
+    "@openelement/signal": "jsr:@openelement/signal@^0.40.7"
   },
   "publish": {
     "include": [

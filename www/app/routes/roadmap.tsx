@@ -2,7 +2,7 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Version: v0.37.2, v0.37.6, v0.38.0, v0.39.0, v0.40.6, v1.0.
+// Version: v0.37.2, v0.37.6, v0.38.0, v0.39.0, v0.40.7, v1.0.
 // Legacy smoke anchors: WC Package Protocol, Six-Phase Vision, Registry Hub, No webpack.
 
 import { OpenElement } from '@openelement/element';
@@ -198,13 +198,13 @@ export class RoadmapPage extends OpenElement {
             <h1>Roadmap</h1>
             <p class='subtitle'>
               openElement roadmap labels are product truth, not aspiration. The current package line
-              is v0.40.6: Elements + Preact + Repository Slimming. The active workspace is the
+              is v0.40.7: Release Readiness & CI Hardening. The active workspace is the
               11-package product line.
             </p>
           </div>
           <aside class='card card-bordered p-4'>
             <span class='badge badge-outline'>current line</span>
-            <h2>v0.40.6 Audit-Driven Quality Cleanup</h2>
+            <h2>v0.40.7 Release Readiness & CI Hardening</h2>
             <p>
               Hub/RPC/CEM/compat-check and interop adapters are out of the current package graph;
               AutoFlow3 owns gates.

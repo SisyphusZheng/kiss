@@ -1,18 +1,18 @@
 {
   "name": "@openelement/ssg",
-  "version": "0.40.6",
+  "version": "0.40.7",
   "exports": {
     ".": "./src/index.ts"
   },
   "imports": {
-    "@openelement/core": "jsr:@openelement/core@^0.40.6",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger",
-    "@openelement/core/errors": "jsr:@openelement/core@^0.40.6/errors",
-    "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.6/style-sheet",
-    "@openelement/protocol/routes": "jsr:@openelement/protocol@^0.40.6/routes",
-    "@openelement/protocol/runtime": "jsr:@openelement/protocol@^0.40.6/runtime",
-    "@openelement/protocol/ssg-contracts": "jsr:@openelement/protocol@^0.40.6/ssg-contracts",
-    "@openelement/content": "jsr:@openelement/content@^0.40.6",
+    "@openelement/core": "jsr:@openelement/core@^0.40.7",
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger",
+    "@openelement/core/errors": "jsr:@openelement/core@^0.40.7/errors",
+    "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.7/style-sheet",
+    "@openelement/protocol/routes": "jsr:@openelement/protocol@^0.40.7/routes",
+    "@openelement/protocol/runtime": "jsr:@openelement/protocol@^0.40.7/runtime",
+    "@openelement/protocol/ssg-contracts": "jsr:@openelement/protocol@^0.40.7/ssg-contracts",
+    "@openelement/content": "jsr:@openelement/content@^0.40.7",
     "hono": "npm:hono@^4.12",
     "typescript": "npm:typescript@^5.9.0"
   },

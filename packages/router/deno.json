@@ -1,6 +1,6 @@
 {
   "name": "@openelement/router",
-  "version": "0.40.6",
+  "version": "0.40.7",
   "exports": {
     ".": "./src/index.ts",
     "./mod": "./src/mod.ts",
@@ -11,8 +11,8 @@
   },
   "imports": {
     "marked": "npm:marked@^15",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger",
-    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.6"
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger",
+    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.7"
   },
   "publish": {
     "include": [

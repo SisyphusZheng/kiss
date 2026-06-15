@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.6 Audit-Driven Quality Cleanup; next line is npm-only distribution.\
+> Current package line: v0.40.7 Release Readiness & CI Hardening; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-15.
 
@@ -69,6 +69,7 @@ v0.41-v1.0 blocker.
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
 | v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
 | v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
+| v0.40.7 | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                      | Released                 |
 | v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
@@ -79,6 +80,34 @@ v0.41-v1.0 blocker.
 | v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+
+## v0.40.7 - Release Readiness & CI Hardening
+
+Patch release that hardens the v0.40.6 release infrastructure without changing
+public API or package topology. Executed under the v0.40.x cleanup-train
+authority from ADR-0105.
+
+Scope:
+
+- Replace the Python `http.server` E2E fixture with a Deno static server that
+  supports directory indexes, `.html` pretty URLs, and SPA fallback.
+- Add an `OPEN_ELEMENT_E2E_OFFLINE=1` escape hatch for local E2E runs.
+- Relax local-only E2E timeouts for slower Windows dev boxes.
+- Gate JSR publish, wait-metadata, post-publish smoke, and GitHub release steps
+  on the presence of required credentials.
+- Install Playwright browsers explicitly in GitHub Actions workflows.
+- Grant `--allow-env` to AutoFlow3 task invocations.
+- Repair workspace mappings in `consumer-local.ts` for `@openelement/router` and
+  `@openelement/core/prop`.
+- Skip `smoke-deploy` when Cloudflare credentials are absent.
+
+Non-goals:
+
+- No public API changes.
+- No package additions or removals.
+- No default runtime / signal-engine / renderer changes.
+- No new product features.
+- No git history rewrite.
 
 ## v0.40.6 - Audit-Driven Quality Cleanup
 

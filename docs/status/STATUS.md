@@ -5,23 +5,24 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
+## Current Version Line: v0.40.7 Released (Release Readiness & CI Hardening)
 
-v0.40.6 is released as the audit-driven quality cleanup release. It addresses
-the findings from the 2026-06-15 architecture audit
-(`docs/audit/2026-06-15-architecture-audit.md`) without changing the v0.40.4
-public product surface or package graph. The release adds test hardening for
-`element` and `ui`, splits over-large source files, unifies error handling,
-cleans up runtime assertions, and simplifies `adapter-vite` internals.
+v0.40.7 hardens the v0.40.6 release infrastructure without changing the v0.40.4
+public product surface or package graph. It closes the gaps between local
+development machines and the GitHub Actions CI environment so that the v0.40.x
+cleanup train can be published reliably. Changes include a Deno static server
+for E2E, an offline E2E escape hatch, CI Playwright browser installation,
+credential-gated release steps, and local-release tooling repairs.
 
-ADR-0106 approves the v0.40.6 audit-driven cleanup scope and binds it to the
-v0.40.x cleanup-train authority from ADR-0105. AutoFlow3 is the workflow, gate,
-evidence, and release-state control plane, but it cannot decide minor/major
-product scope, public API, package topology, default runtime, default signal
-engine, security/auth/database ownership, or release policy without human ADR
-or approved version-plan evidence.
+v0.40.7 is a release-readiness patch under the v0.40.x cleanup-train authority
+from ADR-0105. ADR-0106 continues to approve the underlying audit-driven
+cleanup scope for v0.40.6. AutoFlow3 is the workflow, gate, evidence, and
+release-state control plane, but it cannot decide minor/major product scope,
+public API, package topology, default runtime, default signal engine,
+security/auth/database ownership, or release policy without human ADR or
+approved version-plan evidence.
 
-Local v0.40.6 release-readiness evidence passes: `fmt:check`, `lint`,
+Local v0.40.7 release-readiness evidence passes: `fmt:check`, `lint`,
 `typecheck`, `test`, `build`, `graph:check`, `arch:check`, `repo:hygiene`,
 `workflow:check`, `workflow:check-slimming`, `docs:check-public`,
 `docs:check-current`, `docs:check-strategy`, `package-surface:check`,
@@ -31,15 +32,16 @@ Local v0.40.6 release-readiness evidence passes: `fmt:check`, `lint`,
 by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
 line and runs the post-publish consumer smoke.
 
-## Prior Version Line: v0.40.4 Released (Elements + Preact + Repository Slimming)
+## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
-v0.40.4 is released as the product-line cleanup release. It keeps the public
-target at `openElement = Elements + UI + Framework + Protocols`, makes the
-active package line `0.40.4`, and narrows the workspace to 11 packages. Hub,
-RPC, CEM, compat-check, Lit/React/vanilla interop adapters, and standalone
-runtime/style-sheet/i18n packages are removed from the current package graph.
-`@openelement/ssg` remains as the adapter-agnostic SSG engine. Hub routes and
-registry data are also removed from the website output.
+v0.40.6 is released as the audit-driven quality cleanup release. It addresses
+the findings from the 2026-06-15 architecture audit
+(`docs/audit/2026-06-15-architecture-audit.md`) without changing the v0.40.4
+public product surface or package graph. The release adds test hardening for
+`element` and `ui`, splits over-large source files, unifies error handling,
+cleans up runtime assertions, and simplifies `adapter-vite` internals. It is
+recorded in ADR-0106 and executed under the v0.40.x cleanup-train authority
+from ADR-0105.
 
 Public package names are singular: `@openelement/element`,
 `@openelement/protocol`, and `@openelement/signal`. Active code, tests, tools,
@@ -166,7 +168,7 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.6. It proceeds from the v0.40.4
+The active implementation line is now v0.40.7. It proceeds from the v0.40.4
 product-line cleanup release and focuses on closing the quality gaps identified
 by the 2026-06-15 architecture audit.
 
@@ -300,7 +302,7 @@ DSD/shadow is a default Elements render mode, not the product name.
 ## Package Version State
 
 The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.6**. Published package availability is completed by the
+to local version **0.40.7**. Published package availability is completed by the
 `main` branch JSR publish workflow and its post-publish consumer smoke.
 
 Package governance for v0.40:

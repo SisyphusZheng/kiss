@@ -1,5 +1,5 @@
 export const meta = { section: 'Quick Start', label: 'Getting Started', order: 1 };
-// Strategic docs anchor: current package line v0.40.6, active line v0.40.6.
+// Strategic docs anchor: current package line v0.40.7, active line v0.40.7.
 // openElement = Elements + UI + Framework + Protocols.
 
 import { OpenElement } from '@openelement/element';

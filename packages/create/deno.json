@@ -1,9 +1,9 @@
 {
   "name": "@openelement/create",
-  "version": "0.40.6",
+  "version": "0.40.7",
   "exports": "./cli.ts",
   "imports": {
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.6/logger"
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger"
   },
   "tasks": {
     "run": "deno run -A cli.ts"

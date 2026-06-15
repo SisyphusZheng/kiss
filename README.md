@@ -2,9 +2,9 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.40.6` (`v0.40.6`
-release). Active execution: `v0.40.6` Elements + Preact + Repository
-Slimming.**
+**JSX-first Web Components platform. Package line: `0.40.7` (`v0.40.7`
+release). Active execution: `v0.40.7` Release Readiness & CI
+Hardening.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
 rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD
@@ -85,9 +85,9 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.40.6** (`v0.40.6`) under
+All 11 current workspace packages are aligned at **0.40.7** (`v0.40.7`) under
 [`@openelement`](https://jsr.io/@openelement). The active execution line is
-**v0.40.6**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
+**v0.40.7**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
 while reserving minor/major product decisions for human-approved ADR and
 version-plan evidence.
 
