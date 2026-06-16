@@ -33,6 +33,7 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { type Context, createContext, provideContext } from '@openelement/core';
 import { openPropsTokenSheet } from './open-props-tokens.js';
+import { linearTokenSheet } from './linear-token-sheet.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 import '.\/open-theme-toggle.js';
@@ -134,20 +135,8 @@ sheet.replaceSync(`
     display: block;
   }
 
-  /* ?????? Global font stack ?????? */
   * { font-family: var(--font-sans); }
 
-  /* ?????? Keyframes ?????? */
-  @keyframes nav-pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-  @keyframes logo-breathe {
-    0%, 100% { filter: brightness(1) drop-shadow(0 0 4px var(--brand-glow)); }
-    50% { filter: brightness(1.15) drop-shadow(0 0 12px var(--brand-glow)); }
-  }
-
-  /* ?????? Base ?????? */
   .app-layout {
     display: flex;
     flex-direction: column;
@@ -184,23 +173,29 @@ sheet.replaceSync(`
     flex: 1;
   }
 
-  /* ?????? Header ?? Glassmorphic Swiss ?????? */
+  /* Header - Linear style */
   .app-header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: var(--bg-base);
-    border-bottom: 0.5px solid var(--border);
+    background: transparent;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .app-header.scrolled {
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .header-inner {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--size-16);
+    padding: 0 var(--space-xl);
     display: flex;
     align-items: center;
-    height: 64px;
-    gap: var(--size-8);
+    height: var(--nav-height);
+    gap: var(--space-xs);
   }
 
   .mobile-tab-bar { display: none; }
@@ -209,152 +204,139 @@ sheet.replaceSync(`
     display: none;
     align-items: center;
     justify-content: center;
-    width: var(--size-8);
-    height: var(--size-8);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-2);
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     background: transparent;
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     cursor: pointer;
     padding: 0;
-    list-style: none;
-    transition: all var(--ease-2) var(--duration-2);
+    transition: all 0.15s ease;
   }
-  .mobile-menu-btn:hover,
-  .mobile-menu-btn:focus-visible {
-    color: var(--brand);
-    border-color: var(--brand);
+  .mobile-menu-btn:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    background: var(--surface-2);
   }
 
-  /* ?????? Logo ?? Swiss uppercase ?????? */
+  /* Logo - plain text */
   .logo {
-    font-size: var(--font-size-7);
-    font-weight: var(--font-weight-9);
-    color: transparent;
-    background: linear-gradient(135deg, var(--brand), var(--brand-light));
-    -webkit-background-clip: text;
-    background-clip: text;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
     text-decoration: none;
-    letter-spacing: -0.04em;
-    text-transform: none;
-    transition: opacity var(--ease-2) var(--duration-2);
+    letter-spacing: -0.02em;
     white-space: nowrap;
-    animation: logo-breathe 4s ease-in-out infinite;
   }
-  .logo:hover { opacity: 0.75; animation: none; }
+  .logo:hover { opacity: 0.8; }
 
   .logo-sub {
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-5);
-    color: var(--brand);
-    margin-left: var(--size-2);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-left: var(--space-xs);
   }
 
-  /* ?????? Header Nav ?????? */
   .header-nav {
     display: flex;
-    gap: var(--size-1);
+    gap: var(--space-lg);
     flex: 1;
   }
   .header-nav a {
-    color: var(--text-muted);
+    color: var(--nav-link-color);
     text-decoration: none;
-    font-size: var(--font-size-0);
-    font-weight: var(--font-weight-6);
-    padding: var(--size-2) var(--size-4);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border-radius: var(--radius-2);
-    transition: all var(--ease-2) var(--duration-2);
-    position: relative;
+    font-size: var(--nav-link-size);
+    font-weight: 400;
+    padding: 0;
+    transition: color 0.15s ease;
   }
-  .header-nav a:hover,
+  .header-nav a:hover {
+    color: var(--nav-link-hover);
+  }
   .header-nav a[aria-current="page"] {
-    color: var(--text-primary);
-    background: var(--bg-surface);
-  }
-  .header-nav a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%) scaleX(0);
-    width: 40%;
-    height: 2px;
-    background: var(--brand);
-    border-radius: 1px;
-    transition: transform var(--ease-2) var(--duration-2);
-  }
-  .header-nav a:hover::after,
-  .header-nav a[aria-current="page"]::after {
-    transform: translateX(-50%) scaleX(1);
+    color: var(--color-text-primary);
+    font-weight: 500;
   }
 
   .header-right {
     display: flex;
     align-items: center;
-    gap: var(--size-3);
+    gap: var(--space-xs);
     margin-left: auto;
   }
 
-  /* ?????? GitHub link ?????? */
-  .github-link {
+  /* CTA buttons */
+  .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: var(--size-2);
-    color: var(--text-muted);
+    gap: 4px;
+    color: var(--color-text-primary);
     text-decoration: none;
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-6);
-    letter-spacing: 0.04em;
-    padding: var(--size-2) var(--size-3);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-2);
-    transition: all var(--ease-2) var(--duration-2);
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-medium);
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    transition: all 0.15s ease;
   }
-  .github-link:hover {
-    color: var(--text-primary);
-    border-color: var(--brand);
-    background: var(--bg-surface);
+  .btn-secondary:hover {
+    border-color: var(--color-border-hover);
+    background: var(--surface-2);
   }
-  .github-link svg { flex-shrink: 0; }
+  .btn-secondary svg { flex-shrink: 0; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-medium);
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--color-brand);
+    transition: all 0.15s ease;
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-hover);
+  }
 
   .lang-switch {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 32px;
-    height: 24px;
-    padding: 0 var(--size-2);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-6);
-    color: var(--text-muted);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-2);
+    height: 32px;
+    padding: 0 var(--space-xs);
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     background: transparent;
     cursor: pointer;
     text-decoration: none;
-    letter-spacing: 0.04em;
-    transition: all var(--ease-2) var(--duration-2);
+    transition: all 0.15s ease;
   }
   .lang-switch:hover {
-    color: var(--text-primary);
-    border-color: var(--brand);
-    background: var(--bg-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    background: var(--surface-2);
   }
 
-  /* ?????? Sidebar ?? Swiss vertical indicator ?????? */
+  /* Sidebar */
   .docs-sidebar {
     width: clamp(200px, 20vw, 260px);
     flex-shrink: 0;
-    border-right: 0.5px solid var(--border);
+    border-right: 1px solid var(--color-border);
     padding: 2rem 0;
     overflow-y: auto;
-    height: calc(100vh - 64px);
+    height: calc(100vh - var(--nav-height));
     position: sticky;
-    top: 64px;
+    top: var(--nav-height);
     scrollbar-width: thin;
   }
   :host([home]) .docs-sidebar,
@@ -369,7 +351,7 @@ sheet.replaceSync(`
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.22em;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     padding: 0 1.5rem;
     margin-bottom: 0.5rem;
     cursor: pointer;
@@ -381,75 +363,101 @@ sheet.replaceSync(`
   }
   .nav-section summary::-webkit-details-marker { display: none; }
   .nav-section summary::marker { content: ""; }
-  .nav-section summary:hover { color: var(--text-secondary); }
+  .nav-section summary:hover { color: var(--color-text-secondary); }
 
   .docs-sidebar a {
     display: block;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     text-decoration: none;
     font-size: 0.85rem;
     padding: 0.35rem 1.5rem;
     border-left: 2px solid transparent;
-    transition: color var(--ease-2) var(--duration-2), border-color var(--ease-2) var(--duration-2), background var(--ease-2) var(--duration-2);
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
   .docs-sidebar a:hover {
-    color: var(--text-secondary);
-    background: var(--bg-surface);
+    color: var(--color-text-secondary);
+    background: var(--surface-2);
   }
   .docs-sidebar a.active,
   .docs-sidebar a[aria-current="page"] {
-    color: var(--brand);
-    border-left-color: var(--brand);
-    background: var(--bg-surface);
+    color: var(--color-brand);
+    border-left-color: var(--color-brand);
+    background: var(--surface-1);
     font-weight: 600;
   }
 
-  /* ?????? Footer ?????? */
+  /* Footer */
   .app-footer {
-    padding: var(--size-12);
-    border-top: 0.5px solid var(--border);
-    text-align: center;
-    color: var(--text-muted);
-    font-size: var(--font-size-00);
-    letter-spacing: 0.04em;
+    border-top: 1px solid var(--color-border);
     background: transparent;
   }
-  .app-footer p { margin: 0.25rem 0; }
-  .app-footer a { color: var(--text-secondary); transition: color var(--ease-2) var(--duration-2); }
-  .app-footer a:hover { color: var(--brand); }
-  .edit-link { margin-right: var(--size-3); }
-
-  .app-footer .divider {
-    display: inline-block;
-    width: 1px;
-    height: 8px;
-    background: var(--text-muted);
-    vertical-align: middle;
-    margin: 0 1rem;
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 64px var(--space-xl);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xl);
+  }
+  .footer-column h4 {
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-md);
+  }
+  .footer-column a {
+    display: block;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-body-sm);
+    padding: 4px 0;
+    transition: color 0.15s ease;
+  }
+  .footer-column a:hover {
+    color: var(--color-text-primary);
+  }
+  .footer-bottom {
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-md) var(--space-xl);
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-body-sm);
+  }
+  .footer-bottom a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-bottom a:hover {
+    color: var(--color-text-primary);
   }
 
-  /* ?????? Mobile backdrop ?????? */
+  /* Mobile backdrop */
   .mobile-backdrop {
-    position: fixed; inset: 0; top: 64px;
-    background: rgba(0,0,0,0.6);
+    position: fixed; inset: 0; top: var(--nav-height);
+    background: var(--color-overlay);
     z-index: 80; opacity: 0; pointer-events: none;
     transition: opacity 0.3s ease;
   }
 
-  /* ?????? Responsive ?????? */
+  /* Responsive */
   @media (max-width: 900px) {
     .mobile-menu-btn { display: flex; }
-    .header-inner { padding: 0 1rem; gap: var(--size-3); }
+    .header-inner { padding: 0 var(--space-md); gap: var(--space-xs); }
     .header-nav { display: none; }
-    .github-text { display: none; }
-    .header-right { gap: 0.5rem; }
+    .btn-secondary .btn-text { display: none; }
+    .header-right { gap: 4px; }
 
     .docs-sidebar {
-      position: fixed; top: 64px; left: 0;
+      position: fixed; top: var(--nav-height); left: 0;
       width: min(280px, 80vw);
-      height: calc(100vh - 64px); z-index: 90;
+      height: calc(100vh - var(--nav-height)); z-index: 90;
       background: var(--bg-base);
-      border-right: 0.5px solid var(--border);
+      border-right: 1px solid var(--color-border);
       padding: 1rem 0; overflow-y: auto;
       transform: translateX(-101%);
       transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
@@ -461,48 +469,60 @@ sheet.replaceSync(`
     }
     :host([menu-open]) .mobile-backdrop { opacity: 1; pointer-events: auto; }
     .nav-section { margin-bottom: 0.5rem; }
-    .nav-section summary { padding: var(--size-2) var(--size-4); }
+    .nav-section summary { padding: var(--space-xs) var(--space-md); }
     .docs-sidebar a { padding: 0.5rem 1rem 0.5rem 2rem; }
     .layout-main { width: 100%; }
-    .app-footer { padding: 2rem 1rem; padding-bottom: calc(2rem + 56px); }
+    .app-footer { padding: 0; }
+    .footer-inner {
+      grid-template-columns: repeat(2, 1fr);
+      padding: 48px var(--space-md);
+      padding-bottom: calc(48px + 56px);
+    }
+    .footer-bottom {
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding: var(--space-md);
+      padding-bottom: calc(var(--space-md) + 56px);
+      text-align: center;
+    }
 
     .mobile-tab-bar {
       display: flex; position: fixed; bottom: 0; left: 0; right: 0;
       height: 56px; z-index: 100;
-      background: rgba(9,11,17,0.92);
+      background: var(--nav-bg);
       backdrop-filter: blur(12px) saturate(180%);
       -webkit-backdrop-filter: blur(12px) saturate(180%);
-      border-top: 0.5px solid var(--border);
+      border-top: 1px solid var(--color-border);
       padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
       padding-bottom: env(safe-area-inset-bottom);
     }
     .tab-item {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 2px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       text-decoration: none; font-size: 10px; font-weight: 600;
-      letter-spacing: 0.04em; transition: color var(--ease-3) var(--duration-2);
+      transition: color 0.15s ease;
       -webkit-tap-highlight-color: transparent; padding: 4px 0;
     }
     .tab-item svg { width: 20px; height: 20px; flex-shrink: 0; }
-    .tab-item:hover { color: var(--text-secondary); }
-    .tab-item.active { color: var(--brand); }
+    .tab-item:hover { color: var(--color-text-secondary); }
+    .tab-item.active { color: var(--color-brand); }
   }
 
   @media (max-width: 640px) {
-    .header-right { gap: 0.25rem; }
+    .header-right { gap: 4px; }
     .lang-switch { display: none; }
   }
   @media (max-width: 480px) {
-    .logo-sub { display: none; }
-    .github-link { padding: var(--size-2); border: none; }
-    .github-link .github-text { display: none; }
-    .header-inner { padding: 0 0.75rem; gap: 0.5rem; }
+    .btn-secondary { padding: 8px; border: none; }
+    .btn-secondary .btn-text { display: none; }
+    .header-inner { padding: 0 var(--space-sm); gap: 4px; }
   }
 `);
 
 export class OpenLayout extends OpenElement {
   private _cleanupNav?: () => void;
+  private _scrollCleanup?: () => void;
   private _navOptions?: {
     contentLoader: (path: string, locale: string) => Promise<void>;
     onAfterSwap?: (path: string, locale: string) => void;
@@ -551,7 +571,7 @@ export class OpenLayout extends OpenElement {
     }
   }
 
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [openPropsTokenSheet, linearTokenSheet, sheet];
   static override observedAttributes = [
     'current-path',
     'nav-items',
@@ -786,14 +806,12 @@ export class OpenLayout extends OpenElement {
     const noSearch = this.hasAttribute('no-search');
     const logoText = this._esc(this._getStr('logo-text', ''));
     const logoSub = this._esc(this._getStr('logo-sub', ''));
-    const footerText = this._getStr('footer-text', '');
-    const githubUrl = this._safeHref(this._getStr('github-url', ''), '');
-    const editUrl = this._safeHref(this.getAttribute('edit-url') || this._computeEditUrl(), '');
     const locales = this._locales;
     const currentLocale = this._currentLocale;
     const currentPath = this._currentPathWithoutLocale;
     const langLabel = locales.length > 1 ? switchLabel(currentLocale) : '';
     const langHref = locales.length > 1 ? switchPath(currentPath, currentLocale, locales) : '';
+    const getStartedHref = localizePath('/guide/getting-started', currentLocale);
 
     return (
       <div className='app-layout' part='container' home={home || undefined}>
@@ -841,14 +859,19 @@ export class OpenLayout extends OpenElement {
                   {this._esc(langLabel)}
                 </a>
               )}
-              {githubUrl && (
-                <a className='github-link' href={githubUrl} aria-label='GitHub repository'>
-                  <svg width='16' height='16' viewBox='0 0 16 16' fill='currentColor'>
-                    <path d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z' />
-                  </svg>
-                  <span className='github-text'>GitHub</span>
-                </a>
-              )}
+              <a
+                className='btn-secondary'
+                href='https://github.com/open-element/openelement'
+                aria-label='GitHub repository'
+              >
+                <svg width='16' height='16' viewBox='0 0 16 16' fill='currentColor'>
+                  <path d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z' />
+                </svg>
+                <span className='btn-text'>GitHub</span>
+              </a>
+              <a className='btn-primary' href={getStartedHref} data-nav={getStartedHref}>
+                Get started
+              </a>
             </div>
           </nav>
         </header>
@@ -859,22 +882,90 @@ export class OpenLayout extends OpenElement {
             <slot></slot>
           </main>
         </div>
-        {(editUrl || footerText) && (
-          <footer className='app-footer' part='footer'>
-            <p>
-              {editUrl && (
-                <a
-                  href={editUrl}
-                  target='_blank'
-                  rel='noopener'
-                  className='edit-link'
-                >
-                  Edit this page
-                </a>
-              )} {this._esc(footerText)}
-            </p>
-          </footer>
-        )}
+        <footer className='app-footer' part='footer'>
+          <div className='footer-inner'>
+            <div className='footer-column'>
+              <h4>Product</h4>
+              <a
+                href={localizePath('/guide/core-concepts', currentLocale)}
+                data-nav={localizePath('/guide/core-concepts', currentLocale)}
+              >
+                Elements
+              </a>
+              <a
+                href={localizePath('/architecture/design-system', currentLocale)}
+                data-nav={localizePath('/architecture/design-system', currentLocale)}
+              >
+                UI
+              </a>
+              <a
+                href={localizePath('/architecture/architecture', currentLocale)}
+                data-nav={localizePath('/architecture/architecture', currentLocale)}
+              >
+                Framework
+              </a>
+              <a
+                href={localizePath('/architecture/standards-registry', currentLocale)}
+                data-nav={localizePath('/architecture/standards-registry', currentLocale)}
+              >
+                Protocols
+              </a>
+            </div>
+            <div className='footer-column'>
+              <h4>Resources</h4>
+              <a
+                href={localizePath('/guide/getting-started', currentLocale)}
+                data-nav={localizePath('/guide/getting-started', currentLocale)}
+              >
+                Guide
+              </a>
+              <a
+                href={localizePath('/guide/api', currentLocale)}
+                data-nav={localizePath('/guide/api', currentLocale)}
+              >
+                API
+              </a>
+              <a
+                href={localizePath('/architecture/architecture', currentLocale)}
+                data-nav={localizePath('/architecture/architecture', currentLocale)}
+              >
+                Architecture
+              </a>
+              <a
+                href={localizePath('/blog', currentLocale)}
+                data-nav={localizePath('/blog', currentLocale)}
+              >
+                Blog
+              </a>
+            </div>
+            <div className='footer-column'>
+              <h4>Company</h4>
+              <a href='https://github.com/open-element/openelement'>GitHub</a>
+              <a href='https://jsr.io/@openelement'>JSR</a>
+              <a
+                href={localizePath('/changelog', currentLocale)}
+                data-nav={localizePath('/changelog', currentLocale)}
+              >
+                Changelog
+              </a>
+            </div>
+            <div className='footer-column'>
+              <h4>Legal</h4>
+              <a href='https://github.com/open-element/openelement/blob/main/LICENSE'>
+                MIT License
+              </a>
+              <a
+                href={localizePath('/contributing', currentLocale)}
+                data-nav={localizePath('/contributing', currentLocale)}
+              >
+                Contributing
+              </a>
+            </div>
+          </div>
+          <div className='footer-bottom'>
+            <span>© 2026 openElement. MIT License.</span>
+          </div>
+        </footer>
         {this._renderMobileTabBar()}
       </div>
     );
@@ -979,6 +1070,35 @@ export class OpenLayout extends OpenElement {
     );
   }
 
+  // --- Scroll detection ---
+
+  private _setupScrollDetection(): void {
+    if (typeof globalThis.window === 'undefined') return;
+    let ticking: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      if (ticking !== undefined) return;
+      ticking = globalThis.setTimeout(() => {
+        const header = this.shadowRoot?.querySelector('.app-header');
+        if (header) {
+          header.classList.toggle('scrolled', globalThis.scrollY > 0);
+        }
+        ticking = undefined;
+      }, 100);
+    };
+    globalThis.addEventListener('scroll', onScroll, { passive: true });
+    this._scrollCleanup = () => {
+      globalThis.removeEventListener('scroll', onScroll);
+      if (ticking !== undefined) {
+        globalThis.clearTimeout(ticking);
+      }
+    };
+  }
+
+  private _teardownScrollDetection(): void {
+    this._scrollCleanup?.();
+    this._scrollCleanup = undefined;
+  }
+
   // --- Lifecycle ---
 
   override connectedCallback(): void {
@@ -1030,6 +1150,9 @@ export class OpenLayout extends OpenElement {
     // v0.23.0: Integrated from www/public/mobile-menu.js.
     // Close mobile menu on backdrop click or sidebar nav link click.
     this._docClickCleanup = this._setupBackdropClose();
+
+    // Scroll detection for header backdrop blur
+    this._setupScrollDetection();
   }
 
   override disconnectedCallback(): void {
@@ -1039,6 +1162,7 @@ export class OpenLayout extends OpenElement {
     if (this._themeHandler) {
       globalThis.removeEventListener?.('open:theme-change', this._themeHandler);
     }
+    this._teardownScrollDetection();
   }
 
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
