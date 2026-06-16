@@ -177,7 +177,9 @@ export function renderShowcase(
           </div>
           <div
             class="showcase-body"
-            innerHTML={{ __html: codeSamples[activeTab] }}
+            // ponytail: trustRenderHtml is the framework's explicit trust
+            // boundary for pre-sanitized static HTML in SSR output.
+            dangerouslySetInnerHTML={{ __html: codeSamples[activeTab] }}
           />
         </open-card-linear>
       </div>
