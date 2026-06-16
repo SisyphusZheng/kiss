@@ -11,7 +11,7 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   assertExists(mod.manifest, 'manifest export should exist');
   assertEquals(typeof mod.manifest, 'object');
   assertEquals(mod.manifest.packageName, '@openelement/ui');
-  assertEquals(mod.manifest.declarations.length, 13);
+  assertEquals(mod.manifest.declarations.length, 18);
   assertEquals(mod.manifest.declarations[0].tagName, 'open-card');
   assertEquals(mod.manifest.declarations[1].tagName, 'open-callout');
   assertEquals(mod.manifest.declarations[2].tagName, 'open-step-card');
@@ -25,6 +25,11 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   assertEquals(mod.manifest.declarations[10].tagName, 'open-modal');
   assertEquals(mod.manifest.declarations[11].tagName, 'open-tabs');
   assertEquals(mod.manifest.declarations[12].tagName, 'open-hero-ping');
+  assertEquals(mod.manifest.declarations[13].tagName, 'open-button-linear');
+  assertEquals(mod.manifest.declarations[14].tagName, 'open-card-linear');
+  assertEquals(mod.manifest.declarations[15].tagName, 'open-input-linear');
+  assertEquals(mod.manifest.declarations[16].tagName, 'open-nav-linear');
+  assertEquals(mod.manifest.declarations[17].tagName, 'open-badge-linear');
 });
 
 Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
@@ -53,9 +58,36 @@ Deno.test('open-ui - all components export tagName', async () => {
     'open-step-card',
     'open-tabs',
     'open-theme-toggle',
+    'open-button-linear',
+    'open-card-linear',
+    'open-input-linear',
+    'open-nav-linear',
+    'open-badge-linear',
   ];
   for (const name of components) {
     const mod = await import(`../src/${name}.tsx`);
     assertExists(mod.tagName, `${name} should export tagName`);
   }
+});
+
+Deno.test('open-ui - linear components export class and tagName', async () => {
+  const button = await import('../src/open-button-linear.tsx');
+  assertEquals(button.tagName, 'open-button-linear');
+  assertExists(button.OpenButtonLinear, 'OpenButtonLinear class should be exported');
+
+  const card = await import('../src/open-card-linear.tsx');
+  assertEquals(card.tagName, 'open-card-linear');
+  assertExists(card.OpenCardLinear, 'OpenCardLinear class should be exported');
+
+  const input = await import('../src/open-input-linear.tsx');
+  assertEquals(input.tagName, 'open-input-linear');
+  assertExists(input.OpenInputLinear, 'OpenInputLinear class should be exported');
+
+  const nav = await import('../src/open-nav-linear.tsx');
+  assertEquals(nav.tagName, 'open-nav-linear');
+  assertExists(nav.OpenNavLinear, 'OpenNavLinear class should be exported');
+
+  const badge = await import('../src/open-badge-linear.tsx');
+  assertEquals(badge.tagName, 'open-badge-linear');
+  assertExists(badge.OpenBadgeLinear, 'OpenBadgeLinear class should be exported');
 });

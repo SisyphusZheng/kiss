@@ -366,6 +366,11 @@ const COMPONENT_FILES = [
   'open-dropdown',
   'open-modal',
   'open-tabs',
+  'open-button-linear',
+  'open-card-linear',
+  'open-input-linear',
+  'open-nav-linear',
+  'open-badge-linear',
 ] as const;
 
 const REACTIVE_PROPERTY_CASES: ReadonlyArray<{
@@ -438,6 +443,11 @@ Deno.test('index: re-exports all public components', async () => {
       'OpenDropdown',
       'OpenModal',
       'OpenTabs',
+      'OpenButtonLinear',
+      'OpenCardLinear',
+      'OpenInputLinear',
+      'OpenNavLinear',
+      'OpenBadgeLinear',
       'openPropsTokenSheet',
       'manifest',
     ]
@@ -1009,6 +1019,359 @@ Deno.test('open-hero-ping: has correct tagName and renders status UI', async () 
   const btn = findByPart(vnode, 'dot-animated') as VNode;
   assertEquals(btn.tag, 'button');
   assertStringIncludes(vnodeText(btn), 'ping server');
+});
+
+// ─── Linear component contract tests ────────────────────────────────────────
+
+Deno.test('open-button-linear: exports tagName and class', async () => {
+  const mod = await import('../src/open-button-linear.tsx');
+  assertEquals(mod.tagName, 'open-button-linear');
+  assertEquals(typeof mod.OpenButtonLinear, 'function');
+});
+
+Deno.test('open-button-linear: has correct tagName and default render', async () => {
+  const module = asComponentModule(await import('../src/open-button-linear.tsx'));
+  assertEquals(module.tagName, 'open-button-linear');
+
+  const Component = exportedConstructor(module);
+  const instance = new Component();
+  const vnode = instance.render() as VNode;
+  assertEquals(vnode.tag, 'button');
+  assertEquals(vnode.props.part, 'control');
+  assertEquals(vnode.props.type, 'button');
+  assertStringIncludes(String(vnode.props.className), 'btn--primary');
+  assertStringIncludes(String(vnode.props.className), 'btn--md');
+});
+
+Deno.test('open-button-linear: variant attribute reflects in render', async () => {
+  const { OpenButtonLinear } = await import('../src/open-button-linear.tsx');
+  const instance = new OpenButtonLinear();
+  instance.setAttribute('variant', 'secondary');
+  const vnode = instance.render() as VNode;
+  assertStringIncludes(String(vnode.props.className), 'btn--secondary');
+
+  instance.setAttribute('variant', 'tertiary');
+  const v3 = instance.render() as VNode;
+  assertStringIncludes(String(vnode.props.className), 'btn--secondary');
+  assertStringIncludes(String(v3.props.className), 'btn--tertiary');
+
+  instance.setAttribute('variant', 'inverse');
+  const v4 = instance.render() as VNode;
+  assertStringIncludes(String(v4.props.className), 'btn--inverse');
+});
+
+Deno.test('open-button-linear: size attribute reflects in render', async () => {
+  const { OpenButtonLinear } = await import('../src/open-button-linear.tsx');
+  const instance = new OpenButtonLinear();
+  instance.setAttribute('size', 'sm');
+  const v1 = instance.render() as VNode;
+  assertStringIncludes(String(v1.props.className), 'btn--sm');
+
+  instance.setAttribute('size', 'lg');
+  const v2 = instance.render() as VNode;
+  assertStringIncludes(String(v2.props.className), 'btn--lg');
+});
+
+Deno.test('open-button-linear: href renders anchor tag with part=control', async () => {
+  const { OpenButtonLinear } = await import('../src/open-button-linear.tsx');
+  const instance = new OpenButtonLinear();
+  instance.setAttribute('href', 'https://example.com');
+  instance.setAttribute('target', '_blank');
+  const vnode = instance.render() as VNode;
+  assertEquals(vnode.tag, 'a');
+  assertEquals(vnode.props.href, 'https://example.com');
+  assertEquals(vnode.props.target, '_blank');
+  assertEquals(vnode.props.rel, 'noopener noreferrer');
+  assertEquals(vnode.props.part, 'control');
+});
+
+Deno.test('open-button-linear: disabled reflects on button and anchor', async () => {
+  const { OpenButtonLinear } = await import('../src/open-button-linear.tsx');
+  // Button disabled
+  const btn = new OpenButtonLinear();
+  btn.setAttribute('disabled', '');
+  const v1 = btn.render() as VNode;
+  assertEquals(v1.props.disabled, true);
+
+  // Anchor disabled
+  const anchor = new OpenButtonLinear();
+  anchor.setAttribute('href', '/docs');
+  anchor.setAttribute('disabled', '');
+  const v2 = anchor.render() as VNode;
+  assertEquals(v2.props.href, '');
+  assertEquals(v2.props['aria-disabled'], 'true');
+});
+
+Deno.test('open-button-linear: click dispatches open-click event', async () => {
+  const { OpenButtonLinear } = await import('../src/open-button-linear.tsx');
+  const instance = new OpenButtonLinear();
+  let fired = false;
+  instance.addEventListener('open-click', () => {
+    fired = true;
+  });
+  const vnode = instance.render() as VNode;
+  clickVNode(vnode, undefined, instance);
+  assertEquals(fired, true);
+});
+
+// ─── open-card-linear ───────────────────────────────────────────────────────
+
+Deno.test('open-card-linear: exports tagName and class', async () => {
+  const mod = await import('../src/open-card-linear.tsx');
+  assertEquals(mod.tagName, 'open-card-linear');
+  assertEquals(typeof mod.OpenCardLinear, 'function');
+});
+
+Deno.test('open-card-linear: has correct tagName and slot structure', async () => {
+  const module = asComponentModule(await import('../src/open-card-linear.tsx'));
+  assertEquals(module.tagName, 'open-card-linear');
+
+  const Component = exportedConstructor(module);
+  const instance = new Component();
+  const vnode = instance.render() as VNode;
+  assertEquals(vnode.tag, 'article');
+  assertEquals(vnode.props.part, 'container');
+
+  const slots: VNode[] = [];
+  function collect(node: VNode): void {
+    if (node.tag === 'slot') slots.push(node);
+    for (const child of node.children) {
+      if (isVNodeObject(child)) collect(child);
+    }
+  }
+  collect(vnode);
+  assertEquals(slots.length, 3);
+  assertEquals(slots[0].props.name, 'header');
+  assertEquals(slots[1].props.name, undefined);
+  assertEquals(slots[2].props.name, 'footer');
+});
+
+Deno.test('open-card-linear: variant attribute reflects', async () => {
+  const { OpenCardLinear } = await import('../src/open-card-linear.tsx');
+  const instance = new OpenCardLinear();
+
+  // standard variant (default) — article with slots
+  instance.setAttribute('variant', 'standard');
+  const v1 = instance.render() as VNode;
+  assertEquals(v1.tag, 'article');
+
+  // code-panel — article with header bar
+  instance.setAttribute('variant', 'code-panel');
+  instance.setAttribute('title', 'example.ts');
+  const v2 = instance.render() as VNode;
+  assertEquals(v2.tag, 'article');
+  assertStringIncludes(vnodeText(v2), 'example.ts');
+
+  // featured — article
+  instance.setAttribute('variant', 'featured');
+  const v3 = instance.render() as VNode;
+  assertEquals(v3.tag, 'article');
+});
+
+// ─── open-input-linear ──────────────────────────────────────────────────────
+
+Deno.test('open-input-linear: exports tagName and class', async () => {
+  const mod = await import('../src/open-input-linear.tsx');
+  assertEquals(mod.tagName, 'open-input-linear');
+  assertEquals(typeof mod.OpenInputLinear, 'function');
+});
+
+Deno.test('open-input-linear: has correct tagName and control part', async () => {
+  const module = asComponentModule(await import('../src/open-input-linear.tsx'));
+  assertEquals(module.tagName, 'open-input-linear');
+
+  const Component = exportedConstructor(module);
+  const instance = new Component();
+  const vnode = instance.render() as VNode;
+  assertEquals(vnode.tag, 'div');
+  assertEquals(vnode.props.part, 'wrapper');
+  const control = findByPart(vnode, 'control') as VNode;
+  assertEquals(control.tag, 'input');
+});
+
+Deno.test('open-input-linear: placeholder/value attributes render', async () => {
+  const { OpenInputLinear } = await import('../src/open-input-linear.tsx');
+  const instance = new OpenInputLinear();
+  instance.setAttribute('placeholder', 'Enter text');
+  instance.setAttribute('value', 'hello');
+
+  const input = findByPart(instance.render() as VNode, 'control') as VNode;
+  assertEquals(input.props.placeholder, 'Enter text');
+  assertEquals(input.props.value, 'hello');
+});
+
+Deno.test('open-input-linear: variant attribute reflects', async () => {
+  const { OpenInputLinear } = await import('../src/open-input-linear.tsx');
+  const instance = new OpenInputLinear();
+
+  // standard variant — no variant class, no decorative prefix
+  instance.setAttribute('variant', 'standard');
+  const v1 = instance.render() as VNode;
+  const input1 = findByPart(v1, 'control') as VNode;
+  assertStringIncludes(String(input1.props.className), 'linear-input');
+
+  // cli variant — $ prefix present
+  instance.setAttribute('variant', 'cli');
+  const v2 = instance.render() as VNode;
+  const input2 = findByPart(v2, 'control') as VNode;
+  assertStringIncludes(String(input2.props.className), 'linear-input--cli');
+  assertStringIncludes(vnodeText(v2), '$');
+
+  // search variant — search icon present, default placeholder
+  instance.setAttribute('variant', 'search');
+  instance.removeAttribute('placeholder');
+  const v3 = instance.render() as VNode;
+  const input3 = findByPart(v3, 'control') as VNode;
+  assertStringIncludes(String(input3.props.className), 'linear-input--search');
+  assertEquals(input3.props.placeholder, 'Search documentation...');
+});
+
+Deno.test('open-input-linear: input event updates value and dispatches open-input', async () => {
+  const { OpenInputLinear } = await import('../src/open-input-linear.tsx');
+  const instance = new OpenInputLinear();
+  const events: CustomEvent[] = [];
+  instance.addEventListener('open-input', (e) => events.push(e as CustomEvent));
+
+  const input = findByPart(instance.render() as VNode, 'control') as VNode;
+  (input.props.onInput as (e: Event) => void)?.({
+    target: { value: 'typed' },
+  } as unknown as Event);
+
+  assertEquals(instance.getAttribute('value'), 'typed');
+  assertEquals(events.length, 1);
+  assertEquals((events[0] as CustomEvent).detail.value, 'typed');
+});
+
+Deno.test('open-input-linear: change and focus events dispatch', async () => {
+  const { OpenInputLinear } = await import('../src/open-input-linear.tsx');
+  const instance = new OpenInputLinear();
+  const changeEvents: CustomEvent[] = [];
+  const focusEvents: CustomEvent[] = [];
+  const blurEvents: CustomEvent[] = [];
+  instance.addEventListener('open-change', (e) => changeEvents.push(e as CustomEvent));
+  instance.addEventListener('open-focus', (e) => focusEvents.push(e as CustomEvent));
+  instance.addEventListener('open-blur', (e) => blurEvents.push(e as CustomEvent));
+
+  const input = findByPart(instance.render() as VNode, 'control') as VNode;
+  (input.props.onChange as (e: Event) => void)?.({
+    target: { value: 'changed' },
+  } as unknown as Event);
+  (input.props.onFocus as (e: Event) => void)?.({} as unknown as Event);
+  (input.props.onBlur as (e: Event) => void)?.({} as unknown as Event);
+
+  assertEquals(changeEvents.length, 1);
+  assertEquals(focusEvents.length, 1);
+  assertEquals(blurEvents.length, 1);
+});
+
+// ─── open-nav-linear ────────────────────────────────────────────────────────
+
+Deno.test('open-nav-linear: exports tagName and class', async () => {
+  const mod = await import('../src/open-nav-linear.tsx');
+  assertEquals(mod.tagName, 'open-nav-linear');
+  assertEquals(typeof mod.OpenNavLinear, 'function');
+});
+
+Deno.test('open-nav-linear: has correct tagName and renders logo text', async () => {
+  const module = asComponentModule(await import('../src/open-nav-linear.tsx'));
+  assertEquals(module.tagName, 'open-nav-linear');
+
+  const Component = exportedConstructor(module);
+  const instance = new Component();
+  instance.setAttribute('logo-text', 'MyApp');
+  const vnode = instance.render() as VNode;
+  assertStringIncludes(vnodeText(vnode), 'MyApp');
+  assertEquals(vnode.props.part, 'container');
+  assertExists(findByPart(vnode, 'logo'));
+});
+
+Deno.test('open-nav-linear: nav-links JSON renders navigation links', async () => {
+  const { OpenNavLinear } = await import('../src/open-nav-linear.tsx');
+  const instance = new OpenNavLinear();
+  instance.setAttribute(
+    'nav-links',
+    JSON.stringify([
+      { label: 'Guide', href: '/guide' },
+      { label: 'API', href: '/api' },
+    ]),
+  );
+  const vnode = instance.render() as VNode;
+  assertStringIncludes(vnodeText(vnode), 'Guide');
+  assertStringIncludes(vnodeText(vnode), 'API');
+  const links = findByPart(vnode, 'links') as VNode;
+  assertExists(links);
+});
+
+Deno.test('open-nav-linear: current-path marks active link with aria-current=page', async () => {
+  const { OpenNavLinear } = await import('../src/open-nav-linear.tsx');
+  const instance = new OpenNavLinear();
+  instance.setAttribute('current-path', '/guide');
+  instance.setAttribute(
+    'nav-links',
+    JSON.stringify([
+      { label: 'Guide', href: '/guide' },
+      { label: 'API', href: '/api' },
+    ]),
+  );
+  const vnode = instance.render() as VNode;
+  const links = findByPart(vnode, 'links') as VNode;
+
+  const linkNodes = links.children.filter((c): c is VNode => isVNodeObject(c) && c.tag === 'a');
+  assertEquals(linkNodes.length, 2);
+  assertEquals(linkNodes[0].props['aria-current'], 'page');
+  assertEquals(linkNodes[1].props['aria-current'], undefined);
+});
+
+Deno.test('open-nav-linear: renders GitHub and Get started CTA buttons', async () => {
+  const { OpenNavLinear } = await import('../src/open-nav-linear.tsx');
+  const instance = new OpenNavLinear();
+  instance.setAttribute('github-url', 'https://github.com/test/repo');
+  const vnode = instance.render() as VNode;
+
+  const github = findByPart(vnode, 'github') as VNode;
+  assertExists(github);
+  assertStringIncludes(vnodeText(github), 'GitHub');
+  assertEquals(github.props.href, 'https://github.com/test/repo');
+
+  const cta = findByPart(vnode, 'cta') as VNode;
+  assertExists(cta);
+  assertStringIncludes(vnodeText(cta), 'Get started');
+  assertEquals(cta.props.href, '/docs');
+});
+
+// ─── open-badge-linear ──────────────────────────────────────────────────────
+
+Deno.test('open-badge-linear: exports tagName and class', async () => {
+  const mod = await import('../src/open-badge-linear.tsx');
+  assertEquals(mod.tagName, 'open-badge-linear');
+  assertEquals(typeof mod.OpenBadgeLinear, 'function');
+});
+
+Deno.test('open-badge-linear: has correct tagName and renders slot content', async () => {
+  const module = asComponentModule(await import('../src/open-badge-linear.tsx'));
+  assertEquals(module.tagName, 'open-badge-linear');
+
+  const Component = exportedConstructor(module);
+  const instance = new Component();
+  const vnode = instance.render() as VNode;
+  assertEquals(vnode.tag, 'span');
+  assertEquals(vnode.props.part, 'badge');
+  assertExists(vnode.children.find((c) => isVNodeObject(c) && c.tag === 'slot'));
+});
+
+Deno.test('open-badge-linear: variant attribute reflects', async () => {
+  const { OpenBadgeLinear } = await import('../src/open-badge-linear.tsx');
+  const instance = new OpenBadgeLinear();
+
+  // default
+  let vnode = instance.render() as VNode;
+  assertStringIncludes(classNameOf(vnode), 'badge--default');
+
+  for (const variant of ['success', 'error', 'warning', 'info', 'new'] as const) {
+    instance.setAttribute('variant', variant);
+    vnode = instance.render() as VNode;
+    assertStringIncludes(classNameOf(vnode), `badge--${variant}`);
+  }
 });
 
 Deno.test('open-hero-ping: fetch updates state', async () => {
