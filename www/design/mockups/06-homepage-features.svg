@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="900" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      text { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <rect width="1440" height="900" fill="#08080a"/>
+  
+  <!-- Eyebrow -->
+  <text x="80" y="70" font-size="13" font-weight="500" fill="#5c7cfa" letter-spacing="0.04em">Why openElement</text>
+  
+  <!-- Headline -->
+  <text x="80" y="110" font-size="40" font-weight="600" fill="#e9ecef" letter-spacing="-0.02em">Static-first Web Components</text>
+  <text x="80" y="160" font-size="40" font-weight="600" fill="#e9ecef" letter-spacing="-0.02em">without duplicate render paths.</text>
+  
+  <!-- Feature Cards -->
+  <g id="features">
+    <g id="feature-card-1">
+      <rect x="80" y="240" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="86" y1="240" x2="474" y2="240" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="104" y="264" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="104" y="320" font-size="22" font-weight="500" fill="#e9ecef">Elements-first</text>
+      <text x="104" y="350" font-size="14" font-weight="400" fill="#adb5bd">OpenElement is the future Elements</text>
+      <text x="104" y="372" font-size="14" font-weight="400" fill="#adb5bd">surface. Shadow/DSD remains the default</text>
+      <text x="104" y="394" font-size="14" font-weight="400" fill="#adb5bd">render mode.</text>
+    </g>
+    <g id="feature-card-2">
+      <rect x="504" y="240" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="510" y1="240" x2="898" y2="240" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="528" y="264" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="528" y="320" font-size="22" font-weight="500" fill="#e9ecef">One renderer</text>
+      <text x="528" y="350" font-size="14" font-weight="400" fill="#adb5bd">JSX becomes VNode IR. SSR, CSR,</text>
+      <text x="528" y="372" font-size="14" font-weight="400" fill="#adb5bd">signals, and events share the same</text>
+      <text x="528" y="394" font-size="14" font-weight="400" fill="#adb5bd">structural model.</text>
+    </g>
+    <g id="feature-card-3">
+      <rect x="928" y="240" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="934" y1="240" x2="1322" y2="240" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="952" y="264" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="952" y="320" font-size="22" font-weight="500" fill="#e9ecef">App lifecycle</text>
+      <text x="952" y="350" font-size="14" font-weight="400" fill="#adb5bd">Route params, load context, route</text>
+      <text x="952" y="372" font-size="14" font-weight="400" fill="#adb5bd">metadata, redirect, not-found, and</text>
+      <text x="952" y="394" font-size="14" font-weight="400" fill="#adb5bd">error fallback.</text>
+    </g>
+    <g id="feature-card-4">
+      <rect x="80" y="484" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="86" y1="484" x2="474" y2="484" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="104" y="508" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="104" y="564" font-size="22" font-weight="500" fill="#e9ecef">Trusted boundary</text>
+      <text x="104" y="594" font-size="14" font-weight="400" fill="#adb5bd">HTML injection is explicit and reserved</text>
+      <text x="104" y="616" font-size="14" font-weight="400" fill="#adb5bd">for pre-sanitized non-interactive</text>
+      <text x="104" y="638" font-size="14" font-weight="400" fill="#adb5bd">content.</text>
+    </g>
+    <g id="feature-card-5">
+      <rect x="504" y="484" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="510" y1="484" x2="898" y2="484" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="528" y="508" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="528" y="564" font-size="22" font-weight="500" fill="#e9ecef">Gate-proven</text>
+      <text x="528" y="594" font-size="14" font-weight="400" fill="#adb5bd">AutoFlow3, package graph validation,</text>
+      <text x="528" y="616" font-size="14" font-weight="400" fill="#adb5bd">and workflow slimming guard the</text>
+      <text x="528" y="638" font-size="14" font-weight="400" fill="#adb5bd">14-package line.</text>
+    </g>
+    <g id="feature-card-6">
+      <rect x="928" y="484" width="400" height="220" rx="12" fill="#16191d" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="934" y1="484" x2="1322" y2="484" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <rect x="952" y="508" width="32" height="32" rx="6" fill="#5c7cfa"/>
+      <text x="952" y="564" font-size="22" font-weight="500" fill="#e9ecef">Web standards</text>
+      <text x="952" y="594" font-size="14" font-weight="400" fill="#adb5bd">Custom Elements, Shadow DOM,</text>
+      <text x="952" y="616" font-size="14" font-weight="400" fill="#adb5bd">CSSStyleSheet, URL, fetch, and Web</text>
+      <text x="952" y="638" font-size="14" font-weight="400" fill="#adb5bd">Streams at the center.</text>
+    </g>
+  </g>
+</svg>
