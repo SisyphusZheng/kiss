@@ -13,12 +13,12 @@ export const headerNav = [
     "label": "Architecture"
   },
   {
-    "href": "/registry",
-    "label": "Hub"
-  },
-  {
     "href": "/blog",
     "label": "Blog"
+  },
+  {
+    "href": "/registry",
+    "label": "Hub"
   }
 ];
 export const navSections = [

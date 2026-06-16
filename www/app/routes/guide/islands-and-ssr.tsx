@@ -1,12 +1,13 @@
 export const meta = { section: 'Core', label: 'Islands & SSR', order: 4 };
 import { pageStylesSheet } from '../../components/page-styles.js';
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
 import '@openelement/ui\/open-callout';
+import '@openelement/ui\/open-button-linear';
 
 export class IslandsSsrPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -29,7 +30,7 @@ export class IslandsSsrPage extends OpenElement {
           class='comparison'
           style='display:grid;grid-template-columns:1fr 1fr;gap:var(--size-4);margin:var(--size-4) 0 var(--size-6)'
         >
-          <div style='padding:var(--size-4);border:1px solid var(--gray-3);border-radius:var(--radius-2)'>
+          <div style='padding:var(--size-4);border:1px solid var(--border);border-radius:var(--radius-2)'>
             <h3>传统 SPA</h3>
             <ul>
               <li>JavaScript 加载前页面空白</li>
@@ -37,7 +38,7 @@ export class IslandsSsrPage extends OpenElement {
               <li>内容和交互绑定</li>
             </ul>
           </div>
-          <div style='padding:var(--size-4);border:1px solid var(--gray-3);border-radius:var(--radius-2);background:var(--gray-1);border-left:3px solid var(--indigo-5)'>
+          <div style='padding:var(--size-4);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface);border-left:3px solid var(--brand)'>
             <h3>openElement Islands</h3>
             <ul>
               <li>内容通过 SSG + DSD 预渲染</li>
@@ -235,8 +236,8 @@ customElements.define('my-counter', Counter);`}</code></pre>
         </open-callout>
 
         <div class='nav-row'>
-          <a href='/guide/routing-and-data' class='btn btn-ghost'>&larr; 路由与数据</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>部署 &rarr;</a>
+          <open-button-linear variant='secondary' href='/guide/routing-and-data'>&larr; 路由与数据</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/deployment'>部署 &rarr;</open-button-linear>
         </div>
       </div>
     );
@@ -261,7 +262,7 @@ customElements.define('my-counter', Counter);`}</code></pre>
           class='comparison'
           style='display:grid;grid-template-columns:1fr 1fr;gap:var(--size-4);margin:var(--size-4) 0 var(--size-6)'
         >
-          <div style='padding:var(--size-4);border:1px solid var(--gray-3);border-radius:var(--radius-2)'>
+          <div style='padding:var(--size-4);border:1px solid var(--border);border-radius:var(--radius-2)'>
             <h3>Traditional SPA</h3>
             <ul>
               <li>Blank page until JavaScript loads</li>
@@ -269,7 +270,7 @@ customElements.define('my-counter', Counter);`}</code></pre>
               <li>Content and interactivity are tightly coupled</li>
             </ul>
           </div>
-          <div style='padding:var(--size-4);border:1px solid var(--gray-3);border-radius:var(--radius-2);background:var(--gray-1);border-left:3px solid var(--indigo-5)'>
+          <div style='padding:var(--size-4);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface);border-left:3px solid var(--brand)'>
             <h3>openElement Islands</h3>
             <ul>
               <li>Content pre-rendered via SSG + DSD</li>
@@ -469,8 +470,8 @@ customElements.define('my-counter', Counter);`}</code></pre>
         </open-callout>
 
         <div class='nav-row'>
-          <a href='/guide/routing-and-data' class='btn btn-ghost'>&larr; Routing & Data</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>Deployment &rarr;</a>
+          <open-button-linear variant='secondary' href='/guide/routing-and-data'>&larr; Routing & Data</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/deployment'>Deployment &rarr;</open-button-linear>
         </div>
       </div>
     );

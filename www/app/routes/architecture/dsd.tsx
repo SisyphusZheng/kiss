@@ -2,7 +2,7 @@ export const meta = { section: 'Principles', label: 'DSD Rendering', order: 30 }
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
 import '../../islands/reactive-showcase.js';
 
@@ -12,21 +12,21 @@ routeSheet.replaceSync(`
       .comparison {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: var(--size-4);
-        margin: var(--size-4) 0 var(--size-6);
+        gap: var(--space-md);
+        margin: var(--space-md) 0 var(--space-lg);
       }
       .comparison-item {
-        padding: var(--size-4) var(--size-5);
-        border: 1px solid var(--gray-3);
-        border-radius: var(--radius-2);
+        padding: var(--space-md) 20px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         transition: border-color 0.2s, box-shadow 0.2s;
       }
       .comparison-item:hover {
-        border-color: var(--gray-4);
+        border-color: var(--color-border-hover);
       }
       .comparison-item.openElement {
-        background: var(--gray-1);
-        border-left: 3px solid var(--indigo-5);
+        background: var(--surface-1);
+        border-left: 3px solid var(--color-brand);
       }
       @media (max-width: 720px) {
         .comparison {
@@ -38,7 +38,7 @@ routeSheet.replaceSync(`
 export class DsdGuidePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -211,13 +211,13 @@ export class DsdGuidePage extends OpenElement {
         <reactive-showcase></reactive-showcase>
 
         <div class='nav-row'>
-          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/architecture`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             &larr; {loc === 'zh' ? '分层架构' : 'Architecture'}
           </a>
-          <a href={`/${loc}/architecture/islands`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/islands`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             {loc === 'zh' ? 'Island 升级' : 'Island Upgrade'} &rarr;
           </a>
-          <a href={`/${loc}/architecture/standards-registry`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/standards-registry`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             {loc === 'zh' ? '标准与注册表' : 'Standards & Registry'} &rarr;
           </a>
         </div>
@@ -395,13 +395,13 @@ export class DsdGuidePage extends OpenElement {
         <reactive-showcase></reactive-showcase>
 
         <div class='nav-row'>
-          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/architecture`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             &larr; {loc === 'zh' ? '分层架构' : 'Architecture'}
           </a>
-          <a href={`/${loc}/architecture/islands`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/islands`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             {loc === 'zh' ? 'Island 升级' : 'Island Upgrade'} &rarr;
           </a>
-          <a href={`/${loc}/architecture/standards-registry`} class='btn btn-ghost'>
+          <a href={`/${loc}/architecture/standards-registry`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             {loc === 'zh' ? '标准与注册表' : 'Standards & Registry'} &rarr;
           </a>
         </div>

@@ -3,23 +3,23 @@ export const tagName = 'page-islands-deep-guide';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-code-block';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
-  .layer-card { padding: var(--size-5) var(--size-6); margin: var(--size-4) 0; border-left: 2px solid var(--gray-4); background: var(--gray-1); border-radius: 0 3px 3px 0; }
-  .layer-card .layer-tag { font-size: 0.6875rem; font-weight: var(--font-weight-5); text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-6); margin-bottom: 0.25rem; }
-  .layer-card h3 { margin: 0 0 var(--size-2); }
-  .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--size-4); margin: var(--size-4) 0 var(--size-6); }
-  .strategy-item { padding: var(--size-4) var(--size-5); border: 0.5px solid var(--gray-3); border-radius: var(--radius-1); background: var(--gray-1); }
-  .strategy-item .strat-name { font-weight: var(--font-weight-5); font-size: var(--font-size-2); color: var(--gray-10); margin-bottom: 0.25rem; }
-  .strategy-item .strat-name code { font-size: var(--font-size-0); background: var(--gray-2); padding: 0.125rem 0.375rem; border-radius: 3px; }
+  .layer-card { padding: 20px var(--space-lg); margin: var(--space-md) 0; border-left: 2px solid var(--color-border); background: var(--surface-1); border-radius: 0 3px 3px 0; }
+  .layer-card .layer-tag { font-size: 11px; font-weight: var(--font-weight-medium); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+  .layer-card h3 { margin: 0 0 var(--space-xs); }
+  .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin: var(--space-md) 0 var(--space-lg); }
+  .strategy-item { padding: var(--space-md) 20px; border: 0.5px solid var(--color-border); border-radius: var(--radius-xs); background: var(--surface-1); }
+  .strategy-item .strat-name { font-weight: var(--font-weight-medium); font-size: var(--font-size-body); color: var(--color-text-primary); margin-bottom: 0.25rem; }
+  .strategy-item .strat-name code { font-size: var(--font-size-caption); background: var(--surface-2); padding: 0.125rem 0.375rem; border-radius: 3px; }
   @media (max-width: 720px) { .strategy-grid { grid-template-columns: 1fr; } }
 `);
 
 export class IslandsDeepGuidePage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (
@@ -106,8 +106,8 @@ export class IslandsDeepGuidePage extends OpenElement {
         </p>
 
         <div class='nav-row'>
-          <a href='/architecture/dsd' class='btn btn-ghost'>DSD Architecture</a>
-          <a href='/guide/islands-and-ssr' class='btn btn-ghost'>Islands and SSR</a>
+          <a href='/architecture/dsd' style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>DSD Architecture</a>
+          <a href='/guide/islands-and-ssr' style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>Islands and SSR</a>
         </div>
       </div>
     );

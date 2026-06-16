@@ -1,13 +1,14 @@
 export const meta = { section: 'Production', label: 'Configuration', order: 10 };
 import { pageStylesSheet } from '../../components/page-styles.js';
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
+import '@openelement/ui\/open-button-linear';
 
 export class ConfigurationPage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet];
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
   }
@@ -115,8 +116,8 @@ export default defineConfig({'{'}
 {'}'});</code></pre>
         </open-code-block>
         <div class='nav-row'>
-          <a href='/api/reference' class='btn btn-ghost'>← API Design</a>
-          <a href='/guide/error-handling' class='btn btn-ghost'>Security &amp; Middleware →</a>
+          <open-button-linear variant='secondary' href='/api/reference'>← API Design</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/error-handling'>Security &amp; Middleware →</open-button-linear>
         </div>
       </div>
     );
@@ -241,8 +242,8 @@ export default defineConfig({'{'}
           guide for CSP and middleware configuration.
         </p>
         <div class='nav-row'>
-          <a href='/api/reference' class='btn btn-ghost'>← API Design</a>
-          <a href='/guide/error-handling' class='btn btn-ghost'>Security &amp; Middleware →</a>
+          <open-button-linear variant='secondary' href='/api/reference'>← API Design</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/error-handling'>Security &amp; Middleware →</open-button-linear>
         </div>
       </div>
     );

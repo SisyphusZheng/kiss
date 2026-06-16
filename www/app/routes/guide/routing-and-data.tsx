@@ -1,13 +1,14 @@
 export const meta = { section: 'Core', label: 'Routing & Data', order: 3 };
 
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStylesSheet } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 import '@openelement/ui/open-callout';
+import '@openelement/ui/open-button-linear';
 
 export class RoutingDataPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet];
 
   override render() {
     return (
@@ -185,8 +186,8 @@ export default definePage<Post>({
       </open-callout>
 
       <div class='nav-row'>
-        <a href='/guide/core-concepts' class='btn btn-ghost'>&larr; Core Concepts</a>
-        <a href='/guide/islands-and-ssr' class='btn btn-ghost'>Islands &amp; SSR &rarr;</a>
+        <open-button-linear variant='secondary' href='/guide/core-concepts'>&larr; Core Concepts</open-button-linear>
+        <open-button-linear variant='secondary' href='/guide/islands-and-ssr'>Islands &amp; SSR &rarr;</open-button-linear>
       </div>
     </>
   );
@@ -296,8 +297,8 @@ export default definePage({
       </open-code-block>
 
       <div class='nav-row'>
-        <a href='/zh/guide/core-concepts' class='btn btn-ghost'>&larr; 核心概念</a>
-        <a href='/zh/guide/islands-and-ssr' class='btn btn-ghost'>Islands 与 SSR &rarr;</a>
+        <open-button-linear variant='secondary' href='/zh/guide/core-concepts'>&larr; 核心概念</open-button-linear>
+        <open-button-linear variant='secondary' href='/zh/guide/islands-and-ssr'>Islands 与 SSR &rarr;</open-button-linear>
       </div>
     </>
   );

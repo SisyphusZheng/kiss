@@ -2,7 +2,7 @@ export const meta = { section: 'Compatibility', label: 'Package Compatibility', 
 
 import { pageStylesSheet } from '../../components/page-styles.js';
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
 
 const baseStyle = pageStylesSheet;
@@ -10,7 +10,7 @@ const baseStyle = pageStylesSheet;
 export class PackageCompatibilityGuidePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, baseStyle];
+  static override styles = [linearTokenSheet, baseStyle];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -208,8 +208,8 @@ for (const pkg of node_modules) {
         </ul>
 
         <nav class='nav-row'>
-          <a class='btn btn-ghost' href={`/{loc}/architecture/architecture`}>← Architecture</a>
-          <a class='btn btn-ghost' href={`/{loc}/architecture/standards-registry`}>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href={`/{loc}/architecture/architecture`}>← Architecture</a>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href={`/{loc}/architecture/standards-registry`}>
             Standards & Registry {'->'}
           </a>
         </nav>
@@ -413,8 +413,8 @@ for (const pkg of node_modules) {
         </ul>
 
         <nav class='nav-row'>
-          <a class='btn btn-ghost' href={`/{loc}/architecture/architecture`}>← Architecture</a>
-          <a class='btn btn-ghost' href={`/{loc}/architecture/standards-registry`}>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href={`/{loc}/architecture/architecture`}>← Architecture</a>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href={`/{loc}/architecture/standards-registry`}>
             Standards & Registry {'->'}
           </a>
         </nav>

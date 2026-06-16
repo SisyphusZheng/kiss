@@ -4,7 +4,7 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
 import { signal } from '@openelement/signal';
 import { consumeContext } from '@openelement/core';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { THEME_CTX } from '@openelement/ui/open-layout';
 
 export const tagName = 'home-console';
@@ -46,7 +46,7 @@ styles.replaceSync(`
 `);
 
 export default class HomeConsole extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, styles];
+  static override styles = [linearTokenSheet, styles];
   #count = signal(42);
 
   constructor() {

@@ -1,9 +1,10 @@
 export const meta = { section: 'Production', label: 'Deployment', order: 5 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui\/open-code-block';
+import '@openelement/ui\/open-button-linear';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -17,7 +18,7 @@ routeSheet.replaceSync(
       }
       .platform-card {
         padding: var(--size-4);
-        border: 0.5px solid var(--gray-3);
+        border: var(--border-hairline) solid var(--border);
         border-radius: var(--radius-1);
       }
       .platform-card h3 {
@@ -31,7 +32,7 @@ routeSheet.replaceSync(
 );
 
 export class DeploymentPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -143,8 +144,8 @@ export default defineConfig({
           <li>如果 island 调用运行时端点，单独部署 API 路由。</li>
         </ul>
         <div class='nav-row'>
-          <a href='/guide/islands-and-ssr' class='btn btn-ghost'>← Islands 与 SSR</a>
-          <a href='/roadmap' class='btn btn-ghost'>开发计划 →</a>
+          <open-button-linear variant='secondary' href='/guide/islands-and-ssr'>← Islands 与 SSR</open-button-linear>
+          <open-button-linear variant='secondary' href='/roadmap'>开发计划 →</open-button-linear>
         </div>
       </div>
     );
@@ -236,8 +237,8 @@ export default defineConfig({
           <li>If islands call runtime endpoints, deploy API routes separately.</li>
         </ul>
         <div class='nav-row'>
-          <a href='/guide/islands-and-ssr' class='btn btn-ghost'>← Islands &amp; SSR</a>
-          <a href='/roadmap' class='btn btn-ghost'>Roadmap →</a>
+          <open-button-linear variant='secondary' href='/guide/islands-and-ssr'>← Islands &amp; SSR</open-button-linear>
+          <open-button-linear variant='secondary' href='/roadmap'>Roadmap →</open-button-linear>
         </div>
       </div>
     );

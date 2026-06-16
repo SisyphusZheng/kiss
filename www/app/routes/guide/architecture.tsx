@@ -7,20 +7,20 @@ export const tagName = 'guide-architecture';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const sheet = new StyleSheet();
 sheet.replaceSync(`
   :host { display:block; }
   .shell { max-width:900px; margin:0 auto; padding:44px var(--size-6) 72px; }
-  h1 { color:var(--gray-10); font-size:clamp(2.2rem,6vw,4rem); line-height:0.95; }
-  p { color:var(--gray-7); font-size:var(--font-size-4); line-height:var(--font-lineheight-4); }
-  a { color:var(--indigo-5); font-weight:var(--font-weight-7); }
+  h1 { color:var(--text-primary); font-size:clamp(2.2rem,6vw,4rem); line-height:0.95; }
+  p { color:var(--text-secondary); font-size:var(--font-size-4); line-height:var(--font-lineheight-4); }
+  a { color:var(--brand); font-weight:var(--font-weight-7); }
 `);
 
 export class GuideArchitecturePage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, sheet];
+  static override styles = [linearTokenSheet, sheet];
 
   override render() {
     return (

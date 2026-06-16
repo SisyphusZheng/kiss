@@ -4,7 +4,7 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 export const tagName = 'comparison-page';
 
 export const meta = { section: 'Principles', label: 'Comparison', order: 20 };
@@ -15,15 +15,15 @@ routeSheet.replaceSync(`
       .table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        margin: var(--size-6) 0 var(--size-10);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
+        margin: var(--space-lg) 0 var(--space-xxl);
+        border: 0.5px solid var(--color-border);
+        border-radius: var(--radius-sm);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: var(--font-size-1);
+        font-size: var(--font-size-body-sm);
         min-width: 640px;
       }
 
@@ -34,20 +34,20 @@ routeSheet.replaceSync(`
       }
 
       th {
-        background: var(--gray-1);
-        font-weight: var(--font-weight-5);
-        color: var(--gray-10);
+        background: var(--surface-1);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
         text-align: left;
-        padding: var(--size-3) var(--size-4);
-        border-bottom: 0.5px solid var(--gray-3);
+        padding: var(--space-sm) var(--space-md);
+        border-bottom: 0.5px solid var(--color-border);
         white-space: nowrap;
       }
 
       td {
-        padding: 0.625rem var(--size-4);
-        border-bottom: 0.5px solid var(--gray-3);
-        color: var(--gray-7);
-        line-height: var(--font-lineheight-3);
+        padding: 0.625rem var(--space-md);
+        border-bottom: 0.5px solid var(--color-border);
+        color: var(--color-text-secondary);
+        line-height: var(--line-height-normal);
       }
 
       tbody tr {
@@ -61,7 +61,7 @@ routeSheet.replaceSync(`
       }
 
       tbody tr:hover {
-        background: var(--gray-1);
+        background: var(--surface-1);
       }
 
       tbody tr:last-child td {
@@ -69,8 +69,8 @@ routeSheet.replaceSync(`
       }
 
       td:first-child {
-        font-weight: var(--font-weight-5);
-        color: var(--gray-10);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
         white-space: nowrap;
       }
 
@@ -79,8 +79,8 @@ routeSheet.replaceSync(`
       }
 
       .tag-yes {
-        color: var(--indigo-5);
-        font-weight: var(--font-weight-5);
+        color: var(--color-brand);
+        font-weight: var(--font-weight-medium);
       }
 
       .tag-yes::before {
@@ -88,43 +88,43 @@ routeSheet.replaceSync(`
       }
 
       .tag-no {
-        color: var(--gray-6);
+        color: var(--color-text-muted);
       }
 
       .tag-partial {
-        color: var(--gray-6);
+        color: var(--color-text-muted);
         font-style: italic;
       }
 
       /* openElement column highlight */
       th.openElement-col {
-        color: var(--indigo-5);
-        font-weight: var(--font-weight-6);
+        color: var(--color-brand);
+        font-weight: var(--font-weight-semibold);
       }
 
       td.openElement-col {
-        background: var(--indigo-1));
-        font-weight: var(--font-weight-5);
+        background: var(--color-brand-pale);
+        font-weight: var(--font-weight-medium);
       }
 
       /* Prose lists */
       ul {
-        padding-left: var(--size-5);
-        color: var(--gray-7);
-        line-height: var(--font-lineheight-4);
-        font-size: var(--font-size-2);
+        padding-left: var(--space-md);
+        color: var(--color-text-secondary);
+        line-height: var(--line-height-relaxed);
+        font-size: var(--font-size-body);
       }
       li {
-        margin: var(--size-2) 0;
+        margin: var(--space-xs) 0;
       }
       li strong {
-        color: var(--gray-10);
-        font-weight: var(--font-weight-5);
+        color: var(--color-text-primary);
+        font-weight: var(--font-weight-medium);
       }
     `);
 
 export default class ComparisonPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     const isZh = this._getLocale('zh') === 'zh';

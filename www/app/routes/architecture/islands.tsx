@@ -1,30 +1,30 @@
 export const meta = { section: 'Principles', label: 'Island Upgrade', order: 40 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
 
 const routeSheet = new StyleSheet();
 
-routeSheet.replaceSync(`
+ routeSheet.replaceSync(`
       .comparison {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: var(--size-4);
-        margin: var(--size-4) 0 var(--size-6);
+        gap: var(--space-md);
+        margin: var(--space-md) 0 var(--space-lg);
       }
       .comparison-item {
-        padding: var(--size-4) var(--size-5);
-        border: 1px solid var(--gray-3);
-        border-radius: var(--radius-2);
+        padding: var(--space-md) 20px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         transition: border-color 0.2s, box-shadow 0.2s;
       }
       .comparison-item:hover {
-        border-color: var(--gray-4);
+        border-color: var(--color-border-hover);
       }
       .comparison-item.openElement {
-        background: var(--gray-1);
-        border-left: 3px solid var(--indigo-5);
+        background: var(--surface-1);
+        border-left: 3px solid var(--color-brand);
       }
       @media (max-width: 720px) {
         .comparison {
@@ -36,7 +36,7 @@ routeSheet.replaceSync(`
 export class IslandsGuidePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -147,8 +147,8 @@ if (!customElements.get(tagName)) customElements.define(tagName, MyCounter);`}</
           build，并引入页面级 island manifest，让每个页面只加载实际出现的 island。
         </p>
         <div class='nav-row'>
-          <a href={`/{loc}/architecture/dsd`} class='btn btn-ghost'>&larr; DSD 渲染架构</a>
-          <a href={`/{loc}/architecture/islands-deep`} class='btn btn-ghost'>
+          <a href={`/{loc}/architecture/dsd`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>&larr; DSD 渲染架构</a>
+          <a href={`/{loc}/architecture/islands-deep`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             Island 深度指南 &rarr;
           </a>
         </div>
@@ -245,8 +245,8 @@ if (!customElements.get(tagName)) customElements.define(tagName, MyCounter);`}</
           island instead of guessing.
         </p>
         <div class='nav-row'>
-          <a href={`/{loc}/architecture/dsd`} class='btn btn-ghost'>&larr; DSD Architecture</a>
-          <a href={`/{loc}/architecture/islands-deep`} class='btn btn-ghost'>
+          <a href={`/{loc}/architecture/dsd`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>&larr; DSD Architecture</a>
+          <a href={`/{loc}/architecture/islands-deep`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>
             Island Deep Guide &rarr;
           </a>
         </div>

@@ -3,44 +3,46 @@ export const tagName = 'engine-architecture';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-badge-linear';
+import '@openelement/ui/open-card-linear';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
   :host { display: block; }
-  .shell { max-width: 1120px; margin: 0 auto; padding: 44px var(--size-6) 72px; }
-  .hero { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr); gap: var(--size-7); align-items: start; padding-bottom: var(--size-8); border-bottom: 1px solid var(--gray-3); }
-  .eyebrow { display: flex; flex-wrap: wrap; gap: var(--size-2); margin-bottom: var(--size-5); }
-  h1 { margin: 0; color: var(--gray-10); font-size: clamp(2.5rem, 7vw, 5rem); line-height: 0.95; letter-spacing: 0; }
-  h2 { margin: 0; color: var(--gray-10); font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.08; letter-spacing: 0; }
-  h3 { margin: 0 0 var(--size-2); color: var(--gray-10); }
-  p { color: var(--gray-6); line-height: var(--font-lineheight-4); }
-  .lede { margin: var(--size-5) 0 0; font-size: var(--font-size-4); max-width: 650px; }
-  .artifact, .layer-map { border: var(--border-size-1) solid var(--gray-3); border-radius: var(--radius-2); overflow: hidden; background: var(--gray-1); }
-  .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--gray-3); font-size: var(--font-size-0); color: var(--gray-6); }
-  pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--gray-1); color: var(--gray-11); font-size: var(--font-size-0); line-height: 1.65; }
+  .shell { max-width: 1120px; margin: 0 auto; padding: 44px var(--space-lg) 72px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr); gap: 28px; align-items: start; padding-bottom: var(--space-xl); border-bottom: 1px solid var(--color-border); }
+  .eyebrow { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-bottom: 20px; }
+  h1 { margin: 0; color: var(--color-text-primary); font-size: clamp(2.5rem, 7vw, 5rem); line-height: 0.95; letter-spacing: 0; }
+  h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.08; letter-spacing: 0; }
+  h3 { margin: 0 0 var(--space-xs); color: var(--color-text-primary); }
+  p { color: var(--color-text-secondary); line-height: var(--line-height-relaxed); }
+  .lede { margin: 20px 0 0; font-size: var(--font-size-subhead); max-width: 650px; }
+  .artifact, .layer-map { border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-1); }
+  .artifact-head { display: flex; justify-content: space-between; gap: var(--space-sm); padding: 14px var(--space-md); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-caption); color: var(--color-text-muted); }
+  pre { margin: 0; padding: var(--space-md); overflow-x: auto; background: var(--surface-1); color: var(--color-text-primary); font-size: var(--font-size-caption); line-height: 1.65; }
   code { font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace; }
-  .section { padding: var(--size-10) 0 0; }
-  .section-head { display: flex; justify-content: space-between; gap: var(--size-6); margin-bottom: var(--size-5); }
-  .kicker { margin: 0 0 var(--size-2); color: var(--indigo-5); font-size: var(--font-size-0); font-weight: var(--font-weight-8); text-transform: uppercase; }
-  .section-copy { max-width: 460px; margin: 0; font-size: var(--font-size-2); }
-  .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--gray-3); align-items: start; }
+  .section { padding: 40px 0 0; }
+  .section-head { display: flex; justify-content: space-between; gap: var(--space-lg); margin-bottom: 20px; }
+  .kicker { margin: 0 0 var(--space-xs); color: var(--color-brand); font-size: var(--font-size-caption); font-weight: 800; text-transform: uppercase; }
+  .section-copy { max-width: 460px; margin: 0; font-size: var(--font-size-body); }
+  .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--space-md); padding: 14px var(--space-md); border-bottom: 1px solid var(--color-border); align-items: start; }
   .layer:last-child { border-bottom: 0; }
-  .layer strong { color: var(--gray-10); font-size: var(--font-size-1); }
-  .layer span, .layer p { margin: 0; color: var(--gray-6); font-size: var(--font-size-0); line-height: 1.55; }
-  .cards, .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--size-3); }
+  .layer strong { color: var(--color-text-primary); font-size: var(--font-size-body-sm); }
+  .layer span, .layer p { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }
+  .cards, .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
   .gate-grid { grid-template-columns: 1fr 1fr; }
-  .gate { display: grid; grid-template-columns: 120px 1fr; gap: var(--size-3); align-items: start; padding: var(--size-4); border: var(--border-size-1) solid var(--gray-3); border-radius: var(--radius-2); background: var(--gray-1); }
-  .gate strong { color: var(--indigo-8); font-size: var(--font-size-1); }
-  .gate span { color: var(--gray-6); font-size: var(--font-size-0); line-height: 1.55; }
-  .nav-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--size-8); }
+  .gate { display: grid; grid-template-columns: 120px 1fr; gap: var(--space-sm); align-items: start; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--surface-1); }
+  .gate strong { color: var(--color-brand); font-size: var(--font-size-body-sm); }
+  .gate span { color: var(--color-text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }
+  .nav-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--space-xl); }
   @media (max-width: 900px) {
     .hero, .cards, .gate-grid { grid-template-columns: 1fr; }
-    .layer { grid-template-columns: 1fr; gap: var(--size-2); }
+    .layer { grid-template-columns: 1fr; gap: var(--space-xs); }
   }
   @media (max-width: 560px) {
-    .shell { padding: var(--size-8) var(--size-4) 56px; }
+    .shell { padding: var(--space-xl) var(--space-md) 56px; }
     .section-head, .gate { grid-template-columns: 1fr; display: grid; }
   }
 `);
@@ -63,7 +65,7 @@ foundation
 export class ArchitecturePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageSheet];
+  static override styles = [linearTokenSheet, pageSheet];
 
   override render() {
     return (
@@ -71,9 +73,9 @@ export class ArchitecturePage extends OpenElement {
         <section class='hero'>
           <div>
             <div class='eyebrow'>
-              <span class='badge badge-primary'>ADR-0105</span>
-              <span class='badge badge-primary'>{OPENELEMENT_VERSION}</span>
-              <span class='badge badge-success'>11-package graph</span>
+              <open-badge-linear>ADR-0105</open-badge-linear>
+              <open-badge-linear>{OPENELEMENT_VERSION}</open-badge-linear>
+              <open-badge-linear variant='success'>11-package graph</open-badge-linear>
             </div>
             <h1>Current Architecture</h1>
             <p class='lede'>
@@ -144,27 +146,27 @@ export class ArchitecturePage extends OpenElement {
             </p>
           </div>
           <div class='cards'>
-            <div class='card card-bordered p-4'>
-              <h3>Why element?</h3>
-              <p>
+            <open-card-linear variant='standard'>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-medium);color:var(--color-text-primary)'>Why element?</h3>
+              <p style='margin:0;font-size:var(--font-size-body-sm);color:var(--color-text-secondary)'>
                 Component authors import from one singular facade: @openelement/element. The facade
                 exports OpenElement, StyleSheet, signal helpers, and authoring types.
               </p>
-            </div>
-            <div class='card card-bordered p-4'>
-              <h3>Why SSG?</h3>
-              <p>
+            </open-card-linear>
+            <open-card-linear variant='standard'>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-medium);color:var(--color-text-primary)'>Why SSG?</h3>
+              <p style='margin:0;font-size:var(--font-size-body-sm);color:var(--color-text-secondary)'>
                 @openelement/ssg owns route scanning, entry descriptors, rendering, and HTML
                 postprocess. @openelement/adapter-vite keeps only Vite-specific glue.
               </p>
-            </div>
-            <div class='card card-bordered p-4'>
-              <h3>Why signal?</h3>
-              <p>
+            </open-card-linear>
+            <open-card-linear variant='standard'>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-medium);color:var(--color-text-primary)'>Why signal?</h3>
+              <p style='margin:0;font-size:var(--font-size-body-sm);color:var(--color-text-secondary)'>
                 @preact/signals-core is the default engine behind @openelement/signal.
                 alien-signals remains available through an optional engine subpath.
               </p>
-            </div>
+            </open-card-linear>
           </div>
         </section>
 
@@ -200,9 +202,9 @@ export class ArchitecturePage extends OpenElement {
         </section>
 
         <nav class='nav-row'>
-          <a class='btn btn-ghost' href='/roadmap'>Roadmap truth {'->'}</a>
-          <a class='btn btn-ghost' href='/changelog'>Changelog {'->'}</a>
-          <a class='btn btn-ghost' href='/guide/getting-started'>Start building {'->'}</a>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href='/roadmap'>Roadmap truth {'->'}</a>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href='/changelog'>Changelog {'->'}</a>
+          <a style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)' href='/guide/getting-started'>Start building {'->'}</a>
         </nav>
       </div>
     );

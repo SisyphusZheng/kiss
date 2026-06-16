@@ -2,17 +2,18 @@ export const meta = { section: 'Core', label: 'API Routes', order: 60 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
+import '@openelement/ui/open-button-linear';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
     .principle {
       padding: var(--size-4) var(--size-5);
-      background: var(--gray-1);
-      border-left: 2px solid var(--gray-4);
+      background: var(--bg-surface);
+      border-left: 2px solid var(--border);
       border-radius: 0 var(--radius-1) var(--radius-1) 0;
       margin: var(--size-4) 0;
     }
@@ -20,7 +21,7 @@ routeSheet.replaceSync(
 );
 
 export class ApiPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return this._getLocale('zh') === 'en' ? this._renderEn() : this._renderZh();
@@ -59,7 +60,7 @@ export class ApiPage extends OpenElement {
           需要运行时行为时，通过 serverless adapters 或平台函数部署 API routes。
         </p>
         <div class='nav-row'>
-          <a href='/guide/configuration' class='btn btn-ghost'>Configuration -&gt;</a>
+          <open-button-linear variant='secondary' href='/guide/configuration'>Configuration -&gt;</open-button-linear>
         </div>
       </div>
     );
@@ -132,7 +133,7 @@ export default function GET(ctx: OpenElementApiContext) {
           functions when runtime behavior is needed.
         </p>
         <div class='nav-row'>
-          <a href='/guide/configuration' class='btn btn-ghost'>Configuration -&gt;</a>
+          <open-button-linear variant='secondary' href='/guide/configuration'>Configuration -&gt;</open-button-linear>
         </div>
       </div>
     );

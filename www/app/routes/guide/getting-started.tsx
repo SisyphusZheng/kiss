@@ -5,20 +5,21 @@ export const meta = { section: 'Quick Start', label: 'Getting Started', order: 1
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
 import { pageStylesSheet } from '../../components/page-styles.js';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-callout';
 import '@openelement/ui/open-code-block';
+import '@openelement/ui/open-button-linear';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
   .step { margin: var(--size-6) 0 var(--size-8); }
   .step h2 { margin-top: 0; }
-  .nav-row { margin-top: var(--size-8); padding-top: var(--size-4); border-top: 0.5px solid var(--gray-3); display: flex; justify-content: flex-end; }
+  .nav-row { margin-top: var(--size-8); padding-top: var(--size-4); border-top: var(--border-hairline) solid var(--border); display: flex; justify-content: flex-end; }
 `);
 
 export class GettingStartedPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet, routeSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet, routeSheet];
 
   override render() {
     return (
@@ -183,7 +184,7 @@ export default defineConfig({
 });`}</code></pre>
       </open-code-block>
 
-      <div class='alert alert-info'>
+      <div class='callout info'>
         <p>
           The v1.0 target is a stable application engine. {OPENELEMENT_VERSION}{' '}
           keeps the Application API structured and AI-readable while static generation remains
@@ -192,7 +193,7 @@ export default defineConfig({
       </div>
 
       <div class='nav-row'>
-        <a href='/guide/core-concepts' class='btn btn-ghost'>Core Concepts &rarr;</a>
+        <open-button-linear variant='secondary' href='/guide/core-concepts'>Core Concepts &rarr;</open-button-linear>
       </div>
     </>
   );
@@ -274,7 +275,7 @@ export default defineIsland(
 );`}</code></pre>
       </open-code-block>
 
-      <div class='alert alert-info'>
+      <div class='callout info'>
         <p>
           v1.0 的目标是稳定 Elements、UI、Framework 和 Protocols 四个产品面。
           {OPENELEMENT_VERSION} 继续验证结构化、AI 可读的 Application API。
@@ -282,7 +283,7 @@ export default defineIsland(
       </div>
 
       <div class='nav-row'>
-        <a href='/zh/guide/core-concepts' class='btn btn-ghost'>核心概念 &rarr;</a>
+        <open-button-linear variant='secondary' href='/zh/guide/core-concepts'>核心概念 &rarr;</open-button-linear>
       </div>
     </>
   );

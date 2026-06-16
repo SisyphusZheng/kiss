@@ -1,11 +1,12 @@
 export const meta = { section: 'Production', label: 'Testing', order: 40 };
 import { pageStylesSheet } from '../../components/page-styles.js';
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import '@openelement/ui\/open-code-block';
+import '@openelement/ui\/open-button-linear';
 
 export class TestingPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet];
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
   }
@@ -33,8 +34,8 @@ export class TestingPage extends OpenElement {
           openElement 包含 Playwright 端到端测试，在真实浏览器中验证 SSG 输出。
         </p>
         <div class='nav-row'>
-          <a href='/guide/error-handling' class='btn btn-ghost'>← 错误处理</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>部署 →</a>
+          <open-button-linear variant='secondary' href='/guide/error-handling'>← 错误处理</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/deployment'>部署 →</open-button-linear>
         </div>
       </div>
     );
@@ -76,8 +77,8 @@ export class TestingPage extends OpenElement {
           as expected.
         </p>
         <div class='nav-row'>
-          <a href='/guide/error-handling' class='btn btn-ghost'>← Error Handling</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>Deployment →</a>
+          <open-button-linear variant='secondary' href='/guide/error-handling'>← Error Handling</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/deployment'>Deployment →</open-button-linear>
         </div>
       </div>
     );

@@ -8,21 +8,21 @@ export const meta = { section: 'Reference', label: 'Performance', order: 100 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 
 const styles = new StyleSheet();
 styles.replaceSync(
   pageStyles + `
-  .metric { display:grid; grid-template-columns: 120px 1fr; gap:var(--size-2) var(--size-4); margin:var(--size-4) 0; }
-  .metric .label { color:var(--gray-6); font-size:var(--font-size-0); }
-  .metric .value { color:var(--gray-10); font-weight:var(--font-weight-6); }
+  .metric { display:grid; grid-template-columns: 120px 1fr; gap:var(--space-xs) var(--space-md); margin:var(--space-md) 0; }
+  .metric .label { color:var(--color-text-muted); font-size:var(--font-size-caption); }
+  .metric .value { color:var(--color-text-primary); font-weight:var(--font-weight-semibold); }
 `,
 );
 
 export default class Benchmark extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, styles];
+  static override styles = [linearTokenSheet, styles];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();

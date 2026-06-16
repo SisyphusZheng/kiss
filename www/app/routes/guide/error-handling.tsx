@@ -1,19 +1,20 @@
 export const meta = { section: 'Production', label: 'Error Handling', order: 30 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
+import '@openelement/ui/open-button-linear';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
-  .error-hierarchy { padding: var(--size-4); background: var(--gray-1); border-left: 2px solid var(--gray-4); border-radius: 0 var(--radius-1) var(--radius-1) 0; margin: var(--size-4) 0; font-family: var(--font-mono); font-size: var(--font-size-1); line-height: var(--font-lineheight-4); color: var(--gray-7); }
+  .error-hierarchy { padding: var(--size-4); background: var(--bg-surface); border-left: 2px solid var(--border); border-radius: 0 var(--radius-1) var(--radius-1) 0; margin: var(--size-4) 0; font-family: var(--font-mono); font-size: var(--font-size-1); line-height: var(--font-lineheight-4); color: var(--text-secondary); }
 `,
 );
 
 export class ErrorHandlingPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (
@@ -41,8 +42,8 @@ export class ErrorHandlingPage extends OpenElement {
           leaking private runtime state.
         </p>
         <div class='nav-row'>
-          <a href='/guide/security-middleware' class='btn btn-ghost'>Security and Middleware</a>
-          <a href='/guide/testing' class='btn btn-ghost'>Testing</a>
+          <open-button-linear variant='secondary' href='/guide/security-middleware'>Security and Middleware</open-button-linear>
+          <open-button-linear variant='secondary' href='/guide/testing'>Testing</open-button-linear>
         </div>
       </div>
     );

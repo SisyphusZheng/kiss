@@ -1,3 +1,4 @@
+// ponytail: depends on openPropsTokenSheet being injected onto :root by www/vite.config.ts
 /**
  * openElement Docs - Shared Page Styles
  *

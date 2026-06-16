@@ -2,11 +2,11 @@ export const meta = { section: 'Compatibility', label: 'Standards & Registry', o
 
 import { pageStylesSheet } from '../../components/page-styles.js';
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 export class StandardsRegistryGuidePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+  static override styles = [linearTokenSheet, pageStylesSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
@@ -145,8 +145,8 @@ export class StandardsRegistryGuidePage extends OpenElement {
         </ol>
 
         <div class='nav-row'>
-          <a href={`/{loc}/architecture/architecture`} class='btn btn-ghost'>&larr; Architecture</a>
-          <a href='/roadmap' class='btn btn-ghost'>Roadmap &rarr;</a>
+          <a href={`/{loc}/architecture/architecture`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>&larr; Architecture</a>
+          <a href='/roadmap' style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>Roadmap &rarr;</a>
         </div>
       </div>
     );
@@ -299,8 +299,8 @@ export class StandardsRegistryGuidePage extends OpenElement {
         </ol>
 
         <div class='nav-row'>
-          <a href={`/{loc}/architecture/architecture`} class='btn btn-ghost'>&larr; Architecture</a>
-          <a href='/roadmap' class='btn btn-ghost'>Roadmap &rarr;</a>
+          <a href={`/{loc}/architecture/architecture`} style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>&larr; Architecture</a>
+          <a href='/roadmap' style='color:var(--color-text-secondary);text-decoration:none;font-size:var(--font-size-body-sm)'>Roadmap &rarr;</a>
         </div>
       </div>
     );
