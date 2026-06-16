@@ -23,53 +23,40 @@ const darkCSS = `
 html[data-theme="dark"],
 :host([data-theme="dark"]),
 :root[data-theme="dark"] {
-  --bg-obsidian: #040508;
-  --bg-panel: #090B11;
-  --bg-terminal: #010204;
-  --bg-surface: #090B11;
-  --bg-code: #010204;
-  --text-primary: #FFFFFF;
-  --text-secondary: #8E92A2;
-  --text-muted: #515466;
-  --brand-neon: #7C6FF5;
-  --brand-glow: rgba(124, 111, 245, 0.16);
-  --cyber-green: #00FF87;
-  --cyber-green-glow: rgba(0, 255, 135, 0.12);
-  --laser-cyan: #60EFFF;
-  --border: rgba(124, 111, 245, 0.16);
-  --border-futuristic: rgba(124, 111, 245, 0.16);
-  --border-bright: rgba(124, 111, 245, 0.4);
-  --gray-0: #040508;
-  --gray-1: #090B11;
-  --gray-9: #FFFFFF;
+  --bg-canvas: #08080a;
+  --surface-1: #0d0f12;
+  --surface-2: #16191d;
+  --surface-3: #212529;
+  --text-primary: #e9ecef;
+  --text-secondary: #adb5bd;
+  --text-muted: #868e96;
+  --color-brand: #4263eb;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --edge-highlight: rgba(255, 255, 255, 0.08);
+  --shadow-1: none;
 }
 body {
-  background: var(--bg-obsidian, #040508);
-  color: var(--text-primary, #FFFFFF);
+  background: var(--bg-canvas, #08080a);
+  color: var(--text-primary, #e9ecef);
 }
 
 /* Light mode override -- theme toggle adds [data-theme="light"] to html */
 [data-theme="light"] {
-  --bg-obsidian: #f6f7f9;
-  --bg-panel: #ffffff;
-  --bg-terminal: #f1f3f5;
-  --bg-surface: #ffffff;
+  --bg-canvas: #f8f9fa;
+  --surface-1: #ffffff;
+  --surface-2: #f1f3f5;
+  --surface-3: #e9ecef;
   --text-primary: #12131a;
   --text-secondary: #626676;
-  --text-muted: #8E92A2;
-  --brand-neon: #5148b8;
-  --brand-glow: rgba(81,72,184,0.08);
-  --cyber-green: #13795b;
-  --laser-cyan: #1769aa;
-  --border: rgba(18,19,26,0.12);
-  --border-futuristic: rgba(18,19,26,0.12);
-  --border-bright: rgba(81,72,184,0.3);
-  --gray-0: #f6f7f9;
-  --gray-1: #ffffff;
-  --gray-9: #12131a;
+  --text-muted: #8e92a2;
+  --color-brand: #4263eb;
+  --border: rgba(18, 19, 26, 0.08);
+  --border-hover: rgba(18, 19, 26, 0.12);
+  --edge-highlight: rgba(255, 255, 255, 0.5);
 }
 [data-theme="light"] body {
-  background: var(--bg-obsidian, #f6f7f9);
+  background: var(--bg-canvas, #f8f9fa);
 }
 [data-theme="light"] .app-header {
   background: rgba(255,255,255,0.88);
@@ -87,11 +74,11 @@ body {
   color: #12131a;
 }
 ::selection {
-  background: rgba(124,111,245,0.3);
+  background: rgba(66,99,235,0.3);
   color: #FFFFFF;
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{margin:0;background:var(--gray-1);color:var(--gray-9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${darkCSS}</style>`;
+  `<style>${rootCSS}body{margin:0;background:var(--bg-canvas, #08080a);color:var(--text-primary, #e9ecef);font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${darkCSS}</style>`;
 
 export default defineConfig({
   base: '/',
@@ -136,10 +123,6 @@ export default defineConfig({
       inject: {
         // H-05 fix: Use structured stylesheets with SRI for CDN CSS
         stylesheets: [
-          {
-            href: 'https://cdn.jsdelivr.net/npm/open-props@1.7.20/open-props.min.css',
-            integrity: 'sha384-fsyUJwnN3qLArJUL5oaEYS3/WnhCmI4K5x+oB8wFigOMTJaIvys56ozH3+nE/qcf',
-          },
           {
             href: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
             integrity: 'sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2',
@@ -195,6 +178,9 @@ export default defineConfig({
           },
         ],
         headFragments: [
+          '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />',
+          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
+          '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />',
           '<meta property="og:site_name" content="openElement">',
           '<meta property="og:type" content="website">',
           '<meta property="og:title" content="openElement - The Open Element">',
@@ -222,8 +208,8 @@ export default defineConfig({
             { href: '/guide/getting-started', label: 'Guide' },
             { href: '/apilist', label: 'API' },
             { href: '/architecture/architecture', label: 'Architecture' },
-            { href: '/registry', label: 'Hub' },
             { href: '/blog', label: 'Blog' },
+            { href: '/registry', label: 'Hub' },
           ],
         },
         sitemap: {

@@ -1,18 +1,16 @@
 /**
  * @openelement/ui - Design System
- * Two plates. Zero noise.
- *
- * Dogfooding: uses real open-button, open-card, open-input components.
+ * Linear.app-style design system page with tokens, components, and conventions.
  */
 export const meta = { section: 'Reference', label: 'Design System', order: 10 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { linearTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
-import '@openelement/ui\/open-button';
-import '@openelement/ui\/open-card';
-import '@openelement/ui\/open-input';
-import '@openelement/ui\/open-code-block';
+import '@openelement/ui/open-button-linear';
+import '@openelement/ui/open-card-linear';
+import '@openelement/ui/open-input-linear';
+import '@openelement/ui/open-badge-linear';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -21,97 +19,74 @@ routeSheet.replaceSync(
       :host {
         display: block;
       }
-      .section {
-        margin-bottom: 3.5rem;
+      .ds-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 44px 32px 72px;
       }
-      .section-title {
-        font-size: var(--font-size-00);
-        font-weight: var(--font-weight-7);
+      .ds-title {
+        font-size: 56px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--color-text-primary);
+        margin: 0 0 8px;
+      }
+      .ds-subtitle {
+        font-size: 18px;
+        color: var(--color-text-secondary);
+        margin: 0 0 72px;
+      }
+      .ds-section {
+        margin-bottom: 64px;
+      }
+      .ds-section-label {
+        font-size: 11px;
+        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--gray-6);
-        margin-bottom: var(--size-6);
-        padding-bottom: var(--size-3);
-        border-bottom: 0.5px solid var(--gray-3);
+        letter-spacing: 0.08em;
+        color: var(--color-text-muted);
+        margin-bottom: 8px;
       }
-      .palette-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--border-size-1);
-        background: var(--gray-3);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        overflow: hidden;
-      }
-      .palette-card {
-        padding: var(--size-6);
-      }
-      .palette-dark {
-        background: var(--gray-0);
-      }
-      .palette-light {
-        background: var(--gray-1);
-      }
-      .palette-name {
-        font-size: var(--font-size-00);
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        margin-bottom: var(--size-4);
-      }
-      .palette-dark .palette-name {
-        color: var(--gray-6);
-      }
-      .palette-light .palette-name {
-        color: var(--gray-7);
+      .ds-section-heading {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin: 0 0 20px;
       }
       .swatch-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: var(--size-3);
-        margin-bottom: var(--size-5);
+        gap: 12px;
       }
-      .swatch-item {
-        text-align: center;
+      .swatch-card {
+        background: var(--surface-2);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+      }
+      .swatch-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 12px;
+        right: 12px;
+        height: 1px;
+        background: var(--color-edge-highlight);
+        border-radius: 12px 12px 0 0;
+        pointer-events: none;
       }
       .swatch {
-        width: 100%;
-        aspect-ratio: 1;
-        border-radius: var(--radius-1);
-        margin-bottom: 0.375rem;
-      }
-      .palette-dark .swatch {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      .palette-light .swatch {
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        margin-bottom: 8px;
       }
       .swatch-label {
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-6);
-        letter-spacing: 0.04em;
-      }
-      .palette-dark .swatch-label {
-        color: var(--gray-6);
-      }
-      .palette-light .swatch-label {
-        color: var(--gray-7);
-      }
-      .palette-desc {
-        font-size: var(--font-size-0);
-        line-height: 1.6;
-      }
-      .palette-dark .palette-desc {
-        color: var(--gray-6);
-      }
-      .palette-dark .palette-desc strong {
-        color: var(--gray-10);
-      }
-      .palette-light .palette-desc {
-        color: var(--gray-7);
-      }
-      .palette-light .palette-desc strong {
-        color: var(--gray-10);
+        font-size: 12px;
+        color: var(--color-text-muted);
       }
       .type-scale {
         display: flex;
@@ -120,260 +95,158 @@ routeSheet.replaceSync(
       .type-row {
         display: flex;
         align-items: baseline;
-        gap: var(--size-6);
-        padding: var(--size-3) 0;
-        border-bottom: 0.5px solid var(--gray-3);
+        gap: 24px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--color-border);
       }
       .type-row:last-child {
         border-bottom: none;
       }
       .type-label {
-        min-width: 72px;
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--gray-6);
-      }
-      .type-sample {
-        color: var(--gray-10);
-      }
-      .preview-card {
-        background: var(--gray-1);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        overflow: hidden;
-      }
-      .preview-header {
-        padding: 0.875rem var(--size-5);
-        border-bottom: 0.5px solid var(--gray-3);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .preview-title {
-        font-size: var(--font-size-1);
-        font-weight: var(--font-weight-6);
-        color: var(--gray-10);
-      }
-      .preview-badge {
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-7);
+        min-width: 100px;
+        font-size: 11px;
+        font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        padding: 0.25rem var(--size-2);
-        border-radius: 3px;
-        background: var(--indigo-1);
-        color: var(--gray-7);
-        border: 0.5px solid var(--gray-3);
+        color: var(--color-text-muted);
+        flex-shrink: 0;
       }
-      .preview-body {
-        padding: var(--size-5);
+      .type-detail {
+        font-size: 11px;
+        color: var(--color-text-muted);
+        min-width: 120px;
+        flex-shrink: 0;
+      }
+      .type-sample {
+        color: var(--color-text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .component-section {
+        margin-bottom: 32px;
+      }
+      .component-heading {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        margin: 0 0 16px;
+      }
+      .component-row {
         display: flex;
-        gap: 0.625rem;
+        gap: 8px;
         flex-wrap: wrap;
-        align-items: flex-start;
+        align-items: center;
       }
-      .preview-body-col {
+      .component-row-col {
         display: flex;
         flex-direction: column;
-        gap: var(--size-3);
+        gap: 12px;
       }
-      .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--size-4);
+      .light-palette-wrap {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 24px;
       }
-      .install-section {
-        margin-top: 3.5rem;
-        padding: var(--size-8);
-        background: var(--gray-1);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        text-align: center;
+      .light-palette-wrap .ds-section-heading {
+        color: #12131a;
       }
-      .install-section h3 {
-        font-size: 0.9375rem;
-        font-weight: var(--font-weight-6);
-        color: var(--gray-10);
-        margin: 0 0 var(--size-4);
-      }
-      .install-cmd {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem var(--size-5);
-        background: var(--gray-0);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-1);
-        font-family: "SF Mono", monospace;
-        font-size: var(--font-size-1);
-        color: var(--gray-10);
-      }
-      .install-cmd .prompt {
-        color: var(--gray-6);
-      }
-      .install-section p {
-        font-size: var(--font-size-1);
-        color: var(--gray-6);
-        margin: var(--size-3) 0 0;
+      .light-palette-wrap .swatch-label {
+        color: #626676;
       }
       @media (max-width: 900px) {
-        .section {
-          margin-bottom: 2.5rem;
+        .ds-container {
+          padding: 36px 24px 56px;
         }
-        .type-row {
-          gap: var(--size-4);
+        .ds-title {
+          font-size: 40px;
         }
-        .preview-body {
-          padding: var(--size-4);
-        }
-        .install-section {
-          padding: var(--size-6) var(--size-4);
-        }
-      }
-      @media (max-width: 640px) {
-        .palette-row {
-          grid-template-columns: 1fr;
+        .ds-subtitle {
+          font-size: 16px;
+          margin-bottom: 48px;
         }
         .swatch-grid {
           grid-template-columns: repeat(3, 1fr);
-          gap: var(--size-2);
+          gap: 10px;
         }
-        .install-cmd {
-          font-size: var(--font-size-0);
-          padding: var(--size-2) var(--size-4);
+        .swatch {
+          width: 64px;
+          height: 64px;
+        }
+      }
+      @media (max-width: 640px) {
+        .ds-container {
+          padding: 28px 16px 48px;
+        }
+        .ds-title {
+          font-size: 32px;
+        }
+        .swatch-grid {
+          gap: 8px;
+        }
+        .swatch {
+          width: 56px;
+          height: 56px;
+        }
+        .type-row {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .type-label {
+          min-width: 80px;
         }
       }
     `,
 );
 
 export class UIShowcase extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
   }
 
-  private _renderZh() {
-    const loc = this._getLocale('zh');
+  /* ─── Dark palette swatches ─── */
+  private _darkSwatches = [
+    { name: 'Canvas',   color: '#08080a' },
+    { name: 'Surface 1', color: '#0d0f12' },
+    { name: 'Surface 2', color: '#16191d' },
+    { name: 'Surface 3', color: '#212529' },
+    { name: 'Brand',    color: '#4263eb' },
+    { name: 'Brand light', color: '#5c7cfa' },
+  ];
 
+  /* ─── Light palette swatches ─── */
+  private _lightSwatches = [
+    { name: 'Canvas',   color: '#f8f9fa' },
+    { name: 'Surface 1', color: '#ffffff' },
+    { name: 'Surface 2', color: '#f1f3f5' },
+    { name: 'Surface 3', color: '#e9ecef' },
+    { name: 'Brand',    color: '#4263eb' },
+    { name: 'Brand light', color: '#5c7cfa' },
+  ];
+
+  /* ─── Type scale ─── */
+  private _typeScale = [
+    { label: 'Display XL',  size: '80px', weight: 600, tracking: '-0.04em', css: { fontSize: '80px', fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 0.95 } },
+    { label: 'Display LG',  size: '56px', weight: 600, tracking: '-0.03em', css: { fontSize: '56px', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1 } },
+    { label: 'Display MD',  size: '40px', weight: 600, tracking: '-0.02em', css: { fontSize: '40px', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1 } },
+    { label: 'Subhead',     size: '20px', weight: 400, tracking: '-0.01em', css: { fontSize: '20px', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.2 } },
+    { label: 'Body LG',     size: '18px', weight: 400, tracking: '0',       css: { fontSize: '18px', fontWeight: 400, letterSpacing: '0', lineHeight: 1.5 } },
+    { label: 'Body',        size: '16px', weight: 400, tracking: '0',       css: { fontSize: '16px', fontWeight: 400, letterSpacing: '0', lineHeight: 1.5 } },
+    { label: 'Body SM',     size: '14px', weight: 400, tracking: '0',       css: { fontSize: '14px', fontWeight: 400, letterSpacing: '0', lineHeight: 1.5 } },
+    { label: 'Caption',     size: '12px', weight: 400, tracking: '0',       css: { fontSize: '12px', fontWeight: 400, letterSpacing: '0', lineHeight: 1.5 } },
+  ];
+
+  private _renderPaletteSwatches(swatches: Array<{ name: string; color: string }>) {
     return (
-      <div class='container'>
-        <h1>设计系统</h1>
-        <p class='subtitle'>
-          <strong>双色板。零噪音。</strong>
-          <br />深色和浅色。没有别的。
-        </p>
-        <div class='section'>
-          <div class='section-title'>色板</div>
-          <div class='palette-row'>
-            <div class='palette-card palette-dark'>
-              <div class='palette-name'>深色</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>基底</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#0a0a0a'></div>
-                  <div class='swatch-label'>表面</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>主色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#999'></div>
-                  <div class='swatch-label'>次色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#666'></div>
-                  <div class='swatch-label'>第三色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#444'></div>
-                  <div class='swatch-label'>静默</div>
-                </div>
-              </div>
-              <p class='palette-desc'>
-                <strong>黑色</strong> 基底。白色强调。灰色分层。
-              </p>
-            </div>
-            <div class='palette-card palette-light'>
-              <div class='palette-name'>浅色</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>基底</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fafafa'></div>
-                  <div class='swatch-label'>表面</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>主色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#555'></div>
-                  <div class='swatch-label'>次色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#888'></div>
-                  <div class='swatch-label'>第三色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#aaa'></div>
-                  <div class='swatch-label'>静默</div>
-                </div>
-              </div>
-              <p class='palette-desc'>
-                <strong>白色</strong> 基底。黑色强调。灰色分层。
-              </p>
-            </div>
+      <div class='swatch-grid'>
+        {swatches.map(s => (
+          <div class='swatch-card'>
+            <div class='swatch' style={{ background: s.color }}></div>
+            <div class='swatch-label'>{s.name}</div>
           </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>按钮</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>变体</span>
-              <span class='preview-badge'>可用</span>
-            </div>
-            <div class='preview-body'>
-              <open-button variant='primary'>主要按钮</open-button>
-              <open-button>默认按钮</open-button>
-              <open-button variant='ghost'>幽灵按钮</open-button>
-            </div>
-          </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>输入框</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>文本输入</span>
-              <span class='preview-badge'>可用</span>
-            </div>
-            <div class='preview-body preview-body-col'>
-              <open-input placeholder='输入邮箱...' label='邮箱'></open-input>
-              <open-input type='password' placeholder='密码' label='密码' required>
-              </open-input>
-              <open-input value='hello@openelement.org' label='只读' disabled></open-input>
-            </div>
-          </div>
-        </div>
-        <div class='install-section'>
-          <h3>安装 @openelement/ui</h3>
-          <div class='install-cmd'>
-            <span class='prompt'>$</span> deno add jsr:@openelement/ui
-          </div>
-          <p>Deno、Node、Bun。零配置。</p>
-        </div>
-        <div class='nav-row'>
-          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>← Architecture</a>
-          <a href={`/${loc}/architecture/reference/core`} class='btn btn-ghost'>API Reference →</a>
-        </div>
+        ))}
       </div>
     );
   }
@@ -382,120 +255,233 @@ export class UIShowcase extends OpenElement {
     const loc = this._getLocale('en');
 
     return (
-      <div class='container'>
-        <h1>Design System</h1>
-        <p class='subtitle'>
-          <strong>Two plates. Zero noise.</strong>
-          <br />Dark and light. Nothing else.
-        </p>
-        <div class='section'>
-          <div class='section-title'>Palettes</div>
-          <div class='palette-row'>
-            <div class='palette-card palette-dark'>
-              <div class='palette-name'>Dark</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>Base</div>
+      <div class='ds-container'>
+        <h1 class='ds-title'>Design System</h1>
+        <p class='ds-subtitle'>Tokens, components, and conventions that power openElement.</p>
+
+        {/* ─── Dark Palette ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>Colors</div>
+          <h2 class='ds-section-heading'>Dark palette</h2>
+          {this._renderPaletteSwatches(this._darkSwatches)}
+        </div>
+
+        {/* ─── Light Palette ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>Colors</div>
+          <h2 class='ds-section-heading'>Light palette</h2>
+          <div class='light-palette-wrap' data-theme='light'>
+            <div class='swatch-grid'>
+              {this._lightSwatches.map(s => (
+                <div class='swatch-card'>
+                  <div class='swatch' style={{ background: s.color, borderColor: 'rgba(18,19,26,0.08)' }}></div>
+                  <div class='swatch-label'>{s.name}</div>
                 </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#0a0a0a'></div>
-                  <div class='swatch-label'>Surface</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>Primary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#999'></div>
-                  <div class='swatch-label'>Secondary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#666'></div>
-                  <div class='swatch-label'>Tertiary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#444'></div>
-                  <div class='swatch-label'>Muted</div>
-                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Typography ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>Typography</div>
+          <h2 class='ds-section-heading'>Type scale</h2>
+          <div class='type-scale'>
+            {this._typeScale.map(t => (
+              <div class='type-row'>
+                <span class='type-label'>{t.label}</span>
+                <span class='type-detail'>{t.size} / {t.weight} / {t.tracking}</span>
+                <span class='type-sample' style={t.css as unknown as Record<string, string>}>
+                  The quick brown fox jumps over the lazy dog.
+                </span>
               </div>
-              <p class='palette-desc'>
-                <strong>Black</strong> base. White accent. Gray layers.
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Components ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>Components</div>
+
+          {/* Button */}
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>Button</h2>
+            <div class='component-row'>
+              <open-button-linear variant='primary'>Primary</open-button-linear>
+              <open-button-linear variant='secondary'>Secondary</open-button-linear>
+              <open-button-linear variant='tertiary'>Tertiary</open-button-linear>
+              <open-button-linear variant='inverse'>Inverse</open-button-linear>
+            </div>
+          </div>
+
+          {/* Card */}
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>Card</h2>
+            <open-card-linear variant='standard'>
+              <h3 slot='header' style={{ margin: 0, fontSize: '16px', fontWeight: 500 }}>Card Title</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                This is a standard Linear-style card with edge highlight.
               </p>
+            </open-card-linear>
+          </div>
+
+          {/* Input */}
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>Input</h2>
+            <div class='component-row component-row-col'>
+              <open-input-linear placeholder='Standard input'></open-input-linear>
+              <open-input-linear placeholder='Focused input' autofocus></open-input-linear>
             </div>
-            <div class='palette-card palette-light'>
-              <div class='palette-name'>Light</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>Base</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fafafa'></div>
-                  <div class='swatch-label'>Surface</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>Primary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#555'></div>
-                  <div class='swatch-label'>Secondary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#888'></div>
-                  <div class='swatch-label'>Tertiary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#aaa'></div>
-                  <div class='swatch-label'>Muted</div>
-                </div>
-              </div>
-              <p class='palette-desc'>
-                <strong>White</strong> base. Black accent. Gray layers.
-              </p>
+          </div>
+
+          {/* Badge */}
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>Badge</h2>
+            <div class='component-row'>
+              <open-badge-linear>Default</open-badge-linear>
+              <open-badge-linear variant='success'>Success</open-badge-linear>
+              <open-badge-linear variant='error'>Error</open-badge-linear>
+              <open-badge-linear variant='warning'>Warning</open-badge-linear>
+              <open-badge-linear variant='info'>Info</open-badge-linear>
+              <open-badge-linear variant='new'>New</open-badge-linear>
             </div>
           </div>
         </div>
-        <div class='section'>
-          <div class='section-title'>Buttons</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>Variants</span>
-              <span class='preview-badge'>Ready</span>
-            </div>
-            <div class='preview-body'>
-              <open-button variant='primary'>Primary</open-button>
-              <open-button>Default</open-button>
-              <open-button variant='ghost'>Ghost</open-button>
-            </div>
-          </div>
+
+        {/* ─── Installation ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>Installation</div>
+          <h2 class='ds-section-heading'>Installation</h2>
+          <open-input-linear
+            variant='cli'
+            copy
+            value='deno add jsr:@openelement/ui'
+            style={{ width: '100%', maxWidth: '480px' }}
+          ></open-input-linear>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
+            Deno, Node, Bun. Zero config.
+          </p>
         </div>
-        <div class='section'>
-          <div class='section-title'>Inputs</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>Text Input</span>
-              <span class='preview-badge'>Ready</span>
-            </div>
-            <div class='preview-body preview-body-col'>
-              <open-input placeholder='Enter email...' label='Email'></open-input>
-              <open-input type='password' placeholder='Password' label='Password' required>
-              </open-input>
-              <open-input value='hello@openelement.org' label='Read-only' disabled></open-input>
-            </div>
-          </div>
-        </div>
-        <div class='install-section'>
-          <h3>Install @openelement/ui</h3>
-          <div class='install-cmd'>
-            <span class='prompt'>$</span> deno add jsr:@openelement/ui
-          </div>
-          <p>Deno, Node, Bun. Zero config.</p>
-        </div>
+
         <div class='nav-row'>
           <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>← Architecture</a>
           <a href={`/${loc}/architecture/reference/core`} class='btn btn-ghost'>API Reference →</a>
+        </div>
+      </div>
+    );
+  }
+
+  private _renderZh() {
+    const loc = this._getLocale('zh');
+
+    return (
+      <div class='ds-container'>
+        <h1 class='ds-title'>设计系统</h1>
+        <p class='ds-subtitle'>Tokens、组件及约定：驱动 openElement 的设计体系。</p>
+
+        {/* ─── 深色板 ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>色彩</div>
+          <h2 class='ds-section-heading'>深色板</h2>
+          {this._renderPaletteSwatches(this._darkSwatches)}
+        </div>
+
+        {/* ─── 浅色板 ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>色彩</div>
+          <h2 class='ds-section-heading'>浅色板</h2>
+          <div class='light-palette-wrap' data-theme='light'>
+            <div class='swatch-grid'>
+              {this._lightSwatches.map(s => (
+                <div class='swatch-card'>
+                  <div class='swatch' style={{ background: s.color, borderColor: 'rgba(18,19,26,0.08)' }}></div>
+                  <div class='swatch-label'>{s.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ─── 排印 ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>排印</div>
+          <h2 class='ds-section-heading'>字号层级</h2>
+          <div class='type-scale'>
+            {this._typeScale.map(t => (
+              <div class='type-row'>
+                <span class='type-label'>{t.label}</span>
+                <span class='type-detail'>{t.size} / {t.weight} / {t.tracking}</span>
+                <span class='type-sample' style={t.css as unknown as Record<string, string>}>
+                  The quick brown fox jumps over the lazy dog.
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── 组件 ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>组件</div>
+
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>按钮</h2>
+            <div class='component-row'>
+              <open-button-linear variant='primary'>主要</open-button-linear>
+              <open-button-linear variant='secondary'>次要</open-button-linear>
+              <open-button-linear variant='tertiary'>三级</open-button-linear>
+              <open-button-linear variant='inverse'>反色</open-button-linear>
+            </div>
+          </div>
+
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>卡片</h2>
+            <open-card-linear variant='standard'>
+              <h3 slot='header' style={{ margin: 0, fontSize: '16px', fontWeight: 500 }}>卡片标题</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                这是一张标准的 Linear 风格卡片，带有边缘高亮。
+              </p>
+            </open-card-linear>
+          </div>
+
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>输入框</h2>
+            <div class='component-row component-row-col'>
+              <open-input-linear placeholder='标准输入框'></open-input-linear>
+              <open-input-linear placeholder='聚焦状态' autofocus></open-input-linear>
+            </div>
+          </div>
+
+          <div class='component-section'>
+            <h2 class='ds-section-heading'>徽标</h2>
+            <div class='component-row'>
+              <open-badge-linear>默认</open-badge-linear>
+              <open-badge-linear variant='success'>成功</open-badge-linear>
+              <open-badge-linear variant='error'>错误</open-badge-linear>
+              <open-badge-linear variant='warning'>警告</open-badge-linear>
+              <open-badge-linear variant='info'>信息</open-badge-linear>
+              <open-badge-linear variant='new'>新</open-badge-linear>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── 安装 ─── */}
+        <div class='ds-section'>
+          <div class='ds-section-label'>安装</div>
+          <h2 class='ds-section-heading'>安装</h2>
+          <open-input-linear
+            variant='cli'
+            copy
+            value='deno add jsr:@openelement/ui'
+            style={{ width: '100%', maxWidth: '480px' }}
+          ></open-input-linear>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
+            Deno、Node、Bun。零配置。
+          </p>
+        </div>
+
+        <div class='nav-row'>
+          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>← 架构</a>
+          <a href={`/${loc}/architecture/reference/core`} class='btn btn-ghost'>API 参考 →</a>
         </div>
       </div>
     );

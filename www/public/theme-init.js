@@ -33,8 +33,8 @@
     // matchMedia may be unavailable in old WebViews
   }
 
-  // Match open-theme-toggle default: dark when no preference saved
-  const theme = saved || (prefersDark ? 'dark' : 'light');
+  // Default: dark (matching Linear-style and open-theme-toggle default)
+  const theme = saved || (prefersDark ? 'dark' : 'dark');
   try {
     document.documentElement.setAttribute('data-theme', theme);
   } catch {

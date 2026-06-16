@@ -3,8 +3,9 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
-import '../islands/open-search.tsx';
+import { linearTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-button-linear';
+import '@openelement/ui/open-input-linear';
 
 const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
@@ -42,22 +43,86 @@ const REDIRECT_MAP: Record<string, string> = {
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host { display: block; }
+  .container {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 120px 32px 96px;
+    text-align: center;
+  }
+  .title {
+    font-size: 96px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    letter-spacing: -0.04em;
+    margin: 0;
+    line-height: 1;
+  }
+  .subtitle {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 16px 0 0;
+    color: var(--color-text-primary);
+  }
+  .description {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin: 8px 0 32px;
+  }
+  .search-wrapper {
+    max-width: 400px;
+    margin: 0 auto 40px;
+  }
+  .popular-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  .links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 600px) {
+    .container {
+      padding: 80px 20px 64px;
+    }
+    .title {
+      font-size: 64px;
+    }
+    .subtitle {
+      font-size: 20px;
+    }
+  }
 `);
 
 export default class Page404 extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, styles];
+  static override styles = [linearTokenSheet, styles];
   override render() {
     return (
-      <div class='container text-center' style='max-width:700px;margin:var(--size-12) auto;'>
-        <h1 style='font-size:4rem;font-weight:var(--font-weight-7);color:var(--gray-10);margin:0;'>
-          404
-        </h1>
-        <p style='color:var(--gray-6);font-size:var(--font-size-4);margin:var(--size-4) 0 var(--size-8);'>
-          Page not found. Here are some helpful links:
+      <div class='container'>
+        <h1 class='title'>404</h1>
+        <p class='subtitle'>Page not found</p>
+        <p class='description'>
+          The page you are looking for doesn't exist or has been moved.
         </p>
-        <div class='flex flex-wrap justify-center gap-3'>
-          {POPULAR_LINKS.map((l) => <a href={l.href} class='btn btn-ghost btn-sm'>{l.label}</a>)}
+        <div class='search-wrapper'>
+          <open-input-linear variant='search'></open-input-linear>
         </div>
+        <p class='popular-label'>Popular pages</p>
+        <div class='links-grid'>
+          {POPULAR_LINKS.map((l) => (
+            <open-button-linear variant='secondary' size='sm' href={l.href}>
+              {l.label}
+            </open-button-linear>
+          ))}
+        </div>
+        <open-button-linear variant='primary' href='/'>
+          Go home
+        </open-button-linear>
       </div>
     );
   }
