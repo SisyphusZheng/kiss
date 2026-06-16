@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="822" viewBox="0 0 1440 822" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+      .sans { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }</style>
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4263eb" />
+      <stop offset="100%" stop-color="#5c7cfa" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="822" fill="#08080a" />
+
+  <g id="nav">
+    <rect x="0" y="0" width="1440" height="56" fill="#08080a" opacity="0.95" />
+    <line x1="0" y1="56" x2="1440" y2="56" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <g transform="translate(28, 16)">
+      <rect x="0" y="0" width="24" height="24" rx="6" fill="#4263eb" />
+      <text
+        x="12"
+        y="17"
+        font-size="11"
+        font-weight="600"
+        fill="#ffffff"
+        text-anchor="middle"
+        font-family="Inter, sans-serif"
+      >O</text>
+    </g>
+    <text
+      class="sans"
+      x="60"
+      y="34"
+      font-size="17"
+      font-weight="600"
+      fill="#e9ecef"
+    >openElement</text>
+    <text
+      class="sans"
+      x="620"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      letter-spacing="0.01em"
+    >Guide</text>
+    <text
+      class="sans"
+      x="700"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >API</text>
+    <text
+      class="sans"
+      x="810"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Architecture</text>
+    <text
+      class="sans"
+      x="930"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Blog</text>
+    <text
+      class="sans"
+      x="1000"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Changelog</text>
+    <rect
+      x="1060"
+      y="10"
+      width="85"
+      height="36"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1102.5"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >GitHub</text>
+    <rect
+      x="1155"
+      y="10"
+      width="110"
+      height="36"
+      rx="8"
+      fill="#4263eb"
+      stroke="#4263eb"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1210"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#ffffff"
+      text-anchor="middle"
+    >Get started</text>
+  </g>
+  <g id="sidebar">
+    <text
+      class="sans"
+      x="64"
+      y="80"
+      font-size="11"
+      font-weight="500"
+      fill="#868e96"
+      letter-spacing="0.08em"
+    >DOCS</text>
+    <text
+      class="sans"
+      x="64"
+      y="108"
+      font-size="12"
+      font-weight="600"
+      fill="#adb5bd"
+      letter-spacing="0.02em"
+    >Contributing</text>
+    <text
+      class="sans"
+      x="76"
+      y="134"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+    >Overview</text>
+    <rect x="56" y="122" width="172" height="28" rx="6" fill="#212529" opacity="0.5" />
+    <rect x="56" y="130" width="3" height="16" rx="2" fill="#4263eb" />
+    <text
+      class="sans"
+      x="76"
+      y="158"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Code of Conduct</text>
+    <text
+      class="sans"
+      x="76"
+      y="182"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Development setup</text>
+    <text
+      class="sans"
+      x="76"
+      y="206"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Pull requests</text>
+
+    <rect
+      x="194"
+      y="196"
+      width="80"
+      height="24"
+      rx="9999"
+      fill="rgba(96,165,250,0.1)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="234"
+      y="212"
+      font-size="10"
+      font-weight="400"
+      fill="#60a5fa"
+      text-anchor="middle"
+    >required</text>
+    <text class="sans" x="76" y="230" font-size="13" font-weight="400" fill="#868e96">Testing</text>
+    <text
+      class="sans"
+      x="76"
+      y="254"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Documentation</text>
+    <text
+      class="sans"
+      x="64"
+      y="286"
+      font-size="12"
+      font-weight="600"
+      fill="#adb5bd"
+      letter-spacing="0.02em"
+    >Packages</text>
+    <text
+      class="sans"
+      x="76"
+      y="312"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Package graph</text>
+    <text
+      class="sans"
+      x="76"
+      y="336"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Adding a package</text>
+    <text
+      class="sans"
+      x="76"
+      y="360"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Breaking changes</text>
+  </g>
+  <text
+    class="sans"
+    x="280"
+    y="100"
+    font-size="40"
+    font-weight="600"
+    fill="#e9ecef"
+    letter-spacing="-0.02em"
+  >Contributing to openElement</text>
+  <text
+    class="sans"
+    x="280"
+    y="148"
+    font-size="18"
+    font-weight="400"
+    fill="#adb5bd"
+  >Help us build the open Web Components platform.</text>
+  <text
+    class="sans"
+    x="280"
+    y="200"
+    font-size="22"
+    font-weight="500"
+    fill="#e9ecef"
+  >Before you start</text>
+  <text
+    class="sans"
+    x="280"
+    y="230"
+    font-size="15"
+    font-weight="400"
+    fill="#adb5bd"
+  >openElement is a 14-package monorepo with strict dependency boundaries enforced by AutoFlow3. All contributions go through the same CI pipeline that guards production releases.</text>
+  <g transform="translate(280,266)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="60"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <circle cx="28" cy="30" r="14" fill="#4263eb" />
+    <text
+      class="sans"
+      x="28"
+      y="36"
+      font-size="14"
+      font-weight="600"
+      fill="#ffffff"
+      text-anchor="middle"
+    >1</text>
+    <text
+      class="sans"
+      x="56"
+      y="26"
+      font-size="15"
+      font-weight="500"
+      fill="#e9ecef"
+    >Fork &amp; clone</text>
+    <text
+      class="sans"
+      x="56"
+      y="46"
+      font-size="13"
+      font-weight="400"
+      fill="#adb5bd"
+    >Fork the repo, clone locally. Development on feature branches.</text>
+  </g>
+  <g transform="translate(280,338)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="60"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <circle cx="28" cy="30" r="14" fill="#4263eb" />
+    <text
+      class="sans"
+      x="28"
+      y="36"
+      font-size="14"
+      font-weight="600"
+      fill="#ffffff"
+      text-anchor="middle"
+    >2</text>
+    <text
+      class="sans"
+      x="56"
+      y="26"
+      font-size="15"
+      font-weight="500"
+      fill="#e9ecef"
+    >Run the setup</text>
+    <text
+      class="sans"
+      x="56"
+      y="46"
+      font-size="13"
+      font-weight="400"
+      fill="#adb5bd"
+    >deno task setup installs hooks, checks the package graph.</text>
+  </g>
+  <g transform="translate(280,410)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="60"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <circle cx="28" cy="30" r="14" fill="#4263eb" />
+    <text
+      class="sans"
+      x="28"
+      y="36"
+      font-size="14"
+      font-weight="600"
+      fill="#ffffff"
+      text-anchor="middle"
+    >3</text>
+    <text
+      class="sans"
+      x="56"
+      y="26"
+      font-size="15"
+      font-weight="500"
+      fill="#e9ecef"
+    >Create a branch</text>
+    <text
+      class="sans"
+      x="56"
+      y="46"
+      font-size="13"
+      font-weight="400"
+      fill="#adb5bd"
+    >Branch naming: feat/, fix/, docs/, chore/. AutoFlow3 validates.</text>
+  </g>
+  <g transform="translate(280,482)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="60"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <circle cx="28" cy="30" r="14" fill="#4263eb" />
+    <text
+      class="sans"
+      x="28"
+      y="36"
+      font-size="14"
+      font-weight="600"
+      fill="#ffffff"
+      text-anchor="middle"
+    >4</text>
+    <text
+      class="sans"
+      x="56"
+      y="26"
+      font-size="15"
+      font-weight="500"
+      fill="#e9ecef"
+    >Write &amp; test</text>
+    <text
+      class="sans"
+      x="56"
+      y="46"
+      font-size="13"
+      font-weight="400"
+      fill="#adb5bd"
+    >Write code, add tests. Run deno task repo:hygiene before committing.</text>
+  </g>
+  <g transform="translate(280,554)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="60"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <circle cx="28" cy="30" r="14" fill="#4263eb" />
+    <text
+      class="sans"
+      x="28"
+      y="36"
+      font-size="14"
+      font-weight="600"
+      fill="#ffffff"
+      text-anchor="middle"
+    >5</text>
+    <text
+      class="sans"
+      x="56"
+      y="26"
+      font-size="15"
+      font-weight="500"
+      fill="#e9ecef"
+    >Open a PR</text>
+    <text
+      class="sans"
+      x="56"
+      y="46"
+      font-size="13"
+      font-weight="400"
+      fill="#adb5bd"
+    >PRs must pass AutoFlow3 — graph check, lint, fmt, audit, coverage.</text>
+  </g>
+  <text
+    class="sans"
+    x="280"
+    y="642"
+    font-size="22"
+    font-weight="500"
+    fill="#e9ecef"
+  >Quick setup</text>
+  <g transform="translate(280,672)">
+    <rect
+      x="0"
+      y="0"
+      width="780"
+      height="90"
+      rx="10"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="6" y1="0" x2="774" y2="0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <circle cx="18" cy="19" r="5" fill="#ff5f57" />
+    <circle cx="35" cy="19" r="5" fill="#febc2e" />
+    <circle cx="52" cy="19" r="5" fill="#28c840" />
+    <text class="mono" x="72" y="24" font-size="12" font-weight="400" fill="#868e96">Terminal</text>
+    <line x1="0" y1="40" x2="780" y2="40" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text class="mono" x="20" y="64" font-size="13" font-weight="400" fill="#4ade80">$</text>
+    <text
+      class="mono"
+      x="34"
+      y="64"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >deno task setup</text>
+    <text
+      class="mono"
+      x="20"
+      y="84"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Running package graph check... 14/14 packages OK</text>
+  </g>
+</svg>

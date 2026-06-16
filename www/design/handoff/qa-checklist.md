@@ -3,6 +3,7 @@
 ## 视觉验收
 
 ### 颜色
+
 - [ ] Canvas 背景为 `#08080a`（非纯黑）
 - [ ] Surface 阶梯清晰：canvas → surface-1 → surface-2 → surface-3
 - [ ] Brand 色为 `#5c7cfa`（Indigo/Lavender）
@@ -11,6 +12,7 @@
 - [ ] 无装饰性渐变、无氛围光、无阴影
 
 ### 排版
+
 - [ ] Hero 标题使用 80px，weight 600，letter-spacing -0.04em
 - [ ] Display 字重不超过 600（无 700+）
 - [ ] eyebrow 使用正字间距 +0.04em
@@ -18,6 +20,7 @@
 - [ ] 代码使用 JetBrains Mono（从 Google Fonts 加载）
 
 ### 组件
+
 - [ ] Button 圆角 8px，padding 8px 14px（非 pill）
 - [ ] Card 圆角 12px，padding 24px
 - [ ] Card 顶部有 1px edge highlight（`rgba(255,255,255,0.08)`）
@@ -27,6 +30,7 @@
 - [ ] Badge pill 形状，小尺寸
 
 ### 图标
+
 - [ ] 6 个 Feature Card 使用 SVG 图标（非文本缩写）
 - [ ] 图标风格统一：Outline, 1.5px stroke, round cap/join
 - [ ] 图标颜色：品牌色或 text-secondary
@@ -34,6 +38,7 @@
 ## 布局验收
 
 ### 首页
+
 - [ ] Hero 左右分栏（Desktop ≥ 1024px）
 - [ ] 右侧代码面板 480px 宽，macOS 风格圆点
 - [ ] Feature Grid 3 列（Desktop），2 列（Tablet），1 列（Mobile）
@@ -42,10 +47,12 @@
 - [ ] Footer 4 列链接网格
 
 ### 文档页
+
 - [ ] Docs landing 2×2 卡片网格
 - [ ] 每个卡片有 badge + icon + title + description
 
 ### 设计系统页
+
 - [ ] Dark/Light 色板对比展示
 - [ ] Type scale 展示（display-xl 到 caption）
 - [ ] Button 4 变体展示
@@ -58,7 +65,7 @@
 - [ ] Desktop (≥ 1024px): 完整布局，代码面板显示
 - [ ] Tablet (768-1023px): 2 列 features，hero 堆叠，代码面板隐藏
 - [ ] Mobile (< 768px): 单列，简化 nav，减少 padding
-- [ ] 移动端 640px 以下：无布局崩坏
+- [ ] 移动端 768px 以下：无布局崩坏
 
 ## 交互验收
 
@@ -106,9 +113,9 @@
 
 ## 签字
 
-| 角色 | 姓名 | 日期 | 状态 |
-|------|------|------|------|
-| 设计师 | | | ☐ |
-| 前端开发 | | | ☐ |
-| 产品经理 | | | ☐ |
-| QA | | | ☐ |
+| 角色     | 姓名 | 日期 | 状态 |
+| -------- | ---- | ---- | ---- |
+| 设计师   |      |      | ☐    |
+| 前端开发 |      |      | ☐    |
+| 产品经理 |      |      | ☐    |
+| QA       |      |      | ☐    |

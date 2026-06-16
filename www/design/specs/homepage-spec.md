@@ -51,6 +51,7 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 ## Section 1: Hero
 
 ### 布局
+
 - 全宽，高度 auto
 - Padding-top: 120px（为 nav 留空间）
 - Padding-bottom: 64px
@@ -59,15 +60,16 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 
 ### 左侧内容
 
-| 元素 | 内容 | 样式 |
-|------|------|------|
-| Eyebrow | "openElement 0.40.7 / v0.40.7 active" | 13px, weight 500, brand color, letter-spacing +0.04em, uppercase |
-| Headline | "THE OPEN" / "ELEMENT." | 80px (clamp), weight 600, letter-spacing -0.04em, line-height 0.95 |
-| Headline accent | "ELEMENT." | brand color |
-| Subhead | 平台描述 | 18px, weight 400, text-secondary, line-height 1.5, max-width 520px |
-| CTA Bar | "Start building" + "Read architecture" | Primary + Secondary button |
+| 元素            | 内容                                   | 样式                                                               |
+| --------------- | -------------------------------------- | ------------------------------------------------------------------ |
+| Eyebrow         | "openElement 0.40.7 / v0.40.7 active"  | 13px, weight 500, --color-brand, letter-spacing +0.04em, uppercase |
+| Headline        | "THE OPEN" / "ELEMENT."                | 80px (clamp), weight 600, letter-spacing -0.04em, line-height 0.95 |
+| Headline accent | "ELEMENT."                             | brand color                                                        |
+| Subhead         | 平台描述                               | 18px, weight 400, text-secondary, line-height 1.5, max-width 520px |
+| CTA Bar         | "Start building" + "Read architecture" | Primary + Secondary button                                         |
 
 ### 右侧代码面板
+
 - 宽度：480px
 - 背景：surface-2
 - 圆角：12px
@@ -78,6 +80,7 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 - 内容：Syntax highlighted JSX 代码
 
 ### 响应式
+
 - Desktop (≥1024px): 左右分栏
 - Tablet (<1024px): 堆叠，代码面板隐藏
 - Mobile: 字号缩小，padding 减小
@@ -85,19 +88,21 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 ## Section 2: Features
 
 ### 布局
+
 - 全宽
 - Padding: 96px 32px
 - 内容区：max-width 1200px，居中
 
 ### 内容
 
-| 元素 | 样式 |
-|------|------|
-| Eyebrow | "Why openElement" — 13px, brand, uppercase, +0.04em |
-| Headline | "Static-first Web Components without duplicate render paths." — 40px, weight 600, -0.02em |
-| Feature Grid | 3 列，gap 16px |
+| 元素         | 样式                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Eyebrow      | "Why openElement" — 13px, --color-brand, uppercase, +0.04em                               |
+| Headline     | "Static-first Web Components without duplicate render paths." — 40px, weight 600, -0.02em |
+| Feature Grid | 3 列，gap 16px                                                                            |
 
 ### Feature Card
+
 - 每个卡片：surface-2 背景，12px 圆角，1px border
 - 顶部 edge highlight
 - 24px 内边距
@@ -106,6 +111,7 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 - Hover：border 变亮，无位移
 
 ### 响应式
+
 - Desktop: 3 列
 - Tablet: 2 列
 - Mobile: 1 列
@@ -113,10 +119,12 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 ## Section 3: Showcase
 
 ### 布局
+
 - 全宽，背景 surface-1（提升层级）
 - Padding: 96px 32px
 
 ### 内容
+
 - Eyebrow: "How it works" — brand color
 - Headline: "One pipeline. Zero runtime overhead." — 40px, weight 600
 - Demo Panel: 大型卡片，包含代码 + 预览
@@ -127,10 +135,12 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 ## Section 4: CTA Banner
 
 ### 布局
+
 - 全宽
 - Padding: 96px 32px
 
 ### 内容
+
 - Headline: "Ready to build with Web Standards?" — 40px, weight 600
 - Subhead: "Get started in 30 seconds." — 20px, text-secondary
 - Command line: `deno run -A jsr:@openelement/create my-app`
@@ -140,11 +150,13 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 ## Section 5: Footer
 
 ### 布局
+
 - 全宽，背景 canvas
 - Padding: 64px 32px
 - 顶部 border: 1px solid border
 
 ### 内容
+
 - 左侧：Logo + 标语
 - 右侧：4 列链接网格
   - Product: Elements, UI, Framework, Protocols
@@ -155,21 +167,21 @@ openElement 首页。Linear.app 风格深色科技风。单页长滚动，包含
 
 ## 响应式断点
 
-| 断点 | 关键变化 |
-|------|----------|
-| ≥ 1024px | 3 列 features，hero 左右分栏，代码面板显示 |
-| 768–1023px | 2 列 features，hero 堆叠，代码面板隐藏 |
-| < 768px | 1 列，简化 nav，减少 padding |
+| 断点       | 关键变化                                   |
+| ---------- | ------------------------------------------ |
+| ≥ 1024px   | 3 列 features，hero 左右分栏，代码面板显示 |
+| 768–1023px | 2 列 features，hero 堆叠，代码面板隐藏     |
+| < 768px    | 1 列，简化 nav，减少 padding               |
 
 ## 间距速查
 
-| 区域 | 上内边距 | 下内边距 | 水平内边距 |
-|------|----------|----------|------------|
-| Hero | 120px | 64px | 32px |
-| Features | 96px | 96px | 32px |
-| Showcase | 96px | 96px | 32px |
-| CTA | 96px | 96px | 32px |
-| Footer | 64px | 64px | 32px |
+| 区域     | 上内边距 | 下内边距 | 水平内边距 |
+| -------- | -------- | -------- | ---------- |
+| Hero     | 120px    | 64px     | 32px       |
+| Features | 96px     | 96px     | 32px       |
+| Showcase | 96px     | 96px     | 32px       |
+| CTA      | 96px     | 96px     | 32px       |
+| Footer   | 64px     | 64px     | 32px       |
 
 ## 注意事项
 

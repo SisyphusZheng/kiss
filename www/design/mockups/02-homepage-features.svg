@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="860" viewBox="0 0 1440 860" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+      .sans { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }</style>
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4263eb" />
+      <stop offset="100%" stop-color="#5c7cfa" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="860" fill="#08080a" />
+
+  <g id="nav">
+    <rect x="0" y="0" width="1440" height="56" fill="#08080a" opacity="0.95" />
+    <line x1="0" y1="56" x2="1440" y2="56" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <g transform="translate(28, 16)">
+      <rect x="0" y="0" width="24" height="24" rx="6" fill="#4263eb" />
+      <text
+        x="12"
+        y="17"
+        font-size="11"
+        font-weight="600"
+        fill="#ffffff"
+        text-anchor="middle"
+        font-family="Inter, sans-serif"
+      >O</text>
+    </g>
+    <text
+      class="sans"
+      x="60"
+      y="34"
+      font-size="17"
+      font-weight="600"
+      fill="#e9ecef"
+    >openElement</text>
+    <text
+      class="sans"
+      x="620"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      letter-spacing="0.01em"
+    >Guide</text>
+    <text
+      class="sans"
+      x="700"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >API</text>
+    <text
+      class="sans"
+      x="810"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Architecture</text>
+    <text
+      class="sans"
+      x="930"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Blog</text>
+    <text
+      class="sans"
+      x="1000"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Changelog</text>
+    <rect
+      x="1060"
+      y="10"
+      width="85"
+      height="36"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1102.5"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >GitHub</text>
+    <rect
+      x="1155"
+      y="10"
+      width="110"
+      height="36"
+      rx="8"
+      fill="#4263eb"
+      stroke="#4263eb"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1210"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#ffffff"
+      text-anchor="middle"
+    >Get started</text>
+  </g>
+  <text
+    class="sans"
+    x="80"
+    y="100"
+    font-size="13"
+    font-weight="500"
+    fill="#4263eb"
+    letter-spacing="0.04em"
+  >Why openElement</text>
+  <text
+    class="sans"
+    x="80"
+    y="150"
+    font-size="40"
+    font-weight="600"
+    fill="#e9ecef"
+    letter-spacing="-0.02em"
+  >Static-first Web Components</text>
+  <text
+    class="sans"
+    x="80"
+    y="200"
+    font-size="40"
+    font-weight="600"
+    fill="#e9ecef"
+    letter-spacing="-0.02em"
+  >without duplicate render paths.</text>
+  <g id="feature-1">
+    <rect
+      x="80"
+      y="260"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="86" y1="260" x2="474" y2="260" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(100,280)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+        <polyline points="2 17 12 22 22 17" />
+        <polyline points="2 12 12 17 22 12" />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="136"
+      y="302"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >Elements-first</text>
+    <rect
+      x="370"
+      y="284"
+      width="50"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="395"
+      y="300"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >Core</text>
+    <text
+      class="sans"
+      x="104"
+      y="340"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >Web Components as the surface. Shadow DOM and Declarati</text>
+    <text
+      class="sans"
+      x="104"
+      y="362"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >ve Shadow DOM remain the default render mode. Every com</text>
+    <text
+      class="sans"
+      x="104"
+      y="384"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >ponent is a Custom Element.</text>
+  </g>
+  <g id="feature-2">
+    <rect
+      x="496"
+      y="260"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="502" y1="260" x2="890" y2="260" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(516,280)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <line x1="6" y1="3" x2="6" y2="15" />
+        <circle cx="18" cy="6" r="3" />
+        <circle cx="6" cy="18" r="3" />
+        <path d="M18 9a9 9 0 0 1-9 9" />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="552"
+      y="302"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >One renderer</text>
+    <rect
+      x="786"
+      y="284"
+      width="65"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="818.5"
+      y="300"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >Engine</text>
+    <text
+      class="sans"
+      x="520"
+      y="340"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >JSX compiles to VNode IR. SSR, CSR, signals, and events</text>
+    <text
+      class="sans"
+      x="520"
+      y="362"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >share the same structural model — no duplicate render</text>
+    <text class="sans" x="520" y="384" font-size="14" font-weight="400" fill="#adb5bd">paths.</text>
+  </g>
+  <g id="feature-3">
+    <rect
+      x="912"
+      y="260"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="918" y1="260" x2="1306" y2="260" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(932,280)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="968"
+      y="302"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >App lifecycle</text>
+    <rect
+      x="1202"
+      y="284"
+      width="140"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1272"
+      y="300"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >@openelement/app</text>
+    <text
+      class="sans"
+      x="936"
+      y="340"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >Route params, load context, redirect, not-found, and er</text>
+    <text
+      class="sans"
+      x="936"
+      y="362"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >ror fallback. Structured lifecycle with head management</text>
+    <text
+      class="sans"
+      x="936"
+      y="384"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >built in.</text>
+  </g>
+  <g id="feature-4">
+    <rect
+      x="80"
+      y="516"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="86" y1="516" x2="474" y2="516" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(100,536)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="136"
+      y="558"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >Trusted boundary</text>
+    <rect
+      x="370"
+      y="540"
+      width="80"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="410"
+      y="556"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >Security</text>
+    <text
+      class="sans"
+      x="104"
+      y="596"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >HTML injection is explicit and reserved for pre-sanitiz</text>
+    <text
+      class="sans"
+      x="104"
+      y="618"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >ed non-interactive content. No raw HTML by default.</text>
+  </g>
+  <g id="feature-5">
+    <rect
+      x="496"
+      y="516"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="502" y1="516" x2="890" y2="516" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(516,536)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="552"
+      y="558"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >Gate-proven</text>
+    <rect
+      x="786"
+      y="540"
+      width="57.5"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="814.75"
+      y="556"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >CI/CD</text>
+    <text
+      class="sans"
+      x="520"
+      y="596"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >AutoFlow3 guards every merge. Package graph validation,</text>
+    <text
+      class="sans"
+      x="520"
+      y="618"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >workflow slimming, and CI that fails fast.</text>
+  </g>
+  <g id="feature-6">
+    <rect
+      x="912"
+      y="516"
+      width="400"
+      height="240"
+      rx="12"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="918" y1="516" x2="1306" y2="516" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <g transform="translate(932,536)">
+      <g transform="scale(1.333)" color="#4263eb">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path
+          d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        />
+      </g>
+    </g>
+    <text
+      class="sans"
+      x="968"
+      y="558"
+      font-size="22"
+      font-weight="500"
+      fill="#e9ecef"
+    >Web standards</text>
+    <rect
+      x="1202"
+      y="540"
+      width="80"
+      height="24"
+      rx="9999"
+      fill="rgba(66,99,235,0.12)"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1242"
+      y="556"
+      font-size="11"
+      font-weight="400"
+      fill="#4263eb"
+      text-anchor="middle"
+    >Platform</text>
+    <text
+      class="sans"
+      x="936"
+      y="596"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >Custom Elements, Shadow DOM, CSSStyleSheet, URL, fetch,</text>
+    <text
+      class="sans"
+      x="936"
+      y="618"
+      font-size="14"
+      font-weight="400"
+      fill="#adb5bd"
+    >and Web Streams at the center.</text>
+  </g>
+</svg>

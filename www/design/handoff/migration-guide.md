@@ -7,6 +7,7 @@
 ## 迁移范围
 
 ### 页面
+
 - [ ] 首页（`www/app/routes/index/index.tsx`）
 - [ ] 文档入口（`www/app/routes/docs/index.tsx`）
 - [ ] 设计系统（`www/app/routes/architecture/design-system.tsx`）
@@ -14,6 +15,7 @@
 - [ ] 导航栏（`packages/ui/src/open-layout.tsx`）
 
 ### 组件
+
 - [ ] 新增 `linear-token-sheet.ts`（token 覆写）
 - [ ] 新增 `open-button-linear.tsx`（4 变体）
 - [ ] 新增 `open-card-linear.tsx`（带 edge highlight）
@@ -107,7 +109,7 @@
    - 测试 hover 状态下的可见性
 
 5. **移动端断点测试**
-   - 640px / 900px / 1024px
+   - 768px / 1024px
    - 确认代码面板在 tablet 以下隐藏
 
 ### Phase 5: 性能与可访问性（0.5 天）
@@ -130,6 +132,7 @@
 ## 回滚计划
 
 如果迁移出现问题，可通过以下方式回滚：
+
 1. Git 回退到迁移前 commit
 2. 或保留旧组件，通过 feature flag 切换
 

@@ -13,19 +13,19 @@
   /* ═══════════════════════════════════════════════
      Typography Scale
      ═══════════════════════════════════════════════ */
-  --font-size-display-xl: 5rem;       /* 80px */
-  --font-size-display-lg: 3.5rem;       /* 56px */
-  --font-size-display-md: 2.5rem;      /* 40px */
-  --font-size-headline: 1.75rem;       /* 28px */
-  --font-size-card-title: 1.375rem;     /* 22px */
-  --font-size-subhead: 1.25rem;        /* 20px */
-  --font-size-body-lg: 1.125rem;        /* 18px */
-  --font-size-body: 1rem;               /* 16px */
-  --font-size-body-sm: 0.875rem;        /* 14px */
-  --font-size-caption: 0.75rem;         /* 12px */
-  --font-size-button: 0.875rem;         /* 14px */
-  --font-size-eyebrow: 0.8125rem;      /* 13px */
-  --font-size-mono: 0.8125rem;           /* 13px */
+  --font-size-display-xl: 5rem; /* 80px */
+  --font-size-display-lg: 3.5rem; /* 56px */
+  --font-size-display-md: 2.5rem; /* 40px */
+  --font-size-headline: 1.75rem; /* 28px */
+  --font-size-card-title: 1.375rem; /* 22px */
+  --font-size-subhead: 1.25rem; /* 20px */
+  --font-size-body-lg: 1.125rem; /* 18px */
+  --font-size-body: 1rem; /* 16px */
+  --font-size-body-sm: 0.875rem; /* 14px */
+  --font-size-caption: 0.75rem; /* 12px */
+  --font-size-button: 0.875rem; /* 14px */
+  --font-size-eyebrow: 0.8125rem; /* 13px */
+  --font-size-mono: 0.8125rem; /* 13px */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -73,10 +73,10 @@
   --surface-2: #16191d;
   --surface-3: #212529;
 
-  --color-brand: #5c7cfa;
-  --color-brand-hover: #4c6ef5;
-  --color-brand-light: #748ffc;
-  --color-brand-pale: #91a7ff;
+  --color-brand: #4263eb;
+  --color-brand-hover: #3b5bdb;
+  --color-brand-light: #5c7cfa;
+  --color-brand-pale: #748ffc;
   --color-brand-deep: #26215c;
 
   --color-text-primary: #e9ecef;
@@ -130,6 +130,13 @@
   --badge-bg: var(--surface-1);
   --badge-color: var(--color-text-muted);
 
+  /* ═══════════════════════════════════════════════
+     Breakpoints
+     ═══════════════════════════════════════════════ */
+  --bp-mobile: 0;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+
   --nav-height: 56px;
   --nav-bg: var(--bg-canvas);
   --nav-link-color: var(--color-text-secondary);
@@ -140,7 +147,7 @@
 /* ═══════════════════════════════════════════════
    Light Mode (Product UI Preview Only)
    ═══════════════════════════════════════════════ */
-[data-theme="light"] {
+[data-theme='light'] {
   --bg-canvas: #f8f9fa;
   --surface-1: #ffffff;
   --surface-2: #f1f3f5;
@@ -152,9 +159,23 @@
 
   --color-border: rgba(18, 19, 26, 0.08);
   --color-border-hover: rgba(18, 19, 26, 0.12);
+  --color-border-strong: rgba(18, 19, 26, 0.16);
   --color-edge-highlight: rgba(255, 255, 255, 0.5);
-  --color-brand: #4c6ef5;
-  --color-brand-hover: #4263eb;
+  --color-brand: #4263eb;
+  --color-brand-hover: #3b5bdb;
+  --color-brand-light: #5c7cfa;
+  --color-brand-pale: #748ffc;
+  --color-brand-deep: #e7e9fb;
 
+  --color-success: #16a34a;
+  --color-success-subtle: rgba(22, 163, 74, 0.08);
+  --color-error: #dc2626;
+  --color-error-subtle: rgba(220, 38, 38, 0.08);
+  --color-warning: #d97706;
+  --color-warning-subtle: rgba(217, 119, 6, 0.08);
+  --color-info: #2563eb;
+  --color-info-subtle: rgba(37, 99, 235, 0.08);
+
+  --color-overlay: rgba(0, 0, 0, 0.3);
   --shadow-elevated: 0 0 0 1px rgba(18, 19, 26, 0.08);
 }
