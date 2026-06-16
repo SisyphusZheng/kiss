@@ -29,7 +29,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-card',
       className: 'OpenCard',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Card container with header and footer slots',
       attributes: [
         {
@@ -60,7 +60,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-callout',
       className: 'OpenCallout',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Callout notice box (info, warning, danger, tip)',
       attributes: [
         { name: 'type', type: 'string', default: '"info"', description: 'Callout type' },
@@ -83,7 +83,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-step-card',
       className: 'OpenStepCard',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Step card with numbered indicator',
       attributes: [
         { name: 'step', type: 'number', default: '1', description: 'Step number' },
@@ -109,7 +109,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-button',
       className: 'OpenButton',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Button with variants (default, primary, ghost, accent)',
       attributes: [
         { name: 'variant', type: 'string', default: '"default"', description: 'Button variant' },
@@ -135,7 +135,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-input',
       className: 'OpenInput',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Input field with label and error states',
       attributes: [
         { name: 'label', type: 'string', description: 'Input label' },
@@ -170,7 +170,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-theme-toggle',
       className: 'OpenThemeToggle',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Dark/Light theme toggle',
       attributes: [
         { name: 'theme', type: 'string', description: 'Initial theme (light/dark)' },
@@ -192,7 +192,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-code-block',
       className: 'OpenCodeBlock',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Code block with syntax highlighting and copy button',
       cssParts: [
         { name: 'container', description: 'The code-block wrapper' },
@@ -211,7 +211,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-dialog',
       className: 'OpenDialog',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Modal dialog component using native <dialog>',
       attributes: [
         {
@@ -249,7 +249,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-layout',
       className: 'OpenLayout',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'App layout with header, sidebar, footer, and SPA navigation',
       attributes: [
         { name: 'current-path', type: 'string', description: 'Current URL path' },
@@ -283,7 +283,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-dropdown',
       className: 'OpenDropdown',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Dropdown toggle with trigger slot and content slot',
       slots: [
         { name: 'trigger', description: 'Click target to toggle the dropdown' },
@@ -305,7 +305,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-modal',
       className: 'OpenModal',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Modal dialog using signal-driven open attribute',
       attributes: [
         {
@@ -335,7 +335,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-tabs',
       className: 'OpenTabs',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Tab interface with tab and panel slots',
       slots: [
         { name: 'tab', description: 'Tab button labels (multiple)' },
@@ -358,7 +358,7 @@ export const manifest: OpenElementPackageManifest = {
     {
       tagName: 'open-hero-ping',
       className: 'OpenHeroPing',
-      superclassName: 'DsdElement',
+      superclassName: 'OpenElement',
       description: 'Animated hero ping indicator (Island)',
       cssParts: [
         { name: 'dot-static', description: 'The static status dot' },
@@ -371,6 +371,181 @@ export const manifest: OpenElementPackageManifest = {
         hydrate: 'idle',
         module: '@openelement/ui/open-hero-ping',
         export: 'OpenHeroPing',
+      },
+    },
+    // -- Linear (OpenElement, `@openelement/element`) --
+    {
+      tagName: 'open-button-linear',
+      className: 'OpenButtonLinear',
+      superclassName: 'OpenElement',
+      description: 'Linear.app-style button (compact, no box-shadow, no hover lift)',
+      attributes: [
+        {
+          name: 'variant',
+          type: 'string',
+          default: '"primary"',
+          description: 'Button variant (primary, secondary, tertiary, inverse)',
+        },
+        { name: 'size', type: 'string', default: '"md"', description: 'Button size (sm, md, lg)' },
+        { name: 'disabled', type: 'boolean', default: 'false', description: 'Whether disabled' },
+        { name: 'href', type: 'string', description: 'Link URL (renders as anchor)' },
+        { name: 'target', type: 'string', description: 'Anchor target attribute' },
+        { name: 'type', type: 'string', default: '"button"', description: 'Button type attribute' },
+      ],
+      events: [
+        { name: 'open-click', type: 'CustomEvent', description: 'Fired on button click' },
+      ],
+      cssParts: [
+        { name: 'control', description: 'The button or anchor element' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-button-linear',
+        export: 'OpenButtonLinear',
+      },
+    },
+    {
+      tagName: 'open-card-linear',
+      className: 'OpenCardLinear',
+      superclassName: 'OpenElement',
+      description: 'Linear.app-style card with edge highlight, code-panel and featured variants',
+      attributes: [
+        {
+          name: 'variant',
+          type: 'string',
+          default: '"standard"',
+          description: 'Card variant (standard, featured, code-panel)',
+        },
+        { name: 'title', type: 'string', description: 'Panel title (code-panel variant)' },
+      ],
+      slots: [
+        { name: '', description: 'Default slot for card content' },
+        { name: 'header', description: 'Header slot' },
+        { name: 'footer', description: 'Footer slot' },
+      ],
+      cssParts: [
+        { name: 'container', description: 'The article wrapper' },
+        { name: 'body', description: 'The card content area' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-card-linear',
+        export: 'OpenCardLinear',
+      },
+    },
+    {
+      tagName: 'open-input-linear',
+      className: 'OpenInputLinear',
+      superclassName: 'OpenElement',
+      description: 'Linear.app-style input (standard, cli, search variants; sm, md, lg sizes)',
+      attributes: [
+        {
+          name: 'variant',
+          type: 'string',
+          default: '"standard"',
+          description: 'Input variant (standard, cli, search)',
+        },
+        { name: 'size', type: 'string', default: '"md"', description: 'Input size (sm, md, lg)' },
+        { name: 'type', type: 'string', default: '"text"', description: 'Input type' },
+        { name: 'label', type: 'string', description: 'Input label' },
+        { name: 'value', type: 'string', default: '""', description: 'Input value' },
+        { name: 'placeholder', type: 'string', description: 'Placeholder text' },
+        { name: 'name', type: 'string', description: 'Form field name' },
+        { name: 'disabled', type: 'boolean', description: 'Disabled state' },
+        { name: 'error', type: 'string', description: 'Error message' },
+        { name: 'copy', type: 'boolean', description: 'Show copy button (cli variant)' },
+      ],
+      slots: [
+        { name: '', description: 'Default slot for input content' },
+        { name: 'prefix', description: 'Content before the input' },
+        { name: 'suffix', description: 'Content after the input' },
+      ],
+      events: [
+        {
+          name: 'open-input',
+          type: 'CustomEvent<{ value: string }>',
+          description: 'Fired on input change',
+        },
+        {
+          name: 'open-change',
+          type: 'CustomEvent<{ value: string }>',
+          description: 'Fired on commit (blur/enter)',
+        },
+        { name: 'open-focus', type: 'CustomEvent', description: 'Fired on focus' },
+        { name: 'open-blur', type: 'CustomEvent', description: 'Fired on blur' },
+      ],
+      cssParts: [
+        { name: 'wrapper', description: 'The outer input row wrapper' },
+        { name: 'control', description: 'The actual <input> element' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-input-linear',
+        export: 'OpenInputLinear',
+      },
+    },
+    {
+      tagName: 'open-nav-linear',
+      className: 'OpenNavLinear',
+      superclassName: 'OpenElement',
+      description: 'Linear.app-style sticky navigation bar with backdrop-blur and mobile overlay',
+      attributes: [
+        { name: 'current-path', type: 'string', description: 'Current URL path' },
+        { name: 'nav-links', type: 'array', description: 'Navigation links JSON array' },
+        { name: 'logo-text', type: 'string', default: '"openElement"', description: 'Logo text' },
+        { name: 'github-url', type: 'string', description: 'GitHub repository URL' },
+      ],
+      cssParts: [
+        { name: 'container', description: 'The nav inner wrapper' },
+        { name: 'logo', description: 'The logo link' },
+        { name: 'links', description: 'The desktop nav links container' },
+        { name: 'cta', description: 'The primary CTA button' },
+        { name: 'github', description: 'The GitHub secondary button' },
+        { name: 'hamburger', description: 'The mobile hamburger toggle button' },
+        { name: 'overlay', description: 'The mobile full-screen overlay' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-interactive',
+        hydrate: 'load',
+        module: '@openelement/ui/open-nav-linear',
+        export: 'OpenNavLinear',
+      },
+    },
+    {
+      tagName: 'open-badge-linear',
+      className: 'OpenBadgeLinear',
+      superclassName: 'OpenElement',
+      description: 'Linear.app-style pill badge with status variants',
+      attributes: [
+        {
+          name: 'variant',
+          type: 'string',
+          default: '"default"',
+          description: 'Badge variant (default, success, error, warning, info, new)',
+        },
+        { name: 'size', type: 'string', description: 'Badge size (sm)' },
+      ],
+      cssParts: [
+        { name: 'badge', description: 'The badge span element' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-badge-linear',
+        export: 'OpenBadgeLinear',
       },
     },
   ],
@@ -439,6 +614,32 @@ export const manifest: OpenElementPackageManifest = {
       path: './open-tabs.js',
       exports: [{ name: 'OpenTabs', path: './open-tabs.js' }],
       declarations: ['open-tabs'],
+    },
+    // -- Linear modules --
+    {
+      path: './open-button-linear.js',
+      exports: [{ name: 'OpenButtonLinear', path: './open-button-linear.js' }],
+      declarations: ['open-button-linear'],
+    },
+    {
+      path: './open-card-linear.js',
+      exports: [{ name: 'OpenCardLinear', path: './open-card-linear.js' }],
+      declarations: ['open-card-linear'],
+    },
+    {
+      path: './open-input-linear.js',
+      exports: [{ name: 'OpenInputLinear', path: './open-input-linear.js' }],
+      declarations: ['open-input-linear'],
+    },
+    {
+      path: './open-nav-linear.js',
+      exports: [{ name: 'OpenNavLinear', path: './open-nav-linear.js' }],
+      declarations: ['open-nav-linear'],
+    },
+    {
+      path: './open-badge-linear.js',
+      exports: [{ name: 'OpenBadgeLinear', path: './open-badge-linear.js' }],
+      declarations: ['open-badge-linear'],
     },
   ],
 };
