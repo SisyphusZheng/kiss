@@ -16,10 +16,17 @@
     "./open-dropdown": "./src/open-dropdown.tsx",
     "./open-modal": "./src/open-modal.tsx",
     "./open-tabs": "./src/open-tabs.tsx",
+    "./open-button-linear": "./src/open-button-linear.tsx",
+    "./open-card-linear": "./src/open-card-linear.tsx",
+    "./open-input-linear": "./src/open-input-linear.tsx",
+    "./open-nav-linear": "./src/open-nav-linear.tsx",
+    "./open-badge-linear": "./src/open-badge-linear.tsx",
     "./daisy-classes": "./src/daisy-classes.ts",
     "./daisy-classes.js": "./src/daisy-classes.ts",
     "./open-props-tokens": "./src/open-props-tokens.ts",
-    "./open-props-tokens.js": "./src/open-props-tokens.ts"
+    "./open-props-tokens.js": "./src/open-props-tokens.ts",
+    "./linear-token-sheet": "./src/linear-token-sheet.ts",
+    "./linear-token-sheet.js": "./src/linear-token-sheet.ts"
   },
   "imports": {
     "@openelement/core": "jsr:@openelement/core@^0.40.7",

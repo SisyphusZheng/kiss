@@ -82,10 +82,10 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Brand tokens
      ═══════════════════════════════════════════════ */
-  --brand: #534ab7;      --brand-hover: #4039a0;
-  --brand-light: #6d5ce8; --brand-pale: #8b7cf6;
-  --brand-deep: #26215c;  --brand-subtle: rgba(83, 74, 183, 0.1);
-  --brand-glow: rgba(83, 74, 183, 0.15);
+  --brand: #4263eb;      --brand-hover: #3b5bdb;
+  --brand-light: #5c7cfa; --brand-pale: #8b7cf6;
+  --brand-deep: #26215c;  --brand-subtle: rgba(66, 99, 235, 0.1);
+  --brand-glow: rgba(66, 99, 235, 0.15);
 
   /* ═══════════════════════════════════════════════
      Component Semantic Tokens (for daisyUI classes)
@@ -191,10 +191,10 @@ function createTokenSheet(): StyleSheetLike {
   --gray-6: #868e96;  --gray-7: #adb5bd; --gray-8: #ced4da;
   --gray-9: #dee2e6;  --gray-10: #e9ecef; --gray-11: #f1f3f5;
   --gray-12: #f8f9fa;
-  --brand: #7c6ff5;     --brand-hover: #6d5ce8;
-  --brand-light: #8b7cf6; --brand-deep: #3d3580;
-  --brand-subtle: rgba(124,111,245,.15);
-  --brand-glow: rgba(124,111,245,.2);
+  --brand: #4263eb;     --brand-hover: #3b5bdb;
+  --brand-light: #5c7cfa; --brand-deep: #3d3580;
+  --brand-subtle: rgba(66,99,235,.15);
+  --brand-glow: rgba(66,99,235,.2);
   --text-primary: var(--gray-10);
   --text-secondary: var(--gray-7);
   --text-muted: var(--gray-6);

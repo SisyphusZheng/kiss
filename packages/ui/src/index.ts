@@ -6,8 +6,13 @@
  *
  * Components:
  * - open-button: Button with variants (default, primary, ghost, accent)
+ * - open-button-linear: Linear.app-style button (compact, no box-shadow)
  * - open-card: Card container with optional header/footer
+ * - open-card-linear: Linear.app-style card with edge highlight
  * - open-input: Input field with label and error states
+ * - open-input-linear: Linear.app-style input (standard, cli, search variants)
+ * - open-nav-linear: Linear.app-style sticky navigation bar
+ * - open-badge-linear: Linear.app-style pill badge component
  * - open-code-block: Code block with copy button
  * - open-layout: App layout with header, sidebar, footer
  * - open-theme-toggle: Theme toggle Island (Dark/Light)
@@ -30,6 +35,7 @@
 
 // Design tokens (CSSStyleSheet, zero Lit dependency)
 export { openPropsTokenSheet } from './open-props-tokens.js';
+export { linearTokenSheet } from './linear-token-sheet.js';
 
 // daisyUI forked class sheet (Pure CSS, Open Props tokens)
 export { daisyClassSheet } from './daisy-classes.js';
@@ -49,6 +55,13 @@ export { OpenStepCard, tagName as openStepCardTagName } from './open-step-card.j
 export { OpenDropdown, tagName as openDropdownTagName } from './open-dropdown.js';
 export { OpenModal, tagName as openModalTagName } from './open-modal.js';
 export { OpenTabs, tagName as openTabsTagName } from './open-tabs.js';
+
+// Linear components
+export { OpenButtonLinear, tagName as openButtonLinearTagName } from './open-button-linear.js';
+export { OpenCardLinear, tagName as openCardLinearTagName } from './open-card-linear.js';
+export { OpenInputLinear, tagName as openInputLinearTagName } from './open-input-linear.js';
+export { OpenNavLinear, tagName as openNavLinearTagName } from './open-nav-linear.js';
+export { OpenBadgeLinear, tagName as openBadgeLinearTagName } from './open-badge-linear.js';
 
 // Package manifest (WC Package Protocol)
 // Consumers (adapter-vite) read manifest.declarations to derive island metadata.
