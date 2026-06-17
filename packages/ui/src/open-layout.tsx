@@ -33,7 +33,6 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { type Context, createContext, provideContext } from '@openelement/core';
 import { openPropsTokenSheet } from './open-props-tokens.js';
-import { linearTokenSheet } from './linear-token-sheet.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 import '.\/open-theme-toggle.js';
@@ -181,22 +180,22 @@ sheet.replaceSync(`
     background: var(--nav-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-size-1) solid var(--border);
     transition: background 0.2s ease, border-color 0.2s ease;
   }
   .app-header.scrolled {
     background: var(--nav-bg);
-    border-bottom-color: var(--color-border-hover);
+    border-bottom-color: var(--border-hover);
   }
 
   .header-inner {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 0 var(--space-xl);
+    padding: 0 var(--size-8);
     display: flex;
     align-items: center;
     min-height: 64px;
-    gap: var(--space-md);
+    gap: var(--size-4);
   }
 
   .mobile-tab-bar { display: none; }
@@ -207,18 +206,18 @@ sheet.replaceSync(`
     justify-content: center;
     width: 32px;
     height: 32px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
     background: transparent;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 0;
     transition: all 0.15s ease;
   }
   .mobile-menu-btn:hover {
-    color: var(--color-text-primary);
-    border-color: var(--color-border-hover);
-    background: var(--surface-2);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
   }
 
   .logo {
@@ -227,7 +226,7 @@ sheet.replaceSync(`
     gap: 10px;
     font-size: 18px;
     font-weight: 750;
-    color: var(--color-text-primary);
+    color: var(--text-primary);
     text-decoration: none;
     letter-spacing: 0;
     white-space: nowrap;
@@ -239,20 +238,20 @@ sheet.replaceSync(`
     width: 18px;
     height: 18px;
     border-radius: 5px;
-    background: linear-gradient(135deg, var(--color-brand), #047857);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+    background: linear-gradient(135deg, var(--brand), var(--success));
+    box-shadow: inset 0 0 0 var(--border-size-1) var(--edge-highlight);
     flex: 0 0 auto;
   }
 
   .logo-sub {
     font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-left: var(--space-xs);
+    color: var(--text-muted);
+    margin-left: var(--size-2);
   }
 
   .header-nav {
     display: flex;
-    gap: var(--space-md);
+    gap: var(--size-4);
     flex: 1;
   }
   .header-nav a {
@@ -267,14 +266,14 @@ sheet.replaceSync(`
     color: var(--nav-link-hover);
   }
   .header-nav a[aria-current="page"] {
-    color: var(--color-text-primary);
+    color: var(--text-primary);
     font-weight: 500;
   }
 
   .header-right {
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
+    gap: var(--size-2);
     margin-left: auto;
   }
 
@@ -283,19 +282,19 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--color-text-primary);
+    color: var(--text-primary);
     text-decoration: none;
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-medium);
     padding: 8px 14px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: rgba(255,255,255,0.72);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
+    background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
     transition: all 0.15s ease;
   }
   .btn-secondary:hover {
-    border-color: var(--color-border-hover);
-    background: var(--surface-2);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
   }
   .btn-secondary svg { flex-shrink: 0; }
 
@@ -303,18 +302,18 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #ffffff;
+    color: var(--on-brand);
     text-decoration: none;
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-medium);
     padding: 8px 14px;
     border: none;
-    border-radius: var(--radius-md);
-    background: var(--color-brand);
+    border-radius: var(--radius-2);
+    background: var(--brand);
     transition: all 0.15s ease;
   }
   .btn-primary:hover {
-    background: var(--color-brand-hover);
+    background: var(--brand-hover);
   }
 
   .lang-switch {
@@ -323,35 +322,35 @@ sheet.replaceSync(`
     justify-content: center;
     min-width: 32px;
     height: 32px;
-    padding: 0 var(--space-xs);
+    padding: 0 var(--size-2);
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
     background: transparent;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.15s ease;
   }
   .lang-switch:hover {
-    color: var(--color-text-primary);
-    border-color: var(--color-border-hover);
-    background: var(--surface-2);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
   }
 
   /* Sidebar */
   .docs-sidebar {
     width: clamp(200px, 20vw, 260px);
     flex-shrink: 0;
-    border-right: 1px solid var(--color-border);
+    border-right: var(--border-size-1) solid var(--border);
     padding: 2rem 0;
     overflow-y: auto;
     height: calc(100vh - var(--nav-height));
     position: sticky;
     top: var(--nav-height);
     scrollbar-width: thin;
-    background: rgba(255,255,255,0.42);
+    background: color-mix(in srgb, var(--bg-elevated) 42%, transparent);
   }
   :host([home]) .docs-sidebar,
   :host([full-width]) .docs-sidebar {
@@ -365,7 +364,7 @@ sheet.replaceSync(`
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.22em;
-    color: var(--color-text-muted);
+    color: var(--text-muted);
     padding: 0 1.5rem;
     margin-bottom: 0.5rem;
     cursor: pointer;
@@ -377,11 +376,11 @@ sheet.replaceSync(`
   }
   .nav-section summary::-webkit-details-marker { display: none; }
   .nav-section summary::marker { content: ""; }
-  .nav-section summary:hover { color: var(--color-text-secondary); }
+  .nav-section summary:hover { color: var(--text-secondary); }
 
   .docs-sidebar a {
     display: block;
-    color: var(--color-text-muted);
+    color: var(--text-muted);
     text-decoration: none;
     font-size: 0.85rem;
     padding: 0.35rem 1.5rem;
@@ -389,71 +388,71 @@ sheet.replaceSync(`
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
   .docs-sidebar a:hover {
-    color: var(--color-text-secondary);
-    background: var(--surface-2);
+    color: var(--text-secondary);
+    background: var(--bg-hover);
   }
   .docs-sidebar a.active,
   .docs-sidebar a[aria-current="page"] {
-    color: var(--color-brand);
-    border-left-color: var(--color-brand);
-    background: rgba(29,78,216,0.08);
+    color: var(--brand);
+    border-left-color: var(--brand);
+    background: var(--brand-subtle);
     font-weight: 600;
   }
 
   /* Footer */
   .app-footer {
-    border-top: 1px solid var(--color-border);
-    background: rgba(255,255,255,0.58);
+    border-top: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-elevated) 58%, transparent);
   }
   .footer-inner {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 64px var(--space-xl);
+    padding: var(--size-16) var(--size-8);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-xl);
+    gap: var(--size-8);
   }
   .footer-column h4 {
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-    margin: 0 0 var(--space-md);
+    color: var(--text-primary);
+    margin: 0 0 var(--size-4);
   }
   .footer-column a {
     display: block;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: var(--font-size-body-sm);
     padding: 4px 0;
     transition: color 0.15s ease;
   }
   .footer-column a:hover {
-    color: var(--color-text-primary);
+    color: var(--text-primary);
   }
   .footer-bottom {
-    border-top: 1px solid var(--color-border);
-    padding: var(--space-md) var(--space-xl);
+    border-top: var(--border-size-1) solid var(--border);
+    padding: var(--size-4) var(--size-8);
     max-width: 1240px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: var(--color-text-muted);
+    color: var(--text-muted);
     font-size: var(--font-size-body-sm);
   }
   .footer-bottom a {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     text-decoration: none;
     transition: color 0.15s ease;
   }
   .footer-bottom a:hover {
-    color: var(--color-text-primary);
+    color: var(--text-primary);
   }
 
   /* Mobile backdrop */
   .mobile-backdrop {
     position: fixed; inset: 0; top: var(--nav-height);
-    background: var(--color-overlay);
+    background: var(--overlay);
     z-index: 80; opacity: 0; pointer-events: none;
     transition: opacity 0.3s ease;
   }
@@ -461,7 +460,7 @@ sheet.replaceSync(`
   /* Responsive */
   @media (max-width: 900px) {
     .mobile-menu-btn { display: flex; }
-    .header-inner { padding: 0 var(--space-md); gap: var(--space-xs); }
+    .header-inner { padding: 0 var(--size-4); gap: var(--size-2); }
     .header-nav { display: none; }
     .btn-secondary .btn-text { display: none; }
     .header-right { gap: 4px; }
@@ -470,8 +469,8 @@ sheet.replaceSync(`
       position: fixed; top: var(--nav-height); left: 0;
       width: min(280px, 80vw);
       height: calc(100vh - var(--nav-height)); z-index: 90;
-      background: var(--surface-1);
-      border-right: 1px solid var(--color-border);
+      background: var(--bg-elevated);
+      border-right: var(--border-size-1) solid var(--border);
       padding: 1rem 0; overflow-y: auto;
       transform: translateX(-101%);
       transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
@@ -479,24 +478,24 @@ sheet.replaceSync(`
     }
     :host([menu-open]) .docs-sidebar {
       transform: translateX(0);
-      box-shadow: 8px 0 40px rgba(0,0,0,0.5);
+      box-shadow: var(--shadow-1);
     }
     :host([menu-open]) .mobile-backdrop { opacity: 1; pointer-events: auto; }
     .nav-section { margin-bottom: 0.5rem; }
-    .nav-section summary { padding: var(--space-xs) var(--space-md); }
+    .nav-section summary { padding: var(--size-2) var(--size-4); }
     .docs-sidebar a { padding: 0.5rem 1rem 0.5rem 2rem; }
     .layout-main { width: 100%; }
     .app-footer { padding: 0; }
     .footer-inner {
       grid-template-columns: repeat(2, 1fr);
-      padding: 48px var(--space-md);
-      padding-bottom: calc(48px + 56px);
+      padding: var(--size-12) var(--size-4);
+      padding-bottom: calc(var(--size-12) + var(--size-16));
     }
     .footer-bottom {
       flex-direction: column;
-      gap: var(--space-xs);
-      padding: var(--space-md);
-      padding-bottom: calc(var(--space-md) + 56px);
+      gap: var(--size-2);
+      padding: var(--size-4);
+      padding-bottom: calc(var(--size-4) + var(--size-16));
       text-align: center;
     }
 
@@ -506,21 +505,21 @@ sheet.replaceSync(`
       background: var(--nav-bg);
       backdrop-filter: blur(12px) saturate(180%);
       -webkit-backdrop-filter: blur(12px) saturate(180%);
-      border-top: 1px solid var(--color-border);
+      border-top: var(--border-size-1) solid var(--border);
       padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
       padding-bottom: env(safe-area-inset-bottom);
     }
     .tab-item {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 2px;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       text-decoration: none; font-size: 10px; font-weight: 600;
       transition: color 0.15s ease;
       -webkit-tap-highlight-color: transparent; padding: 4px 0;
     }
     .tab-item svg { width: 20px; height: 20px; flex-shrink: 0; }
-    .tab-item:hover { color: var(--color-text-secondary); }
-    .tab-item.active { color: var(--color-brand); }
+    .tab-item:hover { color: var(--text-secondary); }
+    .tab-item.active { color: var(--brand); }
   }
 
   @media (max-width: 768px) {
@@ -530,7 +529,7 @@ sheet.replaceSync(`
   @media (max-width: 480px) {
     .btn-secondary { padding: 8px; border: none; }
     .btn-secondary .btn-text { display: none; }
-    .header-inner { padding: 0 var(--space-sm); gap: 4px; }
+    .header-inner { padding: 0 var(--size-3); gap: var(--size-1); }
   }
 `);
 
@@ -585,7 +584,7 @@ export class OpenLayout extends OpenElement {
     }
   }
 
-  static override styles = [openPropsTokenSheet, linearTokenSheet, sheet];
+  static override styles = [openPropsTokenSheet, sheet];
   static override observedAttributes = [
     'current-path',
     'nav-items',

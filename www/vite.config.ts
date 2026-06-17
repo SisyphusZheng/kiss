@@ -15,104 +15,90 @@ const _rawCSS = [...openPropsTokenSheet.cssRules].map((r) => r.cssText).join('\n
 const rootCSS = _rawCSS
   .replace(/:host\s*\{/g, ':root, :host {')
   .replace(
+    /:host\(\[data-theme="dark"\]\),\s*:host-context\(\[data-theme="dark"\]\)\s*\{/g,
+    'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]), :host-context([data-theme="dark"]) {',
+  )
+  .replace(
     /:host\(\[data-theme="dark"\]\)\s*\{/g,
-    'html[data-theme="dark"], :host([data-theme="dark"]) {',
+    'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]) {',
   );
 const siteCSS = `
 :root,
 html[data-theme="light"],
 :host([data-theme="light"]),
 :root[data-theme="light"] {
-  --bg-canvas: #f6f8fb;
-  --surface-1: #ffffff;
-  --surface-2: #eef2f7;
-  --surface-3: #dfe6ef;
-  --surface-code: #111827;
-  --text-primary: #101828;
-  --text-secondary: #475467;
-  --text-muted: #667085;
+  --bg-canvas: var(--bg-base);
+  --surface-1: var(--bg-elevated);
+  --surface-2: var(--bg-surface);
+  --surface-3: var(--bg-hover);
+  --surface-code: var(--bg-code);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
-  --color-brand: #1d4ed8;
-  --color-brand-hover: #1e40af;
-  --color-brand-light: #60a5fa;
-  --color-success: #047857;
-  --color-warning: #b45309;
-  --color-error: #b42318;
-  --color-info: #0369a1;
-  --border: rgba(16, 24, 40, 0.12);
-  --border-hover: rgba(16, 24, 40, 0.22);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
-  --color-border-strong: rgba(16, 24, 40, 0.24);
-  --edge-highlight: rgba(255, 255, 255, 0.85);
+  --color-border-strong: color-mix(in srgb, var(--border) 68%, var(--text-primary));
+  --edge-highlight: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
   --color-edge-highlight: var(--edge-highlight);
-  --color-overlay: rgba(15, 23, 42, 0.42);
-  --shadow-1: none;
-  --shadow-elevated: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --bg-base: var(--bg-canvas);
-  --bg-surface: var(--surface-1);
-  --bg-card: var(--surface-1);
-  --bg-hover: var(--surface-2);
-  --bg-code: #111827;
-  --code-border: rgba(255, 255, 255, 0.12);
-  --brand: var(--color-brand);
-  --brand-hover: var(--color-brand-hover);
-  --brand-light: var(--color-brand-light);
-  --border-strong: rgba(16, 24, 40, 0.24);
-  --nav-bg: rgba(246, 248, 251, 0.88);
-  --nav-height: 64px;
+  --color-overlay: var(--overlay);
+  --shadow-elevated: var(--shadow-1);
+  --border-strong: var(--color-border-strong);
+  --nav-bg: color-mix(in srgb, var(--bg-base) 88%, transparent);
+  --nav-height: var(--size-16);
+  --nav-link-color: var(--text-secondary);
+  --nav-link-hover: var(--text-primary);
+  --font-size-button: var(--font-size-0);
+  --font-size-body-sm: var(--font-size-0);
+  --font-size-caption: var(--font-size-00);
+  --font-weight-medium: var(--font-weight-5);
+  --font-weight-semibold: var(--font-weight-7);
 }
 html[data-theme="dark"],
 :host([data-theme="dark"]),
 :root[data-theme="dark"] {
-  --bg-canvas: #0b1020;
-  --surface-1: #101828;
-  --surface-2: #182230;
-  --surface-3: #253044;
-  --surface-code: #050816;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --bg-canvas: var(--bg-base);
+  --surface-1: var(--bg-elevated);
+  --surface-2: var(--bg-surface);
+  --surface-3: var(--bg-hover);
+  --surface-code: var(--bg-code);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
-  --color-brand: #60a5fa;
-  --color-brand-hover: #93c5fd;
-  --color-brand-light: #bfdbfe;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-hover: rgba(255, 255, 255, 0.18);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
-  --color-border-strong: rgba(255, 255, 255, 0.24);
-  --edge-highlight: rgba(255, 255, 255, 0.12);
+  --color-border-strong: color-mix(in srgb, var(--border) 72%, var(--text-primary));
+  --edge-highlight: color-mix(in srgb, var(--bg-elevated) 18%, transparent);
   --color-edge-highlight: var(--edge-highlight);
-  --color-overlay: rgba(0, 0, 0, 0.48);
-  --bg-base: var(--bg-canvas);
-  --bg-surface: var(--surface-1);
-  --bg-card: var(--surface-1);
-  --bg-hover: var(--surface-2);
-  --bg-code: #050816;
-  --code-border: rgba(255, 255, 255, 0.14);
-  --brand: var(--color-brand);
-  --brand-hover: var(--color-brand-hover);
-  --brand-light: var(--color-brand-light);
-  --border-strong: rgba(255, 255, 255, 0.24);
-  --nav-bg: rgba(11, 16, 32, 0.88);
-  --nav-height: 64px;
+  --color-overlay: var(--overlay);
+  --border-strong: var(--color-border-strong);
+  --nav-bg: color-mix(in srgb, var(--bg-base) 88%, transparent);
+  --nav-height: var(--size-16);
 }
 body {
   margin: 0;
   background:
-    linear-gradient(rgba(16, 24, 40, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 24, 40, 0.045) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
     var(--bg-canvas);
-  background-size: 32px 32px, 32px 32px, auto;
+  background-size: var(--size-8) var(--size-8), var(--size-8) var(--size-8), auto;
   color: var(--text-primary);
 }
 ::selection {
-  background: rgba(29, 78, 216, 0.18);
+  background: var(--brand-subtle);
   color: var(--text-primary);
 }`;
 const colorTokensStyle =

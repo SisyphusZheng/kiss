@@ -1,341 +1,268 @@
-export const meta = { section: "", label: "Roadmap", order: 10 };
-export const tagName = "page-roadmap";
+export const meta = { section: '', label: 'Roadmap', order: 10 };
+export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.40.7, 11-package product graph.
+// Current public line: v0.40.7 product graph.
 
-import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/core/style-sheet";
-import { linearTokenSheet } from "@openelement/ui";
+import { OpenElement } from '@openelement/element';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import { openPropsTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-badge';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-card';
+import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-standards-visual';
 
-const routeSheet = new StyleSheet();
-routeSheet.replaceSync(`
+const pageSheet = new StyleSheet();
+pageSheet.replaceSync(`
   :host {
     display: block;
-    color: #101828;
+    color: var(--text-primary);
   }
 
   * {
     box-sizing: border-box;
   }
 
-  .shell {
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 58px 32px 84px;
+  .roadmap {
+    width: min(100% - calc(var(--size-8) * 2), var(--site-container));
+    margin-inline: auto;
+    padding-block: var(--size-12) var(--site-section-block);
   }
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 42px;
+    grid-template-columns: minmax(0, 1fr) minmax(330px, .46fr);
+    gap: var(--size-8);
     align-items: end;
-    padding-bottom: 34px;
-    border-bottom: 1px solid rgba(16,24,40,0.12);
+    padding-block-end: var(--size-8);
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .kicker,
+  .version {
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0;
+    text-transform: uppercase;
   }
 
   .kicker {
-    margin: 0 0 14px;
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0;
+    margin: 0 0 var(--size-4);
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block-start: 0;
   }
 
   h1 {
-    margin: 0;
-    color: #101828;
-    font-size: 58px;
-    line-height: 1.02;
+    margin-block-end: 0;
+    font-size: clamp(var(--font-size-5), 5vw, var(--font-size-7));
+    line-height: var(--font-lineheight-1);
     letter-spacing: 0;
+  }
+
+  .subtitle,
+  .now p,
+  .phase p,
+  .truth p,
+  .truth li {
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
   }
 
   .subtitle {
-    max-width: 740px;
-    margin: 18px 0 0;
-    color: #475467;
-    font-size: 18px;
-    line-height: 1.62;
-  }
-
-  .now {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 22px;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 800;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .badge.done {
-    background: #ecfdf5;
-    color: #047857;
-  }
-
-  .badge.next {
-    background: #fffbeb;
-    color: #b45309;
+    max-width: 760px;
+    margin-block: var(--size-5) 0;
+    font-size: var(--font-size-2);
   }
 
   .now h2 {
-    margin: 18px 0 8px;
-    color: #101828;
-    font-size: 22px;
+    margin-block: var(--size-4) var(--size-2);
+    font-size: var(--font-size-2);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
-  .now p {
-    margin: 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.58;
-  }
-
   .timeline {
-    margin-top: 38px;
     display: grid;
-    gap: 12px;
+    gap: var(--size-3);
+    margin-block-start: var(--size-8);
   }
 
   .phase {
     display: grid;
-    grid-template-columns: 124px 1fr 116px;
-    gap: 20px;
+    grid-template-columns: minmax(90px, .16fr) minmax(0, 1fr) auto;
+    gap: var(--size-5);
     align-items: start;
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 20px;
-  }
-
-  .version {
-    color: #1d4ed8;
-    font-size: 13px;
-    font-weight: 850;
-    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
   .phase h3 {
-    margin: 0 0 8px;
-    color: #101828;
-    font-size: 20px;
+    margin-block: 0 var(--size-2);
+    color: var(--text-primary);
+    font-size: var(--font-size-2);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
   .phase p {
-    margin: 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.62;
-  }
-
-  .status {
-    justify-self: end;
+    margin-block-end: 0;
   }
 
   .truth-grid {
-    margin-top: 38px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-
-  .truth {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 24px;
-  }
-
-  .truth.dark {
-    background: #111827;
-    border-color: #111827;
+    grid-template-columns: minmax(0, .92fr) minmax(0, .92fr) minmax(0, .8fr);
+    gap: var(--size-4);
+    margin-block-start: var(--size-8);
   }
 
   .truth h2 {
-    margin: 0 0 14px;
-    color: #101828;
-    font-size: 22px;
+    margin-block: 0 var(--size-4);
+    font-size: var(--font-size-3);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
-  .truth.dark h2 {
-    color: #ffffff;
-  }
-
-  .truth p,
-  .truth li {
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.62;
-  }
-
-  .truth.dark li {
-    color: #d1d5db;
-  }
-
-  .truth p {
+  .truth ul {
     margin: 0;
+    padding-inline-start: var(--size-5);
   }
 
-  ul {
+  .truth li + li {
+    margin-block-start: var(--size-2);
+  }
+
+  .visual-section {
+    display: grid;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1fr);
+    gap: var(--size-5);
+    margin-block-start: var(--size-8);
+  }
+
+  .rule-list {
+    display: grid;
+    gap: var(--size-3);
     margin: 0;
-    padding-left: 18px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rule-list li {
+    display: grid;
+    grid-template-columns: minmax(110px, .34fr) minmax(0, 1fr);
+    gap: var(--size-3);
+    padding-block: var(--size-3);
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .rule-list li:last-child {
+    border-block-end: 0;
+  }
+
+  .rule-list strong {
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    text-transform: uppercase;
+  }
+
+  .rule-list span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
   }
 
   .nav-row {
-    margin-top: 32px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--size-3);
+    margin-block-start: var(--size-8);
   }
 
-  .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 40px;
-    padding: 0 14px;
-    border-radius: 8px;
-    border: 1px solid rgba(16,24,40,0.14);
-    background: #ffffff;
-    color: #101828;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-  }
-
-  .button:hover {
-    border-color: rgba(29,78,216,0.34);
-    color: #1d4ed8;
-  }
-
-  @media (max-width: 860px) {
+  @media (max-width: 920px) {
     .hero,
     .phase,
-    .truth-grid {
+    .truth-grid,
+    .visual-section {
       grid-template-columns: 1fr;
-    }
-
-    .status {
-      justify-self: start;
     }
   }
 
-  @media (max-width: 560px) {
-    .shell {
-      padding: 38px 18px 64px;
+  @media (max-width: 620px) {
+    .roadmap {
+      width: min(100% - calc(var(--size-4) * 2), var(--site-container));
+      padding-block-start: var(--size-8);
     }
 
     h1 {
-      font-size: 42px;
-      line-height: 1.06;
+      font-size: var(--font-size-6);
+    }
+
+    .subtitle {
+      font-size: var(--font-size-1);
+    }
+
+    .rule-list li {
+      grid-template-columns: 1fr;
     }
   }
 `);
 
+const phases = [
+  ['v0.39', 'Framework RC + four-product matrix reset', 'Validated framework app generation, public docs integrity, and the Elements / UI / Framework / Protocols product model.', 'done', 'success'],
+  ['v0.40', 'Elements + Preact + repository slimming', 'Slimmed the product surface, removed archived work from the public line, and kept the framework direction standards-first.', 'released', 'success'],
+  ['v0.40.7', 'Release readiness and site truth', 'Align design, docs, package language, and CI readiness around the current public product graph.', 'current', 'brand'],
+  ['v0.41', 'npm-only distribution line', 'Make package consumption, docs, and examples match the next distribution strategy without reviving old Hub-era assumptions.', 'planned', 'warning'],
+  ['v1.0', 'Stable four-product platform', 'Freeze public APIs after Elements, UI, Framework, and Protocols have stable contracts and evidence-backed docs.', 'directional', 'warning'],
+];
+
 export class RoadmapPage extends OpenElement {
-  static override styles = [linearTokenSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, pageSheet];
 
   override render() {
     return (
-      <div class="shell">
-        <section class="hero">
+      <main class='roadmap'>
+        <section class='hero'>
           <div>
-            <p class="kicker">Product truth</p>
+            <p class='kicker'>Product truth</p>
             <h1>Roadmap</h1>
-            <p class="subtitle">
+            <p class='subtitle'>
               openElement roadmap labels describe the public product surface,
-              not a wish list. The current line is v0.40.7 on the 11-package
+              not a wish list. The current line is v0.40.7 on the public
               product graph.
             </p>
           </div>
-          <aside class="now">
-            <span class="badge">current</span>
+          <open-lab-panel class='now' label='current' meta='release line'>
+            <open-badge tone='brand'>current</open-badge>
             <h2>v0.40.7 Release Readiness & CI Hardening</h2>
             <p>
               The website, docs, package graph, and release gates should speak
-              the same product language: Elements, UI, Framework, Protocols.
+              the same product language.
             </p>
-          </aside>
+          </open-lab-panel>
         </section>
 
-        <div class="timeline">
-          <div class="phase">
-            <div class="version">v0.39</div>
-            <div>
-              <h3>Framework RC + four-product matrix reset</h3>
-              <p>
-                Validated framework app generation, public docs integrity, and
-                the Elements / UI / Framework / Protocols product model.
-              </p>
-            </div>
-            <span class="badge done status">done</span>
-          </div>
+        <section class='timeline' aria-label='Roadmap phases'>
+          {phases.map(([version, title, copy, status, tone]) => (
+            <open-card class='phase'>
+              <span class='version'>{version}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </div>
+              <open-badge tone={tone}>{status}</open-badge>
+            </open-card>
+          ))}
+        </section>
 
-          <div class="phase">
-            <div class="version">v0.40</div>
-            <div>
-              <h3>Elements + Preact + repository slimming</h3>
-              <p>
-                Slimmed the product surface, removed archived work from the
-                public line, and kept the framework direction standards-first.
-              </p>
-            </div>
-            <span class="badge done status">released</span>
-          </div>
-
-          <div class="phase">
-            <div class="version">v0.40.7</div>
-            <div>
-              <h3>Release readiness and site truth</h3>
-              <p>
-                Align design, docs, package language, and CI readiness around
-                the 11-package line.
-              </p>
-            </div>
-            <span class="badge status">current</span>
-          </div>
-
-          <div class="phase">
-            <div class="version">v0.41</div>
-            <div>
-              <h3>npm-only distribution line</h3>
-              <p>
-                Make package consumption, docs, and examples match the next
-                distribution strategy without reviving old Hub-era assumptions.
-              </p>
-            </div>
-            <span class="badge next status">planned</span>
-          </div>
-
-          <div class="phase">
-            <div class="version">v1.0</div>
-            <div>
-              <h3>Stable four-product platform</h3>
-              <p>
-                Freeze public APIs after Elements, UI, Framework, and Protocols
-                have stable contracts and evidence-backed docs.
-              </p>
-            </div>
-            <span class="badge next status">directional</span>
-          </div>
-        </div>
-
-        <div class="truth-grid">
-          <section class="truth dark">
+        <section class='truth-grid'>
+          <open-lab-panel class='truth' variant='artifact' label='in product'>
             <h2>In product</h2>
             <ul>
               <li>JSX-first application API</li>
@@ -344,9 +271,9 @@ export class RoadmapPage extends OpenElement {
               <li>Hono API routes and adapter-vite integration</li>
               <li>Protocols for product boundaries</li>
             </ul>
-          </section>
+          </open-lab-panel>
 
-          <section class="truth">
+          <open-lab-panel class='truth' label='out of current scope'>
             <h2>Out of current scope</h2>
             <ul>
               <li>Hub product language</li>
@@ -354,26 +281,51 @@ export class RoadmapPage extends OpenElement {
               <li>Generic auth, ORM, or database platform claims</li>
               <li>Old package-count public graph language</li>
             </ul>
-          </section>
+          </open-lab-panel>
 
-          <section class="truth">
+          <open-lab-panel class='truth' label='design rule' variant='muted'>
             <h2>Design rule</h2>
             <p>
               The www design should read like a standards lab: light-first,
               diagrammatic, useful, and grounded in actual framework artifacts.
             </p>
-          </section>
-        </div>
+          </open-lab-panel>
+        </section>
 
-        <nav class="nav-row">
-          <a class="button" href="/architecture/architecture">Architecture</a>
-          <a class="button" href="/changelog">Changelog</a>
-          <a class="button" href="/guide/deployment">Deployment</a>
+        <section class='visual-section'>
+          <open-lab-panel variant='surface' label='package matrix' meta='product boundary'>
+            <open-standards-visual variant='packages'></open-standards-visual>
+          </open-lab-panel>
+          <open-lab-panel label='release discipline' meta='v1.0 posture'>
+            <ul class='rule-list'>
+              <li>
+                <strong>Ship</strong>
+                <span>Only public contracts that are reflected in docs and package surfaces.</span>
+              </li>
+              <li>
+                <strong>Prove</strong>
+                <span>Use CI, build checks, and docs scans as release evidence.</span>
+              </li>
+              <li>
+                <strong>Freeze</strong>
+                <span>Move to v1.0 after the four-product line is stable and readable.</span>
+              </li>
+            </ul>
+          </open-lab-panel>
+        </section>
+
+        <nav class='nav-row'>
+          <open-button href='/architecture/architecture'>Architecture</open-button>
+          <open-button href='/changelog'>Changelog</open-button>
+          <open-button href='/guide/deployment'>Deployment</open-button>
         </nav>
-      </div>
+      </main>
     );
   }
 }
 
-customElements.define(tagName, RoadmapPage);
+if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
+  customElements.define(tagName, RoadmapPage);
+}
+
 export default RoadmapPage;

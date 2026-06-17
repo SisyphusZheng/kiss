@@ -49,7 +49,7 @@ sheet.replaceSync(`
     border-radius: var(--radius-2);
     transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2);
     white-space: nowrap;
-    letter-spacing: var(--font-letterspacing-2);
+    letter-spacing: 0;
   }
 
   /* Sizes */
@@ -80,7 +80,7 @@ sheet.replaceSync(`
 
   .btn--primary {
     background: var(--brand, var(--indigo-6));
-    color: var(--gray-0);
+    color: var(--on-brand);
     border-color: var(--brand, var(--indigo-6));
   }
 
@@ -100,7 +100,7 @@ sheet.replaceSync(`
 
   .btn--accent {
     background: linear-gradient(135deg, var(--brand), var(--brand-hover));
-    color: var(--text-primary);
+    color: var(--on-brand);
     border-color: transparent;
   }
   .btn--accent:hover {

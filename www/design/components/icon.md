@@ -10,11 +10,11 @@ types, and familiar commands.
 | Property | Value |
 | --- | --- |
 | Style | Outline |
-| Stroke | 1.5px |
+| Stroke | `--border-size-2` or icon library default |
 | Cap/join | Round |
 | Fill | none |
 | Color | currentColor |
-| Sizes | 16px, 20px, 24px |
+| Sizes | `--size-4`, `--size-5`, `--size-6` |
 
 ## Rules
 

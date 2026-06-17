@@ -9,10 +9,10 @@ be styled as cards, and cards should not be nested inside cards.
 
 | Property | Value |
 | --- | --- |
-| Background | `--surface-1` |
-| Border | 1px solid `--border` |
-| Radius | 8px |
-| Padding | 16px to 24px depending on density |
+| Background | `--bg-card` |
+| Border | `--border-size-1` solid `--border` |
+| Radius | `--radius-2` |
+| Padding | `--size-4` to `--size-6` depending on density |
 | Shadow | none, except subtle tokenized elevation when required |
 
 ## Variants
@@ -20,7 +20,7 @@ be styled as cards, and cards should not be nested inside cards.
 | Variant | Use |
 | --- | --- |
 | Standard | Repeated docs entries, proof points, package rows |
-| Artifact | Code, route, package, or terminal panel with dark body |
+| Artifact | Code, route, package, or terminal panel through `open-lab-panel` |
 | Status | Roadmap and release-state summaries |
 
 ## Rules

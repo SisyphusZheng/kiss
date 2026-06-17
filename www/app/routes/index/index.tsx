@@ -1,804 +1,539 @@
 /**
- * Homepage - Web Standards Lab direction.
+ * Homepage - Web Standards Lab.
  */
-import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/core/style-sheet";
-import { linearTokenSheet } from "@openelement/ui";
+import { OpenElement } from '@openelement/element';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import { openPropsTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-badge';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-card';
+import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-standards-visual';
 
-export const tagName = "docs-home";
+export const tagName = 'docs-home';
 
-const labSheet = new StyleSheet();
-labSheet.replaceSync(`
+const pageSheet = new StyleSheet();
+pageSheet.replaceSync(`
   :host {
     display: block;
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
   }
 
   * {
     box-sizing: border-box;
   }
 
-  .home-lab {
-    min-height: 100vh;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0) 34rem),
-      transparent;
+  .home {
+    display: grid;
+    gap: var(--site-section-block);
+    padding-block: var(--size-16) var(--site-section-block);
   }
 
+  .hero,
   .section,
-  .hero {
-    max-width: 1240px;
-    margin: 0 auto;
-    padding-left: 32px;
-    padding-right: 32px;
+  .cta {
+    width: min(100% - calc(var(--size-8) * 2), var(--site-container-wide));
+    margin-inline: auto;
   }
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
-    gap: 56px;
-    align-items: center;
-    padding-top: 78px;
-    padding-bottom: 64px;
+    grid-template-columns: minmax(0, .98fr) minmax(390px, .84fr);
+    gap: var(--size-10);
+    align-items: start;
   }
 
-  .eyebrow {
-    margin: 0 0 18px;
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 800;
+  .eyebrow,
+  .section__kicker,
+  .card__index,
+  .mono {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
     letter-spacing: 0;
     text-transform: uppercase;
   }
 
+  .eyebrow,
+  .section__kicker {
+    color: var(--brand);
+    margin: 0 0 var(--size-4);
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block-start: 0;
+  }
+
   h1 {
-    max-width: 760px;
-    margin: 0;
-    color: #101828;
-    font-size: 68px;
-    line-height: 0.98;
+    max-width: 840px;
+    margin-block-end: 0;
+    font-size: clamp(var(--font-size-6), 6vw, var(--font-size-8));
+    line-height: var(--font-lineheight-1);
     letter-spacing: 0;
-    font-weight: 760;
+    font-weight: var(--font-weight-8);
   }
 
   .lede {
-    max-width: 650px;
-    margin: 24px 0 0;
-    color: #475467;
-    font-size: 20px;
-    line-height: 1.58;
+    max-width: 660px;
+    margin-block: var(--size-5) 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-2);
+    line-height: var(--font-lineheight-3);
   }
 
   .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 32px;
+    gap: var(--size-3);
+    margin-block-start: var(--size-6);
   }
 
-  .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 0 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
-  }
-
-  .button.primary {
-    background: #1d4ed8;
-    color: #ffffff;
-    border: 1px solid #1d4ed8;
-  }
-
-  .button.primary:hover {
-    background: #1e40af;
-    border-color: #1e40af;
-  }
-
-  .button.secondary {
-    background: #ffffff;
-    color: #101828;
-    border: 1px solid rgba(16,24,40,0.14);
-  }
-
-  .button.secondary:hover {
-    border-color: rgba(29,78,216,0.35);
-    color: #1d4ed8;
-  }
-
-  .hero-points {
+  .proofs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 30px;
-    max-width: 640px;
+    gap: var(--size-3);
+    margin-block-start: var(--size-7);
+    max-width: 700px;
+    grid-column: 1;
+    grid-row: 2;
   }
 
-  .hero-point {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.74);
-    padding: 14px;
+  .proof-card h3,
+  .pillar h3,
+  .entry h3,
+  .workflow h3 {
+    margin-block: var(--size-3) var(--size-2);
+    color: var(--text-primary);
+    font-size: var(--font-size-2);
+    line-height: var(--font-lineheight-3);
+    letter-spacing: 0;
   }
 
-  .hero-point strong {
-    display: block;
-    color: #101828;
-    font-size: 13px;
-    margin-bottom: 4px;
+  .proof-card p,
+  .pillar p,
+  .entry p,
+  .workflow p,
+  .section__copy,
+  .spec-list span,
+  .matrix p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
+    margin-block-end: 0;
   }
 
-  .hero-point span {
-    display: block;
-    color: #667085;
-    font-size: 13px;
-    line-height: 1.45;
+  .card__index {
+    color: var(--brand);
   }
 
   .artifact {
-    border: 1px solid rgba(16,24,40,0.16);
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0 24px 70px rgba(16,24,40,0.12);
-    overflow: hidden;
+    --panel-min-height: 620px;
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 
-  .artifact-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 42px;
-    padding: 0 14px;
-    border-bottom: 1px solid rgba(16,24,40,0.1);
-    background: #f8fafc;
-    color: #667085;
-    font-size: 12px;
-    font-family: var(--font-mono, ui-monospace, monospace);
+  .artifact-note {
+    display: grid;
+    gap: var(--size-3);
+    margin-block-start: var(--size-4);
   }
 
-  .dots {
-    display: inline-flex;
-    gap: 6px;
-  }
-
-  .dots i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #cbd5e1;
-  }
-
-  .artifact-code {
+  .spec-list {
+    display: grid;
+    gap: var(--size-3);
+    padding: 0;
     margin: 0;
-    padding: 22px;
-    background: #111827;
-    color: #d1d5db;
-    font-size: 12px;
-    line-height: 1.75;
-    overflow: auto;
-    font-family: var(--font-mono, ui-monospace, monospace);
+    list-style: none;
   }
 
-  .artifact-grid {
+  .spec-list li {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: rgba(16,24,40,0.1);
+    grid-template-columns: minmax(90px, .32fr) minmax(0, 1fr);
+    gap: var(--size-3);
+    padding-block: var(--size-3);
+    border-block-end: var(--border-size-1) solid var(--border);
   }
 
-  .artifact-cell {
-    min-height: 122px;
-    padding: 18px;
-    background: #ffffff;
+  .spec-list li:last-child {
+    border-block-end: 0;
   }
 
-  .artifact-cell h2 {
-    margin: 0 0 14px;
-    color: #101828;
-    font-size: 13px;
-  }
-
-  .pipe {
-    display: grid;
-    gap: 8px;
-  }
-
-  .pipe span,
-  .node {
-    display: block;
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 6px;
-    background: #f8fafc;
-    color: #344054;
-    padding: 7px 9px;
-    font-size: 12px;
-    font-weight: 650;
-  }
-
-  .node.blue { border-color: rgba(29,78,216,0.28); background: #eff6ff; color: #1d4ed8; }
-  .node.green { border-color: rgba(4,120,87,0.28); background: #ecfdf5; color: #047857; }
-  .node.amber { border-color: rgba(180,83,9,0.28); background: #fffbeb; color: #b45309; }
-
-  .proof {
-    border-top: 1px solid rgba(16,24,40,0.1);
-    border-bottom: 1px solid rgba(16,24,40,0.1);
-    background: rgba(255,255,255,0.58);
-  }
-
-  .proof .section {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-
-  .proof-card {
-    min-height: 164px;
-    padding: 28px 24px;
-    border-left: 1px solid rgba(16,24,40,0.08);
-  }
-
-  .proof-card:last-child {
-    border-right: 1px solid rgba(16,24,40,0.08);
-  }
-
-  .proof-card .num {
-    color: #1d4ed8;
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .proof-card h2 {
-    margin: 14px 0 8px;
-    color: #101828;
-    font-size: 22px;
+  .spec-list strong {
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
     letter-spacing: 0;
-  }
-
-  .proof-card p {
-    margin: 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.55;
+    text-transform: uppercase;
   }
 
   .section {
-    padding-top: 76px;
-    padding-bottom: 76px;
-  }
-
-  .section-head {
     display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
-    gap: 42px;
+    gap: var(--size-7);
+  }
+
+  .section__head {
+    display: grid;
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1fr);
+    gap: var(--size-8);
     align-items: end;
-    margin-bottom: 28px;
   }
 
-  .section-kicker {
-    margin: 0 0 10px;
-    color: #047857;
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
+  .section__title {
+    margin: 0;
+    font-size: clamp(var(--font-size-4), 4vw, var(--font-size-6));
+    line-height: var(--font-lineheight-1);
     letter-spacing: 0;
   }
 
-  .section-title {
-    margin: 0;
-    color: #101828;
-    font-size: 40px;
-    line-height: 1.08;
-    letter-spacing: 0;
+  .section__copy {
+    max-width: 640px;
+    font-size: var(--font-size-1);
   }
 
-  .section-copy {
-    margin: 0;
-    color: #475467;
-    font-size: 17px;
-    line-height: 1.65;
+  .pillars,
+  .entries {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--size-4);
+  }
+
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--size-3);
   }
 
   .workflow {
+    min-height: 230px;
+  }
+
+  .system {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-  }
-
-  .step {
-    min-height: 210px;
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 20px;
-    position: relative;
-  }
-
-  .step::before {
-    content: "";
-    display: block;
-    width: 28px;
-    height: 3px;
-    background: #1d4ed8;
-    margin-bottom: 24px;
-  }
-
-  .step h3 {
-    margin: 0 0 10px;
-    color: #101828;
-    font-size: 18px;
-  }
-
-  .step p {
-    margin: 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.58;
-  }
-
-  .map {
-    display: grid;
-    grid-template-columns: 0.9fr 1.1fr;
-    gap: 16px;
-  }
-
-  .map-panel {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 24px;
-  }
-
-  .map-panel.dark {
-    background: #111827;
-    border-color: #111827;
-    color: #e5e7eb;
-  }
-
-  .map-panel h3 {
-    margin: 0 0 18px;
-    font-size: 18px;
-    color: inherit;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+    gap: var(--size-5);
   }
 
   .matrix {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--size-3);
   }
 
-  .matrix-item {
-    min-height: 92px;
-    border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 8px;
-    padding: 14px;
-    background: rgba(255,255,255,0.04);
-  }
-
-  .matrix-item strong {
-    display: block;
-    color: #ffffff;
-    font-size: 13px;
-    margin-bottom: 7px;
-  }
-
-  .matrix-item span {
-    color: #cbd5e1;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .package-lines {
+  .matrix__row {
     display: grid;
-    gap: 10px;
+    grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr);
+    gap: var(--size-4);
+    align-items: start;
+    padding-block: var(--size-3);
+    border-block-end: var(--border-size-1) solid var(--border);
   }
 
-  .package-line {
-    display: grid;
-    grid-template-columns: 132px 1fr;
-    gap: 12px;
-    align-items: center;
-    padding: 11px 0;
-    border-bottom: 1px solid rgba(16,24,40,0.08);
+  .matrix__row:last-child {
+    border-block-end: 0;
   }
 
-  .package-line:last-child {
-    border-bottom: 0;
+  .matrix strong {
+    color: var(--text-primary);
+    font-size: var(--font-size-1);
   }
 
-  .package-name {
-    color: #1d4ed8;
-    font-size: 13px;
-    font-weight: 800;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .package-copy {
-    color: #475467;
-    font-size: 14px;
-    line-height: 1.45;
-  }
-
-  .entry-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-
-  .entry {
-    display: block;
-    min-height: 180px;
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 22px;
-    text-decoration: none;
+  .entry-link {
     color: inherit;
+    text-decoration: none;
   }
 
-  .entry:hover {
-    border-color: rgba(29,78,216,0.34);
-  }
-
-  .entry span {
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 800;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .entry h3 {
-    margin: 18px 0 10px;
-    color: #101828;
-    font-size: 20px;
-  }
-
-  .entry p {
-    margin: 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.55;
+  .entry-link:focus-visible {
+    outline: var(--border-size-2) solid var(--brand);
+    outline-offset: var(--size-1);
+    border-radius: var(--radius-2);
   }
 
   .cta {
-    margin-top: 12px;
-    border: 1px solid rgba(16,24,40,0.14);
-    border-radius: 8px;
-    background:
-      linear-gradient(135deg, rgba(29,78,216,0.1), rgba(4,120,87,0.08)),
-      #ffffff;
-    padding: 34px;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--size-6);
     align-items: center;
-    justify-content: space-between;
-    gap: 28px;
+    padding: var(--size-8);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
+    background:
+      linear-gradient(135deg, var(--brand-subtle), var(--success-subtle)),
+      var(--bg-card);
   }
 
   .cta h2 {
-    margin: 0 0 8px;
-    color: #101828;
-    font-size: 30px;
+    margin-block-end: var(--size-2);
+    font-size: var(--font-size-4);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
   .cta p {
-    margin: 0;
-    color: #475467;
-    font-size: 16px;
-    line-height: 1.6;
+    color: var(--text-secondary);
+    line-height: var(--font-lineheight-3);
+    margin-block-end: 0;
   }
 
   @media (max-width: 1080px) {
-    .hero {
+    .hero,
+    .section__head,
+    .system,
+    .cta {
       grid-template-columns: 1fr;
-      padding-top: 56px;
+    }
+
+    .hero {
+      align-items: stretch;
     }
 
     .artifact {
-      max-width: 720px;
+      --panel-min-height: auto;
+      grid-column: auto;
+      grid-row: auto;
     }
 
-    .proof .section,
-    .workflow,
-    .entry-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .proofs {
+      grid-column: auto;
+      grid-row: auto;
     }
 
-    .map,
-    .section-head {
-      grid-template-columns: 1fr;
+    .pillars,
+    .entries {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .workflow-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 680px) {
+    .home {
+      gap: var(--size-12);
+      padding-block-start: var(--size-8);
+    }
+
     .hero,
-    .section {
-      padding-left: 18px;
-      padding-right: 18px;
+    .section,
+    .cta {
+      width: min(100% - calc(var(--size-4) * 2), var(--site-container-wide));
     }
 
     h1 {
-      font-size: 46px;
-      line-height: 1.03;
+      font-size: var(--font-size-5);
     }
 
     .lede {
-      font-size: 17px;
+      font-size: var(--font-size-1);
     }
 
-    .hero-points,
-    .proof .section,
-    .workflow,
-    .map,
-    .entry-grid,
-    .artifact-grid,
-    .matrix {
+    .proofs,
+    .pillars,
+    .entries,
+    .workflow-grid,
+    .matrix__row,
+    .spec-list li {
       grid-template-columns: 1fr;
-    }
-
-    .package-line {
-      grid-template-columns: 1fr;
-      gap: 4px;
     }
 
     .cta {
-      display: block;
-      padding: 24px;
-    }
-
-    .cta .actions {
-      margin-top: 22px;
+      padding: var(--size-5);
     }
   }
 `);
 
+const proofPoints = [
+  ['HTML first', 'Declarative Shadow DOM is the default rendering target.'],
+  ['Island precise', 'JavaScript is reserved for interactive components.'],
+  ['API beside UI', 'Hono routes live beside pages, content, and layouts.'],
+  ['Package truthful', 'Elements, UI, Framework, and Protocols stay separate.'],
+];
+
+const pillars = [
+  ['Elements', 'Custom elements, shadow boundaries, and runtime behavior.'],
+  ['UI', 'Open Props components for product surfaces and app primitives.'],
+  ['Framework', 'Routes, layouts, content, islands, i18n, and deployment.'],
+  ['Protocols', 'Package contracts and compatibility language for consumers.'],
+];
+
+const workflow = [
+  ['Author', 'Write pages, layouts, components, and content in one app tree.'],
+  ['Render', 'Generate static HTML with Declarative Shadow DOM boundaries.'],
+  ['Hydrate', 'Attach islands only where behavior is required.'],
+  ['Serve', 'Use the same project for documents, API routes, and assets.'],
+  ['Prove', 'Validate docs, public package graph, and release truth together.'],
+];
+
+const entries = [
+  ['Guide', 'Build an app', 'Start with routes, layouts, content, islands, and deployment.', '/guide/getting-started'],
+  ['API', 'Read contracts', 'Inspect public package exports and framework helpers.', '/apilist'],
+  ['Architecture', 'Follow boundaries', 'Understand DSD, islands, adapters, and package responsibilities.', '/architecture/architecture'],
+  ['Roadmap', 'Check product truth', 'See shipped, current, planned, and out-of-scope language.', '/roadmap'],
+];
+
 export class DocsHome extends OpenElement {
-  static override styles = [linearTokenSheet, labSheet];
+  static override styles = [openPropsTokenSheet, pageSheet];
 
   override render() {
     return (
-      <div class="home-lab">
-        <section class="hero">
-          <div>
-            <p class="eyebrow">Web Standards Lab / v0.40.7</p>
+      <main class='home'>
+        <section class='hero'>
+          <div class='hero-copy'>
+            <p class='eyebrow'>Web Standards Lab</p>
             <h1>Web Components full-stack framework.</h1>
-            <p class="lede">
-              openElement turns custom elements, Declarative Shadow DOM, routing,
-              content, islands, and protocol contracts into one standards-first
-              application stack.
+            <p class='lede'>
+              openElement builds applications around native custom elements,
+              Declarative Shadow DOM, route contracts, and interaction-only
+              islands. It looks like the platform because it is built on it.
             </p>
-            <div class="actions">
-              <a class="button primary" href="/guide/getting-started">Start building</a>
-              <a class="button secondary" href="/architecture/architecture">Inspect architecture</a>
-            </div>
-            <div class="hero-points">
-              <div class="hero-point">
-                <strong>0 JS by default</strong>
-                <span>Static DSD output first, islands only when interaction needs them.</span>
-              </div>
-              <div class="hero-point">
-                <strong>11-package product line</strong>
-                <span>Elements, UI, Framework, Protocols, content, router, SSG, and Vite adapter.</span>
-              </div>
-              <div class="hero-point">
-                <strong>Full-stack paths</strong>
-                <span>Pages, layouts, API routes, MDX content, i18n, and deployment recipes.</span>
-              </div>
-              <div class="hero-point">
-                <strong>Evidence-driven docs</strong>
-                <span>The website is the product map, not a separate marketing shell.</span>
-              </div>
+            <div class='actions'>
+              <open-button variant='primary' size='lg' href='/guide/getting-started'>Start building</open-button>
+              <open-button size='lg' href='/architecture/architecture'>Inspect architecture</open-button>
             </div>
           </div>
 
-          <div class="artifact" aria-label="openElement engineering artifact">
-            <div class="artifact-bar">
-              <span>app/routes/index.tsx</span>
-              <span class="dots"><i></i><i></i><i></i></span>
+          <open-lab-panel
+            class='artifact'
+            variant='artifact'
+            label='browser.devtools/spec'
+            meta='openElement app'
+          >
+            <open-standards-visual variant='hero'></open-standards-visual>
+            <div class='artifact-note'>
+              <open-badge tone='brand'>Elements + UI + Framework + Protocols</open-badge>
+              <ul class='spec-list'>
+                <li>
+                  <strong>Default</strong>
+                  <span>Static DSD first, islands only where the page needs behavior.</span>
+                </li>
+                <li>
+                  <strong>Surface</strong>
+                  <span>Docs, API routes, content, layouts, and components in one framework line.</span>
+                </li>
+              </ul>
             </div>
-            <pre class="artifact-code"><code>{`import { definePage } from "@openelement/app";
+          </open-lab-panel>
 
-export default definePage({
-  render: () => <product-card />,
-  islands: ["open-search"],
-});`}</code></pre>
-            <div class="artifact-grid">
-              <div class="artifact-cell">
-                <h2>Render pipeline</h2>
-                <div class="pipe">
-                  <span>Route scan</span>
-                  <span>DSD render</span>
-                  <span>Island manifest</span>
-                </div>
-              </div>
-              <div class="artifact-cell">
-                <h2>Runtime map</h2>
-                <div class="pipe">
-                  <span class="node blue">Custom Elements</span>
-                  <span class="node green">Hono API routes</span>
-                  <span class="node amber">Static + SSR intent</span>
-                </div>
-              </div>
-            </div>
+          <div class='proofs'>
+            {proofPoints.map(([title, copy], index) => (
+              <open-card class='proof-card' variant='muted'>
+                <span class='card__index'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
           </div>
         </section>
 
-        <section class="proof" aria-label="Product pillars">
-          <div class="section">
-            <article class="proof-card">
-              <span class="num">01</span>
-              <h2>Elements</h2>
-              <p>Author web components with explicit shadow and light DOM contracts.</p>
-            </article>
-            <article class="proof-card">
-              <span class="num">02</span>
-              <h2>UI</h2>
-              <p>Reusable primitives and site shell pieces built on custom elements.</p>
-            </article>
-            <article class="proof-card">
-              <span class="num">03</span>
-              <h2>Framework</h2>
-              <p>Routes, layouts, islands, content, app shell, and Vite integration.</p>
-            </article>
-            <article class="proof-card">
-              <span class="num">04</span>
-              <h2>Protocols</h2>
-              <p>Shared contracts for compatibility, rendering intent, and package boundaries.</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
+        <section class='section'>
+          <div class='section__head'>
             <div>
-              <p class="section-kicker">Application workflow</p>
-              <h2 class="section-title">A framework that still looks like the web.</h2>
+              <p class='section__kicker'>Product matrix</p>
+              <h2 class='section__title'>Four product lines. One standards-first app model.</h2>
             </div>
-            <p class="section-copy">
-              The strongest visual system for openElement is not another SaaS
-              homepage. It is a precise lab bench: routes, components, server
-              boundaries, and package contracts visible on the page.
+            <p class='section__copy'>
+              The website is intentionally documentation-first: every visual
+              block points back to a framework contract users can inspect.
             </p>
           </div>
-          <div class="workflow">
-            <article class="step">
-              <h3>Author</h3>
-              <p>Write custom elements, pages, layouts, and content with JSX-first ergonomics.</p>
-            </article>
-            <article class="step">
-              <h3>Render</h3>
-              <p>Emit static pages and Declarative Shadow DOM before any client runtime.</p>
-            </article>
-            <article class="step">
-              <h3>Hydrate</h3>
-              <p>Attach islands only where search, navigation, forms, or tools need state.</p>
-            </article>
-            <article class="step">
-              <h3>Serve</h3>
-              <p>Use API routes, adapters, and content pipelines without hiding browser standards.</p>
-            </article>
-            <article class="step">
-              <h3>Prove</h3>
-              <p>Keep docs, roadmap, package graph, and release evidence aligned.</p>
-            </article>
+          <div class='pillars'>
+            {pillars.map(([title, copy], index) => (
+              <open-card class='pillar'>
+                <span class='card__index'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
           </div>
         </section>
 
-        <section class="section">
-          <div class="section-head">
+        <section class='section'>
+          <div class='section__head'>
             <div>
-              <p class="section-kicker">System map</p>
-              <h2 class="section-title">The page explains the architecture.</h2>
+              <p class='section__kicker'>Application flow</p>
+              <h2 class='section__title'>Author a route, ship platform HTML, hydrate exactly what moves.</h2>
             </div>
-            <p class="section-copy">
-              Every major page should show a contract, a pipeline, or a decision.
-              This keeps the site useful to builders and credible to framework
-              evaluators.
+            <p class='section__copy'>
+              This is a full-stack framework without pretending the browser is
+              an implementation detail.
             </p>
           </div>
-          <div class="map">
-            <div class="map-panel dark">
-              <h3>Four-product matrix</h3>
-              <div class="matrix">
-                <div class="matrix-item">
-                  <strong>Elements</strong>
-                  <span>@openelement/element and core rendering primitives.</span>
-                </div>
-                <div class="matrix-item">
-                  <strong>UI</strong>
-                  <span>Layout, theme, cards, controls, and docs shell.</span>
-                </div>
-                <div class="matrix-item">
-                  <strong>Framework</strong>
-                  <span>App, router, content, SSG, and adapter-vite.</span>
-                </div>
-                <div class="matrix-item">
-                  <strong>Protocols</strong>
-                  <span>Shared boundaries for compatibility and conformance.</span>
-                </div>
-              </div>
-            </div>
-            <div class="map-panel">
-              <h3>Package boundary sketch</h3>
-              <div class="package-lines">
-                <div class="package-line">
-                  <span class="package-name">core</span>
-                  <span class="package-copy">Pure rendering, escaping, style sheets, context, and logger.</span>
-                </div>
-                <div class="package-line">
-                  <span class="package-name">element</span>
-                  <span class="package-copy">OpenElement base class for authoring standards-first components.</span>
-                </div>
-                <div class="package-line">
-                  <span class="package-name">app</span>
-                  <span class="package-copy">High-level page, island, layout, and app-shell authoring surface.</span>
-                </div>
-                <div class="package-line">
-                  <span class="package-name">adapter-vite</span>
-                  <span class="package-copy">Build orchestration, generated entries, manifests, and page output.</span>
-                </div>
-                <div class="package-line">
-                  <span class="package-name">www</span>
-                  <span class="package-copy">Documentation site and integration proof for the public product.</span>
-                </div>
-              </div>
-            </div>
+          <div class='workflow-grid'>
+            {workflow.map(([title, copy], index) => (
+              <open-card class='workflow' variant={index === 1 ? 'muted' : undefined}>
+                <span class='card__index'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
           </div>
         </section>
 
-        <section class="section">
-          <div class="section-head">
-            <div>
-              <p class="section-kicker">Entry paths</p>
-              <h2 class="section-title">Start where your question is.</h2>
+        <section class='section system'>
+          <open-lab-panel variant='surface' label='package graph' meta='public product line'>
+            <open-standards-visual variant='packages'></open-standards-visual>
+          </open-lab-panel>
+          <open-lab-panel variant='muted' label='decision sheet' meta='why it matters'>
+            <div class='matrix'>
+              <div class='matrix__row'>
+                <strong>Browser native</strong>
+                <p>Custom elements and DSD define the rendering boundary instead of hiding it.</p>
+              </div>
+              <div class='matrix__row'>
+                <strong>Docs as product</strong>
+                <p>The framework is explained through routes, contracts, packages, and release truth.</p>
+              </div>
+              <div class='matrix__row'>
+                <strong>UI package first</strong>
+                <p>The site consumes the same Open Props primitives it expects consumers to use.</p>
+              </div>
             </div>
-            <p class="section-copy">
-              The site should behave like a working reference desk: fast routes
-              into building, API details, architecture, and roadmap truth.
+          </open-lab-panel>
+        </section>
+
+        <section class='section'>
+          <div class='section__head'>
+            <div>
+              <p class='section__kicker'>Entry paths</p>
+              <h2 class='section__title'>Move from product promise to implementation evidence.</h2>
+            </div>
+            <p class='section__copy'>
+              Use the site as a workbench: build, verify, inspect, and decide.
             </p>
           </div>
-          <div class="entry-grid">
-            <a class="entry" href="/guide/getting-started">
-              <span>GUIDE</span>
-              <h3>Build the first app</h3>
-              <p>Create a project and follow the route, component, content, and deployment path.</p>
-            </a>
-            <a class="entry" href="/apilist">
-              <span>API</span>
-              <h3>Find the public surface</h3>
-              <p>Inspect exported functions, classes, packages, and framework APIs.</p>
-            </a>
-            <a class="entry" href="/roadmap">
-              <span>ROADMAP</span>
-              <h3>Read product truth</h3>
-              <p>Track the active version line, shipped scope, and next framework priorities.</p>
-            </a>
-          </div>
-
-          <div class="cta">
-            <div>
-              <h2>Use standards first. Add framework only where it earns its keep.</h2>
-              <p>
-                That is the design rule for both the product and the website.
-              </p>
-            </div>
-            <div class="actions">
-              <a class="button primary" href="/guide/getting-started">Read the guide</a>
-              <a class="button secondary" href="/architecture/architecture">View architecture</a>
-            </div>
+          <div class='entries'>
+            {entries.map(([label, title, copy, href]) => (
+              <a class='entry-link' href={href}>
+                <open-card class='entry'>
+                  <span class='card__index'>{label}</span>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </open-card>
+              </a>
+            ))}
           </div>
         </section>
-      </div>
+
+        <section class='cta'>
+          <div>
+            <open-badge tone='success'>standards-first</open-badge>
+            <h2>Start with the guide, then inspect the contracts.</h2>
+            <p>
+              The fastest path is a small app: one route, one layout, one island,
+              and one API endpoint.
+            </p>
+          </div>
+          <open-button variant='primary' size='lg' href='/guide/getting-started'>Open the guide</open-button>
+        </section>
+      </main>
     );
   }
 }
 
-customElements.define(tagName, DocsHome);
+if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
+  customElements.define(tagName, DocsHome);
+}
+
 export default DocsHome;

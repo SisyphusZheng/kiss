@@ -64,7 +64,10 @@ function createTokenSheet(): StyleSheetLike {
   --font-weight-4: 400; --font-weight-5: 500;
   --font-weight-6: 600; --font-weight-7: 700;
   --font-weight-8: 800; --font-weight-9: 900;
-  --font-letterspacing-0: -0.02em;
+  --font-letterspacing-0: 0;
+  --font-letterspacing-1: 0;
+  --font-letterspacing-2: 0;
+  --font-letterspacing-3: 0;
   --font-letterspacing-4: 0.04em;
   --font-letterspacing-5: 0.08em;
   --font-lineheight-1: 0.95;
@@ -86,6 +89,12 @@ function createTokenSheet(): StyleSheetLike {
   --brand-light: #5c7cfa; --brand-pale: #8b7cf6;
   --brand-deep: #26215c;  --brand-subtle: rgba(66, 99, 235, 0.1);
   --brand-glow: rgba(66, 99, 235, 0.15);
+  --on-brand: #ffffff;
+  --site-container: 1120px;
+  --site-container-wide: 1240px;
+  --site-container-reading: 760px;
+  --site-section-block: var(--size-16);
+  --site-section-gap: var(--size-8);
 
   /* ═══════════════════════════════════════════════
      Component Semantic Tokens (for daisyUI classes)
@@ -126,9 +135,11 @@ function createTokenSheet(): StyleSheetLike {
   --bg-elevated: #ffffff;
   --bg-hover: var(--gray-2);
   --bg-muted: var(--gray-1);
+  --bg-code: var(--gray-11);
+  --code-border: var(--gray-8);
+  --code-text: var(--gray-2);
   --border: var(--gray-3);
   --border-hover: var(--gray-4);
-  /* --bg-code, --code-border: inherited from :root[data-theme] via SSG polyfill */
   --error: #dc3545;
   --error-subtle: rgba(220,53,69,0.1);
   --success: #16a34a;
@@ -195,6 +206,7 @@ function createTokenSheet(): StyleSheetLike {
   --brand-light: #5c7cfa; --brand-deep: #3d3580;
   --brand-subtle: rgba(66,99,235,.15);
   --brand-glow: rgba(66,99,235,.2);
+  --on-brand: #ffffff;
   --text-primary: var(--gray-10);
   --text-secondary: var(--gray-7);
   --text-muted: var(--gray-6);
@@ -203,6 +215,9 @@ function createTokenSheet(): StyleSheetLike {
   --bg-card: var(--gray-2);
   --bg-elevated: var(--gray-1);
   --bg-hover: var(--gray-3);
+  --bg-code: var(--gray-1);
+  --code-border: var(--gray-4);
+  --code-text: var(--gray-10);
   --border: var(--gray-3);
   --border-hover: var(--gray-4);
   --error: #f87171;

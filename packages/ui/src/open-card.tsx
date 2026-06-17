@@ -33,8 +33,9 @@ const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host {
     display: block;
-    background: var(--gray-0);
-    border: var(--border-size-1) solid var(--gray-3);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-2);
     overflow: hidden;
     transition: box-shadow var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2);
@@ -54,12 +55,22 @@ sheet.replaceSync(`
     border-color: transparent;
   }
 
+  :host([variant="muted"]) {
+    background: var(--bg-surface);
+  }
+
+  :host([variant="artifact"]) {
+    background: var(--bg-code, var(--gray-11));
+    color: var(--gray-2);
+    border-color: var(--code-border, var(--gray-8));
+  }
+
   ::slotted([slot="header"]) {
     padding: var(--size-4) var(--size-5);
-    border-bottom: var(--border-size-1) solid var(--gray-3);
+    border-bottom: var(--border-size-1) solid var(--border);
     font-size: var(--font-size-2);
     font-weight: var(--font-weight-6);
-    color: var(--gray-9);
+    color: var(--text-primary);
     margin: 0;
   }
 
@@ -69,9 +80,9 @@ sheet.replaceSync(`
 
   ::slotted([slot="footer"]) {
     padding: var(--size-3) var(--size-5);
-    border-top: var(--border-size-1) solid var(--gray-3);
+    border-top: var(--border-size-1) solid var(--border);
     font-size: var(--font-size-0);
-    color: var(--gray-5);
+    color: var(--text-muted);
     margin: 0;
   }
 `);

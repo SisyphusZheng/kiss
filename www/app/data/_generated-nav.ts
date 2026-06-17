@@ -17,8 +17,8 @@ export const headerNav = [
     "label": "Blog"
   },
   {
-    "href": "/architecture/standards-registry",
-    "label": "Hub"
+    "href": "/roadmap",
+    "label": "Roadmap"
   }
 ];
 export const navSections = [

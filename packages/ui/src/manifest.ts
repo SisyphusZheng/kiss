@@ -13,8 +13,8 @@ import type { OpenElementPackageManifest } from '@openelement/core';
 export const manifest: OpenElementPackageManifest = {
   schemaVersion: '1.0.0',
   packageName: '@openelement/ui',
-  version: '0.33.0',
-  description: 'Swiss International Style Web Component library for openElement',
+  version: '0.40.7',
+  description: 'Open Props Web Component library for openElement',
   author: 'openElement',
   license: 'MIT',
   homepage: 'https://openelement.org',
@@ -206,6 +206,76 @@ export const manifest: OpenElementPackageManifest = {
         hydrate: 'idle',
         module: '@openelement/ui/open-code-block',
         export: 'OpenCodeBlock',
+      },
+    },
+    {
+      tagName: 'open-badge',
+      className: 'OpenBadge',
+      superclassName: 'OpenElement',
+      description: 'Open Props status badge',
+      attributes: [
+        { name: 'tone', type: 'string', default: '"neutral"', description: 'Badge tone' },
+        { name: 'size', type: 'string', default: '"md"', description: 'Badge size' },
+      ],
+      slots: [
+        { name: '', description: 'Badge text' },
+      ],
+      cssParts: [
+        { name: 'badge', description: 'The badge wrapper' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-badge',
+        export: 'OpenBadge',
+      },
+    },
+    {
+      tagName: 'open-lab-panel',
+      className: 'OpenLabPanel',
+      superclassName: 'OpenElement',
+      description: 'Standards-lab artifact and spec panel',
+      attributes: [
+        { name: 'variant', type: 'string', default: '"surface"', description: 'Panel variant' },
+        { name: 'label', type: 'string', description: 'Panel label' },
+        { name: 'meta', type: 'string', description: 'Panel metadata' },
+        { name: 'compact', type: 'boolean', description: 'Compact body padding' },
+      ],
+      slots: [
+        { name: '', description: 'Panel content' },
+      ],
+      cssParts: [
+        { name: 'container', description: 'The panel wrapper' },
+        { name: 'header', description: 'The panel header' },
+        { name: 'body', description: 'The panel content area' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-lab-panel',
+        export: 'OpenLabPanel',
+      },
+    },
+    {
+      tagName: 'open-standards-visual',
+      className: 'OpenStandardsVisual',
+      superclassName: 'OpenElement',
+      description: 'Product-art standards diagram for route, package, token, and hero visuals',
+      attributes: [
+        { name: 'variant', type: 'string', default: '"hero"', description: 'Visual variant' },
+      ],
+      cssParts: [],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-standards-visual',
+        export: 'OpenStandardsVisual',
       },
     },
     {

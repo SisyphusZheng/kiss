@@ -2,28 +2,21 @@
 
 ## Purpose
 
-The design-system page documents the active Web Standards Lab visual language.
-It is a live rule page for `www`, not a gallery of an external brand style.
-
-## Layout
-
-- Container: max-width 1160px.
-- Hero: title plus rules card.
-- Sections: palette, typography, primitives, artifacts, layout principles.
-- Cards: repeated primitives only; no card nesting.
+The design-system page documents the active Web Standards Lab rules. It is a
+live implementation contract for `www`, not a gallery or moodboard.
 
 ## Required Sections
 
-1. Web Standards Lab hero.
-2. Light-first palette with code/artifact color.
-3. Type scale with letter spacing set to `0`.
-4. Interface primitive examples: buttons, fields, status badges.
-5. Dark code artifact sample.
-6. Layout principles.
+1. Web Standards Lab hero and rule panel.
+2. Token contract with semantic roles and Open Props scales.
+3. UI package primitives: `open-button`, `open-card`, `open-badge`,
+   `open-lab-panel`, `open-standards-visual`.
+4. Standards visual examples: route graph, package graph, token board.
+5. Layout principles and QA acceptance notes.
 
 ## Visual Rules
 
-- Current palette starts from `#f6f8fb`, `#ffffff`, `#111827`, `#1d4ed8`, `#047857`.
-- Display type uses fixed breakpoints, not viewport-scaling font sizes.
-- Use 8px radius or less for buttons, fields, cards, and panels.
-- Dark mode is supported, but the primary documentation experience is light.
+- Show actual UI primitives, not local mock components.
+- Every swatch or token example is expressed as a token name.
+- The page must render cleanly in light and dark mode.
+- Typography uses fixed token steps, never viewport-scaled font sizes.

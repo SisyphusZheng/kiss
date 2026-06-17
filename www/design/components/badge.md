@@ -9,20 +9,20 @@ navigation.
 
 | Property | Value |
 | --- | --- |
-| Radius | `--radius-pill` |
-| Height | 24px |
-| Padding | 0 9px |
-| Font | 12px mono or compact sans |
-| Weight | 800 |
+| Radius | `--radius-round` |
+| Height | `--size-6` |
+| Padding | `--badge-padding-y` / `--badge-padding-x` |
+| Font | `--font-size-00` with `--font-mono` |
+| Weight | `--font-weight-8` |
 
 ## Variants
 
 | Variant | Background | Text |
 | --- | --- | --- |
-| Current | `#eff6ff` | `#1d4ed8` |
-| Done | `#ecfdf5` | `#047857` |
-| Planned | `#fffbeb` | `#b45309` |
-| Error | `#fef3f2` | `#b42318` |
+| Current | `--brand-subtle` | `--brand` |
+| Done | `--success-subtle` | `--success` |
+| Planned | `--warning-subtle` | `--warning` |
+| Error | `--error-subtle` | `--error` |
 
 ## Rules
 

@@ -6,478 +6,340 @@ export const tagName = 'ui-showcase';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { linearTokenSheet } from '@openelement/ui';
+import { openPropsTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-badge';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-card';
+import '@openelement/ui/open-input';
+import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-standards-visual';
 
-const routeSheet = new StyleSheet();
-routeSheet.replaceSync(`
+const pageSheet = new StyleSheet();
+pageSheet.replaceSync(`
   :host {
     display: block;
-    color: #101828;
+    color: var(--text-primary);
   }
 
   * {
     box-sizing: border-box;
   }
 
-  .ds-container {
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 58px 32px 84px;
+  .system {
+    width: min(100% - calc(var(--size-8) * 2), var(--site-container));
+    margin-inline: auto;
+    padding-block: var(--size-12) var(--site-section-block);
   }
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 42px;
+    grid-template-columns: minmax(0, 1fr) minmax(330px, .48fr);
+    gap: var(--size-8);
     align-items: end;
-    padding-bottom: 34px;
-    border-bottom: 1px solid rgba(16,24,40,0.12);
+    padding-block-end: var(--size-8);
+    border-block-end: var(--border-size-1) solid var(--border);
   }
 
   .kicker,
-  .ds-section-label {
-    margin: 0 0 12px;
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 850;
+  .label,
+  .token-name {
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
     letter-spacing: 0;
     text-transform: uppercase;
-    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
-  .ds-title {
+  .kicker,
+  .label {
+    margin: 0 0 var(--size-4);
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block-start: 0;
+  }
+
+  h1 {
+    margin-block-end: 0;
+    font-size: clamp(var(--font-size-5), 5vw, var(--font-size-7));
+    line-height: var(--font-lineheight-1);
+    letter-spacing: 0;
+  }
+
+  .subtitle,
+  .rule-list li,
+  .component-card p,
+  .principle p,
+  .token-row span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
+  }
+
+  .subtitle {
+    max-width: 760px;
+    margin-block: var(--size-5) 0;
+    font-size: var(--font-size-2);
+  }
+
+  .rule-list {
     margin: 0;
-    color: #101828;
-    font-size: 56px;
-    font-weight: 780;
-    line-height: 1.02;
-    letter-spacing: 0;
+    padding-inline-start: var(--size-5);
   }
 
-  .ds-subtitle {
-    max-width: 720px;
-    margin: 18px 0 0;
-    color: #475467;
-    font-size: 18px;
-    line-height: 1.62;
+  .rule-list li + li {
+    margin-block-start: var(--size-2);
   }
 
-  .rule-card {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 20px;
+  .section {
+    display: grid;
+    gap: var(--size-5);
+    margin-block-start: var(--size-10);
   }
 
-  .rule-card h2 {
-    margin: 0 0 12px;
-    color: #101828;
-    font-size: 20px;
-    letter-spacing: 0;
-  }
-
-  .rule-card ul {
+  .section-title {
     margin: 0;
-    padding-left: 18px;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.62;
-  }
-
-  .ds-section {
-    padding-top: 46px;
-  }
-
-  .ds-section-heading {
-    margin: 0 0 20px;
-    color: #101828;
-    font-size: 28px;
-    line-height: 1.14;
+    color: var(--text-primary);
+    font-size: var(--font-size-4);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
-  .swatch-grid,
+  .token-grid,
   .component-grid,
   .principles {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--size-4);
   }
 
-  .swatch-card,
-  .component-card,
-  .principle {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    padding: 16px;
-  }
-
-  .swatch {
-    height: 82px;
-    border-radius: 6px;
-    border: 1px solid rgba(16,24,40,0.12);
-    margin-bottom: 12px;
-  }
-
-  .swatch-label,
-  .swatch-value {
-    display: block;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .swatch-label {
-    color: #101828;
-    font-weight: 750;
-  }
-
-  .swatch-value {
-    color: #667085;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .type-scale {
-    border: 1px solid rgba(16,24,40,0.12);
-    border-radius: 8px;
-    background: #ffffff;
-    overflow: hidden;
-  }
-
-  .type-row {
+  .token-row {
     display: grid;
-    grid-template-columns: 128px 150px 1fr;
-    gap: 18px;
-    align-items: baseline;
-    padding: 16px 18px;
-    border-bottom: 1px solid rgba(16,24,40,0.08);
+    grid-template-columns: minmax(150px, .38fr) minmax(0, 1fr);
+    gap: var(--size-4);
+    align-items: start;
+    padding-block: var(--size-3);
+    border-block-end: var(--border-size-1) solid var(--border);
   }
 
-  .type-row:last-child {
-    border-bottom: 0;
-  }
-
-  .type-label,
-  .type-detail {
-    color: #667085;
-    font-size: 12px;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .type-sample {
-    color: #101828;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    letter-spacing: 0;
+  .token-row:last-child {
+    border-block-end: 0;
   }
 
   .component-card {
-    min-height: 190px;
+    min-height: 220px;
   }
 
   .component-card h3,
   .principle h3 {
-    margin: 0 0 12px;
-    color: #101828;
-    font-size: 18px;
+    margin-block: 0 var(--size-3);
+    color: var(--text-primary);
+    font-size: var(--font-size-2);
+    line-height: var(--font-lineheight-3);
     letter-spacing: 0;
   }
 
   .component-card p,
   .principle p {
-    margin: 12px 0 0;
-    color: #667085;
-    font-size: 14px;
-    line-height: 1.58;
+    margin-block: var(--size-4) 0;
   }
 
-  .button-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 38px;
-    padding: 0 14px;
-    border-radius: 8px;
-    border: 1px solid rgba(16,24,40,0.14);
-    background: #ffffff;
-    color: #101828;
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  .button.primary {
-    background: #1d4ed8;
-    border-color: #1d4ed8;
-    color: #ffffff;
-  }
-
-  .button.icon {
-    width: 38px;
-    padding: 0;
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-
-  .field {
-    height: 40px;
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid rgba(16,24,40,0.14);
-    background: #ffffff;
-    padding: 0 12px;
-    color: #101828;
-    font-size: 14px;
-  }
-
+  .button-row,
   .badge-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--size-2);
   }
 
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-size: 12px;
-    font-weight: 800;
-    font-family: var(--font-mono, ui-monospace, monospace);
+  .visual-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    gap: var(--size-5);
   }
 
-  .badge.green {
-    background: #ecfdf5;
-    color: #047857;
-  }
-
-  .badge.amber {
-    background: #fffbeb;
-    color: #b45309;
-  }
-
-  .artifact {
-    margin-top: 10px;
-    border-radius: 8px;
-    background: #111827;
-    color: #d1d5db;
-    padding: 16px;
-    font-size: 12px;
-    line-height: 1.65;
-    font-family: var(--font-mono, ui-monospace, monospace);
-    overflow: auto;
-  }
-
-  .principle strong {
-    display: block;
-    color: #1d4ed8;
-    font-size: 12px;
-    margin-bottom: 10px;
-    font-family: var(--font-mono, ui-monospace, monospace);
+  .code-sample {
+    margin: 0;
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: var(--font-lineheight-4);
+    white-space: pre-wrap;
   }
 
   .nav-row {
-    margin-top: 34px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--size-3);
+    margin-block-start: var(--size-8);
   }
 
-  .nav-row a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 38px;
-    padding: 0 13px;
-    border: 1px solid rgba(16,24,40,0.14);
-    border-radius: 8px;
-    background: #ffffff;
-    color: #101828;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  @media (max-width: 920px) {
+  @media (max-width: 940px) {
     .hero,
-    .swatch-grid,
+    .token-grid,
     .component-grid,
-    .principles {
+    .principles,
+    .visual-grid {
       grid-template-columns: 1fr;
-    }
-
-    .type-row {
-      grid-template-columns: 1fr;
-      gap: 6px;
     }
   }
 
-  @media (max-width: 560px) {
-    .ds-container {
-      padding: 38px 18px 64px;
+  @media (max-width: 620px) {
+    .system {
+      width: min(100% - calc(var(--size-4) * 2), var(--site-container));
+      padding-block-start: var(--size-8);
     }
 
-    .ds-title {
-      font-size: 40px;
-      line-height: 1.06;
+    h1 {
+      font-size: var(--font-size-6);
+    }
+
+    .subtitle {
+      font-size: var(--font-size-1);
+    }
+
+    .token-row {
+      grid-template-columns: 1fr;
     }
   }
 `);
 
-const palette = [
-  { name: 'Canvas', value: '#f6f8fb', color: '#f6f8fb' },
-  { name: 'Surface', value: '#ffffff', color: '#ffffff' },
-  { name: 'Border', value: 'rgba(16,24,40,0.12)', color: '#d7dee8' },
-  { name: 'Brand', value: '#1d4ed8', color: '#1d4ed8' },
-  { name: 'Standards', value: '#047857', color: '#047857' },
-  { name: 'Warning', value: '#b45309', color: '#b45309' },
-  { name: 'Text', value: '#101828', color: '#101828' },
-  { name: 'Muted', value: '#667085', color: '#667085' },
-  { name: 'Code', value: '#111827', color: '#111827' },
+const tokenRows = [
+  ['Canvas', '--bg-base', 'Page background and grid field.'],
+  ['Surface', '--bg-card / --bg-elevated', 'Reading surfaces and raised panels.'],
+  ['Artifact', '--bg-code / --code-border', 'Code, devtools, route, and package diagrams.'],
+  ['Text', '--text-primary / --text-secondary', 'Readable hierarchy in both themes.'],
+  ['Action', '--brand / --on-brand', 'Primary command and link emphasis.'],
+  ['State', '--success / --warning / --info / --error', 'Roadmap, standards, reference, and failure states.'],
 ];
 
-const typeScale: Array<{ label: string; detail: string; style: Record<string, string> }> = [
-  { label: 'Display', detail: '56 / 780 / 0', style: { fontSize: '56px', fontWeight: '780', lineHeight: '1.02' } },
-  { label: 'Page title', detail: '40 / 760 / 0', style: { fontSize: '40px', fontWeight: '760', lineHeight: '1.1' } },
-  { label: 'Section', detail: '28 / 720 / 0', style: { fontSize: '28px', fontWeight: '720', lineHeight: '1.16' } },
-  { label: 'Card title', detail: '18 / 700 / 0', style: { fontSize: '18px', fontWeight: '700', lineHeight: '1.25' } },
-  { label: 'Body', detail: '16 / 400 / 0', style: { fontSize: '16px', fontWeight: '400', lineHeight: '1.65' } },
-  { label: 'Caption', detail: '12 / 800 / 0', style: { fontSize: '12px', fontWeight: '800', lineHeight: '1.45' } },
+const principles = [
+  ['Lead with the product object', 'Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.'],
+  ['Use components as the design system', 'Buttons, cards, badges, panels, inputs, and visuals come from @openelement/ui.'],
+  ['Treat dark mode as parity', 'Every page and shadow component must resolve through the same semantic tokens.'],
 ];
 
 export class UIShowcase extends OpenElement {
-  static override styles = [linearTokenSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, pageSheet];
 
   override render() {
     return (
-      <div class="ds-container">
-        <section class="hero">
+      <main class='system'>
+        <section class='hero'>
           <div>
-            <p class="kicker">Web Standards Lab</p>
-            <h1 class="ds-title">Design System</h1>
-            <p class="ds-subtitle">
-              The www visual language is light-first, documentation-focused,
-              and built around real framework artifacts: route graphs, code,
-              package boundaries, and browser standards.
+            <p class='kicker'>Web Standards Lab</p>
+            <h1>Design System</h1>
+            <p class='subtitle'>
+              This page documents the active `www` implementation contract:
+              Open Props tokens, UI package primitives, product-art diagrams,
+              and first-class dark mode.
             </p>
           </div>
-          <aside class="rule-card">
-            <h2>Rules</h2>
-            <ul>
-              <li>Light surfaces, dark code/artifact panels.</li>
-              <li>8px radius or less for interface containers.</li>
-              <li>No negative letter spacing.</li>
-              <li>No Linear clone, no decorative blobs.</li>
+          <open-lab-panel label='rules' meta='v3'>
+            <ul class='rule-list'>
+              <li>Strict Open Props and semantic tokens only.</li>
+              <li>Reusable visuals live in `@openelement/ui`.</li>
+              <li>No Linear clone, decorative blobs, or local color systems.</li>
+              <li>Letter spacing remains `0`.</li>
             </ul>
-          </aside>
+          </open-lab-panel>
         </section>
 
-        <section class="ds-section">
-          <p class="ds-section-label">Color</p>
-          <h2 class="ds-section-heading">Light-first palette</h2>
-          <div class="swatch-grid">
-            {palette.map((item) => (
-              <div class="swatch-card">
-                <div class="swatch" style={{ background: item.color }}></div>
-                <span class="swatch-label">{item.name}</span>
-                <span class="swatch-value">{item.value}</span>
+        <section class='section'>
+          <div>
+            <p class='label'>Token contract</p>
+            <h2 class='section-title'>Semantic roles mapped to Open Props.</h2>
+          </div>
+          <open-lab-panel label='token roles' meta='source: openPropsTokenSheet'>
+            {tokenRows.map(([role, token, copy]) => (
+              <div class='token-row'>
+                <strong class='token-name'>{role}</strong>
+                <span><code>{token}</code> - {copy}</span>
               </div>
             ))}
-          </div>
+          </open-lab-panel>
         </section>
 
-        <section class="ds-section">
-          <p class="ds-section-label">Typography</p>
-          <h2 class="ds-section-heading">Type scale</h2>
-          <div class="type-scale">
-            {typeScale.map((item) => (
-              <div class="type-row">
-                <span class="type-label">{item.label}</span>
-                <span class="type-detail">{item.detail}</span>
-                <span class="type-sample" style={item.style}>
-                  Standards-first documentation should be readable at speed.
-                </span>
-              </div>
-            ))}
+        <section class='section'>
+          <div>
+            <p class='label'>Primitives</p>
+            <h2 class='section-title'>The site is composed from UI package components.</h2>
           </div>
-        </section>
-
-        <section class="ds-section">
-          <p class="ds-section-label">Components</p>
-          <h2 class="ds-section-heading">Interface primitives</h2>
-          <div class="component-grid">
-            <article class="component-card">
+          <div class='component-grid'>
+            <open-card class='component-card'>
               <h3>Buttons</h3>
-              <div class="button-row">
-                <span class="button primary">Primary</span>
-                <span class="button">Secondary</span>
-                <span class="button icon">/</span>
+              <div class='button-row'>
+                <open-button variant='primary'>Primary</open-button>
+                <open-button>Secondary</open-button>
+                <open-button variant='ghost'>Ghost</open-button>
               </div>
-              <p>Use text buttons for clear commands and icon buttons for tools.</p>
-            </article>
-            <article class="component-card">
+              <p>Commands use stable dimensions, token colors, and focus-visible states.</p>
+            </open-card>
+            <open-card class='component-card'>
               <h3>Fields</h3>
-              <input class="field" value="app/routes/index.tsx" readonly />
-              <p>Inputs stay dense, predictable, and sized to avoid layout shift.</p>
-            </article>
-            <article class="component-card">
+              <open-input value='app/routes/index.tsx' readonly></open-input>
+              <p>Inputs stay utilitarian and inherit the same Open Props token system.</p>
+            </open-card>
+            <open-card class='component-card'>
               <h3>Status</h3>
-              <div class="badge-row">
-                <span class="badge">current</span>
-                <span class="badge green">done</span>
-                <span class="badge amber">planned</span>
+              <div class='badge-row'>
+                <open-badge tone='brand'>current</open-badge>
+                <open-badge tone='success'>done</open-badge>
+                <open-badge tone='warning'>planned</open-badge>
               </div>
-              <p>Status language should match roadmap and release truth.</p>
-            </article>
+              <p>Status labels are readable text first and color second.</p>
+            </open-card>
           </div>
         </section>
 
-        <section class="ds-section">
-          <p class="ds-section-label">Artifacts</p>
-          <h2 class="ds-section-heading">Code and diagrams are the visual asset.</h2>
-          <pre class="artifact"><code>{`route -> render -> DSD -> island manifest
+        <section class='section'>
+          <div>
+            <p class='label'>Product art</p>
+            <h2 class='section-title'>Code and diagrams are the visual asset.</h2>
+          </div>
+          <div class='visual-grid'>
+            <open-lab-panel variant='artifact' label='artifact panel' meta='render contract'>
+              <pre class='code-sample'><code>{`route -> render -> DSD -> island manifest
 core  -> element -> app -> adapter-vite -> www
 Elements + UI + Framework + Protocols`}</code></pre>
-        </section>
-
-        <section class="ds-section">
-          <p class="ds-section-label">Layout</p>
-          <h2 class="ds-section-heading">Page composition principles</h2>
-          <div class="principles">
-            <article class="principle">
-              <strong>01</strong>
-              <h3>Lead with the product object</h3>
-              <p>Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.</p>
-            </article>
-            <article class="principle">
-              <strong>02</strong>
-              <h3>Keep sections unframed</h3>
-              <p>Use cards for repeated items only. Main sections should be open bands with constrained content.</p>
-            </article>
-            <article class="principle">
-              <strong>03</strong>
-              <h3>Use evidence as navigation</h3>
-              <p>Every major page should point to a guide, API surface, architecture contract, or roadmap truth.</p>
-            </article>
+            </open-lab-panel>
+            <open-lab-panel label='token board' meta='Open Props'>
+              <open-standards-visual variant='tokens'></open-standards-visual>
+            </open-lab-panel>
           </div>
         </section>
 
-        <nav class="nav-row">
-          <a href="/architecture/architecture">Architecture</a>
-          <a href="/roadmap">Roadmap</a>
-          <a href="/guide/getting-started">Guide</a>
+        <section class='section'>
+          <div>
+            <p class='label'>Layout</p>
+            <h2 class='section-title'>Composition principles</h2>
+          </div>
+          <div class='principles'>
+            {principles.map(([title, copy], index) => (
+              <open-card class='principle'>
+                <span class='token-name'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
+          </div>
+        </section>
+
+        <nav class='nav-row'>
+          <open-button href='/docs'>Docs</open-button>
+          <open-button href='/architecture/architecture'>Architecture</open-button>
+          <open-button href='/roadmap'>Roadmap</open-button>
         </nav>
-      </div>
+      </main>
     );
   }
 }
 
-customElements.define(tagName, UIShowcase);
+if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
+  customElements.define(tagName, UIShowcase);
+}
+
 export default UIShowcase;

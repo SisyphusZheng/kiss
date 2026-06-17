@@ -1,52 +1,46 @@
-# Design Tokens
+# Token Contract
 
-## Color
+The website uses `openPropsTokenSheet` as the source of truth. Page-level CSS
+must not define a separate palette, spacing scale, radius scale, or typography
+scale.
 
-| Token | Value | Purpose |
-| --- | --- | --- |
-| `bg-canvas` | `#f6f8fb` | Page background |
-| `surface-1` | `#ffffff` | Panels and cards |
-| `surface-2` | `#eef2f7` | Secondary fills |
-| `surface-3` | `#dfe6ef` | Raised/muted fills |
-| `bg-code` | `#111827` | Code and artifact panels |
-| `brand` | `#1d4ed8` | Primary action and links |
-| `standards` | `#047857` | Standards/contract accent |
-| `warning` | `#b45309` | Planned/warning state |
-| `text-primary` | `#101828` | Main text |
-| `text-secondary` | `#475467` | Secondary text |
-| `text-muted` | `#667085` | Captions and meta |
-| `border` | `rgba(16,24,40,0.12)` | Hairline border |
+## Semantic Tokens
 
-## Typography
+| Role | Token |
+| --- | --- |
+| Canvas | `--bg-base` |
+| Reading surface | `--bg-card` |
+| Elevated panel | `--bg-elevated` |
+| Muted surface | `--bg-surface` |
+| Hover surface | `--bg-hover` |
+| Code/artifact panel | `--bg-code` |
+| Primary text | `--text-primary` |
+| Secondary text | `--text-secondary` |
+| Muted text | `--text-muted` |
+| Hairline border | `--border` |
+| Hover border | `--border-hover` |
+| Primary action | `--brand` |
+| Shipped/standards state | `--success` |
+| Planned state | `--warning` |
+| Reference/API state | `--info` |
+| Error state | `--error` |
 
-No token uses negative letter spacing.
+## Open Props Scales
 
-| Token | Size | Weight | Line Height | Letter Spacing |
-| --- | --- | --- | --- | --- |
-| `display` | 56px | 780 | 1.02 | 0 |
-| `page-title` | 40px | 760 | 1.10 | 0 |
-| `section` | 28px | 720 | 1.16 | 0 |
-| `card-title` | 18px | 700 | 1.25 | 0 |
-| `body-lg` | 18px | 400 | 1.62 | 0 |
-| `body` | 16px | 400 | 1.65 | 0 |
-| `body-sm` | 14px | 400 | 1.55 | 0 |
-| `caption` | 12px | 800 | 1.45 | 0 |
-| `mono` | 13px | 500 | 1.55 | 0 |
+| Category | Required Scale |
+| --- | --- |
+| Spacing | `--size-1` through `--size-16` |
+| Radius | `--radius-1`, `--radius-2`, `--radius-round` |
+| Font size | `--font-size-00` through `--font-size-8` |
+| Font weight | `--font-weight-4` through `--font-weight-9` |
+| Line height | `--font-lineheight-*` |
+| Color families | `--gray-*`, `--indigo-*`, `--blue-*`, `--green-*`, `--teal-*`, `--cyan-*`, `--orange-*`, `--red-*` |
 
-## Radius
+## Hardcoding Ban
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `xs` | 4px | Small marks |
-| `sm` | 6px | Nodes and pills |
-| `md` | 8px | Buttons, inputs, cards, panels |
-| `pill` | 9999px | Badges only |
-
-## Layout
-
-| Token | Value | Use |
-| --- | --- | --- |
-| `nav-height` | 64px | Sticky header and mobile drawer offset |
-| `content-width` | 760px | Prose pages |
-| `content-max-width` | 1120px | Prose + TOC pages |
-| `section` | 76px | Default vertical section spacing |
+- No page-level hex, rgb, hsl, or named theme colors.
+- No page-level `--space-*`, `--radius-md`, or legacy `--surface-*` scale definitions.
+- No `linearTokenSheet` imports in redesigned `www` pages.
+- No `*-linear` UI components in redesigned entry pages.
+- Literal sizes are allowed only for layout constraints that cannot be expressed
+  by Open Props, and those must be rare.

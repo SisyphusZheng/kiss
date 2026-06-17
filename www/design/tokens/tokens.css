@@ -1,105 +1,19 @@
 /**
- * openElement Web Standards Lab Design Tokens
+ * Token reference for www.
+ * Runtime tokens live in packages/ui/src/open-props-tokens.ts.
  */
 
 :root {
-  --font-sans: 'Inter', 'SF Pro Display', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Fira Mono', ui-monospace, monospace;
-
-  --font-size-display: 56px;
-  --font-size-page-title: 40px;
-  --font-size-section: 28px;
-  --font-size-card-title: 18px;
-  --font-size-body-lg: 18px;
-  --font-size-body: 16px;
-  --font-size-body-sm: 14px;
-  --font-size-caption: 12px;
-  --font-size-mono: 13px;
-
-  --font-weight-regular: 400;
-  --font-weight-medium: 560;
-  --font-weight-semibold: 700;
-  --font-weight-display: 780;
-
-  --line-height-tight: 1.02;
-  --line-height-heading: 1.12;
-  --line-height-normal: 1.55;
-  --line-height-relaxed: 1.65;
-  --letter-spacing-default: 0;
-
-  --space-xxs: 4px;
-  --space-xs: 8px;
-  --space-sm: 12px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-xxl: 48px;
-  --space-section: 76px;
-
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-pill: 9999px;
-
-  --bg-canvas: #f6f8fb;
-  --surface-1: #ffffff;
-  --surface-2: #eef2f7;
-  --surface-3: #dfe6ef;
-  --bg-code: #111827;
-
-  --text-primary: #101828;
-  --text-secondary: #475467;
-  --text-muted: #667085;
-
-  --color-brand: #1d4ed8;
-  --color-brand-hover: #1e40af;
-  --color-brand-light: #60a5fa;
-  --color-standards: #047857;
-  --color-warning: #b45309;
-  --color-error: #b42318;
-  --color-info: #0369a1;
-
-  --border: rgba(16, 24, 40, 0.12);
-  --border-hover: rgba(16, 24, 40, 0.22);
-  --border-strong: rgba(16, 24, 40, 0.24);
-  --code-border: rgba(255, 255, 255, 0.12);
-  --overlay: rgba(15, 23, 42, 0.42);
-
-  --shadow-none: none;
-  --shadow-elevated: 0 1px 2px rgba(16, 24, 40, 0.06);
-
-  --nav-height: 64px;
-  --nav-bg: rgba(246, 248, 251, 0.88);
-  --nav-link-color: var(--text-secondary);
-  --nav-link-hover: var(--text-primary);
-
-  --button-radius: var(--radius-md);
-  --button-padding-y: 8px;
-  --button-padding-x: 14px;
-  --card-radius: var(--radius-md);
-  --input-radius: var(--radius-md);
-  --badge-radius: var(--radius-pill);
-
-  --bp-tablet: 768px;
-  --bp-desktop: 1024px;
-}
-
-[data-theme='dark'] {
-  --bg-canvas: #0b1020;
-  --surface-1: #101828;
-  --surface-2: #182230;
-  --surface-3: #253044;
-  --bg-code: #050816;
-
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-
-  --color-brand: #60a5fa;
-  --color-brand-hover: #93c5fd;
-  --color-brand-light: #bfdbfe;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-hover: rgba(255, 255, 255, 0.18);
-  --border-strong: rgba(255, 255, 255, 0.24);
-  --nav-bg: rgba(11, 16, 32, 0.88);
+  --www-canvas: var(--bg-base);
+  --www-surface: var(--bg-card);
+  --www-elevated: var(--bg-elevated);
+  --www-muted-surface: var(--bg-surface);
+  --www-code: var(--bg-code);
+  --www-text: var(--text-primary);
+  --www-text-secondary: var(--text-secondary);
+  --www-border: var(--border);
+  --www-action: var(--brand);
+  --www-standards: var(--success);
+  --www-planned: var(--warning);
+  --www-reference: var(--info);
 }

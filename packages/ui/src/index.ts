@@ -14,6 +14,9 @@
  * - open-nav-linear: Linear.app-style sticky navigation bar
  * - open-badge-linear: Linear.app-style pill badge component
  * - open-code-block: Code block with copy button
+ * - open-badge: Open Props status badge
+ * - open-lab-panel: Standards-lab artifact/spec panel
+ * - open-standards-visual: Product-art standards diagrams
  * - open-layout: App layout with header, sidebar, footer
  * - open-theme-toggle: Theme toggle Island (Dark/Light)
  * - open-dialog: Dialog component using native <dialog>
@@ -45,6 +48,12 @@ export { OpenButton, tagName as openButtonTagName } from './open-button.js';
 export { OpenCard, tagName as openCardTagName } from './open-card.js';
 export { OpenInput, tagName as openInputTagName } from './open-input.js';
 export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.js';
+export { OpenBadge, tagName as openBadgeTagName } from './open-badge.js';
+export { OpenLabPanel, tagName as openLabPanelTagName } from './open-lab-panel.js';
+export {
+  OpenStandardsVisual,
+  tagName as openStandardsVisualTagName,
+} from './open-standards-visual.js';
 export { OpenLayout, tagName as openLayoutTagName } from './open-layout.js';
 export type { HeaderNavLink, NavItem, NavSection } from './open-layout.js';
 export { OpenThemeToggle, tagName as openThemeToggleTagName } from './open-theme-toggle.js';
