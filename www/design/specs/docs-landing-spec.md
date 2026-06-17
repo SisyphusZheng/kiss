@@ -1,54 +1,32 @@
-# Docs Landing 页面规格
+# Docs Landing Page Spec
 
-## 概述
+## Purpose
 
-文档入口页。四个入口路径卡片，2×2 网格布局。
+The docs landing page is a reference desk. It should help users choose the
+right path: build, API, architecture, or roadmap truth.
 
-## 布局
+## Layout
 
-- 全宽
-- 内容区：max-width 1120px，居中
-- Padding: 44px 32px 72px
+- Container: max-width 1180px, centered.
+- Padding: 58px 32px 84px desktop; 38px 18px 64px mobile.
+- Hero: two columns on desktop, one column under 960px.
+- Entry cards: 4 columns desktop, 2 columns tablet, 1 column mobile.
+- Reference section: dark route list plus light workflow panel.
 
-## 内容结构
+## Content
 
-### 标题区域
+| Entry | Label | Title | Description | Link |
+| --- | --- | --- | --- | --- |
+| 01 | Guide | Build an app | Project, routes, layouts, islands, content, i18n, deployment | `/guide/getting-started` |
+| 02 | API | Read the API | Package exports and public framework surface | `/apilist` |
+| 03 | Architecture | Inspect architecture | Package boundaries and rendering decisions | `/architecture/architecture` |
+| 04 | Roadmap | Check roadmap truth | Shipped, current, planned, and out-of-scope product language | `/roadmap` |
 
-- Headline: "Docs" — 56px, weight 600, letter-spacing -0.03em
-- Lede: "openElement documentation is organized around what you want to do." — 20px, weight 400, text-secondary
+## Visual Rules
 
-### 入口路径网格
-
-- 2×2 网格，gap 16px
-- 每个卡片：surface-2 背景，12px 圆角，1px border，24px padding
-- 顶部 edge highlight
-
-### 卡片内容
-
-| 卡片                 | Badge      | 标题                 | 描述                                             | 链接                                |
-| -------------------- | ---------- | -------------------- | ------------------------------------------------ | ----------------------------------- |
-| Build an app         | Entry      | Build an app         | Create a project, write DSD components...        | /guide/getting-started              |
-| Learn the engine     | Concepts   | Learn the engine     | Understand DSD rendering, island architecture... | /architecture/dsd                   |
-| Integrate packages   | Integrate  | Integrate packages   | Publish Web Components to the Hub...             | /architecture/package-compatibility |
-| Maintain openElement | Contribute | Maintain openElement | Read the package graph, ADR decisions...         | /architecture                       |
-
-### 卡片样式
-
-- 左侧：24px icon（brand color）
-- 右上角：pill badge（默认样式）
-- 标题：22px, weight 500
-- 描述：14px, text-secondary, line-height 1.5
-- Hover：border 变亮，无位移
-
-## 响应式
-
-| 断点    | 布局     |
-| ------- | -------- |
-| ≥ 768px | 2×2 网格 |
-| < 768px | 1 列堆叠 |
-
-## 注意事项
-
-- 与首页保持一致的 card 样式
-- 入口路径清晰，减少用户决策成本
-- Badge 使用小写或首字母大写（避免全大写的 shouting）
+- Light cards on the reading surface.
+- Dark route list for concrete paths.
+- 8px card radius.
+- No nested cards.
+- No negative letter spacing.
+- No Hub product language.

@@ -66,8 +66,8 @@ openElement 当前是 DSD-first Web Components 应用框架。与同级框架的
 <td>SSR + RSC + SSG</td>
 </tr>
 <tr>
-<td>Registry Hub</td>
-<td class="openElement-col"><span class="tag-yes">内建</span></td>
+<td>Registry / Hub</td>
+<td class="openElement-col"><span class="tag-no">已移出当前产品图谱</span></td>
 <td><span class="tag-no">否</span></td>
 <td><span class="tag-no">否</span></td>
 <td><span class="tag-no">否</span></td>

@@ -18,67 +18,105 @@ const rootCSS = _rawCSS
     /:host\(\[data-theme="dark"\]\)\s*\{/g,
     'html[data-theme="dark"], :host([data-theme="dark"]) {',
   );
-const darkCSS = `
+const siteCSS = `
 :root,
+html[data-theme="light"],
+:host([data-theme="light"]),
+:root[data-theme="light"] {
+  --bg-canvas: #f6f8fb;
+  --surface-1: #ffffff;
+  --surface-2: #eef2f7;
+  --surface-3: #dfe6ef;
+  --surface-code: #111827;
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-muted: #667085;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: #1d4ed8;
+  --color-brand-hover: #1e40af;
+  --color-brand-light: #60a5fa;
+  --color-success: #047857;
+  --color-warning: #b45309;
+  --color-error: #b42318;
+  --color-info: #0369a1;
+  --border: rgba(16, 24, 40, 0.12);
+  --border-hover: rgba(16, 24, 40, 0.22);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-strong: rgba(16, 24, 40, 0.24);
+  --edge-highlight: rgba(255, 255, 255, 0.85);
+  --color-edge-highlight: var(--edge-highlight);
+  --color-overlay: rgba(15, 23, 42, 0.42);
+  --shadow-1: none;
+  --shadow-elevated: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --bg-base: var(--bg-canvas);
+  --bg-surface: var(--surface-1);
+  --bg-card: var(--surface-1);
+  --bg-hover: var(--surface-2);
+  --bg-code: #111827;
+  --code-border: rgba(255, 255, 255, 0.12);
+  --brand: var(--color-brand);
+  --brand-hover: var(--color-brand-hover);
+  --brand-light: var(--color-brand-light);
+  --border-strong: rgba(16, 24, 40, 0.24);
+  --nav-bg: rgba(246, 248, 251, 0.88);
+  --nav-height: 64px;
+}
 html[data-theme="dark"],
 :host([data-theme="dark"]),
 :root[data-theme="dark"] {
-  --bg-canvas: #08080a;
-  --surface-1: #0d0f12;
-  --surface-2: #16191d;
-  --surface-3: #212529;
-  --text-primary: #e9ecef;
-  --text-secondary: #adb5bd;
-  --text-muted: #868e96;
-  --color-brand: #4263eb;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(255, 255, 255, 0.10);
-  --edge-highlight: rgba(255, 255, 255, 0.08);
-  --shadow-1: none;
+  --bg-canvas: #0b1020;
+  --surface-1: #101828;
+  --surface-2: #182230;
+  --surface-3: #253044;
+  --surface-code: #050816;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: #60a5fa;
+  --color-brand-hover: #93c5fd;
+  --color-brand-light: #bfdbfe;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-strong: rgba(255, 255, 255, 0.24);
+  --edge-highlight: rgba(255, 255, 255, 0.12);
+  --color-edge-highlight: var(--edge-highlight);
+  --color-overlay: rgba(0, 0, 0, 0.48);
+  --bg-base: var(--bg-canvas);
+  --bg-surface: var(--surface-1);
+  --bg-card: var(--surface-1);
+  --bg-hover: var(--surface-2);
+  --bg-code: #050816;
+  --code-border: rgba(255, 255, 255, 0.14);
+  --brand: var(--color-brand);
+  --brand-hover: var(--color-brand-hover);
+  --brand-light: var(--color-brand-light);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --nav-bg: rgba(11, 16, 32, 0.88);
+  --nav-height: 64px;
 }
 body {
-  background: var(--bg-canvas, #08080a);
-  color: var(--text-primary, #e9ecef);
-}
-
-/* Light mode override -- theme toggle adds [data-theme="light"] to html */
-[data-theme="light"] {
-  --bg-canvas: #f8f9fa;
-  --surface-1: #ffffff;
-  --surface-2: #f1f3f5;
-  --surface-3: #e9ecef;
-  --text-primary: #12131a;
-  --text-secondary: #626676;
-  --text-muted: #8e92a2;
-  --color-brand: #4263eb;
-  --border: rgba(18, 19, 26, 0.08);
-  --border-hover: rgba(18, 19, 26, 0.12);
-  --edge-highlight: rgba(255, 255, 255, 0.5);
-}
-[data-theme="light"] body {
-  background: var(--bg-canvas, #f8f9fa);
-}
-[data-theme="light"] .app-header {
-  background: rgba(255,255,255,0.88);
-}
-[data-theme="light"] .app-footer {
-  border-top-color: rgba(18,19,26,0.12);
-}
-[data-theme="light"] .docs-sidebar {
-  border-right-color: rgba(18,19,26,0.12);
-}
-[data-theme="light"] .header-nav a {
-  color: #626676;
-}
-[data-theme="light"] .header-nav a:hover {
-  color: #12131a;
+  margin: 0;
+  background:
+    linear-gradient(rgba(16, 24, 40, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 24, 40, 0.045) 1px, transparent 1px),
+    var(--bg-canvas);
+  background-size: 32px 32px, 32px 32px, auto;
+  color: var(--text-primary);
 }
 ::selection {
-  background: rgba(66,99,235,0.3);
-  color: #FFFFFF;
+  background: rgba(29, 78, 216, 0.18);
+  color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{margin:0;background:var(--bg-canvas, #08080a);color:var(--text-primary, #e9ecef);font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${darkCSS}</style>`;
+  `<style>${rootCSS}body{font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   base: '/',
@@ -115,8 +153,8 @@ export default defineConfig({
       pwa: {
         name: 'openElement Framework',
         shortName: 'openElement',
-        themeColor: '#08080a',
-        backgroundColor: '#08080a',
+        themeColor: '#f6f8fb',
+        backgroundColor: '#f6f8fb',
       },
       viewTransition: true,
       speculation: true,
@@ -189,7 +227,7 @@ export default defineConfig({
           '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
           '<meta name="twitter:card" content="summary_large_image">',
           '<meta name="description" content="openElement - The Open Element. DSD-first Web Standards framework with SSG, islands, and Web Components.">',
-          '<style>html{visibility:visible!important;}body{background:#08080a;color:#fff;}</style>',
+          '<style>html{visibility:visible!important;}body{background:#f6f8fb;color:#101828;}</style>',
           '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
           '<link rel="apple-touch-icon" href="/assets/open-logo.svg" />',
           colorTokensStyle,
@@ -209,7 +247,7 @@ export default defineConfig({
             { href: '/apilist', label: 'API' },
             { href: '/architecture/architecture', label: 'Architecture' },
             { href: '/blog', label: 'Blog' },
-            { href: '/architecture/standards-registry', label: 'Hub' },
+            { href: '/roadmap', label: 'Roadmap' },
           ],
         },
         sitemap: {

@@ -11,7 +11,7 @@ const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
   { href: '/guide/core-concepts', label: 'Core Concepts' },
   { href: '/architecture/dsd', label: 'DSD Rendering' },
-  { href: '/api/reference', label: 'API Reference' },
+  { href: '/apilist', label: 'API Reference' },
   { href: '/architecture/architecture', label: 'Architecture' },
   { href: '/architecture/comparison', label: 'Framework Comparison' },
   { href: '/roadmap', label: 'Roadmap' },
@@ -27,7 +27,7 @@ const REDIRECT_MAP: Record<string, string> = {
   '/engine/comparison': '/architecture/comparison',
   '/engine/package-compatibility': '/architecture/package-compatibility',
   '/engine/standards-registry': '/architecture/standards-registry',
-  '/engine/reference/core': '/api/reference',
+  '/engine/reference/core': '/apilist',
   '/guide/migration-v0.24': '/guide/getting-started',
   '/guide/positioning': '/architecture/architecture',
   '/guide/rpc': '/api/reference',
@@ -51,9 +51,9 @@ styles.replaceSync(`
   }
   .title {
     font-size: 96px;
-    font-weight: 600;
+    font-weight: 780;
     color: var(--color-text-primary);
-    letter-spacing: -0.04em;
+    letter-spacing: 0;
     margin: 0;
     line-height: 1;
   }

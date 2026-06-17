@@ -207,9 +207,9 @@ export default class ComparisonPage extends OpenElement {
                 <td>SSR + RSC + SSG</td>
               </tr>
               <tr>
-                <td>Registry Hub</td>
+                <td>Registry / Hub</td>
                 <td class='openElement-col'>
-                  <span class='tag-yes'>已集成</span>
+                  <span class='tag-no'>Deferred outside current product graph</span>
                 </td>
                 <td>
                   <span class='tag-no'>?</span>

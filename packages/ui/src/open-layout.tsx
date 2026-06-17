@@ -3,7 +3,7 @@
  * @openelement/ui - open-layout
  *
  * App layout component with header, sidebar, and footer.
- * Swiss International Style: Pure B&W, minimal.
+ * Web Standards Lab: light-first, restrained, documentation-focused.
  *
  * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
  *   - CSSStyleSheet replaces Lit css``
@@ -110,7 +110,7 @@ function switchLabel(currentLocale: string): string {
 /** SignalContext key: theme state shared across all components */
 export const THEME_CTX: Context<'dark' | 'light'> = createContext<'dark' | 'light'>(
   Symbol('theme'),
-  'dark',
+  'light',
 );
 
 export interface NavItem {
@@ -173,29 +173,30 @@ sheet.replaceSync(`
     flex: 1;
   }
 
-  /* Header - Linear style */
+  /* Header */
   .app-header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: transparent;
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-border);
     transition: background 0.2s ease, border-color 0.2s ease;
   }
   .app-header.scrolled {
     background: var(--nav-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom-color: var(--color-border-hover);
   }
 
   .header-inner {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 0 var(--space-xl);
     display: flex;
     align-items: center;
-    height: var(--nav-height);
-    gap: var(--space-xs);
+    min-height: 64px;
+    gap: var(--space-md);
   }
 
   .mobile-tab-bar { display: none; }
@@ -220,16 +221,28 @@ sheet.replaceSync(`
     background: var(--surface-2);
   }
 
-  /* Logo - plain text */
   .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 750;
     color: var(--color-text-primary);
     text-decoration: none;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     white-space: nowrap;
   }
   .logo:hover { opacity: 0.8; }
+
+  .logo::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, var(--color-brand), #047857);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+    flex: 0 0 auto;
+  }
 
   .logo-sub {
     font-size: 0.75rem;
@@ -239,15 +252,15 @@ sheet.replaceSync(`
 
   .header-nav {
     display: flex;
-    gap: var(--space-lg);
+    gap: var(--space-md);
     flex: 1;
   }
   .header-nav a {
     color: var(--nav-link-color);
     text-decoration: none;
     font-size: var(--nav-link-size);
-    font-weight: 400;
-    padding: 0;
+    font-weight: 560;
+    padding: 6px 0;
     transition: color 0.15s ease;
   }
   .header-nav a:hover {
@@ -277,7 +290,7 @@ sheet.replaceSync(`
     padding: 8px 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--surface-1);
+    background: rgba(255,255,255,0.72);
     transition: all 0.15s ease;
   }
   .btn-secondary:hover {
@@ -338,6 +351,7 @@ sheet.replaceSync(`
     position: sticky;
     top: var(--nav-height);
     scrollbar-width: thin;
+    background: rgba(255,255,255,0.42);
   }
   :host([home]) .docs-sidebar,
   :host([full-width]) .docs-sidebar {
@@ -382,17 +396,17 @@ sheet.replaceSync(`
   .docs-sidebar a[aria-current="page"] {
     color: var(--color-brand);
     border-left-color: var(--color-brand);
-    background: var(--surface-1);
+    background: rgba(29,78,216,0.08);
     font-weight: 600;
   }
 
   /* Footer */
   .app-footer {
     border-top: 1px solid var(--color-border);
-    background: transparent;
+    background: rgba(255,255,255,0.58);
   }
   .footer-inner {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 64px var(--space-xl);
     display: grid;
@@ -419,7 +433,7 @@ sheet.replaceSync(`
   .footer-bottom {
     border-top: 1px solid var(--color-border);
     padding: var(--space-md) var(--space-xl);
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -456,7 +470,7 @@ sheet.replaceSync(`
       position: fixed; top: var(--nav-height); left: 0;
       width: min(280px, 80vw);
       height: calc(100vh - var(--nav-height)); z-index: 90;
-      background: var(--bg-base);
+      background: var(--surface-1);
       border-right: 1px solid var(--color-border);
       padding: 1rem 0; overflow-y: auto;
       transform: translateX(-101%);
@@ -941,7 +955,12 @@ export class OpenLayout extends OpenElement {
             <div className='footer-column'>
               <h4>Company</h4>
               <a href='https://github.com/open-element/openelement'>GitHub</a>
-              <a href='https://jsr.io/@openelement'>JSR</a>
+              <a
+                href={localizePath('/roadmap', currentLocale)}
+                data-nav={localizePath('/roadmap', currentLocale)}
+              >
+                Roadmap
+              </a>
               <a
                 href={localizePath('/changelog', currentLocale)}
                 data-nav={localizePath('/changelog', currentLocale)}
@@ -1118,7 +1137,7 @@ export class OpenLayout extends OpenElement {
       this.setAttribute('data-theme', docTheme);
     }
     // SignalContext: provide theme state to all child components
-    const initialTheme = (docTheme as 'dark' | 'light') || 'dark';
+    const initialTheme = (docTheme as 'dark' | 'light') || 'light';
     provideContext(this, THEME_CTX, initialTheme);
 
     // Listen for theme change events from open-theme-toggle

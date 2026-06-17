@@ -2,115 +2,143 @@ export const meta = { section: "", label: "Roadmap", order: 10 };
 export const tagName = "page-roadmap";
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Version: v0.37.2, v0.37.6, v0.38.0, v0.39.0, v0.40.7, v1.0.
-// Legacy smoke anchors: WC Package Protocol, Six-Phase Vision, Registry Hub, No webpack.
+// Current public line: v0.40.7, 11-package product graph.
 
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
 import { linearTokenSheet } from "@openelement/ui";
-import "../islands/open-search.tsx";
-import "@openelement/ui/open-button-linear";
-import "@openelement/ui/open-card-linear";
-import "@openelement/ui/open-badge-linear";
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
   :host {
     display: block;
+    color: #101828;
   }
 
-  .chip { display: inline-flex; align-items: center; }
+  * {
+    box-sizing: border-box;
+  }
 
   .shell {
-    max-width: 1080px;
+    max-width: 1160px;
     margin: 0 auto;
-    padding: 44px var(--size-6) 72px;
+    padding: 58px 32px 84px;
   }
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: var(--size-7);
-    align-items: start;
-    padding-bottom: 30px;
-    border-bottom: 1px solid var(--border);
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 42px;
+    align-items: end;
+    padding-bottom: 34px;
+    border-bottom: 1px solid rgba(16,24,40,0.12);
+  }
+
+  .kicker {
+    margin: 0 0 14px;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0;
   }
 
   h1 {
     margin: 0;
-    color: var(--text-primary);
-    font-size: clamp(2.6rem, 7vw, 5rem);
-    line-height: 0.95;
+    color: #101828;
+    font-size: 58px;
+    line-height: 1.02;
     letter-spacing: 0;
   }
 
   .subtitle {
-    max-width: 690px;
+    max-width: 740px;
     margin: 18px 0 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-4);
-    line-height: var(--font-lineheight-4);
+    color: #475467;
+    font-size: 18px;
+    line-height: 1.62;
   }
 
   .now {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    background: var(--bg-canvas);
-    padding: var(--size-4);
+    border: 1px solid rgba(16,24,40,0.12);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 22px;
   }
 
-  .now span {
+  .badge {
     display: inline-flex;
     align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+
+  .badge.done {
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  .badge.next {
+    background: #fffbeb;
+    color: #b45309;
   }
 
   .now h2 {
-    margin: 14px 0 var(--size-2);
-    color: var(--text-primary);
-    font-size: 18px;
+    margin: 18px 0 8px;
+    color: #101828;
+    font-size: 22px;
+    letter-spacing: 0;
   }
 
   .now p {
     margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-1);
-    line-height: 1.6;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.58;
   }
 
   .timeline {
-    margin-top: var(--size-8);
+    margin-top: 38px;
     display: grid;
-    gap: var(--size-3);
+    gap: 12px;
   }
 
   .phase {
     display: grid;
-    grid-template-columns: 110px 1fr 140px;
-    gap: var(--size-4);
+    grid-template-columns: 124px 1fr 116px;
+    gap: 20px;
     align-items: start;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    background: var(--bg-canvas);
-    padding: var(--size-4);
+    border: 1px solid rgba(16,24,40,0.12);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 20px;
   }
 
   .version {
-    color: var(--brand);
-    font-size: var(--font-size-1);
-    font-weight: var(--font-weight-8);
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 850;
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
   .phase h3 {
-    margin: 0 0 var(--size-2);
-    color: var(--text-primary);
-    font-size: var(--font-size-4);
+    margin: 0 0 8px;
+    color: #101828;
+    font-size: 20px;
+    letter-spacing: 0;
   }
 
   .phase p {
     margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-1);
-    line-height: 1.65;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.62;
   }
 
   .status {
@@ -118,30 +146,44 @@ routeSheet.replaceSync(`
   }
 
   .truth-grid {
-    margin-top: 34px;
+    margin-top: 38px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--size-3);
+    gap: 14px;
   }
 
   .truth {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    background: var(--bg-canvas);
-    padding: var(--size-4);
+    border: 1px solid rgba(16,24,40,0.12);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 24px;
+  }
+
+  .truth.dark {
+    background: #111827;
+    border-color: #111827;
   }
 
   .truth h2 {
-    margin: 0 0 10px;
-    color: var(--text-primary);
-    font-size: var(--font-size-4);
+    margin: 0 0 14px;
+    color: #101828;
+    font-size: 22px;
+    letter-spacing: 0;
+  }
+
+  .truth.dark h2 {
+    color: #ffffff;
   }
 
   .truth p,
   .truth li {
-    color: var(--text-secondary);
-    font-size: var(--font-size-1);
-    line-height: 1.65;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  .truth.dark li {
+    color: #d1d5db;
   }
 
   .truth p {
@@ -154,13 +196,33 @@ routeSheet.replaceSync(`
   }
 
   .nav-row {
-    margin-top: 34px;
+    margin-top: 32px;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
   }
 
-  @media (max-width: 820px) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(16,24,40,0.14);
+    background: #ffffff;
+    color: #101828;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .button:hover {
+    border-color: rgba(29,78,216,0.34);
+    color: #1d4ed8;
+  }
+
+  @media (max-width: 860px) {
     .hero,
     .phase,
     .truth-grid {
@@ -174,413 +236,144 @@ routeSheet.replaceSync(`
 
   @media (max-width: 560px) {
     .shell {
-      padding: var(--size-8) var(--size-4) 56px;
+      padding: 38px 18px 64px;
+    }
+
+    h1 {
+      font-size: 42px;
+      line-height: 1.06;
     }
   }
 `);
 
 export class RoadmapPage extends OpenElement {
-  declare locale?: string;
-
   static override styles = [linearTokenSheet, routeSheet];
 
   override render() {
     return (
-      <div
-        class="shell"
-        data-legacy-anchors="WC Package Protocol Six-Phase Vision No webpack Registry Hub"
-      >
+      <div class="shell">
         <section class="hero">
           <div>
+            <p class="kicker">Product truth</p>
             <h1>Roadmap</h1>
             <p class="subtitle">
-              openElement roadmap labels are product truth, not aspiration. The
-              current package line is v0.40.7: Release Readiness & CI Hardening.
-              The active workspace is the 11-package product line.
+              openElement roadmap labels describe the public product surface,
+              not a wish list. The current line is v0.40.7 on the 11-package
+              product graph.
             </p>
           </div>
-          <open-card-linear variant="standard">
-            <open-badge-linear>current line</open-badge-linear>
+          <aside class="now">
+            <span class="badge">current</span>
             <h2>v0.40.7 Release Readiness & CI Hardening</h2>
             <p>
-              Hub/RPC/CEM/compat-check and interop adapters are out of the
-              current package graph; AutoFlow3 owns gates.
+              The website, docs, package graph, and release gates should speak
+              the same product language: Elements, UI, Framework, Protocols.
             </p>
-          </open-card-linear>
+          </aside>
         </section>
 
         <div class="timeline">
           <div class="phase">
-            <div class="version">v0.30.x</div>
+            <div class="version">v0.39</div>
             <div>
-              <h3>Architecture Contract Freeze</h3>
+              <h3>Framework RC + four-product matrix reset</h3>
               <p>
-                One renderer model, one metadata boundary, openElement rename,
-                and cleanup gates.
+                Validated framework app generation, public docs integrity, and
+                the Elements / UI / Framework / Protocols product model.
               </p>
             </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
+            <span class="badge done status">done</span>
           </div>
+
           <div class="phase">
-            <div class="version">v0.31.0</div>
+            <div class="version">v0.40</div>
             <div>
-              <h3>JSX-first Application API</h3>
+              <h3>Elements + Preact + repository slimming</h3>
               <p>
-                definePage, defineIsland, defineElement, defineLayout, and the
-                @openelement/app/vite split.
+                Slimmed the product surface, removed archived work from the
+                public line, and kept the framework direction standards-first.
               </p>
             </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
+            <span class="badge done status">released</span>
           </div>
+
           <div class="phase">
-            <div class="version">v0.32.0</div>
+            <div class="version">v0.40.7</div>
             <div>
-              <h3>App Lifecycle Contract</h3>
+              <h3>Release readiness and site truth</h3>
               <p>
-                Route params, load context, route metadata, redirect, not-found,
-                error fallback, rendering intent, and streaming intent.
+                Align design, docs, package language, and CI readiness around
+                the 11-package line.
               </p>
             </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
+            <span class="badge status">current</span>
           </div>
+
           <div class="phase">
-            <div class="version">v0.33.0</div>
+            <div class="version">v0.41</div>
             <div>
-              <h3>AI-Readable API Foundation</h3>
+              <h3>npm-only distribution line</h3>
               <p>
-                Object-form pages, structured head/route/render intent, explicit
-                island metadata, and old API rejection proof.
+                Make package consumption, docs, and examples match the next
+                distribution strategy without reviving old Hub-era assumptions.
               </p>
             </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
+            <span class="badge next status">planned</span>
           </div>
+
           <div class="phase">
-            <div class="version">v0.34.0</div>
+            <div class="version">v1.0</div>
             <div>
-              <h3>AutoFlow2 Sidecar Kernel</h3>
+              <h3>Stable four-product platform</h3>
               <p>
-                Workflow state, cells, evidence ledger, blockers, and
-                allowed-action report without automatic edits.
+                Freeze public APIs after Elements, UI, Framework, and Protocols
+                have stable contracts and evidence-backed docs.
               </p>
             </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.35.0</div>
-            <div>
-              <h3>AutoFlow2 Harness Gate</h3>
-              <p>
-                Low-noise workflow contradictions become local and CI blockers
-                through model-backed checks.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.0</div>
-            <div>
-              <h3>Rendering Runtime and Deployment</h3>
-              <p>
-                Productized SSR, ISR, streaming DSD, cache adapters, and
-                deployment recipes under AutoFlow evidence.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.1</div>
-            <div>
-              <h3>AutoFlow Closure and Release Truth</h3>
-              <p>
-                Windows-safe AutoFlow tests, merged-cell metrics, and v0.36
-                release evidence alignment.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.2</div>
-            <div>
-              <h3>SSG Bridge Migration</h3>
-              <p>
-                Move Vite-free SSG render and postprocess code into
-                @openelement/ssg.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.3</div>
-            <div>
-              <h3>Complete SSG File Ownership</h3>
-              <p>
-                Move route scanning, entry generation, generated data, and SSG
-                plugin logic into @openelement/ssg.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.4</div>
-            <div>
-              <h3>Firefox/WebKit Cross-Browser Proof</h3>
-              <p>
-                Record browser proof, known limitations, and 20-package v0.36.4
-                alignment.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.36.5</div>
-            <div>
-              <h3>Release Truth and AutoFlow Closure</h3>
-              <p>
-                Align workflow, release docs, AutoFlow evidence, and website
-                truth without product changes.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.0</div>
-            <div>
-              <h3>Product Doctrine + Rendering Contract Reset</h3>
-              <p>
-                ADR-0091, static default 0JS, DSD/shadow default, light DOM
-                opt-in terms, and the v0.37.x SOP split.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.1</div>
-            <div>
-              <h3>OpenElement Shadow + Light Contract</h3>
-              <p>
-                Audit OpenElement behavior and define explicit light DOM opt-in
-                without weakening the DSD/shadow default.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.2</div>
-            <div>
-              <h3>SSR / ISR Server Runtime Contract</h3>
-              <p>
-                Define request-time SSR/ISR framework boundaries, cache
-                behavior, server adapter evidence, and zero-JS defaults.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.3</div>
-            <div>
-              <h3>Data / Database Boundary</h3>
-              <p>
-                Specify data/database adapter contracts and recipes without
-                adopting a built-in ORM, auth platform, or migration system.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.4</div>
-            <div>
-              <h3>Hygiene + Pure CSS UI + Architecture Decoupling</h3>
-              <p>
-                Close audit hygiene, SSG ownership, ui/router decoupling,
-                dsd-hydration dedup, CSS UI foundation, and test
-                supplementation.
-              </p>
-            </div>
-            <open-badge-linear variant="info" class="status">
-              Recovery
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.37.5</div>
-            <div>
-              <h3>Protocol Ports + DaisyUI Coverage Completion</h3>
-              <p>
-                Complete interactive UI coverage and move public protocol types
-                into @openelement/protocol with conformance tests.
-              </p>
-            </div>
-            <open-badge-linear variant="warning" class="status">
-              Planned
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.38.0</div>
-            <div>
-              <h3>Product Surface Reset</h3>
-              <p>
-                Classify product, advanced, internal, and archived packages
-                before the v0.39 framework release-candidate surface.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.38.x</div>
-            <div>
-              <h3>Product Surface Reset and Hardening</h3>
-              <p>
-                Reset public packages, APIs, and docs based on v0.37.x product
-                evidence.
-              </p>
-            </div>
-            <open-badge-linear variant="warning" class="status">
-              Planned
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.39.0</div>
-            <div>
-              <h3>Framework RC + Four-Product Matrix Reset</h3>
-              <p>
-                Validate generated framework apps, public docs integrity,
-                Elements direction, Preact handoff, and release gates.
-              </p>
-            </div>
-            <open-badge-linear variant="success" class="status">
-              Done
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.40.0</div>
-            <div>
-              <h3>Elements + Preact + Repository Slimming</h3>
-              <p>
-                Productize the 14-package current surface, remove Hub and
-                archived packages, and keep Nitro proof plus AutoFlow3 gates
-                green.
-              </p>
-            </div>
-            <open-badge-linear variant="info" class="status">
-              Active
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v0.41.0</div>
-            <div>
-              <h3>v1.0 Freeze Candidate</h3>
-              <p>
-                Freeze public APIs, complete protocol conformance, and harden
-                the product surface before stable release.
-              </p>
-            </div>
-            <open-badge-linear variant="warning" class="status">
-              Planned
-            </open-badge-linear>
-          </div>
-          <div class="phase">
-            <div class="version">v1.0.0</div>
-            <div>
-              <h3>Stable Four-Product Platform</h3>
-              <p>
-                Freeze Elements, UI, Framework, and Protocols surfaces with
-                workflow evidence in the release gate.
-              </p>
-            </div>
-            <open-badge-linear variant="warning" class="status">
-              Planned
-            </open-badge-linear>
+            <span class="badge next status">directional</span>
           </div>
         </div>
 
         <div class="truth-grid">
-          <div class="truth">
-            <h2>Shipped</h2>
+          <section class="truth dark">
+            <h2>In product</h2>
             <ul>
-              <li>JSX-first Application API</li>
-              <li>Structured Renderer IR + single async path</li>
-              <li>SSG + Declarative Shadow DOM</li>
-              <li>Hono API routes + MDX support</li>
-              <li>AppShell protocol + signal-driven islands</li>
+              <li>JSX-first application API</li>
+              <li>Declarative Shadow DOM rendering</li>
+              <li>Routes, layouts, content, islands, i18n</li>
+              <li>Hono API routes and adapter-vite integration</li>
+              <li>Protocols for product boundaries</li>
             </ul>
-          </div>
-          <div class="truth">
-            <h2>Current</h2>
+          </section>
+
+          <section class="truth">
+            <h2>Out of current scope</h2>
             <ul>
-              <li>v0.37.2 SSR / ISR runtime contract</li>
-              <li>OpenElement shadow/light contract implemented</li>
-              <li>SSG pipeline is proven as internal build infrastructure</li>
-              <li>AutoFlow2 evidence and workflow gates</li>
-              <li>20-package aligned monorepo</li>
+              <li>Hub product language</li>
+              <li>RPC, CEM, and interop adapter package promises</li>
+              <li>Generic auth, ORM, or database platform claims</li>
+              <li>Old package-count public graph language</li>
             </ul>
-          </div>
-          <div class="truth">
-            <h2>Deferred</h2>
-            <ul>
-              <li>database adapters and recipes</li>
-              <li>pure CSS UI product surface</li>
-              <li>protocol ports and full-stack preset smoke</li>
-              <li>generic auth or ORM systems</li>
-            </ul>
-          </div>
+          </section>
+
+          <section class="truth">
+            <h2>Design rule</h2>
+            <p>
+              The www design should read like a standards lab: light-first,
+              diagrammatic, useful, and grounded in actual framework artifacts.
+            </p>
+          </section>
         </div>
 
         <nav class="nav-row">
-          <open-button-linear
-            variant="tertiary"
-            size="sm"
-            href="/architecture/architecture"
-          >
-            Architecture {"->"}
-          </open-button-linear>
-          <open-button-linear variant="tertiary" size="sm" href="/changelog">
-            Changelog {"->"}
-          </open-button-linear>
-          <open-button-linear
-            variant="tertiary"
-            size="sm"
-            href="/guide/deployment"
-          >
-            Deployment {"->"}
-          </open-button-linear>
+          <a class="button" href="/architecture/architecture">Architecture</a>
+          <a class="button" href="/changelog">Changelog</a>
+          <a class="button" href="/guide/deployment">Deployment</a>
         </nav>
       </div>
     );
   }
 }
 
-customElements.define("page-roadmap", RoadmapPage);
+customElements.define(tagName, RoadmapPage);
 export default RoadmapPage;
