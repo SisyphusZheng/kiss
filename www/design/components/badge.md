@@ -7,22 +7,22 @@ navigation.
 
 ## Style
 
-| Property | Value |
-| --- | --- |
-| Radius | `--radius-round` |
-| Height | `--size-6` |
-| Padding | `--badge-padding-y` / `--badge-padding-x` |
-| Font | `--font-size-00` with `--font-mono` |
-| Weight | `--font-weight-8` |
+| Property | Value                                     |
+| -------- | ----------------------------------------- |
+| Radius   | `--radius-round`                          |
+| Height   | `--size-6`                                |
+| Padding  | `--badge-padding-y` / `--badge-padding-x` |
+| Font     | `--font-size-00` with `--font-mono`       |
+| Weight   | `--font-weight-8`                         |
 
 ## Variants
 
-| Variant | Background | Text |
-| --- | --- | --- |
-| Current | `--brand-subtle` | `--brand` |
-| Done | `--success-subtle` | `--success` |
+| Variant | Background         | Text        |
+| ------- | ------------------ | ----------- |
+| Current | `--brand-subtle`   | `--brand`   |
+| Done    | `--success-subtle` | `--success` |
 | Planned | `--warning-subtle` | `--warning` |
-| Error | `--error-subtle` | `--error` |
+| Error   | `--error-subtle`   | `--error`   |
 
 ## Rules
 

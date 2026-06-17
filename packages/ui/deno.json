@@ -9,6 +9,7 @@
     "./open-code-block": "./src/open-code-block.tsx",
     "./open-badge": "./src/open-badge.tsx",
     "./open-lab-panel": "./src/open-lab-panel.tsx",
+    "./open-lab-stage": "./src/open-lab-stage.tsx",
     "./open-standards-visual": "./src/open-standards-visual.tsx",
     "./open-layout": "./src/open-layout.tsx",
     "./open-theme-toggle": "./src/open-theme-toggle.tsx",

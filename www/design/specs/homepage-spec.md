@@ -8,14 +8,16 @@ Declarative Shadow DOM, routes, islands, packages, and public contracts.
 ## First Viewport
 
 - H1: `Web Components full-stack framework.`
-- Left side: product statement, lede, primary/secondary actions, four proof points.
-- Right side: `open-lab-panel` with `open-standards-visual variant="hero"`.
+- Left side: product statement, lede, primary/secondary actions.
+- Right side: `open-lab-stage emphasis="high" motion="auto"`.
+- Below the stage/copy: four compact proof points.
 - The first viewport must feel like a browser/devtools/spec workbench, not a
   card stack.
+- Desktop first viewport must leave a hint of the Product Matrix section.
 
 ## Required Sections
 
-1. Hero with browser/devtools/spec artifact.
+1. Hero with `open-lab-stage` browser/devtools/spec artifact.
 2. Four product pillars: Elements, UI, Framework, Protocols.
 3. Workflow: Author, Render DSD, Hydrate islands, Serve API, Prove contracts.
 4. System map: product matrix and package boundary sketch.
@@ -29,6 +31,7 @@ Declarative Shadow DOM, routes, islands, packages, and public contracts.
 - Use `open-badge` for state labels.
 - Use `open-lab-panel` for spec, route, package, and artifact panels.
 - Use `open-standards-visual` for engineering graphics.
+- Use `open-lab-stage` for the first-viewport kinetic product object.
 
 ## Layout Rules
 
@@ -36,3 +39,4 @@ Declarative Shadow DOM, routes, islands, packages, and public contracts.
 - Tablet/mobile hero: stacked, with actions and artifact still above secondary sections.
 - Cards are not nested inside cards.
 - All colors, spacing, radius, and type come from Open Props or semantic tokens.
+- `prefers-reduced-motion` must disable non-essential stage animation.

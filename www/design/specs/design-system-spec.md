@@ -10,7 +10,7 @@ live implementation contract for `www`, not a gallery or moodboard.
 1. Web Standards Lab hero and rule panel.
 2. Token contract with semantic roles and Open Props scales.
 3. UI package primitives: `open-button`, `open-card`, `open-badge`,
-   `open-lab-panel`, `open-standards-visual`.
+   `open-lab-panel`, `open-lab-stage`, `open-standards-visual`.
 4. Standards visual examples: route graph, package graph, token board.
 5. Layout principles and QA acceptance notes.
 
@@ -20,3 +20,5 @@ live implementation contract for `www`, not a gallery or moodboard.
 - Every swatch or token example is expressed as a token name.
 - The page must render cleanly in light and dark mode.
 - Typography uses fixed token steps, never viewport-scaled font sizes.
+- Kinetic examples must respect `prefers-reduced-motion`.
+- `open-lab-stage` is the canonical first-viewport product-art primitive.

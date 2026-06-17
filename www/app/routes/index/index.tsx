@@ -8,6 +8,7 @@ import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
 import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-lab-stage';
 import '@openelement/ui/open-standards-visual';
 
 export const tagName = 'docs-home';
@@ -25,8 +26,8 @@ pageSheet.replaceSync(`
 
   .home {
     display: grid;
-    gap: var(--site-section-block);
-    padding-block: var(--size-16) var(--site-section-block);
+    gap: var(--size-16);
+    padding-block: var(--size-10) var(--site-section-block);
   }
 
   .hero,
@@ -38,9 +39,14 @@ pageSheet.replaceSync(`
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, .98fr) minmax(390px, .84fr);
-    gap: var(--size-10);
-    align-items: start;
+    grid-template-columns: minmax(0, .7fr) minmax(430px, 1.3fr);
+    gap: var(--size-8);
+    align-items: center;
+  }
+
+  .hero-copy {
+    display: grid;
+    align-content: center;
   }
 
   .eyebrow,
@@ -68,7 +74,7 @@ pageSheet.replaceSync(`
   }
 
   h1 {
-    max-width: 840px;
+    max-width: 820px;
     margin-block-end: 0;
     font-size: clamp(var(--font-size-6), 6vw, var(--font-size-8));
     line-height: var(--font-lineheight-1);
@@ -93,12 +99,9 @@ pageSheet.replaceSync(`
 
   .proofs {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--size-3);
-    margin-block-start: var(--size-7);
-    max-width: 700px;
-    grid-column: 1;
-    grid-row: 2;
+    grid-column: 1 / -1;
   }
 
   .proof-card h3,
@@ -129,16 +132,9 @@ pageSheet.replaceSync(`
     color: var(--brand);
   }
 
-  .artifact {
-    --panel-min-height: 620px;
-    grid-column: 2;
-    grid-row: 1 / span 2;
-  }
-
-  .artifact-note {
-    display: grid;
-    gap: var(--size-3);
-    margin-block-start: var(--size-4);
+  .stage-art {
+    --lab-stage-min-height: 560px;
+    min-width: 0;
   }
 
   .spec-list {
@@ -288,18 +284,12 @@ pageSheet.replaceSync(`
       align-items: stretch;
     }
 
-    .artifact {
-      --panel-min-height: auto;
-      grid-column: auto;
-      grid-row: auto;
-    }
-
-    .proofs {
-      grid-column: auto;
-      grid-row: auto;
+    .stage-art {
+      --lab-stage-min-height: auto;
     }
 
     .pillars,
+    .proofs,
     .entries {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -394,37 +384,7 @@ export class DocsHome extends OpenElement {
             </div>
           </div>
 
-          <open-lab-panel
-            class='artifact'
-            variant='artifact'
-            label='browser.devtools/spec'
-            meta='openElement app'
-          >
-            <open-standards-visual variant='hero'></open-standards-visual>
-            <div class='artifact-note'>
-              <open-badge tone='brand'>Elements + UI + Framework + Protocols</open-badge>
-              <ul class='spec-list'>
-                <li>
-                  <strong>Default</strong>
-                  <span>Static DSD first, islands only where the page needs behavior.</span>
-                </li>
-                <li>
-                  <strong>Surface</strong>
-                  <span>Docs, API routes, content, layouts, and components in one framework line.</span>
-                </li>
-              </ul>
-            </div>
-          </open-lab-panel>
-
-          <div class='proofs'>
-            {proofPoints.map(([title, copy], index) => (
-              <open-card class='proof-card' variant='muted'>
-                <span class='card__index'>{String(index + 1).padStart(2, '0')}</span>
-                <h3>{title}</h3>
-                <p>{copy}</p>
-              </open-card>
-            ))}
-          </div>
+          <open-lab-stage class='stage-art' emphasis='high' motion='auto'></open-lab-stage>
         </section>
 
         <section class='section'>
@@ -437,6 +397,15 @@ export class DocsHome extends OpenElement {
               The website is intentionally documentation-first: every visual
               block points back to a framework contract users can inspect.
             </p>
+          </div>
+          <div class='proofs'>
+            {proofPoints.map(([title, copy], index) => (
+              <open-card class='proof-card' variant='muted'>
+                <span class='card__index'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
           </div>
           <div class='pillars'>
             {pillars.map(([title, copy], index) => (
@@ -473,7 +442,7 @@ export class DocsHome extends OpenElement {
 
         <section class='section system'>
           <open-lab-panel variant='surface' label='package graph' meta='public product line'>
-            <open-standards-visual variant='packages'></open-standards-visual>
+            <open-standards-visual variant='packages' emphasis='high' motion='auto'></open-standards-visual>
           </open-lab-panel>
           <open-lab-panel variant='muted' label='decision sheet' meta='why it matters'>
             <div class='matrix'>

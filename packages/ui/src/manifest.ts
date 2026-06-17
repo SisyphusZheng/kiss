@@ -267,6 +267,8 @@ export const manifest: OpenElementPackageManifest = {
       description: 'Product-art standards diagram for route, package, token, and hero visuals',
       attributes: [
         { name: 'variant', type: 'string', default: '"hero"', description: 'Visual variant' },
+        { name: 'motion', type: 'string', default: '"auto"', description: 'Motion mode' },
+        { name: 'emphasis', type: 'string', default: '"normal"', description: 'Visual emphasis' },
       ],
       cssParts: [],
       openElement: {
@@ -276,6 +278,27 @@ export const manifest: OpenElementPackageManifest = {
         hydrate: 'idle',
         module: '@openelement/ui/open-standards-visual',
         export: 'OpenStandardsVisual',
+      },
+    },
+    {
+      tagName: 'open-lab-stage',
+      className: 'OpenLabStage',
+      superclassName: 'OpenElement',
+      description: 'Kinetic standards-lab hero stage for product-art pages',
+      attributes: [
+        { name: 'motion', type: 'string', default: '"auto"', description: 'Motion mode' },
+        { name: 'emphasis', type: 'string', default: '"high"', description: 'Stage emphasis' },
+      ],
+      cssParts: [
+        { name: 'stage', description: 'The stage wrapper' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-lab-stage',
+        export: 'OpenLabStage',
       },
     },
     {
@@ -644,6 +667,26 @@ export const manifest: OpenElementPackageManifest = {
       path: './open-code-block.js',
       exports: [{ name: 'OpenCodeBlock', path: './open-code-block.js' }],
       declarations: ['open-code-block'],
+    },
+    {
+      path: './open-badge.js',
+      exports: [{ name: 'OpenBadge', path: './open-badge.js' }],
+      declarations: ['open-badge'],
+    },
+    {
+      path: './open-lab-panel.js',
+      exports: [{ name: 'OpenLabPanel', path: './open-lab-panel.js' }],
+      declarations: ['open-lab-panel'],
+    },
+    {
+      path: './open-lab-stage.js',
+      exports: [{ name: 'OpenLabStage', path: './open-lab-stage.js' }],
+      declarations: ['open-lab-stage'],
+    },
+    {
+      path: './open-standards-visual.js',
+      exports: [{ name: 'OpenStandardsVisual', path: './open-standards-visual.js' }],
+      declarations: ['open-standards-visual'],
     },
     {
       path: './open-dialog.js',

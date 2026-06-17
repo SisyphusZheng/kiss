@@ -91,16 +91,46 @@ pageSheet.replaceSync(`
   }
 
   .timeline {
+    position: relative;
     display: grid;
     gap: var(--size-3);
     margin-block-start: var(--size-8);
+    padding-inline-start: var(--size-6);
+  }
+
+  .timeline::before {
+    content: "";
+    position: absolute;
+    inset-block: var(--size-3);
+    inset-inline-start: var(--size-2);
+    width: var(--border-size-2);
+    background: linear-gradient(var(--success), var(--brand), var(--warning));
   }
 
   .phase {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(90px, .16fr) minmax(0, 1fr) auto;
     gap: var(--size-5);
     align-items: start;
+    transition: transform var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
+  }
+
+  .phase::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc((var(--size-6) + var(--size-2)) * -1);
+    inset-block-start: var(--size-6);
+    width: var(--size-3);
+    height: var(--size-3);
+    border: var(--border-size-2) solid var(--bg-card);
+    border-radius: var(--radius-round);
+    background: var(--brand);
+  }
+
+  .phase:hover {
+    transform: translateX(var(--size-1));
+    border-color: var(--brand);
   }
 
   .phase h3 {
@@ -294,7 +324,7 @@ export class RoadmapPage extends OpenElement {
 
         <section class='visual-section'>
           <open-lab-panel variant='surface' label='package matrix' meta='product boundary'>
-            <open-standards-visual variant='packages'></open-standards-visual>
+            <open-standards-visual variant='packages' emphasis='high' motion='auto'></open-standards-visual>
           </open-lab-panel>
           <open-lab-panel label='release discipline' meta='v1.0 posture'>
             <ul class='rule-list'>

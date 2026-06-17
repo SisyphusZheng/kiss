@@ -7,12 +7,12 @@ commands and square icon buttons for tools.
 
 ## Variants
 
-| Variant | Background | Text | Border | Use |
-| --- | --- | --- | --- | --- |
-| Primary | `--brand` | `--on-brand` | `--brand` | Main action |
-| Secondary | `--bg-card` | `--text-primary` | `--border` | Secondary action |
-| Tertiary | transparent | `--text-primary` | transparent | Low emphasis |
-| Icon | `--bg-card` | `--text-primary` | `--border` | Tool buttons |
+| Variant   | Background  | Text             | Border      | Use              |
+| --------- | ----------- | ---------------- | ----------- | ---------------- |
+| Primary   | `--brand`   | `--on-brand`     | `--brand`   | Main action      |
+| Secondary | `--bg-card` | `--text-primary` | `--border`  | Secondary action |
+| Tertiary  | transparent | `--text-primary` | transparent | Low emphasis     |
+| Icon      | `--bg-card` | `--text-primary` | `--border`  | Tool buttons     |
 
 ## Rules
 

@@ -27,6 +27,10 @@ sheet.replaceSync(`
     color: var(--text-primary);
   }
 
+  .visual--high {
+    gap: var(--size-5);
+  }
+
   .hero {
     display: grid;
     gap: var(--size-4);
@@ -62,12 +66,27 @@ sheet.replaceSync(`
   .package,
   .token,
   .stage {
+    position: relative;
     display: grid;
     gap: var(--size-1);
     padding: var(--size-3);
+    overflow: hidden;
     border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-2);
     background: var(--bg-card);
+  }
+
+  .route::before,
+  .package::before,
+  .token::before,
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: var(--size-1);
+    background: var(--brand);
+    opacity: .72;
   }
 
   .spec__key,
@@ -103,14 +122,33 @@ sheet.replaceSync(`
     background: color-mix(in srgb, var(--bg-card) 82%, var(--brand-subtle));
   }
 
+  .visual--high .stage,
+  .visual--high .route,
+  .visual--high .package,
+  .visual--high .token {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--brand-subtle) 64%, transparent), transparent),
+      var(--bg-card);
+  }
+
   .stage--success .stage__num,
   .package--success .package__name {
     color: var(--success);
   }
 
+  .stage--success::before,
+  .package--success::before {
+    background: var(--success);
+  }
+
   .stage--warning .stage__num,
   .package--warning .package__name {
     color: var(--warning);
+  }
+
+  .stage--warning::before,
+  .package--warning::before {
+    background: var(--warning);
   }
 
   .routes,
@@ -155,6 +193,59 @@ sheet.replaceSync(`
     gap: var(--size-3);
   }
 
+  .visual--motion .stage,
+  .visual--motion .route,
+  .visual--motion .package,
+  .visual--motion .token {
+    animation: visual-lift 7s var(--ease-2) infinite alternate;
+  }
+
+  .visual--motion .stage:nth-child(2),
+  .visual--motion .route:nth-child(2),
+  .visual--motion .package:nth-child(2),
+  .visual--motion .token:nth-child(2) {
+    animation-delay: 600ms;
+  }
+
+  .visual--motion .stage:nth-child(3),
+  .visual--motion .route:nth-child(3),
+  .visual--motion .package:nth-child(3),
+  .visual--motion .token:nth-child(3) {
+    animation-delay: 1200ms;
+  }
+
+  .visual--motion .code {
+    animation: visual-code 8s var(--ease-1) infinite alternate;
+  }
+
+  @keyframes visual-lift {
+    from {
+      filter: brightness(1);
+    }
+    to {
+      filter: brightness(1.12);
+    }
+  }
+
+  @keyframes visual-code {
+    from {
+      color: var(--code-text);
+    }
+    to {
+      color: var(--brand-light);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .visual--motion .stage,
+    .visual--motion .route,
+    .visual--motion .package,
+    .visual--motion .token,
+    .visual--motion .code {
+      animation: none;
+    }
+  }
+
   @media (max-width: 760px) {
     .hero__top,
     .pipeline,
@@ -169,14 +260,15 @@ sheet.replaceSync(`
 
 export class OpenStandardsVisual extends OpenElement {
   static override styles = [openPropsTokenSheet, sheet];
-  static override observedAttributes = ['variant'];
+  static override observedAttributes = ['variant', 'motion', 'emphasis'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     const variant = this._getStr('variant', 'hero');
-    if (variant === 'routes') return this._routes();
-    if (variant === 'packages') return this._packages();
-    if (variant === 'tokens') return this._tokens();
-    return this._hero();
+    const visualClass = this._visualClass();
+    if (variant === 'routes') return this._routes(visualClass);
+    if (variant === 'packages') return this._packages(visualClass);
+    if (variant === 'tokens') return this._tokens(visualClass);
+    return this._hero(visualClass);
   }
 
   private _getStr(attr: string, def: string): string {
@@ -187,9 +279,15 @@ export class OpenStandardsVisual extends OpenElement {
     return this.getAttribute(attr) || def;
   }
 
-  private _hero(): ReturnType<typeof OpenElement.prototype.render> {
+  private _visualClass(): string {
+    const motion = this._getStr('motion', 'auto') === 'off' ? 'still' : 'motion';
+    const emphasis = this._getStr('emphasis', 'normal') === 'high' ? 'high' : 'normal';
+    return `visual visual--${emphasis} visual--${motion}`;
+  }
+
+  private _hero(visualClass: string): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <div className='visual hero'>
+      <div className={`${visualClass} hero`}>
         <div className='hero__top'>
           <pre className='code'><code>{`export default app({
   routes: './app/routes',
@@ -200,15 +298,21 @@ export class OpenStandardsVisual extends OpenElement {
           <div className='spec' aria-label='Standards sheet'>
             <div className='spec__row'>
               <span className='spec__key'>HTML</span>
-              <span className='spec__value'>Declarative Shadow DOM as the first rendering target</span>
+              <span className='spec__value'>
+                Declarative Shadow DOM as the first rendering target
+              </span>
             </div>
             <div className='spec__row'>
               <span className='spec__key'>WC</span>
-              <span className='spec__value'>Custom elements own behavior and progressive hydration</span>
+              <span className='spec__value'>
+                Custom elements own behavior and progressive hydration
+              </span>
             </div>
             <div className='spec__row'>
               <span className='spec__key'>API</span>
-              <span className='spec__value'>Hono endpoints sit beside pages and content routes</span>
+              <span className='spec__value'>
+                Hono endpoints sit beside pages and content routes
+              </span>
             </div>
           </div>
         </div>
@@ -238,16 +342,18 @@ export class OpenStandardsVisual extends OpenElement {
     );
   }
 
-  private _routes(): ReturnType<typeof OpenElement.prototype.render> {
+  private _routes(visualClass: string): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <div className='visual routes' aria-label='Route graph'>
+      <div className={`${visualClass} routes`} aria-label='Route graph'>
         <div className='route'>
           <span className='route__path'>/</span>
           <span className='route__desc'>homepage lab artifact and product paths</span>
         </div>
         <div className='route'>
           <span className='route__path'>/guide/*</span>
-          <span className='route__desc'>build path, configuration, deployment, and production flow</span>
+          <span className='route__desc'>
+            build path, configuration, deployment, and production flow
+          </span>
         </div>
         <div className='route'>
           <span className='route__path'>/architecture/*</span>
@@ -261,32 +367,40 @@ export class OpenStandardsVisual extends OpenElement {
     );
   }
 
-  private _packages(): ReturnType<typeof OpenElement.prototype.render> {
+  private _packages(visualClass: string): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <div className='visual packages' aria-label='Package graph'>
+      <div className={`${visualClass} packages`} aria-label='Package graph'>
         <div className='package package--success'>
           <span className='package__name'>Elements</span>
-          <span className='package__desc'>custom elements, DSD rendering, and component contracts</span>
+          <span className='package__desc'>
+            custom elements, DSD rendering, and component contracts
+          </span>
         </div>
         <div className='package'>
           <span className='package__name'>UI</span>
-          <span className='package__desc'>Open Props primitives used by this website and consumers</span>
+          <span className='package__desc'>
+            Open Props primitives used by this website and consumers
+          </span>
         </div>
         <div className='package package--warning'>
           <span className='package__name'>Framework</span>
-          <span className='package__desc'>routes, layouts, content, islands, i18n, and adapter-vite</span>
+          <span className='package__desc'>
+            routes, layouts, content, islands, i18n, and adapter-vite
+          </span>
         </div>
         <div className='package'>
           <span className='package__name'>Protocols</span>
-          <span className='package__desc'>public boundary declarations and package compatibility language</span>
+          <span className='package__desc'>
+            public boundary declarations and package compatibility language
+          </span>
         </div>
       </div>
     );
   }
 
-  private _tokens(): ReturnType<typeof OpenElement.prototype.render> {
+  private _tokens(visualClass: string): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <div className='visual tokens' aria-label='Token board'>
+      <div className={`${visualClass} tokens`} aria-label='Token board'>
         <div className='token token--surface'>
           <span className='token__swatch'></span>
           <span className='token__name'>--bg-card</span>

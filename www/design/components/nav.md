@@ -7,14 +7,14 @@ readable, and fast to scan.
 
 ## Desktop
 
-| Property | Value |
-| --- | --- |
-| Height | `--nav-height` |
-| Background | `--nav-bg` |
-| Border | `--border-size-1` solid `--border` |
-| Max width | `--site-container-wide` |
-| Horizontal padding | `--size-8` |
-| Backdrop | blur(14px) |
+| Property           | Value                              |
+| ------------------ | ---------------------------------- |
+| Height             | `--nav-height`                     |
+| Background         | `--nav-bg`                         |
+| Border             | `--border-size-1` solid `--border` |
+| Max width          | `--site-container-wide`            |
+| Horizontal padding | `--size-8`                         |
+| Backdrop           | blur(14px)                         |
 
 ## Structure
 

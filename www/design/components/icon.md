@@ -7,14 +7,14 @@ types, and familiar commands.
 
 ## Style
 
-| Property | Value |
-| --- | --- |
-| Style | Outline |
-| Stroke | `--border-size-2` or icon library default |
-| Cap/join | Round |
-| Fill | none |
-| Color | currentColor |
-| Sizes | `--size-4`, `--size-5`, `--size-6` |
+| Property | Value                                     |
+| -------- | ----------------------------------------- |
+| Style    | Outline                                   |
+| Stroke   | `--border-size-2` or icon library default |
+| Cap/join | Round                                     |
+| Fill     | none                                      |
+| Color    | currentColor                              |
+| Sizes    | `--size-4`, `--size-5`, `--size-6`        |
 
 ## Rules
 

@@ -12,6 +12,7 @@ import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
 import '@openelement/ui/open-input';
 import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-lab-stage';
 import '@openelement/ui/open-standards-visual';
 
 const pageSheet = new StyleSheet();
@@ -157,8 +158,12 @@ pageSheet.replaceSync(`
 
   .visual-grid {
     display: grid;
-    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
     gap: var(--size-5);
+  }
+
+  .stage-demo {
+    --lab-stage-min-height: 430px;
   }
 
   .code-sample {
@@ -242,6 +247,7 @@ export class UIShowcase extends OpenElement {
             <ul class='rule-list'>
               <li>Strict Open Props and semantic tokens only.</li>
               <li>Reusable visuals live in `@openelement/ui`.</li>
+              <li>Kinetic motion respects reduced-motion preferences.</li>
               <li>No Linear clone, decorative blobs, or local color systems.</li>
               <li>Letter spacing remains `0`.</li>
             </ul>
@@ -284,13 +290,13 @@ export class UIShowcase extends OpenElement {
               <p>Inputs stay utilitarian and inherit the same Open Props token system.</p>
             </open-card>
             <open-card class='component-card'>
-              <h3>Status</h3>
+              <h3>Status + motion</h3>
               <div class='badge-row'>
                 <open-badge tone='brand'>current</open-badge>
                 <open-badge tone='success'>done</open-badge>
                 <open-badge tone='warning'>planned</open-badge>
               </div>
-              <p>Status labels are readable text first and color second.</p>
+              <p>Status labels and motion states are readable text first and color second.</p>
             </open-card>
           </div>
         </section>
@@ -301,13 +307,9 @@ export class UIShowcase extends OpenElement {
             <h2 class='section-title'>Code and diagrams are the visual asset.</h2>
           </div>
           <div class='visual-grid'>
-            <open-lab-panel variant='artifact' label='artifact panel' meta='render contract'>
-              <pre class='code-sample'><code>{`route -> render -> DSD -> island manifest
-core  -> element -> app -> adapter-vite -> www
-Elements + UI + Framework + Protocols`}</code></pre>
-            </open-lab-panel>
+            <open-lab-stage class='stage-demo' emphasis='normal' motion='auto'></open-lab-stage>
             <open-lab-panel label='token board' meta='Open Props'>
-              <open-standards-visual variant='tokens'></open-standards-visual>
+              <open-standards-visual variant='tokens' emphasis='high' motion='auto'></open-standards-visual>
             </open-lab-panel>
           </div>
         </section>

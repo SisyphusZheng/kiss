@@ -52,6 +52,7 @@ docs/autoflow/cells/*/state.json
 
 # Vite cache
 .vite/
+/.wrangler/
 
 # Generated data modules (typed stubs are tracked as .d.ts)
 www/app/data/_generated-*.ts
@@ -100,4 +101,3 @@ www/.openElement/
 
 # Vite virtual assets
 assets/_virtual_*
-

@@ -9,6 +9,7 @@ import { StyleSheet } from '@openelement/core/style-sheet';
 import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
+import '@openelement/ui/open-input';
 import '@openelement/ui/open-lab-panel';
 import '@openelement/ui/open-standards-visual';
 
@@ -79,7 +80,8 @@ pageSheet.replaceSync(`
   }
 
   .spec-list,
-  .workflow-list {
+  .workflow-list,
+  .command-list {
     display: grid;
     gap: var(--size-3);
     margin: 0;
@@ -88,7 +90,8 @@ pageSheet.replaceSync(`
   }
 
   .spec-list li,
-  .workflow-item {
+  .workflow-item,
+  .command-list li {
     display: grid;
     grid-template-columns: minmax(110px, .34fr) minmax(0, 1fr);
     gap: var(--size-3);
@@ -97,12 +100,14 @@ pageSheet.replaceSync(`
   }
 
   .spec-list li:last-child,
-  .workflow-item:last-child {
+  .workflow-item:last-child,
+  .command-list li:last-child {
     border-block-end: 0;
   }
 
   .spec-list strong,
-  .workflow-item strong {
+  .workflow-item strong,
+  .command-list strong {
     color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
@@ -112,10 +117,21 @@ pageSheet.replaceSync(`
   }
 
   .spec-list span,
-  .workflow-item span {
+  .workflow-item span,
+  .command-list span {
     color: var(--text-secondary);
     font-size: var(--font-size-0);
     line-height: var(--font-lineheight-3);
+  }
+
+  .command {
+    display: grid;
+    gap: var(--size-4);
+  }
+
+  .command__header {
+    display: grid;
+    gap: var(--size-3);
   }
 
   .paths {
@@ -201,7 +217,8 @@ pageSheet.replaceSync(`
 
     .paths,
     .spec-list li,
-    .workflow-item {
+    .workflow-item,
+    .command-list li {
       grid-template-columns: 1fr;
     }
   }
@@ -221,6 +238,12 @@ const workflow = [
   ['Contribute', 'Read architecture before changing package boundaries.'],
 ];
 
+const commands = [
+  ['route', '/guide/getting-started'],
+  ['api', '/apilist'],
+  ['graph', '/architecture/architecture'],
+];
+
 export class DocsPage extends OpenElement {
   static override styles = [openPropsTokenSheet, pageSheet];
 
@@ -237,21 +260,21 @@ export class DocsPage extends OpenElement {
               truth sit next to each other.
             </p>
           </div>
-          <open-lab-panel label='doc scope' meta='current line'>
-            <ul class='spec-list'>
-              <li>
-                <strong>Product</strong>
-                <span>Elements + UI + Framework + Protocols</span>
-              </li>
-              <li>
-                <strong>Current</strong>
-                <span>v0.40.7 public product graph</span>
-              </li>
-              <li>
-                <strong>Default</strong>
-                <span>Static DSD first, islands when interaction is required</span>
-              </li>
-            </ul>
+          <open-lab-panel label='command palette' meta='docs nav'>
+            <div class='command'>
+              <div class='command__header'>
+                <open-input value='Search routes, APIs, package graph' readonly></open-input>
+                <open-badge tone='brand'>reference desk</open-badge>
+              </div>
+              <ul class='command-list'>
+                {commands.map(([label, href]) => (
+                  <li>
+                    <strong>{label}</strong>
+                    <span>{href}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </open-lab-panel>
         </section>
 
@@ -269,7 +292,7 @@ export class DocsPage extends OpenElement {
 
         <section class='reference'>
           <open-lab-panel class='route-panel' variant='artifact' label='route graph' meta='fast paths'>
-            <open-standards-visual variant='routes'></open-standards-visual>
+            <open-standards-visual variant='routes' emphasis='high' motion='auto'></open-standards-visual>
           </open-lab-panel>
 
           <open-lab-panel class='workflow-panel' label='usage workflow' meta='docs as product'>
