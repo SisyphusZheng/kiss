@@ -70,7 +70,7 @@ featuresSheet.replaceSync(`
   @media (max-width: 1024px) {
     .features-grid { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .features-section { padding: var(--space-xxl) var(--space-md); }
     .features-grid { grid-template-columns: 1fr; }
   }

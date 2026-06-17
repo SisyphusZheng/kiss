@@ -115,8 +115,8 @@ export default defineConfig({
       pwa: {
         name: 'openElement Framework',
         shortName: 'openElement',
-        themeColor: '#040508',
-        backgroundColor: '#040508',
+        themeColor: '#08080a',
+        backgroundColor: '#08080a',
       },
       viewTransition: true,
       speculation: true,
@@ -189,7 +189,7 @@ export default defineConfig({
           '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
           '<meta name="twitter:card" content="summary_large_image">',
           '<meta name="description" content="openElement - The Open Element. DSD-first Web Standards framework with SSG, islands, and Web Components.">',
-          '<style>html{visibility:visible!important;}body{background:#040508;color:#fff;}</style>',
+          '<style>html{visibility:visible!important;}body{background:#08080a;color:#fff;}</style>',
           '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
           '<link rel="apple-touch-icon" href="/assets/open-logo.svg" />',
           colorTokensStyle,
@@ -209,7 +209,7 @@ export default defineConfig({
             { href: '/apilist', label: 'API' },
             { href: '/architecture/architecture', label: 'Architecture' },
             { href: '/blog', label: 'Blog' },
-            { href: '/registry', label: 'Hub' },
+            { href: '/architecture/standards-registry', label: 'Hub' },
           ],
         },
         sitemap: {

@@ -74,7 +74,7 @@ sheet.replaceSync(`
     margin-left: var(--size-1);
   }
   .search-icon { display: none; width: var(--size-4); height: var(--size-4); }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .search-trigger span, .search-trigger kbd { display: none; }
     .search-icon { display: inline-block; }
   }

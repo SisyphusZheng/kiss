@@ -40,7 +40,7 @@ styles.replaceSync(`
     color: var(--text-muted); text-align: center; margin-top: var(--size-4);
   }
   .counter-caption b { color: var(--indigo-5); font-weight: var(--font-weight-7); }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .rp-tab { padding: var(--size-1) var(--size-3); font-size: var(--font-size-00); }
   }
 `);

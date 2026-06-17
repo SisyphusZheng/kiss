@@ -509,7 +509,7 @@ sheet.replaceSync(`
     .tab-item.active { color: var(--color-brand); }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .header-right { gap: 4px; }
     .lang-switch { display: none; }
   }

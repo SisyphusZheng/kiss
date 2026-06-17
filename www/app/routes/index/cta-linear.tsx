@@ -47,7 +47,7 @@ ctaSheet.replaceSync(`
     display: flex;
     gap: var(--space-sm);
   }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .cta-section { padding: var(--space-xxl) var(--space-md); }
     .cta-cli-row { flex-direction: column; align-items: flex-start; }
   }

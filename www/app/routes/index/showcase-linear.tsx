@@ -90,7 +90,7 @@ showcaseSheet.replaceSync(`
   .fn { color: #82aaff; }
   .cm { color: #546e7a; }
   .pn { color: #89ddff; }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .showcase-section { padding: var(--space-xxl) var(--space-md); }
   }
 `);

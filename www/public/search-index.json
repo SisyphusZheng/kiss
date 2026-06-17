@@ -148,11 +148,5 @@
     "title": "Testing",
     "section": "Production",
     "text": "Testing Production"
-  },
-  {
-    "path": "/registry",
-    "title": "Hub",
-    "section": "Hub",
-    "text": "Hub"
   }
 ]

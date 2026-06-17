@@ -17,7 +17,7 @@ export const headerNav = [
     "label": "Blog"
   },
   {
-    "href": "/registry",
+    "href": "/architecture/standards-registry",
     "label": "Hub"
   }
 ];

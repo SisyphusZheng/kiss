@@ -76,7 +76,7 @@ heroSheet.replaceSync(`
     .hero-code-wrapper { display: none; }
     .hero-section { padding-top: 96px; padding-bottom: var(--space-xxl); }
   }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .hero-section { padding-left: var(--space-md); padding-right: var(--space-md); padding-top: 80px; }
     .hero-headline { font-size: 2.4rem; }
     .hero-cta { flex-direction: column; }

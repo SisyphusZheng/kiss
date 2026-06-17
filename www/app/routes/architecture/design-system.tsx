@@ -174,7 +174,7 @@ routeSheet.replaceSync(
           height: 64px;
         }
       }
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         .ds-container {
           padding: 28px 16px 48px;
         }
