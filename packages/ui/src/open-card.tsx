@@ -36,19 +36,18 @@ sheet.replaceSync(`
     background: var(--bg-card);
     color: var(--text-primary);
     border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
+    border-radius: var(--card-radius);
     overflow: hidden;
-    transition: box-shadow var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2);
+    transition: border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2);
   }
 
   :host([variant="elevated"]) {
-    box-shadow: var(--shadow-1);
-    border-color: transparent;
+    box-shadow: none;
+    border-color: var(--border);
   }
 
   :host([variant="elevated"]:hover) {
-    box-shadow: var(--shadow-2);
-    transform: translateY(-2px);
+    border-color: var(--brand);
   }
 
   :host([variant="borderless"]) {

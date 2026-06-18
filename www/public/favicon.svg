@@ -1,15 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
-  <title>Less logo</title>
-  <desc>Angles bracket with anchor dot — the Less framework symbol</desc>
-  <g transform="translate(20, 17)">
-    <path
-      d="M 5 106 L 95 53 L 5 0"
-      fill="none"
-      stroke="#000000"
-      stroke-width="8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <circle cx="107" cy="53" r="5" fill="#000000" />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140" role="img">
+  <title>openElement favicon</title>
+  <desc>openElement open aperture favicon</desc>
+  <rect width="140" height="140" fill="#fa5252" />
+  <path
+    d="M70 14 C102 14 126 38 126 70 C126 102 102 126 70 126 C38 126 14 102 14 70 C14 38 38 14 70 14 Z M70 38 C51 38 38 51 38 70 C38 89 51 102 70 102 C89 102 102 89 102 70 C102 51 89 38 70 38 Z"
+    fill="#0c0b11"
+    fill-rule="evenodd"
+  />
+  <path
+    d="M101 16 H128 V43"
+    fill="none"
+    stroke="#f8f9fa"
+    stroke-width="16"
+    stroke-linecap="square"
+  />
+  <path
+    d="M54 61 H86 M54 79 H86"
+    fill="none"
+    stroke="#fa5252"
+    stroke-width="8"
+    stroke-linecap="square"
+  />
 </svg>

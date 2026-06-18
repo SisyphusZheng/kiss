@@ -45,15 +45,15 @@ html[data-theme="light"],
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
   --color-border-strong: color-mix(in srgb, var(--border) 68%, var(--text-primary));
-  --edge-highlight: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+  --edge-highlight: color-mix(in srgb, var(--text-primary) 10%, transparent);
   --color-edge-highlight: var(--edge-highlight);
   --color-overlay: var(--overlay);
   --shadow-elevated: var(--shadow-1);
   --border-strong: var(--color-border-strong);
-  --nav-bg: color-mix(in srgb, var(--bg-base) 88%, transparent);
+  --nav-bg: var(--bg-base);
   --nav-height: var(--size-16);
-  --nav-link-color: var(--text-secondary);
-  --nav-link-hover: var(--text-primary);
+  --nav-link-color: var(--text-primary);
+  --nav-link-hover: var(--brand);
   --font-size-button: var(--font-size-0);
   --font-size-body-sm: var(--font-size-0);
   --font-size-caption: var(--font-size-00);
@@ -81,20 +81,20 @@ html[data-theme="dark"],
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
   --color-border-strong: color-mix(in srgb, var(--border) 72%, var(--text-primary));
-  --edge-highlight: color-mix(in srgb, var(--bg-elevated) 18%, transparent);
+  --edge-highlight: color-mix(in srgb, var(--text-primary) 14%, transparent);
   --color-edge-highlight: var(--edge-highlight);
   --color-overlay: var(--overlay);
   --border-strong: var(--color-border-strong);
-  --nav-bg: color-mix(in srgb, var(--bg-base) 88%, transparent);
+  --nav-bg: var(--bg-base);
   --nav-height: var(--size-16);
 }
 body {
   margin: 0;
   background:
-    linear-gradient(color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(color-mix(in srgb, var(--border) 56%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 56%, transparent) var(--border-size-1), transparent var(--border-size-1)),
     var(--bg-canvas);
-  background-size: var(--size-8) var(--size-8), var(--size-8) var(--size-8), auto;
+  background-size: 258px 120px, 258px 120px, auto;
   color: var(--text-primary);
 }
 ::selection {

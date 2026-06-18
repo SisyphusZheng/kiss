@@ -1,38 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 140 140"
+  width="140"
+  height="140"
+  role="img"
+  color="#0c0b11"
+>
   <title>openElement logo</title>
-  <desc>Layered element mark with code brackets and standards-lab rails</desc>
-  <defs>
-    <linearGradient id="mark" x1="18" y1="18" x2="122" y2="122" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5c7cfa" />
-      <stop offset="0.58" stop-color="#4263eb" />
-      <stop offset="1" stop-color="#20c997" />
-    </linearGradient>
-  </defs>
-  <rect x="10" y="10" width="120" height="120" rx="22" fill="#030507" />
-  <rect x="18" y="18" width="104" height="104" rx="18" fill="url(#mark)" opacity="0.92" />
+  <desc>Open aperture O mark for Web Components, Shadow DOM, and inspectable standards boundaries</desc>
   <path
-    d="M42 46 L25 70 L42 94"
-    fill="none"
-    stroke="#f8f9fa"
-    stroke-width="9"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    d="M70 14 C102 14 126 38 126 70 C126 102 102 126 70 126 C38 126 14 102 14 70 C14 38 38 14 70 14 Z M70 38 C51 38 38 51 38 70 C38 89 51 102 70 102 C89 102 102 89 102 70 C102 51 89 38 70 38 Z"
+    fill="currentColor"
+    fill-rule="evenodd"
   />
   <path
-    d="M98 46 L115 70 L98 94"
+    d="M101 16 H128 V43"
     fill="none"
-    stroke="#f8f9fa"
-    stroke-width="9"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    stroke="#fa5252"
+    stroke-width="16"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
   />
-  <path d="M57 100 L83 40" fill="none" stroke="#f8f9fa" stroke-width="7" stroke-linecap="round" />
   <path
-    d="M32 30 H108 M32 110 H108"
+    d="M54 61 H86 M54 79 H86"
     fill="none"
-    stroke="#f8f9fa"
-    stroke-width="3"
-    stroke-linecap="round"
-    opacity="0.58"
+    stroke="#fa5252"
+    stroke-width="8"
+    stroke-linecap="square"
   />
 </svg>

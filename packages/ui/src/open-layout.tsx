@@ -178,8 +178,6 @@ sheet.replaceSync(`
     top: 0;
     z-index: 100;
     background: var(--nav-bg);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
     border-bottom: var(--border-size-1) solid var(--border);
     transition: background 0.2s ease, border-color 0.2s ease;
   }
@@ -188,14 +186,36 @@ sheet.replaceSync(`
     border-bottom-color: var(--border-hover);
   }
 
+  .app-layout[home] .app-header {
+    background: var(--brand);
+    border-bottom-color: color-mix(in srgb, var(--on-brand) 28%, transparent);
+  }
+
+  .app-layout[home] .app-header.scrolled {
+    background: var(--brand);
+    border-bottom-color: color-mix(in srgb, var(--on-brand) 42%, transparent);
+  }
+
+  .app-layout[home] .logo,
+  .app-layout[home] .header-nav a,
+  .app-layout[home] .logo-sub,
+  .app-layout[home] .mobile-menu-btn {
+    color: var(--on-brand);
+  }
+
+  .app-layout[home] .logo-mark::before,
+  .app-layout[home] .logo-mark::after {
+    border-color: var(--on-brand);
+  }
+
   .header-inner {
-    max-width: 1240px;
+    max-width: none;
     margin: 0 auto;
-    padding: 0 var(--size-8);
+    padding: 0 var(--size-5);
     display: flex;
     align-items: center;
-    min-height: 64px;
-    gap: var(--size-4);
+    min-height: var(--nav-height);
+    gap: var(--size-6);
   }
 
   .mobile-tab-bar { display: none; }
@@ -224,8 +244,8 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
-    font-size: var(--font-size-1);
-    font-weight: var(--font-weight-8);
+    font-size: var(--font-size-2);
+    font-weight: var(--font-weight-9);
     color: var(--text-primary);
     text-decoration: none;
     letter-spacing: 0;
@@ -233,43 +253,40 @@ sheet.replaceSync(`
   }
 
   .logo:hover .logo-mark {
-    transform: translateY(calc(var(--size-1) * -1));
-    border-color: var(--brand-light);
+    transform: rotate(8deg);
   }
 
   .logo-mark {
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: var(--size-8);
-    height: var(--size-8);
+    width: var(--size-9);
+    height: var(--size-9);
     overflow: hidden;
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--brand) 72%, var(--bg-code)), color-mix(in srgb, var(--success) 42%, var(--bg-code))),
-      var(--bg-code);
-    box-shadow: inset 0 0 0 var(--border-size-1) var(--edge-highlight);
+    border: var(--size-2) solid currentColor;
+    border-radius: var(--radius-round);
+    background: transparent;
     flex: 0 0 auto;
-    transition: transform var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
+    transition: transform var(--duration-2) var(--ease-2);
   }
 
   .logo-mark::before {
     content: "";
     position: absolute;
-    inset: var(--size-2);
-    border-block: var(--border-size-1) solid color-mix(in srgb, var(--on-brand) 72%, transparent);
-    transform: skewX(-18deg);
+    inset-inline-end: calc(var(--size-1) * -1);
+    inset-block-start: calc(var(--size-1) * -1);
+    width: var(--size-4);
+    height: var(--size-4);
+    border-block-start: var(--size-2) solid var(--brand);
+    border-inline-end: var(--size-2) solid var(--brand);
   }
 
   .logo-mark::after {
-    content: "<>";
+    content: "";
     position: relative;
-    color: var(--on-brand);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    letter-spacing: 0;
+    width: var(--size-4);
+    height: var(--size-2);
+    border-block: var(--border-size-2) solid var(--brand);
   }
 
   .logo-word {
@@ -281,19 +298,23 @@ sheet.replaceSync(`
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-left: var(--size-2);
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-8);
+    text-transform: uppercase;
   }
 
   .header-nav {
     display: flex;
-    gap: var(--size-4);
+    gap: var(--size-6);
     flex: 1;
+    justify-content: center;
   }
   .header-nav a {
     color: var(--nav-link-color);
     text-decoration: none;
     font-size: var(--nav-link-size);
-    font-weight: 560;
-    padding: 6px 0;
+    font-weight: var(--font-weight-8);
+    padding: var(--size-2) 0;
     transition: color 0.15s ease;
   }
   .header-nav a:hover {

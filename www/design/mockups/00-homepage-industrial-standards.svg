@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 920" width="1440" height="920" role="img">
+  <title>openElement homepage concept - Industrial Standards System</title>
+  <desc>Enerblock-inspired art direction translated to openElement.</desc>
+  <defs>
+    <style>.sans { font-family: Inter, Arial, Helvetica, sans-serif; }
+      .mono { font-family: "SF Mono", Consolas, monospace; }
+      .ink { fill: #0c0b11; }
+      .paper { fill: #f8f9fa; }
+      .muted { fill: #343a40; }
+      .red { fill: #fa5252; }
+      .line { stroke: rgba(12,11,17,0.28); stroke-width: 1; }
+      .whiteLine { stroke: rgba(248,249,250,0.18); stroke-width: 1; }</style>
+  </defs>
+  <rect width="1440" height="920" fill="#fa5252" />
+  <path
+    d="M0 64 H1440 M0 184 H1440 M0 500 H1440 M0 620 H1440 M472 0 V620 M730 64 V620 M1012 64 V620 M1386 64 V620"
+    class="line"
+  />
+
+  <g transform="translate(20 20) scale(.58)" class="ink">
+    <path
+      d="M48 0 C76 0 96 20 96 48 C96 76 76 96 48 96 C20 96 0 76 0 48 C0 20 20 0 48 0 Z M48 22 C32 22 22 32 22 48 C22 64 32 74 48 74 C64 74 74 64 74 48 C74 32 64 22 48 22 Z"
+      fill="currentColor"
+      fill-rule="evenodd"
+    />
+    <path d="M75 2 H98 V25" fill="none" stroke="#fa5252" stroke-width="12" />
+    <path d="M34 41 H62 M34 55 H62" fill="none" stroke="#fa5252" stroke-width="6" />
+  </g>
+  <text class="sans ink" x="92" y="43" font-size="22" font-weight="900">openElement</text>
+  <text class="mono ink" x="94" y="61" font-size="10" font-weight="800">WEB STANDARDS LAB</text>
+  <text class="sans ink" x="658" y="42" font-size="14" font-weight="800">Docs</text>
+  <text class="sans ink" x="732" y="42" font-size="14" font-weight="800">Architecture</text>
+  <text class="sans ink" x="875" y="42" font-size="14" font-weight="800">Design System</text>
+  <rect x="1208" y="12" width="212" height="40" fill="#0c0b11" />
+  <text class="sans paper" x="1230" y="37" font-size="14" font-weight="900">Start building</text>
+  <text
+    class="sans paper"
+    x="1394"
+    y="37"
+    font-size="20"
+    font-weight="900"
+    text-anchor="middle"
+  >→</text>
+
+  <text
+    class="sans ink"
+    x="20"
+    y="150"
+    font-size="82"
+    font-weight="900"
+    letter-spacing="0"
+  >Web Standards</text>
+  <text
+    class="sans ink"
+    x="20"
+    y="232"
+    font-size="82"
+    font-weight="900"
+    letter-spacing="0"
+  >Productized.</text>
+  <text
+    class="sans ink"
+    x="20"
+    y="444"
+    font-size="30"
+    font-weight="650"
+  >Elements, UI, Framework, and Protocols</text>
+  <text
+    class="sans ink"
+    x="20"
+    y="482"
+    font-size="30"
+    font-weight="650"
+  >as one inspectable application system.</text>
+
+  <text class="mono ink" x="494" y="100" font-size="12" font-weight="900">SYSTEM</text>
+  <text class="mono ink" x="730" y="100" font-size="12" font-weight="900">v0.40.7</text>
+
+  <g transform="translate(968 160)" class="ink">
+    <path
+      d="M188 0 C298 0 376 78 376 188 C376 298 298 376 188 376 C78 376 0 298 0 188 C0 78 78 0 188 0 Z M188 84 C124 84 84 124 84 188 C84 252 124 292 188 292 C252 292 292 252 292 188 C292 124 252 84 188 84 Z"
+      fill="currentColor"
+      fill-rule="evenodd"
+    />
+    <path d="M294 8 H386 V100" fill="none" stroke="#fa5252" stroke-width="46" />
+    <path d="M132 160 H244 M132 216 H244" fill="none" stroke="#fa5252" stroke-width="28" />
+  </g>
+
+  <rect x="0" y="560" width="1440" height="220" fill="#0c0b11" />
+  <path
+    d="M0 620 H1440 M0 700 H1440 M472 560 V780 M730 560 V780 M1012 560 V780"
+    class="whiteLine"
+  />
+  <text class="mono red" x="24" y="606" font-size="12" font-weight="900">DSD WORKBENCH</text>
+  <text
+    class="mono paper"
+    x="24"
+    y="646"
+    font-size="18"
+  >customElements.define('docs-home', OpenElement)</text>
+  <text class="mono red" x="24" y="684" font-size="18">&lt;template shadowrootmode="open"&gt;</text>
+  <text
+    class="mono paper"
+    x="494"
+    y="646"
+    font-size="18"
+  >route graph / island hydration / package truth</text>
+  <text class="mono paper" x="1034" y="646" font-size="18">@openelement/ui</text>
+  <text class="mono paper" x="1034" y="684" font-size="18">@openelement/app</text>
+
+  <rect x="0" y="780" width="1440" height="140" fill="#f8f9fa" />
+  <path d="M0 780 H1440 M0 860 H1440 M360 780 V920 M720 780 V920 M1080 780 V920" class="line" />
+  <text class="mono ink" x="24" y="822" font-size="12" font-weight="900">01 ELEMENTS</text>
+  <text
+    class="sans ink"
+    x="24"
+    y="852"
+    font-size="24"
+    font-weight="850"
+  >Native component surface</text>
+  <text class="mono ink" x="384" y="822" font-size="12" font-weight="900">02 UI</text>
+  <text
+    class="sans ink"
+    x="384"
+    y="852"
+    font-size="24"
+    font-weight="850"
+  >Open Props primitives</text>
+  <text class="mono ink" x="744" y="822" font-size="12" font-weight="900">03 FRAMEWORK</text>
+  <text
+    class="sans ink"
+    x="744"
+    y="852"
+    font-size="24"
+    font-weight="850"
+  >DSD routes and islands</text>
+  <text class="mono ink" x="1104" y="822" font-size="12" font-weight="900">04 PROTOCOLS</text>
+  <text
+    class="sans ink"
+    x="1104"
+    y="852"
+    font-size="24"
+    font-weight="850"
+  >Contracts and CI truth</text>
+</svg>

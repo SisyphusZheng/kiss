@@ -26,18 +26,26 @@ pageSheet.replaceSync(`
   }
 
   .roadmap {
-    width: min(100% - calc(var(--size-8) * 2), var(--site-container));
+    width: 100%;
     margin-inline: auto;
-    padding-block: var(--size-12) var(--site-section-block);
+    padding-block: 0 var(--site-section-block);
   }
 
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(330px, .46fr);
-    gap: var(--size-8);
-    align-items: end;
-    padding-block-end: var(--size-8);
+    grid-template-columns: minmax(0, .6fr) minmax(360px, .4fr);
+    gap: 0;
+    align-items: stretch;
+    min-height: 420px;
+    padding-block-end: 0;
     border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .hero > div:first-child {
+    display: grid;
+    align-content: end;
+    padding: var(--size-8) var(--size-5);
+    border-inline-end: var(--border-size-1) solid var(--border);
   }
 
   .kicker,
@@ -64,8 +72,9 @@ pageSheet.replaceSync(`
   h1 {
     margin-block-end: 0;
     font-size: var(--font-size-7);
-    line-height: var(--font-lineheight-1);
+    line-height: .9;
     letter-spacing: 0;
+    font-weight: var(--font-weight-9);
   }
 
   .subtitle,
@@ -82,6 +91,7 @@ pageSheet.replaceSync(`
     max-width: 760px;
     margin-block: var(--size-5) 0;
     font-size: var(--font-size-2);
+    line-height: 1.18;
   }
 
   .now h2 {
@@ -94,18 +104,14 @@ pageSheet.replaceSync(`
   .timeline {
     position: relative;
     display: grid;
-    gap: var(--size-3);
-    margin-block-start: var(--size-8);
-    padding-inline-start: var(--size-6);
+    gap: 0;
+    margin-block-start: 0;
+    padding-inline-start: 0;
+    border-block-start: var(--border-size-1) solid var(--border);
   }
 
   .timeline::before {
-    content: "";
-    position: absolute;
-    inset-block: var(--size-3);
-    inset-inline-start: var(--size-2);
-    width: var(--border-size-2);
-    background: linear-gradient(var(--success), var(--brand), var(--warning));
+    content: none;
   }
 
   .phase {
@@ -114,23 +120,16 @@ pageSheet.replaceSync(`
     grid-template-columns: minmax(90px, .16fr) minmax(0, 1fr) auto;
     gap: var(--size-5);
     align-items: start;
-    transition: transform var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
+    border-block-end: var(--border-size-1) solid var(--border);
+    transition: background var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
   }
 
   .phase::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: calc((var(--size-6) + var(--size-2)) * -1);
-    inset-block-start: var(--size-6);
-    width: var(--size-3);
-    height: var(--size-3);
-    border: var(--border-size-2) solid var(--bg-card);
-    border-radius: var(--radius-round);
-    background: var(--brand);
+    content: none;
   }
 
   .phase:hover {
-    transform: translateX(var(--size-1));
+    background: var(--brand-subtle);
     border-color: var(--brand);
   }
 
@@ -149,8 +148,10 @@ pageSheet.replaceSync(`
   .truth-grid {
     display: grid;
     grid-template-columns: minmax(0, .92fr) minmax(0, .92fr) minmax(0, .8fr);
-    gap: var(--size-4);
-    margin-block-start: var(--size-8);
+    gap: 0;
+    margin-block-start: 0;
+    border-block-start: var(--border-size-1) solid var(--border);
+    border-inline-start: var(--border-size-1) solid var(--border);
   }
 
   .truth h2 {
@@ -172,8 +173,9 @@ pageSheet.replaceSync(`
   .visual-section {
     display: grid;
     grid-template-columns: minmax(0, .88fr) minmax(0, 1fr);
-    gap: var(--size-5);
-    margin-block-start: var(--size-8);
+    gap: 0;
+    margin-block-start: 0;
+    border-block-start: var(--border-size-1) solid var(--border);
   }
 
   .rule-list {
@@ -227,7 +229,6 @@ pageSheet.replaceSync(`
 
   @media (max-width: 620px) {
     .roadmap {
-      width: min(100% - calc(var(--size-4) * 2), var(--site-container));
       padding-block-start: var(--size-8);
     }
 

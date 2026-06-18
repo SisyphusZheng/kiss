@@ -26,10 +26,8 @@ styles.replaceSync(`
     min-height: 100%;
     overflow: hidden;
     border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-2);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--brand) 16%, transparent), transparent),
-      color-mix(in srgb, var(--bg-code) 88%, var(--code-border));
+    border-radius: var(--radius-1);
+    background: var(--bg-code);
     color: var(--code-text);
   }
 
@@ -45,7 +43,7 @@ styles.replaceSync(`
 
   .rp-title {
     overflow: hidden;
-    color: var(--brand-light);
+    color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
@@ -77,7 +75,7 @@ styles.replaceSync(`
     height: var(--size-8);
     padding: 0;
     border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-1);
     background: color-mix(in srgb, var(--bg-code) 78%, var(--code-border));
     color: var(--code-text);
     cursor: pointer;
@@ -90,13 +88,14 @@ styles.replaceSync(`
   }
 
   .counter-btn:hover {
-    transform: translateY(calc(var(--size-1) * -1));
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand) 20%, var(--bg-code));
+    transform: translateX(var(--size-1));
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
   }
 
   .counter-btn:focus-visible {
-    outline: var(--border-size-2) solid var(--brand-light);
+    outline: var(--border-size-2) solid var(--brand);
     outline-offset: var(--size-1);
   }
 
@@ -120,7 +119,7 @@ styles.replaceSync(`
   }
 
   .counter-caption b {
-    color: var(--success);
+    color: var(--brand);
     font-weight: var(--font-weight-8);
   }
 

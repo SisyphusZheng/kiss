@@ -1,46 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 104" width="420" height="104">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img">
   <title>openElement logo horizontal lockup</title>
-  <desc>openElement kinetic standards-lab wordmark</desc>
-  <defs>
-    <linearGradient id="mark" x1="8" y1="8" x2="88" y2="88" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5c7cfa" />
-      <stop offset="0.6" stop-color="#4263eb" />
-      <stop offset="1" stop-color="#20c997" />
-    </linearGradient>
-  </defs>
-  <rect x="8" y="8" width="88" height="88" rx="18" fill="#030507" />
-  <rect x="15" y="15" width="74" height="74" rx="14" fill="url(#mark)" />
-  <path
-    d="M42 34 L27 52 L42 70"
-    fill="none"
-    stroke="#f8f9fa"
-    stroke-width="7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M62 34 L77 52 L62 70"
-    fill="none"
-    stroke="#f8f9fa"
-    stroke-width="7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path d="M47 76 L57 28" fill="none" stroke="#f8f9fa" stroke-width="5" stroke-linecap="round" />
+  <desc>openElement open aperture O wordmark lockup</desc>
+  <g color="#0c0b11">
+    <path
+      d="M64 12 C94 12 116 34 116 64 C116 94 94 116 64 116 C34 116 12 94 12 64 C12 34 34 12 64 12 Z M64 34 C46 34 34 46 34 64 C34 82 46 94 64 94 C82 94 94 82 94 64 C94 46 82 34 64 34 Z"
+      fill="currentColor"
+      fill-rule="evenodd"
+    />
+    <path
+      d="M93 14 H118 V39"
+      fill="none"
+      stroke="#fa5252"
+      stroke-width="14"
+      stroke-linecap="square"
+    />
+    <path
+      d="M48 56 H80 M48 72 H80"
+      fill="none"
+      stroke="#fa5252"
+      stroke-width="7"
+      stroke-linecap="square"
+    />
+  </g>
   <text
-    x="120"
-    y="56"
-    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
-    font-size="34"
-    font-weight="800"
-    fill="#101828"
+    x="144"
+    y="61"
+    fill="#0c0b11"
+    font-family="Inter, Arial, Helvetica, sans-serif"
+    font-size="36"
+    font-weight="900"
+    letter-spacing="0"
   >openElement</text>
   <text
-    x="122"
-    y="78"
-    font-family="'JetBrains Mono', 'SF Mono', monospace"
-    font-size="11"
-    font-weight="700"
-    fill="#4263eb"
-  >ELEMENTS + UI + FRAMEWORK + PROTOCOLS</text>
+    x="146"
+    y="88"
+    fill="#495057"
+    font-family="'SF Mono', Consolas, monospace"
+    font-size="12"
+    font-weight="800"
+    letter-spacing="0"
+  >OPEN WEB COMPONENTS SYSTEM</text>
 </svg>

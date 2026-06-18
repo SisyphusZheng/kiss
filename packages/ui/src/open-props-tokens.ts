@@ -38,7 +38,7 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Border radius
      ═══════════════════════════════════════════════ */
-  --radius-1: 4px; --radius-2: 8px; --radius-3: 12px; --radius-4: 16px;
+  --radius-1: 0px; --radius-2: 0px; --radius-3: 0px; --radius-4: 0px;
   --radius-round: 9999px;
 
   /* ═══════════════════════════════════════════════
@@ -54,13 +54,13 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Typography
      ═══════════════════════════════════════════════ */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: Inter, Arial, Helvetica, system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
   --font-size-00: 0.75rem; --font-size-0: 0.875rem;
   --font-size-1: 1rem;     --font-size-2: 1.25rem;
   --font-size-3: 1.5rem;   --font-size-4: 2rem;
-  --font-size-5: 2.5rem;   --font-size-6: 3rem;
-  --font-size-7: 3.5rem;   --font-size-8: 4rem;
+  --font-size-5: 2.5rem;   --font-size-6: 3.25rem;
+  --font-size-7: 4.5rem;   --font-size-8: 5rem;
   --font-weight-4: 400; --font-weight-5: 500;
   --font-weight-6: 600; --font-weight-7: 700;
   --font-weight-8: 800; --font-weight-9: 900;
@@ -85,11 +85,11 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Brand tokens
      ═══════════════════════════════════════════════ */
-  --brand: #4263eb;      --brand-hover: #3b5bdb;
-  --brand-light: #5c7cfa; --brand-pale: #8b7cf6;
-  --brand-deep: #26215c;  --brand-subtle: rgba(66, 99, 235, 0.1);
-  --brand-glow: rgba(66, 99, 235, 0.15);
-  --on-brand: #ffffff;
+  --brand: var(--red-6);      --brand-hover: var(--red-7);
+  --brand-light: var(--red-5); --brand-pale: var(--red-3);
+  --brand-deep: var(--red-12); --brand-subtle: color-mix(in srgb, var(--brand) 12%, transparent);
+  --brand-glow: color-mix(in srgb, var(--brand) 18%, transparent);
+  --on-brand: var(--gray-12);
   --site-container: 1120px;
   --site-container-wide: 1240px;
   --site-container-reading: 760px;
@@ -103,7 +103,7 @@ function createTokenSheet(): StyleSheetLike {
   --btn-radius: var(--radius-1);
   --btn-font-size: var(--font-size-0); --btn-font-weight: var(--font-weight-6);
   --btn-text-case: none;
-  --card-padding: var(--size-6); --card-radius: var(--radius-3);
+  --card-padding: var(--size-6); --card-radius: var(--radius-1);
   --badge-padding-x: var(--size-2); --badge-padding-y: 2px;
   --badge-radius: var(--radius-round); --badge-font-size: var(--font-size-00);
   --alert-padding: var(--size-4); --alert-radius: var(--radius-2);
@@ -149,6 +149,11 @@ function createTokenSheet(): StyleSheetLike {
   --info: #2563eb;
   --info-subtle: rgba(37,99,235,0.1);
   --overlay: rgba(0,0,0,0.4);
+  --nav-bg: var(--bg-base);
+  --nav-height: 64px;
+  --nav-link-color: var(--text-primary);
+  --nav-link-hover: var(--brand);
+  --nav-link-size: var(--font-size-0);
 
   /* ═══════════════════════════════════════════════
      Open Props Color Scales (light mode)
@@ -202,11 +207,11 @@ function createTokenSheet(): StyleSheetLike {
   --gray-6: #868e96;  --gray-7: #adb5bd; --gray-8: #ced4da;
   --gray-9: #dee2e6;  --gray-10: #e9ecef; --gray-11: #f1f3f5;
   --gray-12: #f8f9fa;
-  --brand: #4263eb;     --brand-hover: #3b5bdb;
-  --brand-light: #5c7cfa; --brand-deep: #3d3580;
-  --brand-subtle: rgba(66,99,235,.15);
-  --brand-glow: rgba(66,99,235,.2);
-  --on-brand: #ffffff;
+  --brand: var(--red-6);     --brand-hover: var(--red-7);
+  --brand-light: var(--red-5); --brand-deep: var(--red-12);
+  --brand-subtle: color-mix(in srgb, var(--brand) 16%, transparent);
+  --brand-glow: color-mix(in srgb, var(--brand) 22%, transparent);
+  --on-brand: var(--gray-0);
   --text-primary: var(--gray-10);
   --text-secondary: var(--gray-7);
   --text-muted: var(--gray-6);
@@ -229,6 +234,9 @@ function createTokenSheet(): StyleSheetLike {
   --info: #60a5fa;
   --info-subtle: rgba(96,165,250,.1);
   --overlay: rgba(0,0,0,.6);
+  --nav-bg: var(--bg-base);
+  --nav-link-color: var(--text-primary);
+  --nav-link-hover: var(--brand-light);
 
   /* Open Props Color Scales (dark mode inversion) */
   --indigo-0: #11184a; --indigo-1: #1e266d; --indigo-2: #2b3990;

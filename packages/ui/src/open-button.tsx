@@ -40,14 +40,14 @@ sheet.replaceSync(`
     justify-content: center;
     gap: var(--size-2);
     font-family: var(--font-sans);
-    font-weight: var(--font-weight-5);
+    font-weight: var(--font-weight-8);
     text-decoration: none;
     cursor: pointer;
-    border: var(--border-size-1) solid var(--gray-3);
+    border: var(--border-size-1) solid var(--border);
     background: transparent;
-    color: var(--gray-9);
-    border-radius: var(--radius-2);
-    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2);
+    color: var(--text-primary);
+    border-radius: var(--btn-radius);
+    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2);
     white-space: nowrap;
     letter-spacing: 0;
   }
@@ -73,9 +73,9 @@ sheet.replaceSync(`
 
   /* Variants */
   .btn--default:hover {
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-    background: var(--brand-subtle);
+    color: var(--on-brand);
+    border-color: var(--brand);
+    background: var(--brand);
   }
 
   .btn--primary {
@@ -87,6 +87,7 @@ sheet.replaceSync(`
   .btn--primary:hover {
     background: var(--brand-hover, var(--indigo-7));
     border-color: var(--brand-hover, var(--indigo-7));
+    transform: translateX(var(--size-1));
   }
 
   .btn--ghost {
@@ -99,13 +100,12 @@ sheet.replaceSync(`
   }
 
   .btn--accent {
-    background: linear-gradient(135deg, var(--brand), var(--brand-hover));
+    background: var(--brand);
     color: var(--on-brand);
     border-color: transparent;
   }
   .btn--accent:hover {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-2);
     filter: brightness(1.05);
   }
   .btn--accent:active {
