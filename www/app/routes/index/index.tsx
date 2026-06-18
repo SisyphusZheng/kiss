@@ -47,6 +47,13 @@ pageSheet.replaceSync(`
     background-size: calc(var(--size-16) * 2) calc(var(--size-16) * 2);
   }
 
+  .swiss-grid {
+    background:
+      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1));
+    background-size: calc(var(--size-16) * 2) calc(var(--size-16) * 2);
+  }
+
   .draft-stage::before {
     content: "";
     position: absolute;
@@ -196,6 +203,10 @@ pageSheet.replaceSync(`
     background: color-mix(in srgb, var(--bg-elevated) 58%, transparent);
     font-family: var(--font-mono);
     font-size: var(--font-size-0);
+  }
+
+  .terminal {
+    background: var(--bg-elevated);
   }
 
   .console-line small {
@@ -587,7 +598,7 @@ export class DocsHome extends OpenElement {
   override render() {
     return (
       <main class='home'>
-        <section class='draft-stage'>
+        <section class='draft-stage swiss-grid'>
           <div class='measure'><span>OE<br />01</span></div>
           <div class='hero-grid'>
             <div class='copy'>
@@ -601,7 +612,7 @@ export class DocsHome extends OpenElement {
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
                 <a class='action' href='/apilist'>View API</a>
               </div>
-              <div class='console-line' aria-label='Install command'>
+              <div class='console-line terminal' aria-label='Install command'>
                 <span>$</span>
                 <span>npm create openelement@latest</span>
                 <small>Scaffolding your project...</small>

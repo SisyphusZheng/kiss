@@ -135,16 +135,16 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^(packages|tools)\//, /^deno\.json$/],
   },
   {
-    name: 'test:e2e',
-    command: ['deno', 'task', 'test:e2e'],
-    tiers: ['ci', 'release'],
-    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
-  },
-  {
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
     triggers: [/^(packages|www)\//, /^deno\.json$/],
+  },
+  {
+    name: 'test:e2e',
+    command: ['deno', 'task', 'test:e2e'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },
   {
     name: 'nitro:proof:node',
