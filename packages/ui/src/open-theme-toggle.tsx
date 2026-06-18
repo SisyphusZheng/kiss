@@ -34,18 +34,19 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px; height: 32px; padding: 0;
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-2);
-    background: transparent;
+    width: 38px; height: 38px; padding: 0;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
     color: var(--text-muted);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
     cursor: pointer;
     transition: all var(--ease-2) var(--duration-2);
   }
   .theme-toggle:hover {
     color: var(--text-primary);
-    border-color: var(--brand);
-    background: var(--bg-surface);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
   }
 
   .theme-toggle svg {

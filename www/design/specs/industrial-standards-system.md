@@ -1,49 +1,42 @@
-# Industrial Standards System
+# Monet Protocol System
 
-## Reference
+## Direction
 
-Primary reference: Enerblock, Awwwards site of the day direction.
+The active `www` direction is a high-end **Monet Purple Protocol Lab**:
+soft purple light, paper-like technical surfaces, one memorable open `O`
+aperture, and fewer boxed sections. The site should feel artistic but still
+inspectable: routes, Shadow DOM, package graphs, and release truth remain the
+actual visual subject.
 
-Observed design language:
+## Visual Language
 
-- One saturated field color and one near-black ink color.
-- Hard engineering grid instead of soft decorative gradients.
-- Huge geometric brand mark treated as a product object.
-- Short, blunt headlines with no marketing-card hero.
-- Real media strip below the hero, then sticky/editorial sections.
-- Cards behave like technical sheets: square, bordered, aligned to the grid.
-
-## openElement Translation
-
-This is not a copy of Enerblock. For openElement the same language becomes:
-
-- **Color**: Open Props `--red-6` as the standards signal, `--gray-12` as ink,
-  `--gray-0` as paper, `--gray-3` as rule lines.
-- **Logo**: open aperture `O` mark. The outside ring is the open platform,
-  the inside ring is the Shadow DOM boundary, the right-angle notch is
-  `mode: open`, and the two internal rails are the element surface.
-- **Hero**: "Web Standards / Productized." Left text column, giant mark on the
-  right, code/devtools workbench media strip below.
-- **Typography**: one grotesk/system sans, very large hero type, mono only for
-  package names and protocol labels.
-- **Layout**: visible grid divisions, square edges, no glass cards, no floating
-  SaaS panels.
+- **Color**: `--violet-*` is the brand family, with paper neutrals, ink text,
+  and small sage/cyan status accents from the existing Open Props palette.
+- **Logo**: an open `O` aperture. The outer ring is the platform boundary,
+  the inner ring is Shadow DOM, the open cut is `mode: open`, and the wave
+  lines are the reflective DOM/route surface.
+- **Hero**: a full-width landscape stage, not a card split. The lens sits as a
+  product object behind the copy so the first viewport has a single concept.
+- **Typography**: Instrument Sans everywhere, JetBrains Mono only for protocol
+  labels, versions, package names, and command surfaces.
+- **Buttons**: refined pill controls across search, language, GitHub, primary
+  CTA, and `open-button`.
+- **Layout**: broad sections, generous rhythm, soft panels, consistent heading
+  scale across homepage, docs, design system, and roadmap.
 
 ## Site-Wide Rules
 
-- Header, cards, buttons, panels, search, roadmap entries, and docs paths must
-  all share square grid construction.
-- Light mode should feel like paper plus red ink. Dark mode should feel like
-  black console plus red signal.
-- Page sections should alternate between red field, paper field, and black media
-  field, not many small card walls.
-- Motion should use reveal, horizontal scan, and logo rail translation; no
-  decorative bokeh or gradient orbs.
-- The first viewport must have one dominant mark and one dominant headline.
+- Header color and link behavior must stay consistent across all pages.
+- Hero sections use the same page rhythm: large title, purple field, artifact
+  panel or aperture object.
+- Dark mode must remain token-driven and maintain the same hierarchy.
+- Avoid one-off page-local visual systems. Use Open Props tokens and UI package
+  primitives for surfaces, buttons, badges, panels, and cards.
+- The first viewport must read as one designed scene, not a pile of feature
+  cards.
 
 ## Logo Acceptance
 
-- Recognizable at 32px as an `O`, not a generic code glyph.
-- Works as black-on-red, black-on-paper, and white-on-black.
-- Describes the project goal: Web Components as open, inspectable standards
-  boundaries rather than another JavaScript framework glyph.
+- Recognizable at 32px as an `O`, not a bracket, rail, or generic code glyph.
+- Works on paper, purple fields, and dark surfaces.
+- Expresses the project goal: open, inspectable Web Component boundaries.

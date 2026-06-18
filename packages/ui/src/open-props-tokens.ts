@@ -38,7 +38,7 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Border radius
      ═══════════════════════════════════════════════ */
-  --radius-1: 0px; --radius-2: 0px; --radius-3: 0px; --radius-4: 0px;
+  --radius-1: 6px; --radius-2: 8px; --radius-3: 12px; --radius-4: 20px;
   --radius-round: 9999px;
 
   /* ═══════════════════════════════════════════════
@@ -54,13 +54,13 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Typography
      ═══════════════════════════════════════════════ */
-  --font-sans: Inter, Arial, Helvetica, system-ui, sans-serif;
+  --font-sans: 'Instrument Sans', Inter, Arial, Helvetica, system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
   --font-size-00: 0.75rem; --font-size-0: 0.875rem;
   --font-size-1: 1rem;     --font-size-2: 1.25rem;
   --font-size-3: 1.5rem;   --font-size-4: 2rem;
-  --font-size-5: 2.5rem;   --font-size-6: 3.25rem;
-  --font-size-7: 4.5rem;   --font-size-8: 5rem;
+  --font-size-5: 2.5rem;   --font-size-6: 3.125rem;
+  --font-size-7: 4rem;     --font-size-8: 5.5rem;
   --font-weight-4: 400; --font-weight-5: 500;
   --font-weight-6: 600; --font-weight-7: 700;
   --font-weight-8: 800; --font-weight-9: 900;
@@ -85,11 +85,11 @@ function createTokenSheet(): StyleSheetLike {
   /* ═══════════════════════════════════════════════
      Brand tokens
      ═══════════════════════════════════════════════ */
-  --brand: var(--red-6);      --brand-hover: var(--red-7);
-  --brand-light: var(--red-5); --brand-pale: var(--red-3);
-  --brand-deep: var(--red-12); --brand-subtle: color-mix(in srgb, var(--brand) 12%, transparent);
-  --brand-glow: color-mix(in srgb, var(--brand) 18%, transparent);
-  --on-brand: var(--gray-12);
+  --brand: var(--violet-6);      --brand-hover: var(--violet-7);
+  --brand-light: var(--violet-4); --brand-pale: var(--violet-1);
+  --brand-deep: var(--violet-11); --brand-subtle: color-mix(in srgb, var(--brand) 12%, transparent);
+  --brand-glow: color-mix(in srgb, var(--brand) 24%, transparent);
+  --on-brand: var(--gray-0);
   --site-container: 1120px;
   --site-container-wide: 1240px;
   --site-container-reading: 760px;
@@ -100,8 +100,8 @@ function createTokenSheet(): StyleSheetLike {
      Component Semantic Tokens (for daisyUI classes)
      ═══════════════════════════════════════════════ */
   --btn-padding-x: var(--size-4); --btn-padding-y: var(--size-2);
-  --btn-radius: var(--radius-1);
-  --btn-font-size: var(--font-size-0); --btn-font-weight: var(--font-weight-6);
+  --btn-radius: var(--radius-round);
+  --btn-font-size: var(--font-size-0); --btn-font-weight: var(--font-weight-7);
   --btn-text-case: none;
   --card-padding: var(--size-6); --card-radius: var(--radius-1);
   --badge-padding-x: var(--size-2); --badge-padding-y: 2px;
@@ -129,9 +129,9 @@ function createTokenSheet(): StyleSheetLike {
   --text-primary: var(--gray-9);
   --text-secondary: var(--gray-6);
   --text-muted: var(--gray-5);
-  --bg-base: var(--gray-0);
-  --bg-surface: var(--gray-1);
-  --bg-card: var(--gray-0);
+  --bg-base: color-mix(in srgb, var(--violet-0) 42%, var(--gray-0));
+  --bg-surface: color-mix(in srgb, var(--violet-0) 32%, var(--gray-1));
+  --bg-card: color-mix(in srgb, var(--violet-0) 18%, var(--gray-0));
   --bg-elevated: #ffffff;
   --bg-hover: var(--gray-2);
   --bg-muted: var(--gray-1);
@@ -149,8 +149,8 @@ function createTokenSheet(): StyleSheetLike {
   --info: #2563eb;
   --info-subtle: rgba(37,99,235,0.1);
   --overlay: rgba(0,0,0,0.4);
-  --nav-bg: var(--bg-base);
-  --nav-height: 64px;
+  --nav-bg: color-mix(in srgb, var(--bg-base) 86%, transparent);
+  --nav-height: 72px;
   --nav-link-color: var(--text-primary);
   --nav-link-hover: var(--brand);
   --nav-link-size: var(--font-size-0);
@@ -194,6 +194,11 @@ function createTokenSheet(): StyleSheetLike {
   --cyan-6: #15aabf; --cyan-7: #1098ad; --cyan-8: #0c8599;
   --cyan-9: #0b7285; --cyan-10: #095c6b; --cyan-11: #074652;
   --cyan-12: #053038;
+  --violet-0: #fbf7ff; --violet-1: #f3eaff; --violet-2: #e6d8ff;
+  --violet-3: #d0bdff; --violet-4: #b59cff; --violet-5: #9c7df2;
+  --violet-6: #8262db; --violet-7: #6d4cc4; --violet-8: #58399e;
+  --violet-9: #422774; --violet-10: #2f1c52; --violet-11: #21143b;
+  --violet-12: #130a22;
 }
 
 /* ═══════════════════════════════════════════════
@@ -207,17 +212,17 @@ function createTokenSheet(): StyleSheetLike {
   --gray-6: #868e96;  --gray-7: #adb5bd; --gray-8: #ced4da;
   --gray-9: #dee2e6;  --gray-10: #e9ecef; --gray-11: #f1f3f5;
   --gray-12: #f8f9fa;
-  --brand: var(--red-6);     --brand-hover: var(--red-7);
-  --brand-light: var(--red-5); --brand-deep: var(--red-12);
+  --brand: var(--violet-6);     --brand-hover: var(--violet-7);
+  --brand-light: var(--violet-4); --brand-deep: var(--violet-12);
   --brand-subtle: color-mix(in srgb, var(--brand) 16%, transparent);
   --brand-glow: color-mix(in srgb, var(--brand) 22%, transparent);
-  --on-brand: var(--gray-0);
+  --on-brand: var(--gray-12);
   --text-primary: var(--gray-10);
   --text-secondary: var(--gray-7);
   --text-muted: var(--gray-6);
-  --bg-base: var(--gray-0);
-  --bg-surface: var(--gray-1);
-  --bg-card: var(--gray-2);
+  --bg-base: color-mix(in srgb, var(--violet-0) 18%, var(--gray-0));
+  --bg-surface: color-mix(in srgb, var(--violet-1) 14%, var(--gray-1));
+  --bg-card: color-mix(in srgb, var(--violet-2) 10%, var(--gray-2));
   --bg-elevated: var(--gray-1);
   --bg-hover: var(--gray-3);
   --bg-code: var(--gray-1);
@@ -234,7 +239,7 @@ function createTokenSheet(): StyleSheetLike {
   --info: #60a5fa;
   --info-subtle: rgba(96,165,250,.1);
   --overlay: rgba(0,0,0,.6);
-  --nav-bg: var(--bg-base);
+  --nav-bg: color-mix(in srgb, var(--bg-base) 86%, transparent);
   --nav-link-color: var(--text-primary);
   --nav-link-hover: var(--brand-light);
 
@@ -274,6 +279,11 @@ function createTokenSheet(): StyleSheetLike {
   --cyan-6: #15aabf; --cyan-7: #22b8cf; --cyan-8: #3bc9db;
   --cyan-9: #66d9e8; --cyan-10: #99e9f2; --cyan-11: #c5f6fa;
   --cyan-12: #e3fafc;
+  --violet-0: #130a22; --violet-1: #21143b; --violet-2: #2f1c52;
+  --violet-3: #422774; --violet-4: #58399e; --violet-5: #6d4cc4;
+  --violet-6: #8262db; --violet-7: #9c7df2; --violet-8: #b59cff;
+  --violet-9: #d0bdff; --violet-10: #e6d8ff; --violet-11: #f3eaff;
+  --violet-12: #fbf7ff;
 }
 `);
   return sheet;

@@ -1,43 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img">
   <title>openElement logo horizontal lockup</title>
-  <desc>openElement open aperture O wordmark lockup</desc>
-  <g color="#0c0b11">
-    <path
-      d="M64 12 C94 12 116 34 116 64 C116 94 94 116 64 116 C34 116 12 94 12 64 C12 34 34 12 64 12 Z M64 34 C46 34 34 46 34 64 C34 82 46 94 64 94 C82 94 94 82 94 64 C94 46 82 34 64 34 Z"
-      fill="currentColor"
-      fill-rule="evenodd"
-    />
-    <path
-      d="M93 14 H118 V39"
-      fill="none"
-      stroke="#fa5252"
-      stroke-width="14"
-      stroke-linecap="square"
-    />
-    <path
-      d="M48 56 H80 M48 72 H80"
-      fill="none"
-      stroke="#fa5252"
-      stroke-width="7"
-      stroke-linecap="square"
-    />
-  </g>
+  <desc>openElement Monet purple open aperture O wordmark lockup</desc>
+  <defs>
+    <linearGradient
+      id="open-o-horizontal"
+      x1="16"
+      y1="112"
+      x2="112"
+      y2="18"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0" stop-color="#21143b" />
+      <stop offset=".46" stop-color="#8262db" />
+      <stop offset="1" stop-color="#d0bdff" />
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="44" fill="none" stroke="url(#open-o-horizontal)" stroke-width="16" />
+  <circle cx="64" cy="64" r="24" fill="none" stroke="#e6d8ff" stroke-width="2.4" opacity=".92" />
+  <path
+    d="M91 18 C105 26 113 38 114 53"
+    fill="none"
+    stroke="#fbf7ff"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M88 19 C103 28 111 40 112 55"
+    fill="none"
+    stroke="#8262db"
+    stroke-width="4.2"
+    stroke-linecap="round"
+  />
+  <path
+    d="M44 59 C54 53 64 53 75 59 C82 63 89 63 96 59"
+    fill="none"
+    stroke="#21143b"
+    stroke-width="4.8"
+    stroke-linecap="round"
+  />
+  <path
+    d="M40 73 C52 66 64 66 77 73 C85 77 93 77 101 73"
+    fill="none"
+    stroke="#8262db"
+    stroke-width="3.8"
+    stroke-linecap="round"
+  />
   <text
     x="144"
     y="61"
-    fill="#0c0b11"
-    font-family="Inter, Arial, Helvetica, sans-serif"
+    fill="#21143b"
+    font-family="'Instrument Sans', Inter, Arial, Helvetica, sans-serif"
     font-size="36"
-    font-weight="900"
+    font-weight="850"
     letter-spacing="0"
   >openElement</text>
   <text
     x="146"
     y="88"
-    fill="#495057"
-    font-family="'SF Mono', Consolas, monospace"
+    fill="#6d4cc4"
+    font-family="'JetBrains Mono', 'SF Mono', Consolas, monospace"
     font-size="12"
-    font-weight="800"
+    font-weight="700"
     letter-spacing="0"
   >OPEN WEB COMPONENTS SYSTEM</text>
 </svg>

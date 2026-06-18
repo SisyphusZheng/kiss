@@ -4,28 +4,51 @@
   width="140"
   height="140"
   role="img"
-  color="#f8f9fa"
 >
   <title>openElement logo inverted</title>
-  <desc>Open aperture O mark for dark backgrounds</desc>
+  <desc>Monet purple open aperture O mark for dark surfaces</desc>
+  <defs>
+    <linearGradient
+      id="open-o-inverted"
+      x1="18"
+      y1="118"
+      x2="124"
+      y2="20"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0" stop-color="#f3eaff" />
+      <stop offset=".5" stop-color="#b59cff" />
+      <stop offset="1" stop-color="#8262db" />
+    </linearGradient>
+  </defs>
+  <circle cx="70" cy="70" r="48" fill="none" stroke="url(#open-o-inverted)" stroke-width="17" />
+  <circle cx="70" cy="70" r="27" fill="none" stroke="#d0bdff" stroke-width="2.5" opacity=".86" />
   <path
-    d="M70 14 C102 14 126 38 126 70 C126 102 102 126 70 126 C38 126 14 102 14 70 C14 38 38 14 70 14 Z M70 38 C51 38 38 51 38 70 C38 89 51 102 70 102 C89 102 102 89 102 70 C102 51 89 38 70 38 Z"
-    fill="currentColor"
-    fill-rule="evenodd"
+    d="M100 20 C115 28 123 42 124 58"
+    fill="none"
+    stroke="#130a22"
+    stroke-width="19"
+    stroke-linecap="round"
   />
   <path
-    d="M101 16 H128 V43"
+    d="M97 21 C113 31 121 44 122 60"
     fill="none"
-    stroke="#fa5252"
-    stroke-width="16"
-    stroke-linecap="square"
-    stroke-linejoin="miter"
+    stroke="#d0bdff"
+    stroke-width="4.5"
+    stroke-linecap="round"
   />
   <path
-    d="M54 61 H86 M54 79 H86"
+    d="M48 65 C58 59 68 59 79 65 C86 69 94 69 101 65"
     fill="none"
-    stroke="#fa5252"
-    stroke-width="8"
-    stroke-linecap="square"
+    stroke="#f3eaff"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M43 80 C55 73 67 73 80 80 C88 84 96 84 105 80"
+    fill="none"
+    stroke="#b59cff"
+    stroke-width="4"
+    stroke-linecap="round"
   />
 </svg>

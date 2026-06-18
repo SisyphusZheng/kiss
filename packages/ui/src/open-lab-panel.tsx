@@ -24,10 +24,12 @@ sheet.replaceSync(`
     min-height: var(--panel-min-height, auto);
     overflow: hidden;
     border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
-    background: var(--bg-card);
+    border-radius: var(--radius-3);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 18%, transparent), transparent 44%),
+      var(--bg-card);
     color: var(--text-primary);
-    box-shadow: var(--shadow-1);
+    box-shadow: 0 var(--size-2) var(--size-8) color-mix(in srgb, var(--brand) 8%, transparent);
   }
 
   .panel--muted {

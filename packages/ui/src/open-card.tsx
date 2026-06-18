@@ -33,16 +33,18 @@ const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host {
     display: block;
-    background: var(--bg-card);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 14%, transparent), transparent 48%),
+      var(--bg-card);
     color: var(--text-primary);
     border: var(--border-size-1) solid var(--border);
     border-radius: var(--card-radius);
     overflow: hidden;
-    transition: border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2);
+    transition: border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
   }
 
   :host([variant="elevated"]) {
-    box-shadow: none;
+    box-shadow: 0 var(--size-2) var(--size-8) color-mix(in srgb, var(--brand) 8%, transparent);
     border-color: var(--border);
   }
 

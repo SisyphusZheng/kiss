@@ -50,25 +50,27 @@ sheet.replaceSync(`
     align-items: center;
     gap: var(--size-2);
     padding: var(--size-2) var(--size-3);
-    border: 0.5px solid var(--gray-3);
-    border-radius: var(--radius-2);
-    background: transparent;
-    color: var(--gray-6);
+    min-height: 38px;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+    color: var(--text-secondary);
     font-size: var(--font-size-00);
-    font-weight: var(--font-weight-6);
-    letter-spacing: 0.04em;
+    font-weight: var(--font-weight-7);
+    letter-spacing: 0;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
     cursor: pointer;
     transition: all var(--ease-2) var(--duration-2);
   }
   .search-trigger:hover {
-    color: var(--gray-10);
-    border-color: var(--indigo-5);
-    background: var(--gray-1);
+    color: var(--brand-deep);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
   }
   .search-trigger kbd {
     font-family: inherit;
     padding: var(--size-1) var(--size-1);
-    border: var(--border-size-1) solid var(--gray-3);
+    border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-1);
     font-size: var(--font-size-00);
     margin-left: var(--size-1);
@@ -91,7 +93,9 @@ sheet.replaceSync(`
     padding: 15vh 0 0;
     border: 0;
     color: inherit;
-    background: color-mix(in srgb, var(--gray-12) 40%, transparent);
+    background: color-mix(in srgb, var(--gray-12) 44%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     display: none;
     justify-content: center;
     align-items: flex-start;
@@ -106,9 +110,9 @@ sheet.replaceSync(`
     max-height: 70vh;
     margin: 0 var(--size-4);
     background: var(--gray-0);
-    border: 0.5px solid var(--gray-3);
-    border-radius: var(--radius-2);
-    box-shadow: var(--shadow-1);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-4);
+    box-shadow: 0 var(--size-4) var(--size-16) color-mix(in srgb, var(--brand) 18%, transparent);
     display: flex;
     flex-direction: column;
     overflow: hidden;

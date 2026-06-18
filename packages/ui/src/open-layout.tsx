@@ -179,33 +179,14 @@ sheet.replaceSync(`
     z-index: 100;
     background: var(--nav-bg);
     border-bottom: var(--border-size-1) solid var(--border);
-    transition: background 0.2s ease, border-color 0.2s ease;
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .app-header.scrolled {
-    background: var(--nav-bg);
+    background: color-mix(in srgb, var(--bg-base) 94%, transparent);
     border-bottom-color: var(--border-hover);
-  }
-
-  .app-layout[home] .app-header {
-    background: var(--brand);
-    border-bottom-color: color-mix(in srgb, var(--on-brand) 28%, transparent);
-  }
-
-  .app-layout[home] .app-header.scrolled {
-    background: var(--brand);
-    border-bottom-color: color-mix(in srgb, var(--on-brand) 42%, transparent);
-  }
-
-  .app-layout[home] .logo,
-  .app-layout[home] .header-nav a,
-  .app-layout[home] .logo-sub,
-  .app-layout[home] .mobile-menu-btn {
-    color: var(--on-brand);
-  }
-
-  .app-layout[home] .logo-mark::before,
-  .app-layout[home] .logo-mark::after {
-    border-color: var(--on-brand);
+    box-shadow: 0 var(--size-2) var(--size-8) color-mix(in srgb, var(--brand) 7%, transparent);
   }
 
   .header-inner {
@@ -215,7 +196,7 @@ sheet.replaceSync(`
     display: flex;
     align-items: center;
     min-height: var(--nav-height);
-    gap: var(--size-6);
+    gap: var(--size-5);
   }
 
   .mobile-tab-bar { display: none; }
@@ -224,11 +205,11 @@ sheet.replaceSync(`
     display: none;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--size-10);
+    height: var(--size-10);
     border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
-    background: transparent;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 74%, transparent);
     color: var(--text-secondary);
     cursor: pointer;
     padding: 0;
@@ -244,8 +225,8 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
-    font-size: var(--font-size-2);
-    font-weight: var(--font-weight-9);
+    font-size: var(--font-size-1);
+    font-weight: var(--font-weight-8);
     color: var(--text-primary);
     text-decoration: none;
     letter-spacing: 0;
@@ -253,40 +234,46 @@ sheet.replaceSync(`
   }
 
   .logo:hover .logo-mark {
-    transform: rotate(8deg);
+    transform: rotate(-8deg) scale(1.04);
   }
 
   .logo-mark {
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: var(--size-9);
-    height: var(--size-9);
+    width: var(--size-10);
+    height: var(--size-10);
     overflow: hidden;
-    border: var(--size-2) solid currentColor;
+    border: 0;
     border-radius: var(--radius-round);
-    background: transparent;
+    background:
+      radial-gradient(circle at 50% 50%, var(--bg-base) 0 37%, transparent 38%),
+      conic-gradient(from 218deg, var(--brand-deep), var(--brand), var(--brand-light), var(--brand-deep));
+    box-shadow:
+      inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--gray-0) 42%, transparent),
+      0 var(--size-1) var(--size-4) var(--brand-glow);
     flex: 0 0 auto;
-    transition: transform var(--duration-2) var(--ease-2);
+    transition: transform var(--duration-2) var(--ease-2), box-shadow var(--duration-2) var(--ease-2);
   }
 
   .logo-mark::before {
     content: "";
     position: absolute;
-    inset-inline-end: calc(var(--size-1) * -1);
-    inset-block-start: calc(var(--size-1) * -1);
-    width: var(--size-4);
-    height: var(--size-4);
-    border-block-start: var(--size-2) solid var(--brand);
-    border-inline-end: var(--size-2) solid var(--brand);
+    inset: var(--size-2);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 56%, var(--bg-base));
+    border-radius: var(--radius-round);
+    transform: rotate(-18deg);
   }
 
   .logo-mark::after {
     content: "";
-    position: relative;
-    width: var(--size-4);
-    height: var(--size-2);
-    border-block: var(--border-size-2) solid var(--brand);
+    position: absolute;
+    inset-inline-end: 2px;
+    inset-block-start: 1px;
+    width: var(--size-3);
+    height: var(--size-3);
+    border-block-start: var(--border-size-2) solid var(--bg-base);
+    border-inline-end: var(--border-size-2) solid var(--bg-base);
   }
 
   .logo-word {
@@ -295,7 +282,7 @@ sheet.replaceSync(`
   }
 
   .logo-sub {
-    font-size: 0.75rem;
+    font-size: var(--font-size-00);
     color: var(--text-muted);
     margin-left: var(--size-2);
     font-family: var(--font-mono);
@@ -305,7 +292,7 @@ sheet.replaceSync(`
 
   .header-nav {
     display: flex;
-    gap: var(--size-6);
+    gap: var(--size-5);
     flex: 1;
     justify-content: center;
   }
@@ -313,16 +300,16 @@ sheet.replaceSync(`
     color: var(--nav-link-color);
     text-decoration: none;
     font-size: var(--nav-link-size);
-    font-weight: var(--font-weight-8);
-    padding: var(--size-2) 0;
-    transition: color 0.15s ease;
+    font-weight: var(--font-weight-7);
+    padding: var(--size-2) var(--size-1);
+    transition: color 0.15s ease, background 0.15s ease;
   }
   .header-nav a:hover {
     color: var(--nav-link-hover);
   }
   .header-nav a[aria-current="page"] {
-    color: var(--text-primary);
-    font-weight: 500;
+    color: var(--brand-deep);
+    font-weight: var(--font-weight-8);
   }
 
   .header-right {
@@ -336,20 +323,22 @@ sheet.replaceSync(`
   .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--size-2);
     color: var(--text-primary);
     text-decoration: none;
     font-size: var(--font-size-button);
-    font-weight: var(--font-weight-medium);
-    padding: 8px 14px;
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
-    background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--size-2) var(--size-4);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
     transition: all 0.15s ease;
   }
   .btn-secondary:hover {
-    border-color: var(--border-hover);
-    background: var(--bg-hover);
+    color: var(--brand-deep);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
   }
   .btn-secondary svg { flex-shrink: 0; }
 
@@ -360,16 +349,18 @@ sheet.replaceSync(`
     color: var(--on-brand);
     text-decoration: none;
     font-size: var(--font-size-button);
-    font-weight: var(--font-weight-medium);
-    padding: 8px 14px;
-    border: none;
-    border-radius: var(--radius-2);
-    background: var(--brand);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--size-2) var(--size-4);
+    border: var(--border-size-1) solid transparent;
+    border-radius: var(--radius-round);
+    background: linear-gradient(135deg, var(--brand), var(--brand-light));
+    box-shadow: 0 var(--size-2) var(--size-5) var(--brand-glow);
     white-space: nowrap;
     transition: all 0.15s ease;
   }
   .btn-primary:hover {
-    background: var(--brand-hover);
+    background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
+    transform: translateY(calc(var(--border-size-1) * -1));
   }
 
   .lang-switch {
@@ -377,22 +368,22 @@ sheet.replaceSync(`
     align-items: center;
     justify-content: center;
     min-width: 32px;
-    height: 32px;
-    padding: 0 var(--size-2);
+    height: 38px;
+    padding: 0 var(--size-3);
     font-size: var(--font-size-button);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
     border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-2);
-    background: transparent;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
     cursor: pointer;
     text-decoration: none;
     transition: all 0.15s ease;
   }
   .lang-switch:hover {
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-    background: var(--bg-hover);
+    color: var(--brand-deep);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
   }
 
   /* Sidebar */
@@ -514,6 +505,21 @@ sheet.replaceSync(`
   }
 
   /* Responsive */
+  @media (max-width: 1120px) {
+    .header-inner {
+      gap: var(--size-3);
+      padding-inline: var(--size-4);
+    }
+
+    .header-nav {
+      gap: var(--size-3);
+    }
+
+    .btn-secondary .btn-text {
+      display: none;
+    }
+  }
+
   @media (max-width: 900px) {
     .mobile-menu-btn { display: flex; }
     .header-inner { padding: 0 var(--size-4); gap: var(--size-2); }
@@ -874,8 +880,8 @@ export class OpenLayout extends OpenElement {
   private _renderLayout() {
     const home = this._getBool('full-width') || this._getBool('home');
     const noSearch = this.hasAttribute('no-search');
-    const logoText = this._esc(this._getStr('logo-text', ''));
-    const logoSub = this._esc(this._getStr('logo-sub', ''));
+    const logoText = this._getStr('logo-text', '');
+    const logoSub = this._getStr('logo-sub', '');
     const locales = this._locales;
     const currentLocale = this._currentLocale;
     const currentPath = this._currentPathWithoutLocale;
@@ -927,7 +933,7 @@ export class OpenLayout extends OpenElement {
                   href={langHref}
                   data-nav={langHref}
                 >
-                  {this._esc(langLabel)}
+                  {langLabel}
                 </a>
               )}
               <a
@@ -1039,7 +1045,7 @@ export class OpenLayout extends OpenElement {
             </div>
           </div>
           <div className='footer-bottom'>
-            <span>© 2026 openElement. MIT License.</span>
+            <span>(c) 2026 openElement. MIT License.</span>
           </div>
         </footer>
         {this._renderMobileTabBar()}
@@ -1063,7 +1069,7 @@ export class OpenLayout extends OpenElement {
               data-nav={isExternal ? '' : localized}
               aria-current={isCurrent ? 'page' : undefined}
             >
-              {this._esc(link.label)}
+              {link.label}
             </a>
           );
         })}
@@ -1083,7 +1089,7 @@ export class OpenLayout extends OpenElement {
         {nav.map((section) => (
           <details className='nav-section' open>
             <summary className='nav-section-title'>
-              {this._esc(section.section)}
+              {section.section}
             </summary>
             {section.items.map((item) => {
               const href = item.href || item.path || '#';
@@ -1097,7 +1103,7 @@ export class OpenLayout extends OpenElement {
                   aria-current={isActive ? 'page' : undefined}
                   data-nav={isExternal ? '' : localized}
                 >
-                  {this._esc(item.label)}
+                  {item.label}
                 </a>
               );
             })}
@@ -1138,7 +1144,7 @@ export class OpenLayout extends OpenElement {
               aria-current={isActive ? 'page' : undefined}
             >
               {this._renderIcon(link.label)}
-              <span>{this._esc(link.label)}</span>
+              <span>{link.label}</span>
             </a>
           );
         })}

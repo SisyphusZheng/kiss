@@ -1,5 +1,5 @@
 /**
- * Homepage - Industrial Standards System.
+ * Homepage - Monet Protocol Lab.
  *
  * Strategic anchors:
  * openElement = Elements + UI + Framework + Protocols.
@@ -43,81 +43,93 @@ pageSheet.replaceSync(`
 
   .hero {
     position: relative;
-    min-height: clamp(560px, calc(100svh - var(--nav-height) - 220px), 720px);
-    overflow: hidden;
-    background-image:
-      linear-gradient(var(--brand), var(--brand)),
-      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1));
-    background-size: auto, 258px 120px, 258px 120px;
-    color: var(--on-brand);
-  }
-
-  :host([data-theme="dark"]) .hero,
-  :host-context([data-theme="dark"]) .hero {
-    background-image:
-      linear-gradient(var(--bg-code), var(--bg-code)),
-      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1));
-    color: var(--code-text);
-  }
-
-  .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, .72fr) minmax(420px, 1fr);
+    min-height: calc(100svh - var(--nav-height));
+    overflow: hidden;
+    isolation: isolate;
+    border-block-end: var(--border-size-1) solid var(--border);
+    background:
+      linear-gradient(116deg, color-mix(in srgb, var(--violet-2) 44%, transparent), transparent 52%),
+      linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 74%, var(--violet-0)), var(--bg-base));
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      linear-gradient(color-mix(in srgb, var(--brand) 18%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, color-mix(in srgb, var(--brand) 14%, transparent) var(--border-size-1), transparent var(--border-size-1));
+    background-size: 220px 128px;
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 92%, transparent);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 42%;
+    z-index: -1;
+    background:
+      repeating-linear-gradient(
+        176deg,
+        color-mix(in srgb, var(--brand-light) 22%, transparent) 0 1px,
+        transparent 1px 18px
+      );
+    opacity: .62;
+  }
+
+  .hero-stage {
+    position: relative;
+    display: grid;
+    align-content: center;
+    width: 100%;
     min-height: inherit;
-  }
-
-  .hero-copy,
-  .hero-art {
-    min-width: 0;
-    border-inline-end: var(--border-size-1) solid color-mix(in srgb, var(--on-brand) 28%, transparent);
-  }
-
-  :host([data-theme="dark"]) .hero-copy,
-  :host([data-theme="dark"]) .hero-art,
-  :host-context([data-theme="dark"]) .hero-copy,
-  :host-context([data-theme="dark"]) .hero-art {
-    border-inline-end-color: var(--border);
+    padding: var(--size-16) var(--size-8) var(--size-12);
   }
 
   .hero-copy {
-    display: grid;
-    align-content: space-between;
-    gap: var(--size-8);
-    padding: var(--size-6) var(--size-5) var(--size-8);
-  }
-
-  .hero-art {
     position: relative;
+    z-index: 1;
     display: grid;
-    align-items: center;
-    justify-items: end;
-    padding: var(--size-10) var(--size-12);
+    gap: var(--size-8);
+    max-width: 880px;
   }
 
-  .hero-meta {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-block: var(--border-size-1) solid color-mix(in srgb, var(--on-brand) 24%, transparent);
-  }
-
-  .hero-meta span {
-    padding: var(--size-5);
-    border-inline-end: var(--border-size-1) solid color-mix(in srgb, var(--on-brand) 24%, transparent);
+  .hero-meta,
+  .section-kicker,
+  .card-index,
+  .matrix-key,
+  .artifact-tag {
+    color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
     text-transform: uppercase;
   }
 
-  .hero-title {
-    max-width: 780px;
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--size-2);
+  }
+
+  .hero-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 var(--size-3);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--brand) 24%, var(--border));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
   }
 
   h1 {
+    max-width: 860px;
     margin: 0;
-    font-size: clamp(var(--font-size-6), 8vw, 7.25rem);
+    font-size: var(--font-size-8);
     line-height: .88;
     letter-spacing: 0;
     font-weight: var(--font-weight-9);
@@ -125,9 +137,10 @@ pageSheet.replaceSync(`
 
   .lede {
     max-width: 720px;
-    margin-block: var(--size-8) 0;
+    margin-block: 0;
+    color: var(--text-secondary);
     font-size: var(--font-size-3);
-    line-height: 1.12;
+    line-height: 1.18;
     font-weight: var(--font-weight-5);
   }
 
@@ -135,80 +148,83 @@ pageSheet.replaceSync(`
     display: flex;
     flex-wrap: wrap;
     gap: var(--size-3);
-    margin-block-start: var(--size-8);
   }
 
-  .hero .actions open-button[variant="primary"],
-  .cta open-button[variant="primary"] {
-    --brand: var(--text-primary);
-    --brand-hover: var(--text-primary);
-    --on-brand: var(--bg-base);
-  }
-
-  .aperture {
-    position: relative;
-    width: min(34vw, 430px);
+  .hero-art {
+    position: absolute;
+    z-index: 0;
+    inset-inline-end: var(--size-8);
+    inset-block: 50% auto;
+    width: min(620px, 44vw);
     aspect-ratio: 1;
-    border: clamp(var(--size-6), 3.4vw, var(--size-12)) solid currentColor;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .monet-lens {
+    position: absolute;
+    inset: 0;
+    border: var(--size-8) solid transparent;
     border-radius: var(--radius-round);
+    background:
+      linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
+      conic-gradient(from 212deg, var(--brand-deep), var(--brand), var(--brand-light), var(--brand-deep)) border-box;
+    box-shadow:
+      inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--brand-light) 42%, transparent),
+      0 var(--size-12) var(--size-16) var(--brand-glow);
+    opacity: .94;
   }
 
-  .aperture::before {
+  .monet-lens::before {
     content: "";
     position: absolute;
-    inset-inline-end: calc(var(--size-5) * -1);
-    inset-block-start: calc(var(--size-5) * -1);
-    width: clamp(var(--size-12), 7vw, 104px);
-    height: clamp(var(--size-12), 7vw, 104px);
-    border-block-start: clamp(var(--size-5), 2vw, var(--size-8)) solid var(--brand);
-    border-inline-end: clamp(var(--size-5), 2vw, var(--size-8)) solid var(--brand);
+    inset: 18%;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 52%, var(--bg-base));
+    border-radius: var(--radius-round);
+    transform: rotate(-16deg);
   }
 
-  .aperture::after {
+  .monet-lens::after {
     content: "";
     position: absolute;
-    inset-inline: 28%;
-    inset-block: 42%;
-    border-block: clamp(var(--size-2), .9vw, var(--size-4)) solid var(--brand);
+    inset-inline: 19%;
+    inset-block: 47%;
+    height: var(--size-12);
+    border-block: var(--border-size-2) solid var(--brand-deep);
+    opacity: .72;
   }
 
   .hero-art-label {
     position: absolute;
-    inset-inline-start: var(--size-5);
-    inset-block-start: var(--size-5);
+    inset-inline-end: 8%;
+    inset-block-end: 16%;
+    color: var(--brand-deep);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
     text-transform: uppercase;
   }
 
-  .workbench {
+  .surface-band {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, .46fr);
-    min-height: 220px;
-    background: var(--bg-code);
-    color: var(--code-text);
-    border-block: var(--border-size-1) solid var(--code-border);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, .58fr);
+    gap: var(--size-5);
+    padding: var(--size-5);
+    border-block-end: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
   }
 
   .terminal {
     display: grid;
     gap: var(--size-4);
+    min-height: 240px;
     padding: var(--size-6);
-    background: var(--bg-card);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 28%, transparent), transparent 46%),
+      var(--bg-card);
     color: var(--text-primary);
-    border-inline-end: var(--border-size-1) solid var(--code-border);
-  }
-
-  .terminal strong,
-  .section-kicker,
-  .card-index,
-  .matrix-key {
-    color: var(--brand);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    text-transform: uppercase;
   }
 
   .terminal pre {
@@ -224,23 +240,22 @@ pageSheet.replaceSync(`
   .console-wrap {
     display: grid;
     align-content: center;
-    padding: var(--size-6);
-    border-inline-start: var(--border-size-1) solid var(--code-border);
+    min-height: 240px;
   }
 
   .product-strip {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    background: var(--bg-base);
     border-block-end: var(--border-size-1) solid var(--border);
   }
 
   .strip-item {
     display: grid;
     gap: var(--size-3);
-    min-height: 138px;
+    min-height: 154px;
     padding: var(--size-6);
     border-inline-end: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-card) 72%, transparent);
   }
 
   .strip-item:last-child {
@@ -263,13 +278,13 @@ pageSheet.replaceSync(`
 
   .section {
     display: grid;
-    grid-template-columns: minmax(280px, .42fr) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, .42fr) minmax(0, 1fr);
     border-block-end: var(--border-size-1) solid var(--border);
   }
 
   .section-head,
   .section-body {
-    padding: var(--size-8) var(--size-5);
+    padding: var(--size-8);
   }
 
   .section-head {
@@ -280,7 +295,7 @@ pageSheet.replaceSync(`
     margin-block-start: var(--size-4);
     max-width: 620px;
     font-size: var(--font-size-6);
-    line-height: .96;
+    line-height: .98;
     font-weight: var(--font-weight-9);
   }
 
@@ -290,7 +305,7 @@ pageSheet.replaceSync(`
   .matrix-value {
     color: var(--text-secondary);
     font-size: var(--font-size-1);
-    line-height: 1.35;
+    line-height: 1.42;
   }
 
   .matrix {
@@ -310,8 +325,7 @@ pageSheet.replaceSync(`
   .workflow-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-block-start: var(--border-size-1) solid var(--border);
-    border-inline-start: var(--border-size-1) solid var(--border);
+    gap: var(--size-4);
   }
 
   .path-link {
@@ -321,16 +335,15 @@ pageSheet.replaceSync(`
 
   .path-card,
   .workflow {
-    min-height: 260px;
-    border-block-end: 0;
-    border-inline-start: 0;
+    min-height: 270px;
+    background: color-mix(in srgb, var(--bg-card) 84%, transparent);
   }
 
   .path-card h3,
   .workflow h3 {
     margin-block: var(--size-5) var(--size-3);
     font-size: var(--font-size-3);
-    line-height: 1.05;
+    line-height: 1.08;
   }
 
   .visual {
@@ -344,39 +357,49 @@ pageSheet.replaceSync(`
     grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--size-5);
     align-items: center;
-    padding: var(--size-8) var(--size-5);
-    background: var(--brand);
+    padding: var(--size-8);
+    background:
+      linear-gradient(135deg, var(--brand-deep), var(--brand));
     color: var(--on-brand);
   }
 
   .cta h2 {
     margin-block: var(--size-3) 0;
     font-size: var(--font-size-5);
-    line-height: .98;
+    line-height: 1;
   }
 
   .cta p {
     max-width: 680px;
     margin-block-end: 0;
+    color: color-mix(in srgb, var(--on-brand) 82%, transparent);
     font-size: var(--font-size-1);
-    line-height: 1.35;
+    line-height: 1.42;
   }
 
-  @media (max-width: 980px) {
-    .hero-grid,
-    .workbench,
+  .cta open-button[variant="primary"] {
+    --brand: var(--bg-base);
+    --brand-hover: var(--bg-base);
+    --brand-light: var(--violet-1);
+    --on-brand: var(--brand-deep);
+  }
+
+  @media (max-width: 1080px) {
+    .hero-art {
+      opacity: .34;
+      width: 520px;
+    }
+
+    .surface-band,
     .section,
     .visual,
     .cta {
       grid-template-columns: 1fr;
     }
 
-    .hero-copy,
-    .hero-art,
-    .section-head,
-    .terminal,
-    .console-wrap {
+    .section-head {
       border-inline-end: 0;
+      border-block-end: var(--border-size-1) solid var(--border);
     }
 
     .product-strip,
@@ -384,39 +407,34 @@ pageSheet.replaceSync(`
     .workflow-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .aperture {
-      width: min(70vw, 360px);
-    }
   }
 
-  @media (max-width: 620px) {
-    .hero-grid {
-      min-height: auto;
-    }
-
-    .hero-copy,
+  @media (max-width: 640px) {
+    .hero-stage,
     .section-head,
     .section-body,
-    .terminal,
-    .console-wrap,
     .cta {
       padding: var(--size-5) var(--size-4);
     }
 
     h1 {
-      font-size: var(--font-size-5);
+      font-size: var(--font-size-6);
       line-height: .94;
     }
 
     .lede {
       font-size: var(--font-size-1);
-      line-height: 1.24;
+      line-height: 1.3;
     }
 
     .hero-art {
-      min-height: 300px;
-      padding: var(--size-6) var(--size-4);
+      inset-inline-end: calc(var(--size-16) * -1);
+      width: 360px;
+      opacity: .16;
+    }
+
+    .hero-art-label {
+      display: none;
     }
 
     .product-strip,
@@ -434,9 +452,9 @@ pageSheet.replaceSync(`
 
 const productLines = [
   ['01 Elements', 'Native component surface'],
-  ['02 UI', 'Open Props primitives'],
+  ['02 UI', 'Tokenized interface system'],
   ['03 Framework', 'DSD routes and islands'],
-  ['04 Protocols', 'Contracts and CI truth'],
+  ['04 Protocols', 'Package and release truth'],
 ];
 
 const workflow = [
@@ -460,34 +478,33 @@ export class DocsHome extends OpenElement {
     return (
       <main class='home'>
         <section class='hero swiss-grid'>
-          <div class='hero-grid'>
+          <div class='hero-stage'>
             <div class='hero-copy'>
               <div class='hero-meta' aria-label='Product status'>
-                <span>System</span>
+                <span>Monet Protocol Lab</span>
                 <span>v0.40.7</span>
+                <span>Open Web Components</span>
               </div>
-              <div class='hero-title'>
-                <h1>Web Standards Productized.</h1>
-                <p class='lede'>
-                  Elements, UI, Framework, and Protocols as one inspectable
-                  application system.
-                </p>
-                <div class='actions'>
-                  <open-button variant='primary' size='lg' href='/guide/getting-started'>Start building</open-button>
-                  <open-button class='secondary-action' size='lg' href='/architecture/architecture'>Architecture</open-button>
-                </div>
+              <h1>Web standards, held in an open aperture.</h1>
+              <p class='lede'>
+                A refined system for Elements, UI, Framework, and Protocols:
+                platform-native, inspectable, and designed like a product.
+              </p>
+              <div class='actions'>
+                <open-button variant='primary' size='lg' href='/guide/getting-started'>Start building</open-button>
+                <open-button class='secondary-action' size='lg' href='/architecture/architecture'>View architecture</open-button>
               </div>
             </div>
             <div class='hero-art' aria-hidden='true'>
-              <span class='hero-art-label'>open mode</span>
-              <div class='aperture'></div>
+              <div class='monet-lens'></div>
+              <span class='hero-art-label'>shadow DOM / route graph / package truth</span>
             </div>
           </div>
         </section>
 
-        <section class='workbench'>
+        <section class='surface-band'>
           <div class='terminal'>
-            <strong>DSD workbench</strong>
+            <strong class='artifact-tag'>DSD workbench</strong>
             <pre>{`customElements.define('docs-home', OpenElement)
 <template shadowrootmode="open">
 route graph / island hydration / package truth`}</pre>
@@ -509,13 +526,12 @@ route graph / island hydration / package truth`}</pre>
         <section class='section'>
           <div class='section-head'>
             <p class='section-kicker'>Product matrix</p>
-            <h2 class='section-title'>One standard surface across app, UI, docs, and package contracts.</h2>
+            <h2 class='section-title'>One luminous surface across app, UI, docs, and package contracts.</h2>
           </div>
           <div class='section-body'>
             <p class='section-copy'>
-              The site now behaves like a technical sheet: fewer decorative cards,
-              stronger grid structure, and every visual block tied to something
-              users can inspect in the framework.
+              The site reads as a product artifact: fewer walls, clearer rhythm,
+              and every visual block tied to something users can inspect in the framework.
             </p>
             <div class='matrix'>
               <div class='matrix-row'>

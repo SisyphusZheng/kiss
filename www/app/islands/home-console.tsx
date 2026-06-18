@@ -25,10 +25,12 @@ styles.replaceSync(`
     display: grid;
     min-height: 100%;
     overflow: hidden;
-    border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-1);
-    background: var(--bg-code);
-    color: var(--code-text);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-3);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-2) 18%, transparent), transparent 46%),
+      var(--bg-card);
+    color: var(--text-primary);
   }
 
   .rp-header {
@@ -37,8 +39,8 @@ styles.replaceSync(`
     justify-content: space-between;
     gap: var(--size-3);
     padding: var(--size-3) var(--size-4);
-    border-bottom: var(--border-size-1) solid var(--code-border);
-    background: color-mix(in srgb, var(--bg-code) 82%, var(--code-border));
+    border-bottom: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
   }
 
   .rp-title {
@@ -74,10 +76,10 @@ styles.replaceSync(`
     width: var(--size-8);
     height: var(--size-8);
     padding: 0;
-    border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-1);
-    background: color-mix(in srgb, var(--bg-code) 78%, var(--code-border));
-    color: var(--code-text);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+    color: var(--text-primary);
     cursor: pointer;
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-7);
@@ -88,9 +90,9 @@ styles.replaceSync(`
   }
 
   .counter-btn:hover {
-    transform: translateX(var(--size-1));
-    border-color: var(--brand);
-    background: var(--brand);
+    transform: translateY(calc(var(--border-size-1) * -1));
+    border-color: var(--brand-light);
+    background: linear-gradient(135deg, var(--brand), var(--brand-light));
     color: var(--on-brand);
   }
 
@@ -102,7 +104,7 @@ styles.replaceSync(`
   .counter-value {
     min-width: var(--size-16);
     padding: 0 var(--size-7);
-    color: var(--code-text);
+    color: var(--text-primary);
     font-size: var(--font-size-5);
     font-variant-numeric: tabular-nums;
     font-weight: var(--font-weight-9);
@@ -111,7 +113,7 @@ styles.replaceSync(`
 
   .counter-caption {
     margin: 0;
-    color: color-mix(in srgb, var(--code-text) 66%, transparent);
+    color: var(--text-secondary);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     line-height: var(--font-lineheight-3);

@@ -53,7 +53,7 @@ html[data-theme="light"],
   --nav-bg: var(--bg-base);
   --nav-height: var(--size-16);
   --nav-link-color: var(--text-primary);
-  --nav-link-hover: var(--brand);
+  --nav-link-hover: var(--brand-deep);
   --font-size-button: var(--font-size-0);
   --font-size-body-sm: var(--font-size-0);
   --font-size-caption: var(--font-size-00);
@@ -91,10 +91,11 @@ html[data-theme="dark"],
 body {
   margin: 0;
   background:
-    linear-gradient(color-mix(in srgb, var(--border) 56%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 56%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(115deg, color-mix(in srgb, var(--violet-1) 38%, transparent), transparent 46%),
+    linear-gradient(color-mix(in srgb, var(--border) 34%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) var(--border-size-1), transparent var(--border-size-1)),
     var(--bg-canvas);
-  background-size: 258px 120px, 258px 120px, auto;
+  background-size: auto, 220px 128px, 220px 128px, auto;
   color: var(--text-primary);
 }
 ::selection {
@@ -102,7 +103,7 @@ body {
   color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+  `<style>${rootCSS}body{font-family:'Instrument Sans','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   base: '/',
@@ -139,8 +140,8 @@ export default defineConfig({
       pwa: {
         name: 'openElement Framework',
         shortName: 'openElement',
-        themeColor: '#f6f8fb',
-        backgroundColor: '#f6f8fb',
+        themeColor: '#f3eaff',
+        backgroundColor: '#fbf7ff',
       },
       viewTransition: true,
       speculation: true,
@@ -204,7 +205,7 @@ export default defineConfig({
         headFragments: [
           '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />',
           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
-          '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />',
+          '<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />',
           '<meta property="og:site_name" content="openElement">',
           '<meta property="og:type" content="website">',
           '<meta property="og:title" content="openElement - The Open Element">',

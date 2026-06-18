@@ -43,11 +43,12 @@ sheet.replaceSync(`
     font-weight: var(--font-weight-8);
     text-decoration: none;
     cursor: pointer;
-    border: var(--border-size-1) solid var(--border);
-    background: transparent;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
     color: var(--text-primary);
     border-radius: var(--btn-radius);
-    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 72%, transparent);
+    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
     white-space: nowrap;
     letter-spacing: 0;
   }
@@ -56,38 +57,40 @@ sheet.replaceSync(`
   .btn--sm {
     padding: var(--size-1) var(--size-3);
     font-size: var(--font-size-0);
-    height: 28px;
+    min-height: 30px;
   }
 
   .btn--md {
     padding: var(--size-2) var(--size-4);
     font-size: var(--font-size-1);
-    height: 36px;
+    min-height: 38px;
   }
 
   .btn--lg {
     padding: var(--size-3) var(--size-5);
     font-size: var(--font-size-2);
-    height: 44px;
+    min-height: 48px;
   }
 
   /* Variants */
   .btn--default:hover {
-    color: var(--on-brand);
-    border-color: var(--brand);
-    background: var(--brand);
+    color: var(--brand-deep);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 52%, var(--bg-elevated));
   }
 
   .btn--primary {
-    background: var(--brand, var(--indigo-6));
+    background: linear-gradient(135deg, var(--brand), var(--brand-light));
     color: var(--on-brand);
-    border-color: var(--brand, var(--indigo-6));
+    border-color: transparent;
+    box-shadow: 0 var(--size-2) var(--size-5) color-mix(in srgb, var(--brand) 22%, transparent);
   }
 
   .btn--primary:hover {
-    background: var(--brand-hover, var(--indigo-7));
-    border-color: var(--brand-hover, var(--indigo-7));
-    transform: translateX(var(--size-1));
+    background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
+    border-color: transparent;
+    transform: translateY(calc(var(--border-size-1) * -1));
+    box-shadow: 0 var(--size-3) var(--size-6) color-mix(in srgb, var(--brand) 28%, transparent);
   }
 
   .btn--ghost {
@@ -95,7 +98,7 @@ sheet.replaceSync(`
   }
 
   .btn--ghost:hover {
-    background: var(--brand-subtle);
+    background: color-mix(in srgb, var(--brand-pale) 38%, transparent);
     border-color: transparent;
   }
 
