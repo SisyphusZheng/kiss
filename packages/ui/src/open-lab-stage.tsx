@@ -34,6 +34,11 @@ sheet.replaceSync(`
       linear-gradient(225deg, color-mix(in srgb, var(--success) 18%, transparent), transparent),
       var(--bg-code);
     color: var(--code-text);
+    box-shadow: var(--shadow-1);
+  }
+
+  .stage--high {
+    min-height: var(--lab-stage-min-height, 680px);
   }
 
   .stage--normal {
@@ -41,6 +46,7 @@ sheet.replaceSync(`
   }
 
   .stage__grid,
+  .stage__beams,
   .stage__scan {
     position: absolute;
     inset: 0;
@@ -57,21 +63,32 @@ sheet.replaceSync(`
     z-index: -2;
   }
 
+  .stage__beams {
+    background:
+      linear-gradient(112deg, transparent 0 31%, color-mix(in srgb, var(--brand-light) 20%, transparent) 31% 32%, transparent 32% 100%),
+      linear-gradient(68deg, transparent 0 58%, color-mix(in srgb, var(--success) 16%, transparent) 58% 59%, transparent 59% 100%),
+      linear-gradient(92deg, transparent 0 72%, color-mix(in srgb, var(--warning) 12%, transparent) 72% 73%, transparent 73% 100%);
+    opacity: .74;
+    z-index: -1;
+  }
+
   .stage__scan {
     background:
       linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent),
       linear-gradient(180deg, transparent, color-mix(in srgb, var(--success) 14%, transparent), transparent);
     opacity: .72;
     transform: translateX(calc(var(--size-16) * -1));
-    z-index: -1;
+    z-index: 0;
   }
 
   .stage__body {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr);
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
     gap: var(--size-4);
     align-items: stretch;
     padding: var(--size-4);
+    z-index: 1;
   }
 
   .stage__browser,
@@ -159,7 +176,7 @@ sheet.replaceSync(`
   .stage__headline {
     margin: 0;
     color: var(--code-text);
-    font-size: clamp(var(--font-size-4), 4vw, var(--font-size-6));
+    font-size: var(--font-size-6);
     line-height: var(--font-lineheight-1);
     letter-spacing: 0;
   }
@@ -235,7 +252,7 @@ sheet.replaceSync(`
 
   .stage__dock {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--size-3);
   }
 
@@ -344,6 +361,10 @@ sheet.replaceSync(`
     animation: lab-scan 9s var(--ease-2) infinite alternate;
   }
 
+  .stage--motion .stage__beams {
+    animation: lab-beams 12s var(--ease-2) infinite alternate;
+  }
+
   .stage--motion .stage__node {
     animation: lab-float 7s var(--ease-1) infinite alternate;
   }
@@ -361,6 +382,7 @@ sheet.replaceSync(`
   }
 
   .stage--still .stage__scan,
+  .stage--still .stage__beams,
   .stage--still .stage__node,
   .stage--still .stage__code-line {
     animation: none;
@@ -388,6 +410,17 @@ sheet.replaceSync(`
     }
   }
 
+  @keyframes lab-beams {
+    from {
+      transform: translateX(calc(var(--size-8) * -1));
+      opacity: .48;
+    }
+    to {
+      transform: translateX(var(--size-8));
+      opacity: .86;
+    }
+  }
+
   @keyframes lab-float {
     from {
       filter: brightness(1);
@@ -408,6 +441,7 @@ sheet.replaceSync(`
 
   @media (prefers-reduced-motion: reduce) {
     .stage--motion .stage__scan,
+    .stage--motion .stage__beams,
     .stage--motion .stage__node,
     .stage--motion .stage__code-line {
       animation: none;
@@ -425,10 +459,32 @@ sheet.replaceSync(`
     }
 
     .stage__body,
-    .stage__nodes,
-    .stage__dock,
     .stage__spec {
       grid-template-columns: 1fr;
+    }
+
+    .stage__viewport {
+      gap: var(--size-3);
+      padding: var(--size-3);
+    }
+
+    .stage__headline {
+      font-size: var(--font-size-3);
+    }
+
+    .stage__copy,
+    .stage__dock {
+      display: none;
+    }
+
+    .stage__map {
+      min-height: 132px;
+      padding: var(--size-3);
+    }
+
+    .stage__nodes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--size-2);
     }
 
     .stage__side {
@@ -439,6 +495,7 @@ sheet.replaceSync(`
     .stage__node:nth-child(2),
     .stage__node:nth-child(3) {
       min-height: auto;
+      padding: var(--size-2);
       transform: none;
     }
 
@@ -459,6 +516,7 @@ export class OpenLabStage extends OpenElement {
     return (
       <section className={`stage stage--${emphasis} stage--${motion}`} part='stage'>
         <div className='stage__grid' aria-hidden='true'></div>
+        <div className='stage__beams' aria-hidden='true'></div>
         <div className='stage__scan' aria-hidden='true'></div>
         <div className='stage__body'>
           <article className='stage__browser' aria-label='Browser standards lab'>
@@ -511,6 +569,10 @@ export class OpenLabStage extends OpenElement {
                 <div className='stage__dock-item'>
                   <span className='stage__path'>Framework</span>
                   <span>routes, APIs, content</span>
+                </div>
+                <div className='stage__dock-item'>
+                  <span className='stage__path'>Protocols</span>
+                  <span>public package contracts</span>
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
 // Current public line: v0.40.7 product graph.
+// Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -62,7 +63,7 @@ pageSheet.replaceSync(`
 
   h1 {
     margin-block-end: 0;
-    font-size: clamp(var(--font-size-5), 5vw, var(--font-size-7));
+    font-size: var(--font-size-7);
     line-height: var(--font-lineheight-1);
     letter-spacing: 0;
   }
@@ -231,7 +232,7 @@ pageSheet.replaceSync(`
     }
 
     h1 {
-      font-size: var(--font-size-6);
+      font-size: var(--font-size-5);
     }
 
     .subtitle {

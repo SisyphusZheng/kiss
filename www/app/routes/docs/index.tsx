@@ -66,7 +66,7 @@ pageSheet.replaceSync(`
 
   h1 {
     margin-block-end: 0;
-    font-size: clamp(var(--font-size-5), 5vw, var(--font-size-7));
+    font-size: var(--font-size-7);
     line-height: var(--font-lineheight-1);
     letter-spacing: 0;
   }
@@ -204,15 +204,25 @@ pageSheet.replaceSync(`
   @media (max-width: 640px) {
     .desk {
       width: min(100% - calc(var(--size-4) * 2), var(--site-container));
-      padding-block-start: var(--size-8);
+      padding-block-start: var(--size-5);
+    }
+
+    .hero {
+      gap: var(--size-5);
+      padding-block-end: var(--size-5);
     }
 
     h1 {
-      font-size: var(--font-size-6);
+      font-size: var(--font-size-5);
     }
 
     .lede {
+      margin-block-start: var(--size-4);
       font-size: var(--font-size-1);
+    }
+
+    .paths {
+      margin-block-start: var(--size-5);
     }
 
     .paths,

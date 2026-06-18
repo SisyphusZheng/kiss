@@ -204,7 +204,7 @@ export default defineConfig({
         headFragments: [
           '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />',
           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
-          '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />',
+          '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />',
           '<meta property="og:site_name" content="openElement">',
           '<meta property="og:type" content="website">',
           '<meta property="og:title" content="openElement - The Open Element">',
@@ -213,7 +213,7 @@ export default defineConfig({
           '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
           '<meta name="twitter:card" content="summary_large_image">',
           '<meta name="description" content="openElement - The Open Element. DSD-first Web Standards framework with SSG, islands, and Web Components.">',
-          '<style>html{visibility:visible!important;}body{background:#f6f8fb;color:#101828;}</style>',
+          '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
           '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
           '<link rel="apple-touch-icon" href="/assets/open-logo.svg" />',
           colorTokensStyle,

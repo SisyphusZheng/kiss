@@ -1,10 +1,10 @@
 import { defineIslandConfig } from '@openelement/app';
 import { defineCustomElement } from '@openelement/core';
-import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
-import { signal } from '@openelement/signal';
 import { consumeContext } from '@openelement/core';
-import { linearTokenSheet } from '@openelement/ui';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import { OpenElement } from '@openelement/element';
+import { signal } from '@openelement/signal';
+import { openPropsTokenSheet } from '@openelement/ui';
 import { THEME_CTX } from '@openelement/ui/open-layout';
 
 export const tagName = 'home-console';
@@ -12,41 +12,127 @@ export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd:
 
 const styles = new StyleSheet();
 styles.replaceSync(`
-  :host { display: block; }
-  .panel { background: var(--bg-panel, var(--bg-card)); border: 0.5px solid var(--border); border-radius: var(--radius-2); overflow: hidden; }
-  .rp-header { display: flex; align-items: center; justify-content: space-between; padding: var(--size-2) var(--size-3); background: var(--bg-surface); border-bottom: 0.5px solid var(--border); }
-  .rp-title { font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-7); color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
-  .pane { padding: var(--size-6) var(--size-4); }
-  .pane.hidden { display: none; }
-  .counter-row { display: flex; align-items: center; justify-content: center; gap: var(--size-4); }
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .panel {
+    display: grid;
+    min-height: 100%;
+    overflow: hidden;
+    border: var(--border-size-1) solid var(--code-border);
+    border-radius: var(--radius-2);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--brand) 16%, transparent), transparent),
+      color-mix(in srgb, var(--bg-code) 88%, var(--code-border));
+    color: var(--code-text);
+  }
+
+  .rp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--size-3);
+    padding: var(--size-3) var(--size-4);
+    border-bottom: var(--border-size-1) solid var(--code-border);
+    background: color-mix(in srgb, var(--bg-code) 82%, var(--code-border));
+  }
+
+  .rp-title {
+    overflow: hidden;
+    color: var(--brand-light);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .pane {
+    display: grid;
+    align-content: center;
+    gap: var(--size-4);
+    padding: var(--size-5) var(--size-4);
+  }
+
+  .counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--size-3);
+  }
+
   .counter-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: var(--size-8); height: var(--size-8);
-    border: 0.5px solid var(--border); border-radius: var(--radius-2);
-    background: var(--bg-surface); color: var(--text-muted);
-    font-size: var(--font-size-3); font-weight: var(--font-weight-6);
-    cursor: pointer; transition: all var(--ease-3) var(--duration-2);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-8);
+    height: var(--size-8);
+    padding: 0;
+    border: var(--border-size-1) solid var(--code-border);
+    border-radius: var(--radius-2);
+    background: color-mix(in srgb, var(--bg-code) 78%, var(--code-border));
+    color: var(--code-text);
+    cursor: pointer;
+    font-size: var(--font-size-3);
+    font-weight: var(--font-weight-7);
+    transition:
+      transform var(--duration-2) var(--ease-2),
+      border-color var(--duration-2) var(--ease-2),
+      background var(--duration-2) var(--ease-2);
   }
-  .counter-btn:hover { color: var(--text-primary); background: var(--bg-hover); border-color: var(--indigo-5); }
+
+  .counter-btn:hover {
+    transform: translateY(calc(var(--size-1) * -1));
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand) 20%, var(--bg-code));
+  }
+
+  .counter-btn:focus-visible {
+    outline: var(--border-size-2) solid var(--brand-light);
+    outline-offset: var(--size-1);
+  }
+
   .counter-value {
+    min-width: var(--size-16);
     padding: 0 var(--size-7);
-    font-size: var(--font-size-5); font-weight: var(--font-weight-9);
-    color: var(--text-primary); font-variant-numeric: tabular-nums;
-    min-width: 60px; text-align: center;
+    color: var(--code-text);
+    font-size: var(--font-size-5);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-9);
+    text-align: center;
   }
+
   .counter-caption {
-    font-family: var(--font-mono); font-size: var(--font-size-00);
-    color: var(--text-muted); text-align: center; margin-top: var(--size-4);
+    margin: 0;
+    color: color-mix(in srgb, var(--code-text) 66%, transparent);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: var(--font-lineheight-3);
+    text-align: center;
   }
-  .counter-caption b { color: var(--indigo-5); font-weight: var(--font-weight-7); }
+
+  .counter-caption b {
+    color: var(--success);
+    font-weight: var(--font-weight-8);
+  }
+
   @media (max-width: 768px) {
-    .rp-tab { padding: var(--size-1) var(--size-3); font-size: var(--font-size-00); }
+    .counter-value {
+      padding-inline: var(--size-4);
+    }
   }
 `);
 
 export default class HomeConsole extends OpenElement {
-  static override styles = [linearTokenSheet, styles];
+  static override styles = [openPropsTokenSheet, styles];
   #count = signal(42);
 
   constructor() {
@@ -55,7 +141,7 @@ export default class HomeConsole extends OpenElement {
   }
 
   override connectedCallback() {
-    super.connectedCallback(); // calls _hydrateSignals()
+    super.connectedCallback();
     const theme = consumeContext(THEME_CTX);
     this.setAttribute('data-theme', theme.value);
     theme.subscribe((t) => this.setAttribute('data-theme', t));
@@ -65,7 +151,7 @@ export default class HomeConsole extends OpenElement {
     return (
       <div class='panel'>
         <div class='rp-header'>
-          <span class='rp-title'>HYPER-GRAPH ENGINE</span>
+          <span class='rp-title'>LIVE VERIFICATION CONSOLE</span>
         </div>
         <div class='pane'>
           <div class='counter-row'>
@@ -74,8 +160,7 @@ export default class HomeConsole extends OpenElement {
             <button type='button' class='counter-btn' onClick={() => this.increment()}>+</button>
           </div>
           <p class='counter-caption'>
-            <b>METRICS</b> — packages verified:{' '}
-            <b data-signal='count' textContent={this.#count}></b>
+            <b>METRICS</b> packages verified: <b data-signal='count' textContent={this.#count}></b>
           </p>
         </div>
       </div>
@@ -85,6 +170,7 @@ export default class HomeConsole extends OpenElement {
   decrement() {
     this.#count.value--;
   }
+
   increment() {
     this.#count.value++;
   }

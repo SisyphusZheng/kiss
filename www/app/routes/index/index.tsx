@@ -1,5 +1,10 @@
 /**
- * Homepage - Web Standards Lab.
+ * Homepage - Kinetic Web Standards Lab.
+ *
+ * Strategic anchors:
+ * openElement = Elements + UI + Framework + Protocols.
+ * Current public package line: v0.40.7.
+ * Active execution line: v0.40.7.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -10,6 +15,7 @@ import '@openelement/ui/open-card';
 import '@openelement/ui/open-lab-panel';
 import '@openelement/ui/open-lab-stage';
 import '@openelement/ui/open-standards-visual';
+import '../../islands/home-console.js';
 
 export const tagName = 'docs-home';
 
@@ -26,33 +32,76 @@ pageSheet.replaceSync(`
 
   .home {
     display: grid;
-    gap: var(--size-16);
-    padding-block: var(--size-10) var(--site-section-block);
+    gap: var(--size-12);
+    padding-block-end: var(--site-section-block);
   }
 
-  .hero,
+  .hero {
+    position: relative;
+    display: grid;
+    min-height: calc(100svh - var(--nav-height) - var(--size-16));
+    overflow: hidden;
+    isolation: isolate;
+    color: var(--code-text);
+    background:
+      linear-gradient(color-mix(in srgb, var(--code-border) 46%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, color-mix(in srgb, var(--code-border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(135deg, color-mix(in srgb, var(--brand) 22%, transparent), transparent 42%),
+      linear-gradient(225deg, color-mix(in srgb, var(--success) 18%, transparent), transparent 48%),
+      var(--bg-code);
+    background-size: var(--size-10) var(--size-10), var(--size-10) var(--size-10), auto, auto, auto;
+  }
+
+  .hero::before,
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .hero::before {
+    inset-inline-start: 7%;
+    width: var(--border-size-2);
+    background: linear-gradient(transparent, var(--brand-light), transparent);
+    opacity: .68;
+  }
+
+  .hero::after {
+    inset-inline-end: 12%;
+    width: var(--size-16);
+    transform: skewX(-18deg);
+    background: linear-gradient(transparent, color-mix(in srgb, var(--success) 18%, transparent), transparent);
+    opacity: .72;
+  }
+
+  .hero-inner,
   .section,
   .cta {
     width: min(100% - calc(var(--size-8) * 2), var(--site-container-wide));
     margin-inline: auto;
   }
 
-  .hero {
+  .hero-inner {
     display: grid;
-    grid-template-columns: minmax(0, .7fr) minmax(430px, 1.3fr);
+    grid-template-columns: minmax(0, .74fr) minmax(500px, 1.26fr);
     gap: var(--size-8);
     align-items: center;
+    padding-block: var(--size-6);
   }
 
   .hero-copy {
     display: grid;
     align-content: center;
+    min-width: 0;
   }
 
   .eyebrow,
   .section__kicker,
   .card__index,
-  .mono {
+  .mono,
+  .hero-stat strong {
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
@@ -66,6 +115,10 @@ pageSheet.replaceSync(`
     margin: 0 0 var(--size-4);
   }
 
+  .hero .eyebrow {
+    color: var(--success);
+  }
+
   h1,
   h2,
   h3,
@@ -74,18 +127,19 @@ pageSheet.replaceSync(`
   }
 
   h1 {
-    max-width: 820px;
+    max-width: 780px;
     margin-block-end: 0;
-    font-size: clamp(var(--font-size-6), 6vw, var(--font-size-8));
+    color: var(--code-text);
+    font-size: var(--font-size-8);
     line-height: var(--font-lineheight-1);
     letter-spacing: 0;
-    font-weight: var(--font-weight-8);
+    font-weight: var(--font-weight-9);
   }
 
   .lede {
-    max-width: 660px;
+    max-width: 620px;
     margin-block: var(--size-5) 0;
-    color: var(--text-secondary);
+    color: color-mix(in srgb, var(--code-text) 76%, transparent);
     font-size: var(--font-size-2);
     line-height: var(--font-lineheight-3);
   }
@@ -97,11 +151,82 @@ pageSheet.replaceSync(`
     margin-block-start: var(--size-6);
   }
 
+  .hero-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--size-3);
+    margin-block-start: var(--size-7);
+  }
+
+  .hero-stat {
+    display: grid;
+    gap: var(--size-1);
+    min-width: 0;
+    padding-block: var(--size-3);
+    border-block-start: var(--border-size-1) solid color-mix(in srgb, var(--code-border) 76%, transparent);
+  }
+
+  .hero-stat strong {
+    color: var(--brand-light);
+  }
+
+  .hero-stat span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: color-mix(in srgb, var(--code-text) 66%, transparent);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
+  }
+
+  .hero-dashboard {
+    display: grid;
+    gap: var(--size-4);
+    min-width: 0;
+    position: relative;
+  }
+
+  .stage-art {
+    --lab-stage-min-height: 560px;
+    min-width: 0;
+  }
+
+  .live-row {
+    position: absolute;
+    inset-inline: var(--size-4);
+    inset-block-end: var(--size-4);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, .72fr) minmax(260px, .28fr);
+    gap: var(--size-4);
+    align-items: stretch;
+  }
+
+  .live-note {
+    display: grid;
+    gap: var(--size-2);
+    padding: var(--size-4);
+    border: var(--border-size-1) solid var(--code-border);
+    border-radius: var(--radius-2);
+    background: color-mix(in srgb, var(--bg-code) 84%, var(--code-border));
+  }
+
+  .live-note strong {
+    color: var(--success);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    text-transform: uppercase;
+  }
+
+  .live-note span {
+    color: color-mix(in srgb, var(--code-text) 68%, transparent);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
+  }
+
   .proofs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--size-3);
-    grid-column: 1 / -1;
   }
 
   .proof-card h3,
@@ -130,11 +255,6 @@ pageSheet.replaceSync(`
 
   .card__index {
     color: var(--brand);
-  }
-
-  .stage-art {
-    --lab-stage-min-height: 560px;
-    min-width: 0;
   }
 
   .spec-list {
@@ -179,7 +299,7 @@ pageSheet.replaceSync(`
 
   .section__title {
     margin: 0;
-    font-size: clamp(var(--font-size-4), 4vw, var(--font-size-6));
+    font-size: var(--font-size-6);
     line-height: var(--font-lineheight-1);
     letter-spacing: 0;
   }
@@ -272,16 +392,13 @@ pageSheet.replaceSync(`
     margin-block-end: 0;
   }
 
-  @media (max-width: 1080px) {
-    .hero,
+  @media (max-width: 1120px) {
+    .hero-inner,
     .section__head,
     .system,
-    .cta {
+    .cta,
+    .live-row {
       grid-template-columns: 1fr;
-    }
-
-    .hero {
-      align-items: stretch;
     }
 
     .stage-art {
@@ -301,14 +418,21 @@ pageSheet.replaceSync(`
 
   @media (max-width: 680px) {
     .home {
-      gap: var(--size-12);
-      padding-block-start: var(--size-8);
+      gap: var(--size-4);
     }
 
-    .hero,
+    .hero {
+      min-height: auto;
+    }
+
+    .hero-inner,
     .section,
     .cta {
       width: min(100% - calc(var(--size-4) * 2), var(--site-container-wide));
+    }
+
+    .hero-inner {
+      padding-block: var(--size-5);
     }
 
     h1 {
@@ -317,8 +441,18 @@ pageSheet.replaceSync(`
 
     .lede {
       font-size: var(--font-size-1);
+      margin-block-start: var(--size-4);
     }
 
+    .actions {
+      margin-block-start: var(--size-4);
+    }
+
+    .secondary-action {
+      display: none !important;
+    }
+
+    .hero-strip,
     .proofs,
     .pillars,
     .entries,
@@ -326,6 +460,24 @@ pageSheet.replaceSync(`
     .matrix__row,
     .spec-list li {
       grid-template-columns: 1fr;
+    }
+
+    .section__title {
+      font-size: var(--font-size-5);
+    }
+
+    .hero-strip {
+      display: none;
+    }
+
+    .live-row {
+      inset-inline: var(--size-3);
+      inset-block-end: var(--size-3);
+      grid-template-columns: 1fr;
+    }
+
+    .live-note {
+      display: none;
     }
 
     .cta {
@@ -370,21 +522,46 @@ export class DocsHome extends OpenElement {
     return (
       <main class='home'>
         <section class='hero'>
-          <div class='hero-copy'>
-            <p class='eyebrow'>Web Standards Lab</p>
-            <h1>Web Components full-stack framework.</h1>
-            <p class='lede'>
-              openElement builds applications around native custom elements,
-              Declarative Shadow DOM, route contracts, and interaction-only
-              islands. It looks like the platform because it is built on it.
-            </p>
-            <div class='actions'>
-              <open-button variant='primary' size='lg' href='/guide/getting-started'>Start building</open-button>
-              <open-button size='lg' href='/architecture/architecture'>Inspect architecture</open-button>
+          <div class='hero-inner'>
+            <div class='hero-copy'>
+              <p class='eyebrow'>Kinetic Web Standards Lab</p>
+              <h1>Native web. Product engine.</h1>
+              <p class='lede'>
+                openElement turns Elements, UI, Framework, and Protocols into
+                one inspectable application surface: DSD, route graphs, island
+                hydration, and package contracts in motion.
+              </p>
+              <div class='actions'>
+                <open-button variant='primary' size='lg' href='/guide/getting-started'>Start building</open-button>
+                <open-button class='secondary-action' size='lg' href='/architecture/architecture'>Inspect architecture</open-button>
+              </div>
+              <div class='hero-strip' aria-label='Product line anchors'>
+                <div class='hero-stat'>
+                  <strong>v0.40.7</strong>
+                  <span>Current public package line and active execution line.</span>
+                </div>
+                <div class='hero-stat'>
+                  <strong>Matrix</strong>
+                  <span>openElement = Elements + UI + Framework + Protocols.</span>
+                </div>
+                <div class='hero-stat'>
+                  <strong>CI</strong>
+                  <span>AutoFlow keeps docs, package graph, and release truth aligned.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class='hero-dashboard'>
+              <open-lab-stage class='stage-art' emphasis='high' motion='auto'></open-lab-stage>
+              <div class='live-row'>
+                <div class='live-note'>
+                  <strong>Live island</strong>
+                  <span>Interactive behavior stays explicit. The counter below is a real hydrated island, not decorative copy.</span>
+                </div>
+                <home-console class='live-console'></home-console>
+              </div>
             </div>
           </div>
-
-          <open-lab-stage class='stage-art' emphasis='high' motion='auto'></open-lab-stage>
         </section>
 
         <section class='section'>

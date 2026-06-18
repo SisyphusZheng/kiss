@@ -1,15 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
   <title>openElement logo</title>
-  <desc>Angle bracket with anchor dot, the openElement framework symbol</desc>
-  <g transform="translate(20, 17)">
-    <path
-      d="M 5 106 L 95 53 L 5 0"
-      fill="none"
-      stroke="#000000"
-      stroke-width="8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <circle cx="107" cy="53" r="5" fill="#000000" />
-  </g>
+  <desc>Layered element mark with code brackets and standards-lab rails</desc>
+  <defs>
+    <linearGradient id="mark" x1="18" y1="18" x2="122" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5c7cfa" />
+      <stop offset="0.58" stop-color="#4263eb" />
+      <stop offset="1" stop-color="#20c997" />
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="120" height="120" rx="22" fill="#030507" />
+  <rect x="18" y="18" width="104" height="104" rx="18" fill="url(#mark)" opacity="0.92" />
+  <path
+    d="M42 46 L25 70 L42 94"
+    fill="none"
+    stroke="#f8f9fa"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M98 46 L115 70 L98 94"
+    fill="none"
+    stroke="#f8f9fa"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path d="M57 100 L83 40" fill="none" stroke="#f8f9fa" stroke-width="7" stroke-linecap="round" />
+  <path
+    d="M32 30 H108 M32 110 H108"
+    fill="none"
+    stroke="#f8f9fa"
+    stroke-width="3"
+    stroke-linecap="round"
+    opacity="0.58"
+  />
 </svg>

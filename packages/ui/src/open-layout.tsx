@@ -223,24 +223,58 @@ sheet.replaceSync(`
   .logo {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: 750;
+    gap: var(--size-3);
+    font-size: var(--font-size-1);
+    font-weight: var(--font-weight-8);
     color: var(--text-primary);
     text-decoration: none;
     letter-spacing: 0;
     white-space: nowrap;
   }
-  .logo:hover { opacity: 0.8; }
 
-  .logo::before {
-    content: "";
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
-    background: linear-gradient(135deg, var(--brand), var(--success));
+  .logo:hover .logo-mark {
+    transform: translateY(calc(var(--size-1) * -1));
+    border-color: var(--brand-light);
+  }
+
+  .logo-mark {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: var(--size-8);
+    height: var(--size-8);
+    overflow: hidden;
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-2);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--brand) 72%, var(--bg-code)), color-mix(in srgb, var(--success) 42%, var(--bg-code))),
+      var(--bg-code);
     box-shadow: inset 0 0 0 var(--border-size-1) var(--edge-highlight);
     flex: 0 0 auto;
+    transition: transform var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
+  }
+
+  .logo-mark::before {
+    content: "";
+    position: absolute;
+    inset: var(--size-2);
+    border-block: var(--border-size-1) solid color-mix(in srgb, var(--on-brand) 72%, transparent);
+    transform: skewX(-18deg);
+  }
+
+  .logo-mark::after {
+    content: "<>";
+    position: relative;
+    color: var(--on-brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0;
+  }
+
+  .logo-word {
+    display: inline-block;
+    transform: translateY(calc(var(--border-size-1) * -1));
   }
 
   .logo-sub {
@@ -310,6 +344,7 @@ sheet.replaceSync(`
     border: none;
     border-radius: var(--radius-2);
     background: var(--brand);
+    white-space: nowrap;
     transition: all 0.15s ease;
   }
   .btn-primary:hover {
@@ -527,6 +562,7 @@ sheet.replaceSync(`
     .lang-switch { display: none; }
   }
   @media (max-width: 480px) {
+    .btn-primary { display: none; }
     .btn-secondary { padding: 8px; border: none; }
     .btn-secondary .btn-text { display: none; }
     .header-inner { padding: 0 var(--size-3); gap: var(--size-1); }
@@ -832,7 +868,8 @@ export class OpenLayout extends OpenElement {
           <nav className='header-inner' aria-label='Primary navigation'>
             {(logoText || logoSub) && (
               <a className='logo' href='/'>
-                {logoText}
+                <span className='logo-mark' aria-hidden='true'></span>
+                {logoText && <span className='logo-word'>{logoText}</span>}
                 {logoSub && <span className='logo-sub'>{logoSub}</span>}
               </a>
             )}
