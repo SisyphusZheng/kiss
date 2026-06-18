@@ -265,8 +265,8 @@ export class RoadmapPage extends OpenElement {
             <h1>Roadmap</h1>
             <p class='subtitle'>
               openElement roadmap labels describe the public product surface,
-              not a wish list. The current line is v0.40.7 on the public
-              product graph.
+              not a wish list. The Six-Phase Vision now resolves into the
+              v0.40.7 public product graph.
             </p>
           </div>
           <open-lab-panel class='now' label='current' meta='release line'>
@@ -274,7 +274,7 @@ export class RoadmapPage extends OpenElement {
             <h2>v0.40.7 Release Readiness & CI Hardening</h2>
             <p>
               The website, docs, package graph, and release gates should speak
-              the same product language.
+              the same product language around the WC Package Protocol.
             </p>
           </open-lab-panel>
         </section>
@@ -308,6 +308,7 @@ export class RoadmapPage extends OpenElement {
             <h2>Out of current scope</h2>
             <ul>
               <li>Hub product language</li>
+              <li>Registry Hub as a current product promise</li>
               <li>RPC, CEM, and interop adapter package promises</li>
               <li>Generic auth, ORM, or database platform claims</li>
               <li>Old package-count public graph language</li>
@@ -331,7 +332,7 @@ export class RoadmapPage extends OpenElement {
             <ul class='rule-list'>
               <li>
                 <strong>Ship</strong>
-                <span>Only public contracts that are reflected in docs and package surfaces.</span>
+                <span>Only public contracts that are reflected in docs and package surfaces. No webpack remains a hard boundary.</span>
               </li>
               <li>
                 <strong>Prove</strong>

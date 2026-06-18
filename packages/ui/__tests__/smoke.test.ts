@@ -8,28 +8,34 @@ import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
 
 Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => {
   const mod = await import('../src/index.ts');
+  const expectedTags = [
+    'open-card',
+    'open-callout',
+    'open-step-card',
+    'open-button',
+    'open-input',
+    'open-theme-toggle',
+    'open-code-block',
+    'open-badge',
+    'open-lab-panel',
+    'open-standards-visual',
+    'open-lab-stage',
+    'open-dialog',
+    'open-layout',
+    'open-dropdown',
+    'open-modal',
+    'open-tabs',
+    'open-hero-ping',
+    'open-button-linear',
+    'open-card-linear',
+    'open-input-linear',
+    'open-nav-linear',
+    'open-badge-linear',
+  ];
   assertExists(mod.manifest, 'manifest export should exist');
   assertEquals(typeof mod.manifest, 'object');
   assertEquals(mod.manifest.packageName, '@openelement/ui');
-  assertEquals(mod.manifest.declarations.length, 18);
-  assertEquals(mod.manifest.declarations[0].tagName, 'open-card');
-  assertEquals(mod.manifest.declarations[1].tagName, 'open-callout');
-  assertEquals(mod.manifest.declarations[2].tagName, 'open-step-card');
-  assertEquals(mod.manifest.declarations[3].tagName, 'open-button');
-  assertEquals(mod.manifest.declarations[4].tagName, 'open-input');
-  assertEquals(mod.manifest.declarations[5].tagName, 'open-theme-toggle');
-  assertEquals(mod.manifest.declarations[6].tagName, 'open-code-block');
-  assertEquals(mod.manifest.declarations[7].tagName, 'open-dialog');
-  assertEquals(mod.manifest.declarations[8].tagName, 'open-layout');
-  assertEquals(mod.manifest.declarations[9].tagName, 'open-dropdown');
-  assertEquals(mod.manifest.declarations[10].tagName, 'open-modal');
-  assertEquals(mod.manifest.declarations[11].tagName, 'open-tabs');
-  assertEquals(mod.manifest.declarations[12].tagName, 'open-hero-ping');
-  assertEquals(mod.manifest.declarations[13].tagName, 'open-button-linear');
-  assertEquals(mod.manifest.declarations[14].tagName, 'open-card-linear');
-  assertEquals(mod.manifest.declarations[15].tagName, 'open-input-linear');
-  assertEquals(mod.manifest.declarations[16].tagName, 'open-nav-linear');
-  assertEquals(mod.manifest.declarations[17].tagName, 'open-badge-linear');
+  assertEquals(mod.manifest.declarations.map((decl) => decl.tagName), expectedTags);
 });
 
 Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
@@ -51,6 +57,10 @@ Deno.test('open-ui - all components export tagName', async () => {
     'open-code-block',
     'open-dialog',
     'open-dropdown',
+    'open-badge',
+    'open-lab-panel',
+    'open-lab-stage',
+    'open-standards-visual',
     'open-hero-ping',
     'open-input',
     'open-layout',

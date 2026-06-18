@@ -32,20 +32,20 @@ pageSheet.replaceSync(`
 
   .home {
     display: grid;
-    gap: var(--size-12);
+    gap: var(--size-7);
     padding-block-end: var(--site-section-block);
   }
 
   .hero {
     position: relative;
     display: grid;
-    min-height: calc(100svh - var(--nav-height) - var(--size-16));
+    min-height: calc(100svh - var(--nav-height) - var(--size-16) - var(--size-2));
     overflow: hidden;
     isolation: isolate;
     color: var(--code-text);
     background:
-      linear-gradient(color-mix(in srgb, var(--code-border) 46%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, color-mix(in srgb, var(--code-border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1)),
       linear-gradient(135deg, color-mix(in srgb, var(--brand) 22%, transparent), transparent 42%),
       linear-gradient(225deg, color-mix(in srgb, var(--success) 18%, transparent), transparent 48%),
       var(--bg-code);
@@ -205,9 +205,10 @@ pageSheet.replaceSync(`
     display: grid;
     gap: var(--size-2);
     padding: var(--size-4);
-    border: var(--border-size-1) solid var(--code-border);
+    border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-2);
-    background: color-mix(in srgb, var(--bg-code) 84%, var(--code-border));
+    background: var(--bg-card);
+    color: var(--text-primary);
   }
 
   .live-note strong {
@@ -218,7 +219,7 @@ pageSheet.replaceSync(`
   }
 
   .live-note span {
-    color: color-mix(in srgb, var(--code-text) 68%, transparent);
+    color: var(--text-secondary);
     font-size: var(--font-size-0);
     line-height: var(--font-lineheight-3);
   }
@@ -521,7 +522,7 @@ export class DocsHome extends OpenElement {
   override render() {
     return (
       <main class='home'>
-        <section class='hero'>
+        <section class='hero swiss-grid'>
           <div class='hero-inner'>
             <div class='hero-copy'>
               <p class='eyebrow'>Kinetic Web Standards Lab</p>
@@ -554,7 +555,7 @@ export class DocsHome extends OpenElement {
             <div class='hero-dashboard'>
               <open-lab-stage class='stage-art' emphasis='high' motion='auto'></open-lab-stage>
               <div class='live-row'>
-                <div class='live-note'>
+                <div class='live-note terminal'>
                   <strong>Live island</strong>
                   <span>Interactive behavior stays explicit. The counter below is a real hydrated island, not decorative copy.</span>
                 </div>
