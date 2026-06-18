@@ -457,7 +457,7 @@ const phases = [
   {
     version: 'v0.40.7',
     title: 'Release readiness and site truth',
-    copy: 'Align design, docs, package language, and CI readiness around the current product graph.',
+    copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
     status: 'current',
     tone: 'brand',
   },
@@ -508,7 +508,8 @@ export class RoadmapPage extends OpenElement {
                   <h2>Site, docs, package graph, and release gates speak one language.</h2>
                   <p>
                     The current line resolves the Six-Phase Vision into a readable
-                    four-product platform: Elements, UI, Framework, and Protocols.
+                    four-product platform: Elements, UI, Framework, and Protocols,
+                    with WC Package Protocol boundaries kept visible.
                   </p>
                 </div>
               </div>
@@ -549,7 +550,7 @@ export class RoadmapPage extends OpenElement {
               <li>Declarative Shadow DOM rendering</li>
               <li>Routes, layouts, content, islands, and i18n</li>
               <li>Hono API routes and adapter-vite integration</li>
-              <li>Protocols for package and release boundaries</li>
+              <li>WC Package Protocol for package and release boundaries</li>
             </ul>
           </open-lab-panel>
 
@@ -614,7 +615,10 @@ export class RoadmapPage extends OpenElement {
                 </li>
                 <li>
                   <strong class='rule-label'>No ghosts</strong>
-                  <span class='rule-copy'>Archived Hub-era promises stay out of the current public product line.</span>
+                  <span class='rule-copy'>
+                    Archived Hub-era promises and No webpack-era shortcuts stay out
+                    of the current public product line.
+                  </span>
                 </li>
                 <li>
                   <strong class='rule-label'>No fog</strong>
