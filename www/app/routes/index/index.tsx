@@ -1,9 +1,13 @@
 /**
  * Homepage - Aperture drafting stage.
+ *
+ * Strategic anchors: openElement = Elements + UI + Framework + Protocols.
+ * Current public line: v0.40.7 product graph.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
 import { openPropsTokenSheet } from '@openelement/ui';
+import '../../islands/home-console.tsx';
 
 export const tagName = 'docs-home';
 
@@ -181,11 +185,16 @@ pageSheet.replaceSync(`
     border-color: var(--brand);
   }
 
+  .console-stack {
+    display: grid;
+    gap: var(--size-3);
+    max-width: 520px;
+  }
+
   .console-line {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: var(--size-3);
-    max-width: 520px;
     padding: var(--size-3) var(--size-4);
     border: var(--border-size-1) solid color-mix(in srgb, var(--brand) 36%, var(--border));
     color: var(--brand);
@@ -197,6 +206,11 @@ pageSheet.replaceSync(`
   .console-line small {
     grid-column: 2;
     color: var(--text-muted);
+  }
+
+  home-console {
+    max-width: 360px;
+    min-height: 136px;
   }
 
   .art {
@@ -569,10 +583,13 @@ export class DocsHome extends OpenElement {
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
                 <a class='action' href='/apilist'>View API</a>
               </div>
-              <div class='console-line' aria-label='Install command'>
-                <span>$</span>
-                <span>npm create openelement@latest</span>
-                <small>Scaffolding your project...</small>
+              <div class='console-stack'>
+                <div class='console-line' aria-label='Install command'>
+                  <span>$</span>
+                  <span>npm create openelement@latest</span>
+                  <small>Scaffolding your project...</small>
+                </div>
+                <home-console></home-console>
               </div>
             </div>
 
