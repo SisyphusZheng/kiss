@@ -49,8 +49,8 @@ pageSheet.replaceSync(`
     isolation: isolate;
     border-block-end: var(--border-size-1) solid var(--border);
     background:
-      linear-gradient(116deg, color-mix(in srgb, var(--violet-2) 44%, transparent), transparent 52%),
-      linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 74%, var(--violet-0)), var(--bg-base));
+      linear-gradient(116deg, var(--violet-2), transparent 52%),
+      linear-gradient(180deg, var(--bg-base), var(--bg-base));
   }
 
   .hero::before {
@@ -221,9 +221,9 @@ pageSheet.replaceSync(`
     padding: var(--size-6);
     border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-2);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 28%, transparent), transparent 46%),
-      var(--bg-card);
+    background-color: var(--bg-elevated);
+    background-image:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 28%, transparent), transparent 46%);
     color: var(--text-primary);
   }
 
