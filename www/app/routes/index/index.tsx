@@ -185,16 +185,11 @@ pageSheet.replaceSync(`
     border-color: var(--brand);
   }
 
-  .console-stack {
-    display: grid;
-    gap: var(--size-3);
-    max-width: 520px;
-  }
-
   .console-line {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: var(--size-3);
+    max-width: 520px;
     padding: var(--size-3) var(--size-4);
     border: var(--border-size-1) solid color-mix(in srgb, var(--brand) 36%, var(--border));
     color: var(--brand);
@@ -206,11 +201,6 @@ pageSheet.replaceSync(`
   .console-line small {
     grid-column: 2;
     color: var(--text-muted);
-  }
-
-  home-console {
-    max-width: 360px;
-    min-height: 136px;
   }
 
   .art {
@@ -426,6 +416,29 @@ pageSheet.replaceSync(`
     line-height: 1.55;
   }
 
+  .verification {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: var(--size-8);
+    align-items: center;
+    padding: var(--size-8) var(--size-10);
+    border-block-end: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-elevated) 44%, var(--bg-base));
+  }
+
+  .verification h2 {
+    margin-block: var(--size-2);
+    font-size: var(--font-size-5);
+    line-height: var(--font-lineheight-1);
+  }
+
+  .verification p {
+    max-width: 580px;
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: var(--font-lineheight-3);
+  }
+
   @media (max-width: 1080px) {
     .hero-grid {
       grid-template-columns: 1fr;
@@ -457,6 +470,11 @@ pageSheet.replaceSync(`
     .modules {
       grid-template-columns: 1fr;
       padding: var(--size-4);
+    }
+
+    .verification {
+      grid-template-columns: 1fr;
+      padding: var(--size-6) var(--size-4);
     }
 
     .module {
@@ -583,13 +601,10 @@ export class DocsHome extends OpenElement {
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
                 <a class='action' href='/apilist'>View API</a>
               </div>
-              <div class='console-stack'>
-                <div class='console-line' aria-label='Install command'>
-                  <span>$</span>
-                  <span>npm create openelement@latest</span>
-                  <small>Scaffolding your project...</small>
-                </div>
-                <home-console></home-console>
+              <div class='console-line' aria-label='Install command'>
+                <span>$</span>
+                <span>npm create openelement@latest</span>
+                <small>Scaffolding your project...</small>
               </div>
             </div>
 
@@ -650,6 +665,18 @@ export class DocsHome extends OpenElement {
               </div>
             </article>
           ))}
+        </section>
+
+        <section class='verification' aria-label='Live verification'>
+          <div>
+            <p class='kicker'>Island hydration smoke line</p>
+            <h2>Native components stay inspectable.</h2>
+            <p>
+              The same composed surface hydrates as a real custom element, with
+              shadow DOM boundaries and signal updates preserved after static generation.
+            </p>
+          </div>
+          <home-console></home-console>
         </section>
       </main>
     );
