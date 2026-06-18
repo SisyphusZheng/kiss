@@ -36,6 +36,7 @@ import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 import '.\/open-theme-toggle.js';
+import './open-brand-mark.js';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
@@ -185,19 +186,19 @@ sheet.replaceSync(`
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .app-header.scrolled {
-    background: color-mix(in srgb, var(--bg-base) 94%, transparent);
+    background: color-mix(in srgb, var(--bg-base) 88%, transparent);
     border-bottom-color: var(--border-hover);
-    box-shadow: 0 var(--size-2) var(--size-8) color-mix(in srgb, var(--brand) 7%, transparent);
+    box-shadow: 0 var(--size-2) var(--size-10) color-mix(in srgb, var(--brand) 5%, transparent);
   }
 
   .header-inner {
     max-width: none;
     margin: 0 auto;
-    padding: 0 var(--size-5);
+    padding: 0 clamp(var(--size-5), 3.5vw, var(--size-9));
     display: flex;
     align-items: center;
     min-height: var(--nav-height);
-    gap: var(--size-5);
+    gap: var(--size-6);
   }
 
   .mobile-tab-bar { display: none; }
@@ -226,7 +227,7 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
-    font-size: var(--font-size-1);
+    font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
     text-decoration: none;
@@ -234,64 +235,12 @@ sheet.replaceSync(`
     white-space: nowrap;
   }
 
-  .logo:hover .logo-mark {
+  .logo:hover open-brand-mark {
     transform: translateY(calc(var(--border-size-1) * -1));
   }
 
-  .logo-mark {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    overflow: hidden;
-    border: 0;
-    border-radius: var(--radius-round);
-    background:
-      radial-gradient(circle at 50% 50%, var(--nav-bg) 0 38%, transparent 39%),
-      conic-gradient(from 214deg, var(--brand-deep) 0 26%, var(--brand) 26% 60%, var(--brand-light) 60% 82%, var(--brand-deep) 82% 100%);
-    box-shadow: none;
-    flex: 0 0 auto;
+  open-brand-mark {
     transition: transform var(--duration-2) var(--ease-2);
-  }
-
-  .logo-mark::before {
-    content: "";
-    position: absolute;
-    inset: 11px;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 64%, var(--nav-bg));
-    border-radius: var(--radius-round);
-  }
-
-  .logo-mark::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: -1px;
-    inset-block-start: 3px;
-    width: 15px;
-    height: 19px;
-    border-radius: 999px 999px 0 0;
-    background: var(--nav-bg);
-    transform: rotate(24deg);
-  }
-
-  .logo-boundary,
-  .logo-route {
-    position: absolute;
-    inset-inline: 12px 9px;
-    height: var(--border-size-1);
-    background: var(--brand-deep);
-    border-radius: var(--radius-round);
-    z-index: 1;
-  }
-
-  .logo-boundary {
-    inset-block-start: 19px;
-  }
-
-  .logo-route {
-    inset-block-start: 24px;
-    background: var(--brand);
   }
 
   .logo-word {
@@ -310,16 +259,16 @@ sheet.replaceSync(`
 
   .header-nav {
     display: flex;
-    gap: var(--size-5);
+    gap: clamp(var(--size-5), 3vw, var(--size-8));
     flex: 1;
     justify-content: center;
   }
   .header-nav a {
     color: var(--nav-link-color);
     text-decoration: none;
-    font-size: var(--nav-link-size);
-    font-weight: var(--font-weight-7);
-    padding: var(--size-2) var(--size-1);
+    font-size: var(--font-size-1);
+    font-weight: var(--font-weight-5);
+    padding: var(--size-2) 0;
     transition: color 0.15s ease, background 0.15s ease;
   }
   .header-nav a:hover {
@@ -333,7 +282,7 @@ sheet.replaceSync(`
   .header-right {
     display: flex;
     align-items: center;
-    gap: var(--size-2);
+    gap: var(--size-1);
     margin-left: auto;
   }
 
@@ -381,27 +330,33 @@ sheet.replaceSync(`
     transform: translateY(calc(var(--border-size-1) * -1));
   }
 
+  .header-right .btn-secondary,
+  .header-right .btn-primary {
+    display: none;
+  }
+
   .lang-switch {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
-    height: 38px;
-    padding: 0 var(--size-3);
+    min-width: var(--size-9);
+    width: var(--size-9);
+    height: var(--size-9);
+    padding: 0;
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
-    border: var(--border-size-1) solid var(--border);
+    border: 0;
     border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+    background: transparent;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.15s ease;
   }
   .lang-switch:hover {
     color: var(--brand-deep);
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
+    border-color: transparent;
+    background: color-mix(in srgb, var(--brand-pale) 34%, transparent);
   }
 
   /* Sidebar */
@@ -533,9 +488,7 @@ sheet.replaceSync(`
       gap: var(--size-3);
     }
 
-    .btn-secondary .btn-text {
-      display: none;
-    }
+    .btn-secondary .btn-text { display: none; }
   }
 
   @media (max-width: 900px) {
@@ -905,7 +858,6 @@ export class OpenLayout extends OpenElement {
     const currentPath = this._currentPathWithoutLocale;
     const langLabel = locales.length > 1 ? switchLabel(currentLocale) : '';
     const langHref = locales.length > 1 ? switchPath(currentPath, currentLocale, locales) : '';
-    const getStartedHref = localizePath('/guide/getting-started', currentLocale);
 
     return (
       <div className='app-layout' part='container' home={home || undefined}>
@@ -913,10 +865,7 @@ export class OpenLayout extends OpenElement {
           <nav className='header-inner' aria-label='Primary navigation'>
             {(logoText || logoSub) && (
               <a className='logo' href='/'>
-                <span className='logo-mark' aria-hidden='true'>
-                  <span className='logo-boundary'></span>
-                  <span className='logo-route'></span>
-                </span>
+                <open-brand-mark size='md'></open-brand-mark>
                 {logoText && <span className='logo-word'>{logoText}</span>}
                 {logoSub && <span className='logo-sub'>{logoSub}</span>}
               </a>
@@ -957,19 +906,6 @@ export class OpenLayout extends OpenElement {
                   {langLabel}
                 </a>
               )}
-              <a
-                className='btn-secondary'
-                href='https://github.com/open-element/openelement'
-                aria-label='GitHub repository'
-              >
-                <svg width='16' height='16' viewBox='0 0 16 16' fill='currentColor'>
-                  <path d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z' />
-                </svg>
-                <span className='btn-text'>GitHub</span>
-              </a>
-              <a className='btn-primary' href={getStartedHref} data-nav={getStartedHref}>
-                Get started
-              </a>
             </div>
           </nav>
         </header>

@@ -48,24 +48,25 @@ sheet.replaceSync(`
   .search-trigger {
     display: inline-flex;
     align-items: center;
-    gap: var(--size-2);
-    padding: var(--size-2) var(--size-3);
-    min-height: 38px;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    justify-content: center;
+    width: var(--size-9);
+    height: var(--size-9);
+    padding: 0;
+    border: 0;
     border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
-    color: var(--text-secondary);
+    background: transparent;
+    color: var(--text-primary);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-7);
     letter-spacing: 0;
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
+    box-shadow: none;
     cursor: pointer;
     transition: all var(--ease-2) var(--duration-2);
   }
   .search-trigger:hover {
-    color: var(--brand-deep);
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
+    color: var(--brand);
+    border-color: transparent;
+    background: color-mix(in srgb, var(--brand-pale) 34%, transparent);
   }
   .search-trigger kbd {
     font-family: inherit;
@@ -75,11 +76,8 @@ sheet.replaceSync(`
     font-size: var(--font-size-00);
     margin-left: var(--size-1);
   }
-  .search-icon { display: none; width: var(--size-4); height: var(--size-4); }
-  @media (max-width: 768px) {
-    .search-trigger span, .search-trigger kbd { display: none; }
-    .search-icon { display: inline-block; }
-  }
+  .search-trigger span, .search-trigger kbd { display: none; }
+  .search-icon { display: inline-block; width: var(--size-5); height: var(--size-5); }
 
   .overlay {
     position: fixed;

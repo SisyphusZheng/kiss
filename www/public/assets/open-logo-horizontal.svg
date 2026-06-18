@@ -1,62 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img">
   <title>openElement Aperture O horizontal lockup</title>
-  <desc>openElement wordmark with flat Monet purple Aperture O.</desc>
+  <desc>openElement wordmark with the flat Monet purple Aperture O.</desc>
   <defs>
     <linearGradient
-      id="aperture-o-horizontal"
-      x1="18"
+      id="aperture-horizontal"
+      x1="24"
       y1="108"
-      x2="104"
-      y2="20"
+      x2="106"
+      y2="18"
       gradientUnits="userSpaceOnUse"
     >
       <stop offset="0" stop-color="#21143b" />
-      <stop offset=".48" stop-color="#8262db" />
+      <stop offset=".52" stop-color="#8262db" />
       <stop offset="1" stop-color="#b59cff" />
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="128" height="128" rx="30" fill="#fbf7ff" />
-  <circle
-    cx="64"
-    cy="64"
-    r="43"
-    fill="none"
-    stroke="url(#aperture-o-horizontal)"
-    stroke-width="14"
-  />
+  <rect width="128" height="128" rx="32" fill="#fbf7ff" />
+  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-horizontal)" stroke-width="14" />
   <circle cx="64" cy="64" r="24" fill="none" stroke="#d0bdff" stroke-width="2" />
   <path
-    d="M91 24 A43 43 0 0 1 107 57"
+    d="M91 24A43 43 0 0 1 107 57"
     fill="none"
     stroke="#fbf7ff"
     stroke-width="18"
     stroke-linecap="round"
   />
   <path
-    d="M91 25 A43 43 0 0 1 106 56"
+    d="M91 25A43 43 0 0 1 106 56"
     fill="none"
     stroke="#58399e"
     stroke-width="3"
     stroke-linecap="round"
   />
-  <path d="M43 60 H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
-  <path d="M41 75 H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
+  <path d="M43 60H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
+  <path d="M41 75H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
   <text
     x="154"
-    y="60"
+    y="62"
     fill="#21143b"
     font-family="'Instrument Sans', Inter, Arial, Helvetica, sans-serif"
-    font-size="36"
+    font-size="38"
     font-weight="850"
     letter-spacing="0"
   >openElement</text>
   <text
     x="156"
-    y="88"
+    y="90"
     fill="#6d4cc4"
     font-family="'JetBrains Mono', 'SF Mono', Consolas, monospace"
     font-size="12"
     font-weight="700"
     letter-spacing="0"
-  >WEB COMPONENTS / DSD / ROUTE GRAPH</text>
+  >OPEN STANDARDS / DSD / ROUTE GRAPH</text>
 </svg>

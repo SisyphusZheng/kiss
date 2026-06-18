@@ -1,12 +1,12 @@
 /**
  * @openelement/docs - API Reference
- *
- * Editorial reference command center for public APIs.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
 import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-card';
 import '@openelement/ui/open-lab-panel';
 
 export const tagName = 'api-core-page';
@@ -19,9 +19,7 @@ routeSheet.replaceSync(`
     color: var(--text-primary);
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   h1,
   h2,
@@ -38,60 +36,55 @@ routeSheet.replaceSync(`
   .hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, .74fr) minmax(340px, .36fr);
-    min-height: 430px;
+    grid-template-columns: minmax(0, .68fr) minmax(360px, .32fr);
+    min-height: 500px;
     overflow: hidden;
     border-block-end: var(--border-size-1) solid var(--border);
     background:
-      linear-gradient(112deg, var(--violet-2), transparent 48%),
-      radial-gradient(circle at 84% 42%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 34%),
+      linear-gradient(112deg, color-mix(in srgb, var(--brand-pale) 72%, transparent), transparent 48%),
+      radial-gradient(circle at 86% 42%, color-mix(in srgb, var(--brand-light) 20%, transparent), transparent 32%),
       var(--bg-base);
   }
 
-  .hero::after {
+  .hero::before {
     content: "";
     position: absolute;
-    inset-inline-end: var(--size-10);
-    inset-block-start: 50%;
-    width: 360px;
-    aspect-ratio: 1;
-    transform: translateY(-50%);
-    border: var(--size-6) solid color-mix(in srgb, var(--brand) 20%, transparent);
-    border-radius: var(--radius-round);
-    pointer-events: none;
+    inset: 0;
+    background:
+      linear-gradient(color-mix(in srgb, var(--brand) 12%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, color-mix(in srgb, var(--brand) 9%, transparent) var(--border-size-1), transparent var(--border-size-1));
+    background-size: 210px 128px;
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 94%, transparent);
   }
 
   .hero-copy,
-  .hero-card {
+  .hero-panel {
     position: relative;
     z-index: 1;
+    display: grid;
+    align-content: end;
     padding: var(--size-10);
   }
 
   .hero-copy {
-    display: grid;
-    align-content: end;
     border-inline-end: var(--border-size-1) solid var(--border);
   }
 
   .kicker,
-  .rail-title,
-  .category-kicker,
-  .api-sig {
+  .section-kicker,
+  .rail-link,
+  .sig {
     color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
+    letter-spacing: 0;
     text-transform: uppercase;
   }
 
-  .kicker {
-    margin-block-end: var(--size-4);
-  }
-
   h1 {
-    margin: 0;
-    max-width: 780px;
+    max-width: 760px;
+    margin: var(--size-4) 0;
     font-size: var(--font-size-7);
     line-height: .9;
     font-weight: var(--font-weight-9);
@@ -99,140 +92,117 @@ routeSheet.replaceSync(`
   }
 
   .lede {
-    max-width: 740px;
-    margin-block: var(--size-5) 0;
+    max-width: 700px;
     color: var(--text-secondary);
-    font-size: var(--font-size-2);
-    line-height: 1.28;
+    font-size: var(--font-size-3);
+    line-height: 1.22;
   }
 
-  .hero-card open-lab-panel {
-    height: 100%;
-  }
-
-  .quick-list {
+  .shell {
     display: grid;
-    gap: var(--size-3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .quick-list li {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--size-4);
-    padding-block: var(--size-3);
+    grid-template-columns: minmax(220px, .24fr) minmax(0, .76fr);
+    gap: var(--size-6);
+    padding: var(--size-10);
     border-block-end: var(--border-size-1) solid var(--border);
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-  }
-
-  .quick-list li:last-child {
-    border-block-end: 0;
-  }
-
-  .quick-list strong {
-    color: var(--text-primary);
-    font-weight: var(--font-weight-8);
-  }
-
-  .content {
-    display: grid;
-    grid-template-columns: minmax(220px, .24fr) minmax(0, 1fr);
-    gap: var(--size-5);
-    padding: var(--size-5);
   }
 
   .rail {
-    align-self: start;
     position: sticky;
     top: calc(var(--nav-height) + var(--size-5));
+    align-self: start;
     display: grid;
-    gap: var(--size-4);
-    padding: var(--size-5);
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-3);
-    background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+    gap: var(--size-2);
   }
 
-  .rail a {
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    font-weight: var(--font-weight-7);
+  .rail-link {
+    display: block;
+    padding: var(--size-3) 0;
+    color: var(--text-muted);
     text-decoration: none;
-  }
-
-  .rail a:hover {
-    color: var(--brand);
-  }
-
-  .api-sections {
-    display: grid;
-    gap: var(--size-5);
-  }
-
-  .category {
-    display: grid;
-    gap: var(--size-4);
-    padding: var(--size-6);
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-3);
-    background: color-mix(in srgb, var(--bg-card) 72%, transparent);
-  }
-
-  .category-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--size-4);
-    align-items: end;
-    padding-block-end: var(--size-4);
     border-block-end: var(--border-size-1) solid var(--border);
   }
 
-  .category h2 {
-    margin: 0;
-    font-size: var(--font-size-4);
+  .rail-link:hover {
+    color: var(--brand);
+  }
+
+  .api-grid {
+    display: grid;
+    gap: var(--size-6);
+  }
+
+  .api-section {
+    display: grid;
+    gap: var(--size-4);
+    padding-block-end: var(--size-8);
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--size-5);
+  }
+
+  .section-head h2 {
+    margin: var(--size-2) 0 0;
+    font-size: var(--font-size-5);
     line-height: 1;
-    font-weight: var(--font-weight-9);
-    letter-spacing: 0;
   }
 
-  .category p {
-    margin-block: var(--size-2) 0;
+  .section-head p {
+    max-width: 540px;
     color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
+    line-height: 1.55;
   }
 
-  .entry-grid {
+  .signature-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--size-4);
   }
 
-  .api-entry {
-    min-height: 184px;
+  .signature-card {
+    display: grid;
+    gap: var(--size-3);
+    min-height: 220px;
   }
 
-  .api-sig {
+  .sig {
     display: block;
-    margin-block-end: var(--size-4);
-    color: var(--text-primary);
+    padding: var(--size-3);
+    overflow-x: auto;
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-3);
+    background: var(--bg-code);
+    color: var(--code-text);
     text-transform: none;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
   }
 
-  .api-desc {
+  .signature-card h3 {
+    margin: 0;
+    font-size: var(--font-size-3);
+  }
+
+  .signature-card p,
+  .panel-copy,
+  .signature-card li {
     color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
+    line-height: 1.55;
   }
 
-  @media (max-width: 1120px) {
+  .signature-card ul {
+    display: grid;
+    gap: var(--size-2);
+    margin: 0;
+    padding-inline-start: var(--size-5);
+  }
+
+  @media (max-width: 980px) {
     .hero,
-    .content,
-    .entry-grid {
+    .shell {
       grid-template-columns: 1fr;
     }
 
@@ -241,95 +211,81 @@ routeSheet.replaceSync(`
       border-block-end: var(--border-size-1) solid var(--border);
     }
 
+    .hero-copy,
+    .hero-panel,
+    .shell {
+      padding: var(--size-8) var(--size-5);
+    }
+
     .rail {
       position: static;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .signature-grid {
+      grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 640px) {
-    .hero-copy,
-    .hero-card,
-    .category {
-      padding: var(--size-5) var(--size-4);
-    }
-
-    .content {
-      padding: var(--size-4);
-    }
-
     h1 {
       font-size: var(--font-size-6);
-      line-height: .94;
     }
 
     .lede {
-      font-size: var(--font-size-1);
+      font-size: var(--font-size-2);
+    }
+
+    .rail {
+      grid-template-columns: 1fr;
+    }
+
+    .section-head {
+      display: grid;
     }
   }
 `);
 
-const categories = [
+const groups = [
   {
-    id: 'application',
-    kicker: 'Application',
-    title: 'Application API',
-    intro: 'Route descriptors, lifecycle controls, and island metadata for app authors.',
-    entries: [
-      ['definePage({ route, head, renderIntent, render, error })', 'Defines a file-route page through the canonical object descriptor.'],
-      ['redirect(location, status?): never', 'Throws typed redirect control consumed by request-time and SSG rendering.'],
-      ['notFound(message?): never', 'Throws typed not-found control consumed by the framework boundary.'],
-      ['defineIslandConfig({ ssr, dsd, hydrate })', 'Defines static island metadata for adapter scanning.'],
-      ['defineIsland(tagName, render, { hydrate, dsd, ssr })', 'Defines browser-upgraded UI with JSX handlers and hydration strategy.'],
+    id: 'core',
+    label: 'Core',
+    title: '@openelement/core',
+    copy: 'Rendering, DSD, JSX runtime, event hydration, and trust boundaries.',
+    items: [
+      ['renderDsd(Component, props)', 'Render a component into platform HTML with Declarative Shadow DOM.'],
+      ['definePage(config)', 'Attach route metadata, loaders, actions, and document hints to a page module.'],
+      ['trustRenderHtml(html)', 'Explicit trust boundary for prevalidated HTML entering the render path.'],
+      ['createContext(key, value)', 'Provide typed context for framework and UI package surfaces.'],
     ],
   },
   {
-    id: 'components',
-    kicker: 'Elements',
-    title: 'Components',
-    intro: 'The custom element contract used by DSD components and client islands.',
-    entries: [
-      ['class OpenElement extends HTMLElement', 'Base class for DSD components returning JSX VNodes.'],
-      ['override render(): VNode | null', 'The component render contract. JSX escapes text and preserves native event handlers.'],
-      ['static props: Record<string, typeof String | Number | Boolean>', 'Declares typed properties, observed attributes, and kebab-case mapping.'],
+    id: 'framework',
+    label: 'Framework',
+    title: '@openelement/app',
+    copy: 'Application shell, content, i18n, routes, islands, and adapters.',
+    items: [
+      ['createApp(options)', 'Compose the route graph and runtime conventions for an app.'],
+      ['createI18nPlugin(options)', 'Generate localized routes and data for static output.'],
+      ['createContentPlugin(options)', 'Load blog, nav, sitemap, and search metadata.'],
+      ['createHonoAdapter(options)', 'Bridge the app graph into a standards-friendly server boundary.'],
     ],
   },
   {
-    id: 'rendering',
-    kicker: 'Render',
-    title: 'Rendering',
-    intro: 'Server and DOM render entrypoints for platform HTML output.',
-    entries: [
-      ['renderDsd(vnode, options): Promise<RenderOutput>', 'The single DSD rendering entry. Props, sourceInfo, options, and hooks pass through options.'],
-      ['renderDsdStream(components, options): ReadableStream<Uint8Array>', 'Streams document shell and DSD component chunks through Web Streams.'],
-      ['renderToDom(node, host?, disposers?): Node', 'Converts a VNode tree to DOM with native listeners and fine-grained signal props.'],
-      ['renderDsdTree(node): Promise<string>', 'Converts a VNode tree to SSR or SSG HTML with explicit trusted HTML boundaries.'],
-    ],
-  },
-  {
-    id: 'islands',
-    kicker: 'Hydrate',
-    title: 'Islands',
-    intro: 'Hydration metadata and SSR prop restoration for interactive surfaces.',
-    entries: [
-      ['defineIsland(tagName, componentClass, options)', 'Declares island metadata and upgrade strategy: load, idle, visible, or only.'],
-      ['bindSsrProps(element: HTMLElement): void', 'Restores only data-ssr-props from SSR. Events come from JSX markers and handlers.'],
-    ],
-  },
-  {
-    id: 'signals-build',
-    kicker: 'Runtime',
-    title: 'Signals & Build',
-    intro: 'Reactive primitives and the Vite plugin pipeline that assembles routes and islands.',
-    entries: [
-      ['signal<T>(initial: T): Signal<T>', 'Creates a reactive value. JSX props automatically subscribe when a signal is passed.'],
-      ['computed<T>(fn: () => T): Signal<T>', 'Creates a memoized read-only signal derived from other signals.'],
-      ['effect(fn: () => void): () => void', 'Runs when tracked signals change and returns a disposer.'],
-      ['openPipeline(options, ctx): Plugin[]', 'Creates the Vite plugin pipeline for routes, entries, manifests, SSR, and SSG.'],
+    id: 'ui',
+    label: 'UI',
+    title: '@openelement/ui',
+    copy: 'Open Props primitives used by the site and exposed to consumers.',
+    items: [
+      ['<open-layout>', 'Navigation shell, docs sidebar, footer, theme, locale, and SPA transitions.'],
+      ['<open-brand-mark>', 'Aperture O brand primitive shared by header and visual surfaces.'],
+      ['<open-lab-panel>', 'Artifact, spec, and reference panel for documentation surfaces.'],
+      ['openPropsTokenSheet', 'Semantic Open Props token sheet for light and dark parity.'],
     ],
   },
 ] as const;
 
-export default class ApiCorePage extends OpenElement {
+export class ApiCorePage extends OpenElement {
   static override styles = [openPropsTokenSheet, routeSheet];
 
   override render() {
@@ -340,52 +296,48 @@ export default class ApiCorePage extends OpenElement {
             <p class='kicker'>Reference command center</p>
             <h1>API Reference</h1>
             <p class='lede'>
-              Public APIs grouped by the way engineers use openElement: author a route,
-              render platform HTML, hydrate islands, and inspect package boundaries.
+              Public APIs are organized by the same product surface users see in the site:
+              core rendering, application framework, and UI primitives.
             </p>
           </div>
-          <div class='hero-card'>
-            <open-lab-panel label='public surface' meta='current line'>
-              <ul class='quick-list'>
-                <li><strong>Application</strong><span>route contract</span></li>
-                <li><strong>Elements</strong><span>custom elements</span></li>
-                <li><strong>Rendering</strong><span>DSD output</span></li>
-                <li><strong>Islands</strong><span>hydration metadata</span></li>
-                <li><strong>Build</strong><span>plugin pipeline</span></li>
-              </ul>
+          <div class='hero-panel'>
+            <open-lab-panel label='contract map' meta='v0.40.7'>
+              <p class='panel-copy'>
+                Start at the layer you own, then follow the signature panels to
+                route metadata, DSD output, and package protocol boundaries.
+              </p>
+              <open-button href='/guide/api'>Read API guide</open-button>
             </open-lab-panel>
           </div>
         </section>
 
-        <section class='content'>
-          <nav class='rail' aria-label='API categories'>
-            <span class='rail-title'>Categories</span>
-            {categories.map((category) => <a href={`#${category.id}`}>{category.title}</a>)}
-          </nav>
-
-          <div class='api-sections'>
-            {categories.map((category) => (
-              <section class='category' id={category.id}>
-                <div class='category-head'>
+        <div class='shell'>
+          <aside class='rail' aria-label='API categories'>
+            {groups.map((group) => <a class='rail-link' href={`#${group.id}`}>{group.label}</a>)}
+          </aside>
+          <div class='api-grid'>
+            {groups.map((group) => (
+              <section class='api-section' id={group.id}>
+                <div class='section-head'>
                   <div>
-                    <span class='category-kicker'>{category.kicker}</span>
-                    <h2>{category.title}</h2>
-                    <p>{category.intro}</p>
+                    <p class='section-kicker'>{group.label}</p>
+                    <h2>{group.title}</h2>
                   </div>
-                  <open-badge tone='brand'>{String(category.entries.length).padStart(2, '0')}</open-badge>
+                  <p>{group.copy}</p>
                 </div>
-                <div class='entry-grid'>
-                  {category.entries.map(([signature, description]) => (
-                    <open-lab-panel class='api-entry' label='contract' meta='typed'>
-                      <code class='api-sig'>{signature}</code>
-                      <p class='api-desc'>{description}</p>
-                    </open-lab-panel>
+                <div class='signature-grid'>
+                  {group.items.map(([sig, copy]) => (
+                    <open-card class='signature-card'>
+                      <code class='sig'>{sig}</code>
+                      <h3>{sig.split('(')[0].replace(/[<>\-]/g, ' ')}</h3>
+                      <p>{copy}</p>
+                    </open-card>
                   ))}
                 </div>
               </section>
             ))}
           </div>
-        </section>
+        </div>
       </main>
     );
   }
@@ -394,3 +346,5 @@ export default class ApiCorePage extends OpenElement {
 if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
   customElements.define(tagName, ApiCorePage);
 }
+
+export default ApiCorePage;

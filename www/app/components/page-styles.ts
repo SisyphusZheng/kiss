@@ -14,7 +14,7 @@ export const pageStyles = `
     --toc-width: 228px;
     --underline-offset: 3px;
     --border-hairline: 1px;
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
   }
 
   * {
@@ -46,7 +46,7 @@ export const pageStyles = `
     font-weight: var(--font-weight-9);
     letter-spacing: 0;
     margin: 0 0 var(--size-3);
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     line-height: 1.05;
   }
 
@@ -55,9 +55,9 @@ export const pageStyles = `
     font-weight: var(--font-weight-8);
     letter-spacing: 0;
     margin: var(--size-10) 0 var(--size-4);
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     padding-bottom: var(--size-2);
-    border-bottom: var(--border-hairline) solid var(--border, rgba(16,24,40,0.12));
+    border-bottom: var(--border-hairline) solid var(--border);
     line-height: 1.12;
   }
 
@@ -66,7 +66,7 @@ export const pageStyles = `
     font-weight: var(--font-weight-7);
     letter-spacing: 0;
     margin: var(--size-6) 0 var(--size-2);
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     line-height: 1.22;
   }
 
@@ -74,7 +74,7 @@ export const pageStyles = `
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-6);
     margin: var(--size-4) 0 var(--size-2);
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     line-height: 1.3;
   }
 
@@ -83,12 +83,12 @@ export const pageStyles = `
     font-size: var(--font-size-1);
     font-weight: var(--font-weight-6);
     margin: var(--size-3) 0 var(--size-1);
-    color: var(--text-secondary, #475467);
+    color: var(--text-secondary);
     line-height: 1.35;
   }
 
   .subtitle {
-    color: var(--text-secondary, #475467);
+    color: var(--text-secondary);
     margin-bottom: var(--size-10);
     font-size: var(--font-size-2);
     line-height: 1.6;
@@ -97,12 +97,12 @@ export const pageStyles = `
   p {
     line-height: 1.72;
     margin: var(--size-2) 0;
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     font-size: var(--font-size-1);
   }
 
   strong {
-    color: var(--text-primary, #101828);
+    color: var(--text-primary);
     font-weight: var(--font-weight-7);
   }
 
@@ -111,23 +111,23 @@ export const pageStyles = `
   }
 
   a {
-    color: var(--brand, #1d4ed8);
+    color: var(--brand);
     text-decoration: underline;
     text-underline-offset: var(--underline-offset);
-    text-decoration-color: rgba(29,78,216,0.34);
+    text-decoration-color: color-mix(in srgb, var(--brand) 34%, transparent);
     text-decoration-thickness: var(--border-size-1);
     transition: color var(--ease-2) var(--duration-2), text-decoration-color var(--ease-2) var(--duration-2);
   }
 
   a:hover {
-    color: var(--brand-hover, #1e40af);
+    color: var(--brand-hover);
     text-decoration-color: currentColor;
   }
 
   .section-label {
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
-    color: var(--brand, #1d4ed8);
+    color: var(--brand);
     text-transform: uppercase;
     letter-spacing: 0;
     margin-bottom: var(--size-3);
@@ -136,20 +136,20 @@ export const pageStyles = `
   .section-divider {
     border: none;
     height: 1px;
-    background: var(--border, rgba(16,24,40,0.12));
+    background: var(--border);
     margin: var(--size-10) 0;
   }
 
   pre {
-    background: var(--bg-code, #111827);
-    color: #d1d5db;
+    background: var(--bg-code);
+    color: var(--code-text);
     padding: var(--size-5) var(--size-6);
     border-radius: var(--radius-2);
     overflow-x: auto;
     font-size: var(--font-size-0);
     line-height: 1.7;
     margin: var(--size-4) 0;
-    border: var(--border-hairline) solid var(--code-border, rgba(255,255,255,0.12));
+    border: var(--border-hairline) solid var(--code-border);
     box-shadow: none;
   }
 
@@ -160,12 +160,12 @@ export const pageStyles = `
   p code,
   li code,
   .inline-code {
-    background: rgba(29,78,216,0.08);
+    background: var(--brand-subtle);
     padding: 0.14rem 0.36rem;
     border-radius: var(--radius-1);
     font-size: var(--font-size-00);
-    color: var(--brand, #1d4ed8);
-    border: var(--border-hairline) solid rgba(29,78,216,0.12);
+    color: var(--brand);
+    border: var(--border-hairline) solid color-mix(in srgb, var(--brand) 18%, var(--border));
   }
 
   table {
@@ -173,12 +173,12 @@ export const pageStyles = `
     border-collapse: collapse;
     margin: var(--size-3) 0 var(--size-6);
     font-size: var(--font-size-0);
-    background: var(--surface-1, #ffffff);
+    background: var(--bg-card);
   }
 
   th,
   td {
-    border: var(--border-hairline) solid var(--border, rgba(16,24,40,0.12));
+    border: var(--border-hairline) solid var(--border);
     padding: var(--size-2) var(--size-3);
     text-align: left;
     vertical-align: top;
@@ -186,34 +186,34 @@ export const pageStyles = `
 
   th {
     font-weight: var(--font-weight-7);
-    color: var(--text-primary, #101828);
-    background: var(--surface-2, #eef2f7);
+    color: var(--text-primary);
+    background: var(--bg-surface);
   }
 
   td {
-    color: var(--text-secondary, #475467);
+    color: var(--text-secondary);
   }
 
   tr:nth-child(even) td {
-    background: rgba(16,24,40,0.025);
+    background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
   }
 
   .callout,
   .pillar {
     padding: var(--size-4) var(--size-5);
     margin: var(--size-4) 0;
-    border: var(--border-hairline) solid var(--border, rgba(16,24,40,0.12));
-    border-left: var(--border-size-3) solid var(--brand, #1d4ed8);
-    background: var(--surface-1, #ffffff);
+    border: var(--border-hairline) solid var(--border);
+    border-left: var(--border-size-3) solid var(--brand);
+    background: var(--bg-card);
     border-radius: var(--radius-2);
   }
 
   .callout.warn {
-    border-left-color: var(--warning, #b45309);
+    border-left-color: var(--warning);
   }
 
   .callout.info {
-    border-left-color: var(--info, #0369a1);
+    border-left-color: var(--info);
   }
 
   .pillar .num {
@@ -221,7 +221,7 @@ export const pageStyles = `
     font-weight: var(--font-weight-8);
     text-transform: uppercase;
     letter-spacing: 0;
-    color: var(--brand, #1d4ed8);
+    color: var(--brand);
     margin-bottom: var(--size-1);
   }
 
@@ -231,9 +231,9 @@ export const pageStyles = `
 
   .hard-constraint {
     display: inline-block;
-    background: rgba(29,78,216,0.08);
-    border: var(--border-hairline) solid rgba(29,78,216,0.18);
-    color: var(--brand, #1d4ed8);
+    background: var(--brand-subtle);
+    border: var(--border-hairline) solid color-mix(in srgb, var(--brand) 18%, var(--border));
+    color: var(--brand);
     padding: var(--size-1) var(--size-2);
     border-radius: var(--radius-1);
     font-size: var(--font-size-00);
@@ -243,7 +243,7 @@ export const pageStyles = `
   ul,
   ol {
     padding-left: var(--size-5);
-    color: var(--text-secondary, #475467);
+    color: var(--text-secondary);
     line-height: 1.7;
     font-size: var(--font-size-1);
   }
@@ -255,7 +255,7 @@ export const pageStyles = `
   .nav-row {
     margin-top: var(--size-10);
     padding-top: var(--size-4);
-    border-top: var(--border-hairline) solid var(--border, rgba(16,24,40,0.12));
+    border-top: var(--border-hairline) solid var(--border);
     display: flex;
     justify-content: space-between;
     gap: var(--size-3);
@@ -341,7 +341,7 @@ export const pageStyles = `
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand, #1d4ed8);
+    outline: 2px solid var(--brand);
     outline-offset: 2px;
   }
 

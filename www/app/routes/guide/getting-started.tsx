@@ -5,10 +5,10 @@ export const meta = { section: 'Quick Start', label: 'Getting Started', order: 1
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
 import { pageStylesSheet } from '../../components/page-styles.js';
-import { linearTokenSheet } from '@openelement/ui';
+import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-callout';
 import '@openelement/ui/open-code-block';
-import '@openelement/ui/open-button-linear';
+import '@openelement/ui/open-button';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const routeSheet = new StyleSheet();
@@ -19,7 +19,7 @@ routeSheet.replaceSync(`
 `);
 
 export class GettingStartedPage extends OpenElement {
-  static override styles = [linearTokenSheet, pageStylesSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, pageStylesSheet, routeSheet];
 
   override render() {
     return (
@@ -193,7 +193,7 @@ export default defineConfig({
       </div>
 
       <div class='nav-row'>
-        <open-button-linear variant='secondary' href='/guide/core-concepts'>Core Concepts &rarr;</open-button-linear>
+        <open-button href='/guide/core-concepts'>Core Concepts &rarr;</open-button>
       </div>
     </>
   );
@@ -283,7 +283,7 @@ export default defineIsland(
       </div>
 
       <div class='nav-row'>
-        <open-button-linear variant='secondary' href='/zh/guide/core-concepts'>核心概念 &rarr;</open-button-linear>
+          <open-button href='/zh/guide/core-concepts'>核心概念 &rarr;</open-button>
       </div>
     </>
   );

@@ -8,6 +8,7 @@
     "./open-input": "./src/open-input.tsx",
     "./open-code-block": "./src/open-code-block.tsx",
     "./open-badge": "./src/open-badge.tsx",
+    "./open-brand-mark": "./src/open-brand-mark.tsx",
     "./open-lab-panel": "./src/open-lab-panel.tsx",
     "./open-lab-stage": "./src/open-lab-stage.tsx",
     "./open-standards-visual": "./src/open-standards-visual.tsx",

@@ -1,14 +1,14 @@
 export const meta = { section: 'Core', label: 'Core Concepts', order: 2 };
 
 import { OpenElement } from '@openelement/element';
-import { linearTokenSheet } from '@openelement/ui';
+import { openPropsTokenSheet } from '@openelement/ui';
 import { pageStylesSheet } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 import '@openelement/ui/open-callout';
-import '@openelement/ui/open-button-linear';
+import '@openelement/ui/open-button';
 
 export class CoreConceptsPage extends OpenElement {
-  static override styles = [linearTokenSheet, pageStylesSheet];
+  static override styles = [openPropsTokenSheet, pageStylesSheet];
 
   override render() {
     return (
@@ -113,8 +113,8 @@ export default defineIsland('my-counter', () => (
       </open-callout>
 
       <div class='nav-row'>
-        <open-button-linear variant='secondary' href='/guide/getting-started'>&larr; Getting Started</open-button-linear>
-        <open-button-linear variant='secondary' href='/guide/routing-and-data'>Routing &amp; Data &rarr;</open-button-linear>
+        <open-button href='/guide/getting-started'>&larr; Getting Started</open-button>
+        <open-button href='/guide/routing-and-data'>Routing &amp; Data &rarr;</open-button>
       </div>
     </>
   );
@@ -186,8 +186,8 @@ export default defineIsland('my-counter', () => (
       </p>
 
       <div class='nav-row'>
-        <open-button-linear variant='secondary' href='/zh/guide/getting-started'>&larr; 快速开始</open-button-linear>
-        <open-button-linear variant='secondary' href='/zh/guide/routing-and-data'>路由与数据 &rarr;</open-button-linear>
+        <open-button href='/zh/guide/getting-started'>&larr; 快速开始</open-button>
+        <open-button href='/zh/guide/routing-and-data'>路由与数据 &rarr;</open-button>
       </div>
     </>
   );

@@ -1,37 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
   <title>openElement Aperture O</title>
-  <desc>A flat Monet purple aperture O with Shadow DOM and route boundary lines.</desc>
+  <desc>A flat Monet purple Aperture O with an open standards notch, DSD boundary, and route graph line.</desc>
   <defs>
-    <linearGradient
-      id="aperture-o"
-      x1="24"
-      y1="108"
-      x2="106"
-      y2="18"
-      gradientUnits="userSpaceOnUse"
-    >
+    <linearGradient id="aperture" x1="24" y1="108" x2="106" y2="18" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#21143b" />
-      <stop offset=".48" stop-color="#8262db" />
+      <stop offset=".52" stop-color="#8262db" />
       <stop offset="1" stop-color="#b59cff" />
     </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="30" fill="#fbf7ff" />
-  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-o)" stroke-width="14" />
+  <rect width="128" height="128" rx="32" fill="#fbf7ff" />
+  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture)" stroke-width="14" />
   <circle cx="64" cy="64" r="24" fill="none" stroke="#d0bdff" stroke-width="2" />
   <path
-    d="M91 24 A43 43 0 0 1 107 57"
+    d="M91 24A43 43 0 0 1 107 57"
     fill="none"
     stroke="#fbf7ff"
     stroke-width="18"
     stroke-linecap="round"
   />
   <path
-    d="M91 25 A43 43 0 0 1 106 56"
+    d="M91 25A43 43 0 0 1 106 56"
     fill="none"
     stroke="#58399e"
     stroke-width="3"
     stroke-linecap="round"
   />
-  <path d="M43 60 H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
-  <path d="M41 75 H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
+  <path d="M43 60H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
+  <path d="M41 75H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
 </svg>

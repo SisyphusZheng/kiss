@@ -233,6 +233,27 @@ export const manifest: OpenElementPackageManifest = {
       },
     },
     {
+      tagName: 'open-brand-mark',
+      className: 'OpenBrandMark',
+      superclassName: 'OpenElement',
+      description: 'Aperture O brand mark for openElement surfaces',
+      attributes: [
+        { name: 'size', type: 'string', default: '"md"', description: 'Mark size' },
+        { name: 'tone', type: 'string', default: '"default"', description: 'Mark tone' },
+      ],
+      cssParts: [
+        { name: 'mark', description: 'The Aperture O wrapper' },
+      ],
+      openElement: {
+        ssr: true,
+        dsd: true,
+        layer: 'dsd-static',
+        hydrate: 'idle',
+        module: '@openelement/ui/open-brand-mark',
+        export: 'OpenBrandMark',
+      },
+    },
+    {
       tagName: 'open-lab-panel',
       className: 'OpenLabPanel',
       superclassName: 'OpenElement',
@@ -672,6 +693,11 @@ export const manifest: OpenElementPackageManifest = {
       path: './open-badge.js',
       exports: [{ name: 'OpenBadge', path: './open-badge.js' }],
       declarations: ['open-badge'],
+    },
+    {
+      path: './open-brand-mark.js',
+      exports: [{ name: 'OpenBrandMark', path: './open-brand-mark.js' }],
+      declarations: ['open-brand-mark'],
     },
     {
       path: './open-lab-panel.js',

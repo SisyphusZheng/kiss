@@ -230,11 +230,11 @@ export default defineConfig({
           // Minimal headerNav; open-layout auto-filters sidebar.
           // v0.31 UI-shell debt: derive this from route meta scanning.
           headerNav: [
-            { href: '/guide/getting-started', label: 'Guide' },
+            { href: '/docs', label: 'Docs' },
             { href: '/apilist', label: 'API' },
-            { href: '/architecture/architecture', label: 'Architecture' },
-            { href: '/blog', label: 'Blog' },
             { href: '/roadmap', label: 'Roadmap' },
+            { href: '/blog', label: 'Blog' },
+            { href: 'https://github.com/open-element/openelement', label: 'GitHub' },
           ],
         },
         sitemap: {

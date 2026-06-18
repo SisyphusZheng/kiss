@@ -15,6 +15,7 @@
  * - open-badge-linear: Linear.app-style pill badge component
  * - open-code-block: Code block with copy button
  * - open-badge: Open Props status badge
+ * - open-brand-mark: Aperture O brand mark
  * - open-lab-panel: Standards-lab artifact/spec panel
  * - open-lab-stage: Kinetic standards-lab hero primitive
  * - open-standards-visual: Product-art standards diagrams
@@ -50,6 +51,7 @@ export { OpenCard, tagName as openCardTagName } from './open-card.js';
 export { OpenInput, tagName as openInputTagName } from './open-input.js';
 export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.js';
 export { OpenBadge, tagName as openBadgeTagName } from './open-badge.js';
+export { OpenBrandMark, tagName as openBrandMarkTagName } from './open-brand-mark.js';
 export { OpenLabPanel, tagName as openLabPanelTagName } from './open-lab-panel.js';
 export { OpenLabStage, tagName as openLabStageTagName } from './open-lab-stage.js';
 export {
