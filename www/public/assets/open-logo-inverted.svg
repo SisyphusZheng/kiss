@@ -1,54 +1,37 @@
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 140 140"
-  width="140"
-  height="140"
-  role="img"
->
-  <title>openElement logo inverted</title>
-  <desc>Monet purple open aperture O mark for dark surfaces</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
+  <title>openElement Aperture O inverted</title>
+  <desc>A dark-mode Monet purple aperture O with Shadow DOM and route boundary lines.</desc>
   <defs>
     <linearGradient
-      id="open-o-inverted"
-      x1="18"
-      y1="118"
-      x2="124"
-      y2="20"
+      id="aperture-o-inverted"
+      x1="24"
+      y1="108"
+      x2="106"
+      y2="18"
       gradientUnits="userSpaceOnUse"
     >
       <stop offset="0" stop-color="#f3eaff" />
-      <stop offset=".5" stop-color="#b59cff" />
-      <stop offset="1" stop-color="#8262db" />
+      <stop offset=".5" stop-color="#9c7df2" />
+      <stop offset="1" stop-color="#58399e" />
     </linearGradient>
   </defs>
-  <circle cx="70" cy="70" r="48" fill="none" stroke="url(#open-o-inverted)" stroke-width="17" />
-  <circle cx="70" cy="70" r="27" fill="none" stroke="#d0bdff" stroke-width="2.5" opacity=".86" />
+  <rect width="128" height="128" rx="30" fill="#130a22" />
+  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-o-inverted)" stroke-width="14" />
+  <circle cx="64" cy="64" r="24" fill="none" stroke="#422774" stroke-width="2" />
   <path
-    d="M100 20 C115 28 123 42 124 58"
+    d="M91 24 A43 43 0 0 1 107 57"
     fill="none"
     stroke="#130a22"
-    stroke-width="19"
+    stroke-width="18"
     stroke-linecap="round"
   />
   <path
-    d="M97 21 C113 31 121 44 122 60"
+    d="M91 25 A43 43 0 0 1 106 56"
     fill="none"
     stroke="#d0bdff"
-    stroke-width="4.5"
+    stroke-width="3"
     stroke-linecap="round"
   />
-  <path
-    d="M48 65 C58 59 68 59 79 65 C86 69 94 69 101 65"
-    fill="none"
-    stroke="#f3eaff"
-    stroke-width="5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M43 80 C55 73 67 73 80 80 C88 84 96 84 105 80"
-    fill="none"
-    stroke="#b59cff"
-    stroke-width="4"
-    stroke-linecap="round"
-  />
+  <path d="M43 60 H86" fill="none" stroke="#fbf7ff" stroke-width="4" stroke-linecap="round" />
+  <path d="M41 75 H90" fill="none" stroke="#b59cff" stroke-width="4" stroke-linecap="round" />
 </svg>

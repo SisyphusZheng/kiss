@@ -165,6 +165,7 @@ sheet.replaceSync(`
   .app-layout[full-width] .layout-body {
     display: flex;
     flex-direction: column;
+    max-width: none;
   }
 
   .app-layout[home] .layout-main,
@@ -234,46 +235,63 @@ sheet.replaceSync(`
   }
 
   .logo:hover .logo-mark {
-    transform: rotate(-8deg) scale(1.04);
+    transform: translateY(calc(var(--border-size-1) * -1));
   }
 
   .logo-mark {
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: var(--size-10);
-    height: var(--size-10);
+    width: 42px;
+    height: 42px;
     overflow: hidden;
     border: 0;
     border-radius: var(--radius-round);
     background:
-      radial-gradient(circle at 50% 50%, var(--bg-base) 0 37%, transparent 38%),
-      conic-gradient(from 218deg, var(--brand-deep), var(--brand), var(--brand-light), var(--brand-deep));
-    box-shadow:
-      inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--gray-0) 42%, transparent),
-      0 var(--size-1) var(--size-4) var(--brand-glow);
+      radial-gradient(circle at 50% 50%, var(--nav-bg) 0 38%, transparent 39%),
+      conic-gradient(from 214deg, var(--brand-deep) 0 26%, var(--brand) 26% 60%, var(--brand-light) 60% 82%, var(--brand-deep) 82% 100%);
+    box-shadow: none;
     flex: 0 0 auto;
-    transition: transform var(--duration-2) var(--ease-2), box-shadow var(--duration-2) var(--ease-2);
+    transition: transform var(--duration-2) var(--ease-2);
   }
 
   .logo-mark::before {
     content: "";
     position: absolute;
-    inset: var(--size-2);
-    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 56%, var(--bg-base));
+    inset: 11px;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 64%, var(--nav-bg));
     border-radius: var(--radius-round);
-    transform: rotate(-18deg);
   }
 
   .logo-mark::after {
     content: "";
     position: absolute;
-    inset-inline-end: 2px;
-    inset-block-start: 1px;
-    width: var(--size-3);
-    height: var(--size-3);
-    border-block-start: var(--border-size-2) solid var(--bg-base);
-    border-inline-end: var(--border-size-2) solid var(--bg-base);
+    inset-inline-end: -1px;
+    inset-block-start: 3px;
+    width: 15px;
+    height: 19px;
+    border-radius: 999px 999px 0 0;
+    background: var(--nav-bg);
+    transform: rotate(24deg);
+  }
+
+  .logo-boundary,
+  .logo-route {
+    position: absolute;
+    inset-inline: 12px 9px;
+    height: var(--border-size-1);
+    background: var(--brand-deep);
+    border-radius: var(--radius-round);
+    z-index: 1;
+  }
+
+  .logo-boundary {
+    inset-block-start: 19px;
+  }
+
+  .logo-route {
+    inset-block-start: 24px;
+    background: var(--brand);
   }
 
   .logo-word {
@@ -895,7 +913,10 @@ export class OpenLayout extends OpenElement {
           <nav className='header-inner' aria-label='Primary navigation'>
             {(logoText || logoSub) && (
               <a className='logo' href='/'>
-                <span className='logo-mark' aria-hidden='true'></span>
+                <span className='logo-mark' aria-hidden='true'>
+                  <span className='logo-boundary'></span>
+                  <span className='logo-route'></span>
+                </span>
                 {logoText && <span className='logo-word'>{logoText}</span>}
                 {logoSub && <span className='logo-sub'>{logoSub}</span>}
               </a>

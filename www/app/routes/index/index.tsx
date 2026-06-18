@@ -49,7 +49,8 @@ pageSheet.replaceSync(`
     isolation: isolate;
     border-block-end: var(--border-size-1) solid var(--border);
     background:
-      linear-gradient(116deg, var(--violet-2), transparent 52%),
+      linear-gradient(112deg, var(--violet-2), transparent 47%),
+      radial-gradient(circle at 78% 48%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 34%),
       linear-gradient(180deg, var(--bg-base), var(--bg-base));
   }
 
@@ -84,10 +85,12 @@ pageSheet.replaceSync(`
   .hero-stage {
     position: relative;
     display: grid;
-    align-content: center;
+    grid-template-columns: minmax(0, .9fr) minmax(420px, .72fr);
+    align-items: center;
+    gap: var(--size-8);
     width: 100%;
     min-height: inherit;
-    padding: var(--size-16) var(--size-8) var(--size-12);
+    padding: var(--size-16) var(--size-10) var(--size-12);
   }
 
   .hero-copy {
@@ -95,7 +98,7 @@ pageSheet.replaceSync(`
     z-index: 1;
     display: grid;
     gap: var(--size-8);
-    max-width: 880px;
+    max-width: 920px;
   }
 
   .hero-meta,
@@ -127,10 +130,10 @@ pageSheet.replaceSync(`
   }
 
   h1 {
-    max-width: 860px;
+    max-width: 900px;
     margin: 0;
     font-size: var(--font-size-8);
-    line-height: .88;
+    line-height: .86;
     letter-spacing: 0;
     font-weight: var(--font-weight-9);
   }
@@ -151,28 +154,26 @@ pageSheet.replaceSync(`
   }
 
   .hero-art {
-    position: absolute;
+    position: relative;
     z-index: 0;
-    inset-inline-end: var(--size-8);
-    inset-block: 50% auto;
-    width: min(620px, 44vw);
+    justify-self: end;
+    width: min(720px, 47vw);
     aspect-ratio: 1;
-    transform: translateY(-50%);
     pointer-events: none;
   }
 
   .monet-lens {
     position: absolute;
     inset: 0;
-    border: var(--size-8) solid transparent;
+    border: var(--size-9) solid transparent;
     border-radius: var(--radius-round);
     background:
       linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
       conic-gradient(from 212deg, var(--brand-deep), var(--brand), var(--brand-light), var(--brand-deep)) border-box;
     box-shadow:
       inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--brand-light) 42%, transparent),
-      0 var(--size-12) var(--size-16) var(--brand-glow);
-    opacity: .94;
+      0 var(--size-10) var(--size-16) color-mix(in srgb, var(--brand) 12%, transparent);
+    opacity: .96;
   }
 
   .monet-lens::before {
@@ -385,7 +386,15 @@ pageSheet.replaceSync(`
   }
 
   @media (max-width: 1080px) {
+    .hero-stage {
+      grid-template-columns: 1fr;
+    }
+
     .hero-art {
+      position: absolute;
+      inset-inline-end: var(--size-6);
+      inset-block: 50% auto;
+      transform: translateY(-50%);
       opacity: .34;
       width: 520px;
     }
