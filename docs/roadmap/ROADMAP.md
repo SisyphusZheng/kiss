@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.8 Cleanup-Train Patch; next line is npm-only distribution.\
+> Current package line: v0.40.8 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 
@@ -70,7 +70,7 @@ v0.41-v1.0 blocker.
 | v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
 | v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
 | v0.40.7 | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                      | Released                 |
-| v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
+| v0.41.0 | Deno Package Manager for Vite+ Dogfood             | Make Vite+ treat `deno` as a first-class package manager alongside npm/pnpm/yarn/bun; openElement becomes the first Deno-native Web Components dogfood           | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
 | v0.44.0 | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                          | Planned                  |
@@ -80,6 +80,51 @@ v0.41-v1.0 blocker.
 | v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+
+## v0.41.0 - Deno Package Manager for Vite+ Dogfood
+
+Strategic realignment: instead of migrating openElement to Node/npm, v0.41.0
+pushes Vite+ to treat Deno as a first-class package manager. openElement stays
+Deno-first and becomes the first real dogfood for a Deno-powered Vite+
+toolchain.
+
+Scope:
+
+- Vite+ upstream prototype (draft PR + RFC):
+  - Add `deno` to Vite+ package-manager detection: `deno.lock`, `deno.json`,
+    `deno.jsonc`, and `devEngines.packageManager.name === "deno"`.
+  - Route `vp install` to `deno install` when Deno is the detected package
+    manager.
+  - Keep scope narrow: Deno is a package manager, not a Vite+ managed runtime.
+  - Provide unit tests for detection and command mapping.
+  - Update Vite+ docs to mark Deno package-manager mode as experimental.
+- openElement dogfood:
+  - Keep Deno-first workspace and `deno.json` workspace structure.
+  - Do not introduce npm/pnpm/yarn as the primary package manager.
+  - Use Deno to install npm dependencies and maintain `deno.lock` and
+    `node_modules`.
+  - Patch/prototype `vp install`, then pursue `vp check`, `vp test`, `vp build`,
+    or `vp pack` until at least one core command passes on openElement.
+  - Keep existing `deno task` flows working so the dogfood does not break the
+    main branch.
+- Docs and brand:
+  - Position openElement as a "Deno-native Web Components full-stack framework
+    powered by Vite+".
+  - Clarify that Vite+ Deno support is experimental until upstream merges it.
+  - Update `docs/current/VERSION_PLAN.md` and release notes to reflect the new
+    strategy.
+- Roadmap ripple:
+  - v0.41.x is reserved for upstream feedback, Vite+ API churn, and PR fixes.
+  - v0.42.0 resumes Nitro server primitives.
+  - v0.43.0 becomes the VoidZero contribution pass: case study, docs/example PRs.
+
+Non-goals:
+
+- No Node runtime migration.
+- No npm/pnpm/yarn lockfile as the source of truth.
+- No self-built package manager.
+- No full "Deno as Vite+ runtime" rewrite in v0.41.0.
+- No claim that Vite+ officially supports Deno until upstream accepts the PR.
 
 ## v0.40.8 - Cleanup-Train Patch
 
