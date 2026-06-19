@@ -27,6 +27,10 @@ export const pageStyles = `
     padding: var(--size-10) var(--size-6) var(--size-16);
     overflow-wrap: break-word;
     word-break: break-word;
+    background:
+      linear-gradient(color-mix(in srgb, var(--border) 44%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1));
+    background-size: calc(var(--size-16) * 1.5) calc(var(--size-16) * 1.5);
   }
 
   img {
@@ -259,6 +263,10 @@ export const pageStyles = `
     display: flex;
     justify-content: space-between;
     gap: var(--size-3);
+  }
+
+  .nav-row open-button {
+    text-decoration: none;
   }
 
   .content-grid {

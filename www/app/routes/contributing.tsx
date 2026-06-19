@@ -1,13 +1,13 @@
-/**
+﻿/**
  * Contributing Page - openElement Framework Contribution Guide
  */
 export const meta = { section: "", label: "Contributing", order: 30 };
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { linearTokenSheet } from "@openelement/ui";
+import { openPropsTokenSheet } from "@openelement/ui";
 import { pageStyles } from "../components/page-styles.js";
-import "@openelement/ui\/open-code-block";
-import "@openelement/ui/open-button-linear";
+import "@openelement/ui/open-code-block";
+import "@openelement/ui/open-button";
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -47,61 +47,9 @@ routeSheet.replaceSync(
 );
 
 export class ContributingPage extends OpenElement {
-  static override styles = [linearTokenSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, routeSheet];
   override render() {
-    return (this._getLocale("zh")) === "en"
-      ? this._renderEn()
-      : this._renderZh();
-  }
-
-  private _renderZh() {
-    const loc = this._getLocale("zh");
-    return (
-      <div class="container">
-        <h1>Contributing to openElement</h1>
-        <p class="subtitle">感谢你对 openElement 框架的兴趣！</p>
-        <h2>开发环境设置</h2>
-        <open-code-block>
-          <pre><code>git clone https://github.com/open-element/openelement.git
-cd openElement
-deno install
-deno task test
-deno task docs:dev</code></pre>
-        </open-code-block>
-        <h2>Deno-first 工具链</h2>
-        <p>
-          openElement 的 core CLI、SSG、Serverless
-          API、测试、发布和文档站任务都以 Deno 2.7+ 为默认运行环境。
-        </p>
-        <h2>开发规范</h2>
-        <ul>
-          <li>代码风格：deno fmt + deno lint</li>
-          <li>
-            提交规范：Conventional Commits（feat/fix/docs/refactor/test/chore）
-          </li>
-          <li>
-            分层原则：在添加新功能前，检查是否可以用更低层级解决（L0 HTML → L1
-            CSS → L2 Browser API → L3 Hono/Vite/Lit → L4 自研代码）
-          </li>
-        </ul>
-        <h2>发布流程</h2>
-        <ol>
-          <li>更新版本号（packages/*/deno.json）</li>
-          <li>更新 changelog</li>
-          <li>运行测试</li>
-          <li>发布到 JSR</li>
-          <li>创建 GitHub Release</li>
-        </ol>
-        <div class="nav-row">
-          <open-button-linear variant="tertiary" size="sm" href="/changelog">
-            ← Changelog
-          </open-button-linear>
-          <open-button-linear variant="tertiary" size="sm" href="/roadmap">
-            Roadmap →
-          </open-button-linear>
-        </div>
-      </div>
-    );
+    return this._renderEn();
   }
 
   private _renderEn() {
@@ -150,8 +98,8 @@ deno task docs:dev</code></pre>
           </li>
           <li>
             <strong>Layering</strong>: Before adding a new feature, check if it
-            can be solved at a lower level (L0 HTML → L1 CSS → L2 Browser API →
-            L3 Hono/Vite/Lit → L4 Custom code)
+            can be solved at a lower level: L0 HTML, L1 CSS, L2 Browser API, L3
+            Hono/Vite/Lit, then L4 custom code.
           </li>
         </ul>
         <h2>Release Process</h2>
@@ -171,12 +119,12 @@ deno task docs:dev</code></pre>
           <li>Create GitHub Release</li>
         </ol>
         <div class="nav-row">
-          <open-button-linear variant="tertiary" size="sm" href="/changelog">
-            ← Changelog
-          </open-button-linear>
-          <open-button-linear variant="tertiary" size="sm" href="/roadmap">
-            Roadmap →
-          </open-button-linear>
+          <open-button variant="ghost" size="sm" href="/changelog">
+            Changelog
+          </open-button>
+          <open-button variant="ghost" size="sm" href="/roadmap">
+            Roadmap
+          </open-button>
         </div>
       </div>
     );
@@ -186,3 +134,5 @@ deno task docs:dev</code></pre>
 customElements.define("page-contributing", ContributingPage);
 export default ContributingPage;
 export const tagName = "page-contributing";
+
+

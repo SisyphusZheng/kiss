@@ -135,7 +135,9 @@ routeSheet.replaceSync(`
     display: grid;
     grid-template-columns: minmax(280px, .34fr) minmax(0, 1fr);
     gap: var(--size-5);
-    padding: var(--size-5);
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
+    padding: var(--size-8) 0 var(--size-10);
   }
 
   .journal-note {
@@ -231,6 +233,10 @@ routeSheet.replaceSync(`
     .sections,
     .post-grid {
       grid-template-columns: 1fr;
+    }
+
+    .sections {
+      width: min(100% - var(--size-8), 1120px);
     }
 
     .hero-copy {

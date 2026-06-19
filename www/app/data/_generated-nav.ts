@@ -36,6 +36,16 @@ export const navSections = [
         "order": 10
       },
       {
+        "path": "/architecture/standards-registry",
+        "label": "Standards Registry",
+        "order": 80
+      },
+      {
+        "path": "/architecture/package-compatibility",
+        "label": "Package Compatibility",
+        "order": 90
+      },
+      {
         "path": "/architecture/benchmark",
         "label": "Performance",
         "order": 100
@@ -62,28 +72,13 @@ export const navSections = [
       },
       {
         "path": "/architecture/islands",
-        "label": "Island Upgrade",
+        "label": "Islands",
         "order": 40
       },
       {
         "path": "/architecture/islands-deep",
         "label": "Island Deep Dive",
         "order": 50
-      }
-    ]
-  },
-  {
-    "section": "Compatibility",
-    "items": [
-      {
-        "path": "/architecture/package-compatibility",
-        "label": "Package Compatibility",
-        "order": 10
-      },
-      {
-        "path": "/architecture/standards-registry",
-        "label": "Standards & Registry",
-        "order": 20
       }
     ]
   },
@@ -124,37 +119,12 @@ export const navSections = [
         "path": "/docs",
         "label": "Docs",
         "order": 0
-      },
-      {
-        "path": "/guide/getting-started",
-        "label": "Getting Started",
-        "order": 1
-      },
-      {
-        "path": "/guide/architecture",
-        "label": "Architecture",
-        "order": 10
       }
     ]
   },
   {
     "section": "Core",
     "items": [
-      {
-        "path": "/guide/core-concepts",
-        "label": "Core Concepts",
-        "order": 2
-      },
-      {
-        "path": "/guide/routing-and-data",
-        "label": "Routing & Data",
-        "order": 3
-      },
-      {
-        "path": "/guide/islands-and-ssr",
-        "label": "Islands & SSR",
-        "order": 4
-      },
       {
         "path": "/guide/api",
         "label": "API Routes",
@@ -163,27 +133,57 @@ export const navSections = [
     ]
   },
   {
-    "section": "Production",
+    "section": "Guide",
     "items": [
       {
-        "path": "/guide/deployment",
-        "label": "Deployment",
-        "order": 5
+        "path": "/guide/getting-started",
+        "label": "Getting Started",
+        "order": 1
+      },
+      {
+        "path": "/guide/core-concepts",
+        "label": "Core Concepts",
+        "order": 10
+      },
+      {
+        "path": "/guide/architecture",
+        "label": "Architecture",
+        "order": 20
+      },
+      {
+        "path": "/guide/routing-and-data",
+        "label": "Routing and Data",
+        "order": 40
+      },
+      {
+        "path": "/guide/mdx",
+        "label": "MDX",
+        "order": 50
       },
       {
         "path": "/guide/configuration",
         "label": "Configuration",
-        "order": 10
+        "order": 70
       },
       {
         "path": "/guide/error-handling",
         "label": "Error Handling",
-        "order": 30
+        "order": 80
+      },
+      {
+        "path": "/guide/islands-and-ssr",
+        "label": "Islands and SSR",
+        "order": 90
+      },
+      {
+        "path": "/guide/deployment",
+        "label": "Deployment",
+        "order": 100
       },
       {
         "path": "/guide/testing",
         "label": "Testing",
-        "order": 40
+        "order": 110
       }
     ]
   }

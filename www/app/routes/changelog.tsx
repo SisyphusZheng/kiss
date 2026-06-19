@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Changelog Page - openElement Framework Version History.
  */
 export const meta = { section: "", label: "Changelog", order: 20 };
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { linearTokenSheet } from "@openelement/ui";
-import "@openelement/ui/open-button-linear";
+import { openPropsTokenSheet } from "@openelement/ui";
+import "@openelement/ui/open-button";
 import { pageStyles } from "../components/page-styles.js";
 import { marked } from "marked";
 // @deno-types="npm:@types/sanitize-html@^2"
@@ -24,7 +24,7 @@ routeSheet.replaceSync(
 );
 
 export class ChangelogPage extends OpenElement {
-  static override styles = [linearTokenSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, routeSheet];
 
   override render() {
     const changelogPath = new URL("../../../../CHANGELOG.md", import.meta.url);
@@ -59,16 +59,16 @@ export class ChangelogPage extends OpenElement {
         </p>
         <div class="changelog-content" innerHTML={html} trustedHtml={true} />
         <div class="nav-row">
-          <open-button-linear variant="tertiary" size="sm" href="/roadmap">
+          <open-button variant="ghost" size="sm" href="/roadmap">
             Roadmap
-          </open-button-linear>
-          <open-button-linear
-            variant="tertiary"
+          </open-button>
+          <open-button
+            variant="ghost"
             size="sm"
             href="/guide/getting-started"
           >
             Getting Started
-          </open-button-linear>
+          </open-button>
         </div>
       </div>
     );
@@ -78,3 +78,5 @@ export class ChangelogPage extends OpenElement {
 customElements.define("page-changelog", ChangelogPage);
 export default ChangelogPage;
 export const tagName = "page-changelog";
+
+

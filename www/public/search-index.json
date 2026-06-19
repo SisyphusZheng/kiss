@@ -12,6 +12,18 @@
     "text": "Design System Reference"
   },
   {
+    "path": "/architecture/standards-registry",
+    "title": "Standards Registry",
+    "section": "Reference",
+    "text": "Standards Registry Reference"
+  },
+  {
+    "path": "/architecture/package-compatibility",
+    "title": "Package Compatibility",
+    "section": "Reference",
+    "text": "Package Compatibility Reference"
+  },
+  {
     "path": "/architecture/benchmark",
     "title": "Performance",
     "section": "Reference",
@@ -37,27 +49,15 @@
   },
   {
     "path": "/architecture/islands",
-    "title": "Island Upgrade",
+    "title": "Islands",
     "section": "Principles",
-    "text": "Island Upgrade Principles"
+    "text": "Islands Principles"
   },
   {
     "path": "/architecture/islands-deep",
     "title": "Island Deep Dive",
     "section": "Principles",
     "text": "Island Deep Dive Principles"
-  },
-  {
-    "path": "/architecture/package-compatibility",
-    "title": "Package Compatibility",
-    "section": "Compatibility",
-    "text": "Package Compatibility Compatibility"
-  },
-  {
-    "path": "/architecture/standards-registry",
-    "title": "Standards & Registry",
-    "section": "Compatibility",
-    "text": "Standards & Registry Compatibility"
   },
   {
     "path": "/blog",
@@ -90,63 +90,69 @@
     "text": "Docs Quick Start"
   },
   {
-    "path": "/guide/getting-started",
-    "title": "Getting Started",
-    "section": "Quick Start",
-    "text": "Getting Started Quick Start"
-  },
-  {
-    "path": "/guide/architecture",
-    "title": "Architecture",
-    "section": "Quick Start",
-    "text": "Architecture Quick Start"
-  },
-  {
-    "path": "/guide/core-concepts",
-    "title": "Core Concepts",
-    "section": "Core",
-    "text": "Core Concepts Core"
-  },
-  {
-    "path": "/guide/routing-and-data",
-    "title": "Routing & Data",
-    "section": "Core",
-    "text": "Routing & Data Core"
-  },
-  {
-    "path": "/guide/islands-and-ssr",
-    "title": "Islands & SSR",
-    "section": "Core",
-    "text": "Islands & SSR Core"
-  },
-  {
     "path": "/guide/api",
     "title": "API Routes",
     "section": "Core",
     "text": "API Routes Core"
   },
   {
-    "path": "/guide/deployment",
-    "title": "Deployment",
-    "section": "Production",
-    "text": "Deployment Production"
+    "path": "/guide/getting-started",
+    "title": "Getting Started",
+    "section": "Guide",
+    "text": "Getting Started Guide"
+  },
+  {
+    "path": "/guide/core-concepts",
+    "title": "Core Concepts",
+    "section": "Guide",
+    "text": "Core Concepts Guide"
+  },
+  {
+    "path": "/guide/architecture",
+    "title": "Architecture",
+    "section": "Guide",
+    "text": "Architecture Guide"
+  },
+  {
+    "path": "/guide/routing-and-data",
+    "title": "Routing and Data",
+    "section": "Guide",
+    "text": "Routing and Data Guide"
+  },
+  {
+    "path": "/guide/mdx",
+    "title": "MDX",
+    "section": "Guide",
+    "text": "MDX Guide"
   },
   {
     "path": "/guide/configuration",
     "title": "Configuration",
-    "section": "Production",
-    "text": "Configuration Production"
+    "section": "Guide",
+    "text": "Configuration Guide"
   },
   {
     "path": "/guide/error-handling",
     "title": "Error Handling",
-    "section": "Production",
-    "text": "Error Handling Production"
+    "section": "Guide",
+    "text": "Error Handling Guide"
+  },
+  {
+    "path": "/guide/islands-and-ssr",
+    "title": "Islands and SSR",
+    "section": "Guide",
+    "text": "Islands and SSR Guide"
+  },
+  {
+    "path": "/guide/deployment",
+    "title": "Deployment",
+    "section": "Guide",
+    "text": "Deployment Guide"
   },
   {
     "path": "/guide/testing",
     "title": "Testing",
-    "section": "Production",
-    "text": "Testing Production"
+    "section": "Guide",
+    "text": "Testing Guide"
   }
 ]

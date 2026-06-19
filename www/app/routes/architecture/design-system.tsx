@@ -137,6 +137,8 @@ pageSheet.replaceSync(`
     display: grid;
     grid-template-columns: minmax(280px, .34fr) minmax(0, 1fr);
     gap: 0;
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
     margin-block-start: 0;
     border-block-end: var(--border-size-1) solid var(--border);
   }
@@ -243,6 +245,10 @@ pageSheet.replaceSync(`
     .principles,
     .visual-grid {
       grid-template-columns: 1fr;
+    }
+
+    .section {
+      width: min(100% - var(--size-8), 1120px);
     }
   }
 

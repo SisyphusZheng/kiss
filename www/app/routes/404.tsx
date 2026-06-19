@@ -3,9 +3,9 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { linearTokenSheet } from '@openelement/ui';
-import '@openelement/ui/open-button-linear';
-import '@openelement/ui/open-input-linear';
+import { openPropsTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-input';
 
 const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
@@ -42,49 +42,62 @@ const REDIRECT_MAP: Record<string, string> = {
 
 const styles = new StyleSheet();
 styles.replaceSync(`
-  :host { display: block; }
+  :host {
+    display: block;
+    color: var(--text-primary);
+  }
   .container {
-    max-width: 560px;
+    display: grid;
+    justify-items: center;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 120px 32px 96px;
+    padding: var(--size-16) var(--size-6);
     text-align: center;
+    background:
+      radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--brand-pale) 46%, transparent), transparent 34%),
+      var(--bg-base);
   }
   .title {
-    font-size: 96px;
-    font-weight: 780;
-    color: var(--color-text-primary);
+    font-size: calc(var(--font-size-8) * 1.35);
+    font-weight: var(--font-weight-9);
+    color: var(--text-primary);
     letter-spacing: 0;
     margin: 0;
     line-height: 1;
   }
   .subtitle {
-    font-size: 24px;
-    font-weight: 600;
-    margin: 16px 0 0;
-    color: var(--color-text-primary);
+    font-size: var(--font-size-4);
+    font-weight: var(--font-weight-8);
+    margin: var(--size-3) 0 0;
+    color: var(--text-primary);
   }
   .description {
-    font-size: 16px;
-    color: var(--color-text-secondary);
-    margin: 8px 0 32px;
+    max-width: 520px;
+    font-size: var(--font-size-1);
+    color: var(--text-secondary);
+    margin: var(--size-2) 0 var(--size-7);
+    line-height: var(--font-lineheight-3);
   }
   .search-wrapper {
     max-width: 400px;
-    margin: 0 auto 40px;
+    width: 100%;
+    margin: 0 auto var(--size-8);
   }
   .popular-label {
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
     text-transform: uppercase;
-    color: var(--color-text-muted);
-    margin-bottom: 12px;
-    letter-spacing: 0.05em;
+    color: var(--brand);
+    margin-bottom: var(--size-3);
+    letter-spacing: 0;
   }
   .links-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--size-2);
     justify-content: center;
-    margin-bottom: 40px;
+    margin-bottom: var(--size-8);
   }
   @media (max-width: 600px) {
     .container {
@@ -100,7 +113,7 @@ styles.replaceSync(`
 `);
 
 export default class Page404 extends OpenElement {
-  static override styles = [linearTokenSheet, styles];
+  static override styles = [openPropsTokenSheet, styles];
   override render() {
     return (
       <div class='container'>
@@ -110,19 +123,19 @@ export default class Page404 extends OpenElement {
           The page you are looking for doesn't exist or has been moved.
         </p>
         <div class='search-wrapper'>
-          <open-input-linear variant='search'></open-input-linear>
+          <open-input placeholder='Search docs and API'></open-input>
         </div>
         <p class='popular-label'>Popular pages</p>
         <div class='links-grid'>
           {POPULAR_LINKS.map((l) => (
-            <open-button-linear variant='secondary' size='sm' href={l.href}>
+            <open-button size='sm' href={l.href}>
               {l.label}
-            </open-button-linear>
+            </open-button>
           ))}
         </div>
-        <open-button-linear variant='primary' href='/'>
+        <open-button variant='primary' href='/'>
           Go home
-        </open-button-linear>
+        </open-button>
       </div>
     );
   }

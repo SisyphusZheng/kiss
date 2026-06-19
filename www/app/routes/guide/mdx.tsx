@@ -1,64 +1,56 @@
-/** @jsxImportSource @openelement/core */
+﻿export const meta = { section: 'Guide', label: 'MDX', order: 50 };
 
-export const tagName = 'mdx-guide-page';
-export const meta = {
-  title: 'MDX',
-  description: 'Build-time MDX support for openElement content and DSD components.',
-  order: 65,
-};
+import { OpenElement } from '@openelement/element';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import { openPropsTokenSheet } from '@openelement/ui';
+import { pageStyles } from '../../components/page-styles.js';
+import '@openelement/ui/open-card';
 
-export default class MdxGuidePage extends HTMLElement {
-  render() {
+const routeSheet = new StyleSheet();
+routeSheet.replaceSync(
+  pageStyles + `
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--size-4);
+      margin: var(--size-8) 0;
+    }
+
+    @media (max-width: 860px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  `,
+);
+
+export class GuideGuidePage extends OpenElement {
+  static override styles = [openPropsTokenSheet, routeSheet];
+
+  override render() {
     return (
-      <article class='doc-page'>
-        <header class='doc-hero'>
-          <p class='eyebrow'>Content</p>
-          <h1>MDX</h1>
-          <p>
-            Author Markdown with openElement custom elements, compile it at build time, and keep the
-            output on the existing JSX and Declarative Shadow DOM path.
-          </p>
-        </header>
-
-        <section class='doc-section'>
-          <h2>Compiler</h2>
-          <open-code-block language='ts'>
-            {`import { compileMdx } from '@openelement/content/mdx';
-
-const module = await compileMdx(source, {
-  jsxImportSource: '@openelement/core',
-});`}
-          </open-code-block>
-        </section>
-
-        <section class='doc-section'>
-          <h2>Vite</h2>
-          <open-code-block language='ts'>
-            {`import { mdxPlugin } from '@openelement/adapter-vite/plugin-mdx';
-
-export default {
-  plugins: [mdxPlugin()],
-};`}
-          </open-code-block>
-        </section>
-
-        <section class='doc-section'>
-          <h2>Islands</h2>
-          <open-code-block language='mdx'>
-            {`---
-title: Counter demo
----
-
-# Counter
-
-<open-counter client:idle count={1} />`}
-          </open-code-block>
-        </section>
-      </article>
+      <div class='container'>
+        <h1>MDX</h1>
+        <p class='subtitle'>Documentation content should compile into the same route and component system as authored pages.</p>
+        <div class='guide-grid'>
+          <open-card>
+            <h3>Content source</h3>
+            <p>Keep source content reviewable in the repository.</p>
+          </open-card>
+          <open-card>
+            <h3>Components</h3>
+            <p>Use shared UI primitives for examples and callouts.</p>
+          </open-card>
+          <open-card>
+            <h3>Build path</h3>
+            <p>Validate generated pages through the normal site build.</p>
+          </open-card>
+        </div>
+      </div>
     );
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, MdxGuidePage);
-}
+customElements.define('guide-mdx-page', GuideGuidePage);
+export default GuideGuidePage;
+export const tagName = 'guide-mdx-page';

@@ -68,7 +68,7 @@ export default definePage({
             ? (
               <pre
                 style={{
-                  background: '#f5f5f5',
+                  background: 'var(--bg-surface)',
                   padding: '1rem',
                   borderRadius: '4px',
                 }}
@@ -87,7 +87,7 @@ export default definePage({
               placeholder='Enter your name'
               style={{
                 padding: '0.5rem',
-                border: '1px solid #ccc',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
               }}
             />
@@ -95,8 +95,8 @@ export default definePage({
               type='submit'
               style={{
                 padding: '0.5rem 1rem',
-                background: '#0066cc',
-                color: 'white',
+                background: 'var(--brand)',
+                color: 'var(--brand-contrast)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -111,7 +111,7 @@ export default definePage({
               style={{
                 marginTop: '1rem',
                 padding: '1rem',
-                background: '#e6ffe6',
+                background: 'var(--bg-surface)',
                 borderRadius: '4px',
               }}
             >

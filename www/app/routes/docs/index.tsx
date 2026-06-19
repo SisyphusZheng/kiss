@@ -175,10 +175,12 @@ pageSheet.replaceSync(`
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
     margin-block-start: 0;
     border-block-end: var(--border-size-1) solid var(--border);
     gap: var(--size-4);
-    padding: var(--size-5);
+    padding: var(--size-8) 0 var(--size-5);
   }
 
   .path-link {
@@ -218,7 +220,9 @@ pageSheet.replaceSync(`
     display: grid;
     grid-template-columns: minmax(0, .92fr) minmax(0, 1fr);
     gap: var(--size-5);
-    padding: var(--size-5);
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
+    padding: var(--size-5) 0 var(--size-10);
     margin-block-start: 0;
     border-block-end: var(--border-size-1) solid var(--border);
   }
@@ -241,6 +245,11 @@ pageSheet.replaceSync(`
 
     .paths {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: min(100% - var(--size-8), 1120px);
+    }
+
+    .reference {
+      width: min(100% - var(--size-8), 1120px);
     }
   }
 

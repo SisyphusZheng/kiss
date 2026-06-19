@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Blog Post Page - Dynamic Route
  *
  * Renders individual blog posts from @openelement/generated/blog-data.
@@ -7,8 +7,8 @@
  */
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { linearTokenSheet } from "@openelement/ui";
-import "@openelement/ui/open-button-linear";
+import { openPropsTokenSheet } from "@openelement/ui";
+import "@openelement/ui/open-button";
 import { pageStyles } from "../../components/page-styles.js";
 import { getPostBySlug, posts } from "@openelement/generated/blog-data";
 
@@ -51,7 +51,7 @@ routeSheet.replaceSync(
 export default class BlogPostPage extends OpenElement {
   slug = "";
 
-  static override styles = [linearTokenSheet, routeSheet];
+  static override styles = [openPropsTokenSheet, routeSheet];
 
   override render() {
     return (this._getLocale("zh")) === "en"
@@ -68,8 +68,8 @@ export default class BlogPostPage extends OpenElement {
         <div class="container">
           <div class="not-found">
             <h1>404</h1>
-            <p>文章未找到: {this.slug}</p>
-            <a href="/blog">← 返回博客</a>
+            <p>鏂囩珷鏈壘鍒? {this.slug}</p>
+            <a href="/blog">鈫?杩斿洖鍗氬</a>
           </div>
         </div>
       );
@@ -77,7 +77,7 @@ export default class BlogPostPage extends OpenElement {
     const tags = post.frontmatter.tags ?? [];
     return (
       <div class="container">
-        <a href="/blog" class="blog-back">← 博客</a>
+        <a href="/blog" class="blog-back">鈫?鍗氬</a>
         <h1>{post.frontmatter.title}</h1>
         <p class="subtitle">{post.frontmatter.excerpt ?? ""}</p>
         {tags.length > 0
@@ -93,9 +93,9 @@ export default class BlogPostPage extends OpenElement {
         <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
         </div>
         <div class="nav-row">
-          <open-button-linear variant="tertiary" size="sm" href="/blog">
-            ← 返回博客
-          </open-button-linear>
+          <open-button variant="ghost" size="sm" href="/blog">
+            Back to Blog
+          </open-button>
         </div>
       </div>
     );
@@ -111,7 +111,7 @@ export default class BlogPostPage extends OpenElement {
           <div class="not-found">
             <h1>404</h1>
             <p>Post not found: {this.slug}</p>
-            <a href="/en/blog">← Back to Blog</a>
+            <a href="/en/blog">鈫?Back to Blog</a>
           </div>
         </div>
       );
@@ -119,7 +119,7 @@ export default class BlogPostPage extends OpenElement {
     const tags = post.frontmatter.tags ?? [];
     return (
       <div class="container">
-        <a href="/blog" class="blog-back">← Blog</a>
+        <a href="/blog" class="blog-back">Blog</a>
         <h1>{post.frontmatter.title}</h1>
         <p class="subtitle">{post.frontmatter.excerpt ?? ""}</p>
         {tags.length > 0
@@ -135,9 +135,9 @@ export default class BlogPostPage extends OpenElement {
         <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
         </div>
         <div class="nav-row">
-          <open-button-linear variant="tertiary" size="sm" href="/blog">
-            ← Back to Blog
-          </open-button-linear>
+          <open-button variant="ghost" size="sm" href="/blog">
+            Back to Blog
+          </open-button>
         </div>
       </div>
     );
@@ -145,3 +145,5 @@ export default class BlogPostPage extends OpenElement {
 }
 
 customElements.define(tagName, BlogPostPage);
+
+

@@ -100,9 +100,11 @@ routeSheet.replaceSync(`
 
   .shell {
     display: grid;
-    grid-template-columns: minmax(220px, .24fr) minmax(0, .76fr);
+    grid-template-columns: 220px minmax(0, 1fr) 180px;
     gap: var(--size-6);
-    padding: var(--size-10);
+    width: min(1180px, calc(100% - var(--size-10)));
+    margin-inline: auto;
+    padding: var(--size-10) 0;
     border-block-end: var(--border-size-1) solid var(--border);
   }
 
@@ -124,6 +126,16 @@ routeSheet.replaceSync(`
 
   .rail-link:hover {
     color: var(--brand);
+  }
+
+  .toc {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--size-5));
+    align-self: start;
+    display: grid;
+    gap: var(--size-2);
+    padding-inline-start: var(--size-4);
+    border-inline-start: var(--border-size-1) solid var(--border);
   }
 
   .api-grid {
@@ -159,14 +171,14 @@ routeSheet.replaceSync(`
 
   .signature-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--size-4);
   }
 
   .signature-card {
     display: grid;
     gap: var(--size-3);
-    min-height: 220px;
+    min-height: 180px;
   }
 
   .sig {
@@ -204,6 +216,7 @@ routeSheet.replaceSync(`
     .hero,
     .shell {
       grid-template-columns: 1fr;
+      width: min(100% - var(--size-8), 1180px);
     }
 
     .hero-copy {
@@ -220,6 +233,10 @@ routeSheet.replaceSync(`
     .rail {
       position: static;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .toc {
+      display: none;
     }
 
     .signature-grid {
@@ -251,24 +268,22 @@ const groups = [
     id: 'core',
     label: 'Core',
     title: '@openelement/core',
-    copy: 'Rendering, DSD, JSX runtime, event hydration, and trust boundaries.',
+    copy: 'Runtime utilities and trust-boundary helpers exported by the core package.',
     items: [
-      ['renderDsd(Component, props)', 'Render a component into platform HTML with Declarative Shadow DOM.'],
-      ['definePage(config)', 'Attach route metadata, loaders, actions, and document hints to a page module.'],
+      ['OpenElement runtime contracts', 'Core exports are consumed by generated code, UI primitives, and route rendering.'],
+      ['escapeAttr / escapeHtml boundary', 'Escaping helpers are used where user-provided strings enter generated HTML.'],
       ['trustRenderHtml(html)', 'Explicit trust boundary for prevalidated HTML entering the render path.'],
-      ['createContext(key, value)', 'Provide typed context for framework and UI package surfaces.'],
     ],
   },
   {
-    id: 'framework',
-    label: 'Framework',
+    id: 'app',
+    label: 'App',
     title: '@openelement/app',
-    copy: 'Application shell, content, i18n, routes, islands, and adapters.',
+    copy: 'Application shell, content plugin, i18n data, routes, and island metadata.',
     items: [
-      ['createApp(options)', 'Compose the route graph and runtime conventions for an app.'],
-      ['createI18nPlugin(options)', 'Generate localized routes and data for static output.'],
-      ['createContentPlugin(options)', 'Load blog, nav, sitemap, and search metadata.'],
-      ['createHonoAdapter(options)', 'Bridge the app graph into a standards-friendly server boundary.'],
+      ['defineIslandConfig({ hydrate, ssr, dsd })', 'Island metadata used by interactive components such as home-console.'],
+      ['Generated nav data', 'The docs sidebar and site navigation are generated from route metadata.'],
+      ['Generated i18n data', 'Localized route output is produced by the app/content pipeline.'],
     ],
   },
   {
@@ -279,8 +294,20 @@ const groups = [
     items: [
       ['<open-layout>', 'Navigation shell, docs sidebar, footer, theme, locale, and SPA transitions.'],
       ['<open-brand-mark>', 'Aperture O brand primitive shared by header and visual surfaces.'],
+      ['<open-button> / <open-card> / <open-badge>', 'Reusable primitives backed by openPropsTokenSheet.'],
       ['<open-lab-panel>', 'Artifact, spec, and reference panel for documentation surfaces.'],
       ['openPropsTokenSheet', 'Semantic Open Props token sheet for light and dark parity.'],
+    ],
+  },
+  {
+    id: 'build',
+    label: 'Build',
+    title: '@openelement/adapter-vite + @openelement/ssg',
+    copy: 'Build-time route scanning, static generation, client islands, sitemap, and PWA output.',
+    items: [
+      ['deno task build', 'Runs the adapter build and SSG pipeline for the www site.'],
+      ['Route metadata', 'The build generates route types, nav data, search index, sitemap, and localized pages.'],
+      ['Client islands', 'Interactive islands are emitted as separate client assets after static generation.'],
     ],
   },
 ] as const;
@@ -296,15 +323,16 @@ export class ApiCorePage extends OpenElement {
             <p class='kicker'>Reference command center</p>
             <h1>API Reference</h1>
             <p class='lede'>
-              Public APIs are organized by the same product surface users see in the site:
-              core rendering, application framework, and UI primitives.
+              Public surfaces are organized by actual package boundaries and
+              generated website contracts. The left rail is the only category
+              navigation; the right rail tracks the current reference sections.
             </p>
           </div>
           <div class='hero-panel'>
             <open-lab-panel label='contract map' meta='v0.40.7'>
               <p class='panel-copy'>
-                Start at the layer you own, then follow the signature panels to
-                route metadata, DSD output, and package protocol boundaries.
+                Start at the package you own, then follow the section anchors to
+                generated route metadata, UI primitives, and build output.
               </p>
               <open-button href='/guide/api'>Read API guide</open-button>
             </open-lab-panel>
@@ -329,7 +357,7 @@ export class ApiCorePage extends OpenElement {
                   {group.items.map(([sig, copy]) => (
                     <open-card class='signature-card'>
                       <code class='sig'>{sig}</code>
-                      <h3>{sig.split('(')[0].replace(/[<>\-]/g, ' ')}</h3>
+                      <h3>{sig.replace(/[<>\-]/g, ' ')}</h3>
                       <p>{copy}</p>
                     </open-card>
                   ))}
@@ -337,6 +365,10 @@ export class ApiCorePage extends OpenElement {
               </section>
             ))}
           </div>
+          <aside class='toc' aria-label='On this page'>
+            <span class='section-kicker'>On this page</span>
+            {groups.map((group) => <a class='rail-link' href={`#${group.id}`}>{group.title}</a>)}
+          </aside>
         </div>
       </main>
     );

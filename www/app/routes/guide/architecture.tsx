@@ -1,44 +1,56 @@
-/**
- * /guide/architecture is kept for E2E compatibility.
- * The canonical architecture page is at /architecture.
- */
-export const meta = { section: 'Quick Start', label: 'Architecture', order: 10 };
-export const tagName = 'guide-architecture';
+﻿export const meta = { section: 'Guide', label: 'Architecture', order: 20 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { linearTokenSheet } from '@openelement/ui';
-import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import { openPropsTokenSheet } from '@openelement/ui';
+import { pageStyles } from '../../components/page-styles.js';
+import '@openelement/ui/open-card';
 
-const sheet = new StyleSheet();
-sheet.replaceSync(`
-  :host { display:block; }
-  .shell { max-width:900px; margin:0 auto; padding:44px var(--size-6) 72px; }
-  h1 { color:var(--text-primary); font-size:clamp(2.2rem,6vw,4rem); line-height:0.95; }
-  p { color:var(--text-secondary); font-size:var(--font-size-4); line-height:var(--font-lineheight-4); }
-  a { color:var(--brand); font-weight:var(--font-weight-7); }
-`);
+const routeSheet = new StyleSheet();
+routeSheet.replaceSync(
+  pageStyles + `
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--size-4);
+      margin: var(--size-8) 0;
+    }
 
-export class GuideArchitecturePage extends OpenElement {
-  static override styles = [linearTokenSheet, sheet];
+    @media (max-width: 860px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  `,
+);
+
+export class GuideGuidePage extends OpenElement {
+  static override styles = [openPropsTokenSheet, routeSheet];
 
   override render() {
     return (
-      <div class='shell'>
-        <h1>Architecture</h1>
-        <p>
-          The architecture documentation has moved to the canonical{' '}
-          <a href='/architecture'>Architecture section</a>.
-        </p>
-        <p>
-          openElement {OPENELEMENT_VERSION} is an 11-package architecture: Elements, UI,
-          Framework, Protocols, plus foundation packages for core, signal, router, content, SSG,
-          and the Vite bridge.
-        </p>
+      <div class='container'>
+        <h1>Architecture Guide</h1>
+        <p class='subtitle'>openElement is organized around elements, routes, islands, and package layers rather than a single client app shell.</p>
+        <div class='guide-grid'>
+          <open-card>
+            <h3>Elements</h3>
+            <p>Custom Elements and DSD define the component surface.</p>
+          </open-card>
+          <open-card>
+            <h3>Routes</h3>
+            <p>Route metadata drives navigation, generated pages, and documentation.</p>
+          </open-card>
+          <open-card>
+            <h3>Packages</h3>
+            <p>Core, app, UI, adapters, and SSG stay as separate package layers.</p>
+          </open-card>
+        </div>
       </div>
     );
   }
 }
 
-customElements.define('guide-architecture', GuideArchitecturePage);
-export default GuideArchitecturePage;
+customElements.define('guide-architecture-page', GuideGuidePage);
+export default GuideGuidePage;
+export const tagName = 'guide-architecture-page';

@@ -140,6 +140,39 @@ pageSheet.replaceSync(`
     text-transform: uppercase;
   }
 
+  .content {
+    display: grid;
+    gap: var(--size-10);
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
+    padding-block: var(--size-10) var(--size-12);
+  }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(0, .48fr) minmax(0, .52fr);
+    gap: var(--size-8);
+    align-items: end;
+  }
+
+  .section-head h2 {
+    margin: var(--size-2) 0 0;
+    font-size: var(--font-size-6);
+    line-height: .96;
+    letter-spacing: 0;
+    font-weight: var(--font-weight-9);
+  }
+
+  .section-head p,
+  .artifact-copy,
+  .workflow-copy,
+  .surface-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-1);
+    line-height: var(--font-lineheight-3);
+  }
+
   h1 {
     max-width: 720px;
     margin: 0;
@@ -396,9 +429,9 @@ pageSheet.replaceSync(`
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0;
-    padding: var(--size-8) var(--size-10) var(--size-12);
-    border-block-end: var(--border-size-1) solid var(--border);
-    background: color-mix(in srgb, var(--bg-base) 88%, transparent);
+    padding: 0;
+    border: var(--border-size-1) solid var(--border);
+    background: color-mix(in srgb, var(--bg-card) 82%, transparent);
   }
 
   .module {
@@ -427,13 +460,141 @@ pageSheet.replaceSync(`
     line-height: 1.55;
   }
 
+  .artifact-section {
+    display: grid;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+    gap: var(--size-5);
+    align-items: stretch;
+  }
+
+  .artifact-panel {
+    border: var(--border-size-1) solid var(--border);
+    background:
+      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
+      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1)),
+      var(--bg-card);
+    background-size: var(--size-12) var(--size-12);
+    min-height: 440px;
+    padding: var(--size-6);
+  }
+
+  .artifact-map {
+    display: grid;
+    align-items: center;
+    height: 100%;
+  }
+
+  .artifact-map svg {
+    width: 100%;
+    height: auto;
+    color: var(--brand);
+  }
+
+  .artifact-copy {
+    display: grid;
+    align-content: center;
+    gap: var(--size-4);
+    padding: var(--size-6);
+    border: var(--border-size-1) solid var(--border);
+    background: var(--bg-card);
+  }
+
+  .artifact-copy h2,
+  .workflow h2,
+  .surfaces h2 {
+    margin: 0;
+    font-size: var(--font-size-5);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .code-spec {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--size-5);
+  }
+
+  .spec-block {
+    display: grid;
+    gap: var(--size-3);
+    padding: var(--size-5);
+    border: var(--border-size-1) solid var(--code-border);
+    background: var(--bg-code);
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  .workflow {
+    display: grid;
+    gap: var(--size-5);
+    padding-block: var(--size-4);
+  }
+
+  .workflow-rail {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    border: var(--border-size-1) solid var(--border);
+    background: var(--bg-card);
+  }
+
+  .workflow-step {
+    display: grid;
+    gap: var(--size-3);
+    min-height: 180px;
+    padding: var(--size-4);
+    border-inline-end: var(--border-size-1) solid var(--border);
+  }
+
+  .workflow-step:last-child {
+    border-inline-end: 0;
+  }
+
+  .workflow-step strong {
+    color: var(--text-primary);
+    font-size: var(--font-size-2);
+  }
+
+  .workflow-copy {
+    font-size: var(--font-size-0);
+  }
+
+  .surfaces {
+    display: grid;
+    gap: var(--size-5);
+  }
+
+  .surface-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--size-4);
+  }
+
+  .surface-card {
+    display: grid;
+    gap: var(--size-4);
+    min-height: 240px;
+    padding: var(--size-5);
+    border: var(--border-size-1) solid var(--border);
+    background: var(--bg-card);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .surface-card h3 {
+    margin: 0;
+    font-size: var(--font-size-3);
+  }
+
   .verification {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
     gap: var(--size-8);
     align-items: center;
-    padding: var(--size-8) var(--size-10);
-    border-block-end: var(--border-size-1) solid var(--border);
+    padding: var(--size-6);
+    border: var(--border-size-1) solid var(--border);
     background: color-mix(in srgb, var(--bg-elevated) 44%, var(--bg-base));
   }
 
@@ -478,9 +639,19 @@ pageSheet.replaceSync(`
       width: min(260px, 42vw);
     }
 
+    .content {
+      width: min(100% - var(--size-8), 1120px);
+      padding-block: var(--size-8);
+    }
+
+    .section-head,
+    .artifact-section,
+    .code-spec {
+      grid-template-columns: 1fr;
+    }
+
     .modules {
       grid-template-columns: 1fr;
-      padding: var(--size-4);
     }
 
     .verification {
@@ -490,6 +661,16 @@ pageSheet.replaceSync(`
 
     .module {
       grid-template-columns: 120px 1fr;
+      border-inline-end: 0;
+      border-block-end: var(--border-size-1) solid var(--border);
+    }
+
+    .workflow-rail,
+    .surface-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .workflow-step {
       border-inline-end: 0;
       border-block-end: var(--border-size-1) solid var(--border);
     }
@@ -534,6 +715,11 @@ pageSheet.replaceSync(`
       gap: var(--size-3);
       padding: var(--size-6) var(--size-3);
     }
+
+    .content {
+      width: min(100% - var(--size-6), 1120px);
+      gap: var(--size-8);
+    }
   }
 `);
 
@@ -559,6 +745,21 @@ const modules = [
       'Package and ship UI, data, and logic with open, layerable protocols.',
     visual: 'layers',
   },
+] as const;
+
+const workflowSteps = [
+  ['01', 'Create', 'Scaffold the app shell and package graph from the public create surface.'],
+  ['02', 'Compose', 'Author native custom elements and reusable UI primitives.'],
+  ['03', 'Route', 'Map pages through file routes and generated navigation metadata.'],
+  ['04', 'Render', 'Emit platform HTML with Declarative Shadow DOM boundaries.'],
+  ['05', 'Hydrate', 'Upgrade islands only where interaction is required.'],
+  ['06', 'Ship', 'Publish static output and package contracts without framework lock-in.'],
+] as const;
+
+const surfaces = [
+  ['Docs', '/docs', 'Guides, route concepts, deployment notes, and architecture entry points.'],
+  ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
+  ['Roadmap', '/roadmap', 'Current v0.40.7 direction, validation train anchors, and planned work.'],
 ] as const;
 
 function moduleVisual(kind: 'target' | 'graph' | 'layers') {
@@ -665,30 +866,129 @@ export class DocsHome extends OpenElement {
           </div>
         </section>
 
-        <section class='modules' aria-label='Product modules'>
-          {modules.map((module) => (
-            <article class='module'>
-              {moduleVisual(module.visual)}
-              <div>
-                <span class='module-index'>{module.index}</span>
-                <h2>{module.title}</h2>
-                <p>{module.copy}</p>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <section class='verification' aria-label='Live verification'>
-          <div>
-            <p class='kicker'>Island hydration smoke line</p>
-            <h2>Native components stay inspectable.</h2>
+        <div class='content'>
+          <section class='section-head' aria-labelledby='standards-heading'>
+            <div>
+              <p class='kicker'>Standards become an interface</p>
+              <h2 id='standards-heading'>Elements, routes, and protocols share one contract.</h2>
+            </div>
             <p>
-              The same composed surface hydrates as a real custom element, with
-              shadow DOM boundaries and signal updates preserved after static generation.
+              openElement is presented as a standards-first product surface:
+              native components, generated route metadata, DSD output, and
+              package boundaries are designed to stay inspectable.
             </p>
-          </div>
-          <home-console></home-console>
-        </section>
+          </section>
+
+          <section class='modules' aria-label='Product modules'>
+            {modules.map((module) => (
+              <article class='module'>
+                {moduleVisual(module.visual)}
+                <div>
+                  <span class='module-index'>{module.index}</span>
+                  <h2>{module.title}</h2>
+                  <p>{module.copy}</p>
+                </div>
+              </article>
+            ))}
+          </section>
+
+          <section class='artifact-section' aria-label='System model'>
+            <div class='artifact-panel'>
+              <div class='artifact-map'>
+                <svg viewBox='0 0 720 420' aria-hidden='true'>
+                  <path d='M82 88h156l84 88h156l112 118' fill='none' stroke='currentColor' stroke-width='3' />
+                  <path d='M82 294h170l76-76h144l118-128' fill='none' stroke='currentColor' stroke-width='2' opacity='.48' />
+                  <path d='M96 90v208M252 90v208M408 176v118M576 90v210' stroke='currentColor' stroke-width='1' opacity='.28' />
+                  <g fill='var(--bg-base)' stroke='currentColor' stroke-width='3'>
+                    <circle cx='82' cy='88' r='12' /><circle cx='238' cy='88' r='12' />
+                    <circle cx='322' cy='176' r='12' /><circle cx='478' cy='176' r='12' />
+                    <circle cx='590' cy='294' r='12' /><circle cx='82' cy='294' r='12' />
+                    <circle cx='328' cy='218' r='12' /><circle cx='590' cy='90' r='12' />
+                  </g>
+                  <text x='82' y='44' fill='currentColor' font-size='16'>DOM TREE</text>
+                  <text x='312' y='144' fill='currentColor' font-size='16'>ROUTE GRAPH</text>
+                  <text x='452' y='344' fill='currentColor' font-size='16'>PACKAGE GRAPH</text>
+                </svg>
+              </div>
+            </div>
+            <div class='artifact-copy'>
+              <p class='kicker'>System model</p>
+              <h2>DOM tree, route graph, island hydration, package graph.</h2>
+              <p>
+                The page language uses real project boundaries: route metadata
+                from the app, DSD as render output, hydrated islands for
+                interaction, and package contracts as the reference surface.
+              </p>
+            </div>
+          </section>
+
+          <section class='code-spec' aria-label='Build path'>
+            <pre class='spec-block'><code>npm create openelement@latest
+deno task dev
+deno task build</code></pre>
+            <pre class='spec-block'><code>{`<open-layout>
+  <docs-home></docs-home>
+</open-layout>`}</code></pre>
+          </section>
+
+          <section class='workflow' aria-labelledby='workflow-heading'>
+            <div class='section-head'>
+              <div>
+                <p class='kicker'>Developer workflow</p>
+                <h2 id='workflow-heading'>Create, compose, route, render, hydrate, ship.</h2>
+              </div>
+              <p>
+                The homepage middle section is no longer a sparse card strip.
+                It explains the actual work path a developer follows through the
+                framework.
+              </p>
+            </div>
+            <div class='workflow-rail'>
+              {workflowSteps.map(([index, title, copy]) => (
+                <article class='workflow-step'>
+                  <span class='module-index'>{index}</span>
+                  <strong>{title}</strong>
+                  <span class='workflow-copy'>{copy}</span>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section class='surfaces' aria-labelledby='surfaces-heading'>
+            <div class='section-head'>
+              <div>
+                <p class='kicker'>Reference surfaces</p>
+                <h2 id='surfaces-heading'>Follow the docs, API, and roadmap truth.</h2>
+              </div>
+              <p>
+                The site keeps content grounded in generated routes, package
+                surfaces, and current roadmap anchors instead of invented
+                marketing copy.
+              </p>
+            </div>
+            <div class='surface-grid'>
+              {surfaces.map(([title, href, copy]) => (
+                <a class='surface-card' href={href}>
+                  <span class='module-index'>{href}</span>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <section class='verification' aria-label='Live verification'>
+            <div>
+              <p class='kicker'>Island hydration smoke line</p>
+              <h2>Native components stay inspectable.</h2>
+              <p>
+                The same composed surface hydrates as a real custom element, with
+                shadow DOM boundaries and signal updates preserved after static generation.
+              </p>
+            </div>
+            <home-console></home-console>
+          </section>
+        </div>
       </main>
     );
   }
