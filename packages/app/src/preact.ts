@@ -37,9 +37,7 @@ function assertCustomElementTag(tagName: string): void {
 
 function collectAttributes(host: HTMLElement): PreactIslandProps {
   const props: PreactIslandProps = {};
-  const attrs =
-    (host as unknown as { attributes?: Array<{ name: string; value: string }> | NamedNodeMap })
-      .attributes;
+  const attrs = host.attributes;
   if (!attrs) return props;
   for (const attr of Array.from(attrs)) {
     if (attr.name === 'data-ssr-props') continue;

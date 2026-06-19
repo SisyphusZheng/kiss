@@ -31,7 +31,17 @@ export class GuideGuidePage extends OpenElement {
     return (
       <div class='container'>
         <h1>Getting Started</h1>
-        <p class='subtitle'>Start with the Deno-first workflow, then inspect elements, routes, and UI primitives as separate layers.</p>
+        <p class='subtitle'>
+          openElement = Elements + UI + Framework + Protocols. Start with the
+          Deno-first workflow, then inspect elements, routes, and UI primitives
+          as separate layers.
+        </p>
+        <p class='subtitle'>
+          The v0.40.7 line hardened release infrastructure and CI. The current
+          active line is v0.40.8, a cleanup-train patch that removes the legacy
+          Linear UI compatibility surface and tightens type safety before the
+          v0.41.0 npm-only distribution work.
+        </p>
         <div class='guide-grid'>
           <open-card>
             <h3>Install</h3>

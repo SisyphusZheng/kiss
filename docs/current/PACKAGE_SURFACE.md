@@ -1,6 +1,6 @@
 # Package Surface Inventory
 
-This is the v0.40.6 11-package product-line truth table.
+This is the v0.40.8 11-package product-line truth table.
 
 <!-- 11-package -->
 

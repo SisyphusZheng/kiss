@@ -176,8 +176,12 @@ export class OpenCodeBlock extends OpenElement {
     }
   }
 
+  private _prismGlobal(): unknown {
+    return (globalThis as typeof globalThis & { Prism?: unknown }).Prism;
+  }
+
   private _tryHighlight(): void {
-    const p = (globalThis as unknown as Record<string, unknown>).Prism;
+    const p = this._prismGlobal();
     if (typeof p === 'undefined') {
       if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
         // Exponential backoff: 10, 20, 40, 80, 160, 320, 500ms cap
@@ -188,7 +192,7 @@ export class OpenCodeBlock extends OpenElement {
     }
 
     const pre = this.querySelector(':scope > pre') ||
-      Array.from(this.children).find((c) => (c as Element).tagName === 'PRE');
+      Array.from(this.children).find((c) => c.tagName === 'PRE');
     if (!pre) return;
     const codeEl = pre.querySelector('code');
     if (!codeEl) return;

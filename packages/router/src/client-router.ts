@@ -58,7 +58,7 @@ export class Router {
 
   /** Current locale from attribute or URL */
   get locale(): string {
-    const prop = (this.#el as unknown as Record<string, unknown>).locale;
+    const prop = Reflect.get(this.#el, 'locale');
     if (typeof prop === 'string') return prop;
     const attr = this.#el.getAttribute('locale');
     if (attr) return attr;
@@ -299,8 +299,7 @@ export class Router {
 
   #parseLocales(): string[] {
     try {
-      const raw = ((this.#el as unknown as Record<string, unknown>).locales) ||
-        this.#el.getAttribute('locales');
+      const raw = Reflect.get(this.#el, 'locales') || this.#el.getAttribute('locales');
       if (raw) {
         if (Array.isArray(raw)) return raw as string[];
         if (typeof raw === 'string') {

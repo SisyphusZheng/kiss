@@ -84,22 +84,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment: 'this as unknown as Record<string, unknown>',
     reason: 'Custom element prop collection by dynamic prop name.',
   },
-  {
-    file: 'packages/app/src/preact.ts',
-    fragment:
-      'host as unknown as { attributes?: Array<{ name: string; value: string }> | NamedNodeMap }',
-    reason: 'Preact island collects SSR-serialized props from host element attributes.',
-  },
-  {
-    file: 'packages/router/src/client-router.ts',
-    fragment: 'this.#el as unknown as Record<string, unknown>',
-    reason: 'Router host exposes locale/locales as dynamic element properties.',
-  },
-  {
-    file: 'packages/ui/src/open-code-block.tsx',
-    fragment: 'globalThis as unknown as Record<string, unknown>',
-    reason: 'Optional Prism global loaded by the docs site.',
-  },
 ];
 
 const issues: Issue[] = [];

@@ -581,7 +581,7 @@ export class OpenLabStage extends OpenElement {
           <aside className='stage__side' aria-label='Specification sheet'>
             <div className='stage__panel-head'>
               <strong>Spec sheet</strong>
-              <span>v0.40.7</span>
+              <span>v0.40.8</span>
             </div>
             <pre className='stage__code'><code>
               <span className='stage__code-line'>export default app({'{'}</span>

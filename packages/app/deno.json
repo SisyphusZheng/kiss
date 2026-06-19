@@ -1,6 +1,6 @@
 {
   "name": "@openelement/app",
-  "version": "0.40.7",
+  "version": "0.40.8",
   "exports": {
     ".": "./src/index.ts",
     "./i18n": "./src/i18n.ts",
@@ -9,15 +9,15 @@
     "./vite": "./src/vite.ts"
   },
   "imports": {
-    "@openelement/core": "jsr:@openelement/core@^0.40.7",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger",
-    "@openelement/element": "jsr:@openelement/element@^0.40.7",
-    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.7",
-    "@openelement/protocol/islands": "jsr:@openelement/protocol@^0.40.7/islands",
-    "@openelement/protocol/data": "jsr:@openelement/protocol@^0.40.7/data",
-    "@openelement/router": "jsr:@openelement/router@^0.40.7",
-    "@openelement/adapter-vite": "jsr:@openelement/adapter-vite@^0.40.7",
-    "@openelement/content": "jsr:@openelement/content@^0.40.7",
+    "@openelement/core": "jsr:@openelement/core@^0.40.8",
+    "@openelement/core/logger": "jsr:@openelement/core@^0.40.8/logger",
+    "@openelement/element": "jsr:@openelement/element@^0.40.8",
+    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.8",
+    "@openelement/protocol/islands": "jsr:@openelement/protocol@^0.40.8/islands",
+    "@openelement/protocol/data": "jsr:@openelement/protocol@^0.40.8/data",
+    "@openelement/router": "jsr:@openelement/router@^0.40.8",
+    "@openelement/adapter-vite": "jsr:@openelement/adapter-vite@^0.40.8",
+    "@openelement/content": "jsr:@openelement/content@^0.40.8",
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
     "vite": "npm:vite@8.0.10"

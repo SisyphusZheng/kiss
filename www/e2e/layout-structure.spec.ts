@@ -8,7 +8,7 @@ test.describe('Docs Layout Structure', () => {
 
     const display = await page.evaluate(() => {
       const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('.content-grid');
+        const direct = root.querySelector?.('.guide-grid');
         if (direct) return direct;
         const all = root.querySelectorAll?.('*') ?? [];
         for (const el of Array.from(all)) {

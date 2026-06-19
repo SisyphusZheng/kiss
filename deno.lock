@@ -1728,16 +1728,16 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@openelement/adapter-vite@~0.40.7",
-      "jsr:@openelement/app@~0.40.7",
-      "jsr:@openelement/content@~0.40.7",
-      "jsr:@openelement/core@~0.40.7",
-      "jsr:@openelement/element@~0.40.7",
-      "jsr:@openelement/protocol@~0.40.7",
-      "jsr:@openelement/router@~0.40.7",
-      "jsr:@openelement/signal@~0.40.7",
-      "jsr:@openelement/ssg@~0.40.7",
-      "jsr:@openelement/ui@~0.40.7",
+      "jsr:@openelement/adapter-vite@~0.40.8",
+      "jsr:@openelement/app@~0.40.8",
+      "jsr:@openelement/content@~0.40.8",
+      "jsr:@openelement/core@~0.40.8",
+      "jsr:@openelement/element@~0.40.8",
+      "jsr:@openelement/protocol@~0.40.8",
+      "jsr:@openelement/router@~0.40.8",
+      "jsr:@openelement/signal@~0.40.8",
+      "jsr:@openelement/ssg@~0.40.8",
+      "jsr:@openelement/ui@~0.40.8",
       "npm:@hono/vite-dev-server@~0.25.3",
       "npm:@mdx-js/mdx@^3.1.1",
       "npm:@mdx-js/rollup@^3.1.1",
@@ -1757,10 +1757,10 @@
     "members": {
       "packages/adapter-vite": {
         "dependencies": [
-          "jsr:@openelement/content@~0.40.7",
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
-          "jsr:@openelement/ssg@~0.40.7",
+          "jsr:@openelement/content@~0.40.8",
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
+          "jsr:@openelement/ssg@~0.40.8",
           "npm:@hono/vite-dev-server@~0.25.3",
           "npm:@mdx-js/rollup@^3.1.1",
           "npm:esbuild@0.25",
@@ -1771,12 +1771,12 @@
       },
       "packages/app": {
         "dependencies": [
-          "jsr:@openelement/adapter-vite@~0.40.7",
-          "jsr:@openelement/content@~0.40.7",
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/element@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
-          "jsr:@openelement/router@~0.40.7",
+          "jsr:@openelement/adapter-vite@~0.40.8",
+          "jsr:@openelement/content@~0.40.8",
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/element@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
+          "jsr:@openelement/router@~0.40.8",
           "npm:preact-render-to-string@^6.5.0",
           "npm:preact@^10.28.0",
           "npm:vite@8.0.10"
@@ -1784,8 +1784,8 @@
       },
       "packages/content": {
         "dependencies": [
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
           "npm:@mdx-js/mdx@^3.1.1",
           "npm:gray-matter@^4.0.3",
           "npm:marked@15",
@@ -1796,50 +1796,50 @@
       },
       "packages/core": {
         "dependencies": [
-          "jsr:@openelement/protocol@~0.40.7",
-          "jsr:@openelement/signal@~0.40.7"
+          "jsr:@openelement/protocol@~0.40.8",
+          "jsr:@openelement/signal@~0.40.8"
         ]
       },
       "packages/create": {
         "dependencies": [
-          "jsr:@openelement/core@~0.40.7"
+          "jsr:@openelement/core@~0.40.8"
         ]
       },
       "packages/element": {
         "dependencies": [
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
-          "jsr:@openelement/signal@~0.40.7"
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
+          "jsr:@openelement/signal@~0.40.8"
         ]
       },
       "packages/router": {
         "dependencies": [
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
           "npm:marked@15"
         ]
       },
       "packages/signal": {
         "dependencies": [
-          "jsr:@openelement/protocol@~0.40.7",
+          "jsr:@openelement/protocol@~0.40.8",
           "npm:@preact/signals-core@^1.12.1",
           "npm:alien-signals@^3.2.0"
         ]
       },
       "packages/ssg": {
         "dependencies": [
-          "jsr:@openelement/content@~0.40.7",
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/protocol@~0.40.7",
+          "jsr:@openelement/content@~0.40.8",
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/protocol@~0.40.8",
           "npm:hono@^4.12.0",
           "npm:typescript@^5.9.0"
         ]
       },
       "packages/ui": {
         "dependencies": [
-          "jsr:@openelement/core@~0.40.7",
-          "jsr:@openelement/element@~0.40.7",
-          "jsr:@openelement/signal@~0.40.7"
+          "jsr:@openelement/core@~0.40.8",
+          "jsr:@openelement/element@~0.40.8",
+          "jsr:@openelement/signal@~0.40.8"
         ]
       }
     }

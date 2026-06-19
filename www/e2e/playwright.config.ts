@@ -31,11 +31,13 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  // Auto-start a Deno static file server for www/dist/
+  // Auto-start a Deno static file server for www/dist/.
+  // Locally, reuse an existing server to avoid failing when a residual Deno
+  // process still holds the default port. CI always starts a fresh server.
   webServer: {
     command: `deno run -A static-server.ts --port ${PORT} --dir ../dist`,
     url: baseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
 

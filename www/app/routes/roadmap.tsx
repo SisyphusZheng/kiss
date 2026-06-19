@@ -2,7 +2,7 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.40.7 product graph.
+// Current public line: v0.40.8 product graph.
 // Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
@@ -466,7 +466,7 @@ const phases = [
     tone: 'success',
   },
   {
-    version: 'v0.40.7',
+    version: 'v0.40.8',
     title: 'Release readiness and site truth',
     copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
     status: 'current',
@@ -509,7 +509,7 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.40.7'>
+            <open-lab-panel class='now' label='current' meta='v0.40.8'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>

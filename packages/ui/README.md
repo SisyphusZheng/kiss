@@ -7,6 +7,11 @@ prove the openElement Elements model with shadow/DSD output, explicit light DOM
 where needed, and island upgrade. ADR-0099 makes UI one of the four first-class
 products and keeps external UI libraries out of the current default target.
 
+As of v0.40.8, there is **no Linear compatibility layer**. The legacy
+`open-*-linear` components and `linear-token-sheet` token sheet have been
+removed from the public surface. Use the canonical Open Props components and
+`@openelement/ui/open-props-tokens` instead.
+
 ## Install
 
 ```bash
@@ -61,9 +66,11 @@ DSD behavior, and hydration strategy metadata.
 @openelement/ui/open-theme-toggle
 @openelement/ui/open-hero-ping
 @openelement/ui/open-dialog
-@openelement/ui/open-callout
-@openelement/ui/open-step-card
+@openelement/ui/open-dropdown
+@openelement/ui/open-modal
+@openelement/ui/open-tabs
 @openelement/ui/open-props-tokens
+@openelement/ui/daisy-classes
 ```
 
 ## License

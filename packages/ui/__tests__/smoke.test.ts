@@ -27,11 +27,6 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
     'open-modal',
     'open-tabs',
     'open-hero-ping',
-    'open-button-linear',
-    'open-card-linear',
-    'open-input-linear',
-    'open-nav-linear',
-    'open-badge-linear',
   ];
   assertExists(mod.manifest, 'manifest export should exist');
   assertEquals(typeof mod.manifest, 'object');
@@ -70,36 +65,9 @@ Deno.test('open-ui - all components export tagName', async () => {
     'open-step-card',
     'open-tabs',
     'open-theme-toggle',
-    'open-button-linear',
-    'open-card-linear',
-    'open-input-linear',
-    'open-nav-linear',
-    'open-badge-linear',
   ];
   for (const name of components) {
     const mod = await import(`../src/${name}.tsx`);
     assertExists(mod.tagName, `${name} should export tagName`);
   }
-});
-
-Deno.test('open-ui - linear components export class and tagName', async () => {
-  const button = await import('../src/open-button-linear.tsx');
-  assertEquals(button.tagName, 'open-button-linear');
-  assertExists(button.OpenButtonLinear, 'OpenButtonLinear class should be exported');
-
-  const card = await import('../src/open-card-linear.tsx');
-  assertEquals(card.tagName, 'open-card-linear');
-  assertExists(card.OpenCardLinear, 'OpenCardLinear class should be exported');
-
-  const input = await import('../src/open-input-linear.tsx');
-  assertEquals(input.tagName, 'open-input-linear');
-  assertExists(input.OpenInputLinear, 'OpenInputLinear class should be exported');
-
-  const nav = await import('../src/open-nav-linear.tsx');
-  assertEquals(nav.tagName, 'open-nav-linear');
-  assertExists(nav.OpenNavLinear, 'OpenNavLinear class should be exported');
-
-  const badge = await import('../src/open-badge-linear.tsx');
-  assertEquals(badge.tagName, 'open-badge-linear');
-  assertExists(badge.OpenBadgeLinear, 'OpenBadgeLinear class should be exported');
 });

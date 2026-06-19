@@ -1,9 +1,9 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.7 Release Readiness & CI Hardening; next line is npm-only distribution.\
+> Current package line: v0.40.8 Cleanup-Train Patch; next line is npm-only distribution.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
-> Updated: 2026-06-15.
+> Updated: 2026-06-19.
 
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
@@ -80,6 +80,44 @@ v0.41-v1.0 blocker.
 | v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+
+## v0.40.8 - Cleanup-Train Patch
+
+Patch release that removes the legacy Linear UI compatibility surface and
+extends the audit-driven cleanup to type assertions and non-null assertions.
+Executed under the v0.40.x cleanup-train authority from ADR-0105.
+
+Scope:
+
+- Remove `open-button-linear`, `open-card-linear`, `open-input-linear`,
+  `open-nav-linear`, `open-badge-linear`, and `linear-token-sheet` from
+  `@openelement/ui` public exports, subpath exports, manifest declarations,
+  tests, and documentation.
+- Migrate `www/app/islands/scroll-reveal.tsx` from `linearTokenSheet` to
+  `openPropsTokenSheet`.
+- Update UI README and design docs to state there is no Linear compatibility
+  layer.
+- Adjust E2E server strategy: enable `reuseExistingServer` outside CI to avoid
+  local failures from a residual Deno server on `127.0.0.1:4174`; allow the
+  static server to fall back to an isolated port when the default port is
+  occupied.
+- Maintain 0 explicit `any` and reduce unnecessary `as unknown as` and non-null
+  assertions in production code, tests, and tools. Replace ad-hoc test casts
+  with typed helper/fake DOM interfaces where practical.
+- Split or converge the largest redundancy hotspots in `open-layout.tsx`
+  navigation/theme/search helpers and `components.test.ts` fake DOM/test
+  helpers.
+- Extract repeated error formatting and generated runtime `console.*` fragments
+  to use existing `error` / `logger` boundaries while preserving intentional
+  CLI/tool console output.
+- Bump workspace versions to `0.40.8` and publish the v0.40.8 cleanup record.
+
+Non-goals:
+
+- No new product feature.
+- No package additions or removals (count stays 11).
+- No default runtime / signal-engine / renderer changes.
+- No git history rewrite.
 
 ## v0.40.7 - Release Readiness & CI Hardening
 

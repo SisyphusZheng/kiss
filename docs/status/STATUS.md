@@ -5,32 +5,23 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.7 Released (Release Readiness & CI Hardening)
+## Current Version Line: v0.40.8 Active (Cleanup-Train Patch)
 
-v0.40.7 hardens the v0.40.6 release infrastructure without changing the v0.40.4
-public product surface or package graph. It closes the gaps between local
-development machines and the GitHub Actions CI environment so that the v0.40.x
-cleanup train can be published reliably. Changes include a Deno static server
-for E2E, an offline E2E escape hatch, CI Playwright browser installation,
-credential-gated release steps, and local-release tooling repairs.
+v0.40.8 is the active cleanup-train patch on the v0.40.7 baseline. It removes
+the legacy Linear UI compatibility surface from `@openelement/ui`, migrates the
+last internal consumer (`www/app/islands/scroll-reveal.tsx`) to the canonical
+Open Props UI, hardens the E2E server strategy against local port conflicts,
+and extends the audit-driven cleanup from explicit `any` to unnecessary
+`as unknown as` and non-null assertions. The release introduces no new product
+feature and makes no default runtime, signal-engine, or package-topology change.
 
-v0.40.7 is a release-readiness patch under the v0.40.x cleanup-train authority
-from ADR-0105. ADR-0106 continues to approve the underlying audit-driven
-cleanup scope for v0.40.6. AutoFlow3 is the workflow, gate, evidence, and
-release-state control plane, but it cannot decide minor/major product scope,
-public API, package topology, default runtime, default signal engine,
-security/auth/database ownership, or release policy without human ADR or
-approved version-plan evidence.
-
-Local v0.40.7 release-readiness evidence passes: `fmt:check`, `lint`,
-`typecheck`, `test`, `build`, `graph:check`, `arch:check`, `repo:hygiene`,
-`workflow:check`, `workflow:check-slimming`, `docs:check-public`,
-`docs:check-current`, `docs:check-strategy`, `package-surface:check`,
-`signals:check-protocol-boundary`, `type-safety:check`, `autoflow:push`,
-`autoflow:ci`, `nitro:proof:node`, `nitro:proof:workers`, `consumer:local`,
-`consumer:packaged`, and `publish:dry-run`. Distribution closure is completed
-by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
-line and runs the post-publish consumer smoke.
+v0.40.8 is executed under the v0.40.x cleanup-train authority from ADR-0105.
+ADR-0106 continues to approve the underlying audit-driven cleanup scope for
+v0.40.6. AutoFlow3 is the workflow, gate, evidence, and release-state control
+plane, but it cannot decide minor/major product scope, public API, package
+topology, default runtime, default signal engine, security/auth/database
+ownership, or release policy without human ADR or approved version-plan
+evidence.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
@@ -168,7 +159,7 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.7. It proceeds from the v0.40.4
+The active implementation line is now v0.40.8. It proceeds from the v0.40.4
 product-line cleanup release and focuses on closing the quality gaps identified
 by the 2026-06-15 architecture audit.
 
@@ -302,7 +293,7 @@ DSD/shadow is a default Elements render mode, not the product name.
 ## Package Version State
 
 The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.7**. Published package availability is completed by the
+to local version **0.40.8**. Published package availability is completed by the
 `main` branch JSR publish workflow and its post-publish consumer smoke.
 
 Package governance for v0.40:
