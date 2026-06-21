@@ -43,30 +43,34 @@ v0.41.0 repository cleanup (2026-06-21, 930 tests / 0 failed):
 
 ## v0.41.0-alpha.1 Architecture Audit
 
-Three-layer audit covering protocol contract completeness, core purity, and engine-to-protocol adherence.
+Resolved — all 🔴/🟠/🟡 items fixed in 3 phases (930 tests / 0 failed).
 
-### 🔴 CRITICAL
+- Phase 1: Removed broken `validators` protocol subpath. Extracted Vite string from `core/html-escape.ts` (`devMode`→`devScripts`). Routed `HydrationStrategy`/`ComponentLayer`/`HydrationHint`/`RenderError` imports to `@openelement/protocol`.
+- Phase 2: Moved `FrameworkOptions`/`RouteEntry`/`OpenElementPackageManifest`/`IsrManifestEntry`/`CompatibilityClassification` to `protocol/src/build-types.ts`. Added `protocol/logger` (createLogger) and `protocol/errors` (formatError/OpenElementError) subpaths — updated 40+ engine-layer imports.
+- Phase 3: Annotated `app/i18n-plugin.ts` and `content/deno.json` with engine-layer comments. Marked unused protocol surface (`components`, `island-frameworks`, `conformance`).
 
-- **Broken protocol subpath** — `protocol/deno.json` exports `"./validators"` → `"./src/validators.ts"` but the file was deleted in cleanup round 1. Direct `import from '@openelement/protocol/validators'` fails at runtime. (Barrel `import from '@openelement/protocol'` still works via `index.ts`.)
-- **Vite string leaked into `core`** — `core/src/html-escape.ts:166-175` hardcodes `<script type="module" src="/@vite/client">` when `devMode=true`. `core` declares "Zero Vite dependency" but smuggles a Vite dev-server convention via a string literal. Any non-Vite engine passing `devMode=true` gets a broken `<script>` tag.
-- **Protocol-defined types imported from `core`, not `protocol`** — `HydrationStrategy`, `ComponentLayer` are defined in `@openelement/protocol/renderer`, but 8+ locations in `adapter-vite` and `ssg` import them from `@openelement/core` (`build.ts`, `plugin.ts`, `build-context.ts`, `island-manifest.ts`, `entry-generators.ts`, etc.).
+### 🔴 CRITICAL — Resolved
 
-### 🟠 HIGH — Architecture Debt
+- ~~Broken `protocol/validators` subpath~~ → entry removed from deno.json
+- ~~Vite string leaked into `core`~~ → `wrapInDocument()` now accepts generic `devScripts`
+- ~~Protocol types imported from core, not protocol~~ → all 8+ locations routed to `@openelement/protocol/renderer`
 
-- **Core types missing from protocol** — `FrameworkOptions`, `RouteEntry`, `OpenElementPackageManifest`, `IsrManifestEntry`, `CompatibilityClassification`, `ManifestDecision`, `DsdBuildReport` etc. are defined only in `core/src/schemas.ts` but imported by engine packages (`adapter-vite`, `ssg`), forcing engine-to-core direct dependency.
-- **Deep subpath bypass: `createLogger`** — 15+ files across `adapter-vite`, `ssg`, `content`, `create` import `createLogger` from `@openelement/core/logger` (deep subpath), bypassing protocol.
-- **Deep subpath bypass: `formatError` / `OpenElementError`** — 8+ files import from `@openelement/core/errors` instead of protocol.
+### 🟠 HIGH — Resolved
 
-### 🟡 MEDIUM — Boundary Leakage
+- ~~Core types missing from protocol~~ → `protocol/src/build-types.ts` now owns `FrameworkOptions`, `RouteEntry`, etc.
+- ~~Deep subpath `createLogger` bypass~~ → 23 files now import from `@openelement/protocol/logger`
+- ~~Deep subpath `formatError` bypass~~ → 18 files now import from `@openelement/protocol/errors`
 
-- `core/src/html-escape.ts` — `wrapInDocument()` `devMode` + `routeModulePath` params are engine-layer concepts leaking into runtime-free core.
-- `app/vite.ts` and `app/i18n-plugin.ts` — have `vite` / `node:*` imports. Currently on `/vite` subpath and marked `deno-api-free:ignore`; runtime entries (`index.ts`, `authoring.ts`, `i18n.ts`, `preact.ts`) are clean.
-- `content/deno.json` — depends on `vite`, making `@openelement/content` a Vite-coupled plugin rather than a runtime-free engine package.
-- Unused protocol surface — `components.ts`, `island-frameworks.ts`, `conformance.ts` have zero production consumers; dead weight on the protocol contract.
+### 🟡 MEDIUM — Documented
 
-### ✅ Passed
+- `wrapInDocument` params cleaned via Phase 1 fix.
+- `app/vite.ts` + `app/i18n-plugin.ts` annotated.
+- `content/deno.json` annotated.
+- Unused protocol surface annotated.
+
+### ✅ Verified Clean
 
 - `core`, `element`, `ui`, `signal`, `router` — zero `node:*`, zero `Deno.*`, zero framework/engine imports.
-- `app/` runtime entries (`index.ts`, `authoring.ts`, `i18n.ts`, `preact.ts`, `i18n-runtime.ts`) — all pure.
+- `app/` runtime entries — all pure.
 - `protocol/` — zero Vite/Nitro references.
 - `ssg/` — zero Nitro leakage.
