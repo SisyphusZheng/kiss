@@ -41,21 +41,11 @@
  * Audit completed: 2026-05-17
  * Auditor: AI agent (openElement v0.17.4 SOP compliance check)
  *
- * ─── v0.25: AST Upgrade ───────────────────────────────────
+ * ─── v0.41.0-alpha1: AST removed ────────────────────────────
  *
- * Replaced source-text heuristics with structured extraction:
- * - readRouteTagNameFromModule(): TypeScript AST static literal scan
- * - readBooleanMeta() / readHydrateMeta(): eliminated; scanIslandMeta() uses AST
- * - All remaining regex patterns are path-utility only, annotated with v0.25: AST-verified
- *
- * Rationale: route modules and island modules are ESM .ts files. Static AST
- * extraction avoids module execution and avoids source regex heuristics.
- *
- * ─── v0.40.5: Internal module split ─────────────────────────
- *
- * AST helpers live in `route-scanner-ast.ts` and file-system helpers live in
- * `route-scanner-fs.ts`. This file remains the orchestrator and re-exports the
- * original public API unchanged.
+ * Replaced TypeScript AST scanning with regex/glob-based extraction.
+ * Route and island modules are simple ESM files; parsing the whole source
+ * with the TypeScript compiler is overkill and adds a heavy dependency.
  */
 
 import type {
@@ -68,11 +58,110 @@ import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 import { join, posix, sep } from 'node:path';
 import { classifyCemManifest, parseCem } from './cem-compat.ts';
-import { readRouteTagNameFromModule, readStaticOpenElementExport } from './route-scanner-ast.ts';
-import type { LocalIslandMeta } from './route-scanner-ast.ts';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
 const log = createLogger('core');
+
+/** Local island metadata indexed by tag name. */
+export interface LocalIslandMeta {
+  tagName: string;
+  filePath: string;
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: 'load' | 'idle' | 'visible' | 'only';
+  reason?: string;
+}
+
+/**
+ * Read a static string export (e.g. `export const tagName = '...'`) from source text.
+ */
+export function readRouteTagName(source: string): string | undefined {
+  const match = source.match(/export\s+const\s+tagName\s*=\s*(["'`])([^"'`]+)\1/);
+  return match?.[2];
+}
+
+/**
+ * Read `export const tagName = '...'` from a route file using regex scanning.
+ */
+export async function readRouteTagNameFromModule(filePath: string): Promise<string | undefined> {
+  const source = await safeReadFile(filePath);
+  if (source === undefined) return undefined;
+  return readRouteTagName(source);
+}
+
+function staticOpenElementError(message: string): OpenElementError {
+  return new OpenElementError(
+    `Invalid static island metadata export "openElement": ${message}. Accepted shape: export const openElement = defineIslandConfig({ ssr?: boolean, dsd?: boolean, hydrate?: "load" | "idle" | "visible" | "only" }).`,
+    'ISLAND_METADATA_ERROR',
+    500,
+    false,
+  );
+}
+
+/**
+ * v0.41.0-alpha1: Regex-based extraction of
+ * `export const openElement = defineIslandConfig({ ... })`.
+ *
+ * The scanner intentionally does not execute island modules. It accepts only a
+ * defineIslandConfig() call with boolean `ssr`/`dsd` and string `hydrate`
+ * literal values. Dynamic metadata is rejected instead of guessed.
+ */
+export function readStaticOpenElementExport(source: string): {
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: LocalIslandMeta['hydrate'];
+} | null {
+  const declMatch = source.match(/export\s+const\s+openElement\s*=/);
+  if (!declMatch) return null;
+
+  const afterEquals = source.slice(declMatch.index! + declMatch[0].length).trimStart();
+
+  // Must call defineIslandConfig(...) - reject legacy object literals.
+  const callMatch = afterEquals.match(/^defineIslandConfig\s*\(\s*(\{[\s\S]*?\})\s*\)/);
+  if (!callMatch) {
+    const hasCall = /^defineIslandConfig\s*\(/.test(afterEquals);
+    if (hasCall) {
+      throw staticOpenElementError(
+        'defineIslandConfig() argument must be a static object literal',
+      );
+    }
+    throw staticOpenElementError('openElement export must call defineIslandConfig(...)');
+  }
+
+  const body = callMatch[1].slice(1, -1);
+  const meta: { ssr?: boolean; dsd?: boolean; hydrate?: LocalIslandMeta['hydrate'] } = {};
+
+  // Match key: value pairs, skipping nested braces/strings.
+  const propRe = /\b(ssr|dsd|hydrate|[^\s:,{}]+)\s*:\s*(true|false|["']([^"']*)["'])/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = propRe.exec(body)) !== null) {
+    const key = m[1];
+    const raw = m[2];
+
+    if (!['ssr', 'dsd', 'hydrate'].includes(key)) {
+      throw staticOpenElementError(`unsupported openElement metadata key "${key}"`);
+    }
+
+    const typedKey = key as 'ssr' | 'dsd' | 'hydrate';
+
+    if (typedKey === 'ssr' || typedKey === 'dsd') {
+      if (raw !== 'true' && raw !== 'false') {
+        throw staticOpenElementError(`openElement.${typedKey} must be a boolean literal`);
+      }
+      meta[typedKey] = raw === 'true';
+      continue;
+    }
+
+    const value = raw.slice(1, -1);
+    if (!['load', 'idle', 'visible', 'only'].includes(value)) {
+      throw staticOpenElementError(`openElement.hydrate has unsupported value "${value}"`);
+    }
+    meta.hydrate = value as LocalIslandMeta['hydrate'];
+  }
+
+  return meta;
+}
 
 /**
  * Convert a file path to a URL path pattern.
@@ -204,7 +293,7 @@ export async function scanRoutes(
         const params = paramMatches ? paramMatches.map((m) => m.slice(1, -1)) : undefined;
         let tagName: string | undefined;
         if (routeType === 'page') {
-          // Static AST scanning reads `export const tagName` without executing the module.
+          // Regex-based scanning reads `export const tagName` without executing the module.
           tagName = await readRouteTagNameFromModule(fullPath);
           if (tagName === undefined) {
             // tagName not found is normal — not all page routes define one
@@ -296,10 +385,8 @@ export async function scanIslands(
   return files.sort();
 }
 
-export type { LocalIslandMeta } from './route-scanner-ast.ts';
-
 /**
- * v0.25: AST-verified — reads island metadata by statically scanning the module
+ * v0.41.0-alpha1: Regex-based — reads island metadata by statically scanning the module
  * source for `export const openElement = defineIslandConfig({ ... })`.
  *
  * Supported form:

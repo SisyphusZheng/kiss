@@ -97,11 +97,10 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    17,
+    16,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map
-  assertEquals(denoJson.imports['alien-signals'], 'npm:alien-signals@^3.2.0');
   assertEquals(denoJson.imports['@preact/signals-core'], 'npm:@preact/signals-core@^1.12.1');
   assertEquals(denoJson.imports['@deno/vite-plugin'], 'npm:@deno/vite-plugin');
   assertEquals(denoJson.imports['entities'], 'npm:entities@^4.5.0');
@@ -121,13 +120,6 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
     denoJson.imports['@openelement/core/jsx-runtime'],
     'npm:@openelement/core@^${v.core}/jsx-runtime',
   );
-  assertFalse('@openelement/protocol' in denoJson.imports);
-  assertFalse('@openelement/protocol/conformance' in denoJson.imports);
-  assertFalse('@openelement/protocol/data' in denoJson.imports);
-  assertFalse('@openelement/protocol/islands' in denoJson.imports);
-  assertFalse('@openelement/protocol/renderer' in denoJson.imports);
-  assertFalse('@openelement/protocol/routes' in denoJson.imports);
-  assertFalse('@openelement/protocol/signals' in denoJson.imports);
   assertEquals(
     denoJson.imports['@openelement/element'],
     'npm:@openelement/element@^${v.element}',
@@ -264,11 +256,17 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     denoJson.imports['@openelement/app'] = pathToFileURL(
       join(repoRoot, 'packages', 'app', 'src', 'index.ts'),
     ).href;
+    denoJson.imports['@openelement/app/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'app', 'src') + sep,
+    ).href;
     denoJson.imports['@openelement/app/vite'] = pathToFileURL(
       join(repoRoot, 'packages', 'app', 'src', 'vite.ts'),
     ).href;
     denoJson.imports['@openelement/core'] = pathToFileURL(
       join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
+    ).href;
+    denoJson.imports['@openelement/core/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'core', 'src') + sep,
     ).href;
     denoJson.imports['@openelement/core/logger'] = pathToFileURL(
       join(repoRoot, 'packages', 'core', 'src', 'logger.ts'),
@@ -285,44 +283,29 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     denoJson.imports['@openelement/adapter-vite'] = pathToFileURL(
       join(repoRoot, 'packages', 'adapter-vite', 'src', 'index.ts'),
     ).href;
+    denoJson.imports['@openelement/adapter-vite/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'adapter-vite', 'src') + sep,
+    ).href;
     denoJson.imports['@openelement/core'] = pathToFileURL(
       join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
     ).href;
     denoJson.imports['@openelement/signal'] = pathToFileURL(
       join(repoRoot, 'packages', 'signal', 'src', 'index.ts'),
     ).href;
+    denoJson.imports['@openelement/signal/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'signal', 'src') + sep,
+    ).href;
     denoJson.imports['@openelement/signal/framework'] = pathToFileURL(
       join(repoRoot, 'packages', 'signal', 'src', 'framework.ts'),
     ).href;
-    denoJson.imports['@openelement/protocol'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'index.ts'),
+    denoJson.imports['@openelement/ssg'] = pathToFileURL(
+      join(repoRoot, 'packages', 'ssg', 'src', 'index.ts'),
     ).href;
-    denoJson.imports['@openelement/protocol/cache'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'cache.ts'),
+    denoJson.imports['@openelement/router'] = pathToFileURL(
+      join(repoRoot, 'packages', 'router', 'src', 'data-context.ts'),
     ).href;
-    denoJson.imports['@openelement/protocol/components'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'components.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/conformance'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'conformance.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/data'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'data.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/islands'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'islands.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/renderer'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'renderer.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/routes'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'routes.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/runtime'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'runtime.ts'),
-    ).href;
-    denoJson.imports['@openelement/protocol/signals'] = pathToFileURL(
-      join(repoRoot, 'packages', 'protocol', 'src', 'signals.ts'),
+    denoJson.imports['@openelement/router/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'router', 'src') + sep,
     ).href;
     denoJson.imports['@openelement/element'] = pathToFileURL(
       join(repoRoot, 'packages', 'element', 'src', 'index.ts'),
@@ -332,6 +315,9 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     ).href;
     denoJson.imports['@openelement/content'] = pathToFileURL(
       join(repoRoot, 'packages', 'content', 'src', 'index.ts'),
+    ).href;
+    denoJson.imports['@openelement/content/'] = pathToFileURL(
+      join(repoRoot, 'packages', 'content', 'src') + sep,
     ).href;
     denoJson.imports['@openelement/app/i18n'] = pathToFileURL(
       join(repoRoot, 'packages', 'app', 'src', 'i18n.ts'),
@@ -362,51 +348,10 @@ Deno.test('create-open: generated project builds through the one-command pipelin
 
     const uiSrc = join(repoRoot, 'packages', 'ui', 'src');
     const signalsSrc = join(repoRoot, 'packages', 'signal', 'src');
-    const protocolsSrc = join(repoRoot, 'packages', 'protocol', 'src');
     const aliases = [
       {
         find: '@openelement/adapter-vite',
         replacement: vitePath(join(repoRoot, 'packages', 'adapter-vite', 'src', 'index.ts')),
-      },
-      {
-        find: '@openelement/protocol/cache',
-        replacement: vitePath(join(protocolsSrc, 'cache.ts')),
-      },
-      {
-        find: '@openelement/protocol/components',
-        replacement: vitePath(join(protocolsSrc, 'components.ts')),
-      },
-      {
-        find: '@openelement/protocol/conformance',
-        replacement: vitePath(join(protocolsSrc, 'conformance.ts')),
-      },
-      {
-        find: '@openelement/protocol/data',
-        replacement: vitePath(join(protocolsSrc, 'data.ts')),
-      },
-      {
-        find: '@openelement/protocol/islands',
-        replacement: vitePath(join(protocolsSrc, 'islands.ts')),
-      },
-      {
-        find: '@openelement/protocol/renderer',
-        replacement: vitePath(join(protocolsSrc, 'renderer.ts')),
-      },
-      {
-        find: '@openelement/protocol/routes',
-        replacement: vitePath(join(protocolsSrc, 'routes.ts')),
-      },
-      {
-        find: '@openelement/protocol/runtime',
-        replacement: vitePath(join(protocolsSrc, 'runtime.ts')),
-      },
-      {
-        find: '@openelement/protocol/signals',
-        replacement: vitePath(join(protocolsSrc, 'signals.ts')),
-      },
-      {
-        find: '@openelement/protocol',
-        replacement: vitePath(join(protocolsSrc, 'index.ts')),
       },
       {
         find: '@openelement/core/logger',
@@ -437,6 +382,10 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'prop.ts')),
       },
       {
+        find: '@openelement/core/runtime',
+        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'runtime.ts')),
+      },
+      {
         find: '@openelement/core',
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'index.ts')),
       },
@@ -450,11 +399,7 @@ Deno.test('create-open: generated project builds through the one-command pipelin
       },
       {
         find: '@openelement/router',
-        replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'mod.ts')),
-      },
-      {
-        find: '@openelement/protocol',
-        replacement: vitePath(join(protocolsSrc, 'index.ts')),
+        replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
       },
       {
         find: '@openelement/element',

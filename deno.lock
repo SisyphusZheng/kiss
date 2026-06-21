@@ -11,11 +11,6 @@
     "npm:@mdx-js/rollup@^3.1.1": "3.1.1_rollup@4.62.0",
     "npm:@playwright/test@1.59.1": "1.59.1",
     "npm:@preact/signals-core@^1.12.1": "1.14.2",
-    "npm:@types/node@22": "22.19.21",
-    "npm:@types/sanitize-html@2": "2.16.1",
-    "npm:alien-signals@^3.2.0": "3.2.1",
-    "npm:esbuild@0.25": "0.25.12",
-    "npm:flexsearch@0.8.212": "0.8.212",
     "npm:gray-matter@^4.0.3": "4.0.3",
     "npm:h3@2.0.1-rc.22": "2.0.1-rc.22_crossws@0.4.6__srvx@0.11.17",
     "npm:hono@^4.12.0": "4.12.25",
@@ -23,7 +18,6 @@
     "npm:nitro@*": "3.0.260610-beta_vite@8.0.10__@types+node@22.19.21__esbuild@0.25.12",
     "npm:preact-render-to-string@^6.5.0": "6.7.0_preact@10.29.2",
     "npm:preact@^10.28.0": "10.29.2",
-    "npm:sanitize-html@^2.17.4": "2.17.5",
     "npm:typescript@^5.9.0": "5.9.3",
     "npm:vite@8.0.10": "8.0.10_@types+node@22.19.21_esbuild@0.25.12"
   },
@@ -1981,14 +1975,9 @@
       "npm:@mdx-js/rollup@^3.1.1",
       "npm:@playwright/test@1.59.1",
       "npm:@preact/signals-core@^1.12.1",
-      "npm:@types/node@22",
-      "npm:@types/sanitize-html@2",
-      "npm:alien-signals@^3.2.0",
-      "npm:flexsearch@0.8.212",
       "npm:hono@^4.12.0",
       "npm:preact-render-to-string@^6.5.0",
       "npm:preact@^10.28.0",
-      "npm:sanitize-html@^2.17.4",
       "npm:typescript@^5.9.0",
       "npm:vite@8.0.10"
     ],
@@ -1997,9 +1986,6 @@
         "dependencies": [
           "npm:@hono/vite-dev-server@~0.25.3",
           "npm:@mdx-js/rollup@^3.1.1",
-          "npm:esbuild@0.25",
-          "npm:hono@^4.12.0",
-          "npm:typescript@^5.9.0",
           "npm:vite@8.0.10"
         ]
       },
@@ -2015,20 +2001,12 @@
           "npm:@mdx-js/mdx@^3.1.1",
           "npm:gray-matter@^4.0.3",
           "npm:marked@15",
-          "npm:typescript@^5.9.0",
           "npm:vite@8.0.10"
         ]
       },
       "packages/signal": {
         "dependencies": [
-          "npm:@preact/signals-core@^1.12.1",
-          "npm:alien-signals@^3.2.0"
-        ]
-      },
-      "packages/ssg": {
-        "dependencies": [
-          "npm:hono@^4.12.0",
-          "npm:typescript@^5.9.0"
+          "npm:@preact/signals-core@^1.12.1"
         ]
       }
     }

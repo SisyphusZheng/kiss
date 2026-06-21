@@ -6,6 +6,9 @@
  * Implementation detail types used only within core live in their
  * consuming modules (render-dsd.ts, dsd-hydration-events.ts, etc.).
  *
+ * Consolidated from the former @openelement/core module
+ * (ADR-0094 / Phase 2).
+ *
  * @see ADR-0094: Core Type Consolidation — Eliminate types.ts
  */
 
@@ -21,9 +24,14 @@ export interface OpenElementApiContext {
   platform?: unknown;
 }
 
-// --- Manifest descriptors (CEM-compatible) -----------------------
+// --- Component layer & hydration ----------------------------------
 
-/** Custom element attribute descriptor (CEM-compatible) */
+export type ComponentLayer = 'dsd-static' | 'dsd-interactive' | 'pure-island' | 'light-dom';
+export type HydrationStrategy = 'load' | 'idle' | 'visible' | 'only';
+export type StrategySource = 'default' | 'manifest' | 'component' | 'route';
+
+// --- Manifest descriptors (CEM-compatible) ------------------------
+
 export interface OpenElementAttribute {
   name: string;
   type?: string;
@@ -66,8 +74,6 @@ export interface OpenElementCssPart {
   name: string;
   description?: string;
 }
-
-// --- openElement extensions ---------------------------------------
 
 export interface OpenElementExtensions {
   ssr?: boolean;
@@ -126,45 +132,49 @@ export interface OpenElementPackageManifest {
   openElement?: OpenElementPackageExtensions;
 }
 
-// --- Validation ---------------------------------------------------
+// --- Blog / Content / i18n build types ----------------------------
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationWarning[];
+/** Blog options stored in the build context by @openelement/content. */
+export interface OpenElementBlogOptions {
+  contentDir?: string;
+  basePath?: string;
 }
 
-export interface ValidationError {
-  code: string;
-  message: string;
-  path?: string;
+/** Navigation section from @openelement/content. */
+export interface OpenElementNavSection {
+  section: string;
+  items: Array<{ path: string; label: string; order?: number }>;
 }
 
-export interface ValidationWarning {
-  code: string;
-  message: string;
-  path?: string;
+/** Header navigation link. */
+export interface OpenElementHeaderNavLink {
+  href: string;
+  label: string;
 }
 
-// --- Registry -----------------------------------------------------
-
-export interface RegistryIndexEntry {
-  tagName: string;
-  packageName: string;
-  version: string;
-  module?: string;
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: string;
+/** i18n options stored in the build context by @openelement/i18n. */
+export interface OpenElementI18nContextOptions {
+  locales: string[];
+  defaultLocale: string;
+  [key: string]: unknown;
 }
 
-export interface RegistryIndex {
-  totalPackages: number;
-  totalDeclarations: number;
-  entries: RegistryIndexEntry[];
+/** Plugin metadata interface: data bridge between sub-plugins and build context. */
+export interface OpenElementPluginMeta {
+  blogOptions: OpenElementBlogOptions | null;
+  navSections: OpenElementNavSection[];
+  headerNav: OpenElementHeaderNavLink[];
+  sitemapOptions: Record<string, unknown> | null;
+  i18nOptions: OpenElementI18nContextOptions | null;
+  [key: string]: unknown;
 }
 
-// --- App Shell ----------------------------------------------------
+/** Minimal build context interface that sub-plugins can use. */
+export interface OpenElementBuildContextLike {
+  plugins: OpenElementPluginMeta;
+}
+
+// --- App Shell types ----------------------------------------------
 
 export interface AppShellDefinition {
   tagName: string;
@@ -175,6 +185,21 @@ export interface AppShellDefinition {
 export type AppShellConfig = false | 'default' | AppShellDefinition;
 
 export type LayoutsConfig = Record<string, AppShellConfig | undefined>;
+
+// --- Routing types ------------------------------------------------
+
+export type SpecialFileType = 'renderer' | 'middleware';
+
+export interface RouteEntry {
+  path: string;
+  filePath: string;
+  type: 'page' | 'api' | 'island' | 'special';
+  varName: string;
+  tagName?: string;
+  special?: SpecialFileType;
+  revalidate?: number;
+  params?: string[];
+}
 
 // --- Framework Options --------------------------------------------
 
@@ -227,12 +252,6 @@ export interface FrameworkOptions {
   build?: {
     outDir?: string;
   };
-  pwa?: {
-    name?: string;
-    shortName?: string;
-    themeColor?: string;
-    backgroundColor?: string;
-  };
   viewTransition?: boolean;
   speculation?: boolean | {
     prerender?: string[];
@@ -255,9 +274,68 @@ export interface FrameworkOptions {
   };
 }
 
-// --- Routing & Middleware -----------------------------------------
+// --- ISR / Compatibility types ------------------------------------
 
-export type SpecialFileType = 'renderer' | 'middleware';
+/** ISR route record written to isr-manifest.json at build time. */
+export interface IsrManifestEntry {
+  path: string;
+  revalidate: number;
+  cacheKey: string;
+  params: Record<string, string>;
+}
+
+export type CompatibilityTier = 'ssr-capable' | 'client-only' | 'rejected' | 'experimental-dom';
+
+export interface CompatibilityClassification {
+  tagName: string;
+  tier: CompatibilityTier;
+  reason: string;
+  source: 'local' | 'package' | 'nested';
+  modulePath?: string;
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: string;
+}
+
+// --- Validation ---------------------------------------------------
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+export interface ValidationError {
+  code: string;
+  message: string;
+  path?: string;
+}
+
+export interface ValidationWarning {
+  code: string;
+  message: string;
+  path?: string;
+}
+
+// --- Registry -----------------------------------------------------
+
+export interface RegistryIndexEntry {
+  tagName: string;
+  packageName: string;
+  version: string;
+  module?: string;
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: string;
+}
+
+export interface RegistryIndex {
+  totalPackages: number;
+  totalDeclarations: number;
+  entries: RegistryIndexEntry[];
+}
+
+// --- Routing & Middleware (not in protocol, core-specific) ---------
 
 export interface OpenElementRenderer {
   wrap(
@@ -291,27 +369,9 @@ export type OpenElementMiddleware = (
   next: () => Promise<void>,
 ) => Promise<void> | void;
 
-export interface RouteEntry {
-  path: string;
-  filePath: string;
-  type: 'page' | 'api' | 'island' | 'special';
-  varName: string;
-  tagName?: string;
-  special?: SpecialFileType;
-  revalidate?: number;
-  params?: string[];
-}
-
 export type { SsrContext } from './context.js';
 
-// --- Component layer & hydration (sourced from protocol) ----------
-
-import type {
-  ComponentLayer,
-  HydrationStrategy,
-  StrategySource,
-} from '@openelement/protocol/renderer';
-export type { ComponentLayer, HydrationStrategy, StrategySource };
+// --- Hydration events ---------------------------------------------
 
 export interface HydrateEventDescriptor {
   selector: string;

@@ -8,7 +8,7 @@ import type {
   ParallelRenderPageOutput,
   ParallelRenderResult,
   SsgPageInput,
-} from '@openelement/protocol/ssg-contracts';
+} from '@openelement/ssg';
 import { formatError } from '@openelement/core/errors';
 import { resolveDynamicRoutePath } from '@openelement/ssg';
 

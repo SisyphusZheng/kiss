@@ -26,7 +26,6 @@ const PKG_DIR_MAP: Record<string, string> = {
   content: 'content',
   ui: 'ui',
   signal: 'signal',
-  protocol: 'protocol',
   element: 'element',
 };
 
@@ -113,7 +112,6 @@ node_modules/
 `,
     'deno.json': `{
   "imports": {
-    "alien-signals": "npm:alien-signals@^3.2.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
     "entities": "npm:entities@^4.5.0",
@@ -366,9 +364,9 @@ export default defineIsland(tagName, {
 
 async function main() {
   const name = Deno.args[0];
-  if (!name) {
-    log.error('Usage: deno run -A npm:@openelement/create <project-name>');
-    Deno.exit(1);
+  if (!name || name === '--help' || name === '-h') {
+    console.log('Usage: deno run -A npm:@openelement/create <project-name>');
+    Deno.exit(name ? 0 : 1);
   }
 
   // H-14 fix: Validate project name format to prevent path traversal

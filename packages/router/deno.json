@@ -2,8 +2,9 @@
   "name": "@openelement/router",
   "version": "0.40.8",
   "exports": {
-    ".": "./src/mod.ts",
-    "./data-context": "./src/data-context.ts"
+    ".": "./src/data-context.ts",
+    "./data-context": "./src/data-context.ts",
+    "./i18n": "./src/i18n.ts"
   },
   "imports": {},
   "publish": {
@@ -22,6 +23,6 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/index.ts"
+    "build": "deno check src/data-context.ts"
   }
 }

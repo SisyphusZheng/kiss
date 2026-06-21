@@ -7,7 +7,7 @@
 
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
+import type { SsgRenderOptions } from '@openelement/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
 import type { SsgPageOutput } from './ssg-render.ts';

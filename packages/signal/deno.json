@@ -4,12 +4,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./framework": "./src/framework.ts",
-    "./alien-engine": "./src/alien-engine.ts",
     "./preact-engine": "./src/preact-engine.ts"
   },
   "imports": {
-    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
-    "alien-signals": "npm:alien-signals@^3.2.0"
+    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1"
   },
   "publish": {
     "include": [

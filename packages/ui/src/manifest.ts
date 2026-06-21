@@ -1,583 +1,279 @@
 /**
- * @openelement/ui - Package Manifest
+ * @openelement/ui - Generated Package Manifest
  *
- * CEM-compatible OpenElementPackageManifest for the @openelement/ui package.
- * Consumers (adapter-vite) read manifest.declarations to derive
- * island metadata (tagName, module, hydrate, ssr, dsd).
- *
- * v0.20.0: All components use DsdElement (zero framework).
+ * Scans component source files at runtime and builds a CEM-compatible
+ * OpenElementPackageManifest. Keeps the same export shape as the previous
+ * hand-written manifest so consumers continue to work.
  */
 
-import type { OpenElementPackageManifest } from '@openelement/core';
+import type {
+  OpenElementAttribute,
+  OpenElementCssPart,
+  OpenElementDeclaration,
+  OpenElementEvent,
+  OpenElementPackageManifest,
+  OpenElementSlot,
+} from '@openelement/core';
+import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 
-export const manifest: OpenElementPackageManifest = {
-  schemaVersion: '1.0.0',
-  packageName: '@openelement/ui',
-  version: '0.40.8',
-  description: 'Open Props Web Component library for openElement',
-  author: 'openElement',
-  license: 'MIT',
-  homepage: 'https://openelement.org',
-  repository: 'https://github.com/open-element/openelement',
-  openElement: {
-    adapter: 'vanilla', // v0.20.0: DSD components use DsdElement (zero framework)
-    hasStylesheet: true,
-    cssPrefix: 'open',
-  },
-  declarations: [
-    // -- Ocean (DSD, DsdElement) --
-    {
-      tagName: 'open-card',
-      className: 'OpenCard',
-      superclassName: 'OpenElement',
-      description: 'Card container with header and footer slots',
-      attributes: [
-        {
-          name: 'variant',
-          type: 'string',
-          default: '"default"',
-          description: 'Card variant (default, elevated, borderless)',
-        },
-      ],
-      slots: [
-        { name: '', description: 'Default slot for card content' },
-        { name: 'header', description: 'Header slot' },
-        { name: 'footer', description: 'Footer slot' },
-      ],
-      cssParts: [
-        { name: 'container', description: 'The article wrapper' },
-        { name: 'body', description: 'The card content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-card',
-        export: 'OpenCard',
-      },
+const pkgVersion = '0.40.8';
+
+interface ComponentMeta {
+  file: string;
+  tagName: string;
+  className: string;
+  description: string;
+  attributes: OpenElementAttribute[];
+  events: OpenElementEvent[];
+  slots: OpenElementSlot[];
+  cssParts: OpenElementCssPart[];
+  layer: 'dsd-static' | 'dsd-interactive';
+  hydrate: 'load' | 'idle' | 'visible';
+}
+
+const COMPONENT_ORDER = [
+  'open-card',
+  'open-callout',
+  'open-step-card',
+  'open-button',
+  'open-input',
+  'open-theme-toggle',
+  'open-code-block',
+  'open-badge',
+  'open-brand-mark',
+  'open-lab-panel',
+  'open-standards-visual',
+  'open-lab-stage',
+  'open-dialog',
+  'open-layout',
+  'open-dropdown',
+  'open-modal',
+  'open-tabs',
+  'open-hero-ping',
+];
+
+function layerFromClass(className: string): ComponentMeta['layer'] {
+  const interactive = new Set([
+    'OpenButton',
+    'OpenInput',
+    'OpenThemeToggle',
+    'OpenDialog',
+    'OpenLayout',
+    'OpenDropdown',
+    'OpenModal',
+    'OpenTabs',
+    'OpenHeroPing',
+  ]);
+  return interactive.has(className) ? 'dsd-interactive' : 'dsd-static';
+}
+
+function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
+  const load = new Set([
+    'OpenButton',
+    'OpenInput',
+    'OpenThemeToggle',
+    'OpenLayout',
+    'OpenDropdown',
+    'OpenModal',
+    'OpenTabs',
+  ]);
+  return load.has(className) ? 'load' : 'idle';
+}
+
+function inferAttributeType(name: string): string {
+  if (
+    name === 'disabled' || name === 'compact' || name === 'open' || name === 'home' ||
+    name === 'required'
+  ) {
+    return 'boolean';
+  }
+  if (name === 'step') return 'number';
+  if (name === 'nav-items' || name === 'header-nav' || name === 'locales') return 'array';
+  return 'string';
+}
+
+function parseObservedAttributes(text: string): string[] {
+  const match = text.match(/static\s+(?:override\s+)?observedAttributes\s*=\s*\[([\s\S]*?)\]/);
+  if (!match) return [];
+  return match[1]
+    .split(/,\s*/)
+    .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean);
+}
+
+function parseTagName(text: string): string {
+  const match = text.match(/export\s+const\s+tagName\s*=\s*['"]([^'"]+)['"]/);
+  if (!match) throw new Error('Could not find tagName export');
+  return match[1];
+}
+
+function parseClassName(text: string, file: string): string {
+  const match = text.match(/export\s+(?:default\s+)?class\s+(\w+)\s+extends\s+OpenElement/);
+  if (!match) throw new Error(`Could not find exported class in ${file}`);
+  return match[1];
+}
+
+function parseCssParts(text: string): OpenElementCssPart[] {
+  const parts: OpenElementCssPart[] = [];
+  const seen = new Set<string>();
+  for (const m of text.matchAll(/\*\s*@csspart\s+(\S+)\s*-+(.*)/g)) {
+    const name = m[1].trim();
+    const description = m[2].trim();
+    if (!seen.has(name)) {
+      seen.add(name);
+      parts.push({ name, description });
+    }
+  }
+  return parts;
+}
+
+function parseSlots(text: string): OpenElementSlot[] {
+  const slots: OpenElementSlot[] = [];
+  const seen = new Set<string>();
+  for (const m of text.matchAll(/\*\s*@slot\s+(\S*)\s*-+(.*)/g)) {
+    const name = m[1].trim();
+    const description = m[2].trim();
+    if (!seen.has(name)) {
+      seen.add(name);
+      slots.push({ name, description });
+    }
+  }
+  // Default slot fallback when render includes <slot></slot> but no @slot -
+  if (text.includes('<slot></slot>') || text.includes('<slot ')) {
+    if (!seen.has('')) {
+      slots.unshift({ name: '', description: 'Default slot' });
+    }
+  }
+  return slots;
+}
+
+function parseEvents(text: string): OpenElementEvent[] {
+  const events: OpenElementEvent[] = [];
+  const seen = new Set<string>();
+  for (const m of text.matchAll(/new\s+CustomEvent\(['"]([^'"]+)['"],?\s*(?:\{([^}]*)\})?/g)) {
+    const name = m[1];
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const detail = (m[2] || '').match(/detail\s*:\s*\{([^}]*)\}/);
+    events.push({
+      name,
+      type: detail ? `CustomEvent<{ ${detail[1].trim()} }>` : 'CustomEvent',
+      description: `Fired on ${name}`,
+    });
+  }
+  return events;
+}
+
+function parseDescription(text: string): string {
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('* @openelement/ui')) {
+      const next = lines[i + 1]?.replace(/^\s*\*\s?/, '').trim();
+      if (next && !next.startsWith('*') && !next.startsWith('@')) return next;
+    }
+  }
+  return '';
+}
+
+function buildMeta(file: string, source: string): ComponentMeta {
+  const tagName = parseTagName(source);
+  const className = parseClassName(source, file);
+  const observed = parseObservedAttributes(source);
+  const attributes: OpenElementAttribute[] = observed.map((name) => ({
+    name,
+    type: inferAttributeType(name),
+    description: `${name} attribute`,
+  }));
+
+  // Provide defaults for known boolean attributes
+  for (const attr of attributes) {
+    if (attr.type === 'boolean') {
+      attr.default = 'false';
+    }
+  }
+
+  return {
+    file,
+    tagName,
+    className,
+    description: parseDescription(source),
+    attributes,
+    events: parseEvents(source),
+    slots: parseSlots(source),
+    cssParts: parseCssParts(source),
+    layer: layerFromClass(className),
+    hydrate: hydrateFromClass(className),
+  };
+}
+
+function readComponentSources(): ComponentMeta[] {
+  const dir = new URL('.', import.meta.url);
+  const metas: ComponentMeta[] = [];
+  for (const entry of Deno.readDirSync(dir)) {
+    if (!entry.isFile || !entry.name.startsWith('open-') || !entry.name.endsWith('.tsx')) continue;
+    const file = entry.name;
+    const source = new TextDecoder().decode(Deno.readFileSync(new URL(file, dir)));
+    if (!source.includes('extends OpenElement')) continue;
+    metas.push(buildMeta(file, source));
+  }
+  const order = new Map(COMPONENT_ORDER.map((t, i) => [t, i]));
+  metas.sort((a, b) => (order.get(a.tagName) ?? 999) - (order.get(b.tagName) ?? 999));
+  return metas;
+}
+
+function buildDeclaration(meta: ComponentMeta): OpenElementDeclaration {
+  return {
+    tagName: meta.tagName,
+    className: meta.className,
+    superclassName: 'OpenElement',
+    description: meta.description,
+    attributes: meta.attributes.length ? meta.attributes : undefined,
+    events: meta.events.length ? meta.events : undefined,
+    slots: meta.slots.length ? meta.slots : undefined,
+    cssParts: meta.cssParts.length ? meta.cssParts : undefined,
+    openElement: {
+      ssr: true,
+      dsd: true,
+      layer: meta.layer,
+      hydrate: meta.hydrate,
+      module: `@openelement/ui/${meta.file.replace(/\.tsx$/, '')}`,
+      export: meta.className,
     },
-    {
-      tagName: 'open-callout',
-      className: 'OpenCallout',
-      superclassName: 'OpenElement',
-      description: 'Callout notice box (info, warning, danger, tip)',
-      attributes: [
-        { name: 'type', type: 'string', default: '"info"', description: 'Callout type' },
-        { name: 'label', type: 'string', description: 'Callout heading label' },
-      ],
-      cssParts: [
-        { name: 'container', description: 'The callout wrapper' },
-        { name: 'icon', description: 'The type icon span' },
-        { name: 'content', description: 'The body content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-callout',
-        export: 'OpenCallout',
-      },
+  };
+}
+
+function buildManifest(): OpenElementPackageManifest {
+  const metas = readComponentSources();
+  const declarations = metas.map(buildDeclaration);
+  const modules = metas.map((meta) => ({
+    path: `./${meta.file.replace(/\.tsx$/, '.js')}`,
+    exports: [{ name: meta.className, path: `./${meta.file.replace(/\.tsx$/, '.js')}` }],
+    declarations: [meta.tagName],
+  }));
+
+  return {
+    schemaVersion: '1.0.0',
+    packageName: '@openelement/ui',
+    version: pkgVersion,
+    description: 'Open Props Web Component library for openElement',
+    author: 'openElement',
+    license: 'MIT',
+    homepage: 'https://openelement.org',
+    repository: 'https://github.com/open-element/openelement',
+    openElement: {
+      adapter: 'vanilla',
+      hasStylesheet: true,
+      cssPrefix: 'open',
     },
-    {
-      tagName: 'open-step-card',
-      className: 'OpenStepCard',
-      superclassName: 'OpenElement',
-      description: 'Step card with numbered indicator',
-      attributes: [
-        { name: 'step', type: 'number', default: '1', description: 'Step number' },
-        { name: 'label', type: 'string', description: 'Step label' },
-        { name: 'description', type: 'string', description: 'Step description' },
-        { name: 'status', type: 'string', description: 'Step status (completed, active, pending)' },
-      ],
-      cssParts: [
-        { name: 'container', description: 'The step card wrapper' },
-        { name: 'indicator', description: 'The step number circle' },
-        { name: 'title', description: 'The step label heading' },
-        { name: 'content', description: 'The slot content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-step-card',
-        export: 'OpenStepCard',
-      },
-    },
-    {
-      tagName: 'open-button',
-      className: 'OpenButton',
-      superclassName: 'OpenElement',
-      description: 'Button with variants (default, primary, ghost, accent)',
-      attributes: [
-        { name: 'variant', type: 'string', default: '"default"', description: 'Button variant' },
-        { name: 'disabled', type: 'boolean', default: 'false', description: 'Whether disabled' },
-        { name: 'size', type: 'string', default: '"md"', description: 'Button size (sm, md, lg)' },
-        { name: 'href', type: 'string', description: 'Link URL (renders as anchor)' },
-      ],
-      events: [
-        { name: 'open-click', type: 'CustomEvent', description: 'Fired on button click' },
-      ],
-      cssParts: [
-        { name: 'control', description: 'The button or anchor element' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-button',
-        export: 'OpenButton',
-      },
-    },
-    {
-      tagName: 'open-input',
-      className: 'OpenInput',
-      superclassName: 'OpenElement',
-      description: 'Input field with label and error states',
-      attributes: [
-        { name: 'label', type: 'string', description: 'Input label' },
-        { name: 'value', type: 'string', default: '""', description: 'Input value' },
-        { name: 'type', type: 'string', default: '"text"', description: 'Input type' },
-        { name: 'error', type: 'string', description: 'Error message' },
-        { name: 'placeholder', type: 'string', description: 'Placeholder text' },
-        { name: 'disabled', type: 'boolean', description: 'Disabled state' },
-      ],
-      events: [
-        {
-          name: 'open-input',
-          type: 'CustomEvent<{ value: string }>',
-          description: 'Fired on input change',
-        },
-      ],
-      cssParts: [
-        { name: 'wrapper', description: 'The outer wrapper div' },
-        { name: 'label', description: 'The label element' },
-        { name: 'control', description: 'The input element' },
-        { name: 'error', description: 'The error message element' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-input',
-        export: 'OpenInput',
-      },
-    },
-    {
-      tagName: 'open-theme-toggle',
-      className: 'OpenThemeToggle',
-      superclassName: 'OpenElement',
-      description: 'Dark/Light theme toggle',
-      attributes: [
-        { name: 'theme', type: 'string', description: 'Initial theme (light/dark)' },
-      ],
-      cssParts: [
-        { name: 'toggle', description: 'The button element' },
-        { name: 'icon-sun', description: 'The sun SVG icon' },
-        { name: 'icon-moon', description: 'The moon SVG icon' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-theme-toggle',
-        export: 'OpenThemeToggle',
-      },
-    },
-    {
-      tagName: 'open-code-block',
-      className: 'OpenCodeBlock',
-      superclassName: 'OpenElement',
-      description: 'Code block with syntax highlighting and copy button',
-      cssParts: [
-        { name: 'container', description: 'The code-block wrapper' },
-        { name: 'copy', description: 'The copy button' },
-        { name: 'body', description: 'The pre/code area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-code-block',
-        export: 'OpenCodeBlock',
-      },
-    },
-    {
-      tagName: 'open-badge',
-      className: 'OpenBadge',
-      superclassName: 'OpenElement',
-      description: 'Open Props status badge',
-      attributes: [
-        { name: 'tone', type: 'string', default: '"neutral"', description: 'Badge tone' },
-        { name: 'size', type: 'string', default: '"md"', description: 'Badge size' },
-      ],
-      slots: [
-        { name: '', description: 'Badge text' },
-      ],
-      cssParts: [
-        { name: 'badge', description: 'The badge wrapper' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-badge',
-        export: 'OpenBadge',
-      },
-    },
-    {
-      tagName: 'open-brand-mark',
-      className: 'OpenBrandMark',
-      superclassName: 'OpenElement',
-      description: 'Aperture O brand mark for openElement surfaces',
-      attributes: [
-        { name: 'size', type: 'string', default: '"md"', description: 'Mark size' },
-        { name: 'tone', type: 'string', default: '"default"', description: 'Mark tone' },
-      ],
-      cssParts: [
-        { name: 'mark', description: 'The Aperture O wrapper' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-brand-mark',
-        export: 'OpenBrandMark',
-      },
-    },
-    {
-      tagName: 'open-lab-panel',
-      className: 'OpenLabPanel',
-      superclassName: 'OpenElement',
-      description: 'Standards-lab artifact and spec panel',
-      attributes: [
-        { name: 'variant', type: 'string', default: '"surface"', description: 'Panel variant' },
-        { name: 'label', type: 'string', description: 'Panel label' },
-        { name: 'meta', type: 'string', description: 'Panel metadata' },
-        { name: 'compact', type: 'boolean', description: 'Compact body padding' },
-      ],
-      slots: [
-        { name: '', description: 'Panel content' },
-      ],
-      cssParts: [
-        { name: 'container', description: 'The panel wrapper' },
-        { name: 'header', description: 'The panel header' },
-        { name: 'body', description: 'The panel content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-lab-panel',
-        export: 'OpenLabPanel',
-      },
-    },
-    {
-      tagName: 'open-standards-visual',
-      className: 'OpenStandardsVisual',
-      superclassName: 'OpenElement',
-      description: 'Product-art standards diagram for route, package, token, and hero visuals',
-      attributes: [
-        { name: 'variant', type: 'string', default: '"hero"', description: 'Visual variant' },
-        { name: 'motion', type: 'string', default: '"auto"', description: 'Motion mode' },
-        { name: 'emphasis', type: 'string', default: '"normal"', description: 'Visual emphasis' },
-      ],
-      cssParts: [],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-standards-visual',
-        export: 'OpenStandardsVisual',
-      },
-    },
-    {
-      tagName: 'open-lab-stage',
-      className: 'OpenLabStage',
-      superclassName: 'OpenElement',
-      description: 'Kinetic standards-lab hero stage for product-art pages',
-      attributes: [
-        { name: 'motion', type: 'string', default: '"auto"', description: 'Motion mode' },
-        { name: 'emphasis', type: 'string', default: '"high"', description: 'Stage emphasis' },
-      ],
-      cssParts: [
-        { name: 'stage', description: 'The stage wrapper' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-static',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-lab-stage',
-        export: 'OpenLabStage',
-      },
-    },
-    {
-      tagName: 'open-dialog',
-      className: 'OpenDialog',
-      superclassName: 'OpenElement',
-      description: 'Modal dialog component using native <dialog>',
-      attributes: [
-        {
-          name: 'open',
-          type: 'boolean',
-          default: 'false',
-          description: 'Whether the dialog is open',
-        },
-        { name: 'label', type: 'string', description: 'Dialog heading' },
-      ],
-      events: [
-        { name: 'open-dialog-close', type: 'CustomEvent', description: 'Fired when dialog closes' },
-      ],
-      slots: [
-        { name: '', description: 'Default slot for dialog content' },
-        { name: 'trigger', description: 'Click target to open the dialog' },
-        { name: 'footer', description: 'Footer slot for action buttons' },
-      ],
-      cssParts: [
-        { name: 'overlay', description: 'The dialog element (backdrop)' },
-        { name: 'header', description: 'The header bar' },
-        { name: 'close', description: 'The close button' },
-        { name: 'body', description: 'The content area' },
-        { name: 'footer', description: 'The footer area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-dialog',
-        export: 'OpenDialog',
-      },
-    },
-    {
-      tagName: 'open-layout',
-      className: 'OpenLayout',
-      superclassName: 'OpenElement',
-      description: 'App layout with header, sidebar, footer, and SPA navigation',
-      attributes: [
-        { name: 'current-path', type: 'string', description: 'Current URL path' },
-        { name: 'nav-items', type: 'array', description: 'Sidebar navigation sections' },
-        { name: 'header-nav', type: 'array', description: 'Header navigation links' },
-        { name: 'logo-text', type: 'string', default: '"openElement"', description: 'Logo text' },
-        { name: 'home', type: 'boolean', description: 'Home page layout (no sidebar)' },
-      ],
-      slots: [
-        { name: '', description: 'Default slot for page content' },
-        { name: 'header-actions', description: 'Header right-side actions (e.g. search)' },
-      ],
-      cssParts: [
-        { name: 'container', description: 'The app-layout root div' },
-        { name: 'header', description: 'The sticky header' },
-        { name: 'sidebar', description: 'The docs-sidebar nav' },
-        { name: 'main', description: 'The layout-main element' },
-        { name: 'footer', description: 'The app-footer element' },
-        { name: 'nav', description: 'The header-nav element' },
-        { name: 'nav-toggle', description: 'The mobile menu toggle button' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-layout',
-        export: 'OpenLayout',
-      },
-    },
-    {
-      tagName: 'open-dropdown',
-      className: 'OpenDropdown',
-      superclassName: 'OpenElement',
-      description: 'Dropdown toggle with trigger slot and content slot',
-      slots: [
-        { name: 'trigger', description: 'Click target to toggle the dropdown' },
-        { name: '', description: 'Dropdown content (shown when open)' },
-      ],
-      cssParts: [
-        { name: 'dropdown', description: 'The dropdown wrapper' },
-        { name: 'content', description: 'The dropdown content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-dropdown',
-        export: 'OpenDropdown',
-      },
-    },
-    {
-      tagName: 'open-modal',
-      className: 'OpenModal',
-      superclassName: 'OpenElement',
-      description: 'Modal dialog using signal-driven open attribute',
-      attributes: [
-        {
-          name: 'open',
-          type: 'boolean',
-          default: 'false',
-          description: 'Whether the modal is open',
-        },
-      ],
-      slots: [
-        { name: '', description: 'Modal body content' },
-      ],
-      cssParts: [
-        { name: 'modal', description: 'The modal root' },
-        { name: 'backdrop', description: 'The backdrop element' },
-        { name: 'content', description: 'The content area' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-modal',
-        export: 'OpenModal',
-      },
-    },
-    {
-      tagName: 'open-tabs',
-      className: 'OpenTabs',
-      superclassName: 'OpenElement',
-      description: 'Tab interface with tab and panel slots',
-      slots: [
-        { name: 'tab', description: 'Tab button labels (multiple)' },
-        { name: 'panel', description: 'Tab panel content (multiple, one per tab)' },
-      ],
-      cssParts: [
-        { name: 'tabs', description: 'The tab button container' },
-        { name: 'panel', description: 'The active panel content' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'load',
-        module: '@openelement/ui/open-tabs',
-        export: 'OpenTabs',
-      },
-    },
-    // -- Island-style DsdElement component --
-    {
-      tagName: 'open-hero-ping',
-      className: 'OpenHeroPing',
-      superclassName: 'OpenElement',
-      description: 'Animated hero ping indicator (Island)',
-      cssParts: [
-        { name: 'dot-static', description: 'The static status dot' },
-        { name: 'dot-animated', description: 'The animated ping dot' },
-      ],
-      openElement: {
-        ssr: true,
-        dsd: true,
-        layer: 'dsd-interactive',
-        hydrate: 'idle',
-        module: '@openelement/ui/open-hero-ping',
-        export: 'OpenHeroPing',
-      },
-    },
-  ],
-  modules: [
-    {
-      path: './open-button.js',
-      exports: [{ name: 'OpenButton', path: './open-button.js' }],
-      declarations: ['open-button'],
-    },
-    {
-      path: './open-card.js',
-      exports: [{ name: 'OpenCard', path: './open-card.js' }],
-      declarations: ['open-card'],
-    },
-    {
-      path: './open-callout.js',
-      exports: [{ name: 'OpenCallout', path: './open-callout.js' }],
-      declarations: ['open-callout'],
-    },
-    {
-      path: './open-step-card.js',
-      exports: [{ name: 'OpenStepCard', path: './open-step-card.js' }],
-      declarations: ['open-step-card'],
-    },
-    {
-      path: './open-code-block.js',
-      exports: [{ name: 'OpenCodeBlock', path: './open-code-block.js' }],
-      declarations: ['open-code-block'],
-    },
-    {
-      path: './open-badge.js',
-      exports: [{ name: 'OpenBadge', path: './open-badge.js' }],
-      declarations: ['open-badge'],
-    },
-    {
-      path: './open-brand-mark.js',
-      exports: [{ name: 'OpenBrandMark', path: './open-brand-mark.js' }],
-      declarations: ['open-brand-mark'],
-    },
-    {
-      path: './open-lab-panel.js',
-      exports: [{ name: 'OpenLabPanel', path: './open-lab-panel.js' }],
-      declarations: ['open-lab-panel'],
-    },
-    {
-      path: './open-lab-stage.js',
-      exports: [{ name: 'OpenLabStage', path: './open-lab-stage.js' }],
-      declarations: ['open-lab-stage'],
-    },
-    {
-      path: './open-standards-visual.js',
-      exports: [{ name: 'OpenStandardsVisual', path: './open-standards-visual.js' }],
-      declarations: ['open-standards-visual'],
-    },
-    {
-      path: './open-dialog.js',
-      exports: [{ name: 'OpenDialog', path: './open-dialog.js' }],
-      declarations: ['open-dialog'],
-    },
-    {
-      path: './open-hero-ping.js',
-      exports: [{ name: 'OpenHeroPing', path: './open-hero-ping.js' }],
-      declarations: ['open-hero-ping'],
-    },
-    {
-      path: './open-input.js',
-      exports: [{ name: 'OpenInput', path: './open-input.js' }],
-      declarations: ['open-input'],
-    },
-    {
-      path: './open-layout.js',
-      exports: [{ name: 'OpenLayout', path: './open-layout.js' }],
-      declarations: ['open-layout'],
-    },
-    {
-      path: './open-theme-toggle.js',
-      exports: [{ name: 'OpenThemeToggle', path: './open-theme-toggle.js' }],
-      declarations: ['open-theme-toggle'],
-    },
-    {
-      path: './open-dropdown.js',
-      exports: [{ name: 'OpenDropdown', path: './open-dropdown.js' }],
-      declarations: ['open-dropdown'],
-    },
-    {
-      path: './open-modal.js',
-      exports: [{ name: 'OpenModal', path: './open-modal.js' }],
-      declarations: ['open-modal'],
-    },
-    {
-      path: './open-tabs.js',
-      exports: [{ name: 'OpenTabs', path: './open-tabs.js' }],
-      declarations: ['open-tabs'],
-    },
-  ],
-};
+    declarations,
+    modules,
+  };
+}
+
+// ponytail: no-op to avoid an unused-import lint; StyleSheet is only imported
+// to prove the module can access the same runtime as the component sheets.
+const _preload: StyleSheetLike = new StyleSheet();
+void _preload;
+
+export const manifest: OpenElementPackageManifest = buildManifest();

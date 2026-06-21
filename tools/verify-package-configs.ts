@@ -6,7 +6,7 @@
  *   deno run --allow-read tools/verify-package-configs.ts --fix
  */
 
-import { join } from 'https://deno.land/std@0.208.0/path/mod.ts';
+import { join } from 'node:path';
 import { getExpectedConfig, isConfigStandard } from './config-templates.ts';
 
 interface PackageConfig {
@@ -30,7 +30,6 @@ const PACKAGES = [
   'router',
   'adapter-vite',
   'content',
-  'i18n',
   'app',
   'create',
 ];

@@ -165,8 +165,7 @@ export class ArchitecturePage extends OpenElement {
             <open-card>
               <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-5);color:var(--text)'>Why signal?</h3>
               <p style='margin:0;font-size:var(--font-size-1);color:var(--text-secondary)'>
-                @preact/signals-core is the default engine behind @openelement/signal.
-                alien-signals remains available through an optional engine subpath.
+                @preact/signals-core is the engine behind @openelement/signal.
               </p>
             </open-card>
           </div>

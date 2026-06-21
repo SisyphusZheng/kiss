@@ -14,8 +14,8 @@ import {
   type VNode,
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland } from '@openelement/core';
-import type { IslandConfig as ProtocolIslandConfig } from '@openelement/protocol/islands';
 import { __internal_setActionData, __internal_setLoaderData } from '@openelement/router';
+import type { HydrationStrategy } from '@openelement/core';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
 export type PageStreamingMode = 'auto' | 'force' | false;
@@ -279,9 +279,15 @@ export function definePage<
   return OpenElementPage;
 }
 
-export type AppIslandOptions = ProtocolIslandConfig;
+export interface IslandConfig {
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: HydrationStrategy;
+}
 
-export type IslandConfig = ProtocolIslandConfig;
+export type AppIslandOptions = IslandConfig;
+
+export type IslandConfigType = IslandConfig;
 
 export function defineIslandConfig(config: IslandConfig): IslandConfig {
   if (typeof config !== 'object' || config === null || Array.isArray(config)) {

@@ -14,7 +14,7 @@ import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
 import { getSsrProps } from '@openelement/core';
 import { type ComponentChild, h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import { renderToString } from 'preact-render-to-string';
-import type { IslandConfig } from '@openelement/protocol/islands';
+import type { IslandConfig } from './authoring.ts';
 
 export type PreactIslandProps = Record<string, unknown>;
 

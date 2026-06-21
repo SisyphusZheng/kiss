@@ -36,17 +36,6 @@ for (const root of sourceRoots) {
         });
       }
     }
-    const imports = [...text.matchAll(/import\s+([^;]+?)\s+from\s+['"]@openelement\/signals['"]/g)];
-    for (const match of imports) {
-      const clause = match[1] ?? '';
-      if (clause.includes('type ')) {
-        failures.push({
-          file,
-          message:
-            'core must import signal protocol types from @openelement/protocol/signals, not @openelement/signal',
-        });
-      }
-    }
   }
 }
 
@@ -64,11 +53,11 @@ for (const file of protectedPackageConfigs) {
 }
 
 if (failures.length > 0) {
-  console.error('Signal protocol boundary check failed:');
+  console.error('Signal boundary check failed:');
   for (const failure of failures) {
     console.error(`- ${failure.file}: ${failure.message}`);
   }
   Deno.exit(1);
 }
 
-console.log('Signal protocol boundary check passed.');
+console.log('Signal boundary check passed.');

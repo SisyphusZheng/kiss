@@ -14,9 +14,10 @@
  */
 
 import type { Plugin } from 'vite';
-import type { OpenElementBuildContextLike } from '@openelement/protocol/build-types';
+import type { OpenElementBuildContextLike } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
+// ponytail: build-time Vite plugin, deno-api-free:ignore applies
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -98,7 +99,7 @@ export function openI18n(
 // Re-export runtime helpers for convenience when importing @openelement/app/i18n-plugin
 export type { OpenElementI18nOptions } from './i18n-runtime.ts';
 export { i18nStaticPaths, loadI18nData, switchLocale } from './i18n-runtime.ts';
-export type { LocalePath } from '@openelement/protocol';
-export { normalizeLocalePath } from '@openelement/protocol';
+export type { LocalePath } from '@openelement/router/i18n';
+export { normalizeLocalePath } from '@openelement/router/i18n';
 
 export default openI18n;

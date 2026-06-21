@@ -1,8 +1,8 @@
 /**
  * @openelement/adapter-vite - index.ts main entry tests (Deno)
  *
- * Tests that the public openPipeline() entry and internal plugin factory
- * return valid plugin arrays with correct structure and re-exports.
+ * Tests that the internal plugin factory returns valid plugin arrays with correct
+ * structure and re-exports.
  */
 // deno-lint-ignore-file no-unused-vars ban-types
 import {
@@ -45,12 +45,10 @@ function assertOpenPluginArray(plugins: ReturnType<typeof createOpenPlugin>): vo
     'open:core',
     'open:generated-data',
     'open:core-resolve',
-    'open:optional-package-stubs',
     'open:virtual-entry',
     '@hono/vite-dev-server',
     'open:island-transform',
     'open:build',
-    'open:devtools',
   ]);
 }
 

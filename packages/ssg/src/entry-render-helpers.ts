@@ -14,7 +14,7 @@ import type {
   MiddlewareDecl,
   PageRouteDecl,
   RendererDecl,
-} from './entry-descriptor.ts';
+} from './routes.ts';
 
 export function renderImport(imp: ImportDecl): string {
   const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');

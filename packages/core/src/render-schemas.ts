@@ -3,8 +3,10 @@
  *
  * Types for the DSD rendering pipeline: component models, render inputs/outputs,
  * metrics, diagnostics, build reports, ISR records, and DOM simulation.
- * Consumed by render-dsd.ts, render-dsd-stream.ts, dsd-collector.ts,
- * adapter-registry.ts, and DSD build reporting.
+ * Consumed by render-dsd.ts, render-dsd-stream.ts, and DSD build reporting.
+ *
+ * Consolidated from the former @openelement/core module
+ * (ADR-0094 / Phase 2).
  *
  * @see ADR-0094: Core Type Consolidation — Eliminate types.ts
  */
@@ -14,31 +16,75 @@ import type { ComponentLayer, HydrationStrategy, StrategySource } from './schema
 
 export type { ComponentLayer, HydrationStrategy, StrategySource };
 
-// Import + re-export shared renderer types from protocol
-import type {
-  DsdOptions,
-  DsdRenderMetrics,
-  HydrationHint,
-  RendererProtocol,
-  RenderError,
-  RenderErrorSeverity,
-  RenderHooks,
-  RenderInput,
-  RenderOutput,
-  RenderPhase,
-} from '@openelement/protocol/renderer';
-export type {
-  DsdOptions,
-  DsdRenderMetrics,
-  HydrationHint,
-  RendererProtocol,
-  RenderError,
-  RenderErrorSeverity,
-  RenderHooks,
-  RenderInput,
-  RenderOutput,
-  RenderPhase,
-};
+export type RenderPhase = 'instantiate' | 'render' | 'nested' | 'style' | 'serialize';
+export type RenderErrorSeverity = 'error' | 'warning';
+
+export interface RenderError {
+  code: string;
+  severity: RenderErrorSeverity;
+  phase: string;
+  tagName: string;
+  message: string;
+  recoverable: boolean;
+}
+
+export interface RendererProtocol {
+  name: string;
+  isTemplate?: (value: unknown) => boolean;
+  render?: (value: unknown, tagName: string) => Promise<string>;
+  extractStyles?: (componentClass: CustomElementConstructor) => string | undefined;
+}
+
+export interface RenderInput {
+  tagName: string;
+  componentClass: CustomElementConstructor;
+  props: Record<string, unknown>;
+  dsdOptions?: DsdOptions;
+  nestingDepth: number;
+}
+
+export interface HydrationHint {
+  tagName: string;
+  layer: ComponentLayer;
+  strategy?: HydrationStrategy;
+}
+
+export interface RenderOutput {
+  html: string;
+  errors: RenderError[];
+  metrics: DsdRenderMetrics;
+  hydrationHints: HydrationHint[];
+}
+
+export interface RenderHooks {
+  beforeRender?: (input: RenderInput) => void;
+  afterRender?: (output: RenderOutput) => void;
+  onError?: (error: RenderError) => void;
+}
+
+export interface DsdOptions {
+  delegatesFocus?: boolean;
+  clonable?: boolean;
+  serializable?: boolean;
+  slotAssignment?: 'named' | 'manual';
+  customElementRegistry?: boolean;
+  layer?: ComponentLayer;
+}
+
+export interface DsdRenderMetrics {
+  tagName: string;
+  renderTimeMs: number;
+  templateSize: number;
+  layer: ComponentLayer;
+  hasError: boolean;
+  nestingDepth: number;
+}
+
+export interface RendererConformanceFixture {
+  tagName: string;
+  template: unknown;
+  expectedHtml?: string;
+}
 
 // Core-specific extensions
 export type RenderErrorCode =

@@ -4,10 +4,6 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "imports": {
-    "hono": "npm:hono@^4.12",
-    "typescript": "npm:typescript@^5.9.0"
-  },
   "tasks": {
     "build": "deno check src/index.ts",
     "test": "deno test --allow-read --allow-write --allow-env --allow-net __tests__/"

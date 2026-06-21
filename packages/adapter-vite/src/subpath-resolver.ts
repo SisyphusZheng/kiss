@@ -15,7 +15,6 @@
 import type { Plugin } from 'vite';
 
 import { formatError, OpenElementError } from '@openelement/core/errors';
-import { transform as esbuildTransform } from 'esbuild';
 
 /** Virtual module ID prefix for JSR remote resolution */
 export const VIRTUAL_CORE_PREFIX = '\0openelement:core/src/';
@@ -166,10 +165,11 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
         );
       }
 
-      // Compile TypeScript -> JavaScript via esbuild
+      // Compile TypeScript -> JavaScript via Vite's bundled esbuild transform
       let jsCode: string;
       try {
-        const result = await esbuildTransform(tsCode, {
+        const { transformWithEsbuild } = await import('vite');
+        const result = await transformWithEsbuild(tsCode, filePath, {
           loader: 'ts',
           target: 'esnext',
           format: 'esm',

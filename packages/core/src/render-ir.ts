@@ -14,7 +14,7 @@ import {
 } from './event-hydration.ts';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { DANGEROUS_KEYS, trustRenderHtml } from './security.ts';
-import { isSignalLike, unwrapSignalLike } from './signal-like.ts';
+import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 import { isComponentCtor, isComponentFn, isVNode, type RenderFn, type VNode } from './vnode.ts';
 import { renderDsd } from './render-dsd.js';
 import { createLogger } from './logger.js';

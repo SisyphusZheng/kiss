@@ -1,12 +1,16 @@
 /**
- * Route protocol contracts.
+ * Route contracts for the SSG engine and generated entry descriptors.
  *
- * ADR-0098 makes this module the data-contract home for route manifests and
- * generated entry descriptors. Implementation packages still own scanning,
- * import-path generation, and server-entry rendering.
+ * Data-contract home for route manifests and generated entry descriptors.
+ * Implementation packages still own scanning, import-path generation, and
+ * server-entry rendering.
  */
 
-import type { HydrationStrategy } from './renderer.ts';
+import type {
+  CompatibilityClassification,
+  HydrationStrategy,
+  SsrAdmissionDecision,
+} from '@openelement/core';
 
 export type RouteKind = 'page' | 'api' | 'asset' | 'redirect';
 export type RouteRenderingMode = 'auto' | 'static' | 'dynamic';
@@ -83,29 +87,13 @@ export interface IslandDecl {
   reason?: string;
 }
 
-export interface CemClassificationLike {
-  tagName: string;
-  tier?: string;
-  compatible?: boolean;
-  reason?: string;
-  [key: string]: unknown;
-}
-
-export interface SsrAdmissionDecisionLike {
-  tagName: string;
-  modulePath?: string;
-  source?: 'local' | 'package' | 'nested';
-  renderPath: 'ssr+client' | 'client-only' | 'rejected';
-  reason: string;
-}
-
 export interface SsrAdmissionPlan {
   renderableTags: string[];
   clientOnlyTags: string[];
   rejectedTags: string[];
   reasons: Record<string, string>;
-  decisions: SsrAdmissionDecisionLike[];
-  cemClassifications?: CemClassificationLike[];
+  decisions: SsrAdmissionDecision[];
+  cemClassifications?: CompatibilityClassification[];
 }
 
 export interface RendererDecl {
@@ -149,7 +137,7 @@ export interface EntryDescriptor {
   pageRoutes: PageRouteDecl[];
   islands: IslandDecl[];
   ssrAdmissionPlan: SsrAdmissionPlan;
-  cemClassifications?: CemClassificationLike[];
+  cemClassifications?: CompatibilityClassification[];
   clientOnlyTags?: string[];
   renderers: RendererDecl[];
   middlewareScopes: MiddlewareScopeDecl[];

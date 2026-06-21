@@ -36,22 +36,26 @@ Deno.test('html-escape - wrapInDocument', async (t) => {
     assertEquals(html.includes('content="Test page"'), true);
   });
 
-  await t.step('devMode injects Vite client script', () => {
-    const html = wrapInDocument('<h1>Hello</h1>', { devMode: true });
+  await t.step('devScripts injects Vite client script', () => {
+    const html = wrapInDocument('<h1>Hello</h1>', {
+      devScripts: '<script type="module" src="/@vite/client"></script>',
+    });
     assertEquals(html.includes('/@vite/client'), true);
   });
 
-  await t.step('devMode with routeModulePath injects registration script', () => {
+  await t.step('devScripts with route module registration', () => {
     const html = wrapInDocument('<h1>Hello</h1>', {
-      devMode: true,
-      routeModulePath: '/app/routes/index.ts',
+      devScripts:
+        '<script type="module" src="/@vite/client"></script>\n  <script type="module">\nimport \'/app/routes/index.ts\';\n</script>',
     });
     assertEquals(html.includes('/@vite/client'), true);
     assertEquals(html.includes("import '/app/routes/index.ts'"), true);
   });
 
-  await t.step('devMode without routeModulePath only injects Vite client', () => {
-    const html = wrapInDocument('<h1>Hello</h1>', { devMode: true });
+  await t.step('devScripts without route module only injects Vite client', () => {
+    const html = wrapInDocument('<h1>Hello</h1>', {
+      devScripts: '<script type="module" src="/@vite/client"></script>',
+    });
     assertEquals(html.includes('/@vite/client'), true);
     assertEquals(html.includes("import '"), false);
   });

@@ -24,10 +24,8 @@ import {
   type RenderOutput,
   type RenderPhase,
 } from './render-schemas.js';
-import { getDefaultRegistry } from './adapter-registry.js';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import { DsdRenderCollector } from './dsd-collector.js';
 import { type DsdComponentConstructor } from './render-schemas.js';
 import { escapeAttrValue } from './html-escape.js';
 import { isVNode } from './vnode.js';
@@ -202,7 +200,6 @@ export interface RenderDsdOptions {
   props?: Record<string, unknown>;
   sourceInfo?: { route?: string; source?: string };
   dsdOptions?: DsdOptions;
-  collector?: DsdRenderCollector;
   nestingDepth?: number;
   hooks?: RenderHooks;
   lightDom?: RenderNode[];
@@ -249,7 +246,6 @@ export async function renderDsd(
 
   const sourceInfo = options.sourceInfo;
   const dsdOptions = options.dsdOptions;
-  const collector = options.collector;
   const nestingDepth = options.nestingDepth;
   const hooks = options.hooks;
 
@@ -373,28 +369,6 @@ export async function renderDsd(
     }
   }
 
-  if (!styleCss) {
-    for (const adapter of getDefaultRegistry().getAll()) {
-      if (adapter.extractStyles) {
-        try {
-          const extracted = adapter.extractStyles(componentClass);
-          if (extracted) {
-            styleCss += extracted;
-          }
-        } catch (e) {
-          const styleErr = classifyError('style', tagName, e, true);
-          collectedErrors.push(styleErr);
-          hooks?.onError?.(styleErr);
-          log.debug(
-            `extractStyles failed for <${tagName}> via '${adapter.name}' adapter: ${
-              formatError(e)
-            }`,
-          );
-        }
-      }
-    }
-  }
-
   const renderMode = ctor.renderMode ?? 'shadow';
   const resolvedLayer = renderMode === 'light'
     ? 'light-dom'
@@ -411,10 +385,6 @@ export async function renderDsd(
     hasError,
     nestingDepth: _nestingDepth,
   };
-
-  if (collector) {
-    collector.add(metrics);
-  }
 
   if (resolvedLayer !== 'dsd-static') {
     collectedHints.push({

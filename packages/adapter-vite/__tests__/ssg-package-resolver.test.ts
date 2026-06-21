@@ -35,13 +35,16 @@ Deno.test('resolveOpenPackageExport maps public subpaths to source files', () =>
   assertEquals(resolveOpenPackageExport('core', '.'), 'src/index.ts');
   assertEquals(resolveOpenPackageExport('core', 'logger'), 'src/logger.ts');
   assertEquals(resolveOpenPackageExport('core', 'style-sheet'), 'src/style-sheet.ts');
+  assertEquals(resolveOpenPackageExport('core', 'data'), 'src/data.ts');
+  assertEquals(resolveOpenPackageExport('core', 'runtime'), 'src/runtime.ts');
   assertEquals(resolveOpenPackageExport('ui', 'open-card'), 'src/open-card.tsx');
-  assertEquals(resolveOpenPackageExport('protocol', 'build-types'), 'src/build-types.ts');
   assertEquals(resolveOpenPackageExport('signal', 'framework'), 'src/framework.ts');
   assertEquals(resolveOpenPackageExport('signal', 'preact-engine'), 'src/preact-engine.ts');
   assertEquals(resolveOpenPackageExport('app', '.'), 'src/index.ts');
   assertEquals(resolveOpenPackageExport('app', 'preact'), 'src/preact.ts');
   assertEquals(resolveOpenPackageExport('element', '.'), 'src/index.ts');
+  assertEquals(resolveOpenPackageExport('router', '.'), 'src/data-context.ts');
+  assertEquals(resolveOpenPackageExport('router', 'i18n'), 'src/i18n.ts');
 });
 
 Deno.test('resolveOpenPackageExport reports unknown openElement subpaths clearly', () => {
@@ -150,7 +153,7 @@ Deno.test('createOpenJsrPackageResolverPlugin resolves retained core packages bu
   );
   assertEquals(
     await resolveId('@openelement/router'),
-    toVirtualOpenPackageId('router', 'src/mod.ts'),
+    toVirtualOpenPackageId('router', 'src/data-context.ts'),
   );
 
   // Optional retained data packages are handled by optionalPackageStubsPlugin

@@ -21,11 +21,11 @@ import type { Alias, ResolvedConfig } from 'vite';
 import type {
   CompatibilityClassification,
   FrameworkOptions,
-  HydrationStrategy,
   OpenElementPackageManifest,
   RouteEntry,
 } from '@openelement/core';
-import type { OpenElementPluginMeta } from '@openelement/protocol/build-types';
+import type { HydrationStrategy } from '@openelement/core';
+import type { OpenElementPluginMeta } from '@openelement/core';
 import type { IslandDecl, SsrAdmissionPlan } from '@openelement/ssg';
 
 // These branded types ensure Phase 2 can only run after Phase 1,
@@ -96,9 +96,6 @@ export class Phase3Meta {
 
   /** HTML document options from createOpenPlugin() options */
   html: { lang?: string; title?: string } | null = null;
-
-  /** PWA config from createOpenPlugin() options */
-  pwa: FrameworkOptions['pwa'] | null = null;
 
   /** Island hydration strategy (default: 'idle') */
   upgradeStrategy: HydrationStrategy = 'idle';

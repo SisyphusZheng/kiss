@@ -2,7 +2,7 @@
  * @openelement/core — Unified Error Architecture (ADR-0053 / SOP-011).
  */
 
-import type { RenderError as ProtocolRenderError } from '@openelement/protocol/renderer';
+import type { RenderError as ProtocolRenderError } from './render-schemas.js';
 
 // ─── Well-known error codes ─────────────────────────────────────────
 
@@ -136,20 +136,6 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
   }
 }
 
-// ponytail: speculative, never thrown — kept for forward-compat
-export class IslandRenderError extends RenderError {
-  constructor(componentPath: string, sourceError: Error) {
-    super(
-      componentPath,
-      `Island render failed: ${componentPath}`,
-      'ISLAND_RENDER_ERROR',
-      '',
-      sourceError,
-    );
-    this.name = 'IslandRenderError';
-  }
-}
-
 export class PropValidationError extends OpenElementError {
   public readonly propertyName: string;
   public readonly receivedValue: unknown;
@@ -166,25 +152,6 @@ export class PropValidationError extends OpenElementError {
     this.name = 'PropValidationError';
     this.propertyName = propertyName;
     this.receivedValue = receivedValue;
-  }
-}
-
-// ponytail: speculative, never thrown — kept for forward-compat
-export class NavigationError extends OpenElementError {
-  public readonly route: string;
-
-  constructor(route: string, cause?: Error) {
-    super(`Navigation failed: ${route}`, 'NAVIGATION_ERROR', 'error', 'navigation', true, cause);
-    this.name = 'NavigationError';
-    this.route = route;
-  }
-}
-
-// ponytail: speculative, never thrown — kept for forward-compat
-export class BuildError extends OpenElementError {
-  constructor(message: string, cause?: Error) {
-    super(message, 'BUILD_ERROR', 'error', 'build', false, cause);
-    this.name = 'BuildError';
   }
 }
 
@@ -210,30 +177,4 @@ export function reportError(error: OpenElementError): void {
 
 // ─── SSR Error Context ──────────────────────────────────────────────
 
-export interface SsrErrorEntry {
-  componentPath: string;
-  error: OpenElementError;
-  phase: ErrorPhase;
-}
-
-// ponytail: speculative, never instantiated — kept for forward-compat
-export class SsrErrorContext {
-  private errors: SsrErrorEntry[] = [];
-
-  add(entry: SsrErrorEntry): void {
-    this.errors.push(entry);
-    reportError(entry.error);
-  }
-
-  get all(): readonly SsrErrorEntry[] {
-    return this.errors;
-  }
-
-  get hasErrors(): boolean {
-    return this.errors.length > 0;
-  }
-
-  merge(other: SsrErrorContext): void {
-    for (const e of other.errors) this.add(e);
-  }
-}
+// ponytail: SsrErrorContext removed; use collectedErrors arrays directly.

@@ -11,7 +11,6 @@
  *   - Dynamic route expansion (ssg-dynamic.ts)
  *   - i18n locale expansion (ssg-i18n.ts)
  *   - DSD report assembly (ssg-report.ts)
- *   - PWA generation (ssg-pwa.ts)
  *   - Utility helpers (ssg-helpers.ts)
  */
 
@@ -20,17 +19,15 @@ import process from 'node:process';
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type {
   CompatibilityClassification,
-  HydrationHint,
   OpenElementPackageManifest,
-  RenderError,
   SsrAdmissionDecision,
 } from '@openelement/core';
-import type { SsgIslandDeclForReport, SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
+import type { HydrationHint, RenderError } from '@openelement/core';
+import type { SsgIslandDeclForReport, SsgRenderOptions } from '@openelement/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { expandDynamicRoutes } from './ssg-dynamic.ts';
 import { expandI18nLocales } from './ssg-i18n.ts';
 import { assembleDsdReport, writeDsdReport } from './ssg-report.ts';
-import { generatePwaFiles } from './ssg-pwa.ts';
 import { buildIsrManifestEntries, findHtmlFiles, type PageDiagnostic } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');
@@ -285,12 +282,6 @@ export async function ssgRender(
 
   injectDsdPolyfill(outputDir);
   log.info('DSD polyfill injected');
-
-  // ── PWA files ──────────────────────────────────────────────
-  const pwa = options.pwa;
-  if (pwa) {
-    generatePwaFiles(pwa, basePath, outputDir, routeInfo);
-  }
 
   // ── Sitemap (via ctx) ──────────────────────────────────────
   await evidence.onPrintBuildManifest?.({

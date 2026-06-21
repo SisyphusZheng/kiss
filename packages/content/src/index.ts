@@ -10,7 +10,7 @@
 
 import type { Plugin, ViteDevServer } from 'vite';
 import type { OpenElementContentOptions } from './types.ts';
-import type { OpenElementBuildContextLike } from '@openelement/protocol/build-types';
+import type { OpenElementBuildContextLike } from '@openelement/core';
 import { loadBlogData, writeBlogDataModule } from './blog/blog-data.ts';
 import { scanNavData } from './nav/scanner.ts';
 import { writeNavModule } from './nav/writer.ts';

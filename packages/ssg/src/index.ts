@@ -24,7 +24,7 @@ export type {
   SsgIslandDeclForReport,
   SsgPageInput,
   SsgRenderOptions,
-} from '@openelement/protocol/ssg-contracts';
+} from './ssg-contracts.ts';
 export { resolveDynamicRoutePath, ssgRender } from './ssg-render.ts';
 export type { SsgPageOutput, SsgRenderEvidence, SsrBundle } from './ssg-render.ts';
 export {
@@ -61,7 +61,7 @@ export {
 
 export { generateRouteTypes } from './route-type-generator.ts';
 
-export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
+export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 export type {
   ApiRouteDecl,
   AppShellDecl,
@@ -79,7 +79,7 @@ export type {
   ResolvedAppShell,
   RouteDecl,
   SsrAdmissionPlan,
-} from './entry-descriptor.ts';
+} from './routes.ts';
 
 export { generateHonoEntryCode, renderEntry } from './entry-renderer.ts';
 export type { HonoEntryOptions } from './entry-renderer.ts';

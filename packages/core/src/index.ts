@@ -9,7 +9,6 @@
  *
  * Rendering: DSD (Declarative Shadow DOM) string concatenation
  * Islands: Custom Element registration + prop deserialization
- * Adapter: createAdapterRegistry() + default registry access
  *
  * Build orchestration (Vite plugins) lives in @openelement/adapter-vite.
  * For the unified openElement() entry, use @openelement/app/vite instead.
@@ -22,8 +21,10 @@ export type {
   AppShellDefinition,
   FrameworkOptions,
   LayoutsConfig,
+  OpenElementBuildContextLike,
   OpenElementMiddleware,
   OpenElementMiddlewareContext,
+  OpenElementPluginMeta,
   OpenElementRenderer,
   RouteEntry,
   SpecialFileType,
@@ -31,25 +32,23 @@ export type {
 } from './schemas.js';
 
 export {
-  BuildError,
   ERROR_PREFIX,
   ErrorCode,
-  IslandRenderError,
-  NavigationError,
   OpenElementError,
   PropValidationError,
   RenderError,
   reportError,
   setErrorTelemetryHook,
-  SsrErrorContext,
   SsrRenderError,
 } from './errors.js';
-export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook, SsrErrorEntry } from './errors.js';
+export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from './errors.js';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './html-escape.js';
 export type { OpenElementApiContext } from './schemas.js';
 export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
 export type {
+  CacheAdapter,
+  CacheEntry,
   IsrCache,
   IsrCacheEntry,
   IsrCacheResult,
@@ -78,11 +77,6 @@ export type {
   RenderDsdStreamOptions,
 } from './render-dsd-stream.js';
 export { camelToKebab, serializeAttrs } from './render-ir.js';
-export {
-  type AdapterRegistry,
-  createAdapterRegistry,
-  getDefaultRegistry,
-} from './adapter-registry.js';
 export type {
   ComponentLayer,
   HydrateEventDescriptor,
@@ -147,7 +141,7 @@ export {
   isSignalLike,
   type SignalLike,
   unwrapSignalLike,
-} from './signal-like.js';
+} from '@openelement/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
 export { createLogger, OpenElementLogger } from './logger.js';
 /** @internal — use @openelement/core/security subpath */
@@ -164,7 +158,9 @@ export {
 export { transformIslandSource } from './island-transform.js';
 export type { IslandTransformOptions, IslandTransformResult } from './island-transform.js';
 
-// v0.23: Build-time shared types live in @openelement/protocol/build-types.
+// Data adapters
+export { MemoryDataAdapter } from './data.js';
+export type { Action, ActionContext, DataAdapter, Loader, LoaderContext } from './data.js';
 
 // WC Package Protocol (v0.17+)
 export {
@@ -202,6 +198,3 @@ export {
   syncStaticPropsFromAttributes,
   unwrap,
 } from './prop.js';
-// Prop types moved to @openelement/element
-export { MemoryDataAdapter } from '@openelement/protocol/data';
-export type { DataAdapter } from '@openelement/protocol/data';

@@ -7,7 +7,7 @@
  */
 
 import type { Plugin } from 'vite';
-import { transformIslandSource } from '@openelement/core/island-transform';
+import { transformIslandSource } from '@openelement/core';
 
 /** Vite plugin that injects `__island` and `__tagName` markers into island components */
 export function islandTransformPlugin(islandsDir: string): Plugin {

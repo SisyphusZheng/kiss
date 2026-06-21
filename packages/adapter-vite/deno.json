@@ -8,7 +8,6 @@
     "./nitro-mount": "./src/nitro-mount.ts",
     "./plugin": "./src/plugin.ts",
     "./subpath-resolver": "./src/subpath-resolver.ts",
-    "./optional-package-stubs": "./src/optional-package-stubs.ts",
     "./plugin-mdx": "./src/plugin-mdx.ts",
     "./cli/build": "./src/cli/build.ts",
     "./cli/build-client": "./src/cli/build-client.ts",
@@ -16,9 +15,6 @@
   },
   "imports": {
     "@mdx-js/rollup": "npm:@mdx-js/rollup@^3.1.1",
-    "typescript": "npm:typescript@^5.9.0",
-    "esbuild": "npm:esbuild@^0.25",
-    "hono": "npm:hono@^4.12",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3",
     "vite": "npm:vite@8.0.10"
   },

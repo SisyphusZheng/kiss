@@ -1,11 +1,8 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { createAlienEngine } from '../src/alien-engine.ts';
 import { createPreactEngine } from '../src/preact-engine.ts';
 import type { SignalEngine } from '../src/types.ts';
-import { computed, effect, signal } from 'alien-signals';
 
 const engines: Array<[string, () => SignalEngine]> = [
-  ['alien', () => createAlienEngine({ signal, computed, effect })],
   ['preact', createPreactEngine],
 ];
 

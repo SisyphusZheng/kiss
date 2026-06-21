@@ -6,7 +6,7 @@
  */
 
 import type { HydrationStrategy } from '@openelement/core';
-import type { ClientIslandEntry } from '@openelement/protocol/ssg-contracts';
+import type { ClientIslandEntry } from '@openelement/ssg';
 
 const CUSTOM_ELEMENT_NAME_RE = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/;
 const UNSAFE_IMPORT_PROTOCOL_RE = /^(?:javascript|data|vbscript|node):/i;

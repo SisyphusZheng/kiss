@@ -116,17 +116,14 @@ export function generateWorkspaceAliases(workspaceRoot: string): AliasEntry[] {
         replacement: resolve(memberDir, sourcePath as string),
       });
     }
-    // Parent alias last - use directory path to avoid ENOTDIR.
-    // When the "." export points to a file (e.g. src/index.ts),
-    // Rolldown resolves subpath imports like @openelement/ui/open-callout
-    // as index.ts/open-callout -> ENOTDIR. Pointing to the parent
-    // directory instead lets Vite resolve subpaths correctly.
+    // Parent alias last. Subpath aliases above already handle every exported
+    // subpath, so a direct import of the package name resolves to the "./"
+    // export entry without falling through to directory-index heuristics.
     if (exports['.']) {
-      let replacement = resolve(memberDir, exports['.'] as string);
-      if (replacement.match(/\.(ts|js|tsx|jsx)$/)) {
-        replacement = resolve(replacement, '..');
-      }
-      aliases.push({ find: name, replacement });
+      aliases.push({
+        find: name,
+        replacement: resolve(memberDir, exports['.'] as string),
+      });
     }
   }
   return aliases;

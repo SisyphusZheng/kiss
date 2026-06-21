@@ -9,7 +9,7 @@ import { assertEquals, assertExists, assertRejects } from 'jsr:@std/assert@^1.0.
 import { join } from 'node:path';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolveDynamicRoutePath } from '../src/ssg-helpers.ts';
-import type { SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
+import type { SsgRenderOptions } from '@openelement/ssg';
 import type { PageDiagnostic } from '../src/ssg-helpers.ts';
 
 // ─── expandDynamicRoutes ───────────────────────────────────────

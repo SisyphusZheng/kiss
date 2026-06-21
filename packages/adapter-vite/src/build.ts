@@ -11,7 +11,8 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
-import type { ComponentLayer, FrameworkOptions, HydrationStrategy } from '@openelement/core';
+import type { ComponentLayer, HydrationStrategy } from '@openelement/core';
+import type { FrameworkOptions } from '@openelement/core';
 import type {
   OpenElementBuildContext,
   Phase1Token,
@@ -107,7 +108,6 @@ export function buildPlugin(
         ctx.phase3.componentsDir = options.componentsDir || 'app/components';
         ctx.phase3.middleware = options.middleware || null;
         ctx.phase3.html = options.html || null;
-        ctx.phase3.pwa = options.pwa || null;
         ctx.phase3.upgradeStrategy = options.island?.upgradeStrategy || 'idle';
         ctx.phase3.viewTransition = options.viewTransition ?? true;
         ctx.phase3.speculation = options.speculation ?? null;

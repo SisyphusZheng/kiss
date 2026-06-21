@@ -7,8 +7,9 @@
 
 import { join } from 'node:path';
 import { readdirSync } from 'node:fs';
-import type { HydrationHint, IsrManifestEntry, RenderError } from '@openelement/core';
-import { createIsrCacheKey } from '@openelement/core';
+import type { HydrationHint, RenderError } from '@openelement/core';
+import type { IsrManifestEntry } from '@openelement/core';
+import { createIsrCacheKey } from '@openelement/core/isr';
 
 // ─── Path / URL helpers ────────────────────────────────────────
 

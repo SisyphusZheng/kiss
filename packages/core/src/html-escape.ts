@@ -56,7 +56,7 @@ export function escapeAttrValue(value: unknown): string {
 /**
  * Wrap rendered HTML in a full HTML document.
  * Adds DOCTYPE, head (title, meta, preload), and body.
- * Supports CSP nonce and dev mode scripts.
+ * Supports CSP nonce and dev scripts (e.g. Vite client, route module registration).
  */
 export function wrapInDocument(
   html: string,
@@ -69,8 +69,8 @@ export function wrapInDocument(
       description?: string;
       tags?: Array<Record<string, string | number | boolean>>;
     };
-    devMode?: boolean;
-    routeModulePath?: string;
+    /** Raw HTML script tags to inject after rendered HTML (e.g. Vite client, route module registration). */
+    devScripts?: string;
     headExtras?: string;
     /** Raw route-local head fragments from explicit dangerous page metadata. */
     dangerouslyHeadFragments?: string[];
@@ -85,8 +85,7 @@ export function wrapInDocument(
     lang = 'en',
     clientScript = '',
     meta,
-    devMode = false,
-    routeModulePath,
+    devScripts = '',
     headExtras = '',
     dangerouslyHeadFragments = [],
     allowHeadExtrasScripts = false,
@@ -98,8 +97,6 @@ export function wrapInDocument(
   if (cspNonce && !validNonce) {
     log.warn(`Invalid CSP nonce format: "${cspNonce}". Nonce should be a base64-encoded value.`);
   }
-  const nonceAttr = validNonce ? ` nonce="${validNonce}"` : '';
-
   // v0.14.8: C-02 fix - Runtime enforcement for headExtras.
   // If headExtras contains <script> tags and allowHeadExtrasScripts is false,
   // strip them to prevent XSS. Developer should use inject.scripts for safe injection.
@@ -161,18 +158,6 @@ export function wrapInDocument(
   const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : '';
   const dangerousHeadBlock = dangerouslyHeadFragments.length > 0
     ? '\n  ' + dangerouslyHeadFragments.join('\n  ')
-    : '';
-
-  const devScripts = devMode
-    ? `
-  <script type="module" src="/@vite/client"${nonceAttr}></script>
-  ${
-      routeModulePath
-        ? `<script type="module"${nonceAttr}>
-  import '${routeModulePath}';
-</script>`
-        : ''
-    }`
     : '';
 
   const safeTitle = escapeHtml(title);

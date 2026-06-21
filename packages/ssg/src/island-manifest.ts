@@ -7,7 +7,7 @@
 
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { HydrationStrategy } from '@openelement/core';
+import type { ComponentLayer, HydrationStrategy } from '@openelement/core';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */
@@ -128,4 +128,3 @@ export function writeIslandManifests(outputDir: string, manifests: PageIslandMan
 }
 
 // stableHash moved to ssg-helpers.ts — imported above
-import type { ComponentLayer } from '@openelement/core';

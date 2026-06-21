@@ -19,7 +19,7 @@ deno task dev
 ## 产品矩阵
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Elements + UI + Framework
 ```
 
 | 产品      | Surface                                   | 角色                                                              |
@@ -27,13 +27,12 @@ openElement = Elements + UI + Framework + Protocols
 | Elements  | `@openelement/element`, `OpenElement`     | 原生 Web Components authoring layer，对标 Lit 和 FAST。           |
 | UI        | `@openelement/ui`                         | 基于 Elements 模型的一方 `open-*` 组件库。                        |
 | Framework | `@openelement/app`, `@openelement/create` | Pages、layouts、islands、API routes、Vite + Nitro build/runtime。 |
-| Protocols | `@openelement/protocol`                   | Runtime-free replacement boundaries 和 conformance contracts。    |
 
-支持包包括 `@openelement/core`、`@openelement/adapter-vite`、`@openelement/signal`、`@openelement/router`、`@openelement/content` 和 `@openelement/ssg`。它们支撑四个产品，但不是独立的一线产品。
+支持包包括 `@openelement/core`、`@openelement/adapter-vite`、`@openelement/signal`、`@openelement/router`、`@openelement/content` 和 `@openelement/ssg`。它们支撑三个产品，但不是独立的一线产品。
 
-v0.40.x 当前 workspace 收敛为 11 个包。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters，以及 standalone runtime/style-sheet/i18n 包已退出当前包图；`@openelement/ssg` 保留为 adapter-agnostic SSG engine。`@preact/signals-core` 是默认 signal engine，`alien-signals` 作为可选 engine 保留。
+v0.40.x 当前 workspace 收敛为 10 个包。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters，standalone runtime/style-sheet/i18n 包，以及 `@openelement/protocol` 契约包已退出当前包图；`@openelement/ssg` 保留为 adapter-agnostic SSG engine。`@preact/signals-core` 是唯一支持的 signal engine。
 
-v1.0 目标是稳定的四产品平台，冻结 Elements、UI、Framework、Protocols 的公开契约。
+v1.0 目标是稳定的三产品平台，冻结 Elements、UI、Framework 的公开契约。
 
 ## 示例
 

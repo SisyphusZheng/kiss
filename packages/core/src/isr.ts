@@ -12,6 +12,23 @@
  * (Cloudflare Workers KV, Deno KV) are v0.22 scope.
  */
 
+/** Generic cache entry metadata shared by ISR and runtime adapters. */
+export interface CacheEntry<T = unknown> {
+  value: T;
+  createdAt: number;
+  revalidate?: number;
+  tags?: readonly string[];
+}
+
+/** Minimal cache protocol for replacement-compatible runtime adapters. */
+export interface CacheAdapter<T = unknown> {
+  name: string;
+  get(key: string): Promise<CacheEntry<T> | undefined>;
+  set(key: string, entry: CacheEntry<T>): Promise<void>;
+  delete?(key: string): Promise<boolean>;
+  purgeTag?(tag: string): Promise<number>;
+}
+
 export type IsrCacheState = 'miss' | 'hit' | 'stale' | 'error';
 
 export interface IsrCacheEntry {
@@ -56,12 +73,7 @@ export function createIsrCacheKey(
 }
 
 /** ISR route record written to isr-manifest.json at build time. */
-export interface IsrManifestEntry {
-  path: string;
-  revalidate: number;
-  cacheKey: string;
-  params: Record<string, string>;
-}
+export type { IsrManifestEntry } from './schemas.js';
 
 export class MemoryIsrCache implements IsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();

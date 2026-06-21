@@ -1,4 +1,4 @@
-import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/protocol/runtime';
+import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/core/runtime';
 
 export interface NitroLikeRequestEvent<
   Env extends Record<string, unknown> = Record<string, unknown>,

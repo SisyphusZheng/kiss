@@ -137,12 +137,6 @@ export default defineConfig({
       ssr: {
         noExternal: ['@openelement/ui'],
       },
-      pwa: {
-        name: 'openElement Framework',
-        shortName: 'openElement',
-        themeColor: '#f3eaff',
-        backgroundColor: '#fbf7ff',
-      },
       viewTransition: true,
       speculation: true,
       inject: {

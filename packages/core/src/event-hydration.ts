@@ -8,7 +8,7 @@
  */
 
 import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
-import { isSignalLike } from './signal-like.ts';
+import { isSignalLike } from '@openelement/signal';
 import { isComponentCtor, isVNode, type RenderFn, type VNode } from './vnode.ts';
 
 const EVENT_PROP_RE = /^on[A-Z]/;

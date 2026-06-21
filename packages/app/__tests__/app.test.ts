@@ -34,10 +34,9 @@ Deno.test('openElement() minimal includes open:core, open:build, open:virtual-en
   assertArrayIncludes(names, ['open:virtual-entry']);
 });
 
-Deno.test('openElement() minimal includes dev server and devtools', () => {
+Deno.test('openElement() minimal includes dev server', () => {
   const names = openElement().map((p) => p.name);
   assertArrayIncludes(names, ['@hono/vite-dev-server']);
-  assertArrayIncludes(names, ['open:devtools']);
 });
 
 // ─── Content plugin integration ────────────────────────────────
@@ -115,10 +114,5 @@ Deno.test('openElement() accepts packageIslands config', () => {
 
 Deno.test('openElement() accepts middleware config', () => {
   const plugins = openElement({ middleware: { corsOrigin: '*' } });
-  assertExists(plugins);
-});
-
-Deno.test('openElement() accepts pwa config', () => {
-  const plugins = openElement({ pwa: { name: 'Test', shortName: 'T' } });
   assertExists(plugins);
 });

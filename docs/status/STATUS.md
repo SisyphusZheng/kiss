@@ -40,8 +40,7 @@ Public package names are singular: `@openelement/element`,
 and www active code enforce 0 explicit `any` through the `type-safety:check`
 gate.
 
-The default signal engine is `@preact/signals-core`. `alien-signals` remains
-available as an optional engine through `@openelement/signal/alien-engine`.
+The signal engine is `@preact/signals-core`.
 
 ADR-0101 is the governance boundary for this line. ADR-0105 approves the
 v0.40.4 breaking cleanup train consolidated into the v0.40.4 release.
@@ -61,6 +60,81 @@ v0.41.0 repository cleanup (2026-06-21, 1068 tests / 0 failed):
 
 - Round 1: Deleted dead files (validators, file-isr-cache, engine, content barrels, ~530 lines). Removed dead exports (LogLevel, renderSequential/Parallel). Shrink/stdlib fixes (hoisted conditionKeys, unified renderSsrError, extname→path.extname, warnOnce helper).
 - Round 2: Deleted createDefaultEngine, _textEncoder, data.ts barrel, use-loader-data.ts barrel, hasControlCharacter, joinUrlPath, section-matter dep, stale file-isr-cache export. Inlined renderEndTimeFallback/now/escapeRoutePath. Converted codeForRenderError to lookup table. Merged switch fallthrough. Annotated speculative errors.
+- Round 3: Deleted router dead files (client-router, page-loader, ssr-data-stubs, define-routes, pattern-translate, locale-path, ~500 lines). Removed marked dep from router. Converted cem-compat/entry-descriptor/route-scanner switches to lookup tables. Extracted safeNow() for performance.now() fallback. Unified 404 rendering blocks. (useActionData/useLoaderData preserved — used by www.)
+
+## v0.41.0-alpha.1 Architecture Audit
+
+### 🔴 CRITICAL — ✅ Resolved (Phase 1, 2026-06-21)
+
+- ~~Broken `protocol/validators` subpath~~ → removed from `protocol/deno.json`
+- ~~Vite string leaked into `core`~~ → `wrapInDocument()` now accepts generic `devScripts`; `/@vite/client` moved to engine layer
+- ~~Protocol types imported from `core`, not `protocol`~~ → `HydrationStrategy`/`ComponentLayer`/`HydrationHint`/`RenderError` now routed via `@openelement/protocol/renderer` (8+ locations)
+
+### 🟠 HIGH — ✅ Resolved (Phase 2, 2026-06-21)
+
+- ~~Core types missing from protocol~~ → created `protocol/src/build-types.ts` with `FrameworkOptions`/`RouteEntry`/`OpenElementPackageManifest`/`IsrManifestEntry`/`CompatibilityClassification`; core re-exports from protocol
+- ~~Deep subpath bypass: `createLogger`~~ → added `protocol/logger`, 23 files updated
+- ~~Deep subpath bypass: `formatError`~~ → added `protocol/errors`, 18 files updated
+
+### 🟡 MEDIUM — ✅ Annotated (Phase 3, 2026-06-21)
+
+- `wrapInDocument` params cleaned via Phase 1
+- `app/vite.ts` + `app/i18n-plugin.ts` annotated
+- `content/deno.json` annotated
+- Unused protocol surface annotated with `ponytail:` comments
+
+### ✅ Verification (2026-06-21)
+
+- `core`/`element`/`ui`/`signal` — 66 files, zero violations
+- `router` + `app` runtime — 7 files clean, 2 build-time (acceptable)
+- `protocol` — zero Vite/Nitro/signal-engine imports
+
+---
+
+## v0.41.0-alpha.1 — Remaining Tasks
+
+Full byte-level audit (66 core + 7 app + 58 engine + 30 tools = 161 files) complete. Open items below.
+
+### 🟠 Engine Protocol Import Migration (14 locations, ~30 lines)
+
+Types that exist in `protocol/build-types` but are still imported from `@openelement/core`:
+
+| Package        | Files                                                                                                                                                          | Types still from core                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `adapter-vite` | `build.ts`, `plugin.ts`, `head-injection.ts`, `build-pipeline.ts`, `build-context.ts`, `cli/build-ssg.ts`                                                      | `FrameworkOptions`, `OpenElementPackageManifest`, `RouteEntry`, `CompatibilityClassification` |
+| `ssg`          | `entry-renderer.ts`, `ssg-helpers.ts`, `ssg-render.ts`, `route-type-generator.ts`, `entry-descriptor.ts`, `ssg-report.ts`, `route-scanner.ts`, `cem-compat.ts` | Same + `IsrManifestEntry`                                                                     |
+
+### 🟡 Protocol Coverage Gaps (6 types + 5 runtime fns)
+
+Types defined ONLY in `core` that engine packages need — should be added to protocol:
+
+| Type                          | Defined In               | Needed By                                      |
+| ----------------------------- | ------------------------ | ---------------------------------------------- |
+| `SsrAdmissionDecision`        | `core/render-schemas.ts` | `ssg/entry-descriptor.ts`, `ssg/ssg-render.ts` |
+| `CemCompatibilityReport`      | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `DsdBuildReport`              | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `DsdHydrationStrategySummary` | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `ManifestDecision`            | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `SpecialFileType`             | `core/schemas.ts`        | `ssg/route-scanner.ts`                         |
+
+Runtime functions that need protocol re-exports:
+
+| Function                | From                    | Used By                                      |
+| ----------------------- | ----------------------- | -------------------------------------------- |
+| `escapeAttr`            | `core/html-escape`      | `adapter-vite/head-injection`, `ssg/ssg-pwa` |
+| `isValidTagName`        | `core/tag-utils`        | `ssg/cem-compat`                             |
+| `createIsrCacheKey`     | `core/isr`              | `ssg/ssg-helpers`                            |
+| `transformIslandSource` | `core/island-transform` | `adapter-vite/island-transform`              |
+| `StyleSheet`            | `core/style-sheet`      | `ssg/ssr-polyfills`                          |
+
+### 🟢 Dead Dependencies & Tools (3 deps + 4 import-map + 2 tools)
+
+| Category                | Detail                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Dead npm deps           | `hono` in `adapter-vite/deno.json`, `hono` in `ssg/deno.json`, `typescript` in `adapter-vite/deno.json`                  |
+| Stale import-map (root) | `flexsearch`, `sanitize-html`, `@types/sanitize-html`, `@types/node` — zero .ts imports                                  |
+| Broken tool             | `tools/verify-package-configs.ts` — stale `deno.land` URL + references deleted `i18n` package                            |
+| API leak                | `adapter-vite/build-pipeline.ts` re-exports `FrameworkOptions` from `@openelement/core` — should re-export from protocol |
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
 
@@ -409,9 +483,8 @@ The workspace package count is now 11.
 - **Current heavy island target.** Preact is the only planned heavy-framework
   island adapter proof for the pre-1.0 path; Vue, React, Svelte, and generic
   heavy-island expansion are frozen, and Web Awesome is out of scope.
-- **Signal engine default.** `@preact/signals-core` is the default engine
-  (since v0.40.4). `alien-signals` remains available as an optional engine
-  via `@openelement/signal/alien-engine` and runtime `setSignalEngine()`.
+- **Signal engine.** `@preact/signals-core` is the only supported engine
+  (since v0.40.4).
 - **No DOM diff.** Signal writes trigger scoped rerender behavior; complex
   subtrees stay in Islands.
 - **Package graph gate.** `graph:check` verifies zero cycles, unified versions,

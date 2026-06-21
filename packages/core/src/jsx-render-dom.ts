@@ -10,7 +10,7 @@
 
 import { isComponentCtor, isComponentFn, isVNode, type RenderFn, type VNode } from './vnode.ts';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
-import { isSignalLike, unwrapSignalLike } from './signal-like.ts';
+import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 import { eventTypeFromProp } from './event-hydration.ts';
 import { trustRenderHtml } from './security.ts';
 import { effect } from '@openelement/signal';

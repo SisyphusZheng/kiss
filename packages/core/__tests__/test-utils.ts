@@ -16,8 +16,8 @@ export { isComponentCtor, isComponentFn, isVNode } from '../src/vnode.ts';
 export type { ComponentCtor, ComponentFn, VNode } from '../src/vnode.ts';
 
 // ── Signals ───────────────────────────────────────────────────────
-export { isSignalLike, unwrapSignalLike } from '../src/signal-like.ts';
-export type { SignalLike } from '../src/signal-like.ts';
+export { isSignalLike, unwrapSignalLike } from '@openelement/signal';
+export type { SignalLike } from '@openelement/signal';
 
 // ── Island / SSR ──────────────────────────────────────────────────
 export { bindSsrProps, defineIsland, getSsrProps } from '../src/island.ts';

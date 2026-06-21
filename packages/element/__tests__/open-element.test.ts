@@ -32,7 +32,7 @@ import { ErrorBoundary } from '@openelement/element';
 import { jsx } from '@openelement/core/jsx-runtime';
 import type { VNode } from '@openelement/core';
 import { signal } from '@openelement/signal';
-import type { Signal } from '@openelement/protocol/signals';
+import type { Signal } from '@openelement/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';
 
 const hasDOM = typeof customElements !== 'undefined';

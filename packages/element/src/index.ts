@@ -18,7 +18,13 @@ export type { ElementDefinition } from './types.js';
 
 // ─── Prop types ──────────────────────────────────────────
 
-export type { PropDecl, PropDeclFull, PropDeclShorthand, PropsFrom, PropType } from './prop.js';
+export type {
+  PropDecl,
+  PropDeclFull,
+  PropDeclShorthand,
+  PropsFrom,
+  PropType,
+} from '@openelement/core/prop';
 export {
   disposeStaticProps,
   handleStaticPropAttributeChange,
@@ -27,7 +33,7 @@ export {
   registerStaticObservedAttributes,
   syncStaticPropsFromAttributes,
   unwrap,
-} from './prop.js';
+} from '@openelement/core/prop';
 
 // ─── JSX runtime (re-export from core) ───────────────────
 
@@ -47,12 +53,9 @@ export type { Context } from '@openelement/core';
 // ─── Error types (re-export from core) ───────────────────
 
 export type {
-  BuildError,
   ErrorCode,
   ErrorPhase,
   ErrorSeverity,
-  IslandRenderError,
-  NavigationError,
   OpenElementError,
   PropValidationError,
   RenderError,
@@ -64,7 +67,7 @@ export type {
 export { isSignalLike } from '@openelement/core';
 export type { SignalLike } from '@openelement/core';
 export { computed, effect, signal } from '@openelement/signal';
-export type { Signal } from '@openelement/protocol/signals';
+export type { Signal } from '@openelement/signal';
 
 // ─── HTML utilities (re-export from core) ────────────────
 

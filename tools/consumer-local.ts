@@ -106,29 +106,6 @@ denoJson.imports['@openelement/core/jsx-runtime'] = pathToFileURL(
 denoJson.imports['@openelement/core/jsx-dev-runtime'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts'),
 ).href;
-denoJson.imports['@openelement/protocol'] = pathToFileURL(
-  join(repoRoot, 'packages', 'protocol', 'src', 'index.ts'),
-).href;
-for (
-  const subpath of [
-    'build-types',
-    'cache',
-    'components',
-    'conformance',
-    'data',
-    'i18n',
-    'islands',
-    'renderer',
-    'routes',
-    'runtime',
-    'signals',
-    'validators',
-  ]
-) {
-  denoJson.imports[`@openelement/protocol/${subpath}`] = pathToFileURL(
-    join(repoRoot, 'packages', 'protocol', 'src', `${subpath}.ts`),
-  ).href;
-}
 denoJson.imports['@openelement/adapter-vite/build-context'] = pathToFileURL(
   join(repoRoot, 'packages', 'adapter-vite', 'src', 'build-context.ts'),
 ).href;
@@ -147,6 +124,9 @@ denoJson.imports['@openelement/element'] = pathToFileURL(
 denoJson.imports['@openelement/core/style-sheet'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts'),
 ).href;
+denoJson.imports['@openelement/core/runtime'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'runtime.ts'),
+).href;
 denoJson.imports['@openelement/content'] = pathToFileURL(
   join(repoRoot, 'packages', 'content', 'src', 'index.ts'),
 ).href;
@@ -162,10 +142,10 @@ denoJson.imports['@openelement/ui/'] = pathToFileURL(
 // Router is a transitive dependency of @openelement/app; local source overrides
 // must include it so the generated starter import map resolves the SSR bundle.
 denoJson.imports['@openelement/router'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src', 'index.ts'),
+  join(repoRoot, 'packages', 'router', 'src', 'data-context.ts'),
 ).href;
-denoJson.imports['@openelement/router/'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src') + '/',
+denoJson.imports['@openelement/router/i18n'] = pathToFileURL(
+  join(repoRoot, 'packages', 'router', 'src', 'i18n.ts'),
 ).href;
 denoJson.imports['lit'] = 'npm:lit@^3.2.0';
 denoJson.imports['vite'] = 'npm:vite@8.0.10';
@@ -229,29 +209,6 @@ const aliases = [
     find: '@openelement/core',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'index.ts')),
   },
-  ...[
-    'build-types',
-    'cache',
-    'components',
-    'conformance',
-    'data',
-    'i18n',
-    'islands',
-    'renderer',
-    'routes',
-    'runtime',
-    'signals',
-    'validators',
-  ].map((subpath) => ({
-    find: `@openelement/protocol/${subpath}`,
-    replacement: vitePath(
-      join(repoRoot, 'packages', 'protocol', 'src', `${subpath}.ts`),
-    ),
-  })),
-  {
-    find: '@openelement/protocol',
-    replacement: vitePath(join(repoRoot, 'packages', 'protocol', 'src', 'index.ts')),
-  },
   {
     find: '@openelement/signal/framework',
     replacement: vitePath(join(signalsSrc, 'framework.ts')),
@@ -267,6 +224,10 @@ const aliases = [
   {
     find: '@openelement/core/style-sheet',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts')),
+  },
+  {
+    find: '@openelement/core/runtime',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'runtime.ts')),
   },
   {
     find: '@openelement/ui/open-props-tokens',
@@ -310,12 +271,12 @@ const aliases = [
     replacement: vitePath(uiSrc),
   },
   {
-    find: '@openelement/router/',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src') + '/'),
+    find: '@openelement/router/i18n',
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'i18n.ts')),
   },
   {
     find: '@openelement/router',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'index.ts')),
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
   },
   {
     find: '@openelement/app/vite',

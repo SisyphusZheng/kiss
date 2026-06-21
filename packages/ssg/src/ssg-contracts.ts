@@ -1,14 +1,14 @@
 /**
- * SSG engine protocol contracts.
+ * SSG engine contracts.
  *
  * Runtime-free data contracts consumed by the SSG engine and build adapters.
  * These types keep the SSG engine adapter-agnostic: the engine depends on
- * protocol and core, never on Vite or adapter-vite.
+ * core and router, never on Vite or adapter-vite.
  *
- * This module is zero-dependency — it imports nothing outside protocol itself.
+ * This module is zero-dependency — it imports nothing outside SSG itself.
  */
 
-import type { HydrationStrategy } from './renderer.ts';
+import type { HydrationStrategy } from '@openelement/core';
 
 // ─── Concurrency types ───────────────────────────────────────
 
@@ -59,12 +59,6 @@ export interface SsgRenderOptions {
     csp?: { policy?: string; reportOnly?: boolean; nonce?: boolean };
   };
   upgradeStrategy?: string;
-  pwa?: {
-    name?: string;
-    shortName?: string;
-    themeColor?: string;
-    backgroundColor?: string;
-  };
   viewTransition?: boolean;
   speculation?: boolean | Record<string, unknown>;
   islandTagNames?: string[];

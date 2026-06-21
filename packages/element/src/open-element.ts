@@ -50,15 +50,15 @@
 import type { ReactiveHost } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import type { StyleSheetLike } from '@openelement/core/style-sheet';
-import { disposeProps, handlePropAttributeChange, initializeProps } from './prop.js';
+import { disposeProps, handlePropAttributeChange, initializeProps } from '@openelement/core/prop';
 import {
   disposeStaticProps,
   handleStaticPropAttributeChange,
   initializeStaticProps,
   syncStaticPropsFromAttributes,
-} from './prop.js';
+} from '@openelement/core/prop';
 import { type VNode } from '@openelement/core';
-import type { Signal } from '@openelement/protocol/signals';
+import type { Signal } from '@openelement/signal';
 import { signal } from '@openelement/signal';
 import { createLogger } from '@openelement/core/logger';
 import {

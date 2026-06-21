@@ -8,20 +8,10 @@
  * @see ADR-0094: Core Type Consolidation — Eliminate types.ts
  */
 
-// --- Compatibility tier -------------------------------------------
+// --- Compatibility tier — sourced from protocol --------------------
 
-export type CompatibilityTier = 'ssr-capable' | 'client-only' | 'rejected' | 'experimental-dom';
-
-export interface CompatibilityClassification {
-  tagName: string;
-  tier: CompatibilityTier;
-  reason: string;
-  source: 'local' | 'package' | 'nested';
-  modulePath?: string;
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: string;
-}
+import type { CompatibilityClassification, CompatibilityTier } from './schemas.js';
+export type { CompatibilityClassification, CompatibilityTier };
 
 export interface CemCompatibilityReport {
   totalClassified: number;

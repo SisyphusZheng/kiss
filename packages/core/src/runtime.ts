@@ -1,12 +1,12 @@
 /**
  * Runtime adapter protocol.
  *
- * This is the replacement boundary for Nitro, Workers, Node, Deno, or future
- * fetch-compatible runtimes. It preserves openElement semantics while leaving
+ * Replacement boundary for Nitro, Workers, Node, Deno, or future
+ * fetch-compatible runtimes. Preserves openElement semantics while leaving
  * concrete server engines outside this package.
  */
 
-import type { CacheAdapter } from './cache.ts';
+import type { CacheAdapter } from './isr.ts';
 
 export interface RuntimeContext<Env extends Record<string, unknown> = Record<string, unknown>> {
   env?: Env;

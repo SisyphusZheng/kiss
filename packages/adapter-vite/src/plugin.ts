@@ -8,12 +8,8 @@
  */
 
 import type { Alias, Plugin } from 'vite';
-import type {
-  FrameworkOptions,
-  HydrationStrategy,
-  OpenElementPackageManifest,
-  RouteEntry,
-} from '@openelement/core';
+import type { FrameworkOptions, OpenElementPackageManifest, RouteEntry } from '@openelement/core';
+import type { HydrationStrategy } from '@openelement/core';
 
 import { join } from 'node:path';
 import process from 'node:process';
@@ -26,11 +22,9 @@ import honoDevServer from '@hono/vite-dev-server';
 import { OpenElementBuildContext } from './build-context.js';
 import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.js';
 import { buildPlugin } from './build.js';
-import { devtoolsPlugin } from './devtools/index.js';
 import { generateHonoEntryCode } from '@openelement/ssg';
 import { buildHeadExtras } from './head-injection.js';
 import { islandTransformPlugin } from './island-transform.js';
-import { optionalPackageStubsPlugin } from './optional-package-stubs.js';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
   detectAndClassifyCemPackages,
@@ -66,6 +60,32 @@ function mergeAliasOptions(
   append(primary);
   append(fallback);
   return merged;
+}
+
+const OPTIONAL_PACKAGE_STUBS: Record<string, string> = {
+  '@openelement/content':
+    'export async function loadBlogData() { return { posts: [], basePath: "" }; }',
+  '@openelement/content/sitemap': 'export function generateSitemap() { return []; }',
+  '@openelement/app/i18n':
+    'export function loadI18nData() { return { locales: [], defaultLocale: "en" }; }',
+};
+
+export function optionalPackageStubsPlugin(): Plugin {
+  return {
+    name: 'open:optional-package-stubs',
+    enforce: 'pre',
+    async resolveId(id) {
+      if (!(id in OPTIONAL_PACKAGE_STUBS)) return;
+      const resolved = await this.resolve(id, undefined, { skipSelf: true });
+      if (resolved) return null;
+      return `\0open:optional-stub:${id}`;
+    },
+    load(id) {
+      const prefix = '\0open:optional-stub:';
+      if (!id.startsWith(prefix)) return;
+      return OPTIONAL_PACKAGE_STUBS[id.slice(prefix.length)];
+    },
+  };
 }
 
 /**
@@ -342,6 +362,5 @@ export function createOpenPlugin(
     devServerPlugin,
     islandTransformPlugin(resolvedOptions.islandsDir!),
     buildPlugin(resolvedOptions, ctx),
-    devtoolsPlugin(),
   ];
 }
