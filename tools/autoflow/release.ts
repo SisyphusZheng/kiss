@@ -282,66 +282,60 @@ export async function updateProjectConstants(version: string): Promise<void> {
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {
   const tag = releaseTag(version);
   const replacements: Array<[string, string, string]> = [
-    ['README.md', '`0.39.0` (`v0.39.0`', `\`${version}\` (\`${tag}\``],
-    ['README.md', '**0.39.0** (`v0.39.0`)', `**${version}** (\`${tag}\`)`],
-    ['README.md', '**v0.39.0**.', `**${tag}**.`],
-    ['README.zh.md', '`0.39.0`（`v0.39.0` release）', `\`${version}\`（\`${tag}\` release）`],
-    ['README.zh.md', '**0.39.0**（`v0.39.0`）', `**${version}**（\`${tag}\`）`],
-    ['README.zh.md', '**v0.39.0**。', `**${tag}**。`],
-    ['docs/current/VERSION_PLAN.md', '`v0.39.0`', `\`${tag}\``],
+    ['README.md', '`0.40.8` (`v0.40.8`', `\`${version}\` (\`${tag}\``],
+    ['README.md', '**0.40.8** (`v0.40.8`)', `**${version}** (\`${tag}\`)`],
+    ['README.md', '**v0.40.8**.', `**${tag}**.`],
+    ['README.zh.md', '当前包线：`0.40.8`（`v0.40.8`）', `当前包线：\`${version}\`（\`${tag}\`）`],
+    ['README.zh.md', '**0.40.8**（`v0.40.8`）', `**${version}**（\`${tag}\`）`],
+    ['README.zh.md', '**v0.40.8**。', `**${tag}**。`],
+    ['docs/current/VERSION_PLAN.md', 'v0.40.8 removed the legacy', `${tag} removed the legacy`],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `v0.39.0`, active execution line\n`v0.39.0`',
+      'package line `v0.40.8`, active execution line\n`v0.40.8`',
       `package line \`${tag}\`, active execution line\n\`${tag}\``,
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current package line: v0.39.0 Framework RC + Four-Product Matrix Reset.',
-      `Current package line: ${tag} Framework RC + Four-Product Matrix Reset.`,
+      'Current package line: v0.40.8 Cleanup-Train Patch;',
+      `Current package line: ${tag} Cleanup-Train Patch;`,
     ],
     [
       'docs/status/STATUS.md',
-      'package version `0.39.0`',
-      `package version \`${version}\``,
-    ],
-    [
-      'docs/status/STATUS.md',
-      '`0.39.0` is complete',
-      `\`${version}\` is complete`,
-    ],
-    [
-      'docs/status/STATUS.md',
-      'All 20 workspace packages are aligned to **0.39.0**',
-      `All 20 workspace packages are aligned to **${version}**`,
+      'Current Version Line: v0.40.8 Active',
+      `Current Version Line: ${tag} Active`,
     ],
     [
       'www/app/data/version.ts',
-      "export const OPENELEMENT_VERSION = 'v0.39.0';",
+      "export const OPENELEMENT_VERSION = 'v0.40.8';",
       `export const OPENELEMENT_VERSION = '${tag}';`,
     ],
     [
       'www/app/routes/index/index.tsx',
-      'Active execution: v0.39.0.',
-      `Active execution: ${tag}.`,
+      'Current public line: v0.40.8',
+      `Current public line: ${tag}`,
     ],
     [
       'www/app/routes/index/index.tsx',
-      'openElement 0.38.0 / v0.39.0 active',
-      `openElement 0.38.0 / ${tag} active`,
+      'Current v0.40.8 direction',
+      `Current ${tag} direction`,
     ],
     [
       'www/app/routes/guide/getting-started.tsx',
-      'active line v0.39.0.',
-      `active line ${tag}.`,
+      'active line is v0.40.8,',
+      `active line is ${tag},`,
     ],
   ];
 
   for (const [path, from, to] of replacements) {
     const text = await Deno.readTextFile(path);
-    if (!text.includes(from)) {
+    if (text.includes(from)) {
+      await Deno.writeTextFile(path, text.replace(from, to));
+    } else if (text.includes(to)) {
+      // Already at target - skip
+      continue;
+    } else {
       throw new Error(`${path} does not contain expected version anchor: ${from}`);
     }
-    await Deno.writeTextFile(path, text.replace(from, to));
   }
 }
 
