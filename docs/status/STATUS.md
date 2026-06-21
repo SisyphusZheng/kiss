@@ -43,34 +43,58 @@ v0.41.0 repository cleanup (2026-06-21, 930 tests / 0 failed):
 
 ## v0.41.0-alpha.1 Architecture Audit
 
-Resolved — all 🔴/🟠/🟡 items fixed in 3 phases (930 tests / 0 failed).
+### 🔴 CRITICAL — ✅ Resolved (Phase 1)
+- ~~Broken `protocol/validators` subpath~~ → removed from `protocol/deno.json`
+- ~~Vite string leaked into `core`~~ → `wrapInDocument()` now accepts generic `devScripts`; `/@vite/client` moved to engine layer
+- ~~Protocol types imported from `core`, not `protocol`~~ → `HydrationStrategy`/`ComponentLayer`/`HydrationHint`/`RenderError` now routed via `@openelement/protocol/renderer` (8+ locations)
 
-- Phase 1: Removed broken `validators` protocol subpath. Extracted Vite string from `core/html-escape.ts` (`devMode`→`devScripts`). Routed `HydrationStrategy`/`ComponentLayer`/`HydrationHint`/`RenderError` imports to `@openelement/protocol`.
-- Phase 2: Moved `FrameworkOptions`/`RouteEntry`/`OpenElementPackageManifest`/`IsrManifestEntry`/`CompatibilityClassification` to `protocol/src/build-types.ts`. Added `protocol/logger` (createLogger) and `protocol/errors` (formatError/OpenElementError) subpaths — updated 40+ engine-layer imports.
-- Phase 3: Annotated `app/i18n-plugin.ts` and `content/deno.json` with engine-layer comments. Marked unused protocol surface (`components`, `island-frameworks`, `conformance`).
+### 🟠 HIGH — ✅ Resolved (Phase 2)
+- ~~Core types missing from protocol~~ → created `protocol/src/build-types.ts` with `FrameworkOptions`/`RouteEntry`/`OpenElementPackageManifest`/`IsrManifestEntry`/`CompatibilityClassification`; core re-exports from protocol
+- ~~Deep subpath bypass: `createLogger`~~ → added `protocol/logger`, 23 files updated
+- ~~Deep subpath bypass: `formatError`~~ → added `protocol/errors`, 18 files updated
 
-### 🔴 CRITICAL — Resolved
+### 🟡 MEDIUM — ✅ Annotated (Phase 3)
+- `wrapInDocument` params cleaned via Phase 1
+- `app/vite.ts` + `app/i18n-plugin.ts` annotated
+- `content/deno.json` annotated
+- Unused protocol surface annotated with `ponytail:` comments
 
-- ~~Broken `protocol/validators` subpath~~ → entry removed from deno.json
-- ~~Vite string leaked into `core`~~ → `wrapInDocument()` now accepts generic `devScripts`
-- ~~Protocol types imported from core, not protocol~~ → all 8+ locations routed to `@openelement/protocol/renderer`
+### ✅ Verification
+- `core`/`element`/`ui`/`signal` — 66 files, zero violations
+- `router` + `app` runtime — 7 files clean, 2 build-time (acceptable)
+- `protocol` — zero Vite/Nitro/signal-engine imports
 
-### 🟠 HIGH — Resolved
+---
 
-- ~~Core types missing from protocol~~ → `protocol/src/build-types.ts` now owns `FrameworkOptions`, `RouteEntry`, etc.
-- ~~Deep subpath `createLogger` bypass~~ → 23 files now import from `@openelement/protocol/logger`
-- ~~Deep subpath `formatError` bypass~~ → 18 files now import from `@openelement/protocol/errors`
+## v0.41.0-alpha.1 — Remaining Tasks
 
-### 🟡 MEDIUM — Documented
+### 🟠 Engine Protocol Import Migration (14 locations)
 
-- `wrapInDocument` params cleaned via Phase 1 fix.
-- `app/vite.ts` + `app/i18n-plugin.ts` annotated.
-- `content/deno.json` annotated.
-- Unused protocol surface annotated.
+Types in `protocol/build-types` but still imported from `@openelement/core`:
 
-### ✅ Verified Clean
+| Package | Files | Types |
+|---------|-------|-------|
+| `adapter-vite` | `build.ts`, `plugin.ts`, `head-injection.ts`, `build-pipeline.ts`, `build-context.ts`, `cli/build-ssg.ts` | `FrameworkOptions`, `OpenElementPackageManifest`, `RouteEntry`, `CompatibilityClassification` |
+| `ssg` | `entry-renderer.ts`, `ssg-helpers.ts`, `ssg-render.ts`, `route-type-generator.ts`, `entry-descriptor.ts`, `ssg-report.ts`, `route-scanner.ts`, `cem-compat.ts` | Same + `IsrManifestEntry` |
 
-- `core`, `element`, `ui`, `signal`, `router` — zero `node:*`, zero `Deno.*`, zero framework/engine imports.
-- `app/` runtime entries — all pure.
-- `protocol/` — zero Vite/Nitro references.
-- `ssg/` — zero Nitro leakage.
+### 🟡 Protocol Coverage Gaps (6 types + 5 runtime fns)
+
+| Type missing from protocol | Defined In | Needed By |
+|------|-----------|-----------|
+| `SsrAdmissionDecision` | `core/render-schemas.ts` | `ssg/entry-descriptor.ts`, `ssg/ssg-render.ts` |
+| `CemCompatibilityReport` | `core/render-schemas.ts` | `ssg/ssg-report.ts` |
+| `DsdBuildReport` | `core/render-schemas.ts` | `ssg/ssg-report.ts` |
+| `DsdHydrationStrategySummary` | `core/render-schemas.ts` | `ssg/ssg-report.ts` |
+| `ManifestDecision` | `core/render-schemas.ts` | `ssg/ssg-report.ts` |
+| `SpecialFileType` | `core/schemas.ts` | `ssg/route-scanner.ts` |
+
+Runtime functions needing protocol re-exports: `escapeAttr`, `isValidTagName`, `createIsrCacheKey`, `transformIslandSource`, `StyleSheet`.
+
+### 🟢 Dead Dependencies & Tools
+
+| Category | Detail |
+|----------|--------|
+| Dead npm deps | `hono` in `adapter-vite/deno.json`, `hono` in `ssg/deno.json`, `typescript` in `adapter-vite/deno.json` |
+| Stale import-map (root) | `flexsearch`, `sanitize-html`, `@types/sanitize-html`, `@types/node` — zero .ts imports |
+| Broken tool | `tools/verify-package-configs.ts` — stale `deno.land` URL + references deleted `i18n` package |
+| API leak | `adapter-vite/build-pipeline.ts` re-exports `FrameworkOptions` from core — should re-export from protocol |
