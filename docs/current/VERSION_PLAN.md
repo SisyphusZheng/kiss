@@ -76,12 +76,19 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 ## Governance Rules
 
+- ADR-0101 (Product-Line Reset + AutoFlow3 Governance) — current governance baseline.
+- ADR-0104 (Architecture Audit + PACKAGE_SURFACE definition).
+- ADR-0105 (Cleanup Train Implementation + approval-gated patch releases).
 - ADR-0107 (npm-only distribution) is the authority for this release.
 - ADR-0096 (protocol-first Vite + Nitro runtime) and ADR-0098
   (EntryDescriptor route manifest) remain in force.
 - Runtime-free/browser-facing packages must not use `Deno.*` or `node:*` APIs
   in their public source surface. Build/server glue (`ssg`, `content`,
   `adapter-vite`, `create`) may use Deno/Node APIs.
+- Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
+- AutoFlow3 remains the single CI/release gating plane.
+- Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
+- `docs/current/PACKAGE_SURFACE.md` defines the v0.40.8 11-package surface.
 
 ## Test Matrix
 
