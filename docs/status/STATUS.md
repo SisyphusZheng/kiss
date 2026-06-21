@@ -24,28 +24,6 @@ public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
 
-## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
-
-v0.40.6 is released as the audit-driven quality cleanup release. It addresses
-the findings from the 2026-06-15 architecture audit
-(`docs/audit/2026-06-15-architecture-audit.md`) without changing the v0.40.4
-public product surface or package graph. The release adds test hardening for
-`element` and `ui`, splits over-large source files, unifies error handling,
-cleans up runtime assertions, and simplifies `adapter-vite` internals. It is
-recorded in ADR-0106 and executed under the v0.40.x cleanup-train authority
-from ADR-0105.
-
-Public package names are singular: `@openelement/element`,
-`@openelement/protocol`, and `@openelement/signal`. Active code, tests, tools,
-and www active code enforce 0 explicit `any` through the `type-safety:check`
-gate.
-
-The default signal engine is `@preact/signals-core`. `alien-signals` remains
-available as an optional engine through `@openelement/signal/alien-engine`.
-
-ADR-0101 is the governance boundary for this line. ADR-0105 approves the
-v0.40.4 breaking cleanup train consolidated into the v0.40.4 release.
-
 Local v0.41.0 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
 `build`, `graph:check`, `arch:check`, `repo:hygiene`, `workflow:check`,
 `workflow:check-slimming`, `docs:check-public`, `docs:check-current`,
@@ -58,8 +36,37 @@ which packs and publishes the 11-package line with provenance and runs the
 post-publish npm consumer smoke.
 
 v0.41.0 repository cleanup (2026-06-21, 930 tests / 0 failed):
+
 - Round 1: Deleted dead files (validators, file-isr-cache, engine, content barrels, ~530 lines). Removed dead exports (LogLevel, renderSequential/Parallel). Shrink/stdlib fixes (hoisted conditionKeys, unified renderSsrError, extname→path.extname, warnOnce helper).
 - Round 2: Deleted createDefaultEngine, _textEncoder, data.ts barrel, use-loader-data.ts barrel, hasControlCharacter, joinUrlPath, section-matter dep, stale file-isr-cache export. Inlined renderEndTimeFallback/now/escapeRoutePath. Converted codeForRenderError to lookup table. Merged switch fallthrough. Annotated speculative errors.
 - Round 3: Deleted router dead files (client-router, page-loader, ssr-data-stubs, define-routes, pattern-translate, locale-path, ~500 lines). Removed marked dep from router. Converted cem-compat/entry-descriptor/route-scanner switches to lookup tables. Extracted safeNow() for performance.now() fallback. Unified 404 rendering blocks. (useActionData/useLoaderData preserved — used by www.)
 
-## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
+## v0.41.0-alpha.1 Architecture Audit
+
+Three-layer audit covering protocol contract completeness, core purity, and engine-to-protocol adherence.
+
+### 🔴 CRITICAL
+
+- **Broken protocol subpath** — `protocol/deno.json` exports `"./validators"` → `"./src/validators.ts"` but the file was deleted in cleanup round 1. Direct `import from '@openelement/protocol/validators'` fails at runtime. (Barrel `import from '@openelement/protocol'` still works via `index.ts`.)
+- **Vite string leaked into `core`** — `core/src/html-escape.ts:166-175` hardcodes `<script type="module" src="/@vite/client">` when `devMode=true`. `core` declares "Zero Vite dependency" but smuggles a Vite dev-server convention via a string literal. Any non-Vite engine passing `devMode=true` gets a broken `<script>` tag.
+- **Protocol-defined types imported from `core`, not `protocol`** — `HydrationStrategy`, `ComponentLayer` are defined in `@openelement/protocol/renderer`, but 8+ locations in `adapter-vite` and `ssg` import them from `@openelement/core` (`build.ts`, `plugin.ts`, `build-context.ts`, `island-manifest.ts`, `entry-generators.ts`, etc.).
+
+### 🟠 HIGH — Architecture Debt
+
+- **Core types missing from protocol** — `FrameworkOptions`, `RouteEntry`, `OpenElementPackageManifest`, `IsrManifestEntry`, `CompatibilityClassification`, `ManifestDecision`, `DsdBuildReport` etc. are defined only in `core/src/schemas.ts` but imported by engine packages (`adapter-vite`, `ssg`), forcing engine-to-core direct dependency.
+- **Deep subpath bypass: `createLogger`** — 15+ files across `adapter-vite`, `ssg`, `content`, `create` import `createLogger` from `@openelement/core/logger` (deep subpath), bypassing protocol.
+- **Deep subpath bypass: `formatError` / `OpenElementError`** — 8+ files import from `@openelement/core/errors` instead of protocol.
+
+### 🟡 MEDIUM — Boundary Leakage
+
+- `core/src/html-escape.ts` — `wrapInDocument()` `devMode` + `routeModulePath` params are engine-layer concepts leaking into runtime-free core.
+- `app/vite.ts` and `app/i18n-plugin.ts` — have `vite` / `node:*` imports. Currently on `/vite` subpath and marked `deno-api-free:ignore`; runtime entries (`index.ts`, `authoring.ts`, `i18n.ts`, `preact.ts`) are clean.
+- `content/deno.json` — depends on `vite`, making `@openelement/content` a Vite-coupled plugin rather than a runtime-free engine package.
+- Unused protocol surface — `components.ts`, `island-frameworks.ts`, `conformance.ts` have zero production consumers; dead weight on the protocol contract.
+
+### ✅ Passed
+
+- `core`, `element`, `ui`, `signal`, `router` — zero `node:*`, zero `Deno.*`, zero framework/engine imports.
+- `app/` runtime entries (`index.ts`, `authoring.ts`, `i18n.ts`, `preact.ts`, `i18n-runtime.ts`) — all pure.
+- `protocol/` — zero Vite/Nitro references.
+- `ssg/` — zero Nitro leakage.
