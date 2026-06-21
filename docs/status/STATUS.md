@@ -5,23 +5,24 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.8 Active (Cleanup-Train Patch)
+## Current Version Line: v0.41.0 Active (npm Distribution Pivot)
 
-v0.40.8 is the active cleanup-train patch on the v0.40.7 baseline. It removes
-the legacy Linear UI compatibility surface from `@openelement/ui`, migrates the
-last internal consumer (`www/app/islands/scroll-reveal.tsx`) to the canonical
-Open Props UI, hardens the E2E server strategy against local port conflicts,
-and extends the audit-driven cleanup from explicit `any` to unnecessary
-`as unknown as` and non-null assertions. The release introduces no new product
-feature and makes no default runtime, signal-engine, or package-topology change.
+v0.41.0 is the active minor release. It pivots openElement distribution from
+JSR to npm using Deno `deno pack`, keeps Vite + Nitro as the default engines
+behind the protocol boundary, and makes `@openelement/*` packages available as
+pure ESM npm artifacts. Runtime-free packages (`core`, `element`, `ui`,
+`protocol`, `signal`, `router`, `app`) retain zero `Deno.*` and zero `node:*`
+usage; build/server glue (`ssg`, `content`, `adapter-vite`, `create`) owns the
+necessary runtime-specific code. The release introduces no new product feature
+and makes no default runtime, signal-engine, or package-topology change beyond
+the distribution channel.
 
-v0.40.8 is executed under the v0.40.x cleanup-train authority from ADR-0105.
-ADR-0106 continues to approve the underlying audit-driven cleanup scope for
-v0.40.6. AutoFlow3 is the workflow, gate, evidence, and release-state control
-plane, but it cannot decide minor/major product scope, public API, package
-topology, default runtime, default signal engine, security/auth/database
-ownership, or release policy without human ADR or approved version-plan
-evidence.
+v0.41.0 is executed under ADR-0108 and the active version plan in
+`docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
+release-state control plane, but it cannot decide minor/major product scope,
+public API, package topology, default runtime, default signal engine,
+security/auth/database ownership, or release policy without human ADR or
+approved version-plan evidence.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
@@ -45,15 +46,16 @@ available as an optional engine through `@openelement/signal/alien-engine`.
 ADR-0101 is the governance boundary for this line. ADR-0105 approves the
 v0.40.4 breaking cleanup train consolidated into the v0.40.4 release.
 
-Local v0.40.4 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
+Local v0.41.0 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
 `build`, `graph:check`, `arch:check`, `repo:hygiene`, `workflow:check`,
 `workflow:check-slimming`, `docs:check-public`, `docs:check-current`,
 `docs:check-strategy`, `package-surface:check`,
 `signals:check-protocol-boundary`, `type-safety:check`, `autoflow:push`,
 `autoflow:ci`, `nitro:proof:node`, `nitro:proof:workers`, `consumer:local`,
-`consumer:core-smoke`, and `publish:dry-run`. Distribution closure is completed
-by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
-line and runs the post-publish consumer smoke.
+`consumer:core-smoke`, `deno-api:check`, `pack:dry-run`, and `publish:npm:dry-run`.
+Distribution closure is completed by the `main` branch `Publish to npm` workflow,
+which packs and publishes the 11-package line with provenance and runs the
+post-publish npm consumer smoke.
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
 
@@ -159,9 +161,9 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.8. It proceeds from the v0.40.4
-product-line cleanup release and focuses on closing the quality gaps identified
-by the 2026-06-15 architecture audit.
+The active implementation line is now v0.41.0. It proceeds from the v0.40.4
+product-line cleanup release and focuses on replacing JSR distribution with
+npm artifacts, Deno `deno pack`, and trusted npm publishing.
 
 Governing docs:
 
@@ -240,7 +242,7 @@ built-in cell generation.
 | v0.38.0 | Product Surface Reset and Hardening                | Done                | Reset public package/API/product surface based on protocol and Nitro runtime evidence                         |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | Done                | ADR-0099, public docs integrity, Elements direction, Preact handoff, starter/deploy/consumer gates            |
 | v0.40.4 | Elements + Preact + Repository Slimming            | Release-ready       | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
-| v0.41.0 | npm-only Distribution                              | Planned             | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
+| v0.41.0 | npm-only Distribution                              | Active              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
 | v0.42.0 | Server Primitives                                  | Planned             | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                     |
 | v0.43.0 | Data + Cache Primitives                            | Planned             | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                             |
 | v0.44.0 | Forms + Mutations                                  | Planned             | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff       |
@@ -292,11 +294,11 @@ DSD/shadow is a default Elements render mode, not the product name.
 
 ## Package Version State
 
-The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.8**. Published package availability is completed by the
-`main` branch JSR publish workflow and its post-publish consumer smoke.
+The active v0.41 workspace contains 11 current `@openelement/*` packages aligned
+to local version **0.41.0**. Published package availability is completed by the
+`main` branch npm publish workflow and its post-publish npm consumer smoke.
 
-Package governance for v0.40:
+Package governance for v0.41:
 
 - do not add a new top-level package without an ADR;
 - ADR-0102 approves `@openelement/element`; the v0.40 roadmap now prioritizes
@@ -369,8 +371,8 @@ The workspace package count is now 11.
 - Governance convergence before v1.0: gate tiers (fast dev gate for PRs,
   full release gate for publishing), AutoFlow feature scope freeze, Hub scope
   deferred to post-v1.0. See `docs/roadmap/ROADMAP.md` v0.38.x for details.
-- JSR publish remains the v0.40 release distribution gate under ADR-0100.
-  v0.41 is planned to replace this path with npm-only distribution.
+- npm publish is the v0.41 release distribution gate under ADR-0108.
+  v0.41 replaces the JSR-only path with npm-only release truth.
 
 ## Key Decisions
 
@@ -409,9 +411,9 @@ The workspace package count is now 11.
   subtrees stay in Islands.
 - **Package graph gate.** `graph:check` verifies zero cycles, unified versions,
   and declared imports.
-- **JSR publish exit gate restored for v0.40.** `publish:dry-run` remains a
-  local release gate, and the `main` branch publish workflow provides v0.40
-  distribution closure. v0.41 is planned to move release truth to npm.
+- **npm publish exit gate for v0.41.** `pack:dry-run` and `publish:npm:dry-run`
+  are local release gates, and the `main` branch publish workflow provides v0.41
+  distribution closure. v0.41 moves release truth to npm under ADR-0108.
 - **SSG ownership.** `@openelement/ssg` owns SSG render, postprocess, route
   scanning, entry generation, generated data resolution, and SSG-specific Vite
   plugin logic.
@@ -449,10 +451,13 @@ deno task test
 deno task build
 deno task nitro:proof:node
 deno task nitro:proof:workers
-deno task publish:dry-run
+deno task deno-api:check
+deno task pack:dry-run
+deno task publish:npm:dry-run
 ```
 
-Live JSR publish and post-publish JSR consumer smoke run from the `main` branch
-after repository-controlled gates, dev CI, merge, and release work. This remains
-the v0.40 distribution closure path; v0.41 is planned to replace it with
-npm-only release truth.
+Live npm publish and post-publish npm consumer smoke run from the `main` branch
+after repository-controlled gates, dev CI, merge, and release work. This is the
+v0.41 npm-only distribution closure path. JSR publish remains available only as
+a historical observation task (`publish:jsr:*`) and is no longer a release exit
+gate.

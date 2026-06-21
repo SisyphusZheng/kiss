@@ -56,7 +56,7 @@ authors should start from this package.
 ## Install
 
 ```bash
-deno add jsr:@openelement/app
+npm install @openelement/app
 ```
 
 ## License

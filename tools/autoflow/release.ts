@@ -169,36 +169,18 @@ export function createReleasePlan(
       name: 'push main',
       command: ['git', 'push', 'origin', 'main'],
     },
-    ...(canPublishToJsr()
+    {
+      name: 'pack dry-run',
+      command: ['deno', 'task', 'pack:dry-run'],
+    },
+    ...(canPublishNpm()
       ? [
         {
-          name: 'publish JSR packages',
-          command: [
-            'deno',
-            'run',
-            '--allow-read',
-            '--allow-run',
-            '--allow-net',
-            'tools/run-package-graph-task.ts',
-            'publish',
-          ],
+          name: 'publish npm packages',
+          command: ['deno', 'task', 'publish:npm'],
         },
         {
-          name: 'wait for JSR metadata',
-          command: [
-            'deno',
-            'run',
-            '--allow-read',
-            '--allow-net',
-            'tools/wait-jsr-release-metadata.ts',
-            '--timeout-minutes',
-            '300',
-            '--interval-seconds',
-            '15',
-          ],
-        },
-        {
-          name: 'post-publish consumer smoke',
+          name: 'post-publish npm consumer smoke',
           command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
         },
       ]
@@ -258,18 +240,16 @@ export function createPatchReleasePlan(targetVersion: string): ReleaseCommandSte
   return createReleasePlan(targetVersion);
 }
 
-function canPublishToJsr(): boolean {
-  // Local runs need an explicit token; CI can use OIDC via id-token: write.
-  return Boolean(
-    Deno.env.get('DENO_AUTH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
-  );
-}
-
 function canCreateGitHubRelease(): boolean {
   // gh release create needs a GitHub token. In CI it is provided automatically.
   return Boolean(
     Deno.env.get('GITHUB_TOKEN') || Deno.env.get('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
   );
+}
+
+function canPublishNpm(): boolean {
+  // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
+  return Boolean(Deno.env.get('NPM_TOKEN') || Deno.env.get('NODE_AUTH_TOKEN'));
 }
 
 export async function assertCleanWorktree(): Promise<void> {

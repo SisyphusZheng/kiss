@@ -114,12 +114,12 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
     'npm:hono@4.12.23/secure-headers',
   );
   assertEquals(denoJson.imports['marked'], 'npm:marked@15.0.12');
-  assertEquals(denoJson.imports['@openelement/app'], 'jsr:@openelement/app@^${v.app}');
-  assertEquals(denoJson.imports['@openelement/app/vite'], 'jsr:@openelement/app@^${v.app}/vite');
-  assertEquals(denoJson.imports['@openelement/core'], 'jsr:@openelement/core@^${v.core}');
+  assertEquals(denoJson.imports['@openelement/app'], 'npm:@openelement/app@^${v.app}');
+  assertEquals(denoJson.imports['@openelement/app/vite'], 'npm:@openelement/app@^${v.app}/vite');
+  assertEquals(denoJson.imports['@openelement/core'], 'npm:@openelement/core@^${v.core}');
   assertEquals(
     denoJson.imports['@openelement/core/jsx-runtime'],
-    'jsr:@openelement/core@^${v.core}/jsx-runtime',
+    'npm:@openelement/core@^${v.core}/jsx-runtime',
   );
   assertFalse('@openelement/protocol' in denoJson.imports);
   assertFalse('@openelement/protocol/conformance' in denoJson.imports);
@@ -130,9 +130,9 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   assertFalse('@openelement/protocol/signals' in denoJson.imports);
   assertEquals(
     denoJson.imports['@openelement/element'],
-    'jsr:@openelement/element@^${v.element}',
+    'npm:@openelement/element@^${v.element}',
   );
-  assertEquals(denoJson.imports['@openelement/ui'], 'jsr:@openelement/ui@^${v.ui}');
+  assertEquals(denoJson.imports['@openelement/ui'], 'npm:@openelement/ui@^${v.ui}');
   assertEquals(denoJson.imports['vite'], 'npm:vite@8.0.10');
   assertEquals(denoJson.nodeModulesDir, 'auto');
 });
@@ -148,7 +148,7 @@ Deno.test('create-open: deno.json build uses the one-command openElement build',
   const denoJson = JSON.parse(extractTemplate('deno.json'));
   assertEquals(
     denoJson.tasks['build'],
-    'deno run --config deno.json -A jsr:@openelement/adapter-vite@^${v.adapterVite}/cli/build',
+    'deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build',
   );
   assertExists(denoJson.tasks['build:ssr']);
   assertExists(denoJson.tasks['build:client']);
@@ -172,7 +172,7 @@ Deno.test('create-open: vite.config.ts includes packageIslands config', () => {
   const viteConfig = extractTemplate('vite.config.ts');
   assert(viteConfig.includes('@openelement/ui'));
   assert(viteConfig.includes("packageIslands: ['@openelement/ui']"));
-  // v0.21.6: plugin auto-generates JSR URL aliases.
+  // v0.21.6: plugin auto-generates npm URL aliases.
   assertFalse(viteConfig.includes('lessUiAliases'));
   assertFalse(viteConfig.includes('https://jsr.io/@openelement/ui/'));
 });
@@ -443,6 +443,18 @@ Deno.test('create-open: generated project builds through the one-command pipelin
       {
         find: '@openelement/signal/framework',
         replacement: vitePath(join(signalsSrc, 'framework.ts')),
+      },
+      {
+        find: '@openelement/signal',
+        replacement: vitePath(join(signalsSrc, 'index.ts')),
+      },
+      {
+        find: '@openelement/router',
+        replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'mod.ts')),
+      },
+      {
+        find: '@openelement/protocol',
+        replacement: vitePath(join(protocolsSrc, 'index.ts')),
       },
       {
         find: '@openelement/element',

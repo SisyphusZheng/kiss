@@ -130,6 +130,9 @@ export interface OpenJsrPackageResolverOptions {
   userAliases?: Record<string, string> | Alias[] | null;
   fetchSource?: (url: string) => Promise<Response>;
   readLocalSource?: (path: string) => string;
+  /** Registry mode. 'npm' lets Vite resolve @openelement/* from node_modules.
+   * 'jsr' keeps the legacy virtual-module source fetch for JSR consumers. */
+  registry?: 'npm' | 'jsr';
 }
 
 export function parseOpenPackageSpecifier(id: string): OpenJsrPackageSpecifier | null {
@@ -194,6 +197,9 @@ export function createOpenJsrPackageResolverPlugin(
   options: OpenJsrPackageResolverOptions,
 ): Plugin {
   const fetchSource = options.fetchSource ?? fetch;
+  const registry = options.registry ??
+    (typeof import.meta.url === 'string' && import.meta.url.startsWith('https://') ? 'jsr' : 'npm');
+  const isNpmMode = registry === 'npm';
 
   return {
     name: 'open:ssg-package-resolve',
@@ -206,6 +212,7 @@ export function createOpenJsrPackageResolverPlugin(
     },
     resolveId(id, importer) {
       if (options.workspaceRoot) return null;
+      if (isNpmMode) return null;
       if (hasExactUserAlias(id, options.userAliases)) return null;
 
       const spec = parseOpenPackageSpecifier(id);
@@ -221,6 +228,7 @@ export function createOpenJsrPackageResolverPlugin(
     },
     async load(id) {
       if (options.workspaceRoot) return null;
+      if (isNpmMode) return null;
       if (!id.startsWith(VIRTUAL_OPENELEMENT_PACKAGE_PREFIX)) return null;
 
       const [packageName, ...pathParts] = id.slice(VIRTUAL_OPENELEMENT_PACKAGE_PREFIX.length).split(

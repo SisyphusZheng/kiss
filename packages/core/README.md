@@ -19,7 +19,7 @@ This package does not contain Vite, CLI, or build orchestration logic.
 ## Install
 
 ```bash
-deno add jsr:@openelement/core
+npm install @openelement/core
 ```
 
 ## Low-Level Component Authoring
@@ -28,7 +28,7 @@ For component authoring with `OpenElement`, ErrorBoundary, prop system,
 and defineElement helper, use `@openelement/element`:
 
 ```bash
-deno add jsr:@openelement/element
+npm install @openelement/element
 ```
 
 ## License

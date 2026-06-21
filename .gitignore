@@ -68,6 +68,10 @@ coverage-output.txt
 docs/vite-build-*.txt
 node_modules/
 
+# npm pack tarballs
+packages/*/*.tgz
+*.tgz
+
 # Root-level logo source files (design originals, keep local)
 /open-logo*.svg
 /open-favicon.svg

@@ -15,7 +15,7 @@ The engine can be swapped at runtime using `setSignalEngine()`.
 ## Install
 
 ```bash
-deno add jsr:@openelement/signal
+npm install @openelement/signal
 ```
 
 ## Exports

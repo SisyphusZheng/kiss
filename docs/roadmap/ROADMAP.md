@@ -70,7 +70,7 @@ v0.41-v1.0 blocker.
 | v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
 | v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
 | v0.40.7 | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                      | Released                 |
-| v0.41.0 | Deno Package Manager for Vite+ Dogfood             | Make Vite+ treat `deno` as a first-class package manager alongside npm/pnpm/yarn/bun; openElement becomes the first Deno-native Web Components dogfood           | Planned                  |
+| v0.41.0 | Deno-native npm distribution                       | Replace JSR release closure with npm via `deno pack`; keep Deno-first dev/build and Vite+Nitro default engines.                                                  | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
 | v0.44.0 | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                          | Planned                  |
@@ -81,50 +81,62 @@ v0.41-v1.0 blocker.
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
 
-## v0.41.0 - Deno Package Manager for Vite+ Dogfood
+## v0.41.0 - Deno-native npm distribution
 
-Strategic realignment: instead of migrating openElement to Node/npm, v0.41.0
-pushes Vite+ to treat Deno as a first-class package manager. openElement stays
-Deno-first and becomes the first real dogfood for a Deno-powered Vite+
-toolchain.
+Strategic realignment: Vite+ upstream (voidzero-dev/vite-plus#1888) declined to
+add Deno as a first-class package manager. Instead of pushing upstream, v0.41.0
+uses Deno 2.8+ `deno pack` to build npm-publishable tarballs directly from the
+Deno-first workspace. openElement stays Deno-native for development, build, and
+release, while npm becomes the single registry truth for consumers.
 
-Scope:
+Core work:
 
-- Vite+ upstream prototype (draft PR + RFC):
-  - Add `deno` to Vite+ package-manager detection: `deno.lock`, `deno.json`,
-    `deno.jsonc`, and `devEngines.packageManager.name === "deno"`.
-  - Route `vp install` to `deno install` when Deno is the detected package
-    manager.
-  - Keep scope narrow: Deno is a package manager, not a Vite+ managed runtime.
-  - Provide unit tests for detection and command mapping.
-  - Update Vite+ docs to mark Deno package-manager mode as experimental.
-- openElement dogfood:
-  - Keep Deno-first workspace and `deno.json` workspace structure.
-  - Do not introduce npm/pnpm/yarn as the primary package manager.
-  - Use Deno to install npm dependencies and maintain `deno.lock` and
-    `node_modules`.
-  - Patch/prototype `vp install`, then pursue `vp check`, `vp test`, `vp build`,
-    or `vp pack` until at least one core command passes on openElement.
-  - Keep existing `deno task` flows working so the dogfood does not break the
-    main branch.
-- Docs and brand:
-  - Position openElement as a "Deno-native Web Components full-stack framework
-    powered by Vite+".
-  - Clarify that Vite+ Deno support is experimental until upstream merges it.
-  - Update `docs/current/VERSION_PLAN.md` and release notes to reflect the new
-    strategy.
-- Roadmap ripple:
-  - v0.41.x is reserved for upstream feedback, Vite+ API churn, and PR fixes.
-  - v0.42.0 resumes Nitro server primitives.
-  - v0.43.0 becomes the VoidZero contribution pass: case study, docs/example PRs.
+- Toolchain:
+  - Require Deno 2.8+ for `deno pack` support.
+  - Convert all internal `@openelement/*` imports from `jsr:` to `npm:`
+    specifiers in workspace `deno.json` files.
+  - Add `deno task pack` / `deno task publish:npm` that topologically packs and
+    publishes the 11-package graph in dependency order.
+- Runtime-agnostic boundaries:
+  - Move `FileIsrCache` from `@openelement/core/isr` to
+    `@openelement/ssg/file-isr-cache` because it requires filesystem access.
+  - Make `router/src/page-loader.ts` accept raw markdown instead of reading
+    files with `Deno.readTextFile`.
+  - Add a CI gate that fails if runtime-free product packages
+    (`core`, `element`, `ui`, `protocol`, `signal`, `router`, `app`) use
+    `Deno.*` APIs in `src/`.
+- Adapter-vite npm mode:
+  - Default `createOpenJsrPackageResolverPlugin` to npm mode: let Vite resolve
+    `@openelement/*` from `node_modules` instead of fetching TS source from JSR.
+  - Keep JSR source-resolution as an explicit opt-in (`registry: 'jsr'`).
+- Starter template:
+  - Update `@openelement/create` to emit `npm:@openelement/*` imports and
+    resolve remote versions from the npm registry.
+- Release flow:
+  - Replace JSR publish with `deno pack` + `npm publish --provenance` in
+    `tools/autoflow/release.ts`.
+  - Add `actions/setup-node` to `.github/workflows/autoflow-release.yml` and
+    pass `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN`.
+  - Keep JSR monitoring workflows as historical observation only; do not gate
+    releases on JSR.
+- Consumer smoke:
+  - Add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
+    smoke gates against npm artifacts.
+
+Exit criteria:
+
+- `deno pack --dry-run` succeeds for all 11 packages.
+- Generated tarballs contain no `jsr:` or `@jsr/` specifiers.
+- npm trusted publishing succeeds from GitHub Actions with provenance.
+- A generated openElement app installs and builds from npm packages only.
+- Release notes describe npm as the current distribution truth.
 
 Non-goals:
 
-- No Node runtime migration.
-- No npm/pnpm/yarn lockfile as the source of truth.
-- No self-built package manager.
-- No full "Deno as Vite+ runtime" rewrite in v0.41.0.
-- No claim that Vite+ officially supports Deno until upstream accepts the PR.
+- No Node runtime migration for openElement development.
+- No npm/pnpm/yarn lockfile as the workspace source of truth.
+- No further upstream Vite+ Deno PM advocacy in v0.41.0.
+- No removal of existing JSR published versions.
 
 ## v0.40.8 - Cleanup-Train Patch
 
@@ -558,35 +570,6 @@ runtime may leak into `@openelement/core` or Elements as a required public
 dependency. Further package deletion, package merges, new packages, default
 runtime changes, and future default signal-engine changes still require
 ADR-backed human approval.
-
-## v0.41.0 - npm-only Distribution
-
-Replace JSR release closure with npm as the single registry truth. The line
-keeps GitHub as the canonical source, issue/PR surface, CI runner, and npm
-trusted publishing bridge because that is the lowest-cost path with the best JS
-ecosystem discoverability. Codeberg/Forgejo are recorded as future
-source-sovereignty options, not as v0.41 blockers.
-
-Core work:
-
-- write the npm-only distribution ADR;
-- remove JSR publish, JSR metadata wait, and JSR consumer smoke from required
-  release closure;
-- build an npm artifact pipeline for the 11-package graph, using `deno pack`
-  unless a package proves it needs a narrower custom pack step;
-- add tarball inspection for exports, types, files, license, repository
-  metadata, and absence of `jsr:` specifiers;
-- add npm trusted publishing through GitHub Actions;
-- add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
-  consumer smoke.
-
-Exit criteria:
-
-- npm is sufficient to install and build a generated openElement app;
-- Deno consumes the release through `npm:@openelement/*`;
-- browser-safe exports are verified through jsDelivr npm URLs;
-- release notes do not claim package availability until npm publish and all
-  post-publish smoke checks pass.
 
 ## v0.42.0 - Server Primitives
 

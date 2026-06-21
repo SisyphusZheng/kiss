@@ -117,6 +117,12 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
+    name: 'deno-api:check',
+    command: ['deno', 'task', 'deno-api:check'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\/(core|element|ui|protocol|signal|router|app)\/src\//],
+  },
+  {
     name: 'text-integrity:check',
     command: ['deno', 'task', 'text-integrity:check'],
     tiers: ['ci', 'release'],
@@ -198,13 +204,13 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/core\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
   },
   {
-    name: 'publish:dry-run',
-    command: ['deno', 'task', 'publish:dry-run'],
+    name: 'pack:dry-run',
+    command: ['deno', 'task', 'pack:dry-run'],
     tiers: ['release'],
     triggers: [
       /^packages\//,
       /^deno\.json$/,
-      /^tools\/run-package-graph-task\.ts$/,
+      /^tools\/publish-npm\.ts$/,
       /^tools\/lib\/package-graph\.ts$/,
     ],
   },

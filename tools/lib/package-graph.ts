@@ -24,6 +24,118 @@ function normalizeDep(specifier: string, self: string): string | null {
   return base === self ? null : base;
 }
 
+export function collectImportStatements(source: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let inBlockComment = false;
+  let inTemplate = false;
+
+  for (const rawLine of source.split('\n')) {
+    let line = '';
+
+    for (let i = 0; i < rawLine.length; i++) {
+      const char = rawLine[i];
+      const next = rawLine[i + 1];
+
+      if (inBlockComment) {
+        if (char === '*' && next === '/') {
+          inBlockComment = false;
+          i++;
+        }
+        continue;
+      }
+
+      if (inTemplate) {
+        if (char === '`' && rawLine[i - 1] !== '\\') inTemplate = false;
+        continue;
+      }
+
+      if (char === '/' && next === '*') {
+        inBlockComment = true;
+        i++;
+        continue;
+      }
+
+      if (char === '/' && next === '/') break;
+      if (char === '`') {
+        inTemplate = true;
+        continue;
+      }
+
+      line += char;
+    }
+
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const startsImportExport = /^(import|export)\b/.test(trimmed);
+    const dynamicImportIndex = trimmed.search(/\bimport\s*\(/);
+    const firstQuoteIndex = trimmed.search(/['"`]/);
+    const hasDynamicImport = dynamicImportIndex !== -1 &&
+      (firstQuoteIndex === -1 || firstQuoteIndex > dynamicImportIndex);
+
+    if (!current && !startsImportExport && !hasDynamicImport) continue;
+
+    current += `${trimmed}\n`;
+    if (trimmed.endsWith(';') || (hasDynamicImport && /\)\s*(?:as\b.*)?;?$/.test(trimmed))) {
+      statements.push(current);
+      current = '';
+    }
+  }
+
+  if (current) statements.push(current);
+  return statements;
+}
+
+export function extractOpenImports(source: string): string[] {
+  const imports = new Set<string>();
+  const patterns = [
+    /\bimport\s+(?:type\s+)?(?:[^'"]+?\s+from\s+)?['"](@openelement\/[^'"]+)['"]/g,
+    /\bexport\s+(?:type\s+)?[^'"]+?\s+from\s+['"](@openelement\/[^'"]+)['"]/g,
+    /\bimport\s*\(\s*['"](@openelement\/[^'"]+)['"]\s*\)/g,
+  ];
+
+  for (const statement of collectImportStatements(source)) {
+    for (const pattern of patterns) {
+      pattern.lastIndex = 0;
+      for (const match of statement.matchAll(pattern)) {
+        imports.add(match[1]);
+      }
+    }
+  }
+
+  return [...imports];
+}
+
+function collectInternalDeps(dir: string): string[] {
+  const deps = new Set<string>();
+  const srcDir = `${dir}/src`;
+
+  function scan(current: string): void {
+    for (const entry of Deno.readDirSync(current)) {
+      const path = `${current}/${entry.name}`;
+      if (entry.isDirectory) {
+        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
+        scan(path);
+      } else if (entry.isFile && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
+        const text = Deno.readTextFileSync(path);
+        for (const specifier of extractOpenImports(text)) {
+          const base = normalizeDep(specifier, '');
+          if (base) deps.add(base);
+        }
+      }
+    }
+  }
+
+  try {
+    scan(srcDir);
+  } catch {
+    // Packages without src are allowed.
+  }
+
+  return [...deps];
+}
+
 export async function readPackage(dir: string): Promise<PackageInfo | null> {
   const path = `${dir}/deno.json`;
   try {
@@ -31,14 +143,16 @@ export async function readPackage(dir: string): Promise<PackageInfo | null> {
     const json = JSON.parse(raw);
     if (!json.name) return null;
     const imports: Record<string, string> = json.imports ?? {};
-    const deps = Object.keys(imports)
+    const declaredDeps = Object.keys(imports)
       .map((specifier) => normalizeDep(specifier, json.name))
       .filter((specifier): specifier is string => specifier !== null);
+    const sourceDeps = collectInternalDeps(dir);
+    const deps = [...new Set([...declaredDeps, ...sourceDeps])];
     return {
       name: json.name,
       version: json.version ?? '',
       dir,
-      deps: [...new Set(deps)],
+      deps,
       exports: json.exports,
       importKeys: new Set(Object.keys(imports)),
       importValues: imports,

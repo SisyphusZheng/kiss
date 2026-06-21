@@ -73,6 +73,7 @@ Deno.test('createOpenJsrPackageResolverPlugin resolves JSR and bare package ids'
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.9',
+    registry: 'jsr',
     fetchSource: (url) =>
       Promise.resolve(new Response(`export const url = ${JSON.stringify(url)};`)),
   });
@@ -100,6 +101,7 @@ Deno.test('createOpenJsrPackageResolverPlugin fails fetch misses before Vite unr
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.9',
+    registry: 'jsr',
     fetchSource: () => Promise.resolve(new Response('', { status: 404 })),
   });
   const load = plugin.load as unknown as (id: string) => string | null | Promise<string | null>;
@@ -115,6 +117,7 @@ Deno.test('createOpenJsrPackageResolverPlugin can read local package sources bef
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.9',
+    registry: 'jsr',
     localPackageRoot: 'C:/repo',
     readLocalSource: (path) => `// ${path}`,
   });
@@ -130,6 +133,7 @@ Deno.test('createOpenJsrPackageResolverPlugin resolves retained core packages bu
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.9',
+    registry: 'jsr',
   });
   const resolveId = plugin.resolveId as unknown as (
     id: string,
@@ -169,6 +173,7 @@ Deno.test('createOpenJsrPackageResolverPlugin lets exact user aliases resolve fi
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.9',
+    registry: 'jsr',
     userAliases: {
       '@openelement/ui/open-layout': './app/components/site-layout.tsx',
     },
@@ -202,6 +207,7 @@ Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers from JSR 
   const plugin = createOpenJsrPackageResolverPlugin({
     workspaceRoot: null,
     version: '0.21.10',
+    registry: 'jsr',
     fetchSource: () => Promise.resolve(new Response(jsrSource)),
   });
   const load = plugin.load as unknown as (id: string) => string | null | Promise<string | null>;
@@ -224,6 +230,22 @@ Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers from JSR 
   assertEquals(result.includes('@12.0.0'), false);
   assertEquals(result.includes('@10.29.2'), false);
   assertEquals(result.includes('@1.14.2'), false);
+});
+
+Deno.test('createOpenJsrPackageResolverPlugin skips openElement resolution in npm mode', async () => {
+  const plugin = createOpenJsrPackageResolverPlugin({
+    workspaceRoot: null,
+    version: '0.21.9',
+    registry: 'npm',
+  });
+  const resolveId = plugin.resolveId as unknown as (
+    id: string,
+    importer?: string,
+  ) => string | null | Promise<string | null>;
+  const load = plugin.load as unknown as (id: string) => string | null | Promise<string | null>;
+
+  assertEquals(await resolveId('@openelement/ui/open-card'), null);
+  assertEquals(await load(toVirtualOpenPackageId('ui', 'src/open-card.tsx')), null);
 });
 
 Deno.test('createOpenJsrPackageResolverPlugin rewrites npm: specifiers during workspace transforms', async () => {

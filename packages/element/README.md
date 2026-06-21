@@ -16,7 +16,7 @@ Also includes:
 ## Install
 
 ```bash
-deno add jsr:@openelement/element
+npm install @openelement/element
 ```
 
 ## Usage

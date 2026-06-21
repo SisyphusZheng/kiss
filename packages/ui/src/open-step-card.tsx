@@ -17,7 +17,7 @@
  * Usage:
  * ```html
  * <open-step-card step="1" label="Create">
- *   deno run -A jsr:@openelement/create my-app
+ *   deno run -A npm:@openelement/create my-app
  * </open-step-card>
  * ```
  */

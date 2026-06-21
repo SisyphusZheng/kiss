@@ -20,5 +20,5 @@ Most users should not import this package directly; use the framework entry
 ## Install
 
 ```bash
-deno add jsr:@openelement/ssg
+npm install @openelement/ssg
 ```

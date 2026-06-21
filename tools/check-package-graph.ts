@@ -4,7 +4,7 @@
  * Checks:
  * - all package deno.json files under packages/ are readable
  * - all package versions are on one release line
- * - internal jsr:@openelement/* specifiers point at that release line
+ * - internal npm:@openelement/* specifiers point at that release line
  * - source-level @openelement/* imports are declared in each package deno.json
  * - no circular package dependencies exist
  * - release publish order lists every package after its dependencies
@@ -14,6 +14,7 @@ import { PACKAGE_COUNT, PACKAGE_VERSION } from './project-constants.ts';
 import {
   buildDependencyGraph,
   detectCycles,
+  extractOpenImports,
   type PackageInfo,
   readPackages,
   releasePublishOrder,
@@ -54,93 +55,29 @@ async function collectTsFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-function collectImportStatements(source: string): string[] {
-  const statements: string[] = [];
-  let current = '';
-  let inBlockComment = false;
-  let inTemplate = false;
-
-  for (const rawLine of source.split('\n')) {
-    let line = '';
-
-    for (let i = 0; i < rawLine.length; i++) {
-      const char = rawLine[i];
-      const next = rawLine[i + 1];
-
-      if (inBlockComment) {
-        if (char === '*' && next === '/') {
-          inBlockComment = false;
-          i++;
-        }
-        continue;
-      }
-
-      if (inTemplate) {
-        if (char === '`' && rawLine[i - 1] !== '\\') inTemplate = false;
-        continue;
-      }
-
-      if (char === '/' && next === '*') {
-        inBlockComment = true;
-        i++;
-        continue;
-      }
-
-      if (char === '/' && next === '/') break;
-      if (char === '`') {
-        inTemplate = true;
-        continue;
-      }
-
-      line += char;
-    }
-
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    const startsImportExport = /^(import|export)\b/.test(trimmed);
-    const dynamicImportIndex = trimmed.search(/\bimport\s*\(/);
-    const firstQuoteIndex = trimmed.search(/['"`]/);
-    const hasDynamicImport = dynamicImportIndex !== -1 &&
-      (firstQuoteIndex === -1 || firstQuoteIndex > dynamicImportIndex);
-
-    if (!current && !startsImportExport && !hasDynamicImport) continue;
-
-    current += `${trimmed}\n`;
-    if (trimmed.endsWith(';') || (hasDynamicImport && /\)\s*(?:as\b.*)?;?$/.test(trimmed))) {
-      statements.push(current);
-      current = '';
-    }
-  }
-
-  if (current) statements.push(current);
-  return statements;
-}
-
-function extractLessImports(source: string): string[] {
-  const imports = new Set<string>();
-  const patterns = [
-    /\bimport\s+(?:type\s+)?(?:[^'"]+?\s+from\s+)?['"](@openelement\/[^'"]+)['"]/g,
-    /\bexport\s+(?:type\s+)?[^'"]+?\s+from\s+['"](@openelement\/[^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"](@openelement\/[^'"]+)['"]\s*\)/g,
-  ];
-
-  for (const statement of collectImportStatements(source)) {
-    for (const pattern of patterns) {
-      pattern.lastIndex = 0;
-      for (const match of statement.matchAll(pattern)) {
-        imports.add(match[1]);
-      }
-    }
-  }
-
-  return [...imports];
-}
-
-function isDeclaredImport(specifier: string, pkg: PackageInfo): boolean {
+function isDeclaredImport(
+  specifier: string,
+  pkg: PackageInfo,
+  workspaceSpecifiers: Set<string>,
+): boolean {
   const base = normalizeDep(specifier, pkg.name);
   if (base === null) return true;
+  if (workspaceSpecifiers.has(specifier) || workspaceSpecifiers.has(base)) return true;
   return pkg.importKeys.has(specifier) || pkg.importKeys.has(base);
+}
+
+function collectWorkspaceSpecifiers(packages: PackageInfo[]): Set<string> {
+  const specifiers = new Set<string>();
+  for (const pkg of packages) {
+    specifiers.add(pkg.name);
+    const exports = pkg.exports;
+    if (typeof exports === 'object' && exports !== null) {
+      for (const key of Object.keys(exports)) {
+        specifiers.add(`${pkg.name}${key === '.' ? '' : key}`);
+      }
+    }
+  }
+  return specifiers;
 }
 
 function validateVersionConsistency(packages: PackageInfo[], failures: string[]): string | null {
@@ -161,13 +98,13 @@ function validateVersionConsistency(packages: PackageInfo[], failures: string[])
   return packages[0]?.version ?? null;
 }
 
-function parseInternalJsrSpecifier(value: string): { packageName: string; version: string } | null {
-  const match = value.match(/^jsr:(@openelement\/[^@/]+)@\^?(\d+\.\d+\.\d+)(?:\/.*)?$/);
+function parseInternalSpecifier(value: string): { packageName: string; version: string } | null {
+  const match = value.match(/^npm:(@openelement\/[^@/]+)@\^?(\d+\.\d+\.\d+)(?:\/.*)?$/);
   if (!match) return null;
   return { packageName: match[1], version: match[2] };
 }
 
-function validateInternalJsrRanges(
+function validateInternalRanges(
   packages: PackageInfo[],
   releaseVersion: string | null,
   failures: string[],
@@ -175,11 +112,11 @@ function validateInternalJsrRanges(
   if (!releaseVersion) return;
   for (const pkg of packages) {
     for (const [key, value] of Object.entries(pkg.importValues)) {
-      if (!value.startsWith('jsr:@openelement/')) continue;
-      const parsed = parseInternalJsrSpecifier(value);
+      if (!value.startsWith('npm:@openelement/')) continue;
+      const parsed = parseInternalSpecifier(value);
       if (!parsed) {
         failures.push(
-          `${pkg.dir}/deno.json import "${key}" has invalid internal JSR specifier: ${value}`,
+          `${pkg.dir}/deno.json import "${key}" has invalid internal specifier: ${value}`,
         );
         continue;
       }
@@ -220,9 +157,9 @@ async function main(): Promise<void> {
       `Package graph version ${releaseVersion} does not match PACKAGE_VERSION ${PACKAGE_VERSION}.`,
     );
   }
-  validateInternalJsrRanges(packages, releaseVersion, failures);
+  validateInternalRanges(packages, releaseVersion, failures);
   if (releaseVersion) {
-    console.log(`  PASS: all packages and internal JSR ranges use ${releaseVersion}.`);
+    console.log(`  PASS: all packages and internal npm ranges use ${releaseVersion}.`);
   }
 
   const graph = buildDependencyGraph(packages);
@@ -241,12 +178,13 @@ async function main(): Promise<void> {
 
   console.log('\n--- Source Import Declarations ---');
   const importFailuresBefore = failures.length;
+  const workspaceSpecifiers = collectWorkspaceSpecifiers(packages);
   for (const pkg of packages) {
     const sourceFiles = await collectTsFiles(`${pkg.dir}/src`);
     for (const file of sourceFiles) {
       const source = await Deno.readTextFile(file);
-      for (const specifier of extractLessImports(source)) {
-        if (!isDeclaredImport(specifier, pkg)) {
+      for (const specifier of extractOpenImports(source)) {
+        if (!isDeclaredImport(specifier, pkg, workspaceSpecifiers)) {
           const msg =
             `${file} imports "${specifier}" but ${pkg.dir}/deno.json does not declare it.`;
           console.error(`  FAIL: ${msg}`);

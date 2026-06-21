@@ -50,17 +50,13 @@ function parseFrontmatter(raw: string): {
 }
 
 /**
- * Load a page from MD file, parse frontmatter, render to HTML.
+ * Load a page from raw markdown text, parse frontmatter, render to HTML.
+ *
+ * This function is runtime-agnostic: the caller is responsible for reading
+ * the markdown file from disk, a CMS, or any other source.
  */
-export async function loadPage(
-  contentDir: string,
-  locale: string,
-  page: string,
-): Promise<PageData | null> {
+export async function loadPage(raw: string): Promise<PageData | null> {
   try {
-    const raw = await Deno.readTextFile(
-      `${contentDir}/${locale}/${page}.md`,
-    );
     const { meta, content } = parseFrontmatter(raw);
     const html = await marked(content) as string;
     return { html, meta: meta as PageData['meta'] };

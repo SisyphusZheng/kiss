@@ -1,6 +1,8 @@
 /**
  * @openelement/app/i18n-plugin - Node-only Vite plugin for i18n
  *
+ * deno-api-free:ignore — build-time Vite plugin, allowed to use node:*.
+ *
  * This module uses node:process, node:path, node:fs and MUST NOT be imported
  * from the main @openelement/app entry to avoid pulling Node built-ins into
  * client island bundles.

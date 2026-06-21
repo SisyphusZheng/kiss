@@ -18,13 +18,7 @@
     "./data": "./src/data.ts",
     "./dsd-hydration": "./src/dsd-hydration.ts"
   },
-  "imports": {
-    "@openelement/protocol/conformance": "jsr:@openelement/protocol@^0.40.8/conformance",
-    "@openelement/protocol/data": "jsr:@openelement/protocol@^0.40.8/data",
-    "@openelement/protocol/renderer": "jsr:@openelement/protocol@^0.40.8/renderer",
-    "@openelement/protocol/signals": "jsr:@openelement/protocol@^0.40.8/signals",
-    "@openelement/signal": "jsr:@openelement/signal@^0.40.8"
-  },
+  "imports": {},
   "publish": {
     "include": [
       "src/**",

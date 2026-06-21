@@ -2,17 +2,10 @@
   "name": "@openelement/ssg",
   "version": "0.40.8",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./file-isr-cache": "./src/file-isr-cache.ts"
   },
   "imports": {
-    "@openelement/core": "jsr:@openelement/core@^0.40.8",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.8/logger",
-    "@openelement/core/errors": "jsr:@openelement/core@^0.40.8/errors",
-    "@openelement/core/style-sheet": "jsr:@openelement/core@^0.40.8/style-sheet",
-    "@openelement/protocol/routes": "jsr:@openelement/protocol@^0.40.8/routes",
-    "@openelement/protocol/runtime": "jsr:@openelement/protocol@^0.40.8/runtime",
-    "@openelement/protocol/ssg-contracts": "jsr:@openelement/protocol@^0.40.8/ssg-contracts",
-    "@openelement/content": "jsr:@openelement/content@^0.40.8",
     "hono": "npm:hono@^4.12",
     "typescript": "npm:typescript@^5.9.0"
   },

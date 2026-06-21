@@ -11,7 +11,7 @@ openElement 使用 Web Components、JSX/VNode 渲染、渐进式 islands、API r
 ## 快速开始
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```

@@ -197,3 +197,4 @@ export type {
 } from './island-manifest.ts';
 
 export { generateClientEntry, validateClientIslandEntry } from './entry-generators.ts';
+export { FileIsrCache } from './file-isr-cache.ts';

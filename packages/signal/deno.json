@@ -8,7 +8,6 @@
     "./preact-engine": "./src/preact-engine.ts"
   },
   "imports": {
-    "@openelement/protocol/signals": "jsr:@openelement/protocol@^0.40.8/signals",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "alien-signals": "npm:alien-signals@^3.2.0"
   },

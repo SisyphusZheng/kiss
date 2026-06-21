@@ -5,6 +5,8 @@
 - Target: v0.40.0
 - Supersedes: ADR-0099 heavy-framework island scope
 - Depends on: ADR-0096, ADR-0099, ADR-0100
+- Distribution channel superseded by: ADR-0108 for v0.41.0 (npm replaces JSR as
+  the release exit gate)
 
 ## Context
 
@@ -121,3 +123,4 @@ not decide those plans.
 - ADR-0096: Protocol-First Vite + Nitro Runtime Architecture.
 - ADR-0099: Four-Product Matrix and Elements Reset.
 - ADR-0100: JSR Publish Exit Gate Restored.
+- ADR-0108: Deno-native npm Distribution.

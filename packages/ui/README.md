@@ -15,7 +15,7 @@ removed from the public surface. Use the canonical Open Props components and
 ## Install
 
 ```bash
-deno add jsr:@openelement/ui
+npm install @openelement/ui
 ```
 
 ## Components

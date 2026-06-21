@@ -71,7 +71,7 @@ deno task docs:dev</code></pre>
         <h2>Deno-first Toolchain</h2>
         <p>
           openElement core CLI, SSG, serverless API, tests, publishing, and docs
-          site tasks all use Deno 2.7+ as the default runtime. Vite 8 runs via
+          site tasks all use Deno 2.8+ as the default runtime. Vite 8 runs via
           {" "}
           <span class="inline-code">deno run -A npm:vite</span> - no{" "}
           <span class="inline-code">npm</span> or{" "}

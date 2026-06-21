@@ -19,7 +19,7 @@ openElement = Elements + UI + Framework + Protocols
 ## 创建项目
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```

@@ -13,7 +13,7 @@ they should not import the content package at runtime.
 ## Install
 
 ```bash
-deno add jsr:@openelement/content
+npm install @openelement/content
 ```
 
 ## Recommended Usage

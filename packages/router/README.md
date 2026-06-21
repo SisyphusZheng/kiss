@@ -15,5 +15,5 @@ Most users should start from `@openelement/app` or `@openelement/element`;
 ## Install
 
 ```bash
-deno add jsr:@openelement/router
+npm install @openelement/router
 ```

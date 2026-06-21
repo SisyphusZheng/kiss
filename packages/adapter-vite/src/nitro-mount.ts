@@ -43,7 +43,9 @@ function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
 
 export function createOpenElementNitroHandler<
   Env extends Record<string, unknown> = Record<string, unknown>,
->(options: OpenElementNitroMountOptions<Env>) {
+>(
+  options: OpenElementNitroMountOptions<Env>,
+): (event: NitroLikeRequestEvent<Env>) => Promise<NitroLikeResponse> {
   const baseUrl = options.baseUrl || 'http://localhost';
 
   return async (event: NitroLikeRequestEvent<Env>): Promise<NitroLikeResponse> => {

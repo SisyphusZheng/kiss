@@ -6,7 +6,7 @@
  * No orchestrator needed - all three phases run in a single viteBuild() call.
  *
  * Usage:
- *   deno run -A jsr:@openelement/adapter-vite/cli/build
+ *   deno run -A npm:@openelement/adapter-vite/cli/build
  *   deno task build
  */
 

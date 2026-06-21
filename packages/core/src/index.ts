@@ -48,7 +48,7 @@ export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook, SsrErrorEntry } fro
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './html-escape.js';
 export type { OpenElementApiContext } from './schemas.js';
-export { createIsrCacheKey, FileIsrCache, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
+export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
 export type {
   IsrCache,
   IsrCacheEntry,

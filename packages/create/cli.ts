@@ -1,7 +1,7 @@
 /**
  * @openelement/create - Minimal project scaffold for openElement framework.
  *
- * Usage: deno run -A jsr:@openelement/create my-app
+ * Usage: deno run -A npm:@openelement/create my-app
  *
  * openElement Architecture: Keep It Simple, Stupid.
  * One template, zero prompts, instant start.
@@ -12,14 +12,12 @@ import { fileURLToPath } from 'node:url';
 import { createLogger } from '@openelement/core/logger';
 
 // ??? Package versions ??????????????????????????????????????????
-// ADR 0016: Handle both local (file://) and JSR remote (https://) execution.
-// When running from JSR, import.meta.url is https://jsr.io/... and
-// fileURLToPath() throws ERR_INVALID_URL_SCHEME.
+// ADR 0016: Handle both local (workspace file://) and remote (npm registry) execution.
 //
 // - Local:  read version from workspace deno.json (single source of truth)
-// - Remote: query JSR Registry API for latest version (zero hardcoding)
+// - Remote: query npm Registry API for latest version (zero hardcoding)
 
-const JSR_SCOPE = '@openelement';
+const NPM_SCOPE = '@openelement';
 const log = createLogger('create');
 const PKG_DIR_MAP: Record<string, string> = {
   core: 'core',
@@ -34,13 +32,6 @@ const PKG_DIR_MAP: Record<string, string> = {
 
 function loadWorkspaceVersion(pkg: string): string {
   const metaUrl = import.meta.url;
-  const isRemote = metaUrl.startsWith('https://') || metaUrl.startsWith('http://');
-
-  if (isRemote) {
-    // Will be resolved lazily via JSR API in resolveVersions()
-    return '';
-  }
-
   const selfPath = fileURLToPath(new URL('.', metaUrl));
   const dir = PKG_DIR_MAP[pkg] || pkg;
   const wsPath = resolve(selfPath, '..', '..', 'packages', dir, 'deno.json');
@@ -57,54 +48,52 @@ function loadWorkspaceVersion(pkg: string): string {
   }
 }
 
-/** Fetch the latest version of a JSR package from the Registry API. */
-async function fetchJsrVersion(pkg: string): Promise<string> {
-  const resp = await fetch(`https://jsr.io/${JSR_SCOPE}/${pkg}/meta.json`, {
+/** Detect whether cli.ts is being run from the openElement workspace. */
+function isWorkspace(): boolean {
+  try {
+    const selfPath = fileURLToPath(new URL('.', import.meta.url));
+    Deno.readTextFileSync(resolve(selfPath, '..', '..', 'packages', 'core', 'deno.json'));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Fetch the latest version of an npm package from the Registry API. */
+async function fetchNpmVersion(pkg: string): Promise<string> {
+  const resp = await fetch(`https://registry.npmjs.org/${NPM_SCOPE}/${pkg}`, {
     headers: { Accept: 'application/json' },
   });
   if (!resp.ok) {
     throw new Error(
-      `Failed to fetch version for ${JSR_SCOPE}/${pkg} from JSR Registry (HTTP ${resp.status})`,
+      `Failed to fetch version for ${NPM_SCOPE}/${pkg} from npm registry (HTTP ${resp.status})`,
     );
   }
   const meta = await resp.json();
-  // JSR meta.json has { latest, versions: { "0.21.5": {}, ... } }
-  const version = meta?.latest ?? Object.keys(meta?.versions ?? {}).pop();
+  // npm registry response has dist-tags.latest
+  const version = meta?.['dist-tags']?.latest;
   if (!version) {
     throw new Error(
-      `No version found for ${JSR_SCOPE}/${pkg} in JSR Registry response`,
+      `No version found for ${NPM_SCOPE}/${pkg} in npm registry response`,
     );
   }
   return version;
 }
 
-/** Resolve all package versions: local from workspace, remote from JSR API. */
+/** Resolve all package versions: local from workspace, remote from npm registry. */
 async function resolveVersions(): Promise<Record<string, string>> {
-  const metaUrl = import.meta.url;
-  const isRemote = metaUrl.startsWith('https://') || metaUrl.startsWith('http://');
-
   const keys = Object.keys(PKG_DIR_MAP);
-  if (!isRemote) {
+  if (isWorkspace()) {
     // Local: synchronous read from workspace
     const v: Record<string, string> = {};
     for (const k of keys) v[k] = loadWorkspaceVersion(k);
     return v;
   }
 
-  // Remote: fetch all versions from JSR in parallel
-  console.info('Resolving package versions from JSR...');
-  const jsrNames: Record<string, string> = {
-    core: 'core',
-    adapterVite: 'adapter-vite', // H-13 fix: Added missing adapterVite entry
-    app: 'app',
-    content: 'content',
-    ui: 'ui',
-    signal: 'signal',
-    protocol: 'protocol',
-    element: 'element',
-  };
+  // Remote: fetch all versions from npm in parallel
+  console.info('Resolving package versions from npm...');
   const entries = await Promise.all(
-    keys.map(async (k) => [k, await fetchJsrVersion(jsrNames[k])]),
+    keys.map(async (k) => [k, await fetchNpmVersion(PKG_DIR_MAP[k])]),
   );
   return Object.fromEntries(entries);
 }
@@ -134,21 +123,21 @@ node_modules/
     "hono/request-id": "npm:hono@4.12.23/request-id",
     "hono/secure-headers": "npm:hono@4.12.23/secure-headers",
     "marked": "npm:marked@15.0.12",
-    "@openelement/app": "jsr:@openelement/app@^${v.app}",
-    "@openelement/app/vite": "jsr:@openelement/app@^${v.app}/vite",
-    "@openelement/core": "jsr:@openelement/core@^${v.core}",
-    "@openelement/core/jsx-runtime": "jsr:@openelement/core@^${v.core}/jsx-runtime",
-    "@openelement/element": "jsr:@openelement/element@^${v.element}",
-    "@openelement/ui": "jsr:@openelement/ui@^${v.ui}",
+    "@openelement/app": "npm:@openelement/app@^${v.app}",
+    "@openelement/app/vite": "npm:@openelement/app@^${v.app}/vite",
+    "@openelement/core": "npm:@openelement/core@^${v.core}",
+    "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
+    "@openelement/element": "npm:@openelement/element@^${v.element}",
+    "@openelement/ui": "npm:@openelement/ui@^${v.ui}",
     "vite": "npm:vite@8.0.10"
   },
   "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run --config deno.json -A npm:vite",
-    "build": "deno run --config deno.json -A jsr:@openelement/adapter-vite@^${v.adapterVite}/cli/build",
+    "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build",
     "build:ssr": "deno run --config deno.json -A npm:vite build",
-    "build:client": "deno run --config deno.json -A jsr:@openelement/adapter-vite@^${v.adapterVite}/cli/build-client",
-    "build:ssg": "deno run --config deno.json -A jsr:@openelement/adapter-vite@^${v.adapterVite}/cli/build-ssg",
+    "build:client": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-client",
+    "build:ssg": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-ssg",
     "preview": "deno run --config deno.json -A npm:vite preview"
   },
   "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/core" }
@@ -184,7 +173,7 @@ export default defineConfig({
       },
     },
     // Use pre-built UI components from @openelement/ui
-    // (JSR distributes compiled JS - no decorator errors)
+    // (npm distributes compiled JS - no decorator errors)
     packageIslands: ['@openelement/ui'],
     // SSR must bundle @openelement/ui (decorators need compilation)
     ssr: {
@@ -378,7 +367,7 @@ export default defineIsland(tagName, {
 async function main() {
   const name = Deno.args[0];
   if (!name) {
-    log.error('Usage: deno run -A jsr:@openelement/create <project-name>');
+    log.error('Usage: deno run -A npm:@openelement/create <project-name>');
     Deno.exit(1);
   }
 

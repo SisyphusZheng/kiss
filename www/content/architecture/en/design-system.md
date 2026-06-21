@@ -118,7 +118,7 @@ currentPath=/architecture/design-system`}
     <div class='install-section'>
       <h3>Install @openelement/ui</h3>
       <div class='install-cmd'>
-        <span class='prompt'>$</span> deno add jsr:@openelement/ui
+        <span class='prompt'>$</span> npm install @openelement/ui
       </div>
       <p>Deno, Node, Bun. Zero config.</p>
     </div>

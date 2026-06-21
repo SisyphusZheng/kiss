@@ -45,12 +45,17 @@ const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 
 // to prevent timer leaks.
 const _visibilityTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
-const _islandMeta = new WeakMap<
-  CustomElementConstructor,
-  { tagName: string; layer: string; isIsland: boolean; ssr?: boolean; dsd: boolean }
->();
+export interface IslandMeta {
+  tagName: string;
+  layer: string;
+  isIsland: boolean;
+  ssr?: boolean;
+  dsd: boolean;
+}
 
-export function getIslandMeta(ctor: CustomElementConstructor) {
+const _islandMeta = new WeakMap<CustomElementConstructor, IslandMeta>();
+
+export function getIslandMeta(ctor: CustomElementConstructor): IslandMeta | undefined {
   return _islandMeta.get(ctor);
 }
 

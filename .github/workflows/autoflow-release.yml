@@ -52,16 +52,24 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/setup-deno-workspace
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Patch release
         if: ${{ inputs.plan == 'patch' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           deno task autoflow:patch-release --approved-plan ${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}
       - name: Approved release
         if: ${{ inputs.plan != 'patch' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           deno task autoflow:release --approved-plan ${{ inputs.approvedPlan }} --to ${{ inputs.version }}
 

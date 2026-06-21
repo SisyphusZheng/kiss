@@ -36,8 +36,10 @@ export class OpenElementLogger {
     if (err instanceof OpenElementError) {
       console.error(`${this.prefix} ${msg}`, {
         code: err.code,
+        message: err.message,
         severity: err.severity,
         phase: err.phase,
+        cause: err.cause instanceof Error ? err.cause.message : err.cause,
       });
     } else if (err instanceof Error) {
       console.error(`${this.prefix} ${msg}`, err.message);
