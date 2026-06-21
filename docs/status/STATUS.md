@@ -5,9 +5,9 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0 Active (npm Distribution Pivot)
+## Current Version Line: v0.40.8 Active (Cleanup-Train Patch → next v0.41.0 npm Distribution Pivot)
 
-v0.41.0 is the active minor release. It pivots openElement distribution from
+v0.40.8 is the active package line. v0.41.0 (next) pivots openElement distribution from
 JSR to npm using Deno `deno pack`, keeps Vite + Nitro as the default engines
 behind the protocol boundary, and makes `@openelement/*` packages available as
 pure ESM npm artifacts. Runtime-free packages (`core`, `element`, `ui`,
