@@ -257,6 +257,10 @@ const aliases = [
     replacement: vitePath(join(signalsSrc, 'framework.ts')),
   },
   {
+    find: '@openelement/signal',
+    replacement: vitePath(join(signalsSrc, 'index.ts')),
+  },
+  {
     find: '@openelement/element',
     replacement: vitePath(join(repoRoot, 'packages', 'element', 'src', 'index.ts')),
   },
