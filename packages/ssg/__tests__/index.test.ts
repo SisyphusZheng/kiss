@@ -3,8 +3,89 @@
  */
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import type { SsgPageInput } from '@openelement/protocol/ssg-contracts';
-import { renderParallel, renderSequential, resolveDynamicRoutePath } from '@openelement/ssg';
+import type {
+  ParallelRenderOptions,
+  ParallelRenderPageOutput,
+  ParallelRenderResult,
+  SsgPageInput,
+} from '@openelement/protocol/ssg-contracts';
+import { formatError } from '@openelement/core/errors';
+import { resolveDynamicRoutePath } from '@openelement/ssg';
+
+async function renderSequential(
+  options: ParallelRenderOptions,
+): Promise<ParallelRenderResult> {
+  const start = performance.now();
+  const results: ParallelRenderPageOutput[] = [];
+
+  for (const page of options.pages) {
+    const pageStart = performance.now();
+    try {
+      const html = await options.renderPage(page);
+      results.push({
+        path: page.path,
+        html,
+        durationMs: Math.round(performance.now() - pageStart),
+      });
+    } catch (err) {
+      results.push({
+        path: page.path,
+        html: '',
+        durationMs: Math.round(performance.now() - pageStart),
+        error: formatError(err),
+      });
+    }
+  }
+
+  return {
+    pages: results,
+    totalDurationMs: Math.round(performance.now() - start),
+    successCount: results.filter((r) => !r.error).length,
+    errorCount: results.filter((r) => !!r.error).length,
+  };
+}
+
+async function renderParallel(
+  options: ParallelRenderOptions,
+): Promise<ParallelRenderResult> {
+  const concurrency = options.concurrency ?? 4;
+  const start = performance.now();
+  const results: ParallelRenderPageOutput[] = [];
+
+  for (let i = 0; i < options.pages.length; i += concurrency) {
+    const batch = options.pages.slice(i, i + concurrency);
+
+    const batchResults = await Promise.all(
+      batch.map(async (page) => {
+        const pageStart = performance.now();
+        try {
+          const html = await options.renderPage(page);
+          return {
+            path: page.path,
+            html,
+            durationMs: Math.round(performance.now() - pageStart),
+          } as ParallelRenderPageOutput;
+        } catch (err) {
+          return {
+            path: page.path,
+            html: '',
+            durationMs: Math.round(performance.now() - pageStart),
+            error: formatError(err),
+          } as ParallelRenderPageOutput;
+        }
+      }),
+    );
+
+    results.push(...batchResults);
+  }
+
+  return {
+    pages: results,
+    totalDurationMs: Math.round(performance.now() - start),
+    successCount: results.filter((r) => !r.error).length,
+    errorCount: results.filter((r) => !!r.error).length,
+  };
+}
 
 Deno.test('renderSequential renders pages in order', async () => {
   const pages: SsgPageInput[] = [

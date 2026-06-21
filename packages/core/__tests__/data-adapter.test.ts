@@ -2,7 +2,7 @@
  * @openelement/core — DataAdapter unit tests (Deno)
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { type DataAdapter, MemoryDataAdapter } from '../src/data.ts';
+import { type DataAdapter, MemoryDataAdapter } from '../src/index.ts';
 
 Deno.test('MemoryDataAdapter - get existing key', async () => {
   const adapter = new MemoryDataAdapter([['a', 1], ['b', 2]]);

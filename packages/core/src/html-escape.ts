@@ -10,12 +10,9 @@
 
 // ─── L1: Safe/Unsafe HTML Contract ──────────────────────────────
 
-import { createLogger } from './logger.js';
+import { createLogger, warnOnce } from './logger.js';
 
 const log = createLogger('core');
-
-/** Track whether we've already warned about <script> in headExtras (once per process) */
-let _warnedHeadExtrasScripts = false;
 
 /** Branded type: a string that has been HTML-escaped (safe for text content) */
 export type SafeHtml = string & { readonly __safeHtml: unique symbol };
@@ -110,9 +107,10 @@ export function wrapInDocument(
   if (!allowHeadExtrasScripts && headExtras) {
     // Strip <script> tags and their content
     safeHeadExtras = headExtras.replace(/<script[\s>][\s\S]*?<\/script\s*>/gi, '');
-    if (safeHeadExtras !== headExtras && !_warnedHeadExtrasScripts) {
-      _warnedHeadExtrasScripts = true;
-      log.warn(
+    if (safeHeadExtras !== headExtras) {
+      warnOnce(
+        'headExtrasScripts',
+        log,
         'headExtras contained <script> tags which were stripped for security. ' +
           'Use inject.scripts for safe script injection, or set allowHeadExtrasScripts: true.',
       );
@@ -212,24 +210,7 @@ export function renderSsrError(
   const status = typeof statusOrRoute === 'number' ? statusOrRoute : 500;
   const title = isDev ? 'SSR Render Error' : `Error ${status}`;
   const message = escapeHtml(error.message);
-
-  if (isDev) {
-    const stack = error.stack ? escapeHtml(error.stack) : '';
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem}pre{background:#f5f5f5;padding:1rem;overflow:auto;border-radius:4px}</style>
-</head>
-<body>
-  <h1>${title}</h1>
-  <p><strong>${message}</strong></p>
-  ${stack ? `<pre>${stack}</pre>` : ''}
-</body>
-</html>`;
-  }
+  const stack = isDev && error.stack ? escapeHtml(error.stack) : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -237,10 +218,16 @@ export function renderSsrError(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  ${
+    isDev
+      ? '<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem}pre{background:#f5f5f5;padding:1rem;overflow:auto;border-radius:4px}</style>'
+      : ''
+  }
 </head>
 <body>
   <h1>${title}</h1>
-  <p>${message}</p>
+  <p>${isDev ? `<strong>${message}</strong>` : message}</p>
+  ${stack ? `<pre>${stack}</pre>` : ''}
 </body>
 </html>`;
 }

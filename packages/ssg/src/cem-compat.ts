@@ -247,21 +247,16 @@ export function classifyCemManifest(manifest: CustomElementsManifest): CemClassi
   const clientOnlyTags: string[] = [];
   const experimentalDomTags: string[] = [];
 
+  // ponytail: bucket lookup replaces 4-case switch
+  const buckets: Record<string, string[]> = {
+    rejected: rejectedTags,
+    'ssr-capable': ssrCapableTags,
+    'client-only': clientOnlyTags,
+    'experimental-dom': experimentalDomTags,
+  };
+
   for (const classification of classifications) {
-    switch (classification.tier) {
-      case 'rejected':
-        rejectedTags.push(classification.tagName);
-        break;
-      case 'ssr-capable':
-        ssrCapableTags.push(classification.tagName);
-        break;
-      case 'client-only':
-        clientOnlyTags.push(classification.tagName);
-        break;
-      case 'experimental-dom':
-        experimentalDomTags.push(classification.tagName);
-        break;
-    }
+    buckets[classification.tier]?.push(classification.tagName);
   }
 
   return {

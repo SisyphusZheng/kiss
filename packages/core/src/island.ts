@@ -421,7 +421,8 @@ export function defineIsland<T extends CustomElementConstructor>(
 
   if (isBrowser) {
     switch (strategy) {
-      case 'load':
+      case 'load': // ponytail: fallthrough, both 'load' and 'only' call register()
+      case 'only':
         register();
         break;
       case 'idle':
@@ -429,9 +430,6 @@ export function defineIsland<T extends CustomElementConstructor>(
         break;
       case 'visible':
         createVisibleStrategy(tagName, register);
-        break;
-      case 'only':
-        register();
         break;
     }
   } else {

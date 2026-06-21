@@ -15,7 +15,7 @@
 export type { ReadonlySignal, Signal, SignalEngine, Unsubscribe, WritableSignal } from './types.ts';
 
 // ─── Engine factories (available at subpaths) ───────────────────
-export { createAlienEngine, createDefaultEngine } from './alien-engine.ts';
+export { createAlienEngine } from './alien-engine.ts';
 export { createPreactEngine } from './preact-engine.ts';
 
 // ─── Framework layer ────────────────────────────────────────────

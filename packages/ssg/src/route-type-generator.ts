@@ -33,14 +33,6 @@ function filePathToBracketRoute(filePath: string): string {
 }
 
 /**
- * Escape a route path for use as a TypeScript property key.
- * Wraps in quotes to handle paths with special characters.
- */
-function escapeRoutePath(path: string): string {
-  return JSON.stringify(path);
-}
-
-/**
  * Generate TypeScript type literal for route params.
  * Converts param names to a Record<string, string> type.
  *
@@ -101,7 +93,7 @@ export function generateRouteTypes(routes: RouteEntry[]): string {
   // Generate entries for each route with params
   const paramEntries = paramRoutes.map((r) => {
     const bracketPath = filePathToBracketRoute(r.filePath);
-    const path = escapeRoutePath(bracketPath);
+    const path = JSON.stringify(bracketPath);
     const type = generateParamsType(r.params!);
     return `    ${path}: ${type};`;
   });

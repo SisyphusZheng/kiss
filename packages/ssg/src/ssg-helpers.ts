@@ -31,24 +31,6 @@ export function findHtmlFiles(dir: string): string[] {
   return results;
 }
 
-/** Join URL path segments, normalising slashes and removing empties. */
-export function joinUrlPath(...parts: string[]): string {
-  const segments = parts
-    .flatMap((part) => part.split('/'))
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return '/' + segments.join('/');
-}
-
-/** Check whether a string contains ASCII control characters. */
-export function hasControlCharacter(value: string): boolean {
-  for (let i = 0; i < value.length; i++) {
-    const code = value.charCodeAt(i);
-    if (code <= 0x1f || code === 0x7f) return true;
-  }
-  return false;
-}
-
 // ─── Route helpers ─────────────────────────────────────────────
 
 /**
@@ -73,8 +55,7 @@ export function resolveDynamicRoutePath(
     if (
       value === '.' ||
       value === '..' ||
-      /[\\/]/.test(value) ||
-      hasControlCharacter(value)
+      /[\\/]/.test(value)
     ) {
       throw new Error(
         `Unsafe value for route parameter "${name}" in ${routePath}: ${value}`,

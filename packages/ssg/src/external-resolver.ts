@@ -31,6 +31,21 @@ interface PkgJson {
   main?: string;
 }
 
+/** Conditional keys to skip when walking exports (not subpaths). */
+const CONDITION_KEYS = new Set([
+  'import',
+  'require',
+  'node',
+  'default',
+  'types',
+  'browser',
+  'deno',
+  'worker',
+  'development',
+  'production',
+  'module',
+]);
+
 /**
  * ADR-0054: Recursively walk a package.json exports field to extract all
  * export subpaths as bare specifier strings.
@@ -79,29 +94,14 @@ export function walkExports(
   if (typeof exports === 'object') {
     const obj = exports as Record<string, unknown>;
 
-    // Conditional keys to skip (not subpaths)
-    const conditionKeys = new Set([
-      'import',
-      'require',
-      'node',
-      'default',
-      'types',
-      'browser',
-      'deno',
-      'worker',
-      'development',
-      'production',
-      'module',
-    ]);
-
-    const hasSubpathKeys = Object.keys(obj).some((k) => !conditionKeys.has(k));
-    const hasConditionKeys = Object.keys(obj).some((k) => conditionKeys.has(k));
+    const hasSubpathKeys = Object.keys(obj).some((k) => !CONDITION_KEYS.has(k));
+    const hasConditionKeys = Object.keys(obj).some((k) => CONDITION_KEYS.has(k));
 
     if (hasConditionKeys && !hasSubpathKeys) {
       // Pure condition block: recurse into each condition
       const seen = new Set<string>();
       for (const key of Object.keys(obj)) {
-        if (conditionKeys.has(key)) {
+        if (CONDITION_KEYS.has(key)) {
           const sub = walkExports(obj[key], packageName, prefix);
           for (const s of sub) {
             if (!seen.has(s)) {
@@ -114,7 +114,7 @@ export function walkExports(
     } else if (hasSubpathKeys) {
       // Subpath mapping: each key is a subpath
       for (const key of Object.keys(obj)) {
-        if (conditionKeys.has(key)) continue;
+        if (CONDITION_KEYS.has(key)) continue;
         const newPrefix = key; // e.g. ".", "./secure-headers", "./*"
         const sub = walkExports(obj[key], packageName, newPrefix);
         results.push(...sub);

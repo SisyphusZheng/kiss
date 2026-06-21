@@ -620,31 +620,19 @@ export function buildSsrAdmissionPlan(
     const cemClassification = cemMap.get(island.tagName);
 
     if (cemClassification) {
-      // Use CEM classification tier for admission decision
-      switch (cemClassification.tier) {
-        case 'ssr-capable':
-          renderPath = 'ssr+client';
-          reason = `CEM ssr-capable: ${cemClassification.reason}`;
-          break;
-        case 'client-only':
-          renderPath = 'client-only';
-          reason = `CEM client-only: ${cemClassification.reason}`;
-          break;
-        case 'experimental-dom':
-          // Experimental DOM simulation: treat as client-only unless explicitly enabled
-          renderPath = 'client-only';
-          reason = `CEM experimental-dom: ${cemClassification.reason}`;
-          break;
-        case 'rejected':
-          renderPath = 'rejected';
-          reason = `CEM rejected: ${cemClassification.reason}`;
-          break;
-        default:
-          // Unknown tier: conservative default to client-only
-          renderPath = 'client-only';
-          reason =
-            `Unknown CEM tier (${cemClassification.tier}) - conservative default to client-only`;
-      }
+      // ponytail: lookup table replaces 4-case switch
+      const TIER_RENDER_PATH: Record<string, string> = {
+        'ssr-capable': 'ssr+client',
+        'client-only': 'client-only',
+        'experimental-dom': 'client-only',
+        rejected: 'rejected',
+      };
+
+      const knownTier = cemClassification.tier in TIER_RENDER_PATH;
+      renderPath = (TIER_RENDER_PATH[cemClassification.tier] ?? 'client-only') as typeof renderPath;
+      reason = knownTier
+        ? `CEM ${cemClassification.tier}: ${cemClassification.reason}`
+        : `Unknown CEM tier (${cemClassification.tier}) - conservative default to client-only`;
     } else if (island.hydrate === 'only') {
       renderPath = 'client-only';
       reason = island.reason || 'client:only island is excluded from SSR';

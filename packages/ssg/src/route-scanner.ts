@@ -136,17 +136,12 @@ function pathToVarName(path: string): string {
  * Identify special file types by name.
  * _renderer.ts -> renderer, _middleware.ts -> middleware
  */
+// ponytail: inline lookup replaces 2-case switch
 function getSpecialFileType(fileName: string): SpecialFileType | null {
-  // v0.25: AST-verified — path utility, simple extension strip
   const baseName = fileName.replace(/\.[^.]+$/, '');
-  switch (baseName) {
-    case '_renderer':
-      return 'renderer';
-    case '_middleware':
-      return 'middleware';
-    default:
-      return null;
-  }
+  return ({ _renderer: 'renderer', _middleware: 'middleware' } as Record<string, SpecialFileType>)[
+    baseName
+  ] ?? null;
 }
 
 /**

@@ -136,6 +136,7 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
   }
 }
 
+// ponytail: speculative, never thrown — kept for forward-compat
 export class IslandRenderError extends RenderError {
   constructor(componentPath: string, sourceError: Error) {
     super(
@@ -168,6 +169,7 @@ export class PropValidationError extends OpenElementError {
   }
 }
 
+// ponytail: speculative, never thrown — kept for forward-compat
 export class NavigationError extends OpenElementError {
   public readonly route: string;
 
@@ -178,6 +180,7 @@ export class NavigationError extends OpenElementError {
   }
 }
 
+// ponytail: speculative, never thrown — kept for forward-compat
 export class BuildError extends OpenElementError {
   constructor(message: string, cause?: Error) {
     super(message, 'BUILD_ERROR', 'error', 'build', false, cause);
@@ -213,6 +216,7 @@ export interface SsrErrorEntry {
   phase: ErrorPhase;
 }
 
+// ponytail: speculative, never instantiated — kept for forward-compat
 export class SsrErrorContext {
   private errors: SsrErrorEntry[] = [];
 

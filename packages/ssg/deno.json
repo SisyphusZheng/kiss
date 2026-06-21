@@ -2,8 +2,7 @@
   "name": "@openelement/ssg",
   "version": "0.40.8",
   "exports": {
-    ".": "./src/index.ts",
-    "./file-isr-cache": "./src/file-isr-cache.ts"
+    ".": "./src/index.ts"
   },
   "imports": {
     "hono": "npm:hono@^4.12",

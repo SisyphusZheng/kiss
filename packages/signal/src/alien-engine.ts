@@ -101,10 +101,6 @@ const _defaultAlienMod: AlienSignalsModule = { signal: _s, computed: _c, effect:
  * v0.40.0: This returns an alien-signals engine. The framework default
  * (signal/computed/effect in framework.ts) now uses @preact/signals-core.
  */
-export function createDefaultEngine(): SignalEngine {
-  return createAlienEngine(_defaultAlienMod);
-}
-
 // ─── Advanced primitives ────────────────────────────────────────
 
 /**

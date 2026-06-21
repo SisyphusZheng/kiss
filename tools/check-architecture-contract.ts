@@ -6,6 +6,8 @@
  * used as regressions for the active public contract.
  */
 
+import { extname } from 'node:path';
+
 interface Issue {
   check: string;
   file: string;
@@ -94,11 +96,6 @@ function addIssue(check: string, file: string, message: string, line?: number): 
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, '/');
-}
-
-function extname(path: string): string {
-  const idx = path.lastIndexOf('.');
-  return idx === -1 ? '' : path.slice(idx);
 }
 
 async function gitFiles(): Promise<string[]> {

@@ -149,7 +149,7 @@ export {
   unwrapSignalLike,
 } from './signal-like.js';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
-export { createLogger, LogLevel, OpenElementLogger } from './logger.js';
+export { createLogger, OpenElementLogger } from './logger.js';
 /** @internal — use @openelement/core/security subpath */
 export { DANGEROUS_KEYS } from './security.js';
 export { isValidTagName } from './tag-utils.js';
@@ -203,5 +203,5 @@ export {
   unwrap,
 } from './prop.js';
 // Prop types moved to @openelement/element
-export { MemoryDataAdapter } from './data.js';
-export type { DataAdapter } from './data.js';
+export { MemoryDataAdapter } from '@openelement/protocol/data';
+export type { DataAdapter } from '@openelement/protocol/data';

@@ -42,7 +42,6 @@ import {
 import { DANGEROUS_KEYS } from './security.js';
 
 const log = createLogger('core');
-const _textEncoder = new TextEncoder();
 
 // ─── Error Classification ──────────────────────────────────────
 // RenderPhase and RenderErrorCode are imported from render-schemas.js.
@@ -64,15 +63,19 @@ export function classifyError(
   };
 }
 
+// ponytail: lookup table replaces 5-case if/else chain
+const ERROR_CODES: Record<string, RenderErrorCode> = {
+  instantiate: 'LESS_RENDER_INSTANTIATE_FAILED',
+  nested: 'LESS_RENDER_NESTED_FAILED',
+  style: 'LESS_RENDER_STYLE_FAILED',
+  serialize: 'LESS_RENDER_SERIALIZE_FAILED',
+};
+
 function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCode {
-  if (phase === 'instantiate') return 'LESS_RENDER_INSTANTIATE_FAILED';
-  if (phase === 'nested') return 'LESS_RENDER_NESTED_FAILED';
-  if (phase === 'style') return 'LESS_RENDER_STYLE_FAILED';
-  if (phase === 'serialize') return 'LESS_RENDER_SERIALIZE_FAILED';
   if (message.includes('Components must return a VNode')) {
     return 'LESS_RENDER_INVALID_OUTPUT';
   }
-  return 'LESS_RENDER_RENDER_FAILED';
+  return ERROR_CODES[phase] ?? 'LESS_RENDER_RENDER_FAILED';
 }
 
 function instantiationErrorHtml(
@@ -336,7 +339,7 @@ export async function renderDsd(
     hooks?.onError?.(classifiedErr);
 
     const attrs = serializeAttrs(tagName, props);
-    const renderEndFallback = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const renderEndFallback = safeNow();
     const fallbackResult: RenderOutput = {
       html: `<${tagName}${attrs}></${tagName}>`,
       errors: collectedErrors,
@@ -397,9 +400,7 @@ export async function renderDsd(
     ? 'light-dom'
     : dsdOptions?.layer || instance.layer || 'dsd-static';
 
-  const renderEnd = typeof performance !== 'undefined'
-    ? performance.now()
-    : renderEndTimeFallback();
+  const renderEnd = safeNow();
   const renderTimeMs = renderEnd - startTime;
 
   const metrics: DsdRenderMetrics = {
@@ -451,8 +452,9 @@ export async function renderDsd(
   return output;
 }
 
-function renderEndTimeFallback(): number {
-  return Date.now();
+/** Safe high-resolution timestamp with SSR/environment fallback. */
+export function safeNow(): number {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
 function describeRenderValue(value: unknown): string {

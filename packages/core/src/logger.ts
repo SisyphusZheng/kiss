@@ -10,15 +10,6 @@
 
 import { OpenElementError } from './errors.js';
 
-/** Log level enum - higher value = less verbose */
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  SILENT = 4,
-}
-
 const PREFIX_MAP: Record<string, string> = {
   core: '[openElement]',
   ssg: '[openElement/SSG]',
@@ -76,4 +67,13 @@ export class OpenElementLogger {
 export function createLogger(scope: string): OpenElementLogger {
   const prefix = PREFIX_MAP[scope] ?? `[openElement/${scope}]`;
   return new OpenElementLogger(prefix);
+}
+
+// ponytail: warn-once via Set, two callers, shared helper if >3 callers
+const _warned = new Set<string>();
+export function warnOnce(key: string, logger: OpenElementLogger, msg: string): void {
+  if (!_warned.has(key)) {
+    _warned.add(key);
+    logger.warn(msg);
+  }
 }

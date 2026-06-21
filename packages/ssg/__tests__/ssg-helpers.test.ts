@@ -10,7 +10,6 @@ import {
   buildIsrManifestEntries,
   collectPageOutput,
   findHtmlFiles,
-  joinUrlPath,
   type PageDiagnostic,
   resolveDynamicRoutePath,
   stableHash,
@@ -94,28 +93,6 @@ Deno.test('resolveDynamicRoutePath encodes spaces', () => {
     resolveDynamicRoutePath('/blog/:slug', ['slug'], { slug: 'my post' }),
     '/blog/my%20post',
   );
-});
-
-// ─── joinUrlPath ────────────────────────────────────────────────
-
-Deno.test('joinUrlPath joins segments with leading slash', () => {
-  assertEquals(joinUrlPath('a', 'b', 'c'), '/a/b/c');
-});
-
-Deno.test('joinUrlPath strips empty segments', () => {
-  assertEquals(joinUrlPath('a', '', 'b'), '/a/b');
-});
-
-Deno.test('joinUrlPath handles leading slashes in segments', () => {
-  assertEquals(joinUrlPath('/a/', '/b/'), '/a/b');
-});
-
-Deno.test('joinUrlPath returns root for empty input', () => {
-  assertEquals(joinUrlPath(), '/');
-});
-
-Deno.test('joinUrlPath with locale prefix', () => {
-  assertEquals(joinUrlPath('zh-CN', '/blog/post-1'), '/zh-CN/blog/post-1');
 });
 
 // ─── findHtmlFiles ──────────────────────────────────────────────
