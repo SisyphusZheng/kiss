@@ -57,6 +57,11 @@ Distribution closure is completed by the `main` branch `Publish to npm` workflow
 which packs and publishes the 11-package line with provenance and runs the
 post-publish npm consumer smoke.
 
+v0.41.0 repository cleanup (2026-06-21, 1068 tests / 0 failed):
+
+- Round 1: Deleted dead files (validators, file-isr-cache, engine, content barrels, ~530 lines). Removed dead exports (LogLevel, renderSequential/Parallel). Shrink/stdlib fixes (hoisted conditionKeys, unified renderSsrError, extname→path.extname, warnOnce helper).
+- Round 2: Deleted createDefaultEngine, _textEncoder, data.ts barrel, use-loader-data.ts barrel, hasControlCharacter, joinUrlPath, section-matter dep, stale file-isr-cache export. Inlined renderEndTimeFallback/now/escapeRoutePath. Converted codeForRenderError to lookup table. Merged switch fallthrough. Annotated speculative errors.
+
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
 
 v0.39.0 is released. It proved generated starter behavior from
