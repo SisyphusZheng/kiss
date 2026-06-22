@@ -14,7 +14,7 @@ import { createLogger, warnOnce } from './logger.js';
 
 const log = createLogger('core');
 
-import type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
+import type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
 export type { SafeHtml, UnsafeHtml };
 
 /**
@@ -137,11 +137,7 @@ export function wrapInDocument(
   }
   const metaTags: string[] = [];
   if (meta?.description) {
-    const safeDesc = meta.description
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const safeDesc = escapeAttrValue(meta.description);
     metaTags.push(`  <meta name="description" content="${safeDesc}">`);
   }
   if (Array.isArray(meta?.tags)) {

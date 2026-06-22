@@ -159,9 +159,11 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
         throw new OpenElementError(
           `Failed to load @openelement/core module from JSR: ${filePath}. ` +
             `URL: ${url}. Error: ${formatError(err)}`,
-          'JSR_FETCH_ERROR',
-          500,
-          false,
+          {
+            code: 'JSR_FETCH_ERROR',
+            statusCode: 500,
+            recoverable: false,
+          },
         );
       }
 
@@ -179,9 +181,11 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
         throw new OpenElementError(
           `Failed to compile @openelement/core module from JSR: ${filePath}. ` +
             `Error: ${formatError(err)}`,
-          'JSR_COMPILE_ERROR',
-          500,
-          false,
+          {
+            code: 'JSR_COMPILE_ERROR',
+            statusCode: 500,
+            recoverable: false,
+          },
         );
       }
 

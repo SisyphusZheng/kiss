@@ -13,10 +13,8 @@
     "./data": "./src/data.ts",
     "./isr": "./src/isr.ts",
     "./ssg": "./src/ssg.ts",
-    "./router": "./src/router.ts",
     "./errors": "./src/errors.ts",
     "./style-sheet": "./src/style-sheet.ts",
-    "./html": "./src/html.ts",
     "./island": "./src/island.ts",
     "./prop": "./src/prop.ts",
     "./hydration-markers": "./src/hydration-markers.ts"

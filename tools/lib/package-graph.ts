@@ -5,6 +5,8 @@
  * topological sorting / cycle detection used by graph:check and release tasks.
  */
 
+import { walkFiles } from './walk.ts';
+
 export interface PackageInfo {
   name: string;
   version: string;
@@ -111,24 +113,19 @@ function collectInternalDeps(dir: string): string[] {
   const deps = new Set<string>();
   const srcDir = `${dir}/src`;
 
-  function scan(current: string): void {
-    for (const entry of Deno.readDirSync(current)) {
-      const path = `${current}/${entry.name}`;
-      if (entry.isDirectory) {
-        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
-        scan(path);
-      } else if (entry.isFile && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
-        const text = Deno.readTextFileSync(path);
-        for (const specifier of extractOpenImports(text)) {
-          const base = normalizeDep(specifier, '');
-          if (base) deps.add(base);
-        }
+  try {
+    for (
+      const path of walkFiles(srcDir, {
+        exclude: ({ name }) => name === 'node_modules' || name === 'dist',
+        include: ({ name }) => name.endsWith('.ts') || name.endsWith('.tsx'),
+      })
+    ) {
+      const text = Deno.readTextFileSync(path);
+      for (const specifier of extractOpenImports(text)) {
+        const base = normalizeDep(specifier, '');
+        if (base) deps.add(base);
       }
     }
-  }
-
-  try {
-    scan(srcDir);
   } catch {
     // Packages without src are allowed.
   }

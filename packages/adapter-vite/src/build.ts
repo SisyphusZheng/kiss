@@ -5,56 +5,18 @@
  * API Routes (S - Serverless extension) deploy separately.
  *
  * ADR 0011: closeBundle writes metadata to ctx, then triggers Phase 2/3.
- * ADR 0022: Phase 2/3 extracted into explicit BuildStep classes for
- *           error isolation and future extensibility.
  * No globalThis bridge - ctx stays in createOpenPlugin() closure scope throughout.
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
-import type {
-  OpenElementBuildContext,
-  Phase1Token,
-  Phase2Token,
-  Phase3Token,
-} from './build-context.js';
+import type { OpenElementBuildContext, Phase3Token } from './build-context.js';
 import { join } from 'node:path';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 
 const log = createLogger('core');
-
-/** A single build step with name, phase number, error isolation, and compile-time ordering. */
-export interface BuildStep {
-  readonly name: string;
-  readonly phase: 1 | 2 | 3;
-  run(ctx: OpenElementBuildContext, token: Phase1Token | Phase2Token | Phase3Token): Promise<void>;
-}
-
-/** Phase 2: Client island bundle - runs AFTER SSG (ADR 0023) */
-class ClientBuildStep implements BuildStep {
-  readonly name = 'Client island build';
-  readonly phase = 2 as const;
-
-  async run(ctx: OpenElementBuildContext, token: Phase1Token | Phase3Token): Promise<void> {
-    ctx.completePhase2(token);
-    const { buildClient } = await import('./cli/build-client.js');
-    await buildClient(ctx);
-  }
-}
-
-/** Phase 3: Static site generation - runs BEFORE Phase 2 (ADR 0023) */
-class SSGBuildStep implements BuildStep {
-  readonly name = 'Static site generation';
-  readonly phase = 3 as const;
-
-  async run(ctx: OpenElementBuildContext, token: Phase1Token): Promise<void> {
-    ctx.completePhase3(token);
-    const { buildSSG } = await import('./cli/build-ssg.js');
-    await buildSSG({}, ctx);
-  }
-}
 
 /** Vite plugin: writes build metadata to ctx, then runs Phase 2 + Phase 3 */
 export function buildPlugin(
@@ -127,29 +89,30 @@ export function buildPlugin(
       // Phase 2 runs last because client chunks have content hashes that
       // don't affect HTML content, and injection is a post-processing step.
       const phase1Token = ctx.completePhase1();
-      const steps: BuildStep[] = [];
 
       // Phase 3: SSG render (always runs - generates HTML pages)
-      steps.push(new SSGBuildStep());
+      try {
+        log.info('[3/3] Static site generation...');
+        ctx.completePhase3(phase1Token);
+        const { buildSSG } = await import('./cli/build-ssg.js');
+        await buildSSG({}, ctx);
+        log.info('[3/3] Static site generation - complete');
+      } catch (error) {
+        log.error(`[3/3] Static site generation - FAILED: ${error}`);
+        throw error;
+      }
 
       // Phase 2: Client island bundle (only if islands exist)
-      if (totalIslands > 0) steps.push(new ClientBuildStep());
-
-      let currentToken: Phase1Token | Phase2Token | Phase3Token = phase1Token;
-      for (const step of steps) {
+      if (totalIslands > 0) {
         try {
-          log.info(`[${step.phase}/3] ${step.name}...`);
-          await step.run(ctx, currentToken);
-          // Track the latest completion token
-          if (step.phase === 3 && ctx._phaseTokens[3]) {
-            currentToken = ctx._phaseTokens[3] as Phase3Token;
-          }
-          if (step.phase === 2 && ctx._phaseTokens[2]) {
-            currentToken = ctx._phaseTokens[2] as Phase2Token;
-          }
-          log.info(`[${step.phase}/3] ${step.name} - complete`);
+          log.info('[2/3] Client island build...');
+          const phase3Token = ctx._phaseTokens[3] as Phase3Token;
+          ctx.completePhase2(phase3Token);
+          const { buildClient } = await import('./cli/build-client.js');
+          await buildClient(ctx);
+          log.info('[2/3] Client island build - complete');
         } catch (error) {
-          log.error(`[${step.phase}/3] ${step.name} - FAILED:`, error);
+          log.error(`[2/3] Client island build - FAILED: ${error}`);
           throw error;
         }
       }
@@ -221,14 +184,14 @@ export function buildPlugin(
                   strategyMap,
                   layerMap,
                 );
-                writeIslandManifests(outputDir, pageManifests);
+                await writeIslandManifests(outputDir, pageManifests);
                 log.info(`Client script injected: ${scriptSrc}`);
                 break;
               }
             }
           }
         } catch (error) {
-          log.warn('Failed to inject client script:', error);
+          log.warn(`Failed to inject client script: ${error}`);
         }
       } else {
         log.info('No Phase 2 - client script injection skipped');

@@ -21,6 +21,7 @@ import { generateClientEntry } from '@openelement/ssg';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
 import type { OpenElementBuildContext } from '../build-context.js';
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
+import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 
 const log = createLogger('ssg');
@@ -327,7 +328,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     const { printBuildManifest } = await import('../build-manifest.js');
     printBuildManifest({ root, outDir, phase: 2 });
   } catch (error) {
-    log.error('Client build failed:', error);
+    log.error(`Client build failed: ${formatError(error)}`);
     throw error;
   }
 }

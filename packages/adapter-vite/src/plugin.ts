@@ -314,12 +314,11 @@ export function createOpenPlugin(
             `${totalIslands} island(s) - openElement Architecture`,
         );
       } catch (err) {
-        throw new OpenElementError(
-          `Route scan failed: ${formatError(err)}`,
-          'ROUTE_SCAN_ERROR',
-          500,
-          false,
-        );
+        throw new OpenElementError(`Route scan failed: ${formatError(err)}`, {
+          code: 'ROUTE_SCAN_ERROR',
+          statusCode: 500,
+          recoverable: false,
+        });
       }
     },
   };

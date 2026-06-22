@@ -101,7 +101,7 @@ function instantiateComponent(
     return instance;
   } catch (err) {
     const errMsg = formatError(err);
-    log.error(`Failed to instantiate <${tagName}>:`, errMsg);
+    log.error(`Failed to instantiate <${tagName}>: ${errMsg}`);
     return null;
   }
 }

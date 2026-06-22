@@ -25,17 +25,19 @@ export type {
   HydrationStrategy,
   IsrManifestEntry,
   LayoutsConfig,
+  LocalePath,
   OpenElementApiContext,
   OpenElementBuildContextLike,
   OpenElementMiddleware,
   OpenElementMiddlewareContext,
-  OpenElementPluginMeta,
   OpenElementRenderer,
   RegistryIndex,
   RegistryIndexEntry,
   RouteEntry,
+  SafeHtml,
   SpecialFileType,
   StrategySource,
+  UnsafeHtml,
   ValidationError,
   ValidationResult,
   ValidationWarning,
@@ -59,7 +61,6 @@ export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
 export type {
   CacheAdapter,
   CacheEntry,
-  IsrCache,
   IsrCacheEntry,
   IsrCacheResult,
   IsrCacheState,
@@ -72,7 +73,7 @@ export type {
   IsrRuntimeRenderResult,
   IsrRuntimeResult,
   IsrRuntimeState,
-} from '@openelement/protocol/isr';
+} from './isr-runtime.js';
 export { StyleSheet } from './style-sheet.js';
 export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
 export { bindHydrateEvents } from './dsd-hydration-events.js';
@@ -132,7 +133,6 @@ export type {
   ValidationDiagnostic,
 } from '@openelement/protocol/manifest';
 export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
-export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
 export {
   // v0.24.3: Neutral signal utilities — no template dependency
   isSignalLike,
@@ -140,7 +140,7 @@ export {
 } from '@openelement/signal';
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
-export { createLogger, OpenElementLogger } from './logger.js';
+export { createLogger } from './logger.js';
 /** @internal — use @openelement/core/security subpath */
 export { DANGEROUS_KEYS } from './security.js';
 export { isValidTagName } from './tag-utils.js';

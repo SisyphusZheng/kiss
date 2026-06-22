@@ -125,11 +125,13 @@ export abstract class ErrorBoundary extends OpenElement {
   catchError(error: Error): void {
     const openElementError = error instanceof OpenElementError ? error : new OpenElementError(
       error.message,
-      ErrorCode.BOUNDARY_CAUGHT,
-      'error' as ErrorSeverity,
-      'render',
-      true,
-      error,
+      {
+        code: ErrorCode.BOUNDARY_CAUGHT,
+        severity: 'error' as ErrorSeverity,
+        phase: 'render',
+        recoverable: true,
+        cause: error,
+      },
     );
     this._error = openElementError;
     // Trigger re-render with error state

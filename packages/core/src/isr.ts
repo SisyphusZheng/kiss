@@ -8,14 +8,13 @@
  *   2. Runtime: Edge handler checks cache before serving static
  *   4. Stale: serve cached HTML + async background regeneration
  *
- * The IsrCache interface is platform-agnostic. Production adapters
+ * MemoryIsrCache is the reference in-memory implementation. Production adapters
  * (Cloudflare Workers KV, Deno KV) are v0.22 scope.
  */
 
 import type {
   CacheAdapter,
   CacheEntry,
-  IsrCache,
   IsrCacheEntry,
   IsrCacheResult,
   IsrCacheState,
@@ -25,7 +24,6 @@ import type { IsrManifestEntry } from '@openelement/protocol/framework';
 export type {
   CacheAdapter,
   CacheEntry,
-  IsrCache,
   IsrCacheEntry,
   IsrCacheResult,
   IsrCacheState,
@@ -51,7 +49,7 @@ export function createIsrCacheKey(
   return `openelement:isr:${routePath}${suffix}`;
 }
 
-export class MemoryIsrCache implements IsrCache {
+export class MemoryIsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();
 
   get(key: string, now: number = Date.now()): IsrCacheResult {

@@ -7,7 +7,12 @@ import { ErrorCode, OpenElementError, SsrRenderError } from '../src/errors.ts';
 
 Deno.test('errors', async (t) => {
   await t.step('OpenElementError has code, severity, phase, recoverable', () => {
-    const err = new OpenElementError('test', ErrorCode.RENDER_ERROR, 'error', 'render', true);
+    const err = new OpenElementError('test', {
+      code: ErrorCode.RENDER_ERROR,
+      severity: 'error',
+      phase: 'render',
+      recoverable: true,
+    });
     assertEquals(err.code, ErrorCode.RENDER_ERROR);
     assertEquals(err.severity, 'error');
     assertEquals(err.phase, 'render');
@@ -26,7 +31,12 @@ Deno.test('errors', async (t) => {
   });
 
   await t.step('toJSON returns structured error', () => {
-    const err = new OpenElementError('test error', ErrorCode.UNKNOWN, 'warning', 'build', false);
+    const err = new OpenElementError('test error', {
+      code: ErrorCode.UNKNOWN,
+      severity: 'warning',
+      phase: 'build',
+      recoverable: false,
+    });
     const json = err.toJSON() as Record<string, unknown>;
     assertEquals(json.code, ErrorCode.UNKNOWN);
     assertEquals(json.message, 'test error');

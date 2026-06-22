@@ -16,6 +16,14 @@ export interface OpenElementApiContext {
   platform?: unknown;
 }
 
+// --- Safe/Unsafe HTML Contract ------------------------------------
+
+/** Branded type: a string that has been HTML-escaped (safe for text content) */
+export type SafeHtml = string & { readonly __safeHtml: unique symbol };
+
+/** Branded type: a string that is intentionally raw/untrusted HTML */
+export type UnsafeHtml = string & { readonly __unsafeHtml: unique symbol };
+
 // --- Component layer & hydration ----------------------------------
 
 export type ComponentLayer = 'dsd-static' | 'dsd-interactive' | 'pure-island' | 'light-dom';
@@ -49,19 +57,16 @@ export interface OpenElementI18nContextOptions {
   [key: string]: unknown;
 }
 
-/** Plugin metadata interface: data bridge between sub-plugins and build context. */
-export interface OpenElementPluginMeta {
-  blogOptions: OpenElementBlogOptions | null;
-  navSections: OpenElementNavSection[];
-  headerNav: OpenElementHeaderNavLink[];
-  sitemapOptions: Record<string, unknown> | null;
-  i18nOptions: OpenElementI18nContextOptions | null;
-  [key: string]: unknown;
-}
-
 /** Minimal build context interface that sub-plugins can use. */
 export interface OpenElementBuildContextLike {
-  plugins: OpenElementPluginMeta;
+  plugins: {
+    blogOptions: OpenElementBlogOptions | null;
+    navSections: OpenElementNavSection[];
+    headerNav: OpenElementHeaderNavLink[];
+    sitemapOptions: Record<string, unknown> | null;
+    i18nOptions: OpenElementI18nContextOptions | null;
+    [key: string]: unknown;
+  };
 }
 
 // --- App Shell types ----------------------------------------------
@@ -79,6 +84,14 @@ export type LayoutsConfig = Record<string, AppShellConfig | undefined>;
 // --- Routing types ------------------------------------------------
 
 export type SpecialFileType = 'renderer' | 'middleware';
+
+/** Locale-aware resolved path contract. */
+export interface LocalePath {
+  locale: string;
+  path: string;
+  localizedPath: string;
+  isDefaultLocalePath: boolean;
+}
 
 export interface RouteEntry {
   path: string;
@@ -133,8 +146,6 @@ export interface FrameworkOptions {
   };
   ssr?: {
     noExternal?: (string | RegExp)[];
-    domSimulation?: 'off' | 'explicit';
-    domSimulationTimeoutMs?: number;
   };
   island?: {
     upgradeStrategy?: HydrationStrategy;
@@ -154,7 +165,6 @@ export interface FrameworkOptions {
     corsOrigin?: string | string[] | ((origin: string) => string | undefined);
     requestId?: boolean;
     logger?: boolean;
-    rateLimit?: boolean;
     securityHeaders?: boolean;
     csp?: {
       policy?: string;

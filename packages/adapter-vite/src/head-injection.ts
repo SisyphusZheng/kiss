@@ -65,12 +65,11 @@ function sanitizeHeadHtml(html: string, context: string): string {
 
 function assertSafeAttributeName(name: string, context: string): void {
   if (!/^[A-Za-z_:][A-Za-z0-9_.:-]*$/.test(name) || /^on/i.test(name)) {
-    throw new OpenElementError(
-      `Unsafe attribute in ${context}: "${name}"`,
-      'UNSAFE_HEAD_INJECTION',
-      400,
-      false,
-    );
+    throw new OpenElementError(`Unsafe attribute in ${context}: "${name}"`, {
+      code: 'UNSAFE_HEAD_INJECTION',
+      statusCode: 400,
+      recoverable: false,
+    });
   }
 }
 
@@ -83,9 +82,11 @@ export function assertNoScriptTags(html: string, context: string): void {
     throw new OpenElementError(
       `${context} must not contain <script> tags. Use inject.scripts for scripts so ` +
         'openElement can validate script URLs and mark the generated head injection as trusted.',
-      'UNSAFE_HEAD_INJECTION',
-      400,
-      false,
+      {
+        code: 'UNSAFE_HEAD_INJECTION',
+        statusCode: 400,
+        recoverable: false,
+      },
     );
   }
 }
@@ -106,9 +107,11 @@ export function validateSafeUrl(url: string, context: string): string {
       if (lower.startsWith(proto)) {
         throw new OpenElementError(
           `Unsafe URL in ${context}: "${url}" - ${proto} protocol is not allowed`,
-          'UNSAFE_URL',
-          400,
-          false,
+          {
+            code: 'UNSAFE_URL',
+            statusCode: 400,
+            recoverable: false,
+          },
         );
       }
     }
@@ -127,9 +130,11 @@ export function validateSafeUrl(url: string, context: string): string {
     }
     throw new OpenElementError(
       `Invalid URL in ${context}: "${url}" - malformed percent-encoding`,
-      'UNSAFE_URL',
-      400,
-      false,
+      {
+        code: 'UNSAFE_URL',
+        statusCode: 400,
+        recoverable: false,
+      },
     );
   }
   return normalised;

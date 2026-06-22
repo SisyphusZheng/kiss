@@ -19,23 +19,23 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 // ─── stableHash ────────────────────────────────────────────────
 
-Deno.test('stableHash produces deterministic output', () => {
-  const hash1 = stableHash('hello');
-  const hash2 = stableHash('hello');
+Deno.test('stableHash produces deterministic output', async () => {
+  const hash1 = await stableHash('hello');
+  const hash2 = await stableHash('hello');
   assertEquals(hash1, hash2);
 });
 
-Deno.test('stableHash different for different inputs', () => {
-  assertEquals(stableHash('hello') !== stableHash('world'), true);
+Deno.test('stableHash different for different inputs', async () => {
+  assertEquals(await stableHash('hello') !== await stableHash('world'), true);
 });
 
-Deno.test('stableHash handles empty string', () => {
-  assertEquals(typeof stableHash(''), 'string');
-  assertEquals(stableHash('').length > 0, true);
+Deno.test('stableHash handles empty string', async () => {
+  assertEquals(typeof await stableHash(''), 'string');
+  assertEquals((await stableHash('')).length > 0, true);
 });
 
-Deno.test('stableHash handles unicode', () => {
-  assertEquals(typeof stableHash('héllo wörld 🔥'), 'string');
+Deno.test('stableHash handles unicode', async () => {
+  assertEquals(typeof await stableHash('héllo wörld 🔥'), 'string');
 });
 
 // ─── resolveDynamicRoutePath ───────────────────────────────────

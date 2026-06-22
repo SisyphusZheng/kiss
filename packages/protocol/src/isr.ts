@@ -2,8 +2,6 @@
  * @openelement/protocol - Route-level ISR cache contracts.
  */
 
-import type { IsrManifestEntry } from './framework.js';
-
 /** Generic cache entry metadata shared by ISR and runtime adapters. */
 export interface CacheEntry<T = unknown> {
   value: T;
@@ -36,45 +34,6 @@ export interface IsrCacheResult {
   error?: Error;
 }
 
-export interface IsrCache {
-  get(key: string, now?: number): Promise<IsrCacheResult> | IsrCacheResult;
-  set(key: string, entry: IsrCacheEntry): Promise<void> | void;
-  delete?(key: string): Promise<void> | void;
-}
-
 export interface IsrRouteConfig {
   revalidate: number;
-}
-
-// --- Runtime types (from isr-runtime) ------------------------------
-
-export type IsrRuntimeState = IsrCacheResult['state'] | 'not-found';
-
-export interface IsrRuntimeRenderResult {
-  html: string;
-  headers?: Record<string, string>;
-}
-
-export interface IsrRuntimeRenderContext {
-  entry: IsrManifestEntry;
-  request?: Request;
-}
-
-export interface IsrRuntimeOptions {
-  manifest: IsrManifestEntry[];
-  cache: IsrCache;
-  render: (
-    path: string,
-    context: IsrRuntimeRenderContext,
-  ) => Promise<IsrRuntimeRenderResult> | IsrRuntimeRenderResult;
-  now?: () => number;
-  regenerate?: 'blocking' | 'background';
-  onRegenerateError?: (error: unknown, entry: IsrManifestEntry) => void;
-  schedule?: (task: Promise<void>) => void;
-}
-
-export interface IsrRuntimeResult {
-  state: IsrRuntimeState;
-  entry?: IsrManifestEntry;
-  response: Response;
 }

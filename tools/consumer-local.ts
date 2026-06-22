@@ -166,10 +166,8 @@ for (
     'data',
     'isr',
     'ssg',
-    'router',
     'errors',
     'style-sheet',
-    'html',
     'island',
     'prop',
   ]
@@ -248,20 +246,12 @@ const aliases = [
     replacement: vitePath(join(protocolSrc, 'ssg.ts')),
   },
   {
-    find: '@openelement/protocol/router',
-    replacement: vitePath(join(protocolSrc, 'router.ts')),
-  },
-  {
     find: '@openelement/protocol/errors',
     replacement: vitePath(join(protocolSrc, 'errors.ts')),
   },
   {
     find: '@openelement/protocol/style-sheet',
     replacement: vitePath(join(protocolSrc, 'style-sheet.ts')),
-  },
-  {
-    find: '@openelement/protocol/html',
-    replacement: vitePath(join(protocolSrc, 'html.ts')),
   },
   {
     find: '@openelement/protocol/island',

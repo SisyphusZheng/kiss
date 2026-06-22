@@ -30,7 +30,7 @@ import { createOpenPlugin } from './plugin.js';
 export interface OpenPipelineConfig {
   routes?: { dir?: string };
   i18n?: { locales: string[]; defaultLocale?: string };
-  output?: { outDir?: string; cleanUrls?: boolean };
+  output?: { outDir?: string };
   island?: { dir?: string; upgradeStrategy?: string };
   viewTransition?: boolean;
   headExtras?: string;

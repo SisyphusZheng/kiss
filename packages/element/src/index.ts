@@ -71,7 +71,7 @@ export type { Signal } from '@openelement/protocol/signal';
 // ─── HTML utilities (re-export from core) ────────────────
 
 export { escapeAttr, escapeAttrValue, escapeHtml } from '@openelement/core';
-export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
+export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
 
 // ─── Trusted HTML (re-export from core) ──────────────────────────
 

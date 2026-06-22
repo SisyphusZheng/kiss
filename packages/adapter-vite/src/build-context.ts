@@ -22,7 +22,10 @@ import type {
   CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
-  OpenElementPluginMeta,
+  OpenElementBlogOptions,
+  OpenElementHeaderNavLink,
+  OpenElementI18nContextOptions,
+  OpenElementNavSection,
   RouteEntry,
 } from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
@@ -140,32 +143,6 @@ export class Phase3Meta {
   skipPreResolution?: boolean;
 }
 
-export class PluginMeta implements OpenElementPluginMeta {
-  /** Index signature to satisfy OpenElementPluginMeta interface */
-  [key: string]: unknown;
-
-  /** Blog options from @openelement/content plugin */
-  blogOptions: { contentDir?: string; basePath?: string } | null = null;
-
-  /** Navigation sections from @openelement/content plugin */
-  navSections: Array<
-    { section: string; items: Array<{ path: string; label: string; order?: number }> }
-  > = [];
-
-  /** Header navigation links from @openelement/content plugin */
-  headerNav: Array<{ href: string; label: string }> = [];
-
-  /** Sitemap options from @openelement/content plugin */
-  sitemapOptions: Record<string, unknown> | null = null;
-
-  /** i18n options from @openelement/i18n plugin */
-  i18nOptions: {
-    locales: string[];
-    defaultLocale: string;
-    [key: string]: unknown;
-  } | null = null;
-}
-
 export class OpenElementBuildContext {
   /** Phase completion tokens - used for compile-time ordering enforcement */
   readonly _phaseTokens: {
@@ -210,7 +187,20 @@ export class OpenElementBuildContext {
   readonly phase3: Phase3Meta = new Phase3Meta();
 
   /** Plugin data from content/i18n sub-plugins */
-  readonly plugins: PluginMeta = new PluginMeta();
+  readonly plugins: {
+    blogOptions: OpenElementBlogOptions | null;
+    navSections: OpenElementNavSection[];
+    headerNav: OpenElementHeaderNavLink[];
+    sitemapOptions: Record<string, unknown> | null;
+    i18nOptions: OpenElementI18nContextOptions | null;
+    [key: string]: unknown;
+  } = {
+    blogOptions: null,
+    navSections: [],
+    headerNav: [],
+    sitemapOptions: null,
+    i18nOptions: null,
+  };
 
   /** Resolved framework options with defaults applied (read-only after construction) */
   readonly options: FrameworkOptions;
@@ -232,6 +222,12 @@ export class OpenElementBuildContext {
     Object.assign(this.phase1, new Phase1Meta(), { userResolveAlias });
     Object.assign(this.phase2, new Phase2Meta());
     Object.assign(this.phase3, new Phase3Meta());
-    Object.assign(this.plugins, new PluginMeta());
+    Object.assign(this.plugins, {
+      blogOptions: null,
+      navSections: [],
+      headerNav: [],
+      sitemapOptions: null,
+      i18nOptions: null,
+    });
   }
 }

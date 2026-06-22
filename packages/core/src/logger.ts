@@ -1,77 +1,31 @@
 /**
- * @openelement/core - Structured Logger
+ * @openelement/core - Tagged console logger.
  *
- * Provides scoped, leveled logging for the openElement Framework.
- * - logError: logs only, never throws (owner decision Q-4)
- * - logDebug: guarded by DEBUG compile-time constant for DCE
+ * Lightweight scoped logger. Returns plain functions so it is tree-shakable
+ * and has zero class overhead.
  *
  * @module @openelement/core/logger
  */
 
-import { OpenElementError } from './errors.js';
-
-const PREFIX_MAP: Record<string, string> = {
-  core: '[openElement]',
-  ssg: '[openElement/SSG]',
-  blog: '[openElement/Blog]',
-  signal: '[openElement/Signal]',
-};
-
-declare const DEBUG: boolean;
-const _DEBUG: boolean = typeof DEBUG === 'undefined' ? true : DEBUG;
-
-export class OpenElementLogger {
-  constructor(private prefix: string) {}
-
-  logError(msg: string, err?: unknown): void {
-    if (err instanceof OpenElementError) {
-      console.error(`${this.prefix} ${msg}`, {
-        code: err.code,
-        message: err.message,
-        severity: err.severity,
-        phase: err.phase,
-        cause: err.cause instanceof Error ? err.cause.message : err.cause,
-      });
-    } else if (err instanceof Error) {
-      console.error(`${this.prefix} ${msg}`, err.message);
-    } else {
-      console.error(`${this.prefix} ${msg}`);
-    }
-  }
-
-  logWarn(msg: string, detail?: unknown): void {
-    if (detail !== undefined) {
-      console.warn(`${this.prefix} ${msg}`, detail);
-    } else {
-      console.warn(`${this.prefix} ${msg}`);
-    }
-  }
-
-  logInfo(msg: string): void {
-    console.info(`${this.prefix} ${msg}`);
-  }
-
-  logDebug(msg: string): void {
-    if (_DEBUG) {
-      console.debug(`${this.prefix} ${msg}`);
-    }
-  }
-
-  /** Convenience aliases */
-  error = this.logError;
-  warn = this.logWarn;
-  info = this.logInfo;
-  debug = this.logDebug;
+export interface Logger {
+  debug: (msg: string, ...args: unknown[]) => void;
+  info: (msg: string, ...args: unknown[]) => void;
+  warn: (msg: string, ...args: unknown[]) => void;
+  error: (msg: string, ...args: unknown[]) => void;
 }
 
-export function createLogger(scope: string): OpenElementLogger {
-  const prefix = PREFIX_MAP[scope] ?? `[openElement/${scope}]`;
-  return new OpenElementLogger(prefix);
+export function createLogger(tag: string): Logger {
+  return {
+    debug: (msg: string, ...args: unknown[]) => console.debug(`[${tag}] ${msg}`, ...args),
+    info: (msg: string, ...args: unknown[]) => console.info(`[${tag}] ${msg}`, ...args),
+    warn: (msg: string, ...args: unknown[]) => console.warn(`[${tag}] ${msg}`, ...args),
+    error: (msg: string, ...args: unknown[]) => console.error(`[${tag}] ${msg}`, ...args),
+  };
 }
 
 // ponytail: warn-once via Set, two callers, shared helper if >3 callers
 const _warned = new Set<string>();
-export function warnOnce(key: string, logger: OpenElementLogger, msg: string): void {
+export function warnOnce(key: string, logger: Logger, msg: string): void {
   if (!_warned.has(key)) {
     _warned.add(key);
     logger.warn(msg);

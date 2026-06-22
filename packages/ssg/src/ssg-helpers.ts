@@ -74,19 +74,15 @@ export function resolveDynamicRoutePath(
 // ─── Hash helpers ──────────────────────────────────────────────
 
 /**
- * FNV-1a 64-bit hash for stable SSG-generated asset names.
+ * Stable SHA-256 hash for SSG-generated asset names.
+ * Returns a deterministic lowercase hex string.
  */
-export function stableHash(str: string): string {
-  const fnvOffsetBasis = 14695981039346656037n;
-  const fnvPrime = 1099511628211n;
-  const mask64 = (1n << 64n) - 1n;
-
-  let hash = fnvOffsetBasis;
-  for (let i = 0; i < str.length; i++) {
-    hash ^= BigInt(str.charCodeAt(i));
-    hash = (hash * fnvPrime) & mask64;
-  }
-  return hash.toString(36);
+export async function stableHash(str: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(str));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 // ─── ISR manifest builder ──────────────────────────────────────

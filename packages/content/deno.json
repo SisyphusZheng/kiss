@@ -7,8 +7,8 @@
     "./blog-data": "./src/blog/blog-data.ts",
     "./mdx": "./src/mdx/compile.ts",
     "./nav": "./src/nav/scanner.ts",
-    "./nav-data": "./src/nav/writer.ts",
-    "./sitemap": "./src/sitemap/generator.ts"
+    "./sitemap": "./src/sitemap/generator.ts",
+    "./write-json": "./src/write-json.ts"
   },
   "imports": {
     "marked": "npm:marked@^15",

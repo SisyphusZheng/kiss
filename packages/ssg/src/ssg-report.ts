@@ -9,6 +9,7 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
+import { writeJson } from '@openelement/content/write-json';
 import type { CemCompatibilityReport } from '@openelement/protocol/manifest';
 import type { CompatibilityClassification } from '@openelement/protocol/framework';
 import type {
@@ -241,7 +242,7 @@ export function writeDsdReport(
   report: DsdBuildReport,
 ): void {
   const reportPath = join(outputDir, 'dsd-report.json');
-  writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf-8');
+  writeFileSync(reportPath, writeJson(report), 'utf-8');
   log.info(
     `DSD report -> ${reportPath} (${report.totalPages} pages, ${report.totalErrors} errors)`,
   );

@@ -35,43 +35,30 @@ export type { ErrorPhase, ErrorSeverity };
 
 // ─── Base Error ─────────────────────────────────────────────────────
 
+export interface OpenElementErrorOptions {
+  cause?: Error;
+  code?: string;
+  statusCode?: number;
+  severity?: ErrorSeverity;
+  phase?: ErrorPhase;
+  recoverable?: boolean;
+}
+
 export class OpenElementError extends Error {
   public readonly code: string;
   public readonly severity: ErrorSeverity;
   public readonly phase: ErrorPhase;
   public readonly recoverable: boolean;
+  public readonly statusCode?: number;
 
-  constructor(
-    message: string,
-    code?: string,
-    /** Backward compat: if number, treated as statusCode (old API) */
-    severityOrStatus?: ErrorSeverity | number,
-    phaseOrOperational?: ErrorPhase | boolean,
-    recoverable?: boolean,
-    cause?: Error,
-  ) {
-    let severity: ErrorSeverity;
-    let phase: ErrorPhase;
-    let rec: boolean;
-
-    if (typeof severityOrStatus === 'number') {
-      const _statusCode = severityOrStatus;
-      severity = 'error';
-      phase = 'render';
-      rec = phaseOrOperational === true;
-    } else {
-      severity = severityOrStatus ?? 'error';
-      phase =
-        (typeof phaseOrOperational === 'string' ? phaseOrOperational : 'unknown') as ErrorPhase;
-      rec = recoverable ?? false;
-    }
-
-    super(message, cause ? { cause } : undefined);
+  constructor(message: string, options: OpenElementErrorOptions = {}) {
+    super(message, options.cause ? { cause: options.cause } : undefined);
     this.name = 'OpenElementError';
-    this.code = code ?? ErrorCode.UNKNOWN;
-    this.severity = severity;
-    this.phase = phase;
-    this.recoverable = rec;
+    this.code = options.code ?? ErrorCode.UNKNOWN;
+    this.severity = options.severity ?? 'error';
+    this.phase = options.phase ?? 'unknown';
+    this.recoverable = options.recoverable ?? false;
+    this.statusCode = options.statusCode;
   }
 
   toJSON(): Record<string, unknown> {
@@ -82,6 +69,7 @@ export class OpenElementError extends Error {
       severity: this.severity,
       phase: this.phase,
       recoverable: this.recoverable,
+      statusCode: this.statusCode,
       cause: this.cause instanceof Error ? this.cause.message : this.cause,
     };
   }
@@ -94,14 +82,13 @@ export class SsrRenderError extends OpenElementError {
   public readonly sourceError: Error;
 
   constructor(componentPath: string, sourceError: Error) {
-    super(
-      `SSR render failed: ${componentPath}`,
-      'SSR_RENDER_ERROR',
-      'error',
-      'ssr' as ErrorPhase,
-      false,
-      sourceError,
-    );
+    super(`SSR render failed: ${componentPath}`, {
+      code: 'SSR_RENDER_ERROR',
+      severity: 'error',
+      phase: 'ssr',
+      recoverable: false,
+      cause: sourceError,
+    });
     this.name = 'SsrRenderError';
     this.componentPath = componentPath;
     this.sourceError = sourceError;
@@ -121,7 +108,13 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
     tagName = '',
     cause?: Error,
   ) {
-    super(message, code, 'error', 'render', true, cause);
+    super(message, {
+      code,
+      severity: 'error',
+      phase: 'render',
+      recoverable: true,
+      cause,
+    });
     this.name = 'RenderError';
     this.componentPath = componentPath;
     this.tagName = tagName;
@@ -133,14 +126,13 @@ export class PropValidationError extends OpenElementError {
   public readonly receivedValue: unknown;
 
   constructor(propertyName: string, receivedValue: unknown, cause?: Error) {
-    super(
-      `@prop validation failed for "${propertyName}"`,
-      'PROP_VALIDATION_ERROR',
-      'warning',
-      'validation',
-      true,
+    super(`@prop validation failed for "${propertyName}"`, {
+      code: 'PROP_VALIDATION_ERROR',
+      severity: 'warning',
+      phase: 'validation',
+      recoverable: true,
       cause,
-    );
+    });
     this.name = 'PropValidationError';
     this.propertyName = propertyName;
     this.receivedValue = receivedValue;

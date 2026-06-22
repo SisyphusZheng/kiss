@@ -92,9 +92,11 @@ export async function readRouteTagNameFromModule(filePath: string): Promise<stri
 function staticOpenElementError(message: string): OpenElementError {
   return new OpenElementError(
     `Invalid static island metadata export "openElement": ${message}. Accepted shape: export const openElement = defineIslandConfig({ ssr?: boolean, dsd?: boolean, hydrate?: "load" | "idle" | "visible" | "only" }).`,
-    'ISLAND_METADATA_ERROR',
-    500,
-    false,
+    {
+      code: 'ISLAND_METADATA_ERROR',
+      statusCode: 500,
+      recoverable: false,
+    },
   );
 }
 
@@ -474,9 +476,11 @@ export async function scanPackageManifests(
       }
       throw new OpenElementError(
         `Failed to scan package manifest from "${pkg}": ${formatError(e)}`,
-        'PACKAGE_SCAN_ERROR',
-        500,
-        false,
+        {
+          code: 'PACKAGE_SCAN_ERROR',
+          statusCode: 500,
+          recoverable: false,
+        },
       );
     }
     if (mod.manifest && typeof mod.manifest === 'object') {
@@ -486,17 +490,21 @@ export async function scanPackageManifests(
       } else {
         throw new OpenElementError(
           `Invalid manifest in ${pkg}: missing packageName or declarations`,
-          'PACKAGE_MANIFEST_ERROR',
-          500,
-          false,
+          {
+            code: 'PACKAGE_MANIFEST_ERROR',
+            statusCode: 500,
+            recoverable: false,
+          },
         );
       }
     } else {
       throw new OpenElementError(
         `Package ${pkg} does not export a manifest`,
-        'PACKAGE_MANIFEST_ERROR',
-        500,
-        false,
+        {
+          code: 'PACKAGE_MANIFEST_ERROR',
+          statusCode: 500,
+          recoverable: false,
+        },
       );
     }
   }

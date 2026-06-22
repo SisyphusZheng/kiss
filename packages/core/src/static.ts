@@ -33,7 +33,7 @@ export {
   renderSsrError,
   wrapInDocument,
 } from './html-escape.ts';
-export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
+export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
 
 // Security / errors / logging
 export { DANGEROUS_KEYS } from './security.ts';
@@ -49,7 +49,7 @@ export {
   SsrRenderError,
 } from './errors.ts';
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '@openelement/protocol/errors';
-export { createLogger, OpenElementLogger } from './logger.ts';
+export { createLogger } from './logger.ts';
 
 // Static props runtime
 export {

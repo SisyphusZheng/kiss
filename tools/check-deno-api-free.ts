@@ -6,6 +6,8 @@
  * allowed to use Deno/Node APIs and are intentionally excluded.
  */
 
+import { walkFiles } from './lib/walk.ts';
+
 const RESTRICTED_ROOTS = [
   'packages/core/src',
   'packages/element/src',
@@ -43,19 +45,17 @@ function stripComments(line: string, inBlock: boolean): { line: string; inBlock:
 
 function scan(root: string): string[] {
   const violations: string[] = [];
-  for (const entry of Deno.readDirSync(root)) {
-    const path = `${root}/${entry.name}`;
-    if (entry.isDirectory) {
-      if (entry.name === '__tests__') continue;
-      violations.push(...scan(path));
-      continue;
-    }
-    if (!entry.isFile) continue;
-    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) continue;
-    const dot = entry.name.lastIndexOf('.');
-    if (dot === -1) continue;
-    if (!EXTENSIONS.has(entry.name.slice(dot))) continue;
+  const files = walkFiles(root, {
+    exclude: ({ name }) => name === '__tests__',
+    include: ({ name }) => {
+      if (name.endsWith('.test.ts') || name.endsWith('.test.tsx')) return false;
+      const dot = name.lastIndexOf('.');
+      if (dot === -1) return false;
+      return EXTENSIONS.has(name.slice(dot));
+    },
+  });
 
+  for (const path of files) {
     const text = Deno.readTextFileSync(path);
     if (text.includes('deno-api-free:ignore')) continue;
     const lines = text.split('\n');

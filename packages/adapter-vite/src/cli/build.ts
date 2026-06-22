@@ -12,6 +12,7 @@
 
 import { build as viteBuild } from 'vite';
 import process from 'node:process';
+import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 
 if (import.meta.main) {
@@ -20,7 +21,7 @@ if (import.meta.main) {
     process.exit(0);
   } catch (error) {
     const log = createLogger('adapter-vite');
-    log.error('Build failed:', error);
+    log.error(`Build failed: ${formatError(error)}`);
     process.exit(1);
   }
 }

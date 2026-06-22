@@ -28,6 +28,7 @@ import { expandDynamicRoutes } from './ssg-dynamic.ts';
 import { expandI18nLocales } from './ssg-i18n.ts';
 import { assembleDsdReport, writeDsdReport } from './ssg-report.ts';
 import { buildIsrManifestEntries, findHtmlFiles, type PageDiagnostic } from './ssg-helpers.ts';
+import { writeJson } from '@openelement/content/write-json';
 
 const log = createLogger('ssg');
 
@@ -119,7 +120,7 @@ export async function ssgRender(
   if (isrRoutes.length > 0) {
     writeFileSync(
       join(outputDir, 'isr-manifest.json'),
-      JSON.stringify(isrRoutes, null, 2),
+      writeJson(isrRoutes),
       'utf-8',
     );
     log.info(

@@ -12,6 +12,7 @@
 import type { ExternalManifest } from '@openelement/protocol/ssg';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { writeJson } from '@openelement/content/write-json';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
 interface DenoInfoModule {
@@ -226,7 +227,7 @@ function readCachedManifest(projectRoot: string, lockHash: string): ExternalMani
 function writeCachedManifest(projectRoot: string, manifest: ExternalManifest): void {
   const dir = join(projectRoot, '.openElement');
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'external-manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
+  writeFileSync(join(dir, 'external-manifest.json'), writeJson(manifest), 'utf-8');
 }
 
 /**

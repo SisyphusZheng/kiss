@@ -10,7 +10,6 @@
     "./errors": "./src/errors.ts",
     "./context": "./src/context.ts",
     "./logger": "./src/logger.ts",
-    "./data": "./src/data.ts",
     "./isr": "./src/isr.ts",
     "./isr-runtime": "./src/isr-runtime.ts",
     "./runtime": "./src/runtime.ts",

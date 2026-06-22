@@ -63,19 +63,6 @@ class ShimStyleSheet implements StyleSheetLike {
   }
 }
 
-function resolveStyleSheetCtor(): new () => StyleSheetLike {
-  if (typeof globalThis.CSSStyleSheet === 'function') {
-    return globalThis.CSSStyleSheet as unknown as new () => StyleSheetLike;
-  }
-  return ShimStyleSheet;
-}
-
-export const StyleSheet: new () => StyleSheetLike = resolveStyleSheetCtor();
-
-if (typeof globalThis.CSSStyleSheet === 'undefined') {
-  Object.defineProperty(globalThis, 'CSSStyleSheet', {
-    configurable: true,
-    value: ShimStyleSheet,
-    writable: true,
-  });
-}
+export const StyleSheet: new () => StyleSheetLike = typeof globalThis.CSSStyleSheet === 'function'
+  ? globalThis.CSSStyleSheet as unknown as new () => StyleSheetLike
+  : ShimStyleSheet;

@@ -85,7 +85,7 @@ Deno.test('generateIslandManifests: defaults strategy to idle and layer to dsd-s
   cleanup();
 });
 
-Deno.test('writeIslandManifests: creates JSON files in island-manifests dir', () => {
+Deno.test('writeIslandManifests: creates JSON files in island-manifests dir', async () => {
   setup();
   const manifests: PageIslandManifest[] = [
     {
@@ -100,7 +100,7 @@ Deno.test('writeIslandManifests: creates JSON files in island-manifests dir', ()
     },
   ];
 
-  writeIslandManifests(TMP_DIR, manifests);
+  await writeIslandManifests(TMP_DIR, manifests);
 
   const manifestDir = join(TMP_DIR, 'island-manifests');
   assertExists(manifestDir);
