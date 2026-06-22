@@ -4,7 +4,6 @@
  */
 
 import type { VNode } from './vnode.js';
-import type { Unsubscribe } from './signal.js';
 import type { ManifestDecision } from './render.js';
 
 // --- API context --------------------------------------------------
@@ -276,11 +275,4 @@ export interface HydrateEventDescriptor {
   selector: string;
   event: string;
   method: string;
-}
-
-// --- Reactive -----------------------------------------------------
-
-export interface ReactiveHost {
-  subscribeTo(source: { subscribe(fn: (value: unknown) => void): Unsubscribe }): Unsubscribe;
-  requestReactiveUpdate(): void;
 }

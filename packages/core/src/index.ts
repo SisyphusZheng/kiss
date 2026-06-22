@@ -31,7 +31,6 @@ export type {
   OpenElementMiddlewareContext,
   OpenElementPluginMeta,
   OpenElementRenderer,
-  ReactiveHost,
   RegistryIndex,
   RegistryIndexEntry,
   RouteEntry,
@@ -155,6 +154,10 @@ export {
 export type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
 export { transformIslandSource } from './island-transform.js';
 export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
+
+// Unified binding layer (ADR-0109 Phase 1)
+export { applyBindingDescriptor } from './binding-activation.js';
+export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.ts';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {

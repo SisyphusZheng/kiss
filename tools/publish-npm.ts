@@ -14,6 +14,18 @@ import {
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
+const REPOSITORY = {
+  type: 'git',
+  url: 'git+https://github.com/open-element/openelement.git',
+};
+
+const KEYWORDS = ['openelement', 'web-components', 'ssg', 'framework', 'deno'];
+
+const CREATE_BIN = {
+  'openelement-create': './cli.js',
+  'create-openelement': './cli.js',
+};
+
 function npmTarballName(pkg: PackageInfo): string {
   return `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
 }
@@ -108,6 +120,18 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
   return deps;
 }
 
+function isPrerelease(version: string): boolean {
+  return version.includes('-');
+}
+
+function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unknown>): void {
+  pkgJson.repository = REPOSITORY;
+  pkgJson.keywords = KEYWORDS;
+  if (pkg.name === '@openelement/create') {
+    pkgJson.bin = CREATE_BIN;
+  }
+}
+
 async function packPackage(
   pkg: PackageInfo,
   dryRun: boolean,
@@ -128,6 +152,7 @@ async function packPackage(
     await runCommand('tar', ['-xzf', out, '-C', tmp], undefined, tarEnv);
     const pkgJsonPath = `${tmp}/package/package.json`;
     const pkgJson = JSON.parse(Deno.readTextFileSync(pkgJsonPath));
+    applyPackageJsonOverrides(pkg, pkgJson);
     pkgJson.dependencies = {
       ...deriveDependencies(pkg, allPackages),
       ...(pkgJson.dependencies ?? {}),
@@ -146,6 +171,9 @@ async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> 
   const args = dryRun
     ? ['publish', tar, '--dry-run', '--access', 'public']
     : ['publish', tar, '--access', 'public', '--provenance'];
+  if (isPrerelease(pkg.version)) {
+    args.push('--tag', 'next');
+  }
   await runCommand('npm', args);
 }
 

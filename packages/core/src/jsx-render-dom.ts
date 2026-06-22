@@ -1,15 +1,18 @@
 /**
  * Converts a VNode tree to real DOM nodes for client-side rendering and hydration.
  *
- * Design (ADR-0057):
- * - Event handlers (onClick) are wired via native addEventListener
- * - ref callbacks are invoked with the created element
+ * Design (ADR-0057 / ADR-0109 Phase 2):
+ * - Props are translated into BindingDescriptor objects
+ * - Binding descriptors are applied via applyBindingDescriptor()
+ * - Signal names are resolved through an optional signalRegistry and emitted as
+ *   data-signal markers for DSD hydration consistency.
  *
  * @module @openelement/core/jsx-render-dom
  */
 
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
+import type { Signal } from '@openelement/protocol/signal';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 import { eventTypeFromProp } from './event-hydration.ts';
@@ -17,6 +20,9 @@ import { trustRenderHtml } from './security.ts';
 import { effect } from '@openelement/signal';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
+import { applyBindingDescriptor } from './binding-activation.ts';
+import type { BindingDescriptor, BindingLifecycle } from './binding-descriptor.ts';
+import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -88,44 +94,127 @@ function createElementForTag(tag: string): Element {
   return document.createElement(tag);
 }
 
+/** Resolve a signal object to its registered name, if any. */
+function signalNameFor(
+  value: unknown,
+  signalRegistry?: Map<string, Signal<unknown>>,
+): string | undefined {
+  if (!signalRegistry || !isSignalLike(value)) return undefined;
+  for (const [name, sig] of signalRegistry.entries()) {
+    if (sig === value) return name;
+  }
+  return undefined;
+}
+
 /**
- * Apply a single resolved (non-signal) prop value to a DOM element.
- * effect callbacks without unwrapping signals again.
+ * Collect BindingDescriptor objects from a JSX props object.
+ *
+ * @param el - Target element the descriptors will apply to.
+ * @param props - VNode props.
+ * @param signalRegistry - Optional registry used to name signals for hydration markers.
+ * @returns Array of binding descriptors.
  */
-function applyStaticProp(el: Element, key: string, resolved: unknown): void {
-  if (resolved == null) return;
-  if (key === 'trustedHtml') return;
+export function collectPropBindings(
+  el: Element,
+  props: Record<string, unknown>,
+  signalRegistry?: Map<string, Signal<unknown>>,
+): BindingDescriptor[] {
+  const descriptors: BindingDescriptor[] = [];
+  const trustedHtml = props.trustedHtml === true;
 
-  if (key === 'style' && typeof resolved === 'object' && resolved !== null) {
-    const styleObj: Record<string, string> = {};
-    for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
-      styleObj[sk] = String(unwrapSignalLike(sv));
+  for (const [key, value] of Object.entries(props)) {
+    if (key === 'children' || key === 'key' || key === 'trustedHtml') continue;
+
+    // ref callback
+    if (key === 'ref' && typeof value === 'function') {
+      descriptors.push({ kind: 'ref', el, callback: value as (el: Element) => void });
+      continue;
     }
-    Object.assign((el as HTMLElement).style, styleObj);
-    return;
-  }
 
-  // DOM properties that are NOT HTML attributes
-  if (key === 'textContent') {
-    (el as HTMLElement).textContent = String(resolved);
-    return;
-  }
-
-  // Resolve attribute name
-  const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
-
-  // Boolean attributes
-  if (typeof resolved === 'boolean') {
-    if (resolved) {
-      el.setAttribute(attrName, '');
-    } else {
-      el.removeAttribute(attrName);
+    // Event handlers
+    if (key.startsWith('on') && typeof value === 'function') {
+      const eventType = eventTypeFromProp(key);
+      if (!eventType) continue;
+      descriptors.push({ kind: 'event', el, type: eventType, handler: value as EventListener });
+      continue;
     }
-    return;
+
+    if (value == null) continue;
+
+    // innerHTML maps to signal-html / static text injection.
+    if (key === 'innerHTML') {
+      if (isSignalLike(value)) {
+        descriptors.push({
+          kind: 'signal-html',
+          el,
+          signal: value as Signal<unknown>,
+          trusted: trustedHtml,
+        });
+      } else {
+        const resolved = String(unwrapSignalLike(value));
+        if (trustedHtml) {
+          (el as HTMLElement).innerHTML = trustRenderHtml(resolved);
+        } else {
+          (el as HTMLElement).textContent = resolved;
+        }
+      }
+      continue;
+    }
+
+    // Signal binding — emit data-signal marker when we can resolve a name.
+    if (isSignalLike(value)) {
+      const sig = value as Signal<unknown>;
+      const name = signalNameFor(sig, signalRegistry);
+      const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
+
+      if (name) {
+        el.setAttribute(DATA_SIGNAL, name);
+      }
+
+      if (key === 'className' || key === 'class') {
+        // Treat signal as a single class toggle value; the exact className is
+        // taken from the prop key. For a richer class-list signal, callers can
+        // use explicit data-signal-class markers in render().
+        descriptors.push({
+          kind: 'signal-class',
+          el,
+          className: attrName === 'class' ? '' : attrName,
+          signal: sig,
+        });
+      } else {
+        descriptors.push({ kind: 'signal-attr', el, attrNames: [attrName], signal: sig });
+      }
+      continue;
+    }
+
+    const resolved = unwrapSignalLike(value);
+
+    if (key === 'style' && typeof resolved === 'object' && resolved !== null) {
+      const styleObj: Record<string, string | number> = {};
+      for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
+        styleObj[sk] = unwrapSignalLike(sv) as string | number;
+      }
+      descriptors.push({ kind: 'static-style', el, value: styleObj });
+      continue;
+    }
+
+    // DOM properties that are NOT HTML attributes
+    if (key === 'textContent') {
+      descriptors.push({ kind: 'static-attr', el, key, attrName: 'textContent', value: resolved });
+      continue;
+    }
+
+    const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
+
+    if (typeof resolved === 'boolean') {
+      descriptors.push({ kind: 'static-boolean', el, attrName, value: resolved });
+      continue;
+    }
+
+    descriptors.push({ kind: 'static-attr', el, key, attrName, value: resolved });
   }
 
-  // General
-  el.setAttribute(attrName, String(resolved));
+  return descriptors;
 }
 
 /**
@@ -134,64 +223,12 @@ function applyStaticProp(el: Element, key: string, resolved: unknown): void {
 export function applyProps(
   el: Element,
   props: Record<string, unknown>,
-  signal?: AbortSignal,
-  /** Collect effect dispose fns for batch cleanup. */
-  disposers?: Set<() => void>,
+  lifecycle?: BindingLifecycle,
+  signalRegistry?: Map<string, Signal<unknown>>,
 ): void {
-  const trustedHtml = props.trustedHtml === true;
-  for (const [key, value] of Object.entries(props)) {
-    if (key === 'children' || key === 'key' || key === 'trustedHtml') continue;
-
-    // ref callback
-    if (key === 'ref' && typeof value === 'function') {
-      (value as (el: Element) => void)(el);
-      continue;
-    }
-
-    // Event handlers
-    if (key.startsWith('on') && typeof value === 'function') {
-      const eventType = eventTypeFromProp(key);
-      if (!eventType) continue;
-      const opts: AddEventListenerOptions = signal ? { signal } : {};
-      el.addEventListener(eventType, value as EventListener, opts);
-      continue;
-    }
-
-    if (value == null) continue;
-
-    // innerHTML is text by default; explicit trustedHtml opts into trusted HTML.
-    if (key === 'innerHTML') {
-      const resolved = String(unwrapSignalLike(value));
-      if (trustedHtml) {
-        (el as HTMLElement).innerHTML = trustRenderHtml(resolved);
-      } else {
-        (el as HTMLElement).textContent = resolved;
-      }
-      continue;
-    }
-
-    // Signal-to-DOM direct binding (ADR-0058).
-    // Instead of unwrapping the signal to a static value and calling
-    // it done, create an effect that binds the signal directly to the
-    // DOM attribute. When the signal changes, only that attribute/prop
-    if (isSignalLike(value)) {
-      const dispose = effect(() => {
-        const resolved = unwrapSignalLike(value.value);
-        applyStaticProp(el, key, resolved);
-      });
-      // Dispose when the AbortSignal fires (component disconnect)
-      if (signal) {
-        signal.addEventListener('abort', dispose, { once: true });
-      }
-      // Track for batch cleanup in DsdElement lifecycle
-      disposers?.add(dispose);
-      continue;
-    }
-
-    // v0.24.3: Unwrap Signal-like values before handling any attribute
-    const resolved = unwrapSignalLike(value);
-
-    applyStaticProp(el, key, resolved);
+  const descriptors = collectPropBindings(el, props, signalRegistry);
+  for (const desc of descriptors) {
+    applyBindingDescriptor(desc, lifecycle ?? {});
   }
 }
 
@@ -199,15 +236,22 @@ export function applyProps(
  * Render a VNode tree to a real DOM node.
  *
  * @param node - VNode, string, number, or null/undefined
- * @param signal - Optional AbortSignal for automatic event listener cleanup
- * @param disposers - Optional Set to collect effect dispose fns for batch cleanup
+ * @param lifecycle - Optional BindingLifecycle for automatic cleanup
+ * @param disposers - Optional Set to collect effect dispose fns (backward compat)
+ * @param signalRegistry - Optional registry used to resolve signal names for markers
  * @returns DOM Node (Element, Text, or DocumentFragment)
  */
 export function renderToDom(
   node: unknown,
-  signal?: AbortSignal,
+  lifecycle?: BindingLifecycle,
   disposers?: Set<() => void>,
+  signalRegistry?: Map<string, Signal<unknown>>,
 ): Node {
+  const fullLifecycle: BindingLifecycle = lifecycle ?? (disposers ? { disposers } : {});
+  if (disposers && !lifecycle?.disposers) {
+    fullLifecycle.disposers = disposers;
+  }
+
   if (node == null || node === false) {
     return document.createTextNode('');
   }
@@ -219,15 +263,10 @@ export function renderToDom(
   }
 
   // Signal-to-TextNode reactive binding (ADR-0058/0059).
-  // Creates a TextNode that auto-updates when the signal changes,
-  // without requiring full re-render or VDOM diff.
   if (isSignalLike(node)) {
-    const sig = node as { value: unknown };
+    const sig = node as Signal<unknown>;
     const textNode = document.createTextNode(String(sig.value ?? ''));
-    const dispose = effect(() => {
-      textNode.textContent = String(sig.value ?? '');
-    });
-    if (signal) signal.addEventListener('abort', dispose, { once: true });
+    applyBindingDescriptor({ kind: 'signal-text', el: textNode, signal: sig }, fullLifecycle);
     return textNode;
   }
 
@@ -242,7 +281,7 @@ export function renderToDom(
   ) {
     const frag = document.createDocumentFragment();
     for (const child of children) {
-      frag.appendChild(renderToDom(child, signal, disposers));
+      frag.appendChild(renderToDom(child, fullLifecycle, undefined, signalRegistry));
     }
     return frag;
   }
@@ -274,15 +313,17 @@ export function renderToDom(
       const target = show ? truthy : falsy;
       if (anchor) anchor.remove();
       if (target != null) {
-        anchor = renderToDom(target, signal, disposers) as ChildNode;
+        anchor = renderToDom(target, fullLifecycle, undefined, signalRegistry) as ChildNode;
         marker.parentNode?.insertBefore(anchor, marker.nextSibling);
       } else {
         anchor = null;
       }
     };
     const dispose = effect(() => swap());
-    if (signal) signal.addEventListener('abort', dispose, { once: true });
-    // Initial render: run swap so anchor is created before marker is returned
+    if (fullLifecycle.signal) {
+      fullLifecycle.signal.addEventListener('abort', dispose, { once: true });
+    }
+    fullLifecycle.disposers?.add(dispose);
     swap();
     return marker;
   }
@@ -307,13 +348,16 @@ export function renderToDom(
       // Render new
       for (let i = 0; i < items.length; i++) {
         const vn = renderFn(items[i], i);
-        const dom = renderToDom(vn, signal, disposers) as ChildNode;
+        const dom = renderToDom(vn, fullLifecycle, undefined, signalRegistry) as ChildNode;
         marker.parentNode?.insertBefore(dom, marker.nextSibling);
         anchors.push(dom);
       }
     };
     const dispose = effect(() => reconcile());
-    if (signal) signal.addEventListener('abort', dispose, { once: true });
+    if (fullLifecycle.signal) {
+      fullLifecycle.signal.addEventListener('abort', dispose, { once: true });
+    }
+    fullLifecycle.disposers?.add(dispose);
     reconcile();
     return marker;
   }
@@ -325,7 +369,7 @@ export function renderToDom(
         (instance as Record<string, unknown>)[k] = v;
       }
       const result = instance.render();
-      return renderToDom(result, signal, disposers);
+      return renderToDom(result, fullLifecycle, undefined, signalRegistry);
     } catch (err) {
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
@@ -336,7 +380,7 @@ export function renderToDom(
   if (isComponentFn(tag)) {
     try {
       const result = tag({ ...props, children });
-      return renderToDom(result, signal, disposers);
+      return renderToDom(result, fullLifecycle, undefined, signalRegistry);
     } catch (err) {
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
@@ -346,9 +390,9 @@ export function renderToDom(
   }
 
   const el = createElementForTag(tag as string);
-  applyProps(el, props, signal, disposers);
+  applyProps(el, props, fullLifecycle, signalRegistry);
   for (const child of children) {
-    el.appendChild(renderToDom(child, signal, disposers));
+    el.appendChild(renderToDom(child, fullLifecycle, undefined, signalRegistry));
   }
 
   return el;

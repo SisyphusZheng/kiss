@@ -20,3 +20,4 @@ export * from './style-sheet.js';
 export * from './html.js';
 export * from './island.js';
 export * from './prop.js';
+export * from './hydration-markers.js';

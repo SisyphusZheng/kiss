@@ -64,12 +64,14 @@ jobs:
         if: ${{ inputs.plan == 'patch' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           deno task autoflow:patch-release --approved-plan ${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}
       - name: Approved release
         if: ${{ inputs.plan != 'patch' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           deno task autoflow:release --approved-plan ${{ inputs.approvedPlan }} --to ${{ inputs.version }}
 

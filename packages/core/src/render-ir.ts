@@ -11,7 +11,7 @@ import {
   createEventMarkerContext,
   type EventMarkerContext,
   serializeEventMarkers,
-} from './event-hydration.ts';
+} from './event-marker.ts';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { DANGEROUS_KEYS, trustRenderHtml } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';

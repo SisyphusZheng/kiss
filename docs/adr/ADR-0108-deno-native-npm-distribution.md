@@ -60,8 +60,10 @@ openElement v0.41.0 distribution is **Deno-native npm distribution**:
 
 1. **Toolchain**: require Deno 2.8+, convert internal imports to `npm:`, add
    `deno task pack` / `deno task publish:npm`.
-2. **Boundaries**: move `FileIsrCache` to `@openelement/ssg`, make
-   `router/page-loader` accept raw markdown, add `deno-api:check` gate.
+2. **Boundaries**: keep `MemoryIsrCache` in `@openelement/core/isr` as the
+   reference ISR cache; `FileIsrCache` and `router/page-loader` were removed
+   during the architecture audit cleanup because no production code consumed
+   them. Add `deno-api:check` gate for runtime-free packages.
 3. **Adapter-vite**: default `ssg-package-resolver` to npm mode; JSR source
    fetch remains opt-in.
 4. **Starter**: `@openelement/create` emits `npm:` imports and resolves versions

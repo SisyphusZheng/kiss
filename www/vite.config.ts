@@ -15,11 +15,11 @@ const _rawCSS = [...openPropsTokenSheet.cssRules].map((r) => r.cssText).join('\n
 const rootCSS = _rawCSS
   .replace(/:host\s*\{/g, ':root, :host {')
   .replace(
-    /:host\(\[data-theme="dark"\]\),\s*:host-context\(\[data-theme="dark"\]\)\s*\{/g,
+    /:host\(\[data-theme=["']dark["']\]\),\s*:host-context\(\[data-theme=["']dark["']\]\)\s*\{/g,
     'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]), :host-context([data-theme="dark"]) {',
   )
   .replace(
-    /:host\(\[data-theme="dark"\]\)\s*\{/g,
+    /:host\(\[data-theme=["']dark["']\]\)\s*\{/g,
     'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]) {',
   );
 const siteCSS = `

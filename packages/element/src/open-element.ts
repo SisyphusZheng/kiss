@@ -9,7 +9,6 @@
  *   - Signal-driven fine-grained DOM patching via data-signal markers
  *   - AbortController cleanup on disconnect
  *   - formAssociated + delegatesFocus support
- *   - ReactiveHost protocol for explicit Signal integration
  *
  * OpenElement extends HTMLElement directly - ZERO Lit dependency.
  * Components return `render(): VNode | null`.
@@ -47,10 +46,8 @@
  * @module @openelement/element/open-element
  */
 
-import type { ReactiveHost } from '@openelement/protocol/framework';
 import { formatError } from '@openelement/core/errors';
 import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
-import { disposeProps, handlePropAttributeChange, initializeProps } from '@openelement/core/prop';
 import {
   disposeStaticProps,
   handleStaticPropAttributeChange,
@@ -107,7 +104,7 @@ if (typeof HTMLElement === 'undefined') {
  *
  * Subclasses MUST override `render(): VNode | null`.
  */
-export class OpenElement extends _Base implements ReactiveHost {
+export class OpenElement extends _Base {
   /** Component stylesheets (SSR-safe - StyleSheet delegates to native CSSStyleSheet in browser). */
   static styles?: StyleSheetLike | StyleSheetLike[];
 
@@ -157,8 +154,10 @@ export class OpenElement extends _Base implements ReactiveHost {
    * Signal registry for attribute-based hydration (ADR-0065).
    * Maps signal names → signal objects. Built by registerSignal()
    * in component constructors, consumed during hydration.
+   *
+   * Exposed internally for render helper modules.
    */
-  private signalRegistry: Map<string, Signal<unknown>> = new Map();
+  signalRegistry: Map<string, Signal<unknown>> = new Map();
 
   /**
    * Register a signal for hydration by name.
@@ -247,9 +246,6 @@ export class OpenElement extends _Base implements ReactiveHost {
    */
   connectedCallback(): void {
     const ctor = this.constructor as typeof OpenElement;
-
-    // v0.24 (ADR-0052): Initialize @prop() signals and accessors
-    initializeProps(this);
 
     // v0.24.1 (ADR-0057): Initialize static props signals and accessors
     initializeStaticProps(this);
@@ -431,7 +427,6 @@ export class OpenElement extends _Base implements ReactiveHost {
    */
   disconnectedCallback(): void {
     this.#eventCleanups = disposeRenderBindings(this.#effectDisposers, this.#eventCleanups);
-    disposeProps(this);
     disposeStaticProps(this);
   }
 
@@ -454,8 +449,6 @@ export class OpenElement extends _Base implements ReactiveHost {
     _oldValue: string | null,
     _newValue: string | null,
   ): void {
-    // v0.24 (ADR-0052): Route to @prop() handler
-    handlePropAttributeChange(this, _name, _oldValue, _newValue);
     // v0.24.1 (ADR-0057): Route to static props handler
     handleStaticPropAttributeChange(
       this,
@@ -491,41 +484,6 @@ export class OpenElement extends _Base implements ReactiveHost {
    */
   requestUpdate(): void {
     this.update();
-  }
-
-  /**
-   * ReactiveHost: subscribe to a reactive source.
-   *
-   * The host receives a subscription callback from any Signal-like source.
-   * On value change, `requestReactiveUpdate()` is called to schedule a
-   * microtask-batched DOM patch.
-   */
-  subscribeTo(source: { subscribe(fn: (value: unknown) => void): () => void }): () => void {
-    let initial = true;
-    const unsubscribe = source.subscribe(() => {
-      if (initial) {
-        initial = false;
-        return;
-      }
-      this.requestReactiveUpdate();
-    });
-    return unsubscribe;
-  }
-
-  /**
-   * ReactiveHost: request a reactive update.
-   *
-   * Public entry point for signal-driven updates. Re-renders using
-   * the VNode path.
-   */
-  requestReactiveUpdate(): void {
-    if (!this.isConnected) return;
-    const ctor = this.constructor as typeof OpenElement;
-    if (ctor.renderMode === 'light') {
-      this._renderIntoLightDom();
-      return;
-    }
-    this._renderIntoShadowRoot();
   }
 
   private _renderIntoLightDom(): void {

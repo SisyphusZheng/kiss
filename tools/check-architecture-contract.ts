@@ -63,11 +63,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   },
   {
     file: 'packages/core/src/prop.ts',
-    fragment: 'instance as unknown as Record<PropertyKey, unknown>',
-    reason: 'Static prop runtime reads dynamic property keys.',
-  },
-  {
-    file: 'packages/core/src/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',
   },

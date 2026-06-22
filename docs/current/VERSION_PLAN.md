@@ -34,11 +34,15 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 ### Runtime-agnostic boundaries
 
-- Move `FileIsrCache` from `@openelement/core/isr` to
+- ~~Move `FileIsrCache` from `@openelement/core/isr` to
   `@openelement/ssg/file-isr-cache`; keep the interface and `MemoryIsrCache` in
-  `core`.
-- Change `router/src/page-loader.ts` `loadPage()` to accept raw markdown text
-  instead of reading files with `Deno.readTextFile`.
+  `core`.~~ Superseded by architecture audit cleanup: `FileIsrCache` was removed
+  because no production code consumed it. `MemoryIsrCache` remains the reference
+  implementation in `@openelement/core/isr`.
+- ~~Change `router/src/page-loader.ts` `loadPage()` to accept raw markdown text
+  instead of reading files with `Deno.readTextFile`.~~ Superseded by cleanup:
+  `router/src/page-loader.ts` was removed during architecture audit. Raw markdown
+  rendering remains available in `@openelement/content`.
 - Add `tools/check-deno-api-free.ts` and a `deno task deno-api:check` gate that
   fails if `core/element/ui/protocol/signal/router/app` source files use
   `Deno.*`.

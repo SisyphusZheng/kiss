@@ -3,6 +3,9 @@
   "version": "0.41.0-alpha1",
   "exports": {
     ".": "./src/index.ts",
+    "./static": "./src/static.ts",
+    "./hydrate": "./src/hydrate.ts",
+    "./csr": "./src/csr.ts",
     "./prop": "./src/prop.ts",
     "./errors": "./src/errors.ts",
     "./context": "./src/context.ts",

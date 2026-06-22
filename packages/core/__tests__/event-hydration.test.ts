@@ -1,5 +1,10 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
-import { collectEventBindings, eventMarkerId, eventTypeFromProp } from '../src/event-hydration.ts';
+import {
+  collectEventBindings,
+  eventMarkerId,
+  eventRecordsToDescriptors,
+  eventTypeFromProp,
+} from '../src/event-hydration.ts';
 import { For, Fragment, jsx, jsxs, Show } from '../src/jsx-runtime.ts';
 import { renderDsdTree } from '../src/render-ir.ts';
 
@@ -77,4 +82,27 @@ Deno.test('event hydration: SSR markers and hydration bindings share one travers
   assertEquals(html.includes('data-eid="e5"'), false);
 
   assertEquals([...collectEventBindings(tree).keys()], ['e0', 'e1', 'e2', 'e3', 'e4']);
+});
+
+Deno.test('event hydration: eventRecordsToDescriptors binds owner and mirrors descriptor shape', () => {
+  const owner = { name: 'owner' };
+  let clicked = false;
+  const handler = function (this: { name: string }, _e: Event) {
+    clicked = this.name === 'owner';
+  };
+  const records = [
+    { id: 'e0', type: 'click', handler: handler as EventListener },
+    { id: 'e0', type: 'keydown', handler: handler as EventListener },
+  ];
+
+  const el = { tagName: 'button' } as unknown as Element;
+  const descriptors = eventRecordsToDescriptors(el, records, owner);
+
+  assertEquals(descriptors.length, 2);
+  assertEquals(descriptors[0].kind, 'event');
+  assertEquals(descriptors[0].el, el);
+  assertEquals(descriptors[0].type, 'click');
+  (descriptors[0].handler as EventListener).call(owner, new Event('click'));
+  assertEquals(clicked, true);
+  assertEquals(descriptors[1].type, 'keydown');
 });
