@@ -172,13 +172,15 @@ export function collectPropBindings(
       }
 
       if (key === 'className' || key === 'class') {
-        // Treat signal as a single class toggle value; the exact className is
-        // taken from the prop key. For a richer class-list signal, callers can
-        // use explicit data-signal-class markers in render().
+        // ponytail: CSR signal-class only supports a single toggle class today;
+        // the string-prop branch below is unreachable because this block is gated
+        // by isSignalLike. Use explicit data-signal-class markers for arbitrary
+        // class names; revisit when signal-class accepts a class-name accessor.
+        const className = attrName === 'class' ? '' : attrName;
         descriptors.push({
           kind: 'signal-class',
           el,
-          className: attrName === 'class' ? '' : attrName,
+          className,
           signal: sig,
         });
       } else {

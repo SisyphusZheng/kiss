@@ -176,10 +176,7 @@ export function injectCspMeta(
  * This polyfill attaches Shadow Roots manually via attachShadow().
  */
 const DSD_POLYFILL = `
-<style>html{visibility:visible!important}body{background:var(--bg-base);color:var(--text-primary);font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}docs-home{display:block}
-:root[data-theme="dark"]{--gray-0:#030507;--gray-1:#0d0f12;--gray-2:#16191d;--gray-3:#212529;--gray-4:#343a40;--gray-5:#495057;--gray-6:#868e96;--gray-7:#adb5bd;--gray-8:#ced4da;--gray-9:#dee2e6;--gray-10:#e9ecef;--gray-11:#f1f3f5;--gray-12:#f8f9fa;--text-primary:var(--gray-10);--text-secondary:var(--gray-7);--text-muted:var(--gray-6);--bg-base:var(--gray-0);--bg-surface:var(--gray-1);--bg-card:var(--gray-2);--bg-code:#0d0d12;--bg-hover:var(--gray-3);--border:var(--gray-3);--border-hover:var(--gray-4);--brand:#4f6ef7;--brand-hover:#3d5ce5;--brand-light:#6b8cff;--brand-deep:#1a1a4e;--brand-subtle:rgba(79,110,247,.15);--brand-glow:rgba(79,110,247,.2);--code-border:rgba(255,255,255,.08)}
-:root[data-theme="light"]{--gray-0:#f8f9fa;--gray-1:#f1f3f5;--gray-2:#e9ecef;--gray-3:#dee2e6;--gray-4:#ced4da;--gray-5:#adb5bd;--gray-6:#868e96;--gray-7:#495057;--gray-8:#343a40;--gray-9:#212529;--gray-10:#16191d;--gray-11:#0d0f12;--gray-12:#030507;--text-primary:var(--gray-10);--text-secondary:var(--gray-7);--text-muted:var(--gray-6);--bg-base:var(--gray-0);--bg-surface:var(--gray-2);--bg-card:var(--gray-0);--bg-code:#f1f3f5;--bg-hover:var(--gray-2);--border:var(--gray-3);--border-hover:var(--gray-4);--brand:#4f6ef7;--brand-hover:#3d5ce5;--brand-light:#6b8cff;--brand-deep:#e7e9fb;--brand-subtle:rgba(79,110,247,.1);--brand-glow:rgba(79,110,247,.15);--code-border:color-mix(in srgb, var(--gray-0) 8%, transparent)}
-</style>
+<style>html{visibility:visible!important}</style>
 <script>
 // DSD Polyfill (Firefox, older browsers)
 (function() {

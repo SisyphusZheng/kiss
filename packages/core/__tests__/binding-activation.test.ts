@@ -6,7 +6,6 @@ import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
 import type { BindingDescriptor, BindingLifecycle } from '../src/binding-descriptor.ts';
 import { applyBindingDescriptor } from '../src/binding-activation.ts';
-import { escapeHtml } from '../src/html-escape.ts';
 
 // ─── Minimal DOM harness for Deno test runner ────────────────────────────────
 
@@ -509,8 +508,9 @@ Deno.test('signal-html escapes untrusted HTML', () => {
   const s = signal('<script>xss</script>');
   const desc: BindingDescriptor = { kind: 'signal-html', el, signal: s, trusted: false };
   applyBindingDescriptor(desc, {});
-  assertEquals(asTestElement(el).innerHTML, escapeHtml('<script>xss</script>'));
-  assertEquals(el.textContent, escapeHtml('<script>xss</script>'));
+  // textContent escapes HTML, so the literal string is preserved without execution.
+  assertEquals(el.textContent, '<script>xss</script>');
+  assertEquals(asTestElement(el).innerHTML, '<script>xss</script>');
 });
 
 Deno.test('signal-html trusts raw HTML when trusted is true', () => {

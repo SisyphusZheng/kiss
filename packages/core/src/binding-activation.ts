@@ -7,7 +7,6 @@
  */
 
 import { effect, unwrapSignalLike } from '@openelement/signal';
-import { escapeHtml } from './html-escape.js';
 import { trustRenderHtml } from './security.js';
 import { renderToDom } from './jsx-render-dom.js';
 import { Fragment } from './jsx-runtime.ts';
@@ -185,7 +184,7 @@ function applySignalHtml(
     if (trusted) {
       el.innerHTML = trustRenderHtml(str);
     } else {
-      el.textContent = escapeHtml(str);
+      el.textContent = str;
     }
   };
 
