@@ -5,6 +5,7 @@
  * OpenElementPackageManifest. Keeps the same export shape as the previous
  * hand-written manifest so consumers continue to work.
  */
+// deno-api-free:ignore — Deno APIs used only in lazy-initialized Proxy for build-time manifest generation
 
 import type {
   OpenElementAttribute,

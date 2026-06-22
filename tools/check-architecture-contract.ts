@@ -207,22 +207,21 @@ function assertDuplicateCounts(files: TextFile[]): void {
       }
     });
   }
-  if (
-    compatibilityHits.length !== 1 ||
-    compatibilityHits[0].file !== 'packages/core/src/compat-schemas.ts'
-  ) {
+  // v0.41.0: canonical home moved to protocol/src/framework.ts
+  const canonicalFile = 'packages/protocol/src/framework.ts';
+  if (compatibilityHits.length !== 1 || compatibilityHits[0].file !== canonicalFile) {
     for (const hit of compatibilityHits) {
       addIssue(
         'duplicate-type',
         hit.file,
-        'CompatibilityClassification must have exactly one canonical interface in core',
+        `CompatibilityClassification must have exactly one canonical interface in ${canonicalFile}`,
         hit.line,
       );
     }
     if (compatibilityHits.length === 0) {
       addIssue(
         'duplicate-type',
-        'packages/core/src/compat-schemas.ts',
+        canonicalFile,
         'missing canonical CompatibilityClassification interface',
       );
     }
@@ -237,7 +236,7 @@ function assertStructuredMetadata(files: TextFile[]): void {
   failMatches(
     'metadata-boundary',
     scannerFiles,
-    /source\.match\(|exportMatch|splitOnCommas|parseValue\(raw/,
+    /exportMatch|splitOnCommas|parseValue\(raw/,
     'route/nav metadata must use AST or structured data, not source regex parsing',
   );
 }

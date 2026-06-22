@@ -2,8 +2,8 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.40.8` (`v0.40.8`
-release). Active execution: `v0.40.8` Cleanup-Train Patch.**
+**JSX-first Web Components platform. Package line: `0.41.0-alpha1` (`v0.41.0-alpha1`
+release). Active execution: `v0.41.0-alpha1` Cleanup-Train Patch.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
 rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD
@@ -28,7 +28,7 @@ deno task dev
 ## Product Matrix
 
 ```text
-openElement = Elements + UI + Framework
+openElement = Elements + UI + Framework + Protocols
 ```
 
 | Product   | Surface                                   | Role                                                                    |
@@ -84,9 +84,9 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.40.8** (`v0.40.8`) under
+All 11 current workspace packages are aligned at **0.41.0-alpha1** (`v0.41.0-alpha1`) under
 [`@openelement`](https://www.npmjs.com/org/openelement). The active execution line is
-**v0.40.8**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
+**v0.41.0-alpha1**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
 while reserving minor/major product decisions for human-approved ADR and
 version-plan evidence.
 

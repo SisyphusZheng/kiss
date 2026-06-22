@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.8 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
+> Current package line: v0.41.0-alpha1 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 
@@ -138,7 +138,7 @@ Non-goals:
 - No further upstream Vite+ Deno PM advocacy in v0.41.0.
 - No removal of existing JSR published versions.
 
-## v0.40.8 - Cleanup-Train Patch
+## v0.41.0-alpha1 - Cleanup-Train Patch
 
 Patch release that removes the legacy Linear UI compatibility surface and
 extends the audit-driven cleanup to type assertions and non-null assertions.
@@ -167,7 +167,7 @@ Scope:
 - Extract repeated error formatting and generated runtime `console.*` fragments
   to use existing `error` / `logger` boundaries while preserving intentional
   CLI/tool console output.
-- Bump workspace versions to `0.40.8` and publish the v0.40.8 cleanup record.
+- Bump workspace versions to `0.41.0-alpha1` and publish the v0.41.0-alpha1 cleanup record.
 
 Non-goals:
 

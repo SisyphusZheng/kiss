@@ -38,7 +38,7 @@ export class GuideGuidePage extends OpenElement {
         </p>
         <p class='subtitle'>
           The v0.40.7 line hardened release infrastructure and CI. The current
-          active line is v0.40.8, a cleanup-train patch that removes the legacy
+          active line is v0.41.0-alpha1, a cleanup-train patch that removes the legacy
           Linear UI compatibility surface and tightens type safety before the
           v0.41.0 npm-only distribution work.
         </p>

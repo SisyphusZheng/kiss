@@ -1,11 +1,11 @@
 # Package Surface Inventory
 
-This is the v0.40.8 10-package product-line truth table.
+This is the v0.41.0-alpha1 11-package product-line truth table.
 
-<!-- 10-package -->
+<!-- 11-package -->
 
 ```text
-openElement = Elements + UI + Framework
+openElement = Elements + UI + Framework + Protocols
 ```
 
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
