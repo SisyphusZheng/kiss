@@ -45,6 +45,26 @@ Deno.test('event hydration: one marker binds every handler on the same element',
   assertEquals(records.map((record) => record.type), ['click', 'dblclick', 'focusin']);
 });
 
+Deno.test('event hydration: nested parent/child events match SSR child-before-parent order', async () => {
+  const parentHandler = () => {};
+  const childHandler = () => {};
+
+  const tree = jsx('div', {
+    onClick: parentHandler,
+    children: [jsx('button', { onClick: childHandler, children: ['child'] })],
+  });
+
+  const html = await renderDsdTree(tree);
+  assertStringIncludes(html, 'data-eid="e0"');
+  assertStringIncludes(html, 'data-eid="e1"');
+
+  const bindings = collectEventBindings(tree);
+  assertEquals([...bindings.keys()], ['e0', 'e1']);
+  // Child is visited first, so it gets e0; parent gets e1.
+  assertEquals(bindings.get('e0')?.[0].handler, childHandler);
+  assertEquals(bindings.get('e1')?.[0].handler, parentHandler);
+});
+
 Deno.test('event hydration: SSR markers and hydration bindings share one traversal contract', async () => {
   const noop = () => {};
   const Nested = (props: { children?: unknown }) =>

@@ -116,12 +116,14 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
       }
     }
 
+    // Visit children before assigning an ID to this element so the order
+    // matches SSR (renderToNode serializes children first).
+    for (const child of children) visit(child);
+
     if (records.length > 0) {
       const id = eventMarkerId(count++);
       bindings.set(id, records.map((record) => ({ ...record, id })));
     }
-
-    for (const child of children) visit(child);
   };
 
   visit(node);

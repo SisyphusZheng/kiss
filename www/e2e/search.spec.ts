@@ -139,4 +139,32 @@ test.describe('Search', () => {
     expect(lightBackground).toBeTruthy();
     expect(lightBackground).not.toBe(darkBackground);
   });
+
+  test('search overlay closes when clicking the backdrop', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForFunction(() => customElements.get('open-search'));
+
+    await page.locator('open-search').evaluate((el) => {
+      const button = el.shadowRoot?.querySelector('button');
+      button?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    });
+
+    let overlay = await page.locator('open-search').evaluate((el) => {
+      const node = el.shadowRoot?.querySelector('.overlay');
+      return node?.classList.contains('open') ?? false;
+    });
+    expect(overlay).toBe(true);
+
+    await page.locator('open-search').evaluate((el) => {
+      const node = el.shadowRoot?.querySelector('.overlay');
+      node?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    });
+
+    overlay = await page.locator('open-search').evaluate((el) => {
+      const node = el.shadowRoot?.querySelector('.overlay');
+      return node?.classList.contains('open') ?? false;
+    });
+    expect(overlay).toBe(false);
+  });
 });
