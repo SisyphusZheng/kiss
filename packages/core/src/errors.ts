@@ -4,9 +4,8 @@
 
 import type { RenderError as ProtocolRenderError } from '@openelement/protocol/render';
 
-// ─── Well-known error codes ─────────────────────────────────────────
-
 /** Well-known error code constants for reference. String values are always accepted. */
+// ponytail: duplicated from protocol to avoid cross-package runtime import in SSG bundles
 export const ErrorCode = {
   SSR_RENDER_ERROR: 'SSR_RENDER_ERROR',
   ISLAND_RENDER_ERROR: 'ISLAND_RENDER_ERROR',

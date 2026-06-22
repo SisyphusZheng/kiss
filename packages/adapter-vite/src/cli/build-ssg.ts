@@ -31,11 +31,18 @@ import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
 import { optionalPackageStubsPlugin } from '../plugin.js';
 import { normalizeViteAliases } from '../alias-utils.js';
-import {
-  DEFAULT_ADAPTER_VERSION_FALLBACK,
-  SSR_CHUNK_SIZE_WARNING_LIMIT_KB,
-  SSR_EXTERNAL_PATHS,
-} from '../build-constants.js';
+// ponytail: build-constants inlined — only used here
+
+/** Fallback package version when adapter-vite cannot read its own deno.json. */
+const DEFAULT_ADAPTER_VERSION_FALLBACK = '0.35.1';
+
+/** Chunk size warning limit (kB) for the SSR bundle build. */
+const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
+
+/** Rollup/Vite output paths mapping for known externals. */
+const SSR_EXTERNAL_PATHS: Record<string, string> = {
+  'sanitize-html': 'npm:sanitize-html@^2.17.4',
+};
 
 const log = createLogger('ssg');
 

@@ -17,8 +17,6 @@
  */
 export function generateSsrPolyfillBanner(): string {
   return `\
-// SSR polyfill: Lit references CSSStyleSheet in its internals.
-// This must load before any Lit module is evaluated.
 import { StyleSheet } from '@openelement/core';
 if (typeof globalThis.CSSStyleSheet === 'undefined') {
   globalThis.CSSStyleSheet = class {

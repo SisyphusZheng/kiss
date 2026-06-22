@@ -156,8 +156,7 @@ export type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
 export { transformIslandSource } from './island-transform.js';
 export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
-// Data adapters
-export { MemoryDataAdapter } from './data.js';
+// Data adapters — type contract surface only (ADR-0095)
 export type {
   Action,
   ActionContext,

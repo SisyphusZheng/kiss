@@ -96,10 +96,7 @@ export function openI18n(
   };
 }
 
-// Re-export runtime helpers for convenience when importing @openelement/app/i18n-plugin
-export type { OpenElementI18nOptions } from './i18n-runtime.ts';
-export { i18nStaticPaths, loadI18nData, switchLocale } from './i18n-runtime.ts';
-export type { LocalePath } from '@openelement/router/i18n';
-export { normalizeLocalePath } from '@openelement/router/i18n';
+// ponytail: re-exports removed — @openelement/app/i18n already provides them
+// Use @openelement/app/i18n for runtime helpers: i18nStaticPaths, loadI18nData, switchLocale, normalizeLocalePath
 
 export default openI18n;
