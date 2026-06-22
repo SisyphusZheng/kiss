@@ -1,0 +1,23 @@
+{
+  "name": "@openelement/protocol",
+  "version": "0.41.0-alpha1",
+  "exports": {
+    ".": "./src/index.ts",
+    "./signal": "./src/signal.ts",
+    "./vnode": "./src/vnode.ts",
+    "./render": "./src/render.ts",
+    "./manifest": "./src/manifest.ts",
+    "./framework": "./src/framework.ts",
+    "./context": "./src/context.ts",
+    "./runtime": "./src/runtime.ts",
+    "./data": "./src/data.ts",
+    "./isr": "./src/isr.ts",
+    "./ssg": "./src/ssg.ts",
+    "./router": "./src/router.ts",
+    "./errors": "./src/errors.ts",
+    "./style-sheet": "./src/style-sheet.ts",
+    "./html": "./src/html.ts",
+    "./island": "./src/island.ts",
+    "./prop": "./src/prop.ts"
+  }
+}

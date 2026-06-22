@@ -11,6 +11,7 @@
     "./packages/ssg",
     "./packages/app",
     "./packages/router",
+    "./packages/protocol",
     "./www"
   ],
   "imports": {

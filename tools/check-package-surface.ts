@@ -8,6 +8,7 @@ const retainedPackages = [
   '@openelement/core',
   '@openelement/create',
   '@openelement/element',
+  '@openelement/protocol',
   '@openelement/router',
   '@openelement/signal',
   '@openelement/ssg',
