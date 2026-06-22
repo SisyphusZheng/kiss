@@ -14,5 +14,3 @@ import type {
   LoaderContext,
 } from '@openelement/protocol/data';
 export type { Action, ActionContext, DataAdapter, Loader, LoaderContext };
-
-// ponytail: MemoryDataAdapter removed — DataAdapter type is the contract surface

@@ -96,7 +96,6 @@ export function openI18n(
   };
 }
 
-// ponytail: re-exports removed — @openelement/app/i18n already provides them
 // Use @openelement/app/i18n for runtime helpers: i18nStaticPaths, loadI18nData, switchLocale, normalizeLocalePath
 
 export default openI18n;

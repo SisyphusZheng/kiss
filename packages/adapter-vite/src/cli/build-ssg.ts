@@ -31,7 +31,6 @@ import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
 import { optionalPackageStubsPlugin } from '../plugin.js';
 import { normalizeViteAliases } from '../alias-utils.js';
-// ponytail: build-constants inlined — only used here
 
 /** Fallback package version when adapter-vite cannot read its own deno.json. */
 const DEFAULT_ADAPTER_VERSION_FALLBACK = '0.35.1';

@@ -169,5 +169,3 @@ export function reportError(error: OpenElementError): void {
 }
 
 // ─── SSR Error Context ──────────────────────────────────────────────
-
-// ponytail: SsrErrorContext removed; use collectedErrors arrays directly.
