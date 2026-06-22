@@ -58,6 +58,9 @@ export {
   insertAfterHead,
 } from './postprocess.ts';
 
+export { cleanSsrArtifacts, postProcessClientIslandBuild } from './build-postprocess.ts';
+export type { BuildContextView } from './build-postprocess.ts';
+
 export { generateSsrPolyfillBanner } from './ssr-polyfills.ts';
 export {
   buildFallbackManifest,

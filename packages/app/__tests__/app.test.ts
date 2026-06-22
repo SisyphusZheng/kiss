@@ -41,10 +41,10 @@ Deno.test('openElement() minimal includes dev server', () => {
 
 // ─── Content plugin integration ────────────────────────────────
 
-Deno.test('openElement() with content adds open:content plugin', () => {
+Deno.test('openElement() with content adds open:content:blog plugin', () => {
   const names = openElement({ content: { blog: { contentDir: 'posts', basePath: '/blog' } } })
     .map((p) => p.name);
-  assertArrayIncludes(names, ['open:content']);
+  assertArrayIncludes(names, ['open:content:blog']);
   assertArrayIncludes(names, ['open:generated-data']);
 });
 
@@ -54,10 +54,10 @@ Deno.test('openElement() with content has more plugins than without', () => {
   assertEquals(withContent.length > without.length, true);
 });
 
-Deno.test('openElement() with content blog: false excludes open:content blog data plugin', () => {
+Deno.test('openElement() with content blog: false excludes open:content:blog plugin', () => {
   const names = openElement({ content: {} }).map((p) => p.name);
-  // content plugin is still added (with empty config)
-  assertArrayIncludes(names, ['open:content']);
+  // Empty content config enables no content modules.
+  assertEquals(names.includes('open:content:blog'), false);
 });
 
 // ─── i18n plugin integration ──────────────────────────────────
@@ -81,7 +81,7 @@ Deno.test('openElement() with both content and i18n includes all plugins', () =>
     content: { blog: { contentDir: 'posts' } },
     i18n: { locales: ['en'], defaultLocale: 'en' },
   }).map((p) => p.name);
-  assertArrayIncludes(names, ['open:content']);
+  assertArrayIncludes(names, ['open:content:blog']);
   assertArrayIncludes(names, ['open:i18n']);
   assertArrayIncludes(names, ['open:core']);
   assertArrayIncludes(names, ['open:build']);

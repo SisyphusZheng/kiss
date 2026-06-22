@@ -30,6 +30,9 @@ import type {
 } from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { IslandDecl, SsrAdmissionPlan } from '@openelement/protocol/ssg';
+import { createLogger } from '@openelement/core/logger';
+
+const log = createLogger('core');
 
 // These branded types ensure Phase 2 can only run after Phase 1,
 // and Phase 3 can only run after Phase 2. The compiler catches
@@ -177,6 +180,80 @@ export class OpenElementBuildContext {
     this._phaseTokens[3] = t3;
     return t3;
   }
+
+  /** Populate Phase 3 invariants from resolved Vite config and framework options. */
+  populatePhase3(
+    options: FrameworkOptions & { allowHeadExtrasScripts?: boolean },
+    config: ResolvedConfig,
+    ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[],
+  ): void {
+    let base = config.base || '/';
+    if (!base.endsWith('/')) base += '/';
+
+    this.phase3.root = config.root;
+    this.phase3.outDir = options.build?.outDir || 'dist';
+    this.phase3.base = base;
+    this.phase3.ssrNoExternal = ssrNoExternal;
+    this.phase3.routesDir = options.routesDir || 'app/routes';
+    this.phase3.islandsDir = options.islandsDir || 'app/islands';
+    this.phase3.componentsDir = options.componentsDir || 'app/components';
+    this.phase3.middleware = options.middleware || null;
+    this.phase3.html = options.html || null;
+    this.phase3.upgradeStrategy = options.island?.upgradeStrategy || 'idle';
+    this.phase3.viewTransition = options.viewTransition ?? true;
+    this.phase3.speculation = options.speculation ?? null;
+    this.phase3.headExtras = options.headExtras || '';
+    this.phase3.allowHeadExtrasScripts = options.allowHeadExtrasScripts || false;
+    this.phase3.appShell = options.appShell;
+    this.phase3.layouts = options.layouts;
+  }
+
+  /** Return a read-only view of Phase 3 metadata. */
+  getPhase3Meta(): Readonly<Phase3Meta> {
+    return this.phase3;
+  }
+
+  /** Check whether a phase has been completed. */
+  isPhaseComplete(phase: 1 | 2 | 3): boolean {
+    return this._phaseTokens[phase] !== null;
+  }
+
+  /** Run Phase 3 after Phase 1, enforcing ordering and logging. */
+  async runPhase3(runner: (ctx: this) => Promise<void>): Promise<void> {
+    const phase1Token = this._phaseTokens[1];
+    if (!phase1Token) {
+      throw new Error('Phase 3 called before Phase 1 completed');
+    }
+    this.completePhase3(phase1Token);
+
+    log.info('[3/3] Static site generation...');
+    try {
+      await runner(this);
+      log.info('[3/3] Static site generation - complete');
+    } catch (error) {
+      log.error(`[3/3] Static site generation - FAILED: ${error}`);
+      throw error;
+    }
+  }
+
+  /** Run Phase 2 after Phase 3, enforcing ordering and logging. */
+  async runPhase2(runner: (ctx: this) => Promise<void>): Promise<void> {
+    const phase3Token = this._phaseTokens[3];
+    if (!phase3Token) {
+      throw new Error('Phase 2 called before Phase 3 completed');
+    }
+    this.completePhase2(phase3Token);
+
+    log.info('[2/3] Client island build...');
+    try {
+      await runner(this);
+      log.info('[2/3] Client island build - complete');
+    } catch (error) {
+      log.error(`[2/3] Client island build - FAILED: ${error}`);
+      throw error;
+    }
+  }
+
   /** Phase 1: Route scanning & build metadata */
   readonly phase1: Phase1Meta = new Phase1Meta();
 
