@@ -14,8 +14,6 @@ import type {
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '@openelement/protocol/manifest';
-import { StyleSheet } from '@openelement/core/style-sheet';
-import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
 
 const pkgVersion = '0.40.8';
 
@@ -272,9 +270,23 @@ function buildManifest(): OpenElementPackageManifest {
   };
 }
 
-// ponytail: no-op to avoid an unused-import lint; StyleSheet is only imported
-// to prove the module can access the same runtime as the component sheets.
-const _preload: StyleSheetLike = new StyleSheet();
-void _preload;
-
-export const manifest: OpenElementPackageManifest = buildManifest();
+// ponytail: lazy-initialized to keep Deno runtime calls out of client bundles.
+// buildManifest() scans the filesystem and must only execute at build time.
+let _manifest: OpenElementPackageManifest | undefined;
+export const manifest: OpenElementPackageManifest = new Proxy(
+  {} as OpenElementPackageManifest,
+  {
+    get(_target, prop) {
+      if (!_manifest) _manifest = buildManifest();
+      return ((_manifest as unknown) as Record<string, unknown>)[prop as string];
+    },
+    ownKeys() {
+      if (!_manifest) _manifest = buildManifest();
+      return Reflect.ownKeys(_manifest!);
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      if (!_manifest) _manifest = buildManifest();
+      return Reflect.getOwnPropertyDescriptor(_manifest!, prop);
+    },
+  },
+);
