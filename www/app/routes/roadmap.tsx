@@ -459,7 +459,7 @@ const phases = [
   },
   {
     version: 'v0.40',
-    title: 'Elements + Preact + repository slimming',
+    title: 'Elements + repository slimming',
     copy: 'Slimmed the public surface, removed archived promises, and kept the framework direction standards-first.',
     status: 'released',
     tone: 'success',
@@ -540,7 +540,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.40.7' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha1' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

@@ -2,7 +2,7 @@
 
 > Version: 4.0.0
 > Date: 2026-06-19
-> Product line: openElement v0.40.8
+> Product line: openElement v0.41.0-alpha1
 > Direction: Monet Aperture Editorial Lab
 > Status: Required implementation spec for `www`
 
@@ -26,17 +26,17 @@ hero must not be full width and must contain enough real substance.
 
 ## Truth Policy
 
-| Page          | Content source                                                                                                                            |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Homepage      | Product anchors in route code, package concepts, real docs/API/roadmap links.                                                             |
-| Docs          | Generated route metadata and existing guide/architecture routes.                                                                          |
-| API Reference | Real package boundaries and public UI primitives; no invented API signatures.                                                             |
-| Blog index    | `www/app/data/_generated-blog-data.ts` and content frontmatter.                                                                           |
-| Blog article  | The current post payload only. No fake read time, dates, or summaries.                                                                    |
-| Roadmap       | Current roadmap file and required anchors: `v0.40.8`, `v0.37.6`, `WC Package Protocol`, `Six-Phase Vision`, `No webpack`, `Registry Hub`. |
-| Changelog     | Root `CHANGELOG.md`.                                                                                                                      |
-| Contributing  | Current contributing route content and repo workflow.                                                                                     |
-| Design System | Real `@openelement/ui` primitives and Open Props semantic tokens.                                                                         |
+| Page          | Content source                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Homepage      | Product anchors in route code, package concepts, real docs/API/roadmap links.                                                                    |
+| Docs          | Generated route metadata and existing guide/architecture routes.                                                                                 |
+| API Reference | Real package boundaries and public UI primitives; no invented API signatures.                                                                    |
+| Blog index    | `www/app/data/_generated-blog-data.ts` and content frontmatter.                                                                                  |
+| Blog article  | The current post payload only. No fake read time, dates, or summaries.                                                                           |
+| Roadmap       | Current roadmap file and required anchors: `v0.41.0-alpha1`, `v0.37.6`, `WC Package Protocol`, `Six-Phase Vision`, `No webpack`, `Registry Hub`. |
+| Changelog     | Root `CHANGELOG.md`.                                                                                                                             |
+| Contributing  | Current contributing route content and repo workflow.                                                                                            |
+| Design System | Real `@openelement/ui` primitives and Open Props semantic tokens.                                                                                |
 
 Generated mockups are visual references only. They are never a source of truth.
 

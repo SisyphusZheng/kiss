@@ -80,7 +80,7 @@ export class ArchitecturePage extends OpenElement {
             </div>
             <h1>Current Architecture</h1>
             <p class='lede'>
-              openElement is organized as Elements + UI + Framework + Protocols. The v0.40
+              openElement is organized as Elements + UI + Framework + Protocols. The v0.41
               package graph is intentionally small: five product-facing packages and six
               foundation packages. SSG is retained as an adapter-agnostic engine; Vite and Nitro
               stay behind the Framework boundary.
@@ -89,7 +89,7 @@ export class ArchitecturePage extends OpenElement {
           <div class='artifact'>
             <div class='artifact-head'>
               <strong>package graph</strong>
-              <span>v0.40.0 current truth</span>
+              <span>v0.41.0-alpha1 current truth</span>
             </div>
             <pre><code>{PACKAGE_GRAPH}</code></pre>
           </div>
