@@ -16,7 +16,7 @@ import { OpenElementError } from '@openelement/core/errors';
 import { escapeAttr as escapeHtmlAttr } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 // @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml, { type IOptions as SanitizeHtmlOptions } from 'npm:sanitize-html@^2.17.4';
+import sanitizeHtml, { type IOptions as SanitizeHtmlOptions } from 'sanitize-html';
 
 const log = createLogger('adapter-vite:head-injection');
 

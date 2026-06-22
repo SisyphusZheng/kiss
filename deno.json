@@ -24,7 +24,8 @@
     "@playwright/test": "npm:@playwright/test@1.59.1",
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
-    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1"
+    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
+    "flexsearch": "npm:flexsearch@^0.7"
   },
   "vendor": true,
   "nodeModulesDir": "manual",

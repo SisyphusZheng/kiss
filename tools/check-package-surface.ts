@@ -23,7 +23,6 @@ const removedPackages = [
   '@openelement/compat-check',
   '@openelement/elements',
   '@openelement/hub',
-  '@openelement/protocol',
   '@openelement/protocols',
   '@openelement/rpc',
   '@openelement/runtime',

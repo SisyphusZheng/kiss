@@ -14,6 +14,8 @@
     "marked": "npm:marked@^15",
     "gray-matter": "npm:gray-matter@^4.0.3",
     "@mdx-js/mdx": "npm:@mdx-js/mdx@^3.1.1",
+    "sanitize-html": "npm:sanitize-html@^2.17.4",
+    "@types/sanitize-html": "npm:@types/sanitize-html@^2",
     "vite": "npm:vite@8.0.10"
   },
   "publish": {
