@@ -20,7 +20,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { signal } from '@openelement/signal';
 export const tagName = 'open-theme-toggle';
 
@@ -72,7 +71,12 @@ sheet.replaceSync(`
 `);
 
 export class OpenThemeToggle extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  // ponytail: Safari does not recompute adoptedStyleSheets when
+  // :host([data-theme]) changes. The token sheets (openPropsTokenSheet,
+  // daisyClassSheet) are already injected as page-level <style> by
+  // vite.config.ts — CSS custom properties cascade from :root naturally.
+  // Only adopt the component-specific sheet.
+  static override styles = [sheet];
   static override delegatesFocus = true;
   static override observedAttributes = ['theme'];
 
