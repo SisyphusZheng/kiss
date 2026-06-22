@@ -1,6 +1,6 @@
 {
   "name": "@openelement/adapter-vite",
-  "version": "0.41.0-alpha1",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
     "./build-context": "./src/build-context.ts",

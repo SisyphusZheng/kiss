@@ -10,7 +10,7 @@ OpenElement currently has two independent signal→DOM binding paths:
 - **Path A (CSR creation)**: `packages/core/src/jsx-render-dom.ts:applyProps()` binds signals to DOM nodes while they are being created from a VNode tree.
 - **Path D (DSD hydration)**: `packages/element/src/open-element-hydration.ts:hydrateSignals()` binds signals to DOM nodes that already exist inside a Declarative Shadow DOM template, discovering them via `data-signal*` markers and resolving signal identity through `signalRegistry`.
 
-Both paths implement the same binding semantics—text content, attributes, CSS classes, and VNode child rendering—but with different input sources (VNode props vs. DOM attributes) and different cleanup wiring. This duplication was noted in the v0.41.0-alpha1 architecture review and flagged as technical debt.
+Both paths implement the same binding semantics—text content, attributes, CSS classes, and VNode child rendering—but with different input sources (VNode props vs. DOM attributes) and different cleanup wiring. This duplication was noted in the v0.41.0-alpha.1 architecture review and flagged as technical debt.
 
 We have also considered more radical cures:
 

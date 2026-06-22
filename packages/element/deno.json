@@ -1,6 +1,6 @@
 {
   "name": "@openelement/element",
-  "version": "0.41.0-alpha1",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts"
   },

@@ -25,7 +25,7 @@
  *   - entry-render-runtime.ts  — runtime helper function code generation
  *   - entry-render-ssg.ts      — SSG re-export & routeInfo/renderRoute/getStaticPaths
  *
- * v0.41.0-alpha1: The intermediate EntryDescriptor data model was collapsed
+ * v0.41.0-alpha.1: The intermediate EntryDescriptor data model was collapsed
  * into this file. `generateHonoEntryCode()` builds descriptor-shaped data and
  * passes it directly to `renderEntry()` without a separate public descriptor
  * builder or file.

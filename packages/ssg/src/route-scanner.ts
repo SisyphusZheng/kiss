@@ -41,7 +41,7 @@
  * Audit completed: 2026-05-17
  * Auditor: AI agent (openElement v0.17.4 SOP compliance check)
  *
- * ─── v0.41.0-alpha1: AST removed ────────────────────────────
+ * ─── v0.41.0-alpha.1: AST removed ────────────────────────────
  *
  * Replaced TypeScript AST scanning with regex/glob-based extraction.
  * Route and island modules are simple ESM files; parsing the whole source
@@ -101,7 +101,7 @@ function staticOpenElementError(message: string): OpenElementError {
 }
 
 /**
- * v0.41.0-alpha1: Regex-based extraction of
+ * v0.41.0-alpha.1: Regex-based extraction of
  * `export const openElement = defineIslandConfig({ ... })`.
  *
  * The scanner intentionally does not execute island modules. It accepts only a
@@ -388,7 +388,7 @@ export async function scanIslands(
 }
 
 /**
- * v0.41.0-alpha1: Regex-based — reads island metadata by statically scanning the module
+ * v0.41.0-alpha.1: Regex-based — reads island metadata by statically scanning the module
  * source for `export const openElement = defineIslandConfig({ ... })`.
  *
  * Supported form:

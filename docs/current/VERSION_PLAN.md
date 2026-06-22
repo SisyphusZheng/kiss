@@ -13,7 +13,7 @@ as the default runtime engines behind the protocol boundary.
 
 ## Context
 
-v0.41.0-alpha1 removed the legacy Linear UI surface and closed the audit-driven
+v0.41.0-alpha.1 removed the legacy Linear UI surface and closed the audit-driven
 cleanup train. The next strategic blocker is distribution: ADR-0107 decided on
 npm-only releases, but the codebase is still authored for JSR publication.
 
@@ -92,7 +92,7 @@ so this plan pivots to Deno's own `deno pack` tooling.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
-- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha1 11-package surface.
+- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.1 11-package surface.
 
 ## Test Matrix
 
