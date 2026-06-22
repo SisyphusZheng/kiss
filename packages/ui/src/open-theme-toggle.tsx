@@ -130,6 +130,26 @@ export class OpenThemeToggle extends OpenElement {
     document.documentElement.setAttribute('data-theme', this._theme.value);
     if (document.documentElement.style) {
       document.documentElement.style.colorScheme = this._theme.value;
+      // ponytail: Safari/WebKit does not recompute adoptedStyleSheets
+      // when :root[data-theme] changes. Bypass CSS cascade — set the
+      // critical surface variables directly on the root element.
+      const isDark = this._theme.value === 'dark';
+      const root = document.documentElement.style;
+      // ponytail: concrete colors, not var() references — Safari does not
+      // recompute custom properties inside adoptedStyleSheets.
+      if (isDark) {
+        root.setProperty('--bg-canvas', '#030507');
+        root.setProperty('--surface-1', '#0d0f12');
+        root.setProperty('--surface-2', '#16191d');
+        root.setProperty('--surface-3', '#212529');
+        root.setProperty('--surface-code', '#0d0f12');
+      } else {
+        root.removeProperty('--bg-canvas');
+        root.removeProperty('--surface-1');
+        root.removeProperty('--surface-2');
+        root.removeProperty('--surface-3');
+        root.removeProperty('--surface-code');
+      }
     }
     // Propagate to parent open-layout
     try {
@@ -138,6 +158,15 @@ export class OpenThemeToggle extends OpenElement {
         root.host.setAttribute('data-theme', this._theme.value);
       }
     } catch { /* not in shadow DOM */ }
+    // ponytail: Safari/WebKit does not recompute adoptedStyleSheets CSS
+    // custom properties when :root[data-theme] changes. Force a style
+    // recalculation by toggling a no-op custom property on <html>.
+    const prev = document.documentElement.style.getPropertyValue('--force-theme-recalc');
+    document.documentElement.style.setProperty(
+      '--force-theme-recalc',
+      prev === '1' ? '0' : '1',
+    );
+    void document.documentElement.offsetHeight;
     this._dispatchThemeChange(this._theme.value);
     this._persistTheme(this._theme.value);
   }
