@@ -6,38 +6,20 @@
  * concrete server engines outside this package.
  */
 
-import type { CacheAdapter } from './isr.ts';
-
-export interface RuntimeContext<Env extends Record<string, unknown> = Record<string, unknown>> {
-  env?: Env;
-  platform?: unknown;
-  cache?: CacheAdapter<Response>;
-}
-
-export interface RuntimePrerenderResult {
-  path: string;
-  html: string;
-  status?: number;
-  headers?: HeadersInit;
-}
-
-export type OpenElementRequestHandler<
-  Env extends Record<string, unknown> = Record<string, unknown>,
-> = (request: Request, context?: RuntimeContext<Env>) => Response | Promise<Response>;
-
-export interface RuntimeAdapter<Env extends Record<string, unknown> = Record<string, unknown>> {
-  name: string;
-  fetch: OpenElementRequestHandler<Env>;
-  prerender?(): AsyncIterable<RuntimePrerenderResult> | Iterable<RuntimePrerenderResult>;
-}
-
-export interface RuntimeAdapterOptions<
-  Env extends Record<string, unknown> = Record<string, unknown>,
-> {
-  name: string;
-  fetch: OpenElementRequestHandler<Env>;
-  prerender?(): AsyncIterable<RuntimePrerenderResult> | Iterable<RuntimePrerenderResult>;
-}
+import type {
+  OpenElementRequestHandler,
+  RuntimeAdapter,
+  RuntimeAdapterOptions,
+  RuntimeContext,
+  RuntimePrerenderResult,
+} from '@openelement/protocol/runtime';
+export type {
+  OpenElementRequestHandler,
+  RuntimeAdapter,
+  RuntimeAdapterOptions,
+  RuntimeContext,
+  RuntimePrerenderResult,
+};
 
 export function createRuntimeAdapter<
   Env extends Record<string, unknown> = Record<string, unknown>,

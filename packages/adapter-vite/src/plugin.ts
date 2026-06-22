@@ -8,8 +8,12 @@
  */
 
 import type { Alias, Plugin } from 'vite';
-import type { FrameworkOptions, OpenElementPackageManifest, RouteEntry } from '@openelement/core';
-import type { HydrationStrategy } from '@openelement/core';
+import type {
+  FrameworkOptions,
+  HydrationStrategy,
+  RouteEntry,
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 
 import { join } from 'node:path';
 import process from 'node:process';

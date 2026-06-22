@@ -6,7 +6,7 @@
  * and supporting helper functions.
  */
 
-import type { EntryDescriptor } from './routes.ts';
+import type { EntryDescriptor } from '@openelement/protocol/ssg';
 import { routeRevalidateExpr, routeTagNameExpr } from './entry-render-helpers.ts';
 
 /**

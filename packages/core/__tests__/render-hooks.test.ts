@@ -7,8 +7,13 @@
 import { assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { jsx } from '../src/jsx-runtime.ts';
 import { renderDsd, type RenderDsdOptions } from '../src/render-dsd.ts';
-import type { RenderError, RenderHooks, RenderInput, RenderOutput } from '../src/render-schemas.ts';
-import type { VNode } from '../src/vnode.ts';
+import type {
+  RenderError,
+  RenderHooks,
+  RenderInput,
+  RenderOutput,
+} from '@openelement/protocol/render';
+import type { VNode } from '@openelement/protocol/vnode';
 
 interface MockComponent {
   render(): VNode | null | unknown;

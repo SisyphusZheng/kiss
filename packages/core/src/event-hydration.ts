@@ -9,7 +9,8 @@
 
 import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike } from '@openelement/signal';
-import { isComponentCtor, isVNode, type RenderFn, type VNode } from './vnode.ts';
+import { isComponentCtor, isVNode } from './vnode.ts';
+import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 
 const EVENT_PROP_RE = /^on[A-Z]/;
 const EVENT_TYPE_ALIASES: Record<string, string> = {

@@ -13,8 +13,9 @@ import type {
   OpenElementEvent,
   OpenElementPackageManifest,
   OpenElementSlot,
-} from '@openelement/core';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
+} from '@openelement/protocol/manifest';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
 
 const pkgVersion = '0.40.8';
 

@@ -18,12 +18,11 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type {
-  CompatibilityClassification,
-  OpenElementPackageManifest,
-  SsrAdmissionDecision,
-} from '@openelement/core';
-import type { HydrationHint, RenderError } from '@openelement/core';
-import type { SsgIslandDeclForReport, SsgRenderOptions } from '@openelement/ssg';
+  SsgPageOutput,
+  SsgRenderEvidence,
+  SsgRenderOptions,
+  SsrBundle,
+} from '@openelement/protocol/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { expandDynamicRoutes } from './ssg-dynamic.ts';
 import { expandI18nLocales } from './ssg-i18n.ts';
@@ -31,61 +30,6 @@ import { assembleDsdReport, writeDsdReport } from './ssg-report.ts';
 import { buildIsrManifestEntries, findHtmlFiles, type PageDiagnostic } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');
-
-// ─── Types ──────────────────────────────────────────────────────
-
-/** Per-page render diagnostics returned by renderRoute() */
-export interface SsgPageOutput {
-  /** Rendered HTML string */
-  html: string;
-  /** Render errors collected during rendering */
-  errors: RenderError[];
-  /** Hydration hints collected during rendering */
-  hydrationHints: HydrationHint[];
-  /** Number of DSD components rendered on this page */
-  componentCount: number;
-  /** Total render time for all components on this page (ms) */
-  renderTimeMs: number;
-}
-
-export interface SsrBundle {
-  default: unknown;
-  routeInfo?: Array<{
-    path: string;
-    tagName: string;
-    isDynamic: boolean;
-    paramNames: string[];
-    revalidate?: number;
-    params?: Record<string, string>;
-  }>;
-  renderRoute?: (
-    path: string,
-    opts?: Record<string, unknown>,
-  ) => Promise<SsgPageOutput>;
-  getStaticPaths?: (path: string) => Promise<Array<Record<string, string>>>;
-  posts?: unknown[];
-  [key: string]: unknown;
-}
-
-export interface SsgRenderEvidence {
-  i18nOptions?: {
-    locales: string[];
-    defaultLocale?: string;
-    [key: string]: unknown;
-  } | null;
-  localIslandMeta?: Record<string, { hydrate?: string }>;
-  packageIslandDecls?: SsgIslandDeclForReport[];
-  packageManifests?: OpenElementPackageManifest[];
-  admissionDecisions?: SsrAdmissionDecision[];
-  cemClassifications?: CompatibilityClassification[];
-  onPrintBuildManifest?: (input: {
-    root: string;
-    outDir: string;
-    phase: 3;
-    headExtras?: string;
-  }) => void | Promise<void>;
-  onGenerateSitemap?: (outputDir: string) => void | Promise<void>;
-}
 
 // ─── Core render pipeline ──────────────────────────────────────
 

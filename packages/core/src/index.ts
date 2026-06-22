@@ -19,17 +19,29 @@
 export type {
   AppShellConfig,
   AppShellDefinition,
+  ComponentLayer,
   FrameworkOptions,
+  HydrateEventDescriptor,
+  HydrationStrategy,
+  IsrManifestEntry,
   LayoutsConfig,
+  OpenElementApiContext,
   OpenElementBuildContextLike,
   OpenElementMiddleware,
   OpenElementMiddlewareContext,
   OpenElementPluginMeta,
   OpenElementRenderer,
+  ReactiveHost,
+  RegistryIndex,
+  RegistryIndexEntry,
   RouteEntry,
   SpecialFileType,
-  SsrContext,
-} from './schemas.js';
+  StrategySource,
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
+} from '@openelement/protocol/framework';
+export type { IslandDescriptor, SsrContext } from '@openelement/protocol/context';
 
 export {
   ERROR_PREFIX,
@@ -41,10 +53,9 @@ export {
   setErrorTelemetryHook,
   SsrRenderError,
 } from './errors.js';
-export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from './errors.js';
+export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '@openelement/protocol/errors';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './html-escape.js';
-export type { OpenElementApiContext } from './schemas.js';
 export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
 export type {
   CacheAdapter,
@@ -53,9 +64,8 @@ export type {
   IsrCacheEntry,
   IsrCacheResult,
   IsrCacheState,
-  IsrManifestEntry,
   IsrRouteConfig,
-} from './isr.js';
+} from '@openelement/protocol/isr';
 export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.js';
 export type {
   IsrRuntimeOptions,
@@ -63,9 +73,9 @@ export type {
   IsrRuntimeRenderResult,
   IsrRuntimeResult,
   IsrRuntimeState,
-} from './isr-runtime.js';
+} from '@openelement/protocol/isr';
 export { StyleSheet } from './style-sheet.js';
-export type { StyleSheetLike, StyleSheetRule } from './style-sheet.js';
+export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
 export { bindHydrateEvents } from './dsd-hydration-events.js';
 export type { Constructor, DsdHydration } from './dsd-hydration.js';
 export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.js';
@@ -78,9 +88,29 @@ export type {
 } from './render-dsd-stream.js';
 export { camelToKebab, serializeAttrs } from './render-ir.js';
 export type {
-  ComponentLayer,
-  HydrateEventDescriptor,
-  HydrationStrategy,
+  DomSimulationAttempt,
+  DomSimulationReport,
+  DsdBuildReport,
+  DsdComponent,
+  DsdComponentConstructor,
+  DsdHydrationHintSummary,
+  DsdHydrationStrategySummary,
+  DsdMetricsSummary,
+  DsdOptions,
+  DsdPageDiagnostics,
+  DsdRenderMetrics,
+  HydrationHint,
+  IsrRouteRecord,
+  ManifestDecision,
+  RendererProtocol,
+  RenderErrorCode,
+  RenderHooks,
+  RenderInput,
+  RenderOutput,
+  RenderPhase,
+  SsrAdmissionDecision,
+} from '@openelement/protocol/render';
+export type {
   OpenElementAttribute,
   OpenElementCssPart,
   OpenElementCssProperty,
@@ -93,15 +123,7 @@ export type {
   OpenElementPackageExtensions,
   OpenElementPackageManifest,
   OpenElementSlot,
-  ReactiveHost,
-  RegistryIndex,
-  RegistryIndexEntry,
-  StrategySource,
-  Unsubscribe,
-  ValidationError,
-  ValidationResult,
-  ValidationWarning,
-} from './schemas.js';
+} from '@openelement/protocol/manifest';
 export type {
   CemCompatibilityReport,
   CompatibilityClassification,
@@ -109,39 +131,15 @@ export type {
   ManifestValidationReport,
   ValidatedTag,
   ValidationDiagnostic,
-} from './compat-schemas.js';
-export type {
-  DomSimulationAttempt,
-  DomSimulationReport,
-  DsdBuildReport,
-  DsdHydrationHintSummary,
-  DsdHydrationStrategySummary,
-  DsdMetricsSummary,
-  DsdOptions,
-  DsdPageDiagnostics,
-  HydrationHint,
-  IsrRouteRecord,
-  ManifestDecision,
-  RendererProtocol,
-  RenderHooks,
-  RenderInput,
-  RenderOutput,
-  RenderPhase,
-  SsrAdmissionDecision,
-} from './render-schemas.js';
-export {
-  escapeAttr,
-  escapeAttrValue,
-  escapeHtml,
-  type SafeHtml,
-  type UnsafeHtml,
-} from './html-escape.js';
+} from '@openelement/protocol/manifest';
+export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
+export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
 export {
   // v0.24.3: Neutral signal utilities — no template dependency
   isSignalLike,
-  type SignalLike,
   unwrapSignalLike,
 } from '@openelement/signal';
+export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
 export { createLogger, OpenElementLogger } from './logger.js';
 /** @internal — use @openelement/core/security subpath */
@@ -153,14 +151,20 @@ export {
   defineIsland,
   getIslandMeta,
   getSsrProps,
-  type IslandOptions,
 } from './island.js';
+export type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
 export { transformIslandSource } from './island-transform.js';
-export type { IslandTransformOptions, IslandTransformResult } from './island-transform.js';
+export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
 // Data adapters
 export { MemoryDataAdapter } from './data.js';
-export type { Action, ActionContext, DataAdapter, Loader, LoaderContext } from './data.js';
+export type {
+  Action,
+  ActionContext,
+  DataAdapter,
+  Loader,
+  LoaderContext,
+} from '@openelement/protocol/data';
 
 // WC Package Protocol (v0.17+)
 export {
@@ -173,7 +177,7 @@ export {
 } from './registry.js';
 // v0.24.1 (ADR-0057): JSX + Signal component model
 // VNode & jsx-runtime
-export type { VNode } from './vnode.js';
+export type { VNode } from '@openelement/protocol/vnode';
 export { isVNode } from './vnode.js';
 export { Fragment, trustedHtml } from './jsx-runtime.js';
 // Renderers
@@ -198,3 +202,11 @@ export {
   syncStaticPropsFromAttributes,
   unwrap,
 } from './prop.js';
+export type {
+  NormalizedPropDecl,
+  PropDecl,
+  PropDeclFull,
+  PropDeclShorthand,
+  PropsFrom,
+  PropType,
+} from '@openelement/protocol/prop';

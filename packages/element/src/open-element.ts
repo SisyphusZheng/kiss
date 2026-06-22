@@ -47,9 +47,9 @@
  * @module @openelement/element/open-element
  */
 
-import type { ReactiveHost } from '@openelement/core';
+import type { ReactiveHost } from '@openelement/protocol/framework';
 import { formatError } from '@openelement/core/errors';
-import type { StyleSheetLike } from '@openelement/core/style-sheet';
+import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
 import { disposeProps, handlePropAttributeChange, initializeProps } from '@openelement/core/prop';
 import {
   disposeStaticProps,
@@ -57,8 +57,8 @@ import {
   initializeStaticProps,
   syncStaticPropsFromAttributes,
 } from '@openelement/core/prop';
-import { type VNode } from '@openelement/core';
-import type { Signal } from '@openelement/signal';
+import type { VNode } from '@openelement/protocol/vnode';
+import type { Signal } from '@openelement/protocol/signal';
 import { signal } from '@openelement/signal';
 import { createLogger } from '@openelement/core/logger';
 import {

@@ -12,12 +12,14 @@
 import type {
   OpenElementDeclaration,
   OpenElementPackageManifest,
+} from '@openelement/protocol/manifest';
+import type {
   RegistryIndex,
   RegistryIndexEntry,
   ValidationError,
   ValidationResult,
   ValidationWarning,
-} from './schemas.js';
+} from '@openelement/protocol/framework';
 
 const _packages: OpenElementPackageManifest[] = [];
 

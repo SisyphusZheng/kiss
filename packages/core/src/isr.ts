@@ -12,47 +12,26 @@
  * (Cloudflare Workers KV, Deno KV) are v0.22 scope.
  */
 
-/** Generic cache entry metadata shared by ISR and runtime adapters. */
-export interface CacheEntry<T = unknown> {
-  value: T;
-  createdAt: number;
-  revalidate?: number;
-  tags?: readonly string[];
-}
-
-/** Minimal cache protocol for replacement-compatible runtime adapters. */
-export interface CacheAdapter<T = unknown> {
-  name: string;
-  get(key: string): Promise<CacheEntry<T> | undefined>;
-  set(key: string, entry: CacheEntry<T>): Promise<void>;
-  delete?(key: string): Promise<boolean>;
-  purgeTag?(tag: string): Promise<number>;
-}
-
-export type IsrCacheState = 'miss' | 'hit' | 'stale' | 'error';
-
-export interface IsrCacheEntry {
-  html: string;
-  createdAt: number;
-  revalidate: number;
-  headers?: Record<string, string>;
-}
-
-export interface IsrCacheResult {
-  state: IsrCacheState;
-  entry?: IsrCacheEntry;
-  error?: Error;
-}
-
-export interface IsrCache {
-  get(key: string, now?: number): Promise<IsrCacheResult> | IsrCacheResult;
-  set(key: string, entry: IsrCacheEntry): Promise<void> | void;
-  delete?(key: string): Promise<void> | void;
-}
-
-export interface IsrRouteConfig {
-  revalidate: number;
-}
+import type {
+  CacheAdapter,
+  CacheEntry,
+  IsrCache,
+  IsrCacheEntry,
+  IsrCacheResult,
+  IsrCacheState,
+  IsrRouteConfig,
+} from '@openelement/protocol/isr';
+import type { IsrManifestEntry } from '@openelement/protocol/framework';
+export type {
+  CacheAdapter,
+  CacheEntry,
+  IsrCache,
+  IsrCacheEntry,
+  IsrCacheResult,
+  IsrCacheState,
+  IsrManifestEntry,
+  IsrRouteConfig,
+};
 
 export function isIsrRouteConfig(value: unknown): value is IsrRouteConfig {
   return typeof value === 'object' && value !== null &&
@@ -71,9 +50,6 @@ export function createIsrCacheKey(
       .join('&');
   return `openelement:isr:${routePath}${suffix}`;
 }
-
-/** ISR route record written to isr-manifest.json at build time. */
-export type { IsrManifestEntry } from './schemas.js';
 
 export class MemoryIsrCache implements IsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();

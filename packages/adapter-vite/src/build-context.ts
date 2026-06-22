@@ -21,12 +21,12 @@ import type { Alias, ResolvedConfig } from 'vite';
 import type {
   CompatibilityClassification,
   FrameworkOptions,
-  OpenElementPackageManifest,
+  HydrationStrategy,
+  OpenElementPluginMeta,
   RouteEntry,
-} from '@openelement/core';
-import type { HydrationStrategy } from '@openelement/core';
-import type { OpenElementPluginMeta } from '@openelement/core';
-import type { IslandDecl, SsrAdmissionPlan } from '@openelement/ssg';
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+import type { IslandDecl, SsrAdmissionPlan } from '@openelement/protocol/ssg';
 
 // These branded types ensure Phase 2 can only run after Phase 1,
 // and Phase 3 can only run after Phase 2. The compiler catches
@@ -134,7 +134,7 @@ export class Phase3Meta {
   componentsDir: string = 'app/components';
 
   /** ADR-0047: Pre-resolved external dependency manifest (auto-generated from deno info). */
-  externalManifest?: import('@openelement/ssg').ExternalManifest;
+  externalManifest?: import('@openelement/protocol/ssg').ExternalManifest;
 
   /** Skip Deno pre-resolution, use regex fallback. */
   skipPreResolution?: boolean;

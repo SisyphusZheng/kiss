@@ -30,7 +30,7 @@ export type {
 } from './authoring.ts';
 
 // Re-export route data types from protocol for convenience
-export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/core';
+export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/protocol/data';
 
 // Re-export from @openelement/element for convenience
 export { defineElement, defineLayout } from '@openelement/element';

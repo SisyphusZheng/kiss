@@ -6,36 +6,14 @@
  * adapters or recipes.
  */
 
-/** Fetch and enumerate data by key without owning storage implementation. */
-export interface DataAdapter<T = unknown> {
-  /** Adapter name for diagnostics and logging. */
-  name: string;
-  /** Fetch data by key. Returns undefined when not found. */
-  get(key: string): Promise<T | undefined>;
-  /** List available keys when route generation needs enumeration. */
-  keys?(): Promise<string[]>;
-}
-
-// ─── Route data layer types (v0.40.0) ──────────────────────────────
-
-/** Context passed to a route loader function. */
-export interface LoaderContext {
-  request: Request;
-  params: Record<string, string>;
-  env: Record<string, string | undefined>;
-  platform?: unknown;
-}
-
-/** Context passed to a route action function (extends loader context). */
-export interface ActionContext extends LoaderContext {
-  formData: FormData;
-}
-
-/** Route loader: fetches data for a page route. */
-export type Loader<T = unknown> = (ctx: LoaderContext) => T | Promise<T>;
-
-/** Route action: handles form submissions for a page route. */
-export type Action<T = unknown> = (ctx: ActionContext) => T | Promise<T>;
+import type {
+  Action,
+  ActionContext,
+  DataAdapter,
+  Loader,
+  LoaderContext,
+} from '@openelement/protocol/data';
+export type { Action, ActionContext, DataAdapter, Loader, LoaderContext };
 
 /** In-memory adapter used only as a zero-I/O baseline proof. */
 export class MemoryDataAdapter<T = unknown> implements DataAdapter<T> {

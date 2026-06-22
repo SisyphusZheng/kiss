@@ -12,7 +12,6 @@
  */
 
 import {
-  type ComponentLayer,
   type DsdComponent,
   type DsdOptions,
   type DsdRenderMetrics,
@@ -23,10 +22,11 @@ import {
   type RenderInput,
   type RenderOutput,
   type RenderPhase,
-} from './render-schemas.js';
+} from '@openelement/protocol/render';
+import { type DsdComponentConstructor } from '@openelement/protocol/render';
+import type { ComponentLayer } from '@openelement/protocol/framework';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import { type DsdComponentConstructor } from './render-schemas.js';
 import { escapeAttrValue } from './html-escape.js';
 import { isVNode } from './vnode.js';
 import { renderDsdTree } from './render-ir.js';
@@ -42,7 +42,7 @@ import { DANGEROUS_KEYS } from './security.js';
 const log = createLogger('core');
 
 // ─── Error Classification ──────────────────────────────────────
-// RenderPhase and RenderErrorCode are imported from render-schemas.js.
+// RenderPhase and RenderErrorCode are imported from @openelement/protocol/render.
 
 export function classifyError(
   phase: RenderPhase,

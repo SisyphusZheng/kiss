@@ -7,12 +7,12 @@ import { assertExists } from 'jsr:@std/assert@^1.0.0';
 import type {
   FrameworkOptions,
   OpenElementMiddleware,
-  OpenElementPackageManifest,
   OpenElementRenderer,
   RouteEntry,
   SpecialFileType,
-  SsrContext,
-} from '../src/schemas.ts';
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+import type { SsrContext } from '@openelement/protocol/context';
 
 // Compile-time type existence checks (lint compliance: consume the imported types)
 type _LessMiddleware = OpenElementMiddleware;

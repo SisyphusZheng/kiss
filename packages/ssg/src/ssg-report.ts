@@ -9,14 +9,14 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
+import type { CemCompatibilityReport } from '@openelement/protocol/manifest';
+import type { CompatibilityClassification } from '@openelement/protocol/framework';
 import type {
-  CemCompatibilityReport,
-  CompatibilityClassification,
   DsdBuildReport,
   DsdHydrationStrategySummary,
   ManifestDecision,
-} from '@openelement/core';
-import type { SsgRenderEvidence } from './ssg-render.ts';
+} from '@openelement/protocol/render';
+import type { SsgRenderEvidence } from '@openelement/protocol/ssg';
 import type { PageDiagnostic } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');

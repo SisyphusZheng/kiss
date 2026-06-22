@@ -15,7 +15,7 @@ import {
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland } from '@openelement/core';
 import { __internal_setActionData, __internal_setLoaderData } from '@openelement/router';
-import type { HydrationStrategy } from '@openelement/core';
+import type { HydrationStrategy } from '@openelement/protocol/framework';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
 export type PageStreamingMode = 'auto' | 'force' | false;

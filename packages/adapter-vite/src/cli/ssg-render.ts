@@ -6,19 +6,18 @@
  * build orchestration uses the local SSG helpers.
  */
 
-import {
-  resolveDynamicRoutePath,
-  type SsgPageOutput,
-  ssgRender as ssgRenderCore,
-  type SsgRenderEvidence,
-  type SsgRenderOptions,
-  type SsrBundle,
-} from '@openelement/ssg';
+import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '@openelement/ssg';
+import type { SsgRenderEvidence, SsgRenderOptions, SsrBundle } from '@openelement/protocol/ssg';
 import { printBuildManifest } from '../build-manifest.js';
 import type { OpenElementBuildContext } from '../build-context.js';
 
 export { resolveDynamicRoutePath };
-export type { SsgPageOutput, SsgRenderEvidence, SsgRenderOptions, SsrBundle };
+export type {
+  SsgPageOutput,
+  SsgRenderEvidence,
+  SsgRenderOptions,
+  SsrBundle,
+} from '@openelement/protocol/ssg';
 
 export async function ssgRender(
   module: SsrBundle,

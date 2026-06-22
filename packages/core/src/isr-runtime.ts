@@ -1,35 +1,20 @@
-import type { IsrCache, IsrCacheEntry, IsrCacheResult, IsrManifestEntry } from './isr.js';
-
-export type IsrRuntimeState = IsrCacheResult['state'] | 'not-found';
-
-export interface IsrRuntimeRenderResult {
-  html: string;
-  headers?: Record<string, string>;
-}
-
-export interface IsrRuntimeRenderContext {
-  entry: IsrManifestEntry;
-  request?: Request;
-}
-
-export interface IsrRuntimeOptions {
-  manifest: IsrManifestEntry[];
-  cache: IsrCache;
-  render: (
-    path: string,
-    context: IsrRuntimeRenderContext,
-  ) => Promise<IsrRuntimeRenderResult> | IsrRuntimeRenderResult;
-  now?: () => number;
-  regenerate?: 'blocking' | 'background';
-  onRegenerateError?: (error: unknown, entry: IsrManifestEntry) => void;
-  schedule?: (task: Promise<void>) => void;
-}
-
-export interface IsrRuntimeResult {
-  state: IsrRuntimeState;
-  entry?: IsrManifestEntry;
-  response: Response;
-}
+import type {
+  IsrCacheEntry,
+  IsrCacheResult,
+  IsrRuntimeOptions,
+  IsrRuntimeRenderContext,
+  IsrRuntimeRenderResult,
+  IsrRuntimeResult,
+  IsrRuntimeState,
+} from '@openelement/protocol/isr';
+import type { IsrManifestEntry } from '@openelement/protocol/framework';
+export type {
+  IsrRuntimeOptions,
+  IsrRuntimeRenderContext,
+  IsrRuntimeRenderResult,
+  IsrRuntimeResult,
+  IsrRuntimeState,
+};
 
 export function findIsrManifestEntry(
   manifest: IsrManifestEntry[],

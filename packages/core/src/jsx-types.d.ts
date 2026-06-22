@@ -17,9 +17,13 @@ declare namespace JSX {
    * is returned from DsdElement.render(): VNode | null.
    */
   interface Element {
-    tag: string | import('./vnode.ts').ComponentFn | import('./vnode.ts').ComponentCtor | symbol;
+    tag:
+      | string
+      | import('@openelement/protocol/vnode').ComponentFn
+      | import('@openelement/protocol/vnode').ComponentCtor
+      | symbol;
     props: Record<string, unknown>;
-    children: (string | import('./vnode.ts').VNode)[];
+    children: (string | import('@openelement/protocol/vnode').VNode)[];
     key?: string | number;
     ref?: (el: globalThis.Element) => void;
   }

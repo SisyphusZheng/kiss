@@ -8,7 +8,7 @@
  * v0.25.0: Initial implementation for build-time route type code generation.
  */
 
-import type { RouteEntry } from '@openelement/core';
+import type { RouteEntry } from '@openelement/protocol/framework';
 
 /**
  * Convert a file path to a route path, preserving [param] bracket syntax.

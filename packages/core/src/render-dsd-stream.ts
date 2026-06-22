@@ -14,7 +14,7 @@
  */
 
 import { renderDsd, safeNow } from './render-dsd.js';
-import type { RenderError, RenderOutput } from './render-schemas.js';
+import type { RenderError, RenderOutput } from '@openelement/protocol/render';
 
 // --- Streaming types -------------------------------------------
 
@@ -43,7 +43,7 @@ export interface RenderDsdStreamComponent {
   componentClass: CustomElementConstructor;
   props?: Record<string, unknown>;
   sourceInfo?: { route?: string; source?: string };
-  dsdOptions?: import('./render-schemas.js').DsdOptions;
+  dsdOptions?: import('@openelement/protocol/render').DsdOptions;
 }
 
 const textEncoder = new TextEncoder();

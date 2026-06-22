@@ -18,7 +18,7 @@ export type {
   SignalLike,
   Unsubscribe,
   WritableSignal,
-} from './types.ts';
+} from '@openelement/protocol/signal';
 export { isSignalLike, unwrapSignalLike } from './types.ts';
 
 // ─── Engine factory (available at subpath) ──────────────────────

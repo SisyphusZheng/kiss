@@ -17,7 +17,7 @@
 
 import { defineCustomElement } from '@openelement/core';
 import { OpenElement } from '@openelement/element';
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { defineIslandConfig } from '@openelement/app';
 import { computed, signal } from '@openelement/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';

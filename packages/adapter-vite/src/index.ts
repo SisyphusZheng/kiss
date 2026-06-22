@@ -24,7 +24,7 @@
 
 // Primary public API
 import type { Plugin } from 'vite';
-import type { FrameworkOptions } from '@openelement/core';
+import type { FrameworkOptions } from '@openelement/protocol/framework';
 import { createOpenPlugin } from './plugin.js';
 
 export interface OpenPipelineConfig {
@@ -74,12 +74,14 @@ export {
   type IslandManifestEntry,
   type IslandStrategyMap,
   type PageIslandManifest,
-  type SpeculationRulesOptions,
   writeIslandManifests,
 } from '@openelement/ssg';
 
+// Protocol type re-exports
+export type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
+
 // External resolver types used by the adapter-vite build pipeline
-export type { ExternalManifest } from '@openelement/ssg';
+export type { ExternalManifest } from '@openelement/protocol/ssg';
 
 // Subpath resolver (public constants)
 export { CORE_SUBPATHS, VIRTUAL_CORE_PREFIX } from './subpath-resolver.js';

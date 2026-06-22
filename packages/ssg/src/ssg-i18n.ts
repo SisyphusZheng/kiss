@@ -7,10 +7,9 @@
 
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { SsgRenderOptions } from '@openelement/ssg';
+import type { SsgPageOutput, SsgRenderEvidence, SsgRenderOptions } from '@openelement/protocol/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
-import type { SsgPageOutput, SsgRenderEvidence } from './ssg-render.ts';
 import { collectPageOutput, type PageDiagnostic, resolveDynamicRoutePath } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');

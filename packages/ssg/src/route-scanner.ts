@@ -50,10 +50,10 @@
 
 import type {
   CompatibilityClassification,
-  OpenElementPackageManifest,
   RouteEntry,
   SpecialFileType,
-} from '@openelement/core';
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 import { join, posix, sep } from 'node:path';

@@ -2,7 +2,7 @@
  * @openelement/core — Unified Error Architecture (ADR-0053 / SOP-011).
  */
 
-import type { RenderError as ProtocolRenderError } from './render-schemas.js';
+import type { RenderError as ProtocolRenderError } from '@openelement/protocol/render';
 
 // ─── Well-known error codes ─────────────────────────────────────────
 
@@ -31,15 +31,8 @@ export function formatError(e: unknown): string {
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-export type ErrorSeverity = 'error' | 'warning';
-export type ErrorPhase =
-  | 'render'
-  | 'ssr'
-  | 'csr'
-  | 'build'
-  | 'navigation'
-  | 'validation'
-  | 'unknown';
+import type { ErrorPhase, ErrorSeverity } from '@openelement/protocol/errors';
+export type { ErrorPhase, ErrorSeverity };
 
 // ─── Base Error ─────────────────────────────────────────────────────
 
@@ -157,7 +150,8 @@ export class PropValidationError extends OpenElementError {
 
 // ─── Error Telemetry ────────────────────────────────────────────────
 
-export type ErrorTelemetryHook = (error: OpenElementError) => void;
+import type { ErrorTelemetryHook } from '@openelement/protocol/errors';
+export type { ErrorTelemetryHook };
 
 let _telemetryHook: ErrorTelemetryHook | undefined;
 

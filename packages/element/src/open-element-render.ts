@@ -9,7 +9,7 @@
  * @module @openelement/element/open-element-render
  */
 
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { renderToDom } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';

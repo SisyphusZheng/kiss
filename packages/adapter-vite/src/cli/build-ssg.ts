@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { FrameworkOptions, OpenElementPackageManifest } from '@openelement/core';
-import type { HydrationStrategy } from '@openelement/core';
+import type { FrameworkOptions, HydrationStrategy } from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { OpenElementBuildContext } from '../build-context.js';
 import { ssgRender } from '@openelement/ssg';
 import { SsrRenderError } from '@openelement/core/errors';
@@ -73,7 +73,7 @@ interface BuildSSGOptions {
   middleware?: FrameworkOptions['middleware'];
   ssr?: FrameworkOptions['ssr'];
   islandTagNames?: string[];
-  islandMeta?: Record<string, Partial<import('@openelement/ssg').IslandDecl>>;
+  islandMeta?: Record<string, Partial<import('@openelement/protocol/ssg').IslandDecl>>;
   packageManifests?: OpenElementPackageManifest[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
@@ -97,7 +97,7 @@ interface BuildSSGOptions {
    * Enables browser prefetch/prerender of pages before the user navigates.
    * Can be a boolean (true = auto-generate from routes) or explicit rules.
    */
-  speculation?: boolean | import('@openelement/ssg').SpeculationRulesOptions;
+  speculation?: boolean | import('@openelement/protocol/ssg').SpeculationRulesOptions;
   /** ADR-0047: Skip Deno pre-resolution, use regex fallback for external deps. */
   skipPreResolution?: boolean;
 }

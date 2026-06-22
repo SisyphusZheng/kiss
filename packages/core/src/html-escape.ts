@@ -14,11 +14,8 @@ import { createLogger, warnOnce } from './logger.js';
 
 const log = createLogger('core');
 
-/** Branded type: a string that has been HTML-escaped (safe for text content) */
-export type SafeHtml = string & { readonly __safeHtml: unique symbol };
-
-/** Branded type: a string that is intentionally raw/untrusted HTML */
-export type UnsafeHtml = string & { readonly __unsafeHtml: unique symbol };
+import type { SafeHtml, UnsafeHtml } from '@openelement/protocol/html';
+export type { SafeHtml, UnsafeHtml };
 
 /**
  * Escape a string for safe HTML text content insertion.
@@ -180,7 +177,7 @@ export function wrapInDocument(
 
 // ─── Error page rendering ────────────────────────────────────────
 
-import type { RouteEntry } from './schemas.js';
+import type { RouteEntry } from '@openelement/protocol/framework';
 
 /**
  * Render an error page to HTML string.

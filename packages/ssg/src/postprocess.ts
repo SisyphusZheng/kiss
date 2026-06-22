@@ -18,6 +18,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
+import type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
 
 const log = createLogger('core');
 
@@ -269,37 +270,6 @@ export function injectViewTransitionMeta(dir: string): void {
 }
 
 // ─── Speculation Rules API ────────────────────────────────────────────
-
-/** Speculation Rules configuration for SSG post-processing */
-export interface SpeculationRulesOptions {
-  /**
-   * URL patterns to prerender (fully render in background before navigation).
-   * Prerender gives instant page loads but uses more bandwidth/memory.
-   * Best for high-probability navigation targets (e.g. /guide/*).
-   */
-  prerender?: string[];
-
-  /**
-   * URL patterns to prefetch (fetch HTML + resources without rendering).
-   * Lighter than prerender, good for medium-probability links.
-   */
-  prefetch?: string[];
-
-  /**
-   * URL patterns to exclude from both prefetch and prerender.
-   * Typically API routes and dynamic pages that shouldn't be speculatively loaded.
-   */
-  exclude?: string[];
-
-  /**
-   * Eagerness level for prerender rules.
-   * - 'immediate': prerender as soon as the rule is parsed (aggressive)
-   * - 'moderate': prerender on hover (default, recommended)
-   * - 'conservative': prerender on pointerdown or click
-   * @default 'moderate'
-   */
-  eagerness?: 'immediate' | 'moderate' | 'conservative';
-}
 
 /**
  * Build Speculation Rules JSON from configuration and known routes.

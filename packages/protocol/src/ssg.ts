@@ -5,12 +5,8 @@
  * These types keep the SSG engine adapter-agnostic.
  */
 
-import type {
-  CompatibilityClassification,
-  HydrationStrategy,
-  SsrAdmissionDecision,
-} from './framework.js';
-import type { HydrationHint, RenderError } from './render.js';
+import type { CompatibilityClassification, HydrationStrategy } from './framework.js';
+import type { HydrationHint, RenderError, SsrAdmissionDecision } from './render.js';
 import type { OpenElementPackageManifest } from './manifest.js';
 
 // ─── Concurrency types ───────────────────────────────────────

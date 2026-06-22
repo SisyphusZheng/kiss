@@ -9,7 +9,7 @@
  * For each external package, we parse its package.json exports field to
  * auto-discover ALL subpath exports. No more regex maintenance.
  */
-import type { ExternalManifest } from '@openelement/ssg';
+import type { ExternalManifest } from '@openelement/protocol/ssg';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';

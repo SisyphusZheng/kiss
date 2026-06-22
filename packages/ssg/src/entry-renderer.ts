@@ -44,16 +44,16 @@ import type {
   RendererDecl,
   ResolvedAppShell,
   SsrAdmissionPlan,
-} from './routes.ts';
+} from '@openelement/protocol/ssg';
 import type {
   AppShellConfig,
   CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
-  OpenElementPackageManifest,
   RouteEntry,
-  SsrAdmissionDecision,
-} from '@openelement/core';
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+import type { SsrAdmissionDecision } from '@openelement/protocol/render';
 import { fileToTagName } from './route-scanner.ts';
 import {
   renderActionRoute,
@@ -69,7 +69,7 @@ import { renderRuntimeHelpers } from './entry-render-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
 
 // Re-export the canonical descriptor type for consumers that need it.
-export type { EntryDescriptor } from './routes.ts';
+export type { EntryDescriptor } from '@openelement/protocol/ssg';
 
 /**
  * Render an EntryDescriptor into a complete virtual module string.

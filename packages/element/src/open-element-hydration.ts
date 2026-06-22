@@ -10,7 +10,7 @@
  */
 
 import { collectEventBindings, hydrateEventMarkers, isVNode, renderToDom } from '@openelement/core';
-import type { Signal } from '@openelement/signal';
+import type { Signal } from '@openelement/protocol/signal';
 import { effect } from '@openelement/signal';
 import { disposeRenderBindings, type VNodeCacheAccess } from './open-element-render.js';
 import type { OpenElement } from './open-element.js';

@@ -30,9 +30,9 @@ import {
 import { OpenElement } from '@openelement/element';
 import { ErrorBoundary } from '@openelement/element';
 import { jsx } from '@openelement/core/jsx-runtime';
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { signal } from '@openelement/signal';
-import type { Signal } from '@openelement/signal';
+import type { Signal } from '@openelement/protocol/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';
 
 const hasDOM = typeof customElements !== 'undefined';

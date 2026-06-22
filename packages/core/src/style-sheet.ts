@@ -6,14 +6,8 @@
  * used by OpenElement and renderDsd().
  */
 
-export interface StyleSheetRule {
-  cssText: string;
-}
-
-export interface StyleSheetLike {
-  replaceSync(text: string): void;
-  readonly cssRules: StyleSheetRule[];
-}
+import type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
+export type { StyleSheetLike, StyleSheetRule };
 
 function parseRules(css: string): StyleSheetRule[] {
   const rules: StyleSheetRule[] = [];

@@ -7,7 +7,7 @@
 
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { ComponentLayer, HydrationStrategy } from '@openelement/core';
+import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */

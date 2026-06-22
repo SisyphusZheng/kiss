@@ -16,17 +16,37 @@
  */
 
 export type {
+  ApiRouteDecl,
+  AppShellDecl,
+  AppShellPlan,
   ClientIslandEntry,
+  CorsOriginConfig,
+  CspConfig,
+  DocumentConfig,
+  EntryDescriptor,
   ExternalManifest,
+  ImportDecl,
+  IslandDecl,
+  MiddlewareDecl,
+  MiddlewareScopeDecl,
+  PageRouteDecl,
   ParallelRenderOptions,
   ParallelRenderPageOutput,
   ParallelRenderResult,
+  RendererDecl,
+  ResolvedAppShell,
+  RouteDecl,
+  SpeculationRulesOptions,
   SsgIslandDeclForReport,
   SsgPageInput,
+  SsgPageOutput,
+  SsgRenderEvidence,
   SsgRenderOptions,
-} from './ssg-contracts.ts';
+  SsrAdmissionPlan,
+  SsrBundle,
+} from '@openelement/protocol/ssg';
 export { resolveDynamicRoutePath, ssgRender } from './ssg-render.ts';
-export type { SsgPageOutput, SsgRenderEvidence, SsrBundle } from './ssg-render.ts';
+
 export {
   buildIslandChunkMap,
   buildSpeculationRulesJson,
@@ -37,7 +57,6 @@ export {
   injectViewTransitionMeta,
   insertAfterHead,
 } from './postprocess.ts';
-export type { SpeculationRulesOptions } from './postprocess.ts';
 
 export { generateSsrPolyfillBanner } from './ssr-polyfills.ts';
 export {
@@ -62,24 +81,6 @@ export {
 export { generateRouteTypes } from './route-type-generator.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
-export type {
-  ApiRouteDecl,
-  AppShellDecl,
-  AppShellPlan,
-  CorsOriginConfig,
-  CspConfig,
-  DocumentConfig,
-  EntryDescriptor,
-  ImportDecl,
-  IslandDecl,
-  MiddlewareDecl,
-  MiddlewareScopeDecl,
-  PageRouteDecl,
-  RendererDecl,
-  ResolvedAppShell,
-  RouteDecl,
-  SsrAdmissionPlan,
-} from './routes.ts';
 
 export { generateHonoEntryCode, renderEntry } from './entry-renderer.ts';
 export type { HonoEntryOptions } from './entry-renderer.ts';

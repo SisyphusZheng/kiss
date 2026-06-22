@@ -1,5 +1,8 @@
-import type { CompatibilityClassification, CompatibilityTier } from '@openelement/core';
-import type { HydrationStrategy } from '@openelement/core';
+import type {
+  CompatibilityClassification,
+  CompatibilityTier,
+  HydrationStrategy,
+} from '@openelement/protocol/framework';
 import { isValidTagName } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 

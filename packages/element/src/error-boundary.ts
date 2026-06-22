@@ -20,9 +20,10 @@
  * ```
  */
 
-import { type VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { OpenElement } from './open-element.js';
-import { ErrorCode, type ErrorSeverity, OpenElementError } from '@openelement/core';
+import { ErrorCode, OpenElementError } from '@openelement/core';
+import type { ErrorSeverity } from '@openelement/protocol/errors';
 
 export abstract class ErrorBoundary extends OpenElement {
   private _error: OpenElementError | null = null;

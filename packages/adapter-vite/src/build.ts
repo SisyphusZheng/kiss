@@ -11,8 +11,8 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
-import type { ComponentLayer, HydrationStrategy } from '@openelement/core';
-import type { FrameworkOptions } from '@openelement/core';
+import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
+import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type {
   OpenElementBuildContext,
   Phase1Token,

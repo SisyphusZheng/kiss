@@ -8,7 +8,8 @@
  * @module @openelement/core/jsx-render-dom
  */
 
-import { isComponentCtor, isComponentFn, isVNode, type RenderFn, type VNode } from './vnode.ts';
+import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
+import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 import { eventTypeFromProp } from './event-hydration.ts';

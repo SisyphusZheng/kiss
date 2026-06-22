@@ -13,7 +13,7 @@
 
 /// <reference path="./jsx-types.d.ts" />
 
-import type { ComponentCtor, ComponentFn, VNode } from './vnode.ts';
+import type { ComponentCtor, ComponentFn, VNode } from '@openelement/protocol/vnode';
 
 /**
  * Usage in TSX:

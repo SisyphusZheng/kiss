@@ -5,7 +5,7 @@
  */
 import { OpenElement } from './open-element.js';
 import type { ElementDefinition } from './types.js';
-import { type VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 
 const ERROR_PREFIX = '[openElement]';
 
