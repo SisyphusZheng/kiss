@@ -238,7 +238,12 @@ export default class OpenSearch extends OpenElement {
   }
 
   private _closeOnBackdrop(e: Event): void {
-    if (e.target === e.currentTarget) this._close();
+    // ponytail: Firefox shadow DOM event retargeting makes currentTarget
+    // unreliable. Instead, walk composedPath to check if the click origin
+    // is inside the panel. Close only when panel is not in the path.
+    const path = e.composedPath();
+    const inPanel = path.some((el) => (el as Element).classList?.contains('panel'));
+    if (!inPanel) this._close();
   }
 
   private _stopPropagation(e: Event): void {
