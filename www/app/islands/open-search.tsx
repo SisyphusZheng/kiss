@@ -215,6 +215,11 @@ export default class OpenSearch extends OpenElement {
   override connectedCallback(): void {
     super.connectedCallback();
     globalThis.addEventListener('keydown', this._onKeydown);
+    // ponytail: VNode onClick delegation does not reliably fire on shadow DOM
+    // children in all browsers. Attach a native click listener directly.
+    this.shadowRoot
+      ?.querySelector('.overlay')
+      ?.addEventListener('click', (e: Event) => this._closeOnBackdrop(e));
   }
 
   override disconnectedCallback(): void {
