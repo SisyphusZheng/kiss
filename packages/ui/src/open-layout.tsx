@@ -32,7 +32,6 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { type Context, createContext, provideContext } from '@openelement/core';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
 import '.\/open-theme-toggle.js';
@@ -618,7 +617,7 @@ export class OpenLayout extends OpenElement {
     }
   }
 
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = [
     'current-path',
     'nav-items',

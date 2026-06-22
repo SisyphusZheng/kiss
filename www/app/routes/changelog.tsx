@@ -4,7 +4,6 @@
 export const meta = { section: "", label: "Changelog", order: 20 };
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { openPropsTokenSheet } from "@openelement/ui";
 import "@openelement/ui/open-button";
 import { pageStyles } from "../components/page-styles.js";
 import { marked } from "marked";
@@ -24,7 +23,7 @@ routeSheet.replaceSync(
 );
 
 export class ChangelogPage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     const changelogPath = new URL("../../../../CHANGELOG.md", import.meta.url);

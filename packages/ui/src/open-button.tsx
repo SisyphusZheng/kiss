@@ -23,7 +23,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr } from '@openelement/core';
 
 export const tagName = 'open-button';
@@ -137,7 +136,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenButton extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override delegatesFocus = true;
   static override formAssociated = true;
   static override observedAttributes = ['variant', 'size', 'disabled', 'href', 'target', 'type'];

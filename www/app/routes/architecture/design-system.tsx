@@ -6,7 +6,6 @@ export const tagName = 'ui-showcase';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
@@ -287,7 +286,7 @@ const principles = [
 ];
 
 export class UIShowcase extends OpenElement {
-  static override styles = [openPropsTokenSheet, pageSheet];
+  static override styles = [pageSheet];
 
   override render() {
     return (

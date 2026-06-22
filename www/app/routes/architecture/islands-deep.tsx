@@ -3,7 +3,6 @@ export const tagName = 'page-islands-deep-guide';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-code-block';
 
 const routeSheet = new StyleSheet();
@@ -19,7 +18,7 @@ routeSheet.replaceSync(`
 `);
 
 export class IslandsDeepGuidePage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     return (

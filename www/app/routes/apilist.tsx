@@ -3,7 +3,6 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
@@ -313,7 +312,7 @@ const groups = [
 ] as const;
 
 export class ApiCorePage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     return (

@@ -3,7 +3,6 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-input';
 
@@ -113,7 +112,7 @@ styles.replaceSync(`
 `);
 
 export default class Page404 extends OpenElement {
-  static override styles = [openPropsTokenSheet, styles];
+  static override styles = [styles];
   override render() {
     return (
       <div class='container'>

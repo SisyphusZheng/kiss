@@ -24,7 +24,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeHtml } from '@openelement/core';
 
 export const tagName = 'open-step-card';
@@ -81,7 +80,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenStepCard extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['step', 'label', 'description', 'status'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

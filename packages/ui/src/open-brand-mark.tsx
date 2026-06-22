@@ -7,7 +7,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 
 export const tagName = 'open-brand-mark';
 
@@ -93,7 +92,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenBrandMark extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['size', 'tone'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

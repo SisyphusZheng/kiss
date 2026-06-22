@@ -16,7 +16,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeHtml } from '@openelement/core';
 
 export const tagName = 'open-callout';
@@ -58,7 +57,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenCallout extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['type', 'label'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

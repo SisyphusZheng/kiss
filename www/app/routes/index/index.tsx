@@ -6,7 +6,6 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '../../islands/home-console.tsx';
 
 export const tagName = 'docs-home';
@@ -794,7 +793,7 @@ function moduleVisual(kind: 'target' | 'graph' | 'layers') {
 }
 
 export class DocsHome extends OpenElement {
-  static override styles = [openPropsTokenSheet, pageSheet];
+  static override styles = [pageSheet];
 
   override render() {
     return (

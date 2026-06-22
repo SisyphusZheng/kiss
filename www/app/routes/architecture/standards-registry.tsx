@@ -2,7 +2,6 @@ export const meta = { section: 'Reference', label: 'Standards Registry', order: 
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
 
@@ -25,7 +24,7 @@ routeSheet.replaceSync(
 );
 
 export class StandardsRegistryPage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     return (

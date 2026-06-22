@@ -22,7 +22,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { createLogger } from '@openelement/core/logger';
 export const tagName = 'open-code-block';
 
@@ -130,7 +129,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenCodeBlock extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
   private _copyTimer: ReturnType<typeof setTimeout> | undefined;

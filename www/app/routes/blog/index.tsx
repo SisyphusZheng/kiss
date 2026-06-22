@@ -5,7 +5,6 @@ export const meta = { section: 'History', label: 'Blog', order: 10 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-lab-panel';
 import { posts } from '@openelement/generated/blog-data';
@@ -278,7 +277,7 @@ function hasTag(post: typeof posts[number], tag: string): boolean {
 }
 
 export class BlogIndexPage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     const featured = visiblePosts[0];

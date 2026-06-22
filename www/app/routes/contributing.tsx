@@ -4,7 +4,6 @@
 export const meta = { section: "", label: "Contributing", order: 30 };
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { openPropsTokenSheet } from "@openelement/ui";
 import { pageStyles } from "../components/page-styles.js";
 import "@openelement/ui/open-code-block";
 import "@openelement/ui/open-button";
@@ -47,7 +46,7 @@ routeSheet.replaceSync(
 );
 
 export class ContributingPage extends OpenElement {
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
   override render() {
     return this._renderEn();
   }

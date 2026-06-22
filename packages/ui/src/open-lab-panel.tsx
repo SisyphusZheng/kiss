@@ -8,7 +8,6 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { escapeHtml } from '@openelement/core';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 
 export const tagName = 'open-lab-panel';
 
@@ -117,7 +116,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenLabPanel extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['variant', 'label', 'meta', 'compact'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

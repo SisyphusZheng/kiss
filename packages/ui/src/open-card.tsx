@@ -26,7 +26,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 export const tagName = 'open-card';
 
 const sheet: StyleSheetLike = new StyleSheet();
@@ -89,7 +88,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenCard extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['variant'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

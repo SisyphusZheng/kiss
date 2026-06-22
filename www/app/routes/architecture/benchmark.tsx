@@ -8,7 +8,6 @@ export const meta = { section: 'Reference', label: 'Performance', order: 100 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 
@@ -22,7 +21,7 @@ styles.replaceSync(
 );
 
 export default class Benchmark extends OpenElement {
-  static override styles = [openPropsTokenSheet, styles];
+  static override styles = [styles];
 
   override render() {
     return this._renderEn();

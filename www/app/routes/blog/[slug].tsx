@@ -7,7 +7,6 @@
  */
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/core/style-sheet";
-import { openPropsTokenSheet } from "@openelement/ui";
 import "@openelement/ui/open-button";
 import { pageStyles } from "../../components/page-styles.js";
 import { getPostBySlug, posts } from "@openelement/generated/blog-data";
@@ -51,7 +50,7 @@ routeSheet.replaceSync(
 export default class BlogPostPage extends OpenElement {
   slug = "";
 
-  static override styles = [openPropsTokenSheet, routeSheet];
+  static override styles = [routeSheet];
 
   override render() {
     return (this._getLocale("zh")) === "en"

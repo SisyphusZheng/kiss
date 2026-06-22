@@ -3,7 +3,6 @@ export const tagName = 'engine-architecture';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from '@openelement/ui';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
@@ -67,7 +66,7 @@ foundation
 export class ArchitecturePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [openPropsTokenSheet, pageSheet];
+  static override styles = [pageSheet];
 
   override render() {
     return (
