@@ -192,7 +192,7 @@ export class ArchitecturePage extends OpenElement {
             </div>
             <div class='gate'>
               <strong>4 workflows</strong>
-              <span>CI enters through AutoFlow3, with JSR publishing and monitoring separated.</span>
+              <span>CI enters through AutoFlow3, with npm publishing and monitoring separated.</span>
             </div>
             <div class='gate'>
               <strong>0 any</strong>

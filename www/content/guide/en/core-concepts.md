@@ -53,9 +53,8 @@ explicit hydration strategy metadata such as `load`, `idle`, `visible`, or
 
 ## Elements And Runtime Primitives
 
-The future Elements product direction is `@openelement/element` with an
-`OpenElement` base class. Today, `@openelement/element` remains available for
-low-level library code:
+`@openelement/element` is the current Elements product surface and provides the
+`OpenElement` base class, signals, and stylesheet helpers:
 
 ```tsx
 import { OpenElement, signal, StyleSheet } from '@openelement/element';

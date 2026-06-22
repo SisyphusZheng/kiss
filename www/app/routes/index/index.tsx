@@ -814,7 +814,7 @@ export class DocsHome extends OpenElement {
               </div>
               <div class='console-line terminal' aria-label='Install command'>
                 <span>$</span>
-                <span>npm create openelement@latest</span>
+                <span>deno run -A npm:@openelement/create my-app</span>
                 <small>Scaffolding your project...</small>
               </div>
             </div>
@@ -922,7 +922,7 @@ export class DocsHome extends OpenElement {
           </section>
 
           <section class='code-spec' aria-label='Build path'>
-            <pre class='spec-block'><code>npm create openelement@latest
+            <pre class='spec-block'><code>deno run -A npm:@openelement/create my-app
 deno task dev
 deno task build</code></pre>
             <pre class='spec-block'><code>{`<open-layout>

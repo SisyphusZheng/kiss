@@ -20,11 +20,11 @@ const count = signal(0);
 export default defineIsland(
   'my-counter',
   () => <button onClick={() => count.value++}>Count: {count.value}</button>,
-  { strategy: 'idle', dsd: true },
+  { hydrate: 'idle', dsd: true },
 );
 ```
 
-## Strategy
+## Hydration Strategy
 
 - `load`: upgrade as soon as the client module loads.
 - `idle`: wait until the browser is idle.

@@ -29,7 +29,7 @@ const REDIRECT_MAP: Record<string, string> = {
   '/engine/reference/core': '/apilist',
   '/guide/migration-v0.24': '/guide/getting-started',
   '/guide/positioning': '/architecture/architecture',
-  '/guide/rpc': '/api/reference',
+  '/guide/rpc': '/apilist',
   '/guide/security-middleware': '/guide/error-handling',
   '/guide/content-system': '/guide/routing-and-data',
   '/guide/pwa': '/guide/deployment',

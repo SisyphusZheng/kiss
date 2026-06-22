@@ -65,7 +65,7 @@ export class ContributingPage extends OpenElement {
 cd openElement
 deno install
 deno task test
-deno task docs:dev</code></pre>
+deno task dev</code></pre>
         </open-code-block>
         <h2>Deno-first Toolchain</h2>
         <p>
@@ -113,7 +113,9 @@ deno task docs:dev</code></pre>
             Run tests: <span class="inline-code">deno task test</span>
           </li>
           <li>
-            Publish to JSR: <span class="inline-code">deno task publish</span>
+            Publish packages: <span class="inline-code">deno task publish:jsr</span>,{" "}
+            <span class="inline-code">deno task publish:npm</span>,{" "}
+            <span class="inline-code">deno task pack:dry-run</span>
           </li>
           <li>Create GitHub Release</li>
         </ol>

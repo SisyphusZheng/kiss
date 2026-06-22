@@ -22,9 +22,9 @@ responses avoid leaking internal stack traces.
 
 ## API Errors
 
-Use structured response helpers or `RpcError` for client RPC calls. Operational
-errors should carry a clear HTTP status and message; programming errors should
-fail the build or server route.
+Use structured response helpers for server route and action errors.
+Operational errors should carry a clear HTTP status and message; programming
+errors should fail the build or server route.
 
 ## Browser Errors
 

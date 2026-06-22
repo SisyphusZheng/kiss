@@ -2,9 +2,8 @@ import { openElement } from '@openelement/app/vite';
 import { openPropsTokenSheet } from '@openelement/ui';
 import { defineConfig } from 'vite';
 
-// www/ is a pure JSR consumer - no resolve.alias needed.
-// The root deno.json workspace mapping resolves jsr:@openelement/* -> local
-// packages/ during dev, and JSR tarballs in production.
+// www/ is an npm-first consumer; local workspace resolution during dev, npm
+// tarballs in production. No resolve.alias needed.
 
 // v0.20.0: migrated from lessRootColorCSS (deleted) to openPropsTokenSheet.
 // v0.23.0: :host rules don't apply in global CSS context. Replace :host with

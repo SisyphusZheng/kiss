@@ -8,7 +8,7 @@ order: 3
 # Routing and Data
 
 Files in `app/routes` become routes. The route module exports a page component,
-usually created with `definePage()`.
+usually created with `definePage()`, and can export a `loader` for data.
 
 ## Static Page
 
@@ -42,12 +42,16 @@ export default definePage({
 
 ```tsx
 import { definePage } from '@openelement/app';
+import { useLoaderData } from '@openelement/router';
+import type { Loader } from '@openelement/app';
+
+export const loader: Loader = async () => {
+  return { posts: await fetchPosts() };
+};
 
 export default definePage({
-  async load() {
-    return { posts: await fetchPosts() };
-  },
-  render({ data }) {
+  render() {
+    const data = useLoaderData<{ posts: Post[] }>();
     return (
       <main>
         {data.posts.map((post) => <article>{post.title}</article>)}
@@ -57,8 +61,8 @@ export default definePage({
 });
 ```
 
-`load()` receives route params, the request, and runtime context. Its result is
-passed to the page as `data`.
+`loader()` receives route params, the request, and runtime context. Use
+`useLoaderData()` inside `render()` to access the returned data.
 
 ## Rendering Intent
 

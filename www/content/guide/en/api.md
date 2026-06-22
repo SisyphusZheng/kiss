@@ -18,12 +18,19 @@ import { defineElement, defineIsland, defineLayout, definePage } from '@openelem
 Declares a route component.
 
 ```tsx
+import { definePage } from '@openelement/app';
+import { useLoaderData } from '@openelement/router';
+
+export const loader = async () => {
+  return { message: 'Hello' };
+};
+
 export default definePage({
-  title: 'Home',
-  async load() {
-    return { message: 'Hello' };
+  head: {
+    title: 'Home',
   },
-  render({ data }) {
+  render() {
+    const data = useLoaderData<{ message: string }>();
     return <main>{data.message}</main>;
   },
 });
@@ -35,7 +42,7 @@ Declares an interactive Custom Element and its hydration metadata.
 
 ```tsx
 export default defineIsland('my-counter', () => <button>Count</button>, {
-  strategy: 'idle',
+  hydrate: 'idle',
   dsd: true,
 });
 ```
@@ -63,9 +70,8 @@ content, and i18n.
 - `@openelement/app` and `@openelement/create`: Framework product surface.
 - `@openelement/ui`: first-party UI product surface.
 - `@openelement/protocol`: runtime-free Protocols product surface.
-- Future `@openelement/element`: Elements product surface with `OpenElement`.
-- `@openelement/element`: current low-level element, signals, and stylesheet
-  facade.
+- `@openelement/element`: Elements product surface with `OpenElement`, signals,
+  and stylesheet helpers.
 - `@openelement/core`: renderer kernel and JSX runtime.
 - `@openelement/signal`: signal primitives.
 - `@openelement/core/style-sheet`: CSSStyleSheet abstraction.

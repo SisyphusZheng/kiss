@@ -271,7 +271,7 @@ const groups = [
     items: [
       ['OpenElement runtime contracts', 'Core exports are consumed by generated code, UI primitives, and route rendering.'],
       ['escapeAttr / escapeHtml boundary', 'Escaping helpers are used where user-provided strings enter generated HTML.'],
-      ['trustRenderHtml(html)', 'Explicit trust boundary for prevalidated HTML entering the render path.'],
+      ['trustedHtml(html)', 'Explicit trust boundary for prevalidated HTML entering the render path.'],
     ],
   },
   {

@@ -473,7 +473,7 @@ const phases = [
   },
   {
     version: 'v0.41',
-    title: 'npm-only distribution line',
+    title: 'npm-first distribution (JSR secondary)',
     copy: 'Make package consumption, docs, and examples match the next distribution strategy.',
     status: 'planned',
     tone: 'warning',

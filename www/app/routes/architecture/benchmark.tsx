@@ -40,7 +40,7 @@ export default class Benchmark extends OpenElement {
         </div>
         <div class='metric'>
           <span class='label'>Dev cold start</span>
-          <span class='value'>~100ms (deno task dev:fast)</span>
+          <span class='value'>~100ms (deno task dev)</span>
         </div>
         <div class='metric'>
           <span class='label'>Vite dev start</span>
@@ -48,7 +48,7 @@ export default class Benchmark extends OpenElement {
         </div>
         <div class='metric'>
           <span class='label'>Client bundle</span>
-          <span class='value'>~0 KB (islands only, 2 virtual modules)</span>
+          <span class='value'>~0 KB (islands only, generated data modules)</span>
         </div>
 
         <h2>Rendering</h2>
