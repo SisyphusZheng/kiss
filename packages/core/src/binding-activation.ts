@@ -34,6 +34,8 @@ export function applyBindingDescriptor(
   switch (desc.kind) {
     case 'static-attr':
       return applyStaticAttr(desc, lifecycle);
+    case 'static-prop':
+      return applyStaticProp(desc, lifecycle);
     case 'static-boolean':
       return applyStaticBoolean(desc, lifecycle);
     case 'static-style':
@@ -70,6 +72,14 @@ function applyStaticAttr(
   } else {
     desc.el.setAttribute(desc.attrName, String(desc.value));
   }
+  return noop;
+}
+
+function applyStaticProp(
+  desc: Extract<BindingDescriptor, { kind: 'static-prop' }>,
+  _lifecycle: BindingLifecycle,
+): BindingDispose {
+  (desc.el as unknown as Record<string, unknown>)[desc.propName] = desc.value;
   return noop;
 }
 

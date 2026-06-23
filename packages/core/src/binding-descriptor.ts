@@ -30,6 +30,13 @@ export interface StaticAttrBindingDescriptor {
   value: unknown;
 }
 
+export interface StaticPropBindingDescriptor {
+  kind: 'static-prop';
+  el: Element;
+  propName: string;
+  value: unknown;
+}
+
 export interface StaticBooleanBindingDescriptor {
   kind: 'static-boolean';
   el: Element;
@@ -98,6 +105,7 @@ export interface RefBindingDescriptor {
 /** Union of all supported binding descriptors. */
 export type BindingDescriptor =
   | StaticAttrBindingDescriptor
+  | StaticPropBindingDescriptor
   | StaticBooleanBindingDescriptor
   | StaticStyleBindingDescriptor
   | SignalTextBindingDescriptor

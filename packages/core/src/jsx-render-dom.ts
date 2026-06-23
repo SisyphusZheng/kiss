@@ -202,7 +202,7 @@ export function collectPropBindings(
 
     // DOM properties that are NOT HTML attributes
     if (key === 'textContent') {
-      descriptors.push({ kind: 'static-attr', el, key, attrName: 'textContent', value: resolved });
+      descriptors.push({ kind: 'static-prop', el, propName: 'textContent', value: resolved });
       continue;
     }
 

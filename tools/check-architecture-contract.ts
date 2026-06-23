@@ -57,6 +57,11 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'Custom element prop assignment by dynamic prop name.',
   },
   {
+    file: 'packages/core/src/binding-activation.ts',
+    fragment: 'desc.el as unknown as Record<string, unknown>',
+    reason: 'Direct DOM property assignment by dynamic prop name.',
+  },
+  {
     file: 'packages/core/src/island.ts',
     fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
     reason: 'Preserve original connectedCallback signature after wrapping.',
