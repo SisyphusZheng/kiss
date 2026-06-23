@@ -245,7 +245,9 @@ async function runReleaseDispatch(
   await runApprovedRelease(approvedPlan, targetVersion, true);
 
   if (isCIEnv()) {
-    console.error('Release dispatch is not supported inside CI; use the autoflow-release workflow directly.');
+    console.error(
+      'Release dispatch is not supported inside CI; use the autoflow-release workflow directly.',
+    );
     Deno.exit(1);
   }
 

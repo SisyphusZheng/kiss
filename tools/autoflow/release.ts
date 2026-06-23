@@ -274,7 +274,8 @@ function isTruthyEnv(name: string): boolean {
 
 function canCreateGitHubRelease(): boolean {
   // gh release create needs a GitHub token. In CI it is provided automatically.
-  return isTruthyEnv('GITHUB_TOKEN') || isTruthyEnv('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS') === 'true';
+  return isTruthyEnv('GITHUB_TOKEN') || isTruthyEnv('GH_TOKEN') ||
+    Deno.env.get('GITHUB_ACTIONS') === 'true';
 }
 
 function canPublishNpm(): boolean {
