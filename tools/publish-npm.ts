@@ -170,11 +170,29 @@ async function packPackage(
   return out;
 }
 
+async function npmPackageVersionExists(name: string, version: string): Promise<boolean> {
+  const command = new Deno.Command('npm', {
+    args: ['view', `${name}@${version}`, 'version'],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const output = await command.output();
+  return output.success && new TextDecoder().decode(output.stdout).trim() === version;
+}
+
 async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> {
   const tar = tarballPath(pkg);
+  if (!dryRun && await npmPackageVersionExists(pkg.name, pkg.version)) {
+    console.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
+    return;
+  }
   const args = dryRun
     ? ['publish', tar, '--dry-run', '--access', 'public']
-    : ['publish', tar, '--access', 'public', '--provenance'];
+    : ['publish', tar, '--access', 'public'];
+  // Provenance requires a supported CI provider (GitHub Actions); skip locally.
+  if (!dryRun && Deno.env.get('CI') === 'true') {
+    args.push('--provenance');
+  }
   if (isPrerelease(pkg.version)) {
     args.push('--tag', 'next');
   }
