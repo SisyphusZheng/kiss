@@ -128,7 +128,7 @@ order: 20
           <ol>
             <li>把 renderer protocol、adapter contract 和 DSD diagnostics 文档化并加测试。</li>
             <li>把 <code>PackageIslandMeta</code> 扩展为 CEM-compatible 的包 manifest 草案。</li>
-            <li>先做 <code>less validate-manifest</code>，再做 <code>open add</code>。</li>
+            <li>先做 manifest 验证 CLI，再做 <code>openelement add</code>。</li>
             <li>先做本地 registry index，再做公共 hub。</li>
           </ol>
 

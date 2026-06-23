@@ -86,9 +86,9 @@ Deno.test('policy: ci tier includes architecture check for tool and hook changes
   assert(hookGates.includes('arch:check'));
 });
 
-Deno.test('policy: release tier includes publish dry-run and nitro proofs', () => {
+Deno.test('policy: release tier includes pack dry-run and nitro proofs', () => {
   const gates = selectGates('release', ['packages/core/src/index.ts']).map((gate) => gate.name);
-  assert(gates.includes('publish:dry-run'));
+  assert(gates.includes('pack:dry-run'));
   assert(gates.includes('nitro:proof:node'));
   assert(gates.includes('nitro:proof:workers'));
   assert(gates.includes('consumer:core-smoke'));
@@ -122,10 +122,10 @@ Deno.test('release: next patch version and tag are deterministic', () => {
 
 Deno.test('release: patch release plan includes publish, smoke, and GitHub release when credentials are present', () => {
   // Simulate a CI/local environment that has the credentials required for
-  // JSR publish and GitHub release creation.
-  const originalDenoken = Deno.env.get('DENO_AUTH_TOKEN');
+  // npm publish and GitHub release creation.
+  const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
-  Deno.env.set('DENO_AUTH_TOKEN', 'test-token');
+  Deno.env.set('NPM_TOKEN', 'test-token');
   Deno.env.set('GITHUB_TOKEN', 'test-token');
   try {
     const commands = createPatchReleasePlan('0.39.1').map((step) => [
@@ -134,36 +134,37 @@ Deno.test('release: patch release plan includes publish, smoke, and GitHub relea
     ]);
     assert(commands.some(([name]) => name === 'run release gates after bump'));
     assert(
-      commands.some(([, command]) => command.includes('tools/run-package-graph-task.ts publish')),
+      commands.some(([, command]) => command.includes('deno task publish:npm')),
     );
     assert(
       commands.some(([, command]) => command.includes('tools/consumer-smoke.ts --version 0.39.1')),
     );
     assert(commands.some(([, command]) => command.includes('gh release create v0.39.1')));
   } finally {
-    if (originalDenoken === undefined) Deno.env.delete('DENO_AUTH_TOKEN');
-    else Deno.env.set('DENO_AUTH_TOKEN', originalDenoken);
+    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
+    else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
   }
 });
 
 Deno.test('release: patch release plan omits publish and GitHub release without credentials', () => {
-  const originalDenoken = Deno.env.get('DENO_AUTH_TOKEN');
+  const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
   const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
-  Deno.env.delete('DENO_AUTH_TOKEN');
+  Deno.env.delete('NPM_TOKEN');
+  Deno.env.delete('NODE_AUTH_TOKEN');
   Deno.env.delete('GITHUB_TOKEN');
   Deno.env.delete('GITHUB_ACTIONS');
   try {
     const names = createPatchReleasePlan('0.39.1').map((step) => step.name);
-    assertFalse(names.includes('publish JSR packages'));
+    assertFalse(names.includes('publish npm packages'));
     assertFalse(names.includes('create GitHub release'));
     assert(names.includes('tag release'));
     assert(names.includes('push tag'));
   } finally {
-    if (originalDenoken === undefined) Deno.env.delete('DENO_AUTH_TOKEN');
-    else Deno.env.set('DENO_AUTH_TOKEN', originalDenoken);
+    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
+    else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
     if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');

@@ -26,40 +26,51 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 export const tagName = 'open-card';
 
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host {
     display: block;
-    background: var(--gray-0);
-    border: var(--border-size-1) solid var(--gray-3);
-    border-radius: var(--radius-2);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--violet-1) 14%, transparent), transparent 48%),
+      var(--bg-card);
+    color: var(--text-primary);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--card-radius);
     overflow: hidden;
-    transition: box-shadow var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2);
+    transition: border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
   }
 
   :host([variant="elevated"]) {
-    box-shadow: var(--shadow-1);
-    border-color: transparent;
+    box-shadow: 0 var(--size-2) var(--size-8) color-mix(in srgb, var(--brand) 8%, transparent);
+    border-color: var(--border);
   }
 
   :host([variant="elevated"]:hover) {
-    box-shadow: var(--shadow-2);
-    transform: translateY(-2px);
+    border-color: var(--brand);
   }
 
   :host([variant="borderless"]) {
     border-color: transparent;
   }
 
+  :host([variant="muted"]) {
+    background: var(--bg-surface);
+  }
+
+  :host([variant="artifact"]) {
+    background: var(--bg-code, var(--gray-11));
+    color: var(--gray-2);
+    border-color: var(--code-border, var(--gray-8));
+  }
+
   ::slotted([slot="header"]) {
     padding: var(--size-4) var(--size-5);
-    border-bottom: var(--border-size-1) solid var(--gray-3);
+    border-bottom: var(--border-size-1) solid var(--border);
     font-size: var(--font-size-2);
     font-weight: var(--font-weight-6);
-    color: var(--gray-9);
+    color: var(--text-primary);
     margin: 0;
   }
 
@@ -69,15 +80,15 @@ sheet.replaceSync(`
 
   ::slotted([slot="footer"]) {
     padding: var(--size-3) var(--size-5);
-    border-top: var(--border-size-1) solid var(--gray-3);
+    border-top: var(--border-size-1) solid var(--border);
     font-size: var(--font-size-0);
-    color: var(--gray-5);
+    color: var(--text-muted);
     margin: 0;
   }
 `);
 
 export class OpenCard extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override observedAttributes = ['variant'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

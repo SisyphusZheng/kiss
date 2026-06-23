@@ -18,7 +18,9 @@ import { formatError } from './errors.js';
  */
 
 import { createLogger } from './logger.js';
-import type { HydrationStrategy } from './schemas.js';
+import type { HydrationStrategy } from '@openelement/protocol/framework';
+import type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
+export type { IslandMeta, IslandOptions };
 
 /** WeakSet to track elements that have already had SSR props bound (idempotent). */
 const ssrPropsBoundSet = new WeakSet<HTMLElement>();
@@ -45,12 +47,9 @@ const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 
 // to prevent timer leaks.
 const _visibilityTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
-const _islandMeta = new WeakMap<
-  CustomElementConstructor,
-  { tagName: string; layer: string; isIsland: boolean; ssr?: boolean; dsd: boolean }
->();
+const _islandMeta = new WeakMap<CustomElementConstructor, IslandMeta>();
 
-export function getIslandMeta(ctor: CustomElementConstructor) {
+export function getIslandMeta(ctor: CustomElementConstructor): IslandMeta | undefined {
   return _islandMeta.get(ctor);
 }
 
@@ -60,37 +59,6 @@ export function _clearAllVisibilityTimeouts(): void {
     clearTimeout(id);
   }
   _visibilityTimeouts.clear();
-}
-
-export interface IslandOptions {
-  /** Hydration strategy:
-   *   - 'load': load immediately when module is imported
-   *   - 'idle': defer to requestIdleCallback (default)
-   *   - 'visible': use IntersectionObserver to defer until element is visible
-   *   - 'only': client-only render, no DSD/SSR output
-   */
-  strategy?: HydrationStrategy;
-
-  /** Optional tag name override. If provided, used instead of the first argument. */
-  tagName?: string;
-
-  /**
-   * Whether to use DSD for SSR rendering of this island.
-   * - true (default): SSR emits <template shadowrootmode="open"> for no-flicker first paint.
-   *   Component uses _dsdHydrated pattern; adapter handles event hydration.
-   * - false: SSR emits just the tag (<my-island></my-island>).
-   *   Framework fully owns the shadow root on client, getting full reactivity.
-   *   This is Layer 3 (pure-island) in the three-layer model.
-   * @default true
-   */
-  dsd?: boolean;
-
-  /**
-   * Whether this island may be admitted into server rendering.
-   * Build-time metadata controls scanner admission; this runtime field records
-   * the same canonical descriptor for tests and direct registrations.
-   */
-  ssr?: boolean;
 }
 
 /**
@@ -416,7 +384,8 @@ export function defineIsland<T extends CustomElementConstructor>(
 
   if (isBrowser) {
     switch (strategy) {
-      case 'load':
+      case 'load': // ponytail: fallthrough, both 'load' and 'only' call register()
+      case 'only':
         register();
         break;
       case 'idle':
@@ -424,9 +393,6 @@ export function defineIsland<T extends CustomElementConstructor>(
         break;
       case 'visible':
         createVisibleStrategy(tagName, register);
-        break;
-      case 'only':
-        register();
         break;
     }
   } else {

@@ -20,7 +20,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { signal } from '@openelement/signal';
 export const tagName = 'open-theme-toggle';
 
@@ -34,18 +33,19 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px; height: 32px; padding: 0;
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-2);
-    background: transparent;
+    width: 38px; height: 38px; padding: 0;
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
     color: var(--text-muted);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
     cursor: pointer;
     transition: all var(--ease-2) var(--duration-2);
   }
   .theme-toggle:hover {
     color: var(--text-primary);
-    border-color: var(--brand);
-    background: var(--bg-surface);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
   }
 
   .theme-toggle svg {
@@ -71,7 +71,12 @@ sheet.replaceSync(`
 `);
 
 export class OpenThemeToggle extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  // ponytail: Safari does not recompute adoptedStyleSheets when
+  // :host([data-theme]) changes. The token sheets (openPropsTokenSheet,
+  // daisyClassSheet) are already injected as page-level <style> by
+  // vite.config.ts — CSS custom properties cascade from :root naturally.
+  // Only adopt the component-specific sheet.
+  static override styles = [sheet];
   static override delegatesFocus = true;
   static override observedAttributes = ['theme'];
 

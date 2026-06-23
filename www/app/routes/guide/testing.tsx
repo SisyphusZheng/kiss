@@ -1,89 +1,55 @@
-export const meta = { section: 'Production', label: 'Testing', order: 40 };
-import { pageStylesSheet } from '../../components/page-styles.js';
+﻿export const meta = { section: 'Guide', label: 'Testing', order: 110 };
+
 import { OpenElement } from '@openelement/element';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
-import '@openelement/ui\/open-code-block';
+import { StyleSheet } from '@openelement/core/style-sheet';
+import { pageStyles } from '../../components/page-styles.js';
+import '@openelement/ui/open-card';
 
-export class TestingPage extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageStylesSheet];
+const routeSheet = new StyleSheet();
+routeSheet.replaceSync(
+  pageStyles + `
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--size-4);
+      margin: var(--size-8) 0;
+    }
+
+    @media (max-width: 860px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  `,
+);
+
+export class GuideGuidePage extends OpenElement {
+  static override styles = [routeSheet];
+
   override render() {
-    return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
-  }
-
-  private _renderZh() {
-    const loc = this._getLocale('zh');
-
-    return (
-      <div class='container'>
-        <h1>测试</h1>
-        <p class='subtitle'>
-          openElement 测试应保护框架契约：路由扫描、DSD 输出、island 元数据、middleware 范围、SSG
-          后处理和包边界。
-        </p>
-        <h2>项目测试</h2>
-        <p>
-          应用代码可以使用 Deno 内置的测试运行器。从纯逻辑和 API handler 的单元测试开始。
-        </p>
-        <h2>构建冒烟测试</h2>
-        <p>
-          静态优先框架至少需要一个测试来构建站点并验证生成的 HTML。
-        </p>
-        <h2>Playwright E2E 测试</h2>
-        <p>
-          openElement 包含 Playwright 端到端测试，在真实浏览器中验证 SSG 输出。
-        </p>
-        <div class='nav-row'>
-          <a href='/guide/error-handling' class='btn btn-ghost'>← 错误处理</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>部署 →</a>
-        </div>
-      </div>
-    );
-  }
-
-  private _renderEn() {
-    const loc = this._getLocale('en');
-
     return (
       <div class='container'>
         <h1>Testing</h1>
-        <p class='subtitle'>
-          openElement testing should protect framework contracts: route scanning, DSD output, island
-          metadata, middleware scope, SSG post-processing, and package boundaries.
-        </p>
-        <h2>Project Testing</h2>
-        <p>
-          Application code can use Deno's built-in test runner. Start with unit tests for pure logic
-          and API handlers, then add build smoke tests for critical routes.
-        </p>
-        <h2>Build Smoke Tests</h2>
-        <p>
-          A static-first framework needs at least one test that builds the site and verifies the
-          generated HTML. This catches route scanning, SSR, client island, and SSG integration
-          issues.
-        </p>
-        <open-code-block>
-          <pre><code>deno test --allow-read --allow-write --allow-env --allow-net --allow-run</code></pre>
-        </open-code-block>
-        <h2>Browser Testing</h2>
-        <p>
-          Use browser tests when behavior depends on Custom Element upgrade, IntersectionObserver,
-          idle loading, service worker, or real DOM semantics.
-        </p>
-        <h2>Playwright E2E Tests</h2>
-        <p>
-          openElement includes Playwright end-to-end tests that verify SSG output in real browsers.
-          They confirm DSD is correctly parsed, Custom Elements upgrade, and island strategies work
-          as expected.
-        </p>
-        <div class='nav-row'>
-          <a href='/guide/error-handling' class='btn btn-ghost'>← Error Handling</a>
-          <a href='/guide/deployment' class='btn btn-ghost'>Deployment →</a>
+        <p class='subtitle'>Use checks that match the changed surface: type checks for routes, build checks for generated output, and visual checks for design changes.</p>
+        <div class='guide-grid'>
+          <open-card>
+            <h3>Type checks</h3>
+            <p>Run Deno checks on changed route and component files.</p>
+          </open-card>
+          <open-card>
+            <h3>Build checks</h3>
+            <p>Use the site build to catch generation regressions.</p>
+          </open-card>
+          <open-card>
+            <h3>Visual checks</h3>
+            <p>Capture desktop and mobile states for layout-sensitive work.</p>
+          </open-card>
         </div>
       </div>
     );
   }
 }
 
-customElements.define('page-testing', TestingPage);
-export default TestingPage;
-export const tagName = 'page-testing';
+customElements.define('guide-testing-page', GuideGuidePage);
+export default GuideGuidePage;
+export const tagName = 'guide-testing-page';

@@ -12,7 +12,6 @@
  */
 
 import {
-  type ComponentLayer,
   type DsdComponent,
   type DsdOptions,
   type DsdRenderMetrics,
@@ -23,12 +22,11 @@ import {
   type RenderInput,
   type RenderOutput,
   type RenderPhase,
-} from './render-schemas.js';
-import { getDefaultRegistry } from './adapter-registry.js';
+} from '@openelement/protocol/render';
+import { type DsdComponentConstructor } from '@openelement/protocol/render';
+import type { ComponentLayer } from '@openelement/protocol/framework';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import { DsdRenderCollector } from './dsd-collector.js';
-import { type DsdComponentConstructor } from './render-schemas.js';
 import { escapeAttrValue } from './html-escape.js';
 import { isVNode } from './vnode.js';
 import { renderDsdTree } from './render-ir.js';
@@ -42,10 +40,9 @@ import {
 import { DANGEROUS_KEYS } from './security.js';
 
 const log = createLogger('core');
-const _textEncoder = new TextEncoder();
 
 // ─── Error Classification ──────────────────────────────────────
-// RenderPhase and RenderErrorCode are imported from render-schemas.js.
+// RenderPhase and RenderErrorCode are imported from @openelement/protocol/render.
 
 export function classifyError(
   phase: RenderPhase,
@@ -64,15 +61,19 @@ export function classifyError(
   };
 }
 
+// ponytail: lookup table replaces 5-case if/else chain
+const ERROR_CODES: Record<string, RenderErrorCode> = {
+  instantiate: 'LESS_RENDER_INSTANTIATE_FAILED',
+  nested: 'LESS_RENDER_NESTED_FAILED',
+  style: 'LESS_RENDER_STYLE_FAILED',
+  serialize: 'LESS_RENDER_SERIALIZE_FAILED',
+};
+
 function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCode {
-  if (phase === 'instantiate') return 'LESS_RENDER_INSTANTIATE_FAILED';
-  if (phase === 'nested') return 'LESS_RENDER_NESTED_FAILED';
-  if (phase === 'style') return 'LESS_RENDER_STYLE_FAILED';
-  if (phase === 'serialize') return 'LESS_RENDER_SERIALIZE_FAILED';
   if (message.includes('Components must return a VNode')) {
     return 'LESS_RENDER_INVALID_OUTPUT';
   }
-  return 'LESS_RENDER_RENDER_FAILED';
+  return ERROR_CODES[phase] ?? 'LESS_RENDER_RENDER_FAILED';
 }
 
 function instantiationErrorHtml(
@@ -100,7 +101,7 @@ function instantiateComponent(
     return instance;
   } catch (err) {
     const errMsg = formatError(err);
-    log.error(`Failed to instantiate <${tagName}>:`, errMsg);
+    log.error(`Failed to instantiate <${tagName}>: ${errMsg}`);
     return null;
   }
 }
@@ -199,7 +200,6 @@ export interface RenderDsdOptions {
   props?: Record<string, unknown>;
   sourceInfo?: { route?: string; source?: string };
   dsdOptions?: DsdOptions;
-  collector?: DsdRenderCollector;
   nestingDepth?: number;
   hooks?: RenderHooks;
   lightDom?: RenderNode[];
@@ -246,7 +246,6 @@ export async function renderDsd(
 
   const sourceInfo = options.sourceInfo;
   const dsdOptions = options.dsdOptions;
-  const collector = options.collector;
   const nestingDepth = options.nestingDepth;
   const hooks = options.hooks;
 
@@ -336,7 +335,7 @@ export async function renderDsd(
     hooks?.onError?.(classifiedErr);
 
     const attrs = serializeAttrs(tagName, props);
-    const renderEndFallback = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const renderEndFallback = safeNow();
     const fallbackResult: RenderOutput = {
       html: `<${tagName}${attrs}></${tagName}>`,
       errors: collectedErrors,
@@ -370,36 +369,12 @@ export async function renderDsd(
     }
   }
 
-  if (!styleCss) {
-    for (const adapter of getDefaultRegistry().getAll()) {
-      if (adapter.extractStyles) {
-        try {
-          const extracted = adapter.extractStyles(componentClass);
-          if (extracted) {
-            styleCss += extracted;
-          }
-        } catch (e) {
-          const styleErr = classifyError('style', tagName, e, true);
-          collectedErrors.push(styleErr);
-          hooks?.onError?.(styleErr);
-          log.debug(
-            `extractStyles failed for <${tagName}> via '${adapter.name}' adapter: ${
-              formatError(e)
-            }`,
-          );
-        }
-      }
-    }
-  }
-
   const renderMode = ctor.renderMode ?? 'shadow';
   const resolvedLayer = renderMode === 'light'
     ? 'light-dom'
     : dsdOptions?.layer || instance.layer || 'dsd-static';
 
-  const renderEnd = typeof performance !== 'undefined'
-    ? performance.now()
-    : renderEndTimeFallback();
+  const renderEnd = safeNow();
   const renderTimeMs = renderEnd - startTime;
 
   const metrics: DsdRenderMetrics = {
@@ -410,10 +385,6 @@ export async function renderDsd(
     hasError,
     nestingDepth: _nestingDepth,
   };
-
-  if (collector) {
-    collector.add(metrics);
-  }
 
   if (resolvedLayer !== 'dsd-static') {
     collectedHints.push({
@@ -451,8 +422,9 @@ export async function renderDsd(
   return output;
 }
 
-function renderEndTimeFallback(): number {
-  return Date.now();
+/** Safe high-resolution timestamp with SSR/environment fallback. */
+export function safeNow(): number {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
 function describeRenderValue(value: unknown): string {

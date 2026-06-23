@@ -2,11 +2,10 @@
  * @openelement/core — Unified Error Architecture (ADR-0053 / SOP-011).
  */
 
-import type { RenderError as ProtocolRenderError } from '@openelement/protocol/renderer';
-
-// ─── Well-known error codes ─────────────────────────────────────────
+import type { RenderError as ProtocolRenderError } from '@openelement/protocol/render';
 
 /** Well-known error code constants for reference. String values are always accepted. */
+// ponytail: duplicated from protocol to avoid cross-package runtime import in SSG bundles
 export const ErrorCode = {
   SSR_RENDER_ERROR: 'SSR_RENDER_ERROR',
   ISLAND_RENDER_ERROR: 'ISLAND_RENDER_ERROR',
@@ -31,55 +30,35 @@ export function formatError(e: unknown): string {
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-export type ErrorSeverity = 'error' | 'warning';
-export type ErrorPhase =
-  | 'render'
-  | 'ssr'
-  | 'csr'
-  | 'build'
-  | 'navigation'
-  | 'validation'
-  | 'unknown';
+import type { ErrorPhase, ErrorSeverity } from '@openelement/protocol/errors';
+export type { ErrorPhase, ErrorSeverity };
 
 // ─── Base Error ─────────────────────────────────────────────────────
+
+export interface OpenElementErrorOptions {
+  cause?: Error;
+  code?: string;
+  statusCode?: number;
+  severity?: ErrorSeverity;
+  phase?: ErrorPhase;
+  recoverable?: boolean;
+}
 
 export class OpenElementError extends Error {
   public readonly code: string;
   public readonly severity: ErrorSeverity;
   public readonly phase: ErrorPhase;
   public readonly recoverable: boolean;
+  public readonly statusCode?: number;
 
-  constructor(
-    message: string,
-    code?: string,
-    /** Backward compat: if number, treated as statusCode (old API) */
-    severityOrStatus?: ErrorSeverity | number,
-    phaseOrOperational?: ErrorPhase | boolean,
-    recoverable?: boolean,
-    cause?: Error,
-  ) {
-    let severity: ErrorSeverity;
-    let phase: ErrorPhase;
-    let rec: boolean;
-
-    if (typeof severityOrStatus === 'number') {
-      const _statusCode = severityOrStatus;
-      severity = 'error';
-      phase = 'render';
-      rec = phaseOrOperational === true;
-    } else {
-      severity = severityOrStatus ?? 'error';
-      phase =
-        (typeof phaseOrOperational === 'string' ? phaseOrOperational : 'unknown') as ErrorPhase;
-      rec = recoverable ?? false;
-    }
-
-    super(message, cause ? { cause } : undefined);
+  constructor(message: string, options: OpenElementErrorOptions = {}) {
+    super(message, options.cause ? { cause: options.cause } : undefined);
     this.name = 'OpenElementError';
-    this.code = code ?? ErrorCode.UNKNOWN;
-    this.severity = severity;
-    this.phase = phase;
-    this.recoverable = rec;
+    this.code = options.code ?? ErrorCode.UNKNOWN;
+    this.severity = options.severity ?? 'error';
+    this.phase = options.phase ?? 'unknown';
+    this.recoverable = options.recoverable ?? false;
+    this.statusCode = options.statusCode;
   }
 
   toJSON(): Record<string, unknown> {
@@ -90,6 +69,7 @@ export class OpenElementError extends Error {
       severity: this.severity,
       phase: this.phase,
       recoverable: this.recoverable,
+      statusCode: this.statusCode,
       cause: this.cause instanceof Error ? this.cause.message : this.cause,
     };
   }
@@ -102,14 +82,13 @@ export class SsrRenderError extends OpenElementError {
   public readonly sourceError: Error;
 
   constructor(componentPath: string, sourceError: Error) {
-    super(
-      `SSR render failed: ${componentPath}`,
-      'SSR_RENDER_ERROR',
-      'error',
-      'ssr' as ErrorPhase,
-      false,
-      sourceError,
-    );
+    super(`SSR render failed: ${componentPath}`, {
+      code: 'SSR_RENDER_ERROR',
+      severity: 'error',
+      phase: 'ssr',
+      recoverable: false,
+      cause: sourceError,
+    });
     this.name = 'SsrRenderError';
     this.componentPath = componentPath;
     this.sourceError = sourceError;
@@ -129,23 +108,16 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
     tagName = '',
     cause?: Error,
   ) {
-    super(message, code, 'error', 'render', true, cause);
+    super(message, {
+      code,
+      severity: 'error',
+      phase: 'render',
+      recoverable: true,
+      cause,
+    });
     this.name = 'RenderError';
     this.componentPath = componentPath;
     this.tagName = tagName;
-  }
-}
-
-export class IslandRenderError extends RenderError {
-  constructor(componentPath: string, sourceError: Error) {
-    super(
-      componentPath,
-      `Island render failed: ${componentPath}`,
-      'ISLAND_RENDER_ERROR',
-      '',
-      sourceError,
-    );
-    this.name = 'IslandRenderError';
   }
 }
 
@@ -154,40 +126,23 @@ export class PropValidationError extends OpenElementError {
   public readonly receivedValue: unknown;
 
   constructor(propertyName: string, receivedValue: unknown, cause?: Error) {
-    super(
-      `@prop validation failed for "${propertyName}"`,
-      'PROP_VALIDATION_ERROR',
-      'warning',
-      'validation',
-      true,
+    super(`@prop validation failed for "${propertyName}"`, {
+      code: 'PROP_VALIDATION_ERROR',
+      severity: 'warning',
+      phase: 'validation',
+      recoverable: true,
       cause,
-    );
+    });
     this.name = 'PropValidationError';
     this.propertyName = propertyName;
     this.receivedValue = receivedValue;
   }
 }
 
-export class NavigationError extends OpenElementError {
-  public readonly route: string;
-
-  constructor(route: string, cause?: Error) {
-    super(`Navigation failed: ${route}`, 'NAVIGATION_ERROR', 'error', 'navigation', true, cause);
-    this.name = 'NavigationError';
-    this.route = route;
-  }
-}
-
-export class BuildError extends OpenElementError {
-  constructor(message: string, cause?: Error) {
-    super(message, 'BUILD_ERROR', 'error', 'build', false, cause);
-    this.name = 'BuildError';
-  }
-}
-
 // ─── Error Telemetry ────────────────────────────────────────────────
 
-export type ErrorTelemetryHook = (error: OpenElementError) => void;
+import type { ErrorTelemetryHook } from '@openelement/protocol/errors';
+export type { ErrorTelemetryHook };
 
 let _telemetryHook: ErrorTelemetryHook | undefined;
 
@@ -206,30 +161,3 @@ export function reportError(error: OpenElementError): void {
 }
 
 // ─── SSR Error Context ──────────────────────────────────────────────
-
-export interface SsrErrorEntry {
-  componentPath: string;
-  error: OpenElementError;
-  phase: ErrorPhase;
-}
-
-export class SsrErrorContext {
-  private errors: SsrErrorEntry[] = [];
-
-  add(entry: SsrErrorEntry): void {
-    this.errors.push(entry);
-    reportError(entry.error);
-  }
-
-  get all(): readonly SsrErrorEntry[] {
-    return this.errors;
-  }
-
-  get hasErrors(): boolean {
-    return this.errors.length > 0;
-  }
-
-  merge(other: SsrErrorContext): void {
-    for (const e of other.errors) this.add(e);
-  }
-}

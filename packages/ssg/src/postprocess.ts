@@ -18,6 +18,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
+import type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
 
 const log = createLogger('core');
 
@@ -175,10 +176,7 @@ export function injectCspMeta(
  * This polyfill attaches Shadow Roots manually via attachShadow().
  */
 const DSD_POLYFILL = `
-<style>html{visibility:visible!important}body{background:#040508;color:#fff}docs-home{display:block}
-:root[data-theme="dark"]{--gray-0:#030507;--gray-1:#0d0f12;--gray-2:#16191d;--gray-3:#212529;--gray-4:#343a40;--gray-5:#495057;--gray-6:#868e96;--gray-7:#adb5bd;--gray-8:#ced4da;--gray-9:#dee2e6;--gray-10:#e9ecef;--gray-11:#f1f3f5;--gray-12:#f8f9fa;--text-primary:var(--gray-10);--text-secondary:var(--gray-7);--text-muted:var(--gray-6);--bg-base:var(--gray-0);--bg-surface:var(--gray-1);--bg-card:var(--gray-2);--bg-code:#0d0d12;--bg-hover:var(--gray-3);--border:var(--gray-3);--border-hover:var(--gray-4);--brand:#7c6ff5;--brand-hover:#6d5ce8;--brand-light:#8b7cf6;--brand-deep:#3d3580;--brand-subtle:rgba(124,111,245,.15);--brand-glow:rgba(124,111,245,.2);--code-border:rgba(255,255,255,.08)}
-:root[data-theme="light"]{--gray-0:#f8f9fa;--gray-1:#f1f3f5;--gray-2:#e9ecef;--gray-3:#dee2e6;--gray-4:#ced4da;--gray-5:#adb5bd;--gray-6:#868e96;--gray-7:#495057;--gray-8:#343a40;--gray-9:#212529;--gray-10:#16191d;--gray-11:#0d0f12;--gray-12:#030507;--text-primary:var(--gray-10);--text-secondary:var(--gray-7);--text-muted:var(--gray-6);--bg-base:var(--gray-0);--bg-surface:var(--gray-2);--bg-card:var(--gray-0);--bg-code:#f1f3f5;--bg-hover:var(--gray-2);--border:var(--gray-3);--border-hover:var(--gray-4);--brand:#534ab7;--brand-hover:#4039a0;--brand-light:#6d5ce8;--brand-deep:#26215c;--brand-subtle:rgba(83,74,183,.1);--brand-glow:rgba(83,74,183,.15);--code-border:rgba(0,0,0,.08)}
-</style>
+<style>html{visibility:visible!important}</style>
 <script>
 // DSD Polyfill (Firefox, older browsers)
 (function() {
@@ -269,37 +267,6 @@ export function injectViewTransitionMeta(dir: string): void {
 }
 
 // ─── Speculation Rules API ────────────────────────────────────────────
-
-/** Speculation Rules configuration for SSG post-processing */
-export interface SpeculationRulesOptions {
-  /**
-   * URL patterns to prerender (fully render in background before navigation).
-   * Prerender gives instant page loads but uses more bandwidth/memory.
-   * Best for high-probability navigation targets (e.g. /guide/*).
-   */
-  prerender?: string[];
-
-  /**
-   * URL patterns to prefetch (fetch HTML + resources without rendering).
-   * Lighter than prerender, good for medium-probability links.
-   */
-  prefetch?: string[];
-
-  /**
-   * URL patterns to exclude from both prefetch and prerender.
-   * Typically API routes and dynamic pages that shouldn't be speculatively loaded.
-   */
-  exclude?: string[];
-
-  /**
-   * Eagerness level for prerender rules.
-   * - 'immediate': prerender as soon as the rule is parsed (aggressive)
-   * - 'moderate': prerender on hover (default, recommended)
-   * - 'conservative': prerender on pointerdown or click
-   * @default 'moderate'
-   */
-  eagerness?: 'immediate' | 'moderate' | 'conservative';
-}
 
 /**
  * Build Speculation Rules JSON from configuration and known routes.

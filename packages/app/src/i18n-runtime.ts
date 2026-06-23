@@ -81,5 +81,5 @@ export function switchLocale(
   return `/${targetLocale}${stripped}`;
 }
 
-export type { LocalePath } from '@openelement/protocol';
-export { normalizeLocalePath } from '@openelement/protocol';
+export type { LocalePath } from '@openelement/router/i18n';
+export { normalizeLocalePath } from '@openelement/router/i18n';

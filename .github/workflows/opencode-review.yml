@@ -1,0 +1,34 @@
+name: opencode-review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: anomalyco/opencode/github@latest
+        env:
+          # DeepSeek API key. Get one at https://platform.deepseek.com/api_keys
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # DeepSeek provider/model. Other options: deepseek/deepseek-v4-flash
+          model: deepseek/deepseek-v4-pro
+          use_github_token: true
+          prompt: |
+            Review this pull request for the openElement project:
+            - Check for code quality issues, potential bugs, and regressions.
+            - Look for over-engineering, unnecessary abstractions, and unused code.
+            - Verify TypeScript types, ESM imports, and Deno conventions.
+            - Suggest concrete improvements with line-specific comments when possible.
+            - Keep the summary brief; prioritize bugs > readability > style > nits.

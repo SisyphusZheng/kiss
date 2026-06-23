@@ -7,7 +7,8 @@
 
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { HydrationStrategy } from '@openelement/core';
+import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
+import { writeJson } from '@openelement/content/write-json';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */
@@ -116,16 +117,18 @@ export function generateIslandManifests(
  * Write island manifest files to disk.
  * Each page gets its own JSON file at {outDir}/island-manifests/{route-hash}.json
  */
-export function writeIslandManifests(outputDir: string, manifests: PageIslandManifest[]): void {
+export async function writeIslandManifests(
+  outputDir: string,
+  manifests: PageIslandManifest[],
+): Promise<void> {
   const manifestDir = join(outputDir, 'island-manifests');
   mkdirSync(manifestDir, { recursive: true });
 
   for (const manifest of manifests) {
-    const hash = stableHash(manifest.route);
+    const hash = await stableHash(manifest.route);
     const filename = `page-${hash}.json`;
-    writeFileSync(join(manifestDir, filename), JSON.stringify(manifest, null, 2), 'utf-8');
+    writeFileSync(join(manifestDir, filename), writeJson(manifest), 'utf-8');
   }
 }
 
 // stableHash moved to ssg-helpers.ts — imported above
-import type { ComponentLayer } from '@openelement/core';

@@ -8,46 +8,13 @@
  * - Minimal framework overhead - only what's needed for SSR + Islands
  */
 
-import type { RouteEntry } from './schemas.js';
+import type { RouteEntry } from '@openelement/protocol/framework';
+import type { IslandDescriptor, SsrContext } from '@openelement/protocol/context';
+export type { IslandDescriptor, SsrContext };
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
 
-/**
- * Minimal island descriptor used in SSR context.
- * Full IslandDecl (with import paths, strategy, etc.) lives in @openelement/adapter-vite.
- * This keeps @openelement/core zero-dependency on build orchestration.
- */
-export interface IslandDescriptor {
-  /** Custom element tag name */
-  tagName: string;
-  /** Import path for the island module */
-  importPath: string;
-}
-
 const log = createLogger('core');
-
-/**
- * Resolved SSR context passed through the rendering pipeline.
- * Created fresh for each request, carries params/query/status/islands.
- */
-export interface SsrContext {
-  /** Matched route entry */
-  route: RouteEntry;
-  /** The original request URL */
-  url: URL;
-  /** Route params extracted from dynamic segments (e.g., { id: '123' }) */
-  params: Record<string, string>;
-  /** Parsed query/search parameters (supports multi-value) */
-  query: Record<string, string | string[]>;
-  /** Islands collected during SSR rendering */
-  islands: IslandDescriptor[];
-  /** HTTP status code (default: 200) */
-  status: number;
-  /** Custom data bag - for loaders, middleware, etc. */
-  data: Record<string, unknown>;
-  /** Request ID for tracing */
-  requestId?: string;
-}
 
 /**
  * Extract route params from a pathname using a route pattern.

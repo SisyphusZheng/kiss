@@ -9,7 +9,6 @@
  *
  * Rendering: DSD (Declarative Shadow DOM) string concatenation
  * Islands: Custom Element registration + prop deserialization
- * Adapter: createAdapterRegistry() + default registry access
  *
  * Build orchestration (Vite plugins) lives in @openelement/adapter-vite.
  * For the unified openElement() entry, use @openelement/app/vite instead.
@@ -20,43 +19,53 @@
 export type {
   AppShellConfig,
   AppShellDefinition,
+  ComponentLayer,
   FrameworkOptions,
+  HydrateEventDescriptor,
+  HydrationStrategy,
+  IsrManifestEntry,
   LayoutsConfig,
+  LocalePath,
+  OpenElementApiContext,
+  OpenElementBuildContextLike,
   OpenElementMiddleware,
   OpenElementMiddlewareContext,
   OpenElementRenderer,
+  RegistryIndex,
+  RegistryIndexEntry,
   RouteEntry,
+  SafeHtml,
   SpecialFileType,
-  SsrContext,
-} from './schemas.js';
+  StrategySource,
+  UnsafeHtml,
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
+} from '@openelement/protocol/framework';
+export type { IslandDescriptor, SsrContext } from '@openelement/protocol/context';
 
 export {
-  BuildError,
   ERROR_PREFIX,
   ErrorCode,
-  IslandRenderError,
-  NavigationError,
   OpenElementError,
   PropValidationError,
   RenderError,
   reportError,
   setErrorTelemetryHook,
-  SsrErrorContext,
   SsrRenderError,
 } from './errors.js';
-export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook, SsrErrorEntry } from './errors.js';
+export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '@openelement/protocol/errors';
 export { createSsrContext, extractParams, parseQuery } from './context.js';
 export { renderSsrError, wrapInDocument } from './html-escape.js';
-export type { OpenElementApiContext } from './schemas.js';
-export { createIsrCacheKey, FileIsrCache, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
+export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
 export type {
-  IsrCache,
+  CacheAdapter,
+  CacheEntry,
   IsrCacheEntry,
   IsrCacheResult,
   IsrCacheState,
-  IsrManifestEntry,
   IsrRouteConfig,
-} from './isr.js';
+} from '@openelement/protocol/isr';
 export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.js';
 export type {
   IsrRuntimeOptions,
@@ -66,7 +75,7 @@ export type {
   IsrRuntimeState,
 } from './isr-runtime.js';
 export { StyleSheet } from './style-sheet.js';
-export type { StyleSheetLike, StyleSheetRule } from './style-sheet.js';
+export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
 export { bindHydrateEvents } from './dsd-hydration-events.js';
 export type { Constructor, DsdHydration } from './dsd-hydration.js';
 export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.js';
@@ -78,15 +87,30 @@ export type {
   RenderDsdStreamOptions,
 } from './render-dsd-stream.js';
 export { camelToKebab, serializeAttrs } from './render-ir.js';
-export {
-  type AdapterRegistry,
-  createAdapterRegistry,
-  getDefaultRegistry,
-} from './adapter-registry.js';
 export type {
-  ComponentLayer,
-  HydrateEventDescriptor,
-  HydrationStrategy,
+  DomSimulationAttempt,
+  DomSimulationReport,
+  DsdBuildReport,
+  DsdComponent,
+  DsdComponentConstructor,
+  DsdHydrationHintSummary,
+  DsdHydrationStrategySummary,
+  DsdMetricsSummary,
+  DsdOptions,
+  DsdPageDiagnostics,
+  DsdRenderMetrics,
+  HydrationHint,
+  IsrRouteRecord,
+  ManifestDecision,
+  RendererProtocol,
+  RenderErrorCode,
+  RenderHooks,
+  RenderInput,
+  RenderOutput,
+  RenderPhase,
+  SsrAdmissionDecision,
+} from '@openelement/protocol/render';
+export type {
   OpenElementAttribute,
   OpenElementCssPart,
   OpenElementCssProperty,
@@ -99,15 +123,7 @@ export type {
   OpenElementPackageExtensions,
   OpenElementPackageManifest,
   OpenElementSlot,
-  ReactiveHost,
-  RegistryIndex,
-  RegistryIndexEntry,
-  StrategySource,
-  Unsubscribe,
-  ValidationError,
-  ValidationResult,
-  ValidationWarning,
-} from './schemas.js';
+} from '@openelement/protocol/manifest';
 export type {
   CemCompatibilityReport,
   CompatibilityClassification,
@@ -115,41 +131,16 @@ export type {
   ManifestValidationReport,
   ValidatedTag,
   ValidationDiagnostic,
-} from './compat-schemas.js';
-export type {
-  DomSimulationAttempt,
-  DomSimulationReport,
-  DsdBuildReport,
-  DsdHydrationHintSummary,
-  DsdHydrationStrategySummary,
-  DsdMetricsSummary,
-  DsdOptions,
-  DsdPageDiagnostics,
-  HydrationHint,
-  IsrRouteRecord,
-  ManifestDecision,
-  RendererProtocol,
-  RenderHooks,
-  RenderInput,
-  RenderOutput,
-  RenderPhase,
-  SsrAdmissionDecision,
-} from './render-schemas.js';
-export {
-  escapeAttr,
-  escapeAttrValue,
-  escapeHtml,
-  type SafeHtml,
-  type UnsafeHtml,
-} from './html-escape.js';
+} from '@openelement/protocol/manifest';
+export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
 export {
   // v0.24.3: Neutral signal utilities — no template dependency
   isSignalLike,
-  type SignalLike,
   unwrapSignalLike,
-} from './signal-like.js';
+} from '@openelement/signal';
+export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
-export { createLogger, LogLevel, OpenElementLogger } from './logger.js';
+export { createLogger } from './logger.js';
 /** @internal — use @openelement/core/security subpath */
 export { DANGEROUS_KEYS } from './security.js';
 export { isValidTagName } from './tag-utils.js';
@@ -159,12 +150,23 @@ export {
   defineIsland,
   getIslandMeta,
   getSsrProps,
-  type IslandOptions,
 } from './island.js';
+export type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
 export { transformIslandSource } from './island-transform.js';
-export type { IslandTransformOptions, IslandTransformResult } from './island-transform.js';
+export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
-// v0.23: Build-time shared types live in @openelement/protocol/build-types.
+// Unified binding layer (ADR-0109 Phase 1)
+export { applyBindingDescriptor } from './binding-activation.js';
+export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.ts';
+
+// Data adapters — type contract surface only (ADR-0095)
+export type {
+  Action,
+  ActionContext,
+  DataAdapter,
+  Loader,
+  LoaderContext,
+} from '@openelement/protocol/data';
 
 // WC Package Protocol (v0.17+)
 export {
@@ -177,7 +179,7 @@ export {
 } from './registry.js';
 // v0.24.1 (ADR-0057): JSX + Signal component model
 // VNode & jsx-runtime
-export type { VNode } from './vnode.js';
+export type { VNode } from '@openelement/protocol/vnode';
 export { isVNode } from './vnode.js';
 export { Fragment, trustedHtml } from './jsx-runtime.js';
 // Renderers
@@ -202,6 +204,11 @@ export {
   syncStaticPropsFromAttributes,
   unwrap,
 } from './prop.js';
-// Prop types moved to @openelement/element
-export { MemoryDataAdapter } from './data.js';
-export type { DataAdapter } from './data.js';
+export type {
+  NormalizedPropDecl,
+  PropDecl,
+  PropDeclFull,
+  PropDeclShorthand,
+  PropsFrom,
+  PropType,
+} from '@openelement/protocol/prop';

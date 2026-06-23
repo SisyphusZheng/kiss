@@ -6,7 +6,7 @@
  * and supporting helper functions.
  */
 
-import type { EntryDescriptor } from './entry-descriptor.ts';
+import type { EntryDescriptor } from '@openelement/protocol/ssg';
 import { routeRevalidateExpr, routeTagNameExpr } from './entry-render-helpers.ts';
 
 /**
@@ -32,7 +32,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   );
   lines.push('');
   lines.push(
-    'export { getDefaultRegistry, renderDsd, renderDsdTree, wrapInDocument } from "@openelement/core"',
+    'export { renderDsd, renderDsdTree, wrapInDocument } from "@openelement/core"',
   );
   lines.push(
     'export { posts, getPostBySlug, getBlogOptions } from "@openelement/generated/blog-data"',

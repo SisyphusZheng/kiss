@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import type { Alias, Plugin } from 'vite';
 import { formatError } from '@openelement/core/errors';
 
@@ -13,7 +14,6 @@ const DEFAULT_OPENELEMENT_PACKAGES = new Set([
   'core',
   'create',
   'element',
-  'protocol',
   'router',
   'signal',
   'ui',
@@ -24,9 +24,9 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
     '.': 'src/index.ts',
     'build-context': 'src/build-context.ts',
     'head-injection': 'src/head-injection.ts',
+    'nitro-mount': 'src/nitro-mount.ts',
     plugin: 'src/plugin.ts',
     'subpath-resolver': 'src/subpath-resolver.ts',
-    'optional-package-stubs': 'src/optional-package-stubs.ts',
     'generated-data-resolver': 'src/generated-data-resolver.ts',
     'plugin-mdx': 'src/plugin-mdx.ts',
     'cli/build': 'src/cli/build.ts',
@@ -43,59 +43,47 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   content: {
     '.': 'src/index.ts',
     'blog-data': 'src/blog/blog-data.ts',
-    mdx: 'src/mdx/index.ts',
-    nav: 'src/nav/index.ts',
+    mdx: 'src/mdx/compile.ts',
+    nav: 'src/nav/scanner.ts',
     'nav-data': 'src/nav/writer.ts',
-    sitemap: 'src/sitemap/index.ts',
+    sitemap: 'src/sitemap/generator.ts',
   },
   core: {
     '.': 'src/index.ts',
     context: 'src/context.ts',
-    errors: 'src/errors.ts',
     data: 'src/data.ts',
     'dsd-hydration': 'src/dsd-hydration.ts',
+    errors: 'src/errors.ts',
+    'html-escape': 'src/html-escape.ts',
     'island-transform': 'src/island-transform.ts',
     isr: 'src/isr.ts',
     'isr-runtime': 'src/isr-runtime.ts',
     'jsx-runtime': 'src/jsx-runtime.ts',
     'jsx-dev-runtime': 'src/jsx-runtime.ts',
     logger: 'src/logger.ts',
+    prop: 'src/prop.ts',
     'render-dsd-stream': 'src/render-dsd-stream.ts',
+    runtime: 'src/runtime.ts',
     'signal-context': 'src/signal-context.ts',
     'style-sheet': 'src/style-sheet.ts',
-    types: 'src/types.ts',
+    'tag-utils': 'src/tag-utils.ts',
   },
   create: { '.': 'cli.ts' },
   element: {
     '.': 'src/index.ts',
   },
   router: {
-    '.': 'src/mod.ts',
-    'client-router': 'src/client-router.ts',
-    'define-routes': 'src/define-routes.ts',
-    'page-loader': 'src/page-loader.ts',
-    'pattern-translate': 'src/pattern-translate.ts',
-  },
-  protocol: {
-    '.': 'src/index.ts',
-    'build-types': 'src/build-types.ts',
-    cache: 'src/cache.ts',
-    components: 'src/components.ts',
-    conformance: 'src/conformance.ts',
-    data: 'src/data.ts',
+    '.': 'src/data-context.ts',
+    'data-context': 'src/data-context.ts',
     i18n: 'src/i18n.ts',
-    islands: 'src/islands.ts',
-    renderer: 'src/renderer.ts',
-    routes: 'src/routes.ts',
-    runtime: 'src/runtime.ts',
-    signals: 'src/signals.ts',
-    validators: 'src/validators.ts',
   },
   signal: {
     '.': 'src/index.ts',
     framework: 'src/framework.ts',
-    'alien-engine': 'src/alien-engine.ts',
     'preact-engine': 'src/preact-engine.ts',
+  },
+  ssg: {
+    '.': 'src/index.ts',
   },
   ui: {
     '.': 'src/index.ts',
@@ -114,6 +102,13 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
     'open-step-card': 'src/open-step-card.tsx',
     'open-tabs': 'src/open-tabs.tsx',
     'open-theme-toggle': 'src/open-theme-toggle.tsx',
+    'open-badge': 'src/open-badge.tsx',
+    'open-brand-mark': 'src/open-brand-mark.tsx',
+    'open-lab-panel': 'src/open-lab-panel.tsx',
+    'open-lab-stage': 'src/open-lab-stage.tsx',
+    'open-standards-visual': 'src/open-standards-visual.tsx',
+    'daisy-classes': 'src/daisy-classes.ts',
+    'daisy-classes.js': 'src/daisy-classes.ts',
   },
 };
 
@@ -130,6 +125,9 @@ export interface OpenJsrPackageResolverOptions {
   userAliases?: Record<string, string> | Alias[] | null;
   fetchSource?: (url: string) => Promise<Response>;
   readLocalSource?: (path: string) => string;
+  /** Registry mode. 'npm' lets Vite resolve @openelement/* from node_modules.
+   * 'jsr' keeps the legacy virtual-module source fetch for JSR consumers. */
+  registry?: 'npm' | 'jsr';
 }
 
 export function parseOpenPackageSpecifier(id: string): OpenJsrPackageSpecifier | null {
@@ -194,6 +192,9 @@ export function createOpenJsrPackageResolverPlugin(
   options: OpenJsrPackageResolverOptions,
 ): Plugin {
   const fetchSource = options.fetchSource ?? fetch;
+  const registry = options.registry ??
+    (typeof import.meta.url === 'string' && import.meta.url.startsWith('https://') ? 'jsr' : 'npm');
+  const isNpmMode = registry === 'npm';
 
   return {
     name: 'open:ssg-package-resolve',
@@ -206,6 +207,7 @@ export function createOpenJsrPackageResolverPlugin(
     },
     resolveId(id, importer) {
       if (options.workspaceRoot) return null;
+      if (isNpmMode) return null;
       if (hasExactUserAlias(id, options.userAliases)) return null;
 
       const spec = parseOpenPackageSpecifier(id);
@@ -221,6 +223,7 @@ export function createOpenJsrPackageResolverPlugin(
     },
     async load(id) {
       if (options.workspaceRoot) return null;
+      if (isNpmMode) return null;
       if (!id.startsWith(VIRTUAL_OPENELEMENT_PACKAGE_PREFIX)) return null;
 
       const [packageName, ...pathParts] = id.slice(VIRTUAL_OPENELEMENT_PACKAGE_PREFIX.length).split(
@@ -232,7 +235,9 @@ export function createOpenJsrPackageResolverPlugin(
         try {
           return options.readLocalSource
             ? options.readLocalSource(localPath)
-            : await Deno.readTextFile(localPath);
+            : typeof Deno !== 'undefined'
+            ? await Deno.readTextFile(localPath)
+            : await readFile(localPath, 'utf-8');
         } catch (error) {
           throw new Error(
             `[openElement/SSG] Failed to read local @openelement/${packageName}/${filePath} ` +

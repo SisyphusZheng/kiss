@@ -1,507 +1,405 @@
 /**
- * @openelement/ui - Design System
- * Two plates. Zero noise.
- *
- * Dogfooding: uses real open-button, open-card, open-input components.
+ * @openelement/ui - Web Standards Lab design system page.
  */
 export const meta = { section: 'Reference', label: 'Design System', order: 10 };
+export const tagName = 'ui-showcase';
+
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
-import { pageStyles } from '../../components/page-styles.js';
-import '@openelement/ui\/open-button';
-import '@openelement/ui\/open-card';
-import '@openelement/ui\/open-input';
-import '@openelement/ui\/open-code-block';
+import '@openelement/ui/open-badge';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-card';
+import '@openelement/ui/open-input';
+import '@openelement/ui/open-lab-panel';
+import '@openelement/ui/open-lab-stage';
+import '@openelement/ui/open-standards-visual';
 
-const routeSheet = new StyleSheet();
-routeSheet.replaceSync(
-  pageStyles + `
+const pageSheet = new StyleSheet();
+pageSheet.replaceSync(`
+  :host {
+    display: block;
+    color: var(--text-primary);
+  }
 
-      :host {
-        display: block;
-      }
-      .section {
-        margin-bottom: 3.5rem;
-      }
-      .section-title {
-        font-size: var(--font-size-00);
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--gray-6);
-        margin-bottom: var(--size-6);
-        padding-bottom: var(--size-3);
-        border-bottom: 0.5px solid var(--gray-3);
-      }
-      .palette-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--border-size-1);
-        background: var(--gray-3);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        overflow: hidden;
-      }
-      .palette-card {
-        padding: var(--size-6);
-      }
-      .palette-dark {
-        background: var(--gray-0);
-      }
-      .palette-light {
-        background: var(--gray-1);
-      }
-      .palette-name {
-        font-size: var(--font-size-00);
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        margin-bottom: var(--size-4);
-      }
-      .palette-dark .palette-name {
-        color: var(--gray-6);
-      }
-      .palette-light .palette-name {
-        color: var(--gray-7);
-      }
-      .swatch-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--size-3);
-        margin-bottom: var(--size-5);
-      }
-      .swatch-item {
-        text-align: center;
-      }
-      .swatch {
-        width: 100%;
-        aspect-ratio: 1;
-        border-radius: var(--radius-1);
-        margin-bottom: 0.375rem;
-      }
-      .palette-dark .swatch {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      .palette-light .swatch {
-        border: 1px solid rgba(0, 0, 0, 0.08);
-      }
-      .swatch-label {
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-6);
-        letter-spacing: 0.04em;
-      }
-      .palette-dark .swatch-label {
-        color: var(--gray-6);
-      }
-      .palette-light .swatch-label {
-        color: var(--gray-7);
-      }
-      .palette-desc {
-        font-size: var(--font-size-0);
-        line-height: 1.6;
-      }
-      .palette-dark .palette-desc {
-        color: var(--gray-6);
-      }
-      .palette-dark .palette-desc strong {
-        color: var(--gray-10);
-      }
-      .palette-light .palette-desc {
-        color: var(--gray-7);
-      }
-      .palette-light .palette-desc strong {
-        color: var(--gray-10);
-      }
-      .type-scale {
-        display: flex;
-        flex-direction: column;
-      }
-      .type-row {
-        display: flex;
-        align-items: baseline;
-        gap: var(--size-6);
-        padding: var(--size-3) 0;
-        border-bottom: 0.5px solid var(--gray-3);
-      }
-      .type-row:last-child {
-        border-bottom: none;
-      }
-      .type-label {
-        min-width: 72px;
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--gray-6);
-      }
-      .type-sample {
-        color: var(--gray-10);
-      }
-      .preview-card {
-        background: var(--gray-1);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        overflow: hidden;
-      }
-      .preview-header {
-        padding: 0.875rem var(--size-5);
-        border-bottom: 0.5px solid var(--gray-3);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .preview-title {
-        font-size: var(--font-size-1);
-        font-weight: var(--font-weight-6);
-        color: var(--gray-10);
-      }
-      .preview-badge {
-        font-size: 0.5625rem;
-        font-weight: var(--font-weight-7);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 0.25rem var(--size-2);
-        border-radius: 3px;
-        background: var(--indigo-1);
-        color: var(--gray-7);
-        border: 0.5px solid var(--gray-3);
-      }
-      .preview-body {
-        padding: var(--size-5);
-        display: flex;
-        gap: 0.625rem;
-        flex-wrap: wrap;
-        align-items: flex-start;
-      }
-      .preview-body-col {
-        display: flex;
-        flex-direction: column;
-        gap: var(--size-3);
-      }
-      .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--size-4);
-      }
-      .install-section {
-        margin-top: 3.5rem;
-        padding: var(--size-8);
-        background: var(--gray-1);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-2);
-        text-align: center;
-      }
-      .install-section h3 {
-        font-size: 0.9375rem;
-        font-weight: var(--font-weight-6);
-        color: var(--gray-10);
-        margin: 0 0 var(--size-4);
-      }
-      .install-cmd {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem var(--size-5);
-        background: var(--gray-0);
-        border: 0.5px solid var(--gray-3);
-        border-radius: var(--radius-1);
-        font-family: "SF Mono", monospace;
-        font-size: var(--font-size-1);
-        color: var(--gray-10);
-      }
-      .install-cmd .prompt {
-        color: var(--gray-6);
-      }
-      .install-section p {
-        font-size: var(--font-size-1);
-        color: var(--gray-6);
-        margin: var(--size-3) 0 0;
-      }
-      @media (max-width: 900px) {
-        .section {
-          margin-bottom: 2.5rem;
-        }
-        .type-row {
-          gap: var(--size-4);
-        }
-        .preview-body {
-          padding: var(--size-4);
-        }
-        .install-section {
-          padding: var(--size-6) var(--size-4);
-        }
-      }
-      @media (max-width: 640px) {
-        .palette-row {
-          grid-template-columns: 1fr;
-        }
-        .swatch-grid {
-          grid-template-columns: repeat(3, 1fr);
-          gap: var(--size-2);
-        }
-        .install-cmd {
-          font-size: var(--font-size-0);
-          padding: var(--size-2) var(--size-4);
-        }
-      }
-    `,
-);
+  * {
+    box-sizing: border-box;
+  }
+
+  .system {
+    width: 100%;
+    margin-inline: auto;
+    padding-block: 0 var(--site-section-block);
+  }
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, .58fr) minmax(360px, .42fr);
+    gap: 0;
+    align-items: stretch;
+    min-height: 480px;
+    padding-block-end: 0;
+    border-block-end: var(--border-size-1) solid var(--border);
+    background:
+      linear-gradient(126deg, color-mix(in srgb, var(--violet-2) 42%, transparent), transparent 54%),
+      color-mix(in srgb, var(--bg-base) 86%, var(--violet-0));
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: var(--size-8);
+    inset-block: 50% auto;
+    width: 360px;
+    aspect-ratio: 1;
+    transform: translateY(-50%);
+    border: var(--size-6) solid color-mix(in srgb, var(--brand) 24%, transparent);
+    border-radius: var(--radius-round);
+    opacity: .32;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero > div:first-child {
+    display: grid;
+    align-content: end;
+    position: relative;
+    z-index: 1;
+    padding: var(--size-10) var(--size-8);
+    border-inline-end: var(--border-size-1) solid var(--border);
+  }
+
+  .hero open-lab-panel {
+    position: relative;
+    z-index: 1;
+  }
+
+  .kicker,
+  .label,
+  .token-name {
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .kicker,
+  .label {
+    margin: 0 0 var(--size-4);
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block-start: 0;
+  }
+
+  h1 {
+    margin-block-end: 0;
+    font-size: var(--font-size-6);
+    line-height: .92;
+    letter-spacing: 0;
+    font-weight: var(--font-weight-9);
+  }
+
+  .subtitle,
+  .rule-list li,
+  .component-card p,
+  .principle p,
+  .token-row span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-0);
+    line-height: var(--font-lineheight-3);
+  }
+
+  .subtitle {
+    max-width: 760px;
+    margin-block: var(--size-6) 0;
+    font-size: var(--font-size-2);
+    line-height: 1.24;
+  }
+
+  .rule-list {
+    margin: 0;
+    padding-inline-start: var(--size-5);
+  }
+
+  .rule-list li + li {
+    margin-block-start: var(--size-2);
+  }
+
+  .section {
+    display: grid;
+    grid-template-columns: minmax(280px, .34fr) minmax(0, 1fr);
+    gap: 0;
+    width: min(1120px, calc(100% - var(--size-10)));
+    margin-inline: auto;
+    margin-block-start: 0;
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .section > div:first-child {
+    padding: var(--size-8);
+    border-inline-end: var(--border-size-1) solid var(--border);
+  }
+
+  .section > open-lab-panel,
+  .section > .component-grid,
+  .section > .visual-grid,
+  .section > .principles {
+    padding: var(--size-8);
+  }
+
+  .section-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-6);
+    line-height: .96;
+    letter-spacing: 0;
+    font-weight: var(--font-weight-9);
+  }
+
+  .token-grid,
+  .component-grid,
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--size-4);
+  }
+
+  .token-row {
+    display: grid;
+    grid-template-columns: minmax(150px, .38fr) minmax(0, 1fr);
+    gap: var(--size-4);
+    align-items: start;
+    padding-block: var(--size-3);
+    border-block-end: var(--border-size-1) solid var(--border);
+  }
+
+  .token-row:last-child {
+    border-block-end: 0;
+  }
+
+  .component-card {
+    min-height: 220px;
+    background: color-mix(in srgb, var(--bg-card) 84%, transparent);
+  }
+
+  .component-card h3,
+  .principle h3 {
+    margin-block: 0 var(--size-3);
+    color: var(--text-primary);
+    font-size: var(--font-size-3);
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+
+  .component-card p,
+  .principle p {
+    margin-block: var(--size-4) 0;
+  }
+
+  .button-row,
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--size-2);
+  }
+
+  .visual-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+    gap: var(--size-5);
+  }
+
+  .stage-demo {
+    --lab-stage-min-height: 430px;
+  }
+
+  .code-sample {
+    margin: 0;
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: var(--font-lineheight-4);
+    white-space: pre-wrap;
+  }
+
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--size-3);
+    margin: var(--size-8) var(--size-5) 0;
+  }
+
+  @media (max-width: 1120px) {
+    .hero,
+    .section,
+    .token-grid,
+    .component-grid,
+    .principles,
+    .visual-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section {
+      width: min(100% - var(--size-8), 1120px);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .system {
+      padding-block-start: var(--size-8);
+    }
+
+    h1 {
+      font-size: var(--font-size-6);
+    }
+
+    .subtitle {
+      font-size: var(--font-size-1);
+    }
+
+    .token-row {
+      grid-template-columns: 1fr;
+    }
+  }
+`);
+
+const tokenRows = [
+  ['Canvas', '--bg-base', 'Page background and grid field.'],
+  ['Surface', '--bg-card / --bg-elevated', 'Reading surfaces and raised panels.'],
+  ['Artifact', '--bg-code / --code-border', 'Code, devtools, route, and package diagrams.'],
+  ['Text', '--text-primary / --text-secondary', 'Readable hierarchy in both themes.'],
+  ['Action', '--brand / --on-brand', 'Primary command and link emphasis.'],
+  ['State', '--success / --warning / --info / --error', 'Roadmap, standards, reference, and failure states.'],
+];
+
+const principles = [
+  ['Lead with the product object', 'Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.'],
+  ['Use components as the design system', 'Buttons, cards, badges, panels, inputs, and visuals come from @openelement/ui.'],
+  ['Treat dark mode as parity', 'Every page and shadow component must resolve through the same semantic tokens.'],
+];
 
 export class UIShowcase extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, routeSheet];
+  static override styles = [pageSheet];
 
   override render() {
-    return (this._getLocale('zh')) === 'en' ? this._renderEn() : this._renderZh();
-  }
-
-  private _renderZh() {
-    const loc = this._getLocale('zh');
-
     return (
-      <div class='container'>
-        <h1>设计系统</h1>
-        <p class='subtitle'>
-          <strong>双色板。零噪音。</strong>
-          <br />深色和浅色。没有别的。
-        </p>
-        <div class='section'>
-          <div class='section-title'>色板</div>
-          <div class='palette-row'>
-            <div class='palette-card palette-dark'>
-              <div class='palette-name'>深色</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>基底</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#0a0a0a'></div>
-                  <div class='swatch-label'>表面</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>主色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#999'></div>
-                  <div class='swatch-label'>次色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#666'></div>
-                  <div class='swatch-label'>第三色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#444'></div>
-                  <div class='swatch-label'>静默</div>
-                </div>
-              </div>
-              <p class='palette-desc'>
-                <strong>黑色</strong> 基底。白色强调。灰色分层。
-              </p>
-            </div>
-            <div class='palette-card palette-light'>
-              <div class='palette-name'>浅色</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>基底</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fafafa'></div>
-                  <div class='swatch-label'>表面</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>主色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#555'></div>
-                  <div class='swatch-label'>次色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#888'></div>
-                  <div class='swatch-label'>第三色</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#aaa'></div>
-                  <div class='swatch-label'>静默</div>
-                </div>
-              </div>
-              <p class='palette-desc'>
-                <strong>白色</strong> 基底。黑色强调。灰色分层。
-              </p>
-            </div>
+      <main class='system'>
+        <section class='hero'>
+          <div>
+            <p class='kicker'>Web Standards Lab</p>
+            <h1>Design System</h1>
+            <p class='subtitle'>
+              This page documents the active `www` implementation contract:
+              Open Props tokens, UI package primitives, product-art diagrams,
+              and first-class dark mode.
+            </p>
           </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>按钮</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>变体</span>
-              <span class='preview-badge'>可用</span>
-            </div>
-            <div class='preview-body'>
-              <open-button variant='primary'>主要按钮</open-button>
-              <open-button>默认按钮</open-button>
-              <open-button variant='ghost'>幽灵按钮</open-button>
-            </div>
-          </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>输入框</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>文本输入</span>
-              <span class='preview-badge'>可用</span>
-            </div>
-            <div class='preview-body preview-body-col'>
-              <open-input placeholder='输入邮箱...' label='邮箱'></open-input>
-              <open-input type='password' placeholder='密码' label='密码' required>
-              </open-input>
-              <open-input value='hello@openelement.org' label='只读' disabled></open-input>
-            </div>
-          </div>
-        </div>
-        <div class='install-section'>
-          <h3>安装 @openelement/ui</h3>
-          <div class='install-cmd'>
-            <span class='prompt'>$</span> deno add jsr:@openelement/ui
-          </div>
-          <p>Deno、Node、Bun。零配置。</p>
-        </div>
-        <div class='nav-row'>
-          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>← Architecture</a>
-          <a href={`/${loc}/architecture/reference/core`} class='btn btn-ghost'>API Reference →</a>
-        </div>
-      </div>
-    );
-  }
+          <open-lab-panel label='rules' meta='v3'>
+            <ul class='rule-list'>
+              <li>Strict Open Props and semantic tokens only.</li>
+              <li>Reusable visuals live in `@openelement/ui`.</li>
+              <li>Kinetic motion respects reduced-motion preferences.</li>
+              <li>No Linear clone, decorative blobs, or local color systems.</li>
+              <li>Letter spacing remains `0`.</li>
+            </ul>
+          </open-lab-panel>
+        </section>
 
-  private _renderEn() {
-    const loc = this._getLocale('en');
+        <section class='section'>
+          <div>
+            <p class='label'>Token contract</p>
+            <h2 class='section-title'>Semantic roles mapped to Open Props.</h2>
+          </div>
+          <open-lab-panel label='token roles' meta='source: openPropsTokenSheet'>
+            {tokenRows.map(([role, token, copy]) => (
+              <div class='token-row'>
+                <strong class='token-name'>{role}</strong>
+                <span><code>{token}</code> - {copy}</span>
+              </div>
+            ))}
+          </open-lab-panel>
+        </section>
 
-    return (
-      <div class='container'>
-        <h1>Design System</h1>
-        <p class='subtitle'>
-          <strong>Two plates. Zero noise.</strong>
-          <br />Dark and light. Nothing else.
-        </p>
-        <div class='section'>
-          <div class='section-title'>Palettes</div>
-          <div class='palette-row'>
-            <div class='palette-card palette-dark'>
-              <div class='palette-name'>Dark</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>Base</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#0a0a0a'></div>
-                  <div class='swatch-label'>Surface</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>Primary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#999'></div>
-                  <div class='swatch-label'>Secondary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#666'></div>
-                  <div class='swatch-label'>Tertiary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#444'></div>
-                  <div class='swatch-label'>Muted</div>
-                </div>
+        <section class='section'>
+          <div>
+            <p class='label'>Primitives</p>
+            <h2 class='section-title'>The site is composed from UI package components.</h2>
+          </div>
+          <div class='component-grid'>
+            <open-card class='component-card'>
+              <h3>Buttons</h3>
+              <div class='button-row'>
+                <open-button variant='primary'>Primary</open-button>
+                <open-button>Secondary</open-button>
+                <open-button variant='ghost'>Ghost</open-button>
               </div>
-              <p class='palette-desc'>
-                <strong>Black</strong> base. White accent. Gray layers.
-              </p>
-            </div>
-            <div class='palette-card palette-light'>
-              <div class='palette-name'>Light</div>
-              <div class='swatch-grid'>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fff'></div>
-                  <div class='swatch-label'>Base</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#fafafa'></div>
-                  <div class='swatch-label'>Surface</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#000'></div>
-                  <div class='swatch-label'>Primary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#555'></div>
-                  <div class='swatch-label'>Secondary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#888'></div>
-                  <div class='swatch-label'>Tertiary</div>
-                </div>
-                <div class='swatch-item'>
-                  <div class='swatch' style='background:#aaa'></div>
-                  <div class='swatch-label'>Muted</div>
-                </div>
+              <p>Commands use stable dimensions, token colors, and focus-visible states.</p>
+            </open-card>
+            <open-card class='component-card'>
+              <h3>Fields</h3>
+              <open-input value='app/routes/index.tsx' readonly></open-input>
+              <p>Inputs stay utilitarian and inherit the same Open Props token system.</p>
+            </open-card>
+            <open-card class='component-card'>
+              <h3>Status + motion</h3>
+              <div class='badge-row'>
+                <open-badge tone='brand'>current</open-badge>
+                <open-badge tone='success'>done</open-badge>
+                <open-badge tone='warning'>planned</open-badge>
               </div>
-              <p class='palette-desc'>
-                <strong>White</strong> base. Black accent. Gray layers.
-              </p>
-            </div>
+              <p>Status labels and motion states are readable text first and color second.</p>
+            </open-card>
           </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>Buttons</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>Variants</span>
-              <span class='preview-badge'>Ready</span>
-            </div>
-            <div class='preview-body'>
-              <open-button variant='primary'>Primary</open-button>
-              <open-button>Default</open-button>
-              <open-button variant='ghost'>Ghost</open-button>
-            </div>
+        </section>
+
+        <section class='section'>
+          <div>
+            <p class='label'>Product art</p>
+            <h2 class='section-title'>Code and diagrams are the visual asset.</h2>
           </div>
-        </div>
-        <div class='section'>
-          <div class='section-title'>Inputs</div>
-          <div class='preview-card'>
-            <div class='preview-header'>
-              <span class='preview-title'>Text Input</span>
-              <span class='preview-badge'>Ready</span>
-            </div>
-            <div class='preview-body preview-body-col'>
-              <open-input placeholder='Enter email...' label='Email'></open-input>
-              <open-input type='password' placeholder='Password' label='Password' required>
-              </open-input>
-              <open-input value='hello@openelement.org' label='Read-only' disabled></open-input>
-            </div>
+          <div class='visual-grid'>
+            <open-lab-stage class='stage-demo' emphasis='normal' motion='auto'></open-lab-stage>
+            <open-lab-panel label='token board' meta='Open Props'>
+              <open-standards-visual variant='tokens' emphasis='high' motion='auto'></open-standards-visual>
+            </open-lab-panel>
           </div>
-        </div>
-        <div class='install-section'>
-          <h3>Install @openelement/ui</h3>
-          <div class='install-cmd'>
-            <span class='prompt'>$</span> deno add jsr:@openelement/ui
+        </section>
+
+        <section class='section'>
+          <div>
+            <p class='label'>Layout</p>
+            <h2 class='section-title'>Composition principles</h2>
           </div>
-          <p>Deno, Node, Bun. Zero config.</p>
-        </div>
-        <div class='nav-row'>
-          <a href={`/${loc}/architecture/architecture`} class='btn btn-ghost'>← Architecture</a>
-          <a href={`/${loc}/architecture/reference/core`} class='btn btn-ghost'>API Reference →</a>
-        </div>
-      </div>
+          <div class='principles'>
+            {principles.map(([title, copy], index) => (
+              <open-card class='principle'>
+                <span class='token-name'>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </open-card>
+            ))}
+          </div>
+        </section>
+
+        <nav class='nav-row'>
+          <open-button href='/docs'>Docs</open-button>
+          <open-button href='/architecture/architecture'>Architecture</open-button>
+          <open-button href='/roadmap'>Roadmap</open-button>
+        </nav>
+      </main>
     );
   }
 }
 
-customElements.define('ui-showcase', UIShowcase);
+if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
+  customElements.define(tagName, UIShowcase);
+}
+
 export default UIShowcase;
-export const tagName = 'ui-showcase';

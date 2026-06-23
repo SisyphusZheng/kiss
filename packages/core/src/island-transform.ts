@@ -5,21 +5,8 @@
  * Zero Vite dependency. Usable with any build tool.
  */
 
-export interface IslandTransformOptions {
-  /** Directory containing island files (e.g. "app/islands") */
-  islandsDir: string;
-  /** Absolute or relative file path of the source being processed */
-  filePath: string;
-}
-
-export interface IslandTransformResult {
-  /** Transformed source code with markers */
-  code: string;
-  /** Detected island entries */
-  islands: Array<{ tagName: string; filePath: string }>;
-  /** Optional source map */
-  map?: string;
-}
+import type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
+export type { IslandTransformOptions, IslandTransformResult };
 
 /**
  * Inject island metadata markers into source code.

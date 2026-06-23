@@ -19,7 +19,7 @@ shadow/DSD by default, and interactive parts are upgraded as islands.
 ## Create a Project
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```

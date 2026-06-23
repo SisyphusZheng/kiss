@@ -17,11 +17,11 @@
 
 import { defineCustomElement } from '@openelement/core';
 import { OpenElement } from '@openelement/element';
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { defineIslandConfig } from '@openelement/app';
 import { computed, signal } from '@openelement/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { daisyClassSheet } from '@openelement/ui';
 
 interface SearchEntry {
   path: string;
@@ -48,36 +48,36 @@ sheet.replaceSync(`
   .search-trigger {
     display: inline-flex;
     align-items: center;
-    gap: var(--size-2);
-    padding: var(--size-2) var(--size-3);
-    border: 0.5px solid var(--gray-3);
-    border-radius: var(--radius-2);
+    justify-content: center;
+    width: var(--size-9);
+    height: var(--size-9);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-round);
     background: transparent;
-    color: var(--gray-6);
+    color: var(--text-primary);
     font-size: var(--font-size-00);
-    font-weight: var(--font-weight-6);
-    letter-spacing: 0.04em;
+    font-weight: var(--font-weight-7);
+    letter-spacing: 0;
+    box-shadow: none;
     cursor: pointer;
     transition: all var(--ease-2) var(--duration-2);
   }
   .search-trigger:hover {
-    color: var(--gray-10);
-    border-color: var(--indigo-5);
-    background: var(--gray-1);
+    color: var(--brand);
+    border-color: transparent;
+    background: color-mix(in srgb, var(--brand-pale) 34%, transparent);
   }
   .search-trigger kbd {
     font-family: inherit;
     padding: var(--size-1) var(--size-1);
-    border: var(--border-size-1) solid var(--gray-3);
+    border: var(--border-size-1) solid var(--border);
     border-radius: var(--radius-1);
     font-size: var(--font-size-00);
     margin-left: var(--size-1);
   }
-  .search-icon { display: none; width: var(--size-4); height: var(--size-4); }
-  @media (max-width: 640px) {
-    .search-trigger span, .search-trigger kbd { display: none; }
-    .search-icon { display: inline-block; }
-  }
+  .search-trigger span, .search-trigger kbd { display: none; }
+  .search-icon { display: inline-block; width: var(--size-5); height: var(--size-5); }
 
   .overlay {
     position: fixed;
@@ -91,7 +91,9 @@ sheet.replaceSync(`
     padding: 15vh 0 0;
     border: 0;
     color: inherit;
-    background: color-mix(in srgb, var(--gray-12) 40%, transparent);
+    background: color-mix(in srgb, var(--gray-12) 44%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     display: none;
     justify-content: center;
     align-items: flex-start;
@@ -106,9 +108,9 @@ sheet.replaceSync(`
     max-height: 70vh;
     margin: 0 var(--size-4);
     background: var(--gray-0);
-    border: 0.5px solid var(--gray-3);
-    border-radius: var(--radius-2);
-    box-shadow: var(--shadow-1);
+    border: var(--border-size-1) solid var(--border);
+    border-radius: var(--radius-4);
+    box-shadow: 0 var(--size-4) var(--size-16) color-mix(in srgb, var(--brand) 18%, transparent);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -170,7 +172,7 @@ sheet.replaceSync(`
 `);
 
 export default class OpenSearch extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, sheet];
+  static override styles = [daisyClassSheet, sheet];
 
   // ── Signals ──────────────────────────────────────────────────────────────
 
@@ -236,7 +238,12 @@ export default class OpenSearch extends OpenElement {
   }
 
   private _closeOnBackdrop(e: Event): void {
-    if (e.target === e.currentTarget) this._close();
+    // ponytail: Firefox shadow DOM event retargeting makes currentTarget
+    // unreliable. Instead, walk composedPath to check if the click origin
+    // is inside the panel. Close only when panel is not in the path.
+    const path = e.composedPath();
+    const inPanel = path.some((el) => (el as Element).classList?.contains('panel'));
+    if (!inPanel) this._close();
   }
 
   private _stopPropagation(e: Event): void {
@@ -357,7 +364,7 @@ export default class OpenSearch extends OpenElement {
         </button>
 
         <div
-          class={this.#overlayClass}
+          class='overlay'
           data-signal='overlayClass'
           data-signal-attr='class'
           onClick={(e: Event) => this._closeOnBackdrop(e)}

@@ -10,7 +10,7 @@ export interface DsdHydration {
 export type Constructor<T = HTMLElement> = new (...args: unknown[]) => T;
 
 import { bindHydrateEvents } from './dsd-hydration-events.js';
-import type { HydrateEventDescriptor } from './schemas.js';
+import type { HydrateEventDescriptor } from '@openelement/protocol/framework';
 
 /**
  * Shared DSD createRenderRoot logic.

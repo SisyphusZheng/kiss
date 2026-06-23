@@ -1,42 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" width="260" height="80">
-  <title>openElement logo horizontal lockup</title>
-  <desc>openElement logo with symbol, wordmark and tagline</desc>
-  <g transform="translate(0, 8)">
-    <path
-      d="M 0 40 L 36 20 L 0 0"
-      fill="none"
-      stroke="#000000"
-      stroke-width="4.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <circle cx="44" cy="20" r="3" fill="#000000" />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img">
+  <title>openElement Aperture O horizontal lockup</title>
+  <desc>openElement wordmark with the flat Monet purple Aperture O.</desc>
+  <defs>
+    <linearGradient
+      id="aperture-horizontal"
+      x1="24"
+      y1="108"
+      x2="106"
+      y2="18"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0" stop-color="#21143b" />
+      <stop offset=".52" stop-color="#8262db" />
+      <stop offset="1" stop-color="#b59cff" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="32" fill="#fbf7ff" />
+  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-horizontal)" stroke-width="14" />
+  <circle cx="64" cy="64" r="24" fill="none" stroke="#d0bdff" stroke-width="2" />
+  <path
+    d="M91 24A43 43 0 0 1 107 57"
+    fill="none"
+    stroke="#fbf7ff"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M91 25A43 43 0 0 1 106 56"
+    fill="none"
+    stroke="#58399e"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+  <path d="M43 60H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
+  <path d="M41 75H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
   <text
-    x="60"
-    y="60"
-    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
-    font-size="32"
-    font-weight="500"
-    fill="#000000"
-    letter-spacing="1.5"
+    x="154"
+    y="62"
+    fill="#21143b"
+    font-family="'Instrument Sans', Inter, Arial, Helvetica, sans-serif"
+    font-size="38"
+    font-weight="850"
+    letter-spacing="0"
   >openElement</text>
   <text
-    x="160"
-    y="44"
-    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
-    font-size="11"
-    font-weight="400"
-    fill="#888"
-    letter-spacing="1"
-  >//</text>
-  <text
-    x="160"
-    y="60"
-    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
-    font-size="14"
-    font-weight="400"
-    fill="#888"
-    letter-spacing="1.5"
-  >the open element</text>
+    x="156"
+    y="90"
+    fill="#6d4cc4"
+    font-family="'JetBrains Mono', 'SF Mono', Consolas, monospace"
+    font-size="12"
+    font-weight="700"
+    letter-spacing="0"
+  >OPEN STANDARDS / DSD / ROUTE GRAPH</text>
 </svg>

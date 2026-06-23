@@ -27,6 +27,20 @@ const args = Object.fromEntries(
 const PORT = Number(args.port ?? '4174');
 const ROOT = args.dir ?? 'www/dist';
 
+/** Try to find an available port starting from the requested one. */
+function findPort(preferred: number, maxAttempts = 20): number {
+  for (let port = preferred; port < preferred + maxAttempts; port++) {
+    try {
+      const listener = Deno.listen({ port, hostname: '127.0.0.1' });
+      listener.close();
+      return port;
+    } catch {
+      // port in use, try next
+    }
+  }
+  return preferred;
+}
+
 const CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -85,7 +99,9 @@ async function resolveBody(
   return null;
 }
 
-Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
+const actualPort = findPort(PORT);
+
+Deno.serve({ port: actualPort, hostname: '127.0.0.1' }, async (request) => {
   const url = new URL(request.url);
   const decoded = safePath(url.pathname);
   if (!decoded) {
@@ -103,4 +119,4 @@ Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
   });
 });
 
-console.log(`E2E static server listening on http://127.0.0.1:${PORT}`);
+console.log(`E2E static server listening on http://127.0.0.1:${actualPort}`);

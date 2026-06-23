@@ -1,0 +1,1070 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="1820" viewBox="0 0 1440 1820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+      .sans { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }</style>
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4263eb" />
+      <stop offset="100%" stop-color="#5c7cfa" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="1820" fill="#08080a" />
+
+  <g id="nav">
+    <rect x="0" y="0" width="1440" height="56" fill="#08080a" opacity="0.95" />
+    <line x1="0" y1="56" x2="1440" y2="56" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <g transform="translate(28, 16)">
+      <rect x="0" y="0" width="24" height="24" rx="6" fill="#4263eb" />
+      <text
+        x="12"
+        y="17"
+        font-size="11"
+        font-weight="600"
+        fill="#ffffff"
+        text-anchor="middle"
+        font-family="Inter, sans-serif"
+      >O</text>
+    </g>
+    <text
+      class="sans"
+      x="60"
+      y="34"
+      font-size="17"
+      font-weight="600"
+      fill="#e9ecef"
+    >openElement</text>
+    <text
+      class="sans"
+      x="620"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      letter-spacing="0.01em"
+    >Guide</text>
+    <text
+      class="sans"
+      x="700"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >API</text>
+    <text
+      class="sans"
+      x="810"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Architecture</text>
+    <text
+      class="sans"
+      x="930"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Blog</text>
+    <text
+      class="sans"
+      x="1000"
+      y="34"
+      font-size="13"
+      font-weight="500"
+      fill="#adb5bd"
+      letter-spacing="0.01em"
+    >Changelog</text>
+    <rect
+      x="1060"
+      y="10"
+      width="85"
+      height="36"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1102.5"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >GitHub</text>
+    <rect
+      x="1155"
+      y="10"
+      width="110"
+      height="36"
+      rx="8"
+      fill="#4263eb"
+      stroke="#4263eb"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="1210"
+      y="32.55"
+      font-size="13"
+      font-weight="500"
+      fill="#ffffff"
+      text-anchor="middle"
+    >Get started</text>
+  </g>
+  <ellipse cx="720" cy="200" rx="600" ry="250" fill="#4263eb" opacity="0.025" />
+  <text
+    class="sans"
+    x="80"
+    y="90"
+    font-size="13"
+    font-weight="500"
+    fill="#4263eb"
+    letter-spacing="0.04em"
+  >openelement 0.40.7 / v0.40.7 active</text>
+  <text
+    class="sans"
+    x="80"
+    y="130"
+    font-size="80"
+    font-weight="600"
+    fill="#e9ecef"
+    letter-spacing="-0.05em"
+  >THE</text>
+  <text
+    class="sans"
+    x="80"
+    y="218"
+    font-size="80"
+    font-weight="600"
+    fill="#e9ecef"
+    letter-spacing="-0.05em"
+  >OPEN</text>
+  <text
+    class="sans"
+    x="318"
+    y="218"
+    font-size="80"
+    font-weight="600"
+    fill="#4263eb"
+    letter-spacing="-0.05em"
+  >ELEMENT</text>
+  <circle cx="688" cy="232" r="2" fill="#868e96" />
+  <text
+    class="sans"
+    x="696"
+    y="242"
+    font-size="16"
+    font-weight="500"
+    fill="#748ffc"
+    letter-spacing="-0.01em"
+  >Web Components, reimagined.</text>
+  <text
+    class="sans"
+    x="80"
+    y="312"
+    font-size="18"
+    font-weight="400"
+    fill="#adb5bd"
+  >A four-product Web Components platform. Elements, UI, App, and Core.</text>
+  <text
+    class="sans"
+    x="80"
+    y="342"
+    font-size="18"
+    font-weight="400"
+    fill="#adb5bd"
+  >JSX pages, one VNode renderer, structured route lifecycle, explicit</text>
+  <text
+    class="sans"
+    x="80"
+    y="372"
+    font-size="18"
+    font-weight="400"
+    fill="#adb5bd"
+  >trusted HTML boundaries, and island JavaScript.</text>
+  <rect
+    x="80"
+    y="420"
+    width="158"
+    height="42"
+    rx="8"
+    fill="#4263eb"
+    stroke="#4263eb"
+    stroke-width="1"
+  />
+  <text
+    class="sans"
+    x="159"
+    y="446.25"
+    font-size="15"
+    font-weight="500"
+    fill="#ffffff"
+    text-anchor="middle"
+  >Start building</text>
+  <rect
+    x="254"
+    y="420"
+    width="174"
+    height="42"
+    rx="8"
+    fill="#0d0f12"
+    stroke="rgba(255,255,255,0.06)"
+    stroke-width="1"
+  />
+  <text
+    class="sans"
+    x="341"
+    y="446.25"
+    font-size="15"
+    font-weight="500"
+    fill="#e9ecef"
+    text-anchor="middle"
+  >Read architecture</text>
+  <g transform="translate(760, 100)">
+    <rect
+      x="0"
+      y="0"
+      width="480"
+      height="300"
+      rx="12"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <line x1="6" y1="0" x2="474" y2="0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+    <circle cx="18" cy="19" r="5" fill="#ff5f57" />
+    <circle cx="35" cy="19" r="5" fill="#febc2e" />
+    <circle cx="52" cy="19" r="5" fill="#28c840" />
+    <text class="mono" x="72" y="24" font-size="12" font-weight="400" fill="#868e96">app.tsx</text>
+    <line x1="0" y1="40" x2="480" y2="40" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text class="mono" x="20" y="66" font-size="13" font-weight="400" fill="#c084fc">import</text>
+    <text
+      class="mono"
+      x="66.8"
+      y="66"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >{ definePage }</text>
+    <text class="mono" x="191.6" y="66" font-size="13" font-weight="400" fill="#c084fc">from</text>
+    <text
+      class="mono"
+      x="222.79999999999998"
+      y="66"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >
+    </text>
+    <text
+      class="mono"
+      x="230.6"
+      y="66"
+      font-size="13"
+      font-weight="400"
+      fill="#4ade80"
+    >'@openelement/app'</text>
+    <text class="mono" x="371" y="66" font-size="13" font-weight="400" fill="#e9ecef">;</text>
+    <text
+      class="mono"
+      x="20"
+      y="92"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >export default definePage({</text>
+    <text
+      class="mono"
+      x="20"
+      y="112"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >route: { path:</text>
+    <text class="mono" x="152.6" y="112" font-size="13" font-weight="400" fill="#4ade80">'/'</text>
+    <text class="mono" x="176" y="112" font-size="13" font-weight="400" fill="#e9ecef">},</text>
+    <text
+      class="mono"
+      x="20"
+      y="132"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >render() { return &lt;</text>
+    <text
+      class="mono"
+      x="183.79999999999998"
+      y="132"
+      font-size="13"
+      font-weight="400"
+      fill="#fbbf24"
+    >Page</text>
+    <text
+      class="mono"
+      x="214.99999999999997"
+      y="132"
+      font-size="13"
+      font-weight="400"
+      fill="#fbbf24"
+    >&gt;Hello&lt;/</text>
+    <text class="mono" x="277.4" y="132" font-size="13" font-weight="400" fill="#fbbf24">Page</text>
+    <text
+      class="mono"
+      x="308.59999999999997"
+      y="132"
+      font-size="13"
+      font-weight="400"
+      fill="#e9ecef"
+    >&gt;; }</text>
+    <text class="mono" x="20" y="152" font-size="13" font-weight="400" fill="#e9ecef">});</text>
+  </g>
+  <g id="features-section">
+    <text
+      class="sans"
+      x="80"
+      y="530"
+      font-size="13"
+      font-weight="500"
+      fill="#4263eb"
+      letter-spacing="0.04em"
+    >Why openElement</text>
+    <text
+      class="sans"
+      x="80"
+      y="574"
+      font-size="40"
+      font-weight="600"
+      fill="#e9ecef"
+      letter-spacing="-0.02em"
+    >Static-first, one render pipeline.</text>
+    <g>
+      <rect
+        x="80"
+        y="620"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="86" y1="620" x2="474" y2="620" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(100,640)" color="#4263eb">
+        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+        <polyline points="2 17 12 22 22 17" />
+        <polyline points="2 12 12 17 22 12" />
+      </g>
+      <text
+        class="sans"
+        x="132"
+        y="658"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >Elements-first</text>
+      <text
+        class="sans"
+        x="100"
+        y="692"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >Web Components as the surface.</text>
+      <text
+        class="sans"
+        x="100"
+        y="732"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(190,720)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+    <g>
+      <rect
+        x="504"
+        y="620"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="510" y1="620" x2="898" y2="620" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(524,640)" color="#4263eb">
+        <line x1="6" y1="3" x2="6" y2="15" />
+        <circle cx="18" cy="6" r="3" />
+        <circle cx="6" cy="18" r="3" />
+        <path d="M18 9a9 9 0 0 1-9 9" />
+      </g>
+      <text
+        class="sans"
+        x="556"
+        y="658"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >One renderer</text>
+      <text
+        class="sans"
+        x="524"
+        y="692"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >JSX to VNode IR — SSR and CSR share one model.</text>
+      <text
+        class="sans"
+        x="524"
+        y="732"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(614,720)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+    <g>
+      <rect
+        x="928"
+        y="620"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="934" y1="620" x2="1322" y2="620" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(948,640)" color="#4263eb">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+      </g>
+      <text
+        class="sans"
+        x="980"
+        y="658"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >App lifecycle</text>
+      <text
+        class="sans"
+        x="948"
+        y="692"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >Route params, load context, error fallback.</text>
+      <text
+        class="sans"
+        x="948"
+        y="732"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(1038,720)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+    <g>
+      <rect
+        x="80"
+        y="784"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="86" y1="784" x2="474" y2="784" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(100,804)" color="#4263eb">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </g>
+      <text
+        class="sans"
+        x="132"
+        y="822"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >Trusted boundary</text>
+      <text
+        class="sans"
+        x="100"
+        y="856"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >HTML injection is explicit and safe.</text>
+      <text
+        class="sans"
+        x="100"
+        y="896"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(190,884)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+    <g>
+      <rect
+        x="504"
+        y="784"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="510" y1="784" x2="898" y2="784" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(524,804)" color="#4263eb">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </g>
+      <text
+        class="sans"
+        x="556"
+        y="822"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >Gate-proven</text>
+      <text
+        class="sans"
+        x="524"
+        y="856"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >AutoFlow3 CI guards the 14-package line.</text>
+      <text
+        class="sans"
+        x="524"
+        y="896"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(614,884)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+    <g>
+      <rect
+        x="928"
+        y="784"
+        width="400"
+        height="140"
+        rx="12"
+        fill="#16191d"
+        stroke="rgba(255,255,255,0.06)"
+        stroke-width="1"
+      />
+      <line x1="934" y1="784" x2="1322" y2="784" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <g transform="translate(948,804)" color="#4263eb">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path
+          d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        />
+      </g>
+      <text
+        class="sans"
+        x="980"
+        y="822"
+        font-size="20"
+        font-weight="500"
+        fill="#e9ecef"
+      >Web standards</text>
+      <text
+        class="sans"
+        x="948"
+        y="856"
+        font-size="14"
+        font-weight="400"
+        fill="#adb5bd"
+      >Custom Elements, fetch, Web Streams.</text>
+      <text
+        class="sans"
+        x="948"
+        y="896"
+        font-size="13"
+        font-weight="500"
+        fill="#4263eb"
+      >Learn more</text>
+      <g transform="translate(1038,884)" color="#4263eb">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </g>
+    </g>
+  </g>
+  <g id="showcase">
+    <rect x="0" y="900" width="1440" height="400" fill="#0d0f12" opacity="0.3" />
+    <text
+      class="sans"
+      x="80"
+      y="940"
+      font-size="13"
+      font-weight="500"
+      fill="#4263eb"
+      letter-spacing="0.04em"
+    >Architecture</text>
+    <text
+      class="sans"
+      x="80"
+      y="980"
+      font-size="36"
+      font-weight="600"
+      fill="#e9ecef"
+      letter-spacing="-0.02em"
+    >How the packages fit together</text>
+    <rect
+      x="80"
+      y="1040"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="160"
+      y="1075"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >@openelement/core</text>
+    <text
+      class="sans"
+      x="160"
+      y="1116"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >VNode engine</text>
+
+    <rect
+      x="310"
+      y="1040"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="390"
+      y="1075"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >@openelement/elements</text>
+    <text
+      class="sans"
+      x="390"
+      y="1116"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >Custom Elements</text>
+
+    <rect
+      x="540"
+      y="1040"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="620"
+      y="1075"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >@openelement/ui</text>
+    <text
+      class="sans"
+      x="620"
+      y="1116"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >Components</text>
+
+    <rect
+      x="770"
+      y="1040"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#4263eb"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="850"
+      y="1075"
+      font-size="13"
+      font-weight="500"
+      fill="#ffffff"
+      text-anchor="middle"
+    >@openelement/app</text>
+    <text
+      class="sans"
+      x="850"
+      y="1116"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >App framework</text>
+
+    <rect
+      x="310"
+      y="1190"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#212529"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="390"
+      y="1225"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >@openelement/vnode</text>
+    <text
+      class="sans"
+      x="390"
+      y="1266"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >SSR + CSR</text>
+
+    <rect
+      x="770"
+      y="1190"
+      width="160"
+      height="60"
+      rx="8"
+      fill="#212529"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="850"
+      y="1225"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >@openelement/cli</text>
+    <text
+      class="sans"
+      x="850"
+      y="1266"
+      font-size="11"
+      font-weight="400"
+      fill="#868e96"
+      text-anchor="middle"
+    >Tooling</text>
+    <line
+      x1="240"
+      y1="1070"
+      x2="310"
+      y2="1070"
+      stroke="rgba(255,255,255,0.14)"
+      stroke-width="1"
+      stroke-dasharray="4,4"
+    />
+    <line
+      x1="470"
+      y1="1070"
+      x2="540"
+      y2="1070"
+      stroke="rgba(255,255,255,0.14)"
+      stroke-width="1"
+      stroke-dasharray="4,4"
+    />
+    <line
+      x1="700"
+      y1="1070"
+      x2="770"
+      y2="1070"
+      stroke="rgba(255,255,255,0.14)"
+      stroke-width="1"
+      stroke-dasharray="4,4"
+    />
+    <line
+      x1="310"
+      y1="1100"
+      x2="310"
+      y2="1190"
+      stroke="rgba(255,255,255,0.14)"
+      stroke-width="1"
+      stroke-dasharray="4,4"
+    />
+    <line
+      x1="770"
+      y1="1100"
+      x2="770"
+      y2="1190"
+      stroke="rgba(255,255,255,0.14)"
+      stroke-width="1"
+      stroke-dasharray="4,4"
+    />
+  </g>
+  <g id="cta">
+    <text
+      class="sans"
+      x="80"
+      y="1380"
+      font-size="40"
+      font-weight="600"
+      fill="#e9ecef"
+      letter-spacing="-0.02em"
+    >Ready to build with Web Standards?</text>
+    <text
+      class="sans"
+      x="80"
+      y="1436"
+      font-size="20"
+      font-weight="400"
+      fill="#adb5bd"
+    >Get started in 30 seconds.</text>
+    <rect
+      x="80"
+      y="1476"
+      width="600"
+      height="42"
+      rx="8"
+      fill="#16191d"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="mono"
+      x="96"
+      y="1503"
+      font-size="14"
+      font-weight="400"
+      fill="#e9ecef"
+    >deno run -A jsr:@openelement/create my-app</text>
+    <rect
+      x="696"
+      y="1479"
+      width="72"
+      height="36"
+      rx="8"
+      fill="#0d0f12"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="732"
+      y="1501.55"
+      font-size="13"
+      font-weight="500"
+      fill="#e9ecef"
+      text-anchor="middle"
+    >Copy</text>
+    <rect
+      x="80"
+      y="1542"
+      width="158"
+      height="42"
+      rx="8"
+      fill="#4263eb"
+      stroke="#4263eb"
+      stroke-width="1"
+    />
+    <text
+      class="sans"
+      x="159"
+      y="1568.25"
+      font-size="15"
+      font-weight="500"
+      fill="#ffffff"
+      text-anchor="middle"
+    >Read the docs</text>
+  </g>
+  <g id="footer">
+    <line x1="64" y1="1620" x2="1376" y2="1620" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text
+      class="sans"
+      x="64"
+      y="1664"
+      font-size="18"
+      font-weight="600"
+      fill="#e9ecef"
+    >openElement</text>
+    <text
+      class="sans"
+      x="64"
+      y="1692"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >The Open Element for Web Components</text>
+    <text
+      class="sans"
+      x="340"
+      y="1664"
+      font-size="13"
+      font-weight="600"
+      fill="#e9ecef"
+    >Product</text>
+    <text
+      class="sans"
+      x="340"
+      y="1692"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Elements</text>
+    <text class="sans" x="340" y="1714" font-size="13" font-weight="400" fill="#868e96">UI</text>
+    <text
+      class="sans"
+      x="340"
+      y="1736"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Framework</text>
+    <text
+      class="sans"
+      x="340"
+      y="1758"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Protocols</text>
+    <text
+      class="sans"
+      x="520"
+      y="1664"
+      font-size="13"
+      font-weight="600"
+      fill="#e9ecef"
+    >Resources</text>
+    <text class="sans" x="520" y="1692" font-size="13" font-weight="400" fill="#868e96">Guide</text>
+    <text class="sans" x="520" y="1714" font-size="13" font-weight="400" fill="#868e96">API</text>
+    <text
+      class="sans"
+      x="520"
+      y="1736"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Architecture</text>
+    <text class="sans" x="520" y="1758" font-size="13" font-weight="400" fill="#868e96">Blog</text>
+    <text
+      class="sans"
+      x="700"
+      y="1664"
+      font-size="13"
+      font-weight="600"
+      fill="#e9ecef"
+    >Company</text>
+    <text
+      class="sans"
+      x="700"
+      y="1692"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >GitHub</text>
+    <text class="sans" x="700" y="1714" font-size="13" font-weight="400" fill="#868e96">JSR</text>
+    <text
+      class="sans"
+      x="700"
+      y="1736"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Changelog</text>
+    <text class="sans" x="880" y="1664" font-size="13" font-weight="600" fill="#e9ecef">Legal</text>
+    <text
+      class="sans"
+      x="880"
+      y="1692"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >MIT License</text>
+    <text
+      class="sans"
+      x="880"
+      y="1714"
+      font-size="13"
+      font-weight="400"
+      fill="#868e96"
+    >Contributing</text>
+    <line x1="64" y1="1776" x2="1376" y2="1776" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text
+      class="sans"
+      x="64"
+      y="1802"
+      font-size="12"
+      font-weight="400"
+      fill="#868e96"
+    >© 2026 openElement. Built with Web Standards. MIT License.</text>
+    <text
+      class="sans"
+      x="1220"
+      y="1802"
+      font-size="12"
+      font-weight="400"
+      fill="#868e96"
+    >Powered by Deno &amp; Web Components</text>
+  </g>
+</svg>

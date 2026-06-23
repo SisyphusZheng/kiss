@@ -18,7 +18,7 @@ import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { computed, signal } from '@openelement/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import { daisyClassSheet } from '@openelement/ui';
 
 export const tagName = 'reactive-showcase';
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
@@ -88,7 +88,7 @@ const FRAMEWORKS = [
 ];
 
 export default class ReactiveShowcase extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, showcaseStyles];
+  static override styles = [daisyClassSheet, showcaseStyles];
 
   #count = signal(0);
   #isDark = signal(false);
@@ -120,7 +120,7 @@ export default class ReactiveShowcase extends OpenElement {
           </p>
           <div className='counter-row'>
             <button type='button' onClick={() => this.decrement()}>−</button>
-            <span data-signal='count' textContent={this.#count}></span>
+            <span data-signal='count'></span>
             <button type='button' onClick={() => this.increment()}>+</button>
           </div>
         </div>
@@ -139,13 +139,12 @@ export default class ReactiveShowcase extends OpenElement {
             data-signal-attr='data-theme'
           >
             <p>
-              Current theme: <strong data-signal='theme' textContent={this.#theme}></strong>
+              Current theme: <strong data-signal='theme'></strong>
             </p>
             <button
               type='button'
               onClick={() => this.toggleTheme()}
               data-signal='buttonLabel'
-              textContent={this.#buttonLabel}
             >
             </button>
           </div>

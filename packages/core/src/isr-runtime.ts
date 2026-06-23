@@ -1,4 +1,6 @@
-import type { IsrCache, IsrCacheEntry, IsrCacheResult, IsrManifestEntry } from './isr.js';
+import type { IsrCacheEntry, IsrCacheResult } from '@openelement/protocol/isr';
+import type { IsrManifestEntry } from '@openelement/protocol/framework';
+import type { MemoryIsrCache } from './isr.js';
 
 export type IsrRuntimeState = IsrCacheResult['state'] | 'not-found';
 
@@ -14,7 +16,7 @@ export interface IsrRuntimeRenderContext {
 
 export interface IsrRuntimeOptions {
   manifest: IsrManifestEntry[];
-  cache: IsrCache;
+  cache: MemoryIsrCache;
   render: (
     path: string,
     context: IsrRuntimeRenderContext,

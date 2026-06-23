@@ -19,26 +19,29 @@ import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type {
-  FrameworkOptions,
-  HydrationStrategy,
-  OpenElementPackageManifest,
-} from '@openelement/core';
+import type { FrameworkOptions, HydrationStrategy } from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { OpenElementBuildContext } from '../build-context.js';
-import { ssgRender, type SsgRenderOptions } from '@openelement/ssg';
+import { ssgRender } from '@openelement/ssg';
 import { SsrRenderError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 import { createSsgRenderEvidence } from './ssg-render.js';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.js';
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
-import { optionalPackageStubsPlugin } from '../optional-package-stubs.js';
+import { optionalPackageStubsPlugin } from '../plugin.js';
 import { normalizeViteAliases } from '../alias-utils.js';
-import {
-  DEFAULT_ADAPTER_VERSION_FALLBACK,
-  SSR_CHUNK_SIZE_WARNING_LIMIT_KB,
-  SSR_EXTERNAL_PATHS,
-} from '../build-constants.js';
+
+/** Fallback package version when adapter-vite cannot read its own deno.json. */
+const DEFAULT_ADAPTER_VERSION_FALLBACK = '0.35.1';
+
+/** Chunk size warning limit (kB) for the SSR bundle build. */
+const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
+
+/** Rollup/Vite output paths mapping for known externals. */
+const SSR_EXTERNAL_PATHS: Record<string, string> = {
+  'sanitize-html': 'npm:sanitize-html@^2.17.4',
+};
 
 const log = createLogger('ssg');
 
@@ -50,7 +53,9 @@ function getJsrPackageVersion(metaUrl: string): string {
   // Read from own deno.json
   try {
     const denoJson = JSON.parse(
-      Deno.readTextFileSync(new URL('../deno.json', import.meta.url)),
+      typeof Deno !== 'undefined'
+        ? Deno.readTextFileSync(new URL('../deno.json', import.meta.url))
+        : readFileSync(new URL('../deno.json', import.meta.url), 'utf-8'),
     );
     return denoJson.version || DEFAULT_ADAPTER_VERSION_FALLBACK;
   } catch {
@@ -76,7 +81,7 @@ interface BuildSSGOptions {
   middleware?: FrameworkOptions['middleware'];
   ssr?: FrameworkOptions['ssr'];
   islandTagNames?: string[];
-  islandMeta?: Record<string, Partial<import('@openelement/ssg').IslandDecl>>;
+  islandMeta?: Record<string, Partial<import('@openelement/protocol/ssg').IslandDecl>>;
   packageManifests?: OpenElementPackageManifest[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
@@ -87,7 +92,6 @@ interface BuildSSGOptions {
   upgradeStrategy?: HydrationStrategy;
   resolveAlias?: Record<string, string> | import('vite').Alias[];
   base?: string;
-  pwa?: { name?: string; shortName?: string; themeColor?: string; backgroundColor?: string };
   /**
    * View Transitions API configuration.
    * When true (default), injects <meta name="view-transition" content="same-origin">
@@ -101,7 +105,7 @@ interface BuildSSGOptions {
    * Enables browser prefetch/prerender of pages before the user navigates.
    * Can be a boolean (true = auto-generate from routes) or explicit rules.
    */
-  speculation?: boolean | import('@openelement/ssg').SpeculationRulesOptions;
+  speculation?: boolean | import('@openelement/protocol/ssg').SpeculationRulesOptions;
   /** ADR-0047: Skip Deno pre-resolution, use regex fallback for external deps. */
   skipPreResolution?: boolean;
 }
@@ -145,7 +149,6 @@ async function buildSSG(
   if (!options.html) options.html = ctx.phase3.html || undefined;
   if (!options.middleware) options.middleware = ctx.phase3.middleware || undefined;
   if (!options.upgradeStrategy) options.upgradeStrategy = ctx.phase3.upgradeStrategy;
-  if (!options.pwa) options.pwa = ctx.phase3.pwa || undefined;
   if (!options.base) options.base = ctx.phase3.base;
   if (options.viewTransition === undefined) options.viewTransition = ctx.phase3.viewTransition;
   if (!options.speculation) options.speculation = ctx.phase3.speculation || undefined;
@@ -214,16 +217,11 @@ async function buildSSG(
     const { build: viteBuild } = await import('vite');
 
     // SSR noExternal: packages that MUST be inlined into the SSR bundle.
-    // Without these, the SSR bundle contains bare specifier imports (e.g.
-    // `import { signal } from "alien-signals"`) that cannot be resolved
-    // in non-workspace environments (e.g. CF Pages), causing import(entry.js)
-    // to fail and the entire SSG pipeline to produce empty HTML.
+    // Without these, the SSR bundle contains bare specifier imports that cannot
+    // be resolved in non-workspace environments (e.g. CF Pages), causing
+    // import(entry.js) to fail and the entire SSG pipeline to produce empty HTML.
     const defaultNoExternal = [
       /^@openelement\//,
-      // alien-signals is a hard dependency of @openelement/signal.
-      // Without noExternal, it leaks as a bare import that Deno can resolve
-      // locally (via workspace import map) but CF Pages cannot.
-      'alien-signals',
     ];
     // ADR-0047: External packages are externalized, not bundled.
     // ADR-0054: AST-based exports resolution covers ALL subpath exports
@@ -457,7 +455,6 @@ if (typeof globalThis.customElements === 'undefined') {
         islandTagNames: ssgIslandTagNames,
         viewTransition: options.viewTransition,
         speculation: options.speculation as boolean | Record<string, unknown> | undefined,
-        pwa: (options as Record<string, unknown>).pwa as SsgRenderOptions['pwa'],
       },
       createSsgRenderEvidence(ctx),
     );

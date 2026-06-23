@@ -5,11 +5,15 @@
  * Covers success, failure, and undefined hooks scenarios.
  */
 import { assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { getDefaultRegistry } from '../src/adapter-registry.ts';
 import { jsx } from '../src/jsx-runtime.ts';
 import { renderDsd, type RenderDsdOptions } from '../src/render-dsd.ts';
-import type { RenderError, RenderHooks, RenderInput, RenderOutput } from '../src/render-schemas.ts';
-import type { VNode } from '../src/vnode.ts';
+import type {
+  RenderError,
+  RenderHooks,
+  RenderInput,
+  RenderOutput,
+} from '@openelement/protocol/render';
+import type { VNode } from '@openelement/protocol/vnode';
 
 interface MockComponent {
   render(): VNode | null | unknown;
@@ -62,7 +66,6 @@ function renderDsdForTest(
   props: Record<string, unknown> = {},
   sourceInfo?: { route?: string; source?: string },
   dsdOptions?: RenderDsdOptions['dsdOptions'],
-  collector?: RenderDsdOptions['collector'],
   nestingDepth?: number,
   hooks?: RenderHooks,
 ) {
@@ -71,7 +74,6 @@ function renderDsdForTest(
     props,
     sourceInfo,
     dsdOptions,
-    collector,
     nestingDepth,
     hooks,
   });
@@ -79,7 +81,6 @@ function renderDsdForTest(
 
 Deno.test('RenderHooks - beforeRender', async (t) => {
   await t.step('beforeRender fires before instantiation', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>Hello</p>');
     const callOrder: string[] = [];
 
@@ -98,7 +99,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -107,7 +107,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
   });
 
   await t.step('beforeRender receives correct RenderInput', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>Hello</p>');
     let receivedInput: RenderInput | undefined;
 
@@ -123,7 +122,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
       { name: 'test' },
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -134,7 +132,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
   });
 
   await t.step('beforeRender hook throwing does not break rendering', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>Hello</p>');
 
     const hooks: RenderHooks = {
@@ -149,7 +146,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -159,7 +155,6 @@ Deno.test('RenderHooks - beforeRender', async (t) => {
 
 Deno.test('RenderHooks - afterRender', async (t) => {
   await t.step('afterRender receives full RenderOutput', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>World</p>');
     let receivedOutput: RenderOutput | undefined;
 
@@ -175,7 +170,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -187,7 +181,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
   });
 
   await t.step('afterRender receives errors from failed render', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { throwOnRender: true });
     let receivedOutput: RenderOutput | undefined;
 
@@ -203,7 +196,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -214,7 +206,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
   });
 
   await t.step('afterRender receives errors from failed instantiation', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { throwOnConstruct: true });
     let receivedOutput: RenderOutput | undefined;
 
@@ -230,7 +221,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -243,7 +233,6 @@ Deno.test('RenderHooks - afterRender', async (t) => {
 
 Deno.test('RenderHooks - onError', async (t) => {
   await t.step('onError fires for instantiation errors', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { throwOnConstruct: true });
     const receivedErrors: RenderError[] = [];
 
@@ -259,7 +248,6 @@ Deno.test('RenderHooks - onError', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -271,7 +259,6 @@ Deno.test('RenderHooks - onError', async (t) => {
   });
 
   await t.step('onError fires for render() errors', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { throwOnRender: true });
     const receivedErrors: RenderError[] = [];
 
@@ -287,7 +274,6 @@ Deno.test('RenderHooks - onError', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -298,7 +284,6 @@ Deno.test('RenderHooks - onError', async (t) => {
   });
 
   await t.step('onError fires for wrong return type', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { renderValue: { notAVNode: true } });
     const receivedErrors: RenderError[] = [];
 
@@ -314,7 +299,6 @@ Deno.test('RenderHooks - onError', async (t) => {
       {},
       undefined,
       undefined,
-      undefined,
       0,
       hooks,
     );
@@ -326,14 +310,12 @@ Deno.test('RenderHooks - onError', async (t) => {
 
 Deno.test('RenderHooks - optional (undefined)', async (t) => {
   await t.step('pipeline works with no hooks', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>No hooks</p>');
 
     const output = await renderDsdForTest(
       'hook-test-10',
       asCtor(cls),
       {},
-      undefined,
       undefined,
       undefined,
       0,
@@ -345,14 +327,12 @@ Deno.test('RenderHooks - optional (undefined)', async (t) => {
   });
 
   await t.step('pipeline works with empty hooks object', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>Empty hooks</p>');
 
     const output = await renderDsdForTest(
       'hook-test-11',
       asCtor(cls),
       {},
-      undefined,
       undefined,
       undefined,
       0,
@@ -364,14 +344,12 @@ Deno.test('RenderHooks - optional (undefined)', async (t) => {
   });
 
   await t.step('pipeline behavior unchanged when hooks are undefined', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('<p>Same behavior</p>');
 
     const withHooks = await renderDsdForTest(
       'hook-test-12a',
       asCtor(cls),
       {},
-      undefined,
       undefined,
       undefined,
       0,
@@ -381,7 +359,6 @@ Deno.test('RenderHooks - optional (undefined)', async (t) => {
       'hook-test-12b',
       asCtor(cls),
       {},
-      undefined,
       undefined,
       undefined,
       0,
@@ -397,7 +374,6 @@ Deno.test('RenderOutput - structured output', async (t) => {
   await t.step(
     'successful render returns RenderOutput with html, errors, metrics, hydrationHints',
     async () => {
-      getDefaultRegistry().register(undefined);
       const cls = createMockClass('<p>Full output</p>');
 
       const output = await renderDsdForTest('output-test-1', asCtor(cls), { name: 'test' });
@@ -419,7 +395,6 @@ Deno.test('RenderOutput - structured output', async (t) => {
   );
 
   await t.step('failed render returns RenderOutput with errors', async () => {
-    getDefaultRegistry().register(undefined);
     const cls = createMockClass('', { throwOnRender: true });
 
     const output = await renderDsdForTest('output-test-2', asCtor(cls), {});

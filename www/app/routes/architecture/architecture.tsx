@@ -1,43 +1,46 @@
-export const meta = { section: 'Principles', label: 'Architecture', order: 10 };
+﻿export const meta = { section: 'Principles', label: 'Architecture', order: 10 };
 export const tagName = 'engine-architecture';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
+import '@openelement/ui/open-badge';
+import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
   :host { display: block; }
-  .shell { max-width: 1120px; margin: 0 auto; padding: 44px var(--size-6) 72px; }
-  .hero { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr); gap: var(--size-7); align-items: start; padding-bottom: var(--size-8); border-bottom: 1px solid var(--gray-3); }
-  .eyebrow { display: flex; flex-wrap: wrap; gap: var(--size-2); margin-bottom: var(--size-5); }
-  h1 { margin: 0; color: var(--gray-10); font-size: clamp(2.5rem, 7vw, 5rem); line-height: 0.95; letter-spacing: 0; }
-  h2 { margin: 0; color: var(--gray-10); font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.08; letter-spacing: 0; }
-  h3 { margin: 0 0 var(--size-2); color: var(--gray-10); }
-  p { color: var(--gray-6); line-height: var(--font-lineheight-4); }
-  .lede { margin: var(--size-5) 0 0; font-size: var(--font-size-4); max-width: 650px; }
-  .artifact, .layer-map { border: var(--border-size-1) solid var(--gray-3); border-radius: var(--radius-2); overflow: hidden; background: var(--gray-1); }
-  .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--gray-3); font-size: var(--font-size-0); color: var(--gray-6); }
-  pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--gray-1); color: var(--gray-11); font-size: var(--font-size-0); line-height: 1.65; }
+  .shell { max-width: 1160px; margin: 0 auto; padding: 58px 32px 84px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr); gap: 34px; align-items: start; padding-bottom: var(--size-8); border-bottom: 1px solid var(--color-border); }
+  .eyebrow { display: flex; flex-wrap: wrap; gap: var(--size-2); margin-bottom: 20px; }
+  h1 { margin: 0; color: var(--text); font-size: 58px; line-height: 1.02; letter-spacing: 0; }
+  h2 { margin: 0; color: var(--text); font-size: 34px; line-height: 1.12; letter-spacing: 0; }
+  h3 { margin: 0 0 var(--size-2); color: var(--text); }
+  p { color: var(--text-secondary); line-height: var(--line-height-relaxed); }
+  .lede { margin: 20px 0 0; font-size: var(--font-size-subhead); max-width: 650px; }
+  .artifact, .layer-map { border: 1px solid var(--color-border); border-radius: var(--radius-1); overflow: hidden; background: var(--surface-1); }
+  .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-0); color: var(--text-muted); }
+  pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--code-bg); color: var(--code-text); font-size: var(--font-size-0); line-height: 1.65; }
   code { font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace; }
-  .section { padding: var(--size-10) 0 0; }
-  .section-head { display: flex; justify-content: space-between; gap: var(--size-6); margin-bottom: var(--size-5); }
-  .kicker { margin: 0 0 var(--size-2); color: var(--indigo-5); font-size: var(--font-size-0); font-weight: var(--font-weight-8); text-transform: uppercase; }
+  .section { padding: 40px 0 0; }
+  .section-head { display: flex; justify-content: space-between; gap: var(--size-6); margin-bottom: 20px; }
+  .kicker { margin: 0 0 var(--size-2); color: var(--color-brand); font-size: var(--font-size-0); font-weight: 800; text-transform: uppercase; }
   .section-copy { max-width: 460px; margin: 0; font-size: var(--font-size-2); }
-  .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--gray-3); align-items: start; }
+  .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); align-items: start; }
   .layer:last-child { border-bottom: 0; }
-  .layer strong { color: var(--gray-10); font-size: var(--font-size-1); }
-  .layer span, .layer p { margin: 0; color: var(--gray-6); font-size: var(--font-size-0); line-height: 1.55; }
+  .layer strong { color: var(--text); font-size: var(--font-size-1); }
+  .layer span, .layer p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-0); line-height: 1.55; }
   .cards, .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--size-3); }
   .gate-grid { grid-template-columns: 1fr 1fr; }
-  .gate { display: grid; grid-template-columns: 120px 1fr; gap: var(--size-3); align-items: start; padding: var(--size-4); border: var(--border-size-1) solid var(--gray-3); border-radius: var(--radius-2); background: var(--gray-1); }
-  .gate strong { color: var(--indigo-8); font-size: var(--font-size-1); }
-  .gate span { color: var(--gray-6); font-size: var(--font-size-0); line-height: 1.55; }
+  .gate { display: grid; grid-template-columns: 120px 1fr; gap: var(--size-3); align-items: start; padding: var(--size-4); border: 1px solid var(--color-border); border-radius: var(--radius-1); background: var(--surface-1); }
+  .gate strong { color: var(--color-brand); font-size: var(--font-size-1); }
+  .gate span { color: var(--text-secondary); font-size: var(--font-size-0); line-height: 1.55; }
   .nav-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--size-8); }
   @media (max-width: 900px) {
     .hero, .cards, .gate-grid { grid-template-columns: 1fr; }
     .layer { grid-template-columns: 1fr; gap: var(--size-2); }
+    h1 { font-size: 42px; line-height: 1.06; }
+    h2 { font-size: 28px; }
   }
   @media (max-width: 560px) {
     .shell { padding: var(--size-8) var(--size-4) 56px; }
@@ -63,7 +66,7 @@ foundation
 export class ArchitecturePage extends OpenElement {
   declare locale?: string;
 
-  static override styles = [daisyClassSheet, openPropsTokenSheet, pageSheet];
+  static override styles = [pageSheet];
 
   override render() {
     return (
@@ -71,13 +74,13 @@ export class ArchitecturePage extends OpenElement {
         <section class='hero'>
           <div>
             <div class='eyebrow'>
-              <span class='badge badge-primary'>ADR-0105</span>
-              <span class='badge badge-primary'>{OPENELEMENT_VERSION}</span>
-              <span class='badge badge-success'>11-package graph</span>
+              <open-badge>ADR-0105</open-badge>
+              <open-badge>{OPENELEMENT_VERSION}</open-badge>
+              <open-badge tone='success'>11-package graph</open-badge>
             </div>
             <h1>Current Architecture</h1>
             <p class='lede'>
-              openElement is organized as Elements + UI + Framework + Protocols. The v0.40
+              openElement is organized as Elements + UI + Framework + Protocols. The v0.41
               package graph is intentionally small: five product-facing packages and six
               foundation packages. SSG is retained as an adapter-agnostic engine; Vite and Nitro
               stay behind the Framework boundary.
@@ -86,7 +89,7 @@ export class ArchitecturePage extends OpenElement {
           <div class='artifact'>
             <div class='artifact-head'>
               <strong>package graph</strong>
-              <span>v0.40.0 current truth</span>
+              <span>v0.41.0-alpha.1 current truth</span>
             </div>
             <pre><code>{PACKAGE_GRAPH}</code></pre>
           </div>
@@ -144,27 +147,26 @@ export class ArchitecturePage extends OpenElement {
             </p>
           </div>
           <div class='cards'>
-            <div class='card card-bordered p-4'>
-              <h3>Why element?</h3>
-              <p>
+            <open-card>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-5);color:var(--text)'>Why element?</h3>
+              <p style='margin:0;font-size:var(--font-size-1);color:var(--text-secondary)'>
                 Component authors import from one singular facade: @openelement/element. The facade
                 exports OpenElement, StyleSheet, signal helpers, and authoring types.
               </p>
-            </div>
-            <div class='card card-bordered p-4'>
-              <h3>Why SSG?</h3>
-              <p>
+            </open-card>
+            <open-card>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-5);color:var(--text)'>Why SSG?</h3>
+              <p style='margin:0;font-size:var(--font-size-1);color:var(--text-secondary)'>
                 @openelement/ssg owns route scanning, entry descriptors, rendering, and HTML
                 postprocess. @openelement/adapter-vite keeps only Vite-specific glue.
               </p>
-            </div>
-            <div class='card card-bordered p-4'>
-              <h3>Why signal?</h3>
-              <p>
-                @preact/signals-core is the default engine behind @openelement/signal.
-                alien-signals remains available through an optional engine subpath.
+            </open-card>
+            <open-card>
+              <h3 slot='header' style='margin:0;font-size:var(--font-size-card-title);font-weight:var(--font-weight-5);color:var(--text)'>Why signal?</h3>
+              <p style='margin:0;font-size:var(--font-size-1);color:var(--text-secondary)'>
+                @preact/signals-core is the engine behind @openelement/signal.
               </p>
-            </div>
+            </open-card>
           </div>
         </section>
 
@@ -190,7 +192,7 @@ export class ArchitecturePage extends OpenElement {
             </div>
             <div class='gate'>
               <strong>4 workflows</strong>
-              <span>CI enters through AutoFlow3, with JSR publishing and monitoring separated.</span>
+              <span>CI enters through AutoFlow3, with npm publishing and monitoring separated.</span>
             </div>
             <div class='gate'>
               <strong>0 any</strong>
@@ -200,9 +202,9 @@ export class ArchitecturePage extends OpenElement {
         </section>
 
         <nav class='nav-row'>
-          <a class='btn btn-ghost' href='/roadmap'>Roadmap truth {'->'}</a>
-          <a class='btn btn-ghost' href='/changelog'>Changelog {'->'}</a>
-          <a class='btn btn-ghost' href='/guide/getting-started'>Start building {'->'}</a>
+          <a style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)' href='/roadmap'>Roadmap truth {'->'}</a>
+          <a style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)' href='/changelog'>Changelog {'->'}</a>
+          <a style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)' href='/guide/getting-started'>Start building {'->'}</a>
         </nav>
       </div>
     );
@@ -211,3 +213,5 @@ export class ArchitecturePage extends OpenElement {
 
 customElements.define(tagName, ArchitecturePage);
 export default ArchitecturePage;
+
+

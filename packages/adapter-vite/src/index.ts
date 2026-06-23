@@ -13,18 +13,43 @@
  *
  * For the unified openElement() entry, use @openelement/app/vite instead.
  *
- * v0.22 (SOP-004): Decomposed into 5 focused modules:
+ * v0.22 (SOP-004): Decomposed into focused modules:
  *   head-injection.ts      - HTML fragment validation & serialization
- *   plugin.ts         - Internal plugin factory (used by openPipeline)
+ *   plugin.ts              - Internal plugin factory (used by openPipeline)
  *   subpath-resolver.ts    - JSR remote resolution (ADR 0016)
- *   optional-package-stubs.ts - No-op stubs for optional adapters
  *   generated-data-resolver.ts - Generated app data namespace resolver
  *
  * This file is now a pure re-export hub (~60 lines).
  */
 
 // Primary public API
-export { openPipeline, type OpenPipelineConfig } from './build-pipeline.js';
+import type { Plugin } from 'vite';
+import type { FrameworkOptions } from '@openelement/protocol/framework';
+import { createOpenPlugin } from './plugin.js';
+
+export interface OpenPipelineConfig {
+  routes?: { dir?: string };
+  i18n?: { locales: string[]; defaultLocale?: string };
+  output?: { outDir?: string };
+  island?: { dir?: string; upgradeStrategy?: string };
+  viewTransition?: boolean;
+  headExtras?: string;
+}
+
+export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
+  const options: FrameworkOptions = {
+    routesDir: config.routes?.dir || 'app/routes',
+    islandsDir: config.island?.dir || 'app/islands',
+    componentsDir: 'app/components',
+    viewTransition: config.viewTransition ?? true,
+    headExtras: config.headExtras,
+    island: config.island as FrameworkOptions['island'],
+    build: config.output as FrameworkOptions['build'],
+  };
+  return createOpenPlugin(options);
+}
+
+export type { FrameworkOptions };
 
 // Build context
 export { OpenElementBuildContext } from './build-context.js';
@@ -49,12 +74,14 @@ export {
   type IslandManifestEntry,
   type IslandStrategyMap,
   type PageIslandManifest,
-  type SpeculationRulesOptions,
   writeIslandManifests,
 } from '@openelement/ssg';
 
+// Protocol type re-exports
+export type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
+
 // External resolver types used by the adapter-vite build pipeline
-export type { ExternalManifest } from '@openelement/ssg';
+export type { ExternalManifest } from '@openelement/protocol/ssg';
 
 // Subpath resolver (public constants)
 export { CORE_SUBPATHS, VIRTUAL_CORE_PREFIX } from './subpath-resolver.js';
@@ -67,9 +94,6 @@ export type { HeadExtrasResult } from './head-injection.js';
 export { mdxPlugin, openMdx } from './plugin-mdx.js';
 export type { OpenMdxPluginOptions } from './plugin-mdx.js';
 
-// Optional package stubs
-export { OPTIONAL_PACKAGE_STUBS } from './optional-package-stubs.js';
-
 // Nitro runtime proof boundary
 export { createOpenElementNitroHandler } from './nitro-mount.js';
 export type {
@@ -79,4 +103,4 @@ export type {
 } from './nitro-mount.js';
 
 // Default export
-export { openPipeline as default } from './build-pipeline.js';
+export { openPipeline as default };

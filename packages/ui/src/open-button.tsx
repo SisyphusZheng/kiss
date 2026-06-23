@@ -23,7 +23,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr } from '@openelement/core';
 
 export const tagName = 'open-button';
@@ -40,53 +39,57 @@ sheet.replaceSync(`
     justify-content: center;
     gap: var(--size-2);
     font-family: var(--font-sans);
-    font-weight: var(--font-weight-5);
+    font-weight: var(--font-weight-8);
     text-decoration: none;
     cursor: pointer;
-    border: var(--border-size-1) solid var(--gray-3);
-    background: transparent;
-    color: var(--gray-9);
-    border-radius: var(--radius-2);
-    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
+    background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
+    color: var(--text-primary);
+    border-radius: var(--btn-radius);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 72%, transparent);
+    transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
     white-space: nowrap;
-    letter-spacing: var(--font-letterspacing-2);
+    letter-spacing: 0;
   }
 
   /* Sizes */
   .btn--sm {
     padding: var(--size-1) var(--size-3);
     font-size: var(--font-size-0);
-    height: 28px;
+    min-height: 30px;
   }
 
   .btn--md {
     padding: var(--size-2) var(--size-4);
     font-size: var(--font-size-1);
-    height: 36px;
+    min-height: 38px;
   }
 
   .btn--lg {
     padding: var(--size-3) var(--size-5);
     font-size: var(--font-size-2);
-    height: 44px;
+    min-height: 48px;
   }
 
   /* Variants */
   .btn--default:hover {
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-    background: var(--brand-subtle);
+    color: var(--brand-deep);
+    border-color: var(--brand-light);
+    background: color-mix(in srgb, var(--brand-pale) 52%, var(--bg-elevated));
   }
 
   .btn--primary {
-    background: var(--brand, var(--indigo-6));
-    color: var(--gray-0);
-    border-color: var(--brand, var(--indigo-6));
+    background: linear-gradient(135deg, var(--brand), var(--brand-light));
+    color: var(--on-brand);
+    border-color: transparent;
+    box-shadow: 0 var(--size-2) var(--size-5) color-mix(in srgb, var(--brand) 22%, transparent);
   }
 
   .btn--primary:hover {
-    background: var(--brand-hover, var(--indigo-7));
-    border-color: var(--brand-hover, var(--indigo-7));
+    background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
+    border-color: transparent;
+    transform: translateY(calc(var(--border-size-1) * -1));
+    box-shadow: 0 var(--size-3) var(--size-6) color-mix(in srgb, var(--brand) 28%, transparent);
   }
 
   .btn--ghost {
@@ -94,18 +97,17 @@ sheet.replaceSync(`
   }
 
   .btn--ghost:hover {
-    background: var(--brand-subtle);
+    background: color-mix(in srgb, var(--brand-pale) 38%, transparent);
     border-color: transparent;
   }
 
   .btn--accent {
-    background: linear-gradient(135deg, var(--brand), var(--brand-hover));
-    color: var(--text-primary);
+    background: var(--brand);
+    color: var(--on-brand);
     border-color: transparent;
   }
   .btn--accent:hover {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-2);
     filter: brightness(1.05);
   }
   .btn--accent:active {
@@ -134,7 +136,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenButton extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override delegatesFocus = true;
   static override formAssociated = true;
   static override observedAttributes = ['variant', 'size', 'disabled', 'href', 'target', 'type'];

@@ -10,18 +10,12 @@
 
 // ─── L1: Safe/Unsafe HTML Contract ──────────────────────────────
 
-import { createLogger } from './logger.js';
+import { createLogger, warnOnce } from './logger.js';
 
 const log = createLogger('core');
 
-/** Track whether we've already warned about <script> in headExtras (once per process) */
-let _warnedHeadExtrasScripts = false;
-
-/** Branded type: a string that has been HTML-escaped (safe for text content) */
-export type SafeHtml = string & { readonly __safeHtml: unique symbol };
-
-/** Branded type: a string that is intentionally raw/untrusted HTML */
-export type UnsafeHtml = string & { readonly __unsafeHtml: unique symbol };
+import type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
+export type { SafeHtml, UnsafeHtml };
 
 /**
  * Escape a string for safe HTML text content insertion.
@@ -59,7 +53,7 @@ export function escapeAttrValue(value: unknown): string {
 /**
  * Wrap rendered HTML in a full HTML document.
  * Adds DOCTYPE, head (title, meta, preload), and body.
- * Supports CSP nonce and dev mode scripts.
+ * Supports CSP nonce and dev scripts (e.g. Vite client, route module registration).
  */
 export function wrapInDocument(
   html: string,
@@ -72,8 +66,8 @@ export function wrapInDocument(
       description?: string;
       tags?: Array<Record<string, string | number | boolean>>;
     };
-    devMode?: boolean;
-    routeModulePath?: string;
+    /** Raw HTML script tags to inject after rendered HTML (e.g. Vite client, route module registration). */
+    devScripts?: string;
     headExtras?: string;
     /** Raw route-local head fragments from explicit dangerous page metadata. */
     dangerouslyHeadFragments?: string[];
@@ -88,8 +82,7 @@ export function wrapInDocument(
     lang = 'en',
     clientScript = '',
     meta,
-    devMode = false,
-    routeModulePath,
+    devScripts = '',
     headExtras = '',
     dangerouslyHeadFragments = [],
     allowHeadExtrasScripts = false,
@@ -101,8 +94,6 @@ export function wrapInDocument(
   if (cspNonce && !validNonce) {
     log.warn(`Invalid CSP nonce format: "${cspNonce}". Nonce should be a base64-encoded value.`);
   }
-  const nonceAttr = validNonce ? ` nonce="${validNonce}"` : '';
-
   // v0.14.8: C-02 fix - Runtime enforcement for headExtras.
   // If headExtras contains <script> tags and allowHeadExtrasScripts is false,
   // strip them to prevent XSS. Developer should use inject.scripts for safe injection.
@@ -110,9 +101,10 @@ export function wrapInDocument(
   if (!allowHeadExtrasScripts && headExtras) {
     // Strip <script> tags and their content
     safeHeadExtras = headExtras.replace(/<script[\s>][\s\S]*?<\/script\s*>/gi, '');
-    if (safeHeadExtras !== headExtras && !_warnedHeadExtrasScripts) {
-      _warnedHeadExtrasScripts = true;
-      log.warn(
+    if (safeHeadExtras !== headExtras) {
+      warnOnce(
+        'headExtrasScripts',
+        log,
         'headExtras contained <script> tags which were stripped for security. ' +
           'Use inject.scripts for safe script injection, or set allowHeadExtrasScripts: true.',
       );
@@ -145,11 +137,7 @@ export function wrapInDocument(
   }
   const metaTags: string[] = [];
   if (meta?.description) {
-    const safeDesc = meta.description
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const safeDesc = escapeAttrValue(meta.description);
     metaTags.push(`  <meta name="description" content="${safeDesc}">`);
   }
   if (Array.isArray(meta?.tags)) {
@@ -163,18 +151,6 @@ export function wrapInDocument(
   const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : '';
   const dangerousHeadBlock = dangerouslyHeadFragments.length > 0
     ? '\n  ' + dangerouslyHeadFragments.join('\n  ')
-    : '';
-
-  const devScripts = devMode
-    ? `
-  <script type="module" src="/@vite/client"${nonceAttr}></script>
-  ${
-      routeModulePath
-        ? `<script type="module"${nonceAttr}>
-  import '${routeModulePath}';
-</script>`
-        : ''
-    }`
     : '';
 
   const safeTitle = escapeHtml(title);
@@ -197,7 +173,7 @@ export function wrapInDocument(
 
 // ─── Error page rendering ────────────────────────────────────────
 
-import type { RouteEntry } from './schemas.js';
+import type { RouteEntry } from '@openelement/protocol/framework';
 
 /**
  * Render an error page to HTML string.
@@ -212,24 +188,7 @@ export function renderSsrError(
   const status = typeof statusOrRoute === 'number' ? statusOrRoute : 500;
   const title = isDev ? 'SSR Render Error' : `Error ${status}`;
   const message = escapeHtml(error.message);
-
-  if (isDev) {
-    const stack = error.stack ? escapeHtml(error.stack) : '';
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem}pre{background:#f5f5f5;padding:1rem;overflow:auto;border-radius:4px}</style>
-</head>
-<body>
-  <h1>${title}</h1>
-  <p><strong>${message}</strong></p>
-  ${stack ? `<pre>${stack}</pre>` : ''}
-</body>
-</html>`;
-  }
+  const stack = isDev && error.stack ? escapeHtml(error.stack) : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -237,10 +196,16 @@ export function renderSsrError(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  ${
+    isDev
+      ? '<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem}pre{background:#f5f5f5;padding:1rem;overflow:auto;border-radius:4px}</style>'
+      : ''
+  }
 </head>
 <body>
   <h1>${title}</h1>
-  <p>${message}</p>
+  <p>${isDev ? `<strong>${message}</strong>` : message}</p>
+  ${stack ? `<pre>${stack}</pre>` : ''}
 </body>
 </html>`;
 }

@@ -13,15 +13,15 @@ export { Fragment, jsx, jsxDEV, jsxs } from '../src/jsx-runtime.ts';
 export { renderToDom } from '../src/jsx-render-dom.ts';
 export { renderDsdTree, serializeRenderNode } from '../src/render-ir.ts';
 export { isComponentCtor, isComponentFn, isVNode } from '../src/vnode.ts';
-export type { ComponentCtor, ComponentFn, VNode } from '../src/vnode.ts';
+export type { ComponentCtor, ComponentFn, VNode } from '@openelement/protocol/vnode';
 
 // ── Signals ───────────────────────────────────────────────────────
-export { isSignalLike, unwrapSignalLike } from '../src/signal-like.ts';
-export type { SignalLike } from '../src/signal-like.ts';
+export { isSignalLike, unwrapSignalLike } from '@openelement/signal';
+export type { SignalLike } from '@openelement/protocol/signal';
 
 // ── Island / SSR ──────────────────────────────────────────────────
 export { bindSsrProps, defineIsland, getSsrProps } from '../src/island.ts';
-export type { IslandOptions } from '../src/island.ts';
+export type { IslandOptions } from '@openelement/protocol/island';
 
 // ── Rendering ─────────────────────────────────────────────────────
 export { renderDsd } from '../src/render-dsd.ts';
@@ -34,4 +34,4 @@ export type { Context } from '../src/signal-context.ts';
 // ── Cross-package (signals, style-sheet) ───────────────────────────
 export { computed, effect, signal } from '../../signal/src/framework.ts';
 export { StyleSheet } from '../src/style-sheet.ts';
-export type { StyleSheetLike } from '../src/style-sheet.ts';
+export type { StyleSheetLike } from '@openelement/protocol/style-sheet';

@@ -13,7 +13,6 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 export const tagName = 'open-hero-ping';
 
 const styles: StyleSheetLike = new StyleSheet();
@@ -75,7 +74,7 @@ styles.replaceSync(`
 `);
 
 export default class HeroPing extends OpenElement {
-  static override styles = [openPropsTokenSheet, styles];
+  static override styles = [styles];
 
   apiUrl = '';
   _state: 'idle' | 'loading' | 'ok' | 'err' = 'idle';

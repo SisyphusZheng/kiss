@@ -30,9 +30,9 @@ import {
 import { OpenElement } from '@openelement/element';
 import { ErrorBoundary } from '@openelement/element';
 import { jsx } from '@openelement/core/jsx-runtime';
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { signal } from '@openelement/signal';
-import type { Signal } from '@openelement/protocol/signals';
+import type { Signal } from '@openelement/protocol/signal';
 import { StyleSheet } from '@openelement/core/style-sheet';
 
 const hasDOM = typeof customElements !== 'undefined';
@@ -942,6 +942,115 @@ Deno.test('OpenElement signal hydration binds data-signal markers', async () => 
   count.value = 100;
   await flushEffects();
   assertEquals(span.textContent, '100');
+});
+
+Deno.test('OpenElement signal hydration binds data-signal-class markers', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('signal-class-hydrate');
+  const open = signal(false);
+  class SignalClassElement extends OpenElement {
+    constructor() {
+      super();
+      this.registerSignal('open', open as Signal<unknown>);
+    }
+
+    override render(): VNode | null {
+      return jsx('span', {
+        'data-signal': 'open',
+        'data-signal-class': 'open',
+        children: String(open.value),
+      });
+    }
+  }
+  customElements.define(tagName, SignalClassElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><span data-signal="open" data-signal-class="open">false</span></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as SignalClassElement;
+  customElements.upgrade(el);
+
+  const span = el.shadowRoot?.querySelector('span') as TestElement | null;
+  assertExists(span);
+  assertEquals(span.classList.contains('open'), false);
+
+  open.value = true;
+  await flushEffects();
+  assertEquals(span.classList.contains('open'), true);
+});
+
+Deno.test('OpenElement signal hydration binds data-signal-attr markers', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('signal-attr-hydrate');
+  const label = signal('a');
+  class SignalAttrElement extends OpenElement {
+    constructor() {
+      super();
+      this.registerSignal('label', label as Signal<unknown>);
+    }
+
+    override render(): VNode | null {
+      return jsx('input', {
+        'data-signal': 'label',
+        'data-signal-attr': 'value,aria-label',
+      });
+    }
+  }
+  customElements.define(tagName, SignalAttrElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><input data-signal="label" data-signal-attr="value,aria-label" value="a" aria-label="a"></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as SignalAttrElement;
+  customElements.upgrade(el);
+
+  const input = el.shadowRoot?.querySelector('input') as TestElement | null;
+  assertExists(input);
+  assertEquals(input.getAttribute('value'), 'a');
+
+  label.value = 'b';
+  await flushEffects();
+  assertEquals(input.getAttribute('value'), 'b');
+  assertEquals(input.getAttribute('aria-label'), 'b');
+});
+
+Deno.test('OpenElement signal hydration binds data-signal-render markers', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('signal-render-hydrate');
+  const nodes = signal<VNode[]>([jsx('span', { children: 'one' })]);
+  class SignalRenderElement extends OpenElement {
+    constructor() {
+      super();
+      this.registerSignal('nodes', nodes as Signal<unknown>);
+    }
+
+    override render(): VNode | null {
+      return jsx('div', {
+        'data-signal-render': 'nodes',
+        children: 'placeholder',
+      });
+    }
+  }
+  customElements.define(tagName, SignalRenderElement);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    `<${tagName}><template shadowrootmode="open"><div data-signal-render="nodes">placeholder</div></template></${tagName}>`;
+  const el = wrapper.querySelector(tagName) as SignalRenderElement;
+  customElements.upgrade(el);
+
+  const root = el.shadowRoot as unknown as TestShadowRoot | null;
+  assertExists(root);
+  assertEquals(root.innerHTML.includes('placeholder'), false);
+  assertEquals(root.innerHTML.includes('one'), true);
+
+  nodes.value = [jsx('span', { children: 'two' })];
+  await flushEffects();
+  assertEquals(root.innerHTML.includes('one'), false);
+  assertEquals(root.innerHTML.includes('two'), true);
 });
 
 // ─── 8. Event binding and hydration ────────────────────────────────

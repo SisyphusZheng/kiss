@@ -6,7 +6,7 @@
  */
 
 import type { Plugin } from 'vite';
-import type { FrameworkOptions } from '@openelement/core';
+import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type { OpenElementContentOptions } from '@openelement/content';
 import type { OpenElementI18nOptions } from './i18n-runtime.ts';
 

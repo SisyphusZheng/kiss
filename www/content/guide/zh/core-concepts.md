@@ -13,7 +13,7 @@ openElement 围绕一个应用模型、一条渲染管线和四个一级产品�
 openElement = Elements + UI + Framework + Protocols
 ```
 
-Elements 是原生 Web Components 作者层。UI 是第一方 `open-*` 组件库。
+Elements 是原生 Web Components 作者层，当前规范作者层为 `@openelement/element`。UI 是第一方 `open-*` 组件库。
 Framework 负责 pages、layouts、islands、API routes 以及 Vite + Nitro 输出。
 Protocols 定义可替换边界。
 
@@ -51,8 +51,8 @@ JavaScript 升级 island 之前解析 shadow root。
 
 ## Elements 和 Runtime primitives
 
-未来 Elements 产品方向是 `@openelement/element` 和 `OpenElement` 基类。
-当前 `@openelement/element` 仍可用于底层库代码：
+`@openelement/element` 是当前 Elements 产品面和规范作者层，提供 `OpenElement`
+基类：
 
 ```tsx
 import { OpenElement, signal, StyleSheet } from '@openelement/element';

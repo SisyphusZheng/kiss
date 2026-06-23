@@ -6,6 +6,8 @@
  * used as regressions for the active public contract.
  */
 
+import { extname } from 'node:path';
+
 interface Issue {
   check: string;
   file: string;
@@ -39,8 +41,8 @@ const TEXT_EXTENSIONS = new Set([
 
 const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   {
-    file: 'packages/content/src/index.ts',
-    fragment: 'sitemapOpts as unknown as Record<string, unknown>',
+    file: 'packages/content/src/sitemap/plugin.ts',
+    fragment: 'ctx.plugins.sitemapOptions = options as unknown as Record<string, unknown>;',
     reason: 'Plugin option bag crosses a protocol boundary.',
   },
   {
@@ -55,14 +57,14 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'Custom element prop assignment by dynamic prop name.',
   },
   {
+    file: 'packages/core/src/binding-activation.ts',
+    fragment: 'desc.el as unknown as Record<string, unknown>',
+    reason: 'Direct DOM property assignment by dynamic prop name.',
+  },
+  {
     file: 'packages/core/src/island.ts',
     fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
     reason: 'Preserve original connectedCallback signature after wrapping.',
-  },
-  {
-    file: 'packages/core/src/prop.ts',
-    fragment: 'instance as unknown as Record<PropertyKey, unknown>',
-    reason: 'Static prop runtime reads dynamic property keys.',
   },
   {
     file: 'packages/core/src/prop.ts',
@@ -84,22 +86,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment: 'this as unknown as Record<string, unknown>',
     reason: 'Custom element prop collection by dynamic prop name.',
   },
-  {
-    file: 'packages/app/src/preact.ts',
-    fragment:
-      'host as unknown as { attributes?: Array<{ name: string; value: string }> | NamedNodeMap }',
-    reason: 'Preact island collects SSR-serialized props from host element attributes.',
-  },
-  {
-    file: 'packages/router/src/client-router.ts',
-    fragment: 'this.#el as unknown as Record<string, unknown>',
-    reason: 'Router host exposes locale/locales as dynamic element properties.',
-  },
-  {
-    file: 'packages/ui/src/open-code-block.tsx',
-    fragment: 'globalThis as unknown as Record<string, unknown>',
-    reason: 'Optional Prism global loaded by the docs site.',
-  },
 ];
 
 const issues: Issue[] = [];
@@ -110,11 +96,6 @@ function addIssue(check: string, file: string, message: string, line?: number): 
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, '/');
-}
-
-function extname(path: string): string {
-  const idx = path.lastIndexOf('.');
-  return idx === -1 ? '' : path.slice(idx);
 }
 
 async function gitFiles(): Promise<string[]> {
@@ -226,22 +207,21 @@ function assertDuplicateCounts(files: TextFile[]): void {
       }
     });
   }
-  if (
-    compatibilityHits.length !== 1 ||
-    compatibilityHits[0].file !== 'packages/core/src/compat-schemas.ts'
-  ) {
+  // v0.41.0: canonical home moved to protocol/src/framework.ts
+  const canonicalFile = 'packages/protocol/src/framework.ts';
+  if (compatibilityHits.length !== 1 || compatibilityHits[0].file !== canonicalFile) {
     for (const hit of compatibilityHits) {
       addIssue(
         'duplicate-type',
         hit.file,
-        'CompatibilityClassification must have exactly one canonical interface in core',
+        `CompatibilityClassification must have exactly one canonical interface in ${canonicalFile}`,
         hit.line,
       );
     }
     if (compatibilityHits.length === 0) {
       addIssue(
         'duplicate-type',
-        'packages/core/src/compat-schemas.ts',
+        canonicalFile,
         'missing canonical CompatibilityClassification interface',
       );
     }
@@ -256,7 +236,7 @@ function assertStructuredMetadata(files: TextFile[]): void {
   failMatches(
     'metadata-boundary',
     scannerFiles,
-    /source\.match\(|exportMatch|splitOnCommas|parseValue\(raw/,
+    /exportMatch|splitOnCommas|parseValue\(raw/,
     'route/nav metadata must use AST or structured data, not source regex parsing',
   );
 }

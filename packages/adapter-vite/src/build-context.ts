@@ -22,11 +22,17 @@ import type {
   CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
-  OpenElementPackageManifest,
+  OpenElementBlogOptions,
+  OpenElementHeaderNavLink,
+  OpenElementI18nContextOptions,
+  OpenElementNavSection,
   RouteEntry,
-} from '@openelement/core';
-import type { OpenElementPluginMeta } from '@openelement/protocol/build-types';
-import type { IslandDecl, SsrAdmissionPlan } from '@openelement/ssg';
+} from '@openelement/protocol/framework';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+import type { IslandDecl, SsrAdmissionPlan } from '@openelement/protocol/ssg';
+import { createLogger } from '@openelement/core/logger';
+
+const log = createLogger('core');
 
 // These branded types ensure Phase 2 can only run after Phase 1,
 // and Phase 3 can only run after Phase 2. The compiler catches
@@ -97,9 +103,6 @@ export class Phase3Meta {
   /** HTML document options from createOpenPlugin() options */
   html: { lang?: string; title?: string } | null = null;
 
-  /** PWA config from createOpenPlugin() options */
-  pwa: FrameworkOptions['pwa'] | null = null;
-
   /** Island hydration strategy (default: 'idle') */
   upgradeStrategy: HydrationStrategy = 'idle';
 
@@ -137,36 +140,10 @@ export class Phase3Meta {
   componentsDir: string = 'app/components';
 
   /** ADR-0047: Pre-resolved external dependency manifest (auto-generated from deno info). */
-  externalManifest?: import('@openelement/ssg').ExternalManifest;
+  externalManifest?: import('@openelement/protocol/ssg').ExternalManifest;
 
   /** Skip Deno pre-resolution, use regex fallback. */
   skipPreResolution?: boolean;
-}
-
-export class PluginMeta implements OpenElementPluginMeta {
-  /** Index signature to satisfy OpenElementPluginMeta interface */
-  [key: string]: unknown;
-
-  /** Blog options from @openelement/content plugin */
-  blogOptions: { contentDir?: string; basePath?: string } | null = null;
-
-  /** Navigation sections from @openelement/content plugin */
-  navSections: Array<
-    { section: string; items: Array<{ path: string; label: string; order?: number }> }
-  > = [];
-
-  /** Header navigation links from @openelement/content plugin */
-  headerNav: Array<{ href: string; label: string }> = [];
-
-  /** Sitemap options from @openelement/content plugin */
-  sitemapOptions: Record<string, unknown> | null = null;
-
-  /** i18n options from @openelement/i18n plugin */
-  i18nOptions: {
-    locales: string[];
-    defaultLocale: string;
-    [key: string]: unknown;
-  } | null = null;
 }
 
 export class OpenElementBuildContext {
@@ -203,6 +180,80 @@ export class OpenElementBuildContext {
     this._phaseTokens[3] = t3;
     return t3;
   }
+
+  /** Populate Phase 3 invariants from resolved Vite config and framework options. */
+  populatePhase3(
+    options: FrameworkOptions & { allowHeadExtrasScripts?: boolean },
+    config: ResolvedConfig,
+    ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[],
+  ): void {
+    let base = config.base || '/';
+    if (!base.endsWith('/')) base += '/';
+
+    this.phase3.root = config.root;
+    this.phase3.outDir = options.build?.outDir || 'dist';
+    this.phase3.base = base;
+    this.phase3.ssrNoExternal = ssrNoExternal;
+    this.phase3.routesDir = options.routesDir || 'app/routes';
+    this.phase3.islandsDir = options.islandsDir || 'app/islands';
+    this.phase3.componentsDir = options.componentsDir || 'app/components';
+    this.phase3.middleware = options.middleware || null;
+    this.phase3.html = options.html || null;
+    this.phase3.upgradeStrategy = options.island?.upgradeStrategy || 'idle';
+    this.phase3.viewTransition = options.viewTransition ?? true;
+    this.phase3.speculation = options.speculation ?? null;
+    this.phase3.headExtras = options.headExtras || '';
+    this.phase3.allowHeadExtrasScripts = options.allowHeadExtrasScripts || false;
+    this.phase3.appShell = options.appShell;
+    this.phase3.layouts = options.layouts;
+  }
+
+  /** Return a read-only view of Phase 3 metadata. */
+  getPhase3Meta(): Readonly<Phase3Meta> {
+    return this.phase3;
+  }
+
+  /** Check whether a phase has been completed. */
+  isPhaseComplete(phase: 1 | 2 | 3): boolean {
+    return this._phaseTokens[phase] !== null;
+  }
+
+  /** Run Phase 3 after Phase 1, enforcing ordering and logging. */
+  async runPhase3(runner: (ctx: this) => Promise<void>): Promise<void> {
+    const phase1Token = this._phaseTokens[1];
+    if (!phase1Token) {
+      throw new Error('Phase 3 called before Phase 1 completed');
+    }
+    this.completePhase3(phase1Token);
+
+    log.info('[3/3] Static site generation...');
+    try {
+      await runner(this);
+      log.info('[3/3] Static site generation - complete');
+    } catch (error) {
+      log.error(`[3/3] Static site generation - FAILED: ${error}`);
+      throw error;
+    }
+  }
+
+  /** Run Phase 2 after Phase 3, enforcing ordering and logging. */
+  async runPhase2(runner: (ctx: this) => Promise<void>): Promise<void> {
+    const phase3Token = this._phaseTokens[3];
+    if (!phase3Token) {
+      throw new Error('Phase 2 called before Phase 3 completed');
+    }
+    this.completePhase2(phase3Token);
+
+    log.info('[2/3] Client island build...');
+    try {
+      await runner(this);
+      log.info('[2/3] Client island build - complete');
+    } catch (error) {
+      log.error(`[2/3] Client island build - FAILED: ${error}`);
+      throw error;
+    }
+  }
+
   /** Phase 1: Route scanning & build metadata */
   readonly phase1: Phase1Meta = new Phase1Meta();
 
@@ -213,7 +264,20 @@ export class OpenElementBuildContext {
   readonly phase3: Phase3Meta = new Phase3Meta();
 
   /** Plugin data from content/i18n sub-plugins */
-  readonly plugins: PluginMeta = new PluginMeta();
+  readonly plugins: {
+    blogOptions: OpenElementBlogOptions | null;
+    navSections: OpenElementNavSection[];
+    headerNav: OpenElementHeaderNavLink[];
+    sitemapOptions: Record<string, unknown> | null;
+    i18nOptions: OpenElementI18nContextOptions | null;
+    [key: string]: unknown;
+  } = {
+    blogOptions: null,
+    navSections: [],
+    headerNav: [],
+    sitemapOptions: null,
+    i18nOptions: null,
+  };
 
   /** Resolved framework options with defaults applied (read-only after construction) */
   readonly options: FrameworkOptions;
@@ -235,6 +299,12 @@ export class OpenElementBuildContext {
     Object.assign(this.phase1, new Phase1Meta(), { userResolveAlias });
     Object.assign(this.phase2, new Phase2Meta());
     Object.assign(this.phase3, new Phase3Meta());
-    Object.assign(this.plugins, new PluginMeta());
+    Object.assign(this.plugins, {
+      blogOptions: null,
+      navSections: [],
+      headerNav: [],
+      sitemapOptions: null,
+      i18nOptions: null,
+    });
   }
 }

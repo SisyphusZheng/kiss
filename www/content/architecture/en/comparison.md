@@ -67,8 +67,8 @@ the Registry evidence pipeline.
 <td>SSR + RSC + SSG</td>
 </tr>
 <tr>
-<td>Registry Hub</td>
-<td class="openElement-col"><span class="tag-yes">Built-in</span></td>
+<td>Registry / Hub</td>
+<td class="openElement-col"><span class="tag-no">Deferred outside current product graph</span></td>
 <td><span class="tag-no">No</span></td>
 <td><span class="tag-no">No</span></td>
 <td><span class="tag-no">No</span></td>
@@ -103,7 +103,7 @@ the Registry evidence pipeline.
 </tr>
 <tr>
 <td>Package Registry</td>
-<td class="openElement-col">JSR</td>
+<td class="openElement-col">npm</td>
 <td>npm</td>
 <td>JSR + npm</td>
 <td>npm</td>
@@ -122,6 +122,5 @@ the Registry evidence pipeline.
 <h2>What openElement Does Not Optimize For</h2>
 <ul>
 <li><strong>All-in-one meta-framework</strong> - openElement's three pillars each have independent value, not a platform that does everything.</li>
-<li><strong>npm-first ecosystem</strong> - JSR-only package distribution requires extra configuration for npm users.</li>
 <li><strong>Legacy browser support</strong> - Requires browsers with DSD support (Chrome 90+, Safari 16.4+, Firefox 123+).</li>
 </ul>

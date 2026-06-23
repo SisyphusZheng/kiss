@@ -1,3 +1,5 @@
+import { walkFiles } from './lib/walk.ts';
+
 const preset = Deno.args[0];
 
 if (preset !== 'node' && preset !== 'workers') {
@@ -69,13 +71,12 @@ function assertNotIncludes(text: string, unexpected: string, label: string): voi
 
 async function readTextFiles(dir: URL, suffix: string): Promise<string> {
   let content = '';
-  for await (const entry of Deno.readDir(dir)) {
-    const child = new URL(entry.name, dir);
-    if (entry.isDirectory) {
-      content += await readTextFiles(new URL(`${entry.name}/`, dir), suffix);
-    } else if (entry.isFile && entry.name.endsWith(suffix)) {
-      content += await Deno.readTextFile(child);
-    }
+  for (
+    const path of walkFiles(dir.pathname, {
+      include: ({ name }) => name.endsWith(suffix),
+    })
+  ) {
+    content += await Deno.readTextFile(path);
   }
   return content;
 }

@@ -13,7 +13,7 @@ infrastructure; runtime primitives live in `@openelement/core`.
 ## Install
 
 ```bash
-deno add jsr:@openelement/adapter-vite
+npm install @openelement/adapter-vite
 ```
 
 ## Usage

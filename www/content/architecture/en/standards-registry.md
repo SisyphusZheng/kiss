@@ -140,8 +140,8 @@ order: 20
           <h2>Near-Term Priority</h2>
           <ol>
             <li>Document and test renderer protocol, adapter contract, and DSD diagnostics.</li>
-            <li>Extend <code>PackageIslandMeta</code> toward a CEM-compatible package manifest draft.</li>
-            <li>Build <code>less validate-manifest</code> before <code>open add</code>.</li>
+            <li>Extend <code>@openelement/protocol/manifest</code> toward a CEM-compatible package manifest draft.</li>
+            <li>Build manifest validation helpers before one-command install flow.</li>
             <li>Build a local registry index before a public hub.</li>
           </ol>
 

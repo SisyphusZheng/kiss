@@ -3,11 +3,8 @@
  */
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import type {
-  OpenElementPackageManifest,
-  ValidationError,
-  ValidationWarning,
-} from '../src/schemas.js';
+import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+import type { ValidationError, ValidationWarning } from '@openelement/protocol/framework';
 import {
   clear as clearRegistry,
   generateIndex,

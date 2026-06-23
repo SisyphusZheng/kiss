@@ -13,8 +13,8 @@
  * @module @openelement/core/render-dsd-stream
  */
 
-import { renderDsd } from './render-dsd.js';
-import type { RenderError, RenderOutput } from './render-schemas.js';
+import { renderDsd, safeNow } from './render-dsd.js';
+import type { RenderError, RenderOutput } from '@openelement/protocol/render';
 
 // --- Streaming types -------------------------------------------
 
@@ -43,14 +43,10 @@ export interface RenderDsdStreamComponent {
   componentClass: CustomElementConstructor;
   props?: Record<string, unknown>;
   sourceInfo?: { route?: string; source?: string };
-  dsdOptions?: import('./render-schemas.js').DsdOptions;
+  dsdOptions?: import('@openelement/protocol/render').DsdOptions;
 }
 
 const textEncoder = new TextEncoder();
-
-function now(): number {
-  return typeof performance !== 'undefined' ? performance.now() : Date.now();
-}
 
 async function resolveStreamPart(
   part?: string | (() => string | Promise<string>),
@@ -66,7 +62,7 @@ export function createRenderDsdStreamMetrics(): RenderDsdStreamMetrics {
   return {
     chunkCount: 0,
     errorCount: 0,
-    startedAt: now(),
+    startedAt: safeNow(),
   };
 }
 
@@ -124,11 +120,11 @@ export function renderDsdStream(
           controller.enqueue(textEncoder.encode(footer));
           encoderMetrics.chunkCount++;
         }
-        encoderMetrics.endedAt = now();
+        encoderMetrics.endedAt = safeNow();
         controller.close();
       } catch (error) {
         encoderMetrics.errorCount++;
-        encoderMetrics.endedAt = now();
+        encoderMetrics.endedAt = safeNow();
         controller.error(error);
       }
     },

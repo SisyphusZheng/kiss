@@ -1,30 +1,29 @@
 {
   "name": "@openelement/core",
-  "version": "0.40.7",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
+    "./static": "./src/static.ts",
+    "./hydrate": "./src/hydrate.ts",
+    "./csr": "./src/csr.ts",
     "./prop": "./src/prop.ts",
     "./errors": "./src/errors.ts",
     "./context": "./src/context.ts",
     "./logger": "./src/logger.ts",
     "./isr": "./src/isr.ts",
     "./isr-runtime": "./src/isr-runtime.ts",
+    "./runtime": "./src/runtime.ts",
     "./signal-context": "./src/signal-context.ts",
     "./render-dsd-stream": "./src/render-dsd-stream.ts",
     "./style-sheet": "./src/style-sheet.ts",
+    "./html-escape": "./src/html-escape.ts",
+    "./tag-utils": "./src/tag-utils.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./jsx-dev-runtime": "./src/jsx-runtime.ts",
     "./island-transform": "./src/island-transform.ts",
-    "./data": "./src/data.ts",
     "./dsd-hydration": "./src/dsd-hydration.ts"
   },
-  "imports": {
-    "@openelement/protocol/conformance": "jsr:@openelement/protocol@^0.40.7/conformance",
-    "@openelement/protocol/data": "jsr:@openelement/protocol@^0.40.7/data",
-    "@openelement/protocol/renderer": "jsr:@openelement/protocol@^0.40.7/renderer",
-    "@openelement/protocol/signals": "jsr:@openelement/protocol@^0.40.7/signals",
-    "@openelement/signal": "jsr:@openelement/signal@^0.40.7"
-  },
+  "imports": {},
   "publish": {
     "include": [
       "src/**",

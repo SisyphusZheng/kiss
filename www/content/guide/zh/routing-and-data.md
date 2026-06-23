@@ -42,12 +42,15 @@ export default definePage({
 
 ```tsx
 import { definePage } from '@openelement/app';
+import { useLoaderData } from '@openelement/router';
+
+export const loader = async () => {
+  return { posts: await fetchPosts() };
+};
 
 export default definePage({
-  async load() {
-    return { posts: await fetchPosts() };
-  },
-  render({ data }) {
+  render() {
+    const data = useLoaderData<typeof loader>();
     return (
       <main>
         {data.posts.map((post) => <article>{post.title}</article>)}
@@ -57,8 +60,20 @@ export default definePage({
 });
 ```
 
-`load()` 会收到 route params、request 和运行时上下文。返回值会作为 `data`
-传给页面。
+`loader` 导出会收到 route params、request 和运行时上下文。返回值通过
+`useLoaderData()` 在页面组件中读取。
+
+## Action
+
+路由可以导出 `action` 来处理 mutation 请求：
+
+```tsx
+export const action = async ({ request }) => {
+  const form = await request.formData();
+  await createPost(form);
+  return { ok: true };
+};
+```
 
 ## 渲染意图
 

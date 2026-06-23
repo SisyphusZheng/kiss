@@ -12,7 +12,7 @@
  * @module @openelement/core/security
  */
 
-import { createLogger } from './logger.js';
+import { createLogger, warnOnce } from './logger.js';
 
 /** Object prototype keys that must never be injected as SSR props. */
 export const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
@@ -38,15 +38,14 @@ export const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
  * untrusted text by default; callers that cross this boundary must sanitize or
  * otherwise trust the HTML before passing it to openElement.
  */
-let _warnedTrustedHtml = false;
+const _securityLog = createLogger('security');
 
 export function trustRenderHtml(html: string): string {
-  if (!_warnedTrustedHtml) {
-    _warnedTrustedHtml = true;
-    createLogger('security').warn(
-      'trustRenderHtml is a trust boundary, not a sanitizer. ' +
-        'Caller must ensure HTML content is safe before passing to openElement.',
-    );
-  }
+  warnOnce(
+    'trustedHtml',
+    _securityLog,
+    'trustRenderHtml is a trust boundary, not a sanitizer. ' +
+      'Caller must ensure HTML content is safe before passing to openElement.',
+  );
   return html;
 }

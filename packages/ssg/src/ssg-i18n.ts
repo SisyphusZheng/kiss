@@ -7,16 +7,10 @@
 
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { SsgRenderOptions } from '@openelement/protocol/ssg-contracts';
+import type { SsgPageOutput, SsgRenderEvidence, SsgRenderOptions } from '@openelement/protocol/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
-import type { SsgPageOutput, SsgRenderEvidence } from './ssg-render.ts';
-import {
-  collectPageOutput,
-  joinUrlPath,
-  type PageDiagnostic,
-  resolveDynamicRoutePath,
-} from './ssg-helpers.ts';
+import { collectPageOutput, type PageDiagnostic, resolveDynamicRoutePath } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');
 
@@ -93,7 +87,7 @@ export async function expandI18nLocales(
         if (locales.includes(pathSegment)) {
           continue;
         }
-        const localePath = joinUrlPath(locale, resolvedPath);
+        const localePath = '/' + locale + '/' + resolvedPath.replace(/^\//, '');
         try {
           const output = await renderRoute(route.path, {
             params,

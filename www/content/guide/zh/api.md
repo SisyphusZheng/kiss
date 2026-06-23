@@ -18,12 +18,19 @@ import { defineElement, defineIsland, defineLayout, definePage } from '@openelem
 声明 route component。
 
 ```tsx
+import { definePage } from '@openelement/app';
+import { useLoaderData } from '@openelement/router';
+
+export const loader = async () => {
+  return { message: 'Hello' };
+};
+
 export default definePage({
-  title: 'Home',
-  async load() {
-    return { message: 'Hello' };
+  head: {
+    title: 'Home',
   },
-  render({ data }) {
+  render() {
+    const data = useLoaderData<typeof loader>();
     return <main>{data.message}</main>;
   },
 });
@@ -35,7 +42,7 @@ export default definePage({
 
 ```tsx
 export default defineIsland('my-counter', () => <button>Count</button>, {
-  strategy: 'idle',
+  hydrate: 'idle',
   dsd: true,
 });
 ```
@@ -63,8 +70,7 @@ i18n。
 - `@openelement/app` 和 `@openelement/create`：Framework 产品面。
 - `@openelement/ui`：第一方 UI 产品面。
 - `@openelement/protocol`：runtime-free Protocols 产品面。
-- 未来 `@openelement/element`：带 `OpenElement` 的 Elements 产品面。
-- `@openelement/element`：当前底层 element、signals、stylesheet facade。
+- `@openelement/element`：当前 Elements 产品面和规范作者层，提供 `OpenElement`、signals 和 stylesheet facade。
 - `@openelement/core`：renderer kernel 和 JSX runtime。
 - `@openelement/signal`：signal primitives。
 - `@openelement/core/style-sheet`：CSSStyleSheet abstraction。

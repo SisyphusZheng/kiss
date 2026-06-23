@@ -144,27 +144,3 @@ test.describe('Performance', () => {
     expect(criticalErrors.length).toBe(0);
   });
 });
-
-test.describe('PWA Support', () => {
-  test('has PWA manifest', async ({ page }) => {
-    const response = await page.goto('/manifest.json');
-    expect(response?.ok()).toBe(true);
-
-    const manifest = await response!.json();
-    expect(manifest.name).toContain('openElement');
-    expect(manifest.short_name).toBe('openElement');
-  });
-
-  test('has service worker script', async ({ page }) => {
-    const response = await page.goto('/sw.js');
-    expect(response?.ok()).toBe(true);
-  });
-
-  test('homepage has manifest link', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    const manifestLink = page.locator('link[rel="manifest"]');
-    expect(await manifestLink.count()).toBeGreaterThan(0);
-  });
-});

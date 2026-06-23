@@ -25,7 +25,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 
 export const tagName = 'open-dialog';
@@ -115,7 +114,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenDialog extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override delegatesFocus = true;
   static override observedAttributes = ['open', 'label'];
 

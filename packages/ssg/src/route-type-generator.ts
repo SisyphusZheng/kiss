@@ -8,7 +8,7 @@
  * v0.25.0: Initial implementation for build-time route type code generation.
  */
 
-import type { RouteEntry } from '@openelement/core';
+import type { RouteEntry } from '@openelement/protocol/framework';
 
 /**
  * Convert a file path to a route path, preserving [param] bracket syntax.
@@ -30,14 +30,6 @@ function filePathToBracketRoute(filePath: string): string {
   if (!p.startsWith('/')) p = '/' + p;
 
   return p;
-}
-
-/**
- * Escape a route path for use as a TypeScript property key.
- * Wraps in quotes to handle paths with special characters.
- */
-function escapeRoutePath(path: string): string {
-  return JSON.stringify(path);
 }
 
 /**
@@ -101,7 +93,7 @@ export function generateRouteTypes(routes: RouteEntry[]): string {
   // Generate entries for each route with params
   const paramEntries = paramRoutes.map((r) => {
     const bracketPath = filePathToBracketRoute(r.filePath);
-    const path = escapeRoutePath(bracketPath);
+    const path = JSON.stringify(bracketPath);
     const type = generateParamsType(r.params!);
     return `    ${path}: ${type};`;
   });

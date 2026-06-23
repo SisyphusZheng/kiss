@@ -66,8 +66,8 @@ openElement 当前是 DSD-first Web Components 应用框架。与同级框架的
 <td>SSR + RSC + SSG</td>
 </tr>
 <tr>
-<td>Registry Hub</td>
-<td class="openElement-col"><span class="tag-yes">内建</span></td>
+<td>Registry / Hub</td>
+<td class="openElement-col"><span class="tag-no">已移出当前产品图谱</span></td>
 <td><span class="tag-no">否</span></td>
 <td><span class="tag-no">否</span></td>
 <td><span class="tag-no">否</span></td>
@@ -102,7 +102,7 @@ openElement 当前是 DSD-first Web Components 应用框架。与同级框架的
 </tr>
 <tr>
 <td>Package Registry</td>
-<td class="openElement-col">JSR</td>
+<td class="openElement-col">npm</td>
 <td>npm</td>
 <td>JSR + npm</td>
 <td>npm</td>
@@ -121,6 +121,5 @@ openElement 当前是 DSD-first Web Components 应用框架。与同级框架的
 <h2>openElement 不优化的方向</h2>
 <ul>
 <li><strong>大而全的元框架</strong> - openElement 三支柱各有独立价值，不是什么都做的平台</li>
-<li><strong>npm 生态优先</strong> - JSR-only 包分发对 npm 用户需要额外配置</li>
 <li><strong>旧浏览器兼容</strong> - 需要 DSD 支持的浏览器（Chrome 90+、Safari 16.4+、Firefox 123+）</li>
 </ul>

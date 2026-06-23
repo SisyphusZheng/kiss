@@ -12,9 +12,8 @@ order: 100
 
           <h2>构建性能</h2>
           <div class='metric'><span class='label'>SSG 构建 (www)</span><span class='value'>~3s（37 页面，478 URL）</span></div>
-          <div class='metric'><span class='label'>开发冷启动</span><span class='value'>~100ms（deno task dev:fast）</span></div>
           <div class='metric'><span class='label'>Vite 开发启动</span><span class='value'>~2s（deno task dev）</span></div>
-          <div class='metric'><span class='label'>客户端包体积</span><span class='value'>~0 KB（仅 islands，2 虚拟模块）</span></div>
+          <div class='metric'><span class='label'>客户端包体积</span><span class='value'>~0 KB（仅 islands，generated data modules）</span></div>
 
           <h2>渲染</h2>
           <div class='metric'><span class='label'>DSD SSR</span><span class='value'>零 JS 解析成本（浏览器原生）</span></div>

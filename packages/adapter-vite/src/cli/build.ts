@@ -6,12 +6,13 @@
  * No orchestrator needed - all three phases run in a single viteBuild() call.
  *
  * Usage:
- *   deno run -A jsr:@openelement/adapter-vite/cli/build
+ *   deno run -A npm:@openelement/adapter-vite/cli/build
  *   deno task build
  */
 
 import { build as viteBuild } from 'vite';
 import process from 'node:process';
+import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 
 if (import.meta.main) {
@@ -20,7 +21,7 @@ if (import.meta.main) {
     process.exit(0);
   } catch (error) {
     const log = createLogger('adapter-vite');
-    log.error('Build failed:', error);
+    log.error(`Build failed: ${formatError(error)}`);
     process.exit(1);
   }
 }

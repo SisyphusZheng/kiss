@@ -1,6 +1,8 @@
 /**
  * @openelement/app/i18n-plugin - Node-only Vite plugin for i18n
  *
+ * deno-api-free:ignore — build-time Vite plugin, allowed to use node:*.
+ *
  * This module uses node:process, node:path, node:fs and MUST NOT be imported
  * from the main @openelement/app entry to avoid pulling Node built-ins into
  * client island bundles.
@@ -12,9 +14,10 @@
  */
 
 import type { Plugin } from 'vite';
-import type { OpenElementBuildContextLike } from '@openelement/protocol/build-types';
+import type { OpenElementBuildContextLike } from '@openelement/protocol/framework';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
+// ponytail: build-time Vite plugin, deno-api-free:ignore applies
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -93,10 +96,6 @@ export function openI18n(
   };
 }
 
-// Re-export runtime helpers for convenience when importing @openelement/app/i18n-plugin
-export type { OpenElementI18nOptions } from './i18n-runtime.ts';
-export { i18nStaticPaths, loadI18nData, switchLocale } from './i18n-runtime.ts';
-export type { LocalePath } from '@openelement/protocol';
-export { normalizeLocalePath } from '@openelement/protocol';
+// Use @openelement/app/i18n for runtime helpers: i18nStaticPaths, loadI18nData, switchLocale, normalizeLocalePath
 
 export default openI18n;

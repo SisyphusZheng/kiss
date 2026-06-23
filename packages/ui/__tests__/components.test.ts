@@ -351,6 +351,37 @@ function _installQuerySelector(
   ) => resolver(selector) as unknown as Element | null;
 }
 
+// ─── Fake event / navigator helpers ──────────────────────────────────────────
+
+function fakeInputEvent(value: string): Event {
+  return { target: { value } } as unknown as Event;
+}
+
+function fakeEmptyEvent(type = 'event'): Event {
+  return new Event(type);
+}
+
+function fakeMouseEvent(
+  _type = 'click',
+  target?: EventTarget | { classList: { contains: (t: string) => boolean } },
+): Event {
+  return { target } as unknown as Event;
+}
+
+function installClipboardSpy(writeText: (text: string) => Promise<void>): () => void {
+  const originalClipboard = navigator.clipboard;
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  return () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: originalClipboard,
+    });
+  };
+}
+
 installDomHarness();
 
 const COMPONENT_FILES = [
@@ -607,7 +638,7 @@ Deno.test('open-input: input event updates value and dispatches open-input', asy
   instance.addEventListener('open-input', (e) => events.push(e as CustomEvent));
 
   const input = findByPart(instance.render() as VNode, 'control') as VNode;
-  (input.props.onInput as (e: Event) => void)?.({ target: { value: 'typed' } } as unknown as Event);
+  (input.props.onInput as (e: Event) => void)?.(fakeInputEvent('typed'));
 
   assertEquals(instance.getAttribute('value'), 'typed');
   assertEquals(events.length, 1);
@@ -625,11 +656,9 @@ Deno.test('open-input: change and focus events dispatch', async () => {
   instance.addEventListener('open-blur', (e) => blurEvents.push(e as CustomEvent));
 
   const input = findByPart(instance.render() as VNode, 'control') as VNode;
-  (input.props.onChange as (e: Event) => void)?.(
-    { target: { value: 'changed' } } as unknown as Event,
-  );
-  (input.props.onFocus as (e: Event) => void)?.({} as unknown as Event);
-  (input.props.onBlur as (e: Event) => void)?.({} as unknown as Event);
+  (input.props.onChange as (e: Event) => void)?.(fakeInputEvent('changed'));
+  (input.props.onFocus as (e: Event) => void)?.(fakeEmptyEvent('focus'));
+  (input.props.onBlur as (e: Event) => void)?.(fakeEmptyEvent('blur'));
 
   assertEquals(changeEvents.length, 1);
   assertEquals(focusEvents.length, 1);
@@ -655,20 +684,17 @@ Deno.test('open-code-block: copy button writes text to clipboard', async () => {
   instance.textContent = 'const answer = 42;';
 
   let copied = '';
-  const originalClipboard = navigator.clipboard;
-  (navigator as unknown as Record<string, unknown>).clipboard = {
-    writeText: (text: string) => {
-      copied = text;
-      return Promise.resolve();
-    },
-  };
+  const restoreClipboard = installClipboardSpy((text: string) => {
+    copied = text;
+    return Promise.resolve();
+  });
 
   try {
     const vnode = instance.render() as VNode;
     clickVNode(findByPart(vnode, 'copy'));
     assertEquals(copied, 'const answer = 42;');
   } finally {
-    (navigator as unknown as Record<string, unknown>).clipboard = originalClipboard;
+    restoreClipboard();
   }
 });
 
@@ -926,9 +952,7 @@ Deno.test('open-modal: backdrop click closes modal', async () => {
   ) as VNode;
   assertExists(backdrop);
   (backdrop.props.onClick as (e: Event) => void)?.(
-    {
-      target: { classList: { contains: (t: string) => t === 'modal-backdrop' } },
-    } as unknown as Event,
+    fakeMouseEvent('click', { classList: { contains: (t: string) => t === 'modal-backdrop' } }),
   );
   assertEquals(signalValue<boolean>((instance.render() as VNode).props.open), false);
 });

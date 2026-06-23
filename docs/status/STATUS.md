@@ -5,32 +5,24 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.40.7 Released (Release Readiness & CI Hardening)
+## Current Version Line: v0.41.0-alpha.1 Active (Cleanup-Train Patch → next v0.41.0 npm Distribution Pivot)
 
-v0.40.7 hardens the v0.40.6 release infrastructure without changing the v0.40.4
-public product surface or package graph. It closes the gaps between local
-development machines and the GitHub Actions CI environment so that the v0.40.x
-cleanup train can be published reliably. Changes include a Deno static server
-for E2E, an offline E2E escape hatch, CI Playwright browser installation,
-credential-gated release steps, and local-release tooling repairs.
+v0.41.0-alpha.1 is the active package line. v0.41.0 (next) pivots openElement distribution from
+JSR to npm using Deno `deno pack`, keeps Vite + Nitro as the default engines
+behind the protocol boundary, and makes `@openelement/*` packages available as
+pure ESM npm artifacts. Runtime-free packages (`core`, `element`, `ui`,
+`protocol`, `signal`, `router`, `app`) retain zero `Deno.*` and zero `node:*`
+usage; build/server glue (`ssg`, `content`, `adapter-vite`, `create`) owns the
+necessary runtime-specific code. The release introduces no new product feature
+and makes no default runtime, signal-engine, or package-topology change beyond
+the distribution channel.
 
-v0.40.7 is a release-readiness patch under the v0.40.x cleanup-train authority
-from ADR-0105. ADR-0106 continues to approve the underlying audit-driven
-cleanup scope for v0.40.6. AutoFlow3 is the workflow, gate, evidence, and
+v0.41.0 is executed under ADR-0108 and the active version plan in
+`docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
 release-state control plane, but it cannot decide minor/major product scope,
 public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
-
-Local v0.40.7 release-readiness evidence passes: `fmt:check`, `lint`,
-`typecheck`, `test`, `build`, `graph:check`, `arch:check`, `repo:hygiene`,
-`workflow:check`, `workflow:check-slimming`, `docs:check-public`,
-`docs:check-current`, `docs:check-strategy`, `package-surface:check`,
-`signals:check-protocol-boundary`, `type-safety:check`, `autoflow:push`,
-`autoflow:ci`, `nitro:proof:node`, `nitro:proof:workers`, `consumer:local`,
-`consumer:packaged`, and `publish:dry-run`. Distribution closure is completed
-by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
-line and runs the post-publish consumer smoke.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
@@ -48,21 +40,101 @@ Public package names are singular: `@openelement/element`,
 and www active code enforce 0 explicit `any` through the `type-safety:check`
 gate.
 
-The default signal engine is `@preact/signals-core`. `alien-signals` remains
-available as an optional engine through `@openelement/signal/alien-engine`.
+The signal engine is `@preact/signals-core`.
 
 ADR-0101 is the governance boundary for this line. ADR-0105 approves the
 v0.40.4 breaking cleanup train consolidated into the v0.40.4 release.
 
-Local v0.40.4 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
+Local v0.41.0 release-readiness evidence passes: `fmt:check`, `lint`, `typecheck`, `test`,
 `build`, `graph:check`, `arch:check`, `repo:hygiene`, `workflow:check`,
 `workflow:check-slimming`, `docs:check-public`, `docs:check-current`,
 `docs:check-strategy`, `package-surface:check`,
 `signals:check-protocol-boundary`, `type-safety:check`, `autoflow:push`,
 `autoflow:ci`, `nitro:proof:node`, `nitro:proof:workers`, `consumer:local`,
-`consumer:core-smoke`, and `publish:dry-run`. Distribution closure is completed
-by the `main` branch `Publish to JSR` workflow, which publishes the 11-package
-line and runs the post-publish consumer smoke.
+`consumer:core-smoke`, `deno-api:check`, `pack:dry-run`, and `publish:npm:dry-run`.
+Distribution closure is completed by the `main` branch `Publish to npm` workflow,
+which packs and publishes the 11-package line with provenance and runs the
+post-publish npm consumer smoke.
+
+v0.41.0 repository cleanup (2026-06-21, 1068 tests / 0 failed):
+
+- Round 1: Deleted dead files (validators, file-isr-cache, engine, content barrels, ~530 lines). Removed dead exports (LogLevel, renderSequential/Parallel). Shrink/stdlib fixes (hoisted conditionKeys, unified renderSsrError, extname→path.extname, warnOnce helper).
+- Round 2: Deleted createDefaultEngine, _textEncoder, data.ts barrel, use-loader-data.ts barrel, hasControlCharacter, joinUrlPath, section-matter dep, stale file-isr-cache export. Inlined renderEndTimeFallback/now/escapeRoutePath. Converted codeForRenderError to lookup table. Merged switch fallthrough. Annotated speculative errors.
+- Round 3: Deleted router dead files (client-router, page-loader, ssr-data-stubs, define-routes, pattern-translate, locale-path, ~500 lines). Removed marked dep from router. Converted cem-compat/entry-descriptor/route-scanner switches to lookup tables. Extracted safeNow() for performance.now() fallback. Unified 404 rendering blocks. (useActionData/useLoaderData preserved — used by www.)
+
+## v0.41.0-alpha.1 Architecture Audit
+
+### 🔴 CRITICAL — ✅ Resolved (Phase 1, 2026-06-21)
+
+- ~~Broken `protocol/validators` subpath~~ → removed from `protocol/deno.json`
+- ~~Vite string leaked into `core`~~ → `wrapInDocument()` now accepts generic `devScripts`; `/@vite/client` moved to engine layer
+- ~~Protocol types imported from `core`, not `protocol`~~ → `HydrationStrategy`/`ComponentLayer`/`HydrationHint`/`RenderError` now routed via `@openelement/protocol/renderer` (8+ locations)
+
+### 🟠 HIGH — ✅ Resolved (Phase 2, 2026-06-21)
+
+- ~~Core types missing from protocol~~ → created `protocol/src/build-types.ts` with `FrameworkOptions`/`RouteEntry`/`OpenElementPackageManifest`/`IsrManifestEntry`/`CompatibilityClassification`; core re-exports from protocol
+- ~~Deep subpath bypass: `createLogger`~~ → added `protocol/logger`, 23 files updated
+- ~~Deep subpath bypass: `formatError`~~ → added `protocol/errors`, 18 files updated
+
+### 🟡 MEDIUM — ✅ Annotated (Phase 3, 2026-06-21)
+
+- `wrapInDocument` params cleaned via Phase 1
+- `app/vite.ts` + `app/i18n-plugin.ts` annotated
+- `content/deno.json` annotated
+- Unused protocol surface annotated with `ponytail:` comments
+
+### ✅ Verification (2026-06-21)
+
+- `core`/`element`/`ui`/`signal` — 66 files, zero violations
+- `router` + `app` runtime — 7 files clean, 2 build-time (acceptable)
+- `protocol` — zero Vite/Nitro/signal-engine imports
+
+---
+
+## v0.41.0-alpha.1 — Remaining Tasks
+
+Full byte-level audit (66 core + 7 app + 58 engine + 30 tools = 161 files) complete. Open items below.
+
+### 🟠 Engine Protocol Import Migration (14 locations, ~30 lines)
+
+Types that exist in `protocol/build-types` but are still imported from `@openelement/core`:
+
+| Package        | Files                                                                                                                                                          | Types still from core                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `adapter-vite` | `build.ts`, `plugin.ts`, `head-injection.ts`, `build-pipeline.ts`, `build-context.ts`, `cli/build-ssg.ts`                                                      | `FrameworkOptions`, `OpenElementPackageManifest`, `RouteEntry`, `CompatibilityClassification` |
+| `ssg`          | `entry-renderer.ts`, `ssg-helpers.ts`, `ssg-render.ts`, `route-type-generator.ts`, `entry-descriptor.ts`, `ssg-report.ts`, `route-scanner.ts`, `cem-compat.ts` | Same + `IsrManifestEntry`                                                                     |
+
+### 🟡 Protocol Coverage Gaps (6 types + 5 runtime fns)
+
+Types defined ONLY in `core` that engine packages need — should be added to protocol:
+
+| Type                          | Defined In               | Needed By                                      |
+| ----------------------------- | ------------------------ | ---------------------------------------------- |
+| `SsrAdmissionDecision`        | `core/render-schemas.ts` | `ssg/entry-descriptor.ts`, `ssg/ssg-render.ts` |
+| `CemCompatibilityReport`      | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `DsdBuildReport`              | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `DsdHydrationStrategySummary` | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `ManifestDecision`            | `core/render-schemas.ts` | `ssg/ssg-report.ts`                            |
+| `SpecialFileType`             | `core/schemas.ts`        | `ssg/route-scanner.ts`                         |
+
+Runtime functions that need protocol re-exports:
+
+| Function                | From                    | Used By                                      |
+| ----------------------- | ----------------------- | -------------------------------------------- |
+| `escapeAttr`            | `core/html-escape`      | `adapter-vite/head-injection`, `ssg/ssg-pwa` |
+| `isValidTagName`        | `core/tag-utils`        | `ssg/cem-compat`                             |
+| `createIsrCacheKey`     | `core/isr`              | `ssg/ssg-helpers`                            |
+| `transformIslandSource` | `core/island-transform` | `adapter-vite/island-transform`              |
+| `StyleSheet`            | `core/style-sheet`      | `ssg/ssr-polyfills`                          |
+
+### 🟢 Dead Dependencies & Tools (3 deps + 4 import-map + 2 tools)
+
+| Category                | Detail                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Dead npm deps           | `hono` in `adapter-vite/deno.json`, `hono` in `ssg/deno.json`, `typescript` in `adapter-vite/deno.json`                  |
+| Stale import-map (root) | `flexsearch`, `sanitize-html`, `@types/sanitize-html`, `@types/node` — zero .ts imports                                  |
+| Broken tool             | `tools/verify-package-configs.ts` — stale `deno.land` URL + references deleted `i18n` package                            |
+| API leak                | `adapter-vite/build-pipeline.ts` re-exports `FrameworkOptions` from `@openelement/core` — should re-export from protocol |
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
 
@@ -168,9 +240,9 @@ closed for the prior package line. v0.37.4 JSR distribution remains externally
 unhealthy, but ADR-0097 prevents that external state from blocking roadmap
 execution.
 
-The active implementation line is now v0.40.7. It proceeds from the v0.40.4
-product-line cleanup release and focuses on closing the quality gaps identified
-by the 2026-06-15 architecture audit.
+The active implementation line is now v0.41.0. It proceeds from the v0.40.4
+product-line cleanup release and focuses on replacing JSR distribution with
+npm artifacts, Deno `deno pack`, and trusted npm publishing.
 
 Governing docs:
 
@@ -249,7 +321,7 @@ built-in cell generation.
 | v0.38.0 | Product Surface Reset and Hardening                | Done                | Reset public package/API/product surface based on protocol and Nitro runtime evidence                         |
 | v0.39.0 | Framework RC + Four-Product Matrix Reset           | Done                | ADR-0099, public docs integrity, Elements direction, Preact handoff, starter/deploy/consumer gates            |
 | v0.40.4 | Elements + Preact + Repository Slimming            | Release-ready       | Productize `OpenElement`, prove Preact islands, and collapse root/docs/Hub/package/gate shape to 11 packages  |
-| v0.41.0 | npm-only Distribution                              | Planned             | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
+| v0.41.0 | npm-only Distribution                              | Active              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` smoke, and jsDelivr smoke |
 | v0.42.0 | Server Primitives                                  | Planned             | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                     |
 | v0.43.0 | Data + Cache Primitives                            | Planned             | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                             |
 | v0.44.0 | Forms + Mutations                                  | Planned             | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff       |
@@ -301,11 +373,11 @@ DSD/shadow is a default Elements render mode, not the product name.
 
 ## Package Version State
 
-The active v0.40 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.40.7**. Published package availability is completed by the
-`main` branch JSR publish workflow and its post-publish consumer smoke.
+The active v0.41 workspace contains 11 current `@openelement/*` packages aligned
+to local version **0.41.0**. Published package availability is completed by the
+`main` branch npm publish workflow and its post-publish npm consumer smoke.
 
-Package governance for v0.40:
+Package governance for v0.41:
 
 - do not add a new top-level package without an ADR;
 - ADR-0102 approves `@openelement/element`; the v0.40 roadmap now prioritizes
@@ -378,8 +450,8 @@ The workspace package count is now 11.
 - Governance convergence before v1.0: gate tiers (fast dev gate for PRs,
   full release gate for publishing), AutoFlow feature scope freeze, Hub scope
   deferred to post-v1.0. See `docs/roadmap/ROADMAP.md` v0.38.x for details.
-- JSR publish remains the v0.40 release distribution gate under ADR-0100.
-  v0.41 is planned to replace this path with npm-only distribution.
+- npm publish is the v0.41 release distribution gate under ADR-0108.
+  v0.41 replaces the JSR-only path with npm-only release truth.
 
 ## Key Decisions
 
@@ -411,16 +483,15 @@ The workspace package count is now 11.
 - **Current heavy island target.** Preact is the only planned heavy-framework
   island adapter proof for the pre-1.0 path; Vue, React, Svelte, and generic
   heavy-island expansion are frozen, and Web Awesome is out of scope.
-- **Signal engine default.** `@preact/signals-core` is the default engine
-  (since v0.40.4). `alien-signals` remains available as an optional engine
-  via `@openelement/signal/alien-engine` and runtime `setSignalEngine()`.
+- **Signal engine.** `@preact/signals-core` is the only supported engine
+  (since v0.40.4).
 - **No DOM diff.** Signal writes trigger scoped rerender behavior; complex
   subtrees stay in Islands.
 - **Package graph gate.** `graph:check` verifies zero cycles, unified versions,
   and declared imports.
-- **JSR publish exit gate restored for v0.40.** `publish:dry-run` remains a
-  local release gate, and the `main` branch publish workflow provides v0.40
-  distribution closure. v0.41 is planned to move release truth to npm.
+- **npm publish exit gate for v0.41.** `pack:dry-run` and `publish:npm:dry-run`
+  are local release gates, and the `main` branch publish workflow provides v0.41
+  distribution closure. v0.41 moves release truth to npm under ADR-0108.
 - **SSG ownership.** `@openelement/ssg` owns SSG render, postprocess, route
   scanning, entry generation, generated data resolution, and SSG-specific Vite
   plugin logic.
@@ -458,10 +529,13 @@ deno task test
 deno task build
 deno task nitro:proof:node
 deno task nitro:proof:workers
-deno task publish:dry-run
+deno task deno-api:check
+deno task pack:dry-run
+deno task publish:npm:dry-run
 ```
 
-Live JSR publish and post-publish JSR consumer smoke run from the `main` branch
-after repository-controlled gates, dev CI, merge, and release work. This remains
-the v0.40 distribution closure path; v0.41 is planned to replace it with
-npm-only release truth.
+Live npm publish and post-publish npm consumer smoke run from the `main` branch
+after repository-controlled gates, dev CI, merge, and release work. This is the
+v0.41 npm-only distribution closure path. JSR publish remains available only as
+a historical observation task (`publish:jsr:*`) and is no longer a release exit
+gate.

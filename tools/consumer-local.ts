@@ -106,29 +106,6 @@ denoJson.imports['@openelement/core/jsx-runtime'] = pathToFileURL(
 denoJson.imports['@openelement/core/jsx-dev-runtime'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts'),
 ).href;
-denoJson.imports['@openelement/protocol'] = pathToFileURL(
-  join(repoRoot, 'packages', 'protocol', 'src', 'index.ts'),
-).href;
-for (
-  const subpath of [
-    'build-types',
-    'cache',
-    'components',
-    'conformance',
-    'data',
-    'i18n',
-    'islands',
-    'renderer',
-    'routes',
-    'runtime',
-    'signals',
-    'validators',
-  ]
-) {
-  denoJson.imports[`@openelement/protocol/${subpath}`] = pathToFileURL(
-    join(repoRoot, 'packages', 'protocol', 'src', `${subpath}.ts`),
-  ).href;
-}
 denoJson.imports['@openelement/adapter-vite/build-context'] = pathToFileURL(
   join(repoRoot, 'packages', 'adapter-vite', 'src', 'build-context.ts'),
 ).href;
@@ -147,6 +124,9 @@ denoJson.imports['@openelement/element'] = pathToFileURL(
 denoJson.imports['@openelement/core/style-sheet'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts'),
 ).href;
+denoJson.imports['@openelement/core/runtime'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'runtime.ts'),
+).href;
 denoJson.imports['@openelement/content'] = pathToFileURL(
   join(repoRoot, 'packages', 'content', 'src', 'index.ts'),
 ).href;
@@ -162,11 +142,40 @@ denoJson.imports['@openelement/ui/'] = pathToFileURL(
 // Router is a transitive dependency of @openelement/app; local source overrides
 // must include it so the generated starter import map resolves the SSR bundle.
 denoJson.imports['@openelement/router'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src', 'index.ts'),
+  join(repoRoot, 'packages', 'router', 'src', 'data-context.ts'),
 ).href;
-denoJson.imports['@openelement/router/'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src') + '/',
+denoJson.imports['@openelement/router/i18n'] = pathToFileURL(
+  join(repoRoot, 'packages', 'router', 'src', 'i18n.ts'),
 ).href;
+// Protocol subpaths must be mapped so that local source builds resolve
+// cross-package imports such as @openelement/protocol/hydration-markers.
+const protocolSrc = join(repoRoot, 'packages', 'protocol', 'src');
+denoJson.imports['@openelement/protocol'] = pathToFileURL(
+  join(protocolSrc, 'index.ts'),
+).href;
+for (
+  const subpath of [
+    'hydration-markers',
+    'signal',
+    'vnode',
+    'render',
+    'manifest',
+    'framework',
+    'context',
+    'runtime',
+    'data',
+    'isr',
+    'ssg',
+    'errors',
+    'style-sheet',
+    'island',
+    'prop',
+  ]
+) {
+  denoJson.imports[`@openelement/protocol/${subpath}`] = pathToFileURL(
+    join(protocolSrc, `${subpath}.ts`),
+  ).href;
+}
 denoJson.imports['lit'] = 'npm:lit@^3.2.0';
 denoJson.imports['vite'] = 'npm:vite@8.0.10';
 denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
@@ -191,6 +200,71 @@ const uiSrc = join(repoRoot, 'packages', 'ui', 'src');
 const signalsSrc = join(repoRoot, 'packages', 'signal', 'src');
 
 const aliases = [
+  // Protocol subpaths must precede the parent @openelement/protocol alias.
+  {
+    find: '@openelement/protocol/hydration-markers',
+    replacement: vitePath(join(protocolSrc, 'hydration-markers.ts')),
+  },
+  {
+    find: '@openelement/protocol/signal',
+    replacement: vitePath(join(protocolSrc, 'signal.ts')),
+  },
+  {
+    find: '@openelement/protocol/vnode',
+    replacement: vitePath(join(protocolSrc, 'vnode.ts')),
+  },
+  {
+    find: '@openelement/protocol/render',
+    replacement: vitePath(join(protocolSrc, 'render.ts')),
+  },
+  {
+    find: '@openelement/protocol/manifest',
+    replacement: vitePath(join(protocolSrc, 'manifest.ts')),
+  },
+  {
+    find: '@openelement/protocol/framework',
+    replacement: vitePath(join(protocolSrc, 'framework.ts')),
+  },
+  {
+    find: '@openelement/protocol/context',
+    replacement: vitePath(join(protocolSrc, 'context.ts')),
+  },
+  {
+    find: '@openelement/protocol/runtime',
+    replacement: vitePath(join(protocolSrc, 'runtime.ts')),
+  },
+  {
+    find: '@openelement/protocol/data',
+    replacement: vitePath(join(protocolSrc, 'data.ts')),
+  },
+  {
+    find: '@openelement/protocol/isr',
+    replacement: vitePath(join(protocolSrc, 'isr.ts')),
+  },
+  {
+    find: '@openelement/protocol/ssg',
+    replacement: vitePath(join(protocolSrc, 'ssg.ts')),
+  },
+  {
+    find: '@openelement/protocol/errors',
+    replacement: vitePath(join(protocolSrc, 'errors.ts')),
+  },
+  {
+    find: '@openelement/protocol/style-sheet',
+    replacement: vitePath(join(protocolSrc, 'style-sheet.ts')),
+  },
+  {
+    find: '@openelement/protocol/island',
+    replacement: vitePath(join(protocolSrc, 'island.ts')),
+  },
+  {
+    find: '@openelement/protocol/prop',
+    replacement: vitePath(join(protocolSrc, 'prop.ts')),
+  },
+  {
+    find: '@openelement/protocol',
+    replacement: vitePath(join(protocolSrc, 'index.ts')),
+  },
   {
     find: '@openelement/adapter-vite/build-context',
     replacement: vitePath(
@@ -229,32 +303,13 @@ const aliases = [
     find: '@openelement/core',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'index.ts')),
   },
-  ...[
-    'build-types',
-    'cache',
-    'components',
-    'conformance',
-    'data',
-    'i18n',
-    'islands',
-    'renderer',
-    'routes',
-    'runtime',
-    'signals',
-    'validators',
-  ].map((subpath) => ({
-    find: `@openelement/protocol/${subpath}`,
-    replacement: vitePath(
-      join(repoRoot, 'packages', 'protocol', 'src', `${subpath}.ts`),
-    ),
-  })),
-  {
-    find: '@openelement/protocol',
-    replacement: vitePath(join(repoRoot, 'packages', 'protocol', 'src', 'index.ts')),
-  },
   {
     find: '@openelement/signal/framework',
     replacement: vitePath(join(signalsSrc, 'framework.ts')),
+  },
+  {
+    find: '@openelement/signal',
+    replacement: vitePath(join(signalsSrc, 'index.ts')),
   },
   {
     find: '@openelement/element',
@@ -263,6 +318,10 @@ const aliases = [
   {
     find: '@openelement/core/style-sheet',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts')),
+  },
+  {
+    find: '@openelement/core/runtime',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'runtime.ts')),
   },
   {
     find: '@openelement/ui/open-props-tokens',
@@ -306,12 +365,12 @@ const aliases = [
     replacement: vitePath(uiSrc),
   },
   {
-    find: '@openelement/router/',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src') + '/'),
+    find: '@openelement/router/i18n',
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'i18n.ts')),
   },
   {
     find: '@openelement/router',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'index.ts')),
+    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
   },
   {
     find: '@openelement/app/vite',

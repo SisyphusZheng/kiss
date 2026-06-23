@@ -3,14 +3,14 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
-import { daisyClassSheet, openPropsTokenSheet } from '@openelement/ui';
-import '../islands/open-search.tsx';
+import '@openelement/ui/open-button';
+import '@openelement/ui/open-input';
 
 const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
   { href: '/guide/core-concepts', label: 'Core Concepts' },
   { href: '/architecture/dsd', label: 'DSD Rendering' },
-  { href: '/api/reference', label: 'API Reference' },
+  { href: '/apilist', label: 'API Reference' },
   { href: '/architecture/architecture', label: 'Architecture' },
   { href: '/architecture/comparison', label: 'Framework Comparison' },
   { href: '/roadmap', label: 'Roadmap' },
@@ -26,10 +26,10 @@ const REDIRECT_MAP: Record<string, string> = {
   '/engine/comparison': '/architecture/comparison',
   '/engine/package-compatibility': '/architecture/package-compatibility',
   '/engine/standards-registry': '/architecture/standards-registry',
-  '/engine/reference/core': '/api/reference',
+  '/engine/reference/core': '/apilist',
   '/guide/migration-v0.24': '/guide/getting-started',
   '/guide/positioning': '/architecture/architecture',
-  '/guide/rpc': '/api/reference',
+  '/guide/rpc': '/apilist',
   '/guide/security-middleware': '/guide/error-handling',
   '/guide/content-system': '/guide/routing-and-data',
   '/guide/pwa': '/guide/deployment',
@@ -41,23 +41,100 @@ const REDIRECT_MAP: Record<string, string> = {
 
 const styles = new StyleSheet();
 styles.replaceSync(`
-  :host { display: block; }
+  :host {
+    display: block;
+    color: var(--text-primary);
+  }
+  .container {
+    display: grid;
+    justify-items: center;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: var(--size-16) var(--size-6);
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--brand-pale) 46%, transparent), transparent 34%),
+      var(--bg-base);
+  }
+  .title {
+    font-size: calc(var(--font-size-8) * 1.35);
+    font-weight: var(--font-weight-9);
+    color: var(--text-primary);
+    letter-spacing: 0;
+    margin: 0;
+    line-height: 1;
+  }
+  .subtitle {
+    font-size: var(--font-size-4);
+    font-weight: var(--font-weight-8);
+    margin: var(--size-3) 0 0;
+    color: var(--text-primary);
+  }
+  .description {
+    max-width: 520px;
+    font-size: var(--font-size-1);
+    color: var(--text-secondary);
+    margin: var(--size-2) 0 var(--size-7);
+    line-height: var(--font-lineheight-3);
+  }
+  .search-wrapper {
+    max-width: 400px;
+    width: 100%;
+    margin: 0 auto var(--size-8);
+  }
+  .popular-label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: var(--size-3);
+    letter-spacing: 0;
+  }
+  .links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--size-2);
+    justify-content: center;
+    margin-bottom: var(--size-8);
+  }
+  @media (max-width: 600px) {
+    .container {
+      padding: 80px 20px 64px;
+    }
+    .title {
+      font-size: 64px;
+    }
+    .subtitle {
+      font-size: 20px;
+    }
+  }
 `);
 
 export default class Page404 extends OpenElement {
-  static override styles = [daisyClassSheet, openPropsTokenSheet, styles];
+  static override styles = [styles];
   override render() {
     return (
-      <div class='container text-center' style='max-width:700px;margin:var(--size-12) auto;'>
-        <h1 style='font-size:4rem;font-weight:var(--font-weight-7);color:var(--gray-10);margin:0;'>
-          404
-        </h1>
-        <p style='color:var(--gray-6);font-size:var(--font-size-4);margin:var(--size-4) 0 var(--size-8);'>
-          Page not found. Here are some helpful links:
+      <div class='container'>
+        <h1 class='title'>404</h1>
+        <p class='subtitle'>Page not found</p>
+        <p class='description'>
+          The page you are looking for doesn't exist or has been moved.
         </p>
-        <div class='flex flex-wrap justify-center gap-3'>
-          {POPULAR_LINKS.map((l) => <a href={l.href} class='btn btn-ghost btn-sm'>{l.label}</a>)}
+        <div class='search-wrapper'>
+          <open-input placeholder='Search docs and API'></open-input>
         </div>
+        <p class='popular-label'>Popular pages</p>
+        <div class='links-grid'>
+          {POPULAR_LINKS.map((l) => (
+            <open-button size='sm' href={l.href}>
+              {l.label}
+            </open-button>
+          ))}
+        </div>
+        <open-button variant='primary' href='/'>
+          Go home
+        </open-button>
       </div>
     );
   }

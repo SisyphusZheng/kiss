@@ -1,40 +1,22 @@
 {
   "name": "@openelement/protocol",
-  "version": "0.40.7",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
-    "./build-types": "./src/build-types.ts",
-    "./cache": "./src/cache.ts",
-    "./components": "./src/components.ts",
-    "./conformance": "./src/conformance.ts",
-    "./data": "./src/data.ts",
-    "./island-frameworks": "./src/island-frameworks.ts",
-    "./islands": "./src/islands.ts",
-    "./renderer": "./src/renderer.ts",
-    "./routes": "./src/routes.ts",
+    "./signal": "./src/signal.ts",
+    "./vnode": "./src/vnode.ts",
+    "./render": "./src/render.ts",
+    "./manifest": "./src/manifest.ts",
+    "./framework": "./src/framework.ts",
+    "./context": "./src/context.ts",
     "./runtime": "./src/runtime.ts",
-    "./signals": "./src/signals.ts",
-    "./ssg-contracts": "./src/ssg-contracts.ts",
-    "./validators": "./src/validators.ts",
-    "./i18n": "./src/i18n.ts"
-  },
-  "imports": {},
-  "publish": {
-    "include": [
-      "src/**",
-      "deno.json",
-      "README.md",
-      "LICENSE"
-    ]
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "tasks": {
-    "build": "deno check src/index.ts"
+    "./data": "./src/data.ts",
+    "./isr": "./src/isr.ts",
+    "./ssg": "./src/ssg.ts",
+    "./errors": "./src/errors.ts",
+    "./style-sheet": "./src/style-sheet.ts",
+    "./island": "./src/island.ts",
+    "./prop": "./src/prop.ts",
+    "./hydration-markers": "./src/hydration-markers.ts"
   }
 }

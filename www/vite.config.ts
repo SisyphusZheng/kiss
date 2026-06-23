@@ -2,9 +2,8 @@ import { openElement } from '@openelement/app/vite';
 import { openPropsTokenSheet } from '@openelement/ui';
 import { defineConfig } from 'vite';
 
-// www/ is a pure JSR consumer - no resolve.alias needed.
-// The root deno.json workspace mapping resolves jsr:@openelement/* -> local
-// packages/ during dev, and JSR tarballs in production.
+// www/ is an npm-first consumer; local workspace resolution during dev, npm
+// tarballs in production. No resolve.alias needed.
 
 // v0.20.0: migrated from lessRootColorCSS (deleted) to openPropsTokenSheet.
 // v0.23.0: :host rules don't apply in global CSS context. Replace :host with
@@ -15,83 +14,95 @@ const _rawCSS = [...openPropsTokenSheet.cssRules].map((r) => r.cssText).join('\n
 const rootCSS = _rawCSS
   .replace(/:host\s*\{/g, ':root, :host {')
   .replace(
-    /:host\(\[data-theme="dark"\]\)\s*\{/g,
-    'html[data-theme="dark"], :host([data-theme="dark"]) {',
+    /:host\(\[data-theme=["']dark["']\]\),\s*:host-context\(\[data-theme=["']dark["']\]\)\s*\{/g,
+    'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]), :host-context([data-theme="dark"]) {',
+  )
+  .replace(
+    /:host\(\[data-theme=["']dark["']\]\)\s*\{/g,
+    'html[data-theme="dark"], :root[data-theme="dark"], :host([data-theme="dark"]) {',
   );
-const darkCSS = `
+const siteCSS = `
 :root,
+html[data-theme="light"],
+:host([data-theme="light"]),
+:root[data-theme="light"] {
+  --bg-canvas: var(--bg-base);
+  --surface-1: var(--bg-elevated);
+  --surface-2: var(--bg-surface);
+  --surface-3: var(--bg-hover);
+  --surface-code: var(--bg-code);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-strong: color-mix(in srgb, var(--border) 68%, var(--text-primary));
+  --edge-highlight: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  --color-edge-highlight: var(--edge-highlight);
+  --color-overlay: var(--overlay);
+  --shadow-elevated: var(--shadow-1);
+  --border-strong: var(--color-border-strong);
+  --nav-bg: var(--bg-base);
+  --nav-height: var(--size-16);
+  --nav-link-color: var(--text-primary);
+  --nav-link-hover: var(--brand-deep);
+  --font-size-button: var(--font-size-0);
+  --font-size-body-sm: var(--font-size-0);
+  --font-size-caption: var(--font-size-00);
+  --font-weight-medium: var(--font-weight-5);
+  --font-weight-semibold: var(--font-weight-7);
+}
 html[data-theme="dark"],
 :host([data-theme="dark"]),
 :root[data-theme="dark"] {
-  --bg-obsidian: #040508;
-  --bg-panel: #090B11;
-  --bg-terminal: #010204;
-  --bg-surface: #090B11;
-  --bg-code: #010204;
-  --text-primary: #FFFFFF;
-  --text-secondary: #8E92A2;
-  --text-muted: #515466;
-  --brand-neon: #7C6FF5;
-  --brand-glow: rgba(124, 111, 245, 0.16);
-  --cyber-green: #00FF87;
-  --cyber-green-glow: rgba(0, 255, 135, 0.12);
-  --laser-cyan: #60EFFF;
-  --border: rgba(124, 111, 245, 0.16);
-  --border-futuristic: rgba(124, 111, 245, 0.16);
-  --border-bright: rgba(124, 111, 245, 0.4);
-  --gray-0: #040508;
-  --gray-1: #090B11;
-  --gray-9: #FFFFFF;
+  --bg-canvas: var(--bg-base);
+  --surface-1: var(--bg-elevated);
+  --surface-2: var(--bg-surface);
+  --surface-3: var(--bg-hover);
+  --surface-code: var(--bg-code);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-border-strong: color-mix(in srgb, var(--border) 72%, var(--text-primary));
+  --edge-highlight: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  --color-edge-highlight: var(--edge-highlight);
+  --color-overlay: var(--overlay);
+  --border-strong: var(--color-border-strong);
+  --nav-bg: var(--bg-base);
+  --nav-height: var(--size-16);
 }
 body {
-  background: var(--bg-obsidian, #040508);
-  color: var(--text-primary, #FFFFFF);
-}
-
-/* Light mode override -- theme toggle adds [data-theme="light"] to html */
-[data-theme="light"] {
-  --bg-obsidian: #f6f7f9;
-  --bg-panel: #ffffff;
-  --bg-terminal: #f1f3f5;
-  --bg-surface: #ffffff;
-  --text-primary: #12131a;
-  --text-secondary: #626676;
-  --text-muted: #8E92A2;
-  --brand-neon: #5148b8;
-  --brand-glow: rgba(81,72,184,0.08);
-  --cyber-green: #13795b;
-  --laser-cyan: #1769aa;
-  --border: rgba(18,19,26,0.12);
-  --border-futuristic: rgba(18,19,26,0.12);
-  --border-bright: rgba(81,72,184,0.3);
-  --gray-0: #f6f7f9;
-  --gray-1: #ffffff;
-  --gray-9: #12131a;
-}
-[data-theme="light"] body {
-  background: var(--bg-obsidian, #f6f7f9);
-}
-[data-theme="light"] .app-header {
-  background: rgba(255,255,255,0.88);
-}
-[data-theme="light"] .app-footer {
-  border-top-color: rgba(18,19,26,0.12);
-}
-[data-theme="light"] .docs-sidebar {
-  border-right-color: rgba(18,19,26,0.12);
-}
-[data-theme="light"] .header-nav a {
-  color: #626676;
-}
-[data-theme="light"] .header-nav a:hover {
-  color: #12131a;
+  margin: 0;
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--violet-1) 38%, transparent), transparent 46%),
+    linear-gradient(color-mix(in srgb, var(--border) 34%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) var(--border-size-1), transparent var(--border-size-1)),
+    var(--bg-canvas);
+  background-size: auto, 220px 128px, 220px 128px, auto;
+  color: var(--text-primary);
 }
 ::selection {
-  background: rgba(124,111,245,0.3);
-  color: #FFFFFF;
+  background: var(--brand-subtle);
+  color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{margin:0;background:var(--gray-1);color:var(--gray-9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${darkCSS}</style>`;
+  `<style>${rootCSS}body{font-family:'Instrument Sans','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   base: '/',
@@ -125,21 +136,11 @@ export default defineConfig({
       ssr: {
         noExternal: ['@openelement/ui'],
       },
-      pwa: {
-        name: 'openElement Framework',
-        shortName: 'openElement',
-        themeColor: '#040508',
-        backgroundColor: '#040508',
-      },
       viewTransition: true,
       speculation: true,
       inject: {
         // H-05 fix: Use structured stylesheets with SRI for CDN CSS
         stylesheets: [
-          {
-            href: 'https://cdn.jsdelivr.net/npm/open-props@1.7.20/open-props.min.css',
-            integrity: 'sha384-fsyUJwnN3qLArJUL5oaEYS3/WnhCmI4K5x+oB8wFigOMTJaIvys56ozH3+nE/qcf',
-          },
           {
             href: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
             integrity: 'sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2',
@@ -195,6 +196,9 @@ export default defineConfig({
           },
         ],
         headFragments: [
+          '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />',
+          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
+          '<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />',
           '<meta property="og:site_name" content="openElement">',
           '<meta property="og:type" content="website">',
           '<meta property="og:title" content="openElement - The Open Element">',
@@ -203,7 +207,7 @@ export default defineConfig({
           '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
           '<meta name="twitter:card" content="summary_large_image">',
           '<meta name="description" content="openElement - The Open Element. DSD-first Web Standards framework with SSG, islands, and Web Components.">',
-          '<style>html{visibility:visible!important;}body{background:#040508;color:#fff;}</style>',
+          '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
           '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
           '<link rel="apple-touch-icon" href="/assets/open-logo.svg" />',
           colorTokensStyle,
@@ -219,11 +223,11 @@ export default defineConfig({
           // Minimal headerNav; open-layout auto-filters sidebar.
           // v0.31 UI-shell debt: derive this from route meta scanning.
           headerNav: [
-            { href: '/guide/getting-started', label: 'Guide' },
+            { href: '/docs', label: 'Docs' },
             { href: '/apilist', label: 'API' },
-            { href: '/architecture/architecture', label: 'Architecture' },
-            { href: '/registry', label: 'Hub' },
+            { href: '/roadmap', label: 'Roadmap' },
             { href: '/blog', label: 'Blog' },
+            { href: 'https://github.com/open-element/openelement', label: 'GitHub' },
           ],
         },
         sitemap: {

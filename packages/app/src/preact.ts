@@ -14,7 +14,7 @@ import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
 import { getSsrProps } from '@openelement/core';
 import { type ComponentChild, h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import { renderToString } from 'preact-render-to-string';
-import type { IslandConfig } from '@openelement/protocol/islands';
+import type { IslandConfig } from './authoring.ts';
 
 export type PreactIslandProps = Record<string, unknown>;
 
@@ -37,9 +37,7 @@ function assertCustomElementTag(tagName: string): void {
 
 function collectAttributes(host: HTMLElement): PreactIslandProps {
   const props: PreactIslandProps = {};
-  const attrs =
-    (host as unknown as { attributes?: Array<{ name: string; value: string }> | NamedNodeMap })
-      .attributes;
+  const attrs = host.attributes;
   if (!attrs) return props;
   for (const attr of Array.from(attrs)) {
     if (attr.name === 'data-ssr-props') continue;

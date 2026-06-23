@@ -48,9 +48,9 @@ function callLoad(plugin: unknown, id: string): unknown {
 
 // ─── Plugin Order & Structure ─────────────────────────────────
 
-Deno.test('openPlugin: returns 10 plugins in correct order', () => {
+Deno.test('openPlugin: returns 9 plugins in correct order', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 
   const names = plugins.map((p) => p.name);
   assertEquals(names, [
@@ -63,7 +63,6 @@ Deno.test('openPlugin: returns 10 plugins in correct order', () => {
     '@hono/vite-dev-server',
     'open:island-transform',
     'open:build',
-    'open:devtools',
   ]);
 });
 
@@ -87,37 +86,37 @@ Deno.test('openPlugin: defaults routesDir to app/routes', () => {
   const plugins = createOpenPlugin({});
   // Default is applied internally - verify plugin creation succeeds
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: defaults islandsDir to app/islands', () => {
   const plugins = createOpenPlugin({});
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: defaults componentsDir to app/components', () => {
   const plugins = createOpenPlugin({});
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: respects custom routesDir', () => {
   const plugins = createOpenPlugin({ routesDir: 'src/pages' });
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: respects custom islandsDir', () => {
   const plugins = createOpenPlugin({ islandsDir: 'src/widgets' });
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: respects custom componentsDir', () => {
   const plugins = createOpenPlugin({ componentsDir: 'src/ui' });
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 // ─── Upgrade Strategy Default ─────────────────────────────────
@@ -159,12 +158,12 @@ Deno.test('openPlugin: rejects script tags in inject.headFragments', () => {
 
 Deno.test('openPlugin: handles empty options object', () => {
   const plugins = createOpenPlugin({});
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: handles undefined options', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 // ─── Virtual Entry Plugin Behaviors ───────────────────────────
@@ -295,15 +294,6 @@ Deno.test('openPlugin: build plugin exists', () => {
   assertExists(buildPlugin);
 });
 
-// ─── Devtools Plugin ──────────────────────────────────────────
-
-Deno.test('openPlugin: devtools plugin exists', () => {
-  const plugins = createOpenPlugin({});
-  const devtoolsPlugin = plugins.find((p) => p.name === 'open:devtools')!;
-
-  assertExists(devtoolsPlugin);
-});
-
 // ─── Dev Server Plugin ────────────────────────────────────────
 
 Deno.test('openPlugin: dev server plugin is @hono/vite-dev-server', () => {
@@ -318,13 +308,13 @@ Deno.test('openPlugin: dev server plugin is @hono/vite-dev-server', () => {
 Deno.test('openPlugin: accepts packageIslands option', () => {
   const plugins = createOpenPlugin({ packageIslands: ['@openelement/ui'] });
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: accepts empty packageIslands', () => {
   const plugins = createOpenPlugin({ packageIslands: [] });
   assertExists(plugins);
-  assertEquals(plugins.length, 10);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: accepts multiple packageIslands', () => {

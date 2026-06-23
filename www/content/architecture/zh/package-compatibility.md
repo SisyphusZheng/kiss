@@ -15,18 +15,19 @@ order: 10
 
           <h1>第三方包兼容性</h1>
           <p class="subtitle">
-            v0.18.0 引入的 Universal WC Engine 让 openElement 能自动识别第三方 Web Component 包的兼容性，安全决定谁可以 SSR、谁只能跑在浏览器。
+            openElement 通过 `@openelement/protocol` 和 `@openelement/core` 提供的协议面识别第三方 Web Component 包，安全决定谁可以 SSR、谁只能跑在浏览器。
           </p>
 
           <h2>核心思路</h2>
           <p>
             第三方 Web Component 包来自不同的生态：有些用 Lit、有些用 Vanilla、有些只能在浏览器运行。
-            openElement 不做"一刀切"假设，而是通过读取标准的 <code>custom-elements.json</code> 文件来了解每个包。
+            openElement 不做"一刀切"假设，而是通过 `@openelement/protocol` 的包元数据协议和 `@openelement/core`
+            的 renderer 适配来了解每个包。
           </p>
-          <h3>但前提是这个包有 CEM 文件</h3>
+          <h3>manifest 或显式声明</h3>
           <p>
-            例如某个未发布 CEM 的第三方包（如 <code>@example/third-party-wc</code>）<strong>不发布</strong>
-            <code>custom-elements.json</code>。没有 CEM，检测结果为空，这些包会按照 <code>packageIslands</code>
+            例如某个未发布 manifest 的第三方包（如 <code>@example/third-party-wc</code>）<strong>不发布</strong>
+            <code>custom-elements.json</code>。没有 manifest，自动检测返回空，这些包会按照 <code>packageIslands</code>
             里的显式声明来处理。
           </p>
 
@@ -42,7 +43,7 @@ order: 10
             <tbody>
               <tr>
                 <td><code>ssr-capable</code></td>
-                <td>有显式的 openElement SSR 声明或适配器支持</td>
+                <td>有显式的 `@openelement/core` SSR 声明或 renderer 适配器支持</td>
                 <td>导入 SSR bundle，参与 DSD 渲染</td>
               </tr>
               <tr>
@@ -81,9 +82,10 @@ for (const pkg of node_modules)
             <li><strong>零配置</strong> - 自动运行，不需要手动声明</li>
           </ul>
 
-          <h2>dsd-report 中的兼容性报告</h2>
+          <h2>构建产物中的兼容性报告</h2>
           <p>
-            构建完成后，<code>dsd-report.json</code> 中新增了 <code>cemCompatibility</code> 部分：
+            构建完成后，兼容性摘要会写入构建报告（如 <code>manifest.json</code> 或等价的构建产物），包含
+            <code>cemCompatibility</code> 部分：
           </p>
           <open-code-block><pre><code>
     ]
@@ -97,10 +99,8 @@ for (const pkg of node_modules)
 
           <h2>当前站点的实际结果</h2>
           <p>
-            当前 www 示例站点使用的 <code>@openelement/ui</code> 自带
-            <code>custom-elements.json</code>，因此会被自动检测并分类为
-            <code>ssr-capable</code>。如果引入没有 CEM 的第三方包，则需要通过
-            <code>vite.config.ts</code> 中 <code>packageIslands</code> 显式声明。
+            当前 www 示例站点通过 <code>vite.config.ts</code> 中 <code>packageIslands</code> 显式声明第三方包。
+            引入没有 manifest 的第三方包时，必须通过该配置显式声明其行为。
           </p>
 
           <h2>对比：有 CEM vs 无 CEM</h2>
@@ -138,8 +138,8 @@ for (const pkg of node_modules)
 
           <h2>路线图展望</h2>
           <ul class="compact-list">
-            <li><strong>v0.18.1</strong>: <code>less validate-manifest</code> CLI - 安装前手动验证</li>
-            <li><strong>v0.18.2</strong>: <code>open add</code> - 一键安装 + 配置第三方包</li>
+            <li><strong>v0.18.1</strong>: manifest 验证 CLI - 安装前手动验证</li>
+            <li><strong>v0.18.2</strong>: <code>openelement add</code> - 一键安装 + 配置第三方包</li>
             <li><strong>v0.18.3</strong>: DOM 模拟 - 实验性尝试渲染 client-only 组件</li>
           </ul>
 

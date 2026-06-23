@@ -8,34 +8,28 @@
  *   2. Runtime: Edge handler checks cache before serving static
  *   4. Stale: serve cached HTML + async background regeneration
  *
- * The IsrCache interface is platform-agnostic. Production adapters
+ * MemoryIsrCache is the reference in-memory implementation. Production adapters
  * (Cloudflare Workers KV, Deno KV) are v0.22 scope.
  */
 
-export type IsrCacheState = 'miss' | 'hit' | 'stale' | 'error';
-
-export interface IsrCacheEntry {
-  html: string;
-  createdAt: number;
-  revalidate: number;
-  headers?: Record<string, string>;
-}
-
-export interface IsrCacheResult {
-  state: IsrCacheState;
-  entry?: IsrCacheEntry;
-  error?: Error;
-}
-
-export interface IsrCache {
-  get(key: string, now?: number): Promise<IsrCacheResult> | IsrCacheResult;
-  set(key: string, entry: IsrCacheEntry): Promise<void> | void;
-  delete?(key: string): Promise<void> | void;
-}
-
-export interface IsrRouteConfig {
-  revalidate: number;
-}
+import type {
+  CacheAdapter,
+  CacheEntry,
+  IsrCacheEntry,
+  IsrCacheResult,
+  IsrCacheState,
+  IsrRouteConfig,
+} from '@openelement/protocol/isr';
+import type { IsrManifestEntry } from '@openelement/protocol/framework';
+export type {
+  CacheAdapter,
+  CacheEntry,
+  IsrCacheEntry,
+  IsrCacheResult,
+  IsrCacheState,
+  IsrManifestEntry,
+  IsrRouteConfig,
+};
 
 export function isIsrRouteConfig(value: unknown): value is IsrRouteConfig {
   return typeof value === 'object' && value !== null &&
@@ -55,15 +49,7 @@ export function createIsrCacheKey(
   return `openelement:isr:${routePath}${suffix}`;
 }
 
-/** ISR route record written to isr-manifest.json at build time. */
-export interface IsrManifestEntry {
-  path: string;
-  revalidate: number;
-  cacheKey: string;
-  params: Record<string, string>;
-}
-
-export class MemoryIsrCache implements IsrCache {
+export class MemoryIsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();
 
   get(key: string, now: number = Date.now()): IsrCacheResult {
@@ -82,58 +68,5 @@ export class MemoryIsrCache implements IsrCache {
 
   delete(key: string): void {
     this.#entries.delete(key);
-  }
-}
-
-/**
- * File-system backed ISR cache.
- *
- * Stores each cache entry as a JSON file on disk. Suitable for
- * single-server deployments where cache should survive restarts.
- *
- * Each entry is stored as `{cacheDir}/{sanitized-key}.json`.
- */
-export class FileIsrCache implements IsrCache {
-  readonly #cacheDir: string;
-
-  constructor(cacheDir: string) {
-    this.#cacheDir = cacheDir;
-    try {
-      Deno.mkdirSync(cacheDir, { recursive: true });
-    } catch {
-      // directory may already exist
-    }
-  }
-
-  #filePath(key: string): string {
-    // Sanitize key for filesystem safety
-    const safe = key.replace(/[^a-zA-Z0-9_-]/g, '_');
-    return `${this.#cacheDir}/${safe}.json`;
-  }
-
-  async get(key: string, now: number = Date.now()): Promise<IsrCacheResult> {
-    try {
-      const text = await Deno.readTextFile(this.#filePath(key));
-      const entry = JSON.parse(text) as IsrCacheEntry;
-      const ageSeconds = Math.max(0, Math.floor((now - entry.createdAt) / 1000));
-      return {
-        state: ageSeconds >= entry.revalidate ? 'stale' : 'hit',
-        entry,
-      };
-    } catch {
-      return { state: 'miss' };
-    }
-  }
-
-  async set(key: string, entry: IsrCacheEntry): Promise<void> {
-    await Deno.writeTextFile(this.#filePath(key), JSON.stringify(entry));
-  }
-
-  async delete(key: string): Promise<void> {
-    try {
-      await Deno.remove(this.#filePath(key));
-    } catch {
-      // file may not exist
-    }
   }
 }

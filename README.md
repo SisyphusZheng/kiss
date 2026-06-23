@@ -2,9 +2,8 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.40.7` (`v0.40.7`
-release). Active execution: `v0.40.7` Release Readiness & CI
-Hardening.**
+**JSX-first Web Components platform. Package line: `0.41.0-alpha.1` (`v0.41.0-alpha.1`
+release). Active execution: `v0.41.0-alpha.1` Cleanup-Train Patch.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
 rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD
@@ -14,14 +13,14 @@ Mandatory project workflow:
 [`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Deno](https://img.shields.io/badge/Deno-2.7%2B-000000)](https://deno.com/)
-[![JSR](https://img.shields.io/badge/JSR-@openelement/core-blue)](https://jsr.io/@openelement/core)
+[![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)
+[![npm](https://img.shields.io/badge/npm-@openelement%2Fcore-red)](https://www.npmjs.com/package/@openelement/core)
 [![CI](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml/badge.svg)](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml)
 
 ## Quick Start
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```
@@ -37,17 +36,17 @@ openElement = Elements + UI + Framework + Protocols
 | Elements  | `@openelement/element`, `OpenElement`     | Native Web Components authoring layer, competing with Lit and FAST.     |
 | UI        | `@openelement/ui`                         | First-party `open-*` components built on the Elements model.            |
 | Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, islands, API routes, Vite + Nitro build/runtime output. |
-| Protocols | `@openelement/protocol`                   | Runtime-free replacement boundaries and conformance contracts.          |
 
 Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
 `@openelement/signal`, `@openelement/router`, `@openelement/content`, and
 `@openelement/ssg` are advanced or implementation surfaces. They support the
-four products; they are not separate first-class product lines.
+three products; they are not separate first-class product lines.
 
-In v0.40.x, the active workspace is the 11-package cleanup-train product line.
-Hub, RPC, CEM, compat-check, Lit/React/vanilla interop adapters, and standalone
-runtime/style-sheet/i18n packages are removed from the current package graph;
-`@openelement/ssg` is retained as the adapter-agnostic SSG engine. Historical
+In v0.40.x, the active workspace is the 10-package cleanup-train product line.
+Hub, RPC, CEM, compat-check, Lit/React/vanilla interop adapters, standalone
+runtime/style-sheet/i18n packages, and the `@openelement/protocol` contract
+package are removed from the current package graph; `@openelement/ssg` is
+retained as the adapter-agnostic SSG engine. Historical
 details remain in git history and release evidence.
 
 ## Why openElement
@@ -85,9 +84,9 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.40.7** (`v0.40.7`) under
-[`@openelement`](https://jsr.io/@openelement). The active execution line is
-**v0.40.7**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
+All 11 current workspace packages are aligned at **0.41.0-alpha.1** (`v0.41.0-alpha.1`) under
+[`@openelement`](https://www.npmjs.com/org/openelement). The active execution line is
+**v0.41.0-alpha.1**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
 while reserving minor/major product decisions for human-approved ADR and
 version-plan evidence.
 
@@ -95,8 +94,7 @@ v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
 adapters, and standalone runtime/style-sheet/i18n packages from the current
 product line, keeps `@openelement/ssg` as the adapter-agnostic SSG engine,
 keeps Vite + Nitro as the Framework base, and keeps Preact island work bounded
-behind the v0.40 plan. `@preact/signals-core` is the default signal engine;
-`alien-signals` remains optional.
+behind the v0.40 plan. `@preact/signals-core` is the signal engine.
 
 The v1.0 target is a stable four-product platform with frozen Elements, UI,
 Framework, and Protocols contracts.

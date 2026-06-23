@@ -4,8 +4,8 @@
  * Developer-friendly API wrapping the engine.
  * signal(), computed(), effect() - the primary API surface.
  *
- * v0.40.0: @preact/signals-core is the default engine (was alien-signals).
- * The engine can be swapped at runtime via setSignalEngine().
+ * @preact/signals-core is the engine. The engine can be swapped at runtime via
+ * setSignalEngine().
  *
  * @module @openelement/signal/framework
  */

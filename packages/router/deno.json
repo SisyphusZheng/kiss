@@ -1,19 +1,12 @@
 {
   "name": "@openelement/router",
-  "version": "0.40.7",
+  "version": "0.41.0-alpha.1",
   "exports": {
-    ".": "./src/index.ts",
-    "./mod": "./src/mod.ts",
-    "./define-routes": "./src/define-routes.ts",
-    "./pattern-translate": "./src/pattern-translate.ts",
-    "./client-router": "./src/client-router.ts",
-    "./page-loader": "./src/page-loader.ts"
+    ".": "./src/data-context.ts",
+    "./data-context": "./src/data-context.ts",
+    "./i18n": "./src/i18n.ts"
   },
-  "imports": {
-    "marked": "npm:marked@^15",
-    "@openelement/core/logger": "jsr:@openelement/core@^0.40.7/logger",
-    "@openelement/protocol": "jsr:@openelement/protocol@^0.40.7"
-  },
+  "imports": {},
   "publish": {
     "include": [
       "src/**",
@@ -30,6 +23,6 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/index.ts"
+    "build": "deno check src/data-context.ts"
   }
 }

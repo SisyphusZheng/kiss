@@ -7,8 +7,9 @@
 
 import { join } from 'node:path';
 import { readdirSync } from 'node:fs';
-import type { HydrationHint, IsrManifestEntry, RenderError } from '@openelement/core';
-import { createIsrCacheKey } from '@openelement/core';
+import type { HydrationHint, RenderError } from '@openelement/protocol/render';
+import type { IsrManifestEntry } from '@openelement/protocol/framework';
+import { createIsrCacheKey } from '@openelement/core/isr';
 
 // ─── Path / URL helpers ────────────────────────────────────────
 
@@ -29,24 +30,6 @@ export function findHtmlFiles(dir: string): string[] {
     // Directory may not exist yet
   }
   return results;
-}
-
-/** Join URL path segments, normalising slashes and removing empties. */
-export function joinUrlPath(...parts: string[]): string {
-  const segments = parts
-    .flatMap((part) => part.split('/'))
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return '/' + segments.join('/');
-}
-
-/** Check whether a string contains ASCII control characters. */
-export function hasControlCharacter(value: string): boolean {
-  for (let i = 0; i < value.length; i++) {
-    const code = value.charCodeAt(i);
-    if (code <= 0x1f || code === 0x7f) return true;
-  }
-  return false;
 }
 
 // ─── Route helpers ─────────────────────────────────────────────
@@ -73,8 +56,7 @@ export function resolveDynamicRoutePath(
     if (
       value === '.' ||
       value === '..' ||
-      /[\\/]/.test(value) ||
-      hasControlCharacter(value)
+      /[\\/]/.test(value)
     ) {
       throw new Error(
         `Unsafe value for route parameter "${name}" in ${routePath}: ${value}`,
@@ -92,19 +74,15 @@ export function resolveDynamicRoutePath(
 // ─── Hash helpers ──────────────────────────────────────────────
 
 /**
- * FNV-1a 64-bit hash for stable SSG-generated asset names.
+ * Stable SHA-256 hash for SSG-generated asset names.
+ * Returns a deterministic lowercase hex string.
  */
-export function stableHash(str: string): string {
-  const fnvOffsetBasis = 14695981039346656037n;
-  const fnvPrime = 1099511628211n;
-  const mask64 = (1n << 64n) - 1n;
-
-  let hash = fnvOffsetBasis;
-  for (let i = 0; i < str.length; i++) {
-    hash ^= BigInt(str.charCodeAt(i));
-    hash = (hash * fnvPrime) & mask64;
-  }
-  return hash.toString(36);
+export async function stableHash(str: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(str));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 // ─── ISR manifest builder ──────────────────────────────────────

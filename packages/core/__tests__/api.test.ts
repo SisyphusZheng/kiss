@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import type { OpenElementApiContext } from '../src/schemas.ts';
+import type { OpenElementApiContext } from '@openelement/protocol/framework';
 
 Deno.test('OpenElementApiContext type has correct shape', () => {
   // Verify the type is importable and has the expected structure.

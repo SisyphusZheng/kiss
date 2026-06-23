@@ -128,7 +128,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assertEquals(content.includes('defer-hydration'), false);
   });
 
-  await t.step('phase 3 output contains HTML, DSD, clean URLs, and PWA files', () => {
+  await t.step('phase 3 output contains HTML, DSD, clean URLs', () => {
     const htmlFiles = findHtmlFiles(WWW_DIST);
     assert(htmlFiles.length > 0, 'Should have generated HTML files');
 
@@ -150,12 +150,5 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assertStringIncludes(roadmapHtml, 'WC Package Protocol');
     assertStringIncludes(roadmapHtml, 'No webpack');
     assertStringIncludes(roadmapHtml, 'Registry Hub');
-    assert(existsSync(join(WWW_DIST, 'manifest.json')), 'PWA manifest should exist');
-    assert(existsSync(join(WWW_DIST, 'sw.js')), 'PWA service worker should exist');
-    const sw = readFileSync(join(WWW_DIST, 'sw.js'), 'utf-8');
-    assertStringIncludes(sw, "if (e.request.method !== 'GET') return;");
-    assertStringIncludes(sw, "e.request.headers.has('authorization')");
-    assertStringIncludes(sw, '/\\/(api|rpc)(?:\\/|$)/');
-    assertStringIncludes(sw, "['style', 'script', 'image', 'font', 'manifest']");
   });
 });

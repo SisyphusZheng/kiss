@@ -5,7 +5,7 @@
  */
 import { OpenElement } from './open-element.js';
 import type { ElementDefinition } from './types.js';
-import { type VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 
 const ERROR_PREFIX = '[openElement]';
 
@@ -57,6 +57,7 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
   return OpenElementComponent;
 }
 
+// ponytail: semantic alias for defineElement, trim when template/doc migration done
 export function defineLayout<Props extends Record<string, unknown> = Record<string, unknown>>(
   tagName: string,
   input: ((props: Props) => VNode | null) | ElementDefinition<Props>,

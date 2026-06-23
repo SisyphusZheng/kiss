@@ -9,7 +9,7 @@
  * @module @openelement/element/open-element-render
  */
 
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/protocol/vnode';
 import { renderToDom } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
@@ -69,7 +69,7 @@ export function renderIntoLightDom(
   }
 
   if (result != null) {
-    self.appendChild(renderToDom(result, undefined, effectDisposers));
+    self.appendChild(renderToDom(result, undefined, effectDisposers, instance.signalRegistry));
   }
 
   return newEventCleanups;
@@ -99,7 +99,7 @@ export function renderIntoShadowRoot(
     while (root.firstChild) {
       root.removeChild(root.firstChild);
     }
-    root.appendChild(renderToDom(result, undefined, effectDisposers));
+    root.appendChild(renderToDom(result, undefined, effectDisposers, instance.signalRegistry));
   }
 
   return newEventCleanups;
@@ -144,7 +144,7 @@ export function renderErrorFallback(
     while (target.firstChild) {
       target.removeChild(target.firstChild);
     }
-    target.appendChild(renderToDom(fallback, undefined, effectDisposers));
+    target.appendChild(renderToDom(fallback, undefined, effectDisposers, instance.signalRegistry));
   }
 
   return newEventCleanups;

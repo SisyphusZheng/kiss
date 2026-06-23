@@ -20,7 +20,7 @@ SSG 和 SSR route render failure 会记录 route path。生产响应不泄漏内
 
 ## API errors
 
-客户端 RPC 可以使用结构化 response helpers 或 `RpcError`。业务性错误应带清晰 HTTP status
+客户端 RPC 可以使用结构化 response helpers。业务性错误应带清晰 HTTP status
 和 message；编程错误应让 build 或 server route 失败。
 
 ## Browser errors

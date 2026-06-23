@@ -1,7 +1,7 @@
 /**
  * @openelement/adapter-vite - build-context.ts tests (Deno)
  */
-import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertRejects } from 'jsr:@std/assert@^1.0.0';
 import { OpenElementBuildContext } from '../src/build-context.ts';
 
 Deno.test('OpenElementBuildContext creates instance without error', () => {
@@ -45,4 +45,80 @@ Deno.test('OpenElementBuildContext reset clears all mutable state', () => {
   // not build state (see build-context.ts:138-140). It persists through reset()
   // so Phase 2/3 can still access resolve aliases after buildStart() calls reset().
   assertEquals(ctx.phase1.userResolveAlias, { '@openelement/ui': './ui' });
+});
+
+Deno.test('OpenElementBuildContext populatePhase3 sets phase3 invariants', () => {
+  const ctx = new OpenElementBuildContext({});
+  const options = {
+    build: { outDir: 'custom-dist' },
+    routesDir: 'src/routes',
+    islandsDir: 'src/islands',
+    componentsDir: 'src/components',
+    middleware: { cors: true },
+    html: { lang: 'zh', title: 'Test' },
+    island: { upgradeStrategy: 'load' as const },
+    viewTransition: false,
+    speculation: { prerender: ['/guide/*'] },
+    headExtras: '<meta name="theme-color" content="#000">',
+    allowHeadExtrasScripts: true,
+    appShell: 'default' as const,
+    layouts: { docs: 'default' as const },
+  };
+  const config = { root: '/project', base: '/base/', command: 'build' as const };
+
+  ctx.populatePhase3(options, config as never, [{
+    __type: 'RegExp',
+    source: '@openelement/.*',
+    flags: '',
+  }, 'lit']);
+
+  assertEquals(ctx.phase3.root, '/project');
+  assertEquals(ctx.phase3.outDir, 'custom-dist');
+  assertEquals(ctx.phase3.base, '/base/');
+  assertEquals(ctx.phase3.routesDir, 'src/routes');
+  assertEquals(ctx.phase3.islandsDir, 'src/islands');
+  assertEquals(ctx.phase3.componentsDir, 'src/components');
+  assertEquals(ctx.phase3.middleware, { cors: true });
+  assertEquals(ctx.phase3.html, { lang: 'zh', title: 'Test' });
+  assertEquals(ctx.phase3.upgradeStrategy, 'load');
+  assertEquals(ctx.phase3.viewTransition, false);
+  assertEquals(ctx.phase3.speculation, { prerender: ['/guide/*'] });
+  assertEquals(ctx.phase3.headExtras, '<meta name="theme-color" content="#000">');
+  assertEquals(ctx.phase3.allowHeadExtrasScripts, true);
+  assertEquals(ctx.phase3.appShell, 'default');
+  assertEquals(ctx.phase3.layouts, { docs: 'default' });
+  assertEquals(ctx.phase3.ssrNoExternal.length, 2);
+});
+
+Deno.test('OpenElementBuildContext getPhase3Meta returns read-only phase3', () => {
+  const ctx = new OpenElementBuildContext({});
+  ctx.populatePhase3({}, { root: '/root', base: '/', command: 'build' } as never, []);
+  const meta = ctx.getPhase3Meta();
+  assertEquals(meta.root, '/root');
+});
+
+Deno.test('OpenElementBuildContext phase ordering is enforced', async () => {
+  const ctx = new OpenElementBuildContext({});
+
+  await assertRejects(
+    () => ctx.runPhase3(async () => {}),
+    Error,
+    'Phase 3 called before Phase 1 completed',
+  );
+
+  ctx.completePhase1();
+  assertEquals(ctx.isPhaseComplete(1), true);
+  assertEquals(ctx.isPhaseComplete(3), false);
+
+  await assertRejects(
+    () => ctx.runPhase2(async () => {}),
+    Error,
+    'Phase 2 called before Phase 3 completed',
+  );
+
+  await ctx.runPhase3(async () => {});
+  assertEquals(ctx.isPhaseComplete(3), true);
+
+  await ctx.runPhase2(async () => {});
+  assertEquals(ctx.isPhaseComplete(2), true);
 });

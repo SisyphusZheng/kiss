@@ -9,7 +9,6 @@ import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import type { HeaderNavLink, NavItem, NavOptions, NavSection, RouteMeta } from '../types.ts';
 import { createLogger } from '@openelement/core/logger';
-import * as ts from 'typescript';
 
 /** Aggregated navigation data ready for module generation */
 export interface NavData {
@@ -21,74 +20,30 @@ export interface NavData {
 
 const log = createLogger('content:nav');
 
+/**
+ * Extract `export const meta = { ... }` from source text using regex.
+ * Only string values for section/label and numeric order are supported.
+ */
 export function extractMeta(source: string): RouteMeta | null {
-  const sourceFile = ts.createSourceFile(
-    'route.tsx',
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
+  const match = source.match(/export\s+const\s+meta\s*=\s*\{([\s\S]*?)\}/);
+  if (!match) return null;
 
-  for (const statement of sourceFile.statements) {
-    if (!ts.isVariableStatement(statement)) continue;
-    const isExported = statement.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword);
-    if (!isExported) continue;
+  const body = match[1];
+  const result: Record<string, unknown> = {};
+  const propRe = /(section|label|order)\s*:\s*(["']([^"']*)["']|(\d+))/g;
+  let m: RegExpExecArray | null;
 
-    for (const declaration of statement.declarationList.declarations) {
-      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'meta') continue;
-      if (!declaration.initializer) return null;
-
-      const initializer = unwrapStaticExpression(declaration.initializer);
-      if (!ts.isObjectLiteralExpression(initializer)) return null;
-
-      const result = readRouteMetaLiteral(initializer);
-      return toRouteMeta(result);
+  while ((m = propRe.exec(body)) !== null) {
+    const key = m[1];
+    const value = m[2];
+    if (key === 'order') {
+      result[key] = Number(value);
+    } else {
+      result[key] = value.slice(1, -1);
     }
   }
 
-  return null;
-}
-
-function unwrapStaticExpression(expression: ts.Expression): ts.Expression {
-  let current = expression;
-  while (
-    ts.isAsExpression(current) ||
-    ts.isSatisfiesExpression(current) ||
-    ts.isParenthesizedExpression(current)
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
-
-function readRouteMetaLiteral(object: ts.ObjectLiteralExpression): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const property of object.properties) {
-    if (!ts.isPropertyAssignment(property)) continue;
-    const key = propertyNameToString(property.name);
-    if (!key || !['section', 'label', 'order'].includes(key)) continue;
-    result[key] = readLiteralValue(unwrapStaticExpression(property.initializer));
-  }
-  return result;
-}
-
-function readLiteralValue(expression: ts.Expression): unknown {
-  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
-    return expression.text;
-  }
-  if (ts.isNumericLiteral(expression)) return Number(expression.text);
-  if (expression.kind === ts.SyntaxKind.TrueKeyword) return true;
-  if (expression.kind === ts.SyntaxKind.FalseKeyword) return false;
-  if (expression.kind === ts.SyntaxKind.NullKeyword) return null;
-  return undefined;
-}
-
-function propertyNameToString(name: ts.PropertyName): string | null {
-  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-    return name.text;
-  }
-  return null;
+  return toRouteMeta(result);
 }
 
 function toRouteMeta(value: Record<string, unknown>): RouteMeta | null {

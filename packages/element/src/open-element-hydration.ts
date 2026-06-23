@@ -9,9 +9,21 @@
  * @module @openelement/element/open-element-hydration
  */
 
-import { collectEventBindings, hydrateEventMarkers, isVNode, renderToDom } from '@openelement/core';
-import type { Signal } from '@openelement/protocol/signals';
-import { effect } from '@openelement/signal';
+import {
+  applyBindingDescriptor,
+  collectEventBindings,
+  hydrateEventMarkers,
+  isVNode,
+} from '@openelement/core';
+import type { BindingDescriptor, BindingLifecycle } from '@openelement/core';
+import type { Signal } from '@openelement/protocol/signal';
+import {
+  DATA_SIGNAL,
+  DATA_SIGNAL_ATTR,
+  DATA_SIGNAL_CLASS,
+  DATA_SIGNAL_RENDER,
+  parseSignalAttrSpec,
+} from '@openelement/protocol/hydration-markers';
 import { disposeRenderBindings, type VNodeCacheAccess } from './open-element-render.js';
 import type { OpenElement } from './open-element.js';
 
@@ -25,6 +37,76 @@ import type { OpenElement } from './open-element.js';
  * Effects are added to `effectDisposers` for batch cleanup. VNode event marker
  * listeners are added to `eventCleanups`.
  */
+function collectHydrationBindings(
+  shadowRoot: ShadowRoot,
+  signalRegistry: Map<string, Signal<unknown>>,
+): BindingDescriptor[] {
+  const descriptors: BindingDescriptor[] = [];
+
+  // --- Signal → text / class / attribute bindings: data-signal="signalName" ---
+  for (const el of shadowRoot.querySelectorAll(`[${DATA_SIGNAL}]`)) {
+    const name = el.getAttribute(DATA_SIGNAL);
+    if (!name) continue;
+    const sig = signalRegistry.get(name);
+    if (!sig) continue;
+
+    const hasClass = el.hasAttribute(DATA_SIGNAL_CLASS);
+    const hasAttr = el.hasAttribute(DATA_SIGNAL_ATTR);
+
+    if (hasClass) {
+      const className = el.getAttribute(DATA_SIGNAL_CLASS);
+      if (className) {
+        descriptors.push({
+          kind: 'signal-class',
+          el,
+          className,
+          signal: sig,
+        });
+      }
+    }
+
+    if (hasAttr) {
+      const attrSpec = el.getAttribute(DATA_SIGNAL_ATTR);
+      if (attrSpec) {
+        const attrNames = parseSignalAttrSpec(attrSpec);
+        if (attrNames.length > 0) {
+          descriptors.push({
+            kind: 'signal-attr',
+            el,
+            attrNames,
+            signal: sig,
+          });
+        }
+      }
+    }
+
+    if (!hasClass && !hasAttr) {
+      descriptors.push({
+        kind: 'signal-text',
+        el,
+        signal: sig,
+      });
+    }
+  }
+
+  // --- Signal → VNode rendering: data-signal-render="signalName" (v0.30.1 / ADR-0081) ---
+  for (const el of shadowRoot.querySelectorAll(`[${DATA_SIGNAL_RENDER}]`)) {
+    const name = el.getAttribute(DATA_SIGNAL_RENDER);
+    if (!name) continue;
+    const sig = signalRegistry.get(name);
+    if (!sig) continue;
+
+    descriptors.push({
+      kind: 'signal-render',
+      el,
+      signal: sig,
+      lifecycle: {}, // Filled by hydrateSignals before application.
+    });
+  }
+
+  return descriptors;
+}
+
 export function hydrateSignals(
   instance: OpenElement,
   shadowRoot: ShadowRoot,
@@ -33,91 +115,17 @@ export function hydrateSignals(
   eventCleanups: Array<() => void>,
   cache: VNodeCacheAccess,
 ): void {
-  // --- Signal → textContent: data-signal="signalName" ---
-  const signalEls = shadowRoot.querySelectorAll('[data-signal]');
-  for (const el of signalEls) {
-    const name = el.getAttribute('data-signal');
-    if (!name) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
+  const lifecycle: BindingLifecycle = { disposers: effectDisposers };
+  const descriptors = collectHydrationBindings(shadowRoot, signalRegistry);
 
-    // Skip textContent if this element has attribute or class binding.
-    if (
-      el.hasAttribute('data-signal-attr') ||
-      el.hasAttribute('data-signal-class')
-    ) continue;
-
-    (el as HTMLElement).textContent = String(sig.value);
-    const dispose = effect(() => {
-      (el as HTMLElement).textContent = String(sig.value);
-    });
-    effectDisposers.add(dispose);
-  }
-
-  // --- Signal → CSS class: data-signal-class="className" (v0.28.1) ---
-  // Toggles a CSS class based on signal truthiness.
-  // Truthy (non-empty string / non-zero) → add class. Falsy → remove.
-  const classSigEls = shadowRoot.querySelectorAll('[data-signal][data-signal-class]');
-  for (const el of classSigEls) {
-    const name = el.getAttribute('data-signal');
-    const className = el.getAttribute('data-signal-class');
-    if (!name || !className) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
-
-    el.classList.toggle(className, !!sig.value);
-    const dispose = effect(() => {
-      el.classList.toggle(className, !!sig.value);
-    });
-    effectDisposers.add(dispose);
-  }
-
-  const attrSigEls = shadowRoot.querySelectorAll('[data-signal][data-signal-attr]');
-  for (const el of attrSigEls) {
-    const name = el.getAttribute('data-signal');
-    const attrSpec = el.getAttribute('data-signal-attr');
-    if (!name || !attrSpec) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
-
-    const attrNames = attrSpec.split(',').map((a) => a.trim()).filter(Boolean);
-    if (attrNames.length === 0) continue;
-
-    const val = String(sig.value);
-    for (const an of attrNames) {
-      el.setAttribute(an, val);
+  for (const desc of descriptors) {
+    if (desc.kind === 'signal-render') {
+      desc.lifecycle = lifecycle;
+      // Preserve the original DSD hydration contract: replace any SSR content
+      // with the client-rendered VNode tree on first activation.
+      while (desc.el.firstChild) desc.el.removeChild(desc.el.firstChild);
     }
-
-    const dispose = effect(() => {
-      const v = String(sig.value);
-      for (const an of attrNames) {
-        el.setAttribute(an, v);
-      }
-    });
-    effectDisposers.add(dispose);
-  }
-
-  // --- Signal → VNode rendering: data-signal-render="signalName" (v0.30.1 / ADR-0081) ---
-  // Signal value is VNode | VNode[] — renderToDom handles event binding + XSS escape.
-  const renderEls = shadowRoot.querySelectorAll('[data-signal-render]');
-  for (const el of renderEls) {
-    const name = el.getAttribute('data-signal-render');
-    if (!name) continue;
-    const sig = signalRegistry.get(name);
-    if (!sig) continue;
-
-    const renderTarget = () => {
-      while (el.firstChild) el.removeChild(el.firstChild);
-      const v = sig.value;
-      if (v != null) {
-        const nodes = Array.isArray(v) ? v : [v];
-        for (const node of nodes) {
-          el.appendChild(renderToDom(node, undefined, effectDisposers));
-        }
-      }
-    };
-    renderTarget();
-    effectDisposers.add(effect(() => renderTarget()));
+    applyBindingDescriptor(desc, lifecycle);
   }
 
   // v0.28.1: Cache VNode so SSR and hydration use the same event IDs.

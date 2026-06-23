@@ -2,7 +2,7 @@
  * SSR Polyfills for browser-only APIs.
  *
  * Polyfill 分层策略（ADR-0044）:
- * - Entry code body (this module): CSSStyleSheet — needs `import { StyleSheet } from @openelement/core/style-sheet`
+ * - Entry code body (this module): CSSStyleSheet — needs `import { StyleSheet } from @openelement/core`
  * - Output banner (build-ssg.ts): HTMLElement + customElements — no import, runs before module evaluation
  *
  * ADR-0044: SSR polyfill strategy — browser globals in Deno SSR runtime.
@@ -17,9 +17,7 @@
  */
 export function generateSsrPolyfillBanner(): string {
   return `\
-// SSR polyfill: Lit references CSSStyleSheet in its internals.
-// This must load before any Lit module is evaluated.
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/core';
 if (typeof globalThis.CSSStyleSheet === 'undefined') {
   globalThis.CSSStyleSheet = class {
     replaceSync(_css) {}

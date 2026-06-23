@@ -1,21 +1,27 @@
 /**
  * @openelement/signal - Reactive signals powered by @preact/signals-core.
  *
- * v0.40.0: @preact/signals-core is the default engine.
- * alien-signals remains available as an optional engine via `./alien-engine`.
+ * @preact/signals-core is the only supported engine.
  *
  * Architecture:
- *   Engine layer    -> preact-signals-core adapter (preact-engine.ts)
+ *   Engine layer    -> @preact/signals-core adapter (preact-engine.ts)
  *   Framework layer -> User-friendly API: signal(), computed(), effect()
  *
  * @module @openelement/signal
  */
 
 // ─── Public types ───────────────────────────────────────────────
-export type { ReadonlySignal, Signal, SignalEngine, Unsubscribe, WritableSignal } from './types.ts';
+export type {
+  ReadonlySignal,
+  Signal,
+  SignalEngine,
+  SignalLike,
+  Unsubscribe,
+  WritableSignal,
+} from '@openelement/protocol/signal';
+export { isSignalLike, unwrapSignalLike } from './types.ts';
 
-// ─── Engine factories (available at subpaths) ───────────────────
-export { createAlienEngine, createDefaultEngine } from './alien-engine.ts';
+// ─── Engine factory (available at subpath) ──────────────────────
 export { createPreactEngine } from './preact-engine.ts';
 
 // ─── Framework layer ────────────────────────────────────────────

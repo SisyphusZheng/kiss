@@ -1,20 +1,21 @@
 /**
- * @openelement/protocol - Shared openElement contracts.
+ * @openelement/protocol - Minimal, type-only protocol package.
  *
- * Zero-dependency package. Pure TypeScript interfaces and constants
- * consumed by feature packages and build adapters.
+ * Barrel re-export of all protocol subpath modules.
  */
-export * from './build-types.js';
-export * from './cache.js';
-export * from './components.js';
-export * from './conformance.js';
-export * from './data.js';
-export * from './islands.js';
-export * from './island-frameworks.js';
-export * from './renderer.js';
-export * from './routes.js';
+
+export * from './signal.js';
+export * from './vnode.js';
+export * from './render.js';
+export * from './manifest.js';
+export type { SsrAdmissionDecision } from './framework.js';
+export * from './context.js';
 export * from './runtime.js';
-export * from './signals.js';
-export * from './ssg-contracts.js';
-export * from './validators.js';
-export * from './i18n.js';
+export * from './data.js';
+export * from './isr.js';
+export * from './ssg.js';
+export * from './errors.js';
+export * from './style-sheet.js';
+export * from './island.js';
+export * from './prop.js';
+export * from './hydration-markers.js';

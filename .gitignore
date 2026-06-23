@@ -52,6 +52,7 @@ docs/autoflow/cells/*/state.json
 
 # Vite cache
 .vite/
+/.wrangler/
 
 # Generated data modules (typed stubs are tracked as .d.ts)
 www/app/data/_generated-*.ts
@@ -66,6 +67,10 @@ coverage-output.txt
 .git-commit-msg.txt
 docs/vite-build-*.txt
 node_modules/
+
+# npm pack tarballs
+packages/*/*.tgz
+*.tgz
 
 # Root-level logo source files (design originals, keep local)
 /open-logo*.svg
@@ -100,4 +105,3 @@ www/.openElement/
 
 # Vite virtual assets
 assets/_virtual_*
-

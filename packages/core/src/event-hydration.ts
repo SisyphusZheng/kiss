@@ -8,26 +8,22 @@
  */
 
 import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
-import { isSignalLike } from './signal-like.ts';
-import { isComponentCtor, isVNode, type RenderFn, type VNode } from './vnode.ts';
+import { isSignalLike } from '@openelement/signal';
+import { isComponentCtor, isVNode } from './vnode.ts';
+import type { RenderFn, VNode } from '@openelement/protocol/vnode';
+import { DATA_EID } from '@openelement/protocol/hydration-markers';
+import { applyBindingDescriptor } from './binding-activation.js';
+import type { EventBindingDescriptor } from './binding-descriptor.ts';
+import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
 
-const EVENT_PROP_RE = /^on[A-Z]/;
-const EVENT_TYPE_ALIASES: Record<string, string> = {
-  Dblclick: 'dblclick',
-  DoubleClick: 'dblclick',
-  FocusIn: 'focusin',
-  FocusOut: 'focusout',
-  MouseEnter: 'mouseenter',
-  MouseLeave: 'mouseleave',
-  PointerCancel: 'pointercancel',
-  PointerDown: 'pointerdown',
-  PointerEnter: 'pointerenter',
-  PointerLeave: 'pointerleave',
-  PointerMove: 'pointermove',
-  PointerOut: 'pointerout',
-  PointerOver: 'pointerover',
-  PointerUp: 'pointerup',
-};
+// Re-export pure marker helpers so existing consumers keep working.
+export {
+  createEventMarkerContext,
+  eventMarkerId,
+  eventTypeFromProp,
+  serializeEventMarkers,
+} from './event-marker.ts';
+export type { EventMarkerContext } from './event-marker.ts';
 
 export interface EventBindingRecord {
   id: string;
@@ -35,41 +31,8 @@ export interface EventBindingRecord {
   handler: EventListener;
 }
 
-export interface EventMarkerContext {
-  nextId(): string;
-}
-
-export function createEventMarkerContext(): EventMarkerContext {
-  let count = 0;
-  return {
-    nextId(): string {
-      return eventMarkerId(count++);
-    },
-  };
-}
-
-export function eventMarkerId(index: number): string {
-  return `e${index}`;
-}
-
-export function eventTypeFromProp(prop: string): string | null {
-  if (!EVENT_PROP_RE.test(prop)) return null;
-  const eventName = prop.slice(2);
-  return EVENT_TYPE_ALIASES[eventName] ?? eventName.toLowerCase();
-}
-
-export function serializeEventMarkers(
-  props: Record<string, unknown> | undefined,
-  context: EventMarkerContext,
-): string {
-  if (!props) return '';
-  for (const [key, value] of Object.entries(props)) {
-    if (eventTypeFromProp(key) && typeof value === 'function') {
-      return ` data-eid="${context.nextId()}"`;
-    }
-  }
-  return '';
-}
+/** Hydration-time event binding contract (mirrors BindingDescriptor). */
+export type EventBinding = EventBindingDescriptor;
 
 export function collectEventBindings(node: unknown): Map<string, EventBindingRecord[]> {
   const bindings = new Map<string, EventBindingRecord[]>();
@@ -153,16 +116,36 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
       }
     }
 
+    // Visit children before assigning an ID to this element so the order
+    // matches SSR (renderToNode serializes children first).
+    for (const child of children) visit(child);
+
     if (records.length > 0) {
       const id = eventMarkerId(count++);
       bindings.set(id, records.map((record) => ({ ...record, id })));
     }
-
-    for (const child of children) visit(child);
   };
 
   visit(node);
   return bindings;
+}
+
+export function eventRecordsToDescriptors(
+  el: Element,
+  records: EventBindingRecord[],
+  owner?: unknown,
+): EventBinding[] {
+  return records.map((record) => {
+    const handler = owner && typeof record.handler === 'function'
+      ? (record.handler as EventListener).bind(owner)
+      : record.handler as EventListener;
+    return {
+      kind: 'event',
+      el,
+      type: record.type,
+      handler,
+    };
+  });
 }
 
 export function hydrateEventMarkers(
@@ -171,17 +154,14 @@ export function hydrateEventMarkers(
   cleanupBag: Array<() => void>,
   owner?: unknown,
 ): void {
-  for (const el of root.querySelectorAll('[data-eid]')) {
-    const id = el.getAttribute('data-eid');
+  for (const el of root.querySelectorAll(`[${DATA_EID}]`)) {
+    const id = el.getAttribute(DATA_EID);
     if (!id) continue;
     const records = bindings.get(id);
     if (!records) continue;
-    for (const record of records) {
-      const handler = owner && typeof record.handler === 'function'
-        ? (record.handler as EventListener).bind(owner)
-        : record.handler as EventListener;
-      el.addEventListener(record.type, handler);
-      cleanupBag.push(() => el.removeEventListener(record.type, handler));
+    for (const desc of eventRecordsToDescriptors(el, records, owner)) {
+      const dispose = applyBindingDescriptor(desc, {});
+      cleanupBag.push(dispose);
     }
   }
 }

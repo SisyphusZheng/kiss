@@ -31,7 +31,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { openPropsTokenSheet } from './open-props-tokens.js';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 
 export const tagName = 'open-input';
@@ -108,7 +107,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenInput extends OpenElement {
-  static override styles = [openPropsTokenSheet, sheet];
+  static override styles = [sheet];
   static override formAssociated = true;
   static override delegatesFocus = true;
   static override observedAttributes = [

@@ -1,9 +1,9 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.40.7 Release Readiness & CI Hardening; next line is npm-only distribution.\
+> Current package line: v0.41.0-alpha.1 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
-> Updated: 2026-06-15.
+> Updated: 2026-06-19.
 
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
@@ -70,7 +70,7 @@ v0.41-v1.0 blocker.
 | v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
 | v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
 | v0.40.7 | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                      | Released                 |
-| v0.41.0 | npm-only Distribution                              | Replace JSR release closure with npm artifacts, npm trusted publishing, Deno `npm:` consumer smoke, and jsDelivr CDN smoke                                       | Planned                  |
+| v0.41.0 | Deno-native npm distribution                       | Replace JSR release closure with npm via `deno pack`; keep Deno-first dev/build and Vite+Nitro default engines.                                                  | Planned                  |
 | v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
 | v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
 | v0.44.0 | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                          | Planned                  |
@@ -80,6 +80,101 @@ v0.41-v1.0 blocker.
 | v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
 | v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
 | v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+
+## v0.41.0 - Deno-native npm distribution
+
+Strategic realignment: Vite+ upstream (voidzero-dev/vite-plus#1888) declined to
+add Deno as a first-class package manager. Instead of pushing upstream, v0.41.0
+uses Deno 2.8+ `deno pack` to build npm-publishable tarballs directly from the
+Deno-first workspace. openElement stays Deno-native for development, build, and
+release, while npm becomes the single registry truth for consumers.
+
+Core work:
+
+- Toolchain:
+  - Require Deno 2.8+ for `deno pack` support.
+  - Convert all internal `@openelement/*` imports from `jsr:` to `npm:`
+    specifiers in workspace `deno.json` files.
+  - Add `deno task pack` / `deno task publish:npm` that topologically packs and
+    publishes the 11-package graph in dependency order.
+- Runtime-agnostic boundaries:
+  - Move `FileIsrCache` from `@openelement/core/isr` to
+    `@openelement/ssg/file-isr-cache` because it requires filesystem access.
+  - Make `router/src/page-loader.ts` accept raw markdown instead of reading
+    files with `Deno.readTextFile`.
+  - Add a CI gate that fails if runtime-free product packages
+    (`core`, `element`, `ui`, `protocol`, `signal`, `router`, `app`) use
+    `Deno.*` APIs in `src/`.
+- Adapter-vite npm mode:
+  - Default `createOpenJsrPackageResolverPlugin` to npm mode: let Vite resolve
+    `@openelement/*` from `node_modules` instead of fetching TS source from JSR.
+  - Keep JSR source-resolution as an explicit opt-in (`registry: 'jsr'`).
+- Starter template:
+  - Update `@openelement/create` to emit `npm:@openelement/*` imports and
+    resolve remote versions from the npm registry.
+- Release flow:
+  - Replace JSR publish with `deno pack` + `npm publish --provenance` in
+    `tools/autoflow/release.ts`.
+  - Add `actions/setup-node` to `.github/workflows/autoflow-release.yml` and
+    pass `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN`.
+  - Keep JSR monitoring workflows as historical observation only; do not gate
+    releases on JSR.
+- Consumer smoke:
+  - Add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
+    smoke gates against npm artifacts.
+
+Exit criteria:
+
+- `deno pack --dry-run` succeeds for all 11 packages.
+- Generated tarballs contain no `jsr:` or `@jsr/` specifiers.
+- npm trusted publishing succeeds from GitHub Actions with provenance.
+- A generated openElement app installs and builds from npm packages only.
+- Release notes describe npm as the current distribution truth.
+
+Non-goals:
+
+- No Node runtime migration for openElement development.
+- No npm/pnpm/yarn lockfile as the workspace source of truth.
+- No further upstream Vite+ Deno PM advocacy in v0.41.0.
+- No removal of existing JSR published versions.
+
+## v0.41.0-alpha.1 - Cleanup-Train Patch
+
+Patch release that removes the legacy Linear UI compatibility surface and
+extends the audit-driven cleanup to type assertions and non-null assertions.
+Executed under the v0.40.x cleanup-train authority from ADR-0105.
+
+Scope:
+
+- Remove `open-button-linear`, `open-card-linear`, `open-input-linear`,
+  `open-nav-linear`, `open-badge-linear`, and `linear-token-sheet` from
+  `@openelement/ui` public exports, subpath exports, manifest declarations,
+  tests, and documentation.
+- Migrate `www/app/islands/scroll-reveal.tsx` from `linearTokenSheet` to
+  `openPropsTokenSheet`.
+- Update UI README and design docs to state there is no Linear compatibility
+  layer.
+- Adjust E2E server strategy: enable `reuseExistingServer` outside CI to avoid
+  local failures from a residual Deno server on `127.0.0.1:4174`; allow the
+  static server to fall back to an isolated port when the default port is
+  occupied.
+- Maintain 0 explicit `any` and reduce unnecessary `as unknown as` and non-null
+  assertions in production code, tests, and tools. Replace ad-hoc test casts
+  with typed helper/fake DOM interfaces where practical.
+- Split or converge the largest redundancy hotspots in `open-layout.tsx`
+  navigation/theme/search helpers and `components.test.ts` fake DOM/test
+  helpers.
+- Extract repeated error formatting and generated runtime `console.*` fragments
+  to use existing `error` / `logger` boundaries while preserving intentional
+  CLI/tool console output.
+- Bump workspace versions to `0.41.0-alpha.1` and publish the v0.41.0-alpha.1 cleanup record.
+
+Non-goals:
+
+- No new product feature.
+- No package additions or removals (count stays 11).
+- No default runtime / signal-engine / renderer changes.
+- No git history rewrite.
 
 ## v0.40.7 - Release Readiness & CI Hardening
 
@@ -475,35 +570,6 @@ runtime may leak into `@openelement/core` or Elements as a required public
 dependency. Further package deletion, package merges, new packages, default
 runtime changes, and future default signal-engine changes still require
 ADR-backed human approval.
-
-## v0.41.0 - npm-only Distribution
-
-Replace JSR release closure with npm as the single registry truth. The line
-keeps GitHub as the canonical source, issue/PR surface, CI runner, and npm
-trusted publishing bridge because that is the lowest-cost path with the best JS
-ecosystem discoverability. Codeberg/Forgejo are recorded as future
-source-sovereignty options, not as v0.41 blockers.
-
-Core work:
-
-- write the npm-only distribution ADR;
-- remove JSR publish, JSR metadata wait, and JSR consumer smoke from required
-  release closure;
-- build an npm artifact pipeline for the 11-package graph, using `deno pack`
-  unless a package proves it needs a narrower custom pack step;
-- add tarball inspection for exports, types, files, license, repository
-  metadata, and absence of `jsr:` specifiers;
-- add npm trusted publishing through GitHub Actions;
-- add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
-  consumer smoke.
-
-Exit criteria:
-
-- npm is sufficient to install and build a generated openElement app;
-- Deno consumes the release through `npm:@openelement/*`;
-- browser-safe exports are verified through jsDelivr npm URLs;
-- release notes do not claim package availability until npm publish and all
-  post-publish smoke checks pass.
 
 ## v0.42.0 - Server Primitives
 

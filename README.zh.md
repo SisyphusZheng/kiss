@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-**JSX-first Web Components 全栈框架。当前包线：`0.40.7`（`v0.40.7`）。当前执行线：Release Readiness & CI Hardening。**
+**JSX-first Web Components 全栈框架。当前包线：`0.41.0-alpha.1`（`v0.41.0-alpha.1`）。当前执行线：Cleanup-Train Patch。**
 
 openElement 使用 Web Components、JSX/VNode 渲染、渐进式 islands、API routes，以及 Vite + Nitro 输出，构建静态优先的全栈应用。Shadow/DSD 是默认组件渲染模式；light DOM 是显式 opt-in。
 
@@ -11,7 +11,7 @@ openElement 使用 Web Components、JSX/VNode 渲染、渐进式 islands、API r
 ## 快速开始
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```
@@ -27,13 +27,12 @@ openElement = Elements + UI + Framework + Protocols
 | Elements  | `@openelement/element`, `OpenElement`     | 原生 Web Components authoring layer，对标 Lit 和 FAST。           |
 | UI        | `@openelement/ui`                         | 基于 Elements 模型的一方 `open-*` 组件库。                        |
 | Framework | `@openelement/app`, `@openelement/create` | Pages、layouts、islands、API routes、Vite + Nitro build/runtime。 |
-| Protocols | `@openelement/protocol`                   | Runtime-free replacement boundaries 和 conformance contracts。    |
 
-支持包包括 `@openelement/core`、`@openelement/adapter-vite`、`@openelement/signal`、`@openelement/router`、`@openelement/content` 和 `@openelement/ssg`。它们支撑四个产品，但不是独立的一线产品。
+支持包包括 `@openelement/core`、`@openelement/adapter-vite`、`@openelement/signal`、`@openelement/router`、`@openelement/content` 和 `@openelement/ssg`。它们支撑三个产品，但不是独立的一线产品。
 
-v0.40.x 当前 workspace 收敛为 11 个包。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters，以及 standalone runtime/style-sheet/i18n 包已退出当前包图；`@openelement/ssg` 保留为 adapter-agnostic SSG engine。`@preact/signals-core` 是默认 signal engine，`alien-signals` 作为可选 engine 保留。
+v0.40.x 当前 workspace 收敛为 10 个包。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters，standalone runtime/style-sheet/i18n 包，以及 `@openelement/protocol` 契约包已退出当前包图；`@openelement/ssg` 保留为 adapter-agnostic SSG engine。`@preact/signals-core` 是唯一支持的 signal engine。
 
-v1.0 目标是稳定的四产品平台，冻结 Elements、UI、Framework、Protocols 的公开契约。
+v1.0 目标是稳定的三产品平台，冻结 Elements、UI、Framework 的公开契约。
 
 ## 示例
 

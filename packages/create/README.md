@@ -12,7 +12,7 @@ directory structure, Deno configuration, Vite setup, and starter pages.
 ## Usage
 
 ```bash
-deno run -A jsr:@openelement/create my-app
+deno run -A npm:@openelement/create my-app
 cd my-app
 deno task dev
 ```

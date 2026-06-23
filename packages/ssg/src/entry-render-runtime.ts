@@ -9,7 +9,7 @@
  * rendering.
  */
 
-import type { AppShellPlan } from './entry-descriptor.ts';
+import type { AppShellPlan } from '@openelement/protocol/ssg';
 
 /**
  * Render all runtime helper function definitions as a single code block.
