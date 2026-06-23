@@ -51,6 +51,12 @@ jobs:
       - name: Resolve default approved plan
         id: plan
         run: echo "value=${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}" >> "$GITHUB_OUTPUT"
+      - name: Configure npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          echo "registry=https://registry.npmjs.org/" >> "$HOME/.npmrc"
       - name: Patch release
         if: ${{ inputs.plan == 'patch' }}
         env:
