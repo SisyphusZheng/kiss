@@ -363,8 +363,8 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     const text = await Deno.readTextFile(path);
     if (text.includes(from)) {
       await Deno.writeTextFile(path, text.replace(from, to));
-    } else if (text.includes(to)) {
-      // Already at target - skip
+    } else if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
+      // Already at target (exact to-substring or version/tag present) - skip
       continue;
     } else {
       throw new Error(`${path} does not contain expected version anchor: ${from}`);
