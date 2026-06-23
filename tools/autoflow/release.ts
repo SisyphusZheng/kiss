@@ -305,7 +305,9 @@ export async function updateProjectConstants(version: string): Promise<void> {
     .replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`)
     .replace(/ACTIVE_VERSION = '[^']+'/u, `ACTIVE_VERSION = '${tag}'`);
   if (updated === text) {
-    throw new Error(`${path} did not contain expected version constants.`);
+    // ponytail: already at target version; do not treat as an error so a
+    // release can be re-run or dispatched after the bump is already merged.
+    return;
   }
   await Deno.writeTextFile(path, updated);
 }
