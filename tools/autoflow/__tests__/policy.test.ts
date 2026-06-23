@@ -201,11 +201,13 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
 Deno.test('release: patch release plan omits publish and GitHub release without credentials', () => {
   const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
+  const originalGhToken = Deno.env.get('GH_TOKEN');
   const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
   const originalCi = Deno.env.get('CI');
   Deno.env.delete('NPM_TOKEN');
   Deno.env.delete('NODE_AUTH_TOKEN');
   Deno.env.delete('GITHUB_TOKEN');
+  Deno.env.delete('GH_TOKEN');
   Deno.env.delete('GITHUB_ACTIONS');
   Deno.env.delete('CI');
   try {
@@ -219,6 +221,8 @@ Deno.test('release: patch release plan omits publish and GitHub release without 
     else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
+    if (originalGhToken === undefined) Deno.env.delete('GH_TOKEN');
+    else Deno.env.set('GH_TOKEN', originalGhToken);
     if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');
     else Deno.env.set('GITHUB_ACTIONS', originalGitHubActions);
     if (originalCi === undefined) Deno.env.delete('CI');
