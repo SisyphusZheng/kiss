@@ -141,10 +141,12 @@ export function createReleasePlan(
         'www/app/routes/guide/getting-started.tsx',
       ],
     },
-    {
-      name: 'run release gates after bump',
-      command: ['deno', 'task', 'autoflow:ci'],
-    },
+    ...(Deno.env.get('CI') !== 'true'
+      ? [{
+        name: 'run release gates after bump',
+        command: ['deno', 'task', 'autoflow:ci'],
+      }]
+      : []),
     {
       name: 'commit release bump',
       command: ['git', 'commit', '-m', commitMessage],
@@ -185,14 +187,18 @@ export function createReleasePlan(
         },
       ]
       : []),
-    {
-      name: 'deploy:pages',
-      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
-    },
-    {
-      name: 'smoke:deploy',
-      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-    },
+    ...(Deno.env.get('CI') !== 'true'
+      ? [
+        {
+          name: 'deploy:pages',
+          command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
+        },
+        {
+          name: 'smoke:deploy',
+          command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
+        },
+      ]
+      : []),
     {
       name: 'stage release evidence',
       command: ['git', 'add', evidenceFile(targetVersion), note],
