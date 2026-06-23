@@ -1,0 +1,191 @@
+{
+  "id": "approved-release-v0.41.0-alpha.1-2026-06-23T16-33-03-435Z",
+  "kind": "approved-release",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.41.0-alpha.1",
+  "targetVersion": "0.41.0-alpha.1",
+  "status": "running",
+  "startedAt": "2026-06-23T16:33:03.435Z",
+  "approvalId": "ADR-0105/v0.40.x-cleanup-train",
+  "steps": [
+    {
+      "name": "bump patch version",
+      "command": [
+        "deno",
+        "run",
+        "--allow-read",
+        "--allow-write",
+        "tools/bump-version.ts",
+        "--to",
+        "0.41.0-alpha.1"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.497Z",
+      "completedAt": "2026-06-23T16:33:03.535Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update project constants",
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.536Z",
+      "completedAt": "2026-06-23T16:33:03.536Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update current version anchors",
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.537Z",
+      "completedAt": "2026-06-23T16:33:03.538Z",
+      "exitCode": 0
+    },
+    {
+      "name": "format release bump",
+      "command": [
+        "deno",
+        "task",
+        "fmt"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.538Z",
+      "completedAt": "2026-06-23T16:33:03.609Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release bump",
+      "command": [
+        "git",
+        "add",
+        "deno.json",
+        "packages/*/deno.json",
+        "tools/project-constants.ts",
+        "README.md",
+        "README.zh.md",
+        "docs/current/VERSION_PLAN.md",
+        "docs/governance/PROJECT_WORKFLOW.md",
+        "docs/roadmap/ROADMAP.md",
+        "docs/status/STATUS.md",
+        "www/app/data/version.ts",
+        "www/app/routes/index/index.tsx",
+        "www/app/routes/guide/getting-started.tsx"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.609Z",
+      "completedAt": "2026-06-23T16:33:03.612Z",
+      "exitCode": 0
+    },
+    {
+      "name": "commit release bump",
+      "command": [
+        "sh",
+        "-c",
+        "git diff --cached --quiet || git commit -m 'chore(release): v0.41.0-alpha.1 (ADR-0105/v0.40.x-cleanup-train)'"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.613Z",
+      "completedAt": "2026-06-23T16:33:03.616Z",
+      "exitCode": 0
+    },
+    {
+      "name": "pack dry-run",
+      "command": [
+        "deno",
+        "task",
+        "pack:dry-run"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:03.616Z",
+      "completedAt": "2026-06-23T16:33:13.569Z",
+      "exitCode": 0
+    },
+    {
+      "name": "publish npm packages",
+      "command": [
+        "deno",
+        "task",
+        "publish:npm"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:13.569Z",
+      "completedAt": "2026-06-23T16:33:26.958Z",
+      "exitCode": 0
+    },
+    {
+      "name": "post-publish npm consumer smoke",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/consumer-smoke.ts",
+        "--version",
+        "0.41.0-alpha.1"
+      ],
+      "status": "passed",
+      "startedAt": "2026-06-23T16:33:26.958Z",
+      "completedAt": "2026-06-23T16:33:31.989Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.41.0-alpha.1.json",
+        "docs/release/v0.41.0-alpha.1.md"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "commit release evidence",
+      "command": [
+        "git",
+        "commit",
+        "-m",
+        "docs(release): record v0.41.0-alpha.1 evidence"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "push main",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "main"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "tag release",
+      "command": [
+        "git",
+        "tag",
+        "v0.41.0-alpha.1"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.41.0-alpha.1"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "create GitHub release",
+      "command": [
+        "gh",
+        "release",
+        "create",
+        "v0.41.0-alpha.1",
+        "--title",
+        "v0.41.0-alpha.1",
+        "--notes-file",
+        "docs/release/v0.41.0-alpha.1.md"
+      ],
+      "status": "pending"
+    }
+  ]
+}
