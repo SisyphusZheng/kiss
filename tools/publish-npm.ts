@@ -140,7 +140,7 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 
 async function packPackage(
   pkg: PackageInfo,
-  dryRun: boolean,
+  _dryRun: boolean,
   allPackages: PackageInfo[],
 ): Promise<string> {
   const filename = npmTarballName(pkg);
