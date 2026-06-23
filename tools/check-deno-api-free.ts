@@ -27,7 +27,9 @@ function stripComments(line: string, inBlock: boolean): { line: string; inBlock:
     const end = text.indexOf('*/');
     if (end === -1) return { line: '', inBlock: true };
     text = text.slice(end + 2);
-    inBlock = false; // Required to satisfy the control-flow contract.
+    // The local parameter is reassigned only to keep the control-flow contract
+    // explicit; callers consume the returned `inBlock` value, not this variable.
+    return stripComments(text, false);
   }
 
   for (;;) {
