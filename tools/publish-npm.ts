@@ -145,11 +145,9 @@ async function packPackage(
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
-  // Dry-run of the publish pipeline still produces a real tarball so we can
-  // post-process package.json; --allow-dirty lets deno pack run on a dirty worktree.
-  const args = dryRun
-    ? ['pack', '--allow-dirty', '--output', filename]
-    : ['pack', '--output', filename];
+  // Release evidence files under docs/release/ make the worktree dirty; always
+  // pass --allow-dirty so deno pack can run during a release.
+  const args = ['pack', '--allow-dirty', '--output', filename];
   await runCommand('deno', args, pkg.dir);
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });

@@ -126,6 +126,14 @@ export function createReleasePlan(
         },
       ]
       : []),
+    ...(canPublishJsr()
+      ? [
+        {
+          name: 'publish jsr packages',
+          command: ['deno', 'task', 'publish:jsr:release'],
+        },
+      ]
+      : []),
   ];
   const tagSteps: ReleaseCommandStep[] = [
     {
@@ -285,6 +293,11 @@ function canCreateGitHubRelease(): boolean {
 function canPublishNpm(): boolean {
   // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
   return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
+}
+
+function canPublishJsr(): boolean {
+  // JSR publish needs an access token. In CI it comes from secrets.JSR_TOKEN.
+  return isTruthyEnv('JSR_TOKEN');
 }
 
 export async function assertCleanWorktree(): Promise<void> {
