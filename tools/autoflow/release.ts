@@ -97,7 +97,53 @@ export function createReleasePlan(
   const commitMessage = approvalId
     ? `chore(release): ${tag} (${approvalId})`
     : `chore(release): ${tag}`;
-  return [
+  const evidenceSteps: ReleaseCommandStep[] = [
+    {
+      name: 'stage release evidence',
+      command: ['git', 'add', evidenceFile(targetVersion), note],
+    },
+    {
+      name: 'commit release evidence',
+      command: ['git', 'commit', '-m', `docs(release): record ${tag} evidence`],
+    },
+  ];
+  const publishSteps: ReleaseCommandStep[] = [
+    {
+      name: 'pack dry-run',
+      command: ['deno', 'task', 'pack:dry-run'],
+    },
+    ...(canPublishNpm()
+      ? [
+        {
+          name: 'publish npm packages',
+          command: ['deno', 'task', 'publish:npm'],
+        },
+        {
+          name: 'post-publish npm consumer smoke',
+          command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
+        },
+      ]
+      : []),
+  ];
+  const tagSteps: ReleaseCommandStep[] = [
+    {
+      name: 'tag release',
+      command: ['git', 'tag', tag],
+    },
+    {
+      name: 'push tag',
+      command: ['git', 'push', 'origin', tag],
+    },
+    ...(canCreateGitHubRelease()
+      ? [
+        {
+          name: 'create GitHub release',
+          command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
+        },
+      ]
+      : []),
+  ];
+  const baseSteps: ReleaseCommandStep[] = [
     {
       name: 'bump patch version',
       command: [
@@ -141,15 +187,33 @@ export function createReleasePlan(
         'www/app/routes/guide/getting-started.tsx',
       ],
     },
-    ...(Deno.env.get('CI') !== 'true'
-      ? [{
-        name: 'run release gates after bump',
-        command: ['deno', 'task', 'autoflow:ci'],
-      }]
-      : []),
     {
       name: 'commit release bump',
       command: ['git', 'commit', '-m', commitMessage],
+    },
+  ];
+
+  if (Deno.env.get('CI') === 'true') {
+    // In CI, the workflow checks out main directly. Bump, publish, and tag all
+    // on main; do not touch the dev branch.
+    return [
+      ...baseSteps,
+      ...publishSteps,
+      ...evidenceSteps,
+      {
+        name: 'push main',
+        command: ['git', 'push', 'origin', 'main'],
+      },
+      ...tagSteps,
+    ];
+  }
+
+  // Local/manual release: work on dev, then fast-forward main from dev.
+  return [
+    ...baseSteps,
+    {
+      name: 'run release gates after bump',
+      command: ['deno', 'task', 'autoflow:ci'],
     },
     {
       name: 'push dev',
@@ -171,42 +235,16 @@ export function createReleasePlan(
       name: 'push main',
       command: ['git', 'push', 'origin', 'main'],
     },
+    ...publishSteps,
     {
-      name: 'pack dry-run',
-      command: ['deno', 'task', 'pack:dry-run'],
-    },
-    ...(canPublishNpm()
-      ? [
-        {
-          name: 'publish npm packages',
-          command: ['deno', 'task', 'publish:npm'],
-        },
-        {
-          name: 'post-publish npm consumer smoke',
-          command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
-        },
-      ]
-      : []),
-    ...(Deno.env.get('CI') !== 'true'
-      ? [
-        {
-          name: 'deploy:pages',
-          command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
-        },
-        {
-          name: 'smoke:deploy',
-          command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-        },
-      ]
-      : []),
-    {
-      name: 'stage release evidence',
-      command: ['git', 'add', evidenceFile(targetVersion), note],
+      name: 'deploy:pages',
+      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
     },
     {
-      name: 'commit release evidence',
-      command: ['git', 'commit', '-m', `docs(release): record ${tag} evidence`],
+      name: 'smoke:deploy',
+      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
     },
+    ...evidenceSteps,
     {
       name: 'push main evidence',
       command: ['git', 'push', 'origin', 'main'],
@@ -223,22 +261,7 @@ export function createReleasePlan(
       name: 'push dev evidence',
       command: ['git', 'push', 'origin', 'dev'],
     },
-    {
-      name: 'tag release',
-      command: ['git', 'tag', tag],
-    },
-    {
-      name: 'push tag',
-      command: ['git', 'push', 'origin', tag],
-    },
-    ...(canCreateGitHubRelease()
-      ? [
-        {
-          name: 'create GitHub release',
-          command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
-        },
-      ]
-      : []),
+    ...tagSteps,
   ];
 }
 

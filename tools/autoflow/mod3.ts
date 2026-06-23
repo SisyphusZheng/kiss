@@ -145,7 +145,8 @@ async function executeReleasePlan(
     return;
   }
 
-  await assertBranch('dev');
+  const expectedBranch = Deno.env.get('CI') === 'true' ? 'main' : 'dev';
+  await assertBranch(expectedBranch);
   await assertCleanWorktree();
 
   evidence.status = 'running';

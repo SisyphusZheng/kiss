@@ -120,10 +120,10 @@ Deno.test('release: next patch version and tag are deterministic', () => {
   assertEquals(evidenceFile('0.39.1'), 'docs/release/autoflow3/v0.39.1.json');
 });
 
-Deno.test('release: patch release plan includes publish, smoke, and GitHub release when credentials are present', () => {
-  // Simulate a CI/local environment that has the credentials required for
-  // npm publish and GitHub release creation. Force CI off so the plan still
-  // includes local release gates; the workflow itself skips gates when CI=true.
+Deno.test('release: local plan includes publish, smoke, gates, and GitHub release when credentials are present', () => {
+  // Simulate a local/manual environment that has the credentials required for
+  // npm publish and GitHub release creation. Force CI off so the plan follows
+  // the dev -> main path.
   const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
   const originalCi = Deno.env.get('CI');
@@ -136,6 +136,8 @@ Deno.test('release: patch release plan includes publish, smoke, and GitHub relea
       step.command?.join(' ') ?? '',
     ]);
     assert(commands.some(([name]) => name === 'run release gates after bump'));
+    assert(commands.some(([name]) => name === 'push dev'));
+    assert(commands.some(([name]) => name === 'sync dev to main'));
     assert(
       commands.some(([, command]) => command.includes('deno task publish:npm')),
     );
@@ -153,14 +155,45 @@ Deno.test('release: patch release plan includes publish, smoke, and GitHub relea
   }
 });
 
+Deno.test('release: CI plan publishes from main without touching dev', () => {
+  const originalNpmToken = Deno.env.get('NPM_TOKEN');
+  const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
+  const originalCi = Deno.env.get('CI');
+  Deno.env.set('NPM_TOKEN', 'test-token');
+  Deno.env.set('GITHUB_TOKEN', 'test-token');
+  Deno.env.set('CI', 'true');
+  try {
+    const names = createPatchReleasePlan('0.39.1').map((step) => step.name);
+    assertFalse(names.includes('run release gates after bump'));
+    assertFalse(names.includes('push dev'));
+    assertFalse(names.includes('sync dev to main'));
+    assertFalse(names.includes('checkout dev'));
+    assert(names.includes('push main'));
+    assert(names.includes('publish npm packages'));
+    assert(names.includes('post-publish npm consumer smoke'));
+    assert(names.includes('tag release'));
+    assert(names.includes('push tag'));
+    assert(names.includes('create GitHub release'));
+  } finally {
+    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
+    else Deno.env.set('NPM_TOKEN', originalNpmToken);
+    if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
+    else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
+    if (originalCi === undefined) Deno.env.delete('CI');
+    else Deno.env.set('CI', originalCi);
+  }
+});
+
 Deno.test('release: patch release plan omits publish and GitHub release without credentials', () => {
   const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
   const originalGitHubActions = Deno.env.get('GITHUB_ACTIONS');
+  const originalCi = Deno.env.get('CI');
   Deno.env.delete('NPM_TOKEN');
   Deno.env.delete('NODE_AUTH_TOKEN');
   Deno.env.delete('GITHUB_TOKEN');
   Deno.env.delete('GITHUB_ACTIONS');
+  Deno.env.delete('CI');
   try {
     const names = createPatchReleasePlan('0.39.1').map((step) => step.name);
     assertFalse(names.includes('publish npm packages'));
@@ -174,5 +207,7 @@ Deno.test('release: patch release plan omits publish and GitHub release without 
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
     if (originalGitHubActions === undefined) Deno.env.delete('GITHUB_ACTIONS');
     else Deno.env.set('GITHUB_ACTIONS', originalGitHubActions);
+    if (originalCi === undefined) Deno.env.delete('CI');
+    else Deno.env.set('CI', originalCi);
   }
 });
