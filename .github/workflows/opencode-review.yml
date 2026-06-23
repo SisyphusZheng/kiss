@@ -18,17 +18,12 @@ jobs:
 
       - uses: anomalyco/opencode/github@latest
         env:
-          # Required: set the secret that matches your chosen model provider.
-          # Examples: ANTHROPIC_API_KEY, OPENAI_API_KEY, KIMI_API_KEY, etc.
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # DeepSeek API key. Get one at https://platform.deepseek.com/api_keys
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Required: provider/model. Change this to the model you want to use.
-          # Examples:
-          #   anthropic/claude-sonnet-4-20250514
-          #   openai/gpt-5
-          #   kimi/kimi-k2
-          model: anthropic/claude-sonnet-4-20250514
+          # DeepSeek provider/model. Other options: deepseek/deepseek-v4-flash
+          model: deepseek/deepseek-v4-pro
           use_github_token: true
           prompt: |
             Review this pull request for the openElement project:
