@@ -29,7 +29,7 @@ import { buildPlugin } from './build.js';
 import { generateHonoEntryCode } from '@openelement/ssg';
 import { buildHeadExtras } from './head-injection.js';
 import { islandTransformPlugin } from './island-transform.js';
-import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
+import { createGeneratedDataResolverPlugin } from './generated-data-resolver.js';
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
