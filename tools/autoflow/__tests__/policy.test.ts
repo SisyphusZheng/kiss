@@ -122,11 +122,14 @@ Deno.test('release: next patch version and tag are deterministic', () => {
 
 Deno.test('release: patch release plan includes publish, smoke, and GitHub release when credentials are present', () => {
   // Simulate a CI/local environment that has the credentials required for
-  // npm publish and GitHub release creation.
+  // npm publish and GitHub release creation. Force CI off so the plan still
+  // includes local release gates; the workflow itself skips gates when CI=true.
   const originalNpmToken = Deno.env.get('NPM_TOKEN');
   const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
+  const originalCi = Deno.env.get('CI');
   Deno.env.set('NPM_TOKEN', 'test-token');
   Deno.env.set('GITHUB_TOKEN', 'test-token');
+  Deno.env.delete('CI');
   try {
     const commands = createPatchReleasePlan('0.39.1').map((step) => [
       step.name,
@@ -145,6 +148,8 @@ Deno.test('release: patch release plan includes publish, smoke, and GitHub relea
     else Deno.env.set('NPM_TOKEN', originalNpmToken);
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
+    if (originalCi === undefined) Deno.env.delete('CI');
+    else Deno.env.set('CI', originalCi);
   }
 });
 

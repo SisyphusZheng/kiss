@@ -34,6 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: dev
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/setup-deno-workspace
@@ -41,6 +42,8 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      - name: Install Playwright browsers
+        run: deno run -A npm:playwright@1.59.1 install --with-deps chromium
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
