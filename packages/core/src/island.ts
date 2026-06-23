@@ -1,4 +1,4 @@
-import { ERROR_PREFIX } from '@openelement/core';
+import { ERROR_PREFIX } from './index.js';
 import { formatError } from './errors.js';
 /**
  * @openelement/core - defineIsland() wrapper
