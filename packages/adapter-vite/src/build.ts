@@ -115,7 +115,11 @@ export function buildPlugin(
       }
 
       // -- Clean Phase 1 SSR artifacts from public dist (v0.14.10) --
-      await cleanSsrArtifacts(ctx);
+      try {
+        await cleanSsrArtifacts(ctx);
+      } catch (error) {
+        log.warn(`Failed to clean SSR artifacts: ${error}`);
+      }
 
       log.info('Build complete.');
     },

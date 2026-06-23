@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import type { Alias, Plugin } from 'vite';
 import { formatError } from '@openelement/core/errors';
 
@@ -234,7 +235,9 @@ export function createOpenJsrPackageResolverPlugin(
         try {
           return options.readLocalSource
             ? options.readLocalSource(localPath)
-            : await Deno.readTextFile(localPath);
+            : typeof Deno !== 'undefined'
+            ? await Deno.readTextFile(localPath)
+            : await readFile(localPath, 'utf-8');
         } catch (error) {
           throw new Error(
             `[openElement/SSG] Failed to read local @openelement/${packageName}/${filePath} ` +

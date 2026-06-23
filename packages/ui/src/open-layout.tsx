@@ -44,6 +44,7 @@ const log = createLogger('ui');
 function isSafeLayoutUrl(url: string): boolean {
   const trimmed = url.trim();
   if (!trimmed) return false;
+  if (trimmed.startsWith('//')) return false;
   if (
     trimmed.startsWith('/') ||
     trimmed.startsWith('#') ||

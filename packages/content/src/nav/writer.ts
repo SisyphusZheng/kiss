@@ -142,5 +142,3 @@ export function writeSearchIndex(
 
   return writeJson([...entries.values()]);
 }
-
-export type { NavData } from './scanner.ts';

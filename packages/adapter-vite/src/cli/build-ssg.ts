@@ -53,7 +53,9 @@ function getJsrPackageVersion(metaUrl: string): string {
   // Read from own deno.json
   try {
     const denoJson = JSON.parse(
-      Deno.readTextFileSync(new URL('../deno.json', import.meta.url)),
+      typeof Deno !== 'undefined'
+        ? Deno.readTextFileSync(new URL('../deno.json', import.meta.url))
+        : readFileSync(new URL('../deno.json', import.meta.url), 'utf-8'),
     );
     return denoJson.version || DEFAULT_ADAPTER_VERSION_FALLBACK;
   } catch {

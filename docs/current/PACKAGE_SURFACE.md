@@ -1,8 +1,8 @@
 # Package Surface Inventory
 
-This is the v0.41.0-alpha.1 11-package product-line truth table.
+This is the v0.41.0-alpha.1 10-package product-line truth table.
 
-<!-- 11-package -->
+<!-- 10-package -->
 
 ```text
 openElement = Elements + UI + Framework + Protocols
