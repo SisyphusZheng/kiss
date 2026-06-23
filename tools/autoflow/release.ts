@@ -191,7 +191,11 @@ export function createReleasePlan(
     },
     {
       name: 'commit release bump',
-      command: ['git', 'commit', '-m', commitMessage],
+      command: [
+        'sh',
+        '-c',
+        `git diff --cached --quiet || git commit -m '${commitMessage.replace(/'/g, "'\\''")}'`,
+      ],
     },
   ];
 
