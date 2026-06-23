@@ -2,7 +2,7 @@
 
 This is the v0.41.0-alpha.1 10-package product-line truth table.
 
-<!-- 10-package -->
+<!-- 11-package -->
 
 ```text
 openElement = Elements + UI + Framework + Protocols
