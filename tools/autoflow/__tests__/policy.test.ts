@@ -6,7 +6,7 @@ import {
   selectGates,
   V040_CLEANUP_TRAIN_APPROVAL_ID,
 } from '../policy.ts';
-import { createPatchReleasePlan, evidenceFile, nextPatchVersion, releaseTag } from '../release.ts';
+import { createReleasePlan, evidenceFile, nextPatchVersion, releaseTag } from '../release.ts';
 
 Deno.test('policy: patch docs fix can be automated', () => {
   const decision = evaluatePatchEligibility({
@@ -131,7 +131,7 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
   Deno.env.set('GITHUB_TOKEN', 'test-token');
   Deno.env.delete('CI');
   try {
-    const commands = createPatchReleasePlan('0.39.1').map((step) => [
+    const commands = createReleasePlan('0.39.1').map((step) => [
       step.name,
       step.command?.join(' ') ?? '',
     ]);
@@ -163,7 +163,7 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
   Deno.env.set('GITHUB_TOKEN', 'test-token');
   Deno.env.set('CI', 'true');
   try {
-    const names = createPatchReleasePlan('0.39.1').map((step) => step.name);
+    const names = createReleasePlan('0.39.1').map((step) => step.name);
     assertFalse(names.includes('run release gates after bump'));
     assertFalse(names.includes('push dev'));
     assertFalse(names.includes('sync dev to main'));
@@ -195,7 +195,7 @@ Deno.test('release: patch release plan omits publish and GitHub release without 
   Deno.env.delete('GITHUB_ACTIONS');
   Deno.env.delete('CI');
   try {
-    const names = createPatchReleasePlan('0.39.1').map((step) => step.name);
+    const names = createReleasePlan('0.39.1').map((step) => step.name);
     assertFalse(names.includes('publish npm packages'));
     assertFalse(names.includes('create GitHub release'));
     assert(names.includes('tag release'));

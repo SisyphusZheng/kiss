@@ -48,17 +48,20 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Resolve default approved plan
+        id: plan
+        run: echo "value=${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}" >> "$GITHUB_OUTPUT"
       - name: Patch release
         if: ${{ inputs.plan == 'patch' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          deno task autoflow:patch-release --approved-plan ${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}
+          deno task autoflow:patch-release --approved-plan ${{ steps.plan.outputs.value }}
       - name: Approved release
         if: ${{ inputs.plan != 'patch' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          deno task autoflow:release --approved-plan ${{ inputs.approvedPlan }} --to ${{ inputs.version }}
+          deno task autoflow:release --approved-plan ${{ steps.plan.outputs.value }} --to ${{ inputs.version }}

@@ -1,4 +1,6 @@
-import { AUTOFLOW3_POLICY_VERSION } from './policy.ts';
+import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
+
+export { isCI as isCIEnv };
 
 export interface ReleaseStepEvidence {
   name: string;
@@ -193,7 +195,7 @@ export function createReleasePlan(
     },
   ];
 
-  if (Deno.env.get('CI') === 'true') {
+  if (isCI()) {
     // In CI, the workflow checks out main directly. Bump, publish, and tag all
     // on main; do not touch the dev branch.
     return [
@@ -265,20 +267,19 @@ export function createReleasePlan(
   ];
 }
 
-export function createPatchReleasePlan(targetVersion: string): ReleaseCommandStep[] {
-  return createReleasePlan(targetVersion);
+function isTruthyEnv(name: string): boolean {
+  const value = Deno.env.get(name);
+  return value !== undefined && value !== '' && value !== 'false';
 }
 
 function canCreateGitHubRelease(): boolean {
   // gh release create needs a GitHub token. In CI it is provided automatically.
-  return Boolean(
-    Deno.env.get('GITHUB_TOKEN') || Deno.env.get('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
-  );
+  return isTruthyEnv('GITHUB_TOKEN') || isTruthyEnv('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS') === 'true';
 }
 
 function canPublishNpm(): boolean {
   // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
-  return Boolean(Deno.env.get('NPM_TOKEN') || Deno.env.get('NODE_AUTH_TOKEN'));
+  return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
 }
 
 export async function assertCleanWorktree(): Promise<void> {

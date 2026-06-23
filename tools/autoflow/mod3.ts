@@ -11,6 +11,7 @@ import {
   assertCleanWorktree,
   createReleaseEvidence,
   createReleasePlan,
+  isCIEnv,
   nextPatchVersion,
   releaseTag,
   runReleaseStep,
@@ -145,7 +146,7 @@ async function executeReleasePlan(
     return;
   }
 
-  const expectedBranch = Deno.env.get('CI') === 'true' ? 'main' : 'dev';
+  const expectedBranch = isCIEnv() ? 'main' : 'dev';
   await assertBranch(expectedBranch);
   await assertCleanWorktree();
 
