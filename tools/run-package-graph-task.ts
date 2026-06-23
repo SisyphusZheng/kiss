@@ -313,9 +313,9 @@ async function publishPackage(
   pkg: PackageInfo,
   dryRun: boolean,
 ): Promise<'dry-run' | 'skipped' | 'published' | 'recovered'> {
-  const args = ['publish', '-c', 'deno.json', '--allow-slow-types'];
+  const args = ['publish', '-c', 'deno.json', '--allow-slow-types', '--allow-dirty'];
   if (dryRun) {
-    args.push('--dry-run', '--allow-dirty');
+    args.push('--dry-run');
     await runCommand('deno', args, pkg.dir);
     return 'dry-run';
   }
