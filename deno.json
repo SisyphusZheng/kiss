@@ -91,7 +91,8 @@
     "autoflow:patch-release": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts patch-release",
     "autoflow:minor-plan": "deno run --allow-read --allow-run tools/autoflow/mod3.ts minor-plan",
     "autoflow:release": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release",
-    "autoflow:test": "deno test --allow-read --allow-write --allow-run tools/autoflow/__tests__/",
+    "autoflow:release-dispatch": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-dispatch",
+    "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
     "verify:configs": "deno run --allow-read tools/verify-package-configs.ts",
     "verify:configs:fix": "deno run --allow-read --allow-write tools/verify-package-configs.ts --fix"
   },

@@ -98,8 +98,19 @@ Deno.test('mod3: parse approved plan for release command', () => {
   assertEquals(parseArgs(['release', '--approved-plan', 'ADR-0101/v0.40', '--dry-run']), {
     command: 'release',
     dryRun: true,
+    dispatch: false,
     approvedPlan: 'ADR-0101/v0.40',
     targetVersion: undefined,
+  });
+});
+
+Deno.test('mod3: parse dispatch flag for release command', () => {
+  assertEquals(parseArgs(['release-dispatch', '--approved-plan', 'ADR-0101/v0.40', '--to', '0.41.0-alpha.1']), {
+    command: 'release-dispatch',
+    dryRun: false,
+    dispatch: true,
+    approvedPlan: 'ADR-0101/v0.40',
+    targetVersion: '0.41.0-alpha.1',
   });
 });
 
