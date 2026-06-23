@@ -52,7 +52,6 @@ export class ContributingPage extends OpenElement {
   }
 
   private _renderEn() {
-    const loc = this._getLocale("en");
     return (
       <div class="container">
         <h1>Contributing to openElement</h1>

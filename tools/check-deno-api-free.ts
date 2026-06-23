@@ -27,7 +27,7 @@ function stripComments(line: string, inBlock: boolean): { line: string; inBlock:
     const end = text.indexOf('*/');
     if (end === -1) return { line: '', inBlock: true };
     text = text.slice(end + 2);
-    inBlock = false;
+    inBlock = false; // Required to satisfy the control-flow contract.
   }
 
   for (;;) {

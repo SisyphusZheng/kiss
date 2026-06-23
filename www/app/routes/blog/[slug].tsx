@@ -59,7 +59,6 @@ export default class BlogPostPage extends OpenElement {
   }
 
   private _renderZh() {
-    const loc = this._getLocale("zh");
     const post = getPostBySlug(this.slug);
 
     if (!post) {
@@ -101,7 +100,6 @@ export default class BlogPostPage extends OpenElement {
   }
 
   private _renderEn() {
-    const loc = this._getLocale("en");
     const post = getPostBySlug(this.slug);
 
     if (!post) {
