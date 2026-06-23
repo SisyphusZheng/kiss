@@ -7,6 +7,7 @@
     "./head-injection": "./src/head-injection.ts",
     "./nitro-mount": "./src/nitro-mount.ts",
     "./plugin": "./src/plugin.ts",
+    "./generated-data-resolver": "./src/generated-data-resolver.ts",
     "./subpath-resolver": "./src/subpath-resolver.ts",
     "./plugin-mdx": "./src/plugin-mdx.ts",
     "./cli/build": "./src/cli/build.ts",

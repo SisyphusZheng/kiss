@@ -28,12 +28,7 @@ export type { MdxCompileOptions, MdxModule } from './mdx/types.ts';
 
 export { extractMeta, scanNavData } from './nav/scanner.ts';
 export type { NavData } from './nav/scanner.ts';
-export {
-  createRouteManifest,
-  writeNavModule,
-  writeRouteManifestModule,
-  writeSearchIndex,
-} from './nav/writer.ts';
+export { writeNavModule, writeSearchIndex } from './nav/writer.ts';
 export type { DocsRouteManifest, DocsRouteManifestEntry, SearchIndexEntry } from './nav/writer.ts';
 
 export type {
