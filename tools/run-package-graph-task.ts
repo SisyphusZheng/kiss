@@ -260,13 +260,17 @@ async function waitForJsrVersion(pkg: PackageInfo): Promise<boolean> {
   return false;
 }
 
+function isPrerelease(version: string): boolean {
+  return version.includes('-');
+}
+
 async function waitForPackageLevelMetadata(pkg: PackageInfo): Promise<void> {
   await waitForJsrPackageMetadata({
     packageNames: [pkg.name],
     version: pkg.version,
     timeoutMs: JSR_PACKAGE_METADATA_TIMEOUT_MS,
     intervalMs: JSR_PACKAGE_METADATA_INTERVAL_MS,
-    requireLatest: true,
+    requireLatest: !isPrerelease(pkg.version),
     logPrefix: 'publish-meta',
     bypassCdnCache: true,
   });
