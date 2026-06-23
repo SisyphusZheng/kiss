@@ -93,7 +93,7 @@ function detectLocale(pathname: string, locales: string[], defaultLocale: string
 }
 
 function localizePath(path: string, locale: string): string {
-  if (path.startsWith('http')) return path;
+  if (isSafeLayoutUrl(path) && /^https?:/i.test(path)) return path;
   return `/${locale}${path}`;
 }
 
@@ -1423,12 +1423,7 @@ export class OpenLayout extends OpenElement {
       const href = link.getAttribute('href');
       if (!href) return;
 
-      if (
-        href.startsWith('http') ||
-        href.startsWith('#') ||
-        href.startsWith('mailto:') ||
-        href.startsWith('javascript:')
-      ) {
+      if (!isSafeLayoutUrl(href) || /^https?:/i.test(href) || href.startsWith('#')) {
         return;
       }
 
