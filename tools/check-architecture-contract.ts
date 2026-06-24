@@ -86,6 +86,21 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment: 'this as unknown as Record<string, unknown>',
     reason: 'Custom element prop collection by dynamic prop name.',
   },
+  {
+    file: 'packages/element/src/open-element-hydration.ts',
+    fragment: 'instance as unknown as HTMLElement',
+    reason: 'Cycle-break: OpenElementLike does not extend HTMLElement.',
+  },
+  {
+    file: 'packages/element/src/open-element-render.ts',
+    fragment: 'instance as unknown as HTMLElement',
+    reason: 'Cycle-break: OpenElementLike does not extend HTMLElement.',
+  },
+  {
+    file: 'packages/element/src/open-element-render.ts',
+    fragment: 'instance.constructor as unknown as OpenElementLikeConstructor',
+    reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
+  },
 ];
 
 const issues: Issue[] = [];

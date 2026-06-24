@@ -2,8 +2,9 @@
  * Internal rendering helpers for OpenElement.
  *
  * Extracted from open-element.ts to keep the base class focused on its
- * public lifecycle API. These functions are NOT part of the public package
- * surface and should only be consumed by OpenElement itself.
+ * public lifecycle API. Exposed as a package subpath so Deno can emit its
+ * types, but this is an internal implementation detail — consumers should
+ * use OpenElement instead.
  *
  * @internal
  * @module @openelement/element/open-element-render
@@ -13,7 +14,26 @@ import type { VNode } from '@openelement/protocol/vnode';
 import { renderToDom } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
-import type { OpenElement } from './open-element.js';
+import type { Signal } from '@openelement/protocol/signal';
+
+/**
+ * Minimal structural stand-in for OpenElement instances.
+ *
+ * Avoids importing the real OpenElement class, which creates a circular
+ * dependency that confuses Deno's npm type-generation. Only the members
+ * actually used by the render helpers are declared.
+ */
+interface OpenElementLike {
+  render(): unknown;
+  shadowRoot: ShadowRoot | null;
+  createRenderRoot(): void;
+  signalRegistry: Map<string, Signal<unknown>>;
+  tagName: string;
+}
+
+interface OpenElementLikeConstructor {
+  renderMode?: 'shadow' | 'light';
+}
 
 /**
  * Minimal accessor for the VNode cache stored on an OpenElement instance.
@@ -53,7 +73,7 @@ export function disposeRenderBindings(
  * produced DOM into the element itself.
  */
 export function renderIntoLightDom(
-  instance: OpenElement,
+  instance: OpenElementLike,
   effectDisposers: Set<() => void>,
   eventCleanups: Array<() => void>,
   cache: VNodeCacheAccess,
@@ -63,7 +83,7 @@ export function renderIntoLightDom(
   const result = instance.render();
   cache.set(result);
 
-  const self = instance as HTMLElement;
+  const self = instance as unknown as HTMLElement;
   while (self.firstChild) {
     self.removeChild(self.firstChild);
   }
@@ -82,7 +102,7 @@ export function renderIntoLightDom(
  * produced DOM into the shadow root.
  */
 export function renderIntoShadowRoot(
-  instance: OpenElement,
+  instance: OpenElementLike,
   effectDisposers: Set<() => void>,
   eventCleanups: Array<() => void>,
   cache: VNodeCacheAccess,
@@ -112,20 +132,20 @@ export function renderIntoShadowRoot(
  * previous bindings, and mounts the fallback content.
  */
 export function renderErrorFallback(
-  instance: OpenElement,
+  instance: OpenElementLike,
   error: unknown,
   effectDisposers: Set<() => void>,
   eventCleanups: Array<() => void>,
   onRenderError: (error: unknown) => VNode | null,
 ): Array<() => void> {
-  const ctor = instance.constructor as typeof OpenElement;
+  const ctor = instance.constructor as unknown as OpenElementLikeConstructor;
   const isLightDom = ctor.renderMode === 'light';
 
   if (!instance.shadowRoot && !isLightDom) {
     instance.createRenderRoot();
   }
 
-  const target = isLightDom ? (instance as HTMLElement) : instance.shadowRoot;
+  const target = isLightDom ? (instance as unknown as HTMLElement) : instance.shadowRoot;
   if (!target) return [];
 
   let fallback: VNode | null;
