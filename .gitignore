@@ -56,7 +56,6 @@ docs/autoflow/cells/*/state.json
 
 # Generated data modules (typed stubs are tracked as .d.ts)
 www/app/data/_generated-*.ts
-packages/ui/src/generated-manifest.json
 
 # Test / build / lint / coverage output files
 test-*.txt

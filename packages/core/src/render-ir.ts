@@ -6,16 +6,16 @@
  * flows through `renderToNode`.
  */
 
-import { escapeAttr, escapeHtml } from './html-escape.js';
+import { escapeAttr, escapeHtml } from './html-escape.ts';
 import {
   createEventMarkerContext,
   type EventMarkerContext,
   serializeEventMarkers,
-} from './event-marker.js';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.js';
-import { DANGEROUS_KEYS, trustRenderHtml } from './security.js';
+} from './event-marker.ts';
+import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { DANGEROUS_KEYS, trustRenderHtml } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
-import { isComponentCtor, isComponentFn, isVNode } from './vnode.js';
+import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import { renderDsd } from './render-dsd.js';
 import { createLogger } from './logger.js';

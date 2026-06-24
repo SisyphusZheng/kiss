@@ -1,6 +1,6 @@
 {
   "name": "@openelement/core",
-  "version": "0.41.0-alpha.2",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
     "./static": "./src/static.ts",

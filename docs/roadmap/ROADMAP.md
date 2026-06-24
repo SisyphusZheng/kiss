@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.2 Signal-DOM Deepening; next line is Cross-Framework Web Components Integration.\
+> Current package line: v0.41.0-alpha.1 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 
@@ -71,7 +71,7 @@ v0.41-v1.0 blocker.
 | v0.40.6         | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup             | Released                 |
 | v0.40.7         | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                                 | Released                 |
 | v0.41.0-alpha.1 | npm Distribution + Audit Cleanup                   | Replace JSR release closure with npm via `deno pack`; audit-driven cleanup and protocol restoration; ship first npm/JSR dual-published alpha.                               | Released                 |
-| v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                                | Shipped                  |
+| v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                                | Planned                  |
 | v0.41.0-alpha.3 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                     | Planned                  |
 | v0.41.0-alpha.4 | openElement Components in Fresh                    | Lightweight client runtime for third-party frameworks; Fresh example proving SSR + hydration of openElement components.                                                     | Planned                  |
 | v0.41.0-alpha.5 | SPA Mode + Desktop Shell Proof                     | First-class single-page-application mode for Tauri 2 / Electron-style desktop shells; client-side router, history/hash navigation, and no SSR assumptions.                  | Planned                  |
@@ -245,9 +245,6 @@ Scope:
   - Migrate one real static-only consumer to `@openelement/core/static`.
 - Safari adoptedStyleSheets follow-up:
   - Audit token-sheet adoption and apply the chosen theme fix.
-
-> ✅ Shipped 2026-06-24. All three architecture candidates landed, static subpath
-> validated with `open-button`, Safari theme-color fixed via `openPropsRootSheet`.
 
 Non-goals:
 
@@ -723,9 +720,6 @@ runtime changes, and future default signal-engine changes still require
 ADR-backed human approval.
 
 ## v0.42.0 - Server Primitives
-
-> Migration note: `@openelement/app/preact` will move to a dedicated
-> `@openelement/adapter-preact` package once cross-framework island work begins.
 
 Move from application framework toward full-stack framework by adding the
 server primitives that pages, API routes, actions, and adapters share.

@@ -7,15 +7,14 @@
  * replacing the existing DSD DOM.
  */
 
-import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.js';
+import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike } from '@openelement/signal';
-import { isComponentCtor, isVNode } from './vnode.js';
+import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import { DATA_EID } from '@openelement/protocol/hydration-markers';
 import { applyBindingDescriptor } from './binding-activation.js';
-import { bindEvent } from './binding-descriptor.js';
-import type { EventBindingDescriptor } from './binding-descriptor.js';
-import { eventMarkerId, eventTypeFromProp } from './event-marker.js';
+import type { EventBindingDescriptor } from './binding-descriptor.ts';
+import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
 
 // Re-export pure marker helpers so existing consumers keep working.
 export {
@@ -23,8 +22,8 @@ export {
   eventMarkerId,
   eventTypeFromProp,
   serializeEventMarkers,
-} from './event-marker.js';
-export type { EventMarkerContext } from './event-marker.js';
+} from './event-marker.ts';
+export type { EventMarkerContext } from './event-marker.ts';
 
 export interface EventBindingRecord {
   id: string;
@@ -140,7 +139,12 @@ export function eventRecordsToDescriptors(
     const handler = owner && typeof record.handler === 'function'
       ? (record.handler as EventListener).bind(owner)
       : record.handler as EventListener;
-    return bindEvent(el, record.type, handler);
+    return {
+      kind: 'event',
+      el,
+      type: record.type,
+      handler,
+    };
   });
 }
 

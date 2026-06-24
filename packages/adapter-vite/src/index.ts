@@ -11,7 +11,7 @@
  * Runtime code (renderDsd, defineIsland, escapeHtml, etc.) lives in @openelement/core.
  * This package only contains Vite-specific build orchestration.
  *
- * For the unified openElement() entry, use @openelement/adapter-vite.
+ * For the unified openElement() entry, use @openelement/app/vite instead.
  *
  * v0.22 (SOP-004): Decomposed into focused modules:
  *   head-injection.ts      - HTML fragment validation & serialization
@@ -48,8 +48,6 @@ export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
   };
   return createOpenPlugin(options);
 }
-
-export { openElement, type OpenElementOptions } from './app-vite.js';
 
 export type { FrameworkOptions };
 

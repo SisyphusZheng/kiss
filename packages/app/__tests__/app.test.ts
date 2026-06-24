@@ -1,11 +1,11 @@
 /**
- * @openelement/adapter-vite/app-vite - Unified entry tests
+ * @openelement/app - Unified entry tests
  *
  * Tests that openElement() correctly combines openPipeline() + openContent() + openI18n()
  * with a shared OpenElementBuildContext. This is the primary user-facing API.
  */
 import { assertArrayIncludes, assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
-import { openElement } from '../src/app-vite.ts';
+import { openElement } from '../src/vite.ts';
 
 // ─── Plugin structure ──────────────────────────────────────────
 

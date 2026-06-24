@@ -1,4 +1,4 @@
-import { walkSync } from '@std/fs/walk';
+import { walkFiles } from './lib/walk.ts';
 
 const preset = Deno.args[0];
 
@@ -72,10 +72,11 @@ function assertNotIncludes(text: string, unexpected: string, label: string): voi
 async function readTextFiles(dir: URL, suffix: string): Promise<string> {
   let content = '';
   for (
-    const entry of walkSync(dir.pathname, { includeDirs: false })
+    const path of walkFiles(dir.pathname, {
+      include: ({ name }) => name.endsWith(suffix),
+    })
   ) {
-    if (!entry.name.endsWith(suffix)) continue;
-    content += await Deno.readTextFile(entry.path);
+    content += await Deno.readTextFile(path);
   }
   return content;
 }

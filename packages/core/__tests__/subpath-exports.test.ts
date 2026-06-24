@@ -40,9 +40,6 @@ Deno.test('@openelement/core/hydrate subpath exports expected API', async () => 
   assertEquals(typeof hydrateMod.createDsdRenderRoot, 'function');
   assertEquals(typeof hydrateMod.hydrateDsdEvents, 'function');
   assertEquals(typeof hydrateMod.bindHydrateEvents, 'function');
-
-  // v0.41.0-alpha.2: HydrationScope value object
-  assertEquals(typeof hydrateMod.HydrationScope, 'function');
 });
 
 Deno.test('@openelement/core/csr subpath exports expected API', async () => {

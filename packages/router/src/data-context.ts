@@ -1,55 +1,53 @@
 /**
  * @openelement/router - Data context for route loader/action data.
  *
- * Provides render-scoped state for loader and action data, consumed by
+ * Provides module-level state for loader and action data, consumed by
  * useLoaderData / useActionData hooks inside route page renders.
  *
  * Architecture:
- *   ApplicationPageElement.render() pushes loader data (and optional action
- *   data) onto a stack before invoking the user's render function, then pops
- *   the stack in a `finally` block. This keeps data scoped to the current
- *   render instead of relying on module-level mutable state.
+ *   ApplicationPageElement.render() calls setLoaderData / setActionData before
+ *   invoking the user's render function. The hooks read from this module-level
+ *   state. Since JavaScript is single-threaded, concurrent renders do not
+ *   conflict within the same microtask.
  *
- * v0.41.0: Replaced module-level currentState with render-scoped stack.
+ * v0.40.0: Fresh-style data layer MVP.
  */
 
-// ─── Render-scoped stack ─────────────────────────────────────────
+// ─── Module-level state ──────────────────────────────────────────
 
-const dataStack: { loaderData: unknown; actionData: unknown }[] = [];
+interface DataState {
+  loaderData: unknown;
+  actionData: unknown;
+}
 
-// ─── Internal stack operations (called by ApplicationPageElement) ─
+const currentState: DataState = {
+  loaderData: undefined,
+  actionData: undefined,
+};
+
+// ─── Internal setters (called by ApplicationPageElement) ─────────
 
 /**
- * @internal Push loader data for the current render.
- * Called by ApplicationPageElement.render() before invoking the page render.
+ * @internal Set the current loader data before rendering.
+ * Called by ApplicationPageElement.render().
  */
-export function __internal_pushLoaderData(data: unknown): void {
-  dataStack.push({ loaderData: data, actionData: undefined });
-  // ponytail: warn if stack grows abnormally (missing pop indicates a leak).
-  // 10 is a generous upper bound for nested app-shell renders.
-  if (dataStack.length > 10) {
-    console.warn(
-      `[openelement:router] data-context stack depth ${dataStack.length} exceeds expected maximum. ` +
-        'This may indicate a missing __internal_popData() call.',
-    );
-  }
+export function __internal_setLoaderData(data: unknown): void {
+  currentState.loaderData = data;
 }
 
 /**
- * @internal Push action data for the current render.
+ * @internal Set the current action data before rendering.
  * Called by ApplicationPageElement.render() after a form submission.
  */
-export function __internal_pushActionData(data: unknown): void {
-  const top = dataStack[dataStack.length - 1];
-  if (top) top.actionData = data;
+export function __internal_setActionData(data: unknown): void {
+  currentState.actionData = data;
 }
 
 /**
- * @internal Pop the render-scoped data stack.
- * Called by ApplicationPageElement.render() in a `finally` block.
+ * @internal Clear the current action data (e.g., after navigation).
  */
-export function __internal_popData(): void {
-  dataStack.pop();
+export function __internal_clearActionData(): void {
+  currentState.actionData = undefined;
 }
 
 // ─── Public hooks ────────────────────────────────────────────────
@@ -64,7 +62,7 @@ export function __internal_popData(): void {
  * ```
  */
 export function useLoaderData<T = unknown>(): T {
-  return dataStack[dataStack.length - 1]?.loaderData as T;
+  return currentState.loaderData as T;
 }
 
 /**
@@ -78,5 +76,5 @@ export function useLoaderData<T = unknown>(): T {
  * ```
  */
 export function useActionData<T = unknown>(): T | undefined {
-  return dataStack[dataStack.length - 1]?.actionData as T | undefined;
+  return currentState.actionData as T | undefined;
 }

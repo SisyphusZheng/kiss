@@ -2,41 +2,26 @@
  * Converts a VNode tree to real DOM nodes for client-side rendering and hydration.
  *
  * Design (ADR-0057 / ADR-0109 Phase 2):
- * - Props are translated into BindingDescriptor objects.
- * - Special tags emit binding descriptors instead of creating effects directly.
- * - Binding descriptors are committed via commitBindings() after the DOM tree is
- *   created so anchors are already in the document before reactive effects run.
+ * - Props are translated into BindingDescriptor objects
+ * - Binding descriptors are applied via applyBindingDescriptor()
  * - Signal names are resolved through an optional signalRegistry and emitted as
  *   data-signal markers for DSD hydration consistency.
  *
  * @module @openelement/core/jsx-render-dom
  */
 
-import { isComponentCtor, isComponentFn, isVNode } from './vnode.js';
+import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import type { Signal } from '@openelement/protocol/signal';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.js';
+import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
-import { eventTypeFromProp } from './event-hydration.js';
-import { trustRenderHtml } from './security.js';
+import { eventTypeFromProp } from './event-hydration.ts';
+import { trustRenderHtml } from './security.ts';
+import { effect } from '@openelement/signal';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import { commitBindings } from './binding-activation.js';
-import {
-  bindAttr,
-  bindClass,
-  bindConditional,
-  bindEvent,
-  bindHtml,
-  bindList,
-  bindRef,
-  bindStaticAttr,
-  bindStaticBoolean,
-  bindStaticProp,
-  bindStaticStyle,
-  bindText,
-} from './binding-descriptor.js';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
+import { applyBindingDescriptor } from './binding-activation.ts';
+import type { BindingDescriptor, BindingLifecycle } from './binding-descriptor.ts';
 import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -142,7 +127,7 @@ export function collectPropBindings(
 
     // ref callback
     if (key === 'ref' && typeof value === 'function') {
-      descriptors.push(bindRef(el, value as (el: Element) => void));
+      descriptors.push({ kind: 'ref', el, callback: value as (el: Element) => void });
       continue;
     }
 
@@ -150,7 +135,7 @@ export function collectPropBindings(
     if (key.startsWith('on') && typeof value === 'function') {
       const eventType = eventTypeFromProp(key);
       if (!eventType) continue;
-      descriptors.push(bindEvent(el, eventType, value as EventListener));
+      descriptors.push({ kind: 'event', el, type: eventType, handler: value as EventListener });
       continue;
     }
 
@@ -159,7 +144,12 @@ export function collectPropBindings(
     // innerHTML maps to signal-html / static text injection.
     if (key === 'innerHTML') {
       if (isSignalLike(value)) {
-        descriptors.push(bindHtml(el, value as Signal<unknown>, trustedHtml));
+        descriptors.push({
+          kind: 'signal-html',
+          el,
+          signal: value as Signal<unknown>,
+          trusted: trustedHtml,
+        });
       } else {
         const resolved = String(unwrapSignalLike(value));
         if (trustedHtml) {
@@ -187,9 +177,14 @@ export function collectPropBindings(
         // by isSignalLike. Use explicit data-signal-class markers for arbitrary
         // class names; revisit when signal-class accepts a class-name accessor.
         const className = attrName === 'class' ? '' : attrName;
-        descriptors.push(bindClass(el, className, sig));
+        descriptors.push({
+          kind: 'signal-class',
+          el,
+          className,
+          signal: sig,
+        });
       } else {
-        descriptors.push(bindAttr(el, [attrName], sig));
+        descriptors.push({ kind: 'signal-attr', el, attrNames: [attrName], signal: sig });
       }
       continue;
     }
@@ -201,24 +196,24 @@ export function collectPropBindings(
       for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
         styleObj[sk] = unwrapSignalLike(sv) as string | number;
       }
-      descriptors.push(bindStaticStyle(el, styleObj));
+      descriptors.push({ kind: 'static-style', el, value: styleObj });
       continue;
     }
 
     // DOM properties that are NOT HTML attributes
     if (key === 'textContent') {
-      descriptors.push(bindStaticProp(el, 'textContent', resolved));
+      descriptors.push({ kind: 'static-prop', el, propName: 'textContent', value: resolved });
       continue;
     }
 
     const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
 
     if (typeof resolved === 'boolean') {
-      descriptors.push(bindStaticBoolean(el, attrName, resolved));
+      descriptors.push({ kind: 'static-boolean', el, attrName, value: resolved });
       continue;
     }
 
-    descriptors.push(bindStaticAttr(el, key, attrName, resolved));
+    descriptors.push({ kind: 'static-attr', el, key, attrName, value: resolved });
   }
 
   return descriptors;
@@ -232,10 +227,11 @@ export function applyProps(
   props: Record<string, unknown>,
   lifecycle?: BindingLifecycle,
   signalRegistry?: Map<string, Signal<unknown>>,
-  renderer?: BindingRenderer,
 ): void {
   const descriptors = collectPropBindings(el, props, signalRegistry);
-  commitBindings(descriptors, lifecycle ?? {}, renderer);
+  for (const desc of descriptors) {
+    applyBindingDescriptor(desc, lifecycle ?? {});
+  }
 }
 
 /**
@@ -258,23 +254,6 @@ export function renderToDom(
     fullLifecycle.disposers = disposers;
   }
 
-  const renderer: BindingRenderer = {
-    render: (child, childLifecycle) =>
-      renderToDom(child, childLifecycle, undefined, signalRegistry),
-  };
-
-  const descriptors: BindingDescriptor[] = [];
-  const root = renderNode(node, fullLifecycle, signalRegistry, descriptors);
-  commitBindings(descriptors, fullLifecycle, renderer);
-  return root;
-}
-
-function renderNode(
-  node: unknown,
-  lifecycle: BindingLifecycle,
-  signalRegistry: Map<string, Signal<unknown>> | undefined,
-  descriptors: BindingDescriptor[],
-): Node {
   if (node == null || node === false) {
     return document.createTextNode('');
   }
@@ -289,7 +268,7 @@ function renderNode(
   if (isSignalLike(node)) {
     const sig = node as Signal<unknown>;
     const textNode = document.createTextNode(String(sig.value ?? ''));
-    descriptors.push(bindText(textNode, sig));
+    applyBindingDescriptor({ kind: 'signal-text', el: textNode, signal: sig }, fullLifecycle);
     return textNode;
   }
 
@@ -304,7 +283,7 @@ function renderNode(
   ) {
     const frag = document.createDocumentFragment();
     for (const child of children) {
-      frag.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
+      frag.appendChild(renderToDom(child, fullLifecycle, undefined, signalRegistry));
     }
     return frag;
   }
@@ -327,12 +306,27 @@ function renderNode(
     const truthy: unknown = ch[0];
     const falsy: unknown = ch[1];
     const marker = document.createComment('show');
-    descriptors.push(bindConditional(
-      marker as ChildNode,
-      whenSig,
-      () => truthy,
-      () => falsy,
-    ));
+
+    let anchor: ChildNode | null = null;
+    const swap = () => {
+      const show = Boolean(
+        isSignalLike(whenSig) ? (whenSig as { value: unknown }).value : whenSig,
+      );
+      const target = show ? truthy : falsy;
+      if (anchor) anchor.remove();
+      if (target != null) {
+        anchor = renderToDom(target, fullLifecycle, undefined, signalRegistry) as ChildNode;
+        marker.parentNode?.insertBefore(anchor, marker.nextSibling);
+      } else {
+        anchor = null;
+      }
+    };
+    const dispose = effect(() => swap());
+    if (fullLifecycle.signal) {
+      fullLifecycle.signal.addEventListener('abort', dispose, { once: true });
+    }
+    fullLifecycle.disposers?.add(dispose);
+    swap();
     return marker;
   }
 
@@ -342,9 +336,31 @@ function renderNode(
       ((() => document.createTextNode('') as unknown) as RenderFn);
 
     const marker = document.createComment('for');
-    descriptors.push(
-      bindList(marker as ChildNode, eachSig, renderFn),
-    );
+    let anchors: ChildNode[] = [];
+
+    const reconcile = () => {
+      const items =
+        (isSignalLike(eachSig) ? (eachSig as { value: unknown }).value : eachSig) as unknown[];
+      if (!Array.isArray(items)) return;
+
+      // Remove old
+      for (const a of anchors) a.remove();
+      anchors = [];
+
+      // Render new
+      for (let i = 0; i < items.length; i++) {
+        const vn = renderFn(items[i], i);
+        const dom = renderToDom(vn, fullLifecycle, undefined, signalRegistry) as ChildNode;
+        marker.parentNode?.insertBefore(dom, marker.nextSibling);
+        anchors.push(dom);
+      }
+    };
+    const dispose = effect(() => reconcile());
+    if (fullLifecycle.signal) {
+      fullLifecycle.signal.addEventListener('abort', dispose, { once: true });
+    }
+    fullLifecycle.disposers?.add(dispose);
+    reconcile();
     return marker;
   }
 
@@ -355,7 +371,7 @@ function renderNode(
         (instance as Record<string, unknown>)[k] = v;
       }
       const result = instance.render();
-      return renderNode(result, lifecycle, signalRegistry, descriptors);
+      return renderToDom(result, fullLifecycle, undefined, signalRegistry);
     } catch (err) {
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
@@ -366,7 +382,7 @@ function renderNode(
   if (isComponentFn(tag)) {
     try {
       const result = tag({ ...props, children });
-      return renderNode(result, lifecycle, signalRegistry, descriptors);
+      return renderToDom(result, fullLifecycle, undefined, signalRegistry);
     } catch (err) {
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
@@ -376,10 +392,9 @@ function renderNode(
   }
 
   const el = createElementForTag(tag as string);
-  const propDescriptors = collectPropBindings(el, props, signalRegistry);
-  descriptors.push(...propDescriptors);
+  applyProps(el, props, fullLifecycle, signalRegistry);
   for (const child of children) {
-    el.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
+    el.appendChild(renderToDom(child, fullLifecycle, undefined, signalRegistry));
   }
 
   return el;

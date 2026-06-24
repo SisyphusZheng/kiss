@@ -4,7 +4,7 @@
 
 import { assert, assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
-import { For, Fragment, HTML_TAG, jsx, Show } from '../src/jsx-runtime.ts';
+import { jsx } from '../src/jsx-runtime.ts';
 import { collectPropBindings, renderToDom } from '../src/jsx-render-dom.ts';
 import type { Signal } from '@openelement/protocol/signal';
 
@@ -135,18 +135,6 @@ class TestNode {
     return this.childNodes[0] ?? null;
   }
 
-  get nextSibling(): TestNode | null {
-    if (!this.parentNode) return null;
-    const idx = this.parentNode.childNodes.indexOf(this);
-    return this.parentNode.childNodes[idx + 1] ?? null;
-  }
-
-  get previousSibling(): TestNode | null {
-    if (!this.parentNode) return null;
-    const idx = this.parentNode.childNodes.indexOf(this);
-    return this.parentNode.childNodes[idx - 1] ?? null;
-  }
-
   get lastChild(): TestNode | null {
     return this.childNodes.at(-1) ?? null;
   }
@@ -219,10 +207,6 @@ class TestTextNode extends TestNode {
   set textContent(value: string) {
     this.nodeValue = value;
   }
-}
-
-class TestComment extends TestTextNode {
-  override nodeType = 8;
 }
 
 class TestElement extends TestNode {
@@ -372,9 +356,7 @@ class TestDocument {
   }
 
   createDocumentFragment(): DocumentFragment {
-    const frag = new TestNode();
-    frag.nodeType = 11;
-    return frag as unknown as DocumentFragment;
+    return new TestNode() as unknown as DocumentFragment;
   }
 
   createElementNS(_ns: string, tag: string): Element {
@@ -382,7 +364,7 @@ class TestDocument {
   }
 
   createComment(): Comment {
-    return new TestComment() as unknown as Comment;
+    return new TestTextNode() as unknown as Comment;
   }
 }
 
@@ -435,13 +417,11 @@ Deno.test('renderToDom binds signal attribute via descriptor', () => {
 
 Deno.test('renderToDom binds signal class via descriptor', () => {
   const s = signal(false);
-  const div = document.createElement('div');
-  // ponytail: CSR signal-class uses an empty class name for className prop;
-  // the descriptor is emitted but no visible class is toggled. Verify
-  // the descriptor exists with the expected empty className.
-  const descriptors = collectPropBindings(div, { className: s, children: [] });
-  const classDesc = descriptors.find((d) => d.kind === 'signal-class');
-  assert(classDesc, 'expected signal-class descriptor');
+  const vnode = jsx('div', { className: s, children: [] });
+  const el = renderToDom(vnode) as Element;
+  assertFalse(el.classList.contains('class'));
+  s.value = true;
+  assertFalse(el.classList.contains('class'));
 });
 
 Deno.test('renderToDom renders signal child as reactive text node', () => {
@@ -509,101 +489,4 @@ Deno.test('collectPropBindings includes boolean descriptor', () => {
   const boolDesc = descriptors.find((d) => d.kind === 'static-boolean');
   assert(boolDesc);
   assertEquals((boolDesc as { attrName: string }).attrName, 'disabled');
-});
-
-Deno.test('renderToDom renders Fragment children without wrapper', () => {
-  const vnode = jsx(Fragment, { children: ['a', 'b'] });
-  const frag = renderToDom(vnode);
-  assertEquals(frag.nodeType, 11);
-  assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 2);
-});
-
-Deno.test('renderToDom renders trusted HTML_TAG as fragment', () => {
-  const vnode = jsx(HTML_TAG, { html: '<span class="x">y</span>', children: [] });
-  const frag = renderToDom(vnode);
-  assertEquals(frag.nodeType, 11);
-  assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 1);
-});
-
-Deno.test('renderToDom renders number children as text', () => {
-  const vnode = jsx('p', { children: 42 });
-  const el = renderToDom(vnode) as Element;
-  assertEquals(el.textContent, '42');
-});
-
-Deno.test('renderToDom renders null and false as empty text', () => {
-  const vnode = jsx('p', { children: [null, false] });
-  const el = renderToDom(vnode) as Element;
-  assertEquals(el.textContent, '');
-});
-
-Deno.test('renderToDom returns comment anchor for Show and reacts after mount', () => {
-  const when = signal(true);
-  const vnode = jsx(Show, {
-    when,
-    children: [jsx('span', { children: 'yes' }), jsx('span', { children: 'no' })],
-  });
-  const anchor = renderToDom(vnode);
-  assertEquals(anchor.nodeType, 8);
-
-  const host = document.createElement('div');
-  host.appendChild(anchor);
-  when.value = false;
-  assertEquals(asTestElement(host).textContent, 'no');
-  when.value = true;
-  assertEquals(asTestElement(host).textContent, 'yes');
-});
-
-Deno.test('renderToDom returns comment anchor for For and reacts after mount', () => {
-  const items = signal(['a', 'b']);
-  const vnode = jsx(For, {
-    each: items,
-    children: [(item: string) => jsx('span', { children: item })],
-  });
-  const anchor = renderToDom(vnode);
-  assertEquals(anchor.nodeType, 8);
-
-  const host = document.createElement('div');
-  host.appendChild(anchor);
-  items.value = ['x', 'y', 'z'];
-  assertEquals(asTestElement(host).textContent, 'xyz');
-});
-
-Deno.test('renderToDom creates SVG elements with namespace', () => {
-  const vnode = jsx('svg', { children: [] });
-  const el = renderToDom(vnode) as Element;
-  assertEquals(el.tagName.toLowerCase(), 'svg');
-});
-
-Deno.test('renderToDom applies textContent prop', () => {
-  const vnode = jsx('p', { textContent: 'direct', children: [] });
-  const el = renderToDom(vnode) as Element;
-  assertEquals(el.textContent, 'direct');
-});
-
-Deno.test('renderToDom handles component constructor errors gracefully', () => {
-  const Bad = class {
-    render() {
-      throw new Error('boom');
-    }
-  };
-  const vnode = jsx(Bad as unknown as string, { children: [] });
-  const node = renderToDom(vnode);
-  assertEquals(node.textContent, '');
-});
-
-Deno.test('renderToDom handles component function errors gracefully', () => {
-  const Bad = () => {
-    throw new Error('boom');
-  };
-  const vnode = jsx(Bad as unknown as string, { children: [] });
-  const node = renderToDom(vnode);
-  assertEquals(node.textContent, '');
-});
-
-Deno.test('restore global document after jsx-render-dom tests', () => {
-  // ponytail: this test must remain the last one in the file so the mock
-  // document survives every preceding test. A proper per-test harness is
-  // overkill for this alpha-cleanup slice.
-  (globalThis as unknown as Record<string, unknown>).document = _savedDocument;
 });

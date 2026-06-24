@@ -85,7 +85,7 @@ export class OpenThemeToggle extends OpenElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this._requestAnimationFrame(() => this._initTheme());
+    requestAnimationFrame(() => this._initTheme());
   }
 
   /**
@@ -154,7 +154,7 @@ export class OpenThemeToggle extends OpenElement {
 
   protected override onDsdHydrated(): void {
     super.onDsdHydrated();
-    this._requestAnimationFrame(() => this._initTheme());
+    requestAnimationFrame(() => this._initTheme());
   }
 
   protected override onCsrRendered(): void {

@@ -5,10 +5,8 @@
  * plugin buildStart() logic can be unit-tested with an in-memory adapter.
  */
 
-import { cwd } from 'node:process';
+import process from 'node:process';
 import { mkdirSync, writeFileSync } from 'node:fs';
-
-type BufferEncoding = NodeJS.BufferEncoding;
 
 /** Minimal synchronous file-system surface used by content plugins. */
 export interface FileSystemAdapter {
@@ -19,7 +17,7 @@ export interface FileSystemAdapter {
 
 /** Default adapter backed by Node.js process / fs. */
 export const nodeFsAdapter: FileSystemAdapter = {
-  cwd: () => cwd(),
+  cwd: () => process.cwd(),
   mkdirSync,
   writeFileSync: (path: string, data: string, encoding?: string) => {
     writeFileSync(path, data, encoding as BufferEncoding);

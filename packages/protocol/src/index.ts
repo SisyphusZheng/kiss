@@ -8,6 +8,7 @@ export * from './signal.js';
 export * from './vnode.js';
 export * from './render.js';
 export * from './manifest.js';
+export type { SsrAdmissionDecision } from './framework.js';
 export * from './context.js';
 export * from './runtime.js';
 export * from './data.js';

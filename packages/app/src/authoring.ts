@@ -14,11 +14,7 @@ import {
   type VNode,
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland } from '@openelement/core';
-import {
-  __internal_popData,
-  __internal_pushActionData,
-  __internal_pushLoaderData,
-} from '@openelement/router';
+import { __internal_setActionData, __internal_setLoaderData } from '@openelement/router';
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
@@ -95,8 +91,7 @@ export function isOpenElementNotFound(error: unknown): error is OpenElementNotFo
       typeof error === 'object' &&
       error !== null &&
       (error as { name?: unknown }).name === 'OpenElementNotFound' &&
-      typeof (error as { status?: unknown }).status === 'number' &&
-      (error as { status: number }).status === 404
+      (error as { status?: unknown }).status === 404
     );
 }
 
@@ -259,29 +254,25 @@ export function definePage<
 
     override render(): VNode | null {
       // Provide loader/action data to hooks (useLoaderData / useActionData)
-      __internal_pushLoaderData(this.data);
-      __internal_pushActionData(this.__openElementActionData);
+      __internal_setLoaderData(this.data);
+      __internal_setActionData(this.__openElementActionData);
 
-      try {
-        const params = (this.__openElementParams ?? this.params ?? {}) as Params;
-        const data = this.data as Data;
-        const context = {
-          data,
-          params,
-          request: this.__openElementRequest,
-          route: this.__openElementRoute ?? {},
-          meta: this.__openElementMeta ?? {},
-          props: collectPublicProps(this),
-        };
+      const params = (this.__openElementParams ?? this.params ?? {}) as Params;
+      const data = this.data as Data;
+      const context = {
+        data,
+        params,
+        request: this.__openElementRequest,
+        route: this.__openElementRoute ?? {},
+        meta: this.__openElementMeta ?? {},
+        props: collectPublicProps(this),
+      };
 
-        if (this.__openElementError !== undefined && definition.error) {
-          return definition.error({ ...context, error: this.__openElementError });
-        }
-
-        return definition.render(context);
-      } finally {
-        __internal_popData();
+      if (this.__openElementError !== undefined && definition.error) {
+        return definition.error({ ...context, error: this.__openElementError });
       }
+
+      return definition.render(context);
     }
   }
 

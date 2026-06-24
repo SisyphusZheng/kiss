@@ -59,59 +59,16 @@ async function runCoverage(): Promise<CoverageSummary> {
   const summaryResult = await summaryCmd.output();
   const lcov = new TextDecoder().decode(summaryResult.stdout);
 
-  // Parse LCOV to compute overall coverage.
-  // Deno can emit multiple records for the same source file (e.g. when a
-  // module is loaded through different URLs). We merge by source-file path
-  // and take the union of hit lines so lines are not double-counted.
-  interface FileCoverage {
-    totalLines: number;
-    hitLines: Set<number>;
-  }
-
-  const fileCoverage = new Map<string, FileCoverage>();
-  let currentFile: string | null = null;
-  let currentTotal = 0;
-  const currentHits = new Set<number>();
-
-  const flushFile = () => {
-    if (!currentFile) return;
-    const existing = fileCoverage.get(currentFile);
-    if (!existing) {
-      fileCoverage.set(currentFile, {
-        totalLines: currentTotal,
-        hitLines: new Set(currentHits),
-      });
-    } else {
-      existing.totalLines = Math.max(existing.totalLines, currentTotal);
-      for (const line of currentHits) existing.hitLines.add(line);
-    }
-  };
-
-  for (const line of lcov.split('\n')) {
-    if (line.startsWith('SF:')) {
-      flushFile();
-      currentFile = line.slice(3);
-      currentTotal = 0;
-      currentHits.clear();
-    } else if (line.startsWith('LF:')) {
-      currentTotal = parseInt(line.slice(3), 10);
-    } else if (line.startsWith('DA:')) {
-      const [lineNo, hits] = line.slice(3).split(',').map((v) => parseInt(v, 10));
-      if (hits > 0) currentHits.add(lineNo);
-    } else if (line === 'end_of_record') {
-      flushFile();
-      currentFile = null;
-      currentTotal = 0;
-      currentHits.clear();
-    }
-  }
-  flushFile();
-
+  // Parse LCOV to compute overall coverage
   let totalLines = 0;
   let coveredLines = 0;
-  for (const record of fileCoverage.values()) {
-    totalLines += record.totalLines;
-    coveredLines += record.hitLines.size;
+
+  for (const line of lcov.split('\n')) {
+    if (line.startsWith('LF:')) {
+      totalLines += parseInt(line.slice(3), 10);
+    } else if (line.startsWith('LH:')) {
+      coveredLines += parseInt(line.slice(3), 10);
+    }
   }
 
   const percentage = totalLines > 0 ? (coveredLines / totalLines) * 100 : 0;

@@ -122,7 +122,7 @@ node_modules/
     "hono/secure-headers": "npm:hono@4.12.23/secure-headers",
     "marked": "npm:marked@15.0.12",
     "@openelement/app": "npm:@openelement/app@^${v.app}",
-    "@openelement/adapter-vite": "npm:@openelement/adapter-vite@^${v.adapterVite}",
+    "@openelement/app/vite": "npm:@openelement/app@^${v.app}/vite",
     "@openelement/core": "npm:@openelement/core@^${v.core}",
     "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
     "@openelement/element": "npm:@openelement/element@^${v.element}",
@@ -141,7 +141,7 @@ node_modules/
   "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/core" }
 }
 `,
-    'vite.config.ts': `import { openElement } from '@openelement/adapter-vite';
+    'vite.config.ts': `import { openElement } from '@openelement/app/vite';
 import { defineConfig } from 'vite';
 import deno from '@deno/vite-plugin';
 

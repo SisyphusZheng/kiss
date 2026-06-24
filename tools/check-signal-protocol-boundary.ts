@@ -3,7 +3,7 @@ type Failure = {
   message: string;
 };
 
-import { walkSync } from '@std/fs/walk';
+import { walkFiles } from './lib/walk.ts';
 
 const failures: Failure[] = [];
 const sourceRoots = ['packages/core/src', 'packages/element/src'];
@@ -14,13 +14,12 @@ const protectedPackageConfigs = [
 const forbiddenRequiredDeps = ['@preact/signals-core', '@preact/signals'];
 
 for (const root of sourceRoots) {
-  for (const entry of walkSync(root, { includeDirs: false })) {
-    if (!entry.name.endsWith('.ts')) continue;
-    const text = await Deno.readTextFile(entry.path);
+  for (const file of walkFiles(root, { include: ({ name }) => name.endsWith('.ts') })) {
+    const text = await Deno.readTextFile(file);
     for (const dep of forbiddenRequiredDeps) {
       if (text.includes(dep)) {
         failures.push({
-          file: entry.path,
+          file,
           message:
             `${dep} must not be required by core or elements; ADR-0104 only allows candidates behind SignalEngine`,
         });

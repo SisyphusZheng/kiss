@@ -132,6 +132,8 @@ export class OpenCodeBlock extends OpenElement {
   static override styles = [sheet];
 
   private _copyState: 'idle' | 'copied' | 'failed' = 'idle';
+  private _copyTimer: ReturnType<typeof setTimeout> | undefined;
+  private _highlightTimer: ReturnType<typeof setTimeout> | undefined;
   private _highlightedInShadow = false;
   private _highlightRetries = 0;
   private static MAX_HIGHLIGHT_RETRIES = 120;
@@ -161,6 +163,18 @@ export class OpenCodeBlock extends OpenElement {
     this._tryHighlight();
   }
 
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._copyTimer !== undefined) {
+      clearTimeout(this._copyTimer);
+      this._copyTimer = undefined;
+    }
+    if (this._highlightTimer !== undefined) {
+      clearTimeout(this._highlightTimer);
+      this._highlightTimer = undefined;
+    }
+  }
+
   private _prismGlobal(): unknown {
     return (globalThis as typeof globalThis & { Prism?: unknown }).Prism;
   }
@@ -171,7 +185,7 @@ export class OpenCodeBlock extends OpenElement {
       if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
         // Exponential backoff: 10, 20, 40, 80, 160, 320, 500ms cap
         const delay = Math.min(10 * Math.pow(2, Math.min(this._highlightRetries, 6)), 500);
-        this._setTimeout(() => this._tryHighlight(), delay);
+        this._highlightTimer = globalThis.setTimeout(() => this._tryHighlight(), delay);
       }
       return;
     }
@@ -198,7 +212,7 @@ export class OpenCodeBlock extends OpenElement {
     if (!grammar) {
       if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
         const delay = Math.min(20 * Math.pow(2, Math.min(this._highlightRetries, 6)), 1000);
-        this._setTimeout(() => this._tryHighlight(), delay);
+        this._highlightTimer = globalThis.setTimeout(() => this._tryHighlight(), delay);
       }
       return;
     }
@@ -246,20 +260,22 @@ export class OpenCodeBlock extends OpenElement {
       this._internals?.states.add('copied');
       this._internals?.states.delete('failed');
       this._updateCopyButtonDOM();
-      this._setTimeout(() => {
+      this._copyTimer = globalThis.setTimeout(() => {
         this._copyState = 'idle';
         this._internals?.states.delete('copied');
         this._updateCopyButtonDOM();
+        this._copyTimer = undefined;
       }, 2000);
     } catch (e) {
       log.warn('Clipboard write failed:', e);
       this._internals?.states.add('failed');
       this._internals?.states.delete('copied');
       this._updateCopyButtonDOM();
-      this._setTimeout(() => {
+      this._copyTimer = globalThis.setTimeout(() => {
         this._copyState = 'idle';
         this._internals?.states.delete('failed');
         this._updateCopyButtonDOM();
+        this._copyTimer = undefined;
       }, 2000);
     }
   }

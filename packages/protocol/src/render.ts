@@ -21,6 +21,13 @@ export interface RenderError {
   recoverable: boolean;
 }
 
+export interface RendererProtocol {
+  name: string;
+  isTemplate?: (value: unknown) => boolean;
+  render?: (value: unknown, tagName: string) => Promise<string>;
+  extractStyles?: (componentClass: CustomElementConstructor) => string | undefined;
+}
+
 export interface RenderInput {
   tagName: string;
   componentClass: CustomElementConstructor;
@@ -66,6 +73,12 @@ export interface DsdRenderMetrics {
   nestingDepth: number;
 }
 
+export interface RendererConformanceFixture {
+  tagName: string;
+  template: unknown;
+  expectedHtml?: string;
+}
+
 // Core-specific extensions
 export type RenderErrorCode =
   | 'LESS_RENDER_INSTANTIATE_FAILED'
@@ -93,6 +106,15 @@ export interface DsdComponent {
   connectedCallback?(): void;
   layer?: ComponentLayer;
   [key: string]: unknown;
+}
+
+export interface DsdReport {
+  totalComponents: number;
+  dsdComponents: number;
+  hydratedComponents: number;
+  pureIslands: number;
+  totalDsdSize: number;
+  maxNestingDepth: number;
 }
 
 // --- DSD diagnostics & summaries ---------------------------------

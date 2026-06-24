@@ -1,13 +1,18 @@
 {
   "name": "@openelement/app",
-  "version": "0.41.0-alpha.2",
+  "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
     "./i18n": "./src/i18n.ts",
     "./i18n-plugin": "./src/i18n-plugin.ts",
-    "./preact": "./src/preact.ts"
+    "./preact": "./src/preact.ts",
+    "./vite": "./src/vite.ts"
   },
-  "imports": {},
+  "imports": {
+    "preact": "npm:preact@^10.28.0",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
+    "vite": "npm:vite@8.0.10"
+  },
   "publish": {
     "include": [
       "src/**",
@@ -25,9 +30,5 @@
   ],
   "tasks": {
     "build": "deno check src/index.ts"
-  },
-  "peerDependencies": {
-    "preact": "npm:preact@^10.28.0",
-    "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   }
 }

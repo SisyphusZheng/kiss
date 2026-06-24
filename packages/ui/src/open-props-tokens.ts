@@ -7,16 +7,8 @@
 
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 
-function toRootCss(hostCss: string): string {
-  return hostCss
-    .replace(/:host-context\(\[data-theme='dark'\]\),\s*\n\s*/g, '')
-    .replace(/:host\(\[data-theme='dark'\]\)/g, ":root[data-theme='dark']")
-    .replace(/:host/g, ':root');
-}
-
 const sheet: StyleSheetLike = new StyleSheet();
-const tokenCss = `
-/**
+sheet.replaceSync(`/**
  * @openelement/ui - Open Props Token Sheet
  *
  * Shared design tokens (spacing, gray palette, border radius, typography,
@@ -323,11 +315,11 @@ const tokenCss = `
 }
 
 /* ═══════════════════════════════════════════════
-   Dark Mode — matches hosts with data-theme="dark".
-   Document-level overrides live in openPropsRootSheet
-   (:root[data-theme="dark"]) so all shadow DOMs inherit.
+   Dark Mode — cascades from :root[data-theme="dark"]
+   All shadow DOMs inherit these overrides
    ═══════════════════════════════════════════════ */
-:host([data-theme='dark']) {
+:host([data-theme='dark']),
+:host-context([data-theme='dark']) {
   --gray-0: #030507;
   --gray-1: #0d0f12;
   --gray-2: #16191d;
@@ -450,7 +442,7 @@ const tokenCss = `
   --teal-7: #20c997;
   --teal-8: #38d9a9;
   --teal-9: #63e6be;
-  --teal-10: #96f2d7;
+  --blue-10: #96f2d7;
   --teal-11: #c3fae8;
   --teal-12: #e6fcf5;
   --cyan-0: #053038;
@@ -480,19 +472,6 @@ const tokenCss = `
   --violet-11: #f3eaff;
   --violet-12: #fbf7ff;
 }
-`;
-
-sheet.replaceSync(tokenCss);
+`);
 
 export const openPropsTokenSheet: StyleSheetLike = sheet;
-
-/**
- * Page-level variant of the token sheet.
- *
- * Uses `:root` selectors so tokens cascade into every shadow DOM via CSS
- * custom-property inheritance. This is the sheet that should be injected
- * into the document `<head>`; component shadow roots can then consume the
- * tokens without adopting the host-level sheet themselves.
- */
-export const openPropsRootSheet: StyleSheetLike = new StyleSheet();
-openPropsRootSheet.replaceSync(toRootCss(tokenCss));

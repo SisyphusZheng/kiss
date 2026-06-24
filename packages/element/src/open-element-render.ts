@@ -2,9 +2,8 @@
  * Internal rendering helpers for OpenElement.
  *
  * Extracted from open-element.ts to keep the base class focused on its
- * public lifecycle API. Exposed as a package subpath so Deno can emit its
- * types, but this is an internal implementation detail — consumers should
- * use OpenElement instead.
+ * public lifecycle API. These functions are NOT part of the public package
+ * surface and should only be consumed by OpenElement itself.
  *
  * @internal
  * @module @openelement/element/open-element-render
@@ -14,25 +13,37 @@ import type { VNode } from '@openelement/protocol/vnode';
 import { renderToDom } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
-import type { HydrationScope } from '@openelement/core/hydrate';
+import type { OpenElement } from './open-element.js';
 
 /**
- * Minimal structural stand-in for OpenElement instances.
+ * Minimal accessor for the VNode cache stored on an OpenElement instance.
  *
- * Avoids importing the real OpenElement class, which creates a circular
- * dependency that confuses Deno's npm type-generation. Only the members
- * actually used by the render helpers are declared.
+ * The cache lives as true private fields on the class, so helpers interact
+ * with it through this small facade instead of trying to access #private
+ * state from outside the class body.
  */
-export interface OpenElementLike {
-  render(): unknown;
-  shadowRoot: ShadowRoot | null;
-  createRenderRoot(): void;
-  signalRegistry: Map<string, import('@openelement/protocol/signal').Signal<unknown>>;
-  tagName: string;
+export interface VNodeCacheAccess {
+  /** Read the current cached VNode and whether it is valid. */
+  get(): { vnode: unknown; valid: boolean };
+  /** Store a VNode and mark the cache valid. */
+  set(vnode: unknown): void;
 }
 
-interface OpenElementLikeConstructor {
-  renderMode?: 'shadow' | 'light';
+/**
+ * Dispose all reactive effects and declarative event listeners created by
+ * previous renders or hydration passes.
+ *
+ * Returns a fresh, empty event-cleanup array so callers can replace their
+ * existing bag and avoid retaining stale closures.
+ */
+export function disposeRenderBindings(
+  effectDisposers: Set<() => void>,
+  eventCleanups: Array<() => void>,
+): Array<() => void> {
+  for (const d of effectDisposers) d();
+  effectDisposers.clear();
+  for (const f of eventCleanups) f();
+  return [];
 }
 
 /**
@@ -42,29 +53,26 @@ interface OpenElementLikeConstructor {
  * produced DOM into the element itself.
  */
 export function renderIntoLightDom(
-  instance: OpenElementLike,
-  scope: HydrationScope,
-): void {
-  scope.reset();
+  instance: OpenElement,
+  effectDisposers: Set<() => void>,
+  eventCleanups: Array<() => void>,
+  cache: VNodeCacheAccess,
+): Array<() => void> {
+  const newEventCleanups = disposeRenderBindings(effectDisposers, eventCleanups);
 
   const result = instance.render();
-  scope.cacheAccess.set(result);
+  cache.set(result);
 
-  const self = instance as unknown as HTMLElement;
+  const self = instance as HTMLElement;
   while (self.firstChild) {
     self.removeChild(self.firstChild);
   }
 
   if (result != null) {
-    self.appendChild(
-      renderToDom(
-        result,
-        { disposers: scope._effectDisposers },
-        undefined,
-        instance.signalRegistry,
-      ),
-    );
+    self.appendChild(renderToDom(result, undefined, effectDisposers, instance.signalRegistry));
   }
+
+  return newEventCleanups;
 }
 
 /**
@@ -74,53 +82,51 @@ export function renderIntoLightDom(
  * produced DOM into the shadow root.
  */
 export function renderIntoShadowRoot(
-  instance: OpenElementLike,
-  scope: HydrationScope,
-): void {
+  instance: OpenElement,
+  effectDisposers: Set<() => void>,
+  eventCleanups: Array<() => void>,
+  cache: VNodeCacheAccess,
+): Array<() => void> {
   const root = instance.shadowRoot;
-  if (!root) return;
+  if (!root) return eventCleanups;
 
-  scope.reset();
+  const newEventCleanups = disposeRenderBindings(effectDisposers, eventCleanups);
 
   const result = instance.render();
-  scope.cacheAccess.set(result);
+  cache.set(result);
 
   if (result != null) {
     while (root.firstChild) {
       root.removeChild(root.firstChild);
     }
-    root.appendChild(
-      renderToDom(
-        result,
-        { disposers: scope._effectDisposers },
-        undefined,
-        instance.signalRegistry,
-      ),
-    );
+    root.appendChild(renderToDom(result, undefined, effectDisposers, instance.signalRegistry));
   }
+
+  return newEventCleanups;
 }
 
 /**
- * Render a fallback VNode when the unified client render/hydrate path throws.
+ * Render a fallback VNode when the unified render/hydrate path throws.
  *
  * Ensures the render root exists, invokes onRenderError(), disposes any
  * previous bindings, and mounts the fallback content.
  */
 export function renderErrorFallback(
-  instance: OpenElementLike,
+  instance: OpenElement,
   error: unknown,
-  scope: HydrationScope,
+  effectDisposers: Set<() => void>,
+  eventCleanups: Array<() => void>,
   onRenderError: (error: unknown) => VNode | null,
-): void {
-  const ctor = instance.constructor as unknown as OpenElementLikeConstructor;
+): Array<() => void> {
+  const ctor = instance.constructor as typeof OpenElement;
   const isLightDom = ctor.renderMode === 'light';
 
   if (!instance.shadowRoot && !isLightDom) {
     instance.createRenderRoot();
   }
 
-  const target = isLightDom ? (instance as unknown as HTMLElement) : instance.shadowRoot;
-  if (!target) return;
+  const target = isLightDom ? (instance as HTMLElement) : instance.shadowRoot;
+  if (!target) return [];
 
   let fallback: VNode | null;
   try {
@@ -132,19 +138,14 @@ export function renderErrorFallback(
     fallback = null;
   }
 
-  scope.reset();
+  const newEventCleanups = disposeRenderBindings(effectDisposers, eventCleanups);
 
   if (fallback != null) {
     while (target.firstChild) {
       target.removeChild(target.firstChild);
     }
-    target.appendChild(
-      renderToDom(
-        fallback,
-        { disposers: scope._effectDisposers },
-        undefined,
-        instance.signalRegistry,
-      ),
-    );
+    target.appendChild(renderToDom(fallback, undefined, effectDisposers, instance.signalRegistry));
   }
+
+  return newEventCleanups;
 }

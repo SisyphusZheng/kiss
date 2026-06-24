@@ -4,6 +4,7 @@
  */
 
 import type { VNode } from './vnode.js';
+import type { ManifestDecision } from './render.js';
 
 // --- API context --------------------------------------------------
 
@@ -235,6 +236,16 @@ export interface RegistryIndex {
 }
 
 // --- Routing & Middleware -----------------------------------------
+
+/** Admission decision produced by the renderer compatibility check. */
+export type SsrAdmissionDecision =
+  | { status: 'compatible'; classification: CompatibilityClassification }
+  | {
+    status: 'incompatible';
+    classification: CompatibilityClassification;
+    fallback?: ManifestDecision;
+  }
+  | { status: 'unclassified' };
 
 export interface OpenElementRenderer {
   wrap(

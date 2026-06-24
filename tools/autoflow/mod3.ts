@@ -115,7 +115,7 @@ async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
     results.push(result);
     console.log(`${result.passed ? 'PASS' : 'FAIL'} ${gate.name}`);
     if (!result.passed && result.output) {
-      console.log(result.output);
+      console.log(result.output.split(/\r?\n/).slice(0, 20).join('\n'));
     }
   }
 

@@ -12,16 +12,9 @@
 
 import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
 import { getSsrProps } from '@openelement/core';
-import type { ComponentChild } from 'preact';
+import { type ComponentChild, h, hydrate as preactHydrate, render as preactRender } from 'preact';
+import { renderToString } from 'preact-render-to-string';
 import type { IslandConfig } from './authoring.ts';
-
-// ponytail: dynamic imports keep preact out of @openelement/app hard deps;
-// consumers importing @openelement/app/preact must provide preact themselves.
-const preactMod = await import('preact') as typeof import('preact');
-const rtsMod = await import('preact-render-to-string') as typeof import('preact-render-to-string');
-
-const { h, hydrate: preactHydrate, render: preactRender } = preactMod;
-const { renderToString } = rtsMod;
 
 export type PreactIslandProps = Record<string, unknown>;
 

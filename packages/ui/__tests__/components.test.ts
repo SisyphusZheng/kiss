@@ -469,7 +469,6 @@ Deno.test('index: re-exports all public components', async () => {
       'OpenDropdown',
       'OpenModal',
       'OpenTabs',
-      'openPropsRootSheet',
       'openPropsTokenSheet',
       'manifest',
     ]

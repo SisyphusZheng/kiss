@@ -64,6 +64,13 @@ export interface SsgRenderOptions {
   routesDir?: string;
 }
 
+/** Island declaration shape used in SSG render evidence reports. */
+export interface SsgIslandDeclForReport {
+  tagName: string;
+  hydrate?: HydrationStrategy | string;
+  dsd?: boolean;
+}
+
 // ─── External resolver types ─────────────────────────────────
 
 /** Manifest produced by Deno dependency pre-resolution. */
@@ -93,6 +100,25 @@ export interface ClientIslandEntry {
 }
 
 // ─── Route contracts (from routes.ts) ─────────────────────────
+
+export type RouteKind = 'page' | 'api' | 'asset' | 'redirect';
+export type RouteRenderingMode = 'auto' | 'static' | 'dynamic';
+export type RouteStreamingMode = 'auto' | 'force' | false;
+export type RouteRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
+
+export interface RouteRenderIntent {
+  mode?: RouteRenderingMode;
+  streaming?: RouteStreamingMode;
+  revalidate?: RouteRevalidate;
+}
+
+export interface RouteProtocolEntry {
+  id: string;
+  path: string;
+  kind: RouteKind;
+  filePath?: string;
+  renderIntent?: RouteRenderIntent;
+}
 
 export interface ImportDecl {
   from: string;
@@ -136,6 +162,8 @@ export interface PageRouteDecl {
   isDynamic?: boolean;
   paramNames?: string[];
 }
+
+export type RouteDecl = ApiRouteDecl | PageRouteDecl;
 
 export interface IslandDecl {
   tagName: string;
@@ -250,7 +278,7 @@ export interface SsgRenderEvidence {
     [key: string]: unknown;
   } | null;
   localIslandMeta?: Record<string, { hydrate?: string }>;
-  packageIslandDecls?: IslandDecl[];
+  packageIslandDecls?: SsgIslandDeclForReport[];
   packageManifests?: OpenElementPackageManifest[];
   admissionDecisions?: SsrAdmissionDecision[];
   cemClassifications?: CompatibilityClassification[];

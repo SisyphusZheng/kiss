@@ -63,6 +63,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
         run: |
           deno task autoflow:patch-release --approved-plan ${{ steps.plan.outputs.value }}
       - name: Approved release
@@ -71,5 +72,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
         run: |
           deno task autoflow:release --approved-plan ${{ steps.plan.outputs.value }} --to ${{ inputs.version }}
