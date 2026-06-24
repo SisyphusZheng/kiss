@@ -55,7 +55,7 @@ export function resolveDynamicRoutePath(
     if (
       value === '.' ||
       value === '..' ||
-      /[\\/]/.test(value)
+      /[\\/\0]/.test(value)
     ) {
       throw new Error(
         `Unsafe value for route parameter "${name}" in ${routePath}: ${value}`,

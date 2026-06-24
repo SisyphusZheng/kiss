@@ -24,7 +24,6 @@ import { formatError } from './errors.js';
 import { commitBindings } from './binding-activation.js';
 import {
   bindAttr,
-  bindClass,
   bindConditional,
   bindEvent,
   bindHtml,
@@ -182,12 +181,9 @@ export function collectPropBindings(
       }
 
       if (key === 'className' || key === 'class') {
-        // ponytail: CSR signal-class only supports a single toggle class today;
-        // the string-prop branch below is unreachable because this block is gated
-        // by isSignalLike. Use explicit data-signal-class markers for arbitrary
-        // class names; revisit when signal-class accepts a class-name accessor.
-        const className = attrName === 'class' ? '' : attrName;
-        descriptors.push(bindClass(el, className, sig));
+        // Use signal-attr for className/class props — the full attribute value is signal-driven.
+        // Signal-class toggling (single class) is reserved for explicit data-signal-class markers.
+        descriptors.push(bindAttr(el, [attrName], sig));
       } else {
         descriptors.push(bindAttr(el, [attrName], sig));
       }

@@ -37,8 +37,8 @@ export function writeSearchIndex(
   navSections: NavSection[],
   headerNav: HeaderNavLink[] = [],
 ): string {
-  // ponytail: writers inlined into plugin entry; re-extract if index.ts grows
-  // past 400 lines or serialization gains conditional branches.
+  // Serialization helpers are inlined here. Re-extract when writer logic gets
+  // complex enough to dominate this module.
   const entries = new Map<string, SearchIndexEntry>();
   const add = (entry: SearchIndexEntry) => {
     if (!entry.path.includes(':')) entries.set(entry.path, entry);

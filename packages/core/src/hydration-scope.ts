@@ -42,8 +42,8 @@ export interface HydrationScopeDebug {
   eventCleanupCount: number;
 }
 
-/** @internal VNode cache accessor used by render helpers. */
-export interface VNodeCacheAccess {
+/** VNode cache accessor used by render helpers. */
+interface VNodeCacheAccess {
   set(vnode: unknown): void;
 }
 
@@ -51,6 +51,7 @@ export interface VNodeCacheAccess {
 function collectHydrationBindings(
   shadowRoot: ShadowRoot,
   signalRegistry: Map<string, Signal<unknown>>,
+  lifecycle: BindingLifecycle,
 ): BindingDescriptor[] {
   const descriptors: BindingDescriptor[] = [];
 
@@ -91,7 +92,7 @@ function collectHydrationBindings(
     const sig = signalRegistry.get(name);
     if (!sig) continue;
 
-    descriptors.push(bindRender(el, sig, {}));
+    descriptors.push(bindRender(el, sig, lifecycle));
   }
 
   return descriptors;
@@ -128,6 +129,11 @@ export class HydrationScope {
     return this.#effectDisposers;
   }
 
+  /** Create a BindingLifecycle backed by this scope's effect disposers. */
+  createLifecycle(): BindingLifecycle {
+    return { disposers: this.#effectDisposers };
+  }
+
   /** Internal access to event cleanups for binding helpers. */
   get _eventCleanups(): Array<() => void> {
     return this.#eventCleanups;
@@ -152,11 +158,10 @@ export class HydrationScope {
 
     const registry = signalRegistry ?? this.#signalRegistry;
     const lifecycle: BindingLifecycle = { disposers: this.#effectDisposers };
-    const descriptors = collectHydrationBindings(shadowRoot, registry);
+    const descriptors = collectHydrationBindings(shadowRoot, registry, lifecycle);
 
     for (const desc of descriptors) {
       if (desc.kind === 'signal-render') {
-        desc.lifecycle = lifecycle;
         // Preserve the original DSD hydration contract: replace any SSR content
         // with the client-rendered VNode tree on first activation.
         while (desc.el.firstChild) desc.el.removeChild(desc.el.firstChild);

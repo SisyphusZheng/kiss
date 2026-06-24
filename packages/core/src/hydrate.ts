@@ -52,4 +52,3 @@ export type { EventBinding, EventBindingRecord } from './event-hydration.js';
 // DSD hydration contract
 export { createDsdRenderRoot, hydrateDsdEvents } from './dsd-hydration.js';
 export type { Constructor, DsdHydration } from './dsd-hydration.js';
-export { bindHydrateEvents } from './dsd-hydration-events.js';

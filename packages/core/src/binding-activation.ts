@@ -288,6 +288,7 @@ function applySignalRender(
   renderer?: BindingRenderer,
 ): BindingDispose {
   const { el, signal } = desc;
+  const descLifecycle = desc.lifecycle ?? {};
 
   let currentChildren: ChildNode[] = [];
   const currentNestedDisposers = new Set<() => void>();
@@ -320,8 +321,8 @@ function applySignalRender(
     const renderLifecycle: BindingLifecycle = {
       disposers: currentNestedDisposers,
     };
-    if (lifecycle.signal) {
-      renderLifecycle.signal = lifecycle.signal;
+    if (descLifecycle.signal ?? lifecycle.signal) {
+      renderLifecycle.signal = descLifecycle.signal ?? lifecycle.signal;
     }
 
     // Normalize VNode[] into a Fragment so multiple rendered nodes can be

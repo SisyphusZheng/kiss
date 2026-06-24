@@ -88,7 +88,7 @@ export interface SignalRenderBindingDescriptor {
   kind: 'signal-render';
   el: Element;
   signal: Signal<unknown>;
-  lifecycle: BindingLifecycle;
+  lifecycle?: BindingLifecycle;
 }
 
 export interface ConditionalBindingDescriptor {

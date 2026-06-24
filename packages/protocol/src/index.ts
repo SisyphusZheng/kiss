@@ -18,3 +18,4 @@ export * from './style-sheet.js';
 export * from './island.js';
 export * from './prop.js';
 export * from './hydration-markers.js';
+export * from './framework.js';

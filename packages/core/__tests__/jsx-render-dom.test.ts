@@ -433,15 +433,15 @@ Deno.test('renderToDom binds signal attribute via descriptor', () => {
   assertEquals(el.getAttribute('value'), 'b');
 });
 
-Deno.test('renderToDom binds signal class via descriptor', () => {
+Deno.test('renderToDom binds signal class as signal-attr descriptor', () => {
   const s = signal(false);
   const div = document.createElement('div');
-  // ponytail: CSR signal-class uses an empty class name for className prop;
-  // the descriptor is emitted but no visible class is toggled. Verify
-  // the descriptor exists with the expected empty className.
+  // signal-driven className/class props use signal-attr to set the full
+  // attribute value. Signal-class toggling is reserved for explicit
+  // data-signal-class markers.
   const descriptors = collectPropBindings(div, { className: s, children: [] });
-  const classDesc = descriptors.find((d) => d.kind === 'signal-class');
-  assert(classDesc, 'expected signal-class descriptor');
+  const attrDesc = descriptors.find((d) => d.kind === 'signal-attr');
+  assert(attrDesc, 'expected signal-attr descriptor');
 });
 
 Deno.test('renderToDom renders signal child as reactive text node', () => {

@@ -39,7 +39,8 @@ Deno.test('@openelement/core/hydrate subpath exports expected API', async () => 
   assertEquals(typeof hydrateMod.hydrateEventMarkers, 'function');
   assertEquals(typeof hydrateMod.createDsdRenderRoot, 'function');
   assertEquals(typeof hydrateMod.hydrateDsdEvents, 'function');
-  assertEquals(typeof hydrateMod.bindHydrateEvents, 'function');
+
+  // bindHydrateEvents is exported from the main barrel only (not the hydrate subpath).
 
   // v0.41.0-alpha.2: HydrationScope value object
   assertEquals(typeof hydrateMod.HydrationScope, 'function');

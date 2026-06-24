@@ -56,10 +56,13 @@ export function renderIntoLightDom(
   }
 
   if (result != null) {
+    // Event listeners registered during render use the scope's explicit dispose
+    // path (HydrationScope.dispose()) rather than AbortSignal — the scope owns
+    // the lifecycle for all bindings created during render.
     self.appendChild(
       renderToDom(
         result,
-        { disposers: scope._effectDisposers },
+        scope.createLifecycle(),
         undefined,
         instance.signalRegistry,
       ),
@@ -93,7 +96,7 @@ export function renderIntoShadowRoot(
     root.appendChild(
       renderToDom(
         result,
-        { disposers: scope._effectDisposers },
+        scope.createLifecycle(),
         undefined,
         instance.signalRegistry,
       ),
@@ -142,7 +145,7 @@ export function renderErrorFallback(
     target.appendChild(
       renderToDom(
         fallback,
-        { disposers: scope._effectDisposers },
+        scope.createLifecycle(),
         undefined,
         instance.signalRegistry,
       ),
