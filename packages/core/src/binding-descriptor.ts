@@ -139,3 +139,114 @@ export type BindingDescriptor =
   | ListBindingDescriptor
   | EventBindingDescriptor
   | RefBindingDescriptor;
+
+// ─── Factory constructors ───────────────────────────────────────────────────
+
+/** Create a signal-text binding descriptor. */
+export function bindText(
+  node: Text | Element,
+  signal: Signal<unknown>,
+): SignalTextBindingDescriptor {
+  return { kind: 'signal-text', el: node, signal };
+}
+
+/** Create a signal-attribute binding descriptor. */
+export function bindAttr(
+  element: Element,
+  names: string[],
+  signal: Signal<unknown>,
+): SignalAttrBindingDescriptor {
+  return { kind: 'signal-attr', el: element, attrNames: names, signal };
+}
+
+/** Create a signal-class binding descriptor. */
+export function bindClass(
+  element: Element,
+  className: string,
+  signal: Signal<unknown>,
+): SignalClassBindingDescriptor {
+  return { kind: 'signal-class', el: element, className, signal };
+}
+
+/** Create an event binding descriptor. */
+export function bindEvent(
+  element: EventTarget,
+  event: string,
+  listener: EventListenerOrEventListenerObject,
+  options?: AddEventListenerOptions | boolean,
+): EventBindingDescriptor {
+  return { kind: 'event', el: element, type: event, handler: listener, options };
+}
+
+/** Create a signal-render binding descriptor. */
+export function bindRender(
+  element: Element,
+  signal: Signal<unknown>,
+  lifecycle?: BindingLifecycle,
+): SignalRenderBindingDescriptor {
+  return { kind: 'signal-render', el: element, signal, lifecycle: lifecycle ?? {} };
+}
+
+/** Create a conditional ({@link Show}) binding descriptor. */
+export function bindConditional(
+  anchor: ChildNode,
+  condition: Signal<unknown> | unknown,
+  renderTruthy: () => unknown,
+  renderFalsy?: () => unknown,
+): ConditionalBindingDescriptor {
+  return { kind: 'conditional', anchor, condition, renderTruthy, renderFalsy };
+}
+
+/** Create a list ({@link For}) binding descriptor. */
+export function bindList(
+  anchor: ChildNode,
+  items: Signal<unknown> | unknown,
+  renderItem: (item: unknown, index: number) => unknown,
+  keyFn?: (item: unknown, index: number) => unknown,
+): ListBindingDescriptor {
+  return { kind: 'list', anchor, items, renderItem, keyFn };
+}
+
+/** Create a static attribute binding descriptor. */
+export function bindStaticAttr(
+  element: Element,
+  key: string,
+  attrName: string,
+  value: unknown,
+): StaticAttrBindingDescriptor {
+  return { kind: 'static-attr', el: element, key, attrName, value };
+}
+
+/** Create a static DOM property binding descriptor. */
+export function bindStaticProp(
+  element: Element,
+  propName: string,
+  value: unknown,
+): StaticPropBindingDescriptor {
+  return { kind: 'static-prop', el: element, propName, value };
+}
+
+/** Create a static boolean attribute binding descriptor. */
+export function bindStaticBoolean(
+  element: Element,
+  attrName: string,
+  value: boolean,
+): StaticBooleanBindingDescriptor {
+  return { kind: 'static-boolean', el: element, attrName, value };
+}
+
+/** Create a static inline style binding descriptor. */
+export function bindStaticStyle(
+  element: Element,
+  value: Record<string, string | number>,
+): StaticStyleBindingDescriptor {
+  return { kind: 'static-style', el: element, value };
+}
+
+/** Create a ref callback binding descriptor. */
+export function bindRef(
+  element: Element,
+  callback: (el: Element) => void,
+): RefBindingDescriptor {
+  return { kind: 'ref', el: element, callback };
+}
