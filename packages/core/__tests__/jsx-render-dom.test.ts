@@ -4,7 +4,7 @@
 
 import { assert, assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
-import { Fragment, HTML_TAG, jsx } from '../src/jsx-runtime.ts';
+import { For, Fragment, HTML_TAG, jsx, Show } from '../src/jsx-runtime.ts';
 import { collectPropBindings, renderToDom } from '../src/jsx-render-dom.ts';
 import type { Signal } from '@openelement/protocol/signal';
 
@@ -133,6 +133,18 @@ class TestNode {
 
   get firstChild(): TestNode | null {
     return this.childNodes[0] ?? null;
+  }
+
+  get nextSibling(): TestNode | null {
+    if (!this.parentNode) return null;
+    const idx = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[idx + 1] ?? null;
+  }
+
+  get previousSibling(): TestNode | null {
+    if (!this.parentNode) return null;
+    const idx = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[idx - 1] ?? null;
   }
 
   get lastChild(): TestNode | null {
@@ -523,6 +535,38 @@ Deno.test('renderToDom renders null and false as empty text', () => {
   const vnode = jsx('p', { children: [null, false] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.textContent, '');
+});
+
+Deno.test('renderToDom returns comment anchor for Show and reacts after mount', () => {
+  const when = signal(true);
+  const vnode = jsx(Show, {
+    when,
+    children: [jsx('span', { children: 'yes' }), jsx('span', { children: 'no' })],
+  });
+  const anchor = renderToDom(vnode);
+  assertEquals(anchor.nodeType, 8);
+
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  when.value = false;
+  assertEquals(asTestElement(host).textContent, 'no');
+  when.value = true;
+  assertEquals(asTestElement(host).textContent, 'yes');
+});
+
+Deno.test('renderToDom returns comment anchor for For and reacts after mount', () => {
+  const items = signal(['a', 'b']);
+  const vnode = jsx(For, {
+    each: items,
+    children: [(item: string) => jsx('span', { children: item })],
+  });
+  const anchor = renderToDom(vnode);
+  assertEquals(anchor.nodeType, 8);
+
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  items.value = ['x', 'y', 'z'];
+  assertEquals(asTestElement(host).textContent, 'xyz');
 });
 
 Deno.test('renderToDom creates SVG elements with namespace', () => {

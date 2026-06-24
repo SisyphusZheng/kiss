@@ -14,8 +14,13 @@ export { HydrationScope } from './hydration-scope.js';
 export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.js';
 
 // Binding layer
-export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.js';
-export { applyBindingDescriptor } from './binding-activation.js';
+export type {
+  BindingDescriptor,
+  BindingDispose,
+  BindingLifecycle,
+  BindingRenderer,
+} from './binding-descriptor.js';
+export { applyBindingDescriptor, commitBindings } from './binding-activation.js';
 
 // Marker-based event hydration (DOM-specific parts not in static.ts)
 export {

@@ -11,6 +11,7 @@ import type {
 } from '../src/binding-descriptor.ts';
 import { applyBindingDescriptor } from '../src/binding-activation.ts';
 import { renderToDom } from '../src/jsx-render-dom.ts';
+import { jsx } from '../src/jsx-runtime.ts';
 
 // ─── Minimal DOM harness for Deno test runner ────────────────────────────────
 
@@ -168,6 +169,18 @@ class TestNode {
     return this.childNodes[0] ?? null;
   }
 
+  get nextSibling(): TestNode | null {
+    if (!this.parentNode) return null;
+    const idx = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[idx + 1] ?? null;
+  }
+
+  get previousSibling(): TestNode | null {
+    if (!this.parentNode) return null;
+    const idx = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[idx - 1] ?? null;
+  }
+
   get lastChild(): TestNode | null {
     return this.childNodes.at(-1) ?? null;
   }
@@ -240,6 +253,10 @@ class TestTextNode extends TestNode {
   set textContent(value: string) {
     this.nodeValue = value;
   }
+}
+
+class TestComment extends TestTextNode {
+  override nodeType = 8;
 }
 
 class TestElement extends TestNode {
@@ -388,7 +405,7 @@ class TestDocument {
   }
 
   createComment(): Comment {
-    return new TestTextNode() as unknown as Comment;
+    return new TestComment() as unknown as Comment;
   }
 }
 
@@ -699,6 +716,164 @@ Deno.test('event binding supports object options', () => {
   applyBindingDescriptor(desc, lifecycle);
   asTestElement(el).click();
   assertEquals(count, 1);
+});
+
+// ─── Conditional / list bindings ─────────────────────────────────────────────
+
+Deno.test('conditional binding renders truthy branch and reacts', () => {
+  const when = signal(true);
+  const anchor = document.createComment('show');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'conditional',
+    anchor: anchor as ChildNode,
+    condition: when,
+    renderTruthy: () => jsx('span', { children: 'yes' }),
+    renderFalsy: () => jsx('span', { children: 'no' }),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(host).textContent, 'yes');
+
+  when.value = false;
+  assertEquals(asTestElement(host).textContent, 'no');
+
+  when.value = true;
+  assertEquals(asTestElement(host).textContent, 'yes');
+});
+
+Deno.test('conditional binding falls back to falsy branch', () => {
+  const when = signal(false);
+  const anchor = document.createComment('show');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'conditional',
+    anchor: anchor as ChildNode,
+    condition: when,
+    renderTruthy: () => jsx('span', { children: 'yes' }),
+    renderFalsy: () => jsx('span', { children: 'no' }),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(host).textContent, 'no');
+});
+
+Deno.test('conditional binding clears content when branch returns null', () => {
+  const when = signal(true);
+  const anchor = document.createComment('show');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'conditional',
+    anchor: anchor as ChildNode,
+    condition: when,
+    renderTruthy: () => jsx('span', { children: 'yes' }),
+    renderFalsy: () => null,
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(host).textContent, 'yes');
+
+  when.value = false;
+  assertEquals(asTestElement(host).textContent, '');
+});
+
+Deno.test('conditional binding disposes nested renders on update', () => {
+  const when = signal(true);
+  const anchor = document.createComment('show');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const nestedDisposers = new Set<() => void>();
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'conditional',
+    anchor: anchor as ChildNode,
+    condition: when,
+    renderTruthy: () => jsx('span', { children: 'yes' }),
+    renderFalsy: () => jsx('span', { children: 'no' }),
+  };
+  const dispose = applyBindingDescriptor(desc, {}, renderer);
+  const initialDisposerCount = nestedDisposers.size;
+
+  when.value = false;
+  assertEquals(nestedDisposers.size, initialDisposerCount);
+
+  dispose();
+  assertEquals(nestedDisposers.size, 0);
+});
+
+Deno.test('list binding renders items and reacts', () => {
+  const items = signal(['a', 'b']);
+  const anchor = document.createComment('for');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'list',
+    anchor: anchor as ChildNode,
+    items,
+    renderItem: (item: unknown) => jsx('span', { children: item as string }),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(host).textContent, 'ab');
+
+  items.value = ['x', 'y', 'z'];
+  assertEquals(asTestElement(host).textContent, 'xyz');
+});
+
+Deno.test('list binding ignores non-array items', () => {
+  const items = signal('not-an-array');
+  const anchor = document.createComment('for');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'list',
+    anchor: anchor as ChildNode,
+    items,
+    renderItem: (item: unknown) => jsx('span', { children: item as string }),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(host).textContent, '');
+});
+
+Deno.test('list binding disposes nested renders on update', () => {
+  const items = signal(['a']);
+  const anchor = document.createComment('for');
+  const host = document.createElement('div');
+  host.appendChild(anchor);
+  const nestedDisposers = new Set<() => void>();
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
+  };
+  const desc: BindingDescriptor = {
+    kind: 'list',
+    anchor: anchor as ChildNode,
+    items,
+    renderItem: (item: unknown) => jsx('span', { children: item as string }),
+  };
+  const dispose = applyBindingDescriptor(desc, {}, renderer);
+  const initialDisposerCount = nestedDisposers.size;
+
+  items.value = ['b'];
+  assertEquals(nestedDisposers.size, initialDisposerCount);
+
+  dispose();
+  assertEquals(nestedDisposers.size, 0);
 });
 
 Deno.test('restore global document after binding-activation tests', () => {
