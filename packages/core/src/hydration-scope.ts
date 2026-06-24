@@ -11,7 +11,6 @@
  */
 
 import type { Signal } from '@openelement/protocol/signal';
-import type { VNode } from '@openelement/protocol/vnode';
 import { applyBindingDescriptor } from './binding-activation.js';
 import { collectEventBindings, hydrateEventMarkers } from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.js';
@@ -185,7 +184,12 @@ export class HydrationScope {
     const vnode = this.#resolveVNode();
     if (isVNode(vnode)) {
       const eventBindings = collectEventBindings(vnode);
-      hydrateEventMarkers(shadowRoot, eventBindings, this.#eventCleanups, shadowRoot.host ?? undefined);
+      hydrateEventMarkers(
+        shadowRoot,
+        eventBindings,
+        this.#eventCleanups,
+        shadowRoot.host ?? undefined,
+      );
     }
 
     // Chromium DSD layout fix: force reflow without DOM rebuild.
