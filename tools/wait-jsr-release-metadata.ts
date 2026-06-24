@@ -217,6 +217,10 @@ export async function waitForJsrPackageMetadata(
   }
 }
 
+function isPrerelease(version: string): boolean {
+  return version.includes('-');
+}
+
 async function main(): Promise<void> {
   const options = await buildOptions();
   const packages = sortPackages(await readPackages());
@@ -225,7 +229,7 @@ async function main(): Promise<void> {
     version: options.version,
     timeoutMs: options.timeoutMs,
     intervalMs: options.intervalMs,
-    requireLatest: true,
+    requireLatest: !isPrerelease(options.version),
     bypassCdnCache: options.bypassCdnCache,
   });
 }

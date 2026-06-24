@@ -29,6 +29,10 @@ export interface PolicyDecision {
 export const AUTOFLOW3_POLICY_VERSION = 'autoflow3-v0';
 export const V040_CLEANUP_TRAIN_APPROVAL_ID = 'ADR-0105/v0.40.x-cleanup-train';
 
+export function isCI(): boolean {
+  return Deno.env.get('CI') === 'true';
+}
+
 export const GATES: readonly GateDefinition[] = [
   {
     name: 'fmt:check',

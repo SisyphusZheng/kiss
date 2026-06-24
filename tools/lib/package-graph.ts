@@ -109,10 +109,24 @@ export function extractOpenImports(source: string): string[] {
   return [...imports];
 }
 
-function collectInternalDeps(dir: string): string[] {
+function collectInternalDeps(dir: string, exports: unknown): string[] {
   const deps = new Set<string>();
   const srcDir = `${dir}/src`;
 
+  function scanFile(relativePath: string): void {
+    const cleanPath = relativePath.replace(/^\.\//, '');
+    try {
+      const text = Deno.readTextFileSync(`${dir}/${cleanPath}`);
+      for (const specifier of extractOpenImports(text)) {
+        const base = normalizeDep(specifier, '');
+        if (base) deps.add(base);
+      }
+    } catch {
+      // Ignore missing export targets.
+    }
+  }
+
+  // Scan src/ if present.
   try {
     for (
       const path of walkFiles(srcDir, {
@@ -130,6 +144,15 @@ function collectInternalDeps(dir: string): string[] {
     // Packages without src are allowed.
   }
 
+  // Scan declared export entry points (e.g. packages/create/cli.ts).
+  if (typeof exports === 'string') {
+    scanFile(exports);
+  } else if (exports && typeof exports === 'object') {
+    for (const value of Object.values(exports as Record<string, unknown>)) {
+      if (typeof value === 'string') scanFile(value);
+    }
+  }
+
   return [...deps];
 }
 
@@ -143,7 +166,7 @@ export async function readPackage(dir: string): Promise<PackageInfo | null> {
     const declaredDeps = Object.keys(imports)
       .map((specifier) => normalizeDep(specifier, json.name))
       .filter((specifier): specifier is string => specifier !== null);
-    const sourceDeps = collectInternalDeps(dir);
+    const sourceDeps = collectInternalDeps(dir, json.exports);
     const deps = [...new Set([...declaredDeps, ...sourceDeps])];
     return {
       name: json.name,

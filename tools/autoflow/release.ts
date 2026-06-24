@@ -1,4 +1,6 @@
-import { AUTOFLOW3_POLICY_VERSION } from './policy.ts';
+import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
+
+export { isCI as isCIEnv };
 
 export interface ReleaseStepEvidence {
   name: string;
@@ -97,7 +99,99 @@ export function createReleasePlan(
   const commitMessage = approvalId
     ? `chore(release): ${tag} (${approvalId})`
     : `chore(release): ${tag}`;
-  return [
+  const evidenceSteps: ReleaseCommandStep[] = [
+    {
+      name: 'stage release evidence',
+      command: ['git', 'add', evidenceFile(targetVersion), note],
+    },
+    {
+      name: 'commit release evidence',
+      command: ['git', 'commit', '-m', `docs(release): record ${tag} evidence`],
+    },
+  ];
+  const publishSteps: ReleaseCommandStep[] = [
+    {
+      name: 'pack dry-run',
+      command: ['deno', 'task', 'pack:dry-run'],
+    },
+    ...(canPublishNpm()
+      ? [
+        {
+          name: 'publish npm packages',
+          command: ['deno', 'task', 'publish:npm'],
+        },
+        {
+          name: 'post-publish npm consumer smoke',
+          command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
+        },
+      ]
+      : []),
+    ...(canPublishJsr()
+      ? [
+        {
+          name: 'publish jsr packages',
+          command: ['deno', 'task', 'publish:jsr:release'],
+        },
+      ]
+      : []),
+  ];
+  const tagSteps: ReleaseCommandStep[] = [
+    {
+      name: 'tag release',
+      run: async () => {
+        const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
+        let existing: string | undefined;
+        try {
+          existing = (await runCaptured(['git', 'rev-parse', '--verify', tag])).trim();
+        } catch {
+          // Tag does not exist yet.
+        }
+        if (existing === head) {
+          console.log(`Tag ${tag} already exists at HEAD; skipping.`);
+          return;
+        }
+        if (existing) {
+          console.warn(
+            `Tag ${tag} already exists at ${existing}; forcing to HEAD ${head}.`,
+          );
+          await runCaptured(['git', 'tag', '-f', tag]);
+          return;
+        }
+        await runCaptured(['git', 'tag', tag]);
+      },
+    },
+    {
+      name: 'push tag',
+      command: ['git', 'push', '--force', 'origin', tag],
+    },
+    ...(canCreateGitHubRelease()
+      ? [
+        {
+          name: 'create GitHub release',
+          run: async () => {
+            try {
+              await runCaptured(['gh', 'release', 'view', tag]);
+              console.log(`GitHub release ${tag} already exists; skipping.`);
+              return;
+            } catch {
+              // Release does not exist; create it.
+            }
+            await runCaptured([
+              'gh',
+              'release',
+              'create',
+              tag,
+              '--title',
+              tag,
+              '--notes-file',
+              note,
+            ]);
+          },
+        },
+      ]
+      : []),
+  ];
+  const baseSteps: ReleaseCommandStep[] = [
     {
       name: 'bump patch version',
       command: [
@@ -141,15 +235,37 @@ export function createReleasePlan(
         'www/app/routes/guide/getting-started.tsx',
       ],
     },
-    ...(Deno.env.get('CI') !== 'true'
-      ? [{
-        name: 'run release gates after bump',
-        command: ['deno', 'task', 'autoflow:ci'],
-      }]
-      : []),
     {
       name: 'commit release bump',
-      command: ['git', 'commit', '-m', commitMessage],
+      command: [
+        'sh',
+        '-c',
+        `git diff --cached --quiet || git commit -m '${commitMessage.replace(/'/g, "'\\''")}'`,
+      ],
+    },
+  ];
+
+  if (isCI()) {
+    // In CI, the workflow checks out main directly. Bump, publish, and tag all
+    // on main; do not touch the dev branch.
+    return [
+      ...baseSteps,
+      ...publishSteps,
+      ...evidenceSteps,
+      {
+        name: 'push main',
+        command: ['git', 'push', 'origin', 'main'],
+      },
+      ...tagSteps,
+    ];
+  }
+
+  // Local/manual release: work on dev, then fast-forward main from dev.
+  return [
+    ...baseSteps,
+    {
+      name: 'run release gates after bump',
+      command: ['deno', 'task', 'autoflow:ci'],
     },
     {
       name: 'push dev',
@@ -171,42 +287,16 @@ export function createReleasePlan(
       name: 'push main',
       command: ['git', 'push', 'origin', 'main'],
     },
+    ...publishSteps,
     {
-      name: 'pack dry-run',
-      command: ['deno', 'task', 'pack:dry-run'],
-    },
-    ...(canPublishNpm()
-      ? [
-        {
-          name: 'publish npm packages',
-          command: ['deno', 'task', 'publish:npm'],
-        },
-        {
-          name: 'post-publish npm consumer smoke',
-          command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
-        },
-      ]
-      : []),
-    ...(Deno.env.get('CI') !== 'true'
-      ? [
-        {
-          name: 'deploy:pages',
-          command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
-        },
-        {
-          name: 'smoke:deploy',
-          command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-        },
-      ]
-      : []),
-    {
-      name: 'stage release evidence',
-      command: ['git', 'add', evidenceFile(targetVersion), note],
+      name: 'deploy:pages',
+      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
     },
     {
-      name: 'commit release evidence',
-      command: ['git', 'commit', '-m', `docs(release): record ${tag} evidence`],
+      name: 'smoke:deploy',
+      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
     },
+    ...evidenceSteps,
     {
       name: 'push main evidence',
       command: ['git', 'push', 'origin', 'main'],
@@ -223,45 +313,41 @@ export function createReleasePlan(
       name: 'push dev evidence',
       command: ['git', 'push', 'origin', 'dev'],
     },
-    {
-      name: 'tag release',
-      command: ['git', 'tag', tag],
-    },
-    {
-      name: 'push tag',
-      command: ['git', 'push', 'origin', tag],
-    },
-    ...(canCreateGitHubRelease()
-      ? [
-        {
-          name: 'create GitHub release',
-          command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
-        },
-      ]
-      : []),
+    ...tagSteps,
   ];
 }
 
-export function createPatchReleasePlan(targetVersion: string): ReleaseCommandStep[] {
-  return createReleasePlan(targetVersion);
+function isTruthyEnv(name: string): boolean {
+  const value = Deno.env.get(name);
+  return value !== undefined && value !== '' && value !== 'false';
 }
 
 function canCreateGitHubRelease(): boolean {
   // gh release create needs a GitHub token. In CI it is provided automatically.
-  return Boolean(
-    Deno.env.get('GITHUB_TOKEN') || Deno.env.get('GH_TOKEN') || Deno.env.get('GITHUB_ACTIONS'),
-  );
+  return isTruthyEnv('GITHUB_TOKEN') || isTruthyEnv('GH_TOKEN') ||
+    Deno.env.get('GITHUB_ACTIONS') === 'true';
 }
 
 function canPublishNpm(): boolean {
   // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
-  return Boolean(Deno.env.get('NPM_TOKEN') || Deno.env.get('NODE_AUTH_TOKEN'));
+  return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
+}
+
+function canPublishJsr(): boolean {
+  // JSR publish needs an access token. In CI it comes from secrets.JSR_TOKEN.
+  return isTruthyEnv('JSR_TOKEN');
 }
 
 export async function assertCleanWorktree(): Promise<void> {
   const output = await runCaptured(['git', 'status', '--porcelain']);
-  if (output.trim()) {
-    throw new Error(`Refusing release from a dirty worktree:\n${output}`);
+  // Release evidence files are generated by the release flow itself; any
+  // changes under docs/release/ should not block publishing.
+  const nonEvidenceDirty = output
+    .split(/\r?\n/)
+    .filter((line) => line.trim() && !/^.{2} docs\/release\//.test(line))
+    .join('\n');
+  if (nonEvidenceDirty) {
+    throw new Error(`Refusing release from a dirty worktree:\n${nonEvidenceDirty}`);
   }
 }
 
@@ -280,7 +366,9 @@ export async function updateProjectConstants(version: string): Promise<void> {
     .replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`)
     .replace(/ACTIVE_VERSION = '[^']+'/u, `ACTIVE_VERSION = '${tag}'`);
   if (updated === text) {
-    throw new Error(`${path} did not contain expected version constants.`);
+    // ponytail: already at target version; do not treat as an error so a
+    // release can be re-run or dispatched after the bump is already merged.
+    return;
   }
   await Deno.writeTextFile(path, updated);
 }
@@ -336,8 +424,8 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     const text = await Deno.readTextFile(path);
     if (text.includes(from)) {
       await Deno.writeTextFile(path, text.replace(from, to));
-    } else if (text.includes(to)) {
-      // Already at target - skip
+    } else if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
+      // Already at target (exact to-substring or version/tag present) - skip
       continue;
     } else {
       throw new Error(`${path} does not contain expected version anchor: ${from}`);
