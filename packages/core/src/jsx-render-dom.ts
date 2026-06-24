@@ -22,6 +22,19 @@ import { trustRenderHtml } from './security.js';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
 import { commitBindings } from './binding-activation.js';
+import {
+  bindAttr,
+  bindClass,
+  bindConditional,
+  bindEvent,
+  bindList,
+  bindRef,
+  bindStaticAttr,
+  bindStaticBoolean,
+  bindStaticProp,
+  bindStaticStyle,
+  bindText,
+} from './binding-descriptor.js';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
 import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
@@ -128,7 +141,7 @@ export function collectPropBindings(
 
     // ref callback
     if (key === 'ref' && typeof value === 'function') {
-      descriptors.push({ kind: 'ref', el, callback: value as (el: Element) => void });
+      descriptors.push(bindRef(el, value as (el: Element) => void));
       continue;
     }
 
@@ -136,7 +149,7 @@ export function collectPropBindings(
     if (key.startsWith('on') && typeof value === 'function') {
       const eventType = eventTypeFromProp(key);
       if (!eventType) continue;
-      descriptors.push({ kind: 'event', el, type: eventType, handler: value as EventListener });
+      descriptors.push(bindEvent(el, eventType, value as EventListener));
       continue;
     }
 
@@ -178,14 +191,9 @@ export function collectPropBindings(
         // by isSignalLike. Use explicit data-signal-class markers for arbitrary
         // class names; revisit when signal-class accepts a class-name accessor.
         const className = attrName === 'class' ? '' : attrName;
-        descriptors.push({
-          kind: 'signal-class',
-          el,
-          className,
-          signal: sig,
-        });
+        descriptors.push(bindClass(el, className, sig));
       } else {
-        descriptors.push({ kind: 'signal-attr', el, attrNames: [attrName], signal: sig });
+        descriptors.push(bindAttr(el, [attrName], sig));
       }
       continue;
     }
@@ -197,24 +205,24 @@ export function collectPropBindings(
       for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
         styleObj[sk] = unwrapSignalLike(sv) as string | number;
       }
-      descriptors.push({ kind: 'static-style', el, value: styleObj });
+      descriptors.push(bindStaticStyle(el, styleObj));
       continue;
     }
 
     // DOM properties that are NOT HTML attributes
     if (key === 'textContent') {
-      descriptors.push({ kind: 'static-prop', el, propName: 'textContent', value: resolved });
+      descriptors.push(bindStaticProp(el, 'textContent', resolved));
       continue;
     }
 
     const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
 
     if (typeof resolved === 'boolean') {
-      descriptors.push({ kind: 'static-boolean', el, attrName, value: resolved });
+      descriptors.push(bindStaticBoolean(el, attrName, resolved));
       continue;
     }
 
-    descriptors.push({ kind: 'static-attr', el, key, attrName, value: resolved });
+    descriptors.push(bindStaticAttr(el, key, attrName, resolved));
   }
 
   return descriptors;
@@ -285,7 +293,7 @@ function renderNode(
   if (isSignalLike(node)) {
     const sig = node as Signal<unknown>;
     const textNode = document.createTextNode(String(sig.value ?? ''));
-    descriptors.push({ kind: 'signal-text', el: textNode, signal: sig });
+    descriptors.push(bindText(textNode, sig));
     return textNode;
   }
 
@@ -323,13 +331,12 @@ function renderNode(
     const truthy: unknown = ch[0];
     const falsy: unknown = ch[1];
     const marker = document.createComment('show');
-    descriptors.push({
-      kind: 'conditional',
-      anchor: marker as ChildNode,
-      condition: whenSig,
-      renderTruthy: () => truthy,
-      renderFalsy: () => falsy,
-    });
+    descriptors.push(bindConditional(
+      marker as ChildNode,
+      whenSig,
+      () => truthy,
+      () => falsy,
+    ));
     return marker;
   }
 
@@ -339,12 +346,7 @@ function renderNode(
       ((() => document.createTextNode('') as unknown) as RenderFn);
 
     const marker = document.createComment('for');
-    descriptors.push({
-      kind: 'list',
-      anchor: marker as ChildNode,
-      items: eachSig,
-      renderItem: renderFn,
-    });
+    descriptors.push(bindList(marker as ChildNode, eachSig, renderFn));
     return marker;
   }
 

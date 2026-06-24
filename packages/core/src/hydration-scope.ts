@@ -15,6 +15,7 @@ import { applyBindingDescriptor } from './binding-activation.js';
 import { collectEventBindings, hydrateEventMarkers } from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.js';
 import { isVNode } from './vnode.ts';
+import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.ts';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import {
   DATA_SIGNAL,
@@ -66,12 +67,7 @@ function collectHydrationBindings(
     if (hasClass) {
       const className = el.getAttribute(DATA_SIGNAL_CLASS);
       if (className) {
-        descriptors.push({
-          kind: 'signal-class',
-          el,
-          className,
-          signal: sig,
-        });
+        descriptors.push(bindClass(el, className, sig));
       }
     }
 
@@ -80,22 +76,13 @@ function collectHydrationBindings(
       if (attrSpec) {
         const attrNames = parseSignalAttrSpec(attrSpec);
         if (attrNames.length > 0) {
-          descriptors.push({
-            kind: 'signal-attr',
-            el,
-            attrNames,
-            signal: sig,
-          });
+          descriptors.push(bindAttr(el, attrNames, sig));
         }
       }
     }
 
     if (!hasClass && !hasAttr) {
-      descriptors.push({
-        kind: 'signal-text',
-        el,
-        signal: sig,
-      });
+      descriptors.push(bindText(el, sig));
     }
   }
 
@@ -105,12 +92,7 @@ function collectHydrationBindings(
     const sig = signalRegistry.get(name);
     if (!sig) continue;
 
-    descriptors.push({
-      kind: 'signal-render',
-      el,
-      signal: sig,
-      lifecycle: {},
-    });
+    descriptors.push(bindRender(el, sig, {}));
   }
 
   return descriptors;

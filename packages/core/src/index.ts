@@ -149,7 +149,25 @@ export { transformIslandSource } from './island-transform.js';
 export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
 // Unified binding layer (ADR-0109 Phase 1)
-export { applyBindingDescriptor, commitBindings } from './binding-activation.js';
+export {
+  applyBindingDescriptor,
+  commitBindings,
+  registerBindingKind,
+} from './binding-activation.js';
+export {
+  bindAttr,
+  bindClass,
+  bindConditional,
+  bindEvent,
+  bindList,
+  bindRef,
+  bindRender,
+  bindStaticAttr,
+  bindStaticBoolean,
+  bindStaticProp,
+  bindStaticStyle,
+  bindText,
+} from './binding-descriptor.js';
 export type {
   BindingDescriptor,
   BindingDispose,

@@ -16,7 +16,25 @@ export type {
   BindingLifecycle,
   BindingRenderer,
 } from './binding-descriptor.js';
-export { applyBindingDescriptor, commitBindings } from './binding-activation.js';
+export {
+  bindAttr,
+  bindClass,
+  bindConditional,
+  bindEvent,
+  bindList,
+  bindRef,
+  bindRender,
+  bindStaticAttr,
+  bindStaticBoolean,
+  bindStaticProp,
+  bindStaticStyle,
+  bindText,
+} from './binding-descriptor.js';
+export {
+  applyBindingDescriptor,
+  commitBindings,
+  registerBindingKind,
+} from './binding-activation.js';
 
 // Full DOM renderer
 export { applyProps, collectPropBindings, renderToDom } from './jsx-render-dom.js';

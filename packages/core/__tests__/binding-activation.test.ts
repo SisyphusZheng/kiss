@@ -9,7 +9,21 @@ import type {
   BindingLifecycle,
   BindingRenderer,
 } from '../src/binding-descriptor.ts';
-import { applyBindingDescriptor } from '../src/binding-activation.ts';
+import {
+  bindAttr,
+  bindClass,
+  bindConditional,
+  bindEvent,
+  bindList,
+  bindRef,
+  bindRender,
+  bindStaticAttr,
+  bindStaticBoolean,
+  bindStaticProp,
+  bindStaticStyle,
+  bindText,
+} from '../src/binding-descriptor.ts';
+import { applyBindingDescriptor, registerBindingKind } from '../src/binding-activation.ts';
 import { renderToDom } from '../src/jsx-render-dom.ts';
 import { jsx } from '../src/jsx-runtime.ts';
 
@@ -435,13 +449,7 @@ function asTestElement(el: Element): TestElement {
 
 Deno.test('static-attr applies attribute value', () => {
   const el = document.createElement('div');
-  const desc: BindingDescriptor = {
-    kind: 'static-attr',
-    el,
-    key: 'dataTest',
-    attrName: 'data-test',
-    value: 'hello',
-  };
+  const desc: BindingDescriptor = bindStaticAttr(el, 'dataTest', 'data-test', 'hello');
   const dispose = applyBindingDescriptor(desc, {});
   assertEquals(el.getAttribute('data-test'), 'hello');
   dispose();
@@ -449,32 +457,18 @@ Deno.test('static-attr applies attribute value', () => {
 
 Deno.test('static-boolean toggles boolean attribute', () => {
   const el = document.createElement('input');
-  const desc: BindingDescriptor = {
-    kind: 'static-boolean',
-    el,
-    attrName: 'disabled',
-    value: true,
-  };
+  const desc: BindingDescriptor = bindStaticBoolean(el, 'disabled', true);
   applyBindingDescriptor(desc, {});
   assert(el.hasAttribute('disabled'));
 
-  const descOff: BindingDescriptor = {
-    kind: 'static-boolean',
-    el,
-    attrName: 'disabled',
-    value: false,
-  };
+  const descOff: BindingDescriptor = bindStaticBoolean(el, 'disabled', false);
   applyBindingDescriptor(descOff, {});
   assertFalse(el.hasAttribute('disabled'));
 });
 
 Deno.test('static-style applies CSS properties', () => {
   const el = document.createElement('div');
-  const desc: BindingDescriptor = {
-    kind: 'static-style',
-    el,
-    value: { color: 'red', fontSize: '12px' },
-  };
+  const desc: BindingDescriptor = bindStaticStyle(el, { color: 'red', fontSize: '12px' });
   applyBindingDescriptor(desc, {});
   assertEquals(asTestElement(el).style.getPropertyValue('color'), 'red');
   assertEquals(asTestElement(el).style.getPropertyValue('fontSize'), '12px');
@@ -485,7 +479,7 @@ Deno.test('static-style applies CSS properties', () => {
 Deno.test('signal-text updates textContent when signal changes', () => {
   const el = document.createElement('div');
   const s = signal('hello');
-  const desc: BindingDescriptor = { kind: 'signal-text', el, signal: s };
+  const desc: BindingDescriptor = bindText(el, s);
   applyBindingDescriptor(desc, {});
   assertEquals(el.textContent, 'hello');
   s.value = 'world';
@@ -495,7 +489,7 @@ Deno.test('signal-text updates textContent when signal changes', () => {
 Deno.test('signal-text targets a Text node', () => {
   const textNode = document.createTextNode('');
   const s = signal('hello');
-  const desc: BindingDescriptor = { kind: 'signal-text', el: textNode, signal: s };
+  const desc: BindingDescriptor = bindText(textNode, s);
   applyBindingDescriptor(desc, {});
   assertEquals(textNode.textContent, 'hello');
 });
@@ -503,7 +497,7 @@ Deno.test('signal-text targets a Text node', () => {
 Deno.test('signal-class toggles class when signal changes', () => {
   const el = document.createElement('div');
   const s = signal(false);
-  const desc: BindingDescriptor = { kind: 'signal-class', el, className: 'active', signal: s };
+  const desc: BindingDescriptor = bindClass(el, 'active', s);
   applyBindingDescriptor(desc, {});
   assertFalse(el.classList.contains('active'));
   s.value = true;
@@ -513,12 +507,7 @@ Deno.test('signal-class toggles class when signal changes', () => {
 Deno.test('signal-attr updates multiple attributes', () => {
   const el = document.createElement('input');
   const s = signal('foo');
-  const desc: BindingDescriptor = {
-    kind: 'signal-attr',
-    el,
-    attrNames: ['value', 'data-x'],
-    signal: s,
-  };
+  const desc: BindingDescriptor = bindAttr(el, ['value', 'data-x'], s);
   applyBindingDescriptor(desc, {});
   assertEquals(el.getAttribute('value'), 'foo');
   assertEquals(el.getAttribute('data-x'), 'foo');
@@ -549,12 +538,7 @@ Deno.test('signal-render renders VNode and updates on signal change', () => {
   const el = document.createElement('div');
   const s = signal({ tag: 'span', props: { className: 'a' }, children: ['A'] });
   const childLifecycle: BindingLifecycle = {};
-  const desc: BindingDescriptor = {
-    kind: 'signal-render',
-    el,
-    signal: s as unknown as typeof s,
-    lifecycle: childLifecycle,
-  };
+  const desc: BindingDescriptor = bindRender(el, s as unknown as typeof s, childLifecycle);
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
@@ -571,7 +555,7 @@ Deno.test('event binds and unbinds listener', () => {
   const el = document.createElement('button');
   let count = 0;
   const handler = () => count++;
-  const desc: BindingDescriptor = { kind: 'event', el, type: 'click', handler };
+  const desc: BindingDescriptor = bindEvent(el, 'click', handler);
   const dispose = applyBindingDescriptor(desc, {});
   asTestElement(el).click();
   assertEquals(count, 1);
@@ -585,7 +569,7 @@ Deno.test('event uses AbortSignal for cleanup', () => {
   let count = 0;
   const handler = () => count++;
   const lifecycle = createLifecycle();
-  const desc: BindingDescriptor = { kind: 'event', el, type: 'click', handler };
+  const desc: BindingDescriptor = bindEvent(el, 'click', handler);
   applyBindingDescriptor(desc, lifecycle);
   asTestElement(el).click();
   assertEquals(count, 1);
@@ -597,13 +581,9 @@ Deno.test('event uses AbortSignal for cleanup', () => {
 Deno.test('ref invokes callback with element', () => {
   const el = document.createElement('div');
   let received: Element | null = null;
-  const desc: BindingDescriptor = {
-    kind: 'ref',
-    el,
-    callback: (e) => {
-      received = e;
-    },
-  };
+  const desc: BindingDescriptor = bindRef(el, (e) => {
+    received = e;
+  });
   applyBindingDescriptor(desc, {});
   assertEquals(received, el);
 });
@@ -614,7 +594,7 @@ Deno.test('dispose is registered in lifecycle.disposers', () => {
   const el = document.createElement('div');
   const s = signal('x');
   const lifecycle = createLifecycle();
-  const desc: BindingDescriptor = { kind: 'signal-text', el, signal: s };
+  const desc: BindingDescriptor = bindText(el, s);
   applyBindingDescriptor(desc, lifecycle);
   assertEquals(lifecycle.disposers!.size, 1);
 });
@@ -623,7 +603,7 @@ Deno.test('AbortSignal triggers dispose', () => {
   const el = document.createElement('div');
   const s = signal('x');
   const lifecycle = createLifecycle();
-  const desc: BindingDescriptor = { kind: 'signal-text', el, signal: s };
+  const desc: BindingDescriptor = bindText(el, s);
   applyBindingDescriptor(desc, lifecycle);
   s.value = 'y';
   assertEquals(el.textContent, 'y');
@@ -636,14 +616,14 @@ Deno.test('event without AbortSignal registers explicit dispose', () => {
   const el = document.createElement('button');
   const handler = () => {};
   const lifecycle: BindingLifecycle = { disposers: new Set() };
-  const desc: BindingDescriptor = { kind: 'event', el, type: 'click', handler };
+  const desc: BindingDescriptor = bindEvent(el, 'click', handler);
   applyBindingDescriptor(desc, lifecycle);
   assertEquals(lifecycle.disposers!.size, 1);
 });
 
 Deno.test('static-prop assigns a DOM property', () => {
   const el = document.createElement('input');
-  const desc: BindingDescriptor = { kind: 'static-prop', el, propName: 'value', value: 'hello' };
+  const desc: BindingDescriptor = bindStaticProp(el, 'value', 'hello');
   applyBindingDescriptor(desc, {});
   assertEquals((el as unknown as { value: string }).value, 'hello');
 });
@@ -651,7 +631,7 @@ Deno.test('static-prop assigns a DOM property', () => {
 Deno.test('signal-attr handles boolean-ish values', () => {
   const el = document.createElement('input');
   const s = signal<string | boolean | null>('x');
-  const desc: BindingDescriptor = { kind: 'signal-attr', el, attrNames: ['value'], signal: s };
+  const desc: BindingDescriptor = bindAttr(el, ['value'], s);
   applyBindingDescriptor(desc, {});
   assertEquals(el.getAttribute('value'), 'x');
 
@@ -668,12 +648,7 @@ Deno.test('signal-attr handles boolean-ish values', () => {
 Deno.test('signal-render logs error when renderer is missing', () => {
   const el = document.createElement('div');
   const s = signal({ tag: 'span', props: {}, children: ['A'] });
-  const desc: BindingDescriptor = {
-    kind: 'signal-render',
-    el,
-    signal: s as unknown as typeof s,
-    lifecycle: {},
-  };
+  const desc: BindingDescriptor = bindRender(el, s as unknown as typeof s, {});
   const dispose = applyBindingDescriptor(desc, {});
   assertEquals(asTestElement(el).innerHTML, '');
   dispose();
@@ -685,12 +660,7 @@ Deno.test('signal-render renders Fragment array and updates', () => {
     { tag: 'span', props: { className: 'a' }, children: ['A'] },
     { tag: 'span', props: { className: 'b' }, children: ['B'] },
   ]);
-  const desc: BindingDescriptor = {
-    kind: 'signal-render',
-    el,
-    signal: s as unknown as typeof s,
-    lifecycle: {},
-  };
+  const desc: BindingDescriptor = bindRender(el, s as unknown as typeof s, {});
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
@@ -706,13 +676,7 @@ Deno.test('event binding supports object options', () => {
   let count = 0;
   const handler = () => count++;
   const lifecycle: BindingLifecycle = { disposers: new Set() };
-  const desc: BindingDescriptor = {
-    kind: 'event',
-    el,
-    type: 'click',
-    handler,
-    options: { once: true, passive: true },
-  };
+  const desc: BindingDescriptor = bindEvent(el, 'click', handler, { once: true, passive: true });
   applyBindingDescriptor(desc, lifecycle);
   asTestElement(el).click();
   assertEquals(count, 1);
@@ -728,13 +692,12 @@ Deno.test('conditional binding renders truthy branch and reacts', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
-  const desc: BindingDescriptor = {
-    kind: 'conditional',
-    anchor: anchor as ChildNode,
-    condition: when,
-    renderTruthy: () => jsx('span', { children: 'yes' }),
-    renderFalsy: () => jsx('span', { children: 'no' }),
-  };
+  const desc: BindingDescriptor = bindConditional(
+    anchor as ChildNode,
+    when,
+    () => jsx('span', { children: 'yes' }),
+    () => jsx('span', { children: 'no' }),
+  );
   applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(host).textContent, 'yes');
 
@@ -753,13 +716,12 @@ Deno.test('conditional binding falls back to falsy branch', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
-  const desc: BindingDescriptor = {
-    kind: 'conditional',
-    anchor: anchor as ChildNode,
-    condition: when,
-    renderTruthy: () => jsx('span', { children: 'yes' }),
-    renderFalsy: () => jsx('span', { children: 'no' }),
-  };
+  const desc: BindingDescriptor = bindConditional(
+    anchor as ChildNode,
+    when,
+    () => jsx('span', { children: 'yes' }),
+    () => jsx('span', { children: 'no' }),
+  );
   applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(host).textContent, 'no');
 });
@@ -772,13 +734,12 @@ Deno.test('conditional binding clears content when branch returns null', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
-  const desc: BindingDescriptor = {
-    kind: 'conditional',
-    anchor: anchor as ChildNode,
-    condition: when,
-    renderTruthy: () => jsx('span', { children: 'yes' }),
-    renderFalsy: () => null,
-  };
+  const desc: BindingDescriptor = bindConditional(
+    anchor as ChildNode,
+    when,
+    () => jsx('span', { children: 'yes' }),
+    () => null,
+  );
   applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(host).textContent, 'yes');
 
@@ -795,13 +756,12 @@ Deno.test('conditional binding disposes nested renders on update', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
   };
-  const desc: BindingDescriptor = {
-    kind: 'conditional',
-    anchor: anchor as ChildNode,
-    condition: when,
-    renderTruthy: () => jsx('span', { children: 'yes' }),
-    renderFalsy: () => jsx('span', { children: 'no' }),
-  };
+  const desc: BindingDescriptor = bindConditional(
+    anchor as ChildNode,
+    when,
+    () => jsx('span', { children: 'yes' }),
+    () => jsx('span', { children: 'no' }),
+  );
   const dispose = applyBindingDescriptor(desc, {}, renderer);
   const initialDisposerCount = nestedDisposers.size;
 
@@ -820,12 +780,11 @@ Deno.test('list binding renders items and reacts', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
-  const desc: BindingDescriptor = {
-    kind: 'list',
-    anchor: anchor as ChildNode,
+  const desc: BindingDescriptor = bindList(
+    anchor as ChildNode,
     items,
-    renderItem: (item: unknown) => jsx('span', { children: item as string }),
-  };
+    (item: unknown) => jsx('span', { children: item as string }),
+  );
   applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(host).textContent, 'ab');
 
@@ -841,12 +800,11 @@ Deno.test('list binding ignores non-array items', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle),
   };
-  const desc: BindingDescriptor = {
-    kind: 'list',
-    anchor: anchor as ChildNode,
+  const desc: BindingDescriptor = bindList(
+    anchor as ChildNode,
     items,
-    renderItem: (item: unknown) => jsx('span', { children: item as string }),
-  };
+    (item: unknown) => jsx('span', { children: item as string }),
+  );
   applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(host).textContent, '');
 });
@@ -860,12 +818,11 @@ Deno.test('list binding disposes nested renders on update', () => {
   const renderer: BindingRenderer = {
     render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
   };
-  const desc: BindingDescriptor = {
-    kind: 'list',
-    anchor: anchor as ChildNode,
+  const desc: BindingDescriptor = bindList(
+    anchor as ChildNode,
     items,
-    renderItem: (item: unknown) => jsx('span', { children: item as string }),
-  };
+    (item: unknown) => jsx('span', { children: item as string }),
+  );
   const dispose = applyBindingDescriptor(desc, {}, renderer);
   const initialDisposerCount = nestedDisposers.size;
 
@@ -874,6 +831,22 @@ Deno.test('list binding disposes nested renders on update', () => {
 
   dispose();
   assertEquals(nestedDisposers.size, 0);
+});
+
+Deno.test('registerBindingKind dispatches custom binding kind', () => {
+  const el = document.createElement('div');
+  let ran = false;
+  const customDispose = () => {};
+  const kind = 'custom-test-kind';
+  registerBindingKind(kind, (desc, _lifecycle) => {
+    ran = true;
+    assertEquals((desc as unknown as { el: Element }).el, el);
+    return customDispose;
+  });
+  const desc = { kind, el } as unknown as BindingDescriptor;
+  const dispose = applyBindingDescriptor(desc, {});
+  assert(ran);
+  assertEquals(dispose, customDispose);
 });
 
 Deno.test('restore global document after binding-activation tests', () => {

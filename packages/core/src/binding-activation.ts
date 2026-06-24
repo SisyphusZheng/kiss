@@ -30,46 +30,30 @@ export function registerDispose(dispose: BindingDispose, lifecycle: BindingLifec
   }
 }
 
+type ApplyFn = (
+  desc: BindingDescriptor,
+  lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
+) => BindingDispose;
+
+const registry = new Map<string, ApplyFn>();
+
+/** Register a custom binding kind in the activation registry. */
+export function registerBindingKind(kind: string, applyFn: ApplyFn): void {
+  registry.set(kind, applyFn);
+}
+
 /** Apply a single binding descriptor and return a dispose function. */
 export function applyBindingDescriptor(
   desc: BindingDescriptor,
   lifecycle: BindingLifecycle,
   renderer?: BindingRenderer,
 ): BindingDispose {
-  switch (desc.kind) {
-    case 'static-attr':
-      return applyStaticAttr(desc, lifecycle);
-    case 'static-prop':
-      return applyStaticProp(desc, lifecycle);
-    case 'static-boolean':
-      return applyStaticBoolean(desc, lifecycle);
-    case 'static-style':
-      return applyStaticStyle(desc, lifecycle);
-    case 'signal-text':
-      return applySignalText(desc, lifecycle);
-    case 'signal-class':
-      return applySignalClass(desc, lifecycle);
-    case 'signal-attr':
-      return applySignalAttr(desc, lifecycle);
-    case 'signal-html':
-      return applySignalHtml(desc, lifecycle);
-    case 'signal-render':
-      return applySignalRender(desc, lifecycle, renderer);
-    case 'conditional':
-      return applyConditional(desc, lifecycle, renderer);
-    case 'list':
-      return applyList(desc, lifecycle, renderer);
-    case 'event':
-      return applyEvent(desc, lifecycle);
-    case 'ref':
-      return applyRef(desc, lifecycle);
-    default: {
-      // Exhaustiveness guard: unknown descriptor kinds are no-ops.
-      const _exhaustive: never = desc;
-      void _exhaustive;
-      return noop;
-    }
+  const apply = registry.get(desc.kind);
+  if (apply) {
+    return apply(desc, lifecycle, renderer);
   }
+  return noop;
 }
 
 /** Commit all binding descriptors against the activation layer in document order. */
@@ -83,6 +67,72 @@ export function commitBindings(
     applyBindingDescriptor(desc, lifecycle, renderer);
   }
 }
+
+registry.set(
+  'static-attr',
+  (desc, lifecycle) =>
+    applyStaticAttr(desc as Extract<BindingDescriptor, { kind: 'static-attr' }>, lifecycle),
+);
+registry.set(
+  'static-prop',
+  (desc, lifecycle) =>
+    applyStaticProp(desc as Extract<BindingDescriptor, { kind: 'static-prop' }>, lifecycle),
+);
+registry.set(
+  'static-boolean',
+  (desc, lifecycle) =>
+    applyStaticBoolean(desc as Extract<BindingDescriptor, { kind: 'static-boolean' }>, lifecycle),
+);
+registry.set(
+  'static-style',
+  (desc, lifecycle) =>
+    applyStaticStyle(desc as Extract<BindingDescriptor, { kind: 'static-style' }>, lifecycle),
+);
+registry.set(
+  'signal-text',
+  (desc, lifecycle) =>
+    applySignalText(desc as Extract<BindingDescriptor, { kind: 'signal-text' }>, lifecycle),
+);
+registry.set(
+  'signal-class',
+  (desc, lifecycle) =>
+    applySignalClass(desc as Extract<BindingDescriptor, { kind: 'signal-class' }>, lifecycle),
+);
+registry.set(
+  'signal-attr',
+  (desc, lifecycle) =>
+    applySignalAttr(desc as Extract<BindingDescriptor, { kind: 'signal-attr' }>, lifecycle),
+);
+registry.set(
+  'signal-html',
+  (desc, lifecycle) =>
+    applySignalHtml(desc as Extract<BindingDescriptor, { kind: 'signal-html' }>, lifecycle),
+);
+registry.set('signal-render', (desc, lifecycle, renderer) =>
+  applySignalRender(
+    desc as Extract<BindingDescriptor, { kind: 'signal-render' }>,
+    lifecycle,
+    renderer,
+  ));
+registry.set('conditional', (desc, lifecycle, renderer) =>
+  applyConditional(
+    desc as Extract<BindingDescriptor, { kind: 'conditional' }>,
+    lifecycle,
+    renderer,
+  ));
+registry.set(
+  'list',
+  (desc, lifecycle, renderer) =>
+    applyList(desc as Extract<BindingDescriptor, { kind: 'list' }>, lifecycle, renderer),
+);
+registry.set(
+  'event',
+  (desc, lifecycle) => applyEvent(desc as Extract<BindingDescriptor, { kind: 'event' }>, lifecycle),
+);
+registry.set(
+  'ref',
+  (desc, lifecycle) => applyRef(desc as Extract<BindingDescriptor, { kind: 'ref' }>, lifecycle),
+);
 
 function applyStaticAttr(
   desc: Extract<BindingDescriptor, { kind: 'static-attr' }>,
