@@ -11,7 +11,7 @@
  * Islands: Custom Element registration + prop deserialization
  *
  * Build orchestration (Vite plugins) lives in @openelement/adapter-vite.
- * For the unified openElement() entry, use @openelement/app/vite instead.
+ * For the unified openElement() entry, use @openelement/adapter-vite.
  */
 
 // --- Public API re-exports -----------------------------------------
@@ -102,7 +102,6 @@ export type {
   HydrationHint,
   IsrRouteRecord,
   ManifestDecision,
-  RendererProtocol,
   RenderErrorCode,
   RenderHooks,
   RenderInput,
@@ -113,14 +112,11 @@ export type {
 export type {
   OpenElementAttribute,
   OpenElementCssPart,
-  OpenElementCssProperty,
   OpenElementDeclaration,
   OpenElementEvent,
   OpenElementExport,
   OpenElementExtensions,
-  OpenElementMember,
   OpenElementModule,
-  OpenElementPackageExtensions,
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '@openelement/protocol/manifest';
@@ -128,9 +124,6 @@ export type {
   CemCompatibilityReport,
   CompatibilityClassification,
   CompatibilityTier,
-  ManifestValidationReport,
-  ValidatedTag,
-  ValidationDiagnostic,
 } from '@openelement/protocol/manifest';
 export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
 export {
@@ -141,8 +134,6 @@ export {
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
 export { createLogger } from './logger.js';
-/** @internal — use @openelement/core/security subpath */
-export { DANGEROUS_KEYS } from './security.js';
 export { isValidTagName } from './tag-utils.js';
 export {
   bindSsrProps,
@@ -156,8 +147,32 @@ export { transformIslandSource } from './island-transform.js';
 export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
 // Unified binding layer (ADR-0109 Phase 1)
-export { applyBindingDescriptor } from './binding-activation.js';
-export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.ts';
+export {
+  applyBindingDescriptor,
+  commitBindings,
+  registerBindingKind,
+} from './binding-activation.js';
+export {
+  bindAttr,
+  bindClass,
+  bindConditional,
+  bindEvent,
+  bindHtml,
+  bindList,
+  bindRef,
+  bindRender,
+  bindStaticAttr,
+  bindStaticBoolean,
+  bindStaticProp,
+  bindStaticStyle,
+  bindText,
+} from './binding-descriptor.js';
+export type {
+  BindingDescriptor,
+  BindingDispose,
+  BindingLifecycle,
+  BindingRenderer,
+} from './binding-descriptor.js';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {

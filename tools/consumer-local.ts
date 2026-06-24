@@ -82,11 +82,14 @@ const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 denoJson.imports['@openelement/app'] = pathToFileURL(
   join(repoRoot, 'packages', 'app', 'src', 'index.ts'),
 ).href;
-denoJson.imports['@openelement/app/vite'] = pathToFileURL(
-  join(repoRoot, 'packages', 'app', 'src', 'vite.ts'),
-).href;
 denoJson.imports['@openelement/core'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
+).href;
+denoJson.imports['@openelement/core/hydrate'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts'),
+).href;
+denoJson.imports['@openelement/core/static'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'static.ts'),
 ).href;
 denoJson.imports['@openelement/core/errors'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'errors.ts'),
@@ -300,6 +303,14 @@ const aliases = [
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'errors.ts')),
   },
   {
+    find: '@openelement/core/hydrate',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts')),
+  },
+  {
+    find: '@openelement/core/static',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'static.ts')),
+  },
+  {
     find: '@openelement/core',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'index.ts')),
   },
@@ -373,8 +384,8 @@ const aliases = [
     replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
   },
   {
-    find: '@openelement/app/vite',
-    replacement: vitePath(join(repoRoot, 'packages', 'app', 'src', 'vite.ts')),
+    find: '@openelement/adapter-vite',
+    replacement: vitePath(join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts')),
   },
   {
     find: '@openelement/app',

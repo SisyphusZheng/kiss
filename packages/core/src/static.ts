@@ -10,20 +10,20 @@
 
 // VNode / JSX runtime
 export type { VNode } from '@openelement/protocol/vnode';
-export { isVNode } from './vnode.ts';
-export { For, Fragment, jsx, jsxDEV, jsxs, Show, trustedHtml } from './jsx-runtime.ts';
+export { isVNode } from './vnode.js';
+export { For, Fragment, jsx, jsxDEV, jsxs, Show, trustedHtml } from './jsx-runtime.js';
 
 // Static rendering (IR + DSD)
-export { camelToKebab, renderDsdTree, serializeAttrs } from './render-ir.ts';
-export { renderDsd } from './render-dsd.ts';
-export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.ts';
+export { camelToKebab, renderDsdTree, serializeAttrs } from './render-ir.js';
+export { renderDsd } from './render-dsd.js';
+export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.js';
 export type {
   RenderDsdStreamChunk,
   RenderDsdStreamComponent,
   RenderDsdStreamMetrics,
   RenderDsdStreamOptions,
-} from './render-dsd-stream.ts';
-export type { RenderDsdOptions } from './render-dsd.ts';
+} from './render-dsd-stream.js';
+export type { RenderDsdOptions } from './render-dsd.js';
 
 // HTML escaping / document wrapping
 export {
@@ -32,11 +32,11 @@ export {
   escapeHtml,
   renderSsrError,
   wrapInDocument,
-} from './html-escape.ts';
+} from './html-escape.js';
 export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
 
 // Security / errors / logging
-export { DANGEROUS_KEYS } from './security.ts';
+export { DANGEROUS_KEYS } from './security.js';
 export {
   ERROR_PREFIX,
   ErrorCode,
@@ -47,9 +47,9 @@ export {
   reportError,
   setErrorTelemetryHook,
   SsrRenderError,
-} from './errors.ts';
+} from './errors.js';
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '@openelement/protocol/errors';
-export { createLogger } from './logger.ts';
+export { createLogger } from './logger.js';
 
 // Static props runtime
 export {
@@ -60,7 +60,7 @@ export {
   registerStaticObservedAttributes,
   syncStaticPropsFromAttributes,
   unwrap,
-} from './prop.ts';
+} from './prop.js';
 export type {
   NormalizedPropDecl,
   PropDecl,
@@ -75,14 +75,14 @@ export { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 
 // Context / request helpers
-export { createSsrContext, extractParams, parseQuery } from './context.ts';
+export { createSsrContext, extractParams, parseQuery } from './context.js';
 export type { IslandDescriptor, SsrContext } from '@openelement/protocol/context';
-export { consumeContext, createContext, provideContext } from './signal-context.ts';
-export type { Context } from './signal-context.ts';
+export { consumeContext, createContext, provideContext } from './signal-context.js';
+export type { Context } from './signal-context.js';
 
 // Misc static utilities
-export { isValidTagName } from './tag-utils.ts';
-export { StyleSheet } from './style-sheet.ts';
+export { isValidTagName } from './tag-utils.js';
+export { StyleSheet } from './style-sheet.js';
 export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
 
 // Event marker serialization (used by SSR; hydration lives in hydrate.ts)
@@ -91,5 +91,5 @@ export {
   eventMarkerId,
   eventTypeFromProp,
   serializeEventMarkers,
-} from './event-marker.ts';
-export type { EventMarkerContext } from './event-marker.ts';
+} from './event-marker.js';
+export type { EventMarkerContext } from './event-marker.js';

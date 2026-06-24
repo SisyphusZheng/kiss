@@ -79,29 +79,27 @@ export default class HeroPing extends OpenElement {
   apiUrl = '';
   _state: 'idle' | 'loading' | 'ok' | 'err' = 'idle';
   _msg = '';
-  private _abortController?: AbortController;
+  private _fetchAbort?: AbortController;
 
   override connectedCallback(): void {
     super.connectedCallback();
+    this._lifecycleSignal().addEventListener('abort', () => this._fetchAbort?.abort(), {
+      once: true,
+    });
     // DsdElement handles shadow root creation + initial render.
     // Fetch after DOM is ready.
     this._fetch();
   }
 
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._abortController?.abort();
-  }
-
   _fetch = async (): Promise<void> => {
-    this._abortController?.abort();
-    this._abortController = new AbortController();
+    this._fetchAbort?.abort();
+    this._fetchAbort = new AbortController();
     this._state = 'loading';
     this._msg = '';
     this._renderToDom();
     try {
       const url = this.apiUrl || 'https://demo.openelement.org/api';
-      const r = await fetch(url, { signal: this._abortController.signal });
+      const r = await fetch(url, { signal: this._fetchAbort.signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       this._state = 'ok';

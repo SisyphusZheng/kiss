@@ -10,7 +10,6 @@ import { join } from 'node:path';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolveDynamicRoutePath } from '../src/ssg-helpers.ts';
 import type { SsgRenderOptions } from '@openelement/ssg';
-import type { PageDiagnostic } from '../src/ssg-helpers.ts';
 
 // ─── expandDynamicRoutes ───────────────────────────────────────
 
@@ -25,13 +24,13 @@ Deno.test('expandDynamicRoutes: renders dynamic routes via getStaticPaths', asyn
     { path: '/blog/:slug', tagName: 'blog-post', isDynamic: true, paramNames: ['slug'] },
   ];
 
-  const pageDiagnostics: PageDiagnostic[] = [];
-
   const result = await expandDynamicRoutes(
     dynamicRoutes,
     (_path, opts) =>
       Promise.resolve({
-        html: `<html><body>Blog: ${(opts?.params as Record<string, string>)?.slug}</body></html>`,
+        html: `\u003chtml\u003e\u003cbody\u003eBlog: ${
+          (opts?.params as Record<string, string>)?.slug
+        }\u003c/body\u003e\u003c/html\u003e`,
         errors: [],
         hydrationHints: [],
         componentCount: 1,
@@ -41,7 +40,6 @@ Deno.test('expandDynamicRoutes: renders dynamic routes via getStaticPaths', asyn
     {} as SsgRenderOptions,
     root,
     outDir,
-    pageDiagnostics,
   );
 
   // Check that static path params were collected
@@ -83,7 +81,6 @@ Deno.test('expandDynamicRoutes: handles empty getStaticPaths', async () => {
     {} as SsgRenderOptions,
     root,
     outDir,
-    [],
   );
 
   assertEquals(result.get('/blog/:slug')?.length, 0);
@@ -102,7 +99,6 @@ Deno.test('expandDynamicRoutes: handles missing getStaticPaths', async () => {
     {} as SsgRenderOptions,
     root,
     'dist',
-    [],
   );
 
   assertEquals(result.size, 0);
@@ -112,15 +108,13 @@ Deno.test('expandDynamicRoutes: handles missing getStaticPaths', async () => {
 // ─── expandI18nLocales ─────────────────────────────────────────
 
 Deno.test('expandI18nLocales: renders locale-prefixed output', async () => {
-  const { expandI18nLocales } = await import('../src/ssg-i18n.ts');
+  const { expandI18nLocales } = await import('../src/ssg-dynamic.ts');
   const root = Deno.makeTempDirSync({ prefix: 'ssg-i18n-test-' });
   const outDir = 'dist';
   mkdirSync(join(root, outDir), { recursive: true });
 
   // First, write a base page
   writeFileSync(join(root, outDir, 'index.html'), '<html><body>Home</body></html>', 'utf-8');
-
-  const pageDiagnostics: PageDiagnostic[] = [];
 
   await expandI18nLocales(
     {
@@ -142,7 +136,6 @@ Deno.test('expandI18nLocales: renders locale-prefixed output', async () => {
     {} as SsgRenderOptions,
     root,
     outDir,
-    pageDiagnostics,
   );
 
   // Check locale output exists
@@ -155,10 +148,8 @@ Deno.test('expandI18nLocales: renders locale-prefixed output', async () => {
 });
 
 Deno.test('expandI18nLocales: skips when no i18n options', async () => {
-  const { expandI18nLocales } = await import('../src/ssg-i18n.ts');
+  const { expandI18nLocales } = await import('../src/ssg-dynamic.ts');
   const root = Deno.makeTempDirSync({ prefix: 'ssg-i18n-skip-' });
-  const pageDiagnostics: PageDiagnostic[] = [];
-
   await expandI18nLocales(
     {},
     undefined,
@@ -167,14 +158,13 @@ Deno.test('expandI18nLocales: skips when no i18n options', async () => {
     {} as SsgRenderOptions,
     root,
     'dist',
-    pageDiagnostics,
   );
   // Should not throw - just returns early
   rmSync(root, { recursive: true, force: true });
 });
 
 Deno.test('expandI18nLocales: skips when single locale', async () => {
-  const { expandI18nLocales } = await import('../src/ssg-i18n.ts');
+  const { expandI18nLocales } = await import('../src/ssg-dynamic.ts');
   const root = Deno.makeTempDirSync({ prefix: 'ssg-i18n-single-' });
 
   await expandI18nLocales(
@@ -185,7 +175,6 @@ Deno.test('expandI18nLocales: skips when single locale', async () => {
     {} as SsgRenderOptions,
     root,
     'dist',
-    [],
   );
   // Should not throw - just returns early
   rmSync(root, { recursive: true, force: true });

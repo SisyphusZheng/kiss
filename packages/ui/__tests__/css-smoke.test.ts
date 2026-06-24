@@ -9,7 +9,7 @@
 import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
 
 Deno.test('open-props-tokens: openPropsTokenSheet is a CSSStyleSheet', async () => {
-  const { openPropsTokenSheet } = await import('../src/open-props-tokens.ts');
+  const { openPropsTokenSheet, openPropsRootSheet } = await import('../src/open-props-tokens.ts');
   assertExists(openPropsTokenSheet, 'openPropsTokenSheet should be exported');
   assertEquals(
     typeof openPropsTokenSheet.replaceSync,
@@ -22,6 +22,15 @@ Deno.test('open-props-tokens: openPropsTokenSheet is a CSSStyleSheet', async () 
     openPropsTokenSheet.cssRules.length > 0,
     true,
     'openPropsTokenSheet should contain at least one CSS rule',
+  );
+
+  assertExists(openPropsRootSheet, 'openPropsRootSheet should be exported');
+  const rootCss = openPropsRootSheet.cssRules.map((r: { cssText: string }) => r.cssText).join('\n');
+  assertEquals(rootCss.includes(':root'), true, 'openPropsRootSheet should use :root selectors');
+  assertEquals(
+    rootCss.includes(':host-context'),
+    false,
+    'openPropsRootSheet must not contain unsupported :host-context selectors',
   );
 });
 
@@ -122,6 +131,7 @@ Deno.test('daisy-classes: DSD compatibility - sheets can be used as adoptedStyle
   const index = await import('../src/index.ts');
   assertExists(index.daisyClassSheet, 'index should re-export daisyClassSheet');
   assertExists(index.openPropsTokenSheet, 'index should re-export openPropsTokenSheet');
+  assertExists(index.openPropsRootSheet, 'index should re-export openPropsRootSheet');
 });
 
 Deno.test('components: new interactive components are importable', async () => {

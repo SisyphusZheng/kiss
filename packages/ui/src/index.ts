@@ -36,7 +36,7 @@
  */
 
 // Design tokens (CSSStyleSheet, zero Lit dependency)
-export { openPropsTokenSheet } from './open-props-tokens.js';
+export { openPropsRootSheet, openPropsTokenSheet } from './open-props-tokens.js';
 
 // daisyUI forked class sheet (Pure CSS, Open Props tokens)
 export { daisyClassSheet } from './daisy-classes.js';

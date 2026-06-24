@@ -15,17 +15,6 @@ export interface OpenElementAttribute {
   fieldName?: string;
 }
 
-export interface OpenElementMember {
-  name: string;
-  kind: 'field' | 'method' | 'property';
-  type?: string;
-  default?: string;
-  description?: string;
-  privacy?: 'public' | 'protected' | 'private';
-  static?: boolean;
-  readonly?: boolean;
-}
-
 export interface OpenElementEvent {
   name: string;
   type?: string;
@@ -35,13 +24,6 @@ export interface OpenElementEvent {
 export interface OpenElementSlot {
   name: string;
   description?: string;
-}
-
-export interface OpenElementCssProperty {
-  name: string;
-  default?: string;
-  description?: string;
-  type?: string;
 }
 
 export interface OpenElementCssPart {
@@ -58,13 +40,6 @@ export interface OpenElementExtensions {
   export?: string;
 }
 
-export interface OpenElementPackageExtensions {
-  openElementVersion?: string;
-  adapter?: string;
-  hasStylesheet?: boolean;
-  cssPrefix?: string;
-}
-
 export interface OpenElementExport {
   name: string;
   path?: string;
@@ -76,10 +51,8 @@ export interface OpenElementDeclaration {
   className?: string;
   superclassName?: string;
   attributes?: OpenElementAttribute[];
-  members?: OpenElementMember[];
   events?: OpenElementEvent[];
   slots?: OpenElementSlot[];
-  cssProperties?: OpenElementCssProperty[];
   cssParts?: OpenElementCssPart[];
   openElement?: OpenElementExtensions;
   description?: string;
@@ -103,7 +76,6 @@ export interface OpenElementPackageManifest {
   repository?: string;
   declarations: OpenElementDeclaration[];
   modules?: OpenElementModule[];
-  openElement?: OpenElementPackageExtensions;
 }
 
 // --- Compatibility ------------------------------------------------
@@ -119,36 +91,4 @@ export interface CemCompatibilityReport {
   experimentalDomCount: number;
   classifications: CompatibilityClassification[];
   summary: string;
-}
-
-// --- Manifest validation ------------------------------------------
-
-export interface ValidationDiagnostic {
-  code: string;
-  severity: 'error' | 'warning';
-  message: string;
-  tagName?: string;
-  filePath?: string;
-  fix?: string;
-}
-
-export interface ValidatedTag {
-  tagName: string;
-  valid: boolean;
-  compatibility: CompatibilityTier;
-  modulePath?: string;
-  className?: string;
-  ssr?: boolean;
-  dsd?: boolean;
-}
-
-export interface ManifestValidationReport {
-  packageName?: string;
-  version?: string;
-  valid: boolean;
-  schemaVersion?: string;
-  compatibility: CompatibilityTier;
-  errors: ValidationDiagnostic[];
-  warnings: ValidationDiagnostic[];
-  tags: ValidatedTag[];
 }

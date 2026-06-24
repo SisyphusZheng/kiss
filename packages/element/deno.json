@@ -1,8 +1,10 @@
 {
   "name": "@openelement/element",
-  "version": "0.41.0-alpha.1",
+  "version": "0.41.0-alpha.2",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./open-element-render": "./src/open-element-render.ts",
+    "./open-element-hydration": "./src/open-element-hydration.ts"
   },
   "imports": {},
   "publish": {
