@@ -67,25 +67,37 @@ export function buildPlugin(
       // SSG only needs Phase 1 - it renders HTML from the SSR bundle.
       // Phase 2 runs last because client chunks have content hashes that
       // don't affect HTML content, and injection is a post-processing step.
-      ctx.completePhase1();
+      ctx.markComplete(1);
 
-      await ctx.runPhase3(async () => {
+      ctx.markComplete(3);
+      log.info('[3/3] Static site generation...');
+      try {
         const { buildSSG } = await import('./cli/build-ssg.js');
         await buildSSG({}, ctx);
-      });
+        log.info('[3/3] Static site generation - complete');
+      } catch (error) {
+        log.error(`[3/3] Static site generation - FAILED: ${error}`);
+        throw error;
+      }
 
       // Phase 2: Client island bundle (only if islands exist)
       if (totalIslands > 0) {
-        await ctx.runPhase2(async () => {
+        ctx.markComplete(2);
+        log.info('[2/3] Client island build...');
+        try {
           const { buildClient } = await import('./cli/build-client.js');
           await buildClient(ctx);
-        });
+          log.info('[2/3] Client island build - complete');
+        } catch (error) {
+          log.error(`[2/3] Client island build - FAILED: ${error}`);
+          throw error;
+        }
       }
 
       // -- Inject client script (only runs if Phase 2 completed) --
       // Phase 2's manifest.json tells us the client chunk URLs to inject
       // into the already-rendered HTML pages.
-      if (ctx.isPhaseComplete(2)) {
+      if (ctx.isComplete(2)) {
         try {
           const outDir = ctx.phase3.outDir || 'dist';
           const root = ctx.phase3.root || process.cwd();

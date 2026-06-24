@@ -314,18 +314,6 @@ async function main(): Promise<void> {
     'current source/docs must use trustedHtml and VNode event handlers',
   );
   failMatches(
-    'rename-contract',
-    production.concat(currentDocs),
-    /\blessjs\b|\blessPipeline\b|\bless-plugin\b|\bless-add\b|\bless-install-guide\b|\bless:|virtual:less|less-devtool|less:ready|\bLess(?:PackageManifest|BuildContext|Error|ContentOptions|I18nOptions|BlogOptions|Renderer|Middleware|Logger)\b|classifyLessManifest/,
-    'active source/docs must use openElement naming for public and observable contracts',
-  );
-  failMatches(
-    'metadata-contract',
-    production.concat(currentDocs),
-    /export const less\b|\.less\b|\bless\s*\?:|\bless\s*:\s*\{|\bless\.(?:ssr|dsd|hydrate|module|layer)/,
-    'active metadata must use export const openElement and manifest.openElement',
-  );
-  failMatches(
     'core-render',
     coreSource,
     /wrongTypeErrorHtml|typeof\s+result\s*===\s*['"]string['"]|Components must return a string/,

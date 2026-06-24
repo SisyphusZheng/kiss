@@ -111,15 +111,16 @@ Rationale:
 async function build(ctx) {
   // Phase 1: SSR bundle
   await buildSSRBundle(ctx);
-  const phase1Token = ctx.completePhase1();
+  ctx.markComplete(1);
 
   // Phase 3: SSG render (no manifest needed — just render)
   const module = await loadSsrBundle(ctx);
   await ssgRender(module, ctx.options, ctx);  // writes HTML, no script injection
+  ctx.markComplete(3);
 
   // Phase 2: Client islands (any bundler)
   await buildClientBundle(ctx);
-  const phase2Token = ctx.completePhase2(phase1Token);
+  ctx.markComplete(2);
 
   // Inject: read manifest, patch HTML
   if (manifestExists()) {

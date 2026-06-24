@@ -261,11 +261,6 @@ function buildManifest(): OpenElementPackageManifest {
     license: 'MIT',
     homepage: 'https://openelement.org',
     repository: 'https://github.com/open-element/openelement',
-    openElement: {
-      adapter: 'vanilla',
-      hasStylesheet: true,
-      cssPrefix: 'open',
-    },
     declarations,
     modules,
   };
