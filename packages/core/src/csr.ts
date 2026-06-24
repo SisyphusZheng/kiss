@@ -21,6 +21,7 @@ export {
   bindClass,
   bindConditional,
   bindEvent,
+  bindHtml,
   bindList,
   bindRef,
   bindRender,

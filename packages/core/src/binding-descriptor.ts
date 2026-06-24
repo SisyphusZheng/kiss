@@ -105,7 +105,6 @@ export interface ListBindingDescriptor {
   anchor: ChildNode;
   items: Signal<unknown> | unknown;
   renderItem: (item: unknown, index: number) => unknown;
-  keyFn?: (item: unknown, index: number) => unknown;
 }
 
 // ─── Event / ref descriptors ──────────────────────────────────────────────────
@@ -168,6 +167,15 @@ export function bindClass(
   return { kind: 'signal-class', el: element, className, signal };
 }
 
+/** Create a signal-html binding descriptor. */
+export function bindHtml(
+  element: Element,
+  signal: Signal<unknown>,
+  trusted: boolean,
+): SignalHtmlBindingDescriptor {
+  return { kind: 'signal-html', el: element, signal, trusted };
+}
+
 /** Create an event binding descriptor. */
 export function bindEvent(
   element: EventTarget,
@@ -202,9 +210,8 @@ export function bindList(
   anchor: ChildNode,
   items: Signal<unknown> | unknown,
   renderItem: (item: unknown, index: number) => unknown,
-  keyFn?: (item: unknown, index: number) => unknown,
 ): ListBindingDescriptor {
-  return { kind: 'list', anchor, items, renderItem, keyFn };
+  return { kind: 'list', anchor, items, renderItem };
 }
 
 /** Create a static attribute binding descriptor. */
