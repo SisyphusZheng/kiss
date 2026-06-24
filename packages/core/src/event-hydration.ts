@@ -7,14 +7,14 @@
  * replacing the existing DSD DOM.
  */
 
-import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.js';
 import { isSignalLike } from '@openelement/signal';
-import { isComponentCtor, isVNode } from './vnode.ts';
+import { isComponentCtor, isVNode } from './vnode.js';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import { DATA_EID } from '@openelement/protocol/hydration-markers';
 import { applyBindingDescriptor } from './binding-activation.js';
-import type { EventBindingDescriptor } from './binding-descriptor.ts';
-import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
+import type { EventBindingDescriptor } from './binding-descriptor.js';
+import { eventMarkerId, eventTypeFromProp } from './event-marker.js';
 
 // Re-export pure marker helpers so existing consumers keep working.
 export {
@@ -22,8 +22,8 @@ export {
   eventMarkerId,
   eventTypeFromProp,
   serializeEventMarkers,
-} from './event-marker.ts';
-export type { EventMarkerContext } from './event-marker.ts';
+} from './event-marker.js';
+export type { EventMarkerContext } from './event-marker.js';
 
 export interface EventBindingRecord {
   id: string;

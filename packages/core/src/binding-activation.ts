@@ -8,7 +8,7 @@
 
 import { effect, unwrapSignalLike } from '@openelement/signal';
 import { trustRenderHtml } from './security.js';
-import { Fragment } from './jsx-runtime.ts';
+import { Fragment } from './jsx-runtime.js';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
 import type {
@@ -16,7 +16,7 @@ import type {
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.ts';
+} from './binding-descriptor.js';
 
 const bindingLog = createLogger('binding');
 
@@ -261,7 +261,7 @@ function applySignalRender(
     const node = Array.isArray(raw) ? { tag: Fragment, props: {}, children: raw } : raw;
     const result = renderer.render(node, renderLifecycle);
 
-    if (result.nodeType === 11 || result.nodeType === 0) {
+    if (result.nodeType === 11) {
       const fragChildren: ChildNode[] = [];
       while (result.firstChild) {
         const child = result.firstChild as ChildNode;

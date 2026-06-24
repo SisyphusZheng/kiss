@@ -14,7 +14,7 @@
  */
 
 import { join } from 'node:path';
-import process from 'node:process';
+import { cwd } from 'node:process';
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type {
   SsgPageOutput,
@@ -36,7 +36,7 @@ export async function ssgRender(
   options: SsgRenderOptions,
   evidence: SsgRenderEvidence = {},
 ): Promise<void> {
-  const root = options.root || process.cwd();
+  const root = options.root || cwd();
   const outDir = options.outDir || 'dist';
   const basePath = options.base || '/';
 
