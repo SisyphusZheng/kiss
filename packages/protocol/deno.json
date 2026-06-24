@@ -1,6 +1,6 @@
 {
   "name": "@openelement/protocol",
-  "version": "0.41.0-alpha.1",
+  "version": "0.41.0-alpha.2",
   "exports": {
     ".": "./src/index.ts",
     "./signal": "./src/signal.ts",

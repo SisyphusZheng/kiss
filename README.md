@@ -2,8 +2,8 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.41.0-alpha.1` (`v0.41.0-alpha.1`
-release). Active execution: `v0.41.0-alpha.1` Cleanup-Train Patch.**
+**JSX-first Web Components platform. Package line: `0.41.0-alpha.2` (`v0.41.0-alpha.2`
+release). Active execution: Signal-DOM Deepening.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
 rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD

@@ -2,7 +2,7 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.41.0-alpha.1 product graph.
+// Current public line: v0.41.0-alpha.2 product graph.
 // Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
@@ -465,7 +465,7 @@ const phases = [
     tone: 'success',
   },
   {
-    version: 'v0.41.0-alpha.1',
+    version: 'v0.41.0-alpha.2',
     title: 'Release readiness and site truth',
     copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
     status: 'current',
@@ -508,7 +508,7 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.1'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.2'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
@@ -540,7 +540,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.1' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.2' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>
