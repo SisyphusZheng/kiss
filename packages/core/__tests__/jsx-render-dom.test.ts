@@ -4,7 +4,7 @@
 
 import { assert, assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
-import { jsx } from '../src/jsx-runtime.ts';
+import { Fragment, HTML_TAG, jsx } from '../src/jsx-runtime.ts';
 import { collectPropBindings, renderToDom } from '../src/jsx-render-dom.ts';
 import type { Signal } from '@openelement/protocol/signal';
 
@@ -209,6 +209,10 @@ class TestTextNode extends TestNode {
   }
 }
 
+class TestComment extends TestTextNode {
+  override nodeType = 8;
+}
+
 class TestElement extends TestNode {
   tagName: string;
   #attrs = new Map<string, string>();
@@ -364,7 +368,7 @@ class TestDocument {
   }
 
   createComment(): Comment {
-    return new TestTextNode() as unknown as Comment;
+    return new TestComment() as unknown as Comment;
   }
 }
 
@@ -489,4 +493,62 @@ Deno.test('collectPropBindings includes boolean descriptor', () => {
   const boolDesc = descriptors.find((d) => d.kind === 'static-boolean');
   assert(boolDesc);
   assertEquals((boolDesc as { attrName: string }).attrName, 'disabled');
+});
+
+Deno.test('renderToDom renders Fragment children without wrapper', () => {
+  const vnode = jsx(Fragment, { children: ['a', 'b'] });
+  const frag = renderToDom(vnode);
+  assertEquals(frag.nodeType, 0);
+  assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 2);
+});
+
+Deno.test('renderToDom renders trusted HTML_TAG as fragment', () => {
+  const vnode = jsx(HTML_TAG, { html: '<span class="x">y</span>', children: [] });
+  const frag = renderToDom(vnode);
+  assertEquals(frag.nodeType, 0);
+  assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 1);
+});
+
+Deno.test('renderToDom renders number children as text', () => {
+  const vnode = jsx('p', { children: 42 });
+  const el = renderToDom(vnode) as Element;
+  assertEquals(el.textContent, '42');
+});
+
+Deno.test('renderToDom renders null and false as empty text', () => {
+  const vnode = jsx('p', { children: [null, false] });
+  const el = renderToDom(vnode) as Element;
+  assertEquals(el.textContent, '');
+});
+
+Deno.test('renderToDom creates SVG elements with namespace', () => {
+  const vnode = jsx('svg', { children: [] });
+  const el = renderToDom(vnode) as Element;
+  assertEquals(el.tagName.toLowerCase(), 'svg');
+});
+
+Deno.test('renderToDom applies textContent prop', () => {
+  const vnode = jsx('p', { textContent: 'direct', children: [] });
+  const el = renderToDom(vnode) as Element;
+  assertEquals(el.textContent, 'direct');
+});
+
+Deno.test('renderToDom handles component constructor errors gracefully', () => {
+  const Bad = class {
+    render() {
+      throw new Error('boom');
+    }
+  };
+  const vnode = jsx(Bad as unknown as string, { children: [] });
+  const node = renderToDom(vnode);
+  assertEquals(node.textContent, '');
+});
+
+Deno.test('renderToDom handles component function errors gracefully', () => {
+  const Bad = () => {
+    throw new Error('boom');
+  };
+  const vnode = jsx(Bad as unknown as string, { children: [] });
+  const node = renderToDom(vnode);
+  assertEquals(node.textContent, '');
 });

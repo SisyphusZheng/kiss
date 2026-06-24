@@ -2,8 +2,9 @@
  * Internal hydration helpers for OpenElement.
  *
  * Extracted from open-element.ts to isolate DSD signal/event hydration logic
- * from the base class lifecycle. These functions are NOT part of the public
- * package surface and should only be consumed by OpenElement itself.
+ * from the base class lifecycle. Exposed as a package subpath so Deno can emit
+ * its types, but this is an internal implementation detail — consumers should
+ * use OpenElement instead.
  *
  * @internal
  * @module @openelement/element/open-element-hydration
@@ -26,7 +27,20 @@ import {
   parseSignalAttrSpec,
 } from '@openelement/protocol/hydration-markers';
 import { disposeRenderBindings, type VNodeCacheAccess } from './open-element-render.js';
-import type { OpenElement } from './open-element.js';
+
+/**
+ * Minimal structural stand-in for OpenElement instances.
+ *
+ * Avoids importing the real OpenElement class, which creates a circular
+ * dependency that confuses Deno's npm type-generation. Only the members
+ * actually used by the hydration helpers are declared.
+ */
+interface OpenElementLike {
+  render(): unknown;
+  shadowRoot: ShadowRoot | null;
+  signalRegistry: Map<string, Signal<unknown>>;
+  tagName: string;
+}
 
 /**
  * v0.28 (ADR-0067): Signal-native hydration.
@@ -109,7 +123,7 @@ function collectHydrationBindings(
 }
 
 export function hydrateSignals(
-  instance: OpenElement,
+  instance: OpenElementLike,
   shadowRoot: ShadowRoot,
   signalRegistry: Map<string, Signal<unknown>>,
   effectDisposers: Set<() => void>,
@@ -119,7 +133,7 @@ export function hydrateSignals(
   const lifecycle: BindingLifecycle = { disposers: effectDisposers };
   const descriptors = collectHydrationBindings(shadowRoot, signalRegistry);
   const renderer: BindingRenderer = {
-    render: (node, childLifecycle) => renderToDom(node, childLifecycle),
+    render: (node: unknown, childLifecycle: BindingLifecycle) => renderToDom(node, childLifecycle),
   };
 
   for (const desc of descriptors) {
@@ -145,7 +159,7 @@ export function hydrateSignals(
 
   // Chromium DSD layout fix: force reflow without DOM rebuild
   requestAnimationFrame(() => {
-    void (instance as HTMLElement).offsetHeight;
+    void (instance as unknown as HTMLElement).offsetHeight;
   });
 }
 
@@ -156,7 +170,7 @@ export function hydrateSignals(
  * hydrateSignals().
  */
 export function hydrateExistingDom(
-  instance: OpenElement,
+  instance: OpenElementLike,
   signalRegistry: Map<string, Signal<unknown>>,
   effectDisposers: Set<() => void>,
   eventCleanups: Array<() => void>,

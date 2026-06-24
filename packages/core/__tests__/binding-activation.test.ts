@@ -621,3 +621,80 @@ Deno.test('event without AbortSignal registers explicit dispose', () => {
   applyBindingDescriptor(desc, lifecycle);
   assertEquals(lifecycle.disposers!.size, 1);
 });
+
+Deno.test('static-prop assigns a DOM property', () => {
+  const el = document.createElement('input');
+  const desc: BindingDescriptor = { kind: 'static-prop', el, propName: 'value', value: 'hello' };
+  applyBindingDescriptor(desc, {});
+  assertEquals((el as unknown as { value: string }).value, 'hello');
+});
+
+Deno.test('signal-attr handles boolean-ish values', () => {
+  const el = document.createElement('input');
+  const s = signal<string | boolean | null>('x');
+  const desc: BindingDescriptor = { kind: 'signal-attr', el, attrNames: ['value'], signal: s };
+  applyBindingDescriptor(desc, {});
+  assertEquals(el.getAttribute('value'), 'x');
+
+  s.value = null;
+  assertEquals(el.getAttribute('value'), null);
+
+  s.value = true;
+  assertEquals(el.getAttribute('value'), '');
+
+  s.value = false;
+  assertEquals(el.getAttribute('value'), null);
+});
+
+Deno.test('signal-render logs error when renderer is missing', () => {
+  const el = document.createElement('div');
+  const s = signal({ tag: 'span', props: {}, children: ['A'] });
+  const desc: BindingDescriptor = {
+    kind: 'signal-render',
+    el,
+    signal: s as unknown as typeof s,
+    lifecycle: {},
+  };
+  const dispose = applyBindingDescriptor(desc, {});
+  assertEquals(asTestElement(el).innerHTML, '');
+  dispose();
+});
+
+Deno.test('signal-render renders Fragment array and updates', () => {
+  const el = document.createElement('div');
+  const s = signal<unknown>([
+    { tag: 'span', props: { className: 'a' }, children: ['A'] },
+    { tag: 'span', props: { className: 'b' }, children: ['B'] },
+  ]);
+  const desc: BindingDescriptor = {
+    kind: 'signal-render',
+    el,
+    signal: s as unknown as typeof s,
+    lifecycle: {},
+  };
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
+  assertEquals(asTestElement(el).innerHTML, '<span class="a">A</span><span class="b">B</span>');
+
+  s.value = { tag: 'p', props: {}, children: ['C'] };
+  assertEquals(asTestElement(el).innerHTML, '<p>C</p>');
+});
+
+Deno.test('event binding supports object options', () => {
+  const el = document.createElement('button');
+  let count = 0;
+  const handler = () => count++;
+  const lifecycle: BindingLifecycle = { disposers: new Set() };
+  const desc: BindingDescriptor = {
+    kind: 'event',
+    el,
+    type: 'click',
+    handler,
+    options: { once: true, passive: true },
+  };
+  applyBindingDescriptor(desc, lifecycle);
+  asTestElement(el).click();
+  assertEquals(count, 1);
+});
