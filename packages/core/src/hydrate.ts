@@ -9,6 +9,10 @@
 
 export * from './static.js';
 
+// Hydration scope
+export { disposeScope, HydrationScope } from './hydration-scope.ts';
+export type { HydrationScopeDebug, HydrationScopeOptions, VNodeCacheAccess } from './hydration-scope.ts';
+
 // Binding layer
 export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.js';
 export { applyBindingDescriptor } from './binding-activation.js';
