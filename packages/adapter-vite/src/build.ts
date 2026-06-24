@@ -69,11 +69,11 @@ export function buildPlugin(
       // don't affect HTML content, and injection is a post-processing step.
       ctx.markComplete(1);
 
-      ctx.markComplete(3);
       log.info('[3/3] Static site generation...');
       try {
         const { buildSSG } = await import('./cli/build-ssg.js');
         await buildSSG({}, ctx);
+        ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');
       } catch (error) {
         log.error(`[3/3] Static site generation - FAILED: ${error}`);
@@ -82,11 +82,11 @@ export function buildPlugin(
 
       // Phase 2: Client island bundle (only if islands exist)
       if (totalIslands > 0) {
-        ctx.markComplete(2);
         log.info('[2/3] Client island build...');
         try {
           const { buildClient } = await import('./cli/build-client.js');
           await buildClient(ctx);
+          ctx.markComplete(2);
           log.info('[2/3] Client island build - complete');
         } catch (error) {
           log.error(`[2/3] Client island build - FAILED: ${error}`);

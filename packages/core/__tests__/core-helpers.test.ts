@@ -196,11 +196,14 @@ Deno.test('errors - reportError uses telemetry hook', () => {
   const calls: OpenElementError[] = [];
   const hook: ErrorTelemetryHook = (e) => calls.push(e as OpenElementError);
   setErrorTelemetryHook(hook);
-  const err = new OpenElementError('telemetry test', { code: ErrorCode.UNKNOWN });
-  reportError(err);
-  assertEquals(calls.length, 1);
-  assertEquals(calls[0].message, 'telemetry test');
-  setErrorTelemetryHook(undefined as unknown as ErrorTelemetryHook);
+  try {
+    const err = new OpenElementError('telemetry test', { code: ErrorCode.UNKNOWN });
+    reportError(err);
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0].message, 'telemetry test');
+  } finally {
+    setErrorTelemetryHook(undefined as unknown as ErrorTelemetryHook);
+  }
 });
 
 Deno.test('errors - reportError falls back to console.error', () => {

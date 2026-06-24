@@ -82,9 +82,6 @@ const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 denoJson.imports['@openelement/app'] = pathToFileURL(
   join(repoRoot, 'packages', 'app', 'src', 'index.ts'),
 ).href;
-denoJson.imports['@openelement/adapter-vite'] = pathToFileURL(
-  join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts'),
-).href;
 denoJson.imports['@openelement/core'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
 ).href;

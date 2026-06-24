@@ -95,7 +95,8 @@ export function isOpenElementNotFound(error: unknown): error is OpenElementNotFo
       typeof error === 'object' &&
       error !== null &&
       (error as { name?: unknown }).name === 'OpenElementNotFound' &&
-      (error as { status?: unknown }).status === 404
+      typeof (error as { status?: unknown }).status === 'number' &&
+      (error as { status: number }).status === 404
     );
 }
 

@@ -103,7 +103,7 @@ Deno.test('OpenElementBuildContext phase ordering is enforced', () => {
   assertThrows(
     () => ctx.markComplete(3),
     Error,
-    'Phase 3 called before Phase 1 completed',
+    'Phase 3 requires Phase 1 to be completed first',
   );
 
   ctx.markComplete(1);
@@ -113,7 +113,7 @@ Deno.test('OpenElementBuildContext phase ordering is enforced', () => {
   assertThrows(
     () => ctx.markComplete(2),
     Error,
-    'Phase 2 called before Phase 3 completed',
+    'Phase 2 requires Phase 3 to be completed first',
   );
 
   ctx.markComplete(3);

@@ -25,6 +25,14 @@ const dataStack: { loaderData: unknown; actionData: unknown }[] = [];
  */
 export function __internal_pushLoaderData(data: unknown): void {
   dataStack.push({ loaderData: data, actionData: undefined });
+  // ponytail: warn if stack grows abnormally (missing pop indicates a leak).
+  // 10 is a generous upper bound for nested app-shell renders.
+  if (dataStack.length > 10) {
+    console.warn(
+      `[openelement:router] data-context stack depth ${dataStack.length} exceeds expected maximum. ` +
+        'This may indicate a missing __internal_popData() call.',
+    );
+  }
 }
 
 /**

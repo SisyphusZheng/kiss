@@ -244,8 +244,7 @@ function applySignalRender(
     const raw = unwrapSignalLike(signal.value);
     if (raw == null) return;
     if (!renderer) {
-      bindingLog.error('signal-render binding requires a renderer');
-      return;
+      throw new Error('signal-render binding requires a renderer');
     }
 
     // Render into a fresh child lifecycle so nested signal effects can be
