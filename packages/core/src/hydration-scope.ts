@@ -12,11 +12,11 @@
 
 import type { Signal } from '@openelement/protocol/signal';
 import { applyBindingDescriptor } from './binding-activation.js';
-import { collectEventBindings, hydrateEventMarkers } from './event-hydration.ts';
+import { collectEventBindings, hydrateEventMarkers } from './event-hydration.js';
 import { renderToDom } from './jsx-render-dom.js';
-import { isVNode } from './vnode.ts';
-import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.ts';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
+import { isVNode } from './vnode.js';
+import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.js';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
 import {
   DATA_SIGNAL,
   DATA_SIGNAL_ATTR,
@@ -42,9 +42,8 @@ export interface HydrationScopeDebug {
   eventCleanupCount: number;
 }
 
-/** VNode cache accessor used by render helpers. */
+/** @internal VNode cache accessor used by render helpers. */
 export interface VNodeCacheAccess {
-  get(): { vnode: unknown; valid: boolean };
   set(vnode: unknown): void;
 }
 
@@ -113,6 +112,7 @@ export class HydrationScope {
   #render?: () => unknown;
   #cachedVNode: unknown = undefined;
   #cacheValid = false;
+  #cacheAccess?: VNodeCacheAccess;
   #active = true;
 
   constructor(options: HydrationScopeOptions = {}) {
@@ -133,15 +133,17 @@ export class HydrationScope {
     return this.#eventCleanups;
   }
 
-  /** VNode cache accessor passed to render/hydration helpers. */
+  /** @internal VNode cache accessor passed to render/hydration helpers. */
   get cacheAccess(): VNodeCacheAccess {
-    return {
-      get: () => ({ vnode: this.#cachedVNode, valid: this.#cacheValid }),
-      set: (vnode: unknown) => {
-        this.#cachedVNode = vnode;
-        this.#cacheValid = true;
-      },
-    };
+    if (!this.#cacheAccess) {
+      this.#cacheAccess = {
+        set: (vnode: unknown) => {
+          this.#cachedVNode = vnode;
+          this.#cacheValid = true;
+        },
+      };
+    }
+    return this.#cacheAccess;
   }
 
   /** Resolve data-signal markers in a shadow root and activate bindings. */
@@ -216,6 +218,7 @@ export class HydrationScope {
 
     this.#cachedVNode = undefined;
     this.#cacheValid = false;
+    this.#cacheAccess = undefined;
   }
 
   /** Debug observables for testing and devtools. */
