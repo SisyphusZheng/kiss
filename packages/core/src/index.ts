@@ -155,7 +155,7 @@ export type {
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.ts';
+} from './binding-descriptor.js';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {

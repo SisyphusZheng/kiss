@@ -378,7 +378,9 @@ class TestDocument {
   }
 
   createDocumentFragment(): DocumentFragment {
-    return new TestNode() as unknown as DocumentFragment;
+    const frag = new TestNode();
+    frag.nodeType = 11;
+    return frag as unknown as DocumentFragment;
   }
 
   createElementNS(_ns: string, tag: string): Element {
@@ -697,4 +699,8 @@ Deno.test('event binding supports object options', () => {
   applyBindingDescriptor(desc, lifecycle);
   asTestElement(el).click();
   assertEquals(count, 1);
+});
+
+Deno.test('restore global document after binding-activation tests', () => {
+  (globalThis as unknown as Record<string, unknown>).document = _savedDocument;
 });

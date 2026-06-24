@@ -360,7 +360,9 @@ class TestDocument {
   }
 
   createDocumentFragment(): DocumentFragment {
-    return new TestNode() as unknown as DocumentFragment;
+    const frag = new TestNode();
+    frag.nodeType = 11;
+    return frag as unknown as DocumentFragment;
   }
 
   createElementNS(_ns: string, tag: string): Element {
@@ -500,14 +502,14 @@ Deno.test('collectPropBindings includes boolean descriptor', () => {
 Deno.test('renderToDom renders Fragment children without wrapper', () => {
   const vnode = jsx(Fragment, { children: ['a', 'b'] });
   const frag = renderToDom(vnode);
-  assertEquals(frag.nodeType, 0);
+  assertEquals(frag.nodeType, 11);
   assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 2);
 });
 
 Deno.test('renderToDom renders trusted HTML_TAG as fragment', () => {
   const vnode = jsx(HTML_TAG, { html: '<span class="x">y</span>', children: [] });
   const frag = renderToDom(vnode);
-  assertEquals(frag.nodeType, 0);
+  assertEquals(frag.nodeType, 11);
   assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 1);
 });
 
@@ -553,4 +555,8 @@ Deno.test('renderToDom handles component function errors gracefully', () => {
   const vnode = jsx(Bad as unknown as string, { children: [] });
   const node = renderToDom(vnode);
   assertEquals(node.textContent, '');
+});
+
+Deno.test('restore global document after jsx-render-dom tests', () => {
+  (globalThis as unknown as Record<string, unknown>).document = _savedDocument;
 });

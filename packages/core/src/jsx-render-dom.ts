@@ -10,18 +10,18 @@
  * @module @openelement/core/jsx-render-dom
  */
 
-import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
+import { isComponentCtor, isComponentFn, isVNode } from './vnode.js';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import type { Signal } from '@openelement/protocol/signal';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.js';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
-import { eventTypeFromProp } from './event-hydration.ts';
-import { trustRenderHtml } from './security.ts';
+import { eventTypeFromProp } from './event-hydration.js';
+import { trustRenderHtml } from './security.js';
 import { effect } from '@openelement/signal';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import { applyBindingDescriptor } from './binding-activation.ts';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
+import { applyBindingDescriptor } from './binding-activation.js';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
 import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
