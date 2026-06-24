@@ -268,7 +268,9 @@ const _savedDocument = (globalThis as unknown as Record<string, unknown>).docume
 
 // ponytail: mock rAF so hydration-scope reflow tick runs synchronously in tests.
 let rafCallbacks: FrameRequestCallback[] = [];
-(globalThis as unknown as Record<string, unknown>).requestAnimationFrame = (cb: FrameRequestCallback) => {
+(globalThis as unknown as Record<string, unknown>).requestAnimationFrame = (
+  cb: FrameRequestCallback,
+) => {
   rafCallbacks.push(cb);
   return rafCallbacks.length;
 };

@@ -57,7 +57,12 @@ export function renderIntoLightDom(
 
   if (result != null) {
     self.appendChild(
-      renderToDom(result, { disposers: scope._effectDisposers }, undefined, instance.signalRegistry),
+      renderToDom(
+        result,
+        { disposers: scope._effectDisposers },
+        undefined,
+        instance.signalRegistry,
+      ),
     );
   }
 }
@@ -85,7 +90,12 @@ export function renderIntoShadowRoot(
       root.removeChild(root.firstChild);
     }
     root.appendChild(
-      renderToDom(result, { disposers: scope._effectDisposers }, undefined, instance.signalRegistry),
+      renderToDom(
+        result,
+        { disposers: scope._effectDisposers },
+        undefined,
+        instance.signalRegistry,
+      ),
     );
   }
 }
@@ -129,7 +139,12 @@ export function renderErrorFallback(
       target.removeChild(target.firstChild);
     }
     target.appendChild(
-      renderToDom(fallback, { disposers: scope._effectDisposers }, undefined, instance.signalRegistry),
+      renderToDom(
+        fallback,
+        { disposers: scope._effectDisposers },
+        undefined,
+        instance.signalRegistry,
+      ),
     );
   }
 }
