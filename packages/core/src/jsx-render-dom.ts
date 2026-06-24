@@ -329,9 +329,7 @@ function renderNode(
     const marker = document.createComment('show');
     descriptors.push(bindConditional(
       marker as ChildNode,
-      // Narrowing cast: VNode props are typed `unknown`; applyConditional
-      // coerces via Boolean/ifSignalLike at runtime regardless.
-      whenSig as Signal<boolean> | boolean,
+      whenSig,
       () => truthy,
       () => falsy,
     ));
@@ -345,9 +343,7 @@ function renderNode(
 
     const marker = document.createComment('for');
     descriptors.push(
-      // Narrowing cast: VNode props are typed `unknown`; applyList coerces
-      // via Array.isArray/ifSignalLike at runtime.
-      bindList(marker as ChildNode, eachSig as Signal<unknown[]> | unknown[], renderFn),
+      bindList(marker as ChildNode, eachSig, renderFn),
     );
     return marker;
   }

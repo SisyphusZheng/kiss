@@ -95,7 +95,7 @@ export interface SignalRenderBindingDescriptor {
 export interface ConditionalBindingDescriptor {
   kind: 'conditional';
   anchor: ChildNode;
-  condition: Signal<boolean> | boolean;
+  condition: Signal<unknown> | unknown;
   renderTruthy: () => unknown;
   renderFalsy?: () => unknown;
 }
@@ -103,7 +103,7 @@ export interface ConditionalBindingDescriptor {
 export interface ListBindingDescriptor {
   kind: 'list';
   anchor: ChildNode;
-  items: Signal<unknown[]> | unknown[];
+  items: Signal<unknown> | unknown;
   renderItem: (item: unknown, index: number) => unknown;
 }
 
@@ -198,7 +198,7 @@ export function bindRender(
 /** Create a conditional ({@link Show}) binding descriptor. */
 export function bindConditional(
   anchor: ChildNode,
-  condition: Signal<boolean> | boolean,
+  condition: Signal<unknown> | unknown,
   renderTruthy: () => unknown,
   renderFalsy?: () => unknown,
 ): ConditionalBindingDescriptor {
@@ -208,7 +208,7 @@ export function bindConditional(
 /** Create a list ({@link For}) binding descriptor. */
 export function bindList(
   anchor: ChildNode,
-  items: Signal<unknown[]> | unknown[],
+  items: Signal<unknown> | unknown,
   renderItem: (item: unknown, index: number) => unknown,
 ): ListBindingDescriptor {
   return { kind: 'list', anchor, items, renderItem };
