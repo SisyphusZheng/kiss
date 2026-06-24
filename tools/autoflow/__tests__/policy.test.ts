@@ -158,7 +158,7 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
     assert(
       commands.some(([, command]) => command.includes('tools/consumer-smoke.ts --version 0.39.1')),
     );
-    assert(commands.some(([, command]) => command.includes('gh release create v0.39.1')));
+    assert(commands.some(([name]) => name === 'create GitHub release'));
   } finally {
     if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
     else Deno.env.set('NPM_TOKEN', originalNpmToken);

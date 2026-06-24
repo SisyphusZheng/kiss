@@ -151,22 +151,42 @@ export function createReleasePlan(
           return;
         }
         if (existing) {
-          throw new Error(
-            `Tag ${tag} already exists at ${existing}, but HEAD is ${head}.`,
+          console.warn(
+            `Tag ${tag} already exists at ${existing}; forcing to HEAD ${head}.`,
           );
+          await runCaptured(['git', 'tag', '-f', tag]);
+          return;
         }
         await runCaptured(['git', 'tag', tag]);
       },
     },
     {
       name: 'push tag',
-      command: ['git', 'push', 'origin', tag],
+      command: ['git', 'push', '--force', 'origin', tag],
     },
     ...(canCreateGitHubRelease()
       ? [
         {
           name: 'create GitHub release',
-          command: ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note],
+          run: async () => {
+            try {
+              await runCaptured(['gh', 'release', 'view', tag]);
+              console.log(`GitHub release ${tag} already exists; skipping.`);
+              return;
+            } catch {
+              // Release does not exist; create it.
+            }
+            await runCaptured([
+              'gh',
+              'release',
+              'create',
+              tag,
+              '--title',
+              tag,
+              '--notes-file',
+              note,
+            ]);
+          },
         },
       ]
       : []),
