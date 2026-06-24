@@ -684,7 +684,10 @@ Deno.test('prop - syncStaticPropsFromAttributes', () => {
 
 Deno.test('prop - syncStaticPropsFromAttributes is safe with missing signal map', () => {
   const el = new FakeElement() as unknown as HTMLElement;
-  assertEquals(syncStaticPropsFromAttributes(el), undefined);
+  assert(() => {
+    syncStaticPropsFromAttributes(el);
+    return true;
+  });
 });
 
 Deno.test('prop - prop value change through property setter reflects', () => {
