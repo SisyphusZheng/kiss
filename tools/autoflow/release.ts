@@ -138,7 +138,25 @@ export function createReleasePlan(
   const tagSteps: ReleaseCommandStep[] = [
     {
       name: 'tag release',
-      command: ['git', 'tag', tag],
+      run: async () => {
+        const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
+        let existing: string | undefined;
+        try {
+          existing = (await runCaptured(['git', 'rev-parse', '--verify', tag])).trim();
+        } catch {
+          // Tag does not exist yet.
+        }
+        if (existing === head) {
+          console.log(`Tag ${tag} already exists at HEAD; skipping.`);
+          return;
+        }
+        if (existing) {
+          throw new Error(
+            `Tag ${tag} already exists at ${existing}, but HEAD is ${head}.`,
+          );
+        }
+        await runCaptured(['git', 'tag', tag]);
+      },
     },
     {
       name: 'push tag',
