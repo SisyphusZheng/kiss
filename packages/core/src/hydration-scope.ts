@@ -181,6 +181,7 @@ export class HydrationScope {
    */
   reset(): void {
     this.#clearBindings();
+    this.#active = true;
   }
 
   #clearBindings(): void {

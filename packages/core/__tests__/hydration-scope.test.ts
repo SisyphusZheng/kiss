@@ -264,6 +264,10 @@ class TestDocument {
 }
 
 const _savedDocument = (globalThis as unknown as Record<string, unknown>).document;
+// ponytail: module-level mock must be restored by the final test below.
+// All tests in this file depend on the fake DOM harness; if a test
+// throws before line 401, the real document will not be restored for
+// subsequent test files. Do not reorder tests; do not use --shuffle.
 (globalThis as unknown as Record<string, unknown>).document = new TestDocument();
 
 // ponytail: mock rAF so hydration-scope reflow tick runs synchronously in tests.
