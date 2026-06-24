@@ -865,20 +865,42 @@ Non-goals:
 
 A GoToSocial/Mastodon-compatible desktop client using openElement + Tauri 2 is
 an **explicit follow-up project**, not part of the core framework release train.
-It may begin **no earlier than v0.45.0**, when session/auth recipes and data
-primitives are available. v0.41.0-alpha.5's SPA mode and v0.45.0's auth/data
-stack are both prerequisites.
 
-Minimum readiness checklist before starting the desktop client:
+There are two entry points:
 
-- [ ] v0.41.0 stable released (npm distribution + WC interop + SPA mode).
-- [ ] v0.41.0-alpha.5 SPA mode merged and smoke-tested in Tauri 2.
+1. **Incubation / PoC entry point (no earlier than v0.41.0 stable):**
+   - UI built with `@openelement/element` and `@openelement/ui`.
+   - State managed with signals.
+   - SPA navigation can be bootstrapped with a lightweight custom router before
+     v0.41.0-alpha.5 lands; migrate to the official SPA mode once alpha.5 is
+     released.
+   - Mastodon API client, OAuth, cache, and forms are hand-written behind small
+     internal abstractions so they can be replaced by `@openelement/app/data`,
+     `@openelement/app/forms`, and `@openelement/app/session` as those ship.
+   - Goal: prove the stack, build momentum, and surface real requirements for
+     v0.42.0-0.45.0 primitives.
+
+2. **Product-grade entry point (no earlier than v0.45.0):**
+   - Use openElement's loader/action/cache/session/auth primitives.
+   - Replace hand-written glue with framework-provided contracts.
+   - Target long-term maintenance and distribution.
+
+Minimum readiness checklist before starting the **incubation** project:
+
+- [ ] v0.41.0 stable released (npm distribution + WC interop).
+- [ ] v0.41.0-alpha.5 SPA mode available, OR a documented short-term SPA
+      bootstrap pattern agreed on.
+- [ ] Tauri 2 project scaffold can import and render openElement components.
+
+Minimum readiness checklist before declaring the desktop client **product-grade**:
+
 - [ ] v0.42.0 server primitives available (for local dev server / OAuth callback).
 - [ ] v0.43.0 data + cache primitives available (timeline caching, offline queue).
 - [ ] v0.44.0 forms + mutations available (compose, reply, favorite, boost).
 - [ ] v0.45.0 session + auth recipes available (Mastodon OAuth flow).
 
-Until all prerequisites are met, the desktop client remains in design-only mode.
+Until the incubation prerequisites are met, the desktop client remains in
+design-only mode.
 
 ## Explicit Non-Goals
 
