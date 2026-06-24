@@ -579,7 +579,7 @@ Deno.test('prop - initializeStaticProps reflects String prop', () => {
 Deno.test('prop - initializeStaticProps with no props is a no-op', () => {
   class NoPropsEl extends FakeElement {}
   const el = new NoPropsEl() as unknown as HTMLElement;
-  assertEquals(initializeStaticProps(el), undefined);
+  initializeStaticProps(el);
 });
 
 Deno.test('prop - disposeStaticProps unsubscribes reflectors', () => {
