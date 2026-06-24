@@ -11,6 +11,7 @@
  */
 
 import type { VNode } from '@openelement/protocol/vnode';
+import type { Signal } from '@openelement/protocol/signal';
 import { renderToDom } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
@@ -27,7 +28,7 @@ export interface OpenElementLike {
   render(): unknown;
   shadowRoot: ShadowRoot | null;
   createRenderRoot(): void;
-  signalRegistry: Map<string, import('@openelement/protocol/signal').Signal<unknown>>;
+  signalRegistry: Map<string, Signal<unknown>>;
   tagName: string;
 }
 
@@ -48,7 +49,7 @@ export function renderIntoLightDom(
   scope.reset();
 
   const result = instance.render();
-  scope.cacheAccess.set(result);
+  scope.setCachedVNode(result);
 
   const self = instance as unknown as HTMLElement;
   while (self.firstChild) {
@@ -86,8 +87,7 @@ export function renderIntoShadowRoot(
   scope.reset();
 
   const result = instance.render();
-  scope.cacheAccess.set(result);
-
+  scope.setCachedVNode(result);
   while (root.firstChild) {
     root.removeChild(root.firstChild);
   }

@@ -23,13 +23,13 @@ import type { OpenElementLike } from './open-element-render.js';
  *
  * Delegates to the HydrationScope that owns this element's lifecycle state.
  */
-export function hydrateSignals(
+function hydrateSignals(
   instance: OpenElementLike,
   shadowRoot: ShadowRoot,
   scope: HydrationScope,
 ): void {
   // Ensure the cache holds the current VNode before event-marker hydration.
-  scope.cacheAccess.set(instance.render());
+  scope.setCachedVNode(instance.render());
   scope.hydrate(shadowRoot);
 }
 

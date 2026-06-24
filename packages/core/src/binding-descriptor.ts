@@ -190,9 +190,9 @@ export function bindEvent(
 export function bindRender(
   element: Element,
   signal: Signal<unknown>,
-  lifecycle?: BindingLifecycle,
+  lifecycle: BindingLifecycle,
 ): SignalRenderBindingDescriptor {
-  return { kind: 'signal-render', el: element, signal, lifecycle: lifecycle ?? {} };
+  return { kind: 'signal-render', el: element, signal, lifecycle };
 }
 
 /** Create a conditional ({@link Show}) binding descriptor. */

@@ -42,11 +42,6 @@ export interface HydrationScopeDebug {
   eventCleanupCount: number;
 }
 
-/** VNode cache accessor used by render helpers. */
-interface VNodeCacheAccess {
-  set(vnode: unknown): void;
-}
-
 /** Collect binding descriptors from data-signal markers in a shadow root. */
 function collectHydrationBindings(
   shadowRoot: ShadowRoot,
@@ -113,7 +108,6 @@ export class HydrationScope {
   #render?: () => unknown;
   #cachedVNode: unknown = undefined;
   #cacheValid = false;
-  #cacheAccess?: VNodeCacheAccess;
   #active = true;
 
   constructor(options: HydrationScopeOptions = {}) {
@@ -129,17 +123,10 @@ export class HydrationScope {
     return { disposers: this.#effectDisposers };
   }
 
-  /** @internal VNode cache accessor passed to render/hydration helpers. */
-  get cacheAccess(): VNodeCacheAccess {
-    if (!this.#cacheAccess) {
-      this.#cacheAccess = {
-        set: (vnode: unknown) => {
-          this.#cachedVNode = vnode;
-          this.#cacheValid = true;
-        },
-      };
-    }
-    return this.#cacheAccess;
+  /** Set the cached VNode for event-marker hydration. */
+  setCachedVNode(vnode: unknown): void {
+    this.#cachedVNode = vnode;
+    this.#cacheValid = true;
   }
 
   /** Resolve data-signal markers in a shadow root and activate bindings. */
@@ -213,7 +200,6 @@ export class HydrationScope {
 
     this.#cachedVNode = undefined;
     this.#cacheValid = false;
-    this.#cacheAccess = undefined;
   }
 
   /** Debug observables for testing and devtools. */
