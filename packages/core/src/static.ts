@@ -36,6 +36,7 @@ export {
 export type { SafeHtml, UnsafeHtml } from '@openelement/protocol/framework';
 
 // Security / errors / logging
+/** @internal — use @openelement/core/security subpath */
 export { DANGEROUS_KEYS } from './security.js';
 export {
   ERROR_PREFIX,

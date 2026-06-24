@@ -39,7 +39,7 @@ interface Semver {
 }
 
 export function parseSemver(version: string): Semver {
-  const match = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-.+)?$/);
   if (!match) throw new Error(`Invalid semver version: ${version}`);
   return {
     major: Number(match[1]),
