@@ -45,6 +45,6 @@ export function hydrateExistingDom(
 ): void {
   if (!instance.shadowRoot) return;
 
-  scope.dispose();
+  scope.reset();
   hydrateSignals(instance, instance.shadowRoot, scope);
 }

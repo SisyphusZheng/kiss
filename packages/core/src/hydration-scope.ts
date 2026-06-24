@@ -199,6 +199,21 @@ export class HydrationScope {
     if (!this.#active) return;
     this.#active = false;
 
+    this.#clearBindings();
+  }
+
+  /**
+   * Clear effects and event listeners without deactivating the scope.
+   *
+   * Used before re-rendering or re-hydrating an existing shadow root so the
+   * scope can accept a fresh set of bindings.
+   */
+  reset(): void {
+    if (!this.#active) return;
+    this.#clearBindings();
+  }
+
+  #clearBindings(): void {
     for (const d of this.#effectDisposers) {
       try {
         d();
@@ -236,9 +251,4 @@ export class HydrationScope {
     }
     return undefined;
   }
-}
-
-/** Dispose helper used by OpenElement disconnectedCallback. */
-export function disposeScope(scope: HydrationScope): void {
-  scope.dispose();
 }

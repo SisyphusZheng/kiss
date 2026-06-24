@@ -36,22 +36,6 @@ interface OpenElementLikeConstructor {
 }
 
 /**
- * Dispose all reactive effects and declarative event listeners created by
- * previous renders or hydration passes.
- *
- * Returns a fresh, empty event-cleanup array so callers can replace their
- * existing bag and avoid retaining stale closures.
- */
-export function disposeRenderBindings(scope: HydrationScope): void {
-  const effectDisposers = scope._effectDisposers;
-  const eventCleanups = scope._eventCleanups;
-  for (const d of effectDisposers) d();
-  effectDisposers.clear();
-  for (const f of eventCleanups) f();
-  eventCleanups.length = 0;
-}
-
-/**
  * CSR render path for light-DOM components.
  *
  * Clears previous bindings, calls render(), caches the result, and mounts the
@@ -61,7 +45,7 @@ export function renderIntoLightDom(
   instance: OpenElementLike,
   scope: HydrationScope,
 ): void {
-  disposeRenderBindings(scope);
+  scope.reset();
 
   const result = instance.render();
   scope.cacheAccess.set(result);
@@ -91,7 +75,7 @@ export function renderIntoShadowRoot(
   const root = instance.shadowRoot;
   if (!root) return;
 
-  disposeRenderBindings(scope);
+  scope.reset();
 
   const result = instance.render();
   scope.cacheAccess.set(result);
@@ -138,7 +122,7 @@ export function renderErrorFallback(
     fallback = null;
   }
 
-  disposeRenderBindings(scope);
+  scope.reset();
 
   if (fallback != null) {
     while (target.firstChild) {

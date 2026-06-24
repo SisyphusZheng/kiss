@@ -60,7 +60,6 @@ import { signal } from '@openelement/signal';
 import { createLogger } from '@openelement/core/logger';
 import { HydrationScope } from '@openelement/core/hydrate';
 import {
-  disposeRenderBindings,
   renderErrorFallback,
   renderIntoLightDom,
   renderIntoShadowRoot,
@@ -154,7 +153,6 @@ export class OpenElement extends _Base {
    */
   #hydrationScope = new HydrationScope({
     signalRegistry: this.signalRegistry,
-    render: () => this.render(),
   });
 
   /** AbortController tied to element lifecycle. Aborted in disconnectedCallback. */
@@ -443,7 +441,7 @@ export class OpenElement extends _Base {
    * Aborts all hydration event listeners for cleanup.
    */
   disconnectedCallback(): void {
-    disposeRenderBindings(this.#hydrationScope);
+    this.#hydrationScope.dispose();
     disposeStaticProps(this);
     this.#lifecycleAbort?.abort();
     this.#lifecycleAbort = undefined;

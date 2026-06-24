@@ -334,6 +334,35 @@ Deno.test('HydrationScope dispose clears signal effects', () => {
   assertEquals(el.textContent, 'a');
 });
 
+Deno.test('HydrationScope reset clears bindings without deactivating', () => {
+  resetDomMocks();
+  const s = signal('a');
+  const registry = new Map([['msg', s as import('@openelement/protocol/signal').Signal<unknown>]]);
+
+  const host = new TestElement('my-el');
+  const shadow = new TestShadowRoot(host);
+  const el = new TestElement('span');
+  el.setAttribute('data-signal', 'msg');
+  shadow.appendChild(el);
+
+  const scope = new HydrationScope({ signalRegistry: registry });
+  scope.hydrate(shadow as unknown as ShadowRoot);
+  flushRaf();
+
+  assertEquals(el.textContent, 'a');
+  scope.reset();
+  assert(scope.debug.isActive, 'scope should stay active after reset');
+  assertEquals(scope.debug.effectCount, 0, 'effects should be cleared after reset');
+
+  // Re-hydrate with the same scope; new effect should update the DOM again.
+  scope.hydrate(shadow as unknown as ShadowRoot);
+  flushRaf();
+  s.value = 'b';
+  assertEquals(el.textContent, 'b');
+
+  scope.dispose();
+});
+
 Deno.test('HydrationScope hydrates event markers without OpenElement', () => {
   resetDomMocks();
   let clicks = 0;
