@@ -37,9 +37,9 @@ export class GuideGuidePage extends OpenElement {
         </p>
         <p class='subtitle'>
           The v0.40 line hardened release infrastructure and CI. The current
-          active line is v0.41.0-alpha.1, a cleanup-train patch that removes the legacy
-          Linear UI compatibility surface and tightens type safety before the
-          v0.41.0 npm-first distribution work (JSR secondary).
+          active line is v0.41.0-alpha.2, a signal-DOM deepening release that extracts
+          HydrationScope, splits the renderer from the activation layer, and
+          introduces BindingDescriptor factories.
         </p>
         <div class='guide-grid'>
           <open-card>
