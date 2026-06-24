@@ -24,9 +24,10 @@ const noop: BindingDispose = () => {};
 
 /** Register a dispose function with the lifecycle. */
 export function registerDispose(dispose: BindingDispose, lifecycle: BindingLifecycle): void {
-  lifecycle.disposers?.add(dispose);
   if (lifecycle.signal) {
     lifecycle.signal.addEventListener('abort', dispose, { once: true });
+  } else {
+    lifecycle.disposers?.add(dispose);
   }
 }
 

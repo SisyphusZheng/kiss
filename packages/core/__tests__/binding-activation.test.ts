@@ -590,13 +590,20 @@ Deno.test('ref invokes callback with element', () => {
 
 // ─── Lifecycle / dispose ─────────────────────────────────────────────────────
 
-Deno.test('dispose is registered in lifecycle.disposers', () => {
+Deno.test('dispose is registered via AbortSignal when present, Set when not', () => {
+  // With signal: disposer goes to AbortSignal listener, not the Set
   const el = document.createElement('div');
   const s = signal('x');
-  const lifecycle = createLifecycle();
-  const desc: BindingDescriptor = bindText(el, s);
-  applyBindingDescriptor(desc, lifecycle);
-  assertEquals(lifecycle.disposers!.size, 1);
+  const lifecycle1 = createLifecycle();
+  const desc1: BindingDescriptor = bindText(el, s);
+  applyBindingDescriptor(desc1, lifecycle1);
+  assertEquals(lifecycle1.disposers!.size, 0);
+
+  // Without signal: disposer goes to the Set
+  const lifecycle2: BindingLifecycle = { disposers: new Set() };
+  const desc2: BindingDescriptor = bindText(el, s);
+  applyBindingDescriptor(desc2, lifecycle2);
+  assertEquals(lifecycle2.disposers!.size, 1);
 });
 
 Deno.test('AbortSignal triggers dispose', () => {

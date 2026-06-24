@@ -189,10 +189,10 @@ export class HydrationScope {
    * Clear effects and event listeners without deactivating the scope.
    *
    * Used before re-rendering or re-hydrating an existing shadow root so the
-   * scope can accept a fresh set of bindings.
+   * scope can accept a fresh set of bindings. Does not gate on #active so
+   * that a disconnected-then-reconnected element can be re-hydrated.
    */
   reset(): void {
-    if (!this.#active) return;
     this.#clearBindings();
   }
 

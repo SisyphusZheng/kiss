@@ -150,10 +150,18 @@ export class OpenElement extends _Base {
    * fields. The scope is owned by the element and disposed on disconnect.
    * It is exposed to @openelement/core/hydrate so the same lifecycle model
    * can be reused by third-party framework runtimes later.
+   *
+   * Initialized after signalRegistry in the constructor to avoid field-order
+   * dependency on class field initializer sequencing.
    */
-  #hydrationScope = new HydrationScope({
-    signalRegistry: this.signalRegistry,
-  });
+  #hydrationScope!: HydrationScope;
+
+  constructor() {
+    super();
+    this.#hydrationScope = new HydrationScope({
+      signalRegistry: this.signalRegistry,
+    });
+  }
 
   /** AbortController tied to element lifecycle. Aborted in disconnectedCallback. */
   #lifecycleAbort?: AbortController;
