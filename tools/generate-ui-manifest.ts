@@ -99,7 +99,7 @@ function inferAttributeType(name: string): string {
 
 function parseObservedAttributes(text: string): string[] {
   // Greedy match to the last ] closes the array, safe for single-line and multi-line arrays.
-  const match = text.match(/static\s+(?:override\s+)?observedAttributes\s*=\s*\[([\s\S]*)\]/);
+  const match = text.match(/static\s+(?:override\s+)?observedAttributes\s*=\s*\[([\s\S]*?)\]/);
   if (!match) return [];
   return match[1]
     .split(/,\s*/)
