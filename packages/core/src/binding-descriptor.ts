@@ -95,7 +95,7 @@ export interface SignalRenderBindingDescriptor {
 export interface ConditionalBindingDescriptor {
   kind: 'conditional';
   anchor: ChildNode;
-  condition: Signal<unknown> | unknown;
+  condition: Signal<boolean> | boolean;
   renderTruthy: () => unknown;
   renderFalsy?: () => unknown;
 }
@@ -103,9 +103,8 @@ export interface ConditionalBindingDescriptor {
 export interface ListBindingDescriptor {
   kind: 'list';
   anchor: ChildNode;
-  items: Signal<unknown> | unknown;
+  items: Signal<unknown[]> | unknown[];
   renderItem: (item: unknown, index: number) => unknown;
-  keyFn?: (item: unknown, index: number) => unknown;
 }
 
 // ─── Event / ref descriptors ──────────────────────────────────────────────────
@@ -168,6 +167,15 @@ export function bindClass(
   return { kind: 'signal-class', el: element, className, signal };
 }
 
+/** Create a signal-html binding descriptor. */
+export function bindHtml(
+  element: Element,
+  signal: Signal<unknown>,
+  trusted: boolean,
+): SignalHtmlBindingDescriptor {
+  return { kind: 'signal-html', el: element, signal, trusted };
+}
+
 /** Create an event binding descriptor. */
 export function bindEvent(
   element: EventTarget,
@@ -190,7 +198,7 @@ export function bindRender(
 /** Create a conditional ({@link Show}) binding descriptor. */
 export function bindConditional(
   anchor: ChildNode,
-  condition: Signal<unknown> | unknown,
+  condition: Signal<boolean> | boolean,
   renderTruthy: () => unknown,
   renderFalsy?: () => unknown,
 ): ConditionalBindingDescriptor {
@@ -200,11 +208,10 @@ export function bindConditional(
 /** Create a list ({@link For}) binding descriptor. */
 export function bindList(
   anchor: ChildNode,
-  items: Signal<unknown> | unknown,
+  items: Signal<unknown[]> | unknown[],
   renderItem: (item: unknown, index: number) => unknown,
-  keyFn?: (item: unknown, index: number) => unknown,
 ): ListBindingDescriptor {
-  return { kind: 'list', anchor, items, renderItem, keyFn };
+  return { kind: 'list', anchor, items, renderItem };
 }
 
 /** Create a static attribute binding descriptor. */

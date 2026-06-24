@@ -4,6 +4,7 @@
 
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
+import type { Signal } from '@openelement/protocol/signal';
 import type {
   BindingDescriptor,
   BindingLifecycle,
@@ -802,7 +803,7 @@ Deno.test('list binding ignores non-array items', () => {
   };
   const desc: BindingDescriptor = bindList(
     anchor as ChildNode,
-    items,
+    items as unknown as Signal<unknown[]>,
     (item: unknown) => jsx('span', { children: item as string }),
   );
   applyBindingDescriptor(desc, {}, renderer);

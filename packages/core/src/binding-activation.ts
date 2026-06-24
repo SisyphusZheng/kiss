@@ -40,6 +40,9 @@ const registry = new Map<string, ApplyFn>();
 
 /** Register a custom binding kind in the activation registry. */
 export function registerBindingKind(kind: string, applyFn: ApplyFn): void {
+  if (registry.has(kind)) {
+    bindingLog.warn(`Overwriting registered binding kind: ${kind}`);
+  }
   registry.set(kind, applyFn);
 }
 
@@ -58,7 +61,6 @@ export function applyBindingDescriptor(
 
 /** Commit all binding descriptors against the activation layer in document order. */
 export function commitBindings(
-  _root: Node,
   descriptors: BindingDescriptor[],
   lifecycle: BindingLifecycle,
   renderer?: BindingRenderer,

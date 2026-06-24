@@ -27,6 +27,7 @@ import {
   bindClass,
   bindConditional,
   bindEvent,
+  bindHtml,
   bindList,
   bindRef,
   bindStaticAttr,
@@ -158,12 +159,7 @@ export function collectPropBindings(
     // innerHTML maps to signal-html / static text injection.
     if (key === 'innerHTML') {
       if (isSignalLike(value)) {
-        descriptors.push({
-          kind: 'signal-html',
-          el,
-          signal: value as Signal<unknown>,
-          trusted: trustedHtml,
-        });
+        descriptors.push(bindHtml(el, value as Signal<unknown>, trustedHtml));
       } else {
         const resolved = String(unwrapSignalLike(value));
         if (trustedHtml) {
@@ -239,7 +235,7 @@ export function applyProps(
   renderer?: BindingRenderer,
 ): void {
   const descriptors = collectPropBindings(el, props, signalRegistry);
-  commitBindings(el, descriptors, lifecycle ?? {}, renderer);
+  commitBindings(descriptors, lifecycle ?? {}, renderer);
 }
 
 /**
@@ -269,7 +265,7 @@ export function renderToDom(
 
   const descriptors: BindingDescriptor[] = [];
   const root = renderNode(node, fullLifecycle, signalRegistry, descriptors);
-  commitBindings(root, descriptors, fullLifecycle, renderer);
+  commitBindings(descriptors, fullLifecycle, renderer);
   return root;
 }
 
@@ -333,7 +329,7 @@ function renderNode(
     const marker = document.createComment('show');
     descriptors.push(bindConditional(
       marker as ChildNode,
-      whenSig,
+      whenSig as Signal<boolean> | boolean,
       () => truthy,
       () => falsy,
     ));
@@ -346,7 +342,9 @@ function renderNode(
       ((() => document.createTextNode('') as unknown) as RenderFn);
 
     const marker = document.createComment('for');
-    descriptors.push(bindList(marker as ChildNode, eachSig, renderFn));
+    descriptors.push(
+      bindList(marker as ChildNode, eachSig as Signal<unknown[]> | unknown[], renderFn),
+    );
     return marker;
   }
 
