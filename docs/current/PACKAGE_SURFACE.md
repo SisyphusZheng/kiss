@@ -1,6 +1,6 @@
 # Package Surface Inventory
 
-This is the v0.41.0-alpha.1 10-package product-line truth table.
+This is the v0.41.0-alpha.2 11-package product-line truth table.
 
 <!-- 11-package -->
 
@@ -12,7 +12,7 @@ ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
 ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-10 package
 graph collapse.
 
-## Current 10-package surface
+## Current 11-package surface
 
 | Package                     | Class          | v0.40.4 decision                                                                              |
 | --------------------------- | -------------- | --------------------------------------------------------------------------------------------- |

@@ -2,7 +2,7 @@
 
 > Version: 4.0.0
 > Date: 2026-06-19
-> Product line: openElement v0.41.0-alpha.1
+> Product line: openElement v0.41.0-alpha.2
 > Direction: Monet Aperture Editorial Lab
 > Status: Required implementation spec for `www`
 
