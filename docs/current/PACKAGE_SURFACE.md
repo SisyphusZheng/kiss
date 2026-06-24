@@ -9,7 +9,7 @@ openElement = Elements + UI + Framework + Protocols
 ```
 
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
-ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-10 package
+ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-11 package
 graph collapse.
 
 ## Current 11-package surface
