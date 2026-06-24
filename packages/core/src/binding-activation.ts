@@ -55,6 +55,10 @@ export function applyBindingDescriptor(
       return applySignalHtml(desc, lifecycle);
     case 'signal-render':
       return applySignalRender(desc, lifecycle, renderer);
+    case 'conditional':
+      return applyConditional(desc, lifecycle, renderer);
+    case 'list':
+      return applyList(desc, lifecycle, renderer);
     case 'event':
       return applyEvent(desc, lifecycle);
     case 'ref':
@@ -65,6 +69,18 @@ export function applyBindingDescriptor(
       void _exhaustive;
       return noop;
     }
+  }
+}
+
+/** Commit all binding descriptors against the activation layer in document order. */
+export function commitBindings(
+  _root: Node,
+  descriptors: BindingDescriptor[],
+  lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
+): void {
+  for (const desc of descriptors) {
+    applyBindingDescriptor(desc, lifecycle, renderer);
   }
 }
 
@@ -281,6 +297,166 @@ function applySignalRender(
       render();
     } catch (err) {
       bindingLog.error(`signal-render binding failed: ${formatError(err)}`);
+    }
+  });
+
+  const fullDispose: BindingDispose = () => {
+    clearRender();
+    dispose();
+  };
+  registerDispose(fullDispose, lifecycle);
+  return fullDispose;
+}
+
+function applyConditional(
+  desc: Extract<BindingDescriptor, { kind: 'conditional' }>,
+  lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
+): BindingDispose {
+  const { anchor, condition, renderTruthy, renderFalsy } = desc;
+
+  let currentChildren: ChildNode[] = [];
+  const currentNestedDisposers = new Set<() => void>();
+
+  const clearRender = () => {
+    for (const dispose of currentNestedDisposers) {
+      try {
+        dispose();
+      } catch (err) {
+        bindingLog.error(`conditional nested dispose failed: ${formatError(err)}`);
+      }
+    }
+    currentNestedDisposers.clear();
+    for (const child of currentChildren) {
+      child.remove();
+    }
+    currentChildren = [];
+  };
+
+  const render = () => {
+    clearRender();
+    const show = Boolean(unwrapSignalLike(condition));
+    const target = show ? renderTruthy() : renderFalsy?.();
+    if (target == null) return;
+    if (!renderer) {
+      throw new Error('conditional binding requires a renderer');
+    }
+
+    const renderLifecycle: BindingLifecycle = {
+      disposers: currentNestedDisposers,
+    };
+    if (lifecycle.signal) {
+      renderLifecycle.signal = lifecycle.signal;
+    }
+
+    const node = Array.isArray(target) ? { tag: Fragment, props: {}, children: target } : target;
+    const result = renderer.render(node, renderLifecycle);
+
+    if (result.nodeType === 11) {
+      const fragChildren: ChildNode[] = [];
+      while (result.firstChild) {
+        fragChildren.push(result.firstChild as ChildNode);
+      }
+      const ref = anchor.nextSibling;
+      for (let i = fragChildren.length - 1; i >= 0; i--) {
+        anchor.parentNode?.insertBefore(fragChildren[i], ref);
+      }
+      currentChildren = fragChildren;
+    } else {
+      const child = result as ChildNode;
+      anchor.parentNode?.insertBefore(child, anchor.nextSibling);
+      currentChildren = [child];
+    }
+  };
+
+  const dispose = effect(() => {
+    try {
+      render();
+    } catch (err) {
+      bindingLog.error(`conditional binding failed: ${formatError(err)}`);
+    }
+  });
+
+  const fullDispose: BindingDispose = () => {
+    clearRender();
+    dispose();
+  };
+  registerDispose(fullDispose, lifecycle);
+  return fullDispose;
+}
+
+function applyList(
+  desc: Extract<BindingDescriptor, { kind: 'list' }>,
+  lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
+): BindingDispose {
+  const { anchor, items, renderItem } = desc;
+
+  let anchors: ChildNode[] = [];
+  const currentNestedDisposers = new Set<() => void>();
+
+  const clearRender = () => {
+    for (const dispose of currentNestedDisposers) {
+      try {
+        dispose();
+      } catch (err) {
+        bindingLog.error(`list nested dispose failed: ${formatError(err)}`);
+      }
+    }
+    currentNestedDisposers.clear();
+    for (const a of anchors) {
+      a.remove();
+    }
+    anchors = [];
+  };
+
+  const render = () => {
+    clearRender();
+    const list = unwrapSignalLike(items);
+    if (!Array.isArray(list)) return;
+    if (!renderer) {
+      throw new Error('list binding requires a renderer');
+    }
+
+    const ref: ChildNode | null = anchor.nextSibling;
+    const rendered: ChildNode[] = [];
+
+    for (let i = 0; i < list.length; i++) {
+      const renderLifecycle: BindingLifecycle = {
+        disposers: currentNestedDisposers,
+      };
+      if (lifecycle.signal) {
+        renderLifecycle.signal = lifecycle.signal;
+      }
+
+      const vn = renderItem(list[i], i);
+      const node = Array.isArray(vn) ? { tag: Fragment, props: {}, children: vn } : vn;
+      const dom = renderer.render(node, renderLifecycle);
+
+      if (dom.nodeType === 11) {
+        const fragChildren: ChildNode[] = [];
+        while (dom.firstChild) {
+          fragChildren.push(dom.firstChild as ChildNode);
+        }
+        for (let j = fragChildren.length - 1; j >= 0; j--) {
+          anchor.parentNode?.insertBefore(fragChildren[j], ref);
+        }
+        rendered.push(...fragChildren);
+      } else {
+        const child = dom as ChildNode;
+        anchor.parentNode?.insertBefore(child, ref);
+        rendered.push(child);
+      }
+    }
+
+    anchors = rendered;
+  };
+
+  const dispose = effect(() => {
+    try {
+      render();
+    } catch (err) {
+      bindingLog.error(`list binding failed: ${formatError(err)}`);
     }
   });
 

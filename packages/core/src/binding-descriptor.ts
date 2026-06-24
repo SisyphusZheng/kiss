@@ -92,6 +92,22 @@ export interface SignalRenderBindingDescriptor {
   lifecycle: BindingLifecycle;
 }
 
+export interface ConditionalBindingDescriptor {
+  kind: 'conditional';
+  anchor: ChildNode;
+  condition: Signal<unknown> | unknown;
+  renderTruthy: () => unknown;
+  renderFalsy?: () => unknown;
+}
+
+export interface ListBindingDescriptor {
+  kind: 'list';
+  anchor: ChildNode;
+  items: Signal<unknown> | unknown;
+  renderItem: (item: unknown, index: number) => unknown;
+  keyFn?: (item: unknown, index: number) => unknown;
+}
+
 // ─── Event / ref descriptors ──────────────────────────────────────────────────
 
 export interface EventBindingDescriptor {
@@ -119,5 +135,7 @@ export type BindingDescriptor =
   | SignalAttrBindingDescriptor
   | SignalHtmlBindingDescriptor
   | SignalRenderBindingDescriptor
+  | ConditionalBindingDescriptor
+  | ListBindingDescriptor
   | EventBindingDescriptor
   | RefBindingDescriptor;

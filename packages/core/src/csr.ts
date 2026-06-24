@@ -10,8 +10,13 @@
 export * from './static.js';
 
 // Binding layer
-export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.js';
-export { applyBindingDescriptor } from './binding-activation.js';
+export type {
+  BindingDescriptor,
+  BindingDispose,
+  BindingLifecycle,
+  BindingRenderer,
+} from './binding-descriptor.js';
+export { applyBindingDescriptor, commitBindings } from './binding-activation.js';
 
 // Full DOM renderer
 export { applyProps, collectPropBindings, renderToDom } from './jsx-render-dom.js';
