@@ -1,11 +1,11 @@
 {
-  "id": "approved-release-v0.41.0-alpha.1-2026-06-24T01-41-00-934Z",
+  "id": "approved-release-v0.41.0-alpha.1-2026-06-24T01-49-58-799Z",
   "kind": "approved-release",
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.41.0-alpha.1",
   "targetVersion": "0.41.0-alpha.1",
   "status": "running",
-  "startedAt": "2026-06-24T01:41:00.934Z",
+  "startedAt": "2026-06-24T01:49:58.799Z",
   "approvalId": "ADR-0105/v0.40.x-cleanup-train",
   "steps": [
     {
@@ -20,22 +20,22 @@
         "0.41.0-alpha.1"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:00.994Z",
-      "completedAt": "2026-06-24T01:41:01.028Z",
+      "startedAt": "2026-06-24T01:49:58.861Z",
+      "completedAt": "2026-06-24T01:49:58.900Z",
       "exitCode": 0
     },
     {
       "name": "update project constants",
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.028Z",
-      "completedAt": "2026-06-24T01:41:01.029Z",
+      "startedAt": "2026-06-24T01:49:58.901Z",
+      "completedAt": "2026-06-24T01:49:58.901Z",
       "exitCode": 0
     },
     {
       "name": "update current version anchors",
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.029Z",
-      "completedAt": "2026-06-24T01:41:01.030Z",
+      "startedAt": "2026-06-24T01:49:58.901Z",
+      "completedAt": "2026-06-24T01:49:58.903Z",
       "exitCode": 0
     },
     {
@@ -46,8 +46,8 @@
         "fmt"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.030Z",
-      "completedAt": "2026-06-24T01:41:01.087Z",
+      "startedAt": "2026-06-24T01:49:58.903Z",
+      "completedAt": "2026-06-24T01:49:58.975Z",
       "exitCode": 0
     },
     {
@@ -69,8 +69,8 @@
         "www/app/routes/guide/getting-started.tsx"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.088Z",
-      "completedAt": "2026-06-24T01:41:01.090Z",
+      "startedAt": "2026-06-24T01:49:58.976Z",
+      "completedAt": "2026-06-24T01:49:58.979Z",
       "exitCode": 0
     },
     {
@@ -81,8 +81,8 @@
         "git diff --cached --quiet || git commit -m 'chore(release): v0.41.0-alpha.1 (ADR-0105/v0.40.x-cleanup-train)'"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.091Z",
-      "completedAt": "2026-06-24T01:41:01.093Z",
+      "startedAt": "2026-06-24T01:49:58.979Z",
+      "completedAt": "2026-06-24T01:49:58.983Z",
       "exitCode": 0
     },
     {
@@ -93,8 +93,8 @@
         "pack:dry-run"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:01.094Z",
-      "completedAt": "2026-06-24T01:41:10.505Z",
+      "startedAt": "2026-06-24T01:49:58.983Z",
+      "completedAt": "2026-06-24T01:50:09.094Z",
       "exitCode": 0
     },
     {
@@ -105,8 +105,8 @@
         "publish:npm"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:10.505Z",
-      "completedAt": "2026-06-24T01:41:25.987Z",
+      "startedAt": "2026-06-24T01:50:09.095Z",
+      "completedAt": "2026-06-24T01:50:26.408Z",
       "exitCode": 0
     },
     {
@@ -120,8 +120,8 @@
         "0.41.0-alpha.1"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:25.987Z",
-      "completedAt": "2026-06-24T01:41:29.316Z",
+      "startedAt": "2026-06-24T01:50:26.409Z",
+      "completedAt": "2026-06-24T01:50:30.157Z",
       "exitCode": 0
     },
     {
@@ -132,8 +132,8 @@
         "publish:jsr:release"
       ],
       "status": "passed",
-      "startedAt": "2026-06-24T01:41:29.317Z",
-      "completedAt": "2026-06-24T01:41:31.970Z",
+      "startedAt": "2026-06-24T01:50:30.158Z",
+      "completedAt": "2026-06-24T01:50:33.013Z",
       "exitCode": 0
     },
     {
@@ -175,6 +175,7 @@
       "command": [
         "git",
         "push",
+        "--force",
         "origin",
         "v0.41.0-alpha.1"
       ],
@@ -182,16 +183,6 @@
     },
     {
       "name": "create GitHub release",
-      "command": [
-        "gh",
-        "release",
-        "create",
-        "v0.41.0-alpha.1",
-        "--title",
-        "v0.41.0-alpha.1",
-        "--notes-file",
-        "docs/release/v0.41.0-alpha.1.md"
-      ],
       "status": "pending"
     }
   ]
