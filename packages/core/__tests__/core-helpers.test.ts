@@ -661,7 +661,8 @@ Deno.test('prop - handleStaticPropAttributeChange', async (t) => {
 
   await t.step('is no-op when props are not initialized', () => {
     const el = new FakeElement() as unknown as HTMLElement;
-    assertEquals(handleStaticPropAttributeChange(el, 'x', null, 'y'), undefined);
+    handleStaticPropAttributeChange(el, 'x', null, 'y');
+    assertEquals(el.getAttribute('x'), null);
   });
 });
 
