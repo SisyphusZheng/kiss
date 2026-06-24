@@ -150,6 +150,40 @@ export class OpenElement extends _Base {
   #vnodeCache: unknown = undefined;
   #vnodeCacheValid = false;
 
+  /** AbortController tied to element lifecycle. Aborted in disconnectedCallback. */
+  #lifecycleAbort?: AbortController;
+
+  /**
+   * Returns an AbortSignal that is aborted when the element is disconnected.
+   * Useful for tying async work (fetch, event listeners) to element lifecycle.
+   */
+  protected _lifecycleSignal(): AbortSignal {
+    if (!this.#lifecycleAbort) this.#lifecycleAbort = new AbortController();
+    return this.#lifecycleAbort.signal;
+  }
+
+  /**
+   * setTimeout wrapper that auto-clears when the element disconnects.
+   */
+  protected _setTimeout(handler: TimerHandler, timeout?: number): number {
+    const id = globalThis.setTimeout(handler, timeout);
+    this._lifecycleSignal().addEventListener('abort', () => globalThis.clearTimeout(id), {
+      once: true,
+    });
+    return id;
+  }
+
+  /**
+   * requestAnimationFrame wrapper that auto-cancels when the element disconnects.
+   */
+  protected _requestAnimationFrame(callback: FrameRequestCallback): number {
+    const id = globalThis.requestAnimationFrame(callback);
+    this._lifecycleSignal().addEventListener('abort', () => globalThis.cancelAnimationFrame(id), {
+      once: true,
+    });
+    return id;
+  }
+
   /**
    * Signal registry for attribute-based hydration (ADR-0065).
    * Maps signal names → signal objects. Built by registerSignal()
@@ -428,6 +462,8 @@ export class OpenElement extends _Base {
   disconnectedCallback(): void {
     this.#eventCleanups = disposeRenderBindings(this.#effectDisposers, this.#eventCleanups);
     disposeStaticProps(this);
+    this.#lifecycleAbort?.abort();
+    this.#lifecycleAbort = undefined;
   }
 
   // v0.28 (ADR-0067): Effect + event lifecycle managed by Set/Array.

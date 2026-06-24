@@ -11,7 +11,7 @@
  * Islands: Custom Element registration + prop deserialization
  *
  * Build orchestration (Vite plugins) lives in @openelement/adapter-vite.
- * For the unified openElement() entry, use @openelement/app/vite instead.
+ * For the unified openElement() entry, use @openelement/adapter-vite.
  */
 
 // --- Public API re-exports -----------------------------------------
@@ -150,7 +150,12 @@ export type { IslandTransformOptions, IslandTransformResult } from '@openelement
 
 // Unified binding layer (ADR-0109 Phase 1)
 export { applyBindingDescriptor } from './binding-activation.js';
-export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.ts';
+export type {
+  BindingDescriptor,
+  BindingDispose,
+  BindingLifecycle,
+  BindingRenderer,
+} from './binding-descriptor.ts';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {

@@ -1,53 +1,47 @@
 /**
  * @openelement/router - Data context for route loader/action data.
  *
- * Provides module-level state for loader and action data, consumed by
+ * Provides render-scoped state for loader and action data, consumed by
  * useLoaderData / useActionData hooks inside route page renders.
  *
  * Architecture:
- *   ApplicationPageElement.render() calls setLoaderData / setActionData before
- *   invoking the user's render function. The hooks read from this module-level
- *   state. Since JavaScript is single-threaded, concurrent renders do not
- *   conflict within the same microtask.
+ *   ApplicationPageElement.render() pushes loader data (and optional action
+ *   data) onto a stack before invoking the user's render function, then pops
+ *   the stack in a `finally` block. This keeps data scoped to the current
+ *   render instead of relying on module-level mutable state.
  *
- * v0.40.0: Fresh-style data layer MVP.
+ * v0.41.0: Replaced module-level currentState with render-scoped stack.
  */
 
-// ─── Module-level state ──────────────────────────────────────────
+// ─── Render-scoped stack ─────────────────────────────────────────
 
-interface DataState {
-  loaderData: unknown;
-  actionData: unknown;
-}
+const dataStack: { loaderData: unknown; actionData: unknown }[] = [];
 
-const currentState: DataState = {
-  loaderData: undefined,
-  actionData: undefined,
-};
-
-// ─── Internal setters (called by ApplicationPageElement) ─────────
+// ─── Internal stack operations (called by ApplicationPageElement) ─
 
 /**
- * @internal Set the current loader data before rendering.
- * Called by ApplicationPageElement.render().
+ * @internal Push loader data for the current render.
+ * Called by ApplicationPageElement.render() before invoking the page render.
  */
-export function __internal_setLoaderData(data: unknown): void {
-  currentState.loaderData = data;
+export function __internal_pushLoaderData(data: unknown): void {
+  dataStack.push({ loaderData: data, actionData: undefined });
 }
 
 /**
- * @internal Set the current action data before rendering.
+ * @internal Push action data for the current render.
  * Called by ApplicationPageElement.render() after a form submission.
  */
-export function __internal_setActionData(data: unknown): void {
-  currentState.actionData = data;
+export function __internal_pushActionData(data: unknown): void {
+  const top = dataStack[dataStack.length - 1];
+  if (top) top.actionData = data;
 }
 
 /**
- * @internal Clear the current action data (e.g., after navigation).
+ * @internal Pop the render-scoped data stack.
+ * Called by ApplicationPageElement.render() in a `finally` block.
  */
-export function __internal_clearActionData(): void {
-  currentState.actionData = undefined;
+export function __internal_popData(): void {
+  dataStack.pop();
 }
 
 // ─── Public hooks ────────────────────────────────────────────────
@@ -62,7 +56,7 @@ export function __internal_clearActionData(): void {
  * ```
  */
 export function useLoaderData<T = unknown>(): T {
-  return currentState.loaderData as T;
+  return dataStack[dataStack.length - 1]?.loaderData as T;
 }
 
 /**
@@ -76,5 +70,5 @@ export function useLoaderData<T = unknown>(): T {
  * ```
  */
 export function useActionData<T = unknown>(): T | undefined {
-  return currentState.actionData as T | undefined;
+  return dataStack[dataStack.length - 1]?.actionData as T | undefined;
 }

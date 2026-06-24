@@ -14,8 +14,9 @@ import {
   collectEventBindings,
   hydrateEventMarkers,
   isVNode,
+  renderToDom,
 } from '@openelement/core';
-import type { BindingDescriptor, BindingLifecycle } from '@openelement/core';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from '@openelement/core';
 import type { Signal } from '@openelement/protocol/signal';
 import {
   DATA_SIGNAL,
@@ -117,6 +118,9 @@ export function hydrateSignals(
 ): void {
   const lifecycle: BindingLifecycle = { disposers: effectDisposers };
   const descriptors = collectHydrationBindings(shadowRoot, signalRegistry);
+  const renderer: BindingRenderer = {
+    render: (node, childLifecycle) => renderToDom(node, childLifecycle),
+  };
 
   for (const desc of descriptors) {
     if (desc.kind === 'signal-render') {
@@ -125,7 +129,7 @@ export function hydrateSignals(
       // with the client-rendered VNode tree on first activation.
       while (desc.el.firstChild) desc.el.removeChild(desc.el.firstChild);
     }
-    applyBindingDescriptor(desc, lifecycle);
+    applyBindingDescriptor(desc, lifecycle, renderer);
   }
 
   // v0.28.1: Cache VNode so SSR and hydration use the same event IDs.
