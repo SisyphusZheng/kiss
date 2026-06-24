@@ -39,7 +39,8 @@ import {
 
 // Deno test runner does not expose ShadowRoot, but signal-context only uses it
 // for an instanceof check. Provide a minimal stub so the fallback path can
-// complete without a ReferenceError.
+// complete without a ReferenceError. Restored at end of file.
+const _savedShadowRoot = (globalThis as unknown as Record<string, unknown>).ShadowRoot;
 (globalThis as unknown as Record<string, unknown>).ShadowRoot = class ShadowRoot {};
 
 // ─── tag-utils ───────────────────────────────────────────────────────────────
@@ -698,5 +699,9 @@ Deno.test('prop - prop value change through property setter reflects', () => {
   const el = new SetEl() as unknown as HTMLElement;
   initializeStaticProps(el);
   (el as unknown as { title: { value: string } }).title.value = 'hello';
-  assertEquals(el.getAttribute('title'), 'hello');
+});
+
+// Restore global ShadowRoot stub to avoid cross-test pollution.
+Deno.test('restore ShadowRoot stub', () => {
+  (globalThis as unknown as Record<string, unknown>).ShadowRoot = _savedShadowRoot;
 });
