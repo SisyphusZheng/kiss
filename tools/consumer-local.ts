@@ -85,6 +85,9 @@ denoJson.imports['@openelement/app'] = pathToFileURL(
 denoJson.imports['@openelement/core'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
 ).href;
+denoJson.imports['@openelement/core/hydrate'] = pathToFileURL(
+  join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts'),
+).href;
 denoJson.imports['@openelement/core/static'] = pathToFileURL(
   join(repoRoot, 'packages', 'core', 'src', 'static.ts'),
 ).href;
@@ -298,6 +301,10 @@ const aliases = [
   {
     find: '@openelement/core/errors',
     replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'errors.ts')),
+  },
+  {
+    find: '@openelement/core/hydrate',
+    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts')),
   },
   {
     find: '@openelement/core/static',

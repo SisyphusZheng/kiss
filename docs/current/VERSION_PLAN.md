@@ -24,9 +24,10 @@ interoperability. The release is staged through four alphas and one beta:
 ## Context
 
 v0.41.0-alpha.1 removed the legacy Linear UI surface, closed the audit-driven
-cleanup train, and shipped the first npm/JSR dual-published alpha. The next
-strategic blockers are signal-DOM architecture hardening and WC ecosystem
-integration.
+cleanup train, and shipped the first npm-only alpha under ADR-0107. JSR publish
+was removed as a release gate; distribution evidence is produced by `deno pack`
+and the npm provenance workflow. The next strategic blockers are signal-DOM
+architecture hardening and WC ecosystem integration.
 
 A previous v0.41.0 line proposed making Vite+ treat Deno as a first-class
 package manager. That upstream PR (voidzero-dev/vite-plus#1888) was declined,

@@ -9,6 +9,10 @@
 
 export * from './static.js';
 
+// Hydration scope
+export { HydrationScope } from './hydration-scope.js';
+export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.js';
+
 // Binding layer
 export type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.js';
 export { applyBindingDescriptor } from './binding-activation.js';

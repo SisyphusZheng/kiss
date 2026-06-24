@@ -58,12 +58,11 @@ import type { VNode } from '@openelement/protocol/vnode';
 import type { Signal } from '@openelement/protocol/signal';
 import { signal } from '@openelement/signal';
 import { createLogger } from '@openelement/core/logger';
+import { HydrationScope } from '@openelement/core/hydrate';
 import {
-  disposeRenderBindings,
   renderErrorFallback,
   renderIntoLightDom,
   renderIntoShadowRoot,
-  type VNodeCacheAccess,
 } from './open-element-render.js';
 import { hydrateExistingDom, hydrateSignals } from './open-element-hydration.js';
 
@@ -136,19 +135,25 @@ export class OpenElement extends _Base {
   static formAssociated?: boolean;
 
   /**
-   * Effect dispose tracking (ADR-0065).
-   * Replaces effectScope() — effects are created at top level
-   * so they fire on signal changes. Disposed as a batch in
-   * disconnectedCallback.
+   * Signal registry for attribute-based hydration (ADR-0065).
+   * Maps signal names → signal objects. Built by registerSignal()
+   * in component constructors, consumed during hydration.
+   *
+   * Exposed internally for render helper modules.
    */
-  #effectDisposers: Set<() => void> = new Set();
+  signalRegistry: Map<string, Signal<unknown>> = new Map();
 
-  /** v0.28 (ADR-0067): Event listener cleanup tracking for _hydrateSignals(). */
-  #eventCleanups: Array<() => void> = [];
-
-  /** v0.28.1: Cached VNode from render() — avoids double-render mismatch between SSR and hydration. */
-  #vnodeCache: unknown = undefined;
-  #vnodeCacheValid = false;
+  /**
+   * v0.41.0-alpha.2: Hydration lifecycle scope.
+   *
+   * Replaces the separate #effectDisposers, #eventCleanups, and #vnodeCache
+   * fields. The scope is owned by the element and disposed on disconnect.
+   * It is exposed to @openelement/core/hydrate so the same lifecycle model
+   * can be reused by third-party framework runtimes later.
+   */
+  #hydrationScope = new HydrationScope({
+    signalRegistry: this.signalRegistry,
+  });
 
   /** AbortController tied to element lifecycle. Aborted in disconnectedCallback. */
   #lifecycleAbort?: AbortController;
@@ -183,15 +188,6 @@ export class OpenElement extends _Base {
     });
     return id;
   }
-
-  /**
-   * Signal registry for attribute-based hydration (ADR-0065).
-   * Maps signal names → signal objects. Built by registerSignal()
-   * in component constructors, consumed during hydration.
-   *
-   * Exposed internally for render helper modules.
-   */
-  signalRegistry: Map<string, Signal<unknown>> = new Map();
 
   /**
    * Register a signal for hydration by name.
@@ -360,21 +356,13 @@ export class OpenElement extends _Base {
    * from DSD shadow root and creates direct signal→DOM effect bindings.
    * No position matching, no childNodes filtering, no VNode traversal.
    *
-   * Effects are tracked in #effectDisposers for batch cleanup.
-   * VNode event marker listeners are tracked in #eventCleanups.
+   * Effects and event marker listeners are tracked in #hydrationScope.
    *
    * Implementation lives in open-element-hydration.ts.
    */
   private _hydrateSignals(): void {
     if (!this.shadowRoot) return;
-    hydrateSignals(
-      this,
-      this.shadowRoot,
-      this.signalRegistry,
-      this.#effectDisposers,
-      this.#eventCleanups,
-      this.#cacheAccess(),
-    );
+    hydrateSignals(this, this.shadowRoot, this.#hydrationScope);
   }
 
   /**
@@ -386,13 +374,7 @@ export class OpenElement extends _Base {
    * Implementation lives in open-element-hydration.ts.
    */
   private _hydrateExistingDom(): void {
-    this.#eventCleanups = hydrateExistingDom(
-      this,
-      this.signalRegistry,
-      this.#effectDisposers,
-      this.#eventCleanups,
-      this.#cacheAccess(),
-    );
+    hydrateExistingDom(this, this.#hydrationScope);
   }
 
   /**
@@ -425,7 +407,7 @@ export class OpenElement extends _Base {
    * Called once after the element is connected, the shadow root
    * is ready, and any DSD hydration or CSR rendering has completed.
    * This is the right place for framework hydration (Preact, React,
-   * Vue, Lit) to take over the shadow DOM.
+   * Vue, Lit) to take over the shadow root.
    *
    * Default implementation is a no-op. Subclasses override this to
    * hydrate or render framework components into the shadow root.
@@ -446,11 +428,10 @@ export class OpenElement extends _Base {
   }
 
   private _renderErrorFallback(error: unknown): void {
-    this.#eventCleanups = renderErrorFallback(
+    renderErrorFallback(
       this,
       error,
-      this.#effectDisposers,
-      this.#eventCleanups,
+      this.#hydrationScope,
       (err) => this.onRenderError(err),
     );
   }
@@ -460,13 +441,13 @@ export class OpenElement extends _Base {
    * Aborts all hydration event listeners for cleanup.
    */
   disconnectedCallback(): void {
-    this.#eventCleanups = disposeRenderBindings(this.#effectDisposers, this.#eventCleanups);
+    this.#hydrationScope.dispose();
     disposeStaticProps(this);
     this.#lifecycleAbort?.abort();
     this.#lifecycleAbort = undefined;
   }
 
-  // v0.28 (ADR-0067): Effect + event lifecycle managed by Set/Array.
+  // v0.28 (ADR-0067): Effect + event lifecycle managed by HydrationScope.
   // _walkAndBind DELETED — replaced by _hydrateSignals().
 
   /**
@@ -523,36 +504,11 @@ export class OpenElement extends _Base {
   }
 
   private _renderIntoLightDom(): void {
-    this.#eventCleanups = renderIntoLightDom(
-      this,
-      this.#effectDisposers,
-      this.#eventCleanups,
-      this.#cacheAccess(),
-    );
+    renderIntoLightDom(this, this.#hydrationScope);
   }
 
   private _renderIntoShadowRoot(): void {
-    this.#eventCleanups = renderIntoShadowRoot(
-      this,
-      this.#effectDisposers,
-      this.#eventCleanups,
-      this.#cacheAccess(),
-    );
-  }
-
-  /**
-   * Accessor for the private VNode cache used by extracted render/hydration
-   * helpers. Keeps #vnodeCache / #vnodeCacheValid encapsulated while allowing
-   * the logic to live in separate modules.
-   */
-  #cacheAccess(): VNodeCacheAccess {
-    return {
-      get: () => ({ vnode: this.#vnodeCache, valid: this.#vnodeCacheValid }),
-      set: (vnode: unknown) => {
-        this.#vnodeCache = vnode;
-        this.#vnodeCacheValid = true;
-      },
-    };
+    renderIntoShadowRoot(this, this.#hydrationScope);
   }
 
   /**

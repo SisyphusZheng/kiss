@@ -418,6 +418,10 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts')),
       },
       {
+        find: '@openelement/core/hydrate',
+        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts')),
+      },
+      {
         find: '@openelement/core/static',
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'static.ts')),
       },
