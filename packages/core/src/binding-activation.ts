@@ -8,11 +8,15 @@
 
 import { effect, unwrapSignalLike } from '@openelement/signal';
 import { trustRenderHtml } from './security.js';
-import { renderToDom } from './jsx-render-dom.js';
 import { Fragment } from './jsx-runtime.ts';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
-import type { BindingDescriptor, BindingDispose, BindingLifecycle } from './binding-descriptor.ts';
+import type {
+  BindingDescriptor,
+  BindingDispose,
+  BindingLifecycle,
+  BindingRenderer,
+} from './binding-descriptor.ts';
 
 const bindingLog = createLogger('binding');
 
@@ -30,6 +34,7 @@ export function registerDispose(dispose: BindingDispose, lifecycle: BindingLifec
 export function applyBindingDescriptor(
   desc: BindingDescriptor,
   lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
 ): BindingDispose {
   switch (desc.kind) {
     case 'static-attr':
@@ -49,7 +54,7 @@ export function applyBindingDescriptor(
     case 'signal-html':
       return applySignalHtml(desc, lifecycle);
     case 'signal-render':
-      return applySignalRender(desc, lifecycle);
+      return applySignalRender(desc, lifecycle, renderer);
     case 'event':
       return applyEvent(desc, lifecycle);
     case 'ref':
@@ -212,6 +217,7 @@ function applySignalHtml(
 function applySignalRender(
   desc: Extract<BindingDescriptor, { kind: 'signal-render' }>,
   lifecycle: BindingLifecycle,
+  renderer?: BindingRenderer,
 ): BindingDispose {
   const { el, signal } = desc;
 
@@ -237,6 +243,10 @@ function applySignalRender(
     clearRender();
     const raw = unwrapSignalLike(signal.value);
     if (raw == null) return;
+    if (!renderer) {
+      bindingLog.error('signal-render binding requires a renderer');
+      return;
+    }
 
     // Render into a fresh child lifecycle so nested signal effects can be
     // disposed per render without leaking into previous renders.
@@ -250,7 +260,7 @@ function applySignalRender(
     // Normalize VNode[] into a Fragment so multiple rendered nodes can be
     // tracked and replaced together across updates.
     const node = Array.isArray(raw) ? { tag: Fragment, props: {}, children: raw } : raw;
-    const result = renderToDom(node, renderLifecycle);
+    const result = renderer.render(node, renderLifecycle);
 
     if (result.nodeType === 11 || result.nodeType === 0) {
       const fragChildren: ChildNode[] = [];

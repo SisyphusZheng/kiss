@@ -114,7 +114,10 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   );
   assertEquals(denoJson.imports['marked'], 'npm:marked@15.0.12');
   assertEquals(denoJson.imports['@openelement/app'], 'npm:@openelement/app@^${v.app}');
-  assertEquals(denoJson.imports['@openelement/app/vite'], 'npm:@openelement/app@^${v.app}/vite');
+  assertEquals(
+    denoJson.imports['@openelement/adapter-vite'],
+    'npm:@openelement/adapter-vite@^${v.adapterVite}',
+  );
   assertEquals(denoJson.imports['@openelement/core'], 'npm:@openelement/core@^${v.core}');
   assertEquals(
     denoJson.imports['@openelement/core/jsx-runtime'],
@@ -156,7 +159,7 @@ Deno.test('create-open: refuses path escape and existing target before writing',
 
 Deno.test('create-open: vite.config.ts imports openElement plugin', () => {
   const viteConfig = extractTemplate('vite.config.ts');
-  assert(viteConfig.includes("import { openElement } from '@openelement/app/vite'"));
+  assert(viteConfig.includes("import { openElement } from '@openelement/adapter-vite'"));
   assert(viteConfig.includes('openElement({'));
 });
 
@@ -259,8 +262,8 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     denoJson.imports['@openelement/app/'] = pathToFileURL(
       join(repoRoot, 'packages', 'app', 'src') + sep,
     ).href;
-    denoJson.imports['@openelement/app/vite'] = pathToFileURL(
-      join(repoRoot, 'packages', 'app', 'src', 'vite.ts'),
+    denoJson.imports['@openelement/adapter-vite'] = pathToFileURL(
+      join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts'),
     ).href;
     denoJson.imports['@openelement/core'] = pathToFileURL(
       join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
@@ -469,8 +472,8 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         replacement: vitePath(uiSrc),
       },
       {
-        find: '@openelement/app/vite',
-        replacement: vitePath(join(repoRoot, 'packages', 'app', 'src', 'vite.ts')),
+        find: '@openelement/adapter-vite',
+        replacement: vitePath(join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts')),
       },
       // @openelement/app must resolve to local source
       {

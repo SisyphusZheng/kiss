@@ -21,7 +21,7 @@ import { effect } from '@openelement/signal';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
 import { applyBindingDescriptor } from './binding-activation.ts';
-import type { BindingDescriptor, BindingLifecycle } from './binding-descriptor.ts';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -227,10 +227,11 @@ export function applyProps(
   props: Record<string, unknown>,
   lifecycle?: BindingLifecycle,
   signalRegistry?: Map<string, Signal<unknown>>,
+  renderer?: BindingRenderer,
 ): void {
   const descriptors = collectPropBindings(el, props, signalRegistry);
   for (const desc of descriptors) {
-    applyBindingDescriptor(desc, lifecycle ?? {});
+    applyBindingDescriptor(desc, lifecycle ?? {}, renderer);
   }
 }
 
@@ -253,6 +254,11 @@ export function renderToDom(
   if (disposers && !lifecycle?.disposers) {
     fullLifecycle.disposers = disposers;
   }
+
+  const renderer: BindingRenderer = {
+    render: (child, childLifecycle) =>
+      renderToDom(child, childLifecycle, undefined, signalRegistry),
+  };
 
   if (node == null || node === false) {
     return document.createTextNode('');
@@ -392,7 +398,7 @@ export function renderToDom(
   }
 
   const el = createElementForTag(tag as string);
-  applyProps(el, props, fullLifecycle, signalRegistry);
+  applyProps(el, props, fullLifecycle, signalRegistry, renderer);
   for (const child of children) {
     el.appendChild(renderToDom(child, fullLifecycle, undefined, signalRegistry));
   }

@@ -12,7 +12,7 @@
  * - Sub-plugins (openContent, openI18n) write their data -> ctx fields
  *
  * ctx is passed via explicit parameter - no globalThis or module-level discovery.
- * use openElement() from @openelement/app/vite for the recommended unified entry.
+ * use openElement() from @openelement/adapter-vite for the recommended unified entry.
  *
  * Fields are grouped by Phase to improve type safety and maintainability.
  */

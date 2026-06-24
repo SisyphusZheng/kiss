@@ -3,6 +3,7 @@
   "version": "0.41.0-alpha.1",
   "exports": {
     ".": "./src/index.ts",
+    "./app-vite": "./src/app-vite.ts",
     "./build-context": "./src/build-context.ts",
     "./head-injection": "./src/head-injection.ts",
     "./nitro-mount": "./src/nitro-mount.ts",

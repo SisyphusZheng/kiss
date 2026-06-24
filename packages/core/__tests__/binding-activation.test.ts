@@ -4,8 +4,13 @@
 
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { signal } from './test-utils.ts';
-import type { BindingDescriptor, BindingLifecycle } from '../src/binding-descriptor.ts';
+import type {
+  BindingDescriptor,
+  BindingLifecycle,
+  BindingRenderer,
+} from '../src/binding-descriptor.ts';
 import { applyBindingDescriptor } from '../src/binding-activation.ts';
+import { renderToDom } from '../src/jsx-render-dom.ts';
 
 // ─── Minimal DOM harness for Deno test runner ────────────────────────────────
 
@@ -531,7 +536,10 @@ Deno.test('signal-render renders VNode and updates on signal change', () => {
     signal: s as unknown as typeof s,
     lifecycle: childLifecycle,
   };
-  applyBindingDescriptor(desc, {});
+  const renderer: BindingRenderer = {
+    render: (node, lifecycle) => renderToDom(node, lifecycle),
+  };
+  applyBindingDescriptor(desc, {}, renderer);
   assertEquals(asTestElement(el).innerHTML, '<span class="a">A</span>');
 
   s.value = { tag: 'span', props: { className: 'b' }, children: ['B'] };

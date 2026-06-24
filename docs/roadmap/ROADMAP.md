@@ -721,6 +721,9 @@ ADR-backed human approval.
 
 ## v0.42.0 - Server Primitives
 
+> Migration note: `@openelement/app/preact` will move to a dedicated
+> `@openelement/adapter-preact` package once cross-framework island work begins.
+
 Move from application framework toward full-stack framework by adding the
 server primitives that pages, API routes, actions, and adapters share.
 

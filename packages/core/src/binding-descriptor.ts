@@ -17,6 +17,12 @@ export interface BindingLifecycle {
   disposers?: Set<() => void>;
 }
 
+/** Renderer contract injected to avoid a core intra-package cycle. */
+export interface BindingRenderer {
+  /** Render a VNode tree (or primitive) to a DOM node under the given lifecycle. */
+  render(node: unknown, lifecycle: BindingLifecycle): Node;
+}
+
 /** Dispose function returned by bindings and registered into lifecycle. */
 export type BindingDispose = () => void;
 
