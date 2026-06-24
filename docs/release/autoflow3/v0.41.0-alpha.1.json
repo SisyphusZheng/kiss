@@ -1,11 +1,11 @@
 {
-  "id": "approved-release-v0.41.0-alpha.1-2026-06-23T17-54-24-712Z",
+  "id": "approved-release-v0.41.0-alpha.1-2026-06-24T01-41-00-934Z",
   "kind": "approved-release",
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.41.0-alpha.1",
   "targetVersion": "0.41.0-alpha.1",
   "status": "running",
-  "startedAt": "2026-06-23T17:54:24.712Z",
+  "startedAt": "2026-06-24T01:41:00.934Z",
   "approvalId": "ADR-0105/v0.40.x-cleanup-train",
   "steps": [
     {
@@ -20,22 +20,22 @@
         "0.41.0-alpha.1"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.769Z",
-      "completedAt": "2026-06-23T17:54:24.807Z",
+      "startedAt": "2026-06-24T01:41:00.994Z",
+      "completedAt": "2026-06-24T01:41:01.028Z",
       "exitCode": 0
     },
     {
       "name": "update project constants",
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.807Z",
-      "completedAt": "2026-06-23T17:54:24.808Z",
+      "startedAt": "2026-06-24T01:41:01.028Z",
+      "completedAt": "2026-06-24T01:41:01.029Z",
       "exitCode": 0
     },
     {
       "name": "update current version anchors",
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.808Z",
-      "completedAt": "2026-06-23T17:54:24.810Z",
+      "startedAt": "2026-06-24T01:41:01.029Z",
+      "completedAt": "2026-06-24T01:41:01.030Z",
       "exitCode": 0
     },
     {
@@ -46,8 +46,8 @@
         "fmt"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.810Z",
-      "completedAt": "2026-06-23T17:54:24.880Z",
+      "startedAt": "2026-06-24T01:41:01.030Z",
+      "completedAt": "2026-06-24T01:41:01.087Z",
       "exitCode": 0
     },
     {
@@ -69,8 +69,8 @@
         "www/app/routes/guide/getting-started.tsx"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.880Z",
-      "completedAt": "2026-06-23T17:54:24.884Z",
+      "startedAt": "2026-06-24T01:41:01.088Z",
+      "completedAt": "2026-06-24T01:41:01.090Z",
       "exitCode": 0
     },
     {
@@ -81,8 +81,8 @@
         "git diff --cached --quiet || git commit -m 'chore(release): v0.41.0-alpha.1 (ADR-0105/v0.40.x-cleanup-train)'"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.884Z",
-      "completedAt": "2026-06-23T17:54:24.887Z",
+      "startedAt": "2026-06-24T01:41:01.091Z",
+      "completedAt": "2026-06-24T01:41:01.093Z",
       "exitCode": 0
     },
     {
@@ -93,8 +93,8 @@
         "pack:dry-run"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:24.887Z",
-      "completedAt": "2026-06-23T17:54:35.218Z",
+      "startedAt": "2026-06-24T01:41:01.094Z",
+      "completedAt": "2026-06-24T01:41:10.505Z",
       "exitCode": 0
     },
     {
@@ -105,8 +105,8 @@
         "publish:npm"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:35.219Z",
-      "completedAt": "2026-06-23T17:54:51.644Z",
+      "startedAt": "2026-06-24T01:41:10.505Z",
+      "completedAt": "2026-06-24T01:41:25.987Z",
       "exitCode": 0
     },
     {
@@ -120,8 +120,8 @@
         "0.41.0-alpha.1"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:51.644Z",
-      "completedAt": "2026-06-23T17:54:55.128Z",
+      "startedAt": "2026-06-24T01:41:25.987Z",
+      "completedAt": "2026-06-24T01:41:29.316Z",
       "exitCode": 0
     },
     {
@@ -132,8 +132,8 @@
         "publish:jsr:release"
       ],
       "status": "passed",
-      "startedAt": "2026-06-23T17:54:55.129Z",
-      "completedAt": "2026-06-23T17:58:05.127Z",
+      "startedAt": "2026-06-24T01:41:29.317Z",
+      "completedAt": "2026-06-24T01:41:31.970Z",
       "exitCode": 0
     },
     {
@@ -168,11 +168,6 @@
     },
     {
       "name": "tag release",
-      "command": [
-        "git",
-        "tag",
-        "v0.41.0-alpha.1"
-      ],
       "status": "pending"
     },
     {
