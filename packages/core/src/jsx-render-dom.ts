@@ -17,7 +17,7 @@ import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import type { Signal } from '@openelement/protocol/signal';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.js';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
-import { eventTypeFromProp } from './event-hydration.js';
+import { eventTypeFromProp } from './event-marker.js';
 import { trustRenderHtml } from './security.js';
 import { createLogger } from './logger.js';
 import { formatError } from './errors.js';
@@ -218,7 +218,7 @@ export function collectPropBindings(
       continue;
     }
 
-    descriptors.push(bindStaticAttr(el, key, attrName, resolved));
+    descriptors.push(bindStaticAttr(el, attrName, resolved));
   }
 
   return descriptors;

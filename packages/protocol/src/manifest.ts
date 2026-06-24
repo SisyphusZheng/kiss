@@ -92,5 +92,3 @@ export interface CemCompatibilityReport {
   classifications: CompatibilityClassification[];
   summary: string;
 }
-
-// --- Manifest validation ------------------------------------------
