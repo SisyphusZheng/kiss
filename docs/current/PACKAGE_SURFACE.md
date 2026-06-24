@@ -26,14 +26,13 @@ graph collapse.
 | `@openelement/signal`       | foundation     | Signal implementation; default is `@preact/signals-core`.                                     |
 | `@openelement/content`      | foundation     | Content support behind Framework recipes.                                                     |
 | `@openelement/adapter-vite` | foundation     | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                   |
+| `@openelement/protocol`     | foundation     | Shared contract types (hydration markers, signal, vnode, render, manifest, data, errors).     |
 
 ## Removed from current graph
 
-v0.40.4 removes historical and collapsed packages from the current workspace and
-publish order:
+v0.40.4 removes historical packages from the current workspace and publish order:
 
 - `@openelement/i18n` (moved to `@openelement/app/i18n`)
-- `@openelement/protocol` (collapsed into `@openelement/core`, `@openelement/ssg`, `@openelement/router`, and `@openelement/signal`)
 - `@openelement/rpc`
 - `@openelement/hub`
 - `@openelement/cem`
