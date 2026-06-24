@@ -450,7 +450,7 @@ const tokenCss = `
   --teal-7: #20c997;
   --teal-8: #38d9a9;
   --teal-9: #63e6be;
-  --blue-10: #96f2d7;
+  --teal-10: #96f2d7;
   --teal-11: #c3fae8;
   --teal-12: #e6fcf5;
   --cyan-0: #053038;
