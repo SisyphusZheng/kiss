@@ -134,6 +134,7 @@ export {
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
 export { createLogger } from './logger.js';
+/** @internal — use @openelement/core/security subpath instead */
 export { DANGEROUS_KEYS } from './security.js';
 export { isValidTagName } from './tag-utils.js';
 export {
