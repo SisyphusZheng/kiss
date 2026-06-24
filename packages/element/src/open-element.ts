@@ -64,7 +64,7 @@ import {
   renderIntoLightDom,
   renderIntoShadowRoot,
 } from './open-element-render.js';
-import { hydrateExistingDom, hydrateSignals } from './open-element-hydration.js';
+import { hydrateExistingDom } from './open-element-hydration.js';
 
 /**
  * SSR-safe base class for OpenElement.
@@ -348,28 +348,10 @@ export class OpenElement extends _Base {
       this._renderErrorFallback(err);
     }
   }
-
-  /**
-   * v0.28 (ADR-0067): Signal-native hydration.
-   *
-   * Replaces _walkAndBind() — reads data-signal markers
-   * from DSD shadow root and creates direct signal→DOM effect bindings.
-   * No position matching, no childNodes filtering, no VNode traversal.
-   *
-   * Effects and event marker listeners are tracked in #hydrationScope.
-   *
-   * Implementation lives in open-element-hydration.ts.
-   */
-  private _hydrateSignals(): void {
-    if (!this.shadowRoot) return;
-    hydrateSignals(this, this.shadowRoot, this.#hydrationScope);
-  }
-
   /**
    * Hydrate DSD DOM with signal and event bindings.
    *
-   * v0.28 (ADR-0067): Delegates to _hydrateSignals().
-   * _walkAndBind position matching is DELETED.
+   * v0.28 (ADR-0067): Replaces _walkAndBind position matching.
    *
    * Implementation lives in open-element-hydration.ts.
    */
@@ -448,7 +430,7 @@ export class OpenElement extends _Base {
   }
 
   // v0.28 (ADR-0067): Effect + event lifecycle managed by HydrationScope.
-  // _walkAndBind DELETED — replaced by _hydrateSignals().
+  // _walkAndBind DELETED — replaced by _hydrateExistingDom().
 
   /**
    * Lifecycle: called when an observed attribute changes.

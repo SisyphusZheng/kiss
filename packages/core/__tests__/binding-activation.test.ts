@@ -449,7 +449,7 @@ function asTestElement(el: Element): TestElement {
 
 Deno.test('static-attr applies attribute value', () => {
   const el = document.createElement('div');
-  const desc: BindingDescriptor = bindStaticAttr(el, 'dataTest', 'data-test', 'hello');
+  const desc: BindingDescriptor = bindStaticAttr(el, 'data-test', 'hello');
   const dispose = applyBindingDescriptor(desc, {});
   assertEquals(el.getAttribute('data-test'), 'hello');
   dispose();

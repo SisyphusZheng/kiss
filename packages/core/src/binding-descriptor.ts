@@ -31,7 +31,6 @@ export type BindingDispose = () => void;
 export interface StaticAttrBindingDescriptor {
   kind: 'static-attr';
   el: Element;
-  key: string;
   attrName: string;
   value: unknown;
 }
@@ -217,11 +216,10 @@ export function bindList(
 /** Create a static attribute binding descriptor. */
 export function bindStaticAttr(
   element: Element,
-  key: string,
   attrName: string,
   value: unknown,
 ): StaticAttrBindingDescriptor {
-  return { kind: 'static-attr', el: element, key, attrName, value };
+  return { kind: 'static-attr', el: element, attrName, value };
 }
 
 /** Create a static DOM property binding descriptor. */

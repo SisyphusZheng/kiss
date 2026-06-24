@@ -85,10 +85,11 @@ export function renderIntoShadowRoot(
   const result = instance.render();
   scope.cacheAccess.set(result);
 
+  while (root.firstChild) {
+    root.removeChild(root.firstChild);
+  }
+
   if (result != null) {
-    while (root.firstChild) {
-      root.removeChild(root.firstChild);
-    }
     root.appendChild(
       renderToDom(
         result,
