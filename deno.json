@@ -15,6 +15,7 @@
     "./www"
   ],
   "imports": {
+    "@std/fs/walk": "jsr:@std/fs@^1.0.0/walk",
     "hono": "npm:hono@^4.12",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3",
     "vite": "npm:vite@8.0.10",

@@ -102,7 +102,6 @@ export type {
   HydrationHint,
   IsrRouteRecord,
   ManifestDecision,
-  RendererProtocol,
   RenderErrorCode,
   RenderHooks,
   RenderInput,
@@ -113,14 +112,11 @@ export type {
 export type {
   OpenElementAttribute,
   OpenElementCssPart,
-  OpenElementCssProperty,
   OpenElementDeclaration,
   OpenElementEvent,
   OpenElementExport,
   OpenElementExtensions,
-  OpenElementMember,
   OpenElementModule,
-  OpenElementPackageExtensions,
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '@openelement/protocol/manifest';
@@ -128,9 +124,6 @@ export type {
   CemCompatibilityReport,
   CompatibilityClassification,
   CompatibilityTier,
-  ManifestValidationReport,
-  ValidatedTag,
-  ValidationDiagnostic,
 } from '@openelement/protocol/manifest';
 export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
 export {

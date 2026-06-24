@@ -9,8 +9,7 @@
  *
  * Thin orchestrator that imports focused sub-modules for:
  *   - Dynamic route expansion (ssg-dynamic.ts)
- *   - i18n locale expansion (ssg-i18n.ts)
- *   - DSD report assembly (ssg-report.ts)
+ *   - i18n locale expansion (ssg-dynamic.ts)
  *   - Utility helpers (ssg-helpers.ts)
  */
 
@@ -24,10 +23,8 @@ import type {
   SsrBundle,
 } from '@openelement/protocol/ssg';
 import { createLogger } from '@openelement/core/logger';
-import { expandDynamicRoutes } from './ssg-dynamic.ts';
-import { expandI18nLocales } from './ssg-i18n.ts';
-import { assembleDsdReport, writeDsdReport } from './ssg-report.ts';
-import { buildIsrManifestEntries, findHtmlFiles, type PageDiagnostic } from './ssg-helpers.ts';
+import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
+import { buildIsrManifestEntries, findHtmlFiles } from './ssg-helpers.ts';
 import { writeJson } from '@openelement/content/write-json';
 
 const log = createLogger('ssg');
@@ -42,9 +39,6 @@ export async function ssgRender(
   const root = options.root || process.cwd();
   const outDir = options.outDir || 'dist';
   const basePath = options.base || '/';
-
-  // ── Report collection (v0.15.3: dsd-report.json) ──────────────
-  const pageDiagnostics: PageDiagnostic[] = [];
 
   // ── Dynamic route expansion via bundle.getStaticPaths() ──────
   const routeInfo = (module.routeInfo ?? []) as Array<{
@@ -76,7 +70,6 @@ export async function ssgRender(
     options,
     root,
     outDir,
-    pageDiagnostics,
   );
 
   // ── Main SSG via Hono's toSSG() ────────────────────────────
@@ -174,7 +167,6 @@ export async function ssgRender(
     options,
     root,
     outDir,
-    pageDiagnostics,
   );
 
   // ── Post-processing modules ─────────────────────────────────
@@ -241,10 +233,6 @@ export async function ssgRender(
   } catch {
     log.debug('Sitemap generation skipped or failed');
   }
-
-  // ── dsd-report.json (v0.15.3) ──────────────────────────────────
-  const report = assembleDsdReport(pageDiagnostics, evidence);
-  writeDsdReport(outputDir, report);
 }
 
 // Re-export resolveDynamicRoutePath for consumers who import from ssg-render.ts

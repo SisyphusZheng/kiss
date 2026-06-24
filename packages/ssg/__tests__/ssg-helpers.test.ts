@@ -1,16 +1,14 @@
 /**
  * @openelement/ssg - Helper utility tests
  *
- * Tests for stableHash, resolveDynamicRoutePath, joinUrlPath, findHtmlFiles,
- * and collectPageOutput from ssg-helpers.ts
+ * Tests for stableHash, resolveDynamicRoutePath, joinUrlPath, and findHtmlFiles
+ * from ssg-helpers.ts
  */
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import {
   buildIsrManifestEntries,
-  collectPageOutput,
   findHtmlFiles,
-  type PageDiagnostic,
   resolveDynamicRoutePath,
   stableHash,
 } from '../src/ssg-helpers.ts';
@@ -125,31 +123,6 @@ Deno.test('findHtmlFiles finds html files in directory tree', () => {
 Deno.test('findHtmlFiles returns empty for nonexistent dir', () => {
   const files = findHtmlFiles(join(testDir, 'nonexistent'));
   assertEquals(files, []);
-});
-
-// ─── collectPageOutput ──────────────────────────────────────────
-
-Deno.test('collectPageOutput handles string output', () => {
-  const diagnostics: PageDiagnostic[] = [];
-  const html = collectPageOutput('/test', '<html>hello</html>', diagnostics);
-  assertEquals(html, '<html>hello</html>');
-  assertEquals(diagnostics.length, 0);
-});
-
-Deno.test('collectPageOutput handles object output', () => {
-  const diagnostics: PageDiagnostic[] = [];
-  const html = collectPageOutput('/test', {
-    html: '<html>hello</html>',
-    errors: [],
-    hydrationHints: [],
-    componentCount: 3,
-    renderTimeMs: 42,
-  }, diagnostics);
-  assertEquals(html, '<html>hello</html>');
-  assertEquals(diagnostics.length, 1);
-  assertEquals(diagnostics[0].path, '/test');
-  assertEquals(diagnostics[0].componentCount, 3);
-  assertEquals(diagnostics[0].renderTimeMs, 42);
 });
 
 // ─── buildIsrManifestEntries ────────────────────────────────────

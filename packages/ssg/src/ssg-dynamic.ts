@@ -1,16 +1,16 @@
 /**
- * @openelement/ssg - Dynamic route expansion
+ * @openelement/ssg - Route expansion
  *
  * Handles dynamic route rendering using getStaticPaths() + renderRoute()
- * from the SSR bundle.
+ * from the SSR bundle, and i18n locale expansion.
  */
 
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { SsgPageOutput, SsgRenderOptions } from '@openelement/protocol/ssg';
+import type { SsgPageOutput, SsgRenderEvidence, SsgRenderOptions } from '@openelement/protocol/ssg';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
-import { collectPageOutput, type PageDiagnostic, resolveDynamicRoutePath } from './ssg-helpers.ts';
+import { resolveDynamicRoutePath } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');
 
@@ -23,6 +23,56 @@ interface RouteInfoItem {
   params?: Record<string, string>;
 }
 
+type RenderRouteFn =
+  | ((path: string, opts?: Record<string, unknown>) => Promise<SsgPageOutput>)
+  | undefined;
+
+type GetStaticPathsFn =
+  | ((path: string) => Promise<Array<Record<string, string>>>)
+  | undefined;
+
+function pageHtml(output: SsgPageOutput | string): string {
+  return typeof output === 'string' ? output : output.html;
+}
+
+async function writeRenderedPage(
+  routePath: string,
+  resolvedPath: string,
+  params: Record<string, string>,
+  renderRoute: NonNullable<RenderRouteFn>,
+  options: SsgRenderOptions,
+  root: string,
+  outDir: string,
+  locale?: string,
+): Promise<void> {
+  const targetPath = locale ? '/' + locale + '/' + resolvedPath.replace(/^\//, '') : resolvedPath;
+
+  const renderOpts: Record<string, unknown> = {
+    params,
+    title: options.html?.title,
+    headExtras: options.headExtras,
+  };
+  if (locale) {
+    renderOpts.locale = locale;
+    renderOpts.lang = locale;
+  } else {
+    renderOpts.lang = options.html?.lang;
+  }
+
+  const output = await renderRoute(routePath, renderOpts);
+  const html = pageHtml(output);
+
+  const pageDir = join(root, outDir, targetPath);
+  mkdirSync(pageDir, { recursive: true });
+  writeFileSync(join(pageDir, 'index.html'), html, 'utf-8');
+
+  log.info(
+    locale
+      ? `i18n: ${targetPath}/index.html`
+      : `Dynamic route: ${resolvedPath} -> ${resolvedPath}/index.html`,
+  );
+}
+
 /**
  * Expand dynamic routes by calling getStaticPaths() and renderRoute()
  * for each parameter set.
@@ -32,30 +82,21 @@ interface RouteInfoItem {
  */
 export async function expandDynamicRoutes(
   dynamicRoutes: RouteInfoItem[],
-  renderRoute:
-    | ((path: string, opts?: Record<string, unknown>) => Promise<SsgPageOutput>)
-    | undefined,
-  getStaticPaths:
-    | ((path: string) => Promise<Array<Record<string, string>>>)
-    | undefined,
+  renderRoute: RenderRouteFn,
+  getStaticPaths: GetStaticPathsFn,
   options: SsgRenderOptions,
   root: string,
   outDir: string,
-  pageDiagnostics: PageDiagnostic[],
 ): Promise<Map<string, Array<Record<string, string>>>> {
   const staticPathParamsByRoute = new Map<string, Array<Record<string, string>>>();
 
   if (dynamicRoutes.length > 0 && renderRoute && getStaticPaths) {
     for (const route of dynamicRoutes) {
-      const paramNames = route.paramNames;
       let paramsList: Array<Record<string, string>>;
-
       try {
         paramsList = await getStaticPaths(route.path);
       } catch (e) {
-        log.warn(
-          `Failed to get static paths for ${route.path}: ${formatError(e)}`,
-        );
+        log.warn(`Failed to get static paths for ${route.path}: ${formatError(e)}`);
         continue;
       }
       staticPathParamsByRoute.set(route.path, paramsList);
@@ -68,42 +109,98 @@ export async function expandDynamicRoutes(
       for (const params of paramsList) {
         let resolvedPath: string;
         try {
-          resolvedPath = resolveDynamicRoutePath(
-            route.path,
-            paramNames,
-            params,
-          );
+          resolvedPath = resolveDynamicRoutePath(route.path, route.paramNames, params);
         } catch (e) {
-          log.warn(
-            `Skipping unsafe dynamic route ${route.path}: ${formatError(e)}`,
-          );
+          log.warn(`Skipping unsafe dynamic route ${route.path}: ${formatError(e)}`);
           continue;
         }
 
         try {
-          const output = await renderRoute(route.path, {
+          await writeRenderedPage(
+            route.path,
+            resolvedPath,
             params,
-            title: options.html?.title,
-            lang: options.html?.lang,
-            headExtras: options.headExtras,
-          });
-          const html = collectPageOutput(resolvedPath, output, pageDiagnostics);
-
-          const outputDir = join(root, outDir);
-          const pageDir = join(outputDir, resolvedPath);
-          mkdirSync(pageDir, { recursive: true });
-          writeFileSync(join(pageDir, 'index.html'), html, 'utf-8');
-          log.info(
-            `Dynamic route: ${resolvedPath} -> ${resolvedPath}/index.html`,
+            renderRoute,
+            options,
+            root,
+            outDir,
           );
         } catch (e) {
-          log.warn(
-            `Failed to render dynamic route ${resolvedPath}: ${formatError(e)}`,
-          );
+          log.warn(`Failed to render dynamic route ${resolvedPath}: ${formatError(e)}`);
         }
       }
     }
   }
 
   return staticPathParamsByRoute;
+}
+
+/**
+ * Expand rendered pages for each locale when i18n is configured.
+ *
+ * For each locale and each route, re-renders the route with the locale
+ * parameter and writes output under /{locale}/{path}/index.html.
+ */
+export async function expandI18nLocales(
+  evidence: SsgRenderEvidence,
+  renderRoute: RenderRouteFn,
+  routeInfo: RouteInfoItem[],
+  getStaticPaths: GetStaticPathsFn,
+  options: SsgRenderOptions,
+  root: string,
+  outDir: string,
+): Promise<void> {
+  const i18nOpts = evidence.i18nOptions || null;
+  if (!i18nOpts || !renderRoute) return;
+
+  const locales: string[] = i18nOpts.locales || [];
+  if (locales.length <= 1) return;
+
+  log.info(`i18n: expanding for locales: ${locales.join(', ')}`);
+  for (const locale of locales) {
+    for (const route of routeInfo) {
+      let paramsList: Array<Record<string, string>>;
+      if (!route.isDynamic) {
+        paramsList = [{}];
+      } else if (getStaticPaths) {
+        try {
+          paramsList = await getStaticPaths(route.path);
+        } catch {
+          log.warn(`i18n: getStaticPaths failed for ${route.path}, skipping`);
+          continue;
+        }
+      } else {
+        continue;
+      }
+      if (paramsList.length === 0) continue;
+
+      for (const params of paramsList) {
+        let resolvedPath: string;
+        try {
+          resolvedPath = resolveDynamicRoutePath(route.path, route.paramNames, params);
+        } catch (e) {
+          log.warn(`i18n: skipping unsafe dynamic route ${route.path}: ${formatError(e)}`);
+          continue;
+        }
+
+        const pathSegment = resolvedPath.split('/')[1] || '';
+        if (locales.includes(pathSegment)) continue;
+
+        try {
+          await writeRenderedPage(
+            route.path,
+            resolvedPath,
+            params,
+            renderRoute,
+            options,
+            root,
+            outDir,
+            locale,
+          );
+        } catch (e) {
+          log.warn(`i18n: failed for locale ${locale} on ${resolvedPath}: ${formatError(e)}`);
+        }
+      }
+    }
+  }
 }
