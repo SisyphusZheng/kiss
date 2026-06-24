@@ -17,6 +17,8 @@ interoperability. The release is staged through four alphas and one beta:
   pure-ESM / pure-ECMAScript npm quality gates.
 - **alpha.4**: Lightweight client runtime so openElement components work in Deno
   Fresh.
+- **alpha.5**: SPA mode + desktop shell proof (Tauri 2 / Electron) with a
+  client-side router.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -96,9 +98,10 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
 - `docs/release/v0.41.0-alpha.3-plan.md` — Cross-Framework Web Components Integration
 - `docs/release/v0.41.0-alpha.4-plan.md` — openElement Components in Fresh
+- `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Desktop Shell Proof
 
 The stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`
-when alpha.4 is complete.
+when alpha.5 is complete.
 
 ## Governance Rules
 
