@@ -124,19 +124,9 @@ export class HydrationScope {
     this.#render = options.render;
   }
 
-  /** Internal access to effect disposers for binding helpers. */
-  get _effectDisposers(): Set<() => void> {
-    return this.#effectDisposers;
-  }
-
   /** Create a BindingLifecycle backed by this scope's effect disposers. */
   createLifecycle(): BindingLifecycle {
     return { disposers: this.#effectDisposers };
-  }
-
-  /** Internal access to event cleanups for binding helpers. */
-  get _eventCleanups(): Array<() => void> {
-    return this.#eventCleanups;
   }
 
   /** @internal VNode cache accessor passed to render/hydration helpers. */

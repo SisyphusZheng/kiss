@@ -63,6 +63,7 @@ export interface SignalTextBindingDescriptor {
   signal: Signal<unknown>;
 }
 
+/** @internal DSD-only descriptor emitted by hydration-scope, never by CSR collectPropBindings. */
 export interface SignalClassBindingDescriptor {
   kind: 'signal-class';
   el: Element;

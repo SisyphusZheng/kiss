@@ -180,13 +180,9 @@ export function collectPropBindings(
         el.setAttribute(DATA_SIGNAL, name);
       }
 
-      if (key === 'className' || key === 'class') {
-        // Use signal-attr for className/class props — the full attribute value is signal-driven.
-        // Signal-class toggling (single class) is reserved for explicit data-signal-class markers.
-        descriptors.push(bindAttr(el, [attrName], sig));
-      } else {
-        descriptors.push(bindAttr(el, [attrName], sig));
-      }
+      // Use signal-attr for all signal-driven props; signal-class toggling
+      // (single class) is reserved for explicit data-signal-class markers.
+      descriptors.push(bindAttr(el, [attrName], sig));
       continue;
     }
 
