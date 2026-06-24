@@ -5,17 +5,20 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.1 Active (Cleanup-Train Patch → next v0.41.0 npm Distribution Pivot)
+## Current Version Line: v0.41.0-alpha.2 Active (Signal-DOM Deepening)
 
-v0.41.0-alpha.1 is the active package line. v0.41.0 (next) pivots openElement distribution from
-JSR to npm using Deno `deno pack`, keeps Vite + Nitro as the default engines
-behind the protocol boundary, and makes `@openelement/*` packages available as
-pure ESM npm artifacts. Runtime-free packages (`core`, `element`, `ui`,
-`protocol`, `signal`, `router`, `app`) retain zero `Deno.*` and zero `node:*`
-usage; build/server glue (`ssg`, `content`, `adapter-vite`, `create`) owns the
-necessary runtime-specific code. The release introduces no new product feature
-and makes no default runtime, signal-engine, or package-topology change beyond
-the distribution channel.
+v0.41.0-alpha.2 is the active package line. It follows the v0.41.0-alpha.1
+npm-only distribution pivot and focuses on narrowing the signal-to-DOM binding
+seam: extracting `HydrationScope` to `@openelement/core/hydrate`, splitting the
+renderer from the activation layer, replacing the central `BindingDescriptor`
+switch with a registry of small binding factories, validating the
+`static`/`hydrate`/`csr` subpath split with at least one real static-only
+consumer, and resolving the Safari adoptedStyleSheets theme-color follow-up.
+Runtime-free packages (`core`, `element`, `ui`, `protocol`, `signal`, `router`,
+`app`) retain zero `Deno.*` and zero `node:*` usage; build/server glue (`ssg`,
+`content`, `adapter-vite`, `create`) owns the necessary runtime-specific code.
+The release introduces no new product feature and makes no default runtime,
+signal-engine, or package-topology change.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and

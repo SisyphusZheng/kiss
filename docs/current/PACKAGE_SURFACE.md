@@ -1,6 +1,6 @@
 # Package Surface Inventory
 
-This is the v0.41.0-alpha.1 10-package product-line truth table.
+This is the v0.41.0-alpha.2 11-package product-line truth table.
 
 <!-- 11-package -->
 
@@ -9,10 +9,10 @@ openElement = Elements + UI + Framework + Protocols
 ```
 
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
-ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-10 package
+ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-11 package
 graph collapse.
 
-## Current 10-package surface
+## Current 11-package surface
 
 | Package                     | Class          | v0.40.4 decision                                                                              |
 | --------------------------- | -------------- | --------------------------------------------------------------------------------------------- |
@@ -26,14 +26,13 @@ graph collapse.
 | `@openelement/signal`       | foundation     | Signal implementation; default is `@preact/signals-core`.                                     |
 | `@openelement/content`      | foundation     | Content support behind Framework recipes.                                                     |
 | `@openelement/adapter-vite` | foundation     | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                   |
+| `@openelement/protocol`     | foundation     | Shared contract types (hydration markers, signal, vnode, render, manifest, data, errors).     |
 
 ## Removed from current graph
 
-v0.40.4 removes historical and collapsed packages from the current workspace and
-publish order:
+v0.40.4 removes historical packages from the current workspace and publish order:
 
 - `@openelement/i18n` (moved to `@openelement/app/i18n`)
-- `@openelement/protocol` (collapsed into `@openelement/core`, `@openelement/ssg`, `@openelement/router`, and `@openelement/signal`)
 - `@openelement/rpc`
 - `@openelement/hub`
 - `@openelement/cem`

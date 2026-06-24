@@ -7,7 +7,6 @@
 
 import { join } from 'node:path';
 import { readdirSync } from 'node:fs';
-import type { HydrationHint, RenderError } from '@openelement/protocol/render';
 import type { IsrManifestEntry } from '@openelement/protocol/framework';
 import { createIsrCacheKey } from '@openelement/core/isr';
 
@@ -117,43 +116,4 @@ export function buildIsrManifestEntries(
     }
   }
   return entries;
-}
-
-// ─── Per-page diagnostic collector ─────────────────────────────
-
-/** Page-level render diagnostic entry used during SSG render. */
-export interface PageDiagnostic {
-  path: string;
-  errors: RenderError[];
-  hydrationHints: HydrationHint[];
-  componentCount: number;
-  renderTimeMs: number;
-}
-
-/**
- * Collect per-page render diagnostics (backward-compat with string output).
- * Returns the rendered HTML string.
- */
-export function collectPageOutput(
-  routePath: string,
-  output: {
-    html: string;
-    errors: RenderError[];
-    hydrationHints: HydrationHint[];
-    componentCount: number;
-    renderTimeMs: number;
-  } | string,
-  pageDiagnostics: PageDiagnostic[],
-): string {
-  const html = typeof output === 'string' ? output : output.html;
-  if (typeof output !== 'string') {
-    pageDiagnostics.push({
-      path: routePath,
-      errors: output.errors,
-      hydrationHints: output.hydrationHints,
-      componentCount: output.componentCount,
-      renderTimeMs: output.renderTimeMs,
-    });
-  }
-  return html;
 }

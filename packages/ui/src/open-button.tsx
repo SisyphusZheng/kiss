@@ -23,7 +23,7 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { escapeAttr } from '@openelement/core';
+import { escapeAttr } from '@openelement/core/static';
 
 export const tagName = 'open-button';
 

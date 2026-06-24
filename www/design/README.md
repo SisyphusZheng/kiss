@@ -2,7 +2,7 @@
 
 > Version: 4.0.0
 > Date: 2026-06-19
-> Product line: openElement v0.41.0-alpha.1
+> Product line: openElement v0.41.0-alpha.2
 > Direction: Monet Aperture Editorial Lab
 > Status: Required implementation spec for `www`
 
@@ -33,7 +33,7 @@ hero must not be full width and must contain enough real substance.
 | API Reference | Real package boundaries and public UI primitives; no invented API signatures.                                                                     |
 | Blog index    | `www/app/data/_generated-blog-data.ts` and content frontmatter.                                                                                   |
 | Blog article  | The current post payload only. No fake read time, dates, or summaries.                                                                            |
-| Roadmap       | Current roadmap file and required anchors: `v0.41.0-alpha.1`, `v0.37.6`, `WC Package Protocol`, `Six-Phase Vision`, `No webpack`, `Registry Hub`. |
+| Roadmap       | Current roadmap file and required anchors: `v0.41.0-alpha.2`, `v0.37.6`, `WC Package Protocol`, `Six-Phase Vision`, `No webpack`, `Registry Hub`. |
 | Changelog     | Root `CHANGELOG.md`.                                                                                                                              |
 | Contributing  | Current contributing route content and repo workflow.                                                                                             |
 | Design System | Real `@openelement/ui` primitives and Open Props semantic tokens.                                                                                 |

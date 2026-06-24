@@ -7,7 +7,7 @@
  */
 
 import { join } from 'node:path';
-import process from 'node:process';
+import { cwd } from 'node:process';
 import { readdir, unlink } from 'node:fs/promises';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
 import type { IslandDecl } from '@openelement/protocol/ssg';
@@ -40,7 +40,7 @@ export async function postProcessClientIslandBuild(
   ctx: BuildContextView,
   scriptSrc: string,
 ): Promise<void> {
-  const root = ctx.phase3.root || process.cwd();
+  const root = ctx.phase3.root || cwd();
   const outDir = ctx.phase3.outDir || 'dist';
   const base = ctx.phase3.base || '/';
   const outputDir = join(root, outDir);
@@ -86,7 +86,7 @@ export async function postProcessClientIslandBuild(
  * and must not be deployed to static hosting.
  */
 export async function cleanSsrArtifacts(ctx: BuildContextView): Promise<void> {
-  const root = ctx.phase3.root || process.cwd();
+  const root = ctx.phase3.root || cwd();
   const outDir = ctx.phase3.outDir || 'dist';
 
   try {

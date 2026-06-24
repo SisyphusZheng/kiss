@@ -1,7 +1,7 @@
 /**
  * @openelement/adapter-vite - build-context.ts tests (Deno)
  */
-import { assertEquals, assertExists, assertRejects } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { OpenElementBuildContext } from '../src/build-context.ts';
 
 Deno.test('OpenElementBuildContext creates instance without error', () => {
@@ -97,28 +97,43 @@ Deno.test('OpenElementBuildContext getPhase3Meta returns read-only phase3', () =
   assertEquals(meta.root, '/root');
 });
 
-Deno.test('OpenElementBuildContext phase ordering is enforced', async () => {
+Deno.test('OpenElementBuildContext phase ordering is enforced', () => {
   const ctx = new OpenElementBuildContext({});
 
-  await assertRejects(
-    () => ctx.runPhase3(async () => {}),
+  assertThrows(
+    () => ctx.markComplete(3),
     Error,
-    'Phase 3 called before Phase 1 completed',
+    'Phase 3 requires Phase 1 to be completed first',
   );
 
-  ctx.completePhase1();
-  assertEquals(ctx.isPhaseComplete(1), true);
-  assertEquals(ctx.isPhaseComplete(3), false);
+  ctx.markComplete(1);
+  assertEquals(ctx.isComplete(1), true);
+  assertEquals(ctx.isComplete(3), false);
 
-  await assertRejects(
-    () => ctx.runPhase2(async () => {}),
+  assertThrows(
+    () => ctx.markComplete(2),
     Error,
-    'Phase 2 called before Phase 3 completed',
+    'Phase 2 requires Phase 3 to be completed first',
   );
 
-  await ctx.runPhase3(async () => {});
-  assertEquals(ctx.isPhaseComplete(3), true);
+  ctx.markComplete(3);
+  assertEquals(ctx.isComplete(3), true);
 
-  await ctx.runPhase2(async () => {});
-  assertEquals(ctx.isPhaseComplete(2), true);
+  ctx.markComplete(2);
+  assertEquals(ctx.isComplete(2), true);
+});
+
+Deno.test('OpenElementBuildContext reset clears completed phases', () => {
+  const ctx = new OpenElementBuildContext({});
+
+  ctx.markComplete(1);
+  ctx.markComplete(3);
+  ctx.markComplete(2);
+  assertEquals(ctx.isComplete(2), true);
+
+  ctx.reset();
+
+  assertEquals(ctx.isComplete(1), false);
+  assertEquals(ctx.isComplete(2), false);
+  assertEquals(ctx.isComplete(3), false);
 });

@@ -77,7 +77,7 @@ for (const pkg of removedPackages) {
   }
 }
 
-for (const required of ['10-package', 'v0.40.x', 'ADR-0105']) {
+for (const required of ['11-package', 'v0.40.x', 'ADR-0105']) {
   if (!docs.includes(required)) {
     failures.push(`PACKAGE_SURFACE.md missing required anchor: ${required}`);
   }
@@ -89,4 +89,4 @@ if (failures.length > 0) {
   Deno.exit(1);
 }
 
-console.log('Package surface check passed (10 packages retained).');
+console.log('Package surface check passed (11 packages retained).');

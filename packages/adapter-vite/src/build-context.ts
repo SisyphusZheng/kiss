@@ -12,7 +12,7 @@
  * - Sub-plugins (openContent, openI18n) write their data -> ctx fields
  *
  * ctx is passed via explicit parameter - no globalThis or module-level discovery.
- * use openElement() from @openelement/app/vite for the recommended unified entry.
+ * use openElement() from @openelement/adapter-vite for the recommended unified entry.
  *
  * Fields are grouped by Phase to improve type safety and maintainability.
  */
@@ -30,16 +30,8 @@ import type {
 } from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { IslandDecl, SsrAdmissionPlan } from '@openelement/protocol/ssg';
-import { createLogger } from '@openelement/core/logger';
 
-const log = createLogger('core');
-
-// These branded types ensure Phase 2 can only run after Phase 1,
-// and Phase 3 can only run after Phase 2. The compiler catches
-// out-of-order phase calls at build time.
-export type Phase1Token = { readonly __phase1: unique symbol };
-export type Phase2Token = { readonly __phase2: unique symbol };
-export type Phase3Token = { readonly __phase3: unique symbol };
+export type Phase = 1 | 2 | 3;
 
 export class Phase1Meta {
   /** The generated Hono entry module code (virtual module content) */
@@ -147,38 +139,58 @@ export class Phase3Meta {
 }
 
 export class OpenElementBuildContext {
-  /** Phase completion tokens - used for compile-time ordering enforcement */
-  readonly _phaseTokens: {
-    1: Phase1Token | null;
-    2: Phase2Token | null;
-    3: Phase3Token | null;
-  } = { 1: null, 2: null, 3: null };
+  /** Phase 1: Route scanning & build metadata */
+  readonly phase1: Phase1Meta = new Phase1Meta();
 
-  /** Mark Phase 1 as complete and return the token for subsequent phases */
-  completePhase1(): Phase1Token {
-    const token: Phase1Token = { __phase1: Symbol() as never };
-    this._phaseTokens[1] = token;
-    return token;
+  /** Phase 2: Client island build state */
+  readonly phase2: Phase2Meta = new Phase2Meta();
+
+  /** Phase 3: SSG rendering state */
+  readonly phase3: Phase3Meta = new Phase3Meta();
+
+  /** Plugin data from content/i18n sub-plugins */
+  readonly plugins: {
+    blogOptions: OpenElementBlogOptions | null;
+    navSections: OpenElementNavSection[];
+    headerNav: OpenElementHeaderNavLink[];
+    sitemapOptions: Record<string, unknown> | null;
+    i18nOptions: OpenElementI18nContextOptions | null;
+    [key: string]: unknown;
+  } = {
+    blogOptions: null,
+    navSections: [],
+    headerNav: [],
+    sitemapOptions: null,
+    i18nOptions: null,
+  };
+
+  /** Resolved framework options with defaults applied (read-only after construction) */
+  readonly options: FrameworkOptions;
+
+  /** Tracks which build phases have completed. */
+  private completed = new Set<Phase>();
+
+  constructor(options: FrameworkOptions) {
+    this.options = options;
   }
 
-  /** Mark Phase 2 as complete (after Phase 1 or Phase 3) */
-  completePhase2(token: Phase1Token | Phase3Token): Phase2Token {
-    if (this._phaseTokens[1] !== token && this._phaseTokens[3] !== token) {
-      throw new Error('Phase 2 called before Phase 1 completed');
+  /** Mark a phase as complete, enforcing ordering constraints. */
+  markComplete(phase: Phase): void {
+    if (phase === 2 && !this.completed.has(3)) {
+      throw new Error('Phase 2 requires Phase 3 to be completed first');
     }
-    const t2: Phase2Token = { __phase2: Symbol() as never };
-    this._phaseTokens[2] = t2;
-    return t2;
+    if (phase === 2 && !this.completed.has(1)) {
+      throw new Error('Phase 2 requires Phase 1 to be completed first');
+    }
+    if (phase === 3 && !this.completed.has(1)) {
+      throw new Error('Phase 3 requires Phase 1 to be completed first');
+    }
+    this.completed.add(phase);
   }
 
-  /** Mark Phase 3 as complete (only requires Phase 1, not Phase 2) */
-  completePhase3(token: Phase1Token): Phase3Token {
-    if (this._phaseTokens[1] !== token) {
-      throw new Error('Phase 3 called before Phase 1 completed');
-    }
-    const t3: Phase3Token = { __phase3: Symbol() as never };
-    this._phaseTokens[3] = t3;
-    return t3;
+  /** Check whether a phase has been completed. */
+  isComplete(phase: Phase): boolean {
+    return this.completed.has(phase);
   }
 
   /** Populate Phase 3 invariants from resolved Vite config and framework options. */
@@ -213,84 +225,9 @@ export class OpenElementBuildContext {
     return this.phase3;
   }
 
-  /** Check whether a phase has been completed. */
-  isPhaseComplete(phase: 1 | 2 | 3): boolean {
-    return this._phaseTokens[phase] !== null;
-  }
-
-  /** Run Phase 3 after Phase 1, enforcing ordering and logging. */
-  async runPhase3(runner: (ctx: this) => Promise<void>): Promise<void> {
-    const phase1Token = this._phaseTokens[1];
-    if (!phase1Token) {
-      throw new Error('Phase 3 called before Phase 1 completed');
-    }
-    this.completePhase3(phase1Token);
-
-    log.info('[3/3] Static site generation...');
-    try {
-      await runner(this);
-      log.info('[3/3] Static site generation - complete');
-    } catch (error) {
-      log.error(`[3/3] Static site generation - FAILED: ${error}`);
-      throw error;
-    }
-  }
-
-  /** Run Phase 2 after Phase 3, enforcing ordering and logging. */
-  async runPhase2(runner: (ctx: this) => Promise<void>): Promise<void> {
-    const phase3Token = this._phaseTokens[3];
-    if (!phase3Token) {
-      throw new Error('Phase 2 called before Phase 3 completed');
-    }
-    this.completePhase2(phase3Token);
-
-    log.info('[2/3] Client island build...');
-    try {
-      await runner(this);
-      log.info('[2/3] Client island build - complete');
-    } catch (error) {
-      log.error(`[2/3] Client island build - FAILED: ${error}`);
-      throw error;
-    }
-  }
-
-  /** Phase 1: Route scanning & build metadata */
-  readonly phase1: Phase1Meta = new Phase1Meta();
-
-  /** Phase 2: Client island build state */
-  readonly phase2: Phase2Meta = new Phase2Meta();
-
-  /** Phase 3: SSG rendering state */
-  readonly phase3: Phase3Meta = new Phase3Meta();
-
-  /** Plugin data from content/i18n sub-plugins */
-  readonly plugins: {
-    blogOptions: OpenElementBlogOptions | null;
-    navSections: OpenElementNavSection[];
-    headerNav: OpenElementHeaderNavLink[];
-    sitemapOptions: Record<string, unknown> | null;
-    i18nOptions: OpenElementI18nContextOptions | null;
-    [key: string]: unknown;
-  } = {
-    blogOptions: null,
-    navSections: [],
-    headerNav: [],
-    sitemapOptions: null,
-    i18nOptions: null,
-  };
-
-  /** Resolved framework options with defaults applied (read-only after construction) */
-  readonly options: FrameworkOptions;
-
-  constructor(options: FrameworkOptions) {
-    this.options = options;
-  }
-
   /** Reset all mutable state (for watch mode / testing) */
   reset(): void {
-    this._phaseTokens[1] = null;
-    this._phaseTokens[2] = null;
-    this._phaseTokens[3] = null;
+    this.completed.clear();
 
     const userResolveAlias = this.phase1.userResolveAlias;
     // NOTE: userResolveAlias is NOT reset - it's user configuration, not

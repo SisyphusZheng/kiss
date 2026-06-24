@@ -6,7 +6,7 @@
  * allowed to use Deno/Node APIs and are intentionally excluded.
  */
 
-import { walkFiles } from './lib/walk.ts';
+import { walkSync } from '@std/fs/walk';
 
 const RESTRICTED_ROOTS = [
   'packages/core/src',
@@ -47,18 +47,18 @@ function stripComments(line: string, inBlock: boolean): { line: string; inBlock:
 
 function scan(root: string): string[] {
   const violations: string[] = [];
-  const files = walkFiles(root, {
-    exclude: ({ name }) => name === '__tests__',
-    include: ({ name }) => {
-      if (name.endsWith('.test.ts') || name.endsWith('.test.tsx')) return false;
-      const dot = name.lastIndexOf('.');
-      if (dot === -1) return false;
-      return EXTENSIONS.has(name.slice(dot));
-    },
+  const files = walkSync(root, {
+    includeDirs: false,
+    skip: [/^__tests__$/],
+  }).filter((entry) => {
+    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) return false;
+    const dot = entry.name.lastIndexOf('.');
+    if (dot === -1) return false;
+    return EXTENSIONS.has(entry.name.slice(dot));
   });
 
-  for (const path of files) {
-    const text = Deno.readTextFileSync(path);
+  for (const entry of files) {
+    const text = Deno.readTextFileSync(entry.path);
     if (text.includes('deno-api-free:ignore')) continue;
     const lines = text.split('\n');
     let inBlockComment = false;
@@ -68,10 +68,10 @@ function scan(root: string): string[] {
       inBlockComment = inBlock;
 
       if (/'node:[^']*'/.test(line) || /"node:[^"]*"/.test(line)) {
-        violations.push(`${path}:${i + 1}: node import: ${raw.trim()}`);
+        violations.push(`${entry.path}:${i + 1}: node import: ${raw.trim()}`);
       }
       if (/\bDeno\.[a-zA-Z_]/.test(line)) {
-        violations.push(`${path}:${i + 1}: Deno API: ${raw.trim()}`);
+        violations.push(`${entry.path}:${i + 1}: Deno API: ${raw.trim()}`);
       }
     }
   }

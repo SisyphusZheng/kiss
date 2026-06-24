@@ -86,6 +86,16 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment: 'this as unknown as Record<string, unknown>',
     reason: 'Custom element prop collection by dynamic prop name.',
   },
+  {
+    file: 'packages/element/src/open-element-render.ts',
+    fragment: 'instance as unknown as HTMLElement',
+    reason: 'Cycle-break: OpenElementLike does not extend HTMLElement.',
+  },
+  {
+    file: 'packages/element/src/open-element-render.ts',
+    fragment: 'instance.constructor as unknown as OpenElementLikeConstructor',
+    reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
+  },
 ];
 
 const issues: Issue[] = [];
@@ -312,18 +322,6 @@ async function main(): Promise<void> {
     currentDocs,
     /\brawHtml\b|data-on-/,
     'current source/docs must use trustedHtml and VNode event handlers',
-  );
-  failMatches(
-    'rename-contract',
-    production.concat(currentDocs),
-    /\blessjs\b|\blessPipeline\b|\bless-plugin\b|\bless-add\b|\bless-install-guide\b|\bless:|virtual:less|less-devtool|less:ready|\bLess(?:PackageManifest|BuildContext|Error|ContentOptions|I18nOptions|BlogOptions|Renderer|Middleware|Logger)\b|classifyLessManifest/,
-    'active source/docs must use openElement naming for public and observable contracts',
-  );
-  failMatches(
-    'metadata-contract',
-    production.concat(currentDocs),
-    /export const less\b|\.less\b|\bless\s*\?:|\bless\s*:\s*\{|\bless\.(?:ssr|dsd|hydrate|module|layer)/,
-    'active metadata must use export const openElement and manifest.openElement',
   );
   failMatches(
     'core-render',

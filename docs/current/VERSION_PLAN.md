@@ -24,9 +24,10 @@ interoperability. The release is staged through four alphas and one beta:
 ## Context
 
 v0.41.0-alpha.1 removed the legacy Linear UI surface, closed the audit-driven
-cleanup train, and shipped the first npm/JSR dual-published alpha. The next
-strategic blockers are signal-DOM architecture hardening and WC ecosystem
-integration.
+cleanup train, and shipped the first npm-only alpha under ADR-0107. JSR publish
+was removed as a release gate; distribution evidence is produced by `deno pack`
+and the npm provenance workflow. The next strategic blockers are signal-DOM
+architecture hardening and WC ecosystem integration.
 
 A previous v0.41.0 line proposed making Vite+ treat Deno as a first-class
 package manager. That upstream PR (voidzero-dev/vite-plus#1888) was declined,
@@ -117,7 +118,7 @@ when alpha.5 is complete.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
-- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.1 11-package surface.
+- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.2 11-package surface.
 
 ## Test Matrix
 
