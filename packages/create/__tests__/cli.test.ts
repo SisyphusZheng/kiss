@@ -418,6 +418,10 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts')),
       },
       {
+        find: '@openelement/core/static',
+        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'static.ts')),
+      },
+      {
         find: '@openelement/ui/open-props-tokens',
         replacement: vitePath(join(uiSrc, 'open-props-tokens.ts')),
       },
