@@ -44,50 +44,60 @@ v0.41-v1.0 blocker.
 
 ## Version Ladder
 
-| Version | Name                                               | Goal                                                                                                                                                             | Status                   |
-| ------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| v0.30.x | Contract cleanup                                   | Architecture and package contract cleanup                                                                                                                        | Done                     |
-| v0.31.0 | JSX-first Application API                          | App authoring API, `/vite` config split, docs/template DX                                                                                                        | Done                     |
-| v0.32.0 | App Lifecycle Contract                             | Route, load, context, layout, error, redirect lifecycle                                                                                                          | Done                     |
-| v0.33.0 | AI-Readable API Foundation                         | Structured page, island, head, route, and render intent APIs                                                                                                     | Done                     |
-| v0.34.0 | AutoFlow2 Sidecar Kernel                           | Workflow state, cells, evidence ledger, allowed-action report                                                                                                    | Done                     |
-| v0.35.x | AutoFlow2 Mechanical Autonomy                      | Harness Gate, Cell Execution, Evolution Loop, full-auto evidence                                                                                                 | Done                     |
-| v0.36.0 | Rendering Runtime, Deployment & Deferred Refactors | Rendering runtime evidence, docs, ISR, SSG Phase 1, parallel SSG, AutoFlow cell base                                                                             | Done with deferred items |
-| v0.36.1 | AutoFlow Closure & v0.36 Release Truth             | Windows-safe AutoFlow tests, real merged cell metrics, release truth alignment                                                                                   | Done                     |
-| v0.36.2 | SSG Bridge Migration + Rendering Evidence Closure  | Move Vite-free SSG render/postprocess code into `@openelement/ssg`; keep adapter-vite as Vite shell                                                              | Done                     |
-| v0.36.3 | Complete SSG File Ownership Migration              | Move route scanner, entry generator, Vite plugin, generated data resolver out of adapter-vite                                                                    | Done                     |
-| v0.36.4 | Firefox/WebKit Cross-Browser Proof                 | Resolve Firefox/WebKit timeout and behavior differences; establish cross-browser E2E gate                                                                        | Done                     |
-| v0.36.5 | Release Truth and AutoFlow Closure                 | Align workflow, release docs, AutoFlow evidence, and website truth                                                                                               | Done                     |
-| v0.37.0 | Product Doctrine + Rendering Contract Reset        | ADR-0091, default 0JS doctrine, DSD/shadow default, light opt-in terms, v0.37.x SOP split                                                                        | Done                     |
-| v0.37.1 | DsdElement Shadow + Light Contract                 | Explicit DsdElement light DOM opt-in with SSR/CSR proof                                                                                                          | Done                     |
-| v0.37.2 | SSR / ISR Server Runtime Contract                  | Request-time SSR/ISR runtime boundary, cache contract, server adapter evidence                                                                                   | Done                     |
-| v0.37.3 | Data / Database Boundary                           | Data/database adapter contracts and recipes without built-in ORM ownership                                                                                       | Done                     |
-| v0.37.4 | Hygiene + Pure CSS UI + Architecture Decoupling    | Close code-quality debt, pure CSS UI, ui/router decoupling, dsd-hydration dedup, test supplementation, autoflow:gate                                             | Done / JSR caveat        |
-| v0.37.5 | Protocol-First Runtime Architecture                | Make @openelement/protocol the replacement boundary and define Vite + Nitro as the default base engine                                                           | Done                     |
-| v0.37.6 | Vite + Nitro Runtime Proof                         | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro                                                        | Done                     |
-| v0.38.0 | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                            | Done                     |
-| v0.39.0 | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                        | Done                     |
-| v0.40.4 | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction | Released                 |
-| v0.40.6 | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup  | Released                 |
-| v0.40.7 | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                      | Released                 |
-| v0.41.0 | Deno-native npm distribution                       | Replace JSR release closure with npm via `deno pack`; keep Deno-first dev/build and Vite+Nitro default engines.                                                  | Planned                  |
-| v0.42.0 | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                        | Planned                  |
-| v0.43.0 | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                | Planned                  |
-| v0.44.0 | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                          | Planned                  |
-| v0.45.0 | Session + Auth Recipes                             | Add signed session primitives and official auth recipes without becoming an auth platform                                                                        | Planned                  |
-| v0.46.0 | Database + Storage Recipes                         | Prove SQLite/libSQL, Postgres, D1, KV/R2-style recipes without selecting a default database                                                                      | Planned                  |
-| v0.47.0 | Deployment Hardening                               | Harden Node, Workers, npm, jsDelivr, Deno `npm:`, cache headers, ISR/SWR, and runtime smoke gates                                                                | Planned                  |
-| v0.48.0 | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                   | Planned                  |
-| v0.49.0 | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                               | Planned                  |
-| v1.0.0  | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                       | Vision                   |
+| Version         | Name                                               | Goal                                                                                                                                                                 | Status                   |
+| --------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| v0.30.x         | Contract cleanup                                   | Architecture and package contract cleanup                                                                                                                            | Done                     |
+| v0.31.0         | JSX-first Application API                          | App authoring API, `/vite` config split, docs/template DX                                                                                                            | Done                     |
+| v0.32.0         | App Lifecycle Contract                             | Route, load, context, layout, error, redirect lifecycle                                                                                                              | Done                     |
+| v0.33.0         | AI-Readable API Foundation                         | Structured page, island, head, route, and render intent APIs                                                                                                         | Done                     |
+| v0.34.0         | AutoFlow2 Sidecar Kernel                           | Workflow state, cells, evidence ledger, allowed-action report                                                                                                        | Done                     |
+| v0.35.x         | AutoFlow2 Mechanical Autonomy                      | Harness Gate, Cell Execution, Evolution Loop, full-auto evidence                                                                                                     | Done                     |
+| v0.36.0         | Rendering Runtime, Deployment & Deferred Refactors | Rendering runtime evidence, docs, ISR, SSG Phase 1, parallel SSG, AutoFlow cell base                                                                                 | Done with deferred items |
+| v0.36.1         | AutoFlow Closure & v0.36 Release Truth             | Windows-safe AutoFlow tests, real merged cell metrics, release truth alignment                                                                                       | Done                     |
+| v0.36.2         | SSG Bridge Migration + Rendering Evidence Closure  | Move Vite-free SSG render/postprocess code into `@openelement/ssg`; keep adapter-vite as Vite shell                                                                  | Done                     |
+| v0.36.3         | Complete SSG File Ownership Migration              | Move route scanner, entry generator, Vite plugin, generated data resolver out of adapter-vite                                                                        | Done                     |
+| v0.36.4         | Firefox/WebKit Cross-Browser Proof                 | Resolve Firefox/WebKit timeout and behavior differences; establish cross-browser E2E gate                                                                            | Done                     |
+| v0.36.5         | Release Truth and AutoFlow Closure                 | Align workflow, release docs, AutoFlow evidence, and website truth                                                                                                   | Done                     |
+| v0.37.0         | Product Doctrine + Rendering Contract Reset        | ADR-0091, default 0JS doctrine, DSD/shadow default, light opt-in terms, v0.37.x SOP split                                                                            | Done                     |
+| v0.37.1         | DsdElement Shadow + Light Contract                 | Explicit DsdElement light DOM opt-in with SSR/CSR proof                                                                                                              | Done                     |
+| v0.37.2         | SSR / ISR Server Runtime Contract                  | Request-time SSR/ISR runtime boundary, cache contract, server adapter evidence                                                                                       | Done                     |
+| v0.37.3         | Data / Database Boundary                           | Data/database adapter contracts and recipes without built-in ORM ownership                                                                                           | Done                     |
+| v0.37.4         | Hygiene + Pure CSS UI + Architecture Decoupling    | Close code-quality debt, pure CSS UI, ui/router decoupling, dsd-hydration dedup, test supplementation, autoflow:gate                                                 | Done / JSR caveat        |
+| v0.37.5         | Protocol-First Runtime Architecture                | Make @openelement/protocol the replacement boundary and define Vite + Nitro as the default base engine                                                               | Done                     |
+| v0.37.6         | Vite + Nitro Runtime Proof                         | Prove openElement routes, rendering, islands, assets, SSR/ISR intent, and deployment output through Nitro                                                            | Done                     |
+| v0.38.0         | Product Surface Reset and Hardening                | Public package/API/product surface reset based on protocol and Nitro runtime evidence                                                                                | Done                     |
+| v0.39.0         | Framework RC + Four-Product Matrix Reset           | ADR-0099, public docs integrity, Elements direction, starter/deploy/consumer gates, Preact island handoff                                                            | Done                     |
+| v0.40.4         | Elements + Preact + Repository Slimming            | Productize `OpenElement`, prove Preact islands, collapse to 11 packages, singular public names, 0 explicit any, AutoFlow3-only governance, SSG engine extraction     | Released                 |
+| v0.40.6         | Audit-Driven Quality Cleanup                       | Close audit gaps: test hardening for element/ui, internal file splits, error-handling unification, assertion cleanup, naming-debt removal, adapter-vite cleanup      | Released                 |
+| v0.40.7         | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                          | Released                 |
+| v0.41.0-alpha.1 | npm Distribution + Audit Cleanup                   | Replace JSR release closure with npm via `deno pack`; audit-driven cleanup and protocol restoration; ship first npm/JSR dual-published alpha.                        | Released                 |
+| v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                         | Planned                  |
+| v0.41.0-alpha.3 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                              | Planned                  |
+| v0.41.0-alpha.4 | openElement Components in Fresh                    | Lightweight client runtime for third-party frameworks; Fresh example proving SSR + hydration of openElement components.                                              | Planned                  |
+| v0.41.0-beta.1  | v0.41.0 Stabilization                              | Close alpha feedback, update docs/starters/examples, freeze public surface for v0.41.0.                                                                              | Planned                  |
+| v0.41.0         | Deno-native npm distribution + WC Interop          | Stable npm-first distribution, hardened signal-DOM architecture, validated third-party WC integration, and a lightweight runtime for external framework consumption. | Planned                  |
+| v0.42.0         | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                            | Planned                  |
+| v0.43.0         | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                    | Planned                  |
+| v0.44.0         | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                              | Planned                  |
+| v0.45.0         | Session + Auth Recipes                             | Add signed session primitives and official auth recipes without becoming an auth platform                                                                            | Planned                  |
+| v0.46.0         | Database + Storage Recipes                         | Prove SQLite/libSQL, Postgres, D1, KV/R2-style recipes without selecting a default database                                                                          | Planned                  |
+| v0.47.0         | Deployment Hardening                               | Harden Node, Workers, npm, jsDelivr, Deno `npm:`, cache headers, ISR/SWR, and runtime smoke gates                                                                    | Planned                  |
+| v0.48.0         | Product DX + Docs Freeze                           | Freeze docs shape, starter templates, examples, and smoke-backed learning path                                                                                       | Planned                  |
+| v0.49.0         | v1.0 Freeze Candidate                              | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                                   | Planned                  |
+| v1.0.0          | Stable Web Components Full-stack Framework         | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                           | Vision                   |
 
-## v0.41.0 - Deno-native npm distribution
+## v0.41.0 - Deno-native npm Distribution + WC Interop
 
 Strategic realignment: Vite+ upstream (voidzero-dev/vite-plus#1888) declined to
 add Deno as a first-class package manager. Instead of pushing upstream, v0.41.0
 uses Deno 2.8+ `deno pack` to build npm-publishable tarballs directly from the
 Deno-first workspace. openElement stays Deno-native for development, build, and
 release, while npm becomes the single registry truth for consumers.
+
+Beyond distribution, v0.41.0 also hardens the signal-DOM architecture and proves
+that openElement can both consume and be consumed by the broader Web Components
+ecosystem. This work is staged through four alphas and one beta before the stable
+v0.41.0 tag.
 
 Core work:
 
@@ -97,6 +107,9 @@ Core work:
     specifiers in workspace `deno.json` files.
   - Add `deno task pack` / `deno task publish:npm` that topologically packs and
     publishes the 11-package graph in dependency order.
+  - Add `deno task pack:dry-run` for CI validation.
+  - Add pure-ESM / pure-ECMAScript quality gates (`publint`,
+    `attw --profile esm-only`, and custom static scans) to the release pipeline.
 - Runtime-agnostic boundaries:
   - Move `FileIsrCache` from `@openelement/core/isr` to
     `@openelement/ssg/file-isr-cache` because it requires filesystem access.
@@ -105,23 +118,41 @@ Core work:
   - Add a CI gate that fails if runtime-free product packages
     (`core`, `element`, `ui`, `protocol`, `signal`, `router`, `app`) use
     `Deno.*` APIs in `src/`.
-- Adapter-vite npm mode:
+- Signal-DOM architecture:
+  - Extract hydration lifecycle into a standalone `@openelement/core/hydrate`
+    entry point.
+  - Split renderer from activation layer (`jsx-render-dom.ts` emits descriptors;
+    `binding-activation.ts` owns effect lifecycle).
+  - Replace the central `BindingDescriptor` switch with an internal registry of
+    small binding factories.
+- Cross-framework Web Components:
+  - Prove that Lit, Shoelace, and Material Web Components render, hydrate, and
+    remain interactive inside an openElement app.
+  - Document the interop contract between openElement components and standard
+    Custom Elements.
+- External framework consumption:
+  - Provide a lightweight client runtime so openElement components can be used
+    in third-party frameworks such as Deno Fresh.
+- Adapter-vite and starter template:
   - Default `createOpenJsrPackageResolverPlugin` to npm mode: let Vite resolve
     `@openelement/*` from `node_modules` instead of fetching TS source from JSR.
   - Keep JSR source-resolution as an explicit opt-in (`registry: 'jsr'`).
-- Starter template:
   - Update `@openelement/create` to emit `npm:@openelement/*` imports and
-    resolve remote versions from the npm registry.
+    resolve remote package versions from the npm registry.
 - Release flow:
   - Replace JSR publish with `deno pack` + `npm publish --provenance` in
     `tools/autoflow/release.ts`.
   - Add `actions/setup-node` to `.github/workflows/autoflow-release.yml` and
     pass `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN`.
-  - Keep JSR monitoring workflows as historical observation only; do not gate
-    releases on JSR.
+  - Keep dual npm/JSR publishing; JSR acts as a strictness signal, npm as the
+    primary distribution channel.
+  - Keep `jsr-consumer-monitor.yml` and `wait-jsr-release-metadata.ts` as
+    historical observation tools, not release gates.
 - Consumer smoke:
   - Add Node ESM, Deno `npm:`, jsDelivr browser-safe, and Nitro Node/Workers
     smoke gates against npm artifacts.
+  - Add third-party WC smoke for Shoelace and Material Web Components.
+  - Add Fresh example smoke for openElement component hydration.
 
 Exit criteria:
 
@@ -129,7 +160,11 @@ Exit criteria:
 - Generated tarballs contain no `jsr:` or `@jsr/` specifiers.
 - npm trusted publishing succeeds from GitHub Actions with provenance.
 - A generated openElement app installs and builds from npm packages only.
-- Release notes describe npm as the current distribution truth.
+- Pure-ESM / pure-ECMAScript gates pass for every npm artifact.
+- Third-party WC libraries render and hydrate inside an openElement app.
+- A Fresh example project SSRs and hydrates an openElement component.
+- Release notes describe npm as the current distribution truth and document
+  cross-framework WC interop.
 
 Non-goals:
 
@@ -137,6 +172,7 @@ Non-goals:
 - No npm/pnpm/yarn lockfile as the workspace source of truth.
 - No further upstream Vite+ Deno PM advocacy in v0.41.0.
 - No removal of existing JSR published versions.
+- No server/data/forms/session/cache primitives (deferred to v0.42.0+).
 
 ## v0.41.0-alpha.1 - Cleanup-Train Patch
 
@@ -175,6 +211,114 @@ Non-goals:
 - No package additions or removals (count stays 11).
 - No default runtime / signal-engine / renderer changes.
 - No git history rewrite.
+
+## v0.41.0-alpha.2 - Signal-DOM Deepening
+
+Architecture-review follow-up deferred from alpha.1. Extract hydration lifecycle
+into a standalone `@openelement/core/hydrate` entry point, split the renderer
+from the activation layer, and replace the broad `BindingDescriptor` union with
+a registry of small binding factories. Validate the `static`/`hydrate`/`csr`
+subpath split with at least one real static-only consumer.
+
+Scope:
+
+- Candidate 3 — `HydrationScope`:
+  - Create `packages/core/src/hydration-scope.ts`.
+  - Export `HydrationScope` from `@openelement/core/hydrate`.
+  - Refactor `OpenElement` to hold one scope instead of three private collections.
+  - Move hydration logic that does not depend on `OpenElement` into core.
+  - Add isolation tests for `@openelement/core/hydrate`.
+- Candidate 1 — Renderer / Activation Split:
+  - Make `jsx-render-dom.ts` a pure translator that emits `BindingDescriptor`s.
+  - Move all signal effect lifecycle into `binding-activation.ts`.
+  - Add `SHOW`/`FOR` lifecycle as `conditional`/`list` binding kinds.
+- Candidate 2 — `BindingDescriptor` Registry:
+  - Define factory constructors (`bindText`, `bindAttr`, `bindClass`, `bindEvent`,
+    `bindRender`, `bindConditional`, `bindList`).
+  - Replace the central switch in `applyBindingDescriptor()` with an internal
+    registry.
+- Static subpath validation:
+  - Migrate one real static-only consumer to `@openelement/core/static`.
+- Safari adoptedStyleSheets follow-up:
+  - Audit token-sheet adoption and apply the chosen theme fix.
+
+Non-goals:
+
+- No public JSX syntax changes.
+- No new product features.
+- No third-party WC integration (deferred to alpha.3).
+
+## v0.41.0-alpha.3 - Cross-Framework Web Components Integration
+
+Prove that the openElement full-stack framework can consume mature third-party
+Web Components and that npm artifacts satisfy strict pure-ESM / pure-ECMAScript
+quality gates.
+
+Scope:
+
+- Mature WC library direct use:
+  - Primary targets: Lit, Shoelace, Material Web Components.
+  - Optional targets: FAST, Stencil compiled output.
+  - Verify install, JSX usage, SSR output, client hydration, events, slots, and
+    theme-token flow for each primary target.
+  - Add release-gate smoke tests.
+- Cross-framework WC capability benchmark:
+  - Document the interop contract between openElement components and standard
+    Custom Elements.
+  - Add unit tests for openElement ↔ Lit component nesting.
+- Pure ESM / pure ECMAScript quality gates:
+  - Run `publint` and `attw --profile esm-only` on every npm tarball.
+  - Add custom scans for `require`, `module.exports`, Node-only globals, and
+    non-ESM syntax.
+  - Document the dual npm/JSR and pure-ESM rationale.
+
+Non-goals:
+
+- No openElement components in React/Vue/Fresh yet (deferred to alpha.4).
+- No server/data/forms/session/cache primitives.
+
+## v0.41.0-alpha.4 - openElement Components in Fresh
+
+Provide a lightweight client runtime so openElement components can be consumed
+as npm packages inside third-party frameworks, starting with Deno Fresh.
+
+Scope:
+
+- Lightweight client runtime:
+  - Define `hydrateOpenElement(root)` and `disposeOpenElement(root)` APIs.
+  - Implement in `@openelement/core/hydrate` (or a dedicated package if coupling
+    demands it).
+  - Hydrate DSD templates, bind signals, and initialize context without the full
+    `@openelement/element` framework stack.
+- Fresh example project:
+  - Create `examples/open-element-in-fresh/`.
+  - Verify SSR output, browser upgrade, signal reactivity, and context.
+- Documentation:
+  - Write `docs/integrations/open-element-in-fresh.md`.
+  - List known limitations and disposal requirements.
+
+Non-goals:
+
+- No React/Vue/Svelte adapters yet.
+- No server primitives.
+
+## v0.41.0-beta.1 - Stabilization
+
+Close alpha feedback loops, update docs and starters, and freeze the public
+surface for the stable v0.41.0 tag.
+
+Scope:
+
+- Address regressions and API rough edges discovered during alpha.2-4.
+- Update `README`, `STATUS`, starter templates, and examples to reflect v0.41.0
+  capabilities.
+- Freeze public package exports and subpath contracts.
+- Run the full release gate matrix end-to-end.
+
+Non-goals:
+
+- No new product features.
+- No package additions or removals.
 
 ## v0.40.7 - Release Readiness & CI Hardening
 

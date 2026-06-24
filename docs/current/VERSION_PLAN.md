@@ -1,4 +1,4 @@
-# v0.41.0 Version Plan - Deno-native npm distribution
+# v0.41.0 Version Plan - Deno-native npm Distribution + WC Interop
 
 ```text
 openElement = Elements + UI + Framework + Protocols
@@ -6,16 +6,25 @@ openElement = Elements + UI + Framework + Protocols
 
 ## Objective
 
-Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`.
-This release replaces JSR as the required release exit gate with npm, keeps the
-project Deno-native for development/build/release, and preserves Vite + Nitro
-as the default runtime engines behind the protocol boundary.
+Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`,
+harden the signal-DOM architecture, and prove cross-framework Web Components
+interoperability. The release is staged through four alphas and one beta:
+
+- **alpha.1** (shipped): npm distribution + audit cleanup.
+- **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
+  renderer/activation split, `BindingDescriptor` registry).
+- **alpha.3**: Consume Lit/Shoelace/Material Web Components inside openElement;
+  pure-ESM / pure-ECMAScript npm quality gates.
+- **alpha.4**: Lightweight client runtime so openElement components work in Deno
+  Fresh.
+- **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
 
-v0.41.0-alpha.1 removed the legacy Linear UI surface and closed the audit-driven
-cleanup train. The next strategic blocker is distribution: ADR-0107 decided on
-npm-only releases, but the codebase is still authored for JSR publication.
+v0.41.0-alpha.1 removed the legacy Linear UI surface, closed the audit-driven
+cleanup train, and shipped the first npm/JSR dual-published alpha. The next
+strategic blockers are signal-DOM architecture hardening and WC ecosystem
+integration.
 
 A previous v0.41.0 line proposed making Vite+ treat Deno as a first-class
 package manager. That upstream PR (voidzero-dev/vite-plus#1888) was declined,
@@ -69,6 +78,8 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 - Add npm-registry consumer smoke for Node ESM, Deno `npm:`, jsDelivr CDN, and
   Nitro Node/Workers output.
+- Add third-party WC smoke for Shoelace and Material Web Components.
+- Add Fresh example smoke for openElement component hydration.
 
 ## Non-Goals
 
@@ -76,7 +87,18 @@ so this plan pivots to Deno's own `deno pack` tooling.
 - No npm/pnpm/yarn workspace source of truth.
 - No further upstream Vite+ Deno PM advocacy in this release.
 - No removal of existing JSR published versions.
-- No new product features or package graph changes.
+- No server/data/forms/session/cache primitives (deferred to v0.42.0+).
+
+## Staged Alpha/Beta Plans
+
+The active work is tracked in per-alpha plan files:
+
+- `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
+- `docs/release/v0.41.0-alpha.3-plan.md` — Cross-Framework Web Components Integration
+- `docs/release/v0.41.0-alpha.4-plan.md` — openElement Components in Fresh
+
+The stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`
+when alpha.4 is complete.
 
 ## Governance Rules
 
