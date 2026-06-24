@@ -177,10 +177,13 @@ export class OpenElementBuildContext {
   /** Mark a phase as complete, enforcing ordering constraints. */
   markComplete(phase: Phase): void {
     if (phase === 2 && !this.completed.has(3)) {
-      throw new Error('Phase 2 called before Phase 3 completed');
+      throw new Error('Phase 2 requires Phase 3 to be completed first');
+    }
+    if (phase === 2 && !this.completed.has(1)) {
+      throw new Error('Phase 2 requires Phase 1 to be completed first');
     }
     if (phase === 3 && !this.completed.has(1)) {
-      throw new Error('Phase 3 called before Phase 1 completed');
+      throw new Error('Phase 3 requires Phase 1 to be completed first');
     }
     this.completed.add(phase);
   }

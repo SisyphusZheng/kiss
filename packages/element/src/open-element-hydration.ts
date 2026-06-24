@@ -26,21 +26,11 @@ import {
   DATA_SIGNAL_RENDER,
   parseSignalAttrSpec,
 } from '@openelement/protocol/hydration-markers';
-import { disposeRenderBindings, type VNodeCacheAccess } from './open-element-render.js';
-
-/**
- * Minimal structural stand-in for OpenElement instances.
- *
- * Avoids importing the real OpenElement class, which creates a circular
- * dependency that confuses Deno's npm type-generation. Only the members
- * actually used by the hydration helpers are declared.
- */
-interface OpenElementLike {
-  render(): unknown;
-  shadowRoot: ShadowRoot | null;
-  signalRegistry: Map<string, Signal<unknown>>;
-  tagName: string;
-}
+import {
+  disposeRenderBindings,
+  type OpenElementLike,
+  type VNodeCacheAccess,
+} from './open-element-render.js';
 
 /**
  * v0.28 (ADR-0067): Signal-native hydration.

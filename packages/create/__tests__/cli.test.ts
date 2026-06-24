@@ -262,9 +262,6 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     denoJson.imports['@openelement/app/'] = pathToFileURL(
       join(repoRoot, 'packages', 'app', 'src') + sep,
     ).href;
-    denoJson.imports['@openelement/adapter-vite'] = pathToFileURL(
-      join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts'),
-    ).href;
     denoJson.imports['@openelement/core'] = pathToFileURL(
       join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
     ).href;

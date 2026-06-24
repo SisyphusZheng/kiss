@@ -23,7 +23,7 @@ import type { Signal } from '@openelement/protocol/signal';
  * dependency that confuses Deno's npm type-generation. Only the members
  * actually used by the render helpers are declared.
  */
-interface OpenElementLike {
+export interface OpenElementLike {
   render(): unknown;
   shadowRoot: ShadowRoot | null;
   createRenderRoot(): void;

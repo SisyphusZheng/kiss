@@ -258,7 +258,7 @@ export function selectGates(tier: AutoFlowTier, changedPaths: string[]): GateDef
           command: [
             'deno',
             'eval',
-            "console.warn('[test:e2e] OPEN_ELEMENT_E2E_OFFLINE=1; skipping E2E (dev-only escape)')",
+            "console.warn('[test:e2e] OPEN_ELEMENT_E2E_OFFLINE=1; skipping E2E (dev-only escape)'); Deno.exit(77)",
           ],
         };
       });
