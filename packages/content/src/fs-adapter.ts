@@ -8,6 +8,8 @@
 import { cwd } from 'node:process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
+type BufferEncoding = NodeJS.BufferEncoding;
+
 /** Minimal synchronous file-system surface used by content plugins. */
 export interface FileSystemAdapter {
   cwd(): string;

@@ -702,5 +702,8 @@ Deno.test('event binding supports object options', () => {
 });
 
 Deno.test('restore global document after binding-activation tests', () => {
+  // ponytail: this test must remain the last one in the file so the mock
+  // document survives every preceding test. A proper per-test harness is
+  // overkill for this alpha-cleanup slice.
   (globalThis as unknown as Record<string, unknown>).document = _savedDocument;
 });

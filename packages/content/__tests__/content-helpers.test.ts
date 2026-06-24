@@ -5,7 +5,7 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import { writeJson } from '../src/write-json.ts';
 import { createSitemapPlugin } from '../src/sitemap/plugin.ts';
-import { nodeFsAdapter, type FileSystemAdapter } from '../src/fs-adapter.ts';
+import { type FileSystemAdapter, nodeFsAdapter } from '../src/fs-adapter.ts';
 
 Deno.test('writeJson serializes value with trailing newline', () => {
   assertEquals(writeJson({ a: 1 }), '{\n  "a": 1\n}\n');
@@ -13,7 +13,9 @@ Deno.test('writeJson serializes value with trailing newline', () => {
 });
 
 Deno.test('createSitemapPlugin records options on build context', () => {
-  const ctx = { plugins: {} as Record<string, unknown> } as import('@openelement/protocol/framework').OpenElementBuildContextLike;
+  const ctx = {
+    plugins: {} as Record<string, unknown>,
+  } as import('@openelement/protocol/framework').OpenElementBuildContextLike;
   const plugin = createSitemapPlugin({ hostname: 'https://example.com' }, ctx);
   assertEquals(plugin.name, 'open:content:sitemap');
 
