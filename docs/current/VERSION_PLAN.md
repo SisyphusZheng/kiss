@@ -118,7 +118,7 @@ when alpha.5 is complete.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
-- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.1 11-package surface.
+- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.2 11-package surface.
 
 ## Test Matrix
 

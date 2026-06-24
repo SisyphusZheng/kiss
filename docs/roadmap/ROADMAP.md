@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.1 Cleanup-Train Patch; next line is Deno Package Manager for Vite+ Dogfood.\
+> Current package line: v0.41.0-alpha.2 Signal-DOM Deepening; next line is Cross-Framework Web Components Integration.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 

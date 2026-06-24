@@ -328,7 +328,7 @@ export class ApiCorePage extends OpenElement {
             </p>
           </div>
           <div class='hero-panel'>
-            <open-lab-panel label='contract map' meta='v0.41.0-alpha.1'>
+            <open-lab-panel label='contract map' meta='v0.41.0-alpha.2'>
               <p class='panel-copy'>
                 Start at the package you own, then follow the section anchors to
                 generated route metadata, UI primitives, and build output.
