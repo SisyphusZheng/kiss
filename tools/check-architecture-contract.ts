@@ -42,8 +42,9 @@ const TEXT_EXTENSIONS = new Set([
 const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   {
     file: 'packages/content/src/sitemap/plugin.ts',
-    fragment: 'ctx.plugins.sitemapOptions = options as unknown as Record<string, unknown>;',
-    reason: 'Plugin option bag crosses a protocol boundary.',
+    fragment:
+      "ctx.registerPlugin('sitemapOptions', options as unknown as Record<string, unknown>);",
+    reason: 'Plugin option bag crosses a protocol boundary via registerPlugin.',
   },
   {
     file: 'packages/core/src/style-sheet.ts',

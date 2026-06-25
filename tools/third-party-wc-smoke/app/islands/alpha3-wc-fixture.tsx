@@ -1,0 +1,64 @@
+/** @jsxImportSource @openelement/core */
+import { defineElement, defineIsland, defineIslandConfig } from '@openelement/app';
+import { signal, StyleSheet } from '@openelement/element';
+
+export const tagName = 'alpha3-wc-fixture';
+export const openElement = defineIslandConfig({ hydrate: 'load', ssr: true, dsd: true });
+
+if (typeof window !== 'undefined') {
+  import('../client/alpha3-wc-client.ts');
+}
+
+defineElement('alpha3-open-child', {
+  render() {
+    return <span id='open-child-ready'>openElement child inside Lit</span>;
+  },
+});
+
+const styles = new StyleSheet();
+styles.replaceSync(`
+  :host { display: grid; gap: 1rem; }
+  section { display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #d0d7de; border-radius: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+`);
+
+const eventCount = signal(0);
+const bump = () => eventCount.value++;
+
+export default defineIsland(tagName, {
+  styles,
+  render() {
+    return (
+      <>
+        <p id='event-count'>events:{eventCount.value}</p>
+        <section id='lit-section'>
+          <h2>Lit</h2>
+          <alpha3-lit-counter label='Lit counter' on-lit-count={bump}>
+            <span slot='label'>Lit slot label</span>
+          </alpha3-lit-counter>
+        </section>
+        <section id='shoelace-section'>
+          <h2>Shoelace</h2>
+          <div class='row'>
+            <sl-button id='sl-button' variant='primary' onClick={bump}>Shoelace Button</sl-button>
+            <sl-switch id='sl-switch' on-sl-change={bump}>Shoelace Switch</sl-switch>
+          </div>
+          <sl-dialog id='sl-dialog' label='Shoelace Dialog'>Dialog content</sl-dialog>
+        </section>
+        <section id='material-section'>
+          <h2>Material Web</h2>
+          <div class='row'>
+            <md-filled-button id='md-button' onClick={bump}>Material Button</md-filled-button>
+            <md-outlined-text-field id='md-field' label='Material Field' value='alpha3'>
+            </md-outlined-text-field>
+            <md-switch id='md-switch' on-change={bump}></md-switch>
+          </div>
+        </section>
+        <section id='interop-section'>
+          <h2>Bidirectional</h2>
+          <alpha3-lit-host></alpha3-lit-host>
+        </section>
+      </>
+    );
+  },
+}, openElement);

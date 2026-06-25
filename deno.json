@@ -52,6 +52,8 @@
     "graph:check-imports": "deno run --allow-read --allow-write --allow-run tools/check-import-map.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
     "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
+    "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
+    "package-artifacts:check": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env tools/check-package-artifacts.ts",
     "publish:jsr:core": "cd packages/core && deno publish",
     "pack": "deno task generate:ui-manifest && deno run --allow-read --allow-write --allow-run tools/publish-npm.ts pack",
     "pack:dry-run": "deno task generate:ui-manifest && deno run --allow-read --allow-write --allow-run tools/publish-npm.ts pack:dry-run",

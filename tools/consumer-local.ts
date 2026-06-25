@@ -14,6 +14,56 @@ import { dirname, join } from 'node:path';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { allPackageAliases } from './lib/package-graph.ts';
+
+function findMissingGeneratedImports(
+  source: string,
+  importMap: Record<string, string>,
+): string[] {
+  const specifiers = extractBareImportSpecifiers(source);
+  return [...specifiers].filter((specifier) => !isMappedSpecifier(specifier, importMap)).sort();
+}
+
+function extractBareImportSpecifiers(source: string): Set<string> {
+  const specifiers = new Set<string>();
+  const patterns = [
+    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
+    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
+    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) {
+      const specifier = match[1];
+      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
+        specifiers.add(specifier);
+      }
+    }
+  }
+
+  return specifiers;
+}
+
+function isBareSpecifier(specifier: string): boolean {
+  return !specifier.startsWith('.') &&
+    !specifier.startsWith('/') &&
+    !specifier.startsWith('file:') &&
+    !specifier.startsWith('http:') &&
+    !specifier.startsWith('https:') &&
+    !specifier.startsWith('data:') &&
+    !specifier.startsWith('node:') &&
+    !specifier.startsWith('npm:') &&
+    !specifier.startsWith('jsr:');
+}
+
+function isMappedSpecifier(
+  specifier: string,
+  importMap: Record<string, string>,
+): boolean {
+  if (Object.hasOwn(importMap, specifier)) return true;
+  return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');
 
@@ -79,106 +129,10 @@ const denoJsonPath = join(appDir, 'deno.json');
 const denoJson = JSON.parse(readFileSync(denoJsonPath, 'utf-8'));
 const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 
-denoJson.imports['@openelement/app'] = pathToFileURL(
-  join(repoRoot, 'packages', 'app', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/core'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/core/hydrate'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts'),
-).href;
-denoJson.imports['@openelement/core/static'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'static.ts'),
-).href;
-denoJson.imports['@openelement/core/errors'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'errors.ts'),
-).href;
-denoJson.imports['@openelement/core/logger'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'logger.ts'),
-).href;
-denoJson.imports['@openelement/core/prop'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'prop.ts'),
-).href;
-denoJson.imports['@openelement/core/render-ir'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'render-ir.ts'),
-).href;
-denoJson.imports['@openelement/core/jsx-runtime'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts'),
-).href;
-denoJson.imports['@openelement/core/jsx-dev-runtime'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts'),
-).href;
-denoJson.imports['@openelement/adapter-vite/build-context'] = pathToFileURL(
-  join(repoRoot, 'packages', 'adapter-vite', 'src', 'build-context.ts'),
-).href;
-denoJson.imports['@openelement/adapter-vite'] = pathToFileURL(
-  join(repoRoot, 'packages', 'adapter-vite', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/signal'] = pathToFileURL(
-  join(repoRoot, 'packages', 'signal', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/signal/framework'] = pathToFileURL(
-  join(repoRoot, 'packages', 'signal', 'src', 'framework.ts'),
-).href;
-denoJson.imports['@openelement/element'] = pathToFileURL(
-  join(repoRoot, 'packages', 'element', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/core/style-sheet'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts'),
-).href;
-denoJson.imports['@openelement/core/runtime'] = pathToFileURL(
-  join(repoRoot, 'packages', 'core', 'src', 'runtime.ts'),
-).href;
-denoJson.imports['@openelement/content'] = pathToFileURL(
-  join(repoRoot, 'packages', 'content', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/app/i18n'] = pathToFileURL(
-  join(repoRoot, 'packages', 'app', 'src', 'i18n.ts'),
-).href;
-denoJson.imports['@openelement/ui'] = pathToFileURL(
-  join(repoRoot, 'packages', 'ui', 'src', 'index.ts'),
-).href;
-denoJson.imports['@openelement/ui/'] = pathToFileURL(
-  join(repoRoot, 'packages', 'ui', 'src') + '/',
-).href;
-// Router is a transitive dependency of @openelement/app; local source overrides
-// must include it so the generated starter import map resolves the SSR bundle.
-denoJson.imports['@openelement/router'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src', 'data-context.ts'),
-).href;
-denoJson.imports['@openelement/router/i18n'] = pathToFileURL(
-  join(repoRoot, 'packages', 'router', 'src', 'i18n.ts'),
-).href;
-// Protocol subpaths must be mapped so that local source builds resolve
-// cross-package imports such as @openelement/protocol/hydration-markers.
-const protocolSrc = join(repoRoot, 'packages', 'protocol', 'src');
-denoJson.imports['@openelement/protocol'] = pathToFileURL(
-  join(protocolSrc, 'index.ts'),
-).href;
-for (
-  const subpath of [
-    'hydration-markers',
-    'signal',
-    'vnode',
-    'render',
-    'manifest',
-    'framework',
-    'context',
-    'runtime',
-    'data',
-    'isr',
-    'ssg',
-    'errors',
-    'style-sheet',
-    'island',
-    'prop',
-  ]
-) {
-  denoJson.imports[`@openelement/protocol/${subpath}`] = pathToFileURL(
-    join(protocolSrc, `${subpath}.ts`),
-  ).href;
+for (const [specifier, url] of allPackageAliases(repoRoot)) {
+  denoJson.imports[specifier] = url;
 }
+
 denoJson.imports['lit'] = 'npm:lit@^3.2.0';
 denoJson.imports['vite'] = 'npm:vite@8.0.10';
 denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
@@ -200,198 +154,27 @@ writeFileSync(denoJsonPath, JSON.stringify(denoJson, null, 2));
 
 // Step 3: Patch vite.config.ts for local source resolution
 const uiSrc = join(repoRoot, 'packages', 'ui', 'src');
-const signalsSrc = join(repoRoot, 'packages', 'signal', 'src');
 
-const aliases = [
-  // Protocol subpaths must precede the parent @openelement/protocol alias.
-  {
-    find: '@openelement/protocol/hydration-markers',
-    replacement: vitePath(join(protocolSrc, 'hydration-markers.ts')),
-  },
-  {
-    find: '@openelement/protocol/signal',
-    replacement: vitePath(join(protocolSrc, 'signal.ts')),
-  },
-  {
-    find: '@openelement/protocol/vnode',
-    replacement: vitePath(join(protocolSrc, 'vnode.ts')),
-  },
-  {
-    find: '@openelement/protocol/render',
-    replacement: vitePath(join(protocolSrc, 'render.ts')),
-  },
-  {
-    find: '@openelement/protocol/manifest',
-    replacement: vitePath(join(protocolSrc, 'manifest.ts')),
-  },
-  {
-    find: '@openelement/protocol/framework',
-    replacement: vitePath(join(protocolSrc, 'framework.ts')),
-  },
-  {
-    find: '@openelement/protocol/context',
-    replacement: vitePath(join(protocolSrc, 'context.ts')),
-  },
-  {
-    find: '@openelement/protocol/runtime',
-    replacement: vitePath(join(protocolSrc, 'runtime.ts')),
-  },
-  {
-    find: '@openelement/protocol/data',
-    replacement: vitePath(join(protocolSrc, 'data.ts')),
-  },
-  {
-    find: '@openelement/protocol/isr',
-    replacement: vitePath(join(protocolSrc, 'isr.ts')),
-  },
-  {
-    find: '@openelement/protocol/ssg',
-    replacement: vitePath(join(protocolSrc, 'ssg.ts')),
-  },
-  {
-    find: '@openelement/protocol/errors',
-    replacement: vitePath(join(protocolSrc, 'errors.ts')),
-  },
-  {
-    find: '@openelement/protocol/style-sheet',
-    replacement: vitePath(join(protocolSrc, 'style-sheet.ts')),
-  },
-  {
-    find: '@openelement/protocol/island',
-    replacement: vitePath(join(protocolSrc, 'island.ts')),
-  },
-  {
-    find: '@openelement/protocol/prop',
-    replacement: vitePath(join(protocolSrc, 'prop.ts')),
-  },
-  {
-    find: '@openelement/protocol',
-    replacement: vitePath(join(protocolSrc, 'index.ts')),
-  },
-  {
-    find: '@openelement/adapter-vite/build-context',
-    replacement: vitePath(
-      join(repoRoot, 'packages', 'adapter-vite', 'src', 'build-context.ts'),
-    ),
-  },
-  {
-    find: '@openelement/adapter-vite',
-    replacement: vitePath(join(repoRoot, 'packages', 'adapter-vite', 'src', 'index.ts')),
-  },
-  {
-    find: '@openelement/core/logger',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'logger.ts')),
-  },
-  {
-    find: '@openelement/core/prop',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'prop.ts')),
-  },
-  {
-    find: '@openelement/core/render-ir',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'render-ir.ts')),
-  },
-  {
-    find: '@openelement/core/jsx-runtime',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts')),
-  },
-  {
-    find: '@openelement/core/jsx-dev-runtime',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'jsx-runtime.ts')),
-  },
-  {
-    find: '@openelement/core/errors',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'errors.ts')),
-  },
-  {
-    find: '@openelement/core/hydrate',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'hydrate.ts')),
-  },
-  {
-    find: '@openelement/core/static',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'static.ts')),
-  },
-  {
-    find: '@openelement/core',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'index.ts')),
-  },
-  {
-    find: '@openelement/signal/framework',
-    replacement: vitePath(join(signalsSrc, 'framework.ts')),
-  },
-  {
-    find: '@openelement/signal',
-    replacement: vitePath(join(signalsSrc, 'index.ts')),
-  },
-  {
-    find: '@openelement/element',
-    replacement: vitePath(join(repoRoot, 'packages', 'element', 'src', 'index.ts')),
-  },
-  {
-    find: '@openelement/core/style-sheet',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'style-sheet.ts')),
-  },
-  {
-    find: '@openelement/core/runtime',
-    replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'runtime.ts')),
-  },
-  {
-    find: '@openelement/ui/open-props-tokens',
-    replacement: vitePath(join(uiSrc, 'open-props-tokens.ts')),
-  },
-  {
-    find: '@openelement/ui/open-button',
-    replacement: vitePath(join(uiSrc, 'open-button.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-card',
-    replacement: vitePath(join(uiSrc, 'open-card.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-input',
-    replacement: vitePath(join(uiSrc, 'open-input.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-code-block',
-    replacement: vitePath(join(uiSrc, 'open-code-block.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-layout',
-    replacement: vitePath(join(uiSrc, 'open-layout.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-theme-toggle',
-    replacement: vitePath(join(uiSrc, 'open-theme-toggle.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-hero-ping',
-    replacement: vitePath(join(uiSrc, 'open-hero-ping.tsx')),
-  },
-  {
-    find: '@openelement/ui/open-dialog',
-    replacement: vitePath(join(uiSrc, 'open-dialog.tsx')),
-  },
-  // Parent @openelement/ui alias MUST come after all @openelement/ui/* subpath aliases
-  {
-    find: '@openelement/ui',
-    replacement: vitePath(uiSrc),
-  },
-  {
-    find: '@openelement/router/i18n',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'i18n.ts')),
-  },
-  {
-    find: '@openelement/router',
-    replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
-  },
-  {
-    find: '@openelement/adapter-vite',
-    replacement: vitePath(join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts')),
-  },
-  {
-    find: '@openelement/app',
-    replacement: vitePath(join(repoRoot, 'packages', 'app', 'src', 'index.ts')),
-  },
-];
+const aliases = [...allPackageAliases(repoRoot)]
+  .filter(([find]) => find !== '@openelement/ui/')
+  .map(([find, url]) => ({
+    find,
+    replacement: vitePath(fileURLToPath(url)),
+  }));
+
+// Override adapter-vite main entry to use app-vite.ts
+const avIdx = aliases.findIndex((a) => a.find === '@openelement/adapter-vite');
+if (avIdx !== -1) {
+  aliases[avIdx].replacement = vitePath(
+    join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts'),
+  );
+}
+
+// @openelement/ui directory catch-all (after all specific subpath aliases)
+aliases.push({
+  find: '@openelement/ui',
+  replacement: vitePath(uiSrc),
+});
 
 const viteConfigPath = join(appDir, 'vite.config.ts');
 let viteConfig = readFileSync(viteConfigPath, 'utf-8');
@@ -724,51 +507,3 @@ else console.log('Generated app Nitro node smoke passed.');
 // Cleanup
 cleanup();
 if (exitCode !== 0) Deno.exit(exitCode);
-
-function findMissingGeneratedImports(
-  source: string,
-  importMap: Record<string, string>,
-): string[] {
-  const specifiers = extractBareImportSpecifiers(source);
-  return [...specifiers].filter((specifier) => !isMappedSpecifier(specifier, importMap)).sort();
-}
-
-function extractBareImportSpecifiers(source: string): Set<string> {
-  const specifiers = new Set<string>();
-  const patterns = [
-    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
-    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
-    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
-      const specifier = match[1];
-      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
-        specifiers.add(specifier);
-      }
-    }
-  }
-
-  return specifiers;
-}
-
-function isBareSpecifier(specifier: string): boolean {
-  return !specifier.startsWith('.') &&
-    !specifier.startsWith('/') &&
-    !specifier.startsWith('file:') &&
-    !specifier.startsWith('http:') &&
-    !specifier.startsWith('https:') &&
-    !specifier.startsWith('data:') &&
-    !specifier.startsWith('node:') &&
-    !specifier.startsWith('npm:') &&
-    !specifier.startsWith('jsr:');
-}
-
-function isMappedSpecifier(
-  specifier: string,
-  importMap: Record<string, string>,
-): boolean {
-  if (Object.hasOwn(importMap, specifier)) return true;
-  return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
-}

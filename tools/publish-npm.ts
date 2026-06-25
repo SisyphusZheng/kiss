@@ -131,6 +131,7 @@ function isPrerelease(version: string): boolean {
 }
 
 function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unknown>): void {
+  pkgJson.type = 'module';
   pkgJson.repository = REPOSITORY;
   pkgJson.keywords = KEYWORDS;
   if (pkg.name === '@openelement/create') {

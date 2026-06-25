@@ -1,0 +1,261 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-net --allow-env
+/**
+ * Release gate: verify packed npm artifacts stay ESM-only and keep host APIs out
+ * of runtime-free/browser-facing package surfaces.
+ */
+
+import { walkSync } from '@std/fs/walk';
+import { dirname } from 'node:path';
+import { type PackageInfo, readPackages, releasePublishOrder } from './lib/package-graph.ts';
+
+const PUBLINT_VERSION = '0.3.21';
+const ATTW_VERSION = '0.18.4';
+
+const RUNTIME_FREE_PACKAGES = new Set([
+  '@openelement/core',
+  '@openelement/element',
+  '@openelement/ui',
+  '@openelement/protocol',
+  '@openelement/signal',
+  '@openelement/router',
+  '@openelement/app',
+]);
+
+const RUNTIME_EXTENSIONS = new Set(['.js', '.mjs', '.cjs']);
+const CJS_PATTERNS: Array<[RegExp, string]> = [
+  [/\brequire\s*\(/, 'CommonJS require()'],
+  [/\bmodule\.exports\b/, 'CommonJS module.exports'],
+  [/\bexports\./, 'CommonJS exports.*'],
+  [/\b__dirname\b/, 'CommonJS __dirname'],
+  [/\b__filename\b/, 'CommonJS __filename'],
+];
+
+const HOST_PATTERNS: Array<[RegExp, string]> = [
+  [/(?:^|['"])node:[^'"]+/, 'node:* import'],
+  [/\bDeno\.[A-Za-z_]/, 'Deno API'],
+  [/\bprocess\b/, 'Node process global'],
+  [/\bBuffer\b/, 'Node Buffer global'],
+  [/\bsetImmediate\b/, 'Node setImmediate global'],
+  [/\bclearImmediate\b/, 'Node clearImmediate global'],
+];
+
+export interface ArtifactViolation {
+  path: string;
+  message: string;
+  line?: number;
+}
+
+export interface PackageScanResult {
+  packageName: string;
+  violations: ArtifactViolation[];
+}
+
+function tarballName(pkg: PackageInfo): string {
+  return `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
+}
+
+function tarballPath(pkg: PackageInfo): string {
+  return `${pkg.dir}/${tarballName(pkg)}`;
+}
+
+function extension(path: string): string {
+  const idx = path.lastIndexOf('.');
+  return idx === -1 ? '' : path.slice(idx);
+}
+
+/**
+ * Strip comments from source text for pattern scanning.
+ *
+ * Block comment delimiters and their content are replaced with spaces of the same length
+ * to avoid forming false // sequences when concatenating text across
+ * comment boundaries (e.g. "http:" + "//example.com" was silently joining).
+ * Line comments (// ...) are stripped entirely.
+ */
+function stripComments(source: string): string {
+  // Replace block comments with spaces (same-length to preserve line numbers),
+  // then strip single-line comments. This is basic but sufficient for artifact
+  // scanning; false positives from edge cases like 'http:'/* */+ '//x' are
+  // extremely unlikely in real npm package output.
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
+    .replace(/\/\/.*/g, '');
+}
+
+function pushPackageJsonViolations(
+  packageName: string,
+  packageJsonPath: string,
+  violations: ArtifactViolation[],
+): void {
+  const packageJson = JSON.parse(Deno.readTextFileSync(packageJsonPath));
+  if (packageJson.type !== 'module') {
+    violations.push({
+      path: `${packageName}/package.json`,
+      message: 'package.json must declare "type": "module"',
+    });
+  }
+
+  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.cjs')) {
+    violations.push({
+      path: `${packageName}/package.json`,
+      message: 'package.json main must not point at a CommonJS entry',
+    });
+  }
+
+  if (!packageJson.exports) {
+    violations.push({
+      path: `${packageName}/package.json`,
+      message: 'package.json must expose an exports map',
+    });
+  }
+}
+
+function scanRuntimeFile(
+  root: string,
+  path: string,
+  packageName: string,
+  runtimeFree: boolean,
+): ArtifactViolation[] {
+  const violations: ArtifactViolation[] = [];
+  const relative = path.slice(root.length + 1);
+
+  if (extension(relative) === '.cjs') {
+    violations.push({
+      path: `${packageName}/${relative}`,
+      message: 'CommonJS .cjs artifact is not allowed',
+    });
+  }
+
+  const text = Deno.readTextFileSync(path);
+  const hostScanAllowed = !text.includes('deno-api-free:ignore');
+  const lines = stripComments(text).split('\n');
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+
+    for (const [pattern, message] of CJS_PATTERNS) {
+      if (pattern.test(line)) {
+        violations.push({
+          path: `${packageName}/${relative}`,
+          message,
+          line: index + 1,
+        });
+      }
+    }
+
+    if (runtimeFree && hostScanAllowed) {
+      for (const [pattern, message] of HOST_PATTERNS) {
+        if (pattern.test(line)) {
+          violations.push({
+            path: `${packageName}/${relative}`,
+            message,
+            line: index + 1,
+          });
+        }
+      }
+    }
+  }
+
+  return violations;
+}
+
+export function scanExtractedPackage(packageName: string, packageRoot: string): PackageScanResult {
+  const violations: ArtifactViolation[] = [];
+  pushPackageJsonViolations(packageName, `${packageRoot}/package.json`, violations);
+
+  const runtimeFree = RUNTIME_FREE_PACKAGES.has(packageName);
+  for (
+    const entry of walkSync(packageRoot, {
+      includeDirs: false,
+      skip: [/^node_modules$/],
+    })
+  ) {
+    if (!RUNTIME_EXTENSIONS.has(extension(entry.path))) continue;
+    violations.push(...scanRuntimeFile(packageRoot, entry.path, packageName, runtimeFree));
+  }
+
+  return { packageName, violations };
+}
+
+async function run(command: string, args: string[], cwd?: string): Promise<void> {
+  console.log(`$ ${[command, ...args].join(' ')}${cwd ? `  # cwd=${cwd}` : ''}`);
+  const output = await new Deno.Command(command, {
+    args,
+    cwd,
+    stdout: 'piped',
+    stderr: 'piped',
+  }).output();
+  if (output.success) return;
+
+  const stdout = new TextDecoder().decode(output.stdout).trim();
+  const stderr = new TextDecoder().decode(output.stderr).trim();
+  if (stdout) console.error(stdout);
+  if (stderr) console.error(stderr);
+  throw new Error(`Command failed with exit code ${output.code}: ${command} ${args.join(' ')}`);
+}
+
+async function extractTarball(tarball: string): Promise<string> {
+  const tmp = await Deno.makeTempDir({ prefix: 'openelement-artifact-' });
+  await run('tar', ['-xzf', tarball, '-C', tmp], undefined);
+  return `${tmp}/package`;
+}
+
+async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
+  const tarball = tarballPath(pkg);
+  await Deno.stat(tarball);
+
+  await run(Deno.execPath(), [
+    'run',
+    '-A',
+    `npm:publint@${PUBLINT_VERSION}`,
+    'run',
+    tarball,
+    '--strict',
+  ]);
+  await run(Deno.execPath(), [
+    'run',
+    '-A',
+    `npm:@arethetypeswrong/cli@${ATTW_VERSION}`,
+    '--profile',
+    'esm-only',
+    tarball,
+  ]);
+
+  const packageRoot = await extractTarball(tarball);
+  try {
+    return scanExtractedPackage(pkg.name, packageRoot);
+  } finally {
+    await Deno.remove(dirname(packageRoot), {
+      recursive: true,
+    });
+  }
+}
+
+async function main(): Promise<void> {
+  const skipPack = Deno.args.includes('--skip-pack');
+  if (!skipPack) {
+    await run(Deno.execPath(), ['task', 'pack:dry-run']);
+  }
+
+  const packages = releasePublishOrder(await readPackages());
+  const results: PackageScanResult[] = [];
+  for (const pkg of packages) {
+    console.log(`\n[artifact] ${pkg.name}`);
+    results.push(await verifyTarball(pkg));
+  }
+
+  const violations = results.flatMap((result) => result.violations);
+  if (violations.length > 0) {
+    console.error('\nPackage artifact violations detected:');
+    for (const violation of violations) {
+      const line = violation.line ? `:${violation.line}` : '';
+      console.error(`  ${violation.path}${line}: ${violation.message}`);
+    }
+    Deno.exit(1);
+  }
+
+  console.log(`\nPackage artifact checks passed for ${packages.length} packages.`);
+}
+
+if (import.meta.main) {
+  await main();
+}

@@ -34,8 +34,8 @@ export function createNavPlugin(
       const navSections = scanNavData(resolvedNavOpts);
       const headerNav = resolvedNavOpts.headerNav || [];
       if (ctx) {
-        ctx.plugins.navSections = navSections;
-        ctx.plugins.headerNav = headerNav;
+        ctx.registerPlugin('navSections', navSections);
+        ctx.registerPlugin('headerNav', headerNav);
       }
 
       // SOP-001: Write generated nav data module to disk

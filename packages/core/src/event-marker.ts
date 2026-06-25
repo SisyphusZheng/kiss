@@ -13,6 +13,7 @@
 import { DATA_EID } from '@openelement/protocol/hydration-markers';
 
 const EVENT_PROP_RE = /^on[A-Z]/;
+const DASHED_EVENT_PROP_RE = /^on-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const EVENT_TYPE_ALIASES: Record<string, string> = {
   Dblclick: 'dblclick',
   DoubleClick: 'dblclick',
@@ -48,6 +49,7 @@ export function eventMarkerId(index: number): string {
 }
 
 export function eventTypeFromProp(prop: string): string | null {
+  if (DASHED_EVENT_PROP_RE.test(prop)) return prop.slice(3);
   if (!EVENT_PROP_RE.test(prop)) return null;
   const eventName = prop.slice(2);
   return EVENT_TYPE_ALIASES[eventName] ?? eventName.toLowerCase();

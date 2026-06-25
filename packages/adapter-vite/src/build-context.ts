@@ -116,7 +116,9 @@ export class Phase3Meta {
   /** Named route layouts selected by route meta. */
   layouts: FrameworkOptions['layouts'] = undefined;
 
-  /** SSR noExternal patterns (serialized) */
+  /** SSR noExternal patterns. Accept strings or serialized RegExp objects.
+   * Callers should use the plain-object form `{ __type: 'RegExp', source, flags }`
+   * rather than passing RegExp instances directly. */
   ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[] = [];
 
   /** SSR deps to keep as external (resolved by Deno import() at runtime per ADR-0043) */
@@ -174,11 +176,18 @@ export class OpenElementBuildContext {
     this.options = options;
   }
 
+  /** Register plugin data by name. */
+  registerPlugin<K extends keyof OpenElementBuildContext['plugins']>(
+    name: K,
+    instance: OpenElementBuildContext['plugins'][K],
+  ): void {
+    this.plugins[name] = instance;
+  }
+
   /** Mark a phase as complete, enforcing ordering constraints. */
   markComplete(phase: Phase): void {
-    if (phase === 2 && !this.completed.has(3)) {
-      throw new Error('Phase 2 requires Phase 3 to be completed first');
-    }
+    // Phase 2 (client build) requires Phase 1 (route scanning) only.
+    // Phase 2 runs after Phase 3 (SSG) per ADR 0023; it does NOT require Phase 3.
     if (phase === 2 && !this.completed.has(1)) {
       throw new Error('Phase 2 requires Phase 1 to be completed first');
     }

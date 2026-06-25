@@ -14,11 +14,10 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
   renderer/activation split, `BindingDescriptor` registry).
 - **alpha.3**: Consume Lit/Shoelace/Material Web Components inside openElement;
-  pure-ESM / pure-ECMAScript npm quality gates.
+  pure-ESM / pure-ECMAScript / modern Web Standards npm quality gates.
 - **alpha.4**: Lightweight client runtime so openElement components work in Deno
-  Fresh.
-- **alpha.5**: SPA mode + desktop shell proof (Tauri 2 / Electron) with a
-  client-side router.
+  Fresh; Preact island proof.
+- **alpha.5**: SPA mode + Deno Desktop shell proof.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -57,7 +56,8 @@ so this plan pivots to Deno's own `deno pack` tooling.
   rendering remains available in `@openelement/content`.
 - Add `tools/check-deno-api-free.ts` and a `deno task deno-api:check` gate that
   fails if `core/element/ui/protocol/signal/router/app` source files use
-  `Deno.*`.
+  `Deno.*` or host-specific runtime APIs that do not belong in browser-facing
+  package surfaces.
 
 ### Adapter-vite
 
@@ -81,7 +81,10 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 - Add npm-registry consumer smoke for Node ESM, Deno `npm:`, jsDelivr CDN, and
   Nitro Node/Workers output.
-- Add third-party WC smoke for Shoelace and Material Web Components.
+- Add third-party WC smoke for Lit, Shoelace, Material Web Components, and
+  bidirectional Lit/openElement nesting.
+- Add packed artifact quality gate using publint, arethetypeswrong, and
+  tarball extraction scans.
 - Add Fresh example smoke for openElement component hydration.
 
 ## Non-Goals
@@ -113,8 +116,10 @@ when alpha.5 is complete.
 - ADR-0096 (protocol-first Vite + Nitro runtime) and ADR-0098
   (EntryDescriptor route manifest) remain in force.
 - Runtime-free/browser-facing packages must not use `Deno.*` or `node:*` APIs
-  in their public source surface. Build/server glue (`ssg`, `content`,
-  `adapter-vite`, `create`) may use Deno/Node APIs.
+  in their public source surface, and should prefer native W3C/WHATWG/Web
+  Platform APIs before custom wrappers. Build/server glue (`ssg`, `content`,
+  `adapter-vite`, `create`) may use Deno/Node APIs, with Deno-first
+  implementations preferred when a host API is necessary.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
@@ -130,17 +135,26 @@ Static gates: `deno task fmt:check`, `deno task lint`, `deno task typecheck`,
 `deno task arch:check`, `deno task signals:check-protocol-boundary`,
 `deno task type-safety:check`, `deno task text-integrity:check`,
 `deno task deno-api:check`.
+Alpha.3 also adds `deno task third-party-wc:smoke` and
+`deno task package-artifacts:check`.
 
 Build/test gates: `deno task test`, `deno task test:coverage:check`,
 `deno task build`, `deno task test:e2e`, `deno task pack:dry-run`,
-`deno task consumer:packaged`, `deno task autoflow:dev`,
+`deno task consumer:packaged`, `deno task third-party-wc:smoke`,
+`deno task package-artifacts:check`, `deno task autoflow:dev`,
 `deno task autoflow:push`, `deno task autoflow:ci`,
 `deno task nitro:proof:node`, `deno task nitro:proof:workers`.
 
 ## Acceptance
 
 - `deno task deno-api:check` passes.
+- Runtime-free/browser-facing package artifacts stay pure ESM, avoid
+  host-specific APIs, and use modern Web Platform APIs as the default runtime
+  substrate.
 - `deno task pack:dry-run` succeeds for all 11 packages.
+- `deno task package-artifacts:check` passes for all 11 packed npm artifacts.
+- `deno task third-party-wc:smoke` proves Lit, Shoelace, and Material Web
+  Components can be consumed directly in an openElement app.
 - No `jsr:@openelement/` or `@jsr/openelement__*` specifiers remain in product
   code or generated tarballs.
 - GitHub Actions `autoflow-release.yml` successfully publishes to npm with

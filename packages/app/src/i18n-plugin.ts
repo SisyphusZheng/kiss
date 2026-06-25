@@ -72,10 +72,10 @@ export function openI18n(
       // Write i18n options to ctx (shared build context)
       // The @openelement/generated/i18n plugin reads ctx.plugins.i18nOptions in its load() hook
       if (ctx) {
-        ctx.plugins.i18nOptions = {
+        ctx.registerPlugin('i18nOptions', {
           locales: i18nData.locales,
           defaultLocale: i18nData.defaultLocale,
-        };
+        });
       }
 
       // SOP-001: Write generated i18n data module to disk
