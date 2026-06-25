@@ -131,7 +131,7 @@ export function createOpenPlugin(
   try {
     const wsRoot = findWorkspaceRoot(process.cwd());
     if (wsRoot) {
-      ctx.recordPhase1Fact('userResolveAlias', generateWorkspaceAliases(wsRoot));
+      ctx.phase1.userResolveAlias = generateWorkspaceAliases(wsRoot);
       log.info(
         `Auto-generated ${
           (ctx.phase1.userResolveAlias as Array<unknown>).length
@@ -177,12 +177,9 @@ export function createOpenPlugin(
 
     config(userConfig) {
       if (userConfig.resolve?.alias) {
-        ctx.recordPhase1Fact(
-          'userResolveAlias',
-          mergeAliasOptions(
-            userConfig.resolve.alias as Record<string, string> | Alias[],
-            ctx.phase1.userResolveAlias,
-          ),
+        ctx.phase1.userResolveAlias = mergeAliasOptions(
+          userConfig.resolve.alias as Record<string, string> | Alias[],
+          ctx.phase1.userResolveAlias,
         );
       }
 
@@ -206,19 +203,16 @@ export function createOpenPlugin(
 
     configResolved(cfg) {
       if (cfg.resolve?.alias && !ctx.phase1.userResolveAlias) {
-        ctx.recordPhase1Fact('userResolveAlias', cfg.resolve.alias);
+        ctx.phase1.userResolveAlias = cfg.resolve.alias;
       }
       // v0.14.6: Generate placeholder entry code with empty routes in configResolved.
       // This is a Vite requirement - the virtual entry must exist before buildStart().
       // The real entry with actual routes is generated in buildStart() which runs later.
-      ctx.recordPhase1Fact(
-        'honoEntryCode',
-        generateEntry(
-          [],
-          ctx.phase1.islandTagNames,
-          ctx.phase1.packageManifests,
-          ctx.phase1.islandFiles,
-        ),
+      ctx.phase1.honoEntryCode = generateEntry(
+        [],
+        ctx.phase1.islandTagNames,
+        ctx.phase1.packageManifests,
+        ctx.phase1.islandFiles,
       );
     },
 
@@ -233,37 +227,31 @@ export function createOpenPlugin(
           resolvedOptions.islandsDir || 'app/islands',
         );
         const islandFiles = await scanIslands(islandsRoot);
-        ctx.recordPhase1Fact('islandTagNames', islandFiles.map((f) => fileToTagName(f)));
-        ctx.recordPhase1Fact('islandFiles', islandFiles);
+        ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
+        ctx.phase1.islandFiles = islandFiles;
         const { scanIslandMeta } = await import('@openelement/ssg');
-        ctx.recordPhase1Fact('islandMeta', await scanIslandMeta(islandsRoot, islandFiles));
+        ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
 
         if (
           resolvedOptions.packageIslands &&
           resolvedOptions.packageIslands.length > 0
         ) {
-          ctx.recordPhase1Fact(
-            'packageManifests',
-            await scanPackageManifests(
-              resolvedOptions.packageIslands,
-            ),
+          ctx.phase1.packageManifests = await scanPackageManifests(
+            resolvedOptions.packageIslands,
           );
           if (ctx.phase1.packageManifests.length > 0) {
             // Extract island declarations from manifests
-            ctx.recordPhase1Fact(
-              'packageIslandDecls',
-              ctx.phase1.packageManifests.flatMap((pkg) =>
-                pkg.declarations
-                  .filter((d) => d.openElement?.module)
-                  .map((d) => ({
-                    tagName: d.tagName,
-                    modulePath: d.openElement!.module!,
-                    isPackage: true,
-                    hydrate: d.openElement?.hydrate as HydrationStrategy | undefined,
-                    ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
-                    dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
-                  }))
-              ),
+            ctx.phase1.packageIslandDecls = ctx.phase1.packageManifests.flatMap((pkg) =>
+              pkg.declarations
+                .filter((d) => d.openElement?.module)
+                .map((d) => ({
+                  tagName: d.tagName,
+                  modulePath: d.openElement!.module!,
+                  isPackage: true,
+                  hydrate: d.openElement?.hydrate as HydrationStrategy | undefined,
+                  ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
+                  dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
+                }))
             );
             log.info(
               `Package islands: ${ctx.phase1.packageIslandDecls.map((i) => i.tagName).join(', ')}`,
@@ -273,16 +261,13 @@ export function createOpenPlugin(
 
         // Cache routes for lazy load() regeneration (ctx.blogOptions may not
         // be set yet - openContent() buildStart() runs after this one).
-        ctx.recordPhase1Fact('cachedRoutes', routes);
+        ctx.phase1.cachedRoutes = routes;
 
-        ctx.recordPhase1Fact(
-          'honoEntryCode',
-          generateEntry(
-            routes,
-            ctx.phase1.islandTagNames,
-            ctx.phase1.packageManifests,
-            ctx.phase1.islandFiles,
-          ),
+        ctx.phase1.honoEntryCode = generateEntry(
+          routes,
+          ctx.phase1.islandTagNames,
+          ctx.phase1.packageManifests,
+          ctx.phase1.islandFiles,
         );
         const { buildEntryDescriptor } = await import('@openelement/ssg');
 
@@ -290,10 +275,7 @@ export function createOpenPlugin(
         // without importing or executing any package code.
         try {
           const nodeModulesDir = join(process.cwd(), 'node_modules');
-          ctx.recordPhase1Fact(
-            'cemClassifications',
-            await detectAndClassifyCemPackages(nodeModulesDir),
-          );
+          ctx.phase1.cemClassifications = await detectAndClassifyCemPackages(nodeModulesDir);
           if (ctx.phase1.cemClassifications.length > 0) {
             log.info(
               `CEM auto-detection: classified ${ctx.phase1.cemClassifications.length} component(s) from node_modules`,
@@ -304,24 +286,21 @@ export function createOpenPlugin(
           log.debug(
             `CEM auto-detection failed (non-fatal): ${formatError(err)}`,
           );
-          ctx.recordPhase1Fact('cemClassifications', []);
+          ctx.phase1.cemClassifications = [];
         }
 
-        ctx.recordPhase1Fact(
-          'ssrAdmissionPlan',
-          buildEntryDescriptor(routes, {
-            routesDir: resolvedOptions.routesDir,
-            islandsDir: resolvedOptions.islandsDir,
-            islandTagNames: ctx.phase1.islandTagNames,
-            islandFiles: ctx.phase1.islandFiles,
-            islandMeta: ctx.phase1.islandMeta,
-            packageManifests: ctx.phase1.packageManifests,
-            cemClassifications: ctx.phase1.cemClassifications,
-            clientOnlyTags: [],
-            appShell: resolvedOptions.appShell,
-            layouts: resolvedOptions.layouts,
-          }).ssrAdmissionPlan,
-        );
+        ctx.phase1.ssrAdmissionPlan = buildEntryDescriptor(routes, {
+          routesDir: resolvedOptions.routesDir,
+          islandsDir: resolvedOptions.islandsDir,
+          islandTagNames: ctx.phase1.islandTagNames,
+          islandFiles: ctx.phase1.islandFiles,
+          islandMeta: ctx.phase1.islandMeta,
+          packageManifests: ctx.phase1.packageManifests,
+          cemClassifications: ctx.phase1.cemClassifications,
+          clientOnlyTags: [],
+          appShell: resolvedOptions.appShell,
+          layouts: resolvedOptions.layouts,
+        }).ssrAdmissionPlan;
         const pageCount = routes.filter(
           (r) => r.type === 'page' && !r.special,
         ).length;

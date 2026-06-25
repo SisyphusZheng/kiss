@@ -5,6 +5,7 @@
  */
 
 import { walkSync } from '@std/fs/walk';
+import { dirname } from 'node:path';
 import { type PackageInfo, readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const PUBLINT_VERSION = '0.3.21';
@@ -62,26 +63,18 @@ function extension(path: string): string {
   return idx === -1 ? '' : path.slice(idx);
 }
 
-function stripComments(line: string, inBlock: boolean): { line: string; inBlock: boolean } {
-  let text = line;
-
-  if (inBlock) {
-    const end = text.indexOf('*/');
-    if (end === -1) return { line: '', inBlock: true };
-    return stripComments(text.slice(end + 2), false);
-  }
-
-  for (;;) {
-    const start = text.indexOf('/*');
-    if (start === -1) break;
-    const end = text.indexOf('*/', start + 2);
-    if (end === -1) {
-      return { line: text.slice(0, start).replace(/\/\/.*/, ''), inBlock: true };
-    }
-    text = text.slice(0, start) + text.slice(end + 2);
-  }
-
-  return { line: text.replace(/\/\/.*/, ''), inBlock: false };
+/**
+ * Strip comments from source text for pattern scanning.
+ *
+ * Block comment delimiters and their content are replaced with spaces of the same length
+ * to avoid forming false // sequences when concatenating text across
+ * comment boundaries (e.g. "http:" + "//example.com" was silently joining).
+ * Line comments (// ...) are stripped entirely.
+ */
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
+    .replace(/\/\/.*/g, '');
 }
 
 function pushPackageJsonViolations(
@@ -130,14 +123,10 @@ function scanRuntimeFile(
 
   const text = Deno.readTextFileSync(path);
   const hostScanAllowed = !text.includes('deno-api-free:ignore');
-  const lines = text.split('\n');
-  let inBlock = false;
+  const lines = stripComments(text).split('\n');
 
   for (let index = 0; index < lines.length; index++) {
-    const raw = lines[index];
-    const stripped = stripComments(raw, inBlock);
-    inBlock = stripped.inBlock;
-    const line = stripped.line;
+    const line = lines[index];
 
     for (const [pattern, message] of CJS_PATTERNS) {
       if (pattern.test(line)) {
@@ -231,7 +220,7 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
   try {
     return scanExtractedPackage(pkg.name, packageRoot);
   } finally {
-    await Deno.remove(packageRoot.slice(0, packageRoot.length - '/package'.length), {
+    await Deno.remove(dirname(packageRoot), {
       recursive: true,
     });
   }

@@ -3,13 +3,12 @@
  */
 
 import { assert, assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { asTestElement, signal, TestDocument, TestEvent } from './test-utils.ts';
+import { asTestElement, setupMockDocument, signal, TestEvent } from './test-utils.ts';
 import { For, Fragment, HTML_TAG, jsx, Show } from '../src/jsx-runtime.ts';
 import { collectPropBindings, renderToDom } from '../src/jsx-render-dom.ts';
 import type { Signal } from '@openelement/protocol/signal';
 
-const _savedDocument = (globalThis as unknown as Record<string, unknown>).document;
-(globalThis as unknown as Record<string, unknown>).document = new TestDocument();
+setupMockDocument();
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
@@ -230,11 +229,4 @@ Deno.test('renderToDom handles component function errors gracefully', () => {
   const vnode = jsx(Bad as unknown as string, { children: [] });
   const node = renderToDom(vnode);
   assertEquals(node.textContent, '');
-});
-
-Deno.test('restore global document after jsx-render-dom tests', () => {
-  // ponytail: this test must remain the last one in the file so the mock
-  // document survives every preceding test. A proper per-test harness is
-  // overkill for this alpha-cleanup slice.
-  (globalThis as unknown as Record<string, unknown>).document = _savedDocument;
 });

@@ -174,36 +174,18 @@ export class OpenElementBuildContext {
     this.options = options;
   }
 
-  // ─── Semantic behavior methods (v0.41.0-alpha.3) ────────────
-  // These replace direct field mutation for common operations,
-  // providing a typed, self-documenting interface. Raw field
-  // access is retained for backward compatibility.
-
-  /** Record a Phase 1 mutable fact by key. */
-  recordPhase1Fact<K extends keyof Phase1Meta>(key: K, value: Phase1Meta[K]): void {
-    this.phase1[key] = value;
-  }
-
-  /** Record a Phase 2 mutable fact by key. */
-  recordPhase2Fact<K extends keyof Phase2Meta>(key: K, value: Phase2Meta[K]): void {
-    this.phase2[key] = value;
-  }
-
-  /** Record a Phase 3 mutable fact by key. */
-  recordPhase3Fact<K extends keyof Phase3Meta>(key: K, value: Phase3Meta[K]): void {
-    this.phase3[key] = value;
-  }
-
   /** Register plugin data by name. */
-  registerPlugin(name: string, instance: unknown): void {
+  registerPlugin<K extends keyof OpenElementBuildContext['plugins']>(
+    name: K,
+    instance: OpenElementBuildContext['plugins'][K],
+  ): void {
     this.plugins[name] = instance;
   }
 
   /** Mark a phase as complete, enforcing ordering constraints. */
   markComplete(phase: Phase): void {
-    if (phase === 2 && !this.completed.has(3)) {
-      throw new Error('Phase 2 requires Phase 3 to be completed first');
-    }
+    // Phase 2 (client build) requires Phase 1 (route scanning) only.
+    // Phase 2 runs after Phase 3 (SSG) per ADR 0023; it does NOT require Phase 3.
     if (phase === 2 && !this.completed.has(1)) {
       throw new Error('Phase 2 requires Phase 1 to be completed first');
     }

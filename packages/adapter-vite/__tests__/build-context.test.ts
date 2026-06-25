@@ -110,12 +110,6 @@ Deno.test('OpenElementBuildContext phase ordering is enforced', () => {
   assertEquals(ctx.isComplete(1), true);
   assertEquals(ctx.isComplete(3), false);
 
-  assertThrows(
-    () => ctx.markComplete(2),
-    Error,
-    'Phase 2 requires Phase 3 to be completed first',
-  );
-
   ctx.markComplete(3);
   assertEquals(ctx.isComplete(3), true);
 

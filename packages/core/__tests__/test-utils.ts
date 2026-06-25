@@ -475,7 +475,8 @@ const _savedDocument = (globalThis as unknown as Record<string, unknown>).docume
 const _savedRaf = (globalThis as unknown as Record<string, unknown>).requestAnimationFrame;
 let _rafCallbacks: FrameRequestCallback[] = [];
 
-function setupMockDocument(): void {
+/** Set up mock document and requestAnimationFrame on globalThis. */
+export function setupMockDocument(): void {
   (globalThis as unknown as Record<string, unknown>).document = new TestDocument();
   (globalThis as unknown as Record<string, unknown>).requestAnimationFrame = (
     cb: FrameRequestCallback,
