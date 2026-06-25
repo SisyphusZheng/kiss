@@ -179,18 +179,21 @@ async function buildSSG(
     : await scanIslandMeta(islandsRoot, ssgIslandFiles);
   const { buildEntryDescriptor } = await import('@openelement/ssg');
 
-  ctx.phase1.ssrAdmissionPlan = buildEntryDescriptor(routes, {
-    routesDir,
-    islandsDir,
-    ssg: true,
-    islandTagNames: ssgIslandTagNames,
-    islandFiles: ssgIslandFiles,
-    islandMeta: ssgIslandMeta,
-    packageManifests,
-    clientOnlyTags: [],
-    appShell,
-    layouts,
-  }).ssrAdmissionPlan;
+  ctx.recordPhase1Fact(
+    'ssrAdmissionPlan',
+    buildEntryDescriptor(routes, {
+      routesDir,
+      islandsDir,
+      ssg: true,
+      islandTagNames: ssgIslandTagNames,
+      islandFiles: ssgIslandFiles,
+      islandMeta: ssgIslandMeta,
+      packageManifests,
+      clientOnlyTags: [],
+      appShell,
+      layouts,
+    }).ssrAdmissionPlan,
+  );
 
   const rawSsgEntryCode = generateSsrPolyfillBanner() + '\n' + generateHonoEntryCode(routes, {
     routesDir,

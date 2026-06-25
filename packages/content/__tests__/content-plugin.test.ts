@@ -49,6 +49,9 @@ function createTestCtx(): OpenElementBuildContextLike {
       sitemapOptions: null,
       i18nOptions: null,
     },
+    registerPlugin(name: string, instance: unknown) {
+      this.plugins[name] = instance;
+    },
   };
 }
 

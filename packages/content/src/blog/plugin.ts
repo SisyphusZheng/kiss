@@ -38,7 +38,7 @@ export function createBlogPlugin(
 
       // Write blog options to ctx for SSG helpers.
       if (ctx) {
-        ctx.plugins.blogOptions = { contentDir, basePath };
+        ctx.registerPlugin('blogOptions', { contentDir, basePath });
       }
 
       // SOP-001: Write generated blog data module to disk

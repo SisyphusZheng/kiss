@@ -15,6 +15,9 @@ Deno.test('writeJson serializes value with trailing newline', () => {
 Deno.test('createSitemapPlugin records options on build context', () => {
   const ctx = {
     plugins: {} as Record<string, unknown>,
+    registerPlugin(name: string, instance: unknown) {
+      this.plugins[name] = instance;
+    },
   } as import('@openelement/protocol/framework').OpenElementBuildContextLike;
   const plugin = createSitemapPlugin({ hostname: 'https://example.com' }, ctx);
   assertEquals(plugin.name, 'open:content:sitemap');

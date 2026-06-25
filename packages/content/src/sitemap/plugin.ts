@@ -22,7 +22,7 @@ export function createSitemapPlugin(
 
     buildStart() {
       if (ctx) {
-        ctx.plugins.sitemapOptions = options as unknown as Record<string, unknown>;
+        ctx.registerPlugin('sitemapOptions', options as unknown as Record<string, unknown>);
       }
       log.info(`Sitemap: configured for ${options.hostname}`);
     },
