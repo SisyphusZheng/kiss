@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 128" width="420" height="128" role="img">
-  <title>openElement horizontal wordmark</title>
-  <desc>Geometric Aperture O+E monogram with the short code wordmark.</desc>
+  <title>openElement horizontal wordmark inverted</title>
+  <desc>Geometric Aperture O+E monogram with the short code wordmark for dark surfaces.</desc>
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;700&amp;display=swap');
@@ -10,14 +10,14 @@
     <path
       d="M 100.4 85 A 42 42 0 1 1 100.4 43 M 64 44 A 20 20 0 0 0 64 84 M 44 64 L 100.4 64"
       fill="none"
-      stroke="#21143b"
+      stroke="#f3eaff"
       stroke-width="14"
     />
   </g>
   <text
     x="154"
     y="82"
-    fill="#21143b"
+    fill="#f3eaff"
     font-family="Jost, Futura, 'Century Gothic', system-ui, -apple-system, sans-serif"
     font-size="48"
     letter-spacing="-0.03em"

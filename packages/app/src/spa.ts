@@ -8,18 +8,18 @@ import {
   createRouter,
   type RouteConfig,
   type RouterInstance,
-} from '@openelement/router/client-router';
+} from "@openelement/router/client-router";
 import {
   __internal_popData,
   __internal_pushActionData,
   __internal_pushLoaderData,
-} from '@openelement/router/data-context';
-import type { RouterMode } from '@openelement/router/client-router';
+} from "@openelement/router/data-context";
+import type { RouterMode } from "@openelement/router/client-router";
 
 // ─── Public types ──────────────────────────────────────────────
 
 export interface SpaAppOptions {
-  mode: 'spa';
+  mode: "spa";
   /** Route definitions. If omitted, no routes are registered. */
   routes?: RouteConfig[];
   /** Router mode. Defaults to auto: history on http(s), hash on file://. */
@@ -31,6 +31,8 @@ export interface SpaAppInstance {
   mount(selector: string): void;
   /** Dispose the SPA: clear DOM, dispose router, remove listeners, pop all data. Idempotent. */
   dispose(): void;
+  /** The client-side router instance. Null before mount. */
+  readonly router: RouterInstance | null;
 }
 
 // ─── defineApp ─────────────────────────────────────────────────
@@ -43,7 +45,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
   /** Duck-type check since `Node` may not exist in test environments (e.g. Deno). */
   function isRenderableNode(value: unknown): value is Node {
-    return value !== null && typeof value === 'object' && 'nodeType' in value;
+    return value !== null && typeof value === "object" && "nodeType" in value;
   }
 
   /** Pop the last render cycle's data frame from the stack. */
@@ -63,7 +65,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     try {
       return await route.loader({ params: router.params });
     } catch (err) {
-      console.error('[spa] loader failed:', err);
+      console.error("[spa] loader failed:", err);
       return undefined;
     }
   }
@@ -72,7 +74,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   function renderComponent(): void {
     if (!router || !rootEl) return;
     const route = router.currentRoute;
-    rootEl.innerHTML = '';
+    rootEl.innerHTML = "";
     if (route) {
       const result = route.component();
       if (isRenderableNode(result)) {
@@ -104,9 +106,9 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   function isFormElement(el: unknown): el is HTMLFormElement {
     return (
       el !== null &&
-      typeof el === 'object' &&
-      'tagName' in el &&
-      (el as { tagName: string }).tagName === 'FORM'
+      typeof el === "object" &&
+      "tagName" in el &&
+      (el as { tagName: string }).tagName === "FORM"
     );
   }
 
@@ -133,7 +135,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     try {
       actionData = await route.action({ params: router.params });
     } catch (err) {
-      console.error('[spa] action failed:', err);
+      console.error("[spa] action failed:", err);
       actionData = { error: String(err) };
     }
 
@@ -161,7 +163,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     rootEl = el;
 
     router = createRouter({
-      mode: options.routerMode ?? 'auto',
+      mode: options.routerMode ?? "auto",
       routes: options.routes ?? [],
       onChange: renderRoute,
     });
@@ -170,7 +172,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     submitHandler = (e: Event) => {
       handleFormSubmit(e);
     };
-    rootEl.addEventListener('submit', submitHandler);
+    rootEl.addEventListener("submit", submitHandler);
 
     // Initial render for the current URL
     renderRoute();
@@ -180,7 +182,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // Remove form submit listener
     renderId++;
     if (submitHandler && rootEl) {
-      rootEl.removeEventListener('submit', submitHandler);
+      rootEl.removeEventListener("submit", submitHandler);
       submitHandler = null;
     }
 
@@ -189,7 +191,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       router = null;
     }
     if (rootEl) {
-      rootEl.innerHTML = '';
+      rootEl.innerHTML = "";
       rootEl = null;
     }
 
@@ -197,5 +199,11 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     clearDataStack();
   }
 
-  return { mount, dispose };
+  return {
+    mount,
+    dispose,
+    get router() {
+      return router;
+    },
+  };
 }

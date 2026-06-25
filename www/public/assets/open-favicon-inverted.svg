@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img">
-  <title>openElement favicon</title>
-  <desc>Three separated code-bracket segments sharing the same geometric radius as the O+E mark.</desc>
+  <title>openElement favicon inverted</title>
+  <desc>Three separated code-bracket segments for dark surfaces.</desc>
   <path
     d="M 15 9 A 10 10 0 0 0 4 16 A 10 10 0 0 1 15 23
        M 13 25 L 19 7
        M 17 9 A 10 10 0 0 0 28 16 A 10 10 0 0 1 17 23"
     fill="none"
-    stroke="#21143b"
+    stroke="#f3eaff"
     stroke-width="3"
     stroke-linecap="round"
     stroke-linejoin="round"
