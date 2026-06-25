@@ -1,25 +1,61 @@
-/** @jsxImportSource preact */
+// Register a minimal open-element custom element inline to prove
+// Fresh ↔ custom-element interop without bundling @openelement/ui
+// (which ships .js with JSX that Vite can't transpile yet).
+//
+// ponytail: once @openelement/ui ships pre-compiled JS (compilerOptions.jsx
+// already in packages/ui/deno.json; remaining blocker is deno pack transpilation), replace with
+// `import "@openelement/ui"`.
+//
+// ponytail: stub ignores variant/size/disabled attributes. The real
+// open-button renders different styles per variant; the stub renders
+// a plain button regardless. Full component behavior after ui import.
 
-import { useEffect } from "preact/hooks";
+function defineOpenButton() {
+  if (customElements.get('open-button')) return;
+  class OpenButton extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+    }
+    connectedCallback() {
+      // ponytail: guard against re-render on disconnect/reconnect
+      if (this.shadowRoot!.childElementCount > 0) return;
+      // ponytail: minimal render; real component via @openelement/ui
+      this.shadowRoot!.innerHTML = `
+        <button part="control">
+          <slot></slot>
+        </button>
+      `;
+    }
+  }
+  customElements.define('open-button', OpenButton);
+}
+
+function defineOpenCard() {
+  if (customElements.get('open-card')) return;
+  class OpenCard extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+    }
+    connectedCallback() {
+      if (this.shadowRoot!.childElementCount > 0) return;
+      this.shadowRoot!.innerHTML = `
+        <div part="card">
+          <slot name="header"></slot>
+          <slot></slot>
+          <slot name="footer"></slot>
+        </div>
+      `;
+    }
+  }
+  customElements.define('open-card', OpenCard);
+}
 
 export default function OpenElementsIsland() {
-  useEffect(() => {
-    let dispose: (() => void) | undefined;
-    let unmounted = false;
-
-    Promise.all([
-      import("@openelement/ui"),
-      import("@openelement/core/hydrate"),
-    ]).then(([_, { hydrateOpenElement }]) => {
-      if (unmounted) return;
-      dispose = hydrateOpenElement(document.body);
-    });
-
-    return () => {
-      unmounted = true;
-      dispose?.();
-    };
-  }, []);
-
+  if (typeof window !== 'undefined') {
+    defineOpenButton();
+    defineOpenCard();
+  }
   return null;
 }

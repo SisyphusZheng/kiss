@@ -10,11 +10,10 @@ Fresh app with Preact islands.
    are rendered as standard HTML custom element tags in the Fresh server-side
    route. No special JSX, no wrapper components needed.
 
-2. **Third-party framework boot** — The `OpenElements.tsx` island imports
-   `@openelement/ui` (which registers the custom elements via
-   `customElements.define`) and calls `hydrateOpenElement(document.body)` to
-   explicitly hydrate DSD content and bind event markers. This proves
-   openElement can be bootstrapped and hydrated from within Preact islands.
+2. **Third-party framework boot** — The `OpenElements.tsx` island defines inline
+   custom element stubs (`<open-button>`, `<open-card>`) using the native
+   `customElements.define` API. This proves openElement-compatible registrations
+   can be shipped from within Preact islands.
 
 3. **Bilateral interop** — The same page hosts both openElement custom elements
    and a Preact counter island (`PreactCounter.tsx`). Each owns its lifecycle
@@ -55,9 +54,9 @@ examples/open-element-in-fresh/
    marker (Fresh handles this automatically).
 
 2. **Client Hydration** — When the page loads in the browser:
-   - `OpenElements.tsx` island activates → imports `@openelement/ui` →
-     `customElements.define` registers `<open-button>` and `<open-card>` →
-     `hydrateOpenElement()` iterates the DOM and triggers upgrade + hydration.
+   - `OpenElements.tsx` island activates → defines inline custom element classes
+     via `customElements.define` → browser upgrades the `<open-button>` and
+     `<open-card>` tags already in the DOM.
    - `PreactCounter.tsx` island activates → Preact mounts the counter component
      independently.
 
@@ -75,3 +74,16 @@ examples/open-element-in-fresh/
 - `client.ts` → new required file for client-side entry
 - `$fresh/` imports → `fresh` (via `jsr:@fresh/core`)
 - Tasks: `vite` / `vite build` / `deno serve -A _fresh/server.js`
+
+## Known Limitation
+
+The `OpenElements` island uses inline custom element stubs instead of
+`@openelement/ui`. Root cause: `deno pack` does not apply JSX transformation
+when publishing `packages/ui` to npm — the output `.js` files retain raw JSX
+which Vite cannot transpile.
+
+**Fix (alpha.5):** The `compilerOptions.jsx` config is already in
+`packages/ui/deno.json`. The remaining blocker is the `deno pack`
+transpilation gap — when publishing to npm, JSX is not transformed to
+`jsx()` calls in the output `.js` files. Once the pack pipeline is fixed,
+replace stubs with `import "@openelement/ui"`.

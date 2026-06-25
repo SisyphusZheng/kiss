@@ -13,10 +13,9 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.1** (shipped): npm distribution + audit cleanup.
 - **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
   renderer/activation split, `BindingDescriptor` registry).
-- **alpha.3**: Consume Lit/Shoelace/Material Web Components inside openElement;
-  pure-ESM / pure-ECMAScript / modern Web Standards npm quality gates.
-- **alpha.4**: Lightweight client runtime so openElement components work in Deno
-  Fresh; Preact island proof.
+- **alpha.3–4** (merged): Cross-Framework WC Integration —
+  consume Lit/Shoelace/MWC + client runtime for Deno Fresh
+  interop proof; pure-ESM/ECMAScript npm gates.
 - **alpha.5**: SPA mode + Deno Desktop shell proof.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
@@ -89,7 +88,7 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 ### alpha.4 Merge and Release Closure
 
-alpha.4 is merge-ready when PR #111 is green on `dev`: both AutoFlow CI jobs,
+alpha.4 is merge-ready when PR #113 is green on `dev`: both AutoFlow CI jobs,
 CodeQL/Analyze jobs, Cloudflare Pages preview, and review bot must pass. After
 merge, alpha.4 is not called released until `main` CI is green and the approved
 release workflow records npm publish plus post-publish npm consumer smoke
@@ -112,8 +111,7 @@ alpha.5 unless they are required to validate SPA navigation disposal semantics.
 The active work is tracked in per-alpha plan files:
 
 - `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
-- `docs/release/v0.41.0-alpha.3-plan.md` — Cross-Framework Web Components Integration
-- `docs/release/v0.41.0-alpha.4-plan.md` — openElement Components in Fresh
+- `docs/release/v0.41.0-alpha.4-plan.md` — Cross-Framework Web Components Integration
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Desktop Shell Proof
 
 The stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`

@@ -246,11 +246,7 @@ export function createReleasePlan(
       ...publishSteps,
       ...evidenceSteps,
       {
-        name: 'push main',
-        command: ['git', 'pull', '--rebase', 'origin', 'main'],
-      },
-      {
-        name: 'pull main for evidence push',
+        name: 'pull latest main',
         command: ['git', 'pull', '--rebase', 'origin', 'main'],
       },
       {
@@ -285,11 +281,11 @@ export function createReleasePlan(
       command: ['git', 'merge', '--ff-only', 'dev'],
     },
     {
-      name: 'pull main for push',
+      name: 'pull main (before publish)',
       command: ['git', 'pull', '--rebase', 'origin', 'main'],
     },
     {
-      name: 'push main',
+      name: 'push main (before publish)',
       command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,

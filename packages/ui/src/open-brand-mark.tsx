@@ -1,8 +1,7 @@
-/** @jsxImportSource @openelement/core */
 /**
  * @openelement/ui - open-brand-mark
  *
- * Flat Aperture O brand mark shared by header, docs surfaces, and assets.
+ * Geometric openElement monogram shared by header, docs surfaces, and assets.
  */
 
 import { OpenElement } from '@openelement/element';
@@ -25,69 +24,22 @@ sheet.replaceSync(`
   :host([size="lg"]) { --mark-size: var(--size-12); }
   :host([size="xl"]) { --mark-size: var(--size-16); }
 
-  .mark {
-    position: relative;
-    display: grid;
-    place-items: center;
+  svg {
+    display: block;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    border-radius: var(--radius-round);
-    background:
-      radial-gradient(circle at 50% 50%, var(--brand-mark-field, var(--bg-base)) 0 38%, transparent 39%),
-      conic-gradient(
-        from 218deg,
-        var(--brand-deep) 0 24%,
-        var(--brand) 24% 61%,
-        var(--brand-light) 61% 82%,
-        var(--brand-deep) 82% 100%
-      );
   }
 
-  :host([tone="inverted"]) .mark {
-    --brand-mark-field: var(--gray-12);
+  .mark-path {
+    fill: none;
+    stroke: var(--brand-deep);
+    stroke-width: 7.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
-  .mark::before {
-    content: "";
-    position: absolute;
-    inset: 27%;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 58%, var(--brand-mark-field, var(--bg-base)));
-    border-radius: var(--radius-round);
-    transform: rotate(-13deg);
-  }
-
-  .mark::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: -2%;
-    inset-block-start: 7%;
-    width: 35%;
-    height: 44%;
-    border-radius: var(--radius-round) var(--radius-round) 0 0;
-    background: var(--brand-mark-field, var(--bg-base));
-    transform: rotate(24deg);
-  }
-
-  .boundary,
-  .route {
-    position: absolute;
-    inset-inline: 28% 22%;
-    height: var(--border-size-1);
-    border-radius: var(--radius-round);
-    background: var(--brand-deep);
-    z-index: 1;
-  }
-
-  .boundary { inset-block-start: 46%; }
-  .route {
-    inset-block-start: 57%;
-    background: var(--brand);
-  }
-
-  :host([size="sm"]) .boundary,
-  :host([size="sm"]) .route {
-    inset-inline: 30% 24%;
+  :host([tone="inverted"]) .mark-path {
+    stroke: var(--brand-light);
   }
 `);
 
@@ -97,10 +49,12 @@ export class OpenBrandMark extends OpenElement {
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <span className='mark' part='mark' aria-hidden='true'>
-        <span className='boundary'></span>
-        <span className='route'></span>
-      </span>
+      <svg className='mark' part='mark' viewBox='0 0 64 64' role='img' aria-hidden='true'>
+        <path
+          className='mark-path'
+          d='M43.8 17.6A22 22 0 1 0 43.8 46.4M43.8 32H25.2'
+        />
+      </svg>
     );
   }
 }

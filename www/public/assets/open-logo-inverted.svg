@@ -1,37 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
-  <title>openElement Aperture O inverted</title>
-  <desc>A flat Monet purple Aperture O for dark surfaces.</desc>
-  <defs>
-    <linearGradient
-      id="aperture-inverted"
-      x1="24"
-      y1="108"
-      x2="106"
-      y2="18"
-      gradientUnits="userSpaceOnUse"
-    >
-      <stop offset="0" stop-color="#d0bdff" />
-      <stop offset=".52" stop-color="#9c7df2" />
-      <stop offset="1" stop-color="#f3eaff" />
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="32" fill="#12091f" />
-  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-inverted)" stroke-width="14" />
-  <circle cx="64" cy="64" r="24" fill="none" stroke="#8262db" stroke-width="2" />
+  <title>openElement monogram inverted</title>
+  <desc>A transparent geometric monogram combining openElement's o and e for dark surfaces.</desc>
   <path
-    d="M91 24A43 43 0 0 1 107 57"
-    fill="none"
-    stroke="#12091f"
-    stroke-width="18"
-    stroke-linecap="round"
-  />
-  <path
-    d="M91 25A43 43 0 0 1 106 56"
+    d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4"
     fill="none"
     stroke="#f3eaff"
-    stroke-width="3"
+    stroke-width="15"
     stroke-linecap="round"
+    stroke-linejoin="round"
   />
-  <path d="M43 60H86" fill="none" stroke="#f3eaff" stroke-width="4" stroke-linecap="round" />
-  <path d="M41 75H90" fill="none" stroke="#9c7df2" stroke-width="4" stroke-linecap="round" />
 </svg>
