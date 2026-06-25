@@ -13,10 +13,9 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.1** (shipped): npm distribution + audit cleanup.
 - **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
   renderer/activation split, `BindingDescriptor` registry).
-- **alpha.3**: Consume Lit/Shoelace/Material Web Components inside openElement;
-  pure-ESM / pure-ECMAScript / modern Web Standards npm quality gates.
-- **alpha.4**: Lightweight client runtime so openElement components work in Deno
-  Fresh; Preact island proof.
+- **alpha.3–4** (merged): Cross-Framework WC Integration —
+  consume Lit/Shoelace/MWC + client runtime for Deno Fresh
+  interop proof; pure-ESM/ECMAScript npm gates.
 - **alpha.5**: SPA mode + Deno Desktop shell proof.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 

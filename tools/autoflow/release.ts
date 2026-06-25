@@ -285,7 +285,7 @@ export function createReleasePlan(
       command: ['git', 'pull', '--rebase', 'origin', 'main'],
     },
     {
-      name: 'push main (after publish)',
+      name: 'push main (before publish)',
       command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,

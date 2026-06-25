@@ -252,7 +252,7 @@ Non-goals:
 
 - No public JSX syntax changes.
 - No new product features.
-- No third-party WC integration (deferred to alpha.3).
+- No third-party WC integration (deferred to alpha.4).
 
 ## v0.41.0-alpha.4 - Cross-Framework Web Components Integration
 
