@@ -2,6 +2,10 @@ import { defineConfig } from 'vite';
 import { openElement } from '@openelement/adapter-vite';
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: '@openelement/core',
+  },
   plugins: [
     openElement({
       mode: 'spa',

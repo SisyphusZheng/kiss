@@ -1,13 +1,29 @@
 /** @jsxImportSource @openelement/core */
-import type { ReaderBook } from '../app/types.ts';
+import { useLoaderData } from '@openelement/router/data-context';
+import type { ReaderBook, ReaderProgress } from '../app/types.ts';
 import { loadProgress } from '../app/storage.ts';
 import { navigate } from '../router.ts';
 
 // ponytail: direct import of books JSON for the SPA client
 import booksData from '../fixtures/books.json' with { type: 'json' };
 
+interface BookshelfData {
+  books: ReaderBook[];
+  progressByBook: Record<string, ReaderProgress>;
+}
+
+export function loader(): Promise<BookshelfData> {
+  const books = booksData as unknown as ReaderBook[];
+  const progressByBook: Record<string, ReaderProgress> = {};
+  for (const book of books) {
+    const progress = loadProgress(book.id);
+    if (progress) progressByBook[book.id] = progress;
+  }
+  return Promise.resolve({ books, progressByBook });
+}
+
 export default function BookshelfRoute() {
-  const books: ReaderBook[] = booksData as unknown as ReaderBook[];
+  const { books, progressByBook } = useLoaderData<BookshelfData>();
 
   return (
     <div class='bookshelf'>
@@ -15,7 +31,7 @@ export default function BookshelfRoute() {
       {books.length === 0 ? <p class='empty-state'>No books in library</p> : (
         <div class='book-grid'>
           {books.map((book) => {
-            const progress = loadProgress(book.id);
+            const progress = progressByBook[book.id];
             return (
               <open-card
                 key={book.id}

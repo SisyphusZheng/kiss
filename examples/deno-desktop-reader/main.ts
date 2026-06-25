@@ -25,7 +25,7 @@ function readTextSafe(url: URL): string | null {
   }
 }
 
-function readFileSafe(url: URL): Uint8Array | null {
+function readFileSafe(url: URL): Uint8Array<ArrayBuffer> | null {
   try {
     return Deno.readFileSync(url);
   } catch {
@@ -52,13 +52,20 @@ function json(data: unknown): Response {
   });
 }
 
-function pdf(bytes: Uint8Array): Response {
-  return new Response(bytes, {
+function byteBody(bytes: Uint8Array<ArrayBuffer>): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
+}
+
+function pdf(bytes: Uint8Array<ArrayBuffer>): Response {
+  return new Response(byteBody(bytes), {
     headers: { 'content-type': 'application/pdf' },
   });
 }
 
-function serveFile(bytes: Uint8Array, ext: string): Response {
+function serveFile(bytes: Uint8Array<ArrayBuffer>, ext: string): Response {
   const mime: Record<string, string> = {
     '.js': 'application/javascript',
     '.css': 'text/css',
@@ -67,7 +74,7 @@ function serveFile(bytes: Uint8Array, ext: string): Response {
     '.svg': 'image/svg+xml',
     '.png': 'image/png',
   };
-  return new Response(bytes, {
+  return new Response(byteBody(bytes), {
     headers: { 'content-type': mime[ext] ?? 'application/octet-stream' },
   });
 }

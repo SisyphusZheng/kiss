@@ -1,6 +1,7 @@
 /** @jsxImportSource @openelement/core */
+import { useActionData, useLoaderData } from '@openelement/router/data-context';
 import type { ReaderBook } from '../../app/types.ts';
-import { currentParams, currentPath, navigate } from '../../router.ts';
+import { currentPath, navigate } from '../../router.ts';
 import { saveNote, saveProgress } from '../../app/storage.ts';
 
 // ponytail: direct import of books JSON for the SPA client
@@ -8,22 +9,66 @@ import booksData from '../../fixtures/books.json' with { type: 'json' };
 
 let _showAddNoteForm = false;
 
-// Toast helper (ponytail: simple DOM toast, lives outside #root so survives routing)
-function showToast(message: string): void {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
+interface ReadingData {
+  book: ReaderBook | null;
+  page: number;
+  totalPages: number;
+}
+
+interface ReadingActionData {
+  saved?: boolean;
+  error?: string;
+}
+
+function readPage(params: Record<string, string>): number {
+  const pageParam = parseInt(params.page || '1', 10);
+  return isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+}
+
+export function loader(
+  ctx: { params: Record<string, string> },
+): Promise<ReadingData> {
+  const books = booksData as unknown as ReaderBook[];
+  const book = books.find((b) => b.id === ctx.params.id) ?? null;
+  const page = readPage(ctx.params);
+  if (book) saveProgress(book.id, page);
+  return Promise.resolve({
+    book,
+    page,
+    totalPages: book?.pageCount ?? 0,
+  });
+}
+
+export function action(
+  ctx: { params: Record<string, string> },
+): Promise<ReadingActionData> {
+  const books = booksData as unknown as ReaderBook[];
+  const book = books.find((b) => b.id === ctx.params.id);
+  if (!book) return Promise.resolve({ error: 'Book not found' });
+
+  const quoteEl = document.getElementById('note-quote') as HTMLTextAreaElement | null;
+  const noteEl = document.getElementById('note-text') as HTMLTextAreaElement | null;
+  const page = readPage(ctx.params);
+  const note = (noteEl?.value ?? '').trim();
+  if (!note) {
+    return Promise.resolve({ error: 'Write a note before saving.' });
+  }
+
+  saveNote({
+    id: crypto.randomUUID(),
+    bookId: book.id,
+    pageNumber: page,
+    quote: quoteEl?.value ?? '',
+    note,
+    createdAt: new Date().toISOString(),
+  });
+  _showAddNoteForm = false;
+  return Promise.resolve({ saved: true });
 }
 
 export default function ReadingRoute() {
-  const params = currentParams();
-  const bookId = params.id;
-  const books: ReaderBook[] = booksData as unknown as ReaderBook[];
-  const book = books.find((b) => b.id === bookId);
+  const { book, page, totalPages } = useLoaderData<ReadingData>();
+  const actionData = useActionData<ReadingActionData>();
 
   if (!book) {
     return (
@@ -42,17 +87,12 @@ export default function ReadingRoute() {
     );
   }
 
-  const pageParam = parseInt(currentParams().page || '1', 10);
-  const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
-  const totalPages = book.pageCount;
-
-  // Save reading progress
-  saveProgress(book.id, page);
-
   return (
     <div>
       <h1>{book.title}</h1>
       <p class='book-author'>by {book.author}</p>
+      {actionData?.saved && <p class='toast-inline'>Note saved.</p>}
+      {actionData?.error && <p class='form-error'>{actionData.error}</p>}
 
       <embed
         src={`/books/${book.fileName}#page=${page}`}
@@ -88,7 +128,7 @@ export default function ReadingRoute() {
       </open-button>
 
       {_showAddNoteForm && (
-        <div class='note-form'>
+        <form class='note-form'>
           <label>Quote:</label>
           <textarea
             id='note-quote'
@@ -105,31 +145,10 @@ export default function ReadingRoute() {
             placeholder='Write your thoughts...'
           />
 
-          <open-button
-            onClick={() => {
-              const quoteEl = document.getElementById(
-                'note-quote',
-              ) as HTMLTextAreaElement;
-              const noteEl = document.getElementById(
-                'note-text',
-              ) as HTMLTextAreaElement;
-              const note = {
-                id: crypto.randomUUID(),
-                bookId: book.id,
-                pageNumber: page,
-                quote: quoteEl?.value ?? '',
-                note: noteEl?.value ?? '',
-                createdAt: new Date().toISOString(),
-              };
-              saveNote(note);
-              _showAddNoteForm = false;
-              showToast('Note saved!');
-              navigate(currentPath());
-            }}
-          >
+          <open-button type='submit'>
             Save Note
           </open-button>
-        </div>
+        </form>
       )}
     </div>
   );

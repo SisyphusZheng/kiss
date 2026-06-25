@@ -6,28 +6,36 @@ import { setRouter } from './router.ts';
 import '@openelement/ui';
 
 // Import route components for SPA routing
-import BookshelfRoute from './routes/index.tsx';
-import ReadingRoute from './routes/books/[id].tsx';
-import NotesRoute from './routes/notes.tsx';
-import SearchRoute from './routes/search.tsx';
-import SettingsRoute from './routes/settings.tsx';
+import BookshelfRoute, { loader as bookshelfLoader } from './routes/index.tsx';
+import ReadingRoute, {
+  action as readingAction,
+  loader as readingLoader,
+} from './routes/books/[id].tsx';
+import NotesRoute, { loader as notesLoader } from './routes/notes.tsx';
+import SearchRoute, { loader as searchLoader } from './routes/search.tsx';
+import SettingsRoute, { loader as settingsLoader } from './routes/settings.tsx';
 import WcInteropRoute from './routes/wc-interop.tsx';
 
 import type { RouteConfig } from '@openelement/router/client-router';
 
 const routes: RouteConfig[] = [
-  { path: '/', component: BookshelfRoute },
-  { path: '/books/:id', component: ReadingRoute },
-  { path: '/notes', component: NotesRoute },
-  { path: '/search', component: SearchRoute },
-  { path: '/settings', component: SettingsRoute },
+  { path: '/', loader: bookshelfLoader, component: BookshelfRoute },
+  {
+    path: '/books/:id',
+    loader: readingLoader,
+    action: readingAction,
+    component: ReadingRoute,
+  },
+  { path: '/notes', loader: notesLoader, component: NotesRoute },
+  { path: '/search', loader: searchLoader, component: SearchRoute },
+  { path: '/settings', loader: settingsLoader, component: SettingsRoute },
   { path: '/wc-interop', component: WcInteropRoute },
 ];
 
 export default function Reader() {
   const app = defineApp({ mode: 'spa', routes });
-  setRouter(app.router);
   app.mount('#root');
+  setRouter(app.router);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e: KeyboardEvent) => {

@@ -70,13 +70,26 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     }
   }
 
+  function resolveComponentResult(value: unknown): unknown {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      'default' in value &&
+      typeof (value as { default?: unknown }).default === 'function'
+    ) {
+      return (value as { default: () => unknown }).default();
+    }
+    return value;
+  }
+
   /** Render the current route component into rootEl. */
-  function renderComponent(): void {
+  async function renderComponent(expectedRender: number): Promise<void> {
     if (!router || !rootEl) return;
     const route = router.currentRoute;
     rootEl.innerHTML = '';
     if (route) {
-      const result = route.component();
+      const result = resolveComponentResult(await route.component());
+      if (expectedRender !== renderId || !router || !rootEl) return;
       if (isRenderableNode(result)) {
         rootEl.appendChild(result);
       }
@@ -99,7 +112,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     __internal_pushLoaderData(loaderData);
 
-    renderComponent();
+    await renderComponent(currentRender);
   }
 
   /** Duck-type check: is this element a form? Works in test environments without HTMLElement globals. */
@@ -121,12 +134,12 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const form = event.target;
     if (!isFormElement(form)) return;
     if (!router || !rootEl) return;
-    const currentRender = ++renderId;
-
-    event.preventDefault();
 
     const route = router.currentRoute;
     if (!route?.action) return;
+    const currentRender = ++renderId;
+
+    event.preventDefault();
 
     // Pop old data first
     __internal_popData();
@@ -148,7 +161,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     __internal_pushLoaderData(loaderData);
     __internal_pushActionData(actionData);
 
-    renderComponent();
+    await renderComponent(currentRender);
   }
 
   function mount(selector: string): void {
@@ -172,12 +185,16 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     /** Intercept form submissions for action support. */
     submitHandler = (e: Event) => {
-      handleFormSubmit(e);
+      void handleFormSubmit(e).catch((err) => {
+        console.error('[spa] form submit failed:', err);
+      });
     };
     rootEl.addEventListener('submit', submitHandler);
 
     // Initial render for the current URL
-    renderRoute();
+    void renderRoute().catch((err) => {
+      console.error('[spa] initial render failed:', err);
+    });
   }
 
   function dispose(): void {

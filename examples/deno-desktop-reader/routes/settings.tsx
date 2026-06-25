@@ -1,4 +1,5 @@
 /** @jsxImportSource @openelement/core */
+import { useLoaderData } from '@openelement/router/data-context';
 import { loadSettings, saveSettings } from '../app/storage.ts';
 import type { ReaderSettings } from '../app/types.ts';
 
@@ -21,8 +22,12 @@ function applyMeasure(chars: number): void {
   document.documentElement.style.setProperty('--reader-measure', `${chars}ch`);
 }
 
+export function loader(): Promise<ReaderSettings> {
+  return Promise.resolve(loadSettings());
+}
+
 export default function SettingsRoute() {
-  const current = loadSettings();
+  const current = useLoaderData<ReaderSettings>();
 
   // Apply current settings on mount
   applyTheme(current.theme);

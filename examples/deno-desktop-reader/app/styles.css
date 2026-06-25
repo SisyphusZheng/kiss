@@ -156,6 +156,23 @@ html.theme-dark .note-form {
   color: var(--reader-fg);
 }
 
+.toast-inline,
+.form-error {
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.toast-inline {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.form-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 /* ─── Notes list ───────────────────────────────────────────── */
 
 .notes-book-section {

@@ -4,6 +4,7 @@
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@material/web@2": "2.4.1",
+    "npm:@preact/signals-core@^1.12.1": "1.14.3",
     "npm:@preact/signals@^2.9.0": "2.9.2_preact@10.29.2",
     "npm:@shoelace-style/shoelace@^2.19.0": "2.20.1_@floating-ui+utils@0.2.11_@types+react@19.2.17",
     "npm:pdf-parse@^1.1.1": "1.1.4",

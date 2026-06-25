@@ -16,12 +16,11 @@ export function getRouter(): RouterInstance | null {
 
 export function navigate(path: string): void {
   if (_router) {
-    _router.navigate(path);
-  } else {
-    // fallback for when router isn't ready
-    history.pushState(null, '', path);
-    globalThis.dispatchEvent(new PopStateEvent('popstate'));
+    void _router.navigate(path);
+    return;
   }
+
+  console.warn('[reader] navigate called before openElement router is mounted:', path);
 }
 
 export function currentParams(): Record<string, string> {

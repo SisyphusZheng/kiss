@@ -258,6 +258,88 @@ Deno.test('action data flows to useActionData() via form submit', async () => {
   assertEquals(parsed.action, actionResult);
 });
 
+Deno.test('submit without route action falls through to native form behavior', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [routeWithLoader('/', 'loader-data')],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+
+  const form = new StubElement();
+  form.tagName = 'FORM';
+  const submitEvent = new Event('submit', { cancelable: true });
+  Object.defineProperty(submitEvent, 'target', {
+    value: form,
+    writable: false,
+    configurable: true,
+  });
+
+  const result = stubRoot.dispatchEvent(submitEvent);
+
+  assertEquals(result, true);
+  assertEquals(submitEvent.defaultPrevented, false);
+});
+
+Deno.test('async route component result renders after loader data is available', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [{
+      path: '/',
+      loader: () => Promise.resolve({ message: 'async loader' }),
+      component: async () => {
+        await new Promise((r) => setTimeout(r, 0));
+        const data = useLoaderData<{ message: string }>();
+        const el = new StubElement();
+        el.textContent = data.message;
+        return el;
+      },
+    }],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 5));
+
+  assertEquals(stubRoot.textContent, 'async loader');
+});
+
+Deno.test('lazy module default route component renders', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [{
+      path: '/',
+      component: async () => {
+        await Promise.resolve();
+        return {
+          default: () => {
+            const el = new StubElement();
+            el.textContent = 'lazy module';
+            return el;
+          },
+        };
+      },
+    }],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 5));
+
+  assertEquals(stubRoot.textContent, 'lazy module');
+});
+
 Deno.test('navigation pops old loader data and loads new', async () => {
   resetMocks({ pathname: '/home' });
   stubRoot = new StubElement();

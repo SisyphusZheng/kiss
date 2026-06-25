@@ -5,7 +5,7 @@
   "tasks": {
     "dev": "deno run -A main.ts & vite",
     "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist main.ts",
-    "check": "deno check main.ts",
+    "check": "deno check --sloppy-imports main.ts reader.tsx",
     "smoke": "deno test -A --no-check app/__tests__/"
   },
   "imports": {
@@ -15,6 +15,9 @@
     "@openelement/app": "../../packages/app/src/index.ts",
     "@openelement/app/spa": "../../packages/app/src/spa.ts",
     "@openelement/app/preact": "../../packages/app/src/preact.ts",
+    "@openelement/router": "../../packages/router/src/index.ts",
+    "@openelement/router/client-router": "../../packages/router/src/client-router.ts",
+    "@openelement/router/data-context": "../../packages/router/src/data-context.ts",
     "@openelement/adapter-vite": "../../packages/adapter-vite/src/index.ts",
     "@openelement/protocol": "../../packages/protocol/src/index.ts",
     "preact": "npm:preact@^10.29.1",

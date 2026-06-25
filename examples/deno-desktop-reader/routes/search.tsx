@@ -1,15 +1,34 @@
 /** @jsxImportSource @openelement/core */
+import { useLoaderData } from '@openelement/router/data-context';
 import type { ReaderBook } from '../app/types.ts';
 import { navigate } from '../router.ts';
 
 // ponytail: direct import
 import booksData from '../fixtures/books.json' with { type: 'json' };
 
+interface SearchData {
+  query: string;
+  results: ReaderBook[];
+}
+
+export function loader(
+  ctx: { params: Record<string, string> },
+): Promise<SearchData> {
+  const books = booksData as unknown as ReaderBook[];
+  const query = (ctx.params.q || '').trim();
+  const lowerQuery = query.toLowerCase();
+  const results = query
+    ? books.filter(
+      (book) =>
+        book.title.toLowerCase().includes(lowerQuery) ||
+        book.author.toLowerCase().includes(lowerQuery),
+    )
+    : [];
+  return Promise.resolve({ query, results });
+}
+
 export default function SearchRoute() {
-  const books: ReaderBook[] = booksData as unknown as ReaderBook[];
-  const params = new URLSearchParams(globalThis.location.search);
-  const rawQuery = params.get('q') || '';
-  const query = rawQuery.trim();
+  const { query, results } = useLoaderData<SearchData>();
 
   if (!query) {
     return (
@@ -21,13 +40,6 @@ export default function SearchRoute() {
       </div>
     );
   }
-
-  const lowerQuery = query.toLowerCase();
-  const results = books.filter(
-    (book) =>
-      book.title.toLowerCase().includes(lowerQuery) ||
-      book.author.toLowerCase().includes(lowerQuery),
-  );
 
   if (results.length === 0) {
     return (

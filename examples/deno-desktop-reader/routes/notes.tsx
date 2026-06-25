@@ -1,4 +1,5 @@
 /** @jsxImportSource @openelement/core */
+import { useLoaderData } from '@openelement/router/data-context';
 import type { ReaderBook, ReaderNote } from '../app/types.ts';
 import { deleteNote, loadNotes } from '../app/storage.ts';
 import { navigate } from '../router.ts';
@@ -6,6 +7,11 @@ import { exportNotesToMarkdown } from '../app/export.ts';
 
 // ponytail: direct import of books JSON
 import booksData from '../fixtures/books.json' with { type: 'json' };
+
+interface NotesData {
+  allNotes: ReaderNote[];
+  books: ReaderBook[];
+}
 
 function showToast(message: string): void {
   const existing = document.querySelector('.toast');
@@ -17,9 +23,15 @@ function showToast(message: string): void {
   setTimeout(() => toast.remove(), 2500);
 }
 
+export function loader(): Promise<NotesData> {
+  return Promise.resolve({
+    allNotes: loadNotes() as unknown as ReaderNote[],
+    books: booksData as unknown as ReaderBook[],
+  });
+}
+
 export default function NotesRoute() {
-  const allNotes: ReaderNote[] = loadNotes() as unknown as ReaderNote[];
-  const books: ReaderBook[] = booksData as unknown as ReaderBook[];
+  const { allNotes, books } = useLoaderData<NotesData>();
 
   if (allNotes.length === 0) {
     return (
