@@ -4,7 +4,7 @@
   "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run -A main.ts & vite",
-    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist main.ts",
+    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist --include fixtures main.ts",
     "check": "deno check --sloppy-imports main.ts reader.tsx",
     "smoke": "deno test -A --no-check app/__tests__/"
   },
