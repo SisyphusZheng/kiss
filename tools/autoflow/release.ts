@@ -282,7 +282,7 @@ export function createReleasePlan(
       command: ['git', 'merge', '--ff-only', 'dev'],
     },
     {
-      name: 'pull main for push',
+      name: 'push main (after publish)',
       command: ['git', 'pull', '--rebase', 'origin', 'main'],
     },
     {

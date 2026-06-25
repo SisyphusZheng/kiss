@@ -2,8 +2,8 @@
 // Fresh ↔ custom-element interop without bundling @openelement/ui
 // (which ships .js with JSX that Vite can't transpile yet).
 //
-// ponytail: once @openelement/ui ships pre-compiled JS (add compilerOptions.jsx
-// to packages/ui/deno.json), replace these inline registrations with
+// ponytail: once @openelement/ui ships pre-compiled JS (compilerOptions.jsx
+// already in packages/ui/deno.json; remaining blocker is deno pack transpilation), replace with
 // `import "@openelement/ui"`.
 //
 // ponytail: stub ignores variant/size/disabled attributes. The real

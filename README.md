@@ -86,7 +86,7 @@ export default defineIsland(
 
 All 11 current workspace packages are aligned at **0.41.0-alpha.4** (`v0.41.0-alpha.4`) under
 [`@openelement`](https://www.npmjs.com/org/openelement). The active execution line is
-**Signal-DOM Deepening**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
+**Cross-Framework Web Components Integration**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
 while reserving minor/major product decisions for human-approved ADR and
 version-plan evidence.
 
