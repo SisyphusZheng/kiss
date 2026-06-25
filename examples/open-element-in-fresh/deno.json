@@ -1,0 +1,24 @@
+{
+  "name": "@openelement/example-fresh",
+  "version": "0.41.0-alpha.4",
+  "lock": false,
+  "tasks": {
+    "start": "deno run -A --watch=static/,routes/ dev.ts",
+    "check": "deno check dev.ts main.ts"
+  },
+  "imports": {
+    "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "preact": "https://esm.sh/preact@10.22.0",
+    "preact/": "https://esm.sh/preact@10.22.0/",
+    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.5.11",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.7.0",
+    "@openelement/element": "npm:@openelement/element@^0.41.0",
+    "@openelement/ui": "npm:@openelement/ui@^0.41.0",
+    "@openelement/core/hydrate": "npm:@openelement/core@^0.41.0/hydrate"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+}
