@@ -208,9 +208,16 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function notifyChange(): void {
-    void Promise.resolve(options.onChange?.()).catch((err) => {
+    // Outer try/catch catches synchronous throws from onChange().
+    // Promise.resolve().catch() only handles async rejections; a sync throw
+    // during argument evaluation would crash the router.
+    try {
+      void Promise.resolve(options.onChange?.()).catch((err) => {
+        console.error('[router] onChange failed:', err);
+      });
+    } catch (err) {
       console.error('[router] onChange failed:', err);
-    });
+    }
   }
 
   async function commitNavigation(
