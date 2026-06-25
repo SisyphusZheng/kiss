@@ -1,0 +1,106 @@
+import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { scanExtractedPackage } from './check-package-artifacts.ts';
+
+async function withPackage(
+  packageName: string,
+  files: Record<string, string>,
+  fn: (root: string) => void | Promise<void>,
+): Promise<void> {
+  const root = await Deno.makeTempDir({ prefix: 'openelement-artifact-test-' });
+  try {
+    await Deno.writeTextFile(
+      `${root}/package.json`,
+      JSON.stringify(
+        { name: packageName, type: 'module', exports: { '.': './index.js' } },
+        null,
+        2,
+      ),
+    );
+    for (const [path, content] of Object.entries(files)) {
+      const fullPath = `${root}/${path}`;
+      await Deno.mkdir(fullPath.slice(0, fullPath.lastIndexOf('/')), { recursive: true });
+      await Deno.writeTextFile(fullPath, content);
+    }
+    await fn(root);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+}
+
+Deno.test('package artifacts: accepts ESM runtime package with Web APIs', async () => {
+  await withPackage(
+    '@openelement/core',
+    {
+      'index.js': `
+        export function makeRequest(url) {
+          const controller = new AbortController();
+          return fetch(new URL(url), { signal: controller.signal });
+        }
+      `,
+    },
+    (root) => {
+      const result = scanExtractedPackage('@openelement/core', root);
+      assertEquals(result.violations, []);
+    },
+  );
+});
+
+Deno.test('package artifacts: rejects CJS and host APIs in runtime-free packages', async () => {
+  await withPackage(
+    '@openelement/core',
+    {
+      'index.js': `
+        import process from 'node:process';
+        const fs = require('node:fs');
+        export const value = process.env.OPEN_ELEMENT;
+      `,
+    },
+    (root) => {
+      const messages = scanExtractedPackage('@openelement/core', root).violations.map((v) =>
+        v.message
+      );
+      assert(messages.includes('node:* import'));
+      assert(messages.includes('CommonJS require()'));
+      assert(messages.includes('Node process global'));
+    },
+  );
+});
+
+Deno.test('package artifacts: allows documented host API escape hatches', async () => {
+  await withPackage(
+    '@openelement/app',
+    {
+      'i18n-plugin.js': `
+        // deno-api-free:ignore build-time plugin
+        import process from 'node:process';
+        export const cwd = process.cwd();
+      `,
+    },
+    (root) => {
+      const result = scanExtractedPackage('@openelement/app', root);
+      assertEquals(result.violations, []);
+    },
+  );
+});
+
+Deno.test('package artifacts: rejects missing module type and CJS entry', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'openelement-artifact-test-' });
+  try {
+    await Deno.writeTextFile(
+      `${root}/package.json`,
+      JSON.stringify({ name: '@openelement/core', main: './index.cjs' }, null, 2),
+    );
+    await Deno.writeTextFile(`${root}/index.cjs`, 'module.exports = {};');
+
+    const messages = scanExtractedPackage('@openelement/core', root).violations.map((v) =>
+      v.message
+    );
+    assert(messages.includes('package.json must declare "type": "module"'));
+    assert(messages.includes('package.json main must not point at a CommonJS entry'));
+    assert(messages.includes('package.json must expose an exports map'));
+    assert(messages.includes('CommonJS .cjs artifact is not allowed'));
+    assert(messages.includes('CommonJS module.exports'));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

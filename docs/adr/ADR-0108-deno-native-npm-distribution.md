@@ -26,6 +26,16 @@ openElement v0.41.0 distribution is **Deno-native npm distribution**:
 - JSR publish is no longer a required release exit gate; it remains available as
   historical observation only.
 - Vite + Nitro remain the default engines behind the protocol boundary.
+- Runtime-free/browser-facing npm artifacts remain pure ESM, pure ECMAScript
+  where possible, and built on native W3C/WHATWG/Web Platform APIs before
+  host-specific APIs or custom wrappers.
+- Build/server glue may use Deno-first platform APIs when filesystem, process,
+  packaging, or publishing behavior requires a host environment, but those APIs
+  must not leak into runtime-free browser-facing package surfaces.
+- Release publishing must run the packed artifact gate before `npm publish`:
+  `pack:dry-run`, `publint --strict`, arethetypeswrong with an ESM-only profile,
+  and tarball extraction scans for CommonJS artifacts and runtime-free host API
+  leakage.
 
 ## Consequences
 
@@ -44,6 +54,9 @@ openElement v0.41.0 distribution is **Deno-native npm distribution**:
   tarball output on every release.
 - Build/server glue packages (`ssg`, `content`, `adapter-vite`, `create`) retain
   Deno/Node APIs; runtime-free packages must stay Web Standard.
+- The quality gate is layered: hard artifact checks enforce pure ESM and
+  host-API absence, while modern Web Standards preference is enforced through
+  documented exceptions, integration tests, and release review.
 
 ### Negative
 
@@ -63,13 +76,14 @@ openElement v0.41.0 distribution is **Deno-native npm distribution**:
 2. **Boundaries**: keep `MemoryIsrCache` in `@openelement/core/isr` as the
    reference ISR cache; `FileIsrCache` and `router/page-loader` were removed
    during the architecture audit cleanup because no production code consumed
-   them. Add `deno-api:check` gate for runtime-free packages.
+   them. Add `deno-api:check` gate for runtime-free packages and extend release
+   gates to inspect packed npm artifacts for host-specific runtime leakage.
 3. **Adapter-vite**: default `ssg-package-resolver` to npm mode; JSR source
    fetch remains opt-in.
 4. **Starter**: `@openelement/create` emits `npm:` imports and resolves versions
    from the npm registry.
-5. **Release**: `tools/autoflow/release.ts` runs `pack:dry-run` and
-   `publish:npm`; GitHub Actions uses `actions/setup-node` and
+5. **Release**: `tools/autoflow/release.ts` runs `package-artifacts:check`
+   before `publish:npm`; GitHub Actions uses `actions/setup-node` and
    `secrets.NPM_TOKEN` for provenance publishing.
 6. **Smoke**: post-publish consumer smoke installs from npm and validates Node
    ESM, Deno `npm:`, jsDelivr browser-safe exports, and Nitro Node/Workers.

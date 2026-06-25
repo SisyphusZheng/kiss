@@ -48,6 +48,26 @@ Deno.test('render-ir keeps trustedHtml as explicit trusted-html node', async () 
   assertEquals(serializeRenderNode(node), '<div><span>trusted</span></div>');
 });
 
+Deno.test('render-ir preserves unknown custom elements during SSR', async () => {
+  const node = await renderToNode(
+    jsx('third-party-card', {
+      className: 'card',
+      userName: 'Ada',
+      disabled: true,
+      children: [
+        jsx('span', { slot: 'label', children: ['Profile'] }),
+      ],
+    }),
+  );
+
+  assertEquals(
+    serializeRenderNode(node),
+    '<third-party-card class="card" user-name="Ada" disabled>' +
+      '<span slot="label">Profile</span>' +
+      '</third-party-card>',
+  );
+});
+
 Deno.test('render-ir serializes DSD host nodes through the same serializer', () => {
   const html = serializeRenderNode(
     dsdHostNode({

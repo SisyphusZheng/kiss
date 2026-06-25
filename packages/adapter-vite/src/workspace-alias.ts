@@ -6,6 +6,7 @@
  * can run in synchronous plugin hooks (config, configResolved).
  */
 
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 export interface AliasEntry {
@@ -19,7 +20,7 @@ function tryReadJson(path: string): Record<string, unknown> | null {
     // Deno.readTextFileSync in Deno environments, node:fs in Node.js (Vite)
     const content = typeof Deno !== 'undefined'
       ? Deno.readTextFileSync(path)
-      : require('node:fs').readFileSync(path, 'utf-8');
+      : readFileSync(path, 'utf-8');
     // deno.json files may contain comments - strip them before JSON.parse.
     // Naive regex breaks URLs (https:// -> https:), so we walk character by character,
     // tracking whether we're inside a string literal.

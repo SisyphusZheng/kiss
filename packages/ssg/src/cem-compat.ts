@@ -195,7 +195,7 @@ export function parseCem(json: string): CemParseResult {
       }
     }
 
-    for (const [j, exported] of (module.exports ?? []).entries()) {
+    for (const [j, exported] of (module['exports'] ?? []).entries()) {
       if (!exported.declaration) {
         errors.push({
           code: 'CEM_EXPORT_NO_DECLARATION',

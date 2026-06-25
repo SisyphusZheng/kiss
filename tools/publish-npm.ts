@@ -131,6 +131,7 @@ function isPrerelease(version: string): boolean {
 }
 
 function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unknown>): void {
+  pkgJson.type = 'module';
   pkgJson.repository = REPOSITORY;
   pkgJson.keywords = KEYWORDS;
   if (pkg.name === '@openelement/create') {
@@ -140,7 +141,6 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 
 async function packPackage(
   pkg: PackageInfo,
-  dryRun: boolean,
   allPackages: PackageInfo[],
 ): Promise<string> {
   const filename = npmTarballName(pkg);
@@ -253,7 +253,7 @@ async function main(): Promise<void> {
 
   const tarballs: string[] = [];
   for (const pkg of packages) {
-    const tar = await packPackage(pkg, dryRun, packages);
+    const tar = await packPackage(pkg, packages);
     tarballs.push(tar);
   }
 

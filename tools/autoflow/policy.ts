@@ -208,6 +208,29 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/core\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
   },
   {
+    name: 'third-party-wc:smoke',
+    command: ['deno', 'task', 'third-party-wc:smoke'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\//,
+      /^tools\/third-party-wc-smoke\.ts$/,
+      /^docs\/integrations\//,
+      /^deno\.json$/,
+    ],
+  },
+  {
+    name: 'package-artifacts:check',
+    command: ['deno', 'task', 'package-artifacts:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\//,
+      /^deno\.json$/,
+      /^tools\/check-package-artifacts\.ts$/,
+      /^tools\/publish-npm\.ts$/,
+      /^tools\/lib\/package-graph\.ts$/,
+    ],
+  },
+  {
     name: 'pack:dry-run',
     command: ['deno', 'task', 'pack:dry-run'],
     tiers: ['release'],

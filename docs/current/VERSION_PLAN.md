@@ -81,7 +81,10 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 - Add npm-registry consumer smoke for Node ESM, Deno `npm:`, jsDelivr CDN, and
   Nitro Node/Workers output.
-- Add third-party WC smoke for Shoelace and Material Web Components.
+- Add third-party WC smoke for Lit, Shoelace, Material Web Components, and
+  bidirectional Lit/openElement nesting.
+- Add packed artifact quality gate using publint, arethetypeswrong, and
+  tarball extraction scans.
 - Add Fresh example smoke for openElement component hydration.
 
 ## Non-Goals
@@ -132,10 +135,13 @@ Static gates: `deno task fmt:check`, `deno task lint`, `deno task typecheck`,
 `deno task arch:check`, `deno task signals:check-protocol-boundary`,
 `deno task type-safety:check`, `deno task text-integrity:check`,
 `deno task deno-api:check`.
+Alpha.3 also adds `deno task third-party-wc:smoke` and
+`deno task package-artifacts:check`.
 
 Build/test gates: `deno task test`, `deno task test:coverage:check`,
 `deno task build`, `deno task test:e2e`, `deno task pack:dry-run`,
-`deno task consumer:packaged`, `deno task autoflow:dev`,
+`deno task consumer:packaged`, `deno task third-party-wc:smoke`,
+`deno task package-artifacts:check`, `deno task autoflow:dev`,
 `deno task autoflow:push`, `deno task autoflow:ci`,
 `deno task nitro:proof:node`, `deno task nitro:proof:workers`.
 
@@ -146,6 +152,9 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
   host-specific APIs, and use modern Web Platform APIs as the default runtime
   substrate.
 - `deno task pack:dry-run` succeeds for all 11 packages.
+- `deno task package-artifacts:check` passes for all 11 packed npm artifacts.
+- `deno task third-party-wc:smoke` proves Lit, Shoelace, and Material Web
+  Components can be consumed directly in an openElement app.
 - No `jsr:@openelement/` or `@jsr/openelement__*` specifiers remain in product
   code or generated tarballs.
 - GitHub Actions `autoflow-release.yml` successfully publishes to npm with

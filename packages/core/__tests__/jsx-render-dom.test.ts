@@ -424,6 +424,19 @@ Deno.test('renderToDom binds click event via descriptor', () => {
   assert(clicked);
 });
 
+Deno.test('renderToDom binds dashed custom element events via descriptor', () => {
+  let changed = false;
+  const vnode = jsx('sl-switch', {
+    'on-sl-change': () => (changed = true),
+    children: 'Toggle',
+  });
+  const el = renderToDom(vnode) as Element;
+
+  el.dispatchEvent(new TestEvent('sl-change', { bubbles: true }) as unknown as Event);
+
+  assert(changed);
+});
+
 Deno.test('renderToDom binds signal attribute via descriptor', () => {
   const s = signal('a');
   const vnode = jsx('input', { value: s });

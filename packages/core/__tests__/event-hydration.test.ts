@@ -25,6 +25,9 @@ Deno.test('event hydration: React-style onDoubleClick maps to native dblclick', 
   assertEquals(eventTypeFromProp('onPointerMove'), 'pointermove');
   assertEquals(eventTypeFromProp('onPointerUp'), 'pointerup');
   assertEquals(eventTypeFromProp('onPointerCancel'), 'pointercancel');
+  assertEquals(eventTypeFromProp('on-sl-change'), 'sl-change');
+  assertEquals(eventTypeFromProp('on-md-input'), 'md-input');
+  assertEquals(eventTypeFromProp('on-1bad'), null);
   assertEquals(eventTypeFromProp('onclick'), null);
 });
 
@@ -43,6 +46,22 @@ Deno.test('event hydration: one marker binds every handler on the same element',
 
   const records = collectEventBindings(tree).get('e0') ?? [];
   assertEquals(records.map((record) => record.type), ['click', 'dblclick', 'focusin']);
+});
+
+Deno.test('event hydration: dashed custom events are marked and collected', async () => {
+  const handler = () => {};
+  const tree = jsx('sl-switch', {
+    'on-sl-change': handler,
+    children: ['Switch'],
+  });
+
+  const html = await renderDsdTree(tree);
+  assertStringIncludes(html, '<sl-switch');
+  assertStringIncludes(html, 'data-eid="e0"');
+
+  const records = collectEventBindings(tree).get('e0') ?? [];
+  assertEquals(records.map((record) => record.type), ['sl-change']);
+  assertEquals(records[0]?.handler, handler);
 });
 
 Deno.test('event hydration: nested parent/child events match SSR child-before-parent order', async () => {

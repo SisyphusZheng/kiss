@@ -88,10 +88,12 @@ Deno.test('policy: ci tier includes architecture check for tool and hook changes
 
 Deno.test('policy: release tier includes pack dry-run and nitro proofs', () => {
   const gates = selectGates('release', ['packages/core/src/index.ts']).map((gate) => gate.name);
+  assert(gates.includes('package-artifacts:check'));
   assert(gates.includes('pack:dry-run'));
   assert(gates.includes('nitro:proof:node'));
   assert(gates.includes('nitro:proof:workers'));
   assert(gates.includes('consumer:core-smoke'));
+  assert(gates.includes('third-party-wc:smoke'));
 });
 
 Deno.test('mod3: parse approved plan for release command', () => {
@@ -150,6 +152,7 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
       step.command?.join(' ') ?? '',
     ]);
     assert(commands.some(([name]) => name === 'run release gates after bump'));
+    assert(commands.some(([name]) => name === 'package artifact gate'));
     assert(commands.some(([name]) => name === 'push dev'));
     assert(commands.some(([name]) => name === 'sync dev to main'));
     assert(
@@ -183,6 +186,7 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
     assertFalse(names.includes('sync dev to main'));
     assertFalse(names.includes('checkout dev'));
     assert(names.includes('push main'));
+    assert(names.includes('package artifact gate'));
     assert(names.includes('publish npm packages'));
     assert(names.includes('post-publish npm consumer smoke'));
     assert(names.includes('tag release'));

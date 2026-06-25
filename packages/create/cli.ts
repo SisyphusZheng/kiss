@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno run -A
 /**
  * @openelement/create - Minimal project scaffold for openElement framework.
  *

@@ -111,8 +111,8 @@ export function createReleasePlan(
   ];
   const publishSteps: ReleaseCommandStep[] = [
     {
-      name: 'pack dry-run',
-      command: ['deno', 'task', 'pack:dry-run'],
+      name: 'package artifact gate',
+      command: ['deno', 'task', 'package-artifacts:check'],
     },
     ...(canPublishNpm()
       ? [
