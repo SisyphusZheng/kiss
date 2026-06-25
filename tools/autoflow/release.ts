@@ -371,10 +371,18 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     ['README.md', '`0.41.0-alpha.2` (`v0.41.0-alpha.2`', `\`${version}\` (\`${tag}\``],
     ['README.md', '**0.41.0-alpha.2** (`v0.41.0-alpha.2`)', `**${version}** (\`${tag}\`)`],
     ['README.md', '**v0.41.0-alpha.2**.', `**${tag}**.`],
-    ['README.zh.md', '当前包线：`0.41.0-alpha.2`（`v0.41.0-alpha.2`）', `当前包线：\`${version}\`（\`${tag}\`）`],
+    [
+      'README.zh.md',
+      '当前包线：`0.41.0-alpha.2`（`v0.41.0-alpha.2`）',
+      `当前包线：\`${version}\`（\`${tag}\`）`,
+    ],
     ['README.zh.md', '**0.41.0-alpha.2**（`v0.41.0-alpha.2`）', `**${version}**（\`${tag}\`）`],
     ['README.zh.md', '**v0.41.0-alpha.2**。', `**${tag}**。`],
-    ['docs/current/VERSION_PLAN.md', 'v0.41.0-alpha.2 removed the legacy', `${tag} removed the legacy`],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'v0.41.0-alpha.2 removed the legacy',
+      `${tag} removed the legacy`,
+    ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
       'package line `v0.41.0-alpha.2`, active execution line\n`v0.41.0-alpha.2`',
