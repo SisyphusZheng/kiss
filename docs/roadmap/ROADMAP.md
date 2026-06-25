@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.2 Signal-DOM Deepening; next line is Cross-Framework Web Components Integration.\
+> Current package line: v0.41.0-alpha.4 Cross-Framework WC Integration; next line is Cross-Framework Web Components Integration.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 
@@ -280,9 +280,8 @@ Scope:
 
 Non-goals:
 
-- No openElement components in React/Vue/Fresh yet (deferred to alpha.4).
+- No openElement components in React/Vue yet (Fresh proof shipped in alpha.4).
 - No server/data/forms/session/cache primitives.
-
 
 Provide a lightweight client runtime so openElement components can be consumed
 as npm packages inside third-party frameworks, starting with Deno Fresh.
