@@ -221,6 +221,12 @@ export class TestNode {
     return child;
   }
 
+  append(...nodes: TestNode[]): void {
+    for (const node of nodes) {
+      this.appendChild(node);
+    }
+  }
+
   removeChild(child: TestNode): TestNode {
     const idx = this.childNodes.indexOf(child);
     if (idx === -1) {
@@ -291,6 +297,7 @@ export class TestElement extends TestNode {
   #attrs = new Map<string, string>();
   classList = new TestClassList();
   style = new TestStyle();
+  shadowRoot: TestShadowRoot | null = null;
   override nodeType = 1;
 
   constructor(tag: string) {
@@ -362,6 +369,12 @@ export class TestElement extends TestNode {
 
   hasAttribute(name: string): boolean {
     return this.#attrs.has(name.toLowerCase());
+  }
+
+  attachShadow(): TestShadowRoot {
+    const root = new TestShadowRoot(this);
+    this.shadowRoot = root;
+    return root;
   }
 
   querySelector(selector: string): TestElement | null {

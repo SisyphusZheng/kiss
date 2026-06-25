@@ -52,3 +52,7 @@ export type { EventBinding, EventBindingRecord } from './event-hydration.js';
 // DSD hydration contract
 export { createDsdRenderRoot, hydrateDsdEvents } from './dsd-hydration.js';
 export type { Constructor, DsdHydration } from './dsd-hydration.js';
+
+// Client runtime for third-party frameworks
+export { disposeOpenElement, hydrateOpenElement } from './client-runtime.js';
+export type { ClientRuntimeOptions } from './client-runtime.js';

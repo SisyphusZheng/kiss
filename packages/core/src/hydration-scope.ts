@@ -130,12 +130,19 @@ export class HydrationScope {
   }
 
   /** Resolve data-signal markers in a shadow root and activate bindings. */
-  hydrate(shadowRoot: ShadowRoot, signalRegistry?: Map<string, Signal<unknown>>): void {
+  hydrate(
+    shadowRoot: ShadowRoot,
+    signalRegistry?: Map<string, Signal<unknown>>,
+  ): void {
     if (!this.#active) return;
 
     const registry = signalRegistry ?? this.#signalRegistry;
     const lifecycle: BindingLifecycle = { disposers: this.#effectDisposers };
-    const descriptors = collectHydrationBindings(shadowRoot, registry, lifecycle);
+    const descriptors = collectHydrationBindings(
+      shadowRoot,
+      registry,
+      lifecycle,
+    );
 
     for (const desc of descriptors) {
       if (desc.kind === 'signal-render') {
@@ -159,7 +166,7 @@ export class HydrationScope {
     }
 
     // Chromium DSD layout fix: force reflow without DOM rebuild.
-    requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame?.(() => {
       void (shadowRoot.host as HTMLElement | undefined)?.offsetHeight;
     });
   }
