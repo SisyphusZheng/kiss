@@ -1,0 +1,28 @@
+{
+  "name": "@openelement/example-desktop-reader",
+  "version": "0.41.0-alpha.5",
+  "nodeModulesDir": "manual",
+  "tasks": {
+    "dev": "deno run -A main.ts",
+    "build": "deno desktop main.ts",
+    "check": "deno check main.ts",
+    "smoke": "deno test -A --no-check app/__tests__/"
+  },
+  "imports": {
+    "@openelement/app": "npm:@openelement/app@^0.41.0-alpha.5",
+    "@openelement/core/hydrate": "npm:@openelement/core@^0.41.0-alpha.5/hydrate",
+    "@openelement/router/": "npm:@openelement/router@^0.41.0-alpha.5/",
+    "pdf-parse": "npm:pdf-parse@^1.1.1"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@openelement/core",
+    "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
+  },
+  "desktop": {
+    "backend": "webview",
+    "title": "openElement Reader",
+    "width": 1200,
+    "height": 800
+  }
+}

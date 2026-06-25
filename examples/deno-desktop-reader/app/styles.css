@@ -1,0 +1,128 @@
+:root {
+  --reader-bg: #ffffff;
+  --reader-fg: #1a1a1a;
+  --reader-measure: 65ch;
+  --reader-font-size: 16px;
+  --reader-line-height: 1.6;
+  --reader-accent: #2563eb;
+}
+
+html.theme-dark {
+  --reader-bg: #1a1a1a;
+  --reader-fg: #e0e0e0;
+  --reader-accent: #60a5fa;
+}
+html.theme-sepia {
+  --reader-bg: #f4ecd8;
+  --reader-fg: #5b4636;
+  --reader-accent: #92400e;
+}
+
+body {
+  background: var(--reader-bg);
+  color: var(--reader-fg);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  max-width: var(--reader-measure);
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* ─── Bookshelf ─────────────────────────────────────────────── */
+
+.book-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.book-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html.theme-dark .book-card {
+  border-color: #374151;
+}
+html.theme-dark .book-card:hover {
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Progress / Continue Reading ──────────────────────────── */
+
+.progress-indicator {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+html.theme-dark .progress-indicator {
+  color: #999;
+}
+
+.continue-btn {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+/* ─── Toast ─────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--reader-fg);
+  color: var(--reader-bg);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  z-index: 9999;
+  font-size: 0.95rem;
+  animation: toast-in 0.3s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ─── Settings ──────────────────────────────────────────────── */
+
+.settings-slider {
+  width: 100%;
+  max-width: 300px;
+  margin: 0.5rem 0;
+}
+
+.settings-value {
+  margin-left: 0.75rem;
+  font-weight: 600;
+}
+
+.settings-radio {
+  display: block;
+  margin: 0.25rem 0;
+  cursor: pointer;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-select {
+  margin: 0.5rem 0;
+}
+
+/* ─── Export button ─────────────────────────────────────────── */
+
+.export-btn {
+  margin: 1rem 0 1.5rem;
+}
