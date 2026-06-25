@@ -14,6 +14,7 @@ import type { OpenElementBuildContext } from './build-context.js';
 import { join } from 'node:path';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
+import { escapeAttr, escapeHtml } from '@openelement/core';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
 import { writeRouteManifest } from './route-manifest.js';
 
@@ -76,13 +77,15 @@ export function buildPlugin(
         const outDirName = ctx.phase3.outDir || 'dist';
         const absOutDir = join(root, outDirName);
         const base = ctx.phase3.base || '/';
+        const htmlLang = escapeAttr(ctx.phase3.html?.lang ?? 'en');
+        const htmlTitle = escapeHtml(ctx.phase3.html?.title ?? 'openElement App');
 
         // Generate SPA shell HTML
         const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
-  <title>openElement Reader</title>
+  <title>${htmlTitle}</title>
 </head>
 <body>
   <div id="root"></div>

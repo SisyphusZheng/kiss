@@ -250,6 +250,40 @@ Deno.test({
 });
 
 Deno.test({
+  name: 'buildPlugin - SPA shell uses configured html title and lang',
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    const root = await Deno.makeTempDir();
+    try {
+      await Deno.mkdir(`${root}/app/routes`, { recursive: true });
+
+      const ctx = new OpenElementBuildContext({ mode: 'spa' });
+      const plugin = buildPlugin({
+        mode: 'spa',
+        routesDir: 'app/routes',
+        build: { outDir: 'dist' },
+        html: {
+          lang: 'zh-CN',
+          title: 'Reader <Alpha>',
+        },
+      }, ctx);
+      const config = makeConfig('build');
+      config.root = root;
+      callHook(plugin.configResolved, config);
+
+      await callAsyncHook(plugin.closeBundle);
+
+      const html = await Deno.readTextFile(`${root}/dist/index.html`);
+      assertStringIncludes(html, '<html lang="zh-CN">');
+      assertStringIncludes(html, '<title>Reader &lt;Alpha&gt;</title>');
+    } finally {
+      await Deno.remove(root, { recursive: true });
+    }
+  },
+});
+
+Deno.test({
   name: 'buildPlugin - ssr.noExternal RegExp serialization writes to ctx',
   // Rolldown/Vite SSR build spawns dangling async fs.access (Deno.lstat) ops
   sanitizeOps: false,
