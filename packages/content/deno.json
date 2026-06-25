@@ -1,6 +1,6 @@
 {
   "name": "@openelement/content",
-  "version": "0.41.0-alpha.4",
+  "version": "0.41.0-alpha.5",
   "//": "content is an engine-layer Vite plugin, not runtime-free",
   "exports": {
     ".": "./src/index.ts",

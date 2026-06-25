@@ -376,54 +376,54 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
   // before the `from` strings are updated, the replacement is silently skipped.
   // Consider extracting `previousVersion` as a second parameter.
   const replacements: Array<[string, string, string]> = [
-    ['README.md', '`0.41.0-alpha.4` (`v0.41.0-alpha.4`', `\`${version}\` (\`${tag}\``],
-    ['README.md', '**0.41.0-alpha.4** (`v0.41.0-alpha.4`)', `**${version}** (\`${tag}\`)`],
-    ['README.md', '**v0.41.0-alpha.4**.', `**${tag}**.`],
+    ['README.md', '`0.41.0-alpha.5` (`v0.41.0-alpha.5`', `\`${version}\` (\`${tag}\``],
+    ['README.md', '**0.41.0-alpha.5** (`v0.41.0-alpha.5`)', `**${version}** (\`${tag}\`)`],
+    ['README.md', '**v0.41.0-alpha.5**.', `**${tag}**.`],
     [
       'README.zh.md',
-      '当前包线：`0.41.0-alpha.4`（`v0.41.0-alpha.4`）',
+      '当前包线：`0.41.0-alpha.5`（`v0.41.0-alpha.5`）',
       `当前包线：\`${version}\`（\`${tag}\`）`,
     ],
-    ['README.zh.md', '**0.41.0-alpha.4**（`v0.41.0-alpha.4`）', `**${version}**（\`${tag}\`）`],
-    ['README.zh.md', '**v0.41.0-alpha.4**。', `**${tag}**。`],
+    ['README.zh.md', '**0.41.0-alpha.5**（`v0.41.0-alpha.5`）', `**${version}**（\`${tag}\`）`],
+    ['README.zh.md', '**v0.41.0-alpha.5**。', `**${tag}**。`],
     [
       'docs/current/VERSION_PLAN.md',
-      'v0.41.0-alpha.4 removed the legacy',
+      'v0.41.0-alpha.5 removed the legacy',
       `${tag} removed the legacy`,
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `v0.41.0-alpha.4`, active execution line\n`v0.41.0-alpha.4`',
+      'package line `v0.41.0-alpha.5`, active execution line\n`v0.41.0-alpha.5`',
       `package line \`${tag}\`, active execution line\n\`${tag}\``,
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current package line: v0.41.0-alpha.4 Cleanup-Train Patch;',
+      'Current package line: v0.41.0-alpha.5 Cleanup-Train Patch;',
       `Current package line: ${tag} Cleanup-Train Patch;`,
     ],
     [
       'docs/status/STATUS.md',
-      'Current Version Line: v0.41.0-alpha.4 Active',
+      'Current Version Line: v0.41.0-alpha.5 Active',
       `Current Version Line: ${tag} Active`,
     ],
     [
       'www/app/data/version.ts',
-      "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.4';",
+      "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.5';",
       `export const OPENELEMENT_VERSION = '${tag}';`,
     ],
     [
       'www/app/routes/index/index.tsx',
-      'Current public line: v0.41.0-alpha.4',
+      'Current public line: v0.41.0-alpha.5',
       `Current public line: ${tag}`,
     ],
     [
       'www/app/routes/index/index.tsx',
-      'Current v0.41.0-alpha.4 direction',
+      'Current v0.41.0-alpha.5 direction',
       `Current ${tag} direction`,
     ],
     [
       'www/app/routes/guide/getting-started.tsx',
-      'active line is v0.41.0-alpha.4,',
+      'active line is v0.41.0-alpha.5,',
       `active line is ${tag},`,
     ],
   ];

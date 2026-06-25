@@ -16,7 +16,7 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.3–4** (merged): Cross-Framework WC Integration —
   consume Lit/Shoelace/MWC + client runtime for Deno Fresh
   interop proof; pure-ESM/ECMAScript npm gates.
-- **alpha.5**: SPA mode + Deno Desktop shell proof.
+- **alpha.5**: SPA mode + Deno Desktop shell proof (Deno canary).
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -95,7 +95,7 @@ release workflow records npm publish plus post-publish npm consumer smoke
 evidence.
 
 alpha.5 remains the next implementation target after alpha.4 release closure:
-SPA mode + Deno Desktop shell proof. React/Vue/Svelte adapters stay out of
+SPA mode + Deno Desktop shell proof (Deno canary). React/Vue/Svelte adapters stay out of
 alpha.5 unless they are required to validate SPA navigation disposal semantics.
 
 ## Non-Goals
