@@ -94,8 +94,8 @@ ${entries.join(',\n')}
  */
 function relativeToOutput(absSourcePath: string, fromDir: string): string {
   // Compute the relative path
-  const parts = absSourcePath.replace(sep, posix.sep).split(posix.sep);
-  const fromParts = fromDir.replace(sep, posix.sep).split(posix.sep);
+  const parts = absSourcePath.replaceAll(sep, posix.sep).split(posix.sep);
+  const fromParts = fromDir.replaceAll(sep, posix.sep).split(posix.sep);
 
   // Strip common prefix
   let i = 0;

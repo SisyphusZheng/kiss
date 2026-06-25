@@ -28,6 +28,7 @@
     "build": "deno check src/index.ts"
   },
   "peerDependencies": {
+    "@openelement/router": "npm:@openelement/router@^0.41.0-alpha.5",
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   }

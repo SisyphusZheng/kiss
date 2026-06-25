@@ -411,6 +411,9 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         find: '@openelement/signal',
         replacement: vitePath(join(signalsSrc, 'index.ts')),
       },
+      // Keep router subpath aliases before the package root alias. Vite's
+      // string alias replacement is prefix-based, so the root alias would turn
+      // @openelement/router/client-router into data-context.ts/client-router.
       {
         find: '@openelement/router/data-context',
         replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),

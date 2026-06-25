@@ -45,7 +45,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     return value !== null && typeof value === 'object' && 'nodeType' in value;
   }
 
-  /** Pop all remaining data from the stack (idempotent). */
+  /** Pop the last render cycle's data frame from the stack (idempotent). */
   function clearDataStack(): void {
     // pop on empty array returns undefined; one render cycle leaves at most one frame.
     __internal_popData();

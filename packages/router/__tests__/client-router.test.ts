@@ -299,6 +299,70 @@ Deno.test('query string parsing', () => {
   assertEquals(router.params.page, '2');
 });
 
+Deno.test('query string parsing decodes plus as space', () => {
+  resetMocks({ pathname: '/search', search: '?q=hello+world' });
+
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/search', component: () => null },
+    ],
+  });
+
+  assertEquals(router.params.q, 'hello world');
+});
+
+Deno.test('params skip prototype pollution keys', () => {
+  resetMocks({
+    pathname: '/pollute/path-value',
+    search: '?__proto__=polluted&constructor=bad&ok=yes',
+  });
+
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/pollute/:prototype', component: () => null },
+    ],
+  });
+
+  assertEquals(router.params.ok, 'yes');
+  assertEquals(Object.hasOwn(router.params, '__proto__'), false);
+  assertEquals(Object.hasOwn(router.params, 'constructor'), false);
+  assertEquals(Object.hasOwn(router.params, 'prototype'), false);
+  assertEquals(({} as Record<string, unknown>).polluted, undefined);
+});
+
+Deno.test('onChange errors are reported and do not stop router state update', () => {
+  resetMocks({ pathname: '/' });
+
+  const originalError = console.error;
+  const errors: unknown[][] = [];
+  console.error = (...args: unknown[]) => {
+    errors.push(args);
+  };
+
+  try {
+    const router = createRouter({
+      mode: 'history',
+      routes: [
+        { path: '/', component: () => null },
+        { path: '/about', component: () => null },
+      ],
+      onChange: () => {
+        throw new Error('render failed');
+      },
+    });
+
+    mockLocation.pathname = '/about';
+    fireEvent('popstate');
+
+    assertEquals(router.currentRoute?.path, '/about');
+    assertEquals(String(errors[0]?.[0]), '[router] onChange failed:');
+  } finally {
+    console.error = originalError;
+  }
+});
+
 Deno.test('guard blocking: returns false → navigation blocked', async () => {
   resetMocks({ pathname: '/' });
 

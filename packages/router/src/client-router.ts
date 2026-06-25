@@ -60,7 +60,7 @@ function matchPattern(
     if (clean.startsWith(':')) {
       const name = clean.slice(1);
       if (pi < pathParts.length) {
-        params[name] = pathParts[pi];
+        setParam(params, name, pathParts[pi]);
         pi++;
       } else if (!isOptional) {
         return null; // required param missing
@@ -80,6 +80,37 @@ function matchPattern(
   return params;
 }
 
+function decodeQueryComponent(value: string): string {
+  return decodeURIComponent(value.replace(/\+/g, ' '));
+}
+
+function isSafeParamName(name: string): boolean {
+  return name !== '__proto__' && name !== 'prototype' && name !== 'constructor';
+}
+
+function setParam(
+  target: Record<string, string>,
+  name: string,
+  value: string,
+): void {
+  if (!isSafeParamName(name)) return;
+  Object.defineProperty(target, name, {
+    value,
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  });
+}
+
+function copyParams(
+  target: Record<string, string>,
+  source: Record<string, string>,
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    setParam(target, key, value);
+  }
+}
+
 function parseQuery(search: string): Record<string, string> {
   const result: Record<string, string> = Object.create(null);
   if (search.startsWith('?')) search = search.slice(1);
@@ -88,7 +119,7 @@ function parseQuery(search: string): Record<string, string> {
     const eq = pair.indexOf('=');
     const key = eq === -1 ? pair : pair.slice(0, eq);
     const val = eq === -1 ? '' : pair.slice(eq + 1);
-    result[decodeURIComponent(key)] = decodeURIComponent(val);
+    setParam(result, decodeQueryComponent(key), decodeQueryComponent(val));
   }
   return result;
 }
@@ -104,9 +135,12 @@ export function matchRoute(
   for (const route of routes) {
     const pathParams = matchPattern(route.path, pathname);
     if (pathParams !== null) {
+      const params: Record<string, string> = Object.create(null);
+      copyParams(params, queryParams);
+      copyParams(params, pathParams);
       return {
         route,
-        params: Object.assign(Object.create(null), queryParams, pathParams),
+        params,
       };
     }
   }
@@ -159,7 +193,13 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function notifyChange(): void {
-    void options.onChange?.();
+    try {
+      void Promise.resolve(options.onChange?.()).catch((err) => {
+        console.error('[router] onChange failed:', err);
+      });
+    } catch (err) {
+      console.error('[router] onChange failed:', err);
+    }
   }
 
   async function navigate(path: string): Promise<void> {
