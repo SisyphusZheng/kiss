@@ -282,11 +282,11 @@ export function createReleasePlan(
       command: ['git', 'merge', '--ff-only', 'dev'],
     },
     {
-      name: 'push main (after publish)',
+      name: 'pull main (before publish)',
       command: ['git', 'pull', '--rebase', 'origin', 'main'],
     },
     {
-      name: 'pull latest main',
+      name: 'push main (after publish)',
       command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,
