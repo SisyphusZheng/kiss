@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 
-import { useEffect } from 'preact/hooks';
+import { useEffect } from "preact/hooks";
 
 export default function OpenElementsIsland() {
   useEffect(() => {
@@ -8,8 +8,8 @@ export default function OpenElementsIsland() {
     let unmounted = false;
 
     Promise.all([
-      import('@openelement/ui'),
-      import('@openelement/core/hydrate'),
+      import("@openelement/ui"),
+      import("@openelement/core/hydrate"),
     ]).then(([_, { hydrateOpenElement }]) => {
       if (unmounted) return;
       dispose = hydrateOpenElement(document.body);

@@ -1,8 +1,8 @@
 # openElement in Fresh — alpha.4 Interop Proof
 
-A minimal [Fresh](https://fresh.deno.dev) project that demonstrates openElement
-custom elements (`<open-button>`, `<open-card>`) running inside a Fresh app with
-Preact islands.
+A minimal [Fresh 2.3+](https://fresh.deno.dev) project that demonstrates
+openElement custom elements (`<open-button>`, `<open-card>`) running inside a
+Fresh app with Preact islands.
 
 ## What It Proves
 
@@ -25,7 +25,7 @@ Preact islands.
 
 ```bash
 # From this directory
-deno task start
+deno task dev
 ```
 
 Then open http://localhost:8000.
@@ -34,10 +34,10 @@ Then open http://localhost:8000.
 
 ```
 examples/open-element-in-fresh/
-├── deno.json              # Fresh + openElement imports
-├── fresh.config.ts        # Minimal Fresh config
-├── dev.ts                 # Dev server entry
-├── main.ts                # Production entry
+├── deno.json              # Fresh 2.3+ + openElement imports
+├── vite.config.ts         # Vite dev server config (Fresh 2.x)
+├── client.ts              # Client-side entry point (Fresh 2.x)
+├── main.ts                # Server entry (Fresh 2.x App API)
 ├── routes/
 │   └── index.tsx          # Main route rendering open-button + open-card + Preact island
 ├── islands/
@@ -66,3 +66,12 @@ examples/open-element-in-fresh/
    APIs. Fresh/Preact islands are standard Preact components hydrated via
    Fresh's island hydration. The two systems share the DOM but not state or
    lifecycle.
+
+## Migration Notes (Fresh 1.x → 2.x)
+
+- `dev.ts` → replaced by `vite.config.ts` with `@fresh/plugin-vite`
+- `fresh.config.ts` → removed; config in `main.ts` via `new App()`
+- `fresh.gen.ts` → removed; manifest no longer needed
+- `client.ts` → new required file for client-side entry
+- `$fresh/` imports → `fresh` (via `jsr:@fresh/core`)
+- Tasks: `vite` / `vite build` / `deno serve -A _fresh/server.js`
