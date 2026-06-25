@@ -146,8 +146,6 @@ class StubNode {
   removeEventListener(): void {}
 }
 
-const _attrsMap = new WeakMap<object, Array<{ name: string; value: string }>>();
-
 /**
  * Minimal HTMLElement stub that supports OpenElement's lifecycle APIs:
  * attachShadow, shadowRoot, attributes (iterable), getAttribute/setAttribute/hasAttribute/removeAttribute.
@@ -160,40 +158,11 @@ class TestElement extends StubNode {
 
   constructor() {
     super();
-    _attrsMap.set(this, []);
   }
 
   attachShadow(): ShadowRoot {
     this.shadowRoot = new StubNode() as unknown as ShadowRoot;
     return this.shadowRoot;
-  }
-
-  override get attributes(): Array<{ name: string; value: string }> {
-    return _attrsMap.get(this) ?? [];
-  }
-
-  override getAttribute(name: string): string | null {
-    return this.attributes.find((attr) => attr.name === name)?.value ?? null;
-  }
-
-  override hasAttribute(name: string): boolean {
-    return this.getAttribute(name) !== null;
-  }
-
-  override setAttribute(name: string, value: string): void {
-    const attrs = _attrsMap.get(this) ?? [];
-    const existing = attrs.findIndex((a) => a.name === name);
-    if (existing >= 0) {
-      attrs[existing] = { name, value };
-    } else {
-      attrs.push({ name, value });
-    }
-    _attrsMap.set(this, attrs);
-  }
-
-  override removeAttribute(name: string): void {
-    const attrs = (_attrsMap.get(this) ?? []).filter((a) => a.name !== name);
-    _attrsMap.set(this, attrs);
   }
 
   get isConnected(): boolean {
