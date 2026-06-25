@@ -27,6 +27,10 @@
     "./open-props-tokens.js": "./src/open-props-tokens.ts"
   },
   "imports": {},
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@openelement/core"
+  },
   "publish": {
     "include": [
       "src/**",

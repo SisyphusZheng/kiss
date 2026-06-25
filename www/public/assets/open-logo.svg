@@ -1,30 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
-  <title>openElement Aperture O</title>
-  <desc>A flat Monet purple Aperture O with an open standards notch, DSD boundary, and route graph line.</desc>
-  <defs>
-    <linearGradient id="aperture" x1="24" y1="108" x2="106" y2="18" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#21143b" />
-      <stop offset=".52" stop-color="#8262db" />
-      <stop offset="1" stop-color="#b59cff" />
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="32" fill="#fbf7ff" />
-  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture)" stroke-width="14" />
-  <circle cx="64" cy="64" r="24" fill="none" stroke="#d0bdff" stroke-width="2" />
-  <path
-    d="M91 24A43 43 0 0 1 107 57"
-    fill="none"
-    stroke="#fbf7ff"
-    stroke-width="18"
-    stroke-linecap="round"
-  />
-  <path
-    d="M91 25A43 43 0 0 1 106 56"
-    fill="none"
-    stroke="#58399e"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
-  <path d="M43 60H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
-  <path d="M41 75H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
+  <title>openElement monogram</title>
+  <desc>A transparent geometric monogram combining openElement's o and e.</desc>
+  <path d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4" fill="none" stroke="#21143b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

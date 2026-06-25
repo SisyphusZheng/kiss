@@ -1,55 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img">
-  <title>openElement Aperture O horizontal lockup</title>
-  <desc>openElement wordmark with the flat Monet purple Aperture O.</desc>
-  <defs>
-    <linearGradient
-      id="aperture-horizontal"
-      x1="24"
-      y1="108"
-      x2="106"
-      y2="18"
-      gradientUnits="userSpaceOnUse"
-    >
-      <stop offset="0" stop-color="#21143b" />
-      <stop offset=".52" stop-color="#8262db" />
-      <stop offset="1" stop-color="#b59cff" />
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="32" fill="#fbf7ff" />
-  <circle cx="64" cy="64" r="43" fill="none" stroke="url(#aperture-horizontal)" stroke-width="14" />
-  <circle cx="64" cy="64" r="24" fill="none" stroke="#d0bdff" stroke-width="2" />
-  <path
-    d="M91 24A43 43 0 0 1 107 57"
-    fill="none"
-    stroke="#fbf7ff"
-    stroke-width="18"
-    stroke-linecap="round"
-  />
-  <path
-    d="M91 25A43 43 0 0 1 106 56"
-    fill="none"
-    stroke="#58399e"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
-  <path d="M43 60H86" fill="none" stroke="#21143b" stroke-width="4" stroke-linecap="round" />
-  <path d="M41 75H90" fill="none" stroke="#8262db" stroke-width="4" stroke-linecap="round" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 128" width="420" height="128" role="img">
+  <title>openElement horizontal logo</title>
+  <desc>Transparent geometric openElement monogram with the openElement short code wordmark.</desc>
+  <path d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4" fill="none" stroke="#21143b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
   <text
     x="154"
-    y="62"
+    y="78"
     fill="#21143b"
-    font-family="'Instrument Sans', Inter, Arial, Helvetica, sans-serif"
-    font-size="38"
-    font-weight="850"
-    letter-spacing="0"
-  >openElement</text>
-  <text
-    x="156"
-    y="90"
-    fill="#6d4cc4"
     font-family="'JetBrains Mono', 'SF Mono', Consolas, monospace"
-    font-size="12"
-    font-weight="700"
+    font-size="46"
+    font-weight="800"
     letter-spacing="0"
-  >OPEN STANDARDS / DSD / ROUTE GRAPH</text>
+  >&lt;open/&gt;</text>
 </svg>

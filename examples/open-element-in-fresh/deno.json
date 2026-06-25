@@ -32,17 +32,11 @@
       "a",
       "img",
       "source",
-      "body",
-      "html",
-      "head",
-      "title",
+      "link",
       "meta",
       "script",
-      "link",
       "style",
-      "base",
-      "noscript",
-      "template"
+      "title"
     ],
     "types": ["vite/client"]
   }
