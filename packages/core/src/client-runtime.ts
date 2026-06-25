@@ -10,7 +10,16 @@
 import type { Signal } from '@openelement/protocol/signal';
 import { HydrationScope } from './hydration-scope.js';
 
-const DISPOSE_KEY = Symbol.for('openelement.hydrate.dispose');
+const hostDisposers = new WeakMap<Element, () => void>();
+
+interface ChildContainer {
+  readonly children?: Iterable<Node>;
+  readonly childNodes?: Iterable<Node>;
+}
+
+interface SignalRegistryHost {
+  signalRegistry?: Map<string, Signal<unknown>>;
+}
 
 export interface ClientRuntimeOptions {
   /** Optional CustomElementRegistry. If not provided, uses globalThis.customElements. */
@@ -51,21 +60,19 @@ function collectDsdTemplates(root: ParentNode): HTMLTemplateElement[] {
     // ponytail: walk childNodes instead of children since test doubles may not
     // implement ParentNode.children. Only process ELEMENT_NODE children.
     const walk = (node: ParentNode) => {
-      const n = node as unknown as { children?: unknown[]; childNodes?: Node[] };
-      const nodes: Node[] = Array.isArray(n.children)
-        ? (n.children as Node[])
-        : (n.childNodes ?? []);
+      const container = node as ChildContainer;
+      const nodes = Array.from(container.children ?? container.childNodes ?? []);
       for (const child of nodes.filter((c: Node) => c.nodeType === 1)) {
         const el = child as Element;
         if (
           el.tagName === 'TEMPLATE' &&
           el.getAttribute('shadowrootmode') === 'open'
         ) {
-          results.push(el as unknown as HTMLTemplateElement);
+          results.push(el as HTMLTemplateElement);
         }
-        const cn = child as unknown as { childNodes?: Node[] };
-        if (cn.childNodes) {
-          walk(child as unknown as ParentNode);
+        const childContainer = child as ChildContainer;
+        if (childContainer.childNodes) {
+          walk(child as ParentNode);
         }
       }
     };
@@ -104,6 +111,24 @@ function createShadowRootFromTemplate(
   return shadow;
 }
 
+function templateHost(template: HTMLTemplateElement): Element | null {
+  if (template.parentElement) return template.parentElement;
+  const parent = template.parentNode;
+  return parent?.nodeType === 1 ? parent as Element : null;
+}
+
+function getSignalRegistry(host: Element): Map<string, Signal<unknown>> | undefined {
+  return (host as SignalRegistryHost).signalRegistry;
+}
+
+function disposeScope(scope: HydrationScope): void {
+  try {
+    scope.dispose();
+  } catch {
+    /* ignore dispose errors */
+  }
+}
+
 /**
  * Hydrate all openElement components in a root element.
  *
@@ -120,9 +145,10 @@ export function hydrateOpenElement(
     globalThis.customElements;
   const templates = collectDsdTemplates(root);
   const scopes: HydrationScope[] = [];
+  const hydratedHosts: Element[] = [];
 
   for (const template of templates) {
-    const host: Element | null = template.parentElement ?? template.parentNode as Element | null;
+    const host = templateHost(template);
     if (!host || !registry) continue;
 
     const tagName = host.tagName.toLowerCase();
@@ -133,24 +159,23 @@ export function hydrateOpenElement(
 
     // Read signal registry from the upgraded element instance.
     // OpenElement sets signalRegistry in its constructor.
-    const hostReg = (host as unknown as { signalRegistry?: Map<string, Signal<unknown>> })
-      .signalRegistry;
+    const hostReg = getSignalRegistry(host);
 
     const scope = new HydrationScope({ signalRegistry: hostReg });
     scope.hydrate(shadowRoot, hostReg);
     scopes.push(scope);
+    hydratedHosts.push(host);
 
     // Store disposer on the host so disposeOpenElement can find it.
-    (host as unknown as Record<symbol, () => void>)[DISPOSE_KEY] = () => scope.dispose();
+    hostDisposers.set(host, () => disposeScope(scope));
   }
 
   return () => {
     for (const scope of scopes) {
-      try {
-        scope.dispose();
-      } catch {
-        /* ignore dispose errors */
-      }
+      disposeScope(scope);
+    }
+    for (const host of hydratedHosts) {
+      hostDisposers.delete(host);
     }
   };
 }
@@ -162,30 +187,20 @@ export function hydrateOpenElement(
  * `hydrateOpenElement` and calls their cleanup functions.
  */
 export function disposeOpenElement(root: ParentNode): void {
-  // ponytail: O(n) walk without a dedicated hydration registry.
-  // Use a hydration map stored on the root if per-root scoping is needed later.
+  // ponytail: O(n) walk so callers can dispose an arbitrary container.
   const walk = (node: Node) => {
     const el = node as Element;
-    const rec = el as unknown as Record<symbol, (() => void) | undefined>;
-    const disposer = rec?.[DISPOSE_KEY];
+    const disposer = hostDisposers.get(el);
     if (disposer) {
-      try {
-        disposer();
-      } catch {
-        /* ignore dispose errors */
-      }
-      // Remove after use
-      delete rec[DISPOSE_KEY];
+      disposer();
+      hostDisposers.delete(el);
     }
     // Walk children (supports both real DOM children and test double childNodes).
-    const kids = el.children ?? (el.childNodes ?? []);
-    for (const child of Array.from(kids)) {
+    const container = el as ChildContainer;
+    for (const child of Array.from(container.children ?? container.childNodes ?? [])) {
       walk(child as Node);
     }
-    // Also walk shadow roots recursively
-    const shadow = (el as HTMLElement)?.shadowRoot;
-    if (shadow) walk(shadow);
   };
 
-  walk(root as unknown as Node);
+  walk(root as Node);
 }

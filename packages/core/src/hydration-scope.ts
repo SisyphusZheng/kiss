@@ -159,7 +159,7 @@ export class HydrationScope {
     }
 
     // Chromium DSD layout fix: force reflow without DOM rebuild.
-    requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame?.(() => {
       void (shadowRoot.host as HTMLElement | undefined)?.offsetHeight;
     });
   }

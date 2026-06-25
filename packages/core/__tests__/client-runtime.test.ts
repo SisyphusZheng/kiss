@@ -76,15 +76,19 @@ function signalMap(name: string, s: ReturnType<typeof signal>): Map<string, Sign
   return new Map([[name, s as Signal<unknown>]]);
 }
 
+function defineRegistry(tagName: string): TestCustomElementRegistry {
+  const registry = new TestCustomElementRegistry();
+  class MyEl {}
+  registry.define(tagName, MyEl as unknown as CustomElementConstructor);
+  return registry;
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────
 
 Deno.test('hydrateOpenElement hydrates signal-text marker via DSD template', () =>
   withMockDocument(() => {
     const s = signal('hello');
-    const registry = new TestCustomElementRegistry();
-
-    class MyEl {}
-    registry.define('my-el', MyEl as unknown as CustomElementConstructor);
+    const registry = defineRegistry('my-el');
 
     const [root, , span] = setupHydrationFixture('my-el', signalMap('msg', s));
     // Set a different initial textContent so we can verify hydration overwrites it.
@@ -109,10 +113,7 @@ Deno.test('hydrateOpenElement hydrates signal-text marker via DSD template', () 
 Deno.test('disposeOpenElement cleans up signal effects', () =>
   withMockDocument(() => {
     const s = signal('initial');
-    const registry = new TestCustomElementRegistry();
-
-    class MyEl {}
-    registry.define('my-el', MyEl as unknown as CustomElementConstructor);
+    const registry = defineRegistry('my-el');
 
     const [root, , span] = setupHydrationFixture('my-el', signalMap('msg', s));
     span.textContent = 'initial';
@@ -151,10 +152,7 @@ Deno.test('non-custom-element nodes are skipped', () =>
 Deno.test('returned dispose function cleans up effects', () =>
   withMockDocument(() => {
     const s = signal('a');
-    const registry = new TestCustomElementRegistry();
-
-    class MyEl {}
-    registry.define('my-el', MyEl as unknown as CustomElementConstructor);
+    const registry = defineRegistry('my-el');
 
     const [root, , span] = setupHydrationFixture('my-el', signalMap('msg', s));
     span.textContent = 'a';
@@ -220,4 +218,104 @@ Deno.test('hydrateOpenElement uses globalThis.customElements when no registry pr
         configurable: true,
       });
     }
+  }));
+
+Deno.test('hydrateOpenElement collects DSD templates through document.createTreeWalker', () =>
+  withMockDocument(() => {
+    const s = signal('tree');
+    const registry = defineRegistry('my-el');
+    const [root, , span] = setupHydrationFixture('my-el', signalMap('msg', s));
+    span.textContent = 'before';
+
+    const savedNodeFilter = (globalThis as unknown as { NodeFilter?: unknown }).NodeFilter;
+    Object.defineProperty(globalThis, 'NodeFilter', {
+      value: { SHOW_ELEMENT: 1, FILTER_ACCEPT: 1, FILTER_SKIP: 3 },
+      writable: true,
+      configurable: true,
+    });
+
+    const savedWalker = globalThis.document.createTreeWalker;
+    Object.defineProperty(globalThis.document, 'createTreeWalker', {
+      value(
+        walkerRoot: ParentNode,
+        _whatToShow: number,
+        filter: { acceptNode(node: Node): number },
+      ) {
+        const nodes: Node[] = [];
+        const visit = (node: Node): void => {
+          const childNodes = (node as unknown as { childNodes?: Node[] }).childNodes ?? [];
+          for (const child of childNodes) {
+            if (filter.acceptNode(child) === 1) nodes.push(child);
+            visit(child);
+          }
+        };
+        visit(walkerRoot as unknown as Node);
+        let index = 0;
+        return {
+          nextNode(): Node | null {
+            return nodes[index++] ?? null;
+          },
+        } as TreeWalker;
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    try {
+      const dispose = hydrateOpenElement(asRoot(root), {
+        registry: registry as unknown as CustomElementRegistry,
+      });
+      flushRaf();
+
+      assertEquals(span.textContent, 'tree');
+      dispose();
+    } finally {
+      Object.defineProperty(globalThis.document, 'createTreeWalker', {
+        value: savedWalker,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(globalThis, 'NodeFilter', {
+        value: savedNodeFilter,
+        writable: true,
+        configurable: true,
+      });
+    }
+  }));
+
+Deno.test('hydrateOpenElement creates shadow root from template.content fallback', () =>
+  withMockDocument(() => {
+    const s = signal('content');
+    const registry = defineRegistry('my-el');
+    const root = new TestElement('div');
+    const host = new TestElement('my-el');
+    const template = new TestElement('template') as unknown as HTMLTemplateElement;
+    const fragment = new TestShadowRoot(host);
+    const span = new TestElement('span');
+
+    root.appendChild(host);
+    (host as unknown as { signalRegistry?: Map<string, Signal<unknown>> }).signalRegistry =
+      signalMap(
+        'msg',
+        s,
+      );
+    span.setAttribute('data-signal', 'msg');
+    span.textContent = 'before';
+    fragment.appendChild(span);
+    Object.defineProperty(template, 'content', {
+      value: fragment,
+      configurable: true,
+    });
+    template.setAttribute('shadowrootmode', 'open');
+    host.appendChild(template as unknown as TestElement);
+
+    const dispose = hydrateOpenElement(asRoot(root), {
+      registry: registry as unknown as CustomElementRegistry,
+    });
+    flushRaf();
+
+    assertEquals(host.shadowRoot?.childNodes.includes(span), true);
+    assertEquals(span.textContent, 'content');
+
+    dispose();
   }));

@@ -3,6 +3,8 @@ export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
 // Current public line: v0.41.0-alpha.2 product graph.
+// Shipped interop line: v0.41.0-alpha.3.
+// Active example proof line: v0.41.0-alpha.4.
 // Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
@@ -470,6 +472,20 @@ const phases = [
     copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
     status: 'current',
     tone: 'brand',
+  },
+  {
+    version: 'v0.41.0-alpha.3',
+    title: 'Cross-framework WC integration',
+    copy: 'Proved Lit, Shoelace, and Material Web consumption while keeping the interop contract standards-first.',
+    status: 'shipped',
+    tone: 'success',
+  },
+  {
+    version: 'v0.41.0-alpha.4',
+    title: 'openElement components in Fresh',
+    copy: 'Validate the lightweight client runtime with a Fresh example that hydrates openElement components.',
+    status: 'active',
+    tone: 'warning',
   },
   {
     version: 'v0.41',

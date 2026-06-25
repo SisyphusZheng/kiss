@@ -34,8 +34,16 @@ class StubNode {
     return node;
   }
 
-  insertBefore(node: Node): Node {
-    this.childNodes.push(node);
+  insertBefore(node: Node, refChild?: Node | null): Node {
+    if (refChild == null) {
+      this.childNodes.push(node);
+      return node;
+    }
+    const index = this.childNodes.indexOf(refChild);
+    if (index === -1) {
+      throw new Error('Reference node not found');
+    }
+    this.childNodes.splice(index, 0, node);
     return node;
   }
 

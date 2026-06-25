@@ -5,9 +5,9 @@
 /// <reference lib="dom.asynciterable" />
 /// <reference lib="deno.ns" />
 
-import { Builder } from "$fresh/dev.ts";
-import manifest from "./fresh.gen.ts";
-import config from "./fresh.config.ts";
+import { Builder } from '$fresh/dev.ts';
+import manifest from './fresh.gen.ts';
+import config from './fresh.config.ts';
 
 const builder = new Builder({ manifest, config });
 await builder.listen(import.meta.url);
