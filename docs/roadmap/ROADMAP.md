@@ -283,7 +283,6 @@ Non-goals:
 - No openElement components in React/Vue/Fresh yet (deferred to alpha.4).
 - No server/data/forms/session/cache primitives.
 
-## v0.41.0-alpha.4 - openElement Components in Fresh
 
 Provide a lightweight client runtime so openElement components can be consumed
 as npm packages inside third-party frameworks, starting with Deno Fresh.
