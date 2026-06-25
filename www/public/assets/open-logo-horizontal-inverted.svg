@@ -2,9 +2,7 @@
   <title>openElement horizontal wordmark inverted</title>
   <desc>Geometric Aperture O+E monogram with the short code wordmark for dark surfaces.</desc>
   <defs>
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;700&amp;display=swap');
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;700&amp;display=swap');</style>
   </defs>
   <g stroke-linecap="round" stroke-linejoin="round">
     <path
