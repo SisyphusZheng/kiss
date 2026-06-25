@@ -4,7 +4,7 @@
   "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno task build:client && deno run -A main.ts",
-    "build": "deno task build:client && deno desktop main.ts",
+    "build": "deno task build:client && deno desktop --allow-env --allow-read --allow-net main.ts",
     "build:client": "deno run -A build-client.ts",
     "check": "deno check main.ts",
     "smoke": "deno test -A --no-check app/__tests__/"
