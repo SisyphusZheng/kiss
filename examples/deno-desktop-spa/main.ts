@@ -23,7 +23,9 @@ Deno.serve((_req) => {
   <script type="module">
     import { defineApp } from '@openelement/app';
     const app = defineApp({ mode: 'spa' });
-    app.mount('#root');
+    // ponytail: routes/index.tsx not yet wired (proof infrastructure only).
+// Import and pass routes when SPA router manifest is integrated.
+app.mount('#root');
   </script>
 </body>
 </html>`;

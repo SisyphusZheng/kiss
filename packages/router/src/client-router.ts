@@ -39,7 +39,7 @@ const MAX_GUARD_REDIRECTS = 10;
 
 function resolveMode(mode: RouterMode): 'history' | 'hash' {
   if (mode === 'auto') {
-    // ponytail: detect file:// protocol for local dev; use hash routing
+    // detect file:// protocol for local dev; use hash routing
     return typeof location !== 'undefined' && location.protocol === 'file:' ? 'hash' : 'history';
   }
   return mode;
@@ -208,13 +208,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
   }
 
   function notifyChange(): void {
-    try {
-      void Promise.resolve(options.onChange?.()).catch((err) => {
-        console.error('[router] onChange failed:', err);
-      });
-    } catch (err) {
+    void Promise.resolve(options.onChange?.()).catch((err) => {
       console.error('[router] onChange failed:', err);
-    }
+    });
   }
 
   async function commitNavigation(
