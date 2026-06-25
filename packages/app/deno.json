@@ -3,6 +3,7 @@
   "version": "0.41.0-alpha.5",
   "exports": {
     ".": "./src/index.ts",
+    "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",
     "./i18n-plugin": "./src/i18n-plugin.ts",
     "./preact": "./src/preact.ts"
