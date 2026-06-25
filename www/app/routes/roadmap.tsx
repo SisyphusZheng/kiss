@@ -2,9 +2,8 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.41.0-alpha.2 product graph.
-// Shipped interop line: v0.41.0-alpha.3.
-// Active example proof line: v0.41.0-alpha.4.
+// Current public line: v0.41.0-alpha.5 SPA + Deno Desktop reader proof.
+// Planned practice line: v0.41.0-alpha.6-alpha.7 Mastodon/GoToSocial.
 // Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
@@ -489,15 +488,29 @@ const phases = [
   },
   {
     version: 'v0.41.0-alpha.5',
-    title: 'SPA mode + Deno Desktop proof',
-    copy: 'Client-side router, SPA bootstrap, and Deno Desktop proof are in PR hardening; Tauri and Electron remain later targets.',
+    title: 'SPA mode + Deno Desktop reader',
+    copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop reader proof backed by local/open fixtures.',
     status: 'PR hardening',
     tone: 'warning',
   },
   {
+    version: 'v0.41.0-alpha.6',
+    title: 'Mastodon-lite read-only',
+    copy: 'Use a real federated social API for public timeline, profile, and status detail without auth or mutations.',
+    status: 'planned',
+    tone: 'warning',
+  },
+  {
+    version: 'v0.41.0-alpha.7',
+    title: 'Mastodon auth + mutations',
+    copy: 'Add OAuth, home timeline, compose, favorite, boost, reply, optimistic actions, and rate-limit/error handling.',
+    status: 'planned',
+    tone: 'warning',
+  },
+  {
     version: 'v0.41',
-    title: 'npm-first distribution (JSR secondary)',
-    copy: 'Make package consumption, docs, and examples match the next distribution strategy.',
+    title: 'npm-first distribution + app proofs',
+    copy: 'Stabilize npm artifacts, WC interop, SPA reader proof, and Mastodon practice evidence before the v0.41 tag.',
     status: 'planned',
     tone: 'warning',
   },

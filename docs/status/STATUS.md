@@ -5,14 +5,14 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.5 Active (Cross-Framework WC Integration)
+## Current Version Line: v0.41.0-alpha.5 Active (SPA + Desktop Reader Proof)
 
-v0.41.0-alpha.5 is the active package line. It follows the v0.41.0-alpha.3
-cross-framework WC integration release and proves that openElement components
-can be consumed inside third-party frameworks (Deno Fresh 2.3+ Preact islands)
-and third-party WC libraries (Lit, Shoelace, MWC) can be consumed inside
-openElement. Key deliverables: `@openelement/core/hydrate` client runtime,
-`examples/open-element-in-fresh/` integration proof, interop contract docs.
+v0.41.0-alpha.5 is the active package line. It follows the cross-framework WC
+integration work and adds a first-class SPA mode, client router, and
+Deno Desktop reader practice app. The desktop proof is intentionally
+WeRead-style rather than WeRead-integrated: it uses local/open fixtures and does
+not use WeRead private APIs, account cookies, scraping, or copyrighted book
+content.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -21,19 +21,16 @@ public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
 
-## v0.41.0-alpha.5 PR State: CI Green, Awaiting Release Closure
+## v0.41.0-alpha.5 PR State: PR Hardening
 
-v0.41.0-alpha.5 proves the inverse of alpha.3: openElement components can be
-consumed inside a third-party framework, starting with Deno Fresh. PR #113 is
-green on `dev` with both AutoFlow CI jobs, CodeQL/Analyze jobs, Cloudflare Pages
-preview, and review bot passing at commit `06b21d37`. The release is not closed
-until the PR is merged to `main`, `main` CI passes, and the approved release
-workflow records npm publish plus post-publish npm consumer smoke evidence.
+v0.41.0-alpha.5 proves SPA mode plus a Deno Desktop app substrate. PR #121 is
+the active alpha.5 implementation branch: `@openelement/app` gains
+`defineApp({ mode: 'spa' })`, `@openelement/router` gains client routing, and
+the desktop proof now expands from a shell smoke into a reader practice app.
 
-Remaining alpha.4 follow-up is release-process evidence, not runtime scope. The
-next implementation version remains v0.41.0-alpha.5: SPA mode + Deno Desktop
-shell proof, with React/Vue/Svelte adapters deferred unless needed to validate
-SPA disposal semantics.
+React/Vue/Svelte adapters remain deferred unless needed to validate SPA disposal
+semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 is
+read-only real-network data, and alpha.7 is authenticated mutations.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 

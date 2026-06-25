@@ -16,7 +16,9 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.3–4** (merged): Cross-Framework WC Integration —
   consume Lit/Shoelace/MWC + client runtime for Deno Fresh
   interop proof; pure-ESM/ECMAScript npm gates.
-- **alpha.5**: SPA mode + Deno Desktop shell proof (Deno canary).
+- **alpha.5**: SPA mode + Deno Desktop reader proof (Deno canary).
+- **alpha.6**: Mastodon/GoToSocial read-only practice app.
+- **alpha.7**: Mastodon/GoToSocial authenticated mutations practice app.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -94,9 +96,12 @@ merge, alpha.4 is not called released until `main` CI is green and the approved
 release workflow records npm publish plus post-publish npm consumer smoke
 evidence.
 
-alpha.5 remains the next implementation target after alpha.4 release closure:
-SPA mode + Deno Desktop shell proof (Deno canary). React/Vue/Svelte adapters stay out of
-alpha.5 unless they are required to validate SPA navigation disposal semantics.
+alpha.5 is the current implementation target: SPA mode + Deno Desktop reader
+proof (Deno canary). The reader is a
+WeRead-style desktop practice app backed by local/open fixtures; it must not use
+WeRead private APIs, account cookies, scraping, or copyrighted book content.
+React/Vue/Svelte adapters stay out of alpha.5 unless they are required to
+validate SPA navigation disposal semantics.
 
 ## Non-Goals
 
@@ -112,10 +117,11 @@ The active work is tracked in per-alpha plan files:
 
 - `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
 - `docs/release/v0.41.0-alpha.5-plan.md` — Cross-Framework Web Components Integration
-- `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Desktop Shell Proof
+- `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
 
-The stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`
-when alpha.5 is complete.
+Alpha.6 and alpha.7 Mastodon/GoToSocial practice plans will be recorded in
+dedicated files when those lines start. The stabilization phase will be recorded
+in `docs/release/v0.41.0-beta.1-plan.md` when alpha.7 is complete.
 
 ## Governance Rules
 
