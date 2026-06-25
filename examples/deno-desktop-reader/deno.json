@@ -19,9 +19,6 @@
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
   },
   "desktop": {
-    "backend": "webview",
-    "title": "openElement Reader",
-    "width": 1200,
-    "height": 800
+    "backend": "webview"
   }
 }
