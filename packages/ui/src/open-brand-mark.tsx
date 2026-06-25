@@ -54,8 +54,7 @@ export class OpenBrandMark extends OpenElement {
         <path
           className='mark-path'
           d='M43.8 17.6A22 22 0 1 0 43.8 46.4M43.8 32H25.2'
-        >
-        </path>
+        />
       </svg>
     );
   }

@@ -38,13 +38,7 @@
     "jsx": "precompile",
     "jsxImportSource": "preact",
     "jsxPrecompileSkipElements": [
-      "a",
-      "img",
-      "source",
-      "link",
       "meta",
-      "script",
-      "style",
       "title"
     ],
     "types": [
