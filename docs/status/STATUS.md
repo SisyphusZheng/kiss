@@ -5,7 +5,7 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.3 Active (Signal-DOM Deepening)
+## Current Version Line: v0.41.0-alpha.4 Active (Signal-DOM Deepening)
 
 v0.41.0-alpha.2 is the active package line. It follows the v0.41.0-alpha.1
 npm-only distribution pivot and focuses on narrowing the signal-to-DOM binding

@@ -11,13 +11,15 @@
 // a plain button regardless. Full component behavior after ui import.
 
 function defineOpenButton() {
-  if (customElements.get("open-button")) return;
+  if (customElements.get('open-button')) return;
   class OpenButton extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" });
+      this.attachShadow({ mode: 'open' });
     }
     connectedCallback() {
+      // ponytail: guard against re-render on disconnect/reconnect
+      if (this.shadowRoot!.childElementCount > 0) return;
       // ponytail: minimal render; real component via @openelement/ui
       this.shadowRoot!.innerHTML = `
         <button part="control">
@@ -26,15 +28,15 @@ function defineOpenButton() {
       `;
     }
   }
-  customElements.define("open-button", OpenButton);
+  customElements.define('open-button', OpenButton);
 }
 
 function defineOpenCard() {
-  if (customElements.get("open-card")) return;
+  if (customElements.get('open-card')) return;
   class OpenCard extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" });
+      this.attachShadow({ mode: 'open' });
     }
     connectedCallback() {
       this.shadowRoot!.innerHTML = `
@@ -46,11 +48,11 @@ function defineOpenCard() {
       `;
     }
   }
-  customElements.define("open-card", OpenCard);
+  customElements.define('open-card', OpenCard);
 }
 
 export default function OpenElementsIsland() {
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     defineOpenButton();
     defineOpenCard();
   }

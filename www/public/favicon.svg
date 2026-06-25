@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img">
   <title>openElement favicon</title>
   <desc>Transparent geometric openElement monogram favicon.</desc>
-  <path d="M21.9 8.8A11 11 0 1 0 21.9 23.2M21.9 16H12.6" fill="none" stroke="#21143b" stroke-width="3.75" stroke-linecap="round" stroke-linejoin="round" />
+  <path
+    d="M21.9 8.8A11 11 0 1 0 21.9 23.2M21.9 16H12.6"
+    fill="none"
+    stroke="#21143b"
+    stroke-width="3.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>

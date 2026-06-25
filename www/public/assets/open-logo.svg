@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
   <title>openElement monogram</title>
   <desc>A transparent geometric monogram combining openElement's o and e.</desc>
-  <path d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4" fill="none" stroke="#21143b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+  <path
+    d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4"
+    fill="none"
+    stroke="#21143b"
+    stroke-width="15"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>

@@ -72,7 +72,7 @@ v0.41-v1.0 blocker.
 | v0.40.7         | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                                    | Released                 |
 | v0.41.0-alpha.1 | npm Distribution + Audit Cleanup                   | Replace JSR release closure with npm via `deno pack`; audit-driven cleanup and protocol restoration; ship first npm/JSR dual-published alpha.                                  | Released                 |
 | v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                                   | Shipped                  |
-| v0.41.0-alpha.3 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                        | Shipped                  |
+| v0.41.0-alpha.4 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                        | Shipped                  |
 | v0.41.0-alpha.4 | openElement Components in Fresh                    | Lightweight client runtime for third-party frameworks; Fresh example proving SSR + hydration of openElement components; PR #111 green on `dev`, awaiting main release closure. | Release candidate        |
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Proof                      | First-class single-page-application mode with client-side router; Deno Desktop shell validation (Tauri 2/Electron deferred to v0.42+).                                         | Planned                  |
 | v0.41.0-beta.1  | v0.41.0 Stabilization                              | Close alpha feedback, update docs/starters/examples, freeze public surface for v0.41.0.                                                                                        | Planned                  |
@@ -255,7 +255,7 @@ Non-goals:
 - No new product features.
 - No third-party WC integration (deferred to alpha.3).
 
-## v0.41.0-alpha.3 - Cross-Framework Web Components Integration
+## v0.41.0-alpha.4 - Cross-Framework Web Components Integration
 
 Prove that the openElement full-stack framework can consume mature third-party
 Web Components and that npm artifacts satisfy strict pure-ESM / pure-ECMAScript
