@@ -5,9 +5,9 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.4 Active (Signal-DOM Deepening)
+## Current Version Line: v0.41.0-alpha.4 Active (Cross-Framework WC Integration)
 
-v0.41.0-alpha.2 is the active package line. It follows the v0.41.0-alpha.1
+v0.41.0-alpha.4 is the active package line. It follows the v0.41.0-alpha.1
 npm-only distribution pivot and focuses on narrowing the signal-to-DOM binding
 seam: extracting `HydrationScope` to `@openelement/core/hydrate`, splitting the
 renderer from the activation layer, replacing the central `BindingDescriptor`
