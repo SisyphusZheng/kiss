@@ -1,6 +1,6 @@
 {
   "name": "@openelement/signal",
-  "version": "0.41.0-alpha.3",
+  "version": "0.41.0-alpha.4",
   "exports": {
     ".": "./src/index.ts",
     "./framework": "./src/framework.ts",
@@ -19,7 +19,9 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
+      "tags": [
+        "recommended"
+      ]
     }
   },
   "include": [
