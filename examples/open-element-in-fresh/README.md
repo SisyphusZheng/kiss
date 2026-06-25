@@ -82,7 +82,8 @@ The `OpenElements` island uses inline custom element stubs instead of
 when publishing `packages/ui` to npm — the output `.js` files retain raw JSX
 which Vite cannot transpile.
 
-**Fix (alpha.5):** Add
-`compilerOptions: { "jsx": "react-jsx", "jsxImportSource": "@openelement/core" }`
-to `packages/ui/deno.json`, then replace stubs with `import "@openelement/ui"` +
-`hydrateOpenElement()`.
+**Fix (alpha.5):** The `compilerOptions.jsx` config is already in
+`packages/ui/deno.json`. The remaining blocker is the `deno pack`
+transpilation gap — when publishing to npm, JSX is not transformed to
+`jsx()` calls in the output `.js` files. Once the pack pipeline is fixed,
+replace stubs with `import "@openelement/ui"`.
