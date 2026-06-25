@@ -99,8 +99,10 @@ Deno.serve((req: Request) => {
   // Static app assets — serve TS/JS/CSS with correct MIME types
   if (
     url.pathname.startsWith("/app/") ||
+    url.pathname.startsWith("/dist/") ||
     url.pathname.endsWith(".ts") ||
-    url.pathname.endsWith(".css")
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".js")
   ) {
     const mimeTypes: Record<string, string> = {
       ".ts": "application/javascript",

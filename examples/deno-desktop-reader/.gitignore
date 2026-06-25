@@ -1,4 +1,5 @@
 _fresh/
 .vite/
+dist/
 node_modules/
 ~/.open-reader/
