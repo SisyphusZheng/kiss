@@ -16,6 +16,54 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { allPackageAliases } from './lib/package-graph.ts';
 
+function findMissingGeneratedImports(
+  source: string,
+  importMap: Record<string, string>,
+): string[] {
+  const specifiers = extractBareImportSpecifiers(source);
+  return [...specifiers].filter((specifier) => !isMappedSpecifier(specifier, importMap)).sort();
+}
+
+function extractBareImportSpecifiers(source: string): Set<string> {
+  const specifiers = new Set<string>();
+  const patterns = [
+    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
+    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
+    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) {
+      const specifier = match[1];
+      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
+        specifiers.add(specifier);
+      }
+    }
+  }
+
+  return specifiers;
+}
+
+function isBareSpecifier(specifier: string): boolean {
+  return !specifier.startsWith('.') &&
+    !specifier.startsWith('/') &&
+    !specifier.startsWith('file:') &&
+    !specifier.startsWith('http:') &&
+    !specifier.startsWith('https:') &&
+    !specifier.startsWith('data:') &&
+    !specifier.startsWith('node:') &&
+    !specifier.startsWith('npm:') &&
+    !specifier.startsWith('jsr:');
+}
+
+function isMappedSpecifier(
+  specifier: string,
+  importMap: Record<string, string>,
+): boolean {
+  if (Object.hasOwn(importMap, specifier)) return true;
+  return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');
 
@@ -451,54 +499,6 @@ try {
 } finally {
   server.kill('SIGTERM');
   await server.status.catch(() => undefined);
-}
-
-function findMissingGeneratedImports(
-  source: string,
-  importMap: Record<string, string>,
-): string[] {
-  const specifiers = extractBareImportSpecifiers(source);
-  return [...specifiers].filter((specifier) => !isMappedSpecifier(specifier, importMap)).sort();
-}
-
-function extractBareImportSpecifiers(source: string): Set<string> {
-  const specifiers = new Set<string>();
-  const patterns = [
-    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
-    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
-    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
-      const specifier = match[1];
-      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
-        specifiers.add(specifier);
-      }
-    }
-  }
-
-  return specifiers;
-}
-
-function isBareSpecifier(specifier: string): boolean {
-  return !specifier.startsWith('.') &&
-    !specifier.startsWith('/') &&
-    !specifier.startsWith('file:') &&
-    !specifier.startsWith('http:') &&
-    !specifier.startsWith('https:') &&
-    !specifier.startsWith('data:') &&
-    !specifier.startsWith('node:') &&
-    !specifier.startsWith('npm:') &&
-    !specifier.startsWith('jsr:');
-}
-
-function isMappedSpecifier(
-  specifier: string,
-  importMap: Record<string, string>,
-): boolean {
-  if (Object.hasOwn(importMap, specifier)) return true;
-  return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
 }
 
 if (nitroSmokeFailed) exitCode = 1;
