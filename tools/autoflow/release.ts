@@ -342,7 +342,10 @@ function canPublishNpm(): boolean {
 }
 
 function canPublishJsr(): boolean {
-  return isTruthyEnv('JSR_TOKEN');
+  // JSR OIDC publishing from GitHub Actions does not need a token.
+  // The autoflow-release workflow already sets permissions.id-token: write.
+  // Each package must be linked to the repo on jsr.io.
+  return isCI();
 }
 
 export async function assertCleanWorktree(): Promise<void> {
