@@ -33,6 +33,7 @@ export interface RouterInstance {
 }
 
 type ParamMap = Map<string, string>;
+const MAX_GUARD_REDIRECTS = 10;
 
 // ─── Internal helpers ─────────────────────────────────────────────
 
@@ -216,7 +217,15 @@ export function createRouter(options: RouterOptions): RouterInstance {
     }
   }
 
-  async function navigate(path: string): Promise<void> {
+  async function commitNavigation(
+    path: string,
+    options: { replace: boolean; depth?: number },
+  ): Promise<void> {
+    const depth = options.depth ?? 0;
+    if (depth > MAX_GUARD_REDIRECTS) {
+      throw new Error(`[router] Guard redirect limit exceeded while navigating to "${path}"`);
+    }
+
     // Run guard if we have a matching target route
     const u = new URL(path, 'http://x');
     const matched = matchRoute(u.pathname, u.search, routes);
@@ -224,29 +233,29 @@ export function createRouter(options: RouterOptions): RouterInstance {
       const result = await matched.route.guard();
       if (result === false) return; // blocked
       if (typeof result === 'string') {
-        return navigate(result); // redirect
+        return commitNavigation(result, {
+          replace: options.replace,
+          depth: depth + 1,
+        });
       }
     }
 
-    history.pushState(null, '', mode === 'hash' ? toHashUrl(path) : path);
+    const url = mode === 'hash' ? toHashUrl(path) : path;
+    if (options.replace) {
+      history.replaceState(null, '', url);
+    } else {
+      history.pushState(null, '', url);
+    }
     rematch();
     notifyChange();
   }
 
-  async function replace(path: string): Promise<void> {
-    const u = new URL(path, 'http://x');
-    const matched = matchRoute(u.pathname, u.search, routes);
-    if (matched?.route.guard) {
-      const result = await matched.route.guard();
-      if (result === false) return;
-      if (typeof result === 'string') {
-        return navigate(result);
-      }
-    }
+  function navigate(path: string): Promise<void> {
+    return commitNavigation(path, { replace: false });
+  }
 
-    history.replaceState(null, '', mode === 'hash' ? toHashUrl(path) : path);
-    rematch();
-    notifyChange();
+  function replace(path: string): Promise<void> {
+    return commitNavigation(path, { replace: true });
   }
 
   function dispose(): void {

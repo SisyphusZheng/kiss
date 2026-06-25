@@ -291,6 +291,44 @@ Deno.test('navigation pops old loader data and loads new', async () => {
   assertEquals(parsed, aboutData);
 });
 
+Deno.test('stale loader results do not overwrite newer navigation', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  let resolveHome!: (value: unknown) => void;
+  const homeLoader = new Promise((resolve) => {
+    resolveHome = resolve;
+  });
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [
+      {
+        path: '/',
+        loader: () => homeLoader,
+        component: () => {
+          const el = new StubElement();
+          el.textContent = JSON.stringify(useLoaderData());
+          return el;
+        },
+      },
+      routeWithLoader('/about', { page: 'about' }),
+    ],
+  });
+
+  app.mount('#root');
+
+  mockLocation.pathname = '/about';
+  firePopstate();
+  await new Promise((r) => setTimeout(r, 0));
+  assertEquals(JSON.parse(stubRoot.textContent), { page: 'about' });
+
+  resolveHome({ page: 'stale-home' });
+  await new Promise((r) => setTimeout(r, 0));
+  assertEquals(JSON.parse(stubRoot.textContent), { page: 'about' });
+});
+
 Deno.test('dispose clears all data context', async () => {
   resetMocks({ pathname: '/' });
   stubRoot = new StubElement();

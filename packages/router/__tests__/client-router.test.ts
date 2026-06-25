@@ -4,7 +4,7 @@
  * Mocks browser globals (location, history, addEventListener, removeEventListener)
  * on globalThis before importing the module.
  */
-import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse, assertRejects } from 'jsr:@std/assert@^1.0.0';
 
 // ─── Mock helpers ─────────────────────────────────────────────────
 
@@ -419,6 +419,26 @@ Deno.test('guard redirect: returns string → navigate to that path', async () =
   assertEquals(router.currentRoute?.path, '/login');
 });
 
+Deno.test('guard redirect: cycles stop at redirect limit', async () => {
+  resetMocks({ pathname: '/' });
+
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/', component: () => null },
+      { path: '/a', component: () => null, guard: () => Promise.resolve('/b') },
+      { path: '/b', component: () => null, guard: () => Promise.resolve('/a') },
+    ],
+  });
+
+  await assertRejects(
+    () => router.navigate('/a'),
+    Error,
+    'Guard redirect limit exceeded',
+  );
+  assertEquals(mockHistory._calls.length, 0);
+});
+
 Deno.test('dispose removes event listeners', () => {
   resetMocks({ pathname: '/' });
 
@@ -468,7 +488,7 @@ Deno.test('replace: replaces state without adding history entry', async () => {
   assertEquals(router.currentRoute?.path, '/about');
 });
 
-Deno.test('replace guard redirect: returns string → pushes redirected path', async () => {
+Deno.test('replace guard redirect: returns string → replaces redirected path', async () => {
   resetMocks({ pathname: '/' });
 
   const router = createRouter({
@@ -490,5 +510,5 @@ Deno.test('replace guard redirect: returns string → pushes redirected path', a
   await router.replace('/protected');
 
   assertEquals(router.currentRoute?.path, '/login');
-  assertEquals(mockHistory._calls, [{ method: 'pushState', url: '/login' }]);
+  assertEquals(mockHistory._calls, [{ method: 'replaceState', url: '/login' }]);
 });

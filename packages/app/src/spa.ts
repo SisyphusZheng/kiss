@@ -39,13 +39,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let router: RouterInstance | null = null;
   let rootEl: Element | null = null;
   let submitHandler: ((e: Event) => void) | null = null;
+  let renderId = 0;
 
   /** Duck-type check since `Node` may not exist in test environments (e.g. Deno). */
   function isRenderableNode(value: unknown): value is Node {
     return value !== null && typeof value === 'object' && 'nodeType' in value;
   }
 
-  /** Pop the last render cycle's data frame from the stack (idempotent). */
+  /** Pop the last render cycle's data frame from the stack. */
   function clearDataStack(): void {
     // pop on empty array returns undefined; one render cycle leaves at most one frame.
     __internal_popData();
@@ -82,18 +83,18 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
   /**
    * Full render cycle: pop old data → run loader → push loader data → render component.
-   *
-   * ponytail: no abort/race protection for rapid navigations.
-   * Add a renderId counter if stale renders become a problem.
    */
   async function renderRoute(): Promise<void> {
     if (!router || !rootEl) return;
+    const currentRender = ++renderId;
 
     // Pop previous render's data (safe no-op on empty stack)
     __internal_popData();
 
     // Run loader and push result
     const loaderData = await runLoader();
+    if (currentRender !== renderId || !router || !rootEl) return;
+
     __internal_pushLoaderData(loaderData);
 
     renderComponent();
@@ -151,6 +152,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     if (router) {
       dispose();
     }
+    renderId++;
 
     const el = document.querySelector(selector);
     if (!el) {
@@ -176,6 +178,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
   function dispose(): void {
     // Remove form submit listener
+    renderId++;
     if (submitHandler && rootEl) {
       rootEl.removeEventListener('submit', submitHandler);
       submitHandler = null;
