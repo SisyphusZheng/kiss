@@ -1,23 +1,26 @@
-// Deno.serve() HTTP server
-// On startup: read READER_REPO env var (default "open-element/reader-fixtures")
-// Serve:
-//   - GET /          → app/index.html (SPA shell)
-//   - GET /api/books → JSON list of books (stub: return fixtures/books.json)
-//   - GET /api/search?q= → search results (stub: return [])
-//   - GET /books/*   → serve PDF files from ~/.open-reader/books/
-//   - SPA fallback: return index.html for all other routes
+/**
+ * openElement Desktop Reader — HTTP server.
+ *
+ * Serves the SPA client, API endpoints, and PDF files.
+ * PDF text indexing is lazy (on first /api/search request) to avoid
+ * blocking Deno.serve() startup in desktop mode.
+ */
 
-import { indexBook, search } from "./app/search.ts";
-import { loadSearchIndex } from "./app/search.ts";
-import { syncBooks } from "./app/repo.ts";
+import {
+  indexBook,
+  loadSearchIndex,
+  saveSearchIndex,
+  search,
+} from "./app/search.ts";
 
-// ponytail: used in S4 for GitHub repo sync
-const _repo = Deno.env.get("READER_REPO") ?? "open-element/reader-fixtures";
-const cacheDir = Deno.env.get("HOME")
-  ? `${Deno.env.get("HOME")}/.open-reader`
-  : `~/.open-reader`;
-const booksDir = `${cacheDir}/books`;
-const fixturesDir = new URL("./fixtures/books/", import.meta.url).pathname;
+// Cache paths
+const HOME = Deno.env.get("HOME") ?? ".";
+const CACHE_DIR = `${HOME}/.open-reader`;
+const BOOKS_DIR = `${CACHE_DIR}/books`;
+const FIXTURES_DIR = new URL("./fixtures/books/", import.meta.url).pathname;
+const BOOKS_JSON = new URL("./fixtures/books.json", import.meta.url);
+
+let searchIndexReady = false;
 
 function serveHtml(): Response {
   const html = Deno.readTextFileSync(
@@ -38,92 +41,80 @@ function serve404(): Response {
   return new Response("Not Found", { status: 404 });
 }
 
-// Index fixture PDFs at startup
-try {
-  const books = JSON.parse(
-    Deno.readTextFileSync(new URL("./fixtures/books.json", import.meta.url)),
-  );
-  for (const book of books) {
-    const fixturePath = `${fixturesDir}/${book.fileName}`;
-    try {
-      Deno.statSync(fixturePath);
-      await indexBook(fixturePath, book.id, cacheDir);
-    } catch {
-      console.warn(`[reader] Skipping index: ${fixturePath} not found`);
+/** Lazy-init the search index on first /api/search call */
+async function ensureSearchIndex(): Promise<void> {
+  if (searchIndexReady) return;
+  searchIndexReady = true;
+
+  try {
+    const books = JSON.parse(Deno.readTextFileSync(BOOKS_JSON));
+    for (const book of books) {
+      const path = `${FIXTURES_DIR}/${book.fileName}`;
+      try {
+        Deno.statSync(path);
+        await indexBook(path, book.id, CACHE_DIR);
+      } catch {
+        // PDF not found — skip
+      }
     }
+    console.log("[reader] Search index ready");
+  } catch (err) {
+    console.warn("[reader] Failed to build search index:", err);
   }
-} catch (err) {
-  console.warn("[reader] Failed to index fixture PDFs:", err);
 }
 
-Deno.serve((req: Request) => {
+Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
 
-  // API routes
+  // API: books list
   if (url.pathname === "/api/books") {
-    const books = JSON.parse(
-      Deno.readTextFileSync(
-        new URL("./fixtures/books.json", import.meta.url),
-      ),
-    );
+    const books = JSON.parse(Deno.readTextFileSync(BOOKS_JSON));
     return serveJson(books);
   }
 
+  // API: search (lazy-init index)
   if (url.pathname === "/api/search") {
     const q = url.searchParams.get("q");
     if (!q) return serveJson([]);
-    // ponytail: search index built at startup from fixtures; GitHub-synced books added later
-    return serveJson(search(q, cacheDir));
+    await ensureSearchIndex();
+    return serveJson(search(q, CACHE_DIR));
   }
 
-  // PDF file serving — try local cache first, then fixtures fallback
+  // PDF files — try cache, fallback fixtures
   if (url.pathname.startsWith("/books/")) {
     const fileName = url.pathname.slice("/books/".length);
-    try {
-      const file = Deno.readFileSync(`${booksDir}/${fileName}`);
-      return new Response(file, {
-        headers: { "content-type": "application/pdf" },
-      });
-    } catch {
+    for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {
       try {
-        const file = Deno.readFileSync(`${fixturesDir}/${fileName}`);
+        const file = Deno.readFileSync(`${dir}/${fileName}`);
         return new Response(file, {
           headers: { "content-type": "application/pdf" },
         });
-      } catch {
-        return serve404();
-      }
+      } catch { /* try next */ }
     }
+    return serve404();
   }
 
-  // Static app assets — serve TS/JS/CSS with correct MIME types
-  if (
-    url.pathname.startsWith("/app/") ||
-    url.pathname.startsWith("/dist/") ||
-    url.pathname.endsWith(".ts") ||
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js")
-  ) {
-    const mimeTypes: Record<string, string> = {
-      ".ts": "application/javascript",
-      ".tsx": "application/javascript",
-      ".js": "application/javascript",
-      ".css": "text/css",
-      ".html": "text/html",
-    };
-    const ext = url.pathname.slice(url.pathname.lastIndexOf("."));
-    const mime = mimeTypes[ext] || "application/octet-stream";
+  // Static assets
+  const ext = url.pathname.slice(url.pathname.lastIndexOf("."));
+  const mime: Record<string, string> = {
+    ".js": "application/javascript",
+    ".css": "text/css",
+    ".html": "text/html",
+    ".ts": "application/javascript",
+  };
+  if (url.pathname.startsWith("/dist/") || url.pathname.startsWith("/app/")) {
     try {
-      const filePath = url.pathname.startsWith("/app/")
-        ? new URL(`.${url.pathname}`, import.meta.url)
-        : new URL(`.${url.pathname}`, import.meta.url);
-      const file = Deno.readFileSync(filePath);
-      return new Response(file, { headers: { "content-type": mime } });
+      const file = Deno.readFileSync(
+        new URL(`.${url.pathname}`, import.meta.url),
+      );
+      return new Response(file, {
+        headers: { "content-type": mime[ext] ?? "application/octet-stream" },
+      });
     } catch {
       return serve404();
     }
   }
 
-  // SPA fallback: index.html for all other routes
+  // SPA fallback
   return serveHtml();
 });
