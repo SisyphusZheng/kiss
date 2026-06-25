@@ -67,7 +67,7 @@ export interface OpenElementBuildContextLike {
     [key: string]: unknown;
   };
   /** Register plugin data by name. */
-  registerPlugin(name: string, instance: unknown): void;
+  registerPlugin(name: string, instance: Record<string, unknown>): void;
 }
 
 // --- App Shell types ----------------------------------------------
