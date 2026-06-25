@@ -37,7 +37,7 @@ export class GuideGuidePage extends OpenElement {
         </p>
         <p class='subtitle'>
           The v0.40 line hardened release infrastructure and CI. The current
-          active line is v0.41.0-alpha.4, a cross-framework WC integration release that ships
+          active line is v0.41.0-alpha.5, a cross-framework WC integration release that ships
           Fresh 2.3+ Preact interop proof, cross-framework WC consumption, and
           the @openelement/core/hydrate client runtime.
         </p>

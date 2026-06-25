@@ -2,7 +2,7 @@
  * Homepage - Aperture drafting stage.
  *
  * Strategic anchors: openElement = Elements + UI + Framework + Protocols.
- * Current public line: v0.41.0-alpha.4 product graph.
+ * Current public line: v0.41.0-alpha.5 product graph.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -758,7 +758,7 @@ const workflowSteps = [
 const surfaces = [
   ['Docs', '/docs', 'Guides, route concepts, deployment notes, and architecture entry points.'],
   ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Roadmap', '/roadmap', 'Current v0.41.0-alpha.4 direction, validation train anchors, and planned work.'],
+  ['Roadmap', '/roadmap', 'Current v0.41.0-alpha.5 direction, validation train anchors, and planned work.'],
 ] as const;
 
 function moduleVisual(kind: 'target' | 'graph' | 'layers') {

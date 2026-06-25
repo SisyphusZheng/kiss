@@ -111,7 +111,7 @@ alpha.5 unless they are required to validate SPA navigation disposal semantics.
 The active work is tracked in per-alpha plan files:
 
 - `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
-- `docs/release/v0.41.0-alpha.4-plan.md` — Cross-Framework Web Components Integration
+- `docs/release/v0.41.0-alpha.5-plan.md` — Cross-Framework Web Components Integration
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Desktop Shell Proof
 
 The stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`

@@ -5,9 +5,9 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.4 Active (Cross-Framework WC Integration)
+## Current Version Line: v0.41.0-alpha.5 Active (Cross-Framework WC Integration)
 
-v0.41.0-alpha.4 is the active package line. It follows the v0.41.0-alpha.3
+v0.41.0-alpha.5 is the active package line. It follows the v0.41.0-alpha.3
 cross-framework WC integration release and proves that openElement components
 can be consumed inside third-party frameworks (Deno Fresh 2.3+ Preact islands)
 and third-party WC libraries (Lit, Shoelace, MWC) can be consumed inside
@@ -21,9 +21,9 @@ public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
 
-## v0.41.0-alpha.4 PR State: CI Green, Awaiting Release Closure
+## v0.41.0-alpha.5 PR State: CI Green, Awaiting Release Closure
 
-v0.41.0-alpha.4 proves the inverse of alpha.3: openElement components can be
+v0.41.0-alpha.5 proves the inverse of alpha.3: openElement components can be
 consumed inside a third-party framework, starting with Deno Fresh. PR #113 is
 green on `dev` with both AutoFlow CI jobs, CodeQL/Analyze jobs, Cloudflare Pages
 preview, and review bot passing at commit `06b21d37`. The release is not closed

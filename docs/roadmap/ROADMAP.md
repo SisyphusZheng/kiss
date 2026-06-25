@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.4 Cross-Framework Web Components Integration; next line is SPA Mode + Deno Desktop.\
+> Current package line: v0.41.0-alpha.5 Cross-Framework Web Components Integration; next line is SPA Mode + Deno Desktop.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 
@@ -72,7 +72,7 @@ v0.41-v1.0 blocker.
 | v0.40.7         | Release Readiness & CI Hardening                   | Harden v0.40.6 release infrastructure: Deno E2E server, CI browser install, credential gating, local release escape hatches                                                 | Released                 |
 | v0.41.0-alpha.1 | npm Distribution + Audit Cleanup                   | Replace JSR release closure with npm via `deno pack`; audit-driven cleanup and protocol restoration; ship first npm/JSR dual-published alpha.                               | Released                 |
 | v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                                | Released                 |
-| v0.41.0-alpha.4 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                     | Release candidate        |
+| v0.41.0-alpha.5 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                     | Release candidate        |
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Proof                      | First-class single-page-application mode with client-side router; Deno Desktop shell validation via Deno canary (Tauri 2/Electron deferred to v0.42+).                      | Planned                  |
 | v0.41.0-beta.1  | v0.41.0 Stabilization                              | Close alpha feedback, update docs/starters/examples, freeze public surface for v0.41.0.                                                                                     | Planned                  |
 | v0.41.0         | Deno-native npm distribution + WC Interop          | Stable npm-first distribution, hardened signal-DOM architecture, validated third-party WC integration, lightweight external-framework runtime, and SPA/desktop shell proof. | Planned                  |
@@ -254,7 +254,7 @@ Non-goals:
 - No new product features.
 - No third-party WC integration (deferred to alpha.4).
 
-## v0.41.0-alpha.4 - Cross-Framework Web Components Integration
+## v0.41.0-alpha.5 - Cross-Framework Web Components Integration
 
 Prove that the openElement full-stack framework can consume mature third-party
 Web Components and that npm artifacts satisfy strict pure-ESM / pure-ECMAScript
@@ -303,7 +303,7 @@ Scope:
 - Release closure:
   - Merge only after PR #113 remains green on `dev`.
   - Wait for `main` CI after merge.
-  - Run the approved AutoFlow3 release workflow for `0.41.0-alpha.4`.
+  - Run the approved AutoFlow3 release workflow for `0.41.0-alpha.5`.
   - Record npm publish and post-publish npm consumer smoke before marking
     alpha.4 released.
 
