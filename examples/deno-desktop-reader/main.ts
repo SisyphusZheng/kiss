@@ -2,119 +2,156 @@
  * openElement Desktop Reader — HTTP server.
  *
  * Serves the SPA client, API endpoints, and PDF files.
- * PDF text indexing is lazy (on first /api/search request) to avoid
- * blocking Deno.serve() startup in desktop mode.
+ * All handler errors are caught to avoid breaking the desktop webview.
  */
 
-import {
-  indexBook,
-  loadSearchIndex,
-  saveSearchIndex,
-  search,
-} from "./app/search.ts";
+import { indexBook, search } from "./app/search.ts";
 
 // Cache paths
 const HOME = Deno.env.get("HOME") ?? ".";
 const CACHE_DIR = `${HOME}/.open-reader`;
 const BOOKS_DIR = `${CACHE_DIR}/books`;
 const FIXTURES_DIR = new URL("./fixtures/books/", import.meta.url).pathname;
-const BOOKS_JSON = new URL("./fixtures/books.json", import.meta.url);
+const BOOKS_JSON_URL = new URL("./fixtures/books.json", import.meta.url);
+const APP_DIR = new URL("./app/", import.meta.url);
+const DIST_DIR = new URL("./dist/", import.meta.url);
 
 let searchIndexReady = false;
 
-function serveHtml(): Response {
-  const html = Deno.readTextFileSync(
-    new URL("./app/index.html", import.meta.url),
-  );
-  return new Response(html, {
-    headers: { "content-type": "text/html" },
-  });
+function readTextSafe(url: URL): string | null {
+  try {
+    return Deno.readTextFileSync(url);
+  } catch {
+    return null;
+  }
 }
 
-function serveJson(data: unknown): Response {
+function readFileSafe(url: URL): Uint8Array | null {
+  try {
+    return Deno.readFileSync(url);
+  } catch {
+    return null;
+  }
+}
+
+function statSafe(path: string): boolean {
+  try {
+    Deno.statSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function html(body: string): Response {
+  return new Response(body, { headers: { "content-type": "text/html" } });
+}
+
+function json(data: unknown): Response {
   return new Response(JSON.stringify(data), {
     headers: { "content-type": "application/json" },
   });
 }
 
-function serve404(): Response {
-  return new Response("Not Found", { status: 404 });
+function pdf(bytes: Uint8Array): Response {
+  return new Response(new Uint8Array(bytes), {
+    headers: { "content-type": "application/pdf" },
+  });
 }
 
-/** Lazy-init the search index on first /api/search call */
-async function ensureSearchIndex(): Promise<void> {
-  if (searchIndexReady) return;
-  searchIndexReady = true;
-
-  try {
-    const books = JSON.parse(Deno.readTextFileSync(BOOKS_JSON));
-    for (const book of books) {
-      const path = `${FIXTURES_DIR}/${book.fileName}`;
-      try {
-        Deno.statSync(path);
-        await indexBook(path, book.id, CACHE_DIR);
-      } catch {
-        // PDF not found — skip
-      }
-    }
-    console.log("[reader] Search index ready");
-  } catch (err) {
-    console.warn("[reader] Failed to build search index:", err);
-  }
-}
-
-Deno.serve(async (req: Request) => {
-  const url = new URL(req.url);
-
-  // API: books list
-  if (url.pathname === "/api/books") {
-    const books = JSON.parse(Deno.readTextFileSync(BOOKS_JSON));
-    return serveJson(books);
-  }
-
-  // API: search (lazy-init index)
-  if (url.pathname === "/api/search") {
-    const q = url.searchParams.get("q");
-    if (!q) return serveJson([]);
-    await ensureSearchIndex();
-    return serveJson(search(q, CACHE_DIR));
-  }
-
-  // PDF files — try cache, fallback fixtures
-  if (url.pathname.startsWith("/books/")) {
-    const fileName = url.pathname.slice("/books/".length);
-    for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {
-      try {
-        const file = Deno.readFileSync(`${dir}/${fileName}`);
-        return new Response(file, {
-          headers: { "content-type": "application/pdf" },
-        });
-      } catch { /* try next */ }
-    }
-    return serve404();
-  }
-
-  // Static assets
-  const ext = url.pathname.slice(url.pathname.lastIndexOf("."));
+function serveFile(bytes: Uint8Array, ext: string): Response {
   const mime: Record<string, string> = {
     ".js": "application/javascript",
     ".css": "text/css",
     ".html": "text/html",
-    ".ts": "application/javascript",
   };
-  if (url.pathname.startsWith("/dist/") || url.pathname.startsWith("/app/")) {
-    try {
-      const file = Deno.readFileSync(
-        new URL(`.${url.pathname}`, import.meta.url),
-      );
-      return new Response(file, {
-        headers: { "content-type": mime[ext] ?? "application/octet-stream" },
-      });
-    } catch {
-      return serve404();
-    }
-  }
+  return new Response(new Uint8Array(bytes), {
+    headers: { "content-type": mime[ext] ?? "application/octet-stream" },
+  });
+}
 
-  // SPA fallback
-  return serveHtml();
+function notFound(): Response {
+  return new Response("Not Found", { status: 404 });
+}
+
+function serverError(msg: string): Response {
+  return new Response(msg, {
+    status: 500,
+    headers: { "content-type": "text/plain" },
+  });
+}
+
+async function ensureSearchIndex(): Promise<void> {
+  if (searchIndexReady) return;
+  searchIndexReady = true;
+  const raw = readTextSafe(BOOKS_JSON_URL);
+  if (!raw) return;
+  try {
+    const books = JSON.parse(raw);
+    for (const book of books) {
+      const path = `${FIXTURES_DIR}/${book.fileName}`;
+      if (!statSafe(path)) continue;
+      try {
+        await indexBook(path, book.id, CACHE_DIR);
+      } catch { /* skip */ }
+    }
+  } catch { /* skip */ }
+}
+
+Deno.serve((req: Request) => {
+  try {
+    const url = new URL(req.url);
+    const pathname = url.pathname;
+    const ext = pathname.slice(pathname.lastIndexOf("."));
+
+    // API: books
+    if (pathname === "/api/books") {
+      const raw = readTextSafe(BOOKS_JSON_URL);
+      return raw ? json(JSON.parse(raw)) : json([]);
+    }
+
+    // API: search
+    if (pathname === "/api/search") {
+      const q = url.searchParams.get("q");
+      if (!q) return json([]);
+      ensureSearchIndex(); // fire-and-forget
+      try {
+        return json(search(q, CACHE_DIR));
+      } catch {
+        return json([]);
+      }
+    }
+
+    // PDF files
+    if (pathname.startsWith("/books/")) {
+      const name = pathname.slice("/books/".length);
+      for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {
+        const p = `${dir}/${name}`;
+        if (!statSafe(p)) continue;
+        try {
+          return pdf(Deno.readFileSync(p));
+        } catch { /* try next */ }
+      }
+      return notFound();
+    }
+
+    // Static assets from dist/
+    if (pathname.startsWith("/dist/")) {
+      const file = readFileSafe(new URL(`.${pathname}`, DIST_DIR));
+      return file ? serveFile(file, ext) : notFound();
+    }
+
+    // Static assets from app/
+    if (pathname.startsWith("/app/")) {
+      const file = readFileSafe(new URL(`.${pathname}`, APP_DIR));
+      return file ? serveFile(file, ext) : notFound();
+    }
+
+    // SPA fallback
+    const indexHtml = readTextSafe(new URL("./index.html", APP_DIR));
+    return indexHtml ? html(indexHtml) : serverError("index.html not found");
+  } catch (err) {
+    console.error("[reader] Handler error:", err);
+    return serverError(String(err));
+  }
 });
