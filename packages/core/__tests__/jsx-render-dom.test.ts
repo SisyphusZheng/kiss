@@ -3,16 +3,18 @@
  */
 
 import { assert, assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { asTestElement, setupMockDocument, signal, TestEvent } from './test-utils.ts';
+import { asTestElement, signal, TestEvent, withMockDocument } from './test-utils.ts';
 import { For, Fragment, HTML_TAG, jsx, Show } from '../src/jsx-runtime.ts';
 import { collectPropBindings, renderToDom } from '../src/jsx-render-dom.ts';
 import type { Signal } from '@openelement/protocol/signal';
 
-setupMockDocument();
+function it(name: string, fn: () => void): void {
+  Deno.test(name, () => withMockDocument(fn));
+}
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-Deno.test('renderToDom creates element with static attributes', () => {
+it('renderToDom creates element with static attributes', () => {
   const vnode = jsx('div', { id: 'x', 'data-test': 'foo', children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.tagName.toLowerCase(), 'div');
@@ -20,20 +22,20 @@ Deno.test('renderToDom creates element with static attributes', () => {
   assertEquals(el.getAttribute('data-test'), 'foo');
 });
 
-Deno.test('renderToDom maps className to class attribute', () => {
+it('renderToDom maps className to class attribute', () => {
   const vnode = jsx('span', { className: 'a b', children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.getAttribute('class'), 'a b');
 });
 
-Deno.test('renderToDom applies static style descriptor', () => {
+it('renderToDom applies static style descriptor', () => {
   const vnode = jsx('div', { style: { color: 'red', fontSize: 12 }, children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(asTestElement(el).style.getPropertyValue('color'), 'red');
   assertEquals(asTestElement(el).style.getPropertyValue('fontSize'), '12');
 });
 
-Deno.test('renderToDom binds click event via descriptor', () => {
+it('renderToDom binds click event via descriptor', () => {
   let clicked = false;
   const vnode = jsx('button', { onClick: () => (clicked = true), children: 'hi' });
   const el = renderToDom(vnode) as Element;
@@ -41,7 +43,7 @@ Deno.test('renderToDom binds click event via descriptor', () => {
   assert(clicked);
 });
 
-Deno.test('renderToDom binds dashed custom element events via descriptor', () => {
+it('renderToDom binds dashed custom element events via descriptor', () => {
   let changed = false;
   const vnode = jsx('sl-switch', {
     'on-sl-change': () => (changed = true),
@@ -54,7 +56,7 @@ Deno.test('renderToDom binds dashed custom element events via descriptor', () =>
   assert(changed);
 });
 
-Deno.test('renderToDom binds signal attribute via descriptor', () => {
+it('renderToDom binds signal attribute via descriptor', () => {
   const s = signal('a');
   const vnode = jsx('input', { value: s });
   const el = renderToDom(vnode) as Element;
@@ -63,7 +65,7 @@ Deno.test('renderToDom binds signal attribute via descriptor', () => {
   assertEquals(el.getAttribute('value'), 'b');
 });
 
-Deno.test('renderToDom binds signal class as signal-attr descriptor', () => {
+it('renderToDom binds signal class as signal-attr descriptor', () => {
   const s = signal(false);
   const div = document.createElement('div');
   // signal-driven className/class props use signal-attr to set the full
@@ -74,7 +76,7 @@ Deno.test('renderToDom binds signal class as signal-attr descriptor', () => {
   assert(attrDesc, 'expected signal-attr descriptor');
 });
 
-Deno.test('renderToDom renders signal child as reactive text node', () => {
+it('renderToDom renders signal child as reactive text node', () => {
   const s = signal('hello');
   const vnode = jsx('p', { children: [s] });
   const el = renderToDom(vnode) as Element;
@@ -83,7 +85,7 @@ Deno.test('renderToDom renders signal child as reactive text node', () => {
   assertEquals(el.textContent, 'world');
 });
 
-Deno.test('collectPropBindings emits data-signal marker for registered signal', () => {
+it('collectPropBindings emits data-signal marker for registered signal', () => {
   const s = signal(1);
   const registry = new Map<string, Signal<unknown>>([['count', s as Signal<unknown>]]);
   const el = document.createElement('span');
@@ -91,14 +93,14 @@ Deno.test('collectPropBindings emits data-signal marker for registered signal', 
   assertEquals(el.getAttribute('data-signal'), 'count');
 });
 
-Deno.test('collectPropBindings skips data-signal for unregistered signal', () => {
+it('collectPropBindings skips data-signal for unregistered signal', () => {
   const s = signal(1);
   const el = document.createElement('span');
   collectPropBindings(el, { value: s, children: [] });
   assertFalse(el.hasAttribute('data-signal'));
 });
 
-Deno.test('renderToDom passes signalRegistry to nested elements', () => {
+it('renderToDom passes signalRegistry to nested elements', () => {
   const count = signal(0);
   const registry = new Map<string, Signal<unknown>>([['count', count as Signal<unknown>]]);
   const vnode = jsx('div', { children: [jsx('span', { value: count })] });
@@ -108,19 +110,19 @@ Deno.test('renderToDom passes signalRegistry to nested elements', () => {
   assertEquals(span.getAttribute('data-signal'), 'count');
 });
 
-Deno.test('renderToDom escapes untrusted innerHTML', () => {
+it('renderToDom escapes untrusted innerHTML', () => {
   const vnode = jsx('div', { innerHTML: '<script>xss</script>', children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.textContent, '<script>xss</script>');
 });
 
-Deno.test('renderToDom honors trustedHtml innerHTML', () => {
+it('renderToDom honors trustedHtml innerHTML', () => {
   const vnode = jsx('div', { innerHTML: '<span>trusted</span>', trustedHtml: true, children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(asTestElement(el).innerHTML, '<span>trusted</span>');
 });
 
-Deno.test('collectPropBindings includes ref descriptor', () => {
+it('collectPropBindings includes ref descriptor', () => {
   let refEl: Element | null = null;
   const el = document.createElement('div');
   const descriptors = collectPropBindings(
@@ -133,7 +135,7 @@ Deno.test('collectPropBindings includes ref descriptor', () => {
   assertEquals(refEl, el);
 });
 
-Deno.test('collectPropBindings includes boolean descriptor', () => {
+it('collectPropBindings includes boolean descriptor', () => {
   const el = document.createElement('input');
   const descriptors = collectPropBindings(el, { disabled: true, children: [] });
   const boolDesc = descriptors.find((d) => d.kind === 'static-boolean');
@@ -141,33 +143,33 @@ Deno.test('collectPropBindings includes boolean descriptor', () => {
   assertEquals((boolDesc as { attrName: string }).attrName, 'disabled');
 });
 
-Deno.test('renderToDom renders Fragment children without wrapper', () => {
+it('renderToDom renders Fragment children without wrapper', () => {
   const vnode = jsx(Fragment, { children: ['a', 'b'] });
   const frag = renderToDom(vnode);
   assertEquals(frag.nodeType, 11);
   assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 2);
 });
 
-Deno.test('renderToDom renders trusted HTML_TAG as fragment', () => {
+it('renderToDom renders trusted HTML_TAG as fragment', () => {
   const vnode = jsx(HTML_TAG, { html: '<span class="x">y</span>', children: [] });
   const frag = renderToDom(vnode);
   assertEquals(frag.nodeType, 11);
   assertEquals(asTestElement(frag as unknown as Element).childNodes.length, 1);
 });
 
-Deno.test('renderToDom renders number children as text', () => {
+it('renderToDom renders number children as text', () => {
   const vnode = jsx('p', { children: 42 });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.textContent, '42');
 });
 
-Deno.test('renderToDom renders null and false as empty text', () => {
+it('renderToDom renders null and false as empty text', () => {
   const vnode = jsx('p', { children: [null, false] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.textContent, '');
 });
 
-Deno.test('renderToDom returns comment anchor for Show and reacts after mount', () => {
+it('renderToDom returns comment anchor for Show and reacts after mount', () => {
   const when = signal(true);
   const vnode = jsx(Show, {
     when,
@@ -184,7 +186,7 @@ Deno.test('renderToDom returns comment anchor for Show and reacts after mount', 
   assertEquals(asTestElement(host).textContent, 'yes');
 });
 
-Deno.test('renderToDom returns comment anchor for For and reacts after mount', () => {
+it('renderToDom returns comment anchor for For and reacts after mount', () => {
   const items = signal(['a', 'b']);
   const vnode = jsx(For, {
     each: items,
@@ -199,19 +201,19 @@ Deno.test('renderToDom returns comment anchor for For and reacts after mount', (
   assertEquals(asTestElement(host).textContent, 'xyz');
 });
 
-Deno.test('renderToDom creates SVG elements with namespace', () => {
+it('renderToDom creates SVG elements with namespace', () => {
   const vnode = jsx('svg', { children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.tagName.toLowerCase(), 'svg');
 });
 
-Deno.test('renderToDom applies textContent prop', () => {
+it('renderToDom applies textContent prop', () => {
   const vnode = jsx('p', { textContent: 'direct', children: [] });
   const el = renderToDom(vnode) as Element;
   assertEquals(el.textContent, 'direct');
 });
 
-Deno.test('renderToDom handles component constructor errors gracefully', () => {
+it('renderToDom handles component constructor errors gracefully', () => {
   const Bad = class {
     render() {
       throw new Error('boom');
@@ -222,7 +224,7 @@ Deno.test('renderToDom handles component constructor errors gracefully', () => {
   assertEquals(node.textContent, '');
 });
 
-Deno.test('renderToDom handles component function errors gracefully', () => {
+it('renderToDom handles component function errors gracefully', () => {
   const Bad = () => {
     throw new Error('boom');
   };
