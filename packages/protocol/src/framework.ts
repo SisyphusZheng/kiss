@@ -115,6 +115,8 @@ export interface FrameworkOptions {
   packageIslands?: string[];
   appShell?: AppShellConfig;
   layouts?: LayoutsConfig;
+  /** Build mode. 'ssg' (default) generates static HTML. 'spa' produces a client-only bundle. */
+  mode?: 'ssg' | 'spa';
   /** @dangerous injected as-is, only use with controlled content */
   headExtras?: string;
   html?: {

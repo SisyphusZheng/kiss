@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { exportNotesToMarkdown } from "../export.ts";
 import type { ReaderBook, ReaderNote } from "../types.ts";
 
@@ -47,8 +47,6 @@ Deno.test("exportNotesToMarkdown includes open-reader backlink", () => {
 });
 
 Deno.test("exportNotesToMarkdown handles unknown book gracefully", () => {
-  // New behavior: unknown book IDs cause notes to be skipped entirely
-  // ponytail: this behavior might change later, but for now assert emptiness
   const result = exportNotesToMarkdown([sampleNote], []);
   assertEquals(result, "");
 });

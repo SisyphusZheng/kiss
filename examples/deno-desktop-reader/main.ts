@@ -1,7 +1,7 @@
 /**
  * openElement Desktop Reader — HTTP server.
  *
- * Serves the SPA client, API endpoints, and PDF files.
+ * Serves the SPA client (built by Vite to dist/), API endpoints, and PDF files.
  * All handler errors are caught to avoid breaking the desktop webview.
  */
 
@@ -13,7 +13,6 @@ const CACHE_DIR = `${HOME}/.open-reader`;
 const BOOKS_DIR = `${CACHE_DIR}/books`;
 const FIXTURES_DIR = new URL("./fixtures/books/", import.meta.url).pathname;
 const BOOKS_JSON_URL = new URL("./fixtures/books.json", import.meta.url);
-const APP_DIR = new URL("./app/", import.meta.url);
 const DIST_DIR = new URL("./dist/", import.meta.url);
 
 let searchIndexReady = false;
@@ -64,10 +63,28 @@ function serveFile(bytes: Uint8Array, ext: string): Response {
     ".js": "application/javascript",
     ".css": "text/css",
     ".html": "text/html",
+    ".json": "application/json",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
   };
   return new Response(new Uint8Array(bytes), {
     headers: { "content-type": mime[ext] ?? "application/octet-stream" },
   });
+}
+
+/** Find the main app JS bundle in dist/assets/ (ponytail: glob + pick first match). */
+function findAppScript(dir: URL): string | null {
+  try {
+    for (const entry of Deno.readDirSync(dir)) {
+      if (
+        entry.isFile && entry.name.startsWith("reader-") &&
+        entry.name.endsWith(".js")
+      ) {
+        return entry.name;
+      }
+    }
+  } catch { /* dir may not exist */ }
+  return null;
 }
 
 function notFound(): Response {
@@ -135,22 +152,39 @@ Deno.serve((req: Request) => {
       return notFound();
     }
 
-    // Static assets from dist/
-    if (pathname.startsWith("/dist/")) {
-      const name = pathname.slice("/dist/".length);
-      const file = readFileSafe(new URL(`./${name}`, DIST_DIR));
-      return file ? serveFile(file, ext) : notFound();
+    // Static assets from dist/ (Vite build output)
+    if (
+      pathname.startsWith("/assets/") || pathname.startsWith("/islands/") ||
+      pathname.startsWith("/client/") ||
+      pathname.startsWith("/app/") || pathname.startsWith("/fixtures/")
+    ) {
+      const file = readFileSafe(new URL(`.${pathname}`, DIST_DIR));
+      if (!file) {
+        // Also try from project root for non-built assets (CSS, JSON)
+        const rootFile = readFileSafe(new URL(`.${pathname}`, import.meta.url));
+        return rootFile ? serveFile(rootFile, ext) : notFound();
+      }
+      return serveFile(file, ext);
     }
 
-    // Static assets from app/
-    if (pathname.startsWith("/app/")) {
-      const file = readFileSafe(new URL(`.${pathname}`, APP_DIR));
-      return file ? serveFile(file, ext) : notFound();
+    // SPA fallback: serve dist/index.html for all other routes
+    let indexHtml = readTextSafe(new URL("./index.html", DIST_DIR));
+    if (indexHtml) {
+      // Inject main app bundle script (adapter-vite's SPA shell only includes island entry)
+      const assetsDir = new URL("./assets/", DIST_DIR);
+      const appScript = findAppScript(assetsDir);
+      if (appScript) {
+        indexHtml = indexHtml.replace(
+          "</body>",
+          `  <script type="module" src="/assets/${appScript}"></script>\n</body>`,
+        );
+      }
+      return html(indexHtml);
     }
 
-    // SPA fallback
-    const indexHtml = readTextSafe(new URL("./index.html", APP_DIR));
-    return indexHtml ? html(indexHtml) : serverError("index.html not found");
+    // Fallback: try project-root index.html (for dev mode)
+    const rootIndex = readTextSafe(new URL("./index.html", import.meta.url));
+    return rootIndex ? html(rootIndex) : serverError("index.html not found");
   } catch (err) {
     console.error("[reader] Handler error:", err);
     return serverError(String(err));

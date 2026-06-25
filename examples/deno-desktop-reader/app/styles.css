@@ -31,6 +31,13 @@ body {
 
 /* ─── Bookshelf ─────────────────────────────────────────────── */
 
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
 .book-card {
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
@@ -51,6 +58,43 @@ html.theme-dark .book-card:hover {
   box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
 }
 
+.book-cover {
+  height: 120px;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.book-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.book-author {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.5rem;
+}
+html.theme-dark .book-author {
+  color: #999;
+}
+
+.book-summary {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+}
+html.theme-dark .book-summary {
+  color: #aaa;
+}
+
+.book-pages {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0;
+}
+
 /* ─── Progress / Continue Reading ──────────────────────────── */
 
 .progress-indicator {
@@ -65,6 +109,144 @@ html.theme-dark .progress-indicator {
 .continue-btn {
   display: block;
   margin-top: 0.5rem;
+}
+
+/* ─── Page Navigation ──────────────────────────────────────── */
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.page-info {
+  font-weight: 600;
+  min-width: 120px;
+}
+
+/* ─── Note Form ────────────────────────────────────────────── */
+
+.note-form {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+html.theme-dark .note-form {
+  border-color: #374151;
+}
+
+.note-form label {
+  display: block;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.note-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: var(--reader-bg);
+  color: var(--reader-fg);
+}
+
+/* ─── Notes list ───────────────────────────────────────────── */
+
+.notes-book-section {
+  margin-bottom: 2rem;
+}
+
+.notes-book-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+
+.note-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+html.theme-dark .note-card {
+  border-color: #374151;
+}
+
+.note-quote-preview {
+  font-style: italic;
+  color: #666;
+  border-left: 3px solid #d1d5db;
+  padding-left: 0.75rem;
+  margin: 0 0 0.5rem;
+}
+html.theme-dark .note-quote-preview {
+  color: #999;
+  border-left-color: #4b5563;
+}
+
+.note-text-preview {
+  margin: 0 0 0.5rem;
+}
+
+.note-meta {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0 0 0.5rem;
+}
+
+.note-link {
+  font-size: 0.85rem;
+  color: var(--reader-accent);
+  text-decoration: none;
+  margin-right: 1rem;
+}
+.note-link:hover {
+  text-decoration: underline;
+}
+
+.note-delete-btn {
+  font-size: 0.8rem;
+}
+
+/* ─── Search ───────────────────────────────────────────────── */
+
+.search-results {
+  margin-top: 1rem;
+}
+
+.search-result-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+html.theme-dark .search-result-card {
+  border-color: #374151;
+}
+.search-result-card:hover {
+  transform: translateY(-1px);
+}
+
+.search-term {
+  color: #666;
+  margin: 1rem 0;
+}
+html.theme-dark .search-term {
+  color: #999;
+}
+
+.book-cover-sm {
+  height: 80px;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 /* ─── Toast ─────────────────────────────────────────────────── */
@@ -125,4 +307,42 @@ html.theme-dark .progress-indicator {
 
 .export-btn {
   margin: 1rem 0 1.5rem;
+}
+
+/* ─── Empty state ───────────────────────────────────────────── */
+
+.empty-state {
+  color: #888;
+  font-style: italic;
+  padding: 2rem 0;
+  text-align: center;
+}
+html.theme-dark .empty-state {
+  color: #666;
+}
+
+/* ─── WC Interop ────────────────────────────────────────────── */
+
+.wc-interop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.wc-interop-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+html.theme-dark .wc-interop-item {
+  border-color: #374151;
+}
+
+.wc-interop-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
 }

@@ -26,6 +26,7 @@
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
+    "@preact/signals": "npm:@preact/signals@^2.9.0",
     "flexsearch": "npm:flexsearch@^0.7"
   },
   "vendor": true,

@@ -263,6 +263,21 @@ export function createOpenPlugin(
         // be set yet - openContent() buildStart() runs after this one).
         ctx.phase1.cachedRoutes = routes;
 
+        // SPA mode: skip SSR virtual entry generation + SSR admission plan
+        if (resolvedOptions.mode === 'spa') {
+          ctx.phase1.isSpa = true;
+          log.info('SPA mode: skipping SSR entry generation, SSG rendering will be skipped');
+          const pageCount = routes.filter(
+            (r) => r.type === 'page' && !r.special,
+          ).length;
+          const totalIslands = ctx.phase1.islandTagNames.length +
+            ctx.phase1.packageIslandDecls.length;
+          log.info(
+            `Routes: ${pageCount} page(s), ${totalIslands} island(s) - openElement Architecture (SPA)`,
+          );
+          return;
+        }
+
         ctx.phase1.honoEntryCode = generateEntry(
           routes,
           ctx.phase1.islandTagNames,

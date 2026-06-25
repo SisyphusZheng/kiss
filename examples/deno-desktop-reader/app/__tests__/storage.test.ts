@@ -1,4 +1,4 @@
-import { assertArrayIncludes, assertEquals } from "jsr:@std/assert@1";
+import { assertArrayIncludes, assertEquals } from "@std/assert";
 
 import {
   deleteNote,

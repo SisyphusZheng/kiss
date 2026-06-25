@@ -61,6 +61,9 @@ export class Phase1Meta {
   /** v0.18.0: CEM-derived compatibility classifications from the classifier. */
   cemClassifications: CompatibilityClassification[] = [];
 
+  /** SPA mode active (skips SSR entry generation + SSG rendering) */
+  isSpa?: boolean;
+
   /** Whether the SSR+client build has completed */
   buildCompleted: boolean = false;
 

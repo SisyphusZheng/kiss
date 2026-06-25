@@ -2015,6 +2015,7 @@
       "npm:@mdx-js/rollup@^3.1.1",
       "npm:@playwright/test@1.59.1",
       "npm:@preact/signals-core@^1.12.1",
+      "npm:@preact/signals@^2.9.0",
       "npm:flexsearch@0.7",
       "npm:hono@^4.12.0",
       "npm:preact-render-to-string@^6.5.0",

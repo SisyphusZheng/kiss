@@ -1,7 +1,4 @@
-_fresh/
-.vite/
 dist/
 node_modules/
-~/.open-reader/
-deno-desktop-reader.app/
-deno-desktop-reader.dylib*
+*.log
+.deno-dir/

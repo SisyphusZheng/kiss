@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
+import { writeRouteManifest } from './route-manifest.js';
 
 const log = createLogger('core');
 
@@ -68,6 +69,56 @@ export function buildPlugin(
       // Phase 2 runs last because client chunks have content hashes that
       // don't affect HTML content, and injection is a post-processing step.
       ctx.markComplete(1);
+
+      // SPA mode: skip Phase 3 SSG, generate SPA shell + route manifest
+      if (ctx.options.mode === 'spa') {
+        const root = ctx.phase3.root || process.cwd();
+        const outDirName = ctx.phase3.outDir || 'dist';
+        const absOutDir = join(root, outDirName);
+        const base = ctx.phase3.base || '/';
+
+        // Generate SPA shell HTML
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>openElement Reader</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="${base}client-entry.js"></script>
+</body>
+</html>`;
+
+        await Deno.mkdir(absOutDir, { recursive: true });
+        await Deno.writeTextFile(join(absOutDir, 'index.html'), html);
+        log.info('SPA shell written to index.html');
+
+        // Generate route manifest for client-side routing
+        const absRoutesDir = join(root, ctx.phase3.routesDir || 'app/routes');
+        const routeCount = await writeRouteManifest({
+          routesDir: absRoutesDir,
+          outDir: absOutDir,
+        });
+        log.info(`Route manifest written (${routeCount} page route(s))`);
+
+        // Phase 2: Client island bundle (only if islands exist)
+        if (totalIslands > 0) {
+          log.info('[2/3] Client island build...');
+          try {
+            const { buildClient } = await import('./cli/build-client.js');
+            await buildClient(ctx);
+            ctx.markComplete(2);
+            log.info('[2/3] Client island build - complete');
+          } catch (error) {
+            log.error(`[2/3] Client island build - FAILED: ${error}`);
+            throw error;
+          }
+        }
+
+        log.info('SPA build complete.');
+        return;
+      }
 
       log.info('[3/3] Static site generation...');
       try {
