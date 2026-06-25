@@ -467,3 +467,28 @@ Deno.test('replace: replaces state without adding history entry', async () => {
   assertEquals(replaceCalls.length, 1);
   assertEquals(router.currentRoute?.path, '/about');
 });
+
+Deno.test('replace guard redirect: returns string → pushes redirected path', async () => {
+  resetMocks({ pathname: '/' });
+
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/', component: () => null },
+      { path: '/login', component: () => null },
+      {
+        path: '/protected',
+        component: () => null,
+        guard: async () => {
+          await Promise.resolve();
+          return '/login';
+        },
+      },
+    ],
+  });
+
+  await router.replace('/protected');
+
+  assertEquals(router.currentRoute?.path, '/login');
+  assertEquals(mockHistory._calls, [{ method: 'pushState', url: '/login' }]);
+});

@@ -33,7 +33,7 @@
  */
 
 import { scanRoutes } from '@openelement/ssg';
-import { dirname, join, posix, sep } from 'node:path';
+import { dirname, join, posix, sep, win32 } from 'node:path';
 
 /**
  * Parameters for route manifest generation.
@@ -93,6 +93,14 @@ ${entries.join(',\n')}
  * @returns Relative import path string
  */
 function relativeToOutput(absSourcePath: string, fromDir: string): string {
+  const sourceDrive = win32.parse(absSourcePath).root.toLowerCase();
+  const fromDrive = win32.parse(fromDir).root.toLowerCase();
+  if (sourceDrive && fromDrive && sourceDrive !== fromDrive) {
+    throw new Error(
+      `Cannot generate relative route import across Windows drives: ${fromDir} -> ${absSourcePath}`,
+    );
+  }
+
   // Compute the relative path
   const parts = absSourcePath.replaceAll(sep, posix.sep).split(posix.sep);
   const fromParts = fromDir.replaceAll(sep, posix.sep).split(posix.sep);
@@ -137,8 +145,8 @@ export async function writeRouteManifest(
   // ponytail: Deno.mkdir is built-in, no need for ensureDir dep
   try {
     await Deno.mkdir(outDir, { recursive: true });
-  } catch {
-    // Directory already exists
+  } catch (err) {
+    if (!(err instanceof Deno.errors.AlreadyExists)) throw err;
   }
   const content = await generateRouteManifestContent(routesDir, manifestPath);
   await Deno.writeTextFile(manifestPath, content);
