@@ -1,27 +1,6 @@
-/** @jsxImportSource preact */
-
-import type { JSX } from "preact";
 import { Head } from "fresh/runtime";
 import PreactCounter from "../islands/PreactCounter.tsx";
 import OpenElements from "../islands/OpenElements.tsx";
-
-// Augment Preact's JSX types so TypeScript accepts openElement custom element
-// tags (<open-button>, <open-card>) as valid JSX intrinsic elements.
-declare module "preact" {
-  namespace JSX {
-    interface IntrinsicElements {
-      "open-button": Omit<JSX.HTMLAttributes<HTMLElement>, "size"> & {
-        variant?: string;
-        /** open-button size: sm | md | lg (overrides HTML size) */
-        size?: string;
-        disabled?: boolean;
-      };
-      "open-card": JSX.HTMLAttributes<HTMLElement> & {
-        variant?: string;
-      };
-    }
-  }
-}
 
 export default function Home() {
   return (
@@ -45,12 +24,13 @@ export default function Home() {
         <p>
           This page renders <code>&lt;open-button&gt;</code> and{" "}
           <code>&lt;open-card&gt;</code>{" "}
-          as standard HTML custom elements. They are registered and hydrated by
-          the <code>OpenElements</code> island which imports{" "}
-          <code>@openelement/ui</code>.
+          as standard HTML custom elements, registered inline by the{" "}
+          <code>OpenElements</code> island. A full <code>@openelement/ui</code>
+          {" "}
+          integration will be enabled once the package ships pre-compiled JS
+          (see README).
         </p>
 
-        {/* openElement custom elements rendered as standard HTML tags */}
         <h2>open-button</h2>
         <open-button variant="primary">Primary Button</open-button>
         <open-button>Default Button</open-button>

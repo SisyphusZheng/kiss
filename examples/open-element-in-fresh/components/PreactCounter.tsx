@@ -1,5 +1,3 @@
-/** @jsxImportSource preact */
-
 import type { Signal } from "@preact/signals";
 
 interface PreactCounterProps {
