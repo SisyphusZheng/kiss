@@ -46,9 +46,11 @@ deno task check    # Type-check main.ts
 
 ## Fixtures
 
-The `fixtures/books/` directory contains placeholder PDF files for development. To use real books:
+The `fixtures/books/` directory contains placeholder PDF files for development.
+To use real books:
 
-1. Download public domain PDFs from [Project Gutenberg](https://www.gutenberg.org/)
+1. Download public domain PDFs from
+   [Project Gutenberg](https://www.gutenberg.org/)
 2. Place them in `fixtures/books/` matching the names in `books.json`
 3. Or point the reader to your own GitHub book repo via `READER_REPO` env var
 

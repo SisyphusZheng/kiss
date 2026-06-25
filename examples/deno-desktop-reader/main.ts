@@ -96,6 +96,32 @@ Deno.serve((req: Request) => {
     }
   }
 
+  // Static app assets — serve TS/JS/CSS with correct MIME types
+  if (
+    url.pathname.startsWith("/app/") ||
+    url.pathname.endsWith(".ts") ||
+    url.pathname.endsWith(".css")
+  ) {
+    const mimeTypes: Record<string, string> = {
+      ".ts": "application/javascript",
+      ".tsx": "application/javascript",
+      ".js": "application/javascript",
+      ".css": "text/css",
+      ".html": "text/html",
+    };
+    const ext = url.pathname.slice(url.pathname.lastIndexOf("."));
+    const mime = mimeTypes[ext] || "application/octet-stream";
+    try {
+      const filePath = url.pathname.startsWith("/app/")
+        ? new URL(`.${url.pathname}`, import.meta.url)
+        : new URL(`.${url.pathname}`, import.meta.url);
+      const file = Deno.readFileSync(filePath);
+      return new Response(file, { headers: { "content-type": mime } });
+    } catch {
+      return serve404();
+    }
+  }
+
   // SPA fallback: index.html for all other routes
   return serveHtml();
 });
