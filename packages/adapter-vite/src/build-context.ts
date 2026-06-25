@@ -116,7 +116,9 @@ export class Phase3Meta {
   /** Named route layouts selected by route meta. */
   layouts: FrameworkOptions['layouts'] = undefined;
 
-  /** SSR noExternal patterns (serialized) */
+  /** SSR noExternal patterns. Accept strings or serialized RegExp objects.
+   * Callers should use the plain-object form `{ __type: 'RegExp', source, flags }`
+   * rather than passing RegExp instances directly. */
   ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[] = [];
 
   /** SSR deps to keep as external (resolved by Deno import() at runtime per ADR-0043) */
