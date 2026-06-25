@@ -14,11 +14,10 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
   renderer/activation split, `BindingDescriptor` registry).
 - **alpha.3**: Consume Lit/Shoelace/Material Web Components inside openElement;
-  pure-ESM / pure-ECMAScript npm quality gates.
+  pure-ESM / pure-ECMAScript / modern Web Standards npm quality gates.
 - **alpha.4**: Lightweight client runtime so openElement components work in Deno
-  Fresh.
-- **alpha.5**: SPA mode + desktop shell proof (Tauri 2 / Electron) with a
-  client-side router.
+  Fresh; Preact island proof.
+- **alpha.5**: SPA mode + Deno Desktop shell proof.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -57,7 +56,8 @@ so this plan pivots to Deno's own `deno pack` tooling.
   rendering remains available in `@openelement/content`.
 - Add `tools/check-deno-api-free.ts` and a `deno task deno-api:check` gate that
   fails if `core/element/ui/protocol/signal/router/app` source files use
-  `Deno.*`.
+  `Deno.*` or host-specific runtime APIs that do not belong in browser-facing
+  package surfaces.
 
 ### Adapter-vite
 
@@ -113,8 +113,10 @@ when alpha.5 is complete.
 - ADR-0096 (protocol-first Vite + Nitro runtime) and ADR-0098
   (EntryDescriptor route manifest) remain in force.
 - Runtime-free/browser-facing packages must not use `Deno.*` or `node:*` APIs
-  in their public source surface. Build/server glue (`ssg`, `content`,
-  `adapter-vite`, `create`) may use Deno/Node APIs.
+  in their public source surface, and should prefer native W3C/WHATWG/Web
+  Platform APIs before custom wrappers. Build/server glue (`ssg`, `content`,
+  `adapter-vite`, `create`) may use Deno/Node APIs, with Deno-first
+  implementations preferred when a host API is necessary.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
@@ -140,6 +142,9 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
 ## Acceptance
 
 - `deno task deno-api:check` passes.
+- Runtime-free/browser-facing package artifacts stay pure ESM, avoid
+  host-specific APIs, and use modern Web Platform APIs as the default runtime
+  substrate.
 - `deno task pack:dry-run` succeeds for all 11 packages.
 - No `jsr:@openelement/` or `@jsr/openelement__*` specifiers remain in product
   code or generated tarballs.
