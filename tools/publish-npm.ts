@@ -196,7 +196,16 @@ async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> 
   if (isPrerelease(pkg.version)) {
     args.push('--tag', 'next');
   }
-  await runCommand('npm', args);
+  try {
+    await runCommand('npm', args);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('E403') || msg.includes('previously published versions')) {
+      console.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
+      return;
+    }
+    throw error;
+  }
 }
 
 function assertVersionConsistency(packages: PackageInfo[]): void {
