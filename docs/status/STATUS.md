@@ -24,7 +24,7 @@ approved version-plan evidence.
 ## v0.41.0-alpha.4 PR State: CI Green, Awaiting Release Closure
 
 v0.41.0-alpha.4 proves the inverse of alpha.3: openElement components can be
-consumed inside a third-party framework, starting with Deno Fresh. PR #111 is
+consumed inside a third-party framework, starting with Deno Fresh. PR #113 is
 green on `dev` with both AutoFlow CI jobs, CodeQL/Analyze jobs, Cloudflare Pages
 preview, and review bot passing at commit `06b21d37`. The release is not closed
 until the PR is merged to `main`, `main` CI passes, and the approved release

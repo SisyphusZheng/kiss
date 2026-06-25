@@ -249,10 +249,7 @@ export function createReleasePlan(
         name: 'pull latest main',
         command: ['git', 'pull', '--rebase', 'origin', 'main'],
       },
-      {
-        name: 'pull main for evidence push',
-        command: ['git', 'pull', '--rebase', 'origin', 'main'],
-      },
+      {},
       {
         name: 'push main evidence',
         command: ['git', 'push', 'origin', 'main'],

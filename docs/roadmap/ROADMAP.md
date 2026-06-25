@@ -301,7 +301,7 @@ Scope:
   - Write `docs/integrations/open-element-in-fresh.md`.
   - List known limitations and disposal requirements.
 - Release closure:
-  - Merge only after PR #111 remains green on `dev`.
+  - Merge only after PR #113 remains green on `dev`.
   - Wait for `main` CI after merge.
   - Run the approved AutoFlow3 release workflow for `0.41.0-alpha.4`.
   - Record npm publish and post-publish npm consumer smoke before marking

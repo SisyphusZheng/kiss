@@ -89,7 +89,7 @@ so this plan pivots to Deno's own `deno pack` tooling.
 
 ### alpha.4 Merge and Release Closure
 
-alpha.4 is merge-ready when PR #111 is green on `dev`: both AutoFlow CI jobs,
+alpha.4 is merge-ready when PR #113 is green on `dev`: both AutoFlow CI jobs,
 CodeQL/Analyze jobs, Cloudflare Pages preview, and review bot must pass. After
 merge, alpha.4 is not called released until `main` CI is green and the approved
 release workflow records npm publish plus post-publish npm consumer smoke
