@@ -189,6 +189,7 @@ export function hydrateOpenElement(
 export function disposeOpenElement(root: ParentNode): void {
   // ponytail: O(n) walk so callers can dispose an arbitrary container.
   const walk = (node: Node) => {
+    if (node.nodeType !== 1) return;
     const el = node as Element;
     const disposer = hostDisposers.get(el);
     if (disposer) {

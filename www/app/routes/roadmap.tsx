@@ -483,8 +483,15 @@ const phases = [
   {
     version: 'v0.41.0-alpha.4',
     title: 'openElement components in Fresh',
-    copy: 'Validate the lightweight client runtime with a Fresh example that hydrates openElement components.',
-    status: 'active',
+    copy: 'PR-green Fresh proof for the lightweight client runtime; awaiting main merge, npm publish, and post-publish smoke evidence.',
+    status: 'release candidate',
+    tone: 'warning',
+  },
+  {
+    version: 'v0.41.0-alpha.5',
+    title: 'SPA mode + Deno Desktop proof',
+    copy: 'Keep the next implementation target narrow: client-side navigation and desktop shell validation.',
+    status: 'next',
     tone: 'warning',
   },
   {

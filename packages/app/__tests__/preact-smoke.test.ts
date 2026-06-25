@@ -28,27 +28,48 @@ import { definePreactIsland } from '../src/preact.ts';
 class StubNode {
   nodeType = 1;
   childNodes: Node[] = [];
+  parentNode: StubNode | null = null;
+
+  #adopt(node: Node): void {
+    const previousParent = (node as { parentNode?: StubNode | null }).parentNode;
+    previousParent?.removeChild(node);
+    Object.defineProperty(node, 'parentNode', {
+      value: this,
+      writable: true,
+      configurable: true,
+    });
+  }
 
   appendChild(node: Node): Node {
+    this.#adopt(node);
     this.childNodes.push(node);
     return node;
   }
 
-  insertBefore(node: Node, refChild?: Node | null): Node {
+  insertBefore(node: Node, refChild: Node | null): Node {
     if (refChild == null) {
-      this.childNodes.push(node);
-      return node;
+      return this.appendChild(node);
     }
-    const index = this.childNodes.indexOf(refChild);
-    if (index === -1) {
+    if (!this.childNodes.includes(refChild)) {
       throw new Error('Reference node not found');
     }
+    this.#adopt(node);
+    const index = this.childNodes.indexOf(refChild);
     this.childNodes.splice(index, 0, node);
     return node;
   }
 
   removeChild(node: Node): Node {
-    this.childNodes = this.childNodes.filter((child) => child !== node);
+    const index = this.childNodes.indexOf(node);
+    if (index === -1) {
+      throw new Error('Node not found');
+    }
+    this.childNodes.splice(index, 1);
+    Object.defineProperty(node, 'parentNode', {
+      value: null,
+      writable: true,
+      configurable: true,
+    });
     return node;
   }
 }
@@ -144,7 +165,6 @@ function installDomStubs(): () => void {
 }
 
 /** Simulate SSR by temporarily deleting globalThis.document. */
-/** Delete globalThis.document temporarily. Returns a teardown function. */
 function suppressDocument(): () => void {
   const origDoc = globalThis.document;
   // @ts-expect-error - intentionally clearing for SSR test
@@ -165,6 +185,32 @@ function extractTrustedHtml(vnode: unknown): string {
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────
+
+Deno.test('Preact island smoke: DOM stub tracks parentNode and insertion order', () => {
+  const parent = new StubNode();
+  const first = new StubNode() as unknown as Node;
+  const second = new StubNode() as unknown as Node;
+  const inserted = new StubNode() as unknown as Node;
+
+  parent.appendChild(first);
+  parent.appendChild(second);
+  parent.insertBefore(inserted, second);
+
+  assertEquals(parent.childNodes, [first, inserted, second]);
+  assertEquals((inserted as unknown as { parentNode: StubNode | null }).parentNode, parent);
+
+  parent.removeChild(inserted);
+  assertEquals(parent.childNodes, [first, second]);
+  assertEquals((inserted as unknown as { parentNode: StubNode | null }).parentNode, null);
+
+  let threw = false;
+  try {
+    parent.removeChild(inserted);
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, true);
+});
 
 // ── 1. Simple Preact component renders inside an openElement island (SSR) ──
 
