@@ -39,6 +39,7 @@ function defineOpenCard() {
       this.attachShadow({ mode: 'open' });
     }
     connectedCallback() {
+      if (this.shadowRoot!.childElementCount > 0) return;
       this.shadowRoot!.innerHTML = `
         <div part="card">
           <slot name="header"></slot>
