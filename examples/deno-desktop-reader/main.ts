@@ -7,11 +7,17 @@
 //   - GET /books/*   → serve PDF files from ~/.open-reader/books/
 //   - SPA fallback: return index.html for all other routes
 
+import { indexBook, search } from "./app/search.ts";
+import { loadSearchIndex } from "./app/search.ts";
+import { syncBooks } from "./app/repo.ts";
+
 // ponytail: used in S4 for GitHub repo sync
 const _repo = Deno.env.get("READER_REPO") ?? "open-element/reader-fixtures";
-const booksDir = Deno.env.get("HOME")
-  ? `${Deno.env.get("HOME")}/.open-reader/books`
-  : `~/.open-reader/books`;
+const cacheDir = Deno.env.get("HOME")
+  ? `${Deno.env.get("HOME")}/.open-reader`
+  : `~/.open-reader`;
+const booksDir = `${cacheDir}/books`;
+const fixturesDir = new URL("./fixtures/books/", import.meta.url).pathname;
 
 function serveHtml(): Response {
   const html = Deno.readTextFileSync(
@@ -32,6 +38,24 @@ function serve404(): Response {
   return new Response("Not Found", { status: 404 });
 }
 
+// Index fixture PDFs at startup
+try {
+  const books = JSON.parse(
+    Deno.readTextFileSync(new URL("./fixtures/books.json", import.meta.url)),
+  );
+  for (const book of books) {
+    const fixturePath = `${fixturesDir}/${book.fileName}`;
+    try {
+      Deno.statSync(fixturePath);
+      await indexBook(fixturePath, book.id, cacheDir);
+    } catch {
+      console.warn(`[reader] Skipping index: ${fixturePath} not found`);
+    }
+  }
+} catch (err) {
+  console.warn("[reader] Failed to index fixture PDFs:", err);
+}
+
 Deno.serve((req: Request) => {
   const url = new URL(req.url);
 
@@ -46,11 +70,13 @@ Deno.serve((req: Request) => {
   }
 
   if (url.pathname === "/api/search") {
-    // Stub: return empty results
-    return serveJson([]);
+    const q = url.searchParams.get("q");
+    if (!q) return serveJson([]);
+    // ponytail: search index built at startup from fixtures; GitHub-synced books added later
+    return serveJson(search(q, cacheDir));
   }
 
-  // PDF file serving
+  // PDF file serving — try local cache first, then fixtures fallback
   if (url.pathname.startsWith("/books/")) {
     const fileName = url.pathname.slice("/books/".length);
     try {
@@ -59,7 +85,14 @@ Deno.serve((req: Request) => {
         headers: { "content-type": "application/pdf" },
       });
     } catch {
-      return serve404();
+      try {
+        const file = Deno.readFileSync(`${fixturesDir}/${fileName}`);
+        return new Response(file, {
+          headers: { "content-type": "application/pdf" },
+        });
+      } catch {
+        return serve404();
+      }
     }
   }
 

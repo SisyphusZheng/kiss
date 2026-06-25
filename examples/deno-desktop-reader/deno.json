@@ -1,7 +1,7 @@
 {
   "name": "@openelement/example-desktop-reader",
   "version": "0.41.0-alpha.5",
-  "nodeModulesDir": "manual",
+  "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run -A main.ts",
     "build": "deno desktop main.ts",
@@ -9,9 +9,8 @@
     "smoke": "deno test -A --no-check app/__tests__/"
   },
   "imports": {
-    "@openelement/app": "npm:@openelement/app@^0.41.0-alpha.5",
-    "@openelement/core/hydrate": "npm:@openelement/core@^0.41.0-alpha.5/hydrate",
-    "@openelement/router/": "npm:@openelement/router@^0.41.0-alpha.5/",
+    "@openelement/app": "../../packages/app/src/index.ts",
+    "@openelement/core/hydrate": "../../packages/core/src/hydrate.ts",
     "pdf-parse": "npm:pdf-parse@^1.1.1"
   },
   "compilerOptions": {
