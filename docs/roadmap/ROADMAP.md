@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.4 Cross-Framework WC Integration; next line is Cross-Framework Web Components Integration.\
+> Current package line: v0.41.0-alpha.4 Cross-Framework Web Components Integration; next line is SPA Mode + Deno Desktop.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-06-19.
 

@@ -7,18 +7,12 @@ Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 
 ## Current Version Line: v0.41.0-alpha.4 Active (Cross-Framework WC Integration)
 
-v0.41.0-alpha.4 is the active package line. It follows the v0.41.0-alpha.1
-npm-only distribution pivot and focuses on narrowing the signal-to-DOM binding
-seam: extracting `HydrationScope` to `@openelement/core/hydrate`, splitting the
-renderer from the activation layer, replacing the central `BindingDescriptor`
-switch with a registry of small binding factories, validating the
-`static`/`hydrate`/`csr` subpath split with at least one real static-only
-consumer, and resolving the Safari adoptedStyleSheets theme-color follow-up.
-Runtime-free packages (`core`, `element`, `ui`, `protocol`, `signal`, `router`,
-`app`) retain zero `Deno.*` and zero `node:*` usage; build/server glue (`ssg`,
-`content`, `adapter-vite`, `create`) owns the necessary runtime-specific code.
-The release introduces no new product feature and makes no default runtime,
-signal-engine, or package-topology change.
+v0.41.0-alpha.4 is the active package line. It follows the v0.41.0-alpha.3
+cross-framework WC integration release and proves that openElement components
+can be consumed inside third-party frameworks (Deno Fresh 2.3+ Preact islands)
+and third-party WC libraries (Lit, Shoelace, MWC) can be consumed inside
+openElement. Key deliverables: `@openelement/core/hydrate` client runtime,
+`examples/open-element-in-fresh/` integration proof, interop contract docs.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -29,8 +23,8 @@ approved version-plan evidence.
 
 ## v0.41.0-alpha.4 PR State: CI Green, Awaiting Release Closure
 
-v0.41.0-alpha.4 proves the inverse of alpha.3: Fresh 2.3+ hosts openElement custom elements with Preact islands: openElement components can be
-consumed inside a third-party framework, starting with Deno Fresh. PR #113 is
+v0.41.0-alpha.4 proves the inverse of alpha.3: openElement components can be
+consumed inside a third-party framework, starting with Deno Fresh. PR #111 is
 green on `dev` with both AutoFlow CI jobs, CodeQL/Analyze jobs, Cloudflare Pages
 preview, and review bot passing at commit `06b21d37`. The release is not closed
 until the PR is merged to `main`, `main` CI passes, and the approved release

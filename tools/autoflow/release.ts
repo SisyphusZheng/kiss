@@ -246,7 +246,7 @@ export function createReleasePlan(
       ...publishSteps,
       ...evidenceSteps,
       {
-        name: 'push main',
+        name: 'pull latest main',
         command: ['git', 'pull', '--rebase', 'origin', 'main'],
       },
       {
@@ -289,7 +289,7 @@ export function createReleasePlan(
       command: ['git', 'pull', '--rebase', 'origin', 'main'],
     },
     {
-      name: 'push main',
+      name: 'pull latest main',
       command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,

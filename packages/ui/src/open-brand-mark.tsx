@@ -1,4 +1,3 @@
-/** @jsxImportSource @openelement/core */
 /**
  * @openelement/ui - open-brand-mark
  *
