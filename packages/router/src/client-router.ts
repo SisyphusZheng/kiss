@@ -32,6 +32,8 @@ export interface RouterInstance {
   params: Record<string, string>;
 }
 
+type ParamMap = Map<string, string>;
+
 // ─── Internal helpers ─────────────────────────────────────────────
 
 function resolveMode(mode: RouterMode): 'history' | 'hash' {
@@ -45,11 +47,11 @@ function resolveMode(mode: RouterMode): 'history' | 'hash' {
 function matchPattern(
   pattern: string,
   pathname: string,
-): Record<string, string> | null {
+): ParamMap | null {
   const patternParts = pattern === '/' ? [] : pattern.split('/').filter(Boolean);
   const pathParts = pathname === '/' ? [] : pathname.split('/').filter(Boolean);
 
-  const params: Record<string, string> = Object.create(null);
+  const params: ParamMap = new Map();
   let pi = 0;
 
   for (let i = 0; i < patternParts.length; i++) {
@@ -89,30 +91,16 @@ function isSafeParamName(name: string): boolean {
 }
 
 function setParam(
-  target: Record<string, string>,
+  target: ParamMap,
   name: string,
   value: string,
 ): void {
   if (!isSafeParamName(name)) return;
-  Object.defineProperty(target, name, {
-    value,
-    enumerable: true,
-    configurable: true,
-    writable: true,
-  });
+  target.set(name, value);
 }
 
-function copyParams(
-  target: Record<string, string>,
-  source: Record<string, string>,
-): void {
-  for (const [key, value] of Object.entries(source)) {
-    setParam(target, key, value);
-  }
-}
-
-function parseQuery(search: string): Record<string, string> {
-  const result: Record<string, string> = Object.create(null);
+function parseQuery(search: string): ParamMap {
+  const result: ParamMap = new Map();
   if (search.startsWith('?')) search = search.slice(1);
   if (!search) return result;
   for (const pair of search.split('&')) {
@@ -122,6 +110,35 @@ function parseQuery(search: string): Record<string, string> {
     setParam(result, decodeQueryComponent(key), decodeQueryComponent(val));
   }
   return result;
+}
+
+function createParamsRecord(...sources: ParamMap[]): Record<string, string> {
+  const values = new Map<string, string>();
+  for (const source of sources) {
+    for (const [key, value] of source) {
+      values.set(key, value);
+    }
+  }
+
+  return new Proxy(Object.create(null), {
+    get(_target, prop) {
+      return typeof prop === 'string' ? values.get(prop) : undefined;
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      if (typeof prop !== 'string' || !values.has(prop)) return undefined;
+      return {
+        value: values.get(prop),
+        enumerable: true,
+        configurable: true,
+      };
+    },
+    has(_target, prop) {
+      return typeof prop === 'string' && values.has(prop);
+    },
+    ownKeys() {
+      return [...values.keys()];
+    },
+  }) as Record<string, string>;
 }
 
 /** Exported for testing / standalone matching without creating a router. */
@@ -135,12 +152,9 @@ export function matchRoute(
   for (const route of routes) {
     const pathParams = matchPattern(route.path, pathname);
     if (pathParams !== null) {
-      const params: Record<string, string> = Object.create(null);
-      copyParams(params, queryParams);
-      copyParams(params, pathParams);
       return {
         route,
-        params,
+        params: createParamsRecord(queryParams, pathParams),
       };
     }
   }
