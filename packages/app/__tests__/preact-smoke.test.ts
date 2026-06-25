@@ -26,9 +26,40 @@ import { definePreactIsland } from '../src/preact.ts';
 // ─── DOM stubs for Deno test environment ─────────────────────────
 
 class StubNode {
-  nodeType = 1;
+  nodeType: number;
+  nodeName: string;
+  localName: string;
+  namespaceURI = 'http://www.w3.org/1999/xhtml';
   childNodes: Node[] = [];
   parentNode: StubNode | null = null;
+  data = '';
+  nodeValue: string | null = null;
+
+  constructor(nodeType = 1, nodeName = 'DIV') {
+    this.nodeType = nodeType;
+    this.nodeName = nodeName;
+    this.localName = nodeName.toLowerCase();
+  }
+
+  get firstChild(): Node | null {
+    return this.childNodes[0] ?? null;
+  }
+
+  get lastChild(): Node | null {
+    return this.childNodes.at(-1) ?? null;
+  }
+
+  get nextSibling(): Node | null {
+    if (!this.parentNode) return null;
+    const index = this.parentNode.childNodes.indexOf(this as unknown as Node);
+    return this.parentNode.childNodes[index + 1] ?? null;
+  }
+
+  get previousSibling(): Node | null {
+    if (!this.parentNode) return null;
+    const index = this.parentNode.childNodes.indexOf(this as unknown as Node);
+    return this.parentNode.childNodes[index - 1] ?? null;
+  }
 
   #adopt(node: Node): void {
     const previousParent = (node as { parentNode?: StubNode | null }).parentNode;
@@ -72,6 +103,11 @@ class StubNode {
     });
     return node;
   }
+
+  setAttribute(_name: string, _value: string): void {}
+  removeAttribute(_name: string): void {}
+  addEventListener(): void {}
+  removeEventListener(): void {}
 }
 
 const _attrsMap = new WeakMap<object, Array<{ name: string; value: string }>>();
@@ -83,10 +119,11 @@ const _attrsMap = new WeakMap<object, Array<{ name: string; value: string }>>();
  * ponytail: this is a self-contained stub shared by all test cases.
  * When Deno's HTMLElement becomes available natively, delete this.
  */
-class TestElement {
+class TestElement extends StubNode {
   shadowRoot: ShadowRoot | null = null;
 
   constructor() {
+    super();
     _attrsMap.set(this, []);
   }
 
@@ -107,7 +144,7 @@ class TestElement {
     return this.getAttribute(name) !== null;
   }
 
-  setAttribute(name: string, value: string): void {
+  override setAttribute(name: string, value: string): void {
     const attrs = _attrsMap.get(this) ?? [];
     const existing = attrs.findIndex((a) => a.name === name);
     if (existing >= 0) {
@@ -118,7 +155,7 @@ class TestElement {
     _attrsMap.set(this, attrs);
   }
 
-  removeAttribute(name: string): void {
+  override removeAttribute(name: string): void {
     const attrs = (_attrsMap.get(this) ?? []).filter((a) => a.name !== name);
     _attrsMap.set(this, attrs);
   }
@@ -132,10 +169,20 @@ class TestElement {
   }
 }
 
+class StubTextNode extends StubNode {
+  constructor(text: string) {
+    super(3, '#text');
+    this.data = text;
+    this.nodeValue = text;
+  }
+}
+
 function installDomStubs(): () => void {
   const previousCustomElements = globalThis.customElements;
   const previousHTMLElement = globalThis.HTMLElement;
   const previousDocument = globalThis.document;
+  const previousRaf = globalThis.requestAnimationFrame;
+  const previousCancelRaf = globalThis.cancelAnimationFrame;
   const registry = new Map<string, CustomElementConstructor>();
   (globalThis as { customElements?: CustomElementRegistry }).customElements = {
     define(name: string, ctor: CustomElementConstructor) {
@@ -148,19 +195,35 @@ function installDomStubs(): () => void {
 
   (globalThis as { HTMLElement?: typeof HTMLElement }).HTMLElement = TestElement as never;
   (globalThis as { document?: Document }).document = {
-    createElement() {
-      return new StubNode();
+    createElement(tagName: string) {
+      return new StubNode(1, tagName.toUpperCase());
+    },
+    createElementNS(_namespace: string, tagName: string) {
+      return new StubNode(1, tagName.toUpperCase());
     },
     createTextNode(text: string) {
-      return { nodeType: 3, data: text };
+      return new StubTextNode(text);
     },
   } as unknown as Document;
+  (globalThis as { requestAnimationFrame?: typeof requestAnimationFrame })
+    .requestAnimationFrame = (
+      callback,
+    ) => {
+      callback(performance.now());
+      return 1;
+    };
+  (globalThis as { cancelAnimationFrame?: typeof cancelAnimationFrame })
+    .cancelAnimationFrame = () => {};
 
   return () => {
     (globalThis as { customElements?: CustomElementRegistry }).customElements =
       previousCustomElements;
     (globalThis as { HTMLElement?: typeof HTMLElement }).HTMLElement = previousHTMLElement;
     (globalThis as { document?: Document }).document = previousDocument;
+    (globalThis as { requestAnimationFrame?: typeof requestAnimationFrame })
+      .requestAnimationFrame = previousRaf;
+    (globalThis as { cancelAnimationFrame?: typeof cancelAnimationFrame })
+      .cancelAnimationFrame = previousCancelRaf;
   };
 }
 
@@ -197,11 +260,17 @@ Deno.test('Preact island smoke: DOM stub tracks parentNode and insertion order',
   parent.insertBefore(inserted, second);
 
   assertEquals(parent.childNodes, [first, inserted, second]);
-  assertEquals((inserted as unknown as { parentNode: StubNode | null }).parentNode, parent);
+  assertEquals(
+    (inserted as unknown as { parentNode: StubNode | null }).parentNode,
+    parent,
+  );
 
   parent.removeChild(inserted);
   assertEquals(parent.childNodes, [first, second]);
-  assertEquals((inserted as unknown as { parentNode: StubNode | null }).parentNode, null);
+  assertEquals(
+    (inserted as unknown as { parentNode: StubNode | null }).parentNode,
+    null,
+  );
 
   let threw = false;
   try {
@@ -429,7 +498,8 @@ Deno.test('Preact island smoke: clientActivate exists on island instance', () =>
 
     // Verify clientActivate is inherited from OpenElement and overridden by definePreactIsland
     assertEquals(
-      typeof (instance as unknown as { clientActivate?: () => void }).clientActivate,
+      typeof (instance as unknown as { clientActivate?: () => void })
+        .clientActivate,
       'function',
     );
   } finally {
@@ -455,13 +525,7 @@ Deno.test('Preact island smoke: clientActivate creates shadow root', () => {
     // Before activation, shadow root should exist (we set it)
     assertExists(instance.shadowRoot);
 
-    // clientActivate should work without throwing
-    // (Preact hydrate may fail on basic stubs, but the path runs)
-    try {
-      instance.clientActivate();
-    } catch {
-      // Preact hydrate/render might fail on stubs — tolerated in smoke test
-    }
+    instance.clientActivate();
 
     // Shadow root should persist
     assertExists(instance.shadowRoot);
@@ -487,12 +551,7 @@ Deno.test('Preact island smoke: clientActivate with ssr=false uses render path',
     instance.shadowRoot = stubRoot;
 
     // With ssr: false, clientActivate uses preactRender instead of preactHydrate.
-    // Verify the call doesn't throw.
-    try {
-      instance.clientActivate();
-    } catch {
-      // Preact render might fail on stubs — tolerated in smoke test
-    }
+    instance.clientActivate();
 
     assertExists(instance.shadowRoot);
   } finally {
@@ -511,7 +570,8 @@ Deno.test('Preact island smoke: disconnectedCallback exists', () => {
 
     // disconnectedCallback is inherited from OpenElement
     assertEquals(
-      typeof (instance as { disconnectedCallback?: unknown }).disconnectedCallback,
+      typeof (instance as { disconnectedCallback?: unknown })
+        .disconnectedCallback,
       'function',
     );
   } finally {
@@ -574,8 +634,14 @@ Deno.test('Preact island smoke: definePreactIsland registers custom element', ()
   try {
     const tagName = 'test-reg-smoke';
     const ctor = definePreactIsland(tagName, () => null);
-    const registry = globalThis.customElements as unknown as Map<string, CustomElementConstructor>;
-    assertEquals(registry.get(tagName) ?? globalThis.customElements.get(tagName), ctor);
+    const registry = globalThis.customElements as unknown as Map<
+      string,
+      CustomElementConstructor
+    >;
+    assertEquals(
+      registry.get(tagName) ?? globalThis.customElements.get(tagName),
+      ctor,
+    );
   } finally {
     restore();
   }
