@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="1440" height="1820" viewBox="0 0 1440 1820" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
-      .sans { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
-      .mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }</style>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+    .sans {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+    }
+    </style>
     <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#4263eb" />
       <stop offset="100%" stop-color="#5c7cfa" />
@@ -262,8 +268,7 @@
       font-size="13"
       font-weight="400"
       fill="#e9ecef"
-    >
-    </text>
+    ></text>
     <text
       class="mono"
       x="230.6"

@@ -1,13 +1,13 @@
-import type { ReaderNote, ReaderProgress, ReaderSettings } from "./types.ts";
+import type { ReaderNote, ReaderProgress, ReaderSettings } from './types.ts';
 
 const KEYS = {
-  progress: "reader:progress",
-  notes: "reader:notes",
-  settings: "reader:settings",
+  progress: 'reader:progress',
+  notes: 'reader:notes',
+  settings: 'reader:settings',
 } as const;
 
 const DEFAULTS: ReaderSettings = {
-  theme: "light",
+  theme: 'light',
   fontSize: 16,
   lineHeight: 1.6,
   measure: 65,
@@ -20,7 +20,7 @@ function loadProgressRaw(): Record<string, ReaderProgress> {
     const raw = localStorage.getItem(KEYS.progress);
     return raw ? JSON.parse(raw) : {};
   } catch {
-    console.warn("[storage] corrupt progress data, resetting");
+    console.warn('[storage] corrupt progress data, resetting');
     return {};
   }
 }
@@ -43,7 +43,7 @@ function loadNotesRaw(): Record<string, ReaderNote> {
     const raw = localStorage.getItem(KEYS.notes);
     return raw ? JSON.parse(raw) : {};
   } catch {
-    console.warn("[storage] corrupt notes data, resetting");
+    console.warn('[storage] corrupt notes data, resetting');
     return {};
   }
 }
@@ -75,7 +75,7 @@ export function loadSettings(): ReaderSettings {
     if (!raw) return { ...DEFAULTS };
     return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch {
-    console.warn("[storage] corrupt settings data, resetting");
+    console.warn('[storage] corrupt settings data, resetting');
     return { ...DEFAULTS };
   }
 }

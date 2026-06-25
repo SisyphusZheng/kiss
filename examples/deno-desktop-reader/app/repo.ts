@@ -4,12 +4,12 @@ export interface CachedFile {
   downloadedAt: string;
 }
 
-const GITHUB_API = "https://api.github.com/repos";
-const GITHUB_RAW = "https://raw.githubusercontent.com";
+const GITHUB_API = 'https://api.github.com/repos';
+const GITHUB_RAW = 'https://raw.githubusercontent.com';
 
 function defaultCacheDir(): string {
-  return (Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? "/tmp") +
-    "/.open-reader";
+  return (Deno.env.get('HOME') ?? Deno.env.get('USERPROFILE') ?? '/tmp') +
+    '/.open-reader';
 }
 
 /**
@@ -19,9 +19,7 @@ export async function listRepoFiles(
   repo: string,
   path?: string,
 ): Promise<CachedFile[]> {
-  const url = path
-    ? `${GITHUB_API}/${repo}/contents/${path}`
-    : `${GITHUB_API}/${repo}/contents`;
+  const url = path ? `${GITHUB_API}/${repo}/contents/${path}` : `${GITHUB_API}/${repo}/contents`;
   const res = await fetch(url);
   if (!res.ok) {
     console.warn(
@@ -32,7 +30,7 @@ export async function listRepoFiles(
   const data = await res.json();
   if (!Array.isArray(data)) return [];
   return data
-    .filter((item: { type: string }) => item.type === "file")
+    .filter((item: { type: string }) => item.type === 'file')
     .map((item: { name: string; sha: string }) => ({
       path: item.name,
       sha: item.sha,
@@ -54,7 +52,7 @@ export async function downloadFile(
   }
   const buf = new Uint8Array(await res.arrayBuffer());
   // Ensure parent directory exists
-  const parent = destPath.substring(0, destPath.lastIndexOf("/"));
+  const parent = destPath.substring(0, destPath.lastIndexOf('/'));
   await Deno.mkdir(parent, { recursive: true });
   await Deno.writeFile(destPath, buf);
 }

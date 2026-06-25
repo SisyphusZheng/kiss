@@ -34,6 +34,7 @@ open deno-desktop-reader.app
 ## Validation
 
 This app validates:
+
 - `@openelement/app/spa` — SPA mode bootstrap
 - `@openelement/ui` — Custom element components
 - `@openelement/core` — JSX runtime

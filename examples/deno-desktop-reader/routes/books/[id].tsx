@@ -1,19 +1,19 @@
 /** @jsxImportSource @openelement/core */
-import type { ReaderBook } from "../../app/types.ts";
-import { currentParams, currentPath, navigate } from "../../router.ts";
-import { saveNote, saveProgress } from "../../app/storage.ts";
+import type { ReaderBook } from '../../app/types.ts';
+import { currentParams, currentPath, navigate } from '../../router.ts';
+import { saveNote, saveProgress } from '../../app/storage.ts';
 
 // ponytail: direct import of books JSON for the SPA client
-import booksData from "../../fixtures/books.json" with { type: "json" };
+import booksData from '../../fixtures/books.json' with { type: 'json' };
 
 let _showAddNoteForm = false;
 
 // Toast helper (ponytail: simple DOM toast, lives outside #root so survives routing)
 function showToast(message: string): void {
-  const existing = document.querySelector(".toast");
+  const existing = document.querySelector('.toast');
   if (existing) existing.remove();
-  const toast = document.createElement("div");
-  toast.className = "toast";
+  const toast = document.createElement('div');
+  toast.className = 'toast';
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2500);
@@ -30,10 +30,10 @@ export default function ReadingRoute() {
       <div>
         <h1>Book not found</h1>
         <a
-          href="/"
+          href='/'
           onClick={(e: Event) => {
             e.preventDefault();
-            navigate("/");
+            navigate('/');
           }}
         >
           ← Back to Bookshelf
@@ -42,7 +42,7 @@ export default function ReadingRoute() {
     );
   }
 
-  const pageParam = parseInt(currentParams().page || "1", 10);
+  const pageParam = parseInt(currentParams().page || '1', 10);
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
   const totalPages = book.pageCount;
 
@@ -52,17 +52,17 @@ export default function ReadingRoute() {
   return (
     <div>
       <h1>{book.title}</h1>
-      <p class="book-author">by {book.author}</p>
+      <p class='book-author'>by {book.author}</p>
 
       <embed
         src={`/books/${book.fileName}#page=${page}`}
-        type="application/pdf"
-        width="100%"
-        height="600"
+        type='application/pdf'
+        width='100%'
+        height='600'
       />
 
-      <div class="page-nav">
-        <span class="page-info">Page {page} of {totalPages}</span>
+      <div class='page-nav'>
+        <span class='page-info'>Page {page} of {totalPages}</span>
         <open-button
           disabled={page <= 1}
           onClick={() => navigate(`/books/${book.id}?page=${page - 1}`)}
@@ -78,7 +78,7 @@ export default function ReadingRoute() {
       </div>
 
       <open-button
-        class="add-note-btn"
+        class='add-note-btn'
         onClick={() => {
           _showAddNoteForm = !_showAddNoteForm;
           navigate(currentPath());
@@ -88,42 +88,42 @@ export default function ReadingRoute() {
       </open-button>
 
       {_showAddNoteForm && (
-        <div class="note-form">
+        <div class='note-form'>
           <label>Quote:</label>
           <textarea
-            id="note-quote"
-            class="note-quote"
+            id='note-quote'
+            class='note-quote'
             rows={3}
-            placeholder="Paste the passage you want to annotate..."
+            placeholder='Paste the passage you want to annotate...'
           />
 
           <label>Your Note:</label>
           <textarea
-            id="note-text"
-            class="note-text"
+            id='note-text'
+            class='note-text'
             rows={4}
-            placeholder="Write your thoughts..."
+            placeholder='Write your thoughts...'
           />
 
           <open-button
             onClick={() => {
               const quoteEl = document.getElementById(
-                "note-quote",
+                'note-quote',
               ) as HTMLTextAreaElement;
               const noteEl = document.getElementById(
-                "note-text",
+                'note-text',
               ) as HTMLTextAreaElement;
               const note = {
                 id: crypto.randomUUID(),
                 bookId: book.id,
                 pageNumber: page,
-                quote: quoteEl?.value ?? "",
-                note: noteEl?.value ?? "",
+                quote: quoteEl?.value ?? '',
+                note: noteEl?.value ?? '',
                 createdAt: new Date().toISOString(),
               };
               saveNote(note);
               _showAddNoteForm = false;
-              showToast("Note saved!");
+              showToast('Note saved!');
               navigate(currentPath());
             }}
           >

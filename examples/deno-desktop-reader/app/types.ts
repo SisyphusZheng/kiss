@@ -24,7 +24,7 @@ export interface ReaderNote {
 }
 
 export interface ReaderSettings {
-  theme: "light" | "dark" | "sepia";
+  theme: 'light' | 'dark' | 'sepia';
   fontSize: number;
   lineHeight: number;
   measure: number;

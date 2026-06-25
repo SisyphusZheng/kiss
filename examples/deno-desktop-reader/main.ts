@@ -5,15 +5,15 @@
  * All handler errors are caught to avoid breaking the desktop webview.
  */
 
-import { indexBook, search } from "./app/search.ts";
+import { indexBook, search } from './app/search.ts';
 
 // Cache paths
-const HOME = Deno.env.get("HOME") ?? ".";
+const HOME = Deno.env.get('HOME') ?? '.';
 const CACHE_DIR = `${HOME}/.open-reader`;
 const BOOKS_DIR = `${CACHE_DIR}/books`;
-const FIXTURES_DIR = new URL("./fixtures/books/", import.meta.url).pathname;
-const BOOKS_JSON_URL = new URL("./fixtures/books.json", import.meta.url);
-const DIST_DIR = new URL("./dist/", import.meta.url);
+const FIXTURES_DIR = new URL('./fixtures/books/', import.meta.url).pathname;
+const BOOKS_JSON_URL = new URL('./fixtures/books.json', import.meta.url);
+const DIST_DIR = new URL('./dist/', import.meta.url);
 
 let searchIndexReady = false;
 
@@ -43,32 +43,32 @@ function statSafe(path: string): boolean {
 }
 
 function html(body: string): Response {
-  return new Response(body, { headers: { "content-type": "text/html" } });
+  return new Response(body, { headers: { 'content-type': 'text/html' } });
 }
 
 function json(data: unknown): Response {
   return new Response(JSON.stringify(data), {
-    headers: { "content-type": "application/json" },
+    headers: { 'content-type': 'application/json' },
   });
 }
 
 function pdf(bytes: Uint8Array): Response {
-  return new Response(new Uint8Array(bytes), {
-    headers: { "content-type": "application/pdf" },
+  return new Response(bytes, {
+    headers: { 'content-type': 'application/pdf' },
   });
 }
 
 function serveFile(bytes: Uint8Array, ext: string): Response {
   const mime: Record<string, string> = {
-    ".js": "application/javascript",
-    ".css": "text/css",
-    ".html": "text/html",
-    ".json": "application/json",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
+    '.js': 'application/javascript',
+    '.css': 'text/css',
+    '.html': 'text/html',
+    '.json': 'application/json',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
   };
-  return new Response(new Uint8Array(bytes), {
-    headers: { "content-type": mime[ext] ?? "application/octet-stream" },
+  return new Response(bytes, {
+    headers: { 'content-type': mime[ext] ?? 'application/octet-stream' },
   });
 }
 
@@ -77,8 +77,8 @@ function findAppScript(dir: URL): string | null {
   try {
     for (const entry of Deno.readDirSync(dir)) {
       if (
-        entry.isFile && entry.name.startsWith("reader-") &&
-        entry.name.endsWith(".js")
+        entry.isFile && entry.name.startsWith('reader-') &&
+        entry.name.endsWith('.js')
       ) {
         return entry.name;
       }
@@ -88,13 +88,13 @@ function findAppScript(dir: URL): string | null {
 }
 
 function notFound(): Response {
-  return new Response("Not Found", { status: 404 });
+  return new Response('Not Found', { status: 404 });
 }
 
-function serverError(msg: string): Response {
-  return new Response(msg, {
+function serverError(): Response {
+  return new Response('Internal Server Error', {
     status: 500,
-    headers: { "content-type": "text/plain" },
+    headers: { 'content-type': 'text/plain' },
   });
 }
 
@@ -119,17 +119,17 @@ Deno.serve((req: Request) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname;
-    const ext = pathname.slice(pathname.lastIndexOf("."));
+    const ext = pathname.slice(pathname.lastIndexOf('.'));
 
     // API: books
-    if (pathname === "/api/books") {
+    if (pathname === '/api/books') {
       const raw = readTextSafe(BOOKS_JSON_URL);
       return raw ? json(JSON.parse(raw)) : json([]);
     }
 
     // API: search
-    if (pathname === "/api/search") {
-      const q = url.searchParams.get("q");
+    if (pathname === '/api/search') {
+      const q = url.searchParams.get('q');
       if (!q) return json([]);
       ensureSearchIndex(); // fire-and-forget
       try {
@@ -140,8 +140,8 @@ Deno.serve((req: Request) => {
     }
 
     // PDF files
-    if (pathname.startsWith("/books/")) {
-      const name = pathname.slice("/books/".length);
+    if (pathname.startsWith('/books/')) {
+      const name = pathname.slice('/books/'.length);
       for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {
         const p = `${dir}/${name}`;
         if (!statSafe(p)) continue;
@@ -154,9 +154,9 @@ Deno.serve((req: Request) => {
 
     // Static assets from dist/ (Vite build output)
     if (
-      pathname.startsWith("/assets/") || pathname.startsWith("/islands/") ||
-      pathname.startsWith("/client/") ||
-      pathname.startsWith("/app/") || pathname.startsWith("/fixtures/")
+      pathname.startsWith('/assets/') || pathname.startsWith('/islands/') ||
+      pathname.startsWith('/client/') ||
+      pathname.startsWith('/app/') || pathname.startsWith('/fixtures/')
     ) {
       const file = readFileSafe(new URL(`.${pathname}`, DIST_DIR));
       if (!file) {
@@ -168,14 +168,14 @@ Deno.serve((req: Request) => {
     }
 
     // SPA fallback: serve dist/index.html for all other routes
-    let indexHtml = readTextSafe(new URL("./index.html", DIST_DIR));
+    let indexHtml = readTextSafe(new URL('./index.html', DIST_DIR));
     if (indexHtml) {
       // Inject main app bundle script (adapter-vite's SPA shell only includes island entry)
-      const assetsDir = new URL("./assets/", DIST_DIR);
+      const assetsDir = new URL('./assets/', DIST_DIR);
       const appScript = findAppScript(assetsDir);
       if (appScript) {
         indexHtml = indexHtml.replace(
-          "</body>",
+          '</body>',
           `  <script type="module" src="/assets/${appScript}"></script>\n</body>`,
         );
       }
@@ -183,10 +183,10 @@ Deno.serve((req: Request) => {
     }
 
     // Fallback: try project-root index.html (for dev mode)
-    const rootIndex = readTextSafe(new URL("./index.html", import.meta.url));
-    return rootIndex ? html(rootIndex) : serverError("index.html not found");
+    const rootIndex = readTextSafe(new URL('./index.html', import.meta.url));
+    return rootIndex ? html(rootIndex) : serverError();
   } catch (err) {
-    console.error("[reader] Handler error:", err);
-    return serverError(String(err));
+    console.error('[reader] Handler error:', err);
+    return serverError();
   }
 });

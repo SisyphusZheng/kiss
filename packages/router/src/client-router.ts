@@ -222,9 +222,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
   async function commitNavigation(
     path: string,
-    options: { replace: boolean; depth?: number },
+    navOptions: { replace: boolean; depth?: number },
   ): Promise<void> {
-    const depth = options.depth ?? 0;
+    const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
       throw new Error(`[router] Guard redirect limit exceeded while navigating to "${path}"`);
     }
@@ -237,14 +237,14 @@ export function createRouter(options: RouterOptions): RouterInstance {
       if (result === false) return; // blocked
       if (typeof result === 'string') {
         return commitNavigation(result, {
-          replace: options.replace,
+          replace: navOptions.replace,
           depth: depth + 1,
         });
       }
     }
 
     const url = mode === 'hash' ? toHashUrl(path) : path;
-    if (options.replace) {
+    if (navOptions.replace) {
       history.replaceState(null, '', url);
     } else {
       history.pushState(null, '', url);

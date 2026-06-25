@@ -17,10 +17,10 @@ LessJS components (`@openelement/ui`) are built on **Lit + DsdLitElement**:
 ```typescript
 // 当前：Lit 依赖
 class LessButton extends DsdLitElement {
-  static override styles = [lessDesignTokens, css`...`];  // Lit CSSResult
+  static override styles = [lessDesignTokens, css`...`]; // Lit CSSResult
   override render() {
-    if (this._dsdHydrated) return nothing;               // hack!
-    return html`<button @click=${fn}>...`;               // Lit TemplateResult
+    if (this._dsdHydrated) return nothing; // hack!
+    return html`<button @click=${fn}>...`; // Lit TemplateResult
   }
 }
 ```

@@ -1,26 +1,24 @@
 /** @jsxImportSource @openelement/core */
-import { loadSettings, saveSettings } from "../app/storage.ts";
-import type { ReaderSettings } from "../app/types.ts";
+import { loadSettings, saveSettings } from '../app/storage.ts';
+import type { ReaderSettings } from '../app/types.ts';
 
 function applyTheme(theme: string): void {
-  document.documentElement.className = theme === "light"
-    ? ""
-    : `theme-${theme}`;
+  document.documentElement.className = theme === 'light' ? '' : `theme-${theme}`;
 }
 
 function applyFontSize(size: number): void {
-  document.documentElement.style.setProperty("--reader-font-size", `${size}px`);
+  document.documentElement.style.setProperty('--reader-font-size', `${size}px`);
 }
 
 function applyLineHeight(lh: number): void {
   document.documentElement.style.setProperty(
-    "--reader-line-height",
+    '--reader-line-height',
     String(lh),
   );
 }
 
 function applyMeasure(chars: number): void {
-  document.documentElement.style.setProperty("--reader-measure", `${chars}ch`);
+  document.documentElement.style.setProperty('--reader-measure', `${chars}ch`);
 }
 
 export default function SettingsRoute() {
@@ -37,13 +35,13 @@ export default function SettingsRoute() {
       <h1>Settings</h1>
 
       {/* Theme */}
-      <div class="settings-section">
+      <div class='settings-section'>
         <h2>Theme</h2>
-        {(["light", "dark", "sepia"] as const).map((theme) => (
-          <label class="settings-radio" key={theme}>
+        {(['light', 'dark', 'sepia'] as const).map((theme) => (
+          <label class='settings-radio' key={theme}>
             <input
-              type="radio"
-              name="theme"
+              type='radio'
+              name='theme'
               value={theme}
               checked={current.theme === theme}
               onChange={() => {
@@ -58,16 +56,16 @@ export default function SettingsRoute() {
       </div>
 
       {/* Font Size */}
-      <div class="settings-section">
+      <div class='settings-section'>
         <h2>Font Size</h2>
-        <div class="settings-controls">
+        <div class='settings-controls'>
           <input
-            type="range"
-            min="12"
-            max="24"
-            step="1"
+            type='range'
+            min='12'
+            max='24'
+            step='1'
             value={String(current.fontSize)}
-            class="settings-slider"
+            class='settings-slider'
             onInput={(e: Event) => {
               const value = parseInt(
                 (e.target as HTMLInputElement).value,
@@ -85,15 +83,15 @@ export default function SettingsRoute() {
               saveSettings(s);
             }}
           />
-          <span class="settings-value">{current.fontSize}</span>
+          <span class='settings-value'>{current.fontSize}</span>
         </div>
       </div>
 
       {/* Line Height */}
-      <div class="settings-section">
+      <div class='settings-section'>
         <h2>Line Height</h2>
         <select
-          class="settings-select"
+          class='settings-select'
           onChange={(e: Event) => {
             const value = parseFloat(
               (e.target as HTMLSelectElement).value,
@@ -119,10 +117,10 @@ export default function SettingsRoute() {
       </div>
 
       {/* Reading Measure */}
-      <div class="settings-section">
+      <div class='settings-section'>
         <h2>Reading Measure</h2>
         <select
-          class="settings-select"
+          class='settings-select'
           onChange={(e: Event) => {
             const value = parseInt(
               (e.target as HTMLSelectElement).value,

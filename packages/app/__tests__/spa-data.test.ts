@@ -329,6 +329,62 @@ Deno.test('stale loader results do not overwrite newer navigation', async () => 
   assertEquals(JSON.parse(stubRoot.textContent), { page: 'about' });
 });
 
+Deno.test('stale action results do not overwrite newer navigation', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  let resolveAction!: (value: unknown) => void;
+  const action = new Promise((resolve) => {
+    resolveAction = resolve;
+  });
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [
+      {
+        path: '/',
+        loader: () => Promise.resolve({ page: 'home' }),
+        action: () => action,
+        component: () => {
+          const el = new StubElement();
+          el.textContent = JSON.stringify({
+            loader: useLoaderData(),
+            action: useActionData(),
+          });
+          return el;
+        },
+      },
+      routeWithLoader('/about', { page: 'about' }),
+    ],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+  assertEquals(JSON.parse(stubRoot.textContent), {
+    loader: { page: 'home' },
+  });
+
+  const form = new StubElement();
+  form.tagName = 'FORM';
+  const submitEvent = new Event('submit', { cancelable: true });
+  Object.defineProperty(submitEvent, 'target', {
+    value: form,
+    writable: false,
+    configurable: true,
+  });
+  stubRoot.dispatchEvent(submitEvent);
+
+  mockLocation.pathname = '/about';
+  firePopstate();
+  await new Promise((r) => setTimeout(r, 0));
+  assertEquals(JSON.parse(stubRoot.textContent), { page: 'about' });
+
+  resolveAction({ ok: true, stale: true });
+  await new Promise((r) => setTimeout(r, 0));
+  assertEquals(JSON.parse(stubRoot.textContent), { page: 'about' });
+});
+
 Deno.test('dispose clears all data context', async () => {
   resetMocks({ pathname: '/' });
   stubRoot = new StubElement();

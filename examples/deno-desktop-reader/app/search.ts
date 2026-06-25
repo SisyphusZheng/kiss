@@ -1,4 +1,4 @@
-import pdfParse from "pdf-parse";
+import pdfParse from 'pdf-parse';
 
 export interface SearchResult {
   bookId: string;
@@ -8,8 +8,8 @@ export interface SearchResult {
 }
 
 function defaultIndexDir(): string {
-  return (Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? "/tmp") +
-    "/.open-reader";
+  return (Deno.env.get('HOME') ?? Deno.env.get('USERPROFILE') ?? '/tmp') +
+    '/.open-reader';
 }
 
 /**
@@ -48,7 +48,7 @@ export function search(
   const results: SearchResult[] = [];
 
   for (const [bookId, text] of Object.entries(index)) {
-    if (typeof text !== "string") continue;
+    if (typeof text !== 'string') continue;
     const lowerText = text.toLowerCase();
     let pos = 0;
     while ((pos = lowerText.indexOf(lower, pos)) !== -1) {

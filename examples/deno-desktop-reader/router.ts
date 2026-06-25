@@ -2,7 +2,7 @@
  * Shared router reference for SPA navigation.
  * Set by reader.tsx after mount, used by route components.
  */
-import type { RouterInstance } from "@openelement/router/client-router";
+import type { RouterInstance } from '@openelement/router/client-router';
 
 let _router: RouterInstance | null = null;
 
@@ -19,8 +19,8 @@ export function navigate(path: string): void {
     _router.navigate(path);
   } else {
     // fallback for when router isn't ready
-    history.pushState(null, "", path);
-    globalThis.dispatchEvent(new PopStateEvent("popstate"));
+    history.pushState(null, '', path);
+    globalThis.dispatchEvent(new PopStateEvent('popstate'));
   }
 }
 
