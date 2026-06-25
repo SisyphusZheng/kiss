@@ -453,13 +453,6 @@ try {
   await server.status.catch(() => undefined);
 }
 
-if (nitroSmokeFailed) exitCode = 1;
-else console.log('Generated app Nitro node smoke passed.');
-
-// Cleanup
-cleanup();
-if (exitCode !== 0) Deno.exit(exitCode);
-
 function findMissingGeneratedImports(
   source: string,
   importMap: Record<string, string>,
@@ -507,3 +500,10 @@ function isMappedSpecifier(
   if (Object.hasOwn(importMap, specifier)) return true;
   return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
 }
+
+if (nitroSmokeFailed) exitCode = 1;
+else console.log('Generated app Nitro node smoke passed.');
+
+// Cleanup
+cleanup();
+if (exitCode !== 0) Deno.exit(exitCode);

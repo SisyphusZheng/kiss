@@ -72,6 +72,10 @@ function extension(path: string): string {
  * Line comments (// ...) are stripped entirely.
  */
 function stripComments(source: string): string {
+  // Replace block comments with spaces (same-length to preserve line numbers),
+  // then strip single-line comments. This is basic but sufficient for artifact
+  // scanning; false positives from edge cases like 'http:'/* */+ '//x' are
+  // extremely unlikely in real npm package output.
   return source
     .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
     .replace(/\/\/.*/g, '');

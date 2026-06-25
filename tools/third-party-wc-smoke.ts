@@ -93,7 +93,7 @@ function contentType(path: string): string {
 }
 
 function serveDist(distDir: string): Deno.HttpServer {
-  return Deno.serve({ port: 0, onListen: () => {} }, async (request) => {
+  return Deno.serve({ port: 0 }, async (request) => {
     const url = new URL(request.url);
     const pathname = decodeURIComponent(url.pathname);
     const candidates = pathname.endsWith('/')
