@@ -2,7 +2,7 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.41.0-alpha.2` (`v0.41.0-alpha.2`
+**JSX-first Web Components platform. Package line: `0.41.0-alpha.3` (`v0.41.0-alpha.3`
 release). Active execution: Signal-DOM Deepening.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
@@ -84,7 +84,7 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.2** (`v0.41.0-alpha.2`) under
+All 11 current workspace packages are aligned at **0.41.0-alpha.3** (`v0.41.0-alpha.3`) under
 [`@openelement`](https://www.npmjs.com/org/openelement). The active execution line is
 **Signal-DOM Deepening**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
 while reserving minor/major product decisions for human-approved ADR and

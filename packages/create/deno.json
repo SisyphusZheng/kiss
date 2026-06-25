@@ -1,6 +1,6 @@
 {
   "name": "@openelement/create",
-  "version": "0.41.0-alpha.2",
+  "version": "0.41.0-alpha.3",
   "exports": "./cli.ts",
   "imports": {},
   "tasks": {
