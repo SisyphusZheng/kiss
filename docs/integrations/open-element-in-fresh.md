@@ -69,12 +69,21 @@ import { useEffect } from 'preact/hooks';
 
 export default function OpenElementsIsland() {
   useEffect(() => {
+    let dispose: (() => void) | undefined;
+    let unmounted = false;
+
     Promise.all([
       import('@openelement/ui'),
       import('@openelement/core/hydrate'),
     ]).then(([_, { hydrateOpenElement }]) => {
-      hydrateOpenElement(document.body);
+      if (unmounted) return;
+      dispose = hydrateOpenElement(document.body);
     });
+
+    return () => {
+      unmounted = true;
+      dispose?.();
+    };
   }, []);
 
   return null;
@@ -95,7 +104,7 @@ export default function OpenElementsIsland() {
 
 - **JSX transform**: openElement JSX transform must be configured at build time for the component package. At consumption time in Fresh, you use Preact's JSX transform and pass-through custom element tags as standard HTML.
 - **Registration timing**: `customElements.define` must happen on the client, not during SSR. The boot island pattern above handles this correctly via dynamic `import()` inside `useEffect`.
-- **Router disposal**: When navigating away, Fresh unmounts islands but does not call `hydrateOpenElement`'s dispose automatically. For SPAs with client-side routing, store the dispose function and call it on route change.
+- **Router disposal**: When navigating away, Fresh unmounts islands but does not call `hydrateOpenElement`'s dispose automatically. The boot island stores the returned dispose function and calls it from the effect cleanup; SPAs with custom client-side routing should follow the same pattern.
 - **Signal interop**: openElement signals (`@openelement/signal`) and Preact signals (`@preact/signals`) are separate systems. Each manages its own reactivity independently.
 
 ## Reference

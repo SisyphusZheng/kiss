@@ -34,6 +34,7 @@ class StubNode {
   parentNode: StubNode | null = null;
   data = '';
   nodeValue: string | null = null;
+  #attrs: Array<{ name: string; value: string }> = [];
 
   constructor(nodeType = 1, nodeName = 'DIV') {
     this.nodeType = nodeType;
@@ -104,8 +105,43 @@ class StubNode {
     return node;
   }
 
-  setAttribute(_name: string, _value: string): void {}
-  removeAttribute(_name: string): void {}
+  get attributes(): Array<{ name: string; value: string }> {
+    return this.#attrs;
+  }
+
+  get textContent(): string {
+    if (this.nodeType === 3) return this.data;
+    return this.childNodes.map((child) => (child as unknown as StubNode).textContent ?? '').join(
+      '',
+    );
+  }
+
+  set textContent(value: string) {
+    this.childNodes = [];
+    this.appendChild(new StubTextNode(value) as unknown as Node);
+  }
+
+  setAttribute(name: string, value: string): void {
+    const existing = this.#attrs.findIndex((attr) => attr.name === name);
+    if (existing >= 0) {
+      this.#attrs[existing] = { name, value };
+    } else {
+      this.#attrs.push({ name, value });
+    }
+  }
+
+  getAttribute(name: string): string | null {
+    return this.#attrs.find((attr) => attr.name === name)?.value ?? null;
+  }
+
+  hasAttribute(name: string): boolean {
+    return this.getAttribute(name) !== null;
+  }
+
+  removeAttribute(name: string): void {
+    this.#attrs = this.#attrs.filter((attr) => attr.name !== name);
+  }
+
   addEventListener(): void {}
   removeEventListener(): void {}
 }
@@ -132,15 +168,15 @@ class TestElement extends StubNode {
     return this.shadowRoot;
   }
 
-  get attributes(): Array<{ name: string; value: string }> {
+  override get attributes(): Array<{ name: string; value: string }> {
     return _attrsMap.get(this) ?? [];
   }
 
-  getAttribute(name: string): string | null {
+  override getAttribute(name: string): string | null {
     return this.attributes.find((attr) => attr.name === name)?.value ?? null;
   }
 
-  hasAttribute(name: string): boolean {
+  override hasAttribute(name: string): boolean {
     return this.getAttribute(name) !== null;
   }
 
@@ -529,6 +565,7 @@ Deno.test('Preact island smoke: clientActivate creates shadow root', () => {
 
     // Shadow root should persist
     assertExists(instance.shadowRoot);
+    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'hydrated');
   } finally {
     restore();
   }
@@ -554,6 +591,7 @@ Deno.test('Preact island smoke: clientActivate with ssr=false uses render path',
     instance.clientActivate();
 
     assertExists(instance.shadowRoot);
+    assertEquals((instance.shadowRoot as unknown as StubNode).textContent, 'csr');
   } finally {
     restore();
   }

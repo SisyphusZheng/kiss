@@ -44,7 +44,7 @@ export default function Home() {
         <h1>openElement + Fresh alpha.4</h1>
         <p>
           This page renders <code>&lt;open-button&gt;</code> and <code>&lt;open-card&gt;</code>{' '}
-          as standard HTML custom elements. They are registered and hydrated by the
+          as standard HTML custom elements. They are registered and hydrated by the{' '}
           <code>OpenElements</code> island which imports <code>@openelement/ui</code>.
         </p>
 
