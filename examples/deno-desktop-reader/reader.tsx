@@ -53,3 +53,8 @@ export default function Reader() {
 
   return null;
 }
+
+// Auto-start
+if (typeof document !== 'undefined') {
+  Reader();
+}
