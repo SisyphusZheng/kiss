@@ -156,17 +156,6 @@ function mockDocument() {
   },
 };
 
-// Mock crypto.randomUUID
-// deno-lint-ignore no-explicit-any
-(globalThis as any).crypto = {
-  randomUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-  },
-};
-
 // Mock window.location and history
 // deno-lint-ignore no-explicit-any
 (globalThis as any).location = { pathname: '/', search: '', href: '/' };
