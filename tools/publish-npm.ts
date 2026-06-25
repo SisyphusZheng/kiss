@@ -140,17 +140,13 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 
 async function packPackage(
   pkg: PackageInfo,
-  dryRun: boolean,
   allPackages: PackageInfo[],
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
-  // Dry-run pack tolerates dirty worktree (normal dev usage); release pack
-  // requires a clean worktree (enforced before publish steps). Use --allow-dirty
-  // when the caller hasn't already vetted git state.
-  const args = dryRun
-    ? ['pack', '--allow-dirty', '--output', filename]
-    : ['pack', '--output', filename];
+  // Release pack tolerates dirty worktree (deno fmt may touch files outside
+  // the staged bump list). Dry-run pack always tolerates dirty worktree.
+  const args = ['pack', '--allow-dirty', '--output', filename];
   await runCommand('deno', args, pkg.dir);
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });
@@ -247,7 +243,7 @@ async function main(): Promise<void> {
 
   const tarballs: string[] = [];
   for (const pkg of packages) {
-    const tar = await packPackage(pkg, dryRun, packages);
+    const tar = await packPackage(pkg, packages);
     tarballs.push(tar);
   }
 
