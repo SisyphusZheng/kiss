@@ -137,7 +137,8 @@ Deno.serve((req: Request) => {
 
     // Static assets from dist/
     if (pathname.startsWith("/dist/")) {
-      const file = readFileSafe(new URL(`.${pathname}`, DIST_DIR));
+      const name = pathname.slice("/dist/".length);
+      const file = readFileSafe(new URL(`./${name}`, DIST_DIR));
       return file ? serveFile(file, ext) : notFound();
     }
 
