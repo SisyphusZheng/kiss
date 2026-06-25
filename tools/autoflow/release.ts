@@ -363,6 +363,10 @@ export async function updateProjectConstants(version: string): Promise<void> {
 
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {
   const tag = releaseTag(version);
+  // ponytail: `from` strings below are hardcoded to the previous release line.
+  // They must be manually bumped on each release cycle. If a source file drifts
+  // before the `from` strings are updated, the replacement is silently skipped.
+  // Consider extracting `previousVersion` as a second parameter.
   const replacements: Array<[string, string, string]> = [
     ['README.md', '`0.40.8` (`v0.40.8`', `\`${version}\` (\`${tag}\``],
     ['README.md', '**0.40.8** (`v0.40.8`)', `**${version}** (\`${tag}\`)`],
