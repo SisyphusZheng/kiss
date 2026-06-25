@@ -81,6 +81,12 @@ Deno.test('create-open: starter includes a public static asset', () => {
   assert(mark.includes('openElement mark'));
 });
 
+Deno.test('create-open: starter includes default blog content directory', () => {
+  const welcomePost = extractTemplate('content/blog/welcome.md');
+  assert(welcomePost.includes('title: Welcome'));
+  assert(welcomePost.includes('content directory present'));
+});
+
 Deno.test('create-open: deno.json build:client uses @openelement/adapter-vite', () => {
   const denoJson = JSON.parse(extractTemplate('deno.json'));
   assert(denoJson.tasks['build:client'].includes('@openelement/adapter-vite'));
@@ -404,6 +410,14 @@ Deno.test('create-open: generated project builds through the one-command pipelin
       {
         find: '@openelement/signal',
         replacement: vitePath(join(signalsSrc, 'index.ts')),
+      },
+      {
+        find: '@openelement/router/data-context',
+        replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'data-context.ts')),
+      },
+      {
+        find: '@openelement/router/client-router',
+        replacement: vitePath(join(repoRoot, 'packages', 'router', 'src', 'client-router.ts')),
       },
       {
         find: '@openelement/router',

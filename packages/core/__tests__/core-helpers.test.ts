@@ -176,6 +176,12 @@ Deno.test('errors - formatError handles non-Errors', () => {
   assertEquals(formatError({ toString: () => 'custom' }), 'custom');
 });
 
+Deno.test('errors - formatError includes Error cause chain', () => {
+  const root = new Error('root cause');
+  const wrapped = new Error('outer failure', { cause: root });
+  assertEquals(formatError(wrapped), 'outer failure: root cause');
+});
+
 Deno.test('errors - PropValidationError captures property details', () => {
   const err = new PropValidationError('count', 123);
   assertEquals(err.code, ErrorCode.PROP_VALIDATION_ERROR);

@@ -33,16 +33,7 @@
  */
 
 import { scanRoutes } from '@openelement/ssg';
-import type { RouteEntry } from '@openelement/protocol/framework';
 import { dirname, join, posix, sep } from 'node:path';
-
-/**
- * Path mapping for an individual route page.
- */
-export interface ManifestEntry {
-  path: string;
-  importPath: string;
-}
 
 /**
  * Parameters for route manifest generation.
@@ -156,13 +147,3 @@ export async function writeRouteManifest(
   const matches = content.match(/=> import\(/g);
   return matches ? matches.length : 0;
 }
-
-/**
- * Re-export the scanner for testing convenience.
- */
-export { scanRoutes };
-
-/**
- * Type-only re-export for consumers.
- */
-export type { RouteEntry };

@@ -24,6 +24,6 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/data-context.ts"
+    "build": "deno check src/data-context.ts src/client-router.ts"
   }
 }

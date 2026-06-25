@@ -259,10 +259,26 @@ Deno.test('dispose removes popstate listener', () => {
   assertExists(mockEvents.get('popstate'));
 
   app.dispose();
-  // Our SPA popstate handler should be removed.
-  // The router's internal popstate handler was also removed by router.dispose().
+  // The router owns the single browser navigation listener.
   const afterCount = mockEvents.get('popstate')?.size ?? 0;
-  assertEquals(afterCount, beforeCount - 2); // -1 for our handler, -1 for router handler
+  assertEquals(afterCount, beforeCount - 1);
+});
+
+Deno.test('mount uses auto router mode and switches to hash routing for file URLs', () => {
+  resetMocks({ pathname: '/' });
+  mockLocation.protocol = 'file:';
+  stubRoot = new StubElement();
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [homeRoute()],
+  });
+
+  app.mount('#root');
+
+  assertExists(mockEvents.get('hashchange'));
+  assertEquals(mockEvents.has('popstate'), false);
+  mockLocation.protocol = 'http:';
 });
 
 Deno.test('double dispose is safe (idempotent)', () => {

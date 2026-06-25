@@ -25,7 +25,16 @@ export const ERROR_PREFIX = '[openElement]';
 
 /** Format an unknown thrown value as a human-readable string. */
 export function formatError(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+  if (!(e instanceof Error)) return String(e);
+  const parts = [e.message];
+  let cause: unknown = e.cause;
+  const seen = new Set<unknown>([e]);
+  while (cause instanceof Error && !seen.has(cause)) {
+    seen.add(cause);
+    parts.push(cause.message);
+    cause = cause.cause;
+  }
+  return parts.join(': ');
 }
 
 // ─── Types ──────────────────────────────────────────────────────────

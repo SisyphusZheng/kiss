@@ -4,7 +4,7 @@
  * Tests that defineApp({ mode: 'spa' }) correctly manages the
  * data-context stack for loader and action data in client-side mode.
  */
-import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 
 // ─── Mock helpers (same as spa-bootstrap.test.ts) ──────────────
 
@@ -159,7 +159,7 @@ function routeWithLoader(
 ): RouteConfig {
   return {
     path,
-    loader: async () => loaderData,
+    loader: () => Promise.resolve(loaderData),
     component: () => {
       const data = useLoaderData();
       const el = new StubElement();
@@ -179,8 +179,8 @@ function routeWithAction(
 ): RouteConfig {
   return {
     path,
-    loader: async () => 'loader-data',
-    action: async () => actionResult,
+    loader: () => Promise.resolve('loader-data'),
+    action: () => Promise.resolve(actionResult),
     component: () => {
       const loaderData = useLoaderData();
       const actionData = useActionData();
@@ -321,8 +321,6 @@ Deno.test('loader runs before component render', async () => {
   stubRoot = new StubElement();
   stubRoot.tagName = 'DIV';
 
-  let loaderRan = false;
-  let componentRan = false;
   const executionOrder: string[] = [];
 
   const app = defineApp({
@@ -331,13 +329,12 @@ Deno.test('loader runs before component render', async () => {
       {
         path: '/',
         loader: async () => {
+          await Promise.resolve();
           executionOrder.push('loader');
-          loaderRan = true;
           return { ok: true };
         },
         component: () => {
           executionOrder.push('component');
-          componentRan = true;
           const el = new StubElement();
           el.textContent = useLoaderData<{ ok: boolean }>().ok ? 'yes' : 'no';
           return el;

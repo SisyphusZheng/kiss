@@ -111,6 +111,16 @@ node_modules/
   <path d="M36 48h24" stroke="#7cc7ff" stroke-width="6" stroke-linecap="round"/>
 </svg>
 `,
+    'content/blog/welcome.md': `---
+title: Welcome
+date: 2026-01-01
+---
+
+# Welcome
+
+This starter keeps the blog content directory present so the default content
+plugin configuration can build immediately.
+`,
     'deno.json': `{
   "imports": {
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",

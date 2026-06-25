@@ -14,6 +14,7 @@ import {
   __internal_pushActionData,
   __internal_pushLoaderData,
 } from '@openelement/router/data-context';
+import type { RouterMode } from '@openelement/router/client-router';
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -21,6 +22,8 @@ export interface SpaAppOptions {
   mode: 'spa';
   /** Route definitions. If omitted, no routes are registered. */
   routes?: RouteConfig[];
+  /** Router mode. Defaults to auto: history on http(s), hash on file://. */
+  routerMode?: RouterMode;
 }
 
 export interface SpaAppInstance {
@@ -35,7 +38,6 @@ export interface SpaAppInstance {
 export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let router: RouterInstance | null = null;
   let rootEl: Element | null = null;
-  let navHandler: (() => void) | null = null;
   let submitHandler: ((e: Event) => void) | null = null;
 
   /** Duck-type check since `Node` may not exist in test environments (e.g. Deno). */
@@ -45,11 +47,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
   /** Pop all remaining data from the stack (idempotent). */
   function clearDataStack(): void {
-    // pop on empty array returns undefined, so a fixed number of pops is fine.
-    // ponytail: max stack depth is bounded; 20 pops covers any realistic scenario.
-    for (let i = 0; i < 20; i++) {
-      __internal_popData();
-    }
+    // pop on empty array returns undefined; one render cycle leaves at most one frame.
+    __internal_popData();
   }
 
   /**
@@ -160,15 +159,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     rootEl = el;
 
     router = createRouter({
-      mode: 'history',
+      mode: options.routerMode ?? 'auto',
       routes: options.routes ?? [],
+      onChange: renderRoute,
     });
-
-    /** Re-render when the browser navigates (back/forward). */
-    navHandler = () => {
-      renderRoute();
-    };
-    addEventListener('popstate', navHandler);
 
     /** Intercept form submissions for action support. */
     submitHandler = (e: Event) => {
@@ -187,10 +181,6 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       submitHandler = null;
     }
 
-    if (navHandler) {
-      removeEventListener('popstate', navHandler);
-      navHandler = null;
-    }
     if (router) {
       router.dispose();
       router = null;

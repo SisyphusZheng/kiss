@@ -19,11 +19,13 @@ export interface RouteConfig {
 export interface RouterOptions {
   mode: RouterMode;
   routes: RouteConfig[];
+  /** Called after navigation or browser history/hash changes update the current match. */
+  onChange?: () => void | Promise<void>;
 }
 
 export interface RouterInstance {
-  navigate(path: string): void;
-  replace(path: string): void;
+  navigate(path: string): Promise<void>;
+  replace(path: string): Promise<void>;
   dispose(): void;
   currentPath: string;
   currentRoute: RouteConfig | null;
@@ -47,7 +49,7 @@ function matchPattern(
   const patternParts = pattern === '/' ? [] : pattern.split('/').filter(Boolean);
   const pathParts = pathname === '/' ? [] : pathname.split('/').filter(Boolean);
 
-  const params: Record<string, string> = {};
+  const params: Record<string, string> = Object.create(null);
   let pi = 0;
 
   for (let i = 0; i < patternParts.length; i++) {
@@ -79,7 +81,7 @@ function matchPattern(
 }
 
 function parseQuery(search: string): Record<string, string> {
-  const result: Record<string, string> = {};
+  const result: Record<string, string> = Object.create(null);
   if (search.startsWith('?')) search = search.slice(1);
   if (!search) return result;
   for (const pair of search.split('&')) {
@@ -102,7 +104,10 @@ export function matchRoute(
   for (const route of routes) {
     const pathParams = matchPattern(route.path, pathname);
     if (pathParams !== null) {
-      return { route, params: { ...queryParams, ...pathParams } };
+      return {
+        route,
+        params: Object.assign(Object.create(null), queryParams, pathParams),
+      };
     }
   }
   return null;
@@ -116,7 +121,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
   let currentPath = '';
   let currentRoute: RouteConfig | null = null;
-  let currentParams: Record<string, string> = {};
+  let currentParams: Record<string, string> = Object.create(null);
 
   /** Registered listeners keyed by event type, to support dispose. */
   const listeners: Array<{ type: string; handler: EventListener }> = [];
@@ -137,6 +142,10 @@ export function createRouter(options: RouterOptions): RouterInstance {
     return location.pathname + location.search;
   }
 
+  function toHashUrl(path: string): string {
+    return '#' + (path.startsWith('#') ? path.slice(1) : path);
+  }
+
   function rematch(): void {
     const raw = readPath();
     const u = new URL(raw, 'http://x');
@@ -146,7 +155,11 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
     currentPath = raw;
     currentRoute = matched?.route ?? null;
-    currentParams = matched?.params ?? {};
+    currentParams = matched?.params ?? Object.create(null);
+  }
+
+  function notifyChange(): void {
+    void options.onChange?.();
   }
 
   async function navigate(path: string): Promise<void> {
@@ -161,12 +174,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
       }
     }
 
-    if (mode === 'hash') {
-      location.hash = path.startsWith('#') ? path.slice(1) : path;
-    } else {
-      history.pushState(null, '', path);
-    }
+    history.pushState(null, '', mode === 'hash' ? toHashUrl(path) : path);
     rematch();
+    notifyChange();
   }
 
   async function replace(path: string): Promise<void> {
@@ -180,16 +190,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
       }
     }
 
-    if (mode === 'hash') {
-      // ponytail: hash replace via redirect; no replaceState for hash fragments
-      const old = location.hash;
-      location.hash = path.startsWith('#') ? path.slice(1) : path;
-      // Restore history length by replacing the pushed state
-      history.replaceState(null, '', '#' + (old || '/'));
-    } else {
-      history.replaceState(null, '', path);
-    }
+    history.replaceState(null, '', mode === 'hash' ? toHashUrl(path) : path);
     rematch();
+    notifyChange();
   }
 
   function dispose(): void {
@@ -202,9 +205,15 @@ export function createRouter(options: RouterOptions): RouterInstance {
   // ─── Initialization ───────────────────────────────────────────
 
   if (mode === 'history') {
-    addCleanupListener('popstate', () => rematch());
+    addCleanupListener('popstate', () => {
+      rematch();
+      notifyChange();
+    });
   } else {
-    addCleanupListener('hashchange', () => rematch());
+    addCleanupListener('hashchange', () => {
+      rematch();
+      notifyChange();
+    });
   }
 
   // Initial match

@@ -73,7 +73,7 @@ v0.41-v1.0 blocker.
 | v0.41.0-alpha.1 | npm Distribution + Audit Cleanup                   | Replace JSR release closure with npm via `deno pack`; audit-driven cleanup and protocol restoration; ship first npm/JSR dual-published alpha.                               | Released                 |
 | v0.41.0-alpha.2 | Signal-DOM Deepening                               | Extract `HydrationScope` to `@openelement/core/hydrate`; renderer/activation split; `BindingDescriptor` registry; static subpath validation.                                | Released                 |
 | v0.41.0-alpha.5 | Cross-Framework WC Integration                     | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                     | Release candidate        |
-| v0.41.0-alpha.5 | SPA Mode + Deno Desktop Proof                      | First-class single-page-application mode with client-side router; Deno Desktop shell validation via Deno canary (Tauri 2/Electron deferred to v0.42+).                      | Planned                  |
+| v0.41.0-alpha.5 | SPA Mode + Deno Desktop Proof                      | First-class single-page-application mode with client-side router; Deno Desktop shell validation via Deno canary (Tauri 2/Electron deferred to v0.42+).                      | PR hardening             |
 | v0.41.0-beta.1  | v0.41.0 Stabilization                              | Close alpha feedback, update docs/starters/examples, freeze public surface for v0.41.0.                                                                                     | Planned                  |
 | v0.41.0         | Deno-native npm distribution + WC Interop          | Stable npm-first distribution, hardened signal-DOM architecture, validated third-party WC integration, lightweight external-framework runtime, and SPA/desktop shell proof. | Planned                  |
 | v0.42.0         | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                                   | Planned                  |
@@ -841,27 +841,30 @@ and publish decisions.
 ## v0.41.0-alpha.5 - SPA Mode + Desktop Shell Proof
 
 Add a first-class single-page-application mode for desktop-style shells
-(Tauri 2, Electron, Capacitor-style embedded WebViews). openElement's default
-remains SSG/SSR-first, but alpha.5 proves the same component model works when
-there is no server and no pre-rendered HTML.
+(Deno Desktop first; Tauri 2, Electron, and Capacitor-style embedded WebViews
+remain follow-up targets). openElement's default remains SSG/SSR-first, but
+alpha.5 proves the same component model works when there is no server and no
+pre-rendered HTML.
 
 Core work:
 
-- Add `appMode: 'spa'` to the openElement app config.
+- Add `defineApp({ mode: 'spa' })` to `@openelement/app`.
 - Client-side router:
   - History-based navigation (`pushState`/`popstate`).
-  - Optional hash-based navigation for file:// and legacy embedded contexts.
+  - `auto` mode that selects hash navigation for `file://` and history for
+    HTTP(S).
   - Route params, query strings, and guards without a server route manifest.
 - Runtime bootstrap:
   - Mount the app shell into a plain DOM node (no DSD template required).
-  - Hydrate or fully client-render on first load.
+  - Fully client-render on first load.
   - Dispose and remount on hot reload during development.
 - Data layer for SPA:
   - In-memory loader/action data context.
-  - Optional async route guards and lazy route loading.
+  - Optional async route guards.
 - Validation:
-  - Tauri 2 example project under `examples/tauri-spa/`.
-  - Electron example project under `examples/electron-spa/` (optional).
+  - Deno Desktop example project under `examples/deno-desktop-spa/`.
+  - Native browser import map in the served HTML so the example does not rely
+    on bare npm specifier resolution.
   - E2E smoke for navigation, route params, and signal-driven updates inside the
     desktop shell.
 
@@ -870,6 +873,7 @@ Non-goals:
 - No attempt to make SSG/ISR features work inside SPA mode.
 - No server primitives (deferred to v0.42.0+).
 - No official mobile shell in alpha.5.
+- No Tauri 2 or Electron proof in alpha.5.
 
 ## Cross-Project Decision: Mastodon Desktop Client
 

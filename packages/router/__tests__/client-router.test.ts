@@ -4,7 +4,7 @@
  * Mocks browser globals (location, history, addEventListener, removeEventListener)
  * on globalThis before importing the module.
  */
-import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@1';
+import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
 
 // ─── Mock helpers ─────────────────────────────────────────────────
 
@@ -40,12 +40,14 @@ const mockHistory: MockHistory = {
     const u = new URL(url, 'http://x');
     mockLocation.pathname = u.pathname;
     mockLocation.search = u.search;
+    mockLocation.hash = u.hash;
   },
   replaceState(_data: unknown, _title: string, url: string) {
     this._calls.push({ method: 'replaceState', url });
     const u = new URL(url, 'http://x');
     mockLocation.pathname = u.pathname;
     mockLocation.search = u.search;
+    mockLocation.hash = u.hash;
   },
   _reset() {
     this._calls = [];
@@ -132,6 +134,27 @@ Deno.test('history mode: popstate triggers re-match', () => {
   assertEquals(router.currentRoute?.path, '/about');
 });
 
+Deno.test('history mode: popstate calls onChange after re-match', () => {
+  resetMocks({ pathname: '/' });
+
+  let observedPath = '';
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/', component: () => null },
+      { path: '/about', component: () => null },
+    ],
+    onChange: () => {
+      observedPath = router.currentRoute?.path ?? '';
+    },
+  });
+
+  mockLocation.pathname = '/about';
+  fireEvent('popstate');
+
+  assertEquals(observedPath, '/about');
+});
+
 Deno.test('hash mode: hashchange triggers re-match', () => {
   resetMocks({ pathname: '/', hash: '' });
 
@@ -151,6 +174,31 @@ Deno.test('hash mode: hashchange triggers re-match', () => {
 
   assertEquals(router.currentRoute?.path, '/products/:id');
   assertEquals(router.params.id, '42');
+});
+
+Deno.test('hash mode: navigate writes hash URL and calls onChange once', async () => {
+  resetMocks({ pathname: '/', hash: '' });
+
+  let changeCount = 0;
+  const router = createRouter({
+    mode: 'hash',
+    routes: [
+      { path: '/', component: () => null },
+      { path: '/products/:id', component: () => null },
+    ],
+    onChange: () => {
+      changeCount++;
+    },
+  });
+
+  await router.navigate('/products/42');
+
+  assertEquals(mockHistory._calls, [
+    { method: 'pushState', url: '#/products/42' },
+  ]);
+  assertEquals(router.currentRoute?.path, '/products/:id');
+  assertEquals(router.params.id, '42');
+  assertEquals(changeCount, 1);
 });
 
 Deno.test('auto mode: file:// protocol picks hash', () => {

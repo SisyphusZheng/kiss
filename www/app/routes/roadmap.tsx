@@ -490,8 +490,8 @@ const phases = [
   {
     version: 'v0.41.0-alpha.5',
     title: 'SPA mode + Deno Desktop proof',
-    copy: 'Keep the next implementation target narrow: client-side navigation and desktop shell validation.',
-    status: 'next',
+    copy: 'Client-side router, SPA bootstrap, and Deno Desktop proof are in PR hardening; Tauri and Electron remain later targets.',
+    status: 'PR hardening',
     tone: 'warning',
   },
   {
