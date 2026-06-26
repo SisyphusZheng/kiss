@@ -16,10 +16,11 @@ function makeNote(overrides: Partial<ReaderNote> = {}): ReaderNote {
   return {
     id: crypto.randomUUID(),
     bookId: 'book-1',
-    pageNumber: 10,
+    page: 10,
     quote: 'Hello world',
-    note: 'A note',
+    text: 'A note',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   };
 }
@@ -76,7 +77,7 @@ Deno.test('saveProgress/loadProgress round-trip', () => {
   saveProgress('book-1', 42);
   const p = loadProgress('book-1');
   assertEquals(p?.bookId, 'book-1');
-  assertEquals(p?.pageNumber, 42);
+  assertEquals(p?.page, 42);
   assertEquals(typeof p?.updatedAt, 'string');
 });
 
@@ -84,7 +85,7 @@ Deno.test('saveProgress updates existing progress', () => {
   resetStorage();
   saveProgress('book-1', 10);
   saveProgress('book-1', 99);
-  assertEquals(loadProgress('book-1')?.pageNumber, 99);
+  assertEquals(loadProgress('book-1')?.page, 99);
 });
 
 Deno.test('loadProgress for different book returns null', () => {
@@ -152,10 +153,10 @@ Deno.test('corrupt JSON in progress returns null', () => {
 Deno.test('searchNotes matches by quote and note content (case-insensitive)', () => {
   resetStorage();
   saveNote(
-    makeNote({ id: 'n1', quote: 'Kafka says hello', note: 'deep thought' }),
+    makeNote({ id: 'n1', quote: 'Kafka says hello', text: 'deep thought' }),
   );
-  saveNote(makeNote({ id: 'n2', quote: 'foo bar', note: 'baz' }));
-  saveNote(makeNote({ id: 'n3', quote: 'lorem', note: 'Hello Kafka' }));
+  saveNote(makeNote({ id: 'n2', quote: 'foo bar', text: 'baz' }));
+  saveNote(makeNote({ id: 'n3', quote: 'lorem', text: 'Hello Kafka' }));
 
   // Match by quote
   const r1 = searchNotes('kafka');

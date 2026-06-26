@@ -6,6 +6,8 @@
     "npm:@preact/signals-core@^1.12.1": "1.14.3",
     "npm:@preact/signals@^2.9.0": "2.9.2_preact@10.29.2",
     "npm:pdf-parse@^1.1.1": "1.1.4",
+    "npm:preact-render-to-string@^6.5.0": "6.7.0_preact@10.29.2",
+    "npm:preact@^10.28.0": "10.29.2",
     "npm:preact@^10.29.1": "10.29.2",
     "npm:vite@^6.3.0": "6.4.3"
   },
@@ -361,6 +363,12 @@
         "nanoid",
         "picocolors",
         "source-map-js"
+      ]
+    },
+    "preact-render-to-string@6.7.0_preact@10.29.2": {
+      "integrity": "sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q==",
+      "dependencies": [
+        "preact"
       ]
     },
     "preact@10.29.2": {

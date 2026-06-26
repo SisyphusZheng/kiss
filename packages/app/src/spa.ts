@@ -94,7 +94,9 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     // OpenElement route: create custom element from tagName, set loader data as properties
     if (route.tagName) {
-      const el = document.createElement(route.tagName) as HTMLElement & Record<string, unknown>;
+      const el = document.createElement(route.tagName) as
+        & HTMLElement
+        & Record<string, unknown>;
       const loaderData = useLoaderData();
       if (loaderData && typeof loaderData === 'object') {
         Object.assign(el as Record<string, unknown>, loaderData);
@@ -106,6 +108,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // Legacy VNode route: call component(), convert VNode → DOM
     const vnode = resolveComponentResult(await route.component());
     if (expectedRender !== renderId || !router || !rootEl) return;
+    if (isRenderableNode(vnode)) {
+      rootEl.appendChild(vnode);
+      return;
+    }
     if (vnode != null && vnode !== false) {
       rootEl.appendChild(renderToDom(vnode));
     }
@@ -140,6 +146,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     );
   }
 
+  function createFormData(form: HTMLFormElement): FormData | undefined {
+    try {
+      return new FormData(form);
+    } catch {
+      return undefined;
+    }
+  }
+
   /**
    * Handle form submissions via event delegation on the root element.
    * Runs the current route's action, re-runs the loader, pushes both
@@ -162,7 +176,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // Run action
     let actionData: unknown = undefined;
     try {
-      actionData = await route.action({ params: router.params });
+      actionData = await route.action({
+        params: router.params,
+        formData: createFormData(form),
+      });
     } catch (err) {
       console.error('[spa] action failed:', err);
       actionData = { error: String(err) };

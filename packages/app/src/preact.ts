@@ -18,14 +18,18 @@ import type { IslandConfig } from './authoring.ts';
 // ponytail: dynamic imports keep preact out of @openelement/app hard deps;
 // consumers importing @openelement/app/preact must provide preact themselves.
 const preactMod = await import('preact') as typeof import('preact');
-const rtsMod = await import('preact-render-to-string') as typeof import('preact-render-to-string');
+const rtsMod = await import(
+  'preact-render-to-string'
+) as unknown as typeof import('preact-render-to-string');
 
 const { h, hydrate: preactHydrate, render: preactRender } = preactMod;
 const { renderToString } = rtsMod;
 
 export type PreactIslandProps = Record<string, unknown>;
 
-export type PreactIslandComponent<Props extends PreactIslandProps = PreactIslandProps> = (
+export type PreactIslandComponent<
+  Props extends PreactIslandProps = PreactIslandProps,
+> = (
   props: Props,
 ) => ComponentChild;
 
@@ -53,7 +57,10 @@ function collectAttributes(host: HTMLElement): PreactIslandProps {
   return props;
 }
 
-function resolveProps(host: HTMLElement, baseProps: PreactIslandProps): PreactIslandProps {
+function resolveProps(
+  host: HTMLElement,
+  baseProps: PreactIslandProps,
+): PreactIslandProps {
   return {
     ...baseProps,
     ...collectAttributes(host),
@@ -61,7 +68,9 @@ function resolveProps(host: HTMLElement, baseProps: PreactIslandProps): PreactIs
   };
 }
 
-export function definePreactIsland<Props extends PreactIslandProps = PreactIslandProps>(
+export function definePreactIsland<
+  Props extends PreactIslandProps = PreactIslandProps,
+>(
   tagName: string,
   Component: PreactIslandComponent<Props>,
   options: PreactIslandOptions = {},

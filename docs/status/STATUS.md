@@ -10,9 +10,9 @@ Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 v0.41.0-alpha.5 is the active package line. It follows the cross-framework WC
 integration work and adds a first-class SPA mode, client router, and
 Deno Desktop reader practice app. The desktop proof is intentionally
-WeRead-style rather than WeRead-integrated: it uses local/open fixtures and does
-not use WeRead private APIs, account cookies, scraping, or copyrighted book
-content.
+WeRead-style rather than WeRead-integrated: it uses local/open fixtures, local
+PDF folders/repositories, and public GitHub repo/path sources, and does not use
+WeRead private APIs, account cookies, scraping, or copyrighted book content.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -26,7 +26,8 @@ approved version-plan evidence.
 v0.41.0-alpha.5 proves SPA mode plus a Deno Desktop app substrate. PR #121 is
 the active alpha.5 implementation branch: `@openelement/app` gains
 `defineApp({ mode: 'spa' })`, `@openelement/router` gains client routing, and
-the desktop proof now expands from a shell smoke into a reader practice app.
+the desktop proof now expands into a PDF reader with sources, bookshelf,
+reading surface, progress, notes, search, Markdown export, and Preact islands.
 
 React/Vue/Svelte adapters remain deferred unless needed to validate SPA disposal
 semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 is

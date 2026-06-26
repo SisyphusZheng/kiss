@@ -102,6 +102,19 @@ class StubElement {
   }
 }
 
+class StubText extends StubElement {
+  override nodeType = 3;
+
+  constructor(text: string) {
+    super();
+    this.textContent = text;
+  }
+}
+
+class StubDocumentFragment extends StubElement {
+  override nodeType = 11;
+}
+
 let stubRoot: StubElement | null = null;
 
 const mockDocument = {
@@ -112,6 +125,15 @@ const mockDocument = {
     const el = new StubElement();
     el.tagName = _tagName;
     return el;
+  },
+  createTextNode(text: string): StubText {
+    return new StubText(text);
+  },
+  createDocumentFragment(): StubDocumentFragment {
+    return new StubDocumentFragment();
+  },
+  createComment(text: string): StubText {
+    return new StubText(text);
   },
 };
 
@@ -185,7 +207,10 @@ function routeWithAction(
       const loaderData = useLoaderData();
       const actionData = useActionData();
       const el = new StubElement();
-      el.textContent = JSON.stringify({ loader: loaderData, action: actionData });
+      el.textContent = JSON.stringify({
+        loader: loaderData,
+        action: actionData,
+      });
       // The form element is what gets dispatched in the action test
       return el;
     },
@@ -256,6 +281,67 @@ Deno.test('action data flows to useActionData() via form submit', async () => {
   parsed = JSON.parse(stubRoot.textContent);
   assertEquals(parsed.loader, 'loader-data');
   assertEquals(parsed.action, actionResult);
+});
+
+Deno.test('form submit passes FormData to route action', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const OriginalFormData = globalThis.FormData;
+  let capturedForm: unknown;
+  class MockFormData {
+    constructor(form: unknown) {
+      capturedForm = form;
+    }
+  }
+  Object.defineProperty(globalThis, 'FormData', {
+    value: MockFormData,
+    configurable: true,
+  });
+
+  try {
+    let actionFormData: unknown;
+    const app = defineApp({
+      mode: 'spa',
+      routes: [{
+        path: '/',
+        loader: () => Promise.resolve('loader-data'),
+        action: (ctx) => {
+          actionFormData = ctx.formData;
+          return Promise.resolve({ ok: true });
+        },
+        component: () => {
+          const el = new StubElement();
+          el.textContent = JSON.stringify(useActionData());
+          return el;
+        },
+      }],
+    });
+
+    app.mount('#root');
+    await new Promise((r) => setTimeout(r, 0));
+
+    const form = new StubElement();
+    form.tagName = 'FORM';
+    const submitEvent = new Event('submit', { cancelable: true });
+    Object.defineProperty(submitEvent, 'target', {
+      value: form,
+      writable: false,
+      configurable: true,
+    });
+
+    stubRoot.dispatchEvent(submitEvent);
+    await new Promise((r) => setTimeout(r, 0));
+
+    assertEquals(capturedForm, form);
+    assertEquals(actionFormData instanceof MockFormData, true);
+  } finally {
+    Object.defineProperty(globalThis, 'FormData', {
+      value: OriginalFormData,
+      configurable: true,
+    });
+  }
 });
 
 Deno.test('submit without route action falls through to native form behavior', async () => {

@@ -21,24 +21,24 @@ export default function BookCard({ book, onNavigate }: BookCardProps) {
         style={{ backgroundColor: book.coverColor }}
       />
       <h2 class='book-title'>{book.title}</h2>
-      <p class='book-author'>{book.author}</p>
-      <p class='book-summary'>{book.summary}</p>
+      {book.author && <p class='book-author'>{book.author}</p>}
+      <p class='book-summary'>{book.summary ?? book.fileName}</p>
       <p class='book-pages'>{book.pageCount} pages</p>
-      {progress && progress.pageNumber > 1 && (
+      {progress && progress.page > 1 && (
         <div>
           <p class='progress-indicator'>
-            Progress: Page {progress.pageNumber} / {book.pageCount}
+            Progress: Page {progress.page} / {book.pageCount}
           </p>
           <open-button
             class='continue-btn'
             onClick={(e: Event) => {
               e.stopPropagation();
               onNavigate(
-                `${book.id}?page=${progress.pageNumber}`,
+                `${book.id}?page=${progress.page}`,
               );
             }}
           >
-            Continue Reading (Page {progress.pageNumber})
+            Continue Reading (Page {progress.page})
           </open-button>
         </div>
       )}

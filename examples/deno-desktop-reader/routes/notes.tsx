@@ -1,58 +1,54 @@
 /** @jsxImportSource @openelement/core */
-import { OpenElement } from "@openelement/element";
-import type { ReaderBook, ReaderNote } from "../app/types.ts";
-import { deleteNote, loadNotes } from "../app/storage.ts";
-import { navigate } from "../router.ts";
-import { exportNotesToMarkdown } from "../app/export.ts";
-
-// ponytail: direct import of books JSON
-import booksData from "../fixtures/books.json" with { type: "json" };
+import { OpenElement } from '@openelement/element';
+import type { LibraryBook, ReaderNote } from '../app/types.ts';
+import { deleteNote, listBooks, listNotes } from '../app/api.ts';
+import { navigate } from '../router.ts';
 
 export interface NotesData {
   allNotes: ReaderNote[];
-  books: ReaderBook[];
+  books: LibraryBook[];
 }
 
-function showToast(message: string): void {
-  const existing = document.querySelector(".toast");
-  if (existing) existing.remove();
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
+export async function loader(): Promise<NotesData> {
+  const [allNotes, books] = await Promise.all([listNotes(), listBooks()]);
+  return { allNotes, books };
 }
 
-export function loader(): Promise<NotesData> {
-  return Promise.resolve({
-    allNotes: loadNotes() as unknown as ReaderNote[],
-    books: booksData as unknown as ReaderBook[],
-  });
+export async function action(
+  ctx: { formData?: FormData },
+): Promise<{ deleted?: string; error?: string }> {
+  const noteId = String(ctx.formData?.get('note-id') ?? '');
+  if (!noteId) return { error: 'Missing note id.' };
+  await deleteNote(noteId);
+  return { deleted: noteId };
 }
 
-export const tagName = "reader-notes";
+export const tagName = 'reader-notes';
 
 export default class NotesPage extends OpenElement {
   override render() {
     const data = (this as unknown) as NotesPage & NotesData;
+    const actionData = (this as unknown as { actionData?: { deleted?: string; error?: string } })
+      .actionData;
     const allNotes = data.allNotes || [];
     const books = data.books || [];
 
     if (allNotes.length === 0) {
       return (
-        <div>
+        <main class='reader-page'>
           <h1>Notes</h1>
-          <p class="empty-state">
+          {actionData?.deleted && <p class='toast-inline'>Note deleted.</p>}
+          <p class='empty-state'>
             No notes yet. Add notes from the reading surface.
           </p>
-        </div>
+        </main>
       );
     }
 
     // Group notes by book
     const grouped = new Map<
       string,
-      { book: ReaderBook; notes: ReaderNote[] }
+      { book: LibraryBook; notes: ReaderNote[] }
     >();
     for (const note of allNotes) {
       const book = books.find((b) => b.id === note.bookId);
@@ -64,69 +60,55 @@ export default class NotesPage extends OpenElement {
     }
 
     return (
-      <div>
+      <main class='reader-page'>
         <h1>Notes</h1>
+        {actionData?.deleted && <p class='toast-inline'>Note deleted.</p>}
+        {actionData?.error && <p class='form-error'>{actionData.error}</p>}
 
         <open-button
-          class="export-btn"
+          class='export-btn'
           onClick={() => {
-            const md = exportNotesToMarkdown(allNotes, books);
-            const blob = new Blob([md], { type: "text/markdown" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "reader-notes.md";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("Notes exported!");
+            location.href = '/api/notes/export.md';
           }}
         >
           Export Notes (Markdown)
         </open-button>
 
         {Array.from(grouped.values()).map(({ book, notes }) => (
-          <div class="notes-book-section" key={book.id}>
-            <h2 class="notes-book-title">{book.title}</h2>
+          <div class='notes-book-section' key={book.id}>
+            <h2 class='notes-book-title'>{book.title}</h2>
             {notes.map((note) => (
-              <div class="note-card" key={note.id}>
+              <div class='note-card' key={note.id}>
                 {note.quote && (
-                  <blockquote class="note-quote-preview">
+                  <blockquote class='note-quote-preview'>
                     {note.quote}
                   </blockquote>
                 )}
-                <p class="note-text-preview">{note.note}</p>
-                <p class="note-meta">
-                  Page {note.pageNumber} —{" "}
-                  {new Date(note.createdAt).toLocaleDateString()}
+                <p class='note-text-preview'>{note.text}</p>
+                <p class='note-meta'>
+                  Page {note.page ?? 1} — {new Date(note.createdAt).toLocaleDateString()}
                 </p>
                 <a
-                  href={`/books/${book.id}?page=${note.pageNumber}`}
-                  class="note-link"
+                  href={`/books/${book.id}?page=${note.page ?? 1}`}
+                  class='note-link'
                   onClick={(e: Event) => {
                     e.preventDefault();
-                    navigate(`/books/${book.id}?page=${note.pageNumber}`);
+                    navigate(`/books/${book.id}?page=${note.page ?? 1}`);
                   }}
                 >
                   Go to page →
                 </a>
-                <open-button
-                  class="note-delete-btn"
-                  onClick={() => {
-                    deleteNote(note.id);
-                    navigate(
-                      globalThis.location.pathname + globalThis.location.search,
-                    );
-                  }}
-                >
-                  Delete
-                </open-button>
+                <form class='inline-form'>
+                  <input type='hidden' name='note-id' value={note.id} />
+                  <open-button class='note-delete-btn' type='submit'>
+                    Delete
+                  </open-button>
+                </form>
               </div>
             ))}
           </div>
         ))}
-      </div>
+      </main>
     );
   }
 }

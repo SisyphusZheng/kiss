@@ -11,8 +11,10 @@ export interface RouteConfig {
   component: () => unknown;
   /** Client-side loader — runs before component render. Receives matched route params. */
   loader?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
-  /** Client-side action — runs on form submit. Receives matched route params. */
-  action?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
+  /** Client-side action — runs on form submit. Receives matched route params and form data. */
+  action?: (
+    ctx: { params: Record<string, string>; formData?: FormData },
+  ) => Promise<unknown>;
   guard?: () => Promise<boolean | string>;
 }
 
@@ -226,7 +228,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
   ): Promise<void> {
     const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
-      throw new Error(`[router] Guard redirect limit exceeded while navigating to "${path}"`);
+      throw new Error(
+        `[router] Guard redirect limit exceeded while navigating to "${path}"`,
+      );
     }
 
     // Run guard if we have a matching target route

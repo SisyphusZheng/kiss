@@ -14,8 +14,8 @@ export function exportNotesToMarkdown(
     parts.push('---');
     parts.push(`bookId: ${note.bookId}`);
     parts.push(`bookTitle: ${book.title}`);
-    parts.push(`author: ${book.author}`);
-    parts.push(`pageNumber: ${note.pageNumber}`);
+    if (book.author) parts.push(`author: ${book.author}`);
+    if (note.page) parts.push(`page: ${note.page}`);
     parts.push(`createdAt: ${note.createdAt}`);
     parts.push('tags: [reader-import]');
     parts.push('---');
@@ -27,10 +27,12 @@ export function exportNotesToMarkdown(
       parts.push('');
     }
 
-    parts.push(note.note);
+    parts.push(note.text);
     parts.push('');
     parts.push(
-      `[Back to reader](open-reader://books/${note.bookId}?page=${note.pageNumber})`,
+      `[Back to reader](open-reader://books/${note.bookId}${
+        note.page ? `?page=${note.page}` : ''
+      })`,
     );
     parts.push('');
   }

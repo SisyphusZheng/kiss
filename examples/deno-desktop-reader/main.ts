@@ -5,7 +5,21 @@
  * All handler errors are caught to avoid breaking the desktop webview.
  */
 
-import { indexBook, search } from './app/search.ts';
+import {
+  addNote,
+  addSource,
+  deleteNote,
+  exportNotesMarkdown,
+  getBook,
+  getProgress,
+  listBooks,
+  listNotes,
+  listSources,
+  type ReaderStorePaths,
+  saveProgress,
+  searchLibrary,
+  syncSource,
+} from './app/host-store.ts';
 
 // Cache paths
 const HOME = Deno.env.get('HOME') ?? '.';
@@ -15,7 +29,12 @@ const FIXTURES_DIR = new URL('./fixtures/books/', import.meta.url).pathname;
 const BOOKS_JSON_URL = new URL('./fixtures/books.json', import.meta.url);
 const DIST_DIR = new URL('./dist/', import.meta.url);
 
-let searchIndexReady = false;
+const STORE_PATHS: ReaderStorePaths = {
+  cacheDir: CACHE_DIR,
+  booksDir: BOOKS_DIR,
+  fixturesDir: FIXTURES_DIR,
+  fixturesJson: BOOKS_JSON_URL,
+};
 
 function readTextSafe(url: URL): string | null {
   try {
@@ -85,7 +104,10 @@ function findAppScript(dir: URL): string | null {
     let best: string | null = null;
     let bestSize = 0;
     for (const entry of Deno.readDirSync(dir)) {
-      if (entry.isFile && entry.name.startsWith('reader-') && entry.name.endsWith('.js')) {
+      if (
+        entry.isFile && entry.name.startsWith('reader-') &&
+        entry.name.endsWith('.js')
+      ) {
         const info = Deno.statSync(new URL(`./${entry.name}`, dir));
         if (info.size > bestSize) {
           bestSize = info.size;
@@ -102,7 +124,10 @@ function findAppScript(dir: URL): string | null {
 function findAppCss(dir: URL): string | null {
   try {
     for (const entry of Deno.readDirSync(dir)) {
-      if (entry.isFile && entry.name.startsWith('style-') && entry.name.endsWith('.css')) {
+      if (
+        entry.isFile && entry.name.startsWith('style-') &&
+        entry.name.endsWith('.css')
+      ) {
         return entry.name;
       }
     }
@@ -121,48 +146,121 @@ function serverError(): Response {
   });
 }
 
-async function ensureSearchIndex(): Promise<void> {
-  if (searchIndexReady) return;
-  searchIndexReady = true;
-  const raw = readTextSafe(BOOKS_JSON_URL);
-  if (!raw) return;
+async function readJsonRequest(req: Request): Promise<Record<string, unknown>> {
   try {
-    const books = JSON.parse(raw);
-    for (const book of books) {
-      const path = `${FIXTURES_DIR}/${book.fileName}`;
-      if (!statSafe(path)) continue;
-      try {
-        await indexBook(path, book.id, CACHE_DIR);
-      } catch { /* skip */ }
-    }
-  } catch { /* skip */ }
+    return await req.json() as Record<string, unknown>;
+  } catch {
+    return {};
+  }
 }
 
-Deno.serve((req: Request) => {
+function methodNotAllowed(): Response {
+  return new Response('Method Not Allowed', { status: 405 });
+}
+
+Deno.serve(async (req: Request) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname;
     const ext = pathname.slice(pathname.lastIndexOf('.'));
 
+    // API: sources
+    if (pathname === '/api/sources') {
+      if (req.method === 'GET') return json(listSources(STORE_PATHS));
+      if (req.method === 'POST') {
+        return json(await addSource(STORE_PATHS, await readJsonRequest(req)));
+      }
+      return methodNotAllowed();
+    }
+
+    const syncMatch = pathname.match(/^\/api\/sources\/([^/]+)\/sync$/);
+    if (syncMatch) {
+      if (req.method !== 'POST') return methodNotAllowed();
+      return json(
+        await syncSource(STORE_PATHS, decodeURIComponent(syncMatch[1])),
+      );
+    }
+
     // API: books
     if (pathname === '/api/books') {
-      const raw = readTextSafe(BOOKS_JSON_URL);
-      return raw ? json(JSON.parse(raw)) : json([]);
+      return json(listBooks(STORE_PATHS));
+    }
+
+    const bookMatch = pathname.match(/^\/api\/books\/([^/]+)$/);
+    if (bookMatch) {
+      const book = getBook(STORE_PATHS, decodeURIComponent(bookMatch[1]));
+      return book
+        ? json({
+          book,
+          progress: getProgress(STORE_PATHS, book.id),
+          notes: listNotes(STORE_PATHS, book.id),
+        })
+        : notFound();
+    }
+
+    const bookFileMatch = pathname.match(/^\/api\/books\/([^/]+)\/file$/);
+    if (bookFileMatch) {
+      const book = getBook(STORE_PATHS, decodeURIComponent(bookFileMatch[1]));
+      if (!book) return notFound();
+      try {
+        return pdf(Deno.readFileSync(book.path));
+      } catch {
+        return notFound();
+      }
+    }
+
+    const progressMatch = pathname.match(/^\/api\/books\/([^/]+)\/progress$/);
+    if (progressMatch) {
+      if (req.method !== 'POST') return methodNotAllowed();
+      const body = await readJsonRequest(req);
+      return json(saveProgress(STORE_PATHS, {
+        bookId: decodeURIComponent(progressMatch[1]),
+        page: Number(body.page ?? 1),
+        zoom: Number(body.zoom ?? 1),
+        updatedAt: new Date().toISOString(),
+      }));
     }
 
     // API: search
     if (pathname === '/api/search') {
       const q = url.searchParams.get('q');
       if (!q) return json([]);
-      ensureSearchIndex(); // fire-and-forget
-      try {
-        return json(search(q, CACHE_DIR));
-      } catch {
-        return json([]);
-      }
+      return json(searchLibrary(STORE_PATHS, q));
     }
 
-    // PDF files
+    // API: notes
+    if (pathname === '/api/notes') {
+      if (req.method === 'GET') {
+        return json(
+          listNotes(STORE_PATHS, url.searchParams.get('bookId') ?? undefined),
+        );
+      }
+      if (req.method === 'POST') {
+        const body = await readJsonRequest(req);
+        return json(addNote(STORE_PATHS, {
+          bookId: String(body.bookId ?? ''),
+          page: body.page === undefined ? undefined : Number(body.page),
+          quote: typeof body.quote === 'string' ? body.quote : undefined,
+          text: String(body.text ?? ''),
+        }));
+      }
+      return methodNotAllowed();
+    }
+
+    if (pathname === '/api/notes/export.md') {
+      return new Response(exportNotesMarkdown(STORE_PATHS), {
+        headers: { 'content-type': 'text/markdown; charset=utf-8' },
+      });
+    }
+
+    const noteMatch = pathname.match(/^\/api\/notes\/([^/]+)$/);
+    if (noteMatch) {
+      if (req.method !== 'DELETE') return methodNotAllowed();
+      deleteNote(STORE_PATHS, decodeURIComponent(noteMatch[1]));
+      return json({ deleted: true });
+    }
+
+    // Legacy PDF files
     if (pathname.startsWith('/books/')) {
       const name = pathname.slice('/books/'.length);
       for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {

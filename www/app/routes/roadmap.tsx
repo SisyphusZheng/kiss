@@ -489,7 +489,7 @@ const phases = [
   {
     version: 'v0.41.0-alpha.5',
     title: 'SPA mode + Deno Desktop reader',
-    copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop reader proof backed by local/open fixtures.',
+    copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop PDF reader backed by fixtures, local folders, and public GitHub sources.',
     status: 'PR hardening',
     tone: 'warning',
   },

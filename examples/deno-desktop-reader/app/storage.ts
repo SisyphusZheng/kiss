@@ -32,7 +32,12 @@ export function loadProgress(bookId: string): ReaderProgress | null {
 
 export function saveProgress(bookId: string, pageNumber: number): void {
   const all = loadProgressRaw();
-  all[bookId] = { bookId, pageNumber, updatedAt: new Date().toISOString() };
+  all[bookId] = {
+    bookId,
+    page: pageNumber,
+    zoom: 1,
+    updatedAt: new Date().toISOString(),
+  };
   localStorage.setItem(KEYS.progress, JSON.stringify(all));
 }
 
@@ -94,7 +99,7 @@ export function searchNotes(query: string): ReaderNote[] {
   const lower = query.toLowerCase();
   return notes.filter(
     (n) =>
-      n.quote.toLowerCase().includes(lower) ||
-      n.note.toLowerCase().includes(lower),
+      (n.quote ?? '').toLowerCase().includes(lower) ||
+      (n.text ?? '').toLowerCase().includes(lower),
   );
 }

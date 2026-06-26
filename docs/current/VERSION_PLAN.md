@@ -97,9 +97,10 @@ release workflow records npm publish plus post-publish npm consumer smoke
 evidence.
 
 alpha.5 is the current implementation target: SPA mode + Deno Desktop reader
-proof (Deno canary). The reader is a
-WeRead-style desktop practice app backed by local/open fixtures; it must not use
-WeRead private APIs, account cookies, scraping, or copyrighted book content.
+proof (Deno canary). The reader is a WeRead-style desktop practice app backed by
+fixtures, local PDF folders/repositories, and public GitHub repo/path sources; it
+must not use WeRead private APIs, account cookies, scraping, or copyrighted book
+content.
 React/Vue/Svelte adapters stay out of alpha.5 unless they are required to
 validate SPA navigation disposal semantics.
 
