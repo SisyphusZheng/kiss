@@ -189,6 +189,11 @@ Deno.serve((req: Request) => {
     // SPA fallback: serve dist/index.html for all other routes
     let indexHtml = readTextSafe(new URL('./index.html', DIST_DIR));
     if (indexHtml) {
+      // Add fallback text that disappears when SPA mounts (debug aid)
+      indexHtml = indexHtml.replace(
+        '<div id="root"></div>',
+        '<div id="root"><h1 style="font-family:system-ui;text-align:center;padding:2rem;color:#aaa">openElement Reader — loading...</h1></div>',
+      );
       // Inject main app bundle script (adapter-vite's SPA shell only includes island entry)
       const assetsDir = new URL('./assets/', DIST_DIR);
       const appScript = findAppScript(assetsDir);
