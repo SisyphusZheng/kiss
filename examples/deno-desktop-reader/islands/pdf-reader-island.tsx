@@ -60,10 +60,12 @@ function PdfReaderIsland(props: PdfReaderProps) {
       'style',
       null,
       `
-        .toolbar{display:flex;align-items:center;gap:8px;margin:0 0 12px}
-        .toolbar button{border:1px solid #cfd6df;background:#fff;border-radius:6px;padding:6px 10px}
-        .toolbar span{font:13px system-ui;color:#59636f}
-        iframe{width:100%;height:68vh;border:1px solid #d8dee7;border-radius:8px;background:#f7f3ea}
+        :host{display:block}
+        .toolbar{align-items:center;display:flex;gap:8px;justify-content:center;margin:0 0 14px}
+        .toolbar button{background:#fff;border:1px solid #e0d6c8;border-radius:999px;color:#2c4842;font:650 13px system-ui;padding:7px 12px}
+        .toolbar button:disabled{color:#aca59a;background:#f6f1e8}
+        .toolbar span{font:13px system-ui;color:#756f66;min-width:68px;text-align:center}
+        iframe{width:100%;height:68vh;border:1px solid #e0d6c8;border-radius:14px;background:#f8f2e8;box-shadow:inset 0 1px rgba(255,255,255,.8)}
       `,
     ),
     h('div', { class: 'toolbar' }, [

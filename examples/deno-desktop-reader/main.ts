@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Legacy PDF files
-    if (pathname.startsWith('/books/')) {
+    if (pathname.startsWith('/books/') && pathname.toLowerCase().endsWith('.pdf')) {
       const name = pathname.slice('/books/'.length);
       for (const dir of [BOOKS_DIR, FIXTURES_DIR]) {
         const p = `${dir}/${name}`;
