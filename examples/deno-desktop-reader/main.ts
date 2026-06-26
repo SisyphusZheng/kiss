@@ -79,17 +79,21 @@ function serveFile(bytes: Uint8Array<ArrayBuffer>, ext: string): Response {
   });
 }
 
-/** Find the main app JS bundle in dist/assets/ (ponytail: glob + pick first match). */
+/** Find the main app JS bundle in dist/assets/ (pick largest reader-*.js). */
 function findAppScript(dir: URL): string | null {
   try {
+    let best: string | null = null;
+    let bestSize = 0;
     for (const entry of Deno.readDirSync(dir)) {
-      if (
-        entry.isFile && entry.name.startsWith('reader-') &&
-        entry.name.endsWith('.js')
-      ) {
-        return entry.name;
+      if (entry.isFile && entry.name.startsWith('reader-') && entry.name.endsWith('.js')) {
+        const info = Deno.statSync(new URL(`./${entry.name}`, dir));
+        if (info.size > bestSize) {
+          bestSize = info.size;
+          best = entry.name;
+        }
       }
     }
+    return best;
   } catch { /* dir may not exist */ }
   return null;
 }
