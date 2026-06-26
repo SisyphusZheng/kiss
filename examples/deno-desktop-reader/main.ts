@@ -181,9 +181,10 @@ Deno.serve((req: Request) => {
       const assetsDir = new URL('./assets/', DIST_DIR);
       const appScript = findAppScript(assetsDir);
       if (appScript) {
+        // Replace client-entry.js placeholder with actual reader bundle
         indexHtml = indexHtml.replace(
-          '</body>',
-          `  <script type="module" src="/assets/${appScript}"></script>\n</body>`,
+          '<script type="module" src="/client-entry.js"></script>',
+          `<script type="module" src="/assets/${appScript}"></script>`,
         );
       }
       return html(indexHtml);
