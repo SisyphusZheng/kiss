@@ -37,6 +37,19 @@ export default class BookshelfPage extends OpenElement {
 
     return (
       <div class="bookshelf">
+        <style>{`
+          .bookshelf { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+          .bookshelf h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+          .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+          .book-card { cursor: pointer; }
+          .book-cover { height: 120px; border-radius: 4px 4px 0 0; }
+          .book-title { font-size: 1rem; margin: 0.5rem 0 0 0; }
+          .book-author { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
+          .book-summary { font-size: 0.8rem; color: #888; margin: 0.5rem 0 0 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+          .book-pages { font-size: 0.75rem; color: #aaa; margin: 0.25rem 0 0 0; }
+          .progress-indicator { font-size: 0.8rem; color: #2563eb; margin: 0.5rem 0 0 0; }
+          .empty-state { color: #888; text-align: center; padding: 2rem; }
+        `}</style>
         <h1>My Library</h1>
         <div class="book-grid">
           {books.map((book) => {
