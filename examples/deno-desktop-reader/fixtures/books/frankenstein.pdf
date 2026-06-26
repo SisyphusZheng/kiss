@@ -1,14 +1,219 @@
 %PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [ 3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R ] /Count 7 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 475 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(You will rejoice to hear that no disaster has accompanied the commencement) Tj
+0 -23 Td
+(of an enterprise which you have regarded with such evil forebodings.) Tj
+0 -23 Td
+0 -10 Td
+(This fixture is visible by design, so screenshots show whether PDF loading) Tj
+0 -23 Td
+(works.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 1 of 7) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 302 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(The reader uses a calm paper surface, rounded controls, and a wide central) Tj
+0 -23 Td
+(reading stage.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 2 of 7) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 296 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(Progress and notes are persisted through the host API and browser storage) Tj
+0 -23 Td
+(boundary.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 3 of 7) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 298 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(The example validates OpenElement route pages, loaders, actions, and) Tj
+0 -23 Td
+(custom elements.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 4 of 7) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 297 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(Preact islands remain an enhancement layer for local interaction, not the) Tj
+0 -23 Td
+(app shell.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 5 of 7) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 269 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(Future versions can extend this into a broader personal reading inbox.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 6 of 7) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 17 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 232 >>
+stream
+BT
+/F1 28 Tf
+72 714 Td
+(Frankenstein) Tj
+/F1 13 Tf
+0 -24 Td
+(by Mary Shelley) Tj
+/F1 15 Tf
+0 -56 Td
+(End of the short visible fixture.) Tj
+0 -23 Td
+0 -10 Td
+/F1 10 Tf
+0 -80 Td
+(OpenElement Desktop Reader fixture - page 7 of 7) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
 xref
-0 4
+0 18
 0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-trailer<</Size 4/Root 1 0 R>>
+0000000015 00000 n 
+0000000064 00000 n 
+0000000162 00000 n 
+0000000289 00000 n 
+0000000815 00000 n 
+0000000942 00000 n 
+0000001295 00000 n 
+0000001422 00000 n 
+0000001769 00000 n 
+0000001897 00000 n 
+0000002247 00000 n 
+0000002376 00000 n 
+0000002725 00000 n 
+0000002854 00000 n 
+0000003175 00000 n 
+0000003304 00000 n 
+0000003588 00000 n 
+trailer
+<< /Size 18 /Root 1 0 R >>
 startxref
-206
+3659
 %%EOF
