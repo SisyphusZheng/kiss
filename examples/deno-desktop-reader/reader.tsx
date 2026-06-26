@@ -6,22 +6,26 @@ import { setRouter } from './router.ts';
 import '@openelement/ui';
 
 // Import route modules for side-effect: customElements.define + exports loader/action/tagName
-import {
+import BookshelfPage, {
   loader as bookshelfLoader,
   tagName as bookshelfTag,
 } from './routes/index.tsx';
-import {
+import ReadingPage, {
   action as readingAction,
   loader as readingLoader,
   tagName as readingTag,
 } from './routes/books/[id].tsx';
-import { loader as notesLoader, tagName as notesTag } from './routes/notes.tsx';
-import { loader as searchLoader, tagName as searchTag } from './routes/search.tsx';
-import {
+import NotesPage, { loader as notesLoader, tagName as notesTag } from './routes/notes.tsx';
+import SearchPage, { loader as searchLoader, tagName as searchTag } from './routes/search.tsx';
+import SettingsPage, {
   loader as settingsLoader,
   tagName as settingsTag,
 } from './routes/settings.tsx';
-import { tagName as wcInteropTag } from './routes/wc-interop.tsx';
+import WcInteropPage, { tagName as wcInteropTag } from './routes/wc-interop.tsx';
+
+// Prevent tree-shaking: default exports trigger customElements.define side effects
+void BookshelfPage; void ReadingPage; void NotesPage;
+void SearchPage; void SettingsPage; void WcInteropPage;
 
 // ─── Route config ──────────────────────────────────────────
 
