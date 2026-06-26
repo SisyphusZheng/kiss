@@ -15,6 +15,7 @@ import {
   __internal_pushActionData,
   __internal_pushLoaderData,
 } from '@openelement/router/data-context';
+import { renderToDom } from '@openelement/core/csr';
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -88,10 +89,11 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const route = router.currentRoute;
     rootEl.innerHTML = '';
     if (route) {
-      const result = resolveComponentResult(await route.component());
+      const vnode = resolveComponentResult(await route.component());
       if (expectedRender !== renderId || !router || !rootEl) return;
-      if (isRenderableNode(result)) {
-        rootEl.appendChild(result);
+      // VNode → DOM: @openelement/core JSX returns VNodes, not DOM Nodes
+      if (vnode != null && vnode !== false) {
+        rootEl.appendChild(renderToDom(vnode));
       }
     }
   }

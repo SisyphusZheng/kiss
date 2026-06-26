@@ -182,9 +182,12 @@ Deno.serve((req: Request) => {
       const appScript = findAppScript(assetsDir);
       if (appScript) {
         // Replace client-entry.js placeholder with actual reader bundle
+        // Also inject error catcher so blank-page bugs are visible
         indexHtml = indexHtml.replace(
           '<script type="module" src="/client-entry.js"></script>',
-          `<script type="module" src="/assets/${appScript}"></script>`,
+          `<pre id="err" style="color:red;padding:1rem;display:none"></pre>
+<script>function err(m){var d=document.getElementById("err");d.style.display="block";d.textContent+=m+"\\n";}window.onerror=function(m,s,l,c,e){err(e?e.stack||e.message:m)};window.addEventListener("unhandledrejection",function(e){err(e.reason&&e.reason.stack||e.reason||"Promise rejection")});</script>
+<script type="module" src="/assets/${appScript}"></script>`,
         );
       }
       return html(indexHtml);
