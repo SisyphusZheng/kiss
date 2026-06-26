@@ -1,8 +1,8 @@
 # openElement Desktop Reader
 
 Alpha.5 dogfood app proving openElement SPA mode, route loaders/actions,
-data-context rendering, @openelement/ui custom elements, Preact islands, and
-third-party web component interop in a Deno Desktop native window.
+data-context rendering, `@openelement/ui` custom elements, and Preact islands
+in a Deno Desktop native window.
 
 The reader is intentionally not a content platform clone. Its alpha.5 job is to
 stress openElement itself: routing, navigation, form actions, loader data,
@@ -38,7 +38,7 @@ open deno-desktop-reader.app
 ## Architecture
 
 - `reader.tsx` — Vite client entry, SPA bootstrap
-- `main.ts` — Deno.serve HTTP server + API + GitHub sync
+- `main.ts` — Deno.serve HTTP server + API endpoints
 - `routes/` — 6 routes with openElement loaders/actions (bookshelf, reading, notes, search, settings, wc-interop)
 - `islands/` — Preact island (reader-counter)
 - `components/` — Shared components (BookCard)
@@ -55,4 +55,3 @@ This app validates:
 - `@openelement/ui` — Custom element components
 - `@openelement/core` — JSX runtime
 - Preact islands — `definePreactIsland`
-- Third-party CE — Lit, Shoelace, MWC

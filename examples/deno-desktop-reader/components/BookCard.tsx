@@ -3,6 +3,7 @@ import type { ReaderBook } from '../app/types.ts';
 import { loadProgress } from '../app/storage.ts';
 
 export interface BookCardProps {
+  key?: string;
   book: ReaderBook;
   onNavigate: (bookId: string) => void;
 }

@@ -193,12 +193,6 @@ Deno.test('Settings route exports a function', async () => {
 });
 
 Deno.test('WC Interop route exports a function', async () => {
-  // ponytail: lit/shoelace need real DOM APIs not available in test mock.
-  // Skip import validation - the build validates this route compiles.
-  try {
-    const mod = await import('../../routes/wc-interop.tsx');
-    assertEquals(typeof mod.default, 'function');
-  } catch {
-    // Expected: lit/shoelace require real browser DOM
-  }
+  const mod = await import('../../routes/wc-interop.tsx');
+  assertEquals(typeof mod.default, 'function');
 });
