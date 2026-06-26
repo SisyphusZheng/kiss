@@ -4,6 +4,13 @@ import { setRouter } from './router.ts';
 
 // Register @openelement/ui custom elements on page load
 import '@openelement/ui';
+import { openPropsRootSheet } from '@openelement/ui';
+
+// Inject Open Props design tokens into the document so shadow-DOM components
+// can inherit CSS custom properties (--brand, --bg-elevated, etc.).
+const tokenStyle = document.createElement('style');
+tokenStyle.textContent = [...openPropsRootSheet.cssRules].map((r) => r.cssText).join('\n');
+document.head.appendChild(tokenStyle);
 
 // Import route modules for side-effect: customElements.define + exports loader/action/tagName
 import BookshelfPage, {
