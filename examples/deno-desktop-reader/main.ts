@@ -94,6 +94,18 @@ function findAppScript(dir: URL): string | null {
   return null;
 }
 
+/** Find the main CSS bundle in dist/assets/. */
+function findAppCss(dir: URL): string | null {
+  try {
+    for (const entry of Deno.readDirSync(dir)) {
+      if (entry.isFile && entry.name.startsWith('style-') && entry.name.endsWith('.css')) {
+        return entry.name;
+      }
+    }
+  } catch { /* dir may not exist */ }
+  return null;
+}
+
 function notFound(): Response {
   return new Response('Not Found', { status: 404 });
 }
@@ -180,12 +192,13 @@ Deno.serve((req: Request) => {
       // Inject main app bundle script (adapter-vite's SPA shell only includes island entry)
       const assetsDir = new URL('./assets/', DIST_DIR);
       const appScript = findAppScript(assetsDir);
+      const cssScript = findAppCss(assetsDir);
       if (appScript) {
-        // Replace client-entry.js placeholder with actual reader bundle
-        // Also inject error catcher so blank-page bugs are visible
+        // Replace client-entry.js placeholder with actual reader bundle + CSS + CDN + islands
         indexHtml = indexHtml.replace(
           '<script type="module" src="/client-entry.js"></script>',
-          `<pre id="err" style="color:red;padding:1rem;display:none"></pre>
+          `${cssScript ? `<link rel="stylesheet" href="/assets/${cssScript}">` : ''}
+<pre id="err" style="color:red;padding:1rem;display:none"></pre>
 <script>function err(m){var d=document.getElementById("err");d.style.display="block";d.textContent+=m+"\\n";}window.onerror=function(m,s,l,c,e){err(e?e.stack||e.message:m)};window.addEventListener("unhandledrejection",function(e){err(e.reason&&e.reason.stack||e.reason||"Promise rejection")});</script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web@2.4.1/+esm"></script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/+esm"></script>
