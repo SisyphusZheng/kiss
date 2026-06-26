@@ -1,10 +1,8 @@
 /** @jsxImportSource @openelement/core */
 import { OpenElement } from "@openelement/element";
 
-// Third-party Custom Element imports
+// Third-party CE imported via module script in HTML (ponytail: CDN avoids bundling issues)
 import "@shoelace-style/shoelace";
-import "@material/web/checkbox/checkbox.js";
-import "@material/web/button/button.js";
 
 export const tagName = "reader-wc-interop";
 
