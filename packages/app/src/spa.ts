@@ -14,6 +14,7 @@ import {
   __internal_popData,
   __internal_pushActionData,
   __internal_pushLoaderData,
+  useLoaderData,
 } from '@openelement/router/data-context';
 import { renderToDom } from '@openelement/core/csr';
 
@@ -86,15 +87,27 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   /** Render the current route component into rootEl. */
   async function renderComponent(expectedRender: number): Promise<void> {
     if (!router || !rootEl) return;
-    const route = router.currentRoute;
+    const route = router.currentRoute as (RouteConfig & { tagName?: string });
     rootEl.innerHTML = '';
-    if (route) {
-      const vnode = resolveComponentResult(await route.component());
-      if (expectedRender !== renderId || !router || !rootEl) return;
-      // VNode → DOM: @openelement/core JSX returns VNodes, not DOM Nodes
-      if (vnode != null && vnode !== false) {
-        rootEl.appendChild(renderToDom(vnode));
+
+    if (!route) return;
+
+    // OpenElement route: create custom element from tagName, set loader data as properties
+    if (route.tagName) {
+      const el = document.createElement(route.tagName) as HTMLElement & Record<string, unknown>;
+      const loaderData = useLoaderData();
+      if (loaderData && typeof loaderData === 'object') {
+        Object.assign(el as Record<string, unknown>, loaderData);
       }
+      rootEl.appendChild(el);
+      return;
+    }
+
+    // Legacy VNode route: call component(), convert VNode → DOM
+    const vnode = resolveComponentResult(await route.component());
+    if (expectedRender !== renderId || !router || !rootEl) return;
+    if (vnode != null && vnode !== false) {
+      rootEl.appendChild(renderToDom(vnode));
     }
   }
 
