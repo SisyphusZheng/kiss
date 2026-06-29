@@ -22,7 +22,7 @@ async function requestJson<T>(
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     return await res.json() as T;
   } catch (err) {
-    console.warn(`[reader-api] ${path} failed:`, err);
+    console.warn('[reader-api] request failed', { path, err });
     if (fallback !== undefined) return fallback;
     throw err;
   }
