@@ -83,9 +83,9 @@ v0.41-v1.0 blocker.
 | v0.41.0-alpha.4 | OpenElement in Fresh                               | Prove openElement components inside Fresh through the lightweight client runtime and Preact island proof.                                                            | Released                 |
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Reader Proof               | First-class single-page-application mode with client-side router; WeRead-style Deno Desktop reader backed by local/open fixtures; no WeRead private API integration. | PR hardening             |
 | v0.41.0-alpha.6 | App Protocol Architecture Hardening                | Make App own RouteGraph/RenderPipeline/RequestContext; keep Vite/Hono/Nitro as official adapters; promote Reader into regression dogfood.                            | Planned                  |
-| v0.41.0-alpha.7 | Practice App Train                                 | Reserved for the next real app dogfood target after alpha.6 validates the framework architecture.                                                                    | Planned                  |
+| v0.41.0-alpha.7 | Mac Mastodon Desktop Incubation                    | OpenElement + Deno Desktop macOS social/IM-shaped dogfood app; accountless Mastodon/GoToSocial reading first, no OAuth/DM/notifications yet.                         | Planned                  |
 | v0.41.0-beta.1  | v0.41.0 Stabilization                              | Close alpha feedback, update docs/starters/examples, freeze public surface for v0.41.0.                                                                              | Planned                  |
-| v0.41.0         | WC fullstack framework + Basic Element proof       | Stable npm-first distribution, hardened signal-DOM architecture, validated WC integration, external-framework runtime, SPA reader proof, and architecture hardening. | Planned                  |
+| v0.41.0         | WC fullstack framework + Basic Element proof       | Stable npm-first distribution, hardened signal-DOM architecture, validated WC integration, SPA reader proof, architecture hardening, and desktop app incubation.     | Planned                  |
 | v0.42.0         | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                            | Planned                  |
 | v0.43.0         | Data + Cache Primitives                            | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                    | Planned                  |
 | v0.44.0         | Forms + Mutations                                  | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                              | Planned                  |
@@ -902,13 +902,42 @@ Core work:
 Detailed execution lives in `docs/release/v0.41.0-alpha.6-plan.md` and GitHub
 issues #145 through #154.
 
-## v0.41.0-alpha.7 - Practice App Train
+## v0.41.0-alpha.7 - Mac Mastodon Desktop Incubation
 
-Alpha.7 is reserved for the next real application dogfood train after alpha.6
-validates the architecture. Mastodon/GoToSocial remains a possible candidate,
-but it is no longer committed as alpha.6 scope. Any social-client proof still
-depends on later server/data/forms/session/cache primitives unless scoped as a
-strict read-only client-only exercise.
+After alpha.6 validates the App/protocol architecture and first-party Deno
+Desktop target contract, alpha.7 starts the OpenElement + Deno Desktop macOS
+Mastodon/IM incubation project.
+
+This is the second dogfood app after Reader:
+
+- Reader proves local-first reading, notes, sources, PDF/text rendering, and
+  desktop ergonomics.
+- Mac Mastodon Desktop proves a networked desktop social app loop: remote
+  public APIs, timeline/profile/status reading, cache/error/rate-limit states,
+  desktop navigation, and app-shell reuse.
+
+Alpha.7 stays deliberately narrow:
+
+- macOS/Deno Desktop shell.
+- Instance selector for Mastodon/GoToSocial-compatible public instances.
+- Public timeline.
+- Profile page.
+- Status detail / thread reading.
+- Local saved accounts/statuses as a bookmark-like feature.
+- Basic search where public instance APIs support it.
+- Reuse Reader/app-shell learnings for sidebars, panels, settings, keyboard
+  flow, local cache, and verification.
+
+Deferred until later framework primitives:
+
+- OAuth/session flow.
+- Direct messages.
+- Notifications.
+- Streaming/background sync.
+- Compose, reply, favorite, boost, or any authenticated mutation.
+- Encrypted credential storage.
+
+Detailed execution lives in `docs/release/v0.41.0-alpha.7-plan.md`.
 
 ## Explicit Non-Goals
 

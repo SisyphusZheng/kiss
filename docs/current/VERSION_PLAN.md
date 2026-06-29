@@ -26,9 +26,10 @@ The release is staged through alpha lines with explicit execution plans:
   PR/framework closure.
 - **alpha.6**: OpenElement App/protocol architecture hardening, official stack
   contracts, Deno Desktop target contract, and Reader regression-grade dogfood.
-- **alpha.7**: Reserved for the next practice app train after alpha.6 validates
-  the framework architecture; Mastodon/GoToSocial may resume here if still the
-  right dogfood target.
+- **alpha.7**: Mac Mastodon Desktop incubation after alpha.6 validates the
+  framework architecture. This keeps the OpenElement + Deno Desktop social/IM
+  idea alive as a narrow networked desktop dogfood app, not a full authenticated
+  IM product.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -137,11 +138,11 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
 - `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening and Reader dogfood
+- `docs/release/v0.41.0-alpha.7-plan.md` — Mac Mastodon Desktop incubation
 
-Alpha.7 remains reserved for a later practice app train after alpha.6 closes the
-framework architecture loop. The stabilization phase will be recorded in
-`docs/release/v0.41.0-beta.1-plan.md` when the alpha.6/alpha.7 feedback loop is
-complete.
+Alpha.7 starts only after alpha.6 closes the framework architecture loop. The
+stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`
+when the alpha.6/alpha.7 feedback loop is complete.
 
 ## Governance Rules
 
