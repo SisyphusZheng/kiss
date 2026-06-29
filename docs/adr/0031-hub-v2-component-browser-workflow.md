@@ -173,7 +173,7 @@ Auto-generated from CEM manifest:
 
 ```html
 <script>
-import 'package-name/register.js';
+  import 'package-name/register.js';
 </script>
 <template>
   <my-component attr="value"></my-component>

@@ -61,10 +61,14 @@
   --error-bg: #fdeee9;
   --error-fg: #c8392a;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --font-serif: 'Source Han Serif SC', 'Songti SC', 'STSong',
-    Georgia, 'Times New Roman', serif;
+  --font-sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
+  --font-serif: 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, 'Times New Roman', serif;
   --font-mono: 'SF Mono', Menlo, Consolas, monospace;
 }
 
@@ -508,7 +512,7 @@ button {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0));
   z-index: 2;
   pointer-events: none;
 }

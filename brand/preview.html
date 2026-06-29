@@ -5,265 +5,274 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>openElement — Brand</title>
     <style>
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    :root {
-      --ink: #0a0a0a;
-      --brand: #8262db;
-      --paper: #fafafa;
-      --muted: #666;
-      --faint: #999;
-      --line: #e5e5e5;
-      --mono: 'SF Mono','Geist Mono',ui-monospace,Menlo,monospace;
-      --sans: 'Inter',-apple-system,sans-serif;
-    }
-    html {
-      -webkit-font-smoothing: antialiased;
-    }
-    body {
-      font-family: var(--sans);
-      background: var(--paper);
-      color: var(--ink);
-      font-size: 15px;
-      line-height: 1.55;
-      letter-spacing: -.01em;
-    }
-    .wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 28px;
-    }
-    nav {
-      padding: 20px 0;
-    }
-    nav .wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .nav-brand svg {
-      width: 22px;
-      height: 22px;
-    }
-    .nav-brand span {
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: -.02em;
-    }
-    .nav-meta {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .04em;
-    }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --ink: #0a0a0a;
+        --brand: #8262db;
+        --paper: #fafafa;
+        --muted: #666;
+        --faint: #999;
+        --line: #e5e5e5;
+        --mono: 'SF Mono', 'Geist Mono', ui-monospace, Menlo, monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 15px;
+        line-height: 1.55;
+        letter-spacing: -0.01em;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+      nav {
+        padding: 20px 0;
+      }
+      nav .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-brand svg {
+        width: 22px;
+        height: 22px;
+      }
+      .nav-brand span {
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .nav-meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        letter-spacing: 0.04em;
+      }
 
-    .hero {
-      padding: 96px 0 88px;
-      text-align: center;
-    }
-    .hero svg {
-      width: 180px;
-      height: 180px;
-    }
-    h1 {
-      font-size: 40px;
-      font-weight: 400;
-      letter-spacing: -.03em;
-      margin-top: 40px;
-    }
-    h1 b {
-      font-weight: 600;
-      color: var(--brand);
-    }
-    .tag {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--brand);
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      margin-top: 14px;
-      display: inline-block;
-    }
+      .hero {
+        padding: 96px 0 88px;
+        text-align: center;
+      }
+      .hero svg {
+        width: 180px;
+        height: 180px;
+      }
+      h1 {
+        font-size: 40px;
+        font-weight: 400;
+        letter-spacing: -0.03em;
+        margin-top: 40px;
+      }
+      h1 b {
+        font-weight: 600;
+        color: var(--brand);
+      }
+      .tag {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--brand);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-top: 14px;
+        display: inline-block;
+      }
 
-    section {
-      padding: 72px 0;
-      border-top: 1px solid var(--line);
-    }
-    .eb {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-      display: block;
-    }
-    h2 {
-      font-size: 26px;
-      font-weight: 500;
-      letter-spacing: -.025em;
-      line-height: 1.25;
-    }
-    p {
-      color: var(--muted);
-      max-width: 520px;
-      font-size: 15px;
-      line-height: 1.65;
-      margin-top: 12px;
-    }
+      section {
+        padding: 72px 0;
+        border-top: 1px solid var(--line);
+      }
+      .eb {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        display: block;
+      }
+      h2 {
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
+      }
+      p {
+        color: var(--muted);
+        max-width: 520px;
+        font-size: 15px;
+        line-height: 1.65;
+        margin-top: 12px;
+      }
 
-    .stage {
-      margin-top: 36px;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .stage.l {
-      background: #fff;
-      border: 1px solid var(--line);
-      padding: 56px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 160px;
-    }
-    .stage.d {
-      background: linear-gradient(145deg,#111,#1a1a22);
-      padding: 56px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 160px;
-    }
-    .stage.d svg [fill="#0a0a0a"] {
-      fill: #fff;
-    }
-    .stage.d svg text[fill="#0a0a0a"] {
-      fill: #fff;
-    }
-    .stage.d svg [fill="#8262db"] {
-      fill: #b59cff;
-    }
-    .stage svg {
-      max-width: 100%;
-      height: auto;
-    }
-    .cap {
-      margin-top: 10px;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      text-align: center;
-      letter-spacing: .04em;
-    }
-    .pair {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 36px;
-    }
-    @media (max-width:720px) {
+      .stage {
+        margin-top: 36px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .stage.l {
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 56px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 160px;
+      }
+      .stage.d {
+        background: linear-gradient(145deg, #111, #1a1a22);
+        padding: 56px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 160px;
+      }
+      .stage.d svg [fill='#0a0a0a'] {
+        fill: #fff;
+      }
+      .stage.d svg text[fill='#0a0a0a'] {
+        fill: #fff;
+      }
+      .stage.d svg [fill='#8262db'] {
+        fill: #b59cff;
+      }
+      .stage svg {
+        max-width: 100%;
+        height: auto;
+      }
+      .cap {
+        margin-top: 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        text-align: center;
+        letter-spacing: 0.04em;
+      }
       .pair {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 36px;
       }
-    }
+      @media (max-width: 720px) {
+        .pair {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    .merch {
-      display: grid;
-      grid-template-columns: repeat(4,1fr);
-      gap: 14px;
-      margin-top: 36px;
-    }
-    @media (max-width:720px) {
       .merch {
-        grid-template-columns: repeat(2,1fr);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-top: 36px;
       }
-    }
-    .mc {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      overflow: hidden;
-      background: #fff;
-    }
-    .mc-s {
-      aspect-ratio: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .mc-s.lt {
-      background: linear-gradient(135deg,#f4f2ee,#eee9e3);
-    }
-    .mc-s.dk {
-      background: linear-gradient(140deg,#14101c,#0c0a12);
-    }
-    .mc-s svg {
-      width: 46%;
-    }
-    .mc-m {
-      padding: 10px 14px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-    }
-    .mc-m span:last-child {
-      font-family: var(--mono);
-      color: var(--faint);
-    }
+      @media (max-width: 720px) {
+        .merch {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .mc {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .mc-s {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mc-s.lt {
+        background: linear-gradient(135deg, #f4f2ee, #eee9e3);
+      }
+      .mc-s.dk {
+        background: linear-gradient(140deg, #14101c, #0c0a12);
+      }
+      .mc-s svg {
+        width: 46%;
+      }
+      .mc-m {
+        padding: 10px 14px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+      }
+      .mc-m span:last-child {
+        font-family: var(--mono);
+        color: var(--faint);
+      }
 
-    .tee {
-      width: 160px;
-      height: 205px;
-      background: #ddd9cf;
-      border-radius: 5px 5px 2px 2px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tee::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 62px;
-      height: 20px;
-      background: #ddd9cf;
-      clip-path: polygon(0 0,100% 0,86% 100%,14% 100%);
-    }
-    .tee svg {
-      width: 52px;
-    }
+      .tee {
+        width: 160px;
+        height: 205px;
+        background: #ddd9cf;
+        border-radius: 5px 5px 2px 2px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tee::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 62px;
+        height: 20px;
+        background: #ddd9cf;
+        clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+      }
+      .tee svg {
+        width: 52px;
+      }
 
-    footer {
-      padding: 56px 0;
-      text-align: center;
-      border-top: 1px solid var(--line);
-    }
-    footer p {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--faint);
-      letter-spacing: .05em;
-    }
+      footer {
+        padding: 56px 0;
+        text-align: center;
+        border-top: 1px solid var(--line);
+      }
+      footer p {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        letter-spacing: 0.05em;
+      }
     </style>
   </head>
   <body>
     <nav>
       <div class="wrap">
         <div
-          class="nav-brand"><svg viewBox="0 0 128 128"><path fill-rule="evenodd" fill="#0a0a0a" d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"/></svg><span>openElement</span></div>
+          class="nav-brand"
+        >
+          <svg viewBox="0 0 128 128">
+            <path
+              fill-rule="evenodd"
+              fill="#0a0a0a"
+              d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+            />
+          </svg><span>openElement</span>
+        </div>
         <div class="nav-meta">v9</div>
       </div>
     </nav>
@@ -271,8 +280,11 @@
     <div class="hero">
       <div class="wrap">
         <svg viewBox="0 0 128 128">
-          <path fill-rule="evenodd" fill="#0a0a0a"
-            d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+          <path
+            fill-rule="evenodd"
+            fill="#0a0a0a"
+            d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+          />
         </svg>
         <h1>open<b>Element</b></h1>
         <span class="tag">web components · full-stack</span>
@@ -283,7 +295,11 @@
       <div class="wrap">
         <span class="eb">Mark</span>
         <h2>One circle, one subtraction.</h2>
-        <p>Solid circle (R=50, center 64,64). Subtract an offset circle (R=44, center 78,50). The result is a crescent — asymmetric, directional, alive. No letters, no decoration, one geometric operation.</p>
+        <p>
+          Solid circle (R=50, center 64,64). Subtract an offset circle (R=44, center 78,50). The
+          result is a crescent — asymmetric, directional, alive. No letters, no decoration, one
+          geometric operation.
+        </p>
       </div>
     </section>
 
@@ -294,25 +310,43 @@
         <div class="stage l">
           <svg viewBox="0 0 520 128">
             <g transform="translate(16,16) scale(0.75)">
-              <path fill-rule="evenodd" fill="#0a0a0a"
-                d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+              <path
+                fill-rule="evenodd"
+                fill="#0a0a0a"
+                d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+              />
             </g>
-            <text x="136" y="82" font-family="Inter,sans-serif" font-size="54" fill="#0a0a0a"
-              letter-spacing="-1.5">
+            <text
+              x="136"
+              y="82"
+              font-family="Inter,sans-serif"
+              font-size="54"
+              fill="#0a0a0a"
+              letter-spacing="-1.5"
+            >
               <tspan font-weight="400">open</tspan>
               <tspan fill="#8262db" font-weight="600">Element</tspan>
             </text>
           </svg>
         </div>
         <p class="cap">HORIZONTAL · 520 × 128</p>
-        <div class="stage d" style="margin-top:16px">
+        <div class="stage d" style="margin-top: 16px">
           <svg viewBox="0 0 520 128">
             <g transform="translate(16,16) scale(0.75)">
-              <path fill-rule="evenodd" fill="#ffffff"
-                d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+              <path
+                fill-rule="evenodd"
+                fill="#ffffff"
+                d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+              />
             </g>
-            <text x="136" y="82" font-family="Inter,sans-serif" font-size="54" fill="#fff"
-              letter-spacing="-1.5">
+            <text
+              x="136"
+              y="82"
+              font-family="Inter,sans-serif"
+              font-size="54"
+              fill="#fff"
+              letter-spacing="-1.5"
+            >
               <tspan font-weight="400">open</tspan>
               <tspan fill="#b59cff" font-weight="600">Element</tspan>
             </text>
@@ -321,39 +355,75 @@
         <p class="cap">INVERTED · DARK</p>
         <div class="pair">
           <div>
-            <div class="stage l" style="min-height:300px;padding:36px">
+            <div class="stage l" style="min-height: 300px; padding: 36px">
               <svg viewBox="0 0 360 400">
                 <g transform="translate(100,32) scale(1.25)">
-                  <path fill-rule="evenodd" fill="#0a0a0a"
-                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+                  <path
+                    fill-rule="evenodd"
+                    fill="#0a0a0a"
+                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                  />
                 </g>
-                <text x="180" y="268" text-anchor="middle" font-family="Inter,sans-serif"
-                  font-size="58" fill="#0a0a0a" letter-spacing="-1.5">
+                <text
+                  x="180"
+                  y="268"
+                  text-anchor="middle"
+                  font-family="Inter,sans-serif"
+                  font-size="58"
+                  fill="#0a0a0a"
+                  letter-spacing="-1.5"
+                >
                   <tspan font-weight="400">open</tspan>
                   <tspan fill="#8262db" font-weight="600">Element</tspan>
                 </text>
-                <text x="180" y="304" text-anchor="middle" font-family="'SF Mono',monospace"
-                  font-size="12" fill="#8262db"
-                  letter-spacing="3">WEB COMPONENTS · FULL-STACK</text>
+                <text
+                  x="180"
+                  y="304"
+                  text-anchor="middle"
+                  font-family="'SF Mono',monospace"
+                  font-size="12"
+                  fill="#8262db"
+                  letter-spacing="3"
+                >
+                  WEB COMPONENTS · FULL-STACK
+                </text>
               </svg>
             </div>
             <p class="cap">VERTICAL · LIGHT</p>
           </div>
           <div>
-            <div class="stage d" style="min-height:300px;padding:36px">
+            <div class="stage d" style="min-height: 300px; padding: 36px">
               <svg viewBox="0 0 360 400">
                 <g transform="translate(100,32) scale(1.25)">
-                  <path fill-rule="evenodd" fill="#ffffff"
-                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+                  <path
+                    fill-rule="evenodd"
+                    fill="#ffffff"
+                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                  />
                 </g>
-                <text x="180" y="268" text-anchor="middle" font-family="Inter,sans-serif"
-                  font-size="58" fill="#fff" letter-spacing="-1.5">
+                <text
+                  x="180"
+                  y="268"
+                  text-anchor="middle"
+                  font-family="Inter,sans-serif"
+                  font-size="58"
+                  fill="#fff"
+                  letter-spacing="-1.5"
+                >
                   <tspan font-weight="400">open</tspan>
                   <tspan fill="#b59cff" font-weight="600">Element</tspan>
                 </text>
-                <text x="180" y="304" text-anchor="middle" font-family="'SF Mono',monospace"
-                  font-size="12" fill="#9c7df2"
-                  letter-spacing="3">WEB COMPONENTS · FULL-STACK</text>
+                <text
+                  x="180"
+                  y="304"
+                  text-anchor="middle"
+                  font-family="'SF Mono',monospace"
+                  font-size="12"
+                  fill="#9c7df2"
+                  letter-spacing="3"
+                >
+                  WEB COMPONENTS · FULL-STACK
+                </text>
               </svg>
             </div>
             <p class="cap">VERTICAL · INVERTED</p>
@@ -371,8 +441,11 @@
             <div class="mc-s lt">
               <div class="tee">
                 <svg viewBox="0 0 128 128">
-                  <path fill-rule="evenodd" fill="#0a0a0a"
-                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+                  <path
+                    fill-rule="evenodd"
+                    fill="#0a0a0a"
+                    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                  />
                 </svg>
               </div>
             </div>
@@ -380,27 +453,36 @@
           </div>
           <div class="mc">
             <div class="mc-s lt">
-              <svg viewBox="0 0 128 128" style="width:48%">
-                <path fill-rule="evenodd" fill="#0a0a0a"
-                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+              <svg viewBox="0 0 128 128" style="width: 48%">
+                <path
+                  fill-rule="evenodd"
+                  fill="#0a0a0a"
+                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                />
               </svg>
             </div>
             <div class="mc-m"><span>Sticker</span><span>VINYL</span></div>
           </div>
           <div class="mc">
             <div class="mc-s dk">
-              <svg viewBox="0 0 128 128" style="width:48%">
-                <path fill-rule="evenodd" fill="#ffffff"
-                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+              <svg viewBox="0 0 128 128" style="width: 48%">
+                <path
+                  fill-rule="evenodd"
+                  fill="#ffffff"
+                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                />
               </svg>
             </div>
             <div class="mc-m"><span>Sticker</span><span>DARK</span></div>
           </div>
           <div class="mc">
             <div class="mc-s lt">
-              <svg viewBox="0 0 128 128" style="width:38%">
-                <path fill-rule="evenodd" fill="#0a0a0a"
-                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+              <svg viewBox="0 0 128 128" style="width: 38%">
+                <path
+                  fill-rule="evenodd"
+                  fill="#0a0a0a"
+                  d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+                />
               </svg>
             </div>
             <div class="mc-m"><span>Pin</span><span>ENAMEL</span></div>

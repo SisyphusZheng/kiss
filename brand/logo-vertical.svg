@@ -2,19 +2,32 @@
 <svg width="360" height="400" viewBox="0 0 360 400" xmlns="http://www.w3.org/2000/svg" role="img">
   <title>openElement — Vertical</title>
   <g transform="translate(100,32) scale(1.25)">
-    <path fill-rule="evenodd" fill="#0a0a0a"
+    <path
+      fill-rule="evenodd"
+      fill="#0a0a0a"
       d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z
-             M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+             M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z"
+    />
   </g>
-  <text x="180" y="268" text-anchor="middle"
+  <text
+    x="180"
+    y="268"
+    text-anchor="middle"
     font-family="'Inter',-apple-system,system-ui,sans-serif"
-    font-size="58" fill="#0a0a0a" letter-spacing="-1.5">
+    font-size="58"
+    fill="#0a0a0a"
+    letter-spacing="-1.5"
+  >
     <tspan font-weight="400">open</tspan>
     <tspan fill="#8262db" font-weight="600">Element</tspan>
   </text>
-  <text x="180" y="304" text-anchor="middle"
+  <text
+    x="180"
+    y="304"
+    text-anchor="middle"
     font-family="'SF Mono','Geist Mono',monospace"
-    font-size="12" fill="#8262db" letter-spacing="3">
-    WEB COMPONENTS · FULL-STACK
-  </text>
+    font-size="12"
+    fill="#8262db"
+    letter-spacing="3"
+  >WEB COMPONENTS · FULL-STACK</text>
 </svg>
