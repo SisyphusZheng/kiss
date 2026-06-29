@@ -114,6 +114,8 @@ const SHADOW_STYLE_CSS = `
     --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-serif: 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, 'Times New Roman', serif;
     --font-mono: 'SF Mono', Menlo, Consolas, monospace;
+    /* Reader preferences are set on document.documentElement and inherit into */
+    /* shadow roots; keep the defaults here as fallbacks only. */
     --reader-font-size: 16px;
     --reader-line-height: 1.7;
     --reader-measure: 65ch;

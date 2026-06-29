@@ -59,6 +59,36 @@ function cleanPdfText(value: string): string {
     .trim();
 }
 
+interface ReaderPreferenceSettings {
+  fontSize: number;
+  lineHeight: number;
+  measure: number;
+  pdfMaxWidth: number;
+}
+
+function loadReaderSettings(): ReaderPreferenceSettings {
+  const defaults: ReaderPreferenceSettings = {
+    fontSize: 22,
+    lineHeight: 1.9,
+    measure: 65,
+    pdfMaxWidth: 720,
+  };
+  try {
+    const raw = localStorage.getItem('reader:settings');
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+    const measure = Number(parsed.measure) || defaults.measure;
+    return {
+      fontSize: Number(parsed.fontSize) || defaults.fontSize,
+      lineHeight: Number(parsed.lineHeight) || defaults.lineHeight,
+      measure,
+      pdfMaxWidth: Math.max(720, measure * 14),
+    };
+  } catch {
+    return defaults;
+  }
+}
+
 // Lazy-load pdf.js to avoid doing reader work until the PDF route is visited.
 // The worker is bundled by Vite so the desktop app works offline.
 
@@ -89,6 +119,7 @@ function PdfReaderIsland(props: PdfReaderProps) {
   const [immersive, setImmersive] = useState(false);
   const [pageText, setPageText] = useState('');
   const [selectedText, setSelectedText] = useState('');
+  const [settings] = useState(loadReaderSettings);
   const islandRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const renderTaskRef = useRef<PdfRenderTask | null>(null);
@@ -256,6 +287,12 @@ function PdfReaderIsland(props: PdfReaderProps) {
   return h('section', {
     class: `pdf-island ${immersive ? 'immersive' : ''}`,
     ref: islandRef,
+    style: {
+      '--reader-font-size': `${settings.fontSize}px`,
+      '--reader-line-height': String(settings.lineHeight),
+      '--reader-measure': `${settings.measure}ch`,
+      '--reader-pdf-max-width': `${settings.pdfMaxWidth}px`,
+    },
   }, [
     h(
       'style',
@@ -274,7 +311,7 @@ function PdfReaderIsland(props: PdfReaderProps) {
         .pdf-toolbar .zoom-info{color:var(--text-muted,#888);font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:center}
         .pdf-canvas-area{background:transparent;min-height:calc(100vh - 210px);display:flex;justify-content:center;align-items:flex-start;padding:32px 24px 120px;overflow:visible;flex:1;position:relative;cursor:text}
         .pdf-canvas-area canvas{display:none}
-        .reader-text-page{color:var(--text-primary,#1a1a1a);font-family:var(--font-serif,Georgia,serif);font-size:22px;line-height:1.9;max-width:720px;min-height:520px;text-align:left}
+        .reader-text-page{color:var(--text-primary,#1a1a1a);font-family:var(--font-serif,Georgia,serif);font-size:var(--reader-font-size,22px);line-height:var(--reader-line-height,1.9);max-width:min(var(--reader-pdf-max-width,720px),100%);min-height:520px;text-align:left}
         .reader-text-kicker{font-size:15px;letter-spacing:.09em;text-align:center;text-transform:uppercase;margin:0 0 18px}
         .reader-text-title{font-size:34px;font-weight:500;line-height:1.2;text-align:center;margin:0 0 42px}
         .reader-text-body{white-space:normal}
