@@ -13,6 +13,7 @@ import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 import { escapeAttr, escapeHtml } from '@openelement/core';
@@ -99,8 +100,8 @@ export function buildPlugin(
 </body>
 </html>`;
 
-          await Deno.mkdir(absOutDir, { recursive: true });
-          await Deno.writeTextFile(indexPath, html);
+          await mkdir(absOutDir, { recursive: true });
+          await writeFile(indexPath, html, 'utf-8');
           log.info('SPA shell written to index.html');
         } else {
           log.info('SPA shell preserved from Vite output');

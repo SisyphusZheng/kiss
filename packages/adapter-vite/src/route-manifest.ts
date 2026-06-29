@@ -34,6 +34,7 @@
 
 import { scanRoutes } from '@openelement/ssg';
 import { dirname, join, posix, sep, win32 } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 /**
  * Parameters for route manifest generation.
@@ -160,8 +161,8 @@ export async function writeRouteManifest(
   const { routesDir = 'app/routes', outDir } = options;
   const manifestPath = join(outDir, 'route-manifest.ts');
 
-  await Deno.mkdir(outDir, { recursive: true });
+  await mkdir(outDir, { recursive: true });
   const { content, count } = await generateRouteManifest(routesDir, manifestPath);
-  await Deno.writeTextFile(manifestPath, content);
+  await writeFile(manifestPath, content, 'utf-8');
   return count;
 }
