@@ -53,6 +53,32 @@ entry points).
 The canonical authoring import is `@openelement/element`. The signal engine is
 `@preact/signals-core`.
 
+## Package Contracts
+
+Each retained package has a single responsibility, a public surface for app
+authors, an internal surface for sibling packages, and a runtime constraint.
+
+| Package                     | Responsibility                                                                                                 | Public surface                                                                            | Internal surface                                                       | Runtime                                                                                    |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `@openelement/protocol`     | Shared type contracts (hydration, signal, vnode, render, manifest, data, errors).                              | `src/**/*.ts` re-exported at package root.                                                | Direct deep imports are allowed only inside the monorepo during alpha. | Runtime-free; no `Deno.*` or `node:*` APIs.                                                |
+| `@openelement/signal`       | Signal implementation; default is `@preact/signals-core`.                                                      | Package root.                                                                             | `signal-engine.ts` wiring.                                             | Runtime-free.                                                                              |
+| `@openelement/core`         | Low-level kernel: static renderer, hydration lifecycle, StyleSheet, signal integration, SSG contracts, logger. | `src/index.ts`, `src/static.ts`, `src/hydrate.ts`, `src/style-sheet.ts`, `src/logger.ts`. | Internal SSG postprocess helpers consumed by `@openelement/ssg`.       | Runtime-free; no `Deno.*` or `node:*` APIs.                                                |
+| `@openelement/element`      | Canonical authoring facade for `OpenElement`, `StyleSheet`, islands, and signals.                              | Package root.                                                                             | None.                                                                  | Runtime-free browser package; must import safely in SSR via `@openelement/core/static`.    |
+| `@openelement/ui`           | First-party `open-*` component library.                                                                        | `src/index.ts`, per-component tag-name exports.                                           | `daisy-classes.ts`, `open-props-tokens.ts` shared style modules.       | Runtime-free browser package.                                                              |
+| `@openelement/router`       | Route support behind the framework adapter.                                                                    | `src/index.ts`, `src/client-router.ts`.                                                   | Framework-facing route manifest utilities.                             | Runtime-free.                                                                              |
+| `@openelement/app`          | Framework authoring API, including optional Preact island proof under `./preact`.                              | Package root, `@openelement/app/preact`.                                                  | None.                                                                  | Runtime-free framework package; adapters handle build-time concerns.                       |
+| `@openelement/content`      | Content support behind framework recipes (MDX/markdown parsing).                                               | `src/index.ts`.                                                                           | Direct imports by `@openelement/ssg`.                                  | Build/server glue; may use Deno/Node APIs.                                                 |
+| `@openelement/ssg`          | Adapter-agnostic SSG engine: entry descriptor, render pipeline, route scanner, postprocess.                    | `src/index.ts`.                                                                           | Direct imports by `@openelement/adapter-vite`.                         | Build/server glue; may use Deno/Node APIs.                                                 |
+| `@openelement/adapter-vite` | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                                    | `src/index.ts`, CLI entry points.                                                         | None.                                                                  | Build/server glue; prefers Node APIs in public helpers so npm consumers can run the build. |
+| `@openelement/create`       | Starter and consumer entry.                                                                                    | CLI binary, scaffold templates.                                                           | None.                                                                  | Build/server glue; may use Deno/Node APIs.                                                 |
+
+### Boundary rules
+
+- **Runtime-free packages** (`protocol`, `signal`, `core`, `element`, `ui`, `router`, `app`) must not use `Deno.*` or `node:*` APIs in public `src/` code.
+- **Build/server glue packages** (`content`, `ssg`, `adapter-vite`, `create`) may use Deno/Node APIs; Deno is the development toolchain, but published helpers that npm consumers invoke directly must not crash outside Deno.
+- **Public surface** is what application authors import. **Internal surface** is what sibling packages import during the alpha line; internal subpaths may change without a deprecation period until v1.0.
+- The canonical consumer import is `@openelement/element`. Lower-level packages are foundation only.
+
 ## Governance
 
 The v0.40.4 cleanup train is manually approved breaking work consolidated into
