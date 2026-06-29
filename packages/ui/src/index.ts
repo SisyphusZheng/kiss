@@ -36,35 +36,35 @@
  */
 
 // Design tokens (CSSStyleSheet, zero Lit dependency)
-export { openPropsRootSheet, openPropsTokenSheet } from './open-props-tokens.js';
+export { openPropsRootSheet, openPropsTokenSheet } from './open-props-tokens.ts';
 
 // daisyUI forked class sheet (Pure CSS, Open Props tokens)
-export { daisyClassSheet } from './daisy-classes.js';
+export { daisyClassSheet } from './daisy-classes.ts';
 
 // Components
-export { OpenButton, tagName as openButtonTagName } from './open-button.js';
-export { OpenCard, tagName as openCardTagName } from './open-card.js';
-export { OpenInput, tagName as openInputTagName } from './open-input.js';
-export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.js';
-export { OpenBadge, tagName as openBadgeTagName } from './open-badge.js';
-export { OpenBrandMark, tagName as openBrandMarkTagName } from './open-brand-mark.js';
-export { OpenLabPanel, tagName as openLabPanelTagName } from './open-lab-panel.js';
-export { OpenLabStage, tagName as openLabStageTagName } from './open-lab-stage.js';
+export { OpenButton, tagName as openButtonTagName } from './open-button.tsx';
+export { OpenCard, tagName as openCardTagName } from './open-card.tsx';
+export { OpenInput, tagName as openInputTagName } from './open-input.tsx';
+export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.tsx';
+export { OpenBadge, tagName as openBadgeTagName } from './open-badge.tsx';
+export { OpenBrandMark, tagName as openBrandMarkTagName } from './open-brand-mark.tsx';
+export { OpenLabPanel, tagName as openLabPanelTagName } from './open-lab-panel.tsx';
+export { OpenLabStage, tagName as openLabStageTagName } from './open-lab-stage.tsx';
 export {
   OpenStandardsVisual,
   tagName as openStandardsVisualTagName,
-} from './open-standards-visual.js';
-export { OpenLayout, tagName as openLayoutTagName } from './open-layout.js';
-export type { HeaderNavLink, NavItem, NavSection } from './open-layout.js';
-export { OpenThemeToggle, tagName as openThemeToggleTagName } from './open-theme-toggle.js';
-export { default as OpenHeroPing, tagName as openHeroPingTagName } from './open-hero-ping.js';
-export { OpenDialog, tagName as openDialogTagName } from './open-dialog.js';
-export { OpenCallout, tagName as openCalloutTagName } from './open-callout.js';
-export { OpenStepCard, tagName as openStepCardTagName } from './open-step-card.js';
-export { OpenDropdown, tagName as openDropdownTagName } from './open-dropdown.js';
-export { OpenModal, tagName as openModalTagName } from './open-modal.js';
-export { OpenTabs, tagName as openTabsTagName } from './open-tabs.js';
+} from './open-standards-visual.tsx';
+export { OpenLayout, tagName as openLayoutTagName } from './open-layout.tsx';
+export type { HeaderNavLink, NavItem, NavSection } from './open-layout.tsx';
+export { OpenThemeToggle, tagName as openThemeToggleTagName } from './open-theme-toggle.tsx';
+export { default as OpenHeroPing, tagName as openHeroPingTagName } from './open-hero-ping.tsx';
+export { OpenDialog, tagName as openDialogTagName } from './open-dialog.tsx';
+export { OpenCallout, tagName as openCalloutTagName } from './open-callout.tsx';
+export { OpenStepCard, tagName as openStepCardTagName } from './open-step-card.tsx';
+export { OpenDropdown, tagName as openDropdownTagName } from './open-dropdown.tsx';
+export { OpenModal, tagName as openModalTagName } from './open-modal.tsx';
+export { OpenTabs, tagName as openTabsTagName } from './open-tabs.tsx';
 
 // Package manifest (WC Package Protocol)
 // Consumers (adapter-vite) read manifest.declarations to derive island metadata.
-export { manifest } from './manifest.js';
+export { manifest } from './manifest.ts';

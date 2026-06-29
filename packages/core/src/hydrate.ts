@@ -7,11 +7,11 @@
  * ADR-0109 Phase 1: split @openelement/core into static, hydrate, and csr.
  */
 
-export * from './static.js';
+export * from './static.ts';
 
 // Hydration scope
-export { HydrationScope } from './hydration-scope.js';
-export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.js';
+export { HydrationScope } from './hydration-scope.ts';
+export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.ts';
 
 // Binding layer
 export type {
@@ -19,7 +19,7 @@ export type {
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 export {
   bindAttr,
   bindClass,
@@ -34,25 +34,25 @@ export {
   bindStaticProp,
   bindStaticStyle,
   bindText,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 export {
   applyBindingDescriptor,
   commitBindings,
   registerBindingKind,
-} from './binding-activation.js';
+} from './binding-activation.ts';
 
 // Marker-based event hydration (DOM-specific parts not in static.ts)
 export {
   collectEventBindings,
   eventRecordsToDescriptors,
   hydrateEventMarkers,
-} from './event-hydration.js';
-export type { EventBinding, EventBindingRecord } from './event-hydration.js';
+} from './event-hydration.ts';
+export type { EventBinding, EventBindingRecord } from './event-hydration.ts';
 
 // DSD hydration contract
-export { createDsdRenderRoot, hydrateDsdEvents } from './dsd-hydration.js';
-export type { Constructor, DsdHydration } from './dsd-hydration.js';
+export { createDsdRenderRoot, hydrateDsdEvents } from './dsd-hydration.ts';
+export type { Constructor, DsdHydration } from './dsd-hydration.ts';
 
 // Client runtime for third-party frameworks
-export { disposeOpenElement, hydrateOpenElement } from './client-runtime.js';
-export type { ClientRuntimeOptions } from './client-runtime.js';
+export { disposeOpenElement, hydrateOpenElement } from './client-runtime.ts';
+export type { ClientRuntimeOptions } from './client-runtime.ts';

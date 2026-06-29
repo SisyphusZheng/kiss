@@ -8,8 +8,8 @@
 
 import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '@openelement/ssg';
 import type { SsgRenderEvidence, SsgRenderOptions, SsrBundle } from '@openelement/protocol/ssg';
-import { printBuildManifest } from '../build-manifest.js';
-import type { OpenElementBuildContext } from '../build-context.js';
+import { printBuildManifest } from '../build-manifest.ts';
+import type { OpenElementBuildContext } from '../build-context.ts';
 
 export { resolveDynamicRoutePath };
 export type {

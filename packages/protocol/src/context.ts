@@ -5,7 +5,7 @@
  * and is accessible to islands and layout components.
  */
 
-import type { RouteEntry } from './framework.js';
+import type { RouteEntry } from './framework.ts';
 
 /**
  * Minimal island descriptor used in SSR context.

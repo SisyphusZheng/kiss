@@ -372,6 +372,92 @@ Deno.test('submit without route action falls through to native form behavior', a
   assertEquals(submitEvent.defaultPrevented, false);
 });
 
+// ─── Shadow DOM retargeting regression ──────────────────────
+// When a <button type="submit"> inside a custom element (e.g. <open-button>)
+// triggers the form's submit event, the event bubbles out of the shadow
+// boundary and event.target is retargeted to the host element (open-button),
+// NOT the <form>. The handler must use composedPath() to recover the form.
+
+Deno.test('form submit works when event.target is retargeted by Shadow DOM', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const actionResult = { ok: true, shadowDom: true };
+  const app = defineApp({
+    mode: 'spa',
+    routes: [routeWithAction('/', actionResult)],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+
+  // Build the scenario: host element (open-button) is event.target,
+  // but the actual <form> lives inside the composedPath.
+  const form = new StubElement();
+  form.tagName = 'FORM';
+  const hostButton = new StubElement();
+  hostButton.tagName = 'OPEN-BUTTON';
+
+  const submitEvent = new Event('submit', { cancelable: true });
+  // event.target retargets to the host (open-button) — this is what
+  // the root listener sees after the event crosses the shadow boundary.
+  Object.defineProperty(submitEvent, 'target', {
+    value: hostButton,
+    writable: false,
+    configurable: true,
+  });
+  // composedPath() reveals the full path including the form inside the shadow tree.
+  Object.defineProperty(submitEvent, 'composedPath', {
+    value: () => [hostButton, form, stubRoot],
+    configurable: true,
+  });
+
+  stubRoot.dispatchEvent(submitEvent);
+  await new Promise((r) => setTimeout(r, 0));
+
+  const parsed = JSON.parse(stubRoot.textContent);
+  assertEquals(parsed.action, actionResult);
+});
+
+Deno.test('form submit ignored when neither target nor composedPath has a form', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [routeWithAction('/', { shouldNotRun: true })],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+
+  // Simulate a non-form submit (e.g. accidental dispatch from a div)
+  const div = new StubElement();
+  div.tagName = 'DIV';
+  const submitEvent = new Event('submit', { cancelable: true });
+  Object.defineProperty(submitEvent, 'target', {
+    value: div,
+    writable: false,
+    configurable: true,
+  });
+  Object.defineProperty(submitEvent, 'composedPath', {
+    value: () => [div, stubRoot],
+    configurable: true,
+  });
+
+  const result = stubRoot.dispatchEvent(submitEvent);
+  await new Promise((r) => setTimeout(r, 0));
+
+  // No form found → falls through to native (defaultPrevented stays false)
+  assertEquals(result, true);
+  assertEquals(submitEvent.defaultPrevented, false);
+  // Action did not run
+  const parsed = JSON.parse(stubRoot.textContent);
+  assertEquals(parsed.action, undefined);
+});
+
 Deno.test('async route component result renders after loader data is available', async () => {
   resetMocks({ pathname: '/' });
   stubRoot = new StubElement();
@@ -671,4 +757,81 @@ Deno.test('second render replaces first, not accumulates', async () => {
   firePopstate();
   await new Promise((r) => setTimeout(r, 0));
   assertEquals(JSON.parse(stubRoot.textContent).value, 'first');
+});
+
+// ─── OpenElement (tagName) route: actionData must reach the element ──
+// Regression: SPA renderComponent only assigned loaderData to custom
+// elements, never actionData. OpenElement pages reading `this.actionData`
+// in render() got undefined — so success toasts / validation errors never
+// appeared after a form submit. The element must receive actionData as a
+// property just like loaderData.
+
+Deno.test('tagName route: actionData is assigned to element after form submit', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const actionResult = { saved: true, message: '笔记已保存' };
+  const app = defineApp({
+    mode: 'spa',
+    routes: [{
+      path: '/',
+      tagName: 'reader-reading',
+      loader: () => Promise.resolve({ book: 'demo', page: 1 }),
+      action: () => Promise.resolve(actionResult),
+    }] as RouteConfig[],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+
+  // Initial render: element exists with loaderData, no actionData
+  const elAfterLoad = stubRoot.childNodes[0] as StubElement & Record<string, unknown>;
+  assertEquals((elAfterLoad as Record<string, unknown>).book, 'demo');
+  assertEquals((elAfterLoad as Record<string, unknown>).page, 1);
+  assertEquals((elAfterLoad as Record<string, unknown>).actionData, undefined);
+
+  // Simulate form submit
+  const form = new StubElement();
+  form.tagName = 'FORM';
+  const submitEvent = new Event('submit', { cancelable: true });
+  Object.defineProperty(submitEvent, 'target', {
+    value: form,
+    writable: false,
+    configurable: true,
+  });
+  stubRoot.dispatchEvent(submitEvent);
+  await new Promise((r) => setTimeout(r, 0));
+
+  // After submit: re-rendered element must have BOTH loaderData AND actionData
+  const elAfterSubmit = stubRoot.childNodes[0] as StubElement & Record<string, unknown>;
+  assertEquals((elAfterSubmit as Record<string, unknown>).book, 'demo');
+  assertEquals(
+    (elAfterSubmit as Record<string, unknown>).actionData,
+    actionResult,
+  );
+});
+
+Deno.test('tagName route: no actionData property set on initial GET load', async () => {
+  resetMocks({ pathname: '/' });
+  stubRoot = new StubElement();
+  stubRoot.tagName = 'DIV';
+
+  const app = defineApp({
+    mode: 'spa',
+    routes: [{
+      path: '/',
+      tagName: 'reader-reading',
+      loader: () => Promise.resolve({ book: 'demo' }),
+      // no action defined
+    }] as RouteConfig[],
+  });
+
+  app.mount('#root');
+  await new Promise((r) => setTimeout(r, 0));
+
+  const el = stubRoot.childNodes[0] as StubElement & Record<string, unknown>;
+  assertEquals((el as Record<string, unknown>).book, 'demo');
+  // actionData should NOT be set on initial load (useActionData returns undefined)
+  assertEquals((el as Record<string, unknown>).actionData, undefined);
 });

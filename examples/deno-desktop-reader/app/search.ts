@@ -7,9 +7,20 @@ export interface SearchResult {
   snippet: string;
 }
 
+const indexWriteQueues = new Map<string, Promise<void>>();
+
 function defaultIndexDir(): string {
   return (Deno.env.get('HOME') ?? Deno.env.get('USERPROFILE') ?? '/tmp') +
     '/.open-reader';
+}
+
+function queueIndexWrite(indexDir: string, write: () => void): Promise<void> {
+  const previous = indexWriteQueues.get(indexDir) ?? Promise.resolve();
+  const next = previous.then(write, write);
+  indexWriteQueues.set(indexDir, next.catch(() => {}));
+  return next.finally(() => {
+    if (indexWriteQueues.get(indexDir) === next) indexWriteQueues.delete(indexDir);
+  });
 }
 
 /**
@@ -21,18 +32,22 @@ export async function indexBook(
   indexDir?: string,
 ): Promise<void> {
   const dir = indexDir ?? defaultIndexDir();
-  const index = loadSearchIndex(dir);
+  let text: string;
 
   try {
     const data = new Uint8Array(await Deno.readFile(pdfPath));
     const parsed = await pdfParse(data);
-    index[bookId] = parsed.text;
+    text = parsed.text;
   } catch (err) {
     console.warn(`[search] indexBook failed for ${bookId}:`, err);
     return;
   }
 
-  saveSearchIndex(dir, index);
+  await queueIndexWrite(dir, () => {
+    const index = loadSearchIndex(dir);
+    index[bookId] = text;
+    saveSearchIndex(dir, index);
+  });
 }
 
 /**

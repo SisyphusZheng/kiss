@@ -185,6 +185,26 @@ Deno.test('printBuildManifest: total JS budget warning', () => {
   }
 });
 
+Deno.test('printBuildManifest: custom budget suppresses expected large reader chunks', () => {
+  const tmp = makeTempDir();
+  try {
+    const islandsDir = join(tmp, 'dist', 'client', 'islands');
+    mkdirSync(islandsDir, { recursive: true });
+    writeFileSync(join(islandsDir, 'pdf-reader.js'), 'x'.repeat(309 * 1024), 'utf-8');
+    writeFileSync(join(islandsDir, 'reader-shell.js'), 'x'.repeat(40 * 1024), 'utf-8');
+
+    const manifest = printBuildManifest({
+      root: tmp,
+      outDir: 'dist',
+      phase: 2,
+      budget: { islandKB: 350, totalJsKB: 450 },
+    });
+    assertEquals(manifest.warnings, []);
+  } finally {
+    cleanup(tmp);
+  }
+});
+
 Deno.test('printBuildManifest: HTML page budget warning', () => {
   const tmp = makeTempDir();
   try {

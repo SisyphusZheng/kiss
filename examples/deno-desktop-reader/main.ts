@@ -65,6 +65,14 @@ function html(body: string): Response {
   return new Response(body, { headers: { 'content-type': 'text/html' } });
 }
 
+function injectDesktopBridge(body: string): string {
+  const marker = '<script>window.__OPEN_READER_DESKTOP_HOST__=true;</script>';
+  if (body.includes('__OPEN_READER_DESKTOP_HOST__')) return body;
+  return body.includes('</head>')
+    ? body.replace('</head>', `${marker}</head>`)
+    : `${marker}${body}`;
+}
+
 function json(data: unknown): Response {
   return new Response(JSON.stringify(data), {
     headers: { 'content-type': 'application/json' },
@@ -87,6 +95,7 @@ function pdf(bytes: Uint8Array<ArrayBuffer>): Response {
 function serveFile(bytes: Uint8Array<ArrayBuffer>, ext: string): Response {
   const mime: Record<string, string> = {
     '.js': 'application/javascript',
+    '.mjs': 'application/javascript',
     '.css': 'text/css',
     '.html': 'text/html',
     '.json': 'application/json',
@@ -96,43 +105,6 @@ function serveFile(bytes: Uint8Array<ArrayBuffer>, ext: string): Response {
   return new Response(byteBody(bytes), {
     headers: { 'content-type': mime[ext] ?? 'application/octet-stream' },
   });
-}
-
-/** Find the main app JS bundle in dist/assets/ (pick largest reader-*.js). */
-function findAppScript(dir: URL): string | null {
-  try {
-    let best: string | null = null;
-    let bestSize = 0;
-    for (const entry of Deno.readDirSync(dir)) {
-      if (
-        entry.isFile && entry.name.startsWith('reader-') &&
-        entry.name.endsWith('.js')
-      ) {
-        const info = Deno.statSync(new URL(`./${entry.name}`, dir));
-        if (info.size > bestSize) {
-          bestSize = info.size;
-          best = entry.name;
-        }
-      }
-    }
-    return best;
-  } catch { /* dir may not exist */ }
-  return null;
-}
-
-/** Find the main CSS bundle in dist/assets/. */
-function findAppCss(dir: URL): string | null {
-  try {
-    for (const entry of Deno.readDirSync(dir)) {
-      if (
-        entry.isFile && entry.name.startsWith('style-') &&
-        entry.name.endsWith('.css')
-      ) {
-        return entry.name;
-      }
-    }
-  } catch { /* dir may not exist */ }
-  return null;
 }
 
 function notFound(): Response {
@@ -158,11 +130,54 @@ function methodNotAllowed(): Response {
   return new Response('Method Not Allowed', { status: 405 });
 }
 
-Deno.serve(async (req: Request) => {
+function closeApp(): Response {
+  setTimeout(() => {
+    void server?.shutdown().finally(() => Deno.exit(0));
+  }, 25);
+  return json({ closing: true });
+}
+
+async function pickDirectory(): Promise<Response> {
+  if (Deno.build.os !== 'darwin') {
+    return new Response(
+      JSON.stringify({ error: 'Folder picker is only implemented on macOS for now.' }),
+      { status: 501, headers: { 'content-type': 'application/json' } },
+    );
+  }
+
+  const command = new Deno.Command('osascript', {
+    args: ['-e', 'POSIX path of (choose folder with prompt "选择包含 PDF 的文件夹")'],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const output = await command.output();
+  if (!output.success) {
+    const err = new TextDecoder().decode(output.stderr).trim();
+    return new Response(
+      JSON.stringify({ error: err || 'Folder selection cancelled.' }),
+      { status: 400, headers: { 'content-type': 'application/json' } },
+    );
+  }
+  const path = new TextDecoder().decode(output.stdout).trim().replace(/\/$/, '');
+  return json({ path });
+}
+
+const server = Deno.serve(async (req: Request) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname;
-    const ext = pathname.slice(pathname.lastIndexOf('.'));
+    const dotIndex = pathname.lastIndexOf('.');
+    const ext = dotIndex > pathname.lastIndexOf('/') ? pathname.slice(dotIndex) : '';
+
+    if (pathname === '/api/app/close') {
+      if (req.method !== 'POST') return methodNotAllowed();
+      return closeApp();
+    }
+
+    if (pathname === '/api/dialog/directory') {
+      if (req.method !== 'POST') return methodNotAllowed();
+      return await pickDirectory();
+    }
 
     // API: sources
     if (pathname === '/api/sources') {
@@ -225,7 +240,7 @@ Deno.serve(async (req: Request) => {
     if (pathname === '/api/search') {
       const q = url.searchParams.get('q');
       if (!q) return json([]);
-      return json(searchLibrary(STORE_PATHS, q));
+      return json(await searchLibrary(STORE_PATHS, q));
     }
 
     // API: notes
@@ -289,34 +304,12 @@ Deno.serve(async (req: Request) => {
     }
 
     // SPA fallback: serve dist/index.html for all other routes
-    let indexHtml = readTextSafe(new URL('./index.html', DIST_DIR));
-    if (indexHtml) {
-      // Add fallback text that disappears when SPA mounts (debug aid)
-      indexHtml = indexHtml.replace(
-        '<div id="root"></div>',
-        '<div id="root"><h1 style="font-family:system-ui;text-align:center;padding:2rem;color:#aaa">openElement Reader — loading...</h1></div>',
-      );
-      // Inject main app bundle script (adapter-vite's SPA shell only includes island entry)
-      const assetsDir = new URL('./assets/', DIST_DIR);
-      const appScript = findAppScript(assetsDir);
-      const cssScript = findAppCss(assetsDir);
-      if (appScript) {
-        // Replace client-entry.js placeholder with actual reader bundle + CSS + CDN + islands
-        indexHtml = indexHtml.replace(
-          '<script type="module" src="/client-entry.js"></script>',
-          `${cssScript ? `<link rel="stylesheet" href="/assets/${cssScript}">` : ''}
-<pre id="err" style="color:red;padding:1rem;display:none"></pre>
-<script>function err(m){var d=document.getElementById("err");d.style.display="block";d.textContent+=m+"\\n";}window.onerror=function(m,s,l,c,e){err(e?e.stack||e.message:m)};window.addEventListener("unhandledrejection",function(e){err(e.reason&&e.reason.stack||e.reason||"Promise rejection")});</script>
-<script type="module" src="/assets/${appScript}"></script>
-<script type="module" src="/client/islands/client.js"></script>`,
-        );
-      }
-      return html(indexHtml);
-    }
+    const indexHtml = readTextSafe(new URL('./index.html', DIST_DIR));
+    if (indexHtml) return html(injectDesktopBridge(indexHtml));
 
     // Fallback: try project-root index.html (for dev mode)
     const rootIndex = readTextSafe(new URL('./index.html', import.meta.url));
-    return rootIndex ? html(rootIndex) : serverError();
+    return rootIndex ? html(injectDesktopBridge(rootIndex)) : serverError();
   } catch (err) {
     console.error('[reader] Handler error:', err);
     return serverError();

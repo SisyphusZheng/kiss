@@ -12,16 +12,16 @@
  * @module @openelement/core/jsx-render-dom
  */
 
-import { isComponentCtor, isComponentFn, isVNode } from './vnode.js';
+import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import type { Signal } from '@openelement/protocol/signal';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.js';
+import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
-import { eventTypeFromProp } from './event-marker.js';
-import { trustRenderHtml } from './security.js';
-import { createLogger } from './logger.js';
-import { formatError } from './errors.js';
-import { commitBindings } from './binding-activation.js';
+import { eventTypeFromProp } from './event-marker.ts';
+import { trustRenderHtml } from './security.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
+import { commitBindings } from './binding-activation.ts';
 import {
   bindAttr,
   bindConditional,
@@ -34,8 +34,8 @@ import {
   bindStaticProp,
   bindStaticStyle,
   bindText,
-} from './binding-descriptor.js';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
+} from './binding-descriptor.ts';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import { DATA_SIGNAL } from '@openelement/protocol/hydration-markers';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

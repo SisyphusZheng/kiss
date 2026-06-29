@@ -1,6 +1,7 @@
 import { assertEquals, assertExists, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { renderDsd } from '@openelement/core';
 import {
+  defineApp,
   defineElement,
   defineIsland,
   defineIslandConfig,
@@ -11,6 +12,10 @@ import {
   redirect,
 } from '../src/index.ts';
 import { getIslandMeta } from '../../core/src/island.ts';
+
+Deno.test('@openelement/app root export includes defineApp', () => {
+  assertEquals(typeof defineApp, 'function');
+});
 
 Deno.test('definePage() returns a DsdElement-compatible constructor', async () => {
   const Page = definePage({

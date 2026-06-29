@@ -69,6 +69,179 @@ Deno.test('host store syncs local source PDFs into library', async () => {
   assert(listBooks(paths).some((book) => book.sourceId === source.id));
 });
 
+Deno.test('host store syncs local source PDFs recursively', async () => {
+  const paths = await makePaths();
+  const localRoot = await Deno.makeTempDir({ prefix: 'open-reader-local-recursive-' });
+  await Deno.mkdir(`${localRoot}/nested/deeper`, { recursive: true });
+  await Deno.copyFile(
+    new URL('../../fixtures/books/frankenstein.pdf', import.meta.url),
+    `${localRoot}/nested/deeper/frankenstein-copy.pdf`,
+  );
+  const source = await addSource(paths, {
+    kind: 'local',
+    label: 'Nested Papers',
+    root: localRoot,
+  });
+  const result = await syncSource(paths, source.id);
+  assertEquals(result.books.length, 1);
+  assertEquals(result.books[0].id, 'local-nested-papers-nested-deeper-frankenstein-copy');
+});
+
+Deno.test('host store skips unchanged GitHub PDFs by sha', async () => {
+  const paths = await makePaths();
+  const pdfBytes = await Deno.readFile(
+    new URL('../../fixtures/books/metamorphosis.pdf', import.meta.url),
+  );
+  const originalFetch = globalThis.fetch;
+  let downloadCount = 0;
+
+  globalThis.fetch = ((input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('/contents')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([
+            { type: 'file', name: 'root.pdf', path: 'root.pdf', sha: 'sha-root' },
+          ]),
+          { status: 200 },
+        ),
+      );
+    }
+    downloadCount++;
+    return Promise.resolve(new Response(pdfBytes, { status: 200 }));
+  }) as typeof fetch;
+
+  try {
+    const source = await addSource(paths, {
+      kind: 'github',
+      label: 'GitHub PDFs',
+      repo: 'owner/repo',
+      branch: 'main',
+    });
+    await syncSource(paths, source.id);
+    await syncSource(paths, source.id);
+    assertEquals(downloadCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test('host store preserves existing books when source sync fails', async () => {
+  const paths = await makePaths();
+  const localRoot = await Deno.makeTempDir({ prefix: 'open-reader-local-fail-' });
+  await Deno.copyFile(
+    new URL('../../fixtures/books/heart-of-darkness.pdf', import.meta.url),
+    `${localRoot}/before-failure.pdf`,
+  );
+  const source = await addSource(paths, {
+    kind: 'local',
+    label: 'Fragile Local',
+    root: localRoot,
+  });
+  await syncSource(paths, source.id);
+  await Deno.remove(localRoot, { recursive: true });
+
+  let failed = false;
+  try {
+    await syncSource(paths, source.id);
+  } catch {
+    failed = true;
+  }
+
+  assertEquals(failed, true);
+  assert(listBooks(paths).some((book) => book.sourceId === source.id));
+  assert(listSources(paths).some((item) => item.id === source.id && item.error));
+});
+
+Deno.test('host store does not add GitHub books when PDF download fails', async () => {
+  const paths = await makePaths();
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = ((input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('/contents')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([
+            { type: 'file', name: 'missing.pdf', path: 'missing.pdf', sha: 'sha-missing' },
+          ]),
+          { status: 200 },
+        ),
+      );
+    }
+    return Promise.resolve(new Response('not found', { status: 404, statusText: 'Not Found' }));
+  }) as typeof fetch;
+
+  try {
+    const source = await addSource(paths, {
+      kind: 'github',
+      label: 'Broken GitHub PDFs',
+      repo: 'owner/repo',
+      branch: 'main',
+    });
+    let failed = false;
+    try {
+      await syncSource(paths, source.id);
+    } catch {
+      failed = true;
+    }
+
+    assertEquals(failed, true);
+    assertEquals(listBooks(paths).some((book) => book.sourceId === source.id), false);
+    assert(listSources(paths).some((item) => item.id === source.id && item.error));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test('host store preserves notes added while a source sync is in flight', async () => {
+  const paths = await makePaths();
+  const pdfBytes = await Deno.readFile(
+    new URL('../../fixtures/books/metamorphosis.pdf', import.meta.url),
+  );
+  const originalFetch = globalThis.fetch;
+  let releaseContents!: () => void;
+  const contentsReady = new Promise<void>((resolve) => {
+    releaseContents = resolve;
+  });
+
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('/contents')) {
+      await contentsReady;
+      return new Response(
+        JSON.stringify([
+          { type: 'file', name: 'root.pdf', path: 'root.pdf', sha: 'sha-root' },
+        ]),
+        { status: 200 },
+      );
+    }
+    return new Response(pdfBytes, { status: 200 });
+  }) as typeof fetch;
+
+  try {
+    const source = addSource(paths, {
+      kind: 'github',
+      label: 'Slow GitHub PDFs',
+      repo: 'owner/repo',
+      branch: 'main',
+    });
+    const syncing = syncSource(paths, source.id);
+    addNote(paths, {
+      bookId: 'sample',
+      page: 1,
+      text: 'Written while syncing',
+    });
+    releaseContents();
+    await syncing;
+
+    const hits = await searchLibrary(paths, 'Written while syncing');
+    assert(hits.some((hit) => hit.source === 'note'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 Deno.test('host store persists progress, notes, and Obsidian-friendly markdown', async () => {
   const paths = await makePaths();
   saveProgress(paths, {
@@ -96,8 +269,14 @@ Deno.test('host store searches metadata and notes', async () => {
     page: 1,
     text: 'A private marginalia hit',
   });
-  const titleHits = searchLibrary(paths, 'sample');
-  const noteHits = searchLibrary(paths, 'marginalia');
+  const titleHits = await searchLibrary(paths, 'sample');
+  const noteHits = await searchLibrary(paths, 'marginalia');
   assert(titleHits.some((hit) => hit.source === 'book'));
   assert(noteHits.some((hit) => hit.source === 'note'));
+});
+
+Deno.test('host store searches PDF text on first query', async () => {
+  const paths = await makePaths();
+  const hits = await searchLibrary(paths, 'Gregor');
+  assert(hits.some((hit) => hit.source === 'pdf' && hit.bookId === 'sample'));
 });

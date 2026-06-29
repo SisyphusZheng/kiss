@@ -33,18 +33,57 @@ Deno.test('parseOpenPackageSpecifier parses JSR openElement package ids', () => 
 
 Deno.test('resolveOpenPackageExport maps public subpaths to source files', () => {
   assertEquals(resolveOpenPackageExport('core', '.'), 'src/index.ts');
+  assertEquals(resolveOpenPackageExport('core', 'static'), 'src/static.ts');
+  assertEquals(resolveOpenPackageExport('core', 'hydrate'), 'src/hydrate.ts');
+  assertEquals(resolveOpenPackageExport('core', 'csr'), 'src/csr.ts');
   assertEquals(resolveOpenPackageExport('core', 'logger'), 'src/logger.ts');
   assertEquals(resolveOpenPackageExport('core', 'style-sheet'), 'src/style-sheet.ts');
-  assertEquals(resolveOpenPackageExport('core', 'data'), 'src/data.ts');
   assertEquals(resolveOpenPackageExport('core', 'runtime'), 'src/runtime.ts');
   assertEquals(resolveOpenPackageExport('ui', 'open-card'), 'src/open-card.tsx');
   assertEquals(resolveOpenPackageExport('signal', 'framework'), 'src/framework.ts');
   assertEquals(resolveOpenPackageExport('signal', 'preact-engine'), 'src/preact-engine.ts');
   assertEquals(resolveOpenPackageExport('app', '.'), 'src/index.ts');
+  assertEquals(resolveOpenPackageExport('app', 'spa'), 'src/spa.ts');
   assertEquals(resolveOpenPackageExport('app', 'preact'), 'src/preact.ts');
   assertEquals(resolveOpenPackageExport('element', '.'), 'src/index.ts');
+  assertEquals(
+    resolveOpenPackageExport('element', 'open-element-hydration'),
+    'src/open-element-hydration.ts',
+  );
   assertEquals(resolveOpenPackageExport('router', '.'), 'src/data-context.ts');
+  assertEquals(resolveOpenPackageExport('router', 'client-router'), 'src/client-router.ts');
   assertEquals(resolveOpenPackageExport('router', 'i18n'), 'src/i18n.ts');
+});
+
+Deno.test('resolveOpenPackageExport covers package deno.json public exports', async () => {
+  const packages = [
+    ['adapter-vite', '../deno.json'],
+    ['app', '../../app/deno.json'],
+    ['core', '../../core/deno.json'],
+    ['create', '../../create/deno.json'],
+    ['element', '../../element/deno.json'],
+    ['router', '../../router/deno.json'],
+    ['signal', '../../signal/deno.json'],
+    ['ui', '../../ui/deno.json'],
+  ] as const;
+
+  for (const [packageName, denoJsonPath] of packages) {
+    const config = JSON.parse(
+      await Deno.readTextFile(new URL(denoJsonPath, import.meta.url)),
+    ) as { exports?: string | Record<string, string> };
+    const exports = typeof config.exports === 'string' ? { '.': config.exports } : config.exports ??
+      {};
+
+    for (const [subpath, target] of Object.entries(exports)) {
+      const normalizedSubpath = subpath === '.' ? '.' : subpath.replace(/^\.\//, '');
+      const normalizedTarget = target.replace(/^\.\//, '');
+      assertEquals(
+        resolveOpenPackageExport(packageName, normalizedSubpath),
+        normalizedTarget,
+        `@openelement/${packageName}/${normalizedSubpath}`,
+      );
+    }
+  }
 });
 
 Deno.test('resolveOpenPackageExport reports unknown openElement subpaths clearly', () => {
@@ -165,10 +204,18 @@ Deno.test('createOpenJsrPackageResolverPlugin resolves retained core packages bu
     await resolveId('@openelement/app/i18n'),
     toVirtualOpenPackageId('app', 'src/i18n.ts'),
   );
+  assertEquals(
+    await resolveId('@openelement/app/spa'),
+    toVirtualOpenPackageId('app', 'src/spa.ts'),
+  );
 
   assertEquals(
     await resolveId('@openelement/core'),
     toVirtualOpenPackageId('core', 'src/index.ts'),
+  );
+  assertEquals(
+    await resolveId('@openelement/core/csr'),
+    toVirtualOpenPackageId('core', 'src/csr.ts'),
   );
 });
 

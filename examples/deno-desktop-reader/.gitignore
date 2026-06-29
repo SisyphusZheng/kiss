@@ -1,4 +1,5 @@
 dist/
+.cache/
 node_modules/
 *.log
 .deno-dir/

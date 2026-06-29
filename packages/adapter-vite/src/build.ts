@@ -10,13 +10,14 @@
 
 import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
-import type { OpenElementBuildContext } from './build-context.js';
+import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
-import { writeRouteManifest } from './route-manifest.js';
+import { writeRouteManifest } from './route-manifest.ts';
 
 const log = createLogger('core');
 
@@ -80,8 +81,13 @@ export function buildPlugin(
         const htmlLang = escapeAttr(ctx.phase3.html?.lang ?? 'en');
         const htmlTitle = escapeHtml(ctx.phase3.html?.title ?? 'openElement App');
 
-        // Generate SPA shell HTML
-        const html = `<!DOCTYPE html>
+        const indexPath = join(absOutDir, 'index.html');
+
+        // Generate a fallback SPA shell only when Vite did not emit an HTML
+        // entry. Apps with their own index.html (for example desktop shells
+        // with a custom client entry) keep the real Vite output.
+        if (!existsSync(indexPath)) {
+          const html = `<!DOCTYPE html>
 <html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
@@ -93,9 +99,12 @@ export function buildPlugin(
 </body>
 </html>`;
 
-        await Deno.mkdir(absOutDir, { recursive: true });
-        await Deno.writeTextFile(join(absOutDir, 'index.html'), html);
-        log.info('SPA shell written to index.html');
+          await Deno.mkdir(absOutDir, { recursive: true });
+          await Deno.writeTextFile(indexPath, html);
+          log.info('SPA shell written to index.html');
+        } else {
+          log.info('SPA shell preserved from Vite output');
+        }
 
         // Generate route manifest for client-side routing
         const absRoutesDir = join(root, ctx.phase3.routesDir || 'app/routes');
@@ -109,7 +118,7 @@ export function buildPlugin(
         if (totalIslands > 0) {
           log.info('[2/3] Client island build...');
           try {
-            const { buildClient } = await import('./cli/build-client.js');
+            const { buildClient } = await import('./cli/build-client.ts');
             await buildClient(ctx);
             ctx.markComplete(2);
             log.info('[2/3] Client island build - complete');
@@ -125,7 +134,7 @@ export function buildPlugin(
 
       log.info('[3/3] Static site generation...');
       try {
-        const { buildSSG } = await import('./cli/build-ssg.js');
+        const { buildSSG } = await import('./cli/build-ssg.ts');
         await buildSSG({}, ctx);
         ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');
@@ -138,7 +147,7 @@ export function buildPlugin(
       if (totalIslands > 0) {
         log.info('[2/3] Client island build...');
         try {
-          const { buildClient } = await import('./cli/build-client.js');
+          const { buildClient } = await import('./cli/build-client.ts');
           await buildClient(ctx);
           ctx.markComplete(2);
           log.info('[2/3] Client island build - complete');

@@ -12,7 +12,7 @@
  * @module @openelement/core/security
  */
 
-import { createLogger, warnOnce } from './logger.js';
+import { createLogger, warnOnce } from './logger.ts';
 
 /** Object prototype keys that must never be injected as SSR props. */
 export const DANGEROUS_KEYS: ReadonlySet<string> = new Set([

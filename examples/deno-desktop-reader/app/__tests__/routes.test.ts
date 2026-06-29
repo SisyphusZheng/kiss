@@ -192,6 +192,48 @@ Deno.test('Settings route exports a function', async () => {
   assertEquals(typeof mod.default, 'function');
 });
 
+Deno.test('Settings action adds and immediately syncs a source', async () => {
+  const mod = await import('../../routes/settings.tsx');
+  const originalFetch = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    calls.push(`${init?.method ?? 'GET'} ${url}`);
+    if (url === '/api/sources') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ id: 'local-papers', kind: 'local', label: 'Papers' }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    }
+    if (url === '/api/sources/local-papers/sync') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ source: { id: 'local-papers' }, books: [{ id: 'paper-1' }] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    }
+    return Promise.resolve(new Response('not found', { status: 404 }));
+  }) as typeof fetch;
+
+  try {
+    const formData = new FormData();
+    formData.set('kind', 'local');
+    formData.set('label', 'Papers');
+    formData.set('root', '/tmp/papers');
+    const result = await mod.action({ formData });
+    assertEquals(result, { added: 'local-papers', synced: 1 });
+    assertEquals(calls, [
+      'POST /api/sources',
+      'POST /api/sources/local-papers/sync',
+    ]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
   assertEquals(typeof mod.default, 'function');

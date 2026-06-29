@@ -18,7 +18,7 @@
 
 import { OpenElement, type VNode } from '@openelement/element';
 import { signal } from '@openelement/signal';
-import { daisyClassSheet } from './daisy-classes.js';
+import { daisyClassSheet } from './daisy-classes.ts';
 
 export const tagName = 'open-modal';
 

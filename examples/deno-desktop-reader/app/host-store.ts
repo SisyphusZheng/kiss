@@ -202,33 +202,45 @@ async function parsePdfMetadata(
 async function localPdfBooks(source: ReaderSource): Promise<LibraryBook[]> {
   if (!source.root) return [];
   const books: LibraryBook[] = [];
-  for await (const entry of Deno.readDir(source.root)) {
-    if (!entry.isFile || !entry.name.toLowerCase().endsWith('.pdf')) continue;
-    const path = `${source.root}/${entry.name}`;
-    const stat = await Deno.stat(path);
-    const metadata = await parsePdfMetadata(path);
-    books.push({
-      id: stableBookId(source.id, entry.name),
-      sourceId: source.id,
-      title: titleFromFile(entry.name),
-      fileName: entry.name,
-      path,
-      pageCount: metadata.pageCount,
-      summary: metadata.summary,
-      coverColor: colorFor(`${source.id}:${entry.name}`),
-      mtime: stat.mtime?.toISOString(),
-    });
+  const ignoredDirs = new Set(['.git', 'node_modules']);
+
+  async function walk(dir: string): Promise<void> {
+    for await (const entry of Deno.readDir(dir)) {
+      if (entry.name.startsWith('.')) continue;
+      const path = `${dir}/${entry.name}`;
+      if (entry.isDirectory) {
+        if (!ignoredDirs.has(entry.name)) await walk(path);
+        continue;
+      }
+      if (!entry.isFile || !entry.name.toLowerCase().endsWith('.pdf')) continue;
+      const stat = await Deno.stat(path);
+      const relativePath = path.slice(source.root!.replace(/\/$/, '').length + 1);
+      const metadata = await parsePdfMetadata(path);
+      books.push({
+        id: stableBookId(source.id, relativePath),
+        sourceId: source.id,
+        title: titleFromFile(entry.name),
+        fileName: entry.name,
+        path,
+        pageCount: metadata.pageCount,
+        summary: metadata.summary,
+        coverColor: colorFor(`${source.id}:${relativePath}`),
+        mtime: stat.mtime?.toISOString(),
+      });
+    }
   }
+
+  await walk(source.root);
   return books;
 }
 
-async function githubPdfBooks(
-  paths: ReaderStorePaths,
+async function listGithubPdfItems(
   source: ReaderSource,
-): Promise<LibraryBook[]> {
+  dirPath = source.path ? source.path.replace(/^\/|\/$/g, '') : '',
+): Promise<GithubContentItem[]> {
   if (!source.repo) return [];
   const branch = source.branch || 'main';
-  const contentPath = source.path ? `/${source.path.replace(/^\/|\/$/g, '')}` : '';
+  const contentPath = dirPath ? `/${dirPath}` : '';
   const apiUrl = `${GITHUB_API}/${source.repo}/contents${contentPath}?ref=${branch}`;
   const res = await fetch(apiUrl);
   if (!res.ok) {
@@ -236,15 +248,33 @@ async function githubPdfBooks(
   }
   const data = await res.json();
   const items = Array.isArray(data) ? data as GithubContentItem[] : [data as GithubContentItem];
-  const pdfItems = items.filter((item) =>
-    item.type === 'file' && item.name.toLowerCase().endsWith('.pdf')
-  );
+  const pdfs: GithubContentItem[] = [];
+  for (const item of items) {
+    if (item.type === 'dir') {
+      pdfs.push(...await listGithubPdfItems(source, item.path));
+    } else if (item.type === 'file' && item.name.toLowerCase().endsWith('.pdf')) {
+      pdfs.push(item);
+    }
+  }
+  return pdfs;
+}
+
+async function githubPdfBooks(
+  paths: ReaderStorePaths,
+  source: ReaderSource,
+  existingBooks: LibraryBook[],
+): Promise<LibraryBook[]> {
+  if (!source.repo) return [];
+  const branch = source.branch || 'main';
+  const pdfItems = await listGithubPdfItems(source);
+  const existingById = new Map(existingBooks.map((book) => [book.id, book]));
   const books: LibraryBook[] = [];
   for (const item of pdfItems) {
     const id = stableBookId(source.id, item.path);
     const fileName = `${id}.pdf`;
     const destPath = `${paths.booksDir}/${fileName}`;
-    if (!fileExists(destPath) || item.sha) {
+    const cached = existingById.get(id);
+    if (!fileExists(destPath) || cached?.sha !== item.sha) {
       const rawUrl = item.download_url ??
         `${GITHUB_RAW}/${source.repo}/${branch}/${item.path}`;
       const fileRes = await fetch(rawUrl);
@@ -254,7 +284,14 @@ async function githubPdfBooks(
           destPath,
           new Uint8Array(await fileRes.arrayBuffer()),
         );
+      } else if (!fileExists(destPath)) {
+        throw new Error(
+          `GitHub PDF download failed: ${fileRes.status} ${fileRes.statusText}`,
+        );
       }
+    }
+    if (!fileExists(destPath)) {
+      throw new Error(`GitHub PDF cache missing: ${item.path}`);
     }
     const metadata = await parsePdfMetadata(destPath);
     books.push({
@@ -292,15 +329,17 @@ export async function syncSource(
   if (!source) throw new Error(`Unknown source: ${sourceId}`);
   let books: LibraryBook[] = [];
   let nextSource: ReaderSource = { ...source, error: undefined };
+  let synced = false;
   try {
     if (source.kind === 'fixtures') {
       books = loadFixtureBooks(paths);
     } else if (source.kind === 'local') {
       books = await localPdfBooks(source);
     } else if (source.kind === 'github') {
-      books = await githubPdfBooks(paths, source);
+      books = await githubPdfBooks(paths, source, state.books);
     }
     nextSource = { ...nextSource, lastSyncedAt: now() };
+    synced = true;
   } catch (err) {
     nextSource = {
       ...nextSource,
@@ -308,9 +347,12 @@ export async function syncSource(
     };
     throw err;
   } finally {
-    const sources = state.sources.map((item) => item.id === sourceId ? nextSource : item);
-    const otherBooks = state.books.filter((book) => book.sourceId !== sourceId);
-    const nextState = { ...state, sources, books: [...otherBooks, ...books] };
+    const latest = loadState(paths);
+    const sources = latest.sources.map((item) => item.id === sourceId ? nextSource : item);
+    const nextBooks = synced
+      ? [...latest.books.filter((book) => book.sourceId !== sourceId), ...books]
+      : latest.books;
+    const nextState = { ...latest, sources, books: nextBooks };
     saveState(paths, nextState);
   }
   for (const book of books) {
@@ -400,13 +442,21 @@ export function exportNotesMarkdown(paths: ReaderStorePaths): string {
   }).join('\n');
 }
 
-export function searchLibrary(
+async function ensureSearchIndex(paths: ReaderStorePaths, books: LibraryBook[]): Promise<void> {
+  const index = loadSearchIndex(paths.cacheDir);
+  const missing = books.filter((book) => book.path && typeof index[book.id] !== 'string');
+  if (missing.length === 0) return;
+  await Promise.all(missing.map((book) => indexBook(book.path!, book.id, paths.cacheDir)));
+}
+
+export async function searchLibrary(
   paths: ReaderStorePaths,
   query: string,
-): ReaderSearchResult[] {
+): Promise<ReaderSearchResult[]> {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const state = loadState(paths);
+  await ensureSearchIndex(paths, state.books);
   const results: ReaderSearchResult[] = [];
   for (const book of state.books) {
     const haystack = [book.title, book.author, book.fileName, book.summary]
@@ -447,11 +497,6 @@ export function searchLibrary(
       snippet: hit.snippet,
       source: 'pdf',
     });
-  }
-  if (Object.keys(loadSearchIndex(paths.cacheDir)).length === 0) {
-    for (const book of state.books) {
-      if (book.path) void indexBook(book.path, book.id, paths.cacheDir);
-    }
   }
   return results.slice(0, 30);
 }

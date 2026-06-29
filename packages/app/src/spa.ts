@@ -14,6 +14,7 @@ import {
   __internal_popData,
   __internal_pushActionData,
   __internal_pushLoaderData,
+  useActionData,
   useLoaderData,
 } from '@openelement/router/data-context';
 import { renderToDom } from '@openelement/core/csr';
@@ -101,9 +102,19 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       if (loaderData && typeof loaderData === 'object') {
         Object.assign(el as Record<string, unknown>, loaderData);
       }
+      // Also assign actionData so OpenElement page components can read
+      // `this.actionData` in their render() after a form submission.
+      // Without this, SPA-mode custom-element pages never see action results
+      // (e.g. success toasts, validation errors).
+      const actionData = useActionData();
+      if (actionData !== undefined) {
+        el.actionData = actionData;
+      }
       rootEl.appendChild(el);
       return;
     }
+
+    if (!route.component) return;
 
     // Legacy VNode route: call component(), convert VNode → DOM
     const vnode = resolveComponentResult(await route.component());
@@ -160,7 +171,21 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
    * loader and action data, then re-renders the component.
    */
   async function handleFormSubmit(event: Event): Promise<void> {
-    const form = event.target;
+    // Shadow DOM retargeting: when a <button type="submit"> inside a custom
+    // element (e.g. <open-button type="submit">) triggers the form's submit
+    // event, by the time the event bubbles out to our root listener,
+    // event.target is retargeted to the host element (open-button), NOT the
+    // <form>. Use composedPath() to find the actual form in the shadow tree.
+    let form: unknown = event.target;
+    if (!isFormElement(form)) {
+      const path = event.composedPath();
+      for (const node of path) {
+        if (isFormElement(node)) {
+          form = node;
+          break;
+        }
+      }
+    }
     if (!isFormElement(form)) return;
     if (!router || !rootEl) return;
 

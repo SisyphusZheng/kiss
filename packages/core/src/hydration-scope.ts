@@ -11,12 +11,12 @@
  */
 
 import type { Signal } from '@openelement/protocol/signal';
-import { applyBindingDescriptor } from './binding-activation.js';
-import { collectEventBindings, hydrateEventMarkers } from './event-hydration.js';
-import { renderToDom } from './jsx-render-dom.js';
-import { isVNode } from './vnode.js';
-import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.js';
-import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.js';
+import { applyBindingDescriptor } from './binding-activation.ts';
+import { collectEventBindings, hydrateEventMarkers } from './event-hydration.ts';
+import { renderToDom } from './jsx-render-dom.ts';
+import { isVNode } from './vnode.ts';
+import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.ts';
+import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import {
   DATA_SIGNAL,
   DATA_SIGNAL_ATTR,

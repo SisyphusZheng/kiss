@@ -5,7 +5,7 @@
  * shape with absolute, root-relative replacements.
  */
 
-import { resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { type Alias } from 'vite';
 
 function normalizeAliasReplacement(root: string, replacement: string): string {
@@ -25,6 +25,90 @@ function sortAliasEntries<T extends Alias>(aliases: T[]): T[] {
   });
 }
 
+interface OpenElementSourceSubpaths {
+  rootFile: string;
+  files: Record<string, string>;
+}
+
+const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
+  '@openelement/app': {
+    rootFile: 'index.ts',
+    files: {
+      spa: 'spa.ts',
+      i18n: 'i18n.ts',
+      'i18n-plugin': 'i18n-plugin.ts',
+      preact: 'preact.ts',
+    },
+  },
+  '@openelement/core': {
+    rootFile: 'index.ts',
+    files: {
+      static: 'static.ts',
+      hydrate: 'hydrate.ts',
+      csr: 'csr.ts',
+      prop: 'prop.ts',
+      errors: 'errors.ts',
+      context: 'context.ts',
+      logger: 'logger.ts',
+      isr: 'isr.ts',
+      'isr-runtime': 'isr-runtime.ts',
+      runtime: 'runtime.ts',
+      'signal-context': 'signal-context.ts',
+      'render-dsd-stream': 'render-dsd-stream.ts',
+      'style-sheet': 'style-sheet.ts',
+      'html-escape': 'html-escape.ts',
+      'tag-utils': 'tag-utils.ts',
+      'jsx-runtime': 'jsx-runtime.ts',
+      'jsx-dev-runtime': 'jsx-runtime.ts',
+      'island-transform': 'island-transform.ts',
+      'dsd-hydration': 'dsd-hydration.ts',
+    },
+  },
+  '@openelement/router': {
+    rootFile: 'data-context.ts',
+    files: {
+      'data-context': 'data-context.ts',
+      i18n: 'i18n.ts',
+      'client-router': 'client-router.ts',
+    },
+  },
+  '@openelement/signal': {
+    rootFile: 'index.ts',
+    files: {
+      framework: 'framework.ts',
+      'preact-engine': 'preact-engine.ts',
+    },
+  },
+};
+
+function expandOpenElementSourceAliases(aliases: Alias[]): Alias[] {
+  const out = [...aliases];
+  const existing = new Set(
+    out.flatMap((alias) => typeof alias.find === 'string' ? [alias.find] : []),
+  );
+
+  for (const alias of aliases) {
+    if (typeof alias.find !== 'string' || typeof alias.replacement !== 'string') continue;
+    const subpaths = OPENELEMENT_SOURCE_SUBPATHS[alias.find];
+    if (!subpaths) continue;
+    if (
+      !alias.replacement.replace(/\\/g, '/').endsWith(
+        `/src/${subpaths.rootFile}`,
+      )
+    ) continue;
+
+    const sourceDir = dirname(alias.replacement);
+    for (const [subpath, fileName] of Object.entries(subpaths.files)) {
+      const find = `${alias.find}/${subpath}`;
+      if (existing.has(find)) continue;
+      out.push({ find, replacement: join(sourceDir, fileName) });
+      existing.add(find);
+    }
+  }
+
+  return out;
+}
+
 /**
  * Normalize a user-provided alias map into Vite Alias entries.
  *
@@ -37,19 +121,18 @@ export function normalizeViteAliases(
   root: string,
 ): Alias[] | undefined {
   if (!aliases) return undefined;
+  let normalized: Alias[];
   if (Array.isArray(aliases)) {
-    return sortAliasEntries(
-      aliases.map((alias) =>
-        typeof alias.replacement === 'string'
-          ? { ...alias, replacement: normalizeAliasReplacement(root, alias.replacement) }
-          : alias
-      ),
+    normalized = aliases.map((alias) =>
+      typeof alias.replacement === 'string'
+        ? { ...alias, replacement: normalizeAliasReplacement(root, alias.replacement) }
+        : alias
     );
-  }
-  return sortAliasEntries(
-    Object.entries(aliases).map(([find, replacement]) => ({
+  } else {
+    normalized = Object.entries(aliases).map(([find, replacement]) => ({
       find,
       replacement: normalizeAliasReplacement(root, replacement),
-    })),
-  );
+    }));
+  }
+  return sortAliasEntries(expandOpenElementSourceAliases(normalized));
 }

@@ -7,48 +7,75 @@ interface SyncStatusProps {
 }
 
 function SyncStatusIsland(props: SyncStatusProps) {
-  const [state, setState] = useState<'idle' | 'syncing' | 'done' | 'error'>(
-    'idle',
-  );
+  const [state, setState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const sourceId = props['source-id'] ?? 'fixtures';
+
   return h('span', { class: 'sync-island' }, [
     h(
       'style',
       null,
       `
-        button{border:1px solid #c9d2dc;background:#fff;border-radius:999px;padding:5px 10px}
-        small{margin-left:6px;color:#68727e}
+        .sync-btn {
+          background: var(--bg-inset, #fafaf8);
+          border: 1px solid var(--border, #ececea);
+          border-radius: var(--radius-md, 8px);
+          color: var(--text-secondary, #4a4a48);
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 6px 12px;
+          transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+        }
+        .sync-btn:hover:not(:disabled) {
+          border-color: var(--brand, #07c160);
+          color: var(--brand, #07c160);
+        }
+        .sync-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .sync-msg {
+          color: var(--text-muted, #888884);
+          font-size: 12px;
+          margin-left: 8px;
+        }
+        .sync-msg.error { color: var(--error-fg, #c8392a); }
+        .sync-msg.success { color: var(--success-fg, #04984c); }
       `,
     ),
     h(
       'button',
       {
+        class: 'sync-btn',
         type: 'button',
         disabled: state === 'syncing',
         onClick: async () => {
           setState('syncing');
-          setMessage('Syncing...');
+          setMessage('同步中……');
           try {
             const res = await fetch(
               `/api/sources/${encodeURIComponent(sourceId)}/sync`,
-              {
-                method: 'POST',
-              },
+              { method: 'POST' },
             );
             if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
             setState('done');
-            setMessage('Synced');
-            setTimeout(() => location.reload(), 350);
+            setMessage('已同步，刷新中');
+            setTimeout(() => location.reload(), 400);
           } catch (err) {
             setState('error');
             setMessage(err instanceof Error ? err.message : String(err));
           }
         },
       },
-      'Sync',
+      state === 'syncing' ? '同步中' : '同步',
     ),
-    h('small', null, message),
+    h(
+      'span',
+      { class: `sync-msg ${state === 'error' ? 'error' : state === 'done' ? 'success' : ''}` },
+      message,
+    ),
   ]);
 }
 

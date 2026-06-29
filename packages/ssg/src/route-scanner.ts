@@ -451,7 +451,7 @@ export async function scanIslandMeta(
  * Example package export:
  * ```ts
  * // @openelement/ui/index.ts
- * export { manifest } from './manifest.js';
+ * export { manifest } from './manifest.ts';
  * ```
  *
  * @param packageNames - List of package names to scan (e.g., ['@openelement/ui'])

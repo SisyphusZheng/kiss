@@ -1,11 +1,15 @@
 /** @jsxImportSource @openelement/core */
 import { OpenElement } from '@openelement/element';
-import { addSource, listSources } from '../app/api.ts';
+import { addSource, listSources, syncSource } from '../app/api.ts';
 import { loadSettings, saveSettings } from '../app/storage.ts';
 import type { ReaderSettings, ReaderSource } from '../app/types.ts';
 
 function applyTheme(theme: string): void {
-  document.documentElement.className = theme === 'light' ? '' : `theme-${theme}`;
+  if (theme === 'dark' || theme === 'sepia') {
+    document.documentElement.setAttribute('data-theme', theme);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
 }
 
 function applyFontSize(size: number): void {
@@ -13,14 +17,15 @@ function applyFontSize(size: number): void {
 }
 
 function applyLineHeight(lh: number): void {
-  document.documentElement.style.setProperty(
-    '--reader-line-height',
-    String(lh),
-  );
+  document.documentElement.style.setProperty('--reader-line-height', String(lh));
 }
 
 function applyMeasure(chars: number): void {
   document.documentElement.style.setProperty('--reader-measure', `${chars}ch`);
+  document.documentElement.style.setProperty(
+    '--reader-pdf-max-width',
+    `${Math.max(720, chars * 14)}px`,
+  );
 }
 
 export interface SettingsData extends ReaderSettings {
@@ -33,7 +38,7 @@ export async function loader(): Promise<SettingsData> {
 
 export async function action(
   ctx: { formData?: FormData },
-): Promise<{ added?: string; error?: string }> {
+): Promise<{ added?: string; synced?: number; error?: string }> {
   const kind = String(ctx.formData?.get('kind') ?? 'local');
   const label = String(ctx.formData?.get('label') ?? '').trim();
   const root = String(ctx.formData?.get('root') ?? '').trim();
@@ -49,7 +54,8 @@ export async function action(
       branch: branch || undefined,
       path: path || undefined,
     });
-    return { added: source.id };
+    const result = await syncSource(source.id);
+    return { added: source.id, synced: result.books.length };
   } catch (err) {
     return { error: err instanceof Error ? err.message : String(err) };
   }
@@ -58,25 +64,96 @@ export async function action(
 export const tagName = 'reader-settings';
 
 export default class SettingsPage extends OpenElement {
+  #folderPickerError = '';
+  #sourceFeedback: { added?: string; synced?: number; error?: string } | null = null;
+
+  async #submitSourceForm(event: Event): Promise<void> {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const kind = String(formData.get('kind') ?? 'local');
+    const label = String(formData.get('label') ?? '').trim();
+    const root = String(formData.get('root') ?? '').trim();
+    const repo = String(formData.get('repo') ?? '').trim();
+    const branch = String(formData.get('branch') ?? 'main').trim();
+    const path = String(formData.get('path') ?? '').trim();
+    try {
+      const source = await addSource({
+        kind: kind === 'github' ? 'github' : 'local',
+        label,
+        root: root || undefined,
+        repo: repo || undefined,
+        branch: branch || undefined,
+        path: path || undefined,
+      });
+      const result = await syncSource(source.id);
+      (this as unknown as SettingsPage & SettingsData).sources = await listSources();
+      this.#sourceFeedback = { added: source.id, synced: result.books.length };
+      form.reset();
+      const branchInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="branch"]');
+      if (branchInput) branchInput.value = 'main';
+    } catch (err) {
+      this.#sourceFeedback = { error: err instanceof Error ? err.message : String(err) };
+    }
+    this.update();
+  }
+
+  async #pickLocalFolder(): Promise<void> {
+    this.#folderPickerError = '';
+    try {
+      const res = await fetch('/api/dialog/directory', { method: 'POST' });
+      const body = await res.json() as { path?: string; error?: string };
+      if (!res.ok || !body.path) {
+        this.#folderPickerError = body.error || '没有选择文件夹。';
+        this.update();
+        return;
+      }
+      const rootInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="root"]');
+      const kindSelect = this.shadowRoot?.querySelector<HTMLSelectElement>('select[name="kind"]');
+      const labelInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="label"]');
+      if (kindSelect) kindSelect.value = 'local';
+      if (rootInput) rootInput.value = body.path;
+      if (labelInput && !labelInput.value.trim()) {
+        labelInput.value = body.path.split('/').filter(Boolean).at(-1) || '本地书源';
+      }
+    } catch (err) {
+      this.#folderPickerError = err instanceof Error ? err.message : String(err);
+      this.update();
+    }
+  }
+
   override render() {
     const current = (this as unknown) as SettingsPage & SettingsData;
-    const actionData = (this as unknown as { actionData?: { added?: string; error?: string } })
+    const actionData = this.#sourceFeedback ?? (this as unknown as {
+      actionData?: { added?: string; synced?: number; error?: string };
+    })
       .actionData;
 
-    // Apply current settings on mount
     if (current.theme) applyTheme(current.theme);
     if (current.fontSize) applyFontSize(current.fontSize);
     if (current.lineHeight) applyLineHeight(current.lineHeight);
     if (current.measure) applyMeasure(current.measure);
 
     return (
-      <main class='reader-page'>
-        <h1>Settings</h1>
-        {actionData?.added && <p class='toast-inline'>Source added: {actionData.added}</p>}
-        {actionData?.error && <p class='form-error'>{actionData.error}</p>}
+      <main class='reader-main'>
+        <div class='page-header'>
+          <div class='page-header-text'>
+            <h1>设置</h1>
+            <p>管理阅读偏好和书源</p>
+          </div>
+        </div>
 
-        <div class='settings-section'>
-          <h2>Sources</h2>
+        {actionData?.added && (
+          <p class='toast-inline'>
+            书源已添加并同步：{actionData.added}
+            {typeof actionData.synced === 'number' ? ` · ${actionData.synced} 本` : ''}
+          </p>
+        )}
+        {actionData?.error && <p class='form-error'>{actionData.error}</p>}
+        {this.#folderPickerError && <p class='form-error'>{this.#folderPickerError}</p>}
+
+        <section class='settings-section'>
+          <h3>书源管理</h3>
           <div class='source-list'>
             {(current.sources || []).map((source) => (
               <div class='source-row' key={source.id}>
@@ -92,148 +169,142 @@ export default class SettingsPage extends OpenElement {
               </div>
             ))}
           </div>
-          <form class='source-form'>
+          <form class='source-form' onSubmit={(event: Event) => void this.#submitSourceForm(event)}>
             <label>
-              Kind
+              类型
               <select name='kind' class='settings-select'>
-                <option value='local'>Local folder</option>
-                <option value='github'>GitHub repo/path</option>
+                <option value='local'>本地文件夹</option>
+                <option value='github'>GitHub 仓库</option>
               </select>
             </label>
             <label>
-              Label
-              <input name='label' placeholder='Research PDFs' />
+              名称
+              <input name='label' placeholder='研究论文' />
             </label>
             <label>
-              Local root
+              本地路径
               <input name='root' placeholder='/Users/me/Documents/papers' />
+              <small class='field-hint'>提交后会递归读取该文件夹内的 PDF。</small>
             </label>
+            <div class='source-form-tools'>
+              <span class='field-label'>本地文件夹</span>
+              <open-button
+                type='button'
+                class='source-pick-button'
+                variant='ghost'
+                onClick={() => this.#pickLocalFolder()}
+              >
+                选择文件夹
+              </open-button>
+            </div>
             <label>
-              GitHub repo
+              GitHub 仓库
               <input name='repo' placeholder='owner/repo' />
             </label>
             <label>
-              Branch
+              分支
               <input name='branch' value='main' />
             </label>
             <label>
-              Repo path
+              仓库路径
               <input name='path' placeholder='books' />
             </label>
-            <open-button type='submit'>Add source</open-button>
+            <open-button type='submit' class='source-submit' variant='primary'>
+              添加书源
+            </open-button>
           </form>
-        </div>
+        </section>
 
-        {/* Theme */}
-        <div class='settings-section'>
-          <h2>Theme</h2>
-          {(['light', 'dark', 'sepia'] as const).map((theme) => (
-            <label class='settings-radio' key={theme}>
+        <div class='settings-grid'>
+          <section class='settings-section'>
+            <h3>主题</h3>
+            <div class='theme-options'>
+              {(['light', 'dark', 'sepia'] as const).map((theme) => (
+                <button
+                  type='button'
+                  class={`theme-option ${current.theme === theme ? 'active' : ''}`}
+                  key={theme}
+                  onClick={() => {
+                    applyTheme(theme);
+                    const s: ReaderSettings = { ...loadSettings(), theme };
+                    saveSettings(s);
+                  }}
+                >
+                  <span class={`theme-option-swatch ${theme}`} />
+                  {theme === 'light' ? '浅色' : theme === 'dark' ? '深色' : '护眼'}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section class='settings-section'>
+            <h3>字号</h3>
+            <div class='settings-row'>
               <input
-                type='radio'
-                name='theme'
-                value={theme}
-                checked={current.theme === theme}
-                onChange={() => {
-                  applyTheme(theme);
-                  const s: ReaderSettings = { ...loadSettings(), theme };
+                type='range'
+                min='12'
+                max='24'
+                step='1'
+                value={String(current.fontSize)}
+                class='settings-slider'
+                onInput={(e: Event) => {
+                  const value = parseInt((e.target as HTMLInputElement).value, 10);
+                  applyFontSize(value);
+                  const display = (e.target as HTMLInputElement).nextElementSibling;
+                  if (display) display.textContent = String(value);
+                  const s: ReaderSettings = { ...loadSettings(), fontSize: value };
                   saveSettings(s);
                 }}
               />
-              {theme}
-            </label>
-          ))}
-        </div>
+              <span class='settings-value'>{current.fontSize}px</span>
+            </div>
+          </section>
 
-        {/* Font Size */}
-        <div class='settings-section'>
-          <h2>Font Size</h2>
-          <div class='settings-controls'>
-            <input
-              type='range'
-              min='12'
-              max='24'
-              step='1'
-              value={String(current.fontSize)}
-              class='settings-slider'
-              onInput={(e: Event) => {
-                const value = parseInt(
-                  (e.target as HTMLInputElement).value,
-                  10,
-                );
-                applyFontSize(value);
-                // Update display
-                const display = (e.target as HTMLInputElement)
-                  .nextElementSibling;
-                if (display) display.textContent = String(value);
-                const s: ReaderSettings = {
-                  ...loadSettings(),
-                  fontSize: value,
-                };
+          <section class='settings-section'>
+            <h3>行高</h3>
+            <select
+              class='settings-select'
+              onChange={(e: Event) => {
+                const value = parseFloat((e.target as HTMLSelectElement).value);
+                applyLineHeight(value);
+                const s: ReaderSettings = { ...loadSettings(), lineHeight: value };
                 saveSettings(s);
               }}
-            />
-            <span class='settings-value'>{current.fontSize}</span>
-          </div>
-        </div>
+            >
+              {[1.4, 1.6, 1.8].map((lh) => (
+                <option
+                  key={lh}
+                  value={String(lh)}
+                  selected={current.lineHeight === lh}
+                >
+                  {lh}
+                </option>
+              ))}
+            </select>
+          </section>
 
-        {/* Line Height */}
-        <div class='settings-section'>
-          <h2>Line Height</h2>
-          <select
-            class='settings-select'
-            onChange={(e: Event) => {
-              const value = parseFloat(
-                (e.target as HTMLSelectElement).value,
-              );
-              applyLineHeight(value);
-              const s: ReaderSettings = {
-                ...loadSettings(),
-                lineHeight: value,
-              };
-              saveSettings(s);
-            }}
-          >
-            {[1.4, 1.6, 1.8].map((lh) => (
-              <option
-                key={lh}
-                value={String(lh)}
-                selected={current.lineHeight === lh}
-              >
-                {lh}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Reading Measure */}
-        <div class='settings-section'>
-          <h2>Reading Measure</h2>
-          <select
-            class='settings-select'
-            onChange={(e: Event) => {
-              const value = parseInt(
-                (e.target as HTMLSelectElement).value,
-                10,
-              );
-              applyMeasure(value);
-              const s: ReaderSettings = {
-                ...loadSettings(),
-                measure: value,
-              };
-              saveSettings(s);
-            }}
-          >
-            {[55, 65, 75].map((chars) => (
-              <option
-                key={chars}
-                value={String(chars)}
-                selected={current.measure === chars}
-              >
-                {chars} characters
-              </option>
-            ))}
-          </select>
+          <section class='settings-section'>
+            <h3>阅读宽度</h3>
+            <select
+              class='settings-select'
+              onChange={(e: Event) => {
+                const value = parseInt((e.target as HTMLSelectElement).value, 10);
+                applyMeasure(value);
+                const s: ReaderSettings = { ...loadSettings(), measure: value };
+                saveSettings(s);
+              }}
+            >
+              {[55, 65, 75].map((chars) => (
+                <option
+                  key={chars}
+                  value={String(chars)}
+                  selected={current.measure === chars}
+                >
+                  {chars} 字符
+                </option>
+              ))}
+            </select>
+          </section>
         </div>
       </main>
     );

@@ -1,6 +1,6 @@
 import type { IsrCacheEntry, IsrCacheResult } from '@openelement/protocol/isr';
 import type { IsrManifestEntry } from '@openelement/protocol/framework';
-import type { MemoryIsrCache } from './isr.js';
+import type { MemoryIsrCache } from './isr.ts';
 
 export type IsrRuntimeState = IsrCacheResult['state'] | 'not-found';
 

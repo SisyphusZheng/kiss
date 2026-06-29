@@ -5,9 +5,9 @@
  * metrics, diagnostics, build reports, ISR records, and DOM simulation.
  */
 
-import type { VNode } from './vnode.js';
-import type { ComponentLayer, HydrationStrategy, StrategySource } from './framework.js';
-import type { CemCompatibilityReport } from './manifest.js';
+import type { VNode } from './vnode.ts';
+import type { ComponentLayer, HydrationStrategy, StrategySource } from './framework.ts';
+import type { CemCompatibilityReport } from './manifest.ts';
 
 export type RenderPhase = 'instantiate' | 'render' | 'nested' | 'style' | 'serialize';
 export type RenderErrorSeverity = 'error' | 'warning';
@@ -77,7 +77,7 @@ export type RenderErrorCode =
 
 // --- DSD component constructor ------------------------------------
 
-import type { StyleSheetLike } from './style-sheet.js';
+import type { StyleSheetLike } from './style-sheet.ts';
 
 export interface DsdComponentConstructor extends CustomElementConstructor {
   styles?: StyleSheetLike | StyleSheetLike[];

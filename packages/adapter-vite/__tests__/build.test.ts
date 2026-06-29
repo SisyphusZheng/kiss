@@ -284,6 +284,41 @@ Deno.test({
 });
 
 Deno.test({
+  name: 'buildPlugin - SPA mode preserves existing Vite index.html',
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    const root = await Deno.makeTempDir();
+    try {
+      await Deno.mkdir(`${root}/dist`, { recursive: true });
+      await Deno.mkdir(`${root}/app/routes`, { recursive: true });
+      await Deno.writeTextFile(
+        `${root}/dist/index.html`,
+        '<!doctype html><div id="root"></div><script type="module" src="/assets/reader-abc.js"></script>',
+      );
+
+      const ctx = new OpenElementBuildContext({ mode: 'spa' });
+      const plugin = buildPlugin({
+        mode: 'spa',
+        routesDir: 'app/routes',
+        build: { outDir: 'dist' },
+      }, ctx);
+      const config = makeConfig('build');
+      config.root = root;
+      callHook(plugin.configResolved, config);
+
+      await callAsyncHook(plugin.closeBundle);
+
+      const html = await Deno.readTextFile(`${root}/dist/index.html`);
+      assertStringIncludes(html, '/assets/reader-abc.js');
+      assertEquals(html.includes('/client-entry.js'), false);
+    } finally {
+      await Deno.remove(root, { recursive: true });
+    }
+  },
+});
+
+Deno.test({
   name: 'buildPlugin - ssr.noExternal RegExp serialization writes to ctx',
   // Rolldown/Vite SSR build spawns dangling async fs.access (Deno.lstat) ops
   sanitizeOps: false,

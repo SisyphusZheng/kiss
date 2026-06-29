@@ -24,6 +24,6 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/"
+    "build": "deno check src/index.ts"
   }
 }

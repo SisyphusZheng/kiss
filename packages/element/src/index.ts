@@ -8,13 +8,13 @@
 
 // ─── Core exports ───────────────────────────────────────
 
-export { OpenElement } from './open-element.js';
-export type { OpenElementComponentConstructor } from './open-element.js';
+export { OpenElement } from './open-element.ts';
+export type { OpenElementComponentConstructor } from './open-element.ts';
 
-export { ErrorBoundary } from './error-boundary.js';
+export { ErrorBoundary } from './error-boundary.ts';
 
-export { defineElement, defineLayout } from './define-element.js';
-export type { ElementDefinition } from './types.js';
+export { defineElement, defineLayout } from './define-element.ts';
+export type { ElementDefinition } from './types.ts';
 
 // ─── Prop types ──────────────────────────────────────────
 

@@ -43,6 +43,12 @@ export interface BuildManifest {
   warnings: string[];
 }
 
+export interface BuildManifestBudget {
+  islandKB?: number;
+  totalJsKB?: number;
+  pageKB?: number;
+}
+
 /**
  * Format bytes to human-readable string.
  */
@@ -158,8 +164,9 @@ export function printBuildManifest(options: {
   outDir?: string;
   phase: 2 | 3;
   headExtras?: string;
+  budget?: BuildManifestBudget;
 }): BuildManifest {
-  const { root, outDir = 'dist', phase, headExtras = '' } = options;
+  const { root, outDir = 'dist', phase, headExtras = '', budget = {} } = options;
   const timestamp = new Date().toISOString();
 
   // Gather data
@@ -168,9 +175,9 @@ export function printBuildManifest(options: {
   const headExtrasSize = new TextEncoder().encode(headExtras).length;
 
   // Budget thresholds
-  const ISLAND_BUDGET_KB = 50; // Warn if single island > 50KB
-  const TOTAL_JS_BUDGET_KB = 200; // Warn if total JS > 200KB
-  const PAGE_BUDGET_KB = 200; // Advisory only: single uncompressed HTML page budget.
+  const ISLAND_BUDGET_KB = budget.islandKB ?? 50; // Warn if single island > 50KB by default.
+  const TOTAL_JS_BUDGET_KB = budget.totalJsKB ?? 200; // Warn if total JS > 200KB by default.
+  const PAGE_BUDGET_KB = budget.pageKB ?? 200; // Advisory only: single uncompressed HTML page budget.
 
   const warnings: string[] = [];
 

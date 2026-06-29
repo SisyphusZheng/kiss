@@ -1,17 +1,19 @@
 {
   "name": "@openelement/example-desktop-reader",
   "version": "0.41.0-alpha.5",
-  "nodeModulesDir": "auto",
   "tasks": {
-    "dev": "deno run -A main.ts & vite",
-    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist --include fixtures main.ts",
-    "check": "deno check --sloppy-imports main.ts reader.tsx",
-    "smoke": "deno test -A --sloppy-imports --no-check app/__tests__/"
+    "dev": "deno run -A main.ts & deno run -A npm:vite",
+    "dev:api": "deno run -A main.ts",
+    "dev:web": "deno run -A npm:vite",
+    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --allow-run=osascript --include dist --include fixtures main.ts",
+    "check": "deno check main.ts reader.tsx",
+    "smoke": "deno test -A --no-check app/__tests__/"
   },
   "imports": {
     "@openelement/core": "../../packages/core/src/index.ts",
     "@openelement/core/hydrate": "../../packages/core/src/hydrate.ts",
     "@openelement/ui": "../../packages/ui/src/index.ts",
+    "@openelement/element": "../../packages/element/src/index.ts",
     "@openelement/app": "../../packages/app/src/index.ts",
     "@openelement/app/spa": "../../packages/app/src/spa.ts",
     "@openelement/app/preact": "../../packages/app/src/preact.ts",
@@ -23,8 +25,10 @@
     "preact": "npm:preact@^10.29.1",
     "preact/": "npm:preact@^10.29.1/",
     "@preact/signals": "npm:@preact/signals@^2.9.0",
-    "vite": "npm:vite@^6.3.0",
+    "vite": "npm:vite@8.0.10",
     "pdf-parse": "npm:pdf-parse@^1.1.1",
+    "pdfjs-dist/": "npm:pdfjs-dist@4.8.69/",
+    "@shoelace-style/shoelace/": "npm:@shoelace-style/shoelace@^2.19.0/",
     "@std/assert": "jsr:@std/assert@1"
   },
   "exports": {},

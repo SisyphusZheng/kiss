@@ -1,212 +1,10 @@
 /** @jsxImportSource @openelement/core */
 import { OpenElement } from '@openelement/element';
 import type { ReaderProgress, ReaderSource } from '../app/types.ts';
-import { loadProgress } from '../app/storage.ts';
-import { listBooks, listSources, syncSource } from '../app/api.ts';
+import { getBookDetails, listBooks, listSources, syncSource } from '../app/api.ts';
 import { navigate } from '../router.ts';
 import BookCard from '../components/BookCard.tsx';
 import type { LibraryBook } from '../app/types.ts';
-
-const bookshelfStyles = `
-:host {
-  --reader-bg: #f6f1e8;
-  --reader-panel: #fffdf8;
-  --reader-line: #e6dccd;
-  --reader-muted: #756f66;
-  --reader-fg: #231f1b;
-  --reader-accent: #1f6f63;
-  color: var(--reader-fg);
-  display: block;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-.reader-page {
-  background: radial-gradient(circle at 10% 0, rgba(255,255,255,.86), transparent 30%), #f6f1e8;
-  box-sizing: border-box;
-  min-height: 100vh;
-  padding: 28px 30px 56px;
-}
-.reader-hero {
-  align-items: center;
-  background: rgba(255,253,248,.82);
-  border: 1px solid rgba(230,220,205,.9);
-  border-radius: 22px;
-  box-shadow: 0 16px 36px rgba(74,55,38,.08);
-  display: flex;
-  gap: 18px;
-  justify-content: space-between;
-  margin: 0 auto 24px;
-  max-width: 1120px;
-  padding: 24px 26px;
-}
-.eyebrow {
-  color: #1f6f63;
-  font-size: 12px;
-  font-weight: 760;
-  letter-spacing: 0;
-  margin: 0 0 8px;
-  text-transform: uppercase;
-}
-h1 {
-  font-size: clamp(34px, 5vw, 56px);
-  letter-spacing: 0;
-  line-height: .96;
-  margin: 0;
-}
-.reader-hero p {
-  color: var(--reader-muted);
-  margin: 12px 0 0;
-}
-.top-actions {
-  display: flex;
-  gap: 8px;
-}
-.top-actions a {
-  background: #fff;
-  border: 1px solid var(--reader-line);
-  border-radius: 999px;
-  color: #2d4944;
-  font-size: 14px;
-  font-weight: 680;
-  padding: 9px 14px;
-  text-decoration: none;
-}
-.source-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 auto 34px;
-  max-width: 1120px;
-}
-.source-pill {
-  align-items: center;
-  background: rgba(255,253,248,.9);
-  border: 1px solid var(--reader-line);
-  border-radius: 16px;
-  box-shadow: 0 10px 24px rgba(74,55,38,.07);
-  display: flex;
-  gap: 12px;
-  padding: 10px 12px 10px 16px;
-}
-.source-pill span {
-  font-weight: 680;
-}
-.source-pill small {
-  color: var(--reader-muted);
-  font-size: 12px;
-}
-.book-grid {
-  display: grid;
-  gap: 34px 30px;
-  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
-  margin: 0 auto;
-  max-width: 1120px;
-}
-.book-card {
-  cursor: pointer;
-  min-width: 0;
-  text-align: center;
-  transition: transform .18s ease;
-}
-.book-card:hover {
-  transform: translateY(-5px);
-}
-.book-cover-wrap {
-  filter: drop-shadow(0 20px 18px rgba(58,43,31,.2));
-  margin: 0 auto 17px;
-  max-width: 148px;
-  perspective: 900px;
-}
-.book-cover {
-  aspect-ratio: .72;
-  border-radius: 5px 13px 13px 5px;
-  box-shadow: inset 11px 0 18px rgba(0,0,0,.24), inset -1px 0 rgba(255,255,255,.35);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  padding: 18px 16px 16px;
-  position: relative;
-  transform: rotateY(-7deg);
-}
-.book-cover::before {
-  background: linear-gradient(90deg, rgba(255,255,255,.24), transparent 26%), radial-gradient(circle at 74% 16%, rgba(255,255,255,.22), transparent 22%);
-  content: "";
-  inset: 0;
-  position: absolute;
-}
-.book-cover::after {
-  background: rgba(255,255,255,.24);
-  content: "";
-  inset: 0 auto 0 16px;
-  position: absolute;
-  width: 1px;
-}
-.book-cover-title,
-.book-cover-author {
-  position: relative;
-  z-index: 1;
-}
-.book-cover-title {
-  font-size: 16px;
-  font-weight: 780;
-  line-height: 1.16;
-}
-.book-cover-author {
-  font-size: 12px;
-  opacity: .84;
-}
-.book-title {
-  font-size: 17px;
-  font-weight: 760;
-  line-height: 1.22;
-  margin: 0 0 5px;
-}
-.book-author {
-  color: var(--reader-muted);
-  font-size: 14px;
-  margin: 0 0 7px;
-}
-.book-summary {
-  color: #756f66;
-  display: -webkit-box;
-  font-size: 13px;
-  line-height: 1.42;
-  margin: 0 auto 8px;
-  max-width: 210px;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-.book-foot {
-  color: #91887b;
-  display: flex;
-  font-size: 12px;
-  gap: 8px;
-  justify-content: center;
-}
-.progress-block {
-  margin: 10px auto 0;
-  max-width: 150px;
-}
-.progress-bar {
-  background: rgba(35,31,27,.1);
-  border-radius: 999px;
-  height: 4px;
-  overflow: hidden;
-}
-.progress-bar span {
-  background: var(--reader-accent);
-  display: block;
-  height: 100%;
-}
-@media (max-width: 720px) {
-  .reader-page { padding: 18px 16px 42px; }
-  .reader-hero { align-items: flex-start; display: block; }
-  .top-actions { margin-top: 16px; }
-  .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-`;
 
 export interface BookshelfData {
   books: LibraryBook[];
@@ -217,10 +15,10 @@ export interface BookshelfData {
 export async function loader(): Promise<BookshelfData> {
   const [books, sources] = await Promise.all([listBooks(), listSources()]);
   const progressByBook: Record<string, ReaderProgress> = {};
-  for (const book of books) {
-    const progress = loadProgress(book.id);
-    if (progress) progressByBook[book.id] = progress;
-  }
+  await Promise.all(books.map(async (book) => {
+    const details = await getBookDetails(book.id);
+    if (details?.progress) progressByBook[book.id] = details.progress;
+  }));
   return { books, progressByBook, sources };
 }
 
@@ -239,6 +37,13 @@ export async function action(
 export const tagName = 'reader-bookshelf';
 
 export default class BookshelfPage extends OpenElement {
+  #sourceModalOpen = false;
+
+  #setSourceModal(open: boolean): void {
+    this.#sourceModalOpen = open;
+    this.update();
+  }
+
   override render() {
     const data = (this as unknown) as BookshelfPage & BookshelfData;
     const actionData = (this as unknown as { actionData?: { synced?: string; error?: string } })
@@ -248,95 +53,403 @@ export default class BookshelfPage extends OpenElement {
 
     if (books.length === 0) {
       return (
-        <main class='reader-page'>
-          <style>{bookshelfStyles}</style>
-          <header class='reader-hero'>
-            <div>
-              <p class='eyebrow'>OpenElement Reader</p>
-              <h1>Library</h1>
-              <p>
-                No books yet. Sync the fixture source or add a source in settings.
-              </p>
+        <main class='reader-main'>
+          <div class='page-header'>
+            <div class='page-header-text'>
+              <h1>书架</h1>
+              <p>暂无图书，请添加书源或同步数据</p>
             </div>
-          </header>
-          <form class='source-strip'>
-            <input type='hidden' name='source-id' value='fixtures' />
-            <open-button type='submit'>Sync fixtures</open-button>
-          </form>
+          </div>
+          <div class='empty-state'>
+            <svg
+              width='48'
+              height='48'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              stroke-width='1.5'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+            >
+              <path d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' />
+              <path d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' />
+            </svg>
+            <p class='empty-state-title'>书架是空的</p>
+            <p class='empty-state-hint'>同步示例数据源或添加本地文件夹，开始阅读。</p>
+            <form style='margin-top: 16px;'>
+              <input type='hidden' name='source-id' value='fixtures' />
+              <open-button type='submit' variant='primary'>同步示例数据</open-button>
+            </form>
+          </div>
+          {sources.length > 0 && (
+            <section class='source-section'>
+              <h2 class='section-title'>
+                书源
+                <span class='count'>{sources.length} 个</span>
+              </h2>
+              <div class='source-list'>
+                {sources.map((source) => (
+                  <form key={source.id} class='source-card'>
+                    <div class='source-card-info'>
+                      <span>{source.label}</span>
+                      <small>
+                        {source.kind}
+                        {source.lastSyncedAt
+                          ? ` · ${new Date(source.lastSyncedAt).toLocaleDateString()}`
+                          : ''}
+                      </small>
+                    </div>
+                    <input type='hidden' name='source-id' value={source.id} />
+                    <open-button type='submit' size='sm' variant='ghost'>同步</open-button>
+                  </form>
+                ))}
+              </div>
+            </section>
+          )}
         </main>
       );
     }
 
-    return (
-      <main class='reader-page'>
-        <style>{bookshelfStyles}</style>
-        <header class='reader-hero'>
-          <div>
-            <p class='eyebrow'>OpenElement Reader</p>
-            <h1>My Bookshelf</h1>
-            <p>
-              Calm local PDF reading across fixtures, folders, and GitHub repositories.
-            </p>
-          </div>
-          <nav class='top-actions'>
-            <a
-              href='/search'
-              onClick={(e: Event) => {
-                e.preventDefault();
-                navigate('/search');
-              }}
-            >
-              Search
-            </a>
-            <a
-              href='/notes'
-              onClick={(e: Event) => {
-                e.preventDefault();
-                navigate('/notes');
-              }}
-            >
-              Notes
-            </a>
-            <a
-              href='/settings'
-              onClick={(e: Event) => {
-                e.preventDefault();
-                navigate('/settings');
-              }}
-            >
-              Sources
-            </a>
-          </nav>
-        </header>
+    const readingBooks = books.filter((b) => data.progressByBook[b.id]?.page > 1);
+    const otherBooks = books.filter((b) =>
+      !data.progressByBook[b.id] || data.progressByBook[b.id].page <= 1
+    );
 
-        {actionData?.synced && <p class='toast-inline'>Synced {actionData.synced}.</p>}
+    return (
+      <main class='reader-main'>
+        <style>
+          {`
+          .source-manage-button::part(control) {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font: 650 13px/1 var(--font-sans);
+            min-height: 34px;
+            padding: 8px 13px;
+          }
+          .source-manage-button:hover::part(control) {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+          }
+          .sources-overlay {
+            align-items: flex-end;
+            background: rgba(20,20,20,.08);
+            display: flex;
+            inset: 0;
+            justify-content: flex-start;
+            padding: 0 0 18px 300px;
+            position: fixed;
+            z-index: 40;
+          }
+          .sources-dialog {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 24px 70px rgba(0,0,0,.16);
+            display: grid;
+            grid-template-columns: 150px minmax(280px, 1fr);
+            max-width: 520px;
+            min-height: 250px;
+            overflow: hidden;
+            width: min(520px, calc(100vw - 48px));
+          }
+          .sources-head {
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            grid-column: 1 / -1;
+            justify-content: space-between;
+            padding: 14px 18px;
+          }
+          .sources-head h2 {
+            font: 650 14px/1 var(--font-sans);
+            margin: 0;
+          }
+          .sources-close::part(control) {
+            background: transparent;
+            border: 0;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+          }
+          .sources-tabs {
+            background: var(--bg-inset);
+            border-right: 1px solid var(--border);
+            display: grid;
+            gap: 4px;
+            align-content: start;
+            padding: 14px;
+          }
+          .sources-tabs button {
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 10px;
+            text-align: left;
+          }
+          .sources-tabs button.active {
+            background: var(--brand-soft);
+            color: var(--brand);
+          }
+          .sources-body {
+            padding: 18px;
+          }
+          .source-add-card::part(control) {
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: inherit;
+            cursor: pointer;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 36px 1fr auto;
+            margin-bottom: 10px;
+            padding: 12px;
+            text-align: left;
+            width: 100%;
+          }
+          .source-add-card:hover::part(control) {
+            border-color: var(--brand);
+          }
+          .source-add-card .source-add-icon {
+            align-items: center;
+            background: var(--bg-muted);
+            border-radius: 8px;
+            display: flex;
+            height: 36px;
+            justify-content: center;
+            width: 36px;
+          }
+          .source-add-card strong {
+            display: block;
+            font-size: 13px;
+          }
+          .source-add-card small {
+            color: var(--text-muted);
+          }
+          .sources-footer {
+            align-items: center;
+            display: flex;
+            grid-column: 1 / -1;
+            justify-content: space-between;
+            padding: 12px 18px 18px;
+          }
+          .sources-primary::part(control) {
+            background: var(--brand);
+            border: 0;
+            border-radius: 8px;
+            color: var(--text-on-brand);
+            cursor: pointer;
+            font: 650 13px/1 var(--font-sans);
+            padding: 11px 18px;
+          }
+        `}
+        </style>
+        <div class='page-header'>
+          <div class='page-header-text'>
+            <h1>书架</h1>
+            <p>共 {books.length} 本图书</p>
+          </div>
+          <div class='page-header-actions'>
+            <open-button
+              class='source-manage-button'
+              type='button'
+              onClick={() => this.#setSourceModal(true)}
+            >
+              管理书源
+            </open-button>
+          </div>
+        </div>
+
+        {actionData?.synced && <p class='toast-inline'>已同步 {actionData.synced}。</p>}
         {actionData?.error && <p class='form-error'>{actionData.error}</p>}
 
-        <section class='source-strip' aria-label='Reader sources'>
-          {sources.map((source) => (
-            <form key={source.id} class='source-pill'>
-              <input type='hidden' name='source-id' value={source.id} />
-              <span>{source.label}</span>
-              <small>
-                {source.kind}
-                {source.lastSyncedAt
-                  ? ` · ${new Date(source.lastSyncedAt).toLocaleDateString()}`
-                  : ''}
-              </small>
-              <open-button type='submit'>Sync</open-button>
-            </form>
-          ))}
-        </section>
+        {readingBooks.length > 0 && (
+          <>
+            <h2 class='section-title'>
+              最近阅读
+              <span class='count'>{readingBooks.length} 本</span>
+            </h2>
+            <section class='book-grid' aria-label='正在阅读'>
+              {readingBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  progress={data.progressByBook[book.id] ?? null}
+                  onNavigate={(id) => navigate(`/books/${id}`)}
+                />
+              ))}
+            </section>
+          </>
+        )}
 
-        <section class='book-grid' aria-label='Bookshelf'>
-          {books.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              onNavigate={(id) => navigate(`/books/${id}`)}
-            />
-          ))}
-        </section>
+        {otherBooks.length > 0 && (
+          <>
+            <h2 class='section-title'>
+              全部图书
+              <span class='count'>{otherBooks.length} 本</span>
+            </h2>
+            <section class='book-grid' aria-label='书架'>
+              {otherBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  progress={data.progressByBook[book.id] ?? null}
+                  onNavigate={(id) => navigate(`/books/${id}`)}
+                />
+              ))}
+            </section>
+          </>
+        )}
+
+        {sources.length > 0 && (
+          <section class='source-section'>
+            <h2 class='section-title'>
+              书源
+              <span class='count'>{sources.length} 个</span>
+              <span class='section-actions'>
+                <open-button
+                  class='source-manage-button'
+                  type='button'
+                  onClick={() => this.#setSourceModal(true)}
+                >
+                  + 添加
+                </open-button>
+              </span>
+            </h2>
+            <div class='source-list'>
+              {sources.map((source) => (
+                <form key={source.id} class='source-card'>
+                  <div class='source-card-info'>
+                    <span>{source.label}</span>
+                    <small>
+                      {source.kind}
+                      {source.lastSyncedAt
+                        ? ` · ${new Date(source.lastSyncedAt).toLocaleDateString()}`
+                        : ''}
+                    </small>
+                  </div>
+                  <input type='hidden' name='source-id' value={source.id} />
+                  <open-button type='submit' size='sm' variant='ghost'>同步</open-button>
+                </form>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sources.length === 0 && (
+          <section class='source-section'>
+            <h2 class='section-title'>
+              书源
+              <span class='count'>0 个</span>
+              <span class='section-actions'>
+                <form>
+                  <input type='hidden' name='source-id' value='fixtures' />
+                  <open-button type='submit' variant='outline' size='sm'>同步示例数据</open-button>
+                </form>
+              </span>
+            </h2>
+            <p class='source-section-hint'>还没有书源，请添加或同步数据源以获取图书。</p>
+          </section>
+        )}
+
+        {sources.length === 0 && books.length === 0 && (
+          <div class='empty-state'>
+            <svg
+              width='48'
+              height='48'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              stroke-width='1.5'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+            >
+              <path d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' />
+              <path d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' />
+            </svg>
+            <p class='empty-state-title'>书架是空的</p>
+            <p class='empty-state-hint'>同步示例数据源或添加本地文件夹，开始阅读。</p>
+          </div>
+        )}
+        {this.#sourceModalOpen && (
+          <div
+            class='sources-overlay'
+            onClick={() => this.#setSourceModal(false)}
+          >
+            <section class='sources-dialog' onClick={(event: Event) => event.stopPropagation()}>
+              <div class='sources-head'>
+                <h2>Sources</h2>
+                <open-button
+                  class='sources-close'
+                  type='button'
+                  variant='ghost'
+                  onClick={() => this.#setSourceModal(false)}
+                >
+                  ×
+                </open-button>
+              </div>
+              <div class='sources-tabs'>
+                <button class='active' type='button'>
+                  All Sources <span>{sources.length}</span>
+                </button>
+                <button type='button'>
+                  Local <span>{sources.filter((s) => s.kind === 'local').length}</span>
+                </button>
+                <button type='button'>
+                  GitHub <span>{sources.filter((s) => s.kind === 'github').length}</span>
+                </button>
+              </div>
+              <div class='sources-body'>
+                <p class='search-result-meta'>Add a new source</p>
+                <open-button
+                  class='source-add-card'
+                  type='button'
+                  variant='ghost'
+                  onClick={() => navigate('/settings')}
+                >
+                  <span class='source-add-icon'>▣</span>
+                  <span>
+                    <strong>Local Folder</strong>
+                    <small>Add documents from your computer</small>
+                  </span>
+                  <span>›</span>
+                </open-button>
+                <open-button
+                  class='source-add-card'
+                  type='button'
+                  variant='ghost'
+                  onClick={() => navigate('/settings')}
+                >
+                  <span class='source-add-icon'>⌘</span>
+                  <span>
+                    <strong>GitHub Repository</strong>
+                    <small>Add documents from a GitHub repository</small>
+                  </span>
+                  <span>›</span>
+                </open-button>
+              </div>
+              <div class='sources-footer'>
+                <small class='search-result-meta'>Learn more about sources ↗</small>
+                <open-button
+                  class='sources-primary'
+                  type='button'
+                  variant='primary'
+                  onClick={() => navigate('/settings')}
+                >
+                  Browse Sources
+                </open-button>
+              </div>
+            </section>
+          </div>
+        )}
       </main>
     );
   }

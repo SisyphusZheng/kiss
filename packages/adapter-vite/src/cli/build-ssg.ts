@@ -21,16 +21,16 @@ import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { FrameworkOptions, HydrationStrategy } from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
-import type { OpenElementBuildContext } from '../build-context.js';
+import type { OpenElementBuildContext } from '../build-context.ts';
 import { ssgRender } from '@openelement/ssg';
 import { SsrRenderError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
-import { createSsgRenderEvidence } from './ssg-render.js';
-import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.js';
-import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
+import { createSsgRenderEvidence } from './ssg-render.ts';
+import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
+import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
-import { optionalPackageStubsPlugin } from '../plugin.js';
-import { normalizeViteAliases } from '../alias-utils.js';
+import { optionalPackageStubsPlugin } from '../plugin.ts';
+import { normalizeViteAliases } from '../alias-utils.ts';
 
 /** Fallback package version when adapter-vite cannot read its own deno.json. */
 const DEFAULT_ADAPTER_VERSION_FALLBACK = '0.35.1';

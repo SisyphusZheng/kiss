@@ -1,18 +1,19 @@
 /** @jsxImportSource @openelement/core */
-import type { ReaderBook } from '../app/types.ts';
-import { loadProgress } from '../app/storage.ts';
+import type { ReaderBook, ReaderProgress } from '../app/types.ts';
+import BookCover from './BookCover.tsx';
 
 export interface BookCardProps {
   key?: string;
   book: ReaderBook;
+  progress?: ReaderProgress | null;
   onNavigate: (bookId: string) => void;
 }
 
-export default function BookCard({ book, onNavigate }: BookCardProps) {
-  const progress = loadProgress(book.id);
+export default function BookCard({ book, progress, onNavigate }: BookCardProps) {
   const percent = progress
     ? Math.min(100, Math.round((progress.page / Math.max(book.pageCount, 1)) * 100))
     : 0;
+  const isReading = progress && progress.page > 1;
 
   return (
     <article
@@ -20,41 +21,24 @@ export default function BookCard({ book, onNavigate }: BookCardProps) {
       onClick={() => onNavigate(book.id)}
     >
       <div class='book-cover-wrap'>
-        <div
-          class='book-cover'
-          style={`background:${book.coverColor}`}
-        >
-          <span class='book-cover-title'>{book.title}</span>
-          {book.author && <span class='book-cover-author'>{book.author}</span>}
-        </div>
+        <BookCover bookId={book.id} title={book.title} author={book.author} />
       </div>
       <div class='book-meta'>
         <h2 class='book-title'>{book.title}</h2>
         {book.author && <p class='book-author'>{book.author}</p>}
         <p class='book-summary'>{book.summary ?? book.fileName}</p>
         <div class='book-foot'>
-          <span>{book.pageCount} pages</span>
-          {progress && progress.page > 1 && <span>{percent}%</span>}
+          <span>{book.pageCount} 页</span>
+          {isReading && <span class='progress-pct'>已读 {percent}%</span>}
         </div>
-      </div>
-      {progress && progress.page > 1 && (
-        <div class='progress-block'>
-          <div class='progress-bar'>
-            <span style={{ width: `${percent}%` }} />
+        {isReading && (
+          <div class='progress-block'>
+            <div class='progress-bar'>
+              <span style={{ width: `${percent}%` }} />
+            </div>
           </div>
-          <open-button
-            class='continue-btn'
-            onClick={(e: Event) => {
-              e.stopPropagation();
-              onNavigate(
-                `${book.id}?page=${progress.page}`,
-              );
-            }}
-          >
-            Continue page {progress.page}
-          </open-button>
-        </div>
-      )}
+        )}
+      </div>
     </article>
   );
 }

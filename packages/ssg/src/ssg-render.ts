@@ -177,7 +177,7 @@ export async function ssgRender(
     injectViewTransitionMeta,
     injectSpeculationRules,
     buildSpeculationRulesJson,
-  } = await import('./postprocess.js');
+  } = await import('./postprocess.ts');
 
   const islandTagNames = options.islandTagNames || [];
   const _islandChunkMap = buildIslandChunkMap(

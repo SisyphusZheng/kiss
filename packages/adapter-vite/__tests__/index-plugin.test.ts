@@ -23,6 +23,7 @@ import { renderSsrError, wrapInDocument } from '@openelement/core';
 import { buildIslandChunkMap, injectClientScript, injectCspMeta } from '@openelement/ssg';
 
 import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build-manifest.ts';
+import { openPipeline } from '../src/index.ts';
 
 type CallablePluginHook = (...args: unknown[]) => unknown;
 
@@ -468,4 +469,25 @@ Deno.test('createOpenPlugin() corePlugin.config handles config without resolve',
   const result = (corePlugin.config as Function)({} as never);
   assertExists(result);
   assertExists((result as Record<string, unknown>).build);
+});
+
+// ─── openPipeline() mode propagation ──────────────────────────
+// Regression: OpenPipelineConfig previously had no `mode` field, so
+// openPipeline({ mode: 'spa' }) silently dropped the mode and always
+// registered the SSR dev server.
+
+Deno.test('openPipeline() defaults to SSG (includes @hono/vite-dev-server)', () => {
+  const plugins = openPipeline();
+  const names = plugins.map((p) => p.name);
+  assertArrayIncludes(names, ['@hono/vite-dev-server']);
+});
+
+Deno.test('openPipeline({ mode: "spa" }) omits @hono/vite-dev-server', () => {
+  const plugins = openPipeline({ mode: 'spa' });
+  const names = plugins.map((p) => p.name);
+  assertEquals(
+    names.includes('@hono/vite-dev-server'),
+    false,
+    'openPipeline must propagate mode:"spa" — SSR dev server must be skipped',
+  );
 });

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>openElement — Inverted</title>
+  <path fill-rule="evenodd" fill="#ffffff"
+    d="M 14 64 A 50 50 0 1 0 114 64 A 50 50 0 1 0 14 64 Z
+           M 34 50 A 44 44 0 1 0 122 50 A 44 44 0 1 0 34 50 Z" />
+</svg>

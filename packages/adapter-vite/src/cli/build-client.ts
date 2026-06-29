@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import { generateClientEntry } from '@openelement/ssg';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
-import type { OpenElementBuildContext } from '../build-context.js';
-import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.js';
+import type { OpenElementBuildContext } from '../build-context.ts';
+import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
 import { formatError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 
@@ -262,6 +262,11 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
           entryFileNames: 'islands/[name].js',
           chunkFileNames: 'islands/[name]-[hash].js',
           manualChunks(id: string) {
+            // Force preact + preact/hooks into a single chunk so the shared
+            // options object is not duplicated across chunks (which breaks hooks).
+            if (id.includes('node_modules/preact') || id.includes('/preact/')) {
+              return 'preact';
+            }
             if (id.includes(`/${islandsDir}/`)) {
               const match = id.match(/\/([^/]+)\.(ts|js)$/);
               if (match) return `island-${match[1]}`;
@@ -276,6 +281,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     resolve: {
       ...(serializedAlias.length > 0 ? { alias: serializedAlias } : {}),
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      dedupe: ['preact'],
     },
     ssr: {
       noExternal: (noExternalPatterns.length > 0 ? noExternalPatterns : undefined) as
@@ -287,6 +293,21 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
         workspaceRoot: WORKSPACE_ROOT,
         version: getJsrPackageVersion(import.meta.url),
       }),
+      {
+        name: 'open:exclude-preact-rts',
+        resolveId(id: string) {
+          if (id === 'preact-render-to-string') {
+            return '\0empty-preact-rts';
+          }
+          return null;
+        },
+        load(id: string) {
+          if (id === '\0empty-preact-rts') {
+            return 'export const renderToString = () => { throw new Error("preact-render-to-string is not available in browser"); };';
+          }
+          return null;
+        },
+      },
       {
         name: 'open:virtual-client-entry',
         resolveId(id) {
@@ -325,8 +346,8 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     await viteBuild(clientConfig);
     log.info('Client bundle built -> ' + clientOutDir);
 
-    const { printBuildManifest } = await import('../build-manifest.js');
-    printBuildManifest({ root, outDir, phase: 2 });
+    const { printBuildManifest } = await import('../build-manifest.ts');
+    printBuildManifest({ root, outDir, phase: 2, budget: ctx.phase3.manifestBudget });
   } catch (error) {
     log.error(`Client build failed: ${formatError(error)}`);
     throw error;

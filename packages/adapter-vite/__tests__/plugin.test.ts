@@ -268,6 +268,27 @@ Deno.test('openPlugin: core config includes rollupOptions with build trigger inp
   assertArrayIncludes(input, ['virtual:open-build-trigger']);
 });
 
+Deno.test('openPlugin: core config sorts aliases by subpath specificity', () => {
+  const plugins = createOpenPlugin({});
+  const corePlugin = plugins.find((p) => p.name === 'open:core')!;
+
+  const result = callConfig(corePlugin, {
+    resolve: {
+      alias: [
+        { find: '@openelement/core', replacement: '/repo/packages/core/src/index.ts' },
+        { find: '@openelement/core/csr', replacement: '/repo/packages/core/src/csr.ts' },
+      ],
+    },
+  });
+  const resolve = result.resolve as { alias: Array<{ find: string; replacement: string }> };
+  const coreCsrIndex = resolve.alias.findIndex((alias) => alias.find === '@openelement/core/csr');
+  const coreRootIndex = resolve.alias.findIndex((alias) => alias.find === '@openelement/core');
+
+  assertEquals(coreCsrIndex >= 0, true);
+  assertEquals(coreRootIndex >= 0, true);
+  assertEquals(coreCsrIndex < coreRootIndex, true);
+});
+
 // ─── Island Transform Plugin ──────────────────────────────────
 
 Deno.test('openPlugin: island-transform plugin exists with correct name', () => {
@@ -301,6 +322,51 @@ Deno.test('openPlugin: dev server plugin is @hono/vite-dev-server', () => {
   const devServerPlugin = plugins.find((p) => p.name === '@hono/vite-dev-server')!;
 
   assertExists(devServerPlugin);
+});
+
+// ─── SPA Mode: SSR dev server must be skipped ─────────────────
+// Regression: route modules call customElements.define() at module top level,
+// which crashes in a server context. SPA is client-only, so the @hono/vite-dev-server
+// middleware (which SSR-imports route modules) must NOT be registered.
+
+Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (8 plugins)', () => {
+  const plugins = createOpenPlugin({ mode: 'spa' });
+  assertEquals(plugins.length, 8);
+
+  const names = plugins.map((p) => p.name);
+  assertEquals(
+    names,
+    [
+      'open:mdx',
+      'open:core',
+      'open:generated-data',
+      'open:core-resolve',
+      'open:optional-package-stubs',
+      'open:virtual-entry',
+      'open:island-transform',
+      'open:build',
+    ],
+  );
+
+  // Critical: no SSR dev server in SPA mode
+  assertEquals(
+    names.includes('@hono/vite-dev-server'),
+    false,
+    'SPA mode must not register @hono/vite-dev-server — it SSR-imports route ' +
+      'modules that call customElements.define() and crash on the server',
+  );
+});
+
+Deno.test('openPlugin: SSG mode (default) includes @hono/vite-dev-server (9 plugins)', () => {
+  const plugins = createOpenPlugin({});
+  assertEquals(plugins.length, 9);
+  assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
+});
+
+Deno.test('openPlugin: explicit SSG mode includes @hono/vite-dev-server', () => {
+  const plugins = createOpenPlugin({ mode: 'ssg' });
+  assertEquals(plugins.length, 9);
+  assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
 });
 
 // ─── packageIslands Option ────────────────────────────────────

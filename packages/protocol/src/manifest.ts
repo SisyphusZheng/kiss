@@ -2,7 +2,7 @@
  * @openelement/protocol - CEM manifest and compatibility contract types.
  */
 
-import type { ComponentLayer, HydrationStrategy } from './framework.js';
+import type { ComponentLayer, HydrationStrategy } from './framework.ts';
 
 // --- Manifest descriptors (CEM-compatible) ------------------------
 
@@ -80,7 +80,7 @@ export interface OpenElementPackageManifest {
 
 // --- Compatibility ------------------------------------------------
 
-import type { CompatibilityClassification, CompatibilityTier } from './framework.js';
+import type { CompatibilityClassification, CompatibilityTier } from './framework.ts';
 export type { CompatibilityClassification, CompatibilityTier };
 
 export interface CemCompatibilityReport {

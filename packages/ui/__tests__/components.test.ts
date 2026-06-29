@@ -570,6 +570,144 @@ Deno.test('open-button: click dispatches open-click event', async () => {
   assertEquals(fired, true);
 });
 
+// ─── Form submission regression ─────────────────────────────
+// open-button is formAssociated. Its inner <button> lives in the shadow DOM,
+// so the browser's native "type=submit triggers form submit" behavior does
+// NOT reach the outer <form>. The component must explicitly dispatch a
+// composed 'submit' event on the form so the SPA's delegated root listener
+// (which sits outside the shadow boundary) can intercept it.
+
+/** Minimal form stub: records requestSubmit/reset calls and supports
+ * dispatchEvent (returns true so defaultPrevented stays false → requestSubmit
+ * runs, mirroring real form behavior when no listener cancels the event). */
+function makeFormStub(
+  opts: { submit?: () => void; reset?: () => void; preventDefault?: boolean } = {},
+): {
+  requestSubmit: () => void;
+  reset: () => void;
+  submit: () => void;
+  dispatchEvent: (e: Event) => boolean;
+} {
+  const preventDefault = opts.preventDefault ?? false;
+  return {
+    requestSubmit: opts.submit ?? (() => {}),
+    reset: opts.reset ?? (() => {}),
+    submit: opts.submit ?? (() => {}),
+    dispatchEvent: (e: Event) => {
+      if (preventDefault && e.cancelable) e.preventDefault();
+      return !preventDefault;
+    },
+  };
+}
+
+Deno.test('open-button: type=submit dispatches composed submit event and calls requestSubmit', async () => {
+  const { OpenButton } = await import('../src/open-button.tsx');
+  const instance = new OpenButton();
+  instance.setAttribute('type', 'submit');
+
+  let submitCalled = false;
+  let submitEventBubbles = false;
+  let submitEventComposed = false;
+  const form = {
+    requestSubmit: () => {
+      submitCalled = true;
+    },
+    reset: () => {},
+    submit: () => {},
+    dispatchEvent: (e: Event) => {
+      submitEventBubbles = e.bubbles;
+      submitEventComposed = (e as Event & { composed?: boolean }).composed ?? false;
+      return true; // not prevented → requestSubmit should fire
+    },
+  };
+  (instance as unknown as { _internals: { form: unknown } })._internals = { form };
+
+  const vnode = instance.render() as VNode;
+  clickVNode(vnode, undefined, instance);
+
+  // Must dispatch a composed submit event so it crosses shadow boundaries
+  assertEquals(submitEventBubbles, true);
+  assertEquals(submitEventComposed, true);
+  // And fall through to requestSubmit since no listener prevented default
+  assertEquals(submitCalled, true);
+});
+
+Deno.test('open-button: type=submit does NOT call requestSubmit when SPA prevents default', async () => {
+  const { OpenButton } = await import('../src/open-button.tsx');
+  const instance = new OpenButton();
+  instance.setAttribute('type', 'submit');
+
+  let submitCalled = false;
+  const form = makeFormStub({
+    submit: () => {
+      submitCalled = true;
+    },
+    preventDefault: true, // simulate SPA calling e.preventDefault()
+  });
+  (instance as unknown as { _internals: { form: unknown } })._internals = { form };
+
+  const vnode = instance.render() as VNode;
+  clickVNode(vnode, undefined, instance);
+
+  // SPA prevented default → must NOT fall through to native requestSubmit
+  assertEquals(submitCalled, false);
+});
+
+Deno.test('open-button: type=reset triggers form.reset() on click', async () => {
+  const { OpenButton } = await import('../src/open-button.tsx');
+  const instance = new OpenButton();
+  instance.setAttribute('type', 'reset');
+
+  let resetCalled = false;
+  const form = makeFormStub({
+    reset: () => {
+      resetCalled = true;
+    },
+  });
+  (instance as unknown as { _internals: { form: unknown } })._internals = { form };
+
+  const vnode = instance.render() as VNode;
+  clickVNode(vnode, undefined, instance);
+  assertEquals(resetCalled, true);
+});
+
+Deno.test('open-button: type=button (default) does NOT trigger form submit', async () => {
+  const { OpenButton } = await import('../src/open-button.tsx');
+  const instance = new OpenButton();
+  // No type attribute → defaults to 'button' → no form interaction
+
+  let submitCalled = false;
+  const form = makeFormStub({
+    submit: () => {
+      submitCalled = true;
+    },
+    reset: () => {
+      submitCalled = true;
+    },
+  });
+  (instance as unknown as { _internals: { form: unknown } })._internals = { form };
+
+  const vnode = instance.render() as VNode;
+  clickVNode(vnode, undefined, instance);
+  assertEquals(submitCalled, false);
+});
+
+Deno.test('open-button: type=submit without associated form does not throw', async () => {
+  const { OpenButton } = await import('../src/open-button.tsx');
+  const instance = new OpenButton();
+  instance.setAttribute('type', 'submit');
+  // No _internals.form (formAssociated but not inside a <form>)
+
+  let threw = false;
+  try {
+    const vnode = instance.render() as VNode;
+    clickVNode(vnode, undefined, instance);
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, false);
+});
+
 Deno.test('open-card: has correct tagName and slot structure', async () => {
   const module = asComponentModule(await import('../src/open-card.tsx'));
   assertEquals(module.tagName, 'open-card');

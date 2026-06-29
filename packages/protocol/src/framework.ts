@@ -3,7 +3,7 @@
  * metadata contracts.
  */
 
-import type { VNode } from './vnode.js';
+import type { VNode } from './vnode.ts';
 
 // --- API context --------------------------------------------------
 
@@ -156,6 +156,11 @@ export interface FrameworkOptions {
   };
   build?: {
     outDir?: string;
+    manifestBudget?: {
+      islandKB?: number;
+      totalJsKB?: number;
+      pageKB?: number;
+    };
   };
   viewTransition?: boolean;
   speculation?: boolean | {
