@@ -12,6 +12,9 @@ runs:
       with:
         path: node_modules
         key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+    - name: Generate UI manifest
+      shell: bash
+      run: deno run --allow-read --allow-write tools/generate-ui-manifest.ts
     - name: Install dependencies
       shell: bash
       run: deno install --node-modules-dir
