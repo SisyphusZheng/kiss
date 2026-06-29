@@ -141,8 +141,11 @@ function _installThemeObserver(): void {
  * SSR-safe base class for OpenElement.
  *
  * In browser: extends HTMLElement directly.
- * In SSR: assigns a minimal stub to globalThis.HTMLElement so the entire
- * dependency graph shares the same base class.
+ * In SSR/no-DOM runtimes: extends a minimal stub that satisfies the
+ * HTMLElement contract without mutating globalThis.
+ *
+ * NOTE: we intentionally do NOT assign globalThis.HTMLElement in SSR.
+ * Runtime-agnostic modules should not mutate the host global scope.
  */
 const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
   hasAttribute(_name: string): boolean {
@@ -160,11 +163,6 @@ const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
     return false;
   }
 } as unknown as typeof HTMLElement);
-
-// In SSR, assign globalThis.HTMLElement so other code can reference it
-if (typeof HTMLElement === 'undefined') {
-  (globalThis as Record<string, unknown>).HTMLElement = _Base;
-}
 
 /**
  * Zero-dependency Custom Element base class for DSD rendering.
@@ -432,10 +430,12 @@ export class OpenElement extends _Base {
       this._applyStyles(ctor);
     }
 
-    // Sync data-theme from document root
-    const docTheme = document.documentElement?.dataset?.theme;
-    if (docTheme && !this.hasAttribute('data-theme')) {
-      this.setAttribute('data-theme', docTheme);
+    // Sync data-theme from document root (browser only)
+    if (typeof document !== 'undefined') {
+      const docTheme = document.documentElement?.dataset?.theme;
+      if (docTheme && !this.hasAttribute('data-theme')) {
+        this.setAttribute('data-theme', docTheme);
+      }
     }
 
     // v0.41.0 (ADR-0061): Register this instance for theme broadcasts.
