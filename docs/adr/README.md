@@ -97,7 +97,7 @@ architectural decision, its context, and consequences.
 | 0105 | v0.40.x Cleanup Train Exception                          | Accepted                                         |
 | 0106 | Audit-Driven Quality Cleanup for v0.40.6                 | Accepted                                         |
 | 0107 | npm-Only Distribution                                    | Accepted                                         |
-| 0108 | npm Distribution via `deno pack` (Deno Development Toolchain) | Accepted                                         |
+| 0108 | npm Distribution via `deno pack`                         | Accepted                                         |
 | 0109 | Unified Signal-DOM Activation Layer                      | Proposed                                         |
 
 ## Superseded / Historical
