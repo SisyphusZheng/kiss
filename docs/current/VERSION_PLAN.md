@@ -1,14 +1,20 @@
-# v0.41.0 Version Plan - Deno-native npm Distribution + WC Interop
+# v0.41.0 Version Plan - Web Components Fullstack Framework + Basic Element
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
 ## Objective
 
 Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`,
-harden the signal-DOM architecture, and prove cross-framework Web Components
-interoperability. The release is staged through four alphas and one beta:
+harden the signal-DOM architecture, and turn OpenElement into a credible
+Web Components-first fullstack framework powered by a small Basic Element layer.
+Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party Web
+Components are first-party stack decisions, but they must enter through
+OpenElement-owned package contracts and protocol concepts.
+
+The release is staged through alpha lines with explicit execution plans:
 
 - **alpha.1** (shipped): npm distribution + audit cleanup.
 - **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
@@ -16,9 +22,13 @@ interoperability. The release is staged through four alphas and one beta:
 - **alpha.3–4** (merged): Cross-Framework WC Integration —
   consume Lit/Shoelace/MWC + client runtime for Deno Fresh
   interop proof; pure-ESM/ECMAScript npm gates.
-- **alpha.5**: SPA mode + Deno Desktop reader proof (Deno canary).
-- **alpha.6**: Mastodon/GoToSocial read-only practice app.
-- **alpha.7**: Mastodon/GoToSocial authenticated mutations practice app.
+- **alpha.5**: SPA mode + Deno Desktop Reader proof, Reader polish, and current
+  PR/framework closure.
+- **alpha.6**: OpenElement App/protocol architecture hardening, official stack
+  contracts, Deno Desktop target contract, and Reader regression-grade dogfood.
+- **alpha.7**: Reserved for the next practice app train after alpha.6 validates
+  the framework architecture; Mastodon/GoToSocial may resume here if still the
+  right dogfood target.
 - **beta.1**: Stabilization and surface freeze before stable v0.41.0.
 
 ## Context
@@ -31,7 +41,8 @@ architecture hardening and WC ecosystem integration.
 
 A previous v0.41.0 line proposed making Vite+ treat Deno as a first-class
 package manager. That upstream PR (voidzero-dev/vite-plus#1888) was declined,
-so this plan pivots to Deno's own `deno pack` tooling.
+so this plan pivots to Deno's own `deno pack` tooling while keeping Vite as the
+official OpenElement build adapter.
 
 ## Scope
 
@@ -96,13 +107,18 @@ merge, alpha.4 is not called released until `main` CI is green and the approved
 release workflow records npm publish plus post-publish npm consumer smoke
 evidence.
 
-alpha.5 is the current implementation target: SPA mode + Deno Desktop reader
-proof (Deno canary). The reader is a WeRead-style desktop practice app backed by
-fixtures, local PDF folders/repositories, and public GitHub repo/path sources; it
-must not use WeRead private APIs, account cookies, scraping, or copyrighted book
-content.
+alpha.5 is the current implementation target: SPA mode + Deno Desktop Reader
+proof, Reader usability/polish, and framework closure for the current alpha.5
+PR. The Reader is a WeRead-style desktop practice app backed by fixtures, local
+PDF folders/repositories, and public GitHub repo/path sources; it must not use
+WeRead private APIs, account cookies, scraping, or copyrighted book content.
 React/Vue/Svelte adapters stay out of alpha.5 unless they are required to
 validate SPA navigation disposal semantics.
+
+alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
+defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
+RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
+and Deno Desktop target contracts.
 
 ## Non-Goals
 
@@ -117,12 +133,15 @@ validate SPA navigation disposal semantics.
 The active work is tracked in per-alpha plan files:
 
 - `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
-- `docs/release/v0.41.0-alpha.5-plan.md` — Cross-Framework Web Components Integration
+- `docs/release/v0.41.0-alpha.3-plan.md` — Third-party Web Components inside OpenElement
+- `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
+- `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening and Reader dogfood
 
-Alpha.6 and alpha.7 Mastodon/GoToSocial practice plans will be recorded in
-dedicated files when those lines start. The stabilization phase will be recorded
-in `docs/release/v0.41.0-beta.1-plan.md` when alpha.7 is complete.
+Alpha.7 remains reserved for a later practice app train after alpha.6 closes the
+framework architecture loop. The stabilization phase will be recorded in
+`docs/release/v0.41.0-beta.1-plan.md` when the alpha.6/alpha.7 feedback loop is
+complete.
 
 ## Governance Rules
 
@@ -140,7 +159,7 @@ in `docs/release/v0.41.0-beta.1-plan.md` when alpha.7 is complete.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
-- `docs/current/PACKAGE_SURFACE.md` defines the v0.41.0-alpha.2 11-package surface.
+- `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
 
 ## Test Matrix
 

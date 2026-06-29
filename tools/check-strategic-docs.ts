@@ -46,9 +46,9 @@ const currentDocs = [
 
 const checks: Check[] = [
   {
-    name: 'ADR-0099 four-product matrix anchors',
-    files: currentDocs,
-    required: ['openElement = Elements + UI + Framework + Protocols'],
+    name: 'current product-position anchors',
+    files: ['docs/current/VERSION_PLAN.md', 'docs/roadmap/ROADMAP.md'],
+    required: ['openElement = Web Components Fullstack Framework + Basic Element'],
   },
   {
     name: `${PACKAGE_VERSION_TAG} is the current package line`,

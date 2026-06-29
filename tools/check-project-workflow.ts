@@ -26,7 +26,7 @@ const requiredAnchors: Record<string, string[]> = {
   'docs/status/STATUS.md': ['docs/governance/PROJECT_WORKFLOW.md', 'docs/current/VERSION_PLAN.md'],
   'docs/roadmap/ROADMAP.md': ['docs/governance/PROJECT_WORKFLOW.md'],
   'docs/current/VERSION_PLAN.md': [
-    'openElement = Elements + UI + Framework + Protocols',
+    'openElement = Web Components Fullstack Framework + Basic Element',
     'docs/current/PACKAGE_SURFACE.md',
     'ADR-0101',
     'ADR-0104',
