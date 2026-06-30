@@ -11,7 +11,12 @@ import { indexBook, loadSearchIndex, search as searchPdfIndex } from './search.t
 
 const GITHUB_API = 'https://api.github.com/repos';
 const GITHUB_RAW = 'https://raw.githubusercontent.com';
-const searchIndexJobs = new Map<string, Promise<void>>();
+
+interface SearchIndexJob {
+  promise: Promise<void>;
+}
+
+const searchIndexJobs = new Map<string, SearchIndexJob>();
 
 export interface ReaderStorePaths {
   cacheDir: string;
@@ -455,18 +460,20 @@ async function ensureBookSearchIndex(
   const key = searchIndexJobKey(paths, book);
   const existing = searchIndexJobs.get(key);
   if (existing) {
-    await existing;
+    await existing.promise;
     return;
   }
   const latestIndex = loadSearchIndex(paths.cacheDir);
   if (typeof latestIndex[book.id] === 'string') return;
 
-  const job = (async () => {
-    await indexBook(book.path, book.id, paths.cacheDir);
-  })();
+  const job: SearchIndexJob = {
+    promise: (async () => {
+      await indexBook(book.path, book.id, paths.cacheDir);
+    })(),
+  };
   searchIndexJobs.set(key, job);
   try {
-    await job;
+    await job.promise;
   } finally {
     if (searchIndexJobs.get(key) === job) searchIndexJobs.delete(key);
   }
