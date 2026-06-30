@@ -288,3 +288,131 @@ export interface SpeculationRulesOptions {
    */
   eagerness?: 'immediate' | 'moderate' | 'conservative';
 }
+
+// ─── BuildPlan / BuildArtifacts contracts (alpha.5 T2) ───────────
+
+/** A single route input to the build pipeline. */
+export interface BuildRouteInput {
+  /** Route kind: page or API. */
+  kind: 'page' | 'api';
+  /** Route path (e.g. '/about', '/blog/:slug'). */
+  path: string;
+  /** Absolute or relative file path of the route module. */
+  filePath: string;
+  /** Import specifier used by generated entry code. */
+  importPath: string;
+  /** Resolved tag name for page routes. */
+  tagName?: string;
+  /** Dynamic segment names. */
+  paramNames?: string[];
+  /** Static generation params produced by getStaticPaths(). */
+  staticParams?: Array<Record<string, string>>;
+}
+
+/** A single island input to the build pipeline. */
+export interface BuildIslandInput {
+  tagName: string;
+  modulePath: string;
+  isPackage?: boolean;
+  hydrate?: HydrationStrategy;
+  ssr?: boolean;
+  dsd?: boolean;
+  source?: 'local' | 'package' | 'nested';
+  reason?: string;
+}
+
+/** Output configuration for the build pipeline. */
+export interface BuildOutputOptions {
+  /** Project root directory. */
+  root?: string;
+  /** Output directory relative to root. */
+  outDir?: string;
+  /** Base URL path. */
+  base?: string;
+  /** If true, emit a client-only SPA bundle instead of SSG. */
+  spa?: boolean;
+}
+
+/** i18n configuration for the build pipeline. */
+export interface BuildI18nOptions {
+  locales: string[];
+  defaultLocale?: string;
+}
+
+/** Content/blog configuration for the build pipeline. */
+export interface BuildContentOptions {
+  contentDir?: string;
+  basePath?: string;
+}
+
+/** Package island configuration for the build pipeline. */
+export interface BuildPackageIslandOptions {
+  /** Package names that may expose island declarations. */
+  packages?: string[];
+}
+
+/** Framework-agnostic plan consumed by the OpenElement build pipeline. */
+export interface BuildPlan {
+  /** User-facing framework options. */
+  options: import('./framework.ts').FrameworkOptions;
+  /** Discovered page and API routes. */
+  routes: BuildRouteInput[];
+  /** Discovered local and package islands. */
+  islands: BuildIslandInput[];
+  /** Output configuration. */
+  output: BuildOutputOptions;
+  /** i18n expansion options. */
+  i18n?: BuildI18nOptions;
+  /** Content expansion options. */
+  content?: BuildContentOptions;
+  /** Package island discovery options. */
+  packageIslands?: BuildPackageIslandOptions;
+  /** Extra evidence passed to the render pipeline. */
+  evidence?: SsgRenderEvidence;
+}
+
+/** A single generated HTML page artifact. */
+export interface BuildPageArtifact {
+  path: string;
+  html: string;
+  /** Errors collected while rendering this page. */
+  errors: Array<{ message: string; route?: string }>;
+}
+
+/** Manifest produced by the build pipeline. */
+export interface BuildManifestArtifact {
+  routes: Array<{ path: string; tagName?: string; isDynamic: boolean }>;
+  islands: BuildIslandInput[];
+}
+
+/** A single client asset emitted by the build pipeline. */
+export interface BuildClientAsset {
+  fileName: string;
+  source: string | Uint8Array;
+  sizeBytes: number;
+}
+
+/** Result returned by the OpenElement build pipeline. */
+export interface BuildArtifacts {
+  /** Generated HTML pages. */
+  pages: BuildPageArtifact[];
+  /** Build manifest. */
+  manifest: BuildManifestArtifact;
+  /** Client-side assets (island bundles, CSS, etc). */
+  clientAssets: BuildClientAsset[];
+  /** Non-fatal warnings. */
+  warnings: string[];
+  /** Fatal errors. */
+  errors: string[];
+  /** Whether the build succeeded. */
+  success: boolean;
+}
+
+// ─── Build pipeline function contract (implementation lives in @openelement/ssg) ─
+
+/** Build function contract implemented by adapter-agnostic SSG engines. */
+export type OpenElementBuild = (
+  plan: BuildPlan,
+) => Promise<BuildArtifacts>;
+
+
