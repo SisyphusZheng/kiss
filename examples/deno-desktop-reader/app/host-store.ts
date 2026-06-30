@@ -461,7 +461,9 @@ async function ensureBookSearchIndex(
   const latestIndex = loadSearchIndex(paths.cacheDir);
   if (typeof latestIndex[book.id] === 'string') return;
 
-  const job = indexBook(book.path, book.id, paths.cacheDir);
+  const job = (async () => {
+    await indexBook(book.path, book.id, paths.cacheDir);
+  })();
   searchIndexJobs.set(key, job);
   try {
     await job;
