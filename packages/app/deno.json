@@ -25,7 +25,7 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/index.ts"
+    "build": "deno check src/"
   },
   "peerDependencies": {
     "@openelement/router": "npm:@openelement/router@^0.41.0-alpha.5",

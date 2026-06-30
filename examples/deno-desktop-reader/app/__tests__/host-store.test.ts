@@ -280,3 +280,14 @@ Deno.test('host store searches PDF text on first query', async () => {
   const hits = await searchLibrary(paths, 'Gregor');
   assert(hits.some((hit) => hit.source === 'pdf' && hit.bookId === 'sample'));
 });
+
+Deno.test('host store handles concurrent first PDF searches', async () => {
+  const paths = await makePaths();
+  const [first, second] = await Promise.all([
+    searchLibrary(paths, 'Gregor'),
+    searchLibrary(paths, 'Gregor'),
+  ]);
+
+  assert(first.some((hit) => hit.source === 'pdf' && hit.bookId === 'sample'));
+  assert(second.some((hit) => hit.source === 'pdf' && hit.bookId === 'sample'));
+});

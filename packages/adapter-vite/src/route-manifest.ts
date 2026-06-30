@@ -8,8 +8,9 @@
  * ## Usage (SPA mode)
  *
  * ```ts
- * // In your client entry:
- * import { routeManifest } from './route-manifest';
+ * // Generated to `${outDir}/route-manifest.ts`; import from that generated
+ * // module or alias it from your client entry.
+ * import { routeManifest } from './route-manifest.ts';
  * import { createRouter } from '@openelement/router/client-router';
  *
  * const router = createRouter({

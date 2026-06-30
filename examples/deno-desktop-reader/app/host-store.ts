@@ -11,6 +11,7 @@ import { indexBook, loadSearchIndex, search as searchPdfIndex } from './search.t
 
 const GITHUB_API = 'https://api.github.com/repos';
 const GITHUB_RAW = 'https://raw.githubusercontent.com';
+const searchIndexJobs = new Map<string, Promise<void>>();
 
 export interface ReaderStorePaths {
   cacheDir: string;
@@ -442,11 +443,38 @@ export function exportNotesMarkdown(paths: ReaderStorePaths): string {
   }).join('\n');
 }
 
+function searchIndexJobKey(paths: ReaderStorePaths, book: LibraryBook): string {
+  return `${paths.cacheDir}:${book.id}`;
+}
+
+async function ensureBookSearchIndex(
+  paths: ReaderStorePaths,
+  book: LibraryBook,
+): Promise<void> {
+  if (!book.path) return;
+  const key = searchIndexJobKey(paths, book);
+  const existing = searchIndexJobs.get(key);
+  if (existing) {
+    await existing;
+    return;
+  }
+  const latestIndex = loadSearchIndex(paths.cacheDir);
+  if (typeof latestIndex[book.id] === 'string') return;
+
+  const job = indexBook(book.path, book.id, paths.cacheDir);
+  searchIndexJobs.set(key, job);
+  try {
+    await job;
+  } finally {
+    if (searchIndexJobs.get(key) === job) searchIndexJobs.delete(key);
+  }
+}
+
 async function ensureSearchIndex(paths: ReaderStorePaths, books: LibraryBook[]): Promise<void> {
   const index = loadSearchIndex(paths.cacheDir);
   const missing = books.filter((book) => book.path && typeof index[book.id] !== 'string');
   if (missing.length === 0) return;
-  await Promise.all(missing.map((book) => indexBook(book.path!, book.id, paths.cacheDir)));
+  await Promise.all(missing.map((book) => ensureBookSearchIndex(paths, book)));
 }
 
 export async function searchLibrary(
