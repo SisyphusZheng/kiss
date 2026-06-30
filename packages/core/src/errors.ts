@@ -168,5 +168,3 @@ export function reportError(error: OpenElementError): void {
     console.error(`[openElement:${error.code}] ${error.message}`);
   }
 }
-
-// ─── SSR Error Context ──────────────────────────────────────────────

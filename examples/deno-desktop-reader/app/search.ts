@@ -14,7 +14,7 @@ function defaultIndexDir(): string {
     '/.open-reader';
 }
 
-function queueIndexWrite(indexDir: string, write: () => void): Promise<void> {
+function queueIndexWrite(indexDir: string, write: () => Promise<void>): Promise<void> {
   const previous = indexWriteQueues.get(indexDir) ?? Promise.resolve();
   const next = previous.then(write, write);
   indexWriteQueues.set(indexDir, next.catch(() => {}));
@@ -43,10 +43,10 @@ export async function indexBook(
     return;
   }
 
-  await queueIndexWrite(dir, () => {
+  await queueIndexWrite(dir, async () => {
     const index = loadSearchIndex(dir);
     index[bookId] = text;
-    saveSearchIndex(dir, index);
+    await saveSearchIndex(dir, index);
   });
 }
 
@@ -107,8 +107,8 @@ export function loadSearchIndex(
 export function saveSearchIndex(
   indexDir: string,
   index: Record<string, string>,
-): void {
+): Promise<void> {
   const indexFile = `${indexDir}/search-index.json`;
-  Deno.mkdirSync(indexDir, { recursive: true });
-  Deno.writeTextFileSync(indexFile, JSON.stringify(index, null, 2));
+  return Deno.mkdir(indexDir, { recursive: true })
+    .then(() => Deno.writeTextFile(indexFile, JSON.stringify(index, null, 2)));
 }

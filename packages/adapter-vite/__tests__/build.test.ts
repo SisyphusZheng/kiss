@@ -277,6 +277,8 @@ Deno.test({
       const html = await Deno.readTextFile(`${root}/dist/index.html`);
       assertStringIncludes(html, '<html lang="zh-CN">');
       assertStringIncludes(html, '<title>Reader &lt;Alpha&gt;</title>');
+      assertStringIncludes(html, 'SPA fallback shell loaded');
+      assertEquals(html.includes('/client-entry.js'), false);
     } finally {
       await Deno.remove(root, { recursive: true });
     }

@@ -9,7 +9,7 @@
  *
  * ```ts
  * // In your client entry:
- * import { routeManifest } from '../.openelement/route-manifest';
+ * import { routeManifest } from './route-manifest';
  * import { createRouter } from '@openelement/router/client-router';
  *
  * const router = createRouter({

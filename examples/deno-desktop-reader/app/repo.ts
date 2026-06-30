@@ -4,6 +4,11 @@ export interface CachedFile {
   downloadedAt: string;
 }
 
+// alpha.5 keeps this module as the narrow GitHub-repo sync adapter prototype.
+// The current Reader host uses host-store.ts for the dogfood app so local folder
+// sources and bundled fixtures share one flow; alpha.6 can either wire this
+// adapter back in or remove it once SourceManager is finalized.
+
 const GITHUB_API = 'https://api.github.com/repos';
 const GITHUB_RAW = 'https://raw.githubusercontent.com';
 

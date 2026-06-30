@@ -44,9 +44,9 @@ function readTextSafe(url: URL): string | null {
   }
 }
 
-function readFileSafe(url: URL): Uint8Array<ArrayBuffer> | null {
+async function readFileSafe(url: URL): Promise<Uint8Array<ArrayBuffer> | null> {
   try {
-    return Deno.readFileSync(url);
+    return await Deno.readFile(url);
   } catch {
     return null;
   }
@@ -218,7 +218,7 @@ const server = Deno.serve(async (req: Request) => {
       const book = getBook(STORE_PATHS, decodeURIComponent(bookFileMatch[1]));
       if (!book) return notFound();
       try {
-        return pdf(Deno.readFileSync(book.path));
+        return pdf(await Deno.readFile(book.path));
       } catch {
         return notFound();
       }
@@ -282,7 +282,7 @@ const server = Deno.serve(async (req: Request) => {
         const p = `${dir}/${name}`;
         if (!statSafe(p)) continue;
         try {
-          return pdf(Deno.readFileSync(p));
+          return pdf(await Deno.readFile(p));
         } catch { /* try next */ }
       }
       return notFound();
@@ -294,10 +294,10 @@ const server = Deno.serve(async (req: Request) => {
       pathname.startsWith('/client/') ||
       pathname.startsWith('/app/') || pathname.startsWith('/fixtures/')
     ) {
-      const file = readFileSafe(new URL(`.${pathname}`, DIST_DIR));
+      const file = await readFileSafe(new URL(`.${pathname}`, DIST_DIR));
       if (!file) {
         // Also try from project root for non-built assets (CSS, JSON)
-        const rootFile = readFileSafe(new URL(`.${pathname}`, import.meta.url));
+        const rootFile = await readFileSafe(new URL(`.${pathname}`, import.meta.url));
         return rootFile ? serveFile(rootFile, ext) : notFound();
       }
       return serveFile(file, ext);

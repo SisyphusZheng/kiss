@@ -77,7 +77,6 @@ export function buildPlugin(
         const root = ctx.phase3.root || process.cwd();
         const outDirName = ctx.phase3.outDir || 'dist';
         const absOutDir = join(root, outDirName);
-        const base = ctx.phase3.base || '/';
         const htmlLang = escapeAttr(ctx.phase3.html?.lang ?? 'en');
         const htmlTitle = escapeHtml(ctx.phase3.html?.title ?? 'openElement App');
 
@@ -94,7 +93,9 @@ export function buildPlugin(
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="${base}client-entry.js"></script>
+  <script type="module">
+    console.info('[openElement] SPA fallback shell loaded. Provide an app index.html for a bundled client entry.');
+  </script>
 </body>
 </html>`;
 
