@@ -76,6 +76,7 @@ packages/*/*.tgz
 # Root-level logo source files (design originals, keep local)
 /open-logo*.svg
 /open-favicon.svg
+/brand/exports/
 
 www/dist/
 dist/

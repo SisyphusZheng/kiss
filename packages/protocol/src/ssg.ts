@@ -468,5 +468,3 @@ export interface OpenElementPackageExports {
 
 /** Registry from package name to exported subpaths. */
 export type OpenElementExportMap = Record<string, OpenElementPackageExports>;
-
-

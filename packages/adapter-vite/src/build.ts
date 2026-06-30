@@ -12,7 +12,6 @@ import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
@@ -87,8 +86,7 @@ export function buildPlugin(
         // Generate a fallback SPA shell only when Vite did not emit an HTML
         // entry. Apps with their own index.html (for example desktop shells
         // with a custom client entry) keep the real Vite output.
-        if (!existsSync(indexPath)) {
-          const html = `<!DOCTYPE html>
+        const html = `<!DOCTYPE html>
 <html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
@@ -100,11 +98,19 @@ export function buildPlugin(
 </body>
 </html>`;
 
-          await mkdir(absOutDir, { recursive: true });
-          await writeFile(indexPath, html, 'utf-8');
+        await mkdir(absOutDir, { recursive: true });
+        try {
+          await writeFile(indexPath, html, { encoding: 'utf-8', flag: 'wx' });
           log.info('SPA shell written to index.html');
-        } else {
-          log.info('SPA shell preserved from Vite output');
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            (error as Error & { code?: string }).code === 'EEXIST'
+          ) {
+            log.info('SPA shell preserved from Vite output');
+          } else {
+            throw error;
+          }
         }
 
         // Generate route manifest for client-side routing
