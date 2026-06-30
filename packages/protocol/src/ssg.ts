@@ -415,4 +415,58 @@ export type OpenElementBuild = (
   plan: BuildPlan,
 ) => Promise<BuildArtifacts>;
 
+// ─── Resolver contracts (alpha.5 T4) ─────────────────────────────
+
+/** A resolved specifier target. */
+export interface ResolvedSpecifier {
+  /** Final specifier to use in generated code or import map. */
+  specifier: string;
+  /** True if the specifier points to a remote (https://) source. */
+  isRemote: boolean;
+  /** Optional local file system path when resolved to disk. */
+  filePath?: string;
+}
+
+/** Input to the OpenElement package resolver. */
+export interface PackageResolverInput {
+  /** The import specifier to resolve, e.g. '@openelement/core/logger'. */
+  id: string;
+  /** The module requesting the resolution, if any. */
+  importer?: string;
+  /** Workspace root directory, when running inside a Deno workspace. */
+  workspaceRoot?: string | null;
+  /** Local monorepo root for source fallback. */
+  localPackageRoot?: string | null;
+  /** Package version to use for remote registry resolution. */
+  version?: string;
+  /** Registry mode. 'npm' uses node_modules; 'jsr' fetches remote source. */
+  registry?: 'npm' | 'jsr';
+  /** User-provided aliases that should take precedence. */
+  userAliases?: Record<string, string> | Array<{ find: string; replacement: string }> | null;
+}
+
+/** Result of resolving an OpenElement package specifier. */
+export interface PackageResolverResult {
+  /** Resolved target, or null if the resolver declined. */
+  resolution: ResolvedSpecifier | null;
+  /** Errors if the specifier is known to be invalid. */
+  errors: string[];
+  /** Warnings, e.g. deprecated subpaths. */
+  warnings: string[];
+}
+
+/** Contract for an OpenElement package/subpath resolver. */
+export type OpenElementPackageResolver = (
+  input: PackageResolverInput,
+) => PackageResolverResult | Promise<PackageResolverResult>;
+
+/** Known OpenElement package name and its exported subpaths. */
+export interface OpenElementPackageExports {
+  packageName: string;
+  exports: Record<string, string>;
+}
+
+/** Registry from package name to exported subpaths. */
+export type OpenElementExportMap = Record<string, OpenElementPackageExports>;
+
 
