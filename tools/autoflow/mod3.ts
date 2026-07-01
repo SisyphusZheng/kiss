@@ -11,9 +11,13 @@ import {
   assertCleanWorktree,
   createReleaseEvidence,
   createReleasePlan,
+  evidenceFile,
   isCIEnv,
   nextPatchVersion,
+  type ReleaseEvidence,
+  releaseNoteFile,
   releaseTag,
+  runCaptured,
   runReleaseStep,
   writeReleaseEvidence,
   writeReleaseNote,
@@ -133,6 +137,51 @@ async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
   }
 }
 
+async function hasStagedChanges(): Promise<boolean> {
+  const status = await new Deno.Command('git', {
+    args: ['diff', '--cached', '--quiet'],
+  }).spawn().status;
+  if (status.code === 0) return false;
+  if (status.code === 1) return true;
+  throw new Error(`git diff --cached --quiet failed with exit ${status.code}`);
+}
+
+async function writeAndStageReleaseEvidence(evidence: ReleaseEvidence): Promise<void> {
+  await writeReleaseEvidence(evidence);
+  await writeReleaseNote(evidence);
+  await runCaptured([
+    'git',
+    'add',
+    evidenceFile(evidence.targetVersion),
+    releaseNoteFile(evidence.targetVersion),
+  ]);
+}
+
+async function amendReleaseEvidenceCommit(evidence: ReleaseEvidence): Promise<void> {
+  await writeAndStageReleaseEvidence(evidence);
+  if (await hasStagedChanges()) {
+    await runCaptured(['git', 'commit', '--amend', '--no-edit']);
+  }
+}
+
+async function persistReleaseEvidenceAfterStep(
+  evidence: ReleaseEvidence,
+  stepName: string,
+): Promise<void> {
+  if (stepName === 'stage release evidence') {
+    await writeAndStageReleaseEvidence(evidence);
+    return;
+  }
+
+  if (stepName === 'commit release evidence') {
+    await amendReleaseEvidenceCommit(evidence);
+    return;
+  }
+
+  await writeReleaseEvidence(evidence);
+  await writeReleaseNote(evidence);
+}
+
 async function executeReleasePlan(
   kind: 'patch-release' | 'approved-release',
   targetVersion: string,
@@ -166,8 +215,7 @@ async function executeReleasePlan(
   try {
     for (const step of plan) {
       await runReleaseStep(evidence, step);
-      await writeReleaseEvidence(evidence);
-      await writeReleaseNote(evidence);
+      await persistReleaseEvidenceAfterStep(evidence, step.name);
     }
     evidence.status = 'completed';
     evidence.completedAt = new Date().toISOString();
