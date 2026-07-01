@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { addPaths, parseArgs } from '../mod3.ts';
+import { addPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
 import {
   evaluatePatchEligibility,
   evaluateVersionAuthority,
@@ -119,6 +119,17 @@ Deno.test('mod3: parse dispatch flag for release command', () => {
   );
 });
 
+Deno.test('mod3: normalizes compact prerelease version input', () => {
+  assertEquals(normalizeReleaseVersion('0.41.0-alpha5'), '0.41.0-alpha.5');
+  assertEquals(normalizeReleaseVersion('0.41.0-beta12'), '0.41.0-beta.12');
+  assertEquals(normalizeReleaseVersion('0.41.0-rc1'), '0.41.0-rc.1');
+  assertEquals(
+    parseArgs(['release', '--approved-plan', 'ADR-0101/v0.40', '--to', '0.41.0-alpha5'])
+      .targetVersion,
+    '0.41.0-alpha.5',
+  );
+});
+
 Deno.test('mod3: addPaths deduplicates multi-source diff output', () => {
   const paths = new Set<string>();
   addPaths(paths, 'README.md\npackages/core/src/index.ts\n');
@@ -190,6 +201,7 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
     assert(names.includes('package artifact gate'));
     assert(names.includes('publish npm packages'));
     assert(names.includes('post-publish npm consumer smoke'));
+    assert(names.includes('publish jsr packages'));
     assert(names.includes('tag release'));
     assert(names.includes('push tag'));
     assert(names.includes('create GitHub release'));

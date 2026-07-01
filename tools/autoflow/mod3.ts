@@ -34,6 +34,11 @@ export interface GateResult {
   output: string;
 }
 
+export function normalizeReleaseVersion(version: string | undefined): string | undefined {
+  if (!version) return undefined;
+  return version.replace(/-(alpha|beta|rc)(\d+)$/u, '-$1.$2');
+}
+
 export function parseArgs(args: string[]): CliOptions {
   const command = args[0] ?? 'dev';
   const dryRun = args.includes('--dry-run');
@@ -41,7 +46,9 @@ export function parseArgs(args: string[]): CliOptions {
   const approvalIndex = args.indexOf('--approved-plan');
   const approvedPlan = approvalIndex === -1 ? undefined : args[approvalIndex + 1];
   const targetIndex = args.indexOf('--to');
-  const targetVersion = targetIndex === -1 ? undefined : args[targetIndex + 1];
+  const targetVersion = targetIndex === -1
+    ? undefined
+    : normalizeReleaseVersion(args[targetIndex + 1]);
   return { command, dryRun, dispatch, approvedPlan, targetVersion };
 }
 
