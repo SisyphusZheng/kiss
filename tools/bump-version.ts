@@ -158,16 +158,7 @@ function main(): void {
   }
 
   if (resolvedFrom === toVersion) {
-    // Even if version is the same, still check and update cross-package imports
-    const pkgImportCount = updatePackageImports(packageDenos, resolvedFrom, toVersion, dryRun);
-    const rootImportCount = updateRootImports(root, resolvedFrom, toVersion, dryRun);
-    if (pkgImportCount > 0 || rootImportCount > 0) {
-      console.log(
-        `Updated ${rootImportCount} root import(s) and ${pkgImportCount} cross-package import(s).`,
-      );
-    } else {
-      console.log(`Already at version ${toVersion}. Nothing to do.`);
-    }
+    console.log(`Already at version ${toVersion}. Nothing to do.`);
     return;
   }
 
