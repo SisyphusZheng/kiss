@@ -57,6 +57,14 @@ export function releaseTag(version: string): string {
   return `v${version}`;
 }
 
+export function githubReleaseCreateCommand(tag: string, note: string): string[] {
+  const command = ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note];
+  if (/^v?\d+\.\d+\.\d+-/u.test(tag)) {
+    command.push('--prerelease');
+  }
+  return command;
+}
+
 export function evidenceFile(version: string): string {
   return `docs/release/autoflow3/${releaseTag(version)}.json`;
 }
@@ -176,16 +184,7 @@ export function createReleasePlan(
             } catch {
               // Release does not exist; create it.
             }
-            await runCaptured([
-              'gh',
-              'release',
-              'create',
-              tag,
-              '--title',
-              tag,
-              '--notes-file',
-              note,
-            ]);
+            await runCaptured(githubReleaseCreateCommand(tag, note));
           },
         },
       ]
