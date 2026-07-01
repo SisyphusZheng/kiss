@@ -7,6 +7,7 @@ import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
 import '@openelement/ui/open-lab-panel';
+import { OPENELEMENT_VERSION } from '../data/version.ts';
 
 export const tagName = 'api-core-page';
 export const meta = { section: 'Reference', label: 'API Reference', order: 5 };
@@ -33,33 +34,17 @@ routeSheet.replaceSync(`
   }
 
   .hero {
-    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, .68fr) minmax(360px, .32fr);
-    min-height: 500px;
-    overflow: hidden;
+    grid-template-columns: minmax(0, .68fr) minmax(320px, .32fr);
+    min-height: 460px;
     border-block-end: var(--border-size-1) solid var(--border);
     background:
-      linear-gradient(112deg, color-mix(in srgb, var(--brand-pale) 72%, transparent), transparent 48%),
-      radial-gradient(circle at 86% 42%, color-mix(in srgb, var(--brand-light) 20%, transparent), transparent 32%),
+      linear-gradient(112deg, color-mix(in srgb, var(--brand-pale) 56%, transparent), transparent 44%),
       var(--bg-base);
-  }
-
-  .hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(color-mix(in srgb, var(--brand) 12%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, color-mix(in srgb, var(--brand) 9%, transparent) var(--border-size-1), transparent var(--border-size-1));
-    background-size: 210px 128px;
-    mask-image: linear-gradient(90deg, transparent, black 12%, black 94%, transparent);
   }
 
   .hero-copy,
   .hero-panel {
-    position: relative;
-    z-index: 1;
     display: grid;
     align-content: end;
     padding: var(--size-10);
@@ -72,7 +57,8 @@ routeSheet.replaceSync(`
   .kicker,
   .section-kicker,
   .rail-link,
-  .sig {
+  .sig,
+  .surface {
     color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
@@ -82,29 +68,28 @@ routeSheet.replaceSync(`
   }
 
   h1 {
-    max-width: 760px;
+    max-width: 780px;
     margin: var(--size-4) 0;
     font-size: var(--font-size-7);
-    line-height: .9;
+    line-height: .94;
     font-weight: var(--font-weight-9);
     letter-spacing: 0;
   }
 
   .lede {
-    max-width: 700px;
+    max-width: 720px;
     color: var(--text-secondary);
     font-size: var(--font-size-3);
-    line-height: 1.22;
+    line-height: 1.24;
   }
 
   .shell {
     display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) 180px;
-    gap: var(--size-6);
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--size-7);
     width: min(1180px, calc(100% - var(--size-10)));
     margin-inline: auto;
     padding: var(--size-10) 0;
-    border-block-end: var(--border-size-1) solid var(--border);
   }
 
   .rail {
@@ -127,19 +112,9 @@ routeSheet.replaceSync(`
     color: var(--brand);
   }
 
-  .toc {
-    position: sticky;
-    top: calc(var(--nav-height) + var(--size-5));
-    align-self: start;
-    display: grid;
-    gap: var(--size-2);
-    padding-inline-start: var(--size-4);
-    border-inline-start: var(--border-size-1) solid var(--border);
-  }
-
   .api-grid {
     display: grid;
-    gap: var(--size-6);
+    gap: var(--size-8);
   }
 
   .api-section {
@@ -163,21 +138,41 @@ routeSheet.replaceSync(`
   }
 
   .section-head p {
-    max-width: 540px;
+    max-width: 560px;
     color: var(--text-secondary);
     line-height: 1.55;
   }
 
-  .signature-grid {
+  .package-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--size-4);
   }
 
-  .signature-card {
+  .package-card {
     display: grid;
+    align-content: start;
     gap: var(--size-3);
-    min-height: 180px;
+    min-height: 280px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--size-3);
+  }
+
+  .package-card h3 {
+    margin: 0;
+    font-size: var(--font-size-3);
+  }
+
+  .package-card p,
+  .panel-copy,
+  .package-card li {
+    color: var(--text-secondary);
+    line-height: 1.55;
   }
 
   .sig {
@@ -185,30 +180,22 @@ routeSheet.replaceSync(`
     padding: var(--size-3);
     overflow-x: auto;
     border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-3);
+    border-radius: var(--radius-2);
     background: var(--bg-code);
     color: var(--code-text);
     text-transform: none;
     white-space: nowrap;
   }
 
-  .signature-card h3 {
-    margin: 0;
-    font-size: var(--font-size-3);
-  }
-
-  .signature-card p,
-  .panel-copy,
-  .signature-card li {
-    color: var(--text-secondary);
-    line-height: 1.55;
-  }
-
-  .signature-card ul {
+  .package-card ul {
     display: grid;
     gap: var(--size-2);
     margin: 0;
     padding-inline-start: var(--size-5);
+  }
+
+  .surface {
+    color: var(--text-muted);
   }
 
   @media (max-width: 980px) {
@@ -234,11 +221,7 @@ routeSheet.replaceSync(`
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .toc {
-      display: none;
-    }
-
-    .signature-grid {
+    .package-grid {
       grid-template-columns: 1fr;
     }
   }
@@ -252,64 +235,221 @@ routeSheet.replaceSync(`
       font-size: var(--font-size-2);
     }
 
-    .rail {
+    .rail,
+    .section-head {
+      display: grid;
       grid-template-columns: 1fr;
     }
 
-    .section-head {
-      display: grid;
+    .hero-copy,
+    .hero-panel,
+    .shell {
+      padding-inline: var(--size-4);
     }
   }
 `);
 
-const groups = [
+type ApiPackage = {
+  id: string;
+  surface: string;
+  title: string;
+  copy: string;
+  importPath: string;
+  exports: string[];
+  notes: string[];
+};
+
+const packages: ApiPackage[] = [
   {
-    id: 'core',
-    label: 'Core',
-    title: '@openelement/core',
-    copy: 'Runtime utilities and trust-boundary helpers exported by the core package.',
-    items: [
-      ['OpenElement runtime contracts', 'Core exports are consumed by generated code, UI primitives, and route rendering.'],
-      ['escapeAttr / escapeHtml boundary', 'Escaping helpers are used where user-provided strings enter generated HTML.'],
-      ['trustedHtml(html)', 'Explicit trust boundary for prevalidated HTML entering the render path.'],
+    id: 'app',
+    surface: 'Product',
+    title: '@openelement/app',
+    copy: 'JSX-first framework API for pages, layouts, islands, SPA bootstrap, i18n, and the Vite facade.',
+    importPath: "@openelement/app, @openelement/app/spa, @openelement/app/preact",
+    exports: ['.', './spa', './i18n', './i18n-plugin', './preact'],
+    notes: [
+      'Use `definePage`, `defineIsland`, `defineElement`, and `defineLayout` for app authoring.',
+      'Alpha.5 adds first-class `defineApp({ mode: "spa" })` client bootstrap.',
+      'Use `@openelement/adapter-vite/app-vite` or generated create tasks from Vite config.',
     ],
   },
   {
-    id: 'app',
-    label: 'App',
-    title: '@openelement/app',
-    copy: 'Application shell, content plugin, i18n data, routes, and island metadata.',
-    items: [
-      ['defineIslandConfig({ hydrate, ssr, dsd })', 'Island metadata used by interactive components such as home-console.'],
-      ['Generated nav data', 'The docs sidebar and site navigation are generated from route metadata.'],
-      ['Generated i18n data', 'Localized route output is produced by the app/content pipeline.'],
+    id: 'router',
+    surface: 'Foundation',
+    title: '@openelement/router',
+    copy: 'Runtime-free route support behind the framework, including data context and client routing.',
+    importPath: '@openelement/router/client-router',
+    exports: ['.', './data-context', './i18n', './client-router'],
+    notes: [
+      'Alpha.5 exposes the client router used by SPA mode.',
+      'Route params are protected against prototype poisoning and guard redirects are cycle-limited.',
+      'Most app authors reach this package through `@openelement/app`.',
+    ],
+  },
+  {
+    id: 'element',
+    surface: 'Product',
+    title: '@openelement/element',
+    copy: 'Canonical component authoring facade for OpenElement, StyleSheet, signals, islands, JSX, and VNode types.',
+    importPath: '@openelement/element',
+    exports: ['.', './open-element-render', './open-element-hydration'],
+    notes: [
+      'Start here for product-facing native Web Component authoring.',
+      'Shadow/DSD is the default render mode; light DOM remains explicit opt-in.',
+      'Re-exports low-level primitives so app code does not import kernel internals first.',
     ],
   },
   {
     id: 'ui',
-    label: 'UI',
+    surface: 'Product',
     title: '@openelement/ui',
-    copy: 'Open Props primitives used by the site and exposed to consumers.',
-    items: [
-      ['<open-layout>', 'Navigation shell, docs sidebar, footer, theme, locale, and SPA transitions.'],
-      ['<open-brand-mark>', 'Aperture O brand primitive shared by header and visual surfaces.'],
-      ['<open-button> / <open-card> / <open-badge>', 'Reusable primitives backed by openPropsTokenSheet.'],
-      ['<open-lab-panel>', 'Artifact, spec, and reference panel for documentation surfaces.'],
-      ['openPropsTokenSheet', 'Semantic Open Props token sheet for light and dark parity.'],
+    copy: 'First-party `open-*` Web Components and Open Props token foundation used by the docs site.',
+    importPath: '@openelement/ui/open-layout',
+    exports: [
+      '.',
+      './open-button',
+      './open-card',
+      './open-input',
+      './open-brand-mark',
+      './open-layout',
+      './open-theme-toggle',
+      './open-dropdown',
+      './open-modal',
+      './open-tabs',
+      './open-props-tokens',
+    ],
+    notes: [
+      '`open-brand-mark` is the current `<open/>` brand primitive.',
+      'The UI package exports a CEM-compatible manifest for package island scanning.',
+      'Alpha.5 keeps tokens aligned to Open Props plus semantic aliases.',
     ],
   },
   {
-    id: 'build',
-    label: 'Build',
-    title: '@openelement/adapter-vite + @openelement/ssg',
-    copy: 'Build-time route scanning, static generation, client islands, sitemap, and PWA output.',
-    items: [
-      ['deno task build', 'Runs the adapter build and SSG pipeline for the www site.'],
-      ['Route metadata', 'The build generates route types, nav data, search index, sitemap, and localized pages.'],
-      ['Client islands', 'Interactive islands are emitted as separate client assets after static generation.'],
+    id: 'core',
+    surface: 'Foundation',
+    title: '@openelement/core',
+    copy: 'Low-level runtime kernel for JSX, VNode rendering, DSD, hydration, StyleSheet, errors, and trust boundaries.',
+    importPath: '@openelement/core/static, @openelement/core/style-sheet',
+    exports: [
+      '.',
+      './static',
+      './hydrate',
+      './csr',
+      './prop',
+      './errors',
+      './context',
+      './logger',
+      './style-sheet',
+      './html-escape',
+      './jsx-runtime',
+      './dsd-hydration',
+    ],
+    notes: [
+      'Runtime-free public code: no `Deno.*` or `node:*` APIs in the public package surface.',
+      'Use `@openelement/element` first for component authoring.',
+      'Core owns the escaping and explicit trusted HTML boundary.',
     ],
   },
-] as const;
+  {
+    id: 'protocol',
+    surface: 'Foundation',
+    title: '@openelement/protocol',
+    copy: 'Shared type contracts for render, hydration, manifest, data, runtime, errors, prop, island, and SSG shapes.',
+    importPath: '@openelement/protocol/ssg',
+    exports: [
+      '.',
+      './signal',
+      './vnode',
+      './render',
+      './manifest',
+      './framework',
+      './data',
+      './ssg',
+      './errors',
+      './island',
+      './prop',
+    ],
+    notes: [
+      'Alpha.5 defines BuildPlan, BuildArtifacts, and resolver contract shapes here.',
+      'This package stays runtime-free and exists to keep package boundaries explicit.',
+      'Deep imports are alpha-line contracts and should stay synchronized with package surface docs.',
+    ],
+  },
+  {
+    id: 'signal',
+    surface: 'Foundation',
+    title: '@openelement/signal',
+    copy: 'Reactive primitive layer built on `@preact/signals-core` with framework integration hooks.',
+    importPath: '@openelement/signal',
+    exports: ['.', './framework', './preact-engine'],
+    notes: [
+      'Exports signal, computed, and effect primitives at the package root.',
+      'Framework integration is isolated under `./framework`.',
+      'Preact engine wiring stays optional and explicit.',
+    ],
+  },
+  {
+    id: 'content',
+    surface: 'Foundation',
+    title: '@openelement/content',
+    copy: 'Build-time Markdown, MDX, blog data, navigation metadata, sitemap, and robots support.',
+    importPath: '@openelement/content/mdx',
+    exports: ['.', './blog-data', './mdx', './nav', './sitemap', './write-json'],
+    notes: [
+      'Normal apps configure content through `openElement()` rather than runtime imports.',
+      'MDX compiles into the same JSX/DSD path as application code.',
+      'Build/server glue may use Deno or Node APIs.',
+    ],
+  },
+  {
+    id: 'ssg',
+    surface: 'Foundation',
+    title: '@openelement/ssg',
+    copy: 'Adapter-agnostic static site generation engine for route scanning, entry generation, rendering, and postprocess.',
+    importPath: '@openelement/ssg',
+    exports: ['.'],
+    notes: [
+      'Alpha.5 owns `build(plan) -> artifacts` and `prepareBuildPlan()` policy orchestration.',
+      'It depends on core/router/content concepts, never on Vite.',
+      'Adapters delegate framework build policy to this engine.',
+    ],
+  },
+  {
+    id: 'adapter-vite',
+    surface: 'Foundation',
+    title: '@openelement/adapter-vite',
+    copy: 'Vite/Nitro bridge that scans projects, prepares build plans, emits client assets, and delegates SSG work.',
+    importPath: '@openelement/adapter-vite/plugin',
+    exports: [
+      '.',
+      './plugin',
+      './route-manifest',
+      './generated-data-resolver',
+      './subpath-resolver',
+      './cli/build',
+      './cli/build-client',
+      './cli/build-ssg',
+    ],
+    notes: [
+      'Alpha.5 keeps this package thin: Vite glue here, framework policy in `@openelement/ssg`.',
+      'Resolver helpers cover workspace aliases, package subpaths, and npm/jsr export maps.',
+      'Public helpers prefer Node APIs where npm consumers invoke builds directly.',
+    ],
+  },
+  {
+    id: 'create',
+    surface: 'Product',
+    title: '@openelement/create',
+    copy: 'Starter generator and consumer entry for creating new openElement projects.',
+    importPath: 'npm:@openelement/create',
+    exports: ['CLI binary', './cli.ts'],
+    notes: [
+      'Use it for first-run project scaffolding.',
+      'Generated projects should consume the framework facade rather than adapter internals.',
+      'Fresh example restore remains a post-release follow-up after alpha.5 packages publish.',
+    ],
+  },
+];
 
 export class ApiCorePage extends OpenElement {
   static override styles = [routeSheet];
@@ -322,52 +462,63 @@ export class ApiCorePage extends OpenElement {
             <p class='kicker'>Reference command center</p>
             <h1>API Reference</h1>
             <p class='lede'>
-              Public surfaces are organized by actual package boundaries and
-              generated website contracts. The left rail is the only category
-              navigation; the right rail tracks the current reference sections.
+              Public surfaces are organized by the actual {OPENELEMENT_VERSION} package graph.
+              Every package below is backed by current workspace exports, package contracts,
+              and alpha.5 build evidence.
             </p>
           </div>
           <div class='hero-panel'>
-            <open-lab-panel label='contract map' meta='v0.41.0-alpha.2'>
+            <open-lab-panel label='contract map' meta={OPENELEMENT_VERSION}>
               <p class='panel-copy'>
-                Start at the package you own, then follow the section anchors to
-                generated route metadata, UI primitives, and build output.
+                The current product line is Elements + UI + Framework + Protocols, backed by
+                runtime-free foundation packages and adapter-owned build glue.
               </p>
-              <open-button href='/guide/api'>Read API guide</open-button>
+              <open-button href='/guide/api'>Read API routes guide</open-button>
             </open-lab-panel>
           </div>
         </section>
 
         <div class='shell'>
-          <aside class='rail' aria-label='API categories'>
-            {groups.map((group) => <a class='rail-link' href={`#${group.id}`}>{group.label}</a>)}
+          <aside class='rail' aria-label='API packages'>
+            {packages.map((pkg) => <a class='rail-link' href={`#${pkg.id}`}>{pkg.title}</a>)}
           </aside>
           <div class='api-grid'>
-            {groups.map((group) => (
-              <section class='api-section' id={group.id}>
-                <div class='section-head'>
-                  <div>
-                    <p class='section-kicker'>{group.label}</p>
-                    <h2>{group.title}</h2>
+            <section class='api-section' id='overview'>
+              <div class='section-head'>
+                <div>
+                  <p class='section-kicker'>Surface rule</p>
+                  <h2>Authoring starts at product packages.</h2>
+                </div>
+                <p>
+                  Application code should prefer `@openelement/element`, `@openelement/ui`,
+                  `@openelement/app`, and `@openelement/create`. Foundation packages remain
+                  documented because their contracts are public, tested, and versioned.
+                </p>
+              </div>
+            </section>
+
+            <div class='package-grid'>
+              {packages.map((pkg) => (
+                <open-card class='package-card' id={pkg.id}>
+                  <div class='card-top'>
+                    <div>
+                      <span class='surface'>{pkg.surface}</span>
+                      <h3>{pkg.title}</h3>
+                    </div>
+                    <open-badge tone={pkg.surface === 'Product' ? 'brand' : 'neutral'}>
+                      {pkg.exports.length} exports
+                    </open-badge>
                   </div>
-                  <p>{group.copy}</p>
-                </div>
-                <div class='signature-grid'>
-                  {group.items.map(([sig, copy]) => (
-                    <open-card class='signature-card'>
-                      <code class='sig'>{sig}</code>
-                      <h3>{sig.replace(/[<>\-]/g, ' ')}</h3>
-                      <p>{copy}</p>
-                    </open-card>
-                  ))}
-                </div>
-              </section>
-            ))}
+                  <p>{pkg.copy}</p>
+                  <code class='sig'>{pkg.importPath}</code>
+                  <ul>
+                    <li>Exports: {pkg.exports.join(', ')}</li>
+                    {pkg.notes.map((note) => <li>{note}</li>)}
+                  </ul>
+                </open-card>
+              ))}
+            </div>
           </div>
-          <aside class='toc' aria-label='On this page'>
-            <span class='section-kicker'>On this page</span>
-            {groups.map((group) => <a class='rail-link' href={`#${group.id}`}>{group.title}</a>)}
-          </aside>
         </div>
       </main>
     );

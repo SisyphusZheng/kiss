@@ -314,6 +314,8 @@ class TestElement extends TestNodeBase {
     ) {
       el.attributeChangedCallback(name, old, String(value));
     }
+    // v0.41.0: Notify registered MutationObservers (for theme broadcast tests)
+    _notifyMutationObservers(this, name);
   }
 
   hasAttribute(name: string): boolean {
@@ -332,6 +334,7 @@ class TestElement extends TestNodeBase {
     ) {
       el.attributeChangedCallback(name, old, null);
     }
+    _notifyMutationObservers(this, name);
   }
 
   attachShadow(init: ShadowRootInit): ShadowRoot {
@@ -655,6 +658,77 @@ function parseElement(
   return { node: el, nextIndex: i };
 }
 
+// ─── MutationObserver harness (v0.41.0) ──────────────────────────
+// Minimal MutationObserver simulation for theme broadcast tests.
+// Only supports attribute mutations on observed elements.
+
+interface ObserverRecord {
+  callback: (mutations: TestMutationRecord[]) => void;
+  target: TestElement;
+  options: MutationObserverInit;
+}
+
+const _observerRegistry: Set<ObserverRecord> = new Set();
+
+class TestMutationRecord {
+  type = 'attributes';
+  attributeName: string;
+  target: TestElement;
+  constructor(target: TestElement, attrName: string) {
+    this.target = target;
+    this.attributeName = attrName;
+  }
+}
+
+class TestMutationObserver {
+  #callback: (mutations: TestMutationRecord[]) => void;
+  #records: ObserverRecord[] = [];
+
+  constructor(callback: (mutations: TestMutationRecord[]) => void) {
+    this.#callback = callback;
+  }
+
+  observe(target: unknown, options: MutationObserverInit): void {
+    const record: ObserverRecord = {
+      callback: this.#callback,
+      target: target as TestElement,
+      options,
+    };
+    this.#records.push(record);
+    _observerRegistry.add(record);
+  }
+
+  disconnect(): void {
+    for (const r of this.#records) _observerRegistry.delete(r);
+    this.#records = [];
+  }
+
+  takeRecords(): TestMutationRecord[] {
+    return [];
+  }
+}
+
+function _notifyMutationObservers(target: TestElement, attrName: string): void {
+  const records: TestMutationRecord[] = [];
+  for (const r of _observerRegistry) {
+    if (r.target !== target) continue;
+    if (r.options.attributeFilter && !r.options.attributeFilter.includes(attrName)) continue;
+    records.push(new TestMutationRecord(target, attrName));
+  }
+  // Group by callback to mimic real observer batching
+  const byCallback = new Map<(m: TestMutationRecord[]) => void, TestMutationRecord[]>();
+  for (const r of _observerRegistry) {
+    if (r.target !== target) continue;
+    if (r.options.attributeFilter && !r.options.attributeFilter.includes(attrName)) continue;
+    const existing = byCallback.get(r.callback) ?? [];
+    existing.push(new TestMutationRecord(target, attrName));
+    byCallback.set(r.callback, existing);
+  }
+  for (const [cb, recs] of byCallback) {
+    cb(recs);
+  }
+}
+
 let installedHarness = false;
 function installDomHarness(): void {
   if (installedHarness || typeof globalThis.HTMLElement !== 'undefined') return;
@@ -694,6 +768,10 @@ function installDomHarness(): void {
           .map((r) => ({ cssText: `${r}}` }));
       }
     },
+  });
+  Object.defineProperty(globalThis, 'MutationObserver', {
+    configurable: true,
+    value: TestMutationObserver,
   });
 }
 
@@ -1278,4 +1356,227 @@ Deno.test('OpenElement params setter is reactive', () => {
   assertEquals(el.params, { page: '2' });
 
   document.body.removeChild(el);
+});
+
+// ─── 8. Global styles (v0.41.0 / ADR-0061) ─────────────────────────
+
+Deno.test('registerGlobalStyles applies to new OpenElement shadow roots', () => {
+  if (!hasDOM) return;
+
+  const globalSheet = new StyleSheet();
+  globalSheet.replaceSync(':host { --global-token: 1; }');
+  OpenElement.registerGlobalStyles(globalSheet);
+  try {
+    const tagName = uniqueTag('global-styled');
+    class GlobalStyledElement extends OpenElement {
+      override render(): VNode | null {
+        return jsx('span', { children: 'ok' });
+      }
+    }
+    customElements.define(tagName, GlobalStyledElement);
+
+    const el = document.createElement(tagName) as GlobalStyledElement;
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot as unknown as TestShadowRoot;
+    assertExists(root);
+    assertEquals(root.adoptedStyleSheets.includes(globalSheet), true);
+
+    document.body.removeChild(el);
+  } finally {
+    OpenElement._resetGlobalStyles();
+  }
+});
+
+Deno.test('registerGlobalStyles merges ahead of component-level styles', () => {
+  if (!hasDOM) return;
+
+  const globalSheet = new StyleSheet();
+  globalSheet.replaceSync(':host { --g: 1; }');
+  const componentSheet = new StyleSheet();
+  componentSheet.replaceSync(':host { --c: 1; }');
+
+  OpenElement.registerGlobalStyles(globalSheet);
+  try {
+    const tagName = uniqueTag('merge-styled');
+    class MergeStyledElement extends OpenElement {
+      static override styles = componentSheet;
+      override render(): VNode | null {
+        return jsx('span', { children: 'ok' });
+      }
+    }
+    customElements.define(tagName, MergeStyledElement);
+
+    const el = document.createElement(tagName) as MergeStyledElement;
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot as unknown as TestShadowRoot;
+    const sheets = root.adoptedStyleSheets as unknown[];
+    // Global first, component second (cascade order: component wins)
+    assertEquals(sheets.length, 2);
+    assertEquals(sheets[0], globalSheet);
+    assertEquals(sheets[1], componentSheet);
+
+    document.body.removeChild(el);
+  } finally {
+    OpenElement._resetGlobalStyles();
+  }
+});
+
+Deno.test('registerGlobalStyles is idempotent', () => {
+  const sheet = new StyleSheet();
+  sheet.replaceSync(':host { --x: 1; }');
+  OpenElement.registerGlobalStyles(sheet);
+  OpenElement.registerGlobalStyles(sheet);
+  assertEquals(OpenElement.getGlobalStyles().length, 1);
+  OpenElement._resetGlobalStyles();
+});
+
+Deno.test('registerGlobalStyles applies to elements without component styles', () => {
+  if (!hasDOM) return;
+
+  const globalSheet = new StyleSheet();
+  globalSheet.replaceSync(':host { --global: 1; }');
+  OpenElement.registerGlobalStyles(globalSheet);
+  try {
+    const tagName = uniqueTag('global-only');
+    class GlobalOnlyElement extends OpenElement {
+      // No static styles declared
+      override render(): VNode | null {
+        return jsx('span', { children: 'ok' });
+      }
+    }
+    customElements.define(tagName, GlobalOnlyElement);
+
+    const el = document.createElement(tagName) as GlobalOnlyElement;
+    document.body.appendChild(el);
+
+    const root = el.shadowRoot as unknown as TestShadowRoot;
+    assertEquals(root.adoptedStyleSheets.includes(globalSheet), true);
+
+    document.body.removeChild(el);
+  } finally {
+    OpenElement._resetGlobalStyles();
+  }
+});
+
+// ─── 9. Theme broadcast (v0.41.0 / ADR-0061) ──────────────────────
+
+Deno.test('connected OpenElement instances receive data-theme broadcasts', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('theme-bcast');
+  class ThemeBcastElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ThemeBcastElement);
+
+  const docEl = document.documentElement as unknown as TestElement;
+
+  // Pre-set document theme
+  docEl.dataset.theme = 'dark';
+
+  const el = document.createElement(tagName) as ThemeBcastElement;
+  document.body.appendChild(el);
+
+  // First connect: theme synced from document (existing behavior)
+  assertEquals(el.getAttribute('data-theme'), 'dark');
+
+  // Now switch document theme → should broadcast to connected instance
+  docEl.dataset.theme = 'sepia';
+  docEl.setAttribute('data-theme', 'sepia');
+
+  assertEquals(el.getAttribute('data-theme'), 'sepia');
+
+  document.body.removeChild(el);
+  delete docEl.dataset.theme;
+});
+
+Deno.test('connected OpenElement instances clear data-theme when document theme is removed', () => {
+  if (!hasDOM) return;
+  OpenElement._resetGlobalStyles();
+
+  const tagName = uniqueTag('theme-clear');
+  class ThemeClearEl extends OpenElement {
+    override render(): VNode {
+      return jsx('div', {}, 'theme');
+    }
+  }
+  customElements.define(tagName, ThemeClearEl);
+
+  const docEl = document.documentElement as unknown as TestElement;
+  docEl.dataset.theme = 'dark';
+  docEl.setAttribute('data-theme', 'dark');
+
+  const el = document.createElement(tagName) as OpenElement;
+  document.body.appendChild(el);
+  assertEquals(el.getAttribute('data-theme'), 'dark');
+
+  delete docEl.dataset.theme;
+  docEl.removeAttribute('data-theme');
+  assertEquals(el.getAttribute('data-theme'), null);
+});
+
+Deno.test('disconnected instances stop receiving theme broadcasts', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('theme-disc');
+  class ThemeDiscElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ThemeDiscElement);
+
+  const docEl = document.documentElement as unknown as TestElement;
+  docEl.dataset.theme = 'light';
+
+  const el = document.createElement(tagName) as ThemeDiscElement;
+  document.body.appendChild(el);
+  assertEquals(el.getAttribute('data-theme'), 'light');
+
+  document.body.removeChild(el);
+
+  // After disconnect, theme changes should NOT affect this element
+  docEl.dataset.theme = 'dark';
+  docEl.setAttribute('data-theme', 'dark');
+
+  assertEquals(el.getAttribute('data-theme'), 'light');
+
+  delete docEl.dataset.theme;
+});
+
+Deno.test('multiple connected instances all receive theme broadcasts', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('theme-multi');
+  class ThemeMultiElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ThemeMultiElement);
+
+  const docEl = document.documentElement as unknown as TestElement;
+  docEl.dataset.theme = 'light';
+
+  const el1 = document.createElement(tagName) as ThemeMultiElement;
+  const el2 = document.createElement(tagName) as ThemeMultiElement;
+  document.body.appendChild(el1);
+  document.body.appendChild(el2);
+
+  assertEquals(el1.getAttribute('data-theme'), 'light');
+  assertEquals(el2.getAttribute('data-theme'), 'light');
+
+  docEl.dataset.theme = 'dark';
+  docEl.setAttribute('data-theme', 'dark');
+
+  assertEquals(el1.getAttribute('data-theme'), 'dark');
+  assertEquals(el2.getAttribute('data-theme'), 'dark');
+
+  document.body.removeChild(el1);
+  document.body.removeChild(el2);
+  delete docEl.dataset.theme;
 });

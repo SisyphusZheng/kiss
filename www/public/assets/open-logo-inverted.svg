@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
   <title>openElement monogram inverted</title>
-  <desc>A transparent geometric monogram combining openElement's o and e for dark surfaces.</desc>
+  <desc>Legacy openElement SVG asset retained for compatibility; the current site logo is the &lt;open/&gt; brand mark.</desc>
   <path
-    d="M87.6 35.2A44 44 0 1 0 87.6 92.8M87.6 64H50.4"
+    d="M 100.4 85 A 42 42 0 1 1 100.4 43 M 64 44 A 20 20 0 0 0 64 84 M 44 64 L 100.4 64"
     fill="none"
     stroke="#f3eaff"
-    stroke-width="15"
+    stroke-width="14"
     stroke-linecap="round"
     stroke-linejoin="round"
   />

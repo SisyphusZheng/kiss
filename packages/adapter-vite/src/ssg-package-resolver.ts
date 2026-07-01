@@ -22,7 +22,9 @@ const DEFAULT_OPENELEMENT_PACKAGES = new Set([
 const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   'adapter-vite': {
     '.': 'src/index.ts',
+    'app-vite': 'src/app-vite.ts',
     'build-context': 'src/build-context.ts',
+    'route-manifest': 'src/route-manifest.ts',
     'head-injection': 'src/head-injection.ts',
     'nitro-mount': 'src/nitro-mount.ts',
     plugin: 'src/plugin.ts',
@@ -35,10 +37,10 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   },
   app: {
     '.': 'src/index.ts',
+    spa: 'src/spa.ts',
     i18n: 'src/i18n.ts',
     'i18n-plugin': 'src/i18n-plugin.ts',
     preact: 'src/preact.ts',
-    vite: 'src/vite.ts',
   },
   content: {
     '.': 'src/index.ts',
@@ -50,10 +52,11 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   },
   core: {
     '.': 'src/index.ts',
+    csr: 'src/csr.ts',
     context: 'src/context.ts',
-    data: 'src/data.ts',
     'dsd-hydration': 'src/dsd-hydration.ts',
     errors: 'src/errors.ts',
+    hydrate: 'src/hydrate.ts',
     'html-escape': 'src/html-escape.ts',
     'island-transform': 'src/island-transform.ts',
     isr: 'src/isr.ts',
@@ -65,15 +68,19 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
     'render-dsd-stream': 'src/render-dsd-stream.ts',
     runtime: 'src/runtime.ts',
     'signal-context': 'src/signal-context.ts',
+    static: 'src/static.ts',
     'style-sheet': 'src/style-sheet.ts',
     'tag-utils': 'src/tag-utils.ts',
   },
   create: { '.': 'cli.ts' },
   element: {
     '.': 'src/index.ts',
+    'open-element-hydration': 'src/open-element-hydration.ts',
+    'open-element-render': 'src/open-element-render.ts',
   },
   router: {
     '.': 'src/data-context.ts',
+    'client-router': 'src/client-router.ts',
     'data-context': 'src/data-context.ts',
     i18n: 'src/i18n.ts',
   },

@@ -406,9 +406,16 @@ const server = new Deno.Command('node', {
     HOST: '127.0.0.1',
     PORT: String(port),
   },
-  stdout: 'null',
-  stderr: 'null',
+  stdout: 'piped',
+  stderr: 'piped',
 }).spawn();
+let serverExited = false;
+const serverStatus = server.status.then((status) => {
+  serverExited = true;
+  return status;
+});
+const serverStdout = new Response(server.stdout).text();
+const serverStderr = new Response(server.stderr).text();
 
 let nitroSmokeFailed = false;
 try {
@@ -428,6 +435,16 @@ try {
   }
   if (!ready) {
     console.error('Generated app Nitro smoke failed: server did not become ready.');
+    const status = serverExited ? await serverStatus : null;
+    if (status) {
+      console.error(JSON.stringify({ serverStatus: status }, null, 2));
+      const [stdout, stderr] = await Promise.all([
+        serverStdout.catch(() => ''),
+        serverStderr.catch(() => ''),
+      ]);
+      if (stdout) console.error(stdout);
+      if (stderr) console.error(stderr);
+    }
     nitroSmokeFailed = true;
   }
 
@@ -497,8 +514,16 @@ try {
     }
   }
 } finally {
-  server.kill('SIGTERM');
-  await server.status.catch(() => undefined);
+  if (!serverExited) {
+    try {
+      server.kill('SIGTERM');
+    } catch (err) {
+      if (!(err instanceof TypeError)) {
+        console.error('[consumer-local] failed to stop Nitro smoke server:', err);
+      }
+    }
+  }
+  await serverStatus.catch(() => undefined);
 }
 
 if (nitroSmokeFailed) exitCode = 1;

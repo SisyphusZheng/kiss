@@ -3,7 +3,7 @@
 openElement build orchestration for Vite.
 
 > v0.39 surface: advanced Framework infrastructure. First-run apps should use
-> `@openelement/app/vite` or generated `@openelement/create` tasks instead of
+> `@openelement/adapter-vite/app-vite` or generated `@openelement/create` tasks instead of
 > importing this package directly.
 
 This package scans routes and islands, generates virtual entries, builds client
@@ -34,7 +34,7 @@ export default defineConfig({
 });
 ```
 
-Most applications should use `openElement()` from `@openelement/app/vite`
+Most applications should use `openElement()` from `@openelement/adapter-vite/app-vite`
 instead; it combines the core adapter, content pipeline, and i18n with one
 shared build context.
 

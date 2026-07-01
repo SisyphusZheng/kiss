@@ -11,8 +11,8 @@
 import type { RouteEntry } from '@openelement/protocol/framework';
 import type { IslandDescriptor, SsrContext } from '@openelement/protocol/context';
 export type { IslandDescriptor, SsrContext };
-import { createLogger } from './logger.js';
-import { formatError } from './errors.js';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
 
 const log = createLogger('core');
 

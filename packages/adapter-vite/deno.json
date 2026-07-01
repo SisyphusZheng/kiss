@@ -11,6 +11,7 @@
     "./generated-data-resolver": "./src/generated-data-resolver.ts",
     "./subpath-resolver": "./src/subpath-resolver.ts",
     "./plugin-mdx": "./src/plugin-mdx.ts",
+    "./route-manifest": "./src/route-manifest.ts",
     "./cli/build": "./src/cli/build.ts",
     "./cli/build-client": "./src/cli/build-client.ts",
     "./cli/build-ssg": "./src/cli/build-ssg.ts"
@@ -23,7 +24,7 @@
     "vite": "npm:vite@8.0.10"
   },
   "tasks": {
-    "build": "deno check src/index.ts",
+    "build": "deno check src/",
     "test": "deno test --allow-read --allow-write --allow-env --allow-net __tests__/"
   },
   "publish": {

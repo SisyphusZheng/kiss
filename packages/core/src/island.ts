@@ -1,5 +1,5 @@
-import { ERROR_PREFIX } from './index.js';
-import { formatError } from './errors.js';
+import { ERROR_PREFIX } from './index.ts';
+import { formatError } from './errors.ts';
 /**
  * @openelement/core - defineIsland() wrapper
  *
@@ -17,7 +17,7 @@ import { formatError } from './errors.js';
  * v0.29.1: defineCustomElement helper inlined from custom-element.ts.
  */
 
-import { createLogger } from './logger.js';
+import { createLogger } from './logger.ts';
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
 export type { IslandMeta, IslandOptions };
@@ -110,7 +110,7 @@ export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
  * v0.14.7: Extended to cover all Object.prototype methods that could be
  * exploited via arbitrary property assignment (C-03 fix).
  */
-import { DANGEROUS_KEYS } from './security.js';
+import { DANGEROUS_KEYS } from './security.ts';
 
 export function bindSsrProps(el: HTMLElement): void {
   const props = getSsrProps(el);

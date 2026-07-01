@@ -4,7 +4,8 @@
   "exports": {
     ".": "./src/data-context.ts",
     "./data-context": "./src/data-context.ts",
-    "./i18n": "./src/i18n.ts"
+    "./i18n": "./src/i18n.ts",
+    "./client-router": "./src/client-router.ts"
   },
   "imports": {},
   "publish": {
@@ -23,6 +24,6 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/data-context.ts"
+    "build": "deno check src/"
   }
 }

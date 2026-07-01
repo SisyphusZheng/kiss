@@ -10,8 +10,8 @@ import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type { OpenElementContentOptions } from '@openelement/content';
 import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 
-import { OpenElementBuildContext } from './build-context.js';
-import { createOpenPlugin } from './plugin.js';
+import { OpenElementBuildContext } from './build-context.ts';
+import { createOpenPlugin } from './plugin.ts';
 import { openContent } from '@openelement/content';
 import { openI18n } from '@openelement/app/i18n-plugin';
 import { createLogger } from '@openelement/core/logger';

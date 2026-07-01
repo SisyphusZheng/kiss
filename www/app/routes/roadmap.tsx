@@ -2,9 +2,8 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.41.0-alpha.2 product graph.
-// Shipped interop line: v0.41.0-alpha.3.
-// Active example proof line: v0.41.0-alpha.4.
+// Current public line: v0.41.0-alpha.5 SPA + Deno Desktop reader proof.
+// Planned practice line: v0.41.0-alpha.6-alpha.7 Mastodon/GoToSocial.
 // Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
@@ -470,8 +469,8 @@ const phases = [
     version: 'v0.41.0-alpha.2',
     title: 'Release readiness and site truth',
     copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
-    status: 'current',
-    tone: 'brand',
+    status: 'shipped',
+    tone: 'success',
   },
   {
     version: 'v0.41.0-alpha.3',
@@ -489,15 +488,29 @@ const phases = [
   },
   {
     version: 'v0.41.0-alpha.5',
-    title: 'SPA mode + Deno Desktop proof',
-    copy: 'Keep the next implementation target narrow: client-side navigation and desktop shell validation.',
-    status: 'next',
+    title: 'SPA mode + Deno Desktop reader',
+    copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop PDF reader backed by fixtures, local folders, and public GitHub sources.',
+    status: 'current',
+    tone: 'brand',
+  },
+  {
+    version: 'v0.41.0-alpha.6',
+    title: 'Mastodon-lite read-only',
+    copy: 'Use a real federated social API for public timeline, profile, and status detail without auth or mutations.',
+    status: 'planned',
+    tone: 'warning',
+  },
+  {
+    version: 'v0.41.0-alpha.7',
+    title: 'Mastodon auth + mutations',
+    copy: 'Add OAuth, home timeline, compose, favorite, boost, reply, optimistic actions, and rate-limit/error handling.',
+    status: 'planned',
     tone: 'warning',
   },
   {
     version: 'v0.41',
-    title: 'npm-first distribution (JSR secondary)',
-    copy: 'Make package consumption, docs, and examples match the next distribution strategy.',
+    title: 'npm-first distribution + app proofs',
+    copy: 'Stabilize npm artifacts, WC interop, SPA reader proof, and Mastodon practice evidence before the v0.41 tag.',
     status: 'planned',
     tone: 'warning',
   },
@@ -531,7 +544,7 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.2'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.5'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
@@ -563,7 +576,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.2' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.5' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

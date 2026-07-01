@@ -8,13 +8,21 @@ release-document impact before it is merged.
 
 ## Development Setup
 
+openElement is developed with Deno. The repository pins the Deno version in
+`.dvmrc` so that local formatting, linting, and type-checking match CI.
+
 ```bash
 git clone https://github.com/open-element/openelement.git
 cd openelement
+# Install the Deno version listed in .dvmrc (e.g. via dvm, mise, or asdf)
 deno task dev
 deno task build
 deno task test
 ```
+
+Published packages are pure ESM and runtime-agnostic: consumers can run them
+under Deno, Node, Bun, or edge runtimes. Deno is used only as the development,
+build, and release toolchain.
 
 ## Project Structure
 

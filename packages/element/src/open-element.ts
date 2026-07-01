@@ -63,15 +63,89 @@ import {
   renderErrorFallback,
   renderIntoLightDom,
   renderIntoShadowRoot,
-} from './open-element-render.js';
-import { hydrateExistingDom } from './open-element-hydration.js';
+} from './open-element-render.ts';
+import { hydrateExistingDom } from './open-element-hydration.ts';
+
+// ─── Module-level global state ─────────────────────────
+// v0.41.0 (ADR-0061): Global stylesheet registry + theme broadcast.
+// Previously applications had to hand-roll MutationObservers to push a
+// shared design system into every reader-* shadow root and to keep
+// data-theme in sync across shadow boundaries. Both concerns now live
+// in the framework.
+
+/**
+ * Stylesheets registered via `OpenElement.registerGlobalStyles()`.
+ * Automatically merged into every OpenElement shadow root's
+ * `adoptedStyleSheets`, ahead of any component-level `static styles`.
+ *
+ * Accepts both `StyleSheetLike` (openElement's SSR-safe abstraction) and
+ * native `CSSStyleSheet` instances — the real ShadowRoot API eats both.
+ */
+const _globalStyleSheets: StyleSheetLike[] = [];
+
+/**
+ * Set of currently-connected OpenElement instances.
+ * Used by the theme observer to broadcast `data-theme` changes.
+ * Uses a WeakSet-like pattern but we need iteration, so a plain Set is fine —
+ * entries are removed in `disconnectedCallback`.
+ */
+const _connectedInstances: Set<OpenElement> = new Set();
+
+/** Whether the document-level theme observer has been installed. */
+let _themeObserverInstalled = false;
+
+/**
+ * Install a one-shot MutationObserver on `document.documentElement` that
+ * broadcasts `data-theme` changes to every connected OpenElement instance.
+ *
+ * Why this lives in the framework: shadow boundaries prevent
+ * `:root[data-theme]` selectors from reaching shadow content. Each host
+ * needs its own `data-theme` attribute for `:host([data-theme='dark'])`
+ * rules to fire. Without this broadcast, theme switches only affect
+ * newly-connected elements — already-mounted ones keep the stale theme.
+ */
+function _installThemeObserver(): void {
+  if (_themeObserverInstalled) return;
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
+    return;
+  }
+  _themeObserverInstalled = true;
+
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.type !== 'attributes' || m.attributeName !== 'data-theme') continue;
+      const theme = document.documentElement?.dataset?.theme;
+      for (const inst of _connectedInstances) {
+        // Broadcast to every connected instance. We force-set even if the
+        // instance already has a data-theme, because the whole point of the
+        // observer is to propagate document-level theme switches. Apps that
+        // need per-instance themes should set data-theme on the instance AND
+        // avoid changing documentElement's data-theme.
+        if (inst.isConnected) {
+          if (theme) {
+            inst.setAttribute('data-theme', theme);
+          } else {
+            inst.removeAttribute('data-theme');
+          }
+        }
+      }
+    }
+  });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+}
 
 /**
  * SSR-safe base class for OpenElement.
  *
  * In browser: extends HTMLElement directly.
- * In SSR: assigns a minimal stub to globalThis.HTMLElement so the entire
- * dependency graph shares the same base class.
+ * In SSR/no-DOM runtimes: extends a minimal stub that satisfies the
+ * HTMLElement contract without mutating globalThis.
+ *
+ * NOTE: we intentionally do NOT assign globalThis.HTMLElement in SSR.
+ * Runtime-agnostic modules should not mutate the host global scope.
  */
 const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
   hasAttribute(_name: string): boolean {
@@ -90,11 +164,6 @@ const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
   }
 } as unknown as typeof HTMLElement);
 
-// In SSR, assign globalThis.HTMLElement so other code can reference it
-if (typeof HTMLElement === 'undefined') {
-  (globalThis as Record<string, unknown>).HTMLElement = _Base;
-}
-
 /**
  * Zero-dependency Custom Element base class for DSD rendering.
  *
@@ -106,6 +175,57 @@ if (typeof HTMLElement === 'undefined') {
 export class OpenElement extends _Base {
   /** Component stylesheets (SSR-safe - StyleSheet delegates to native CSSStyleSheet in browser). */
   static styles?: StyleSheetLike | StyleSheetLike[];
+
+  /**
+   * Register a stylesheet (or array of stylesheets) to be applied to
+   * **every** OpenElement shadow root, ahead of any component-level
+   * `static styles`.
+   *
+   * v0.41.0 (ADR-0061): Replaces the application-level pattern of
+   * hand-rolling a MutationObserver + `shadowRoot.adoptedStyleSheets`
+   * injection. Intended for shared design systems that must penetrate
+   * shadow boundaries (tokens, base typography, theme rules using
+   * `:host([data-theme='...'])`).
+   *
+   * Accepts both `StyleSheetLike` (openElement's SSR-safe abstraction)
+   * and native `CSSStyleSheet` instances — on real ShadowRoot, both
+   * work identically as `adoptedStyleSheets` entries.
+   *
+   * Idempotent: registering the same sheet twice is a no-op.
+   *
+   * @example
+   * ```ts
+   * const designSystem = new CSSStyleSheet();
+   * designSystem.replaceSync(`:host([data-theme='dark']) { --bg: #0b0b0b; }`);
+   * OpenElement.registerGlobalStyles(designSystem);
+   * ```
+   */
+  static registerGlobalStyles(
+    sheets: unknown | unknown[],
+  ): void {
+    const arr = Array.isArray(sheets) ? sheets : [sheets];
+    for (const s of arr) {
+      if (!_globalStyleSheets.includes(s as StyleSheetLike)) {
+        _globalStyleSheets.push(s as StyleSheetLike);
+      }
+    }
+  }
+
+  /**
+   * Returns a snapshot of the globally-registered stylesheets.
+   * Primarily for testing and debugging.
+   */
+  static getGlobalStyles(): StyleSheetLike[] {
+    return [..._globalStyleSheets];
+  }
+
+  /**
+   * Clear all globally-registered stylesheets.
+   * Primarily for test isolation. Not intended for production use.
+   */
+  static _resetGlobalStyles(): void {
+    _globalStyleSheets.length = 0;
+  }
 
   /** Rendering mode. Defaults to shadow/DSD; light DOM is explicit opt-in. */
   static renderMode?: 'shadow' | 'light';
@@ -256,17 +376,27 @@ export class OpenElement extends _Base {
   }
 
   /**
-   * Apply static styles to the shadow root via adoptedStyleSheets.
+   * Apply styles to the shadow root via adoptedStyleSheets.
    * Shared between CSR (createRenderRoot) and DSD (connectedCallback) paths.
+   *
+   * v0.41.0: Global stylesheets registered via `OpenElement.registerGlobalStyles()`
+   * are merged in **first**, ahead of component-level `static styles`. This lets
+   * a shared design system (tokens, theme rules) reach every shadow root without
+   * each component re-declaring it.
    */
   private _applyStyles(ctor: typeof OpenElement, root?: ShadowRoot): void {
     const target = root ?? this.shadowRoot;
-    if (!target || !ctor.styles) return;
-    const sheets = Array.isArray(ctor.styles) ? ctor.styles : [ctor.styles];
-    if (sheets.length > 0) {
+    if (!target) return;
+    const ctorSheets = ctor.styles
+      ? (Array.isArray(ctor.styles) ? ctor.styles : [ctor.styles])
+      : [];
+    // Global sheets first, then component sheets (component wins on cascade order)
+    const allSheets = [..._globalStyleSheets, ...ctorSheets];
+    if (allSheets.length > 0) {
       // StyleSheet delegates to native CSSStyleSheet in browser
       // type-escape: adoptedStyleSheets may not be in the configured DOM lib
-      (target as unknown as { adoptedStyleSheets: typeof sheets }).adoptedStyleSheets = sheets;
+      (target as unknown as { adoptedStyleSheets: typeof allSheets }).adoptedStyleSheets =
+        allSheets;
     }
   }
 
@@ -300,11 +430,18 @@ export class OpenElement extends _Base {
       this._applyStyles(ctor);
     }
 
-    // Sync data-theme from document root
-    const docTheme = document.documentElement?.dataset?.theme;
-    if (docTheme && !this.hasAttribute('data-theme')) {
-      this.setAttribute('data-theme', docTheme);
+    // Sync data-theme from document root (browser only)
+    if (typeof document !== 'undefined') {
+      const docTheme = document.documentElement?.dataset?.theme;
+      if (docTheme && !this.hasAttribute('data-theme')) {
+        this.setAttribute('data-theme', docTheme);
+      }
     }
+
+    // v0.41.0 (ADR-0061): Register this instance for theme broadcasts.
+    // Also installs the document-level observer on first connect.
+    _connectedInstances.add(this);
+    _installThemeObserver();
 
     // TG-01: Read route params from attribute if present.
     // (SSR/SSG injects params as JS property via injectProps — setter handles it)
@@ -435,6 +572,8 @@ export class OpenElement extends _Base {
     disposeStaticProps(this);
     this.#lifecycleAbort?.abort();
     this.#lifecycleAbort = undefined;
+    // v0.41.0: Stop receiving theme broadcasts.
+    _connectedInstances.delete(this);
   }
 
   // v0.28 (ADR-0067): Effect + event lifecycle managed by HydrationScope.

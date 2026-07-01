@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img">
   <title>openElement favicon</title>
-  <desc>Transparent geometric openElement monogram favicon.</desc>
+  <desc>Three separated code-bracket segments sharing the same geometric radius as the O+E mark.</desc>
   <path
-    d="M21.9 8.8A11 11 0 1 0 21.9 23.2M21.9 16H12.6"
+    d="M 15 9 A 10 10 0 0 0 4 16 A 10 10 0 0 1 15 23
+       M 13 25 L 19 7
+       M 17 9 A 10 10 0 0 0 28 16 A 10 10 0 0 1 17 23"
     fill="none"
     stroke="#21143b"
-    stroke-width="3.75"
+    stroke-width="3"
     stroke-linecap="round"
     stroke-linejoin="round"
   />

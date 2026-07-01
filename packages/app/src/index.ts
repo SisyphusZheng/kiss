@@ -35,3 +35,7 @@ export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/
 // Re-export from @openelement/element for convenience
 export { defineElement, defineLayout } from '@openelement/element';
 export type { ElementDefinition } from '@openelement/element';
+
+// SPA bootstrap
+export { defineApp } from './spa.ts';
+export type { SpaAppInstance, SpaAppOptions } from './spa.ts';

@@ -10,11 +10,14 @@
 
 import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
-import type { OpenElementBuildContext } from './build-context.js';
+import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
+import { escapeAttr, escapeHtml } from '@openelement/core';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
+import { writeRouteManifest } from './route-manifest.ts';
 
 const log = createLogger('core');
 
@@ -69,9 +72,77 @@ export function buildPlugin(
       // don't affect HTML content, and injection is a post-processing step.
       ctx.markComplete(1);
 
+      // SPA mode: skip Phase 3 SSG, generate SPA shell + route manifest
+      if (ctx.options.mode === 'spa') {
+        const root = ctx.phase3.root || process.cwd();
+        const outDirName = ctx.phase3.outDir || 'dist';
+        const absOutDir = join(root, outDirName);
+        const htmlLang = escapeAttr(ctx.phase3.html?.lang ?? 'en');
+        const htmlTitle = escapeHtml(ctx.phase3.html?.title ?? 'openElement App');
+
+        const indexPath = join(absOutDir, 'index.html');
+
+        // Generate a fallback SPA shell only when Vite did not emit an HTML
+        // entry. Apps with their own index.html (for example desktop shells
+        // with a custom client entry) keep the real Vite output.
+        const html = `<!DOCTYPE html>
+<html lang="${htmlLang}">
+<head>
+  <meta charset="UTF-8">
+  <title>${htmlTitle}</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    console.info('[openElement] SPA fallback shell loaded. Provide an app index.html for a bundled client entry.');
+  </script>
+</body>
+</html>`;
+
+        await mkdir(absOutDir, { recursive: true });
+        try {
+          await writeFile(indexPath, html, { encoding: 'utf-8', flag: 'wx' });
+          log.info('SPA shell written to index.html');
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            (error as Error & { code?: string }).code === 'EEXIST'
+          ) {
+            log.info('SPA shell preserved from Vite output');
+          } else {
+            throw error;
+          }
+        }
+
+        // Generate route manifest for client-side routing
+        const absRoutesDir = join(root, ctx.phase3.routesDir || 'app/routes');
+        const routeCount = await writeRouteManifest({
+          routesDir: absRoutesDir,
+          outDir: absOutDir,
+        });
+        log.info(`Route manifest written (${routeCount} page route(s))`);
+
+        // Phase 2: Client island bundle (only if islands exist)
+        if (totalIslands > 0) {
+          log.info('[2/3] Client island build...');
+          try {
+            const { buildClient } = await import('./cli/build-client.ts');
+            await buildClient(ctx);
+            ctx.markComplete(2);
+            log.info('[2/3] Client island build - complete');
+          } catch (error) {
+            log.error(`[2/3] Client island build - FAILED: ${error}`);
+            throw error;
+          }
+        }
+
+        log.info('SPA build complete.');
+        return;
+      }
+
       log.info('[3/3] Static site generation...');
       try {
-        const { buildSSG } = await import('./cli/build-ssg.js');
+        const { buildSSG } = await import('./cli/build-ssg.ts');
         await buildSSG({}, ctx);
         ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');
@@ -84,7 +155,7 @@ export function buildPlugin(
       if (totalIslands > 0) {
         log.info('[2/3] Client island build...');
         try {
-          const { buildClient } = await import('./cli/build-client.js');
+          const { buildClient } = await import('./cli/build-client.ts');
           await buildClient(ctx);
           ctx.markComplete(2);
           log.info('[2/3] Client island build - complete');

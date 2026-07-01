@@ -89,7 +89,7 @@ export class ArchitecturePage extends OpenElement {
           <div class='artifact'>
             <div class='artifact-head'>
               <strong>package graph</strong>
-              <span>v0.41.0-alpha.2 current truth</span>
+              <span>{OPENELEMENT_VERSION} current truth</span>
             </div>
             <pre><code>{PACKAGE_GRAPH}</code></pre>
           </div>
@@ -213,5 +213,4 @@ export class ArchitecturePage extends OpenElement {
 
 customElements.define(tagName, ArchitecturePage);
 export default ArchitecturePage;
-
 

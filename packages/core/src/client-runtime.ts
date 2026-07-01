@@ -8,7 +8,7 @@
  */
 
 import type { Signal } from '@openelement/protocol/signal';
-import { HydrationScope } from './hydration-scope.js';
+import { HydrationScope } from './hydration-scope.ts';
 
 const hostDisposers = new WeakMap<Element, () => void>();
 

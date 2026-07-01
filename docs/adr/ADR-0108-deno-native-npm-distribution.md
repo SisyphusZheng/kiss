@@ -1,4 +1,4 @@
-# ADR-0108: Deno-native npm Distribution via `deno pack`
+# ADR-0108: npm Distribution via `deno pack` (Deno Development Toolchain)
 
 ## Status
 
@@ -18,9 +18,11 @@ without depending on Vite+ upstream acceptance.
 
 ## Decision
 
-openElement v0.41.0 distribution is **Deno-native npm distribution**:
+openElement v0.41.0 distribution is **npm-primary distribution via `deno pack`**:
 
-- Development, build, test, and release tooling remain Deno-first.
+- Development, build, test, and release tooling remain Deno-first. Deno is the
+  development toolchain; it is not the product identity or a runtime constraint
+  on published packages.
 - npm artifacts are produced with `deno pack`.
 - npm publishing uses `npm publish --provenance` from GitHub Actions.
 - JSR publish is no longer a required release exit gate; it remains available as

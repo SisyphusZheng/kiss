@@ -34,8 +34,8 @@ import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
 import { type Context, createContext, provideContext } from '@openelement/core';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { createLogger } from '@openelement/core/logger';
-import '.\/open-theme-toggle.js';
-import './open-brand-mark.js';
+import './open-theme-toggle.tsx';
+import './open-brand-mark.tsx';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
@@ -227,6 +227,7 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
+    min-height: var(--size-10);
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
@@ -240,6 +241,8 @@ sheet.replaceSync(`
   }
 
   open-brand-mark {
+    display: inline-grid;
+    align-self: center;
     transition: transform var(--duration-2) var(--ease-2);
   }
 

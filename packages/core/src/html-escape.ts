@@ -10,7 +10,7 @@
 
 // ─── L1: Safe/Unsafe HTML Contract ──────────────────────────────
 
-import { createLogger, warnOnce } from './logger.js';
+import { createLogger, warnOnce } from './logger.ts';
 
 const log = createLogger('core');
 

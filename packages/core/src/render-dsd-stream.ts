@@ -13,7 +13,7 @@
  * @module @openelement/core/render-dsd-stream
  */
 
-import { renderDsd, safeNow } from './render-dsd.js';
+import { renderDsd, safeNow } from './render-dsd.ts';
 import type { RenderError, RenderOutput } from '@openelement/protocol/render';
 
 // --- Streaming types -------------------------------------------

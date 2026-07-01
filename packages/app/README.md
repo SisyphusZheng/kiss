@@ -19,10 +19,10 @@ export default definePage({
 });
 ```
 
-Use the `/vite` subpath in `vite.config.ts`:
+Use the Vite facade from `@openelement/adapter-vite/app-vite` in `vite.config.ts`:
 
 ```ts
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite/app-vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -52,6 +52,9 @@ import { defineElement, defineIsland, defineLayout, definePage } from '@openelem
 
 `DsdElement` remains the runtime primitive in `@openelement/core`, but application
 authors should start from this package.
+
+Build configuration is owned by `@openelement/adapter-vite`; generated projects
+and docs import its `app-vite` facade rather than an app-package Vite subpath.
 
 ## Install
 

@@ -16,7 +16,7 @@
  */
 
 import type { HydrationScope } from '@openelement/core/hydrate';
-import type { OpenElementLike } from './open-element-render.js';
+import type { OpenElementLike } from './open-element-render.ts';
 
 /**
  * v0.28 (ADR-0067): Signal-native hydration.

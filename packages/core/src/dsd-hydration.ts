@@ -9,7 +9,7 @@ export interface DsdHydration {
 
 export type Constructor<T = HTMLElement> = new (...args: unknown[]) => T;
 
-import { bindHydrateEvents } from './dsd-hydration-events.js';
+import { bindHydrateEvents } from './dsd-hydration-events.ts';
 import type { HydrateEventDescriptor } from '@openelement/protocol/framework';
 
 /**

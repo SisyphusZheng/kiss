@@ -3,6 +3,7 @@
   "version": "0.41.0-alpha.5",
   "exports": {
     ".": "./src/index.ts",
+    "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",
     "./i18n-plugin": "./src/i18n-plugin.ts",
     "./preact": "./src/preact.ts"
@@ -24,9 +25,10 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/index.ts"
+    "build": "deno check src/"
   },
   "peerDependencies": {
+    "@openelement/router": "npm:@openelement/router@^0.41.0-alpha.5",
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   }

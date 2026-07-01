@@ -18,5 +18,23 @@
     "./island": "./src/island.ts",
     "./prop": "./src/prop.ts",
     "./hydration-markers": "./src/hydration-markers.ts"
+  },
+  "publish": {
+    "include": [
+      "src/**",
+      "deno.json",
+      "README.md",
+      "LICENSE"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "tasks": {
+    "build": "deno check src/index.ts"
   }
 }

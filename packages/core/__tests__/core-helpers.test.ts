@@ -176,6 +176,29 @@ Deno.test('errors - formatError handles non-Errors', () => {
   assertEquals(formatError({ toString: () => 'custom' }), 'custom');
 });
 
+Deno.test('errors - formatError includes Error cause chain', () => {
+  const root = new Error('root cause');
+  const wrapped = new Error('outer failure', { cause: root });
+  assertEquals(formatError(wrapped), 'outer failure: root cause');
+});
+
+Deno.test('errors - formatError includes deep cause chain', () => {
+  const root = new Error('root cause');
+  const middle = new Error('middle failure', { cause: root });
+  const wrapped = new Error('outer failure', { cause: middle });
+  assertEquals(formatError(wrapped), 'outer failure: middle failure: root cause');
+});
+
+Deno.test('errors - formatError stops at cause cycles and non-Error causes', () => {
+  const first = new Error('first');
+  const second = new Error('second');
+  Object.defineProperty(first, 'cause', { value: second });
+  Object.defineProperty(second, 'cause', { value: first });
+
+  assertEquals(formatError(first), 'first: second');
+  assertEquals(formatError(new Error('outer', { cause: 'not an error' })), 'outer');
+});
+
 Deno.test('errors - PropValidationError captures property details', () => {
   const err = new PropValidationError('count', 123);
   assertEquals(err.code, ErrorCode.PROP_VALIDATION_ERROR);

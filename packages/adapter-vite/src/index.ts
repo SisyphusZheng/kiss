@@ -25,9 +25,11 @@
 // Primary public API
 import type { Plugin } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
-import { createOpenPlugin } from './plugin.js';
+import { createOpenPlugin } from './plugin.ts';
 
 export interface OpenPipelineConfig {
+  /** Build/dev mode. 'ssg' (default) enables SSR dev server + static generation. 'spa' produces a client-only app (no SSR). */
+  mode?: 'ssg' | 'spa';
   routes?: { dir?: string };
   i18n?: { locales: string[]; defaultLocale?: string };
   output?: { outDir?: string };
@@ -38,6 +40,7 @@ export interface OpenPipelineConfig {
 
 export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
   const options: FrameworkOptions = {
+    mode: config.mode,
     routesDir: config.routes?.dir || 'app/routes',
     islandsDir: config.island?.dir || 'app/islands',
     componentsDir: 'app/components',
@@ -49,16 +52,16 @@ export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
   return createOpenPlugin(options);
 }
 
-export { openElement, type OpenElementOptions } from './app-vite.js';
+export { openElement, type OpenElementOptions } from './app-vite.ts';
 
 export type { FrameworkOptions };
 
 // Build context
-export { OpenElementBuildContext } from './build-context.js';
+export { OpenElementBuildContext } from './build-context.ts';
 
 // Build manifest
-export type { ArtifactInfo, BuildManifest } from './build-manifest.js';
-export { printBuildManifest, scanClientBuild, scanSSGOutput } from './build-manifest.js';
+export type { ArtifactInfo, BuildManifest } from './build-manifest.ts';
+export { printBuildManifest, scanClientBuild, scanSSGOutput } from './build-manifest.ts';
 
 // SSG post-processing & island manifests (adapter-vite internal build helpers)
 export {
@@ -86,23 +89,23 @@ export type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
 export type { ExternalManifest } from '@openelement/protocol/ssg';
 
 // Subpath resolver (public constants)
-export { CORE_SUBPATHS, VIRTUAL_CORE_PREFIX } from './subpath-resolver.js';
+export { CORE_SUBPATHS, VIRTUAL_CORE_PREFIX } from './subpath-resolver.ts';
 
 // Head injection (public helpers)
-export { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from './head-injection.js';
-export type { HeadExtrasResult } from './head-injection.js';
+export { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from './head-injection.ts';
+export type { HeadExtrasResult } from './head-injection.ts';
 
 // MDX integration
-export { mdxPlugin, openMdx } from './plugin-mdx.js';
-export type { OpenMdxPluginOptions } from './plugin-mdx.js';
+export { mdxPlugin, openMdx } from './plugin-mdx.ts';
+export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Nitro runtime proof boundary
-export { createOpenElementNitroHandler } from './nitro-mount.js';
+export { createOpenElementNitroHandler } from './nitro-mount.ts';
 export type {
   NitroLikeRequestEvent,
   NitroLikeResponse,
   OpenElementNitroMountOptions,
-} from './nitro-mount.js';
+} from './nitro-mount.ts';
 
 // Default export
 export { openPipeline as default };

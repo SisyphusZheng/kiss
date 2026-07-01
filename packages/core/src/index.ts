@@ -53,11 +53,11 @@ export {
   reportError,
   setErrorTelemetryHook,
   SsrRenderError,
-} from './errors.js';
+} from './errors.ts';
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '@openelement/protocol/errors';
-export { createSsrContext, extractParams, parseQuery } from './context.js';
-export { renderSsrError, wrapInDocument } from './html-escape.js';
-export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.js';
+export { createSsrContext, extractParams, parseQuery } from './context.ts';
+export { renderSsrError, wrapInDocument } from './html-escape.ts';
+export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.ts';
 export type {
   CacheAdapter,
   CacheEntry,
@@ -66,27 +66,27 @@ export type {
   IsrCacheState,
   IsrRouteConfig,
 } from '@openelement/protocol/isr';
-export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.js';
+export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.ts';
 export type {
   IsrRuntimeOptions,
   IsrRuntimeRenderContext,
   IsrRuntimeRenderResult,
   IsrRuntimeResult,
   IsrRuntimeState,
-} from './isr-runtime.js';
-export { StyleSheet } from './style-sheet.js';
+} from './isr-runtime.ts';
+export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
-export { bindHydrateEvents } from './dsd-hydration-events.js';
-export type { Constructor, DsdHydration } from './dsd-hydration.js';
-export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.js';
-export type { RenderDsdOptions } from './render-dsd.js';
+export { bindHydrateEvents } from './dsd-hydration-events.ts';
+export type { Constructor, DsdHydration } from './dsd-hydration.ts';
+export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.ts';
+export type { RenderDsdOptions } from './render-dsd.ts';
 export type {
   RenderDsdStreamChunk,
   RenderDsdStreamComponent,
   RenderDsdStreamMetrics,
   RenderDsdStreamOptions,
-} from './render-dsd-stream.js';
-export { camelToKebab, serializeAttrs } from './render-ir.js';
+} from './render-dsd-stream.ts';
+export { camelToKebab, serializeAttrs } from './render-ir.ts';
 export type {
   DomSimulationAttempt,
   DomSimulationReport,
@@ -125,25 +125,25 @@ export type {
   CompatibilityClassification,
   CompatibilityTier,
 } from '@openelement/protocol/manifest';
-export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.js';
+export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.ts';
 export {
   // v0.24.3: Neutral signal utilities — no template dependency
   isSignalLike,
   unwrapSignalLike,
 } from '@openelement/signal';
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
-export { consumeContext, type Context, createContext, provideContext } from './signal-context.js';
-export { createLogger } from './logger.js';
-export { isValidTagName } from './tag-utils.js';
+export { consumeContext, type Context, createContext, provideContext } from './signal-context.ts';
+export { createLogger } from './logger.ts';
+export { isValidTagName } from './tag-utils.ts';
 export {
   bindSsrProps,
   defineCustomElement,
   defineIsland,
   getIslandMeta,
   getSsrProps,
-} from './island.js';
+} from './island.ts';
 export type { IslandMeta, IslandOptions } from '@openelement/protocol/island';
-export { transformIslandSource } from './island-transform.js';
+export { transformIslandSource } from './island-transform.ts';
 export type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
 
 // Unified binding layer (ADR-0109 Phase 1)
@@ -151,7 +151,7 @@ export {
   applyBindingDescriptor,
   commitBindings,
   registerBindingKind,
-} from './binding-activation.js';
+} from './binding-activation.ts';
 export {
   bindAttr,
   bindClass,
@@ -166,13 +166,13 @@ export {
   bindStaticProp,
   bindStaticStyle,
   bindText,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 export type {
   BindingDescriptor,
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 
 // Data adapters — type contract surface only (ADR-0095)
 export type {
@@ -191,15 +191,15 @@ export {
   getByTagName,
   register as registerManifest,
   validate as validateManifest,
-} from './registry.js';
+} from './registry.ts';
 // v0.24.1 (ADR-0057): JSX + Signal component model
 // VNode & jsx-runtime
 export type { VNode } from '@openelement/protocol/vnode';
-export { isVNode } from './vnode.js';
-export { Fragment, trustedHtml } from './jsx-runtime.js';
+export { isVNode } from './vnode.ts';
+export { Fragment, trustedHtml } from './jsx-runtime.ts';
 // Renderers
-export { renderToDom } from './jsx-render-dom.js';
-export { renderDsdTree } from './render-ir.js';
+export { renderToDom } from './jsx-render-dom.ts';
+export { renderDsdTree } from './render-ir.ts';
 export {
   collectEventBindings,
   createEventMarkerContext,
@@ -209,7 +209,7 @@ export {
   eventTypeFromProp,
   hydrateEventMarkers,
   serializeEventMarkers,
-} from './event-hydration.js';
+} from './event-hydration.ts';
 // static props runtime + Signal unwrap
 export {
   disposeStaticProps,
@@ -218,7 +218,7 @@ export {
   registerStaticObservedAttributes,
   syncStaticPropsFromAttributes,
   unwrap,
-} from './prop.js';
+} from './prop.ts';
 export type {
   NormalizedPropDecl,
   PropDecl,

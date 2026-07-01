@@ -2,7 +2,7 @@
  * @openelement/protocol - Island contracts.
  */
 
-import type { HydrationStrategy } from './framework.js';
+import type { HydrationStrategy } from './framework.ts';
 
 export interface IslandMeta {
   tagName: string;

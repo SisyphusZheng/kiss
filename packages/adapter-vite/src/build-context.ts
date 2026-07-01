@@ -61,6 +61,9 @@ export class Phase1Meta {
   /** v0.18.0: CEM-derived compatibility classifications from the classifier. */
   cemClassifications: CompatibilityClassification[] = [];
 
+  /** SPA mode active (skips SSR entry generation + SSG rendering) */
+  isSpa?: boolean;
+
   /** Whether the SSR+client build has completed */
   buildCompleted: boolean = false;
 
@@ -106,6 +109,9 @@ export class Phase3Meta {
 
   /** Extra HTML to inject into <head> */
   headExtras: string = '';
+
+  /** Build manifest budget thresholds in KB. */
+  manifestBudget: NonNullable<FrameworkOptions['build']>['manifestBudget'] = undefined;
 
   /** Whether headExtras scripts were produced by structured injection APIs. */
   allowHeadExtrasScripts: boolean = false;
@@ -224,6 +230,7 @@ export class OpenElementBuildContext {
     this.phase3.viewTransition = options.viewTransition ?? true;
     this.phase3.speculation = options.speculation ?? null;
     this.phase3.headExtras = options.headExtras || '';
+    this.phase3.manifestBudget = options.build?.manifestBudget;
     this.phase3.allowHeadExtrasScripts = options.allowHeadExtrasScripts || false;
     this.phase3.appShell = options.appShell;
     this.phase3.layouts = options.layouts;

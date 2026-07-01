@@ -7,16 +7,16 @@
  */
 
 import { effect, unwrapSignalLike } from '@openelement/signal';
-import { trustRenderHtml } from './security.js';
-import { Fragment } from './jsx-runtime.js';
-import { createLogger } from './logger.js';
-import { formatError } from './errors.js';
+import { trustRenderHtml } from './security.ts';
+import { Fragment } from './jsx-runtime.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
 import type {
   BindingDescriptor,
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 
 const bindingLog = createLogger('binding');
 

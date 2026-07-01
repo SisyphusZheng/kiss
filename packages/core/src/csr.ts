@@ -7,7 +7,7 @@
  * ADR-0109 Phase 1: split @openelement/core into static, hydrate, and csr.
  */
 
-export * from './static.js';
+export * from './static.ts';
 
 // Binding layer
 export type {
@@ -15,7 +15,7 @@ export type {
   BindingDispose,
   BindingLifecycle,
   BindingRenderer,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 export {
   bindAttr,
   bindClass,
@@ -30,20 +30,20 @@ export {
   bindStaticProp,
   bindStaticStyle,
   bindText,
-} from './binding-descriptor.js';
+} from './binding-descriptor.ts';
 export {
   applyBindingDescriptor,
   commitBindings,
   registerBindingKind,
-} from './binding-activation.js';
+} from './binding-activation.ts';
 
 // Full DOM renderer
-export { applyProps, collectPropBindings, renderToDom } from './jsx-render-dom.js';
+export { applyProps, collectPropBindings, renderToDom } from './jsx-render-dom.ts';
 
 // Event hydration (DOM-specific parts not already in static.ts)
 export {
   collectEventBindings,
   eventRecordsToDescriptors,
   hydrateEventMarkers,
-} from './event-hydration.js';
-export type { EventBinding, EventBindingRecord } from './event-hydration.js';
+} from './event-hydration.ts';
+export type { EventBinding, EventBindingRecord } from './event-hydration.ts';

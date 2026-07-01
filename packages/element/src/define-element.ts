@@ -3,8 +3,8 @@
  *
  * Functional component-style authoring for OpenElement.
  */
-import { OpenElement } from './open-element.js';
-import type { ElementDefinition } from './types.js';
+import { OpenElement } from './open-element.ts';
+import type { ElementDefinition } from './types.ts';
 import type { VNode } from '@openelement/protocol/vnode';
 
 const ERROR_PREFIX = '[openElement]';

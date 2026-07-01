@@ -12,20 +12,24 @@
 
 import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
 import { getSsrProps } from '@openelement/core';
+import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import type { IslandConfig } from './authoring.ts';
 
-// ponytail: dynamic imports keep preact out of @openelement/app hard deps;
-// consumers importing @openelement/app/preact must provide preact themselves.
-const preactMod = await import('preact') as typeof import('preact');
-const rtsMod = await import('preact-render-to-string') as typeof import('preact-render-to-string');
+let renderToString:
+  | typeof import('preact-render-to-string')['renderToString']
+  | undefined;
 
-const { h, hydrate: preactHydrate, render: preactRender } = preactMod;
-const { renderToString } = rtsMod;
+// SSR-only: keep preact-render-to-string out of browser module evaluation.
+if (typeof document === 'undefined') {
+  ({ renderToString } = await import('preact-render-to-string'));
+}
 
 export type PreactIslandProps = Record<string, unknown>;
 
-export type PreactIslandComponent<Props extends PreactIslandProps = PreactIslandProps> = (
+export type PreactIslandComponent<
+  Props extends PreactIslandProps = PreactIslandProps,
+> = (
   props: Props,
 ) => ComponentChild;
 
@@ -53,7 +57,10 @@ function collectAttributes(host: HTMLElement): PreactIslandProps {
   return props;
 }
 
-function resolveProps(host: HTMLElement, baseProps: PreactIslandProps): PreactIslandProps {
+function resolveProps(
+  host: HTMLElement,
+  baseProps: PreactIslandProps,
+): PreactIslandProps {
   return {
     ...baseProps,
     ...collectAttributes(host),
@@ -61,7 +68,9 @@ function resolveProps(host: HTMLElement, baseProps: PreactIslandProps): PreactIs
   };
 }
 
-export function definePreactIsland<Props extends PreactIslandProps = PreactIslandProps>(
+export function definePreactIsland<
+  Props extends PreactIslandProps = PreactIslandProps,
+>(
   tagName: string,
   Component: PreactIslandComponent<Props>,
   options: PreactIslandOptions = {},
@@ -72,6 +81,11 @@ export function definePreactIsland<Props extends PreactIslandProps = PreactIslan
   class OpenElementPreactIsland extends OpenElement {
     override render(): VNode | null {
       if (typeof document === 'undefined') {
+        if (!renderToString) {
+          throw new Error(
+            'openElement: preact-render-to-string failed to load for SSR.',
+          );
+        }
         // SSR path: render Preact component to string, return as trusted HTML
         const html = renderToString(
           h(Component, resolveProps(this, baseProps) as Props),

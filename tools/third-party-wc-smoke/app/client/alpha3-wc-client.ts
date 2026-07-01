@@ -32,7 +32,11 @@ class Alpha3LitCounter extends LitElement {
   }
   render() {
     return html`
-      <slot name="label"></slot><button id="lit-button" @click="${() => this.#increment()}">
+      <slot name="label"></slot>
+      <button
+        id="lit-button"
+        @click="${() => this.#increment()}"
+      >
         ${this.label}: ${this.count}
       </button>
     `;

@@ -23,13 +23,14 @@ import { createLogger } from '@openelement/core/logger';
 const log = createLogger('adapter-vite');
 
 import honoDevServer from '@hono/vite-dev-server';
-import { OpenElementBuildContext } from './build-context.js';
-import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.js';
-import { buildPlugin } from './build.js';
+import { OpenElementBuildContext } from './build-context.ts';
+import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.ts';
+import { normalizeViteAliases } from './alias-utils.ts';
+import { buildPlugin } from './build.ts';
 import { generateHonoEntryCode } from '@openelement/ssg';
-import { buildHeadExtras } from './head-injection.js';
-import { islandTransformPlugin } from './island-transform.js';
-import { createGeneratedDataResolverPlugin } from './generated-data-resolver.js';
+import { buildHeadExtras } from './head-injection.ts';
+import { islandTransformPlugin } from './island-transform.ts';
+import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
@@ -37,8 +38,8 @@ import {
   scanPackageManifests,
   scanRoutes,
 } from '@openelement/ssg';
-import { createCoreResolvePlugin } from './subpath-resolver.js';
-import { mdxPlugin } from './plugin-mdx.js';
+import { createCoreResolvePlugin } from './subpath-resolver.ts';
+import { mdxPlugin } from './plugin-mdx.ts';
 
 type LessAliasOptions = Record<string, string> | Alias[] | null | undefined;
 
@@ -187,9 +188,13 @@ export function createOpenPlugin(
         | Alias[]
         | Record<string, string>
         | null;
+      const normalizedAliases = normalizeViteAliases(aliases, process.cwd());
+      if (normalizedAliases) {
+        ctx.phase1.userResolveAlias = normalizedAliases;
+      }
 
       return {
-        resolve: aliases ? { alias: aliases } : undefined,
+        resolve: normalizedAliases ? { alias: normalizedAliases } : undefined,
         build: {
           // The generated virtual entry intentionally contains the whole route graph.
           // Keep the budget explicit so Vite does not report it as an unexpected warning.
@@ -262,6 +267,21 @@ export function createOpenPlugin(
         // Cache routes for lazy load() regeneration (ctx.blogOptions may not
         // be set yet - openContent() buildStart() runs after this one).
         ctx.phase1.cachedRoutes = routes;
+
+        // SPA mode: skip SSR virtual entry generation + SSR admission plan
+        if (resolvedOptions.mode === 'spa') {
+          ctx.phase1.isSpa = true;
+          log.info('SPA mode: skipping SSR entry generation, SSG rendering will be skipped');
+          const pageCount = routes.filter(
+            (r) => r.type === 'page' && !r.special,
+          ).length;
+          const totalIslands = ctx.phase1.islandTagNames.length +
+            ctx.phase1.packageIslandDecls.length;
+          log.info(
+            `Routes: ${pageCount} page(s), ${totalIslands} island(s) - openElement Architecture (SPA)`,
+          );
+          return;
+        }
 
         ctx.phase1.honoEntryCode = generateEntry(
           routes,
@@ -350,20 +370,35 @@ export function createOpenPlugin(
     },
   };
 
-  const devServerPlugin = honoDevServer({
-    entry: VIRTUAL_ENTRY_ID,
-    injectClientScript: true,
-  }) as Plugin;
-
-  return [
+  // SPA mode is client-only: the @hono/vite-dev-server middleware would import
+  // route modules on the server to SSR-render them, but route modules call
+  // `customElements.define(...)` at module top level (and may touch `document`/
+  // `localStorage`), which crashes with "customElements is not defined" in a
+  // server context. In SPA mode the client bootstrap (e.g. reader.tsx) owns
+  // rendering, so Vite's built-in SPA middleware (index.html + HMR) is all we
+  // need. Skip the SSR dev server entirely.
+  const plugins: Plugin[] = [
     mdxPlugin(),
     corePlugin,
     createGeneratedDataResolverPlugin({ root: process.cwd() }),
     createCoreResolvePlugin(metaUrl),
     optionalPackageStubsPlugin(),
     virtualEntryPlugin,
-    devServerPlugin,
+  ];
+
+  if (resolvedOptions.mode !== 'spa') {
+    plugins.push(
+      honoDevServer({
+        entry: VIRTUAL_ENTRY_ID,
+        injectClientScript: true,
+      }) as Plugin,
+    );
+  }
+
+  plugins.push(
     islandTransformPlugin(resolvedOptions.islandsDir!),
     buildPlugin(resolvedOptions, ctx),
-  ];
+  );
+
+  return plugins;
 }

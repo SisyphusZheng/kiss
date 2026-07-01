@@ -3,7 +3,7 @@
  * metadata contracts.
  */
 
-import type { VNode } from './vnode.js';
+import type { VNode } from './vnode.ts';
 
 // --- API context --------------------------------------------------
 
@@ -115,6 +115,8 @@ export interface FrameworkOptions {
   packageIslands?: string[];
   appShell?: AppShellConfig;
   layouts?: LayoutsConfig;
+  /** Build mode. 'ssg' (default) generates static HTML. 'spa' produces a client-only bundle. */
+  mode?: 'ssg' | 'spa';
   /** @dangerous injected as-is, only use with controlled content */
   headExtras?: string;
   html?: {
@@ -154,6 +156,11 @@ export interface FrameworkOptions {
   };
   build?: {
     outDir?: string;
+    manifestBudget?: {
+      islandKB?: number;
+      totalJsKB?: number;
+      pageKB?: number;
+    };
   };
   viewTransition?: boolean;
   speculation?: boolean | {

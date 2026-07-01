@@ -21,7 +21,7 @@
  */
 
 import type { VNode } from '@openelement/protocol/vnode';
-import { OpenElement } from './open-element.js';
+import { OpenElement } from './open-element.ts';
 import { ErrorCode, OpenElementError } from '@openelement/core';
 import type { ErrorSeverity } from '@openelement/protocol/errors';
 

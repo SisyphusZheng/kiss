@@ -25,19 +25,19 @@ import {
 } from '@openelement/protocol/render';
 import { type DsdComponentConstructor } from '@openelement/protocol/render';
 import type { ComponentLayer } from '@openelement/protocol/framework';
-import { createLogger } from './logger.js';
-import { formatError } from './errors.js';
-import { escapeAttrValue } from './html-escape.js';
-import { isVNode } from './vnode.js';
-import { renderDsdTree } from './render-ir.js';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
+import { escapeAttrValue } from './html-escape.ts';
+import { isVNode } from './vnode.ts';
+import { renderDsdTree } from './render-ir.ts';
 import {
   dsdHostNode,
   type RenderNode,
   serializeAttrs,
   serializeRenderNode,
   trustedHtmlNode,
-} from './render-ir.js';
-import { DANGEROUS_KEYS } from './security.js';
+} from './render-ir.ts';
+import { DANGEROUS_KEYS } from './security.ts';
 
 const log = createLogger('core');
 
@@ -434,10 +434,10 @@ function describeRenderValue(value: unknown): string {
 }
 
 // v0.21.0: Streaming types and functions moved to render-dsd-stream.ts.
-export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.js';
+export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.ts';
 export type {
   RenderDsdStreamChunk,
   RenderDsdStreamComponent,
   RenderDsdStreamMetrics,
   RenderDsdStreamOptions,
-} from './render-dsd-stream.js';
+} from './render-dsd-stream.ts';
