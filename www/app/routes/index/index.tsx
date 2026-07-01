@@ -821,7 +821,7 @@ export class DocsHome extends OpenElement {
 
             <div class='art' aria-hidden='true'>
               <div class='art-note'>
-                <span>Aperture O</span>
+                <span>&lt;open/&gt;</span>
                 <span>DSD boundary<br />&amp; route graph</span>
               </div>
               <div class='aperture'></div>

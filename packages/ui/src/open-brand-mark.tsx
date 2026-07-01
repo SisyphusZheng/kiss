@@ -14,9 +14,10 @@ sheet.replaceSync(`
   :host {
     --mark-size: var(--size-10);
     display: inline-grid;
-    width: calc(var(--mark-size) * 1.82);
+    width: calc(var(--mark-size) * 3.45);
     height: var(--mark-size);
     flex: 0 0 auto;
+    place-items: center;
     vertical-align: middle;
   }
 
@@ -34,9 +35,9 @@ sheet.replaceSync(`
   .mark-text {
     fill: var(--brand-deep);
     font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-    font-size: 28px;
-    font-weight: 750;
-    letter-spacing: -0.01em;
+    font-size: 32px;
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0;
   }
 
   .mark-accent {
@@ -58,8 +59,8 @@ export class OpenBrandMark extends OpenElement {
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     return (
-      <svg className='mark' part='mark' viewBox='0 0 132 72' role='img' aria-hidden='true'>
-        <text className='mark-text' x='66' y='46' textAnchor='middle'>
+      <svg className='mark' part='mark' viewBox='0 0 260 72' role='img' aria-hidden='true'>
+        <text className='mark-text' x='130' y='47' textAnchor='middle'>
           <tspan>&lt;</tspan>
           <tspan>open</tspan>
           <tspan className='mark-accent'>/</tspan>

@@ -469,8 +469,8 @@ const phases = [
     version: 'v0.41.0-alpha.2',
     title: 'Release readiness and site truth',
     copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
-    status: 'current',
-    tone: 'brand',
+    status: 'shipped',
+    tone: 'success',
   },
   {
     version: 'v0.41.0-alpha.3',
@@ -490,8 +490,8 @@ const phases = [
     version: 'v0.41.0-alpha.5',
     title: 'SPA mode + Deno Desktop reader',
     copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop PDF reader backed by fixtures, local folders, and public GitHub sources.',
-    status: 'PR hardening',
-    tone: 'warning',
+    status: 'current',
+    tone: 'brand',
   },
   {
     version: 'v0.41.0-alpha.6',
@@ -544,7 +544,7 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.2'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.5'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
@@ -576,7 +576,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.2' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.5' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

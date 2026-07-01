@@ -227,6 +227,7 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
+    min-height: var(--size-10);
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
@@ -240,6 +241,8 @@ sheet.replaceSync(`
   }
 
   open-brand-mark {
+    display: inline-grid;
+    align-self: center;
     transition: transform var(--duration-2) var(--ease-2);
   }
 

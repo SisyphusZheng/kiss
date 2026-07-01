@@ -113,6 +113,40 @@ async function assertRenderable(page: Page, label: string): Promise<void> {
   }
 }
 
+async function assertBrandMark(page: Page, label: string): Promise<void> {
+  const mark = await page.evaluate(() => {
+    const visit = (root: Document | ShadowRoot | Element): Element | null => {
+      const direct = root.querySelector?.('open-brand-mark');
+      if (direct) return direct;
+      const all = root.querySelectorAll?.('*') ?? [];
+      for (const el of Array.from(all)) {
+        if (el.shadowRoot) {
+          const found = visit(el.shadowRoot);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    const element = visit(document);
+    if (!element) return null;
+    const box = element.getBoundingClientRect();
+    const text = element.shadowRoot?.textContent?.trim() ?? '';
+    return {
+      width: box.width,
+      height: box.height,
+      text,
+    };
+  });
+
+  if (!mark) throw new Error(`${label} does not render <open/> brand mark`);
+  if (mark.width < 52 || mark.height < 24) {
+    throw new Error(`${label} brand mark rendered too small: ${mark.width}x${mark.height}`);
+  }
+  if (!mark.text.includes('<open/>')) {
+    throw new Error(`${label} brand mark text mismatch: ${mark.text}`);
+  }
+}
+
 async function smokePage(page: Page, label: string, url: string, screenshotName: string) {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -122,6 +156,7 @@ async function smokePage(page: Page, label: string, url: string, screenshotName:
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await assertRenderable(page, label);
+  if (label.startsWith('docs')) await assertBrandMark(page, label);
   await page.screenshot({
     path: join(outputDir, screenshotName),
     fullPage: true,
@@ -145,6 +180,12 @@ async function main(): Promise<void> {
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     await smokePage(page, 'docs site', `${docs.origin}/docs/`, 'docs-site.png');
+    await smokePage(
+      page,
+      'docs API reference',
+      `${docs.origin}/apilist/`,
+      'docs-api-reference.png',
+    );
     await smokePage(page, 'Reader shell', `${reader.origin}/`, 'reader-shell.png');
     console.log(`visual smoke passed; screenshots written to ${outputDir}`);
   } finally {

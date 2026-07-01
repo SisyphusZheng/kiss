@@ -10,7 +10,7 @@
  * - open-input: Input field with label and error states
  * - open-code-block: Code block with copy button
  * - open-badge: Open Props status badge
- * - open-brand-mark: Aperture O brand mark
+ * - open-brand-mark: <open/> code-tag brand mark
  * - open-lab-panel: Standards-lab artifact/spec panel
  * - open-lab-stage: Kinetic standards-lab hero primitive
  * - open-standards-visual: Product-art standards diagrams
