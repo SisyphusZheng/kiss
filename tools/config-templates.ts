@@ -54,8 +54,18 @@ export const CONFIG_EXCEPTIONS: Record<string, Partial<PackageConfig>> = {
   },
   '@openelement/adapter-vite': {
     tasks: {
-      build: 'deno check src/index.ts',
+      build: 'deno check src/',
       test: 'deno test --allow-read --allow-write --allow-env --allow-net __tests__/',
+    },
+  },
+  '@openelement/app': {
+    tasks: {
+      build: 'deno check src/',
+    },
+  },
+  '@openelement/router': {
+    tasks: {
+      build: 'deno check src/',
     },
   },
   '@openelement/signal': {
@@ -63,6 +73,18 @@ export const CONFIG_EXCEPTIONS: Record<string, Partial<PackageConfig>> = {
       rules: {
         exclude: ['no-explicit-any'],
       },
+    },
+  },
+  '@openelement/ssg': {
+    tasks: {
+      build: 'deno check src/index.ts',
+      test: 'deno test --allow-read --allow-write --allow-env --allow-net __tests__/',
+    },
+  },
+  '@openelement/ui': {
+    publish: {
+      include: ['src/**', 'deno.json', 'README.md', 'LICENSE'],
+      exclude: ['!src/generated-manifest.json'],
     },
   },
 };
@@ -111,6 +133,15 @@ export function isConfigStandard(
       mismatches.push(
         `publish.include mismatch: ${JSON.stringify(config.publish.include)} vs ${
           JSON.stringify(expected.publish.include)
+        }`,
+      );
+    } else if (
+      JSON.stringify(config.publish.exclude) !==
+        JSON.stringify(expected.publish.exclude)
+    ) {
+      mismatches.push(
+        `publish.exclude mismatch: ${JSON.stringify(config.publish.exclude)} vs ${
+          JSON.stringify(expected.publish.exclude)
         }`,
       );
     }

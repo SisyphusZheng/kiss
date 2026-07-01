@@ -80,6 +80,28 @@ function collectWorkspaceSpecifiers(packages: PackageInfo[]): Set<string> {
   return specifiers;
 }
 
+async function validateRootImportMap(
+  packages: PackageInfo[],
+  failures: string[],
+): Promise<void> {
+  const rootConfig = JSON.parse(await Deno.readTextFile('deno.json')) as {
+    imports?: Record<string, string>;
+  };
+  const imports = rootConfig.imports ?? {};
+  const packageNames = packages.map((pkg) => pkg.name).sort((a, b) => b.length - a.length);
+
+  for (const specifier of Object.keys(imports)) {
+    const packageName = packageNames.find((name) =>
+      specifier === name || specifier.startsWith(`${name}/`)
+    );
+    if (!packageName) continue;
+    failures.push(
+      `Root deno.json imports must not alias workspace package "${specifier}". ` +
+        `Use ${packageName}/deno.json exports so deno publish can rewrite workspace deps.`,
+    );
+  }
+}
+
 function validateVersionConsistency(packages: PackageInfo[], failures: string[]): string | null {
   const versions = new Map<string, string[]>();
   for (const pkg of packages) {
@@ -195,6 +217,13 @@ async function main(): Promise<void> {
   }
   if (failures.length === importFailuresBefore) {
     console.log('  PASS: All source-level @openelement/* imports are declared.');
+  }
+
+  console.log('\n--- Root Import Map Validation ---');
+  const rootImportFailuresBefore = failures.length;
+  await validateRootImportMap(packages, failures);
+  if (failures.length === rootImportFailuresBefore) {
+    console.log('  PASS: Root deno.json does not alias workspace package exports.');
   }
 
   console.log('\n--- Topological Sort ---');
