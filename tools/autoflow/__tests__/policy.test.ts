@@ -6,7 +6,13 @@ import {
   selectGates,
   V040_CLEANUP_TRAIN_APPROVAL_ID,
 } from '../policy.ts';
-import { createReleasePlan, evidenceFile, nextPatchVersion, releaseTag } from '../release.ts';
+import {
+  createReleasePlan,
+  evidenceFile,
+  githubReleaseCreateCommand,
+  nextPatchVersion,
+  releaseTag,
+} from '../release.ts';
 
 Deno.test('policy: patch docs fix can be automated', () => {
   const decision = evaluatePatchEligibility({
@@ -145,6 +151,12 @@ Deno.test('release: next patch version and tag are deterministic', () => {
   assertEquals(nextPatchVersion('0.39.0'), '0.39.1');
   assertEquals(releaseTag('0.39.1'), 'v0.39.1');
   assertEquals(evidenceFile('0.39.1'), 'docs/release/autoflow3/v0.39.1.json');
+});
+
+Deno.test('release: GitHub prerelease flag follows semver prerelease tags', () => {
+  assert(githubReleaseCreateCommand('v0.41.0-alpha.5', 'notes.md').includes('--prerelease'));
+  assert(githubReleaseCreateCommand('0.41.0-rc.1', 'notes.md').includes('--prerelease'));
+  assertFalse(githubReleaseCreateCommand('v0.41.0', 'notes.md').includes('--prerelease'));
 });
 
 Deno.test('release: local plan includes publish, smoke, gates, and GitHub release when credentials are present', () => {
