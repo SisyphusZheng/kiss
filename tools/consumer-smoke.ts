@@ -142,14 +142,14 @@ async function denoNpmSmoke(version: string, projectRoot: string, local: boolean
     );
 
     console.log('  deno check smoke.ts');
-    const check = await run('deno', ['check', 'smoke.ts'], tmpDir);
+    const check = await run('deno', ['check', '--minimum-dependency-age', '0', 'smoke.ts'], tmpDir);
     if (!check.success) {
       console.error(`  check failed:\n${check.output}`);
       Deno.exit(1);
     }
 
     console.log('  deno run smoke.ts');
-    const exec = await run('deno', ['run', 'smoke.ts'], tmpDir);
+    const exec = await run('deno', ['run', '--minimum-dependency-age', '0', 'smoke.ts'], tmpDir);
     if (!exec.success) {
       console.error(`  run failed:\n${exec.output}`);
       Deno.exit(1);
