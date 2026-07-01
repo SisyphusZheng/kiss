@@ -369,11 +369,8 @@ export async function assertBranch(expected: string): Promise<void> {
 
 export async function updateProjectConstants(version: string): Promise<void> {
   const path = 'tools/project-constants.ts';
-  const tag = releaseTag(version);
   const text = await Deno.readTextFile(path);
-  const updated = text
-    .replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`)
-    .replace(/ACTIVE_VERSION = '[^']+'/u, `ACTIVE_VERSION = '${tag}'`);
+  const updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
   if (updated === text) {
     // ponytail: already at target version; do not treat as an error so a
     // release can be re-run or dispatched after the bump is already merged.
@@ -394,8 +391,8 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     ['README.md', '**v0.41.0-alpha.5**.', `**${tag}**.`],
     [
       'README.zh.md',
-      '当前包线：`0.41.0-alpha.5`（`v0.41.0-alpha.5`）',
-      `当前包线：\`${version}\`（\`${tag}\`）`,
+      '当前包线：`0.41.0-alpha.5`（`v0.41.0-alpha.5` 发布）',
+      `当前包线：\`${version}\`（\`${tag}\` 发布）`,
     ],
     ['README.zh.md', '**0.41.0-alpha.5**（`v0.41.0-alpha.5`）', `**${version}**（\`${tag}\`）`],
     ['README.zh.md', '**v0.41.0-alpha.5**。', `**${tag}**。`],
@@ -406,18 +403,18 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `v0.41.0-alpha.5`, active execution line\n`v0.41.0-alpha.5`',
-      `package line \`${tag}\`, active execution line\n\`${tag}\``,
+      'package line `v0.41.0-alpha.5`',
+      `package line \`${tag}\``,
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current package line: v0.41.0-alpha.5 Cleanup-Train Patch;',
-      `Current package line: ${tag} Cleanup-Train Patch;`,
+      'Current package line: v0.41.0-alpha.5 SPA Mode + Deno Desktop Reader Proof.',
+      `Current package line: ${tag} SPA Mode + Deno Desktop Reader Proof.`,
     ],
     [
       'docs/status/STATUS.md',
-      'Current Version Line: v0.41.0-alpha.5 Active',
-      `Current Version Line: ${tag} Active`,
+      'Current Version Line: v0.41.0-alpha.5 Released',
+      `Current Version Line: ${tag} Released`,
     ],
     [
       'www/app/data/version.ts',
@@ -426,18 +423,13 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     ],
     [
       'www/app/routes/index/index.tsx',
-      'Current public line: v0.41.0-alpha.5',
-      `Current public line: ${tag}`,
-    ],
-    [
-      'www/app/routes/index/index.tsx',
-      'Current v0.41.0-alpha.5 direction',
-      `Current ${tag} direction`,
+      'Current package line: v0.41.0-alpha.5',
+      `Current package line: ${tag}`,
     ],
     [
       'www/app/routes/guide/getting-started.tsx',
-      'active line is v0.41.0-alpha.5,',
-      `active line is ${tag},`,
+      'current package line is v0.41.0-alpha.5.',
+      `current package line is ${tag}.`,
     ],
   ];
 

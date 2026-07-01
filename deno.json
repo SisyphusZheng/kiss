@@ -46,6 +46,7 @@
     "docs:check-public": "deno run --allow-read tools/check-public-docs-integrity.ts",
     "docs:check-strategy": "deno run --allow-read tools/check-strategic-docs.ts",
     "docs:check-current": "deno run --allow-read tools/check-current-docs-no-legacy.ts",
+    "docs:truth": "deno task docs:check-public && deno task docs:check-current && deno task docs:check-strategy",
     "package-surface:check": "deno run --allow-read tools/check-package-surface.ts",
     "signals:check-protocol-boundary": "deno run --allow-read tools/check-signal-protocol-boundary.ts",
     "arch:check": "deno run --allow-read --allow-run tools/check-architecture-contract.ts",

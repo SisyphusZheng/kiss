@@ -227,7 +227,9 @@ sheet.replaceSync(`
     display: inline-flex;
     align-items: center;
     gap: var(--size-3);
+    flex: 0 0 auto;
     min-height: var(--size-10);
+    max-width: min(38vw, calc(var(--size-10) * 3.45));
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
@@ -243,12 +245,8 @@ sheet.replaceSync(`
   open-brand-mark {
     display: inline-grid;
     align-self: center;
+    max-width: 100%;
     transition: transform var(--duration-2) var(--ease-2);
-  }
-
-  .logo-word {
-    display: inline-block;
-    transform: translateY(calc(var(--border-size-1) * -1));
   }
 
   .logo-sub {
@@ -264,6 +262,7 @@ sheet.replaceSync(`
     display: flex;
     gap: clamp(var(--size-5), 3vw, var(--size-8));
     flex: 1;
+    min-width: 0;
     justify-content: center;
   }
   .header-nav a {
@@ -492,6 +491,10 @@ sheet.replaceSync(`
     }
 
     .btn-secondary .btn-text { display: none; }
+  }
+
+  @media (max-width: 1040px) {
+    .header-nav { display: none; }
   }
 
   @media (max-width: 900px) {
@@ -854,7 +857,6 @@ export class OpenLayout extends OpenElement {
   private _renderLayout() {
     const home = this._getBool('full-width') || this._getBool('home');
     const noSearch = this.hasAttribute('no-search');
-    const logoText = this._getStr('logo-text', '');
     const logoSub = this._getStr('logo-sub', '');
     const locales = this._locales;
     const currentLocale = this._currentLocale;
@@ -866,13 +868,10 @@ export class OpenLayout extends OpenElement {
       <div className='app-layout' part='container' home={home || undefined}>
         <header className='app-header' part='header'>
           <nav className='header-inner' aria-label='Primary navigation'>
-            {(logoText || logoSub) && (
-              <a className='logo' href='/'>
-                <open-brand-mark size='md'></open-brand-mark>
-                {logoText && <span className='logo-word'>{logoText}</span>}
-                {logoSub && <span className='logo-sub'>{logoSub}</span>}
-              </a>
-            )}
+            <a className='logo' href='/' aria-label='open home'>
+              <open-brand-mark size='md'></open-brand-mark>
+              {logoSub && <span className='logo-sub'>{logoSub}</span>}
+            </a>
             {this._renderHeaderNav()}
             <div className='header-right'>
               {!noSearch && <open-search></open-search>}

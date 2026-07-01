@@ -31,28 +31,28 @@ export class GuideGuidePage extends OpenElement {
       <div class='container'>
         <h1>Getting Started</h1>
         <p class='subtitle'>
-          openElement = Elements + UI + Framework + Protocols. Start with the
-          Deno-first workflow, then inspect elements, routes, and UI primitives
-          as separate layers.
+          openElement = Web Components Fullstack Framework + Basic Element.
+          Start with the Deno-first workflow, then inspect pages, routes,
+          Web Components, API routes, and deployment as one app model.
         </p>
         <p class='subtitle'>
-          The v0.40 line hardened release infrastructure and CI. The current
-          active line is v0.41.0-alpha.5, a cross-framework WC integration release that ships
-          Fresh 2.3+ Preact interop proof, cross-framework WC consumption, and
-          the @openelement/core/hydrate client runtime.
+          The current package line is v0.41.0-alpha.5. The active execution line
+          is v0.41.0-alpha.6 App/protocol hardening, followed by
+          v0.41.0-alpha.7 Mastodon Desktop dogfood and v0.41.0-beta.1 adoption
+          freeze.
         </p>
         <div class='guide-grid'>
           <open-card>
             <h3>Install</h3>
-            <p>Use the repository Deno tasks for local development.</p>
+            <p>Use the npm-first create surface and Deno tasks for local development.</p>
           </open-card>
           <open-card>
             <h3>Explore</h3>
-            <p>Read the docs, API reference, and roadmap as the public product map.</p>
+            <p>Read the docs, API reference, and roadmap as the current product map.</p>
           </open-card>
           <open-card>
             <h3>Build</h3>
-            <p>Run the site build before treating visual changes as complete.</p>
+            <p>Run build, package, docs truth, and visual smoke gates before release.</p>
           </open-card>
         </div>
       </div>

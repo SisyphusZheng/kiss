@@ -1,8 +1,7 @@
 /**
- * Homepage - Aperture drafting stage.
+ * Homepage for the current public product doctrine.
  *
- * Strategic anchors: openElement = Elements + UI + Framework + Protocols.
- * Current public line: v0.41.0-alpha.5 product graph.
+ * Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -681,16 +680,24 @@ pageSheet.replaceSync(`
     }
 
     .hero-grid {
+      grid-template-columns: minmax(0, 1fr);
       min-height: auto;
+      padding: var(--size-8) var(--size-4) var(--size-6);
       gap: var(--size-5);
+      overflow: hidden;
     }
 
     h1 {
-      font-size: var(--font-size-7);
+      max-width: 100%;
+      font-size: clamp(3.1rem, 14vw, var(--font-size-7));
+      line-height: .96;
+      overflow-wrap: anywhere;
     }
 
     .lede {
+      max-width: 100%;
       font-size: var(--font-size-2);
+      overflow-wrap: anywhere;
     }
 
     .action {
@@ -725,40 +732,40 @@ pageSheet.replaceSync(`
 const modules = [
   {
     index: '01',
-    title: 'Elements',
+    title: 'Fullstack framework',
     copy:
-      'Author encapsulated, interoperable components. Rendered natively. Composed by design.',
+      'Routes, layouts, islands, API paths, assets, deploy targets, and desktop targets owned by OpenElement contracts.',
     visual: 'target',
   },
   {
     index: '02',
-    title: 'Routes',
+    title: 'Basic Element',
     copy:
-      'File-based routing with data, streaming, and progressive enhancement built in.',
+      'A small native Web Components authoring layer with shadow/DSD default output and explicit light DOM opt-in.',
     visual: 'graph',
   },
   {
     index: '03',
-    title: 'Protocols',
+    title: 'Official stack',
     copy:
-      'Package and ship UI, data, and logic with open, layerable protocols.',
+      'Protocols, UI, Vite, Hono, Nitro, Deno Desktop, Preact islands, and third-party WC compatibility support the two products.',
     visual: 'layers',
   },
 ] as const;
 
 const workflowSteps = [
   ['01', 'Create', 'Scaffold the app shell and package graph from the public create surface.'],
-  ['02', 'Compose', 'Author native custom elements and reusable UI primitives.'],
-  ['03', 'Route', 'Map pages through file routes and generated navigation metadata.'],
+  ['02', 'Compose', 'Author Basic Element or third-party custom elements.'],
+  ['03', 'Route', 'Map pages through OpenElement-owned route graph metadata.'],
   ['04', 'Render', 'Emit platform HTML with Declarative Shadow DOM boundaries.'],
   ['05', 'Hydrate', 'Upgrade islands only where interaction is required.'],
-  ['06', 'Ship', 'Publish static output and package contracts without framework lock-in.'],
+  ['06', 'Ship', 'Publish static output, npm artifacts, and app target evidence.'],
 ] as const;
 
 const surfaces = [
   ['Docs', '/docs', 'Guides, route concepts, deployment notes, and architecture entry points.'],
   ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Roadmap', '/roadmap', 'Current v0.41.0-alpha.5 direction, validation train anchors, and planned work.'],
+  ['Roadmap', '/roadmap', 'Alpha.6 architecture, alpha.7 desktop dogfood, beta.1 adoption freeze, and v1.0 direction.'],
 ] as const;
 
 function moduleVisual(kind: 'target' | 'graph' | 'layers') {
@@ -803,10 +810,16 @@ export class DocsHome extends OpenElement {
           <div class='hero-grid'>
             <div class='copy'>
               <p class='kicker'>Web Components, full-stack</p>
-              <h1>Open standards, composed.</h1>
+              <h1>The Web Components fullstack framework.</h1>
               <p class='lede'>
-                A Web Components full-stack framework for elements, routes,
-                islands, and package protocols.
+                openElement pairs an app framework for routes, rendering,
+                islands, deployment, and desktop targets with Basic Element,
+                a small native Web Components authoring layer.
+              </p>
+              <p class='lede'>
+                Current package line: v0.41.0-alpha.5. Active plan:
+                v0.41.0-alpha.6 architecture hardening, v0.41.0-alpha.7
+                desktop dogfood, and v0.41.0-beta.1 adoption freeze.
               </p>
               <div class='actions'>
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
@@ -822,7 +835,7 @@ export class DocsHome extends OpenElement {
             <div class='art' aria-hidden='true'>
               <div class='art-note'>
                 <span>&lt;open/&gt;</span>
-                <span>DSD boundary<br />&amp; route graph</span>
+                <span>App contract<br />&amp; DSD output</span>
               </div>
               <div class='aperture'></div>
               <span class='axis-x'></span>
@@ -835,7 +848,7 @@ export class DocsHome extends OpenElement {
 
               <div class='panel spec'>
                 <span class='panel-title'>Element</span>
-                <p>ELEMENT: &lt;oe-app&gt;<br />ROUTE: /about<br />ISLANDS: 3<br />PROTOCOL: oepkg://</p>
+                <p>APP: &lt;oe-app&gt;<br />ROUTE: /about<br />ISLANDS: 3<br />TARGET: desktop</p>
               </div>
               <div class='panel route'>
                 <span class='panel-title'>Route graph</span>
@@ -869,12 +882,12 @@ export class DocsHome extends OpenElement {
           <section class='section-head' aria-labelledby='standards-heading'>
             <div>
               <p class='kicker'>Standards become an interface</p>
-              <h2 id='standards-heading'>Elements, routes, and protocols share one contract.</h2>
+              <h2 id='standards-heading'>The app model and element model share one contract.</h2>
             </div>
             <p>
-              openElement is presented as a standards-first product surface:
-              native components, generated route metadata, DSD output, and
-              package boundaries are designed to stay inspectable.
+              openElement is presented as a standards-first WC fullstack
+              surface: native components, generated route metadata, DSD output,
+              and package boundaries stay inspectable.
             </p>
           </section>
 

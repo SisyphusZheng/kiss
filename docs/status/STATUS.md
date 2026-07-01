@@ -5,14 +5,32 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.5 Active (SPA + Desktop Reader Proof)
+## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Active Next
 
-v0.41.0-alpha.5 is the active package line. It follows the cross-framework WC
-integration work and adds a first-class SPA mode, client router, and
-Deno Desktop reader practice app. The desktop proof is intentionally
+v0.41.0-alpha.5 is the current released package line. It follows the
+cross-framework WC integration work and adds a first-class SPA mode, client
+router, and Deno Desktop reader practice app. The desktop proof is intentionally
 WeRead-style rather than WeRead-integrated: it uses local/open fixtures, local
 PDF folders/repositories, and public GitHub repo/path sources, and does not use
 WeRead private APIs, account cookies, scraping, or copyrighted book content.
+
+v0.41.0-alpha.6 is the active next architecture line. It syncs product truth
+under ADR-0110, records the App ownership boundary in ADR-0111, makes
+OpenElement App own route/render/request concepts, keeps Vite/Hono/Nitro/Deno
+Desktop as official drivers/adapters, closes CodeQL/doc truth cleanup, and
+promotes Reader into regression-grade dogfood.
+
+v0.41.0-alpha.7 is the planned real-app dogfood line: a read-only,
+accountless Mac Mastodon Desktop incubation that proves networked public API
+fetching, timeline/profile/status routes, local cache, desktop shell behavior,
+and screenshot/API verification without OAuth, direct messages, notifications,
+or authenticated mutations.
+
+v0.41.0-beta.1 is the Adoption Freeze before stable v0.41.0. It adds no new
+product surface; it freezes the five-minute starter path, public API docs,
+website positioning, logo/brand rendering, npm metadata, GitHub release notes,
+and release truth so openElement can be evaluated as the Web Components
+fullstack framework plus Basic Element product line.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -21,17 +39,19 @@ public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
 
-## v0.41.0-alpha.5 PR State: PR Hardening
+## v0.41.0-alpha.5 Release State: Released
 
-v0.41.0-alpha.5 proves SPA mode plus a Deno Desktop app substrate. PR #121 is
-the active alpha.5 implementation branch: `@openelement/app` gains
-`defineApp({ mode: 'spa' })`, `@openelement/router` gains client routing, and
-the desktop proof now expands into a PDF reader with sources, bookshelf,
-reading surface, progress, notes, search, Markdown export, and Preact islands.
+v0.41.0-alpha.5 proves SPA mode plus a Deno Desktop app substrate. PR #121 was
+the alpha.5 implementation branch: `@openelement/app` gained
+`defineApp({ mode: 'spa' })`, `@openelement/router` gained client routing, and
+the desktop proof expanded into a PDF reader with sources, bookshelf, reading
+surface, progress, notes, search, Markdown export, and Preact islands.
 
 React/Vue/Svelte adapters remain deferred unless needed to validate SPA disposal
-semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 is
-read-only real-network data, and alpha.7 is authenticated mutations.
+semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 has
+no Mastodon/GoToSocial app, and alpha.7 is read-only/accountless public
+Mastodon/GoToSocial desktop incubation. Authenticated mutations remain out of
+scope until later framework primitives exist.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
@@ -343,22 +363,26 @@ built-in cell generation.
 
 ## Current Product Center
 
-> openElement = Elements + UI + Framework + Protocols.
+```text
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
+```
 
-ADR-0099 defines the current product matrix:
+ADR-0110 defines the current public product doctrine and supersedes the
+four-product wording for current docs:
 
-| Product   | Current/future primary surface            | Status                                         |
-| --------- | ----------------------------------------- | ---------------------------------------------- |
-| Elements  | `@openelement/element`, `OpenElement`     | v0.40 product package facade over core         |
-| UI        | `@openelement/ui`                         | First-party `open-*` component library         |
-| Framework | `@openelement/app`, `@openelement/create` | Active v0.39 RC proof                          |
-| Protocols | `@openelement/protocol`                   | Replacement boundary and conformance contracts |
+| Product                             | Primary surface                               | Status                                                  |
+| ----------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Web Components Fullstack Framework  | `@openelement/app`, `@openelement/create`     | Active v0.41 app/protocol hardening and adoption target |
+| Web Components Basic Element        | `@openelement/element`, `OpenElement`         | Native custom-element authoring layer                   |
+| Supporting Protocols                | `@openelement/protocol`                       | Runtime-free replacement and conformance contracts      |
+| Supporting UI and official adapters | `@openelement/ui`, `ssg`, `adapter-vite`, etc | Reference UI, dogfood, build/deploy/runtime glue        |
 
 Historical positioning note: earlier ADRs used the phrase DSD-first to protect
 shadow/DSD output as the default. ADR-0096 refines that into Web Components
 application framework identity, with shadow/DSD as the default render mode and
-light DOM as first-class opt-in. ADR-0099 further refines the product matrix:
-DSD/shadow is a default Elements render mode, not the product name.
+light DOM as first-class opt-in. ADR-0099 and the four-product matrix remain
+historical context, not the current public product formula.
 
 ## Current Rendering Mode
 
@@ -412,61 +436,41 @@ product path.
 ADR-0102 approves `@openelement/element` as the first-class Elements package.
 The workspace package count is now 11.
 
-## Architecture Positioning
+## Current Product Direction
 
-1. **Elements** - native Web Components authoring with JSX, signals, styles,
-   shadow/DSD defaults, explicit light DOM opt-in, and the future
-   `OpenElement` base class.
-2. **UI** - first-party `open-*` components built on the Elements model and
-   independent from framework routing.
-3. **Framework** - `definePage()`, `defineIsland()`, file routes, layouts,
-   `load()`, error/redirect/not-found behavior, SSG/SSR/ISR, API routes, and
-   starter/create workflows.
-4. **Protocols** - runtime-free contracts for renderer, component adapter,
-   route manifest, island metadata, runtime adapter, cache/storage, data, and
-   signal interoperability.
-5. **Default engine bridge** - Vite owns module graph, plugin orchestration,
-   client bundling, and HMR; Nitro owns production runtime, deployment output,
-   platform presets, cache/storage, and route-rule plumbing.
+ADR-0110 supersedes the public four-product wording for current docs. The active
+product doctrine is:
+
+```text
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
+```
+
+1. **Web Components Fullstack Framework** - `@openelement/app` owns routes,
+   layouts, request context, render pipeline, islands, assets, deployment, and
+   desktop targets.
+2. **Basic Element** - `@openelement/element` and `OpenElement` provide native
+   Web Components authoring with JSX, signals, shadow/DSD defaults, explicit
+   light DOM opt-in, SSR-safe lifecycle, and render hooks.
+3. **Protocols** - `@openelement/protocol` is the runtime-free foundation for
+   renderer, route, hydration, manifest, data, error, and signal contracts.
+4. **UI** - `@openelement/ui` is the Open Props-backed reference component
+   library and dogfood surface, not a separate design-system empire.
+5. **Official stack adapters** - Vite, Hono, Nitro, and Deno Desktop implement
+   OpenElement-owned concepts. ADR-0111 keeps those adapters from becoming the
+   product identity.
 6. **Supporting implementation surfaces** - core, adapter-vite, ssg, router,
-   content, and signal support the four products without becoming
+   content, signal, and create support the two products without becoming
    separate product lines.
 
-## Future Product Direction
-
-- ADR-0099 supersedes the v0.38 package-name deferral for future work and
-  approves the four-product matrix.
-- Elements becomes a first-class product direction, with `OpenElement` replacing
-  `DsdElement` terminology in future public APIs.
-- Web Components remain the default component model, but renderer and component
-  adapter protocols must not assume only one frontend framework.
-- Shadow/DSD remains the default Elements render mode; explicit light DOM opt-in
-  is a first-class supported mode.
-- Vite + Nitro are the default base engine. Vite handles build/module graph and
-  Nitro handles production runtime/deployment, but neither should leak as the
-  primary user-facing application API.
-- Protocols should grow through concrete conformance tests, not broad
-  abstraction rewrites.
-- UI remains first-party and Elements-based. Web Awesome is not part of the
-  current target.
-- Heavy-framework island expansion is frozen except for the planned v0.40
-  Preact island proof.
-- v0.40 owns the physical repository slimming work: root generated outputs, Hub data, active docs categories, 11-package surface checks, and duplicate gate orchestration must stay aligned with the four-product matrix.
-- Database work belongs in data/database adapter contracts and recipes. It must
-  not become a built-in ORM, auth platform, or migration system.
-- A Vite + Nitro runtime proof should compose openElement routes, rendering,
-  islands, assets, API routes, and ISR/cache intent before product-surface reset.
-- Governance convergence before v1.0: gate tiers (fast dev gate for PRs,
-  full release gate for publishing), AutoFlow feature scope freeze, Hub scope
-  deferred to post-v1.0. See `docs/roadmap/ROADMAP.md` v0.38.x for details.
-- npm publish is the v0.41 release distribution gate under ADR-0108.
-  v0.41 replaces the JSR-only path with npm-only release truth.
+Database, forms, sessions, auth, and storage work belongs in future
+protocol/recipe lines. It must not become a built-in ORM, auth platform, or
+migration system.
 
 ## Key Decisions
 
-- **Four-product matrix.** openElement is Elements + UI + Framework +
-  Protocols; supporting packages do not become first-class products by
-  existing in the workspace.
+- **Two-product doctrine.** openElement is Web Components Fullstack Framework +
+  Basic Element; Protocols, UI, and official adapters support those products.
 - **Elements product reset.** Future public element authoring centers on
   `@openelement/element` and `OpenElement`, not `DsdElement` terminology.
 - **Application API first.** App authors write `definePage()` and

@@ -846,8 +846,10 @@ Deno.test('open-layout: has correct tagName and layout structure', async () => {
   instance.setAttribute('logo-text', 'openElement');
   const vnode = instance.render() as VNode;
   assertStringIncludes(String(vnode.props.className), 'app-layout');
-  assertStringIncludes(vnodeText(vnode), 'openElement');
-  assertExists(findByPart(vnode, 'header'));
+  assertExists(findByTag(vnode, 'open-brand-mark'));
+  const header = findByPart(vnode, 'header');
+  assertExists(header);
+  assertEquals(vnodeText(header).includes('openElement'), false);
   assertExists(findByPart(vnode, 'main'));
 });
 

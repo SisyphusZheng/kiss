@@ -1,4 +1,4 @@
-import { ACTIVE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { ACTIVE_EXECUTION_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
 
 type Check = {
   name: string;
@@ -56,9 +56,9 @@ const checks: Check[] = [
     required: [PACKAGE_VERSION_TAG],
   },
   {
-    name: `${ACTIVE_VERSION} is the active execution line`,
+    name: `${ACTIVE_EXECUTION_VERSION} is the active execution line`,
     files: currentDocs,
-    required: [ACTIVE_VERSION],
+    required: [ACTIVE_EXECUTION_VERSION],
   },
   {
     name: 'v1.0 is the stable engine target',

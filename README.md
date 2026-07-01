@@ -2,8 +2,9 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components platform. Package line: `0.41.0-alpha.5` (`v0.41.0-alpha.5`
-release). Active execution: Cross-Framework Web Components Integration.**
+**JSX-first Web Components fullstack framework. Package line:
+`0.41.0-alpha.5` (`v0.41.0-alpha.5` release). Active execution:
+v0.41.0-alpha.6 App/protocol architecture hardening.**
 
 openElement builds static-first applications with Web Components, JSX/VNode
 rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD
@@ -25,29 +26,30 @@ cd my-app
 deno task dev
 ```
 
-## Product Matrix
+## Product Doctrine
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
-| Product   | Surface                                   | Role                                                                    |
-| --------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| Elements  | `@openelement/element`, `OpenElement`     | Native Web Components authoring layer, competing with Lit and FAST.     |
-| UI        | `@openelement/ui`                         | First-party `open-*` components built on the Elements model.            |
-| Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, islands, API routes, Vite + Nitro build/runtime output. |
+| Product                            | Surface                                   | Role                                                                                 |
+| ---------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| Web Components Fullstack Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, routes, islands, app targets, and official Vite/Hono/Nitro adapters. |
+| Basic Element                      | `@openelement/element`, `OpenElement`     | Native Web Components authoring layer, competing with Lit and FAST.                  |
 
 Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
 `@openelement/signal`, `@openelement/router`, `@openelement/content`, and
-`@openelement/ssg` are advanced or implementation surfaces. They support the
-three products; they are not separate first-class product lines.
+`@openelement/ssg` are advanced or implementation surfaces. `@openelement/protocol`
+is the runtime-free contract foundation. `@openelement/ui` is the Open
+Props-backed reference component library and dogfood surface. These packages
+support the two products; they are not separate first-class product lines.
 
-In v0.40.x, the active workspace is the 10-package cleanup-train product line.
-Hub, RPC, CEM, compat-check, Lit/React/vanilla interop adapters, standalone
-runtime/style-sheet/i18n packages, and the `@openelement/protocol` contract
-package are removed from the current package graph; `@openelement/ssg` is
-retained as the adapter-agnostic SSG engine. Historical
-details remain in git history and release evidence.
+The active workspace is the 11-package v0.41 line. Hub, RPC, CEM,
+compat-check, Lit/React/vanilla interop adapters, and standalone
+runtime/style-sheet/i18n packages are removed from the current package graph;
+`@openelement/protocol` and `@openelement/ssg` are retained as support
+packages. Historical details remain in git history and release evidence.
 
 ## Why openElement
 
@@ -84,11 +86,19 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.5** (`v0.41.0-alpha.5`) under
-[`@openelement`](https://www.npmjs.com/org/openelement). The active execution line is
-**Cross-Framework Web Components Integration**. ADR-0101 keeps AutoFlow3 as the single workflow/gate control plane
-while reserving minor/major product decisions for human-approved ADR and
-version-plan evidence.
+All 11 current workspace packages are aligned at **0.41.0-alpha.5**
+(`v0.41.0-alpha.5`) under
+[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.5 release
+proved SPA mode plus the Deno Desktop Reader proof. The active next line is
+**v0.41.0-alpha.6 App/protocol architecture hardening**. ADR-0101 keeps
+AutoFlow3 as the single workflow/gate control plane while reserving minor/major
+product decisions for human-approved ADR and version-plan evidence.
+
+The next staged lines are **v0.41.0-alpha.7 Mac Mastodon Desktop incubation**
+and **v0.41.0-beta.1 Adoption Freeze**. Alpha.7 proves a read-only,
+accountless networked desktop app; beta.1 freezes the five-minute starter path,
+API docs, website positioning, logo/brand rendering, npm metadata, and release
+truth before stable v0.41.0.
 
 v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
 adapters, and standalone runtime/style-sheet/i18n packages from the current
@@ -96,8 +106,9 @@ product line, keeps `@openelement/ssg` as the adapter-agnostic SSG engine,
 keeps Vite + Nitro as the Framework base, and keeps Preact island work bounded
 behind the v0.40 plan. `@preact/signals-core` is the signal engine.
 
-The v1.0 target is a stable four-product platform with frozen Elements, UI,
-Framework, and Protocols contracts.
+The v1.0 target is a stable Web Components fullstack framework and Basic
+Element authoring layer, with supporting UI, Protocols, and official adapter
+contracts frozen enough for external consumers.
 
 ## Documentation
 
