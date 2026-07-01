@@ -30,6 +30,7 @@ const PACKAGES = [
   'router',
   'adapter-vite',
   'content',
+  'ssg',
   'app',
   'create',
 ];
