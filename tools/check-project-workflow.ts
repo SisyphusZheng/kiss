@@ -41,9 +41,10 @@ const requiredAnchors: Record<string, string[]> = {
     'Test Matrix',
   ],
   'docs/current/PACKAGE_SURFACE.md': [
-    'openElement = Elements + UI + Framework + Protocols',
-    'product-facing',
-    'foundation',
+    'openElement = Web Components Fullstack Framework + Basic Element',
+    'supporting packages = Protocols + UI + official stack adapters',
+    'product',
+    'supporting',
     '11-package',
     '@openelement/element',
     'ADR-0101',

@@ -422,7 +422,7 @@ const REACTIVE_PROPERTY_CASES: ReadonlyArray<{
   {
     fileName: 'open-layout',
     className: 'OpenLayout',
-    props: ['home', 'currentPath', 'navItems', 'headerNav', 'logoText', 'logoSub', 'githubUrl'],
+    props: ['home', 'currentPath', 'navItems', 'headerNav', 'logoSub', 'githubUrl'],
   },
   {
     fileName: 'open-theme-toggle',
@@ -843,10 +843,9 @@ Deno.test('open-layout: has correct tagName and layout structure', async () => {
 
   const Component = exportedConstructor(module);
   const instance = new Component();
-  instance.setAttribute('logo-text', 'openElement');
   const vnode = instance.render() as VNode;
   assertStringIncludes(String(vnode.props.className), 'app-layout');
-  assertStringIncludes(vnodeText(vnode), 'openElement');
+  assertExists(findByTag(vnode, 'open-brand-mark'));
   assertExists(findByPart(vnode, 'header'));
   assertExists(findByPart(vnode, 'main'));
 });

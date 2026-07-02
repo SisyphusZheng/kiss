@@ -7,14 +7,16 @@ order: 1
 
 # 快速开始
 
-openElement 是 JSX-first 的 Web Components 平台：
+openElement 是 JSX-first 的 Web Components 全栈框架：
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
-页面使用 JSX 编写。Framework 默认可以用 shadow/DSD 渲染 Web Components，
-需要交互的部分再作为 islands 升级。
+页面使用 JSX 编写。Framework 负责 routes、layouts、islands、API routes、
+deployment 和 desktop targets。Basic Element 是原生 custom-element authoring
+layer。Shadow/DSD 是默认渲染模式，需要交互的部分再作为 islands 升级。
 
 ## 创建项目
 

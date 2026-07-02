@@ -30,7 +30,9 @@ The release is staged through alpha lines with explicit execution plans:
   framework architecture. This keeps the OpenElement + Deno Desktop social/IM
   idea alive as a narrow networked desktop dogfood app, not a full authenticated
   IM product.
-- **beta.1**: Stabilization and surface freeze before stable v0.41.0.
+- **beta.1**: Adoption Freeze. Starter, docs, API reference, website,
+  package metadata, release notes, and visual brand polish must agree before
+  stable v0.41.0.
 
 ## Context
 
@@ -108,18 +110,20 @@ merge, alpha.4 is not called released until `main` CI is green and the approved
 release workflow records npm publish plus post-publish npm consumer smoke
 evidence.
 
-alpha.5 is the current implementation target: SPA mode + Deno Desktop Reader
-proof, Reader usability/polish, and framework closure for the current alpha.5
-PR. The Reader is a WeRead-style desktop practice app backed by fixtures, local
-PDF folders/repositories, and public GitHub repo/path sources; it must not use
-WeRead private APIs, account cookies, scraping, or copyrighted book content.
-React/Vue/Svelte adapters stay out of alpha.5 unless they are required to
-validate SPA navigation disposal semantics.
+alpha.5 is released: SPA mode + Deno Desktop Reader proof, Reader
+usability/polish, and framework closure for the alpha.5 PR. The Reader is a
+WeRead-style desktop practice app backed by fixtures, local PDF
+folders/repositories, and public GitHub repo/path sources; it must not use WeRead
+private APIs, account cookies, scraping, or copyrighted book content.
+React/Vue/Svelte adapters stayed out of alpha.5 unless required to validate SPA
+navigation disposal semantics.
 
 alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
 defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
 RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
-and Deno Desktop target contracts.
+and Deno Desktop target contracts. It also closes the product-truth and
+CodeQL/code-scanning backlog (#192 through #194 and #186 through #191) as part
+of A6.6/A6.8 governance and release hygiene.
 
 ## Non-Goals
 
@@ -137,12 +141,14 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.3-plan.md` — Third-party Web Components inside OpenElement
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
-- `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening and Reader dogfood
+- `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
 - `docs/release/v0.41.0-alpha.7-plan.md` — Mac Mastodon Desktop incubation
+- `docs/release/v0.41.0-beta.1-plan.md` — Adoption Freeze
 
 Alpha.7 starts only after alpha.6 closes the framework architecture loop. The
-stabilization phase will be recorded in `docs/release/v0.41.0-beta.1-plan.md`
-when the alpha.6/alpha.7 feedback loop is complete.
+beta.1 stabilization phase does not add a new product surface. It freezes
+starter, docs, API reference, website, package metadata, release notes, and
+visual brand polish so v0.41.0 can be adopted without maintainer context.
 
 ## Governance Rules
 
@@ -150,6 +156,10 @@ when the alpha.6/alpha.7 feedback loop is complete.
 - ADR-0104 (Architecture Audit + PACKAGE_SURFACE definition).
 - ADR-0105 (Cleanup Train Implementation + approval-gated patch releases).
 - ADR-0107 (npm-only distribution) is the authority for this release.
+- ADR-0110 (Two-Product Doctrine and Package Truth) is the current public
+  product doctrine.
+- ADR-0111 (OpenElement App Ownership Boundary) is the alpha.6 app/protocol
+  ownership boundary.
 - ADR-0096 (protocol-first Vite + Nitro runtime) and ADR-0098
   (EntryDescriptor route manifest) remain in force.
 - Runtime-free/browser-facing packages must not use `Deno.*` or `node:*` APIs

@@ -7,15 +7,17 @@ order: 2
 
 # 核心概念
 
-openElement 围绕一个应用模型、一条渲染管线和四个一级产品面构建：
+openElement 围绕一个应用模型、一条渲染管线和两个主产品构建：
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
-Elements 是原生 Web Components 作者层，当前规范作者层为 `@openelement/element`。UI 是第一方 `open-*` 组件库。
-Framework 负责 pages、layouts、islands、API routes 以及 Vite + Nitro 输出。
-Protocols 定义可替换边界。
+Web Components Fullstack Framework 负责 pages、layouts、routes、islands、API
+routes、deployment 和 desktop targets。Basic Element 是原生 custom-element
+authoring surface。Protocols、UI、SSG、adapter-vite、router、signal、content 和
+core 支撑这两个产品，但不是独立的一线产品。
 
 ## Application API
 
@@ -49,10 +51,9 @@ JavaScript 升级 island 之前解析 shadow root。
 静态内容保持静态。交互组件是带显式 hydration 策略的 islands，例如
 `load`、`idle`、`visible` 或 `only`。
 
-## Elements 和 Runtime primitives
+## Basic Element 和 Runtime primitives
 
-`@openelement/element` 是当前 Elements 产品面和规范作者层，提供 `OpenElement`
-基类：
+`@openelement/element` 是 Basic Element 产品面，提供 `OpenElement` 基类：
 
 ```tsx
 import { OpenElement, signal, StyleSheet } from '@openelement/element';

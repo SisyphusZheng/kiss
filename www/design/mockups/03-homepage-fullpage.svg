@@ -177,7 +177,7 @@
     font-size="18"
     font-weight="400"
     fill="#adb5bd"
-  >A four-product Web Components platform. Elements, UI, App, and Core.</text>
+  >Web Components Fullstack Framework + Basic Element.</text>
   <text
     class="sans"
     x="80"
@@ -958,7 +958,7 @@
       font-size="13"
       font-weight="400"
       fill="#868e96"
-    >The Open Element for Web Components</text>
+    >Web Components Fullstack Framework + Basic Element</text>
     <text
       class="sans"
       x="340"

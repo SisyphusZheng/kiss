@@ -309,7 +309,10 @@ function footer(startY) {
   let svg = '\n    <g id="footer">\n' +
     '      ' + line(64, startY, W - 64, startY, { stroke: T.border }) + '\n' +
     _t(64, startY + 44, 'openElement', { size: 18, weight: 600 }) + '\n' +
-    _t(64, startY + 72, 'The Open Element for Web Components', { size: 13, fill: T.textMuted }) +
+    _t(64, startY + 72, 'Web Components Fullstack Framework + Basic Element', {
+      size: 13,
+      fill: T.textMuted,
+    }) +
     '\n';
   let colX = 340;
   columns.forEach(function (col) {
@@ -487,7 +490,7 @@ function gen01HomeHero() {
       fill: T.brandPale,
       ls: '-0.01em',
     }) +
-    _t(80, 360, 'A four-product Web Components platform — Elements, UI, App, and Core.', {
+    _t(80, 360, 'Web Components Fullstack Framework + Basic Element.', {
       size: 19,
       fill: T.textSecondary,
     }) +
@@ -676,7 +679,7 @@ function gen03Fullpage() {
       fill: T.brandPale,
       ls: '-0.01em',
     }) +
-    _t(80, 312, 'A four-product Web Components platform. Elements, UI, App, and Core.', {
+    _t(80, 312, 'Web Components Fullstack Framework + Basic Element.', {
       size: 18,
       fill: T.textSecondary,
     }) +
@@ -1326,7 +1329,7 @@ function gen07Architecture() {
 
   const mx = 280, cw = 780;
   body += _t(mx, 100, 'Architecture Overview', { size: 40, weight: 600, ls: '-0.02em' }) +
-    _t(mx, 152, 'How the 14 packages compose into a Web Components platform.', {
+    _t(mx, 152, 'How the package graph composes into a WC fullstack framework.', {
       size: 18,
       fill: T.textSecondary,
     });
@@ -1748,7 +1751,7 @@ function gen11Contributing() {
 
   const mx = 280, cw = 780;
   body += _t(mx, 100, 'Contributing to openElement', { size: 40, weight: 600, ls: '-0.02em' }) +
-    _t(mx, 148, 'Help us build the open Web Components platform.', {
+    _t(mx, 148, 'Help us build the Web Components fullstack framework.', {
       size: 18,
       fill: T.textSecondary,
     });

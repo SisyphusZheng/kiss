@@ -1,10 +1,7 @@
 export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
-// Strategic anchors: openElement = Elements + UI + Framework + Protocols.
-// Current public line: v0.41.0-alpha.5 SPA + Deno Desktop reader proof.
-// Planned practice line: v0.41.0-alpha.6-alpha.7 Mastodon/GoToSocial.
-// Validation train anchor: v0.37.6.
+// Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
@@ -453,8 +450,8 @@ pageSheet.replaceSync(`
 const phases = [
   {
     version: 'v0.39',
-    title: 'Framework RC + product matrix reset',
-    copy: 'Validated app generation, public docs integrity, and the Elements / UI / Framework / Protocols model.',
+    title: 'Framework RC + product doctrine reset',
+    copy: 'Validated app generation, public docs integrity, and the path toward a Web Components fullstack framework.',
     status: 'done',
     tone: 'success',
   },
@@ -495,29 +492,36 @@ const phases = [
   },
   {
     version: 'v0.41.0-alpha.6',
-    title: 'Mastodon-lite read-only',
-    copy: 'Use a real federated social API for public timeline, profile, and status detail without auth or mutations.',
+    title: 'App protocol architecture hardening',
+    copy: 'Make OpenElement App own RouteGraph, RenderPipeline, RequestContext, Deno Desktop target contracts, product truth, and CodeQL cleanup.',
     status: 'planned',
     tone: 'warning',
   },
   {
     version: 'v0.41.0-alpha.7',
-    title: 'Mastodon auth + mutations',
-    copy: 'Add OAuth, home timeline, compose, favorite, boost, reply, optimistic actions, and rate-limit/error handling.',
+    title: 'Mac Mastodon Desktop incubation',
+    copy: 'Prove a read-only, accountless Mastodon/GoToSocial desktop app with public timeline, profile, status, local cache, and screenshot/API verification.',
+    status: 'planned',
+    tone: 'warning',
+  },
+  {
+    version: 'v0.41.0-beta.1',
+    title: 'Adoption freeze',
+    copy: 'Freeze starter, API docs, website positioning, logo/brand rendering, npm metadata, release notes, and release truth.',
     status: 'planned',
     tone: 'warning',
   },
   {
     version: 'v0.41',
     title: 'npm-first distribution + app proofs',
-    copy: 'Stabilize npm artifacts, WC interop, SPA reader proof, and Mastodon practice evidence before the v0.41 tag.',
+    copy: 'Stabilize npm artifacts, WC interop, SPA reader proof, architecture hardening, desktop app evidence, and adoption docs before the v0.41 tag.',
     status: 'planned',
     tone: 'warning',
   },
   {
     version: 'v1.0',
-    title: 'Stable four-product platform',
-    copy: 'Freeze public APIs after contracts, examples, and release evidence are all stable.',
+    title: 'Stable WC fullstack framework',
+    copy: 'Freeze public APIs after contracts, examples, starter adoption, and release evidence are all stable.',
     status: 'direction',
     tone: 'warning',
   },
@@ -544,18 +548,19 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.5'>
+            <open-lab-panel class='now' label='released' meta='v0.41.0-alpha.5'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='brand'>release readiness</open-badge>
-                  <h2>Site, docs, package graph, and release gates speak one language.</h2>
+                  <open-badge tone='brand'>alpha.6 active</open-badge>
+                  <h2>Architecture, app targets, docs truth, and release gates speak one language.</h2>
                   <p>
-                    The current line resolves the Six-Phase Vision into a readable
-                    four-product platform: Elements, UI, Framework, and Protocols,
-                    with WC Package Protocol boundaries kept visible.
+                    The current line resolves the product doctrine into a
+                    readable WC fullstack framework plus Basic Element product
+                    surface, with Protocols, UI, and official stack adapters as
+                    support.
                   </p>
                 </div>
               </div>
@@ -576,7 +581,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.5' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.6' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>
@@ -638,7 +643,7 @@ export class RoadmapPage extends OpenElement {
               </div>
               <div class='matrix-row'>
                 <span class='metric-label'>Freeze</span>
-                <span class='matrix-copy'>Move toward v1.0 after the four-product line is stable, readable, and boring to verify.</span>
+                <span class='matrix-copy'>Move toward v1.0 after the WC fullstack framework and Basic Element line is stable, readable, and boring to verify.</span>
               </div>
             </div>
           </div>
