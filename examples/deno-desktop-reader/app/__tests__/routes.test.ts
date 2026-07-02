@@ -4,7 +4,7 @@
  * These tests verify the exports exist and are callable.
  */
 
-import { assert, assertEquals } from '@std/assert';
+import { assertEquals } from '@std/assert';
 import type { VNode } from '@openelement/core/static';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
