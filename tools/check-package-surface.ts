@@ -81,8 +81,8 @@ for (const pkg of packages) {
   if (JSON.stringify(actualExports) !== JSON.stringify(expected)) {
     failures.push(
       `${pkg.name} exports drift from adapter-vite resolver map. expected=${
-        JSON.stringify(actualExports)
-      } actual=${JSON.stringify(expected)}`,
+        JSON.stringify(expected)
+      } actual=${JSON.stringify(actualExports)}`,
     );
   }
 }

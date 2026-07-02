@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Route scanner
+ * @openelement/ssg - Route scanner
  * Scans the routes directory and generates a route map.
  * Produces the virtual:routes module.
  *

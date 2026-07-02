@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Island Upgrade Manifest
+ * @openelement/ssg - Island Upgrade Manifest
  *
  * Generates per-page island manifest JSON files during SSG post-processing.
  * Each manifest lists the islands found on a page with their chunk URLs and strategies.
@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
 import { writeJson } from '@openelement/content/write-json';
+import { isCustomElementName } from './custom-element-name.ts';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */
@@ -41,7 +42,7 @@ export type IslandLayerMap = Record<string, ComponentLayer>;
 
 function readTagName(html: string, start: number): { name: string; end: number } | undefined {
   let end = start;
-  while (end < html.length && /[A-Za-z0-9:-]/.test(html[end])) end++;
+  while (end < html.length && /[A-Za-z0-9:._-]/.test(html[end])) end++;
   if (end === start) return undefined;
   return { name: html.slice(start, end).toLowerCase(), end };
 }
@@ -97,7 +98,7 @@ export function extractCustomElementTags(html: string): string[] {
       continue;
     }
 
-    if (/^[a-z][a-z0-9]*-[a-z0-9-]+$/.test(tag.name)) {
+    if (isCustomElementName(tag.name)) {
       tags.add(tag.name);
     }
 

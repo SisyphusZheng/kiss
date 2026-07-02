@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Entry Generators
+ * @openelement/ssg - Entry Generators
  *
  * v0.21.0: manifest-driven hydration strategies.
  * Zero DOM interaction - cannot interfere with DSD rendering.
@@ -7,8 +7,8 @@
 
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
+import { isCustomElementName } from './custom-element-name.ts';
 
-const CUSTOM_ELEMENT_NAME_RE = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/;
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
 const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
@@ -47,7 +47,7 @@ export function validateIslandModuleSpecifier(modulePath: string): void {
 }
 
 export function validateClientIslandEntry(entry: ClientIslandEntry): void {
-  if (!CUSTOM_ELEMENT_NAME_RE.test(entry.tagName)) {
+  if (!isCustomElementName(entry.tagName)) {
     throw new Error(`Invalid island tagName: ${entry.tagName}`);
   }
   try {

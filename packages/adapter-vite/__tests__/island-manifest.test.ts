@@ -39,6 +39,12 @@ Deno.test('extractCustomElementTags: handles tags with attributes', () => {
   assertEquals(tags.sort(), ['open-button', 'open-input']);
 });
 
+Deno.test('extractCustomElementTags: matches the client island custom-element name contract', () => {
+  const html = '<my_component-v1></my_component-v1><my.component-v1></my.component-v1>';
+  const tags = extractCustomElementTags(html);
+  assertEquals(tags.sort(), ['my.component-v1', 'my_component-v1']);
+});
+
 Deno.test('extractCustomElementTags: ignores false positives outside real markup', () => {
   const html = `
     <!-- <open-commented></open-commented> -->

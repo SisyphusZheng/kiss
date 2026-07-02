@@ -22,7 +22,7 @@ export function openContent(options: OpenContentOptions = {}): Plugin[] {
   const fs = options.fs ?? nodeFsAdapter;
   const ctx = options.ctx;
 
-  if (options.blog !== false && options.blog) {
+  if (options.blog) {
     plugins.push(createBlogPlugin(options.blog, ctx, fs));
   }
 
