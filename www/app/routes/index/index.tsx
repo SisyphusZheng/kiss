@@ -5,6 +5,7 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
+import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '../../islands/home-console.tsx';
 
 export const tagName = 'docs-home';
@@ -817,7 +818,7 @@ export class DocsHome extends OpenElement {
                 a small native Web Components authoring layer.
               </p>
               <p class='lede'>
-                Current package line: v0.41.0-alpha.5. Active plan:
+                Current package line: {OPENELEMENT_VERSION}. Active plan:
                 v0.41.0-alpha.6 architecture hardening, v0.41.0-alpha.7
                 desktop dogfood, and v0.41.0-beta.1 adoption freeze.
               </p>

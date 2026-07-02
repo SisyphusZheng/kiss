@@ -5,6 +5,7 @@ type Check = {
   files: string[];
   required?: string[];
   forbidden?: RegExp[];
+  accept?: (text: string, file: string) => boolean;
 };
 
 type Failure = {
@@ -54,6 +55,9 @@ const checks: Check[] = [
     name: `${PACKAGE_VERSION_TAG} is the current package line`,
     files: currentDocs,
     required: [PACKAGE_VERSION_TAG],
+    accept: (text: string, file: string) =>
+      text.includes(PACKAGE_VERSION_TAG) ||
+      (file.endsWith('.tsx') && text.includes('OPENELEMENT_VERSION')),
   },
   {
     name: `${ACTIVE_EXECUTION_VERSION} is the active execution line`,
@@ -76,7 +80,6 @@ const checks: Check[] = [
     files: [
       'docs/roadmap/ROADMAP.md',
       'docs/status/STATUS.md',
-      'www/app/routes/roadmap.tsx',
     ],
     required: ['v0.37.6'],
   },
@@ -132,7 +135,8 @@ for (const check of checks) {
     }
 
     for (const required of check.required ?? []) {
-      if (!text.includes(required)) {
+      const hasAnchor = check.accept ? check.accept(text, file) : text.includes(required);
+      if (!hasAnchor) {
         failures.push({
           check: check.name,
           file,

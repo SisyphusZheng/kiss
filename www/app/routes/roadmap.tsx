@@ -2,7 +2,6 @@ export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
 // Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
-// Validation train anchor: v0.37.6.
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';

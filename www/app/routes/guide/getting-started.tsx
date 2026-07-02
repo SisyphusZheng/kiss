@@ -2,6 +2,7 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/core/style-sheet';
+import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
 
@@ -36,7 +37,7 @@ export class GuideGuidePage extends OpenElement {
           Web Components, API routes, and deployment as one app model.
         </p>
         <p class='subtitle'>
-          The current package line is v0.41.0-alpha.5. The active execution line
+          The current package line is {OPENELEMENT_VERSION}. The active execution line
           is v0.41.0-alpha.6 App/protocol hardening, followed by
           v0.41.0-alpha.7 Mastodon Desktop dogfood and v0.41.0-beta.1 adoption
           freeze.
