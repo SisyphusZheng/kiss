@@ -382,8 +382,9 @@ export async function updateProjectConstants(version: string): Promise<void> {
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {
   const tag = releaseTag(version);
   // ponytail: `from` strings below are hardcoded to the previous release line.
-  // They must be manually bumped on each release cycle. If a source file drifts
-  // before the `from` strings are updated, the replacement is silently skipped.
+  // They must be manually bumped on each release cycle. If `text.includes(from)`
+  // fails but the file is already at the target (to/version/tag present), skip.
+  // Otherwise throws — silent drift is not safe.
   // Consider extracting `previousVersion` as a second parameter.
   const replacements: Array<[string, string, string]> = [
     ['README.md', '`0.41.0-alpha.5` (`v0.41.0-alpha.5`', `\`${version}\` (\`${tag}\``],
@@ -420,16 +421,6 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
       'www/app/data/version.ts',
       "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.5';",
       `export const OPENELEMENT_VERSION = '${tag}';`,
-    ],
-    [
-      'www/app/routes/index/index.tsx',
-      'Current package line: v0.41.0-alpha.5',
-      `Current package line: ${tag}`,
-    ],
-    [
-      'www/app/routes/guide/getting-started.tsx',
-      'current package line is v0.41.0-alpha.5.',
-      `current package line is ${tag}.`,
     ],
   ];
 
