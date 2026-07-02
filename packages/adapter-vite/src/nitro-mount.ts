@@ -52,6 +52,10 @@ function createNitroRequestContext<Env extends Record<string, unknown>>(
   request: Request,
   context: RuntimeContext<Env>,
 ): OpenElementRequestContext<Env> {
+  // Keep this runtime-local. Nitro node output imports this module directly, so
+  // a value import from @openelement/app/model would leave an unresolved bare
+  // package in generated server output. The type-only import above still pins
+  // this shape to the app model contract.
   const url = new URL(request.url);
 
   return {

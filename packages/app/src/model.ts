@@ -75,6 +75,7 @@ export interface OpenElementIslandManifestEntry {
   tagName: string;
   hydrate?: 'load' | 'idle' | 'visible' | 'only';
   ssr?: boolean;
+  /** Declarative Shadow DOM capability; kept in the app model for Basic Element pages. */
   dsd?: boolean;
   modulePath?: string;
   source?: 'local' | 'package' | 'third-party';
@@ -118,7 +119,7 @@ export interface CreateRouteGraphOptions {
 export function createRouteGraph(options: CreateRouteGraphOptions): OpenElementRouteGraph {
   return {
     routes: options.routes.map(normalizeRouteNode),
-    basePath: normalizeBasePath(options.basePath),
+    basePath: normalizeRoutePath(options.basePath ?? '/'),
   };
 }
 
@@ -179,10 +180,6 @@ function normalizeRouteNode(route: OpenElementRouteNode): OpenElementRouteNode {
     children: route.children?.map(normalizeRouteNode),
     meta: route.meta ? { ...route.meta } : undefined,
   };
-}
-
-function normalizeBasePath(path = '/'): string {
-  return normalizeRoutePath(path);
 }
 
 function normalizeRoutePath(path: string): string {
