@@ -20,6 +20,7 @@ graph collapse.
 ADR-0110 is the current public product doctrine. ADR-0111 records that
 `@openelement/app` owns route/render/request/asset/island/deployment concepts
 while Vite, Hono, Nitro, and Deno Desktop implement official drivers/adapters.
+`docs/current/STACK_CONTRACT.md` is the active stack contract for those roles.
 
 Repository contents use five classes:
 
@@ -35,7 +36,7 @@ Repository contents use five classes:
 
 | Package                     | Class      | v0.41 decision                                                                                 |
 | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
-| `@openelement/app`          | product    | Web Components fullstack framework authoring API, including optional Preact island proof.      |
+| `@openelement/app`          | product    | Web Components fullstack framework authoring API and OpenElement-owned app model.              |
 | `@openelement/create`       | product    | Starter and consumer entry for the fullstack framework.                                        |
 | `@openelement/element`      | product    | Basic Element facade for `OpenElement`, `StyleSheet`, islands, and signals.                    |
 | `@openelement/protocol`     | supporting | Runtime-free contracts for renderers, routes, islands, adapters, build plans, and app targets. |
@@ -85,7 +86,7 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 | `@openelement/element`      | Canonical authoring facade for `OpenElement`, `StyleSheet`, islands, and signals.                              | Package root.                                                                             | None.                                                                  | Runtime-free browser package; must import safely in SSR via `@openelement/core/static`.    |
 | `@openelement/ui`           | First-party `open-*` component library.                                                                        | `src/index.ts`, per-component tag-name exports.                                           | `daisy-classes.ts`, `open-props-tokens.ts` shared style modules.       | Runtime-free browser package.                                                              |
 | `@openelement/router`       | Route support behind the framework adapter.                                                                    | `src/index.ts`, `src/client-router.ts`.                                                   | Framework-facing route manifest utilities.                             | Runtime-free.                                                                              |
-| `@openelement/app`          | Framework authoring API, including optional Preact island proof under `./preact`.                              | Package root, `@openelement/app/preact`.                                                  | None.                                                                  | Runtime-free framework package; adapters handle build-time concerns.                       |
+| `@openelement/app`          | Framework authoring API and app model: RouteGraph, RequestContext, RenderPipeline, manifests, targets.         | Package root, `@openelement/app/model`, `@openelement/app/preact`.                        | None.                                                                  | Runtime-free framework package; adapters handle build-time concerns.                       |
 | `@openelement/content`      | Content support behind framework recipes (MDX/markdown parsing).                                               | `src/index.ts`.                                                                           | Direct imports by `@openelement/ssg`.                                  | Build/server glue; may use Deno/Node APIs.                                                 |
 | `@openelement/ssg`          | Adapter-agnostic SSG engine: entry descriptor, render pipeline, route scanner, postprocess.                    | `src/index.ts`.                                                                           | Direct imports by `@openelement/adapter-vite`.                         | Build/server glue; may use Deno/Node APIs.                                                 |
 | `@openelement/adapter-vite` | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                                    | `src/index.ts`, CLI entry points.                                                         | None.                                                                  | Build/server glue; prefers Node APIs in public helpers so npm consumers can run the build. |
@@ -99,6 +100,9 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 - The canonical component authoring import is `@openelement/element`.
   Lower-level packages are supporting surfaces unless a public guide explicitly
   names them.
+- The canonical app model import is `@openelement/app/model`. Official Vite,
+  Hono, Nitro, and Deno Desktop integrations map into that model rather than
+  replacing it as the framework vocabulary.
 - Dogfood apps validate OpenElement; they do not define OpenElement. Reader and
   Mastodon Desktop evidence may block release quality, but they must not become
   extra product lines in public docs.

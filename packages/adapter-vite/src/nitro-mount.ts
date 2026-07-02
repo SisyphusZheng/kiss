@@ -1,4 +1,5 @@
 import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/core/runtime';
+import { createRequestContext, type OpenElementRequestContext } from '@openelement/app/model';
 
 export interface NitroLikeRequestEvent<
   Env extends Record<string, unknown> = Record<string, unknown>,
@@ -27,6 +28,7 @@ export interface OpenElementNitroMountOptions<
   baseUrl?: string;
   env?: Env;
   platform?: unknown;
+  onRequestContext?: (context: OpenElementRequestContext<Env>) => void | Promise<void>;
 }
 
 function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
@@ -54,6 +56,13 @@ export function createOpenElementNitroHandler<
       env: event.env || options.env,
       platform: event.platform || options.platform,
     };
+    await options.onRequestContext?.(
+      createRequestContext({
+        request,
+        env: context.env,
+        platform: context.platform,
+      }),
+    );
     const response = await options.handler(request, context);
 
     return {
