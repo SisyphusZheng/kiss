@@ -7,7 +7,8 @@ order: 1
 
 # 快速开始
 
-openElement 是 JSX-first 的 Web Components 全栈框架：
+openElement 是以 Web Components 为原生组件模型的 fullstack framework，并内置
+JSX-first Basic Element authoring layer：
 
 ```text
 openElement = Web Components Fullstack Framework + Basic Element
@@ -16,7 +17,8 @@ supporting packages = Protocols + UI + official stack adapters
 
 页面使用 JSX 编写。Framework 负责 routes、layouts、islands、API routes、
 deployment 和 desktop targets。Basic Element 是原生 custom-element authoring
-layer。Shadow/DSD 是默认渲染模式，需要交互的部分再作为 islands 升级。
+layer。Shadow/DSD 是默认渲染模式，需要交互的部分再作为 islands 升级。Dogfood
+apps 验证 framework，但不定义新的产品线。
 
 ## 创建项目
 

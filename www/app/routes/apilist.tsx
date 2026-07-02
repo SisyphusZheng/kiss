@@ -464,15 +464,17 @@ export class ApiCorePage extends OpenElement {
             <p class='lede'>
               Public surfaces are organized by the actual {OPENELEMENT_VERSION} package graph.
               Every package below is backed by current workspace exports, package contracts,
-              and alpha.6/alpha.7/beta.1 release planning.
+              and alpha.6/alpha.7/beta.1 release planning. Product packages define the
+              user-facing story; supporting packages, adapters, dogfood, and infrastructure
+              stay labeled so they do not expand product scope.
             </p>
           </div>
           <div class='hero-panel'>
             <open-lab-panel label='contract map' meta={OPENELEMENT_VERSION}>
               <p class='panel-copy'>
                 The current product line is Web Components Fullstack Framework +
-                Basic Element, backed by Protocols, UI, and official stack
-                adapters.
+                Basic Element: a WC-native app framework plus a JSX-first
+                Basic Element authoring layer.
               </p>
               <open-button href='/guide/api'>Read API routes guide</open-button>
             </open-lab-panel>
@@ -494,7 +496,8 @@ export class ApiCorePage extends OpenElement {
                   Application code should prefer `@openelement/app`,
                   `@openelement/create`, and `@openelement/element`.
                   Supporting packages remain documented because their contracts
-                  are public, tested, and versioned.
+                  are public, tested, and versioned. Dogfood apps and release
+                  gates are evidence, not import surfaces.
                 </p>
               </div>
             </section>

@@ -540,7 +540,8 @@ export class RoadmapPage extends OpenElement {
             <p class='subtitle'>
               openElement roadmap labels describe the public product surface,
               not a wish list. Every release stage is tied to package truth,
-              docs truth, and CI evidence.
+              docs truth, CI evidence, and the rule that dogfood validates the
+              framework without defining a new product line.
             </p>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
@@ -558,9 +559,9 @@ export class RoadmapPage extends OpenElement {
                   <h2>Architecture, app targets, docs truth, and release gates speak one language.</h2>
                   <p>
                     The current line resolves the product doctrine into a
-                    readable WC fullstack framework plus Basic Element product
-                    surface, with Protocols, UI, and official stack adapters as
-                    support.
+                    readable WC-native fullstack framework plus JSX-first Basic
+                    Element authoring layer, with Protocols, UI, dogfood, and
+                    official stack adapters kept in supporting roles.
                   </p>
                 </div>
               </div>

@@ -811,16 +811,18 @@ export class DocsHome extends OpenElement {
           <div class='hero-grid'>
             <div class='copy'>
               <p class='kicker'>Web Components, full-stack</p>
-              <h1>The Web Components fullstack framework.</h1>
+              <h1>The Web Components-native fullstack framework.</h1>
               <p class='lede'>
-                openElement pairs an app framework for routes, rendering,
-                islands, deployment, and desktop targets with Basic Element,
-                a small native Web Components authoring layer.
+                openElement treats Web Components as the application's native
+                component model. It pairs routes, rendering, islands,
+                deployment, and desktop targets with Basic Element, a JSX-first
+                custom-element authoring layer.
               </p>
               <p class='lede'>
                 Current package line: {OPENELEMENT_VERSION}. Active plan:
-                v0.41.0-alpha.6 architecture hardening, v0.41.0-alpha.7
-                desktop dogfood, and v0.41.0-beta.1 adoption freeze.
+                v0.41.0-alpha.6 architecture and trust-boundary hardening,
+                v0.41.0-alpha.7 desktop dogfood, and v0.41.0-beta.1 adoption
+                freeze.
               </p>
               <div class='actions'>
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
@@ -888,7 +890,8 @@ export class DocsHome extends OpenElement {
             <p>
               openElement is presented as a standards-first WC fullstack
               surface: native components, generated route metadata, DSD output,
-              and package boundaries stay inspectable.
+              and package boundaries stay inspectable. Dogfood apps validate the
+              framework contract; governance gates protect releases.
             </p>
           </section>
 

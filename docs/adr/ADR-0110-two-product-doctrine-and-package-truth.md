@@ -27,6 +27,11 @@ openElement = Web Components Fullstack Framework + Basic Element
 supporting packages = Protocols + UI + official stack adapters
 ```
 
+The public sentence is:
+
+> OpenElement is a Web Components-native fullstack framework with a JSX-first
+> Basic Element authoring layer.
+
 - **Web Components Fullstack Framework** owns application concepts: routes,
   request context, render pipeline, layouts, islands, assets, deployment, and
   desktop targets.
@@ -39,6 +44,11 @@ supporting packages = Protocols + UI + official stack adapters
   design-system empire.
 - **Official stack adapters** such as Vite, Hono, Nitro, and Deno Desktop
   implement OpenElement-owned concepts. They are defaults, not product owners.
+- **Dogfood apps** validate OpenElement. Reader and future desktop dogfood lines
+  can block release quality as evidence, but they do not define product identity.
+- **Governance infrastructure** such as AutoFlow3, docs truth, release evidence,
+  and workflow gates protects the project. It is not part of the Framework
+  product promise.
 
 Historical four-product ADRs remain useful as context, but current public docs,
 release notes, package-surface docs, and roadmap summaries must use the
@@ -52,3 +62,6 @@ two-product doctrine unless they are explicitly describing history.
   package.
 - Alpha.6 owns the product-truth cleanup and should add a docs truth gate so the
   drift does not return.
+- Public docs should distinguish product, supporting, adapter, dogfood, and
+  infrastructure surfaces when a repo directory or package could be mistaken for
+  product scope.

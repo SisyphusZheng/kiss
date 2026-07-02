@@ -39,6 +39,10 @@ and tests should name the OpenElement concepts first. Hono/Vite/Nitro/Deno
 Desktop details should enter through adapter contracts, not leak into the app
 model as product identity.
 
+Dogfood apps use this same boundary. They may add evidence for Reader or
+networked desktop workflows, but they must not introduce app-specific host glue
+as a new framework concept.
+
 ## Non-Goals
 
 - No replacement of Vite, Hono, or Nitro as official defaults in v0.41.

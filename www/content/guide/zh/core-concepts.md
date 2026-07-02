@@ -17,7 +17,8 @@ supporting packages = Protocols + UI + official stack adapters
 Web Components Fullstack Framework 负责 pages、layouts、routes、islands、API
 routes、deployment 和 desktop targets。Basic Element 是原生 custom-element
 authoring surface。Protocols、UI、SSG、adapter-vite、router、signal、content 和
-core 支撑这两个产品，但不是独立的一线产品。
+core 支撑这两个产品，但不是独立的一线产品。Reader、Mastodon Desktop、
+AutoFlow3 和 docs-truth tooling 是证据或基础设施，不是额外产品面。
 
 ## Application API
 

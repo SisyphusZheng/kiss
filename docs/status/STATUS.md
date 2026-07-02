@@ -5,6 +5,11 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
+Public positioning: OpenElement is a Web Components-native fullstack framework
+with a JSX-first Basic Element authoring layer. Dogfood apps validate that
+framework; they do not define new product lines. AutoFlow3, docs truth,
+workflow gates, and release evidence are infrastructure.
+
 ## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Active Next
 
 v0.41.0-alpha.5 is the current released package line. It follows the
@@ -18,7 +23,10 @@ v0.41.0-alpha.6 is the active next architecture line. It syncs product truth
 under ADR-0110, records the App ownership boundary in ADR-0111, makes
 OpenElement App own route/render/request concepts, keeps Vite/Hono/Nitro/Deno
 Desktop as official drivers/adapters, closes CodeQL/doc truth cleanup, and
-promotes Reader into regression-grade dogfood.
+promotes Reader into regression-grade dogfood. Trust-boundary fixes for route
+codegen literals, island manifest extraction, JSR source URL construction, and
+dynamic import specifier admission are prioritized before broad package
+reshaping.
 
 v0.41.0-alpha.7 is the planned real-app dogfood line: a read-only,
 accountless Mac Mastodon Desktop incubation that proves networked public API
@@ -28,9 +36,10 @@ or authenticated mutations.
 
 v0.41.0-beta.1 is the Adoption Freeze before stable v0.41.0. It adds no new
 product surface; it freezes the five-minute starter path, public API docs,
-website positioning, logo/brand rendering, npm metadata, GitHub release notes,
-and release truth so openElement can be evaluated as the Web Components
-fullstack framework plus Basic Element product line.
+website positioning, public surface labels, Deno toolchain truth, logo/brand
+rendering, npm metadata, GitHub release notes, and release truth so openElement
+can be evaluated as the Web Components fullstack framework plus Basic Element
+product line.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
