@@ -47,4 +47,5 @@ behavior, or Reader.
 
 Manual native smoke remains required when Deno Desktop canary or OS integration
 changes: build the Reader, open the native app, verify directory picker behavior,
-and close the window through the desktop lifecycle path.
+and verify the close button or Cmd/Ctrl+W triggers `/api/app/close` and clean
+shutdown.

@@ -133,6 +133,7 @@ function mockDocument() {
 (globalThis as any).DocumentFragment = MockDocumentFragment;
 // deno-lint-ignore no-explicit-any
 (globalThis as any).HTMLElement = MockElement;
+/** In-memory registry backing the customElements mock. */
 const definedCustomElements = new Map<string, CustomElementConstructor>();
 // deno-lint-ignore no-explicit-any
 (globalThis as any).customElements = {
@@ -287,8 +288,8 @@ function collectVNodeTags(node: unknown, tags = new Set<string>()): Set<string> 
   }
   if (typeof node !== 'object') return tags;
 
-  const vnode = node as Partial<VNode>;
+  const vnode = node as VNode;
   if (typeof vnode.tag === 'string') tags.add(vnode.tag);
-  for (const child of vnode.children ?? []) collectVNodeTags(child, tags);
+  for (const child of vnode.children) collectVNodeTags(child, tags);
   return tags;
 }
