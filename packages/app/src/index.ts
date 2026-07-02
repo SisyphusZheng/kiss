@@ -39,3 +39,31 @@ export type { ElementDefinition } from '@openelement/element';
 // SPA bootstrap
 export { defineApp } from './spa.ts';
 export type { SpaAppInstance, SpaAppOptions } from './spa.ts';
+
+// OpenElement-owned application model
+export {
+  createAppModel,
+  createDefaultRenderPipeline,
+  createRenderPipeline,
+  createRequestContext,
+  createRouteGraph,
+} from './model.ts';
+export type {
+  CreateAppModelOptions,
+  CreateRequestContextOptions,
+  CreateRouteGraphOptions,
+  OpenElementAppModel,
+  OpenElementAssetManifest,
+  OpenElementAssetManifestEntry,
+  OpenElementDeploymentRuntime,
+  OpenElementDeploymentTarget,
+  OpenElementIslandManifest,
+  OpenElementIslandManifestEntry,
+  OpenElementRenderPhase,
+  OpenElementRenderPipeline,
+  OpenElementRenderStep,
+  OpenElementRequestContext,
+  OpenElementRouteGraph,
+  OpenElementRouteKind,
+  OpenElementRouteNode,
+} from './model.ts';

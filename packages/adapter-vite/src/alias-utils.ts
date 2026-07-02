@@ -35,6 +35,7 @@ const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
     rootFile: 'index.ts',
     files: {
       spa: 'spa.ts',
+      model: 'model.ts',
       i18n: 'i18n.ts',
       'i18n-plugin': 'i18n-plugin.ts',
       preact: 'preact.ts',

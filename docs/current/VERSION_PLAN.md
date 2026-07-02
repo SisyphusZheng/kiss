@@ -127,11 +127,11 @@ alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
 defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
 RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
 and Deno Desktop target contracts. Before broad package/app reshaping, alpha.6
-first closes the cleanup-audit front half (#205 through #212): release truth,
+has closed the cleanup-audit front half (#205 through #212): release truth,
 package surface drift, router internal exports, tracked ignored generated
 artifacts, stale resolver maps, duplicate tooling helpers, route-scanner test
 ownership, stale design artifacts, and active-source audit labels. It also
-closes the product-truth and CodeQL/code-scanning backlog (#192 through #194 and
+closed the product-truth and CodeQL/code-scanning backlog (#192 through #194 and
 #186 through #191) as part of A6.6/A6.8 governance and release hygiene.
 Trust-boundary work has priority inside alpha.6: route codegen literals, island
 manifest extraction, JSR source URL construction, and dynamic import specifier
@@ -186,6 +186,9 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
 - `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
+- `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
+  Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
+  Web Components.
 - Dogfood apps may block release quality only as evidence. They must not define
   OpenElement's public product identity.
 - AutoFlow3 and docs-truth gates are infrastructure. They should become more

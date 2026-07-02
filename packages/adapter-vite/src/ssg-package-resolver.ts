@@ -40,6 +40,7 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   app: {
     '.': 'src/index.ts',
     spa: 'src/spa.ts',
+    model: 'src/model.ts',
     i18n: 'src/i18n.ts',
     'i18n-plugin': 'src/i18n-plugin.ts',
     preact: 'src/preact.ts',
