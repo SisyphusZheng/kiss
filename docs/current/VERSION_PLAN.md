@@ -9,7 +9,8 @@ supporting packages = Protocols + UI + official stack adapters
 
 Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`,
 harden the signal-DOM architecture, and turn OpenElement into a credible
-Web Components-first fullstack framework powered by a small Basic Element layer.
+Web Components-native fullstack framework with a JSX-first Basic Element
+authoring layer.
 Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party Web
 Components are first-party stack decisions, but they must enter through
 OpenElement-owned package contracts and protocol concepts.
@@ -51,7 +52,10 @@ official OpenElement build adapter.
 
 ### Toolchain
 
-- Bump minimum Deno version to 2.8.0 across docs, READMEs, and CI.
+- Keep Deno 2.8+ as the public target for `deno pack`; if `.dvmrc` must remain
+  `canary` to unblock release automation, document it as a temporary CI
+  toolchain exception and restore a pinned stable primary before beta.1 unless
+  canary becomes an explicit release requirement.
 - Convert all internal `@openelement/*` imports from `jsr:` to `npm:` in root
   and `packages/*/deno.json`.
 - Add `deno task pack` and `deno task publish:npm` that pack and publish the
@@ -123,7 +127,10 @@ defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
 RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
 and Deno Desktop target contracts. It also closes the product-truth and
 CodeQL/code-scanning backlog (#192 through #194 and #186 through #191) as part
-of A6.6/A6.8 governance and release hygiene.
+of A6.6/A6.8 governance and release hygiene. Trust-boundary work has priority
+inside alpha.6: route codegen literals, island manifest extraction, JSR source
+URL construction, and dynamic import specifier admission must be structurally
+fixed or explicitly proven safe before beta.1.
 
 ## Non-Goals
 
@@ -132,6 +139,9 @@ of A6.6/A6.8 governance and release hygiene.
 - No further upstream Vite+ Deno PM advocacy in this release.
 - No removal of existing JSR published versions.
 - No server/data/forms/session/cache primitives (deferred to v0.42.0+).
+- No new product line for Reader, Mastodon Desktop, AutoFlow, or governance
+  tooling. Dogfood apps validate the Framework contract; governance tooling
+  protects releases.
 
 ## Staged Alpha/Beta Plans
 
@@ -171,6 +181,10 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
 - `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
+- Dogfood apps may block release quality only as evidence. They must not define
+  OpenElement's public product identity.
+- AutoFlow3 and docs-truth gates are infrastructure. They should become more
+  reusable over time, but they are not Framework product features.
 
 ## Test Matrix
 
@@ -208,6 +222,11 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
   provenance.
 - npm consumer smoke passes for Node ESM and Deno `npm:`.
 - jsDelivr browser-safe export smoke passes.
+- Alpha.6 trust-boundary debt is closed or replaced by stricter evidence:
+  route codegen literals, island manifest extraction, JSR source URL
+  construction, and dynamic import specifier admission.
+- Deno toolchain truth is explicit: stable primary or documented canary
+  exception, with beta.1 convergence criteria.
 
 ## Verification
 

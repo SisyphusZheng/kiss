@@ -19,7 +19,8 @@ The Web Components fullstack framework owns pages, layouts, routes, islands, API
 routes, deployment, and desktop targets. Basic Element is the native
 custom-element authoring surface. Protocols, UI, SSG, adapter-vite, router,
 signal, content, and core support those products without becoming separate
-product lines.
+product lines. Reader, Mastodon Desktop, AutoFlow3, and docs-truth tooling are
+evidence or infrastructure, not extra product surfaces.
 
 ## Application API
 

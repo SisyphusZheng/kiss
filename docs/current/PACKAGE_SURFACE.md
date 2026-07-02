@@ -9,12 +9,27 @@ openElement = Web Components Fullstack Framework + Basic Element
 supporting packages = Protocols + UI + official stack adapters
 ```
 
+Public positioning sentence:
+
+> OpenElement is a Web Components-native fullstack framework with a JSX-first
+> Basic Element authoring layer.
+
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
 ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-11 package
 graph collapse.
 ADR-0110 is the current public product doctrine. ADR-0111 records that
 `@openelement/app` owns route/render/request/asset/island/deployment concepts
 while Vite, Hono, Nitro, and Deno Desktop implement official drivers/adapters.
+
+Repository contents use five classes:
+
+| Class          | Meaning                                                                              |
+| -------------- | ------------------------------------------------------------------------------------ |
+| product        | User-facing surfaces that define the public product story.                           |
+| supporting     | Public or advanced packages that support products without becoming product lines.    |
+| adapter        | Official default drivers for build, request, deployment, or app targets.             |
+| dogfood        | Apps and examples that prove the framework contract without defining the product.    |
+| infrastructure | Governance, release, docs-truth, and evidence tooling outside the Framework product. |
 
 ## Current 11-package surface
 
@@ -84,6 +99,12 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 - The canonical component authoring import is `@openelement/element`.
   Lower-level packages are supporting surfaces unless a public guide explicitly
   names them.
+- Dogfood apps validate OpenElement; they do not define OpenElement. Reader and
+  Mastodon Desktop evidence may block release quality, but they must not become
+  extra product lines in public docs.
+- Governance tooling, AutoFlow3, docs-truth checks, release evidence, and
+  workflow gates are infrastructure. They are allowed to be strong, but they are
+  not Framework features.
 
 ## Governance
 
