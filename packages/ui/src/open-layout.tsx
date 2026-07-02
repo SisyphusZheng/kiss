@@ -629,7 +629,6 @@ export class OpenLayout extends OpenElement {
     'current-path',
     'nav-items',
     'header-nav',
-    'logo-text',
     'logo-sub',
     'github-url',
     'edit-url',
