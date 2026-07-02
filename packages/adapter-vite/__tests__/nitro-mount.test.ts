@@ -55,13 +55,13 @@ Deno.test('nitro mount: preserves an existing Web Request from the event', async
   assertEquals(await result.response.text(), 'https://worker.test/from-request');
 });
 
-Deno.test('nitro mount: exposes the OpenElement request context boundary', async () => {
+Deno.test('nitro mount: exposes the pre-handler OpenElement request context boundary', async () => {
   const contexts: Array<{ path: string; method: string; envName?: unknown; platform?: unknown }> =
     [];
   const handler = createOpenElementNitroHandler({
     baseUrl: 'https://deploy.test',
     handler: () => new Response('ok'),
-    onRequestContext: (context) => {
+    onBeforeRequestContext: (context) => {
       contexts.push({
         path: context.path,
         method: context.method,

@@ -42,12 +42,14 @@ export type { SpaAppInstance, SpaAppOptions } from './spa.ts';
 
 // OpenElement-owned application model
 export {
+  createAppModel,
   createDefaultRenderPipeline,
   createRenderPipeline,
   createRequestContext,
   createRouteGraph,
 } from './model.ts';
 export type {
+  CreateAppModelOptions,
   CreateRequestContextOptions,
   CreateRouteGraphOptions,
   OpenElementAppModel,

@@ -1,5 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import {
+  createAppModel,
   createDefaultRenderPipeline,
   createRenderPipeline,
   createRequestContext,
@@ -26,6 +27,35 @@ Deno.test('app model: creates a route graph without host adapters', () => {
   assertEquals(graph.routes[0].children?.[0].path, '/api/search');
 });
 
+Deno.test('app model: creates an empty route graph with default base path', () => {
+  assertEquals(createRouteGraph({ routes: [] }), {
+    basePath: '/',
+    routes: [],
+  });
+});
+
+Deno.test('app model: normalizes deep route graph children and metadata', () => {
+  const graph = createRouteGraph({
+    routes: [{
+      kind: 'page',
+      path: '/docs',
+      filePath: 'routes/docs.tsx',
+      importPath: './routes/docs.tsx',
+      meta: { section: 'docs' },
+      children: [{
+        kind: 'page',
+        path: '/docs/guide',
+        children: [{ kind: 'api', path: '/docs/guide/search/' }],
+      }],
+    }],
+  });
+
+  assertEquals(graph.routes[0].filePath, 'routes/docs.tsx');
+  assertEquals(graph.routes[0].importPath, './routes/docs.tsx');
+  assertEquals(graph.routes[0].meta, { section: 'docs' });
+  assertEquals(graph.routes[0].children?.[0].children?.[0].path, '/docs/guide/search');
+});
+
 Deno.test('app model: request context normalizes Web Request details', () => {
   const route = { kind: 'page' as const, path: '/notes/:id', paramNames: ['id'] };
   const context = createRequestContext({
@@ -46,6 +76,18 @@ Deno.test('app model: request context normalizes Web Request details', () => {
   assertEquals(context.route?.paramNames, ['id']);
 });
 
+Deno.test('app model: request context defaults optional route and params', () => {
+  const context = createRequestContext({
+    request: new Request('https://example.test/freeform'),
+  });
+
+  assertEquals(context.path, '/freeform');
+  assertEquals(context.method, 'GET');
+  assertEquals(context.params, {});
+  assertEquals(context.route, undefined);
+  assertEquals(context.platform, undefined);
+});
+
 Deno.test('app model: render pipeline names OpenElement phases before driver details', () => {
   const pipeline = createDefaultRenderPipeline();
 
@@ -62,4 +104,22 @@ Deno.test('app model: render pipeline names OpenElement phases before driver det
   assertEquals(createRenderPipeline([{ phase: 'route', name: 'match route' }]), {
     steps: [{ phase: 'route', name: 'match route' }],
   });
+});
+
+Deno.test('app model: creates a complete composite model with safe defaults', () => {
+  const model = createAppModel();
+
+  assertEquals(model.routes, { basePath: '/', routes: [] });
+  assertEquals(model.assets, { basePath: '/', entries: [] });
+  assertEquals(model.islands, { islands: [] });
+  assertEquals(model.deployment, { runtime: 'static', adapter: 'custom' });
+  assertEquals(model.renderPipeline.steps.map((step) => step.phase), [
+    'route',
+    'layout',
+    'head',
+    'assets',
+    'islands',
+    'serialize',
+    'error',
+  ]);
 });

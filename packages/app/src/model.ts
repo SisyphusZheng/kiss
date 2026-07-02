@@ -91,6 +91,18 @@ export interface OpenElementAppModel {
   deployment: OpenElementDeploymentTarget;
 }
 
+export type CreateAppModelOptions = Partial<OpenElementAppModel>;
+
+export function createAppModel(options: CreateAppModelOptions = {}): OpenElementAppModel {
+  return {
+    routes: options.routes ?? createRouteGraph({ routes: [] }),
+    renderPipeline: options.renderPipeline ?? createDefaultRenderPipeline(),
+    assets: options.assets ?? { basePath: '/', entries: [] },
+    islands: options.islands ?? { islands: [] },
+    deployment: options.deployment ?? { runtime: 'static', adapter: 'custom' },
+  };
+}
+
 export interface CreateRouteGraphOptions {
   routes: OpenElementRouteNode[];
   basePath?: string;

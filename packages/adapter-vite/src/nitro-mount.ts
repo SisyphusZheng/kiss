@@ -28,7 +28,12 @@ export interface OpenElementNitroMountOptions<
   baseUrl?: string;
   env?: Env;
   platform?: unknown;
-  onRequestContext?: (context: OpenElementRequestContext<Env>) => void | Promise<void>;
+  /**
+   * Observes the normalized OpenElement request context before the application
+   * handler runs. Route params are empty here unless a future driver supplies
+   * them before dispatch.
+   */
+  onBeforeRequestContext?: (context: OpenElementRequestContext<Env>) => void | Promise<void>;
 }
 
 function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
@@ -56,7 +61,7 @@ export function createOpenElementNitroHandler<
       env: event.env || options.env,
       platform: event.platform || options.platform,
     };
-    await options.onRequestContext?.(
+    await options.onBeforeRequestContext?.(
       createRequestContext({
         request,
         env: context.env,
