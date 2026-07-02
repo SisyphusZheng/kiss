@@ -189,6 +189,9 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
   Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
   Web Components.
+- `docs/current/HYDRATION_CONTRACT.md` defines `@openelement/core/hydrate` as a
+  low-level building-block subpath and points higher-level authoring to
+  `@openelement/app` and `@openelement/element`.
 - Dogfood apps may block release quality only as evidence. They must not define
   OpenElement's public product identity.
 - AutoFlow3 and docs-truth gates are infrastructure. They should become more
