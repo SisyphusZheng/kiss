@@ -132,10 +132,13 @@ function mockDocument() {
 (globalThis as any).DocumentFragment = MockDocumentFragment;
 // deno-lint-ignore no-explicit-any
 (globalThis as any).HTMLElement = MockElement;
+const definedCustomElements = new Map<string, unknown>();
 // deno-lint-ignore no-explicit-any
 (globalThis as any).customElements = {
-  get: () => undefined,
-  define: () => {},
+  get: (tagName: string) => definedCustomElements.get(tagName),
+  define: (tagName: string, ctor: unknown) => {
+    definedCustomElements.set(tagName, ctor);
+  },
 };
 
 // Mock localStorage
@@ -237,4 +240,16 @@ Deno.test('Settings action adds and immediately syncs a source', async () => {
 Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
   assertEquals(typeof mod.default, 'function');
+});
+
+Deno.test('Reader Preact islands register deterministic custom elements', async () => {
+  await import('../../islands/note-panel-island.tsx');
+  await import('../../islands/pdf-reader-island.tsx');
+  await import('../../islands/search-box-island.tsx');
+  await import('../../islands/sync-status-island.tsx');
+
+  assertEquals(typeof customElements.get('note-panel-island'), 'function');
+  assertEquals(typeof customElements.get('pdf-reader-island'), 'function');
+  assertEquals(typeof customElements.get('search-box-island'), 'function');
+  assertEquals(typeof customElements.get('sync-status-island'), 'function');
 });

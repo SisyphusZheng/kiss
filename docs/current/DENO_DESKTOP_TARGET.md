@@ -28,7 +28,7 @@ source syncing stay inside `examples/deno-desktop-reader`.
 
 ## Reader Host Contract
 
-The Reader host exposes local capabilities through JSON/PDF endpoints:
+The Reader host exposes local capabilities through API endpoints:
 
 - local fixture, folder, and GitHub PDF sources;
 - book metadata, cached files, progress, notes, search, and Markdown export;
@@ -40,17 +40,10 @@ These endpoints are dogfood evidence, not core package APIs.
 
 ## Verification
 
-Use these commands before tagging an alpha release that touches the app,
-router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader:
-
-```sh
-deno task desktop-reader:smoke
-deno task test:visual-smoke
-```
-
-`desktop-reader:smoke` covers host-store, route, export, storage, local/GitHub
-source, search, and note behavior. `test:visual-smoke` builds the docs site and
-Reader, then screenshots desktop and narrow viewport flows.
+Run the automated checks defined in
+`examples/deno-desktop-reader/VERIFICATION.md` before tagging an alpha release
+that touches the app, router, UI, Open Props tokens, SPA mode, Deno Desktop host
+behavior, or Reader.
 
 Manual native smoke remains required when Deno Desktop canary or OS integration
 changes: build the Reader, open the native app, verify directory picker behavior,

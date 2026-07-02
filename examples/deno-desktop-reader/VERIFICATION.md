@@ -19,7 +19,7 @@ router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader.
 | Markdown export              | `desktop-reader:smoke` export tests           |
 | Reading settings             | Browser smoke, storage tests                  |
 | OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests         |
-| Preact islands               | Reader README architecture, route smoke       |
+| Preact islands               | `desktop-reader:smoke` island registration    |
 | Third-party WC compatibility | `/wc-interop` route smoke                     |
 | Desktop/narrow screenshots   | `test:visual-smoke`                           |
 
@@ -81,8 +81,9 @@ Reader, then captures screenshot evidence for the docs shell and Reader shell.
    `~/.open-reader/books` and appear on the shelf.
 8. Close the app with `Cmd/Ctrl + W` or navigate away → `/api/app/close` is
    called and the Deno process exits cleanly.
-9. Track close/minimize/maximize regressions separately from browser UI
-   regressions in release notes or issue comments.
+
+> When filing issues, track close/minimize/maximize regressions separately from
+> browser UI regressions.
 
 ## Expected artifacts
 
