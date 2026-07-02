@@ -249,11 +249,19 @@ Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags
   const page = new mod.default();
   const tags = collectVNodeTags(page.render());
 
-  assert(tags.has('sl-button'));
-  assert(tags.has('open-button'));
-  assert(tags.has('open-card'));
-  assert(tags.has('open-input'));
-  assert(tags.has('sync-status-island'));
+  const expectedTags = [
+    'sl-button',
+    'open-button',
+    'open-card',
+    'open-input',
+    'sync-status-island',
+  ];
+  const missingTags = expectedTags.filter((tag) => !tags.has(tag));
+  assertEquals(missingTags, []);
+});
+
+Deno.test('Shoelace sl-button registers via route side-effect import', async () => {
+  await import('../../routes/wc-interop.tsx');
   assertEquals(typeof customElements.get('sl-button'), 'function');
 });
 

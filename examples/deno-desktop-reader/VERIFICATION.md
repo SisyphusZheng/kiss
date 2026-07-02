@@ -6,22 +6,22 @@ router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader.
 
 ## Smoke matrix
 
-| Area                         | Evidence                                      |
-| ---------------------------- | --------------------------------------------- |
-| Browser app boot             | Browser dev server smoke, `test:visual-smoke` |
-| Deno Desktop target          | Deno Desktop smoke, `desktop-reader:smoke`    |
-| Local fixture source         | `desktop-reader:smoke` host-store tests       |
-| Local folder source          | `desktop-reader:smoke` host-store tests       |
-| GitHub PDF source            | `desktop-reader:smoke` host-store tests       |
-| PDF/text reading             | Browser smoke, `test:visual-smoke`            |
-| Search                       | `desktop-reader:smoke` host-store tests       |
-| Annotation and note jump     | Browser smoke, Reader route tests             |
-| Markdown export              | `desktop-reader:smoke` export tests           |
-| Reading settings             | Browser smoke, storage tests                  |
-| OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests         |
-| Preact islands               | `desktop-reader:smoke` (island registration)  |
-| Third-party WC compatibility | `desktop-reader:smoke` (`/wc-interop` render) |
-| Desktop/narrow screenshots   | `test:visual-smoke`                           |
+| Area                         | Evidence                                                              |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Browser app boot             | Browser dev server smoke, `test:visual-smoke`                         |
+| Deno Desktop target          | Deno Desktop smoke, `desktop-reader:smoke`                            |
+| Local fixture source         | `desktop-reader:smoke` host-store tests                               |
+| Local folder source          | `desktop-reader:smoke` host-store tests                               |
+| GitHub PDF source            | `desktop-reader:smoke` host-store tests                               |
+| PDF/text reading             | Browser smoke, `test:visual-smoke`                                    |
+| Search                       | `desktop-reader:smoke` host-store tests                               |
+| Annotation and note jump     | Browser smoke, Reader route tests                                     |
+| Markdown export              | `desktop-reader:smoke` export tests                                   |
+| Reading settings             | Browser smoke, storage tests                                          |
+| OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests                                 |
+| Preact islands               | `desktop-reader:smoke` (island registration)                          |
+| Third-party WC compatibility | `desktop-reader:smoke` (`/wc-interop` VNode tag smoke), browser smoke |
+| Desktop/narrow screenshots   | `test:visual-smoke`                                                   |
 
 ## Automated release checks
 
