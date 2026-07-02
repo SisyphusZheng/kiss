@@ -16,6 +16,21 @@ The `OpenElement` base class is now authored from `@openelement/element`.
 
 This package does not contain Vite, CLI, or build orchestration logic.
 
+## Hydration Subpaths
+
+`@openelement/core/hydrate` is a low-level building-block subpath for DSD
+marker, event, binding, and `HydrationScope` hydration. It is not a complete
+standalone third-party framework hydration runtime. Use:
+
+- `@openelement/app` for routes, pages, islands, and SPA bootstrap.
+- `@openelement/element` for Basic Element component authoring.
+- `@openelement/core/static` for SSR/DSD rendering without DOM hydration.
+- `@openelement/core/hydrate` for DSD marker/event/binding hydration helpers.
+- `@openelement/core/csr` for full client-side DOM rendering primitives.
+
+The active contract is documented in
+`docs/current/HYDRATION_CONTRACT.md`.
+
 ## Install
 
 ```bash
