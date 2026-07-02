@@ -372,7 +372,7 @@ export async function updateProjectConstants(version: string): Promise<void> {
   const text = await Deno.readTextFile(path);
   const updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
   if (updated === text) {
-    // ponytail: already at target version; do not treat as an error so a
+    // Already at target version; do not treat as an error so a
     // release can be re-run or dispatched after the bump is already merged.
     return;
   }
@@ -381,10 +381,10 @@ export async function updateProjectConstants(version: string): Promise<void> {
 
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {
   const tag = releaseTag(version);
-  // ponytail: `from` strings below are hardcoded to the previous release line.
+  // The `from` strings below are hardcoded to the previous release line.
   // They must be manually bumped on each release cycle. If `text.includes(from)`
-  // fails but the file is already at the target (to/version/tag present), skip.
-  // Otherwise throws — silent drift is not safe.
+  // fails but the file is already at the exact target replacement, skip.
+  // Otherwise throws; silent drift is not safe.
   // Consider extracting `previousVersion` as a second parameter.
   const replacements: Array<[string, string, string]> = [
     ['README.md', '`0.41.0-alpha.5` (`v0.41.0-alpha.5`', `\`${version}\` (\`${tag}\``],
@@ -399,7 +399,7 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     ['README.zh.md', '**v0.41.0-alpha.5**。', `**${tag}**。`],
     [
       'docs/current/VERSION_PLAN.md',
-      'v0.41.0-alpha.5 removed the legacy',
+      'v0.41.0-alpha.1 removed the legacy',
       `${tag} removed the legacy`,
     ],
     [
@@ -428,8 +428,8 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
     const text = await Deno.readTextFile(path);
     if (text.includes(from)) {
       await Deno.writeTextFile(path, text.replace(from, to));
-    } else if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
-      // Already at target (exact to-substring or version/tag present) - skip
+    } else if (text.includes(to)) {
+      // Already at target.
       continue;
     } else {
       throw new Error(`${path} does not contain expected version anchor: ${from}`);
