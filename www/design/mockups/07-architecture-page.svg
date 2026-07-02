@@ -262,7 +262,7 @@
     font-size="18"
     font-weight="400"
     fill="#adb5bd"
-  >How the 14 packages compose into a Web Components platform.</text>
+  >How the package graph composes into a WC fullstack framework.</text>
   <rect
     x="280"
     y="200"

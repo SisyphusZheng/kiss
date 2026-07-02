@@ -98,7 +98,9 @@ architectural decision, its context, and consequences.
 | 0106 | Audit-Driven Quality Cleanup for v0.40.6                 | Accepted                                         |
 | 0107 | npm-Only Distribution                                    | Accepted                                         |
 | 0108 | npm Distribution via `deno pack`                         | Accepted                                         |
-| 0109 | Unified Signal-DOM Activation Layer                      | Proposed                                         |
+| 0109 | Unified Signal-DOM Activation Layer                      | Accepted                                         |
+| 0110 | Two-Product Doctrine and Package Truth                   | Accepted                                         |
+| 0111 | OpenElement App Ownership Boundary                       | Accepted                                         |
 
 ## Superseded / Historical
 

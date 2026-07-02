@@ -1,4 +1,4 @@
-import { ACTIVE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { ACTIVE_EXECUTION_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
 
 type Failure = {
   file: string;
@@ -15,6 +15,10 @@ const currentPublicDocs = [
 ];
 
 const readmeDocs = ['README.md', 'README.zh.md'];
+const productDoctrinePatterns = [
+  'openElement = Web Components Fullstack Framework + Basic Element',
+  'supporting packages = Protocols + UI + official stack adapters',
+];
 
 const mojibakePatterns: RegExp[] = [
   /\uFFFD/,
@@ -64,8 +68,11 @@ for (const file of currentPublicDocs) {
     failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
   }
 
-  if (!text.includes(ACTIVE_VERSION)) {
-    failures.push({ file, message: `missing active execution version ${ACTIVE_VERSION}` });
+  if (!text.includes(ACTIVE_EXECUTION_VERSION)) {
+    failures.push({
+      file,
+      message: `missing active execution version ${ACTIVE_EXECUTION_VERSION}`,
+    });
   }
 
   for (const pattern of staleCurrentClaims) {
@@ -80,8 +87,10 @@ for (const file of readmeDocs) {
   const text = await read(file);
   if (!text) continue;
 
-  if (!text.includes('openElement = Elements + UI + Framework + Protocols')) {
-    failures.push({ file, message: 'missing four-product matrix formula' });
+  for (const doctrine of productDoctrinePatterns) {
+    if (!text.includes(doctrine)) {
+      failures.push({ file, message: `missing two-product doctrine formula: ${doctrine}` });
+    }
   }
 
   for (const pattern of mojibakePatterns) {
@@ -101,5 +110,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, active ${ACTIVE_VERSION}).`,
+  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, active ${ACTIVE_EXECUTION_VERSION}).`,
 );

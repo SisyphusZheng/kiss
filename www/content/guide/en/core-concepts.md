@@ -8,15 +8,18 @@ order: 2
 # Core Concepts
 
 openElement is built around one application model, one renderer pipeline, and
-four product surfaces:
+two primary products:
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
-Elements is the native Web Components authoring surface. UI is the first-party
-`open-*` component library. Framework owns pages, layouts, islands, API routes,
-and Vite + Nitro output. Protocols define replacement boundaries.
+The Web Components fullstack framework owns pages, layouts, routes, islands, API
+routes, deployment, and desktop targets. Basic Element is the native
+custom-element authoring surface. Protocols, UI, SSG, adapter-vite, router,
+signal, content, and core support those products without becoming separate
+product lines.
 
 ## Application API
 
@@ -51,9 +54,9 @@ Static content remains static. Interactive components are isolated islands with
 explicit hydration strategy metadata such as `load`, `idle`, `visible`, or
 `only`.
 
-## Elements And Runtime Primitives
+## Basic Element And Runtime Primitives
 
-`@openelement/element` is the current Elements product surface and provides the
+`@openelement/element` is the Basic Element product surface and provides the
 `OpenElement` base class, signals, and stylesheet helpers:
 
 ```tsx

@@ -620,11 +620,6 @@
           "description": "header-nav attribute"
         },
         {
-          "name": "logo-text",
-          "type": "string",
-          "description": "logo-text attribute"
-        },
-        {
           "name": "logo-sub",
           "type": "string",
           "description": "logo-sub attribute"

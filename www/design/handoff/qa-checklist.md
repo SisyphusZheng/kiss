@@ -33,8 +33,8 @@
 
 ## Content
 
-- [ ] Homepage H1 is `Web Components full-stack framework.`
-- [ ] Product formula is `Elements + UI + Framework + Protocols`.
+- [ ] Homepage H1 identifies openElement as the Web Components fullstack framework.
+- [ ] Product formula is `Web Components Fullstack Framework + Basic Element`.
 - [ ] Entry paths expose Guide, API, Architecture, and Roadmap.
 - [ ] Roadmap is product truth, not a historical dump.
 - [ ] No Hub product promise appears on entry pages.

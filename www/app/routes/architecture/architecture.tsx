@@ -48,14 +48,18 @@ pageSheet.replaceSync(`
   }
 `);
 
-const PACKAGE_GRAPH = `product surfaces
-  @openelement/element
-  @openelement/ui
-  @openelement/app
-  @openelement/create
-  @openelement/protocol
+const PACKAGE_GRAPH = `products
+  Web Components Fullstack Framework
+    @openelement/app
+    @openelement/create
 
-foundation
+  Web Components Basic Element
+  @openelement/element
+
+supporting packages
+  @openelement/protocol
+  @openelement/ui
+
   @openelement/core
   @openelement/signal
   @openelement/router
@@ -74,16 +78,18 @@ export class ArchitecturePage extends OpenElement {
         <section class='hero'>
           <div>
             <div class='eyebrow'>
-              <open-badge>ADR-0105</open-badge>
+              <open-badge>ADR-0110</open-badge>
+              <open-badge>ADR-0111</open-badge>
               <open-badge>{OPENELEMENT_VERSION}</open-badge>
               <open-badge tone='success'>11-package graph</open-badge>
             </div>
             <h1>Current Architecture</h1>
             <p class='lede'>
-              openElement is organized as Elements + UI + Framework + Protocols. The v0.41
-              package graph is intentionally small: five product-facing packages and six
-              foundation packages. SSG is retained as an adapter-agnostic engine; Vite and Nitro
-              stay behind the Framework boundary.
+              openElement is organized as Web Components Fullstack Framework +
+              Basic Element. The v0.41 package graph is intentionally small:
+              product packages expose the app and element authoring surfaces,
+              while UI, Protocols, SSG, Vite, Hono, Nitro, and Deno Desktop
+              support those products through explicit contracts.
             </p>
           </div>
           <div class='artifact'>
@@ -103,34 +109,34 @@ export class ArchitecturePage extends OpenElement {
             </div>
             <p class='section-copy'>
               {OPENELEMENT_VERSION} keeps user-facing imports narrow and moves supporting behavior
-              behind explicit foundation packages.
+              behind explicit supporting packages and official stack contracts.
             </p>
           </div>
           <div class='layer-map'>
             <div class='layer'>
               <strong>authoring</strong>
               <span>@openelement/element</span>
-              <p>Canonical component facade for OpenElement, StyleSheet, signals, and islands.</p>
+              <p>Canonical Basic Element facade for OpenElement, StyleSheet, signals, and islands.</p>
             </div>
             <div class='layer'>
               <strong>framework</strong>
               <span>@openelement/app, @openelement/create</span>
-              <p>Pages, layouts, islands, starter generation, Vite bridge, and app i18n plugin.</p>
+              <p>Pages, layouts, routes, islands, app targets, starter generation, and official stack adapters.</p>
             </div>
             <div class='layer'>
               <strong>ui</strong>
               <span>@openelement/ui</span>
-              <p>First-party open-* components built on the Elements model.</p>
+              <p>Open Props-backed reference components and docs/Reader dogfood surface.</p>
             </div>
             <div class='layer'>
               <strong>protocols</strong>
               <span>@openelement/protocol</span>
-              <p>Runtime-free contracts and conformance boundaries.</p>
+              <p>Runtime-free contracts for renderers, routes, islands, build plans, adapters, and app targets.</p>
             </div>
             <div class='layer'>
-              <strong>foundation</strong>
+              <strong>supporting</strong>
               <span>core, signal, router, content, ssg, adapter-vite</span>
-              <p>Implementation packages that support the four products without becoming products.</p>
+              <p>Implementation packages that support the two products without becoming separate product lines.</p>
             </div>
           </div>
         </section>
@@ -213,4 +219,3 @@ export class ArchitecturePage extends OpenElement {
 
 customElements.define(tagName, ArchitecturePage);
 export default ArchitecturePage;
-

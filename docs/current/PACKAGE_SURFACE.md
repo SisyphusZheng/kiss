@@ -5,28 +5,32 @@ This is the v0.41.0-alpha.5 11-package product-line truth table.
 <!-- 11-package -->
 
 ```text
-openElement = Elements + UI + Framework + Protocols
+openElement = Web Components Fullstack Framework + Basic Element
+supporting packages = Protocols + UI + official stack adapters
 ```
 
 ADR-0101 approves the product-line reset and AutoFlow3 governance boundary.
 ADR-0105 approves the v0.40.4 breaking cleanup train and the 14-to-11 package
 graph collapse.
+ADR-0110 is the current public product doctrine. ADR-0111 records that
+`@openelement/app` owns route/render/request/asset/island/deployment concepts
+while Vite, Hono, Nitro, and Deno Desktop implement official drivers/adapters.
 
 ## Current 11-package surface
 
-| Package                     | Class          | v0.40.4 decision                                                                              |
-| --------------------------- | -------------- | --------------------------------------------------------------------------------------------- |
-| `@openelement/app`          | product-facing | Framework authoring API, including optional Preact island proof under `./preact`.             |
-| `@openelement/create`       | product-facing | Starter and consumer entry.                                                                   |
-| `@openelement/element`      | product-facing | Canonical component-authoring facade for `OpenElement`, `StyleSheet`, islands, and signals.   |
-| `@openelement/ui`           | product-facing | First-party `open-*` component library.                                                       |
-| `@openelement/ssg`          | foundation     | Adapter-agnostic SSG engine (entry descriptor, render pipeline, route scanner, postprocess).  |
-| `@openelement/core`         | foundation     | Low-level implementation kernel, now including `StyleSheet`, signal contracts, and SSG types. |
-| `@openelement/router`       | foundation     | Route support behind Framework.                                                               |
-| `@openelement/signal`       | foundation     | Signal implementation; default is `@preact/signals-core`.                                     |
-| `@openelement/content`      | foundation     | Content support behind Framework recipes.                                                     |
-| `@openelement/adapter-vite` | foundation     | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                   |
-| `@openelement/protocol`     | foundation     | Shared contract types (hydration markers, signal, vnode, render, manifest, data, errors).     |
+| Package                     | Class      | v0.41 decision                                                                                 |
+| --------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+| `@openelement/app`          | product    | Web Components fullstack framework authoring API, including optional Preact island proof.      |
+| `@openelement/create`       | product    | Starter and consumer entry for the fullstack framework.                                        |
+| `@openelement/element`      | product    | Basic Element facade for `OpenElement`, `StyleSheet`, islands, and signals.                    |
+| `@openelement/protocol`     | supporting | Runtime-free contracts for renderers, routes, islands, adapters, build plans, and app targets. |
+| `@openelement/ui`           | supporting | Open Props-backed reference `open-*` component library and dogfood surface.                    |
+| `@openelement/ssg`          | supporting | Adapter-agnostic SSG engine (entry descriptor, render pipeline, route scanner, postprocess).   |
+| `@openelement/core`         | supporting | Low-level implementation kernel, now including `StyleSheet`, signal contracts, and SSG types.  |
+| `@openelement/router`       | supporting | Route support behind the fullstack framework.                                                  |
+| `@openelement/signal`       | supporting | Signal implementation; default is `@preact/signals-core`.                                      |
+| `@openelement/content`      | supporting | Content support behind framework recipes.                                                      |
+| `@openelement/adapter-vite` | supporting | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                    |
 
 ## Removed from current graph
 
@@ -77,7 +81,9 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 - **Runtime-free packages** (`protocol`, `signal`, `core`, `element`, `ui`, `router`, `app`) must not use `Deno.*` or `node:*` APIs in public `src/` code.
 - **Build/server glue packages** (`content`, `ssg`, `adapter-vite`, `create`) may use Deno/Node APIs; Deno is the development toolchain, but published helpers that npm consumers invoke directly must not crash outside Deno.
 - **Public surface** is what application authors import. **Internal surface** is what sibling packages import during the alpha line; internal subpaths may change without a deprecation period until v1.0.
-- The canonical consumer import is `@openelement/element`. Lower-level packages are foundation only.
+- The canonical component authoring import is `@openelement/element`.
+  Lower-level packages are supporting surfaces unless a public guide explicitly
+  names them.
 
 ## Governance
 

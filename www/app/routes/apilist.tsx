@@ -275,7 +275,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'router',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/router',
     copy: 'Runtime-free route support behind the framework, including data context and client routing.',
     importPath: '@openelement/router/client-router',
@@ -301,7 +301,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'ui',
-    surface: 'Product',
+    surface: 'Supporting',
     title: '@openelement/ui',
     copy: 'First-party `open-*` Web Components and Open Props token foundation used by the docs site.',
     importPath: '@openelement/ui/open-layout',
@@ -326,7 +326,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'core',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/core',
     copy: 'Low-level runtime kernel for JSX, VNode rendering, DSD, hydration, StyleSheet, errors, and trust boundaries.',
     importPath: '@openelement/core/static, @openelement/core/style-sheet',
@@ -352,7 +352,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'protocol',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/protocol',
     copy: 'Shared type contracts for render, hydration, manifest, data, runtime, errors, prop, island, and SSG shapes.',
     importPath: '@openelement/protocol/ssg',
@@ -377,7 +377,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'signal',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/signal',
     copy: 'Reactive primitive layer built on `@preact/signals-core` with framework integration hooks.',
     importPath: '@openelement/signal',
@@ -390,7 +390,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'content',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/content',
     copy: 'Build-time Markdown, MDX, blog data, navigation metadata, sitemap, and robots support.',
     importPath: '@openelement/content/mdx',
@@ -403,7 +403,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'ssg',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/ssg',
     copy: 'Adapter-agnostic static site generation engine for route scanning, entry generation, rendering, and postprocess.',
     importPath: '@openelement/ssg',
@@ -416,7 +416,7 @@ const packages: ApiPackage[] = [
   },
   {
     id: 'adapter-vite',
-    surface: 'Foundation',
+    surface: 'Supporting',
     title: '@openelement/adapter-vite',
     copy: 'Vite/Nitro bridge that scans projects, prepares build plans, emits client assets, and delegates SSG work.',
     importPath: '@openelement/adapter-vite/plugin',
@@ -446,7 +446,7 @@ const packages: ApiPackage[] = [
     notes: [
       'Use it for first-run project scaffolding.',
       'Generated projects should consume the framework facade rather than adapter internals.',
-      'Fresh example restore remains a post-release follow-up after alpha.5 packages publish.',
+      'Starter output is part of the beta.1 adoption freeze path.',
     ],
   },
 ];
@@ -464,14 +464,15 @@ export class ApiCorePage extends OpenElement {
             <p class='lede'>
               Public surfaces are organized by the actual {OPENELEMENT_VERSION} package graph.
               Every package below is backed by current workspace exports, package contracts,
-              and alpha.5 build evidence.
+              and alpha.6/alpha.7/beta.1 release planning.
             </p>
           </div>
           <div class='hero-panel'>
             <open-lab-panel label='contract map' meta={OPENELEMENT_VERSION}>
               <p class='panel-copy'>
-                The current product line is Elements + UI + Framework + Protocols, backed by
-                runtime-free foundation packages and adapter-owned build glue.
+                The current product line is Web Components Fullstack Framework +
+                Basic Element, backed by Protocols, UI, and official stack
+                adapters.
               </p>
               <open-button href='/guide/api'>Read API routes guide</open-button>
             </open-lab-panel>
@@ -490,9 +491,10 @@ export class ApiCorePage extends OpenElement {
                   <h2>Authoring starts at product packages.</h2>
                 </div>
                 <p>
-                  Application code should prefer `@openelement/element`, `@openelement/ui`,
-                  `@openelement/app`, and `@openelement/create`. Foundation packages remain
-                  documented because their contracts are public, tested, and versioned.
+                  Application code should prefer `@openelement/app`,
+                  `@openelement/create`, and `@openelement/element`.
+                  Supporting packages remain documented because their contracts
+                  are public, tested, and versioned.
                 </p>
               </div>
             </section>
