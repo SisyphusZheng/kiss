@@ -58,6 +58,7 @@ export type {
   OpenElementDeploymentRuntime,
   OpenElementDeploymentTarget,
   OpenElementIslandManifest,
+  OpenElementIslandManifestEntry,
   OpenElementRenderPhase,
   OpenElementRenderPipeline,
   OpenElementRenderStep,

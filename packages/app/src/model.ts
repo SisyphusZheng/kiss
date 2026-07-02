@@ -6,8 +6,6 @@
  * tested without booting Hono, Vite, Nitro, or a desktop shell.
  */
 
-import type { BuildIslandInput } from '@openelement/protocol/ssg';
-
 export type OpenElementRouteKind = 'page' | 'api';
 export type OpenElementRenderPhase =
   | 'route'
@@ -73,8 +71,17 @@ export interface OpenElementAssetManifest {
   entries: OpenElementAssetManifestEntry[];
 }
 
+export interface OpenElementIslandManifestEntry {
+  tagName: string;
+  hydrate?: 'load' | 'idle' | 'visible' | 'only';
+  ssr?: boolean;
+  dsd?: boolean;
+  modulePath?: string;
+  source?: 'local' | 'package' | 'third-party';
+}
+
 export interface OpenElementIslandManifest {
-  islands: BuildIslandInput[];
+  islands: OpenElementIslandManifestEntry[];
 }
 
 export interface OpenElementDeploymentTarget {
@@ -163,8 +170,11 @@ export function createDefaultRenderPipeline(): OpenElementRenderPipeline {
 
 function normalizeRouteNode(route: OpenElementRouteNode): OpenElementRouteNode {
   return {
-    ...route,
+    kind: route.kind,
     path: normalizeRoutePath(route.path),
+    filePath: route.filePath,
+    importPath: route.importPath,
+    tagName: route.tagName,
     paramNames: route.paramNames ? [...route.paramNames] : undefined,
     children: route.children?.map(normalizeRouteNode),
     meta: route.meta ? { ...route.meta } : undefined,
@@ -176,7 +186,8 @@ function normalizeBasePath(path = '/'): string {
 }
 
 function normalizeRoutePath(path: string): string {
-  if (!path) return '/';
-  const withSlash = path.startsWith('/') ? path : `/${path}`;
+  const trimmed = path.trim();
+  if (!trimmed) return '/';
+  const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return withSlash.length > 1 ? withSlash.replace(/\/+$/, '') : withSlash;
 }

@@ -27,6 +27,14 @@ Deno.test('app model: creates a route graph without host adapters', () => {
   assertEquals(graph.routes[0].children?.[0].path, '/api/search');
 });
 
+Deno.test('app model: trims whitespace-only paths to root', () => {
+  const graph = createRouteGraph({
+    routes: [{ kind: 'page', path: '   ' }],
+  });
+
+  assertEquals(graph.routes[0].path, '/');
+});
+
 Deno.test('app model: creates an empty route graph with default base path', () => {
   assertEquals(createRouteGraph({ routes: [] }), {
     basePath: '/',
@@ -100,6 +108,12 @@ Deno.test('app model: render pipeline names OpenElement phases before driver det
     'serialize',
     'error',
   ]);
+  assertEquals(
+    pipeline.steps
+      .filter((step) => step.optional)
+      .map((step) => step.phase),
+    ['layout', 'islands', 'error'],
+  );
 
   assertEquals(createRenderPipeline([{ phase: 'route', name: 'match route' }]), {
     steps: [{ phase: 'route', name: 'match route' }],
