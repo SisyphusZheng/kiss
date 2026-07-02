@@ -5,6 +5,7 @@
  */
 
 import { assertEquals } from '@std/assert';
+import { jsx, renderDsdTree } from '@openelement/core/static';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
 // ponytail: inline mock covering only the DOM APIs used by route components.
@@ -51,7 +52,7 @@ class MockElement extends MockNode {
     getProperty(k: string): string;
   };
 
-  constructor(tag: string) {
+  constructor(tag = 'mock-element') {
     super();
     this.tagName = tag.toUpperCase();
   }
@@ -132,11 +133,11 @@ function mockDocument() {
 (globalThis as any).DocumentFragment = MockDocumentFragment;
 // deno-lint-ignore no-explicit-any
 (globalThis as any).HTMLElement = MockElement;
-const definedCustomElements = new Map<string, unknown>();
+const definedCustomElements = new Map<string, CustomElementConstructor>();
 // deno-lint-ignore no-explicit-any
 (globalThis as any).customElements = {
   get: (tagName: string) => definedCustomElements.get(tagName),
-  define: (tagName: string, ctor: unknown) => {
+  define: (tagName: string, ctor: CustomElementConstructor) => {
     definedCustomElements.set(tagName, ctor);
   },
 };
@@ -240,6 +241,17 @@ Deno.test('Settings action adds and immediately syncs a source', async () => {
 Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
   assertEquals(typeof mod.default, 'function');
+});
+
+Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags', async () => {
+  const mod = await import('../../routes/wc-interop.tsx');
+  const html = await renderDsdTree(jsx(mod.default, {}));
+
+  assertEquals(html.includes('<sl-button'), true);
+  assertEquals(html.includes('<open-button'), true);
+  assertEquals(html.includes('<open-card'), true);
+  assertEquals(html.includes('<open-input'), true);
+  assertEquals(html.includes('<sync-status-island'), true);
 });
 
 Deno.test('Reader Preact islands register deterministic custom elements', async () => {

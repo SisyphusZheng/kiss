@@ -19,8 +19,8 @@ router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader.
 | Markdown export              | `desktop-reader:smoke` export tests           |
 | Reading settings             | Browser smoke, storage tests                  |
 | OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests         |
-| Preact islands               | `desktop-reader:smoke` island registration    |
-| Third-party WC compatibility | `/wc-interop` route smoke                     |
+| Preact islands               | `desktop-reader:smoke` (island registration)  |
+| Third-party WC compatibility | `desktop-reader:smoke` (`/wc-interop` render) |
 | Desktop/narrow screenshots   | `test:visual-smoke`                           |
 
 ## Automated release checks
