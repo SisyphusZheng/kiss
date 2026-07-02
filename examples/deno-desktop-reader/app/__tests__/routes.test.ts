@@ -4,8 +4,8 @@
  * These tests verify the exports exist and are callable.
  */
 
-import { assertEquals } from '@std/assert';
-import { jsx, renderDsdTree } from '@openelement/core/static';
+import { assert, assertEquals } from '@std/assert';
+import type { VNode } from '@openelement/core/static';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
 // ponytail: inline mock covering only the DOM APIs used by route components.
@@ -245,13 +245,14 @@ Deno.test('WC Interop route exports a function', async () => {
 
 Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
-  const html = await renderDsdTree(jsx(mod.default, {}));
+  const page = new mod.default();
+  const tags = collectVNodeTags(page.render());
 
-  assertEquals(html.includes('<sl-button'), true);
-  assertEquals(html.includes('<open-button'), true);
-  assertEquals(html.includes('<open-card'), true);
-  assertEquals(html.includes('<open-input'), true);
-  assertEquals(html.includes('<sync-status-island'), true);
+  assert(tags.has('sl-button'));
+  assert(tags.has('open-button'));
+  assert(tags.has('open-card'));
+  assert(tags.has('open-input'));
+  assert(tags.has('sync-status-island'));
 });
 
 Deno.test('Reader Preact islands register deterministic custom elements', async () => {
@@ -265,3 +266,17 @@ Deno.test('Reader Preact islands register deterministic custom elements', async 
   assertEquals(typeof customElements.get('search-box-island'), 'function');
   assertEquals(typeof customElements.get('sync-status-island'), 'function');
 });
+
+function collectVNodeTags(node: unknown, tags = new Set<string>()): Set<string> {
+  if (typeof node === 'string' || node == null) return tags;
+  if (Array.isArray(node)) {
+    for (const child of node) collectVNodeTags(child, tags);
+    return tags;
+  }
+  if (typeof node !== 'object') return tags;
+
+  const vnode = node as Partial<VNode>;
+  if (typeof vnode.tag === 'string') tags.add(vnode.tag);
+  for (const child of vnode.children ?? []) collectVNodeTags(child, tags);
+  return tags;
+}

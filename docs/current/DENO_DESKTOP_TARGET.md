@@ -40,7 +40,7 @@ These endpoints are dogfood evidence, not core package APIs.
 
 ## Verification
 
-Run the automated checks defined in
+Use the automated and manual workflows in
 `examples/deno-desktop-reader/VERIFICATION.md` before tagging an alpha release
 that touches the app, router, UI, Open Props tokens, SPA mode, Deno Desktop host
 behavior, or Reader.
