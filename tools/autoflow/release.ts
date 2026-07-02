@@ -134,14 +134,6 @@ export function createReleasePlan(
         },
       ]
       : []),
-    ...(canPublishJsr()
-      ? [
-        {
-          name: 'publish jsr packages',
-          command: ['deno', 'task', 'publish:jsr:release'],
-        },
-      ]
-      : []),
   ];
   const tagSteps: ReleaseCommandStep[] = [
     {
@@ -338,13 +330,6 @@ function canCreateGitHubRelease(): boolean {
 function canPublishNpm(): boolean {
   // npm publish needs an access token. In CI it comes from secrets.NPM_TOKEN.
   return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
-}
-
-function canPublishJsr(): boolean {
-  // JSR OIDC publishing from GitHub Actions does not need a token.
-  // The autoflow-release workflow already sets permissions.id-token: write.
-  // Each package must be linked to the repo on jsr.io.
-  return isCI();
 }
 
 export async function assertCleanWorktree(): Promise<void> {

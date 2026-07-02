@@ -213,7 +213,7 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
     assert(names.includes('package artifact gate'));
     assert(names.includes('publish npm packages'));
     assert(names.includes('post-publish npm consumer smoke'));
-    assert(names.includes('publish jsr packages'));
+    assertFalse(names.includes('publish jsr packages'));
     assert(names.includes('tag release'));
     assert(names.includes('push tag'));
     assert(names.includes('create GitHub release'));

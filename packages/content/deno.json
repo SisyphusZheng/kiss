@@ -5,9 +5,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./blog-data": "./src/blog/blog-data.ts",
+    "./core": "./src/core.ts",
     "./mdx": "./src/mdx/compile.ts",
     "./nav": "./src/nav/scanner.ts",
     "./sitemap": "./src/sitemap/generator.ts",
+    "./vite": "./src/vite.ts",
     "./write-json": "./src/write-json.ts"
   },
   "imports": {

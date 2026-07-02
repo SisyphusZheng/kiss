@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Island Upgrade Manifest
+ * @openelement/ssg - Island Upgrade Manifest
  *
  * Generates per-page island manifest JSON files during SSG post-processing.
  * Each manifest lists the islands found on a page with their chunk URLs and strategies.
@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
 import { writeJson } from '@openelement/content/write-json';
+import { isCustomElementName } from './custom-element-name.ts';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */
@@ -39,24 +40,72 @@ export type IslandStrategyMap = Record<string, HydrationStrategy>;
 /** Layer map type: tagName -> layer */
 export type IslandLayerMap = Record<string, ComponentLayer>;
 
+function readTagName(html: string, start: number): { name: string; end: number } | undefined {
+  let end = start;
+  while (end < html.length && /[A-Za-z0-9:._-]/.test(html[end])) end++;
+  if (end === start) return undefined;
+  return { name: html.slice(start, end).toLowerCase(), end };
+}
+
+function skipThroughClosingTag(html: string, from: number, tagName: string): number {
+  const lower = html.toLowerCase();
+  const close = lower.indexOf(`</${tagName}`, from);
+  if (close === -1) return html.length;
+  const closeEnd = lower.indexOf('>', close);
+  return closeEnd === -1 ? html.length : closeEnd + 1;
+}
+
 /**
  * Extract custom element tag names from HTML content.
- * Matches <xxx-yyy> or <xxx-yyy ...> patterns (custom elements must contain a hyphen).
- * v0.14.6: Strips HTML comments, script blocks, and style blocks before matching
- * to avoid false positives (e.g., CE tags inside comments or script content).
+ * Matches actual tag-open tokens for custom elements, which must contain a hyphen.
+ * Tags inside comments, script blocks, style blocks, and declarations are ignored.
  */
 export function extractCustomElementTags(html: string): string[] {
-  // Strip HTML comments, script blocks, and style blocks first
-  const cleaned = html
-    .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
-    .replace(/<script[\s>][\s\S]*?<\/script>/gi, '') // Remove script blocks
-    .replace(/<style[\s>][\s\S]*?<\/style>/gi, ''); // Remove style blocks
-  const tagPattern = /<([a-z][a-z0-9]*-[a-z0-9-]+)[\s>\/]/gi;
   const tags = new Set<string>();
-  let match: RegExpExecArray | null;
-  while ((match = tagPattern.exec(cleaned)) !== null) {
-    tags.add(match[1].toLowerCase());
+  let index = 0;
+
+  while (index < html.length) {
+    const tagStart = html.indexOf('<', index);
+    if (tagStart === -1) break;
+
+    const next = html[tagStart + 1];
+    if (next === undefined) break;
+
+    if (next === '!') {
+      if (html.startsWith('<!--', tagStart)) {
+        const commentEnd = html.indexOf('-->', tagStart + 4);
+        index = commentEnd === -1 ? html.length : commentEnd + 3;
+      } else {
+        const declarationEnd = html.indexOf('>', tagStart + 2);
+        index = declarationEnd === -1 ? html.length : declarationEnd + 1;
+      }
+      continue;
+    }
+
+    if (next === '/' || next === '?' || /\s/.test(next)) {
+      index = tagStart + 2;
+      continue;
+    }
+
+    const tag = readTagName(html, tagStart + 1);
+    if (!tag) {
+      index = tagStart + 1;
+      continue;
+    }
+
+    if (tag.name === 'script' || tag.name === 'style') {
+      index = skipThroughClosingTag(html, tag.end, tag.name);
+      continue;
+    }
+
+    if (isCustomElementName(tag.name)) {
+      tags.add(tag.name);
+    }
+
+    const tagEnd = html.indexOf('>', tag.end);
+    index = tagEnd === -1 ? html.length : tagEnd + 1;
   }
+
   return [...tags];
 }
 

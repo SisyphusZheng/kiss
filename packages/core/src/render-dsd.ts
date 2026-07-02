@@ -61,7 +61,7 @@ export function classifyError(
   };
 }
 
-// ponytail: lookup table replaces 5-case if/else chain
+// lookup table replaces 5-case if/else chain
 const ERROR_CODES: Record<string, RenderErrorCode> = {
   instantiate: 'LESS_RENDER_INSTANTIATE_FAILED',
   nested: 'LESS_RENDER_NESTED_FAILED',

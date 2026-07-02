@@ -7,7 +7,7 @@
  */
 
 import type { EntryDescriptor } from '@openelement/protocol/ssg';
-import { routeRevalidateExpr, routeTagNameExpr } from './entry-render-helpers.ts';
+import { jsStringLiteral, routeRevalidateExpr, routeTagNameExpr } from './entry-render-helpers.ts';
 
 /**
  * Render the SSG-specific section of the entry code.
@@ -231,7 +231,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   if (dynamicRoutes.length > 0) {
     lines.push("  // Dispatch to the route module's getStaticPaths()");
     for (const r of dynamicRoutes) {
-      lines.push(`  if (routePath === '${r.path.replace(/'/g, "\\'")}') {`);
+      lines.push(`  if (routePath === ${jsStringLiteral(r.path)}) {`);
       lines.push(
         `    if (typeof ${r.varName}.getStaticPaths === 'function') {`,
       );

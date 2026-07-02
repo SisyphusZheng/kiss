@@ -10,13 +10,8 @@ import {
   type RouterInstance,
   type RouterMode,
 } from '@openelement/router/client-router';
-import {
-  __internal_popData,
-  __internal_pushActionData,
-  __internal_pushLoaderData,
-  useActionData,
-  useLoaderData,
-} from '@openelement/router/data-context';
+import { useActionData, useLoaderData } from '@openelement/router/data-context';
+import { popData, pushActionData, pushLoaderData } from '@openelement/router/internal/data-context';
 import { renderToDom } from '@openelement/core/csr';
 
 // ─── Public types ──────────────────────────────────────────────
@@ -54,7 +49,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   /** Pop the last render cycle's data frame from the stack. */
   function clearDataStack(): void {
     // pop on empty array returns undefined; one render cycle leaves at most one frame.
-    __internal_popData();
+    popData();
   }
 
   /**
@@ -136,13 +131,13 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const currentRender = ++renderId;
 
     // Pop previous render's data (safe no-op on empty stack)
-    __internal_popData();
+    popData();
 
     // Run loader and push result
     const loaderData = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
 
-    __internal_pushLoaderData(loaderData);
+    pushLoaderData(loaderData);
 
     await renderComponent(currentRender);
   }
@@ -196,7 +191,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     event.preventDefault();
 
     // Pop old data first
-    __internal_popData();
+    popData();
 
     // Run action
     let actionData: unknown = undefined;
@@ -215,8 +210,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     if (currentRender !== renderId || !router || !rootEl) return;
 
     // Push loader data, then action data on top (so both are visible to the render)
-    __internal_pushLoaderData(loaderData);
-    __internal_pushActionData(actionData);
+    pushLoaderData(loaderData);
+    pushActionData(actionData);
 
     await renderComponent(currentRender);
   }

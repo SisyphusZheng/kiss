@@ -6,6 +6,7 @@
  */
 import { assertEquals, assertExists, assertMatch } from 'jsr:@std/assert@^1.0.0';
 import {
+  buildCoreJsrSourceUrl,
   CORE_SUBPATHS,
   createCoreResolvePlugin,
   VIRTUAL_CORE_PREFIX,
@@ -52,6 +53,33 @@ Deno.test('CORE_SUBPATHS: all keys are valid subpath identifiers', () => {
 Deno.test('CORE_SUBPATHS: all values end with .ts', () => {
   for (const value of Object.values(CORE_SUBPATHS)) {
     assertMatch(value, /\.ts$/);
+  }
+});
+
+Deno.test('buildCoreJsrSourceUrl: accepts only remote bases and safe source paths', () => {
+  assertEquals(
+    buildCoreJsrSourceUrl('https://jsr.io/@openelement/core/0.41.0/src/', 'logger.ts'),
+    'https://jsr.io/@openelement/core/0.41.0/src/logger.ts',
+  );
+  assertEquals(
+    buildCoreJsrSourceUrl('https://jsr.io/@openelement/core/0.41.0/src/', 'nested/file.js'),
+    'https://jsr.io/@openelement/core/0.41.0/src/nested/file.js',
+  );
+
+  for (const unsafePath of ['../logger.ts', '/logger.ts', 'logger.json', 'logger.ts?x=1']) {
+    try {
+      buildCoreJsrSourceUrl('https://jsr.io/@openelement/core/0.41.0/src/', unsafePath);
+      throw new Error(`expected ${unsafePath} to be rejected`);
+    } catch (error) {
+      assertMatch(String(error), /Unsafe @openelement\/core source path/);
+    }
+  }
+
+  try {
+    buildCoreJsrSourceUrl('file:///tmp/src/', 'logger.ts');
+    throw new Error('expected file base to be rejected');
+  } catch (error) {
+    assertMatch(String(error), /Unsafe @openelement\/core source base URL/);
   }
 });
 

@@ -52,4 +52,9 @@ Deno.test('normalizeViteAliases: expands router root alias from its public entry
       ?.replacement,
     '/repo/packages/router/src/client-router.ts',
   );
+  assertEquals(
+    aliases.find((alias) => alias.find === '@openelement/router/internal/data-context')
+      ?.replacement,
+    '/repo/packages/router/src/internal/data-context.ts',
+  );
 });

@@ -14,12 +14,14 @@ const DEFAULT_OPENELEMENT_PACKAGES = new Set([
   'core',
   'create',
   'element',
+  'protocol',
   'router',
   'signal',
+  'ssg',
   'ui',
 ]);
 
-const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
+export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   'adapter-vite': {
     '.': 'src/index.ts',
     'app-vite': 'src/app-vite.ts',
@@ -45,10 +47,12 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   content: {
     '.': 'src/index.ts',
     'blog-data': 'src/blog/blog-data.ts',
+    core: 'src/core.ts',
     mdx: 'src/mdx/compile.ts',
     nav: 'src/nav/scanner.ts',
-    'nav-data': 'src/nav/writer.ts',
     sitemap: 'src/sitemap/generator.ts',
+    vite: 'src/vite.ts',
+    'write-json': 'src/write-json.ts',
   },
   core: {
     '.': 'src/index.ts',
@@ -82,7 +86,26 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
     '.': 'src/data-context.ts',
     'client-router': 'src/client-router.ts',
     'data-context': 'src/data-context.ts',
+    'internal/data-context': 'src/internal/data-context.ts',
     i18n: 'src/i18n.ts',
+  },
+  protocol: {
+    '.': 'src/index.ts',
+    context: 'src/context.ts',
+    data: 'src/data.ts',
+    errors: 'src/errors.ts',
+    framework: 'src/framework.ts',
+    'hydration-markers': 'src/hydration-markers.ts',
+    island: 'src/island.ts',
+    isr: 'src/isr.ts',
+    manifest: 'src/manifest.ts',
+    prop: 'src/prop.ts',
+    render: 'src/render.ts',
+    runtime: 'src/runtime.ts',
+    signal: 'src/signal.ts',
+    ssg: 'src/ssg.ts',
+    'style-sheet': 'src/style-sheet.ts',
+    vnode: 'src/vnode.ts',
   },
   signal: {
     '.': 'src/index.ts',
@@ -170,6 +193,8 @@ export function resolveOpenPackageExport(packageName: string, subpath: string): 
 }
 
 export function toVirtualOpenPackageId(packageName: string, sourcePath: string): string {
+  assertKnownOpenPackage(packageName);
+  assertSafeSourcePath(sourcePath);
   return `${VIRTUAL_OPENELEMENT_PACKAGE_PREFIX}${packageName}/${sourcePath}`;
 }
 
@@ -253,7 +278,7 @@ export function createOpenJsrPackageResolverPlugin(
         }
       }
 
-      const url = `https://jsr.io/@openelement/${packageName}/${options.version}/${filePath}`;
+      const url = buildJsrSourceUrl(packageName, options.version, filePath);
       const resp = await fetchSource(url);
       if (!resp.ok) {
         throw new Error(
@@ -284,6 +309,41 @@ export function hasExactUserAlias(
 function normalizeSubpath(subpath: string): string {
   if (subpath === '' || subpath === '.') return '.';
   return subpath.replace(/^\.\//, '');
+}
+
+export function buildJsrSourceUrl(packageName: string, version: string, filePath: string): string {
+  assertKnownOpenPackage(packageName);
+  assertSafeVersion(version);
+  assertSafeSourcePath(filePath);
+  const url = new URL(
+    `/@openelement/${packageName}/${version}/${filePath}`,
+    'https://jsr.io',
+  );
+  return url.href;
+}
+
+function assertKnownOpenPackage(packageName: string): void {
+  if (!OPENELEMENT_EXPORT_FILES[packageName]) {
+    throw new Error(`[openElement/SSG] Unknown openElement package: @openelement/${packageName}`);
+  }
+}
+
+function assertSafeVersion(version: string): void {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
+    throw new Error(`[openElement/SSG] Unsafe JSR package version: ${version}`);
+  }
+}
+
+function assertSafeSourcePath(filePath: string): void {
+  if (
+    filePath.startsWith('/') ||
+    filePath.includes('\\') ||
+    filePath.split('/').some((part) => !part || part === '.' || part === '..') ||
+    !/^[-./0-9A-Za-z_]+$/u.test(filePath) ||
+    !/\.(ts|tsx|js|jsx|json)$/u.test(filePath)
+  ) {
+    throw new Error(`[openElement/SSG] Unsafe package source path: ${filePath}`);
+  }
 }
 
 function resolveSourcePathExtension(packageName: string, path: string): string {

@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@1';
 import {
+  buildJsrSourceUrl,
   createOpenJsrPackageResolverPlugin,
   parseOpenPackageSpecifier,
   resolveOpenPackageExport,
@@ -59,11 +60,14 @@ Deno.test('resolveOpenPackageExport covers package deno.json public exports', as
   const packages = [
     ['adapter-vite', '../deno.json'],
     ['app', '../../app/deno.json'],
+    ['content', '../../content/deno.json'],
     ['core', '../../core/deno.json'],
     ['create', '../../create/deno.json'],
     ['element', '../../element/deno.json'],
+    ['protocol', '../../protocol/deno.json'],
     ['router', '../../router/deno.json'],
     ['signal', '../../signal/deno.json'],
+    ['ssg', '../../ssg/deno.json'],
     ['ui', '../../ui/deno.json'],
   ] as const;
 
@@ -84,6 +88,28 @@ Deno.test('resolveOpenPackageExport covers package deno.json public exports', as
       );
     }
   }
+});
+
+Deno.test('buildJsrSourceUrl allows only known packages, semver versions, and source paths', () => {
+  assertEquals(
+    buildJsrSourceUrl('core', '0.41.0-alpha.5', 'src/index.ts'),
+    'https://jsr.io/@openelement/core/0.41.0-alpha.5/src/index.ts',
+  );
+  assertThrows(
+    () => buildJsrSourceUrl('../core', '0.41.0-alpha.5', 'src/index.ts'),
+    Error,
+    'Unknown openElement package',
+  );
+  assertThrows(
+    () => buildJsrSourceUrl('core', '../0.41.0', 'src/index.ts'),
+    Error,
+    'Unsafe JSR package version',
+  );
+  assertThrows(
+    () => buildJsrSourceUrl('core', '0.41.0-alpha.5', '../src/index.ts'),
+    Error,
+    'Unsafe package source path',
+  );
 });
 
 Deno.test('resolveOpenPackageExport reports unknown openElement subpaths clearly', () => {

@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Route scanner
+ * @openelement/ssg - Route scanner
  * Scans the routes directory and generates a route map.
  * Produces the virtual:routes module.
  *
@@ -227,7 +227,7 @@ function pathToVarName(path: string): string {
  * Identify special file types by name.
  * _renderer.ts -> renderer, _middleware.ts -> middleware
  */
-// ponytail: inline lookup replaces 2-case switch
+// inline lookup replaces 2-case switch
 function getSpecialFileType(fileName: string): SpecialFileType | null {
   const baseName = fileName.replace(/\.[^.]+$/, '');
   return ({ _renderer: 'renderer', _middleware: 'middleware' } as Record<string, SpecialFileType>)[

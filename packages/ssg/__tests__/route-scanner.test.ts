@@ -260,6 +260,113 @@ Deno.test('scanCemManifests: returns empty when node_modules missing', async () 
   assertEquals(results, []);
 });
 
+Deno.test('scanPackageManifests: returns empty array for empty package list', async () => {
+  const { scanPackageManifests } = await import('../src/route-scanner.ts');
+  const result = await scanPackageManifests([]);
+  assertEquals(result, []);
+});
+
+Deno.test('scanPackageManifests: rejects packages without manifest export', async () => {
+  const { OpenElementError } = await import('@openelement/core/errors');
+  const { scanPackageManifests } = await import('../src/route-scanner.ts');
+  try {
+    await scanPackageManifests(['jsr:@std/assert']);
+  } catch (error) {
+    assertEquals(error instanceof OpenElementError, true);
+  }
+});
+
+Deno.test('scanCemManifests: finds custom-elements.json files', async () => {
+  const { scanCemManifests } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-test-' });
+  try {
+    const pkgWithCem = join(tmpDir, 'wc-with-cem');
+    const pkgNoCem = join(tmpDir, 'no-cem-pkg');
+    mkdirSync(pkgWithCem, { recursive: true });
+    mkdirSync(pkgNoCem, { recursive: true });
+    writeFileSync(
+      join(pkgWithCem, 'custom-elements.json'),
+      JSON.stringify({ schemaVersion: '1.0.0', modules: [] }),
+      'utf-8',
+    );
+    writeFileSync(join(pkgNoCem, 'package.json'), '{"name":"no-cem-pkg"}', 'utf-8');
+
+    const results = await scanCemManifests(tmpDir);
+    assertEquals(results.length, 1);
+    assertEquals(results[0].packageName, 'wc-with-cem');
+    assertEquals(typeof results[0].json, 'string');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('scanCemManifests: handles scoped packages', async () => {
+  const { scanCemManifests } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-scoped-test-' });
+  try {
+    const scopedPkg = join(tmpDir, '@my-org', 'my-wc');
+    mkdirSync(scopedPkg, { recursive: true });
+    writeFileSync(
+      join(scopedPkg, 'custom-elements.json'),
+      JSON.stringify({ schemaVersion: '1.0.0', modules: [] }),
+      'utf-8',
+    );
+
+    const results = await scanCemManifests(tmpDir);
+    assertEquals(results.length, 1);
+    assertEquals(results[0].packageName, '@my-org/my-wc');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('detectAndClassifyCemPackages: classifies client-only by default', async () => {
+  const { detectAndClassifyCemPackages } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-classify-test-' });
+  try {
+    const pkg = join(tmpDir, 'vanilla-wc');
+    mkdirSync(pkg, { recursive: true });
+    writeFileSync(
+      join(pkg, 'custom-elements.json'),
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        modules: [{
+          kind: 'javascript-module',
+          path: './src/index.js',
+          declarations: [{
+            kind: 'custom-element',
+            tagName: 'my-button',
+            name: 'MyButton',
+          }],
+        }],
+      }),
+      'utf-8',
+    );
+
+    const result = await detectAndClassifyCemPackages(tmpDir);
+    assertEquals(result.length, 1);
+    assertEquals(result[0].tagName, 'my-button');
+    assertEquals(result[0].tier, 'client-only');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('detectAndClassifyCemPackages: skips invalid CEM JSON', async () => {
+  const { detectAndClassifyCemPackages } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-invalid-test-' });
+  try {
+    const pkg = join(tmpDir, 'broken-wc');
+    mkdirSync(pkg, { recursive: true });
+    writeFileSync(join(pkg, 'custom-elements.json'), 'not-valid-json{{{', 'utf-8');
+
+    const result = await detectAndClassifyCemPackages(tmpDir);
+    assertEquals(result.length, 0);
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 // Cleanup
 Deno.test({
   name: 'route-scanner: cleanup temp dirs',
