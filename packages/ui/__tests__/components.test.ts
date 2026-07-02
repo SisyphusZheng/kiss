@@ -422,7 +422,7 @@ const REACTIVE_PROPERTY_CASES: ReadonlyArray<{
   {
     fileName: 'open-layout',
     className: 'OpenLayout',
-    props: ['home', 'currentPath', 'navItems', 'headerNav', 'logoText', 'logoSub', 'githubUrl'],
+    props: ['home', 'currentPath', 'navItems', 'headerNav', 'logoSub', 'githubUrl'],
   },
   {
     fileName: 'open-theme-toggle',

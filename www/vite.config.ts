@@ -127,7 +127,6 @@ export default defineConfig({
         tagName: 'open-layout',
         import: '@openelement/ui/open-layout',
         props: {
-          logoText: 'openElement',
           footerText: 'Built with openElement - Web Components Fullstack Framework + Basic Element',
           githubUrl: 'https://github.com/open-element/openelement',
         },
