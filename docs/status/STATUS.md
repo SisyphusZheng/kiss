@@ -23,7 +23,11 @@ v0.41.0-alpha.6 is the active next architecture line. It syncs product truth
 under ADR-0110, records the App ownership boundary in ADR-0111, makes
 OpenElement App own route/render/request concepts, keeps Vite/Hono/Nitro/Deno
 Desktop as official drivers/adapters, closes CodeQL/doc truth cleanup, and
-promotes Reader into regression-grade dogfood. Trust-boundary fixes for route
+promotes Reader into regression-grade dogfood. Its first execution block is the
+front-half cleanup audit (#205 through #212): release truth, package surface
+drift, router internal exports, tracked ignored generated artifacts, stale
+resolver maps, duplicate tooling helpers, route-scanner test ownership, stale
+design artifacts, and active-source audit labels. Trust-boundary fixes for route
 codegen literals, island manifest extraction, JSR source URL construction, and
 dynamic import specifier admission are prioritized before broad package
 reshaping.

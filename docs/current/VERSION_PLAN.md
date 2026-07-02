@@ -25,8 +25,9 @@ The release is staged through alpha lines with explicit execution plans:
   interop proof; pure-ESM/ECMAScript npm gates.
 - **alpha.5**: SPA mode + Deno Desktop Reader proof, Reader polish, and current
   PR/framework closure.
-- **alpha.6**: OpenElement App/protocol architecture hardening, official stack
-  contracts, Deno Desktop target contract, and Reader regression-grade dogfood.
+- **alpha.6**: Front-half cleanup audit closure, OpenElement App/protocol
+  architecture hardening, official stack contracts, Deno Desktop target
+  contract, and Reader regression-grade dogfood.
 - **alpha.7**: Mac Mastodon Desktop incubation after alpha.6 validates the
   framework architecture. This keeps the OpenElement + Deno Desktop social/IM
   idea alive as a narrow networked desktop dogfood app, not a full authenticated
@@ -125,12 +126,16 @@ navigation disposal semantics.
 alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
 defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
 RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
-and Deno Desktop target contracts. It also closes the product-truth and
-CodeQL/code-scanning backlog (#192 through #194 and #186 through #191) as part
-of A6.6/A6.8 governance and release hygiene. Trust-boundary work has priority
-inside alpha.6: route codegen literals, island manifest extraction, JSR source
-URL construction, and dynamic import specifier admission must be structurally
-fixed or explicitly proven safe before beta.1.
+and Deno Desktop target contracts. Before broad package/app reshaping, alpha.6
+first closes the cleanup-audit front half (#205 through #212): release truth,
+package surface drift, router internal exports, tracked ignored generated
+artifacts, stale resolver maps, duplicate tooling helpers, route-scanner test
+ownership, stale design artifacts, and active-source audit labels. It also
+closes the product-truth and CodeQL/code-scanning backlog (#192 through #194 and
+#186 through #191) as part of A6.6/A6.8 governance and release hygiene.
+Trust-boundary work has priority inside alpha.6: route codegen literals, island
+manifest extraction, JSR source URL construction, and dynamic import specifier
+admission must be structurally fixed or explicitly proven safe before beta.1.
 
 ## Non-Goals
 
@@ -151,7 +156,7 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.3-plan.md` — Third-party Web Components inside OpenElement
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
-- `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
+- `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
 - `docs/release/v0.41.0-alpha.7-plan.md` — Mac Mastodon Desktop incubation
 - `docs/release/v0.41.0-beta.1-plan.md` — Adoption Freeze
 
@@ -225,6 +230,9 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
 - Alpha.6 trust-boundary debt is closed or replaced by stricter evidence:
   route codegen literals, island manifest extraction, JSR source URL
   construction, and dynamic import specifier admission.
+- Alpha.6 front-half cleanup debt is closed: release behavior, package surface,
+  router internals, generated artifacts, resolver maps, tooling helpers, scanner
+  test ownership, stale design artifacts, and active-source audit labels.
 - Deno toolchain truth is explicit: stable primary or documented canary
   exception, with beta.1 convergence criteria.
 
