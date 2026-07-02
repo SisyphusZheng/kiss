@@ -248,7 +248,7 @@ Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags
   const mod = await import('../../routes/wc-interop.tsx');
   // Inspect pure VNode output; this test does not need DOM rendering.
   const page = new mod.default();
-  const tags = collectVNodeTags(page.render());
+  const tags = collectElementTags(page.render());
 
   const expectedTags = [
     'sl-button',
@@ -280,16 +280,16 @@ Deno.test('Reader Preact islands register deterministic custom elements', async 
   assertEquals(typeof customElements.get('sync-status-island'), 'function');
 });
 
-function collectVNodeTags(node: unknown, tags = new Set<string>()): Set<string> {
+function collectElementTags(node: unknown, tags = new Set<string>()): Set<string> {
   if (node === null || node === undefined || typeof node === 'string') return tags;
   if (Array.isArray(node)) {
-    for (const child of node) collectVNodeTags(child, tags);
+    for (const child of node) collectElementTags(child, tags);
     return tags;
   }
   if (typeof node !== 'object') return tags;
 
   const vnode = node as VNode;
   if (typeof vnode.tag === 'string') tags.add(vnode.tag);
-  for (const child of vnode.children) collectVNodeTags(child, tags);
+  for (const child of vnode.children) collectElementTags(child, tags);
   return tags;
 }
