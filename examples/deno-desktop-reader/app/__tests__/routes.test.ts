@@ -254,13 +254,16 @@ Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags
   assert(tags.has('open-card'));
   assert(tags.has('open-input'));
   assert(tags.has('sync-status-island'));
+  assertEquals(typeof customElements.get('sl-button'), 'function');
 });
 
 Deno.test('Reader Preact islands register deterministic custom elements', async () => {
-  await import('../../islands/note-panel-island.tsx');
-  await import('../../islands/pdf-reader-island.tsx');
-  await import('../../islands/search-box-island.tsx');
-  await import('../../islands/sync-status-island.tsx');
+  await Promise.all([
+    import('../../islands/note-panel-island.tsx'),
+    import('../../islands/pdf-reader-island.tsx'),
+    import('../../islands/search-box-island.tsx'),
+    import('../../islands/sync-status-island.tsx'),
+  ]);
 
   assertEquals(typeof customElements.get('note-panel-island'), 'function');
   assertEquals(typeof customElements.get('pdf-reader-island'), 'function');
