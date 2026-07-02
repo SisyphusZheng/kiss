@@ -17,7 +17,7 @@ import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from '@openelement/protocol/framework';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
-// ponytail: build-time Vite plugin, deno-api-free:ignore applies
+// build-time Vite plugin, deno-api-free:ignore applies
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';

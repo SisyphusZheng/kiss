@@ -12,7 +12,7 @@ import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, open } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 import { escapeAttr, escapeHtml } from '@openelement/core';
@@ -101,7 +101,12 @@ export function buildPlugin(
 
         await mkdir(absOutDir, { recursive: true });
         try {
-          await writeFile(indexPath, html, { encoding: 'utf-8', flag: 'wx' });
+          const handle = await open(indexPath, 'wx');
+          try {
+            await handle.writeFile(html, { encoding: 'utf-8' });
+          } finally {
+            await handle.close();
+          }
           log.info('SPA shell written to index.html');
         } catch (error) {
           if (

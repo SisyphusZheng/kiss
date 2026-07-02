@@ -294,7 +294,7 @@ async function runReleaseDispatch(
     Deno.exit(1);
   }
 
-  // ponytail: gates and release plan validation happen in dry-run mode first.
+  // gates and release plan validation happen in dry-run mode first.
   // Only when --dispatch is given and the local repo is on a clean main branch
   // do we push and trigger the real workflow.
   await runApprovedRelease(approvedPlan, targetVersion, true);

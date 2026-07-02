@@ -38,6 +38,8 @@ const staleCurrentClaims: RegExp[] = [
   /活动执行目标是\s+v0\.38\.0/i,
   /JSR publish .*best-effort/i,
   /JSR publish .*telemetry/i,
+  /dual npm\/JSR publishing/i,
+  /to JSR as a secondary channel/i,
   /not (?:a )?(?:version-)?exit gate/i,
   /do not block version\s+exit/i,
   /distribution telemetry/i,

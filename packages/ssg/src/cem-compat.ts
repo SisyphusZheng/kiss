@@ -247,7 +247,7 @@ export function classifyCemManifest(manifest: CustomElementsManifest): CemClassi
   const clientOnlyTags: string[] = [];
   const experimentalDomTags: string[] = [];
 
-  // ponytail: bucket lookup replaces 4-case switch
+  // bucket lookup replaces 4-case switch
   const buckets: Record<string, string[]> = {
     rejected: rejectedTags,
     'ssr-capable': ssrCapableTags,

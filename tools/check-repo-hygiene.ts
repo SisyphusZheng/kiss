@@ -134,6 +134,25 @@ async function gitOthers(): Promise<string[]> {
     .map(normalize);
 }
 
+async function gitTrackedIgnored(): Promise<string[]> {
+  const command = new Deno.Command('git', {
+    args: ['-c', 'core.quotepath=false', 'ls-files', '-ci', '--exclude-standard', '-z'],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const output = await command.output();
+  if (!output.success) {
+    throw new Error(
+      new TextDecoder().decode(output.stderr).trim() || 'git ls-files -ci failed',
+    );
+  }
+  return new TextDecoder()
+    .decode(output.stdout)
+    .split('\0')
+    .filter(Boolean)
+    .map(normalize);
+}
+
 async function exists(path: string): Promise<boolean> {
   try {
     await Deno.stat(path);
@@ -172,6 +191,10 @@ for (const file of await gitOthers()) {
   if (forbiddenUntrackedResidue.some((pattern) => pattern.test(file))) {
     failures.push({ path: file, message: 'untracked workflow or root tool residue is present' });
   }
+}
+
+for (const file of await gitTrackedIgnored()) {
+  failures.push({ path: file, message: 'tracked file is also ignored by .gitignore' });
 }
 
 for (const file of files.filter(isActiveScanFile)) {

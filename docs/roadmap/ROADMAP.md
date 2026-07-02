@@ -166,8 +166,8 @@ Core work:
     `tools/autoflow/release.ts`.
   - Add `actions/setup-node` to `.github/workflows/autoflow-release.yml` and
     pass `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN`.
-  - Keep dual npm/JSR publishing; JSR acts as a strictness signal, npm as the
-    primary distribution channel.
+  - Keep JSR monitor and metadata waiters as historical observation tools only;
+    npm is the only required registry closure path.
   - Keep `jsr-consumer-monitor.yml` and `wait-jsr-release-metadata.ts` as
     historical observation tools, not release gates.
 - Consumer smoke:

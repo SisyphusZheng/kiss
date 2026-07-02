@@ -133,12 +133,12 @@ Deno.test('client entry safely escapes tag names and module paths', () => {
   const code = generateClientEntry([
     {
       tagName: 'x-safe',
-      modulePath: './safe"quote.ts',
+      modulePath: './safe-module.ts',
       strategy: 'load',
     },
   ]);
 
-  assert(code.includes('"x-safe": () => import("./safe\\"quote.ts")'));
+  assert(code.includes('"x-safe": () => import("./safe-module.ts")'));
   new Function(code);
 });
 
@@ -168,6 +168,30 @@ Deno.test('client entry rejects malicious package island metadata', () => {
     Error,
     'Invalid island modulePath',
   );
+
+  for (
+    const modulePath of [
+      'https://example.com/island.js',
+      'data:text/javascript,alert(1)',
+      '../outside.ts',
+      './nested/../../outside.ts',
+      './bad path.ts',
+      './bad\npath.ts',
+    ]
+  ) {
+    assertThrows(
+      () =>
+        generateClientEntry([
+          {
+            tagName: 'x-safe',
+            modulePath,
+            strategy: 'idle',
+          },
+        ]),
+      Error,
+      'Invalid island modulePath',
+    );
+  }
 });
 
 Deno.test('client entry rejects legacy eager/lazy strategy values', () => {

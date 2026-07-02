@@ -384,7 +384,7 @@ export function defineIsland<T extends CustomElementConstructor>(
 
   if (isBrowser) {
     switch (strategy) {
-      case 'load': // ponytail: fallthrough, both 'load' and 'only' call register()
+      case 'load': // fallthrough, both 'load' and 'only' call register()
       case 'only':
         register();
         break;

@@ -445,7 +445,7 @@ export class TestShadowRoot extends TestElement {
     this.host = host;
   }
 
-  // ponytail: only supports [attrName] attribute selectors. Tag selectors
+  // only supports [attrName] attribute selectors. Tag selectors
   // and [attr=value] selectors are not implemented; add when needed by tests.
   override querySelectorAll(selector: string): TestElement[] {
     const attr = selector.replace(/^\[|\]$/g, '');

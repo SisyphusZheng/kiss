@@ -23,7 +23,7 @@ export function createLogger(tag: string): Logger {
   };
 }
 
-// ponytail: warn-once via Set, two callers, shared helper if >3 callers
+// warn-once via Set, two callers, shared helper if >3 callers
 const _warned = new Set<string>();
 export function warnOnce(key: string, logger: Logger, msg: string): void {
   if (!_warned.has(key)) {

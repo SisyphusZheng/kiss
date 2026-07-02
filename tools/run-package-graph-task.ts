@@ -82,12 +82,10 @@ async function runPublishCommand(
     try {
       child.kill(signal);
     } catch (err) {
-      if (!stopped) {
-        console.warn(
-          `[publish] ${pkg.name}@${pkg.version}: unable to send ${signal} to ` +
-            `deno publish: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
+      console.warn(
+        `[publish] ${pkg.name}@${pkg.version}: unable to send ${signal} to ` +
+          `deno publish: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -111,11 +109,15 @@ async function runPublishCommand(
     await Promise.race([sleep(ms), stopWatcherPromise]);
   }
 
+  function isPublishActive(): boolean {
+    return !stopped && !timedOut && !visibleOnJsr;
+  }
+
   const watcher = (async () => {
     let attempt = 1;
-    while (!stopped && !timedOut && !visibleOnJsr) {
+    while (isPublishActive()) {
       await sleepOrStop(JSR_PUBLISH_POLL_DELAY_MS);
-      if (stopped || timedOut || visibleOnJsr) break;
+      if (!isPublishActive()) break;
 
       try {
         if (await jsrVersionExists(pkg.name, pkg.version)) {

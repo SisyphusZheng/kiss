@@ -4,7 +4,7 @@
  * Tests that the internal plugin factory returns valid plugin arrays with correct
  * structure and re-exports.
  */
-// deno-lint-ignore-file no-unused-vars ban-types
+// deno-lint-ignore-file ban-types
 import {
   assertArrayIncludes,
   assertEquals,
@@ -15,14 +15,6 @@ import {
 import { join } from 'node:path';
 import { createOpenPlugin } from '../src/plugin.ts';
 
-// Verify core re-exports work (imported via @openelement/core subpaths)
-import { OpenElementError, SsrRenderError } from '@openelement/core/errors';
-import { createSsrContext, extractParams, parseQuery } from '@openelement/core/context';
-import { renderSsrError, wrapInDocument } from '@openelement/core';
-
-import { buildIslandChunkMap, injectClientScript, injectCspMeta } from '@openelement/ssg';
-
-import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build-manifest.ts';
 import { openPipeline } from '../src/index.ts';
 
 type CallablePluginHook = (...args: unknown[]) => unknown;
@@ -360,9 +352,6 @@ Deno.test('createOpenPlugin() corePlugin.buildStart scans routes and islands', a
 Deno.test('createOpenPlugin() corePlugin.buildStart handles empty directories gracefully', async () => {
   const tmp = Deno.makeTempDirSync({ prefix: 'open-buildstart-empty-' });
   try {
-    const routesDir = join(tmp, 'nonexistent', 'routes');
-    const islandsDir = join(tmp, 'nonexistent', 'islands');
-
     const origCwd = Deno.cwd();
     Deno.chdir(tmp);
 

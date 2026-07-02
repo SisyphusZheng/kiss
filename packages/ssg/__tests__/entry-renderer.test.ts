@@ -8,7 +8,7 @@
  * - SSG renderRoute using `data` prop (not `__openElementData`)
  */
 
-import { assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '@openelement/ssg';
 import type { RouteEntry } from '@openelement/core';
 
@@ -84,8 +84,8 @@ Deno.test('renderEntry: action POST handler uses app.post', () => {
   const code = renderEntry(desc);
 
   // Verify action POST routes
-  assertStringIncludes(code, "app.post('/'");
-  assertStringIncludes(code, "app.post('/about'");
+  assertStringIncludes(code, 'app.post("/",');
+  assertStringIncludes(code, 'app.post("/about"');
 });
 
 Deno.test('renderEntry: action POST handler calls module.loader', () => {
@@ -212,8 +212,24 @@ Deno.test('renderEntry: getStaticPaths dispatches to dynamic route modules', () 
   const desc = buildEntryDescriptor(dynamicRoutes, { ssg: true });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "if (routePath === '/blog/:slug')");
+  assertStringIncludes(code, 'if (routePath === "/blog/:slug")');
   assertStringIncludes(code, '$pageBlogSlug.getStaticPaths');
+});
+
+Deno.test('renderEntry: route paths are emitted as structured JS string literals', () => {
+  const desc = buildEntryDescriptor([
+    {
+      path: "/docs/'quoted-\\\\path",
+      filePath: "docs/'quoted-\\\\path.ts",
+      type: 'page',
+      varName: 'pageQuotedPath',
+    },
+  ], { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, `app.get("/docs/'quoted-\\\\\\\\path"`);
+  assertStringIncludes(code, `app.post("/docs/'quoted-\\\\\\\\path"`);
+  assertEquals(code.includes(`app.get('/docs/\\'quoted-`), false);
 });
 
 // ─── head handling ─────────────────────────────────────────────

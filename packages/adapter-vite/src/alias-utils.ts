@@ -68,6 +68,7 @@ const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
     rootFile: 'data-context.ts',
     files: {
       'data-context': 'data-context.ts',
+      'internal/data-context': 'internal/data-context.ts',
       i18n: 'i18n.ts',
       'client-router': 'client-router.ts',
     },

@@ -9,7 +9,11 @@ import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
 
 const CUSTOM_ELEMENT_NAME_RE = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/;
-const UNSAFE_IMPORT_PROTOCOL_RE = /^(?:javascript|data|vbscript|node):/i;
+const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
+const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
+const SAFE_BARE_SPECIFIER_RE =
+  /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
 const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
 
 function hasControlCharacter(value: string): boolean {
@@ -20,16 +24,35 @@ function hasControlCharacter(value: string): boolean {
   return false;
 }
 
+function hasTraversalSegment(value: string): boolean {
+  return value.split('/').includes('..');
+}
+
+export function validateIslandModuleSpecifier(modulePath: string): void {
+  if (
+    !modulePath ||
+    hasControlCharacter(modulePath) ||
+    URL_OR_SCHEME_RE.test(modulePath) ||
+    hasTraversalSegment(modulePath)
+  ) {
+    throw new Error(`Invalid island modulePath: ${modulePath}`);
+  }
+  if (
+    !SAFE_RELATIVE_SPECIFIER_RE.test(modulePath) &&
+    !SAFE_ROOT_SPECIFIER_RE.test(modulePath) &&
+    !SAFE_BARE_SPECIFIER_RE.test(modulePath)
+  ) {
+    throw new Error(`Invalid island modulePath: ${modulePath}`);
+  }
+}
+
 export function validateClientIslandEntry(entry: ClientIslandEntry): void {
   if (!CUSTOM_ELEMENT_NAME_RE.test(entry.tagName)) {
     throw new Error(`Invalid island tagName: ${entry.tagName}`);
   }
-  if (
-    !entry.modulePath ||
-    hasControlCharacter(entry.modulePath) ||
-    /[\r\n]/.test(entry.modulePath) ||
-    UNSAFE_IMPORT_PROTOCOL_RE.test(entry.modulePath)
-  ) {
+  try {
+    validateIslandModuleSpecifier(entry.modulePath);
+  } catch {
     throw new Error(`Invalid island modulePath for ${entry.tagName}: ${entry.modulePath}`);
   }
   if (!VALID_STRATEGIES.has(entry.strategy)) {

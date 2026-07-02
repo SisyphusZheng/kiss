@@ -40,6 +40,10 @@ export function routeRevalidateExpr(varName: string): string {
   return `(${pageDef}.renderIntent?.revalidate ?? false)`;
 }
 
+export function jsStringLiteral(value: string): string {
+  return JSON.stringify(value);
+}
+
 /** Generate a POST handler for a page route (form action handling). */
 export function renderActionRoute(
   lines: string[],
@@ -58,7 +62,7 @@ export function renderActionRoute(
     return route.path === r.scope || route.path.startsWith(r.scope + '/');
   });
 
-  const pathStr = route.path.replace(/'/g, "\\'");
+  const pathLiteral = jsStringLiteral(route.path);
   const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
   const pageDefExpr = pageDefinitionExpr(route.varName);
   const routeMeta = routeMetaExpr(route.varName);
@@ -68,7 +72,7 @@ export function renderActionRoute(
   const headExtrasExpr = isSSG ? '__headExtras' : JSON.stringify(docConfig.headExtras);
 
   lines.push(`// Action POST: ${route.path} (${route.filePath})`);
-  lines.push(`app.post('${pathStr}', async (c) => {`);
+  lines.push(`app.post(${pathLiteral}, async (c) => {`);
   lines.push(`  let __tag = ${tagNameExpr}`);
   lines.push(`  let __page = ${pageDefExpr}`);
   lines.push(`  let __params = {}`);
@@ -135,7 +139,9 @@ export function renderActionRoute(
   lines.push(`        cspNonce: c.get('cspNonce'),`);
   lines.push(`      }), 404)`);
   lines.push(`    }`);
-  lines.push(`    console.error('[openElement] Action POST failed for ${pathStr}:', err)`);
+  lines.push(
+    `    console.error('[openElement] Action POST failed for ' + ${pathLiteral} + ':', err)`,
+  );
   lines.push(`    if (import.meta.env.PROD) {`);
   lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   lines.push(`    } else {`);
@@ -327,7 +333,7 @@ export function renderPageRoute(
   });
 
   lines.push(`// Page: ${route.path} (${route.filePath})`);
-  const pathStr = route.path.replace(/'/g, "\\'");
+  const pathLiteral = jsStringLiteral(route.path);
   const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
   const pageDefExpr = pageDefinitionExpr(route.varName);
   const routeMeta = routeMetaExpr(route.varName);
@@ -335,7 +341,7 @@ export function renderPageRoute(
     JSON.stringify(route.filePath)
   } }`;
   lines.push(`// GET handler - renders the page with loader data`);
-  lines.push(`app.get('${pathStr}', async (c) => {`);
+  lines.push(`app.get(${pathLiteral}, async (c) => {`);
   lines.push(`  let __tag = ${tagNameExpr}`);
   lines.push(`  let __page = ${pageDefExpr}`);
   lines.push(`  let __params = {}`);
@@ -425,12 +431,12 @@ export function renderPageRoute(
   lines.push(`        }), 500)`);
   lines.push(`      } catch (errorRenderFailure) {`);
   lines.push(
-    `        console.error('[openElement] Route error renderer failed for ${pathStr}:', errorRenderFailure)`,
+    `        console.error('[openElement] Route error renderer failed for ' + ${pathLiteral} + ':', errorRenderFailure)`,
   );
   lines.push(`      }`);
   lines.push(`    }`);
   lines.push(
-    `    console.error('[openElement] Route render failed for ${pathStr}:', err)`,
+    `    console.error('[openElement] Route render failed for ' + ${pathLiteral} + ':', err)`,
   );
   lines.push(`    if (import.meta.env.PROD) {`);
   lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
