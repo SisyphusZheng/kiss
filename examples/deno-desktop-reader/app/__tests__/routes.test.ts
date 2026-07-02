@@ -245,6 +245,7 @@ Deno.test('WC Interop route exports a function', async () => {
 
 Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
+  // Inspect pure VNode output; this test does not need DOM rendering.
   const page = new mod.default();
   const tags = collectVNodeTags(page.render());
 
@@ -268,7 +269,7 @@ Deno.test('Reader Preact islands register deterministic custom elements', async 
 });
 
 function collectVNodeTags(node: unknown, tags = new Set<string>()): Set<string> {
-  if (typeof node === 'string' || node == null) return tags;
+  if (node === null || node === undefined || typeof node === 'string') return tags;
   if (Array.isArray(node)) {
     for (const child of node) collectVNodeTags(child, tags);
     return tags;
