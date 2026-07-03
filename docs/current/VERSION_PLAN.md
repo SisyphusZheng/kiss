@@ -192,6 +192,8 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - `docs/current/HYDRATION_CONTRACT.md` defines `@openelement/core/hydrate` as a
   low-level building-block subpath and points higher-level authoring to
   `@openelement/app` and `@openelement/element`.
+- `docs/current/DENO_DESKTOP_TARGET.md` defines Deno Desktop as a first-party
+  app target and records Reader's regression-grade dogfood evidence.
 - Dogfood apps may block release quality only as evidence. They must not define
   OpenElement's public product identity.
 - AutoFlow3 and docs-truth gates are infrastructure. They should become more
