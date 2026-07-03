@@ -38,6 +38,19 @@ Most applications should use `openElement()` from `@openelement/adapter-vite/app
 instead; it combines the core adapter, content pipeline, and i18n with one
 shared build context.
 
+## Nitro Deploy Adapter
+
+Nitro is the first-party production deployment adapter proven by this package's
+Node and Workers fixtures. Import the Nitro bridge from the explicit subpath:
+
+```ts
+import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-mount';
+```
+
+The package root keeps a temporary alpha compatibility re-export for existing
+proof consumers, but new code should use the `nitro-mount` subpath so Vite build
+orchestration and deployment adapter concerns stay visibly separate.
+
 ## Main Options
 
 | Option           | Default            | Purpose                                         |

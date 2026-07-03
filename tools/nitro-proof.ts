@@ -80,8 +80,102 @@ async function readTextFiles(dir: URL, suffix: string): Promise<string> {
   return content;
 }
 
-async function fetchText(baseUrl: string, path: string, expectedStatus: number): Promise<string> {
-  const response = await fetch(`${baseUrl}${path}`, { redirect: 'manual' });
+type FetchLike = (request: Request) => Promise<Response> | Response;
+
+async function assertRuntimeRoutes(fetchRuntime: FetchLike): Promise<void> {
+  const proof = await fetchRuntime(new Request('http://127.0.0.1/api/proof'));
+  const payload = await proof.json() as {
+    ok?: boolean;
+    framework?: string;
+    runtime?: string;
+    path?: string;
+    env?: string;
+  };
+  if (
+    proof.status !== 200 ||
+    payload.ok !== true ||
+    payload.framework !== 'openElement' ||
+    payload.runtime !== 'nitro' ||
+    payload.path !== '/api/proof' ||
+    payload.env !== 'nitro'
+  ) {
+    console.error(JSON.stringify({ status: proof.status, payload }, null, 2));
+    Deno.exit(1);
+  }
+
+  const staticHtml = await fetchRuntimeText(fetchRuntime, '/static', 200);
+  assertIncludes(staticHtml, 'data-route="static"', 'static route');
+  assertNotIncludes(staticHtml, '<script', 'static zero-JS route');
+  assertNotIncludes(staticHtml, 'open-element-island-visible.js', 'static zero-JS route');
+  assertNotIncludes(staticHtml, 'open-element-client-only.js', 'static zero-JS route');
+
+  const loadHtml = await fetchRuntimeText(fetchRuntime, '/load', 200);
+  assertIncludes(loadHtml, 'data-load="nitro-data"', 'load route');
+
+  const layoutHtml = await fetchRuntimeText(fetchRuntime, '/layout', 200);
+  assertIncludes(layoutHtml, 'data-layout="shell"', 'layout route');
+  assertIncludes(layoutHtml, 'data-route="layout"', 'layout route');
+
+  const redirect = await fetchRuntime(
+    new Request('http://127.0.0.1/redirect', { redirect: 'manual' }),
+  );
+  if (redirect.status !== 302 || redirect.headers.get('location') !== '/static') {
+    console.error(
+      JSON.stringify(
+        { status: redirect.status, location: redirect.headers.get('location') },
+        null,
+        2,
+      ),
+    );
+    Deno.exit(1);
+  }
+
+  const notFoundHtml = await fetchRuntimeText(fetchRuntime, '/not-found', 404);
+  assertIncludes(notFoundHtml, 'data-route="not-found"', 'not-found route');
+
+  const errorHtml = await fetchRuntimeText(fetchRuntime, '/error', 500);
+  assertIncludes(errorHtml, 'data-route="error"', 'error route');
+
+  const islandHtml = await fetchRuntimeText(fetchRuntime, '/island', 200);
+  assertIncludes(islandHtml, 'data-hydrate="visible"', 'explicit island route');
+  assertIncludes(islandHtml, 'open-element-island-visible.js', 'explicit island route');
+  assertNotIncludes(islandHtml, 'open-element-client-only.js', 'explicit island route');
+
+  const clientOnlyHtml = await fetchRuntimeText(fetchRuntime, '/client-only', 200);
+  assertIncludes(clientOnlyHtml, 'data-hydrate="only"', 'client-only route');
+  assertIncludes(clientOnlyHtml, 'open-element-client-only.js', 'client-only route');
+  assertNotIncludes(clientOnlyHtml, 'open-element-island-visible.js', 'client-only route');
+
+  const isr = await fetchRuntime(new Request('http://127.0.0.1/isr'));
+  const isrText = await isr.text();
+  if (
+    isr.status !== 200 ||
+    !isrText.includes('data-route="isr"') ||
+    isr.headers.get('x-open-element-cache-intent') !== 'isr; revalidate=60' ||
+    isr.headers.get('cache-control') !== 'public, max-age=60, s-maxage=60'
+  ) {
+    console.error(
+      JSON.stringify(
+        {
+          status: isr.status,
+          cacheIntent: isr.headers.get('x-open-element-cache-intent'),
+          cacheControl: isr.headers.get('cache-control'),
+          body: isrText,
+        },
+        null,
+        2,
+      ),
+    );
+    Deno.exit(1);
+  }
+}
+
+async function fetchRuntimeText(
+  fetchRuntime: FetchLike,
+  path: string,
+  expectedStatus: number,
+): Promise<string> {
+  const response = await fetchRuntime(new Request(`http://127.0.0.1${path}`));
   const text = await response.text();
   if (response.status !== expectedStatus) {
     console.error(JSON.stringify({ path, expectedStatus, status: response.status, text }, null, 2));
@@ -93,13 +187,8 @@ async function fetchText(baseUrl: string, path: string, expectedStatus: number):
 async function smokeNode(serverEntry: URL): Promise<void> {
   const port = 47937;
   const baseUrl = `http://127.0.0.1:${port}`;
-  const server = new Deno.Command('deno', {
-    args: [
-      'run',
-      '-A',
-      '--node-modules-dir=auto',
-      serverEntry.pathname,
-    ],
+  const server = new Deno.Command('node', {
+    args: [serverEntry.pathname],
     env: {
       PORT: String(port),
       HOST: '127.0.0.1',
@@ -124,92 +213,21 @@ async function smokeNode(serverEntry: URL): Promise<void> {
       Deno.exit(1);
     }
 
-    const payload = await response.json() as {
-      ok?: boolean;
-      framework?: string;
-      runtime?: string;
-      path?: string;
-      env?: string;
-    };
-    if (
-      response.status !== 200 ||
-      payload.ok !== true ||
-      payload.framework !== 'openElement' ||
-      payload.runtime !== 'nitro' ||
-      payload.path !== '/api/proof' ||
-      payload.env !== 'nitro'
-    ) {
-      console.error(JSON.stringify({ status: response.status, payload }, null, 2));
+    if (response.status !== 200) {
+      console.error(
+        JSON.stringify({ status: response.status, body: await response.text() }, null, 2),
+      );
       Deno.exit(1);
     }
+
+    await assertRuntimeRoutes((request) => {
+      const url = new URL(request.url);
+      return fetch(new Request(`${baseUrl}${url.pathname}${url.search}`, request));
+    });
 
     await assertPublicAsset(baseUrl, '/open-element-proof.txt', 'openElement Nitro public asset');
     await assertPublicAsset(baseUrl, '/open-element-island-visible.js', 'open-proof-island');
     await assertPublicAsset(baseUrl, '/open-element-client-only.js', 'open-proof-client-only');
-
-    const staticHtml = await fetchText(baseUrl, '/static', 200);
-    assertIncludes(staticHtml, 'data-route="static"', 'static route');
-    assertNotIncludes(staticHtml, '<script', 'static zero-JS route');
-    assertNotIncludes(staticHtml, 'open-element-island-visible.js', 'static zero-JS route');
-    assertNotIncludes(staticHtml, 'open-element-client-only.js', 'static zero-JS route');
-
-    const loadHtml = await fetchText(baseUrl, '/load', 200);
-    assertIncludes(loadHtml, 'data-load="nitro-data"', 'load route');
-
-    const layoutHtml = await fetchText(baseUrl, '/layout', 200);
-    assertIncludes(layoutHtml, 'data-layout="shell"', 'layout route');
-    assertIncludes(layoutHtml, 'data-route="layout"', 'layout route');
-
-    const redirect = await fetch(`${baseUrl}/redirect`, { redirect: 'manual' });
-    if (redirect.status !== 302 || redirect.headers.get('location') !== '/static') {
-      console.error(
-        JSON.stringify(
-          { status: redirect.status, location: redirect.headers.get('location') },
-          null,
-          2,
-        ),
-      );
-      Deno.exit(1);
-    }
-
-    const notFoundHtml = await fetchText(baseUrl, '/not-found', 404);
-    assertIncludes(notFoundHtml, 'data-route="not-found"', 'not-found route');
-
-    const errorHtml = await fetchText(baseUrl, '/error', 500);
-    assertIncludes(errorHtml, 'data-route="error"', 'error route');
-
-    const islandHtml = await fetchText(baseUrl, '/island', 200);
-    assertIncludes(islandHtml, 'data-hydrate="visible"', 'explicit island route');
-    assertIncludes(islandHtml, 'open-element-island-visible.js', 'explicit island route');
-    assertNotIncludes(islandHtml, 'open-element-client-only.js', 'explicit island route');
-
-    const clientOnlyHtml = await fetchText(baseUrl, '/client-only', 200);
-    assertIncludes(clientOnlyHtml, 'data-hydrate="only"', 'client-only route');
-    assertIncludes(clientOnlyHtml, 'open-element-client-only.js', 'client-only route');
-    assertNotIncludes(clientOnlyHtml, 'open-element-island-visible.js', 'client-only route');
-
-    const isr = await fetch(`${baseUrl}/isr`);
-    const isrText = await isr.text();
-    if (
-      isr.status !== 200 ||
-      !isrText.includes('data-route="isr"') ||
-      isr.headers.get('x-open-element-cache-intent') !== 'isr; revalidate=60' ||
-      isr.headers.get('cache-control') !== 'public, max-age=60, s-maxage=60'
-    ) {
-      console.error(
-        JSON.stringify(
-          {
-            status: isr.status,
-            cacheIntent: isr.headers.get('x-open-element-cache-intent'),
-            cacheControl: isr.headers.get('cache-control'),
-            body: isrText,
-          },
-          null,
-          2,
-        ),
-      );
-      Deno.exit(1);
-    }
   } finally {
     server.kill('SIGTERM');
     await server.status.catch(() => undefined);
@@ -218,6 +236,95 @@ async function smokeNode(serverEntry: URL): Promise<void> {
 
 async function assertPublicAsset(baseUrl: string, path: string, marker: string): Promise<void> {
   const asset = await fetch(`${baseUrl}${path}`);
+  const text = await asset.text();
+  if (asset.status !== 200 || !text.includes(marker)) {
+    console.error(JSON.stringify({ path, status: asset.status, text }, null, 2));
+    Deno.exit(1);
+  }
+}
+
+type CloudflareWorkerModule = {
+  default?: {
+    fetch?: (
+      request: Request,
+      env: CloudflareWorkerEnv,
+      context: CloudflareWorkerContext,
+    ) => Promise<Response> | Response;
+  };
+};
+
+type CloudflareWorkerEnv = {
+  OPEN_ELEMENT_PROOF: string;
+  ASSETS: { fetch: FetchLike };
+};
+
+type CloudflareWorkerContext = {
+  waitUntil: (promise: Promise<unknown>) => void;
+  passThroughOnException: () => void;
+};
+
+async function smokeWorkers(serverEntry: URL, publicDir: URL): Promise<void> {
+  const imported = await import(`${serverEntry.href}?t=${Date.now()}`) as CloudflareWorkerModule;
+  const workerFetch = imported.default?.fetch;
+  if (!workerFetch) {
+    console.error(
+      'Cloudflare Workers smoke failed: generated module does not export default.fetch',
+    );
+    Deno.exit(1);
+  }
+
+  const env: CloudflareWorkerEnv = {
+    OPEN_ELEMENT_PROOF: 'nitro',
+    ASSETS: {
+      fetch: (request) => fetchPublicAsset(publicDir, request),
+    },
+  };
+  const context: CloudflareWorkerContext = {
+    waitUntil: () => undefined,
+    passThroughOnException: () => undefined,
+  };
+  const fetchRuntime: FetchLike = (request) => workerFetch(request, env, context);
+
+  await assertRuntimeRoutes(fetchRuntime);
+
+  await assertRuntimePublicAsset(
+    fetchRuntime,
+    '/open-element-proof.txt',
+    'openElement Nitro public asset',
+  );
+  await assertRuntimePublicAsset(
+    fetchRuntime,
+    '/open-element-island-visible.js',
+    'open-proof-island',
+  );
+  await assertRuntimePublicAsset(
+    fetchRuntime,
+    '/open-element-client-only.js',
+    'open-proof-client-only',
+  );
+}
+
+async function fetchPublicAsset(publicDir: URL, request: Request): Promise<Response> {
+  const pathname = new URL(request.url).pathname;
+  const fileUrl = new URL(`.${pathname}`, publicDir);
+  const rootPath = await Deno.realPath(publicDir);
+  const filePath = await Deno.realPath(fileUrl).catch(() => '');
+  if (!filePath.startsWith(rootPath)) {
+    return new Response('Not Found', { status: 404 });
+  }
+  try {
+    return new Response(await Deno.readFile(fileUrl), { status: 200 });
+  } catch {
+    return new Response('Not Found', { status: 404 });
+  }
+}
+
+async function assertRuntimePublicAsset(
+  fetchRuntime: FetchLike,
+  path: string,
+  marker: string,
+): Promise<void> {
+  const asset = await fetchRuntime(new Request(`http://127.0.0.1${path}`));
   const text = await asset.text();
   if (asset.status !== 200 || !text.includes(marker)) {
     console.error(JSON.stringify({ path, status: asset.status, text }, null, 2));
@@ -269,23 +376,7 @@ if (preset === 'node') {
   await smokeNode(serverEntry);
 } else {
   await assertFile(new URL('server/wrangler.json', output), 'Cloudflare Workers wrangler config');
-  for (
-    const marker of [
-      'openElement',
-      'nitro',
-      'data-route="static"',
-      'data-load="nitro-data"',
-      'data-layout="shell"',
-      'data-hydrate="visible"',
-      'data-hydrate="only"',
-      'x-open-element-cache-intent',
-    ]
-  ) {
-    if (!outputServerCode.includes(marker)) {
-      console.error(`Cloudflare Workers output does not contain proof marker: ${marker}`);
-      Deno.exit(1);
-    }
-  }
+  await smokeWorkers(serverEntry, new URL(`${manifest.publicDir || 'public'}/`, output));
 }
 
 console.log(`nitro proof ${preset}: real Nitro ${expectedPreset} output passed`);
