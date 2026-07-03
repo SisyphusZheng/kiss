@@ -122,6 +122,10 @@ export function createReleasePlan(
       name: 'package artifact gate',
       command: ['deno', 'task', 'package-artifacts:check'],
     },
+    {
+      name: 'cleanup package artifact gate outputs',
+      run: cleanupReleaseGateGeneratedArtifacts,
+    },
     ...(canPublishNpm()
       ? [
         {
@@ -204,6 +208,10 @@ export function createReleasePlan(
       run: () => updateCurrentVersionAnchors(targetVersion),
     },
     {
+      name: 'regenerate UI manifest after version bump',
+      command: ['deno', 'task', 'generate:ui-manifest'],
+    },
+    {
       name: 'format release bump',
       command: ['deno', 'task', 'fmt'],
     },
@@ -214,6 +222,7 @@ export function createReleasePlan(
         'add',
         'deno.json',
         'packages/*/deno.json',
+        'packages/ui/src/generated-manifest.json',
         'tools/project-constants.ts',
         'README.md',
         'README.zh.md',
