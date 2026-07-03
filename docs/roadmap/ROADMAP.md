@@ -897,7 +897,8 @@ the contracts they implement.
 
 Status: implementation complete and in release-candidate cleanup. All alpha.6
 GitHub issue slices are closed; the remaining release-candidate work is to close
-the final CodeQL dynamic-import code-generation alert and run the
+the final CodeQL dynamic-import code-generation alert with admitted specifiers
+and shared JavaScript literal escaping for generated entry code, then run the
 `0.41.0-alpha.6` package workflow.
 
 Before broad package/app/SSG reshaping, alpha.6 first closes the final cleanup
