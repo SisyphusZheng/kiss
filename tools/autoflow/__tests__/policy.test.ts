@@ -222,8 +222,13 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
       step.name,
       step.command?.join(' ') ?? '',
     ]);
+    assert(commands.some(([name]) => name === 'regenerate UI manifest after version bump'));
+    assert(
+      commands.some(([, command]) => command.includes('packages/ui/src/generated-manifest.json')),
+    );
     assert(commands.some(([name]) => name === 'run release gates after bump'));
     assert(commands.some(([name]) => name === 'package artifact gate'));
+    assert(commands.some(([name]) => name === 'cleanup package artifact gate outputs'));
     assert(commands.some(([name]) => name === 'push dev'));
     assert(commands.some(([name]) => name === 'sync dev to main'));
     assert(
@@ -256,9 +261,11 @@ Deno.test('release: CI plan publishes from main without touching dev', () => {
     assertFalse(names.includes('push dev'));
     assertFalse(names.includes('sync dev to main'));
     assertFalse(names.includes('checkout dev'));
+    assert(names.includes('regenerate UI manifest after version bump'));
     assert(names.includes('pull latest main'));
     assert(names.includes('push main evidence'));
     assert(names.includes('package artifact gate'));
+    assert(names.includes('cleanup package artifact gate outputs'));
     assert(names.includes('publish npm packages'));
     assert(names.includes('post-publish npm consumer smoke'));
     assertFalse(names.includes('publish jsr packages'));
