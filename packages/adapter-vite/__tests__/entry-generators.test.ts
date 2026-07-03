@@ -11,6 +11,8 @@ const REJECTED_ISLAND_MODULE_PATHS = [
   './bad\npath.ts',
   './bad\\path.ts',
   './bad%0a.ts',
+  './bad<path.ts',
+  './bad\u2028path.ts',
   '',
 ] as const;
 

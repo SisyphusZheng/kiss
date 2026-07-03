@@ -75,10 +75,12 @@ implementation PR train has closed the alpha.6 issue set:
 - Front-half repository cleanup audit: #205 through #212.
 
 Release-candidate cleanup closes the final CodeQL alert for island dynamic
-import code generation by routing generated client-entry imports through an
-explicit admitted module-specifier boundary. After GitHub CodeQL, AutoFlow CI,
-review, and Cloudflare checks pass on that cleanup PR, the release workflow
-should publish `0.41.0-alpha.6` from `main`.
+import code generation with an explicit admitted module-specifier boundary plus
+CodeQL-recognized JavaScript literal escaping shared by generated client and
+server entry code before emitted JavaScript receives route, tag, or module
+literals. After GitHub CodeQL, AutoFlow CI, review, and Cloudflare checks pass
+on that cleanup PR, the release workflow should publish `0.41.0-alpha.6` from
+`main`.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 

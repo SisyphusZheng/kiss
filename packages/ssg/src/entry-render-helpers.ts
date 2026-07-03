@@ -15,6 +15,7 @@ import type {
   PageRouteDecl,
   RendererDecl,
 } from '@openelement/protocol/ssg';
+import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
 
 export function renderImport(imp: ImportDecl): string {
   const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');
@@ -41,7 +42,7 @@ export function routeRevalidateExpr(varName: string): string {
 }
 
 export function jsStringLiteral(value: string): string {
-  return JSON.stringify(value);
+  return quoteGeneratedJavaScriptStringLiteral(value);
 }
 
 /** Generate a POST handler for a page route (form action handling). */

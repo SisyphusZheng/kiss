@@ -135,8 +135,9 @@ route-scanner test ownership, stale design artifacts, and active-source audit
 labels. It also closed the product-truth and CodeQL/code-scanning backlog
 (#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
 release hygiene. The final release-candidate cleanup closes the remaining
-CodeQL dynamic-import code-generation alert before the `0.41.0-alpha.6` package
-workflow runs.
+CodeQL dynamic-import code-generation alert with admitted island module
+specifiers and shared CodeQL-recognized JavaScript literal escaping for generated
+client and server entry code before the `0.41.0-alpha.6` package workflow runs.
 
 ## Non-Goals
 

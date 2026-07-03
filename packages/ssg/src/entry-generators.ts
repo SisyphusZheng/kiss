@@ -7,6 +7,7 @@
 
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
+import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
 import { isCustomElementName } from './custom-element-name.ts';
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
@@ -60,12 +61,8 @@ function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpe
   return modulePath as AdmittedIslandModuleSpecifier;
 }
 
-function jsStringLiteral(value: string): string {
-  return JSON.stringify(value);
-}
-
 function islandImportFactory(modulePath: AdmittedIslandModuleSpecifier): string {
-  return `() => import(${jsStringLiteral(modulePath)})`;
+  return `() => import(${quoteGeneratedJavaScriptStringLiteral(modulePath)})`;
 }
 
 export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
@@ -97,25 +94,29 @@ export function generateClientEntry(
   }
 
   const islandMap = admittedIslands
-    .map((i) => `  ${jsStringLiteral(i.tagName)}: ${islandImportFactory(i.modulePath)}`)
+    .map((i) =>
+      `  ${quoteGeneratedJavaScriptStringLiteral(i.tagName)}: ${islandImportFactory(i.modulePath)}`
+    )
     .join(',\n');
 
-  const tags = admittedIslands.map((i) => jsStringLiteral(i.tagName)).join(', ');
+  const tags = admittedIslands.map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName)).join(
+    ', ',
+  );
   const loadTags = admittedIslands
     .filter((i) => i.strategy === 'load')
-    .map((i) => jsStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
   const visibleTags = admittedIslands
     .filter((i) => i.strategy === 'visible')
-    .map((i) => jsStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
   const idleTags = admittedIslands
     .filter((i) => i.strategy === 'idle')
-    .map((i) => jsStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
   const onlyTags = admittedIslands
     .filter((i) => i.strategy === 'only')
-    .map((i) => jsStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
 
   return `// openElement Client Entry (v0.21 - load/idle/visible/only)
