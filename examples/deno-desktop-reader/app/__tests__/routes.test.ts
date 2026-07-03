@@ -1,7 +1,7 @@
 /**
  * Smoke tests for route components.
- * Each route module exports a default function that returns JSX.
- * These tests verify the exports exist and are callable.
+ * Tests verify route exports, VNode tag structure, and custom element
+ * registration.
  */
 
 import { assertEquals } from '@std/assert';
