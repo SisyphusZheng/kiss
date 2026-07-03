@@ -73,16 +73,22 @@ export function createAssetManifestFromViteManifest(
   basePath = '/',
 ): OpenElementAssetManifest {
   const entries: OpenElementAssetManifestEntry[] = [];
+  const seenHrefs = new Set<string>();
+  const pushEntry = (entry: OpenElementAssetManifestEntry) => {
+    if (seenHrefs.has(entry.href)) return;
+    seenHrefs.add(entry.href);
+    entries.push(entry);
+  };
 
   for (const value of Object.values(manifest)) {
     if (value.file) {
-      entries.push(toAssetEntry(value.file, 'script', basePath));
+      pushEntry(toAssetEntry(value.file, 'script', basePath));
     }
     for (const css of value.css ?? []) {
-      entries.push(toAssetEntry(css, 'style', basePath));
+      pushEntry(toAssetEntry(css, 'style', basePath));
     }
     for (const asset of value.assets ?? []) {
-      entries.push(toAssetEntry(asset, 'asset', basePath));
+      pushEntry(toAssetEntry(asset, 'asset', basePath));
     }
   }
 
@@ -97,6 +103,7 @@ function routeEntryToNode(route: RouteEntry): OpenElementRouteNode {
     kind: route.type as OpenElementRouteKind,
     path: route.path,
     filePath: route.filePath,
+    // RouteEntry has no separate importPath yet; scanned route files are also imports.
     importPath: route.filePath,
   };
   if (route.tagName !== undefined) node.tagName = route.tagName;
@@ -109,9 +116,10 @@ function toAssetEntry(
   kind: OpenElementAssetManifestEntry['kind'],
   basePath: string,
 ): OpenElementAssetManifestEntry {
+  const normalizedFileName = fileName.replace(/^\/+/, '');
   return {
-    fileName,
-    href: `${normalizeBasePath(basePath)}${fileName.replace(/^\/+/, '')}`,
+    fileName: normalizedFileName,
+    href: `${normalizeBasePath(basePath)}${normalizedFileName}`,
     kind,
   };
 }

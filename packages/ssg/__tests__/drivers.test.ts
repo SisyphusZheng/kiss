@@ -69,8 +69,10 @@ Deno.test('ssg drivers: Hono is an explicit request driver over route entries', 
   assertEquals(driver.name, 'hono');
   assertEquals(driver.routeGraph([]), { basePath: '/', routes: [] });
   assertEquals(driver.routeGraph([], '/docs/'), { basePath: '/docs', routes: [] });
+  assertEquals(createRouteGraphFromEntries([], '/docs/'), { basePath: '/docs', routes: [] });
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'const app = new Hono()');
+  assertStringIncludes(driver.entryCode([], { ssg: true }), 'export const routeInfo');
 });
 
 Deno.test('ssg drivers: Vite manifest becomes an OpenElement AssetManifest', () => {
@@ -116,9 +118,24 @@ Deno.test('ssg drivers: Vite asset manifest handles empty and CSS-only entries',
     {
       basePath: '/docs/',
       entries: [
-        { fileName: '/assets/critical.css', href: '/docs/assets/critical.css', kind: 'style' },
+        { fileName: 'assets/critical.css', href: '/docs/assets/critical.css', kind: 'style' },
         { fileName: 'assets/font.woff2', href: '/docs/assets/font.woff2', kind: 'asset' },
       ],
     },
   );
+});
+
+Deno.test('ssg drivers: Vite asset manifest deduplicates shared assets by href', () => {
+  const manifest = createAssetManifestFromViteManifest(
+    {
+      'src/a.ts': { css: ['assets/shared.css'], assets: ['/assets/logo.svg'] },
+      'src/b.ts': { css: ['/assets/shared.css'], assets: ['assets/logo.svg'] },
+    },
+    '/docs',
+  );
+
+  assertEquals(manifest.entries, [
+    { fileName: 'assets/shared.css', href: '/docs/assets/shared.css', kind: 'style' },
+    { fileName: 'assets/logo.svg', href: '/docs/assets/logo.svg', kind: 'asset' },
+  ]);
 });
