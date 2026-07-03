@@ -21,6 +21,10 @@ adapters.
 These contracts are exported from `@openelement/app/model` and re-exported from
 `@openelement/app`.
 
+`@openelement/app/hono` is the official default request-driver bridge. It maps a
+Hono-like context into `RequestContext` before OpenElement framework code sees
+request data.
+
 ## Official Defaults
 
 | Tool / target       | Role                                                                 |
@@ -33,9 +37,19 @@ These contracts are exported from `@openelement/app/model` and re-exported from
 | Preact islands      | Optional island authoring adapter, not the default UI model.         |
 | Third-party WC libs | Compatibility target beside Basic Element conveniences.              |
 
+`@openelement/ssg/drivers` contains adapter-facing driver contracts:
+
+- `createHonoRequestDriver()` keeps Hono entry generation behind an explicit
+  request-driver boundary.
+- `createViteAssetDriver()` maps Vite manifest output into OpenElement
+  `AssetManifest`.
+- `createRouteGraphFromEntries()` maps scanned route entries into `RouteGraph`.
+
 ## Boundary Rules
 
 - App model tests must run without booting Hono.
+- Hono request-driver tests must prove request data crosses into
+  `RequestContext` before app code uses it.
 - Hono, Nitro, Vite, and Deno Desktop may optimize their implementations, but
   public docs and tests should name OpenElement concepts first.
 - Nitro output proof remains required evidence, but Nitro-specific routes are

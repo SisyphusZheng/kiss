@@ -44,9 +44,11 @@ Deno.test('resolveOpenPackageExport maps public subpaths to source files', () =>
   assertEquals(resolveOpenPackageExport('signal', 'framework'), 'src/framework.ts');
   assertEquals(resolveOpenPackageExport('signal', 'preact-engine'), 'src/preact-engine.ts');
   assertEquals(resolveOpenPackageExport('app', '.'), 'src/index.ts');
+  assertEquals(resolveOpenPackageExport('app', 'hono'), 'src/hono.ts');
   assertEquals(resolveOpenPackageExport('app', 'spa'), 'src/spa.ts');
   assertEquals(resolveOpenPackageExport('app', 'model'), 'src/model.ts');
   assertEquals(resolveOpenPackageExport('app', 'preact'), 'src/preact.ts');
+  assertEquals(resolveOpenPackageExport('ssg', 'drivers'), 'src/drivers.ts');
   assertEquals(resolveOpenPackageExport('element', '.'), 'src/index.ts');
   assertEquals(
     resolveOpenPackageExport('element', 'open-element-hydration'),

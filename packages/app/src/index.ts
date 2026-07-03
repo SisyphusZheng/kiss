@@ -67,3 +67,7 @@ export type {
   OpenElementRouteKind,
   OpenElementRouteNode,
 } from './model.ts';
+
+// Official default request driver bridge
+export { createHonoRequestContext } from './hono.ts';
+export type { CreateHonoRequestContextOptions, HonoContextLike, HonoRequestLike } from './hono.ts';
