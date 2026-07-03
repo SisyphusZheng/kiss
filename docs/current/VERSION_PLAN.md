@@ -27,7 +27,8 @@ The release is staged through alpha lines with explicit execution plans:
   PR/framework closure.
 - **alpha.6**: Front-half cleanup audit closure, OpenElement App/protocol
   architecture hardening, official stack contracts, Deno Desktop target
-  contract, and Reader regression-grade dogfood.
+  contract, and Reader regression-grade dogfood. Implementation is complete
+  and in release-candidate cleanup for `0.41.0-alpha.6`.
 - **alpha.7**: Mac Mastodon Desktop incubation after alpha.6 validates the
   framework architecture. This keeps the OpenElement + Deno Desktop social/IM
   idea alive as a narrow networked desktop dogfood app, not a full authenticated
@@ -123,19 +124,19 @@ private APIs, account cookies, scraping, or copyrighted book content.
 React/Vue/Svelte adapters stayed out of alpha.5 unless required to validate SPA
 navigation disposal semantics.
 
-alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
-defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
-RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
-and Deno Desktop target contracts. Before broad package/app reshaping, alpha.6
-has closed the cleanup-audit front half (#205 through #212): release truth,
-package surface drift, router internal exports, tracked ignored generated
-artifacts, stale resolver maps, duplicate tooling helpers, route-scanner test
-ownership, stale design artifacts, and active-source audit labels. It also
-closed the product-truth and CodeQL/code-scanning backlog (#192 through #194 and
-#186 through #191) as part of A6.6/A6.8 governance and release hygiene.
-Trust-boundary work has priority inside alpha.6: route codegen literals, island
-manifest extraction, JSR source URL construction, and dynamic import specifier
-admission must be structurally fixed or explicitly proven safe before beta.1.
+alpha.6 is implementation-complete and in release-candidate cleanup. It keeps
+Vite/Hono/Nitro as official defaults, but moves framework ownership to
+OpenElement concepts: RouteGraph, RenderPipeline, RequestContext,
+AssetManifest, IslandManifest, DeploymentTarget, and Deno Desktop target
+contracts. It closed the cleanup-audit front half (#205 through #212): release
+truth, package surface drift, router internal exports, tracked ignored
+generated artifacts, stale resolver maps, duplicate tooling helpers,
+route-scanner test ownership, stale design artifacts, and active-source audit
+labels. It also closed the product-truth and CodeQL/code-scanning backlog
+(#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
+release hygiene. The final release-candidate cleanup closes the remaining
+CodeQL dynamic-import code-generation alert before the `0.41.0-alpha.6` package
+workflow runs.
 
 ## Non-Goals
 

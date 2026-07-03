@@ -16,6 +16,15 @@ const SAFE_BARE_SPECIFIER_RE =
   /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
 const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
 
+declare const admittedIslandModuleSpecifier: unique symbol;
+type AdmittedIslandModuleSpecifier = string & {
+  readonly [admittedIslandModuleSpecifier]: true;
+};
+
+interface AdmittedClientIslandEntry extends Omit<ClientIslandEntry, 'modulePath'> {
+  modulePath: AdmittedIslandModuleSpecifier;
+}
+
 function hasControlCharacter(value: string): boolean {
   for (let i = 0; i < value.length; i++) {
     const code = value.charCodeAt(i);
@@ -46,12 +55,26 @@ export function validateIslandModuleSpecifier(modulePath: string): void {
   }
 }
 
-export function validateClientIslandEntry(entry: ClientIslandEntry): void {
+function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
+  validateIslandModuleSpecifier(modulePath);
+  return modulePath as AdmittedIslandModuleSpecifier;
+}
+
+function jsStringLiteral(value: string): string {
+  return JSON.stringify(value);
+}
+
+function islandImportFactory(modulePath: AdmittedIslandModuleSpecifier): string {
+  return `() => import(${jsStringLiteral(modulePath)})`;
+}
+
+export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
   if (!isCustomElementName(entry.tagName)) {
     throw new Error(`Invalid island tagName: ${entry.tagName}`);
   }
+  let modulePath: AdmittedIslandModuleSpecifier;
   try {
-    validateIslandModuleSpecifier(entry.modulePath);
+    modulePath = admitIslandModuleSpecifier(entry.modulePath);
   } catch {
     throw new Error(`Invalid island modulePath for ${entry.tagName}: ${entry.modulePath}`);
   }
@@ -61,37 +84,38 @@ export function validateClientIslandEntry(entry: ClientIslandEntry): void {
         'Use one of: load, idle, visible, only.',
     );
   }
+  return { ...entry, modulePath };
 }
 
 export function generateClientEntry(
   islands: ClientIslandEntry[],
 ): string {
-  islands.forEach(validateClientIslandEntry);
+  const admittedIslands = islands.map(validateClientIslandEntry);
 
-  if (islands.length === 0) {
+  if (admittedIslands.length === 0) {
     return '// openElement Client Entry - No islands detected, zero client JS needed\n';
   }
 
-  const islandMap = islands
-    .map((i) => `  ${JSON.stringify(i.tagName)}: () => import(${JSON.stringify(i.modulePath)})`)
+  const islandMap = admittedIslands
+    .map((i) => `  ${jsStringLiteral(i.tagName)}: ${islandImportFactory(i.modulePath)}`)
     .join(',\n');
 
-  const tags = islands.map((i) => JSON.stringify(i.tagName)).join(', ');
-  const loadTags = islands
+  const tags = admittedIslands.map((i) => jsStringLiteral(i.tagName)).join(', ');
+  const loadTags = admittedIslands
     .filter((i) => i.strategy === 'load')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => jsStringLiteral(i.tagName))
     .join(', ');
-  const visibleTags = islands
+  const visibleTags = admittedIslands
     .filter((i) => i.strategy === 'visible')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => jsStringLiteral(i.tagName))
     .join(', ');
-  const idleTags = islands
+  const idleTags = admittedIslands
     .filter((i) => i.strategy === 'idle')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => jsStringLiteral(i.tagName))
     .join(', ');
-  const onlyTags = islands
+  const onlyTags = admittedIslands
     .filter((i) => i.strategy === 'only')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => jsStringLiteral(i.tagName))
     .join(', ');
 
   return `// openElement Client Entry (v0.21 - load/idle/visible/only)

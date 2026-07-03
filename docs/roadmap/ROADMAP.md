@@ -2,8 +2,9 @@
 
 > Source of truth for forward version planning.\
 > Current package line: v0.41.0-alpha.5 SPA Mode + Deno Desktop Reader Proof.\
+> Current implementation line: v0.41.0-alpha.6 release candidate.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
-> Updated: 2026-07-01.
+> Updated: 2026-07-03.
 
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
@@ -92,8 +93,8 @@ v0.41-v1.0 blocker.
 | v0.41.0-alpha.3 | Third-party WC in OpenElement                      | Consume Lit/Shoelace/Material Web Components inside openElement; document interop contract; pure-ESM/pure-ECMAScript npm quality gates.                                                                                                    | Merged                   |
 | v0.41.0-alpha.4 | OpenElement in Fresh                               | Prove openElement components inside Fresh through the lightweight client runtime and Preact island proof.                                                                                                                                  | Released                 |
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Reader Proof               | First-class single-page-application mode with client-side router; WeRead-style Deno Desktop reader backed by local/open fixtures; no WeRead private API integration.                                                                       | Released                 |
-| v0.41.0-alpha.6 | App Protocol Architecture Hardening                | Close the front-half cleanup audit, sync product truth, make App own RouteGraph/RenderPipeline/RequestContext, keep Vite/Hono/Nitro as official adapters, close CodeQL/trust-boundary backlog, and promote Reader into regression dogfood. | Planned                  |
-| v0.41.0-alpha.7 | Mac Mastodon Desktop Incubation                    | OpenElement + Deno Desktop macOS social/IM-shaped dogfood app; accountless Mastodon/GoToSocial reading first, no OAuth/DM/notifications yet.                                                                                               | Planned                  |
+| v0.41.0-alpha.6 | App Protocol Architecture Hardening                | Close the front-half cleanup audit, sync product truth, make App own RouteGraph/RenderPipeline/RequestContext, keep Vite/Hono/Nitro as official adapters, close CodeQL/trust-boundary backlog, and promote Reader into regression dogfood. | Release candidate        |
+| v0.41.0-alpha.7 | Mac Mastodon Desktop Incubation                    | OpenElement + Deno Desktop macOS social/IM-shaped dogfood app; accountless Mastodon/GoToSocial reading first, no OAuth/DM/notifications yet.                                                                                               | Next                     |
 | v0.41.0-beta.1  | Adoption Freeze                                    | Freeze the five-minute starter path, API docs, website positioning, public surface labels, Deno toolchain truth, logo/brand rendering, npm metadata, and release truth before stable v0.41.0.                                              | Planned                  |
 | v0.41.0         | WC fullstack framework + Basic Element proof       | Stable npm-first distribution, hardened signal-DOM architecture, validated WC integration, SPA reader proof, app architecture hardening, desktop app incubation, and adoption-ready docs.                                                  | Planned                  |
 | v0.42.0         | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                                                                                                  | Planned                  |
@@ -893,6 +894,11 @@ After alpha.5 proves SPA mode and the Deno Desktop Reader, alpha.6 turns the
 lessons into a cleaner framework architecture. The goal is to keep
 Vite/Hono/Nitro/Deno Desktop as official defaults while making OpenElement own
 the contracts they implement.
+
+Status: implementation complete and in release-candidate cleanup. All alpha.6
+GitHub issue slices are closed; the remaining release-candidate work is to close
+the final CodeQL dynamic-import code-generation alert and run the
+`0.41.0-alpha.6` package workflow.
 
 Before broad package/app/SSG reshaping, alpha.6 first closes the final cleanup
 audit front half: release truth, package surface drift, router internal exports,
