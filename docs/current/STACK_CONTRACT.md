@@ -45,6 +45,10 @@ request data.
   `AssetManifest`.
 - `createRouteGraphFromEntries()` maps scanned route entries into `RouteGraph`.
 
+`@openelement/adapter-vite/nitro-mount` contains the first-party Nitro deploy
+adapter bridge. The adapter-vite root keeps a temporary alpha compatibility
+re-export, but stack docs and new proof code should use the explicit subpath.
+
 ## Boundary Rules
 
 - App model tests must run without booting Hono.
@@ -52,8 +56,9 @@ request data.
   `RequestContext` before app code uses it.
 - Hono, Nitro, Vite, and Deno Desktop may optimize their implementations, but
   public docs and tests should name OpenElement concepts first.
-- Nitro output proof remains required evidence, but Nitro-specific routes are
-  not the authoring API for OpenElement pages.
+- Nitro output proof must execute generated Node and Workers output. Nitro
+  route files are deploy-adapter glue, not the authoring API for OpenElement
+  pages.
 - Deno Desktop proof is a native app target check, not merely a localhost
   browser preview.
 - Dogfood apps prove the framework contract; they do not create extra product

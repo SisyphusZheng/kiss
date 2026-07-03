@@ -222,9 +222,10 @@ Local evidence: `deno task nitro:proof:node` builds Nitro `node-server` output
 and verifies the mounted openElement Web `Response`, public asset serving,
 route/render behavior, explicit island minimality, static zero-JS output, API
 routes, and Nitro-owned cache-control for `/isr`. `deno task
-nitro:proof:workers` builds Nitro `cloudflare-module` output and verifies the
-generated Workers server entry, wrangler config, public asset, openElement
-route/render markers, and route-rule cache markers. Local, `dev`, and `main`
+nitro:proof:workers` builds Nitro `cloudflare-module` output, imports the
+generated Workers module, executes its `fetch` handler with a local
+Cloudflare-compatible asset binding, and verifies the same public asset,
+route/render, island, API, and cache-intent behavior. Local, `dev`, and `main`
 non-JSR release gates passed. JSR publish ran locally and in CI under the
 ADR-0097-era distribution policy.
 

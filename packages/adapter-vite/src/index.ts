@@ -99,7 +99,9 @@ export type { HeadExtrasResult } from './head-injection.ts';
 export { mdxPlugin, openMdx } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
-// Nitro runtime proof boundary
+// Nitro deploy adapter compatibility export.
+// Canonical alpha.6 import: @openelement/adapter-vite/nitro-mount.
+// Kept on the root surface during alpha so existing proof consumers do not break.
 export { createOpenElementNitroHandler } from './nitro-mount.ts';
 export type {
   NitroLikeRequestEvent,

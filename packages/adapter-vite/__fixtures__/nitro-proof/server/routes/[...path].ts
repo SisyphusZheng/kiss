@@ -1,5 +1,4 @@
 import { createOpenElementNitroHandler } from '../../../../src/nitro-mount.ts';
-import { eventHandler, getMethod, getRequestHeaders, getRequestURL } from 'npm:h3@2.0.1-rc.22';
 
 const openElementHandler = createOpenElementNitroHandler({
   baseUrl: 'http://localhost',
@@ -90,15 +89,20 @@ function html(body: string, headers: Headers, status = 200): Response {
   });
 }
 
-export default eventHandler(async (event) => {
-  const url = getRequestURL(event);
+type NitroProofEvent = {
+  request?: Request;
+  url?: URL;
+};
+
+export default async function openElementNitroProofRoute(
+  event: NitroProofEvent,
+): Promise<Response> {
+  const request = event.request ?? new Request(event.url ?? 'http://localhost/');
   const result = await openElementHandler({
-    method: getMethod(event),
-    path: url.pathname,
-    headers: getRequestHeaders(event),
+    request,
     env: { OPEN_ELEMENT_PROOF: 'nitro' },
     platform: { nitro: true },
   });
 
   return result.response;
-});
+}
