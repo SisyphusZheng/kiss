@@ -19,7 +19,7 @@ Deno.test('ssg drivers: maps scanned routes into OpenElement RouteGraph', () => 
       },
       {
         type: 'api',
-        path: '/api/search',
+        path: '/api/search/',
         filePath: '/project/routes/api/search.ts',
         varName: 'route1',
       },
@@ -41,6 +41,8 @@ Deno.test('ssg drivers: maps scanned routes into OpenElement RouteGraph', () => 
         path: '/docs/:slug',
         filePath: '/project/routes/docs/[slug].tsx',
         importPath: '/project/routes/docs/[slug].tsx',
+        children: undefined,
+        meta: undefined,
         tagName: 'docs-page',
         paramNames: ['slug'],
       },
@@ -49,6 +51,10 @@ Deno.test('ssg drivers: maps scanned routes into OpenElement RouteGraph', () => 
         path: '/api/search',
         filePath: '/project/routes/api/search.ts',
         importPath: '/project/routes/api/search.ts',
+        children: undefined,
+        meta: undefined,
+        paramNames: undefined,
+        tagName: undefined,
       },
     ],
   });

@@ -13,6 +13,7 @@ import type {
   OpenElementRouteKind,
   OpenElementRouteNode,
 } from '@openelement/app/model';
+import { createRouteGraph } from '@openelement/app/model';
 import type { RouteEntry } from '@openelement/protocol/framework';
 import type { HonoEntryOptions } from './entry-renderer.ts';
 import { generateHonoEntryCode } from './entry-renderer.ts';
@@ -58,14 +59,12 @@ export function createRouteGraphFromEntries(
   routes: RouteEntry[],
   basePath = '/',
 ): OpenElementRouteGraph {
-  const routeNodes = routes
-    .filter((route) => route.type === 'page' || route.type === 'api')
-    .map(routeEntryToNode);
-
-  return {
+  return createRouteGraph({
     basePath: normalizeRouteBasePath(basePath),
-    routes: routeNodes,
-  };
+    routes: routes
+      .filter((route) => route.type === 'page' || route.type === 'api')
+      .map(routeEntryToNode),
+  });
 }
 
 export function createAssetManifestFromViteManifest(
