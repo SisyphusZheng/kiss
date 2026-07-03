@@ -68,6 +68,7 @@ Deno.test('ssg drivers: Hono is an explicit request driver over route entries', 
 
   assertEquals(driver.name, 'hono');
   assertEquals(driver.routeGraph([]), { basePath: '/', routes: [] });
+  assertEquals(driver.routeGraph([], '/docs/'), { basePath: '/docs', routes: [] });
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'const app = new Hono()');
 });
@@ -94,4 +95,30 @@ Deno.test('ssg drivers: Vite manifest becomes an OpenElement AssetManifest', () 
   });
 
   assertEquals(createViteAssetDriver().name, 'vite');
+});
+
+Deno.test('ssg drivers: Vite asset manifest handles empty and CSS-only entries', () => {
+  assertEquals(createAssetManifestFromViteManifest({}), {
+    basePath: '/',
+    entries: [],
+  });
+
+  assertEquals(
+    createAssetManifestFromViteManifest(
+      {
+        'src/styles.css': {
+          css: ['/assets/critical.css'],
+          assets: ['assets/font.woff2'],
+        },
+      },
+      '/docs',
+    ),
+    {
+      basePath: '/docs/',
+      entries: [
+        { fileName: '/assets/critical.css', href: '/docs/assets/critical.css', kind: 'style' },
+        { fileName: 'assets/font.woff2', href: '/docs/assets/font.woff2', kind: 'asset' },
+      ],
+    },
+  );
 });

@@ -28,6 +28,7 @@ export interface ViteSsgAssetDriver {
   assetManifest(input: ViteManifestLike, basePath?: string): OpenElementAssetManifest;
 }
 
+/** Minimal Vite manifest entry shape consumed by the OpenElement asset driver. */
 export type ViteManifestLike = Record<
   string,
   {
@@ -110,7 +111,7 @@ function toAssetEntry(
 ): OpenElementAssetManifestEntry {
   return {
     fileName,
-    href: `${normalizeBasePath(basePath)}${fileName}`,
+    href: `${normalizeBasePath(basePath)}${fileName.replace(/^\/+/, '')}`,
     kind,
   };
 }
