@@ -352,6 +352,62 @@ Deno.test('detectAndClassifyCemPackages: classifies client-only by default', asy
   }
 });
 
+Deno.test('cemToOpenElementPackageManifest: generates third-party WC manifest path', async () => {
+  const { cemToOpenElementPackageManifest, parseCem } = await import('../src/cem-compat.ts');
+  const parseResult = parseCem(JSON.stringify({
+    schemaVersion: '1.0.0',
+    packageName: 'plain-wc',
+    version: '1.2.3',
+    modules: [{
+      kind: 'javascript-module',
+      path: './plain-card.js',
+      declarations: [{
+        kind: 'custom-element',
+        tagName: 'plain-card',
+        name: 'PlainCard',
+        superClass: { name: 'HTMLElement' },
+        openElement: { hydrate: 'only', ssr: false },
+      }],
+    }],
+  }));
+
+  assertEquals(parseResult.success, true);
+  const manifest = cemToOpenElementPackageManifest(parseResult.manifest!);
+  assertEquals(manifest.packageName, 'plain-wc');
+  assertEquals(manifest.declarations[0].tagName, 'plain-card');
+  assertEquals(manifest.declarations[0].contract?.authoring, 'third-party-wc');
+  assertEquals(manifest.declarations[0].contract?.render, 'client-only');
+  assertEquals(manifest.declarations[0].openElement?.module, './plain-card.js');
+  assertEquals(manifest.declarations[0].openElement?.contract?.authoring, 'third-party-wc');
+});
+
+Deno.test('cemToOpenElementPackageManifest: preserves Basic Element SSR contract', async () => {
+  const { cemToOpenElementPackageManifest, parseCem } = await import('../src/cem-compat.ts');
+  const parseResult = parseCem(JSON.stringify({
+    schemaVersion: '1.0.0',
+    packageName: 'basic-element-package',
+    version: '1.0.0',
+    modules: [{
+      kind: 'javascript-module',
+      path: './open-panel.js',
+      declarations: [{
+        kind: 'custom-element',
+        tagName: 'open-panel',
+        name: 'OpenPanel',
+        superClass: { name: 'OpenElement' },
+        openElement: { hydrate: 'visible', ssr: true, dsd: true, layer: 'dsd-interactive' },
+      }],
+    }],
+  }));
+
+  assertEquals(parseResult.success, true);
+  const manifest = cemToOpenElementPackageManifest(parseResult.manifest!);
+  assertEquals(manifest.declarations[0].contract?.authoring, 'basic-element');
+  assertEquals(manifest.declarations[0].contract?.render, 'ssr-dsd');
+  assertEquals(manifest.declarations[0].openElement?.ssr, true);
+  assertEquals(manifest.declarations[0].openElement?.dsd, true);
+});
+
 Deno.test('detectAndClassifyCemPackages: skips invalid CEM JSON', async () => {
   const { detectAndClassifyCemPackages } = await import('../src/route-scanner.ts');
   const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-invalid-test-' });

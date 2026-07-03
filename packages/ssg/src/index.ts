@@ -97,6 +97,8 @@ export {
   scanRoutes,
 } from './route-scanner.ts';
 
+export { cemToOpenElementPackageManifest, classifyCemManifest, parseCem } from './cem-compat.ts';
+
 export { generateRouteTypes } from './route-type-generator.ts';
 
 export {

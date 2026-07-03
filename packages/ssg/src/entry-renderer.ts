@@ -476,6 +476,7 @@ export function buildEntryDescriptor(
     ssr: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.ssr,
     dsd: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.dsd,
     hydrate: islandMeta[tagName]?.hydrate || options.upgradeStrategy || 'idle',
+    authoring: 'basic-element',
     reason: islandMeta[tagName]?.reason,
   }));
 
@@ -498,6 +499,7 @@ export function buildEntryDescriptor(
             (d.openElement?.hydrate || options.upgradeStrategy || 'idle') as IslandDecl['hydrate'],
           ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
           dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
+          authoring: d.openElement?.contract?.authoring ?? d.contract?.authoring,
         };
       })
   );
@@ -618,10 +620,14 @@ export function buildSsrAdmissionPlan(
     } else if (source === 'package') {
       if (island.ssr === true) {
         renderPath = 'ssr+client';
-        reason = 'package island with openElement.ssr=true';
+        reason = island.authoring === 'third-party-wc'
+          ? 'third-party WC package island with explicit openElement.ssr=true'
+          : 'package island with openElement.ssr=true';
       } else {
         renderPath = 'client-only';
-        reason = 'package island has no validated SSR capability (conservative default)';
+        reason = island.authoring === 'third-party-wc'
+          ? 'third-party WC package island has no validated SSR capability (explicit client-only interop)'
+          : 'package island has no validated SSR capability (conservative default)';
       }
     } else {
       renderPath = 'ssr+client';

@@ -100,6 +100,11 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 - The canonical component authoring import is `@openelement/element`.
   Lower-level packages are supporting surfaces unless a public guide explicitly
   names them.
+- Basic Element pages and third-party WC interop pages are distinct contracts.
+  Basic Element is the default authoring layer. Third-party custom elements are
+  admitted through explicit package metadata or CEM-derived manifest data, with
+  unsupported SSR behavior reported as client-only or rejected instead of being
+  inferred from `extends OpenElement`.
 - The canonical app model import is `@openelement/app/model`. Official Vite,
   Hono, Nitro, and Deno Desktop integrations map into that model rather than
   replacing it as the framework vocabulary.
