@@ -10,7 +10,7 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Active Next
+## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Release Candidate
 
 v0.41.0-alpha.5 is the current released package line. It follows the
 cross-framework WC integration work and adds a first-class SPA mode, client
@@ -19,20 +19,18 @@ WeRead-style rather than WeRead-integrated: it uses local/open fixtures, local
 PDF folders/repositories, and public GitHub repo/path sources, and does not use
 WeRead private APIs, account cookies, scraping, or copyrighted book content.
 
-v0.41.0-alpha.6 is the active next architecture line. It syncs product truth
-under ADR-0110, records the App ownership boundary in ADR-0111, makes
-OpenElement App own route/render/request concepts, keeps Vite/Hono/Nitro/Deno
-Desktop as official drivers/adapters, closes CodeQL/doc truth cleanup, and
-promotes Reader into regression-grade dogfood. Its first execution block is the
-front-half cleanup audit (#205 through #212): release truth, package surface
-drift, router internal exports, tracked ignored generated artifacts, stale
-resolver maps, duplicate tooling helpers, route-scanner test ownership, stale
-design artifacts, and active-source audit labels. Trust-boundary fixes for route
-codegen literals, island manifest extraction, JSR source URL construction, and
-dynamic import specifier admission are prioritized before broad package
-reshaping.
+v0.41.0-alpha.6 is implementation-complete and ready for release review. It
+syncs product truth under ADR-0110, records the App ownership boundary in
+ADR-0111, makes OpenElement App own route/render/request concepts, keeps
+Vite/Hono/Nitro/Deno Desktop as official drivers/adapters, closes
+CodeQL/doc-truth cleanup, and promotes Reader into regression-grade dogfood.
+The front-half cleanup audit (#205 through #212), product-truth backlog
+(#192 through #194), architecture slices (#145 through #154), and CodeQL
+cleanup issues (#186 through #191) are closed. The final release-candidate
+cleanup closes the remaining CodeQL dynamic-import code generation alert before
+the `0.41.0-alpha.6` package workflow runs.
 
-v0.41.0-alpha.7 is the planned real-app dogfood line: a read-only,
+v0.41.0-alpha.7 is the next real-app dogfood line: a read-only,
 accountless Mac Mastodon Desktop incubation that proves networked public API
 fetching, timeline/profile/status routes, local cache, desktop shell behavior,
 and screenshot/API verification without OAuth, direct messages, notifications,
@@ -65,6 +63,22 @@ semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 has
 no Mastodon/GoToSocial app, and alpha.7 is read-only/accountless public
 Mastodon/GoToSocial desktop incubation. Authenticated mutations remain out of
 scope until later framework primitives exist.
+
+## v0.41.0-alpha.6 Release Candidate State
+
+v0.41.0-alpha.6 is the App/protocol architecture hardening line. The
+implementation PR train has closed the alpha.6 issue set:
+
+- App/protocol architecture slices: #145 through #154.
+- CodeQL and trust-boundary cleanup: #186 through #191.
+- Product-truth/docs gates: #192 through #194.
+- Front-half repository cleanup audit: #205 through #212.
+
+Release-candidate cleanup closes the final CodeQL alert for island dynamic
+import code generation by routing generated client-entry imports through an
+explicit admitted module-specifier boundary. After GitHub CodeQL, AutoFlow CI,
+review, and Cloudflare checks pass on that cleanup PR, the release workflow
+should publish `0.41.0-alpha.6` from `main`.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
