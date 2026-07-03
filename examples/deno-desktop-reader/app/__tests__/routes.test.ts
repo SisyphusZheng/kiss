@@ -290,6 +290,9 @@ function collectElementTags(node: unknown, tags = new Set<string>()): Set<string
 
   const vnode = node as VNode;
   if (typeof vnode.tag === 'string') tags.add(vnode.tag);
-  for (const child of vnode.children) collectElementTags(child, tags);
+  for (const child of vnode.children) {
+    if (typeof child === 'function') continue;
+    collectElementTags(child, tags);
+  }
   return tags;
 }
