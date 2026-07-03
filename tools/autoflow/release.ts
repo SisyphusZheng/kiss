@@ -345,6 +345,22 @@ export async function assertCleanWorktree(): Promise<void> {
   }
 }
 
+const RELEASE_GATE_TRANSIENT_ARTIFACTS = [
+  'www/app/data/_generated-blog-data.ts',
+] as const;
+
+export async function cleanupReleaseGateGeneratedArtifacts(): Promise<void> {
+  for (const path of RELEASE_GATE_TRANSIENT_ARTIFACTS) {
+    const status = await runCaptured(['git', 'status', '--porcelain', '--', path]);
+    if (!status.startsWith('?? ')) continue;
+    try {
+      await Deno.remove(path);
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+  }
+}
+
 export async function assertBranch(expected: string): Promise<void> {
   const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
   if (branch !== expected) {

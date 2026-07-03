@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertRejects } from 'jsr:@std/assert@^1.0.0';
 import { addPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
 import {
   evaluatePatchEligibility,
@@ -7,6 +7,7 @@ import {
   V040_CLEANUP_TRAIN_APPROVAL_ID,
 } from '../policy.ts';
 import {
+  cleanupReleaseGateGeneratedArtifacts,
   createReleasePlan,
   evidenceFile,
   githubReleaseCreateCommand,
@@ -151,6 +152,53 @@ Deno.test('release: next patch version and tag are deterministic', () => {
   assertEquals(nextPatchVersion('0.39.0'), '0.39.1');
   assertEquals(releaseTag('0.39.1'), 'v0.39.1');
   assertEquals(evidenceFile('0.39.1'), 'docs/release/autoflow3/v0.39.1.json');
+});
+
+Deno.test('release: cleanup removes transient generated blog data after gates', async () => {
+  const path = 'www/app/data/_generated-blog-data.ts';
+  const original = await Deno.readTextFile(path).catch((error) => {
+    if (error instanceof Deno.errors.NotFound) return undefined;
+    throw error;
+  });
+
+  try {
+    await Deno.writeTextFile(path, '// generated during release gate test\n');
+    await cleanupReleaseGateGeneratedArtifacts();
+    await assertRejects(() => Deno.lstat(path), Deno.errors.NotFound);
+  } finally {
+    if (original !== undefined) {
+      await Deno.writeTextFile(path, original);
+    } else {
+      await Deno.remove(path).catch((error) => {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+      });
+    }
+  }
+});
+
+Deno.test('release: cleanup preserves generated blog data when Git does not report it untracked', async () => {
+  const path = 'www/app/data/_generated-blog-data.ts';
+  const original = await Deno.readTextFile(path).catch((error) => {
+    if (error instanceof Deno.errors.NotFound) return undefined;
+    throw error;
+  });
+
+  try {
+    await Deno.writeTextFile(path, '// intentionally preserved test fixture\n');
+    await new Deno.Command('git', { args: ['add', '-N', path] }).output();
+    await cleanupReleaseGateGeneratedArtifacts();
+    const stat = await Deno.stat(path);
+    assert(stat.isFile);
+  } finally {
+    await new Deno.Command('git', { args: ['reset', '--', path] }).output();
+    if (original !== undefined) {
+      await Deno.writeTextFile(path, original);
+    } else {
+      await Deno.remove(path).catch((error) => {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+      });
+    }
+  }
 });
 
 Deno.test('release: GitHub prerelease flag follows semver prerelease tags', () => {
