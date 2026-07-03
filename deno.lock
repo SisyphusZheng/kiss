@@ -26,6 +26,7 @@
     "npm:nitro@*": "3.0.260610-beta_vite@8.0.10__@types+node@22.19.21__esbuild@0.25.12",
     "npm:pdf-parse@^1.1.1": "1.1.4",
     "npm:pdfjs-dist@4.8.69": "4.8.69",
+    "npm:playwright@1.59.1": "1.59.1",
     "npm:preact-render-to-string@^6.5.0": "6.7.0_preact@10.29.2",
     "npm:preact@^10.28.0": "10.29.2",
     "npm:preact@^10.29.1": "10.29.2",
