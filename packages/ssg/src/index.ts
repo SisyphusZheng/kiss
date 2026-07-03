@@ -99,6 +99,14 @@ export {
 
 export { generateRouteTypes } from './route-type-generator.ts';
 
+export {
+  createAssetManifestFromViteManifest,
+  createHonoRequestDriver,
+  createRouteGraphFromEntries,
+  createViteAssetDriver,
+} from './drivers.ts';
+export type { HonoSsgRequestDriver, ViteManifestLike, ViteSsgAssetDriver } from './drivers.ts';
+
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 
 export { generateHonoEntryCode, renderEntry } from './entry-renderer.ts';

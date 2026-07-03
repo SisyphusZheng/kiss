@@ -3,6 +3,7 @@
   "version": "0.41.0-alpha.5",
   "exports": {
     ".": "./src/index.ts",
+    "./hono": "./src/hono.ts",
     "./model": "./src/model.ts",
     "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",

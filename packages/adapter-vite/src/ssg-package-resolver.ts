@@ -39,6 +39,7 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   },
   app: {
     '.': 'src/index.ts',
+    hono: 'src/hono.ts',
     spa: 'src/spa.ts',
     model: 'src/model.ts',
     i18n: 'src/i18n.ts',
@@ -115,6 +116,7 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   },
   ssg: {
     '.': 'src/index.ts',
+    drivers: 'src/drivers.ts',
   },
   ui: {
     '.': 'src/index.ts',

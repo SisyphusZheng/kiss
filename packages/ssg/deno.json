@@ -2,7 +2,8 @@
   "name": "@openelement/ssg",
   "version": "0.41.0-alpha.5",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./drivers": "./src/drivers.ts"
   },
   "tasks": {
     "build": "deno check src/index.ts",
