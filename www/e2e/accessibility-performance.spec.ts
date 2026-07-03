@@ -124,7 +124,10 @@ test.describe('Performance', () => {
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // Wait for async scripts
+    await page.waitForFunction(() => {
+      const layout = document.querySelector('open-layout');
+      return !!customElements.get('open-layout') && !!layout?.shadowRoot;
+    });
 
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)
     const criticalErrors = errors.filter(

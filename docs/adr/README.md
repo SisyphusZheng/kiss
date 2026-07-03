@@ -3,6 +3,22 @@
 Architecture Decision Records for openElement. Each ADR documents a significant
 architectural decision, its context, and consequences.
 
+## Current Decision Set
+
+The ADR directory is append-only project history. Not every accepted ADR is
+current product truth. For v0.41 alpha.6, start with these current documents:
+
+| Area               | Current ADR / doc                                                | Notes                                                       |
+| ------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| Product doctrine   | ADR-0110                                                         | Current two-product framing and 11-package package truth.   |
+| App ownership      | ADR-0111                                                         | OpenElement-owned app concepts; Vite/Hono/Nitro as drivers. |
+| Distribution       | ADR-0108                                                         | npm-primary distribution via `deno pack` for v0.41+.        |
+| Cleanup governance | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.       |
+| Active stack truth | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.    |
+
+Older ADRs remain useful evidence, but they are historical when they conflict
+with ADR-0110, ADR-0111, or docs under `docs/current/`.
+
 ## Format
 
 ```
@@ -21,7 +37,10 @@ architectural decision, its context, and consequences.
 (What are the positive, negative, and neutral outcomes?)
 ```
 
-## Active ADRs
+## ADR Catalog
+
+This catalog preserves historical status labels from each ADR. Use the current
+decision set above to decide which records are authoritative for new work.
 
 | ADR  | Title                                                    | Status                                           |
 | ---- | -------------------------------------------------------- | ------------------------------------------------ |
@@ -104,7 +123,10 @@ architectural decision, its context, and consequences.
 
 ## Superseded / Historical
 
-(ADR files in `www/content/` from before this docs/ structure was created.)
+Historical ADRs are intentionally kept in place rather than deleted. They are
+release evidence and design context, but current docs should not cite them as
+active product doctrine when a newer ADR or `docs/current/` page supersedes
+them.
 
 ## New ADRs
 

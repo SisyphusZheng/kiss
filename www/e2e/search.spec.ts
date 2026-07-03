@@ -24,7 +24,7 @@ test.describe('Search', () => {
       input?.focus();
     });
     await page.keyboard.type('routing');
-    await page.waitForTimeout(500);
+    await expect(page.locator('open-search').locator('.result').first()).toBeVisible();
 
     const href = await page.locator('open-search').evaluate((el) => {
       const link = el.shadowRoot?.querySelector('.result') as HTMLAnchorElement | null;
