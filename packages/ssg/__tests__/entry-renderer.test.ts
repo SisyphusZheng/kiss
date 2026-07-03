@@ -9,7 +9,12 @@
  */
 
 import { assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '@openelement/ssg';
+import {
+  buildEntryDescriptor,
+  buildSsrAdmissionPlan,
+  generateHonoEntryCode,
+  renderEntry,
+} from '@openelement/ssg';
 import type { RouteEntry } from '@openelement/core';
 
 // ─── Fixtures ──────────────────────────────────────────────────
@@ -30,6 +35,27 @@ const dynamicRoutes: RouteEntry[] = [
     params: ['slug'],
   },
 ];
+
+Deno.test('buildSsrAdmissionPlan: third-party WC package without SSR metadata is explicit client-only', () => {
+  const plan = buildSsrAdmissionPlan([
+    {
+      tagName: 'plain-card',
+      modulePath: './plain-card.js',
+      source: 'package',
+      isPackage: true,
+      authoring: 'third-party-wc',
+      hydrate: 'idle',
+    },
+  ]);
+
+  assertEquals(plan.clientOnlyTags, ['plain-card']);
+  assertEquals(plan.renderableTags, []);
+  assertEquals(
+    plan.reasons['plain-card'],
+    'third-party WC package island has no validated SSR capability (explicit client-only interop)',
+  );
+  assertEquals(plan.decisions[0].renderPath, 'client-only');
+});
 
 // ─── Loader handler tests ──────────────────────────────────────
 

@@ -25,6 +25,23 @@ These contracts are exported from `@openelement/app/model` and re-exported from
 Hono-like context into `RequestContext` before OpenElement framework code sees
 request data.
 
+## Page And Component Contracts
+
+OpenElement has two supported Web Component page/component paths:
+
+- **Basic Element pages** use `@openelement/element` and the `OpenElement`
+  class. They are the default authoring path and may use OpenElement render,
+  StyleSheet, signal, DSD, hydration, and island conveniences.
+- **Third-party WC interop pages** use custom elements from outside Basic
+  Element. They enter the build through explicit package manifest metadata or
+  Custom Elements Manifest input. They are first-class compatibility targets,
+  but only the capabilities declared in metadata are assumed.
+
+The protocol-level `WebComponentContract` records `authoring`,
+`render`, `metadataSource`, and a diagnostic `reason`. Unsupported or unknown
+third-party SSR behavior must become a clear client-only or rejected admission
+decision, not a silent partial render.
+
 ## Official Defaults
 
 | Tool / target       | Role                                                                 |
@@ -59,6 +76,9 @@ re-export, but stack docs and new proof code should use the explicit subpath.
 - Nitro output proof must execute generated Node and Workers output. Nitro
   route files are deploy-adapter glue, not the authoring API for OpenElement
   pages.
+- Basic Element conveniences must not be promised to arbitrary third-party Web
+  Components unless their manifest declares the capability. Third-party WC
+  packages without validated SSR metadata use explicit client-only interop.
 - Deno Desktop proof is a native app target check, not merely a localhost
   browser preview.
 - Dogfood apps prove the framework contract; they do not create extra product
