@@ -105,13 +105,7 @@ export {
   createRouteGraphFromEntries,
   createViteAssetDriver,
 } from './drivers.ts';
-export type {
-  OpenElementSsgAssetDriver,
-  OpenElementSsgDriverContract,
-  OpenElementSsgFileSystemOutput,
-  OpenElementSsgRequestDriver,
-  ViteManifestLike,
-} from './drivers.ts';
+export type { HonoSsgRequestDriver, ViteManifestLike, ViteSsgAssetDriver } from './drivers.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 

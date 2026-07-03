@@ -9,7 +9,6 @@
 import type {
   OpenElementAssetManifest,
   OpenElementAssetManifestEntry,
-  OpenElementRenderPipeline,
   OpenElementRouteGraph,
   OpenElementRouteKind,
   OpenElementRouteNode,
@@ -18,30 +17,15 @@ import type { RouteEntry } from '@openelement/protocol/framework';
 import type { HonoEntryOptions } from './entry-renderer.ts';
 import { generateHonoEntryCode } from './entry-renderer.ts';
 
-export interface OpenElementSsgFileSystemOutput {
-  rootDir: string;
-  outDir: string;
-  staticDir?: string;
-}
-
-export interface OpenElementSsgRequestDriver {
-  name: 'hono' | 'custom';
-  routeGraph(routes: RouteEntry[]): OpenElementRouteGraph;
+export interface HonoSsgRequestDriver {
+  name: 'hono';
+  routeGraph(routes: RouteEntry[], basePath?: string): OpenElementRouteGraph;
   entryCode(routes: RouteEntry[], options?: HonoEntryOptions): string;
 }
 
-export interface OpenElementSsgAssetDriver {
-  name: 'vite' | 'custom';
+export interface ViteSsgAssetDriver {
+  name: 'vite';
   assetManifest(input: ViteManifestLike, basePath?: string): OpenElementAssetManifest;
-}
-
-export interface OpenElementSsgDriverContract {
-  routes: OpenElementRouteGraph;
-  renderPipeline: OpenElementRenderPipeline;
-  assets: OpenElementAssetManifest;
-  output: OpenElementSsgFileSystemOutput;
-  requestDriver: OpenElementSsgRequestDriver;
-  assetDriver: OpenElementSsgAssetDriver;
 }
 
 export type ViteManifestLike = Record<
@@ -53,7 +37,7 @@ export type ViteManifestLike = Record<
   }
 >;
 
-export function createHonoRequestDriver(): OpenElementSsgRequestDriver {
+export function createHonoRequestDriver(): HonoSsgRequestDriver {
   return {
     name: 'hono',
     routeGraph: createRouteGraphFromEntries,
@@ -61,20 +45,24 @@ export function createHonoRequestDriver(): OpenElementSsgRequestDriver {
   };
 }
 
-export function createViteAssetDriver(): OpenElementSsgAssetDriver {
+export function createViteAssetDriver(): ViteSsgAssetDriver {
   return {
     name: 'vite',
     assetManifest: createAssetManifestFromViteManifest,
   };
 }
 
-export function createRouteGraphFromEntries(routes: RouteEntry[]): OpenElementRouteGraph {
+/** Map scanned route entries into the OpenElement app RouteGraph contract. */
+export function createRouteGraphFromEntries(
+  routes: RouteEntry[],
+  basePath = '/',
+): OpenElementRouteGraph {
   const routeNodes = routes
     .filter((route) => route.type === 'page' || route.type === 'api')
     .map(routeEntryToNode);
 
   return {
-    basePath: '/',
+    basePath: normalizeRouteBasePath(basePath),
     routes: routeNodes,
   };
 }
@@ -104,14 +92,15 @@ export function createAssetManifestFromViteManifest(
 }
 
 function routeEntryToNode(route: RouteEntry): OpenElementRouteNode {
-  return {
+  const node: OpenElementRouteNode = {
     kind: route.type as OpenElementRouteKind,
     path: route.path,
     filePath: route.filePath,
     importPath: route.filePath,
-    tagName: route.tagName,
-    paramNames: route.params,
   };
+  if (route.tagName !== undefined) node.tagName = route.tagName;
+  if (route.params !== undefined) node.paramNames = route.params;
+  return node;
 }
 
 function toAssetEntry(
@@ -121,7 +110,7 @@ function toAssetEntry(
 ): OpenElementAssetManifestEntry {
   return {
     fileName,
-    href: `${normalizeBasePath(basePath)}${fileName}`.replace(/\/+/g, '/'),
+    href: `${normalizeBasePath(basePath)}${fileName}`,
     kind,
   };
 }
@@ -131,4 +120,9 @@ function normalizeBasePath(basePath: string): string {
   if (!trimmed || trimmed === '/') return '/';
   const withSlashes = `/${trimmed.replace(/^\/+|\/+$/g, '')}/`;
   return withSlashes.replace(/\/+/g, '/');
+}
+
+function normalizeRouteBasePath(basePath: string): string {
+  const normalized = normalizeBasePath(basePath);
+  return normalized.length > 1 ? normalized.replace(/\/$/, '') : normalized;
 }

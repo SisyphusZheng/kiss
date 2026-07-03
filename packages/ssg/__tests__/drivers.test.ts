@@ -7,31 +7,34 @@ import {
 } from '../src/drivers.ts';
 
 Deno.test('ssg drivers: maps scanned routes into OpenElement RouteGraph', () => {
-  const graph = createRouteGraphFromEntries([
-    {
-      type: 'page',
-      path: '/docs/:slug',
-      filePath: '/project/routes/docs/[slug].tsx',
-      varName: 'route0',
-      tagName: 'docs-page',
-      params: ['slug'],
-    },
-    {
-      type: 'api',
-      path: '/api/search',
-      filePath: '/project/routes/api/search.ts',
-      varName: 'route1',
-    },
-    {
-      type: 'island',
-      path: '/islands/counter',
-      filePath: '/project/islands/counter.tsx',
-      varName: 'island0',
-    },
-  ]);
+  const graph = createRouteGraphFromEntries(
+    [
+      {
+        type: 'page',
+        path: '/docs/:slug',
+        filePath: '/project/routes/docs/[slug].tsx',
+        varName: 'route0',
+        tagName: 'docs-page',
+        params: ['slug'],
+      },
+      {
+        type: 'api',
+        path: '/api/search',
+        filePath: '/project/routes/api/search.ts',
+        varName: 'route1',
+      },
+      {
+        type: 'island',
+        path: '/islands/counter',
+        filePath: '/project/islands/counter.tsx',
+        varName: 'island0',
+      },
+    ],
+    '/docs/',
+  );
 
   assertEquals(graph, {
-    basePath: '/',
+    basePath: '/docs',
     routes: [
       {
         kind: 'page',
@@ -46,8 +49,6 @@ Deno.test('ssg drivers: maps scanned routes into OpenElement RouteGraph', () => 
         path: '/api/search',
         filePath: '/project/routes/api/search.ts',
         importPath: '/project/routes/api/search.ts',
-        tagName: undefined,
-        paramNames: undefined,
       },
     ],
   });
