@@ -4,7 +4,7 @@ English | [Simplified Chinese](./README.zh.md)
 
 **Web Components-native fullstack framework with a JSX-first Basic Element
 authoring layer. Package line: `0.41.0-alpha.6` (`v0.41.0-alpha.6` release).
-Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop incubation.**
+Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.**
 
 openElement treats Web Components as the application's native component model.
 It builds static-first applications with JSX/VNode rendering, progressive
@@ -95,9 +95,9 @@ export default defineIsland(
 
 All 11 current workspace packages are aligned at **0.41.0-alpha.6**
 (`v0.41.0-alpha.6`) under
-[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.6 release
-hardens the App/protocol architecture and Reader dogfood evidence. The active next line is
-**v0.41.0-alpha.7 Mac Mastodon Desktop incubation**. ADR-0101 keeps
+[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 release
+proves a read-only, accountless networked desktop app. The active next line is
+**v0.41.0-alpha.7 Mac Mastodon Desktop Incubation**. ADR-0101 keeps
 AutoFlow3 as the single workflow/gate control plane while reserving minor/major
 product decisions for human-approved ADR and version-plan evidence.
 

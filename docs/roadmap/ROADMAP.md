@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.6 App Protocol Architecture Hardening.\
+> Current package line: v0.41.0-alpha.6 Mac Mastodon Desktop Incubation.\
 > Current implementation line: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-07-03.

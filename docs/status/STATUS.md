@@ -10,7 +10,7 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.6 Released / alpha.7 Active Next
+## Current Version Line: v0.41.0-alpha.6 Released / beta.1 Active Next
 
 v0.41.0-alpha.6 is the current released package line. It closes the front-half
 cleanup audit (#205 through #212, #226, #227), syncs product truth under
