@@ -219,15 +219,16 @@ async function nitroSmoke(): Promise<void> {
   for (const target of ['node', 'workers']) {
     console.log(`  deno task nitro:proof:${target}`);
     const result = await runWithOutput('deno', ['task', `nitro:proof:${target}`]);
+    const output = result.stdout + result.stderr;
     if (!result.success) {
-      console.error(`  ${target} failed:\n${result.output.slice(0, 2000)}`);
+      console.error(`  ${target} failed:\n${output.slice(0, 2000)}`);
       Deno.exit(1);
     }
-    if (!result.output.includes(`nitro proof ${target}:`)) {
+    if (!output.includes(`nitro proof ${target}:`)) {
       console.error(`  ${target} missing success marker`);
       Deno.exit(1);
     }
-    const lastLine = result.output.trim().split('\n').slice(-1)[0];
+    const lastLine = output.trim().split('\n').slice(-1)[0];
     console.log(`  ok: ${lastLine}`);
   }
 }
