@@ -487,15 +487,15 @@ const phases = [
     version: 'v0.41.0-alpha.5',
     title: 'SPA mode + Deno Desktop reader',
     copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop PDF reader backed by fixtures, local folders, and public GitHub sources.',
-    status: 'current',
-    tone: 'brand',
+    status: 'released',
+    tone: 'success',
   },
   {
     version: 'v0.41.0-alpha.6',
     title: 'App protocol architecture hardening',
     copy: 'Make OpenElement App own RouteGraph, RenderPipeline, RequestContext, Deno Desktop target contracts, product truth, and CodeQL cleanup.',
-    status: 'planned',
-    tone: 'warning',
+    status: 'current',
+    tone: 'brand',
   },
   {
     version: 'v0.41.0-alpha.7',
@@ -549,13 +549,13 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='released' meta='v0.41.0-alpha.5'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.6'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='brand'>alpha.6 active</open-badge>
+                  <open-badge tone='brand'>alpha.6 released</open-badge>
                   <h2>Architecture, app targets, docs truth, and release gates speak one language.</h2>
                   <p>
                     The current line resolves the product doctrine into a

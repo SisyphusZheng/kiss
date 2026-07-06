@@ -25,11 +25,11 @@ The release is staged through alpha lines with explicit execution plans:
   interop proof; pure-ESM/ECMAScript npm gates.
 - **alpha.5**: SPA mode + Deno Desktop Reader proof, Reader polish, and current
   PR/framework closure.
-- **alpha.6**: Front-half cleanup audit closure, OpenElement App/protocol
+- **alpha.6** (released): Front-half cleanup audit closure, OpenElement App/protocol
   architecture hardening, official stack contracts, Deno Desktop target
-  contract, and Reader regression-grade dogfood. Implementation is complete
-  and in release-candidate cleanup for `0.41.0-alpha.6`.
-- **alpha.7**: Mac Mastodon Desktop incubation after alpha.6 validates the
+  contract, and Reader regression-grade dogfood. Published to npm as
+  `0.41.0-alpha.6` with provenance.
+- **alpha.7** (active next): Mac Mastodon Desktop incubation after alpha.6 validates the
   framework architecture. This keeps the OpenElement + Deno Desktop social/IM
   idea alive as a narrow networked desktop dogfood app, not a full authenticated
   IM product.
@@ -124,12 +124,11 @@ private APIs, account cookies, scraping, or copyrighted book content.
 React/Vue/Svelte adapters stayed out of alpha.5 unless required to validate SPA
 navigation disposal semantics.
 
-alpha.6 is implementation-complete and in release-candidate cleanup. It keeps
-Vite/Hono/Nitro as official defaults, but moves framework ownership to
-OpenElement concepts: RouteGraph, RenderPipeline, RequestContext,
-AssetManifest, IslandManifest, DeploymentTarget, and Deno Desktop target
-contracts. It closed the cleanup-audit front half (#205 through #212): release
-truth, package surface drift, router internal exports, tracked ignored
+alpha.6 is released. It keeps Vite/Hono/Nitro as official defaults, but moves
+framework ownership to OpenElement concepts: RouteGraph, RenderPipeline,
+RequestContext, AssetManifest, IslandManifest, DeploymentTarget, and Deno Desktop
+target contracts. It closed the cleanup-audit front half (#205 through #212):
+release truth, package surface drift, router internal exports, tracked ignored
 generated artifacts, stale resolver maps, duplicate tooling helpers,
 route-scanner test ownership, stale design artifacts, and active-source audit
 labels. Final review extended the front-half slice with #226 and #227 to
@@ -137,10 +136,10 @@ capture duplicate implementations across packages and redundant
 dependencies/configs/tooling helpers discovered during release-candidate review.
 It also closed the product-truth and CodeQL/code-scanning backlog
 (#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
-release hygiene. The final release-candidate cleanup closes the remaining
+release hygiene. The final release-candidate cleanup closed the remaining
 CodeQL dynamic-import code-generation alert with admitted island module
 specifiers and shared CodeQL-recognized JavaScript literal escaping for generated
-client and server entry code before the `0.41.0-alpha.6` package workflow runs.
+client and server entry code before the `0.41.0-alpha.6` package workflow ran.
 
 ## Non-Goals
 

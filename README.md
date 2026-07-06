@@ -3,8 +3,8 @@
 English | [Simplified Chinese](./README.zh.md)
 
 **Web Components-native fullstack framework with a JSX-first Basic Element
-authoring layer. Package line: `0.41.0-alpha.5` (`v0.41.0-alpha.5` release).
-Active execution: v0.41.0-alpha.6 App/protocol architecture hardening.**
+authoring layer. Package line: `0.41.0-alpha.6` (`v0.41.0-alpha.6` release).
+Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop incubation.**
 
 openElement treats Web Components as the application's native component model.
 It builds static-first applications with JSX/VNode rendering, progressive
@@ -93,16 +93,16 @@ export default defineIsland(
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.5**
-(`v0.41.0-alpha.5`) under
-[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.5 release
-proved SPA mode plus the Deno Desktop Reader proof. The active next line is
-**v0.41.0-alpha.6 App/protocol architecture hardening**. ADR-0101 keeps
+All 11 current workspace packages are aligned at **0.41.0-alpha.6**
+(`v0.41.0-alpha.6`) under
+[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.6 release
+hardens the App/protocol architecture and Reader dogfood evidence. The active next line is
+**v0.41.0-alpha.7 Mac Mastodon Desktop incubation**. ADR-0101 keeps
 AutoFlow3 as the single workflow/gate control plane while reserving minor/major
 product decisions for human-approved ADR and version-plan evidence.
 
-The next staged lines are **v0.41.0-alpha.7 Mac Mastodon Desktop incubation**
-and **v0.41.0-beta.1 Adoption Freeze**. Alpha.7 proves a read-only,
+The next staged lines are **v0.41.0-beta.1 Adoption Freeze**
+and **stable v0.41.0**. Alpha.7 proves a read-only,
 accountless networked desktop app; beta.1 freezes the five-minute starter path,
 API docs, website positioning, logo/brand rendering, npm metadata, and release
 truth before stable v0.41.0.

@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/core */
 /**
- * Example route demonstrating the Fresh-style data layer in the v0.41.0-alpha.5 site.
+ * Example route demonstrating the Fresh-style data layer in the v0.41.0-alpha.6 site.
  *
  * - Loader: fetches data before rendering the page
  * - Action: handles form submissions
