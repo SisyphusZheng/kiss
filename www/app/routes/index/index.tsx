@@ -766,7 +766,7 @@ const workflowSteps = [
 const surfaces = [
   ['Docs', '/docs', 'Guides, route concepts, deployment notes, and architecture entry points.'],
   ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Roadmap', '/roadmap', 'Alpha.6 architecture, alpha.7 desktop dogfood, beta.1 adoption freeze, and v1.0 direction.'],
+  ['Roadmap', '/roadmap', 'Alpha.6 released, alpha.7 desktop dogfood, beta.1 adoption freeze, and v1.0 direction.'],
 ] as const;
 
 function moduleVisual(kind: 'target' | 'graph' | 'layers') {
@@ -820,9 +820,8 @@ export class DocsHome extends OpenElement {
               </p>
               <p class='lede'>
                 Current package line: {OPENELEMENT_VERSION}. Active plan:
-                v0.41.0-alpha.6 architecture and trust-boundary hardening,
-                v0.41.0-alpha.7 desktop dogfood, and v0.41.0-beta.1 adoption
-                freeze.
+                v0.41.0-alpha.7 desktop dogfood, followed by v0.41.0-beta.1
+                adoption freeze.
               </p>
               <div class='actions'>
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>

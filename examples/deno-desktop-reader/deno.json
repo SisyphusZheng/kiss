@@ -1,6 +1,6 @@
 {
   "name": "@openelement/example-desktop-reader",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "tasks": {
     "dev": "deno run -A main.ts & deno run -A npm:vite",
     "dev:api": "deno run -A main.ts",

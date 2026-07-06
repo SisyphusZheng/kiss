@@ -8,7 +8,7 @@
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
 import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
-import { isCustomElementName } from './custom-element-name.ts';
+import { isValidTagName } from '@openelement/core';
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
@@ -80,7 +80,7 @@ function islandImportFactory(modulePath: AdmittedIslandModuleSpecifier): string 
 }
 
 export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
-  if (!isCustomElementName(entry.tagName)) {
+  if (!isValidTagName(entry.tagName)) {
     throw new Error(`Invalid island tagName: ${entry.tagName}`);
   }
   let modulePath: AdmittedIslandModuleSpecifier;

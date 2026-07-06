@@ -399,70 +399,70 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
   // Otherwise throws; silent drift is not safe.
   // Consider extracting `previousVersion` as a second parameter.
   const replacements: Array<[string, string, string]> = [
-    ['README.md', '`0.41.0-alpha.5` (`v0.41.0-alpha.5`', `\`${version}\` (\`${tag}\``],
+    ['README.md', '`0.41.0-alpha.6` (`v0.41.0-alpha.6`', `\`${version}\` (\`${tag}\``],
     [
       'README.md',
-      'All 11 current workspace packages are aligned at **0.41.0-alpha.5**\n(`v0.41.0-alpha.5`)',
+      'All 11 current workspace packages are aligned at **0.41.0-alpha.6**\n(`v0.41.0-alpha.6`)',
       `All 11 current workspace packages are aligned at **${version}**\n(\`${tag}\`)`,
     ],
     [
       'README.md',
-      'Active execution: v0.41.0-alpha.6 App/protocol architecture hardening.',
+      'Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop incubation.',
       `Active execution: ${nextExecutionLine} ${nextExecutionTitle}.`,
     ],
     [
       'README.md',
-      'The active next line is\n**v0.41.0-alpha.6 App/protocol architecture hardening**.',
+      'The active next line is\n**v0.41.0-alpha.7 Mac Mastodon Desktop incubation**.',
       `The active next line is\n**${nextExecutionLine} ${nextExecutionTitle}**.`,
     ],
     [
       'README.md',
-      'The alpha.5 release\nproved SPA mode plus the Deno Desktop Reader proof.',
       'The alpha.6 release\nhardens the App/protocol architecture and Reader dogfood evidence.',
+      'The alpha.7 release\nproves a read-only, accountless networked desktop app.',
     ],
     [
       'README.zh.md',
-      '当前包线：`0.41.0-alpha.5`（`v0.41.0-alpha.5` 发布）',
+      '当前包线：`0.41.0-alpha.6`（`v0.41.0-alpha.6` 发布）',
       `当前包线：\`${version}\`（\`${tag}\` 发布）`,
     ],
     [
       'README.zh.md',
-      '当前执行线：v0.41.0-alpha.6 App/protocol 架构硬化。',
+      '当前执行线：v0.41.0-alpha.7 Mac Mastodon Desktop incubation。',
       `当前执行线：${nextExecutionLine} Mac Mastodon Desktop incubation。`,
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `v0.41.0-alpha.5`, active execution line\n`v0.41.0-alpha.6`',
+      'package line `v0.41.0-alpha.6`, active execution line\n`v0.41.0-alpha.7`',
       `package line \`${tag}\`, active execution line\n\`${nextExecutionLine}\``,
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current package line: v0.41.0-alpha.5 SPA Mode + Deno Desktop Reader Proof.',
-      `Current package line: ${tag} App Protocol Architecture Hardening.`,
+      'Current package line: v0.41.0-alpha.6 App Protocol Architecture Hardening.',
+      `Current package line: ${tag} Mac Mastodon Desktop Incubation.`,
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current implementation line: v0.41.0-alpha.6 release candidate.',
+      'Current implementation line: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.',
       `Current implementation line: ${nextExecutionLine} ${nextExecutionTitle}.`,
     ],
     [
       'docs/status/STATUS.md',
-      'Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Release Candidate',
-      `Current Version Line: ${tag} Released / alpha.7 Active Next`,
+      'Current Version Line: v0.41.0-alpha.6 Released / alpha.7 Active Next',
+      `Current Version Line: ${tag} Released / beta.1 Active Next`,
     ],
     [
       'www/app/data/version.ts',
-      "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.5';",
+      "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.6';",
       `export const OPENELEMENT_VERSION = '${tag}';`,
     ],
     [
       'www/app/routes/index/index.tsx',
-      'Active plan:\n                v0.41.0-alpha.6 architecture and trust-boundary hardening,\n                v0.41.0-alpha.7 desktop dogfood, and v0.41.0-beta.1 adoption\n                freeze.',
+      'Active plan:\n                v0.41.0-alpha.7 desktop dogfood, followed by v0.41.0-beta.1\n                adoption freeze.',
       `Active plan:\n                ${nextExecutionLine} desktop dogfood, followed by v0.41.0-beta.1\n                adoption freeze.`,
     ],
     [
       'www/app/routes/guide/getting-started.tsx',
-      'The current package line is {OPENELEMENT_VERSION}. The active execution line\n          is v0.41.0-alpha.6 App/protocol and trust-boundary hardening, followed\n          by v0.41.0-alpha.7 Mastodon Desktop dogfood and v0.41.0-beta.1\n          adoption freeze.',
+      'The current package line is {OPENELEMENT_VERSION}. The active execution line\n          is v0.41.0-alpha.7 Mastodon Desktop dogfood, followed by\n          v0.41.0-beta.1 adoption freeze.',
       `The current package line is {OPENELEMENT_VERSION}. The active execution line\n          is ${nextExecutionLine} Mastodon Desktop dogfood, followed by\n          v0.41.0-beta.1 adoption freeze.`,
     ],
   ];

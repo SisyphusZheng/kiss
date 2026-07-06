@@ -6,15 +6,16 @@
  */
 
 import type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
-import { normalizeSeparators } from './path-utils.ts';
+import { normalizeSeparators, pathToTagName } from './path-utils.ts';
 export type { IslandTransformOptions, IslandTransformResult };
 
 /**
  * Inject island metadata markers into source code.
  *
  * Only transforms files inside the islands directory.
- * Tag names must be lowercase + hyphens (Custom Elements spec).
- * Unsafe characters cause a thrown error.
+ * Tag names are derived from the file path and normalized to valid custom
+ * element names (lowercase letters, digits, and hyphens). Unsafe characters
+ * are silently normalized to hyphens.
  */
 export function transformIslandSource(
   source: string,
@@ -33,28 +34,20 @@ export function transformIslandSource(
     return { code: source, islands: [] };
   }
 
-  // Extract tag name from file path: replace path separators with hyphens
-  // matching route-scanner.ts fileToTagName() behavior.
-  // e.g. "nested/my-widget.tsx" → "my-widget", "my-widget.tsx" → "my-widget"
-  const relativePath = normalizedPath.split(`/${islandsDir}/`)[1] ??
+  // Extract tag name from file path using the same helper as the SSG route
+  // scanner. This keeps route and island tag-name derivation consistent and
+  // safely handles edge cases such as top-level numeric file names.
+  const relativePath = normalizedPath.split(`/${normalizedIslandsDir}/`)[1] ??
     normalizedPath.split('/').pop()!;
-  const tagName = normalizeSeparators(relativePath)
-    .replace(/\.[^.]+$/, '')
-    .replace(/\//g, '-')
-    .toLowerCase();
+  const tagName = pathToTagName(relativePath);
 
-  // Validate tag name (must contain a hyphen for Custom Elements)
-  if (!tagName.includes('-')) {
+  // Files that do not yield a valid name are skipped silently.
+  if (!tagName) {
     return { code: source, islands: [] };
   }
 
-  // Security: only allow lowercase letters, digits, and hyphens
-  if (!/^[a-z0-9-]+$/.test(tagName)) {
-    throw new Error(
-      `Island tag name "${tagName}" contains unsafe characters. ` +
-        `Only lowercase letters, digits, and hyphens are allowed.`,
-    );
-  }
+  // pathToTagName already guarantees a valid custom element name (or empty).
+  // No further validation is needed here.
 
   // Inject metadata markers
   const injected = `

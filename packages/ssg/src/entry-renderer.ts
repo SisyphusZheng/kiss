@@ -168,7 +168,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('');
   }
   for (const route of desc.pageRoutes) {
-    const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
+    const tagNameExpr = routeTagNameExpr(route.tagName);
     lines.push(
       `if (!customElements.get(${tagNameExpr})) {`,
     );

@@ -10,27 +10,22 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Release Candidate
+## Current Version Line: v0.41.0-alpha.6 Released / alpha.7 Active Next
 
-v0.41.0-alpha.5 is the current released package line. It follows the
-cross-framework WC integration work and adds a first-class SPA mode, client
-router, and Deno Desktop reader practice app. The desktop proof is intentionally
-WeRead-style rather than WeRead-integrated: it uses local/open fixtures, local
-PDF folders/repositories, and public GitHub repo/path sources, and does not use
-WeRead private APIs, account cookies, scraping, or copyrighted book content.
+v0.41.0-alpha.6 is the current released package line. It closes the front-half
+cleanup audit (#205 through #212, #226, #227), syncs product truth under
+ADR-0110, records the App ownership boundary in ADR-0111, makes OpenElement App
+own RouteGraph/RenderPipeline/RequestContext concepts, keeps
+Vite/Hono/Nitro/Deno Desktop as official drivers/adapters, closes the CodeQL and
+doc-truth backlog (#186 through #191 and #192 through #194), and promotes Reader
+into regression-grade dogfood. The release was published to npm with provenance;
+post-publish npm consumer smoke evidence is recorded in
+`docs/release/autoflow3/v0.41.0-alpha.6.json`.
 
-v0.41.0-alpha.6 is implementation-complete and ready for release review. It
-syncs product truth under ADR-0110, records the App ownership boundary in
-ADR-0111, makes OpenElement App own route/render/request concepts, keeps
-Vite/Hono/Nitro/Deno Desktop as official drivers/adapters, closes
-CodeQL/doc-truth cleanup, and promotes Reader into regression-grade dogfood.
-The front-half cleanup audit (#205 through #212, #226, #227), product-truth
-backlog (#192 through #194), architecture slices (#145 through #154), and CodeQL
-cleanup issues (#186 through #191) are closed. The final release-candidate
-cleanup closes the remaining CodeQL dynamic-import code generation alert before
-the `0.41.0-alpha.6` package workflow runs.
+v0.41.0-alpha.5 proved SPA mode plus the Deno Desktop Reader proof. It is now
+the prior released line.
 
-v0.41.0-alpha.7 is the next real-app dogfood line: a read-only,
+v0.41.0-alpha.7 is the active next real-app dogfood line: a read-only,
 accountless Mac Mastodon Desktop incubation that proves networked public API
 fetching, timeline/profile/status routes, local cache, desktop shell behavior,
 and screenshot/API verification without OAuth, direct messages, notifications,
@@ -64,23 +59,22 @@ no Mastodon/GoToSocial app, and alpha.7 is read-only/accountless public
 Mastodon/GoToSocial desktop incubation. Authenticated mutations remain out of
 scope until later framework primitives exist.
 
-## v0.41.0-alpha.6 Release Candidate State
+## v0.41.0-alpha.6 Release State: Released
 
 v0.41.0-alpha.6 is the App/protocol architecture hardening line. The
-implementation PR train has closed the alpha.6 issue set:
+implementation PR train closed the alpha.6 issue set:
 
 - App/protocol architecture slices: #145 through #154.
 - CodeQL and trust-boundary cleanup: #186 through #191.
 - Product-truth/docs gates: #192 through #194.
 - Front-half repository cleanup audit: #205 through #212, #226, #227.
 
-Release-candidate cleanup closes the final CodeQL alert for island dynamic
+Release-candidate cleanup closed the final CodeQL alert for island dynamic
 import code generation with an explicit admitted module-specifier boundary plus
 CodeQL-recognized JavaScript literal escaping shared by generated client and
 server entry code before emitted JavaScript receives route, tag, or module
-literals. After GitHub CodeQL, AutoFlow CI, review, and Cloudflare checks pass
-on that cleanup PR, the release workflow should publish `0.41.0-alpha.6` from
-`main`.
+literals. After GitHub CodeQL, AutoFlow CI, review, and Cloudflare checks passed
+on PR #229, the release workflow published `0.41.0-alpha.6` from `main`.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 

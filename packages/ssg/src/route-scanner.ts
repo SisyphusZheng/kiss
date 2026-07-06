@@ -56,7 +56,7 @@ import type {
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
-import { normalizeSeparators } from '@openelement/core';
+import { normalizeSeparators, pathToTagName } from '@openelement/core';
 import { join, posix, sep } from 'node:path';
 import { classifyCemManifest, parseCem } from './cem-compat.ts';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
@@ -362,19 +362,20 @@ export async function scanRoutes(
 }
 
 /**
- * v0.25: AST-verified — converts file name to a valid Custom Element tag name.
- * Uses regex for path manipulation since tag names are derived from file paths.
+ * Convert a file path to a valid Custom Element tag name.
+ *
+ * Delegates to `@openelement/core/path-utils` so the validation rules stay in
+ * one place. Top-level files like `404.ts` get a safe prefix (`el-404`) and
+ * files without a natural hyphen get a `-page` suffix.
  *
  * Examples:
  *   'my-counter.ts'        -> 'my-counter'
  *   'posts/index.ts'       -> 'posts-index'
  *   'admin\\dashboard.ts'  -> 'admin-dashboard'
+ *   '404.ts'               -> 'el-404'
  */
 export function fileToTagName(fileName: string): string {
-  return normalizeSeparators(fileName)
-    .replace(/\.[^.]+$/, '') // v0.25: AST-verified — remove extension
-    .replace(/\//g, '-') // v0.25: AST-verified — replace path separators with hyphens
-    .toLowerCase();
+  return pathToTagName(fileName);
 }
 
 /**

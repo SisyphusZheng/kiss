@@ -32,6 +32,18 @@ Deno.test('fileToTagName: preserves multi-hyphen names', () => {
   assertEquals(fileToTagName('my-cool-component.ts'), 'my-cool-component');
 });
 
+Deno.test('fileToTagName: prefixes top-level numeric names', () => {
+  assertEquals(fileToTagName('404.ts'), 'el-404');
+});
+
+Deno.test('fileToTagName: adds suffix to hyphen-less names', () => {
+  assertEquals(fileToTagName('about.ts'), 'about-page');
+});
+
+Deno.test('fileToTagName: normalizes unsafe characters to hyphens', () => {
+  assertEquals(fileToTagName('my-mod!.ts'), 'my-mod');
+});
+
 // ─── scanIslands ───────────────────────────────────────────────
 
 Deno.test('scanIslands: finds all island files recursively', async () => {

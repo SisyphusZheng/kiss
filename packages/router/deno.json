@@ -1,6 +1,6 @@
 {
   "name": "@openelement/router",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "exports": {
     ".": "./src/data-context.ts",
     "./data-context": "./src/data-context.ts",

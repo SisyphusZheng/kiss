@@ -39,7 +39,7 @@ export function gitTrackedIgnoredFiles(): Promise<string[]> {
 /** Return true if `path` is tracked by git. */
 export async function gitIsTracked(path: string): Promise<boolean> {
   const command = new Deno.Command('git', {
-    args: ['ls-files', path],
+    args: ['-c', 'core.quotepath=false', 'ls-files', path],
     stdout: 'piped',
     stderr: 'piped',
   });
