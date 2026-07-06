@@ -13,8 +13,9 @@ export type { IslandTransformOptions, IslandTransformResult };
  * Inject island metadata markers into source code.
  *
  * Only transforms files inside the islands directory.
- * Tag names must be lowercase + hyphens (Custom Elements spec).
- * Unsafe characters cause a thrown error.
+ * Tag names are derived from the file path and normalized to valid custom
+ * element names (lowercase letters, digits, and hyphens). Unsafe characters
+ * are silently normalized to hyphens.
  */
 export function transformIslandSource(
   source: string,
@@ -36,7 +37,7 @@ export function transformIslandSource(
   // Extract tag name from file path using the same helper as the SSG route
   // scanner. This keeps route and island tag-name derivation consistent and
   // safely handles edge cases such as top-level numeric file names.
-  const relativePath = normalizedPath.split(`/${islandsDir}/`)[1] ??
+  const relativePath = normalizedPath.split(`/${normalizedIslandsDir}/`)[1] ??
     normalizedPath.split('/').pop()!;
   const tagName = pathToTagName(relativePath);
 
