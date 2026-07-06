@@ -7,11 +7,11 @@
  */
 
 import type { Plugin } from 'vite';
-import { transformIslandSource } from '@openelement/core';
+import { normalizeSeparators, transformIslandSource } from '@openelement/core';
 
 /** Vite plugin that injects `__island` and `__tagName` markers into island components */
 export function islandTransformPlugin(islandsDir: string): Plugin {
-  const normalizedDir = islandsDir.replace(/\\/g, '/');
+  const normalizedDir = normalizeSeparators(islandsDir);
 
   return {
     name: 'open:island-transform',
@@ -20,7 +20,7 @@ export function islandTransformPlugin(islandsDir: string): Plugin {
       try {
         const result = transformIslandSource(code, {
           islandsDir: normalizedDir,
-          filePath: id.replace(/\\/g, '/'),
+          filePath: normalizeSeparators(id),
         });
 
         if (result.islands.length === 0) return null;

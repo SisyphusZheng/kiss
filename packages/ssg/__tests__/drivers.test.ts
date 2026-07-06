@@ -76,7 +76,7 @@ Deno.test('ssg drivers: Hono is an explicit request driver over route entries', 
   assertEquals(driver.routeGraph([]), { basePath: '/', routes: [] });
   assertEquals(driver.routeGraph([], '/docs/'), { basePath: '/docs', routes: [] });
   assertEquals(createRouteGraphFromEntries([], '/docs/'), { basePath: '/docs', routes: [] });
-  assertStringIncludes(code, "import { Hono } from 'hono'");
+  assertEquals(/import\s*{\s*Hono\s*}\s*from\s*['"]hono['"]/.test(code), true);
   assertStringIncludes(code, 'const app = new Hono()');
   assertStringIncludes(driver.entryCode([], { ssg: true }), 'export const routeInfo');
 });

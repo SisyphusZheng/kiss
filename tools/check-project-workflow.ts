@@ -55,21 +55,9 @@ const requiredAnchors: Record<string, string[]> = {
   '.github/agents/README.md': ['docs/governance/PROJECT_WORKFLOW.md'],
 };
 
-const failures: Failure[] = [];
+import { gitIsTracked } from './lib/git.ts';
 
-async function tracked(path: string): Promise<boolean> {
-  const command = new Deno.Command('git', {
-    args: ['ls-files', path],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  if (!output.success) {
-    failures.push({ file: path, message: 'could not inspect git tracking state' });
-    return false;
-  }
-  return new TextDecoder().decode(output.stdout).trim().length > 0;
-}
+const failures: Failure[] = [];
 
 async function read(file: string): Promise<string | undefined> {
   try {
@@ -85,11 +73,15 @@ for (const file of requiredFiles) {
 }
 
 for (const forbidden of ['docs/sop/v0.40.0', 'docs/next/v0.40.0']) {
-  if (await tracked(forbidden)) {
-    failures.push({
-      file: forbidden,
-      message: 'v0.40 must use docs/current/VERSION_PLAN.md instead of SOP/NextVersion docs',
-    });
+  try {
+    if (await gitIsTracked(forbidden)) {
+      failures.push({
+        file: forbidden,
+        message: 'v0.40 must use docs/current/VERSION_PLAN.md instead of SOP/NextVersion docs',
+      });
+    }
+  } catch {
+    failures.push({ file: forbidden, message: 'could not inspect git tracking state' });
   }
 }
 

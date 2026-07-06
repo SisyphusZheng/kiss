@@ -55,32 +55,17 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   for (const r of desc.pageRoutes) {
     const tagNameExpr = routeTagNameExpr(r.varName, r.tagName);
     lines.push(
-      `  { path: '${r.path}', filePath: ${
-        JSON.stringify(r.filePath)
+      `  { path: ${jsStringLiteral(r.path)}, filePath: ${
+        jsStringLiteral(r.filePath)
       }, tagName: ${tagNameExpr}, module: ${r.varName}, isDynamic: ${!!r
-        .isDynamic}, paramNames: ${JSON.stringify(r.paramNames || [])}, revalidate: ${
+        .isDynamic}, paramNames: [${
+        (r.paramNames || []).map(jsStringLiteral).join(', ')
+      }], revalidate: ${
         routeRevalidateExpr(r.varName)
       }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto"), streaming: (__pageDefinition(${r.varName}).renderIntent?.streaming || "auto") },`,
     );
   }
   lines.push('];');
-  lines.push('');
-
-  lines.push('function __pageDefinition(module) {');
-  lines.push('  return module?.default?.openElementPage || {};');
-  lines.push('}');
-  lines.push('');
-
-  lines.push('function __routeMeta(module) {');
-  lines.push('  const page = __pageDefinition(module);');
-  lines.push('  return {');
-  lines.push('    ...(page.route !== undefined ? { route: page.route } : {}),');
-  lines.push('    ...(page.head?.title !== undefined ? { title: page.head.title } : {}),');
-  lines.push(
-    '    ...(page.head?.description !== undefined ? { description: page.head.description } : {}),',
-  );
-  lines.push('  };');
-  lines.push('}');
   lines.push('');
 
   lines.push('function __rendererContext(routePath, params) {');
@@ -102,7 +87,11 @@ export function renderSsgSection(desc: EntryDescriptor): string {
       lines.push(`  renderers.push(${renderer.varName}.default);`);
     } else {
       lines.push(
-        `  if (routePath.toLowerCase() === '${renderer.scope.toLowerCase()}' || routePath.toLowerCase().startsWith('${renderer.scope.toLowerCase()}/')) renderers.push(${renderer.varName}.default);`,
+        `  if (routePath.toLowerCase() === ${
+          jsStringLiteral(renderer.scope.toLowerCase())
+        } || routePath.toLowerCase().startsWith(${
+          jsStringLiteral(renderer.scope.toLowerCase() + '/')
+        })) renderers.push(${renderer.varName}.default);`,
       );
     }
   }

@@ -9,28 +9,7 @@
  */
 
 import type { RouteEntry } from '@openelement/protocol/framework';
-
-/**
- * Convert a file path to a route path, preserving [param] bracket syntax.
- * Unlike `filePathToRoutePath()` in route-scanner (which converts to `:param`
- * for Hono/URLPattern), this preserves `[param]` to match the file-system
- * convention that developers see in their route files.
- *
- * e.g., 'blog/[slug].ts' → '/blog/[slug]'
- * e.g., 'index.ts' → '/'
- */
-function filePathToBracketRoute(filePath: string): string {
-  let p = filePath.replace(/\.[^.]+$/, '');
-
-  if (p === 'index') return '/';
-  if (p.endsWith('/index')) {
-    p = p.slice(0, -6);
-    if (p === '') return '/';
-  }
-  if (!p.startsWith('/')) p = '/' + p;
-
-  return p;
-}
+import { parseRouteFilePath } from './route-scanner.ts';
 
 /**
  * Generate TypeScript type literal for route params.
@@ -92,7 +71,7 @@ export function generateRouteTypes(routes: RouteEntry[]): string {
 
   // Generate entries for each route with params
   const paramEntries = paramRoutes.map((r) => {
-    const bracketPath = filePathToBracketRoute(r.filePath);
+    const bracketPath = parseRouteFilePath(r.filePath, { paramSyntax: 'bracket' });
     const path = JSON.stringify(bracketPath);
     const type = generateParamsType(r.params!);
     return `    ${path}: ${type};`;

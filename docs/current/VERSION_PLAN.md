@@ -132,7 +132,10 @@ contracts. It closed the cleanup-audit front half (#205 through #212): release
 truth, package surface drift, router internal exports, tracked ignored
 generated artifacts, stale resolver maps, duplicate tooling helpers,
 route-scanner test ownership, stale design artifacts, and active-source audit
-labels. It also closed the product-truth and CodeQL/code-scanning backlog
+labels. Final review extended the front-half slice with #226 and #227 to
+capture duplicate implementations across packages and redundant
+dependencies/configs/tooling helpers discovered during release-candidate review.
+It also closed the product-truth and CodeQL/code-scanning backlog
 (#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
 release hygiene. The final release-candidate cleanup closes the remaining
 CodeQL dynamic-import code-generation alert with admitted island module

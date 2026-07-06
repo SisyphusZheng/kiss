@@ -169,7 +169,7 @@ Deno.test('renderEntry: API routes are registered with app.route', () => {
   const code = renderEntry(desc);
 
   // v0.21: API routes accept Hono sub-apps and direct (ctx) => Response functions.
-  assertStringIncludes(code, "app.route('/api/hello'");
+  assertStringIncludes(code, 'app.route("/api/hello"');
   assertStringIncludes(code, 'request: c.req.raw');
   assertStringIncludes(code, '$apiHello');
 });
@@ -239,7 +239,7 @@ Deno.test('generateHonoEntryCode: end-to-end produces runnable code', () => {
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'export default app');
-  assertStringIncludes(code, "app.route('/api/hello'");
+  assertStringIncludes(code, 'app.route("/api/hello"');
   assertStringIncludes(code, 'app.get("/",');
   assertStringIncludes(code, 'app.get("/about",');
   // No process.env call in non-comment lines
@@ -267,8 +267,8 @@ Deno.test('buildEntryDescriptor: root middleware scope uses /* not //*', () => {
   const code = renderEntry(desc);
 
   // Root middleware must use '/*' (matches all paths), NOT '//*' (only matches /)
-  assertStringIncludes(code, "app.use('/*'");
-  assertEquals(code.includes("app.use('//*'"), false, 'Root middleware must NOT use //* pattern');
+  assertStringIncludes(code, 'app.use("/*"');
+  assertEquals(code.includes('app.use("//*"'), false, 'Root middleware must NOT use //* pattern');
 });
 
 Deno.test('buildEntryDescriptor: nested island files use real paths, not tagName-derived paths', () => {

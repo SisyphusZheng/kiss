@@ -10,7 +10,9 @@
     "./i18n-plugin": "./src/i18n-plugin.ts",
     "./preact": "./src/preact.ts"
   },
-  "imports": {},
+  "imports": {
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
+  },
   "publish": {
     "include": [
       "src/**",

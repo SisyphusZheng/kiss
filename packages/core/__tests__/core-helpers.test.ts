@@ -8,7 +8,7 @@
  */
 
 import { assert, assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { isValidTagName } from '../src/tag-utils.ts';
+import { assertValidTagName, isValidTagName } from '../src/tag-utils.ts';
 import { StyleSheet } from '../src/style-sheet.ts';
 import { escapeHtml, renderSsrError, wrapInDocument } from '../src/html-escape.ts';
 import { createLogger, warnOnce } from '../src/logger.ts';
@@ -76,6 +76,37 @@ Deno.test('tag-utils - isValidTagName', async (t) => {
     assertFalse(isValidTagName('annotation-xml'));
     assertFalse(isValidTagName('font-face'));
     assertFalse(isValidTagName('missing-glyph'));
+  });
+
+  await t.step('rejects xml prefix', () => {
+    assertFalse(isValidTagName('xml-element'));
+    assertFalse(isValidTagName('xml'));
+  });
+});
+
+Deno.test('tag-utils - assertValidTagName', async (t) => {
+  await t.step('accepts valid custom element names', () => {
+    assertValidTagName('my-element');
+    assertValidTagName('x-1');
+  });
+
+  await t.step('throws for invalid names', () => {
+    try {
+      assertValidTagName('invalid');
+      throw new Error('expected assertion to throw');
+    } catch (e) {
+      assertStringIncludes(String(e), '[openElement]');
+      assertStringIncludes(String(e), 'invalid');
+    }
+  });
+
+  await t.step('throws for reserved names', () => {
+    try {
+      assertValidTagName('font-face');
+      throw new Error('expected assertion to throw');
+    } catch (e) {
+      assertStringIncludes(String(e), '[openElement]');
+    }
   });
 });
 

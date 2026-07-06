@@ -18,7 +18,7 @@ const SAFE_BARE_SPECIFIER_RE =
 const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
 
 declare const admittedIslandModuleSpecifier: unique symbol;
-type AdmittedIslandModuleSpecifier = string & {
+export type AdmittedIslandModuleSpecifier = string & {
   readonly [admittedIslandModuleSpecifier]: true;
 };
 
@@ -38,11 +38,25 @@ function hasTraversalSegment(value: string): boolean {
   return value.split('/').includes('..');
 }
 
+/**
+ * Zero-dependency shared logger micro-implementation for the generated
+ * client entry. Keeps the browser bundle free of external logger imports
+ * while still prefixing messages with `[openElement]`.
+ */
+function renderClientLogger(tag = 'openElement'): string {
+  const prefix = quoteGeneratedJavaScriptStringLiteral(`[${tag}]`);
+  return `var log = {
+  warn: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.warn.apply(console, a); },
+  error: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.error.apply(console, a); },
+};`;
+}
+
 export function validateIslandModuleSpecifier(modulePath: string): void {
   if (
     !modulePath ||
     hasControlCharacter(modulePath) ||
     URL_OR_SCHEME_RE.test(modulePath) ||
+    modulePath.startsWith('//') ||
     hasTraversalSegment(modulePath)
   ) {
     throw new Error(`Invalid island modulePath: ${modulePath}`);
@@ -56,7 +70,7 @@ export function validateIslandModuleSpecifier(modulePath: string): void {
   }
 }
 
-function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
+export function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
   validateIslandModuleSpecifier(modulePath);
   return modulePath as AdmittedIslandModuleSpecifier;
 }
@@ -126,10 +140,7 @@ export function generateClientEntry(
 // only islands are client-only and import immediately (no DSD/SSR).
 // Zero DOM interaction - safe with DSD rendering.
 
-var log = {
-  warn: function() { var a = ['[openElement]']; a.push.apply(a, arguments); console.warn.apply(console, a); },
-  error: function() { var a = ['[openElement]']; a.push.apply(a, arguments); console.error.apply(console, a); },
-};
+${renderClientLogger()}
 
 var __map = {
 ${islandMap}

@@ -125,7 +125,6 @@ plugin configuration can build immediately.
   "imports": {
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
-    "entities": "npm:entities@^4.5.0",
     "hono": "npm:hono@4.12.23",
     "hono/cors": "npm:hono@4.12.23/cors",
     "hono/logger": "npm:hono@4.12.23/logger",

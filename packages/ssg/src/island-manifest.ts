@@ -8,7 +8,7 @@
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
-import { writeJson } from '@openelement/content/write-json';
+import { writeJson } from '@openelement/core/write-json';
 import { isCustomElementName } from './custom-element-name.ts';
 import { stableHash } from './ssg-helpers.ts';
 

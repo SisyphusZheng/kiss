@@ -29,25 +29,10 @@ const EXCLUDED_FILES = new Set([
   'tools/check-architecture-contract.ts',
 ]);
 
+import { normalizeSlashes } from './lib/path.ts';
+import { walk } from './lib/fs.ts';
+
 const EXTENSIONS = /\.(ts|tsx)$/;
-
-function normalize(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  for await (const entry of Deno.readDir(dir)) {
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'vendor') {
-      continue;
-    }
-    const path = `${dir}/${entry.name}`;
-    if (entry.isDirectory) {
-      yield* walk(path);
-    } else if (entry.isFile) {
-      yield path;
-    }
-  }
-}
 
 function isCodeLine(line: string): boolean {
   const trimmed = line.trim();
@@ -62,9 +47,9 @@ async function main(): Promise<void> {
 
   for (const root of ACTIVE_ROOTS) {
     try {
-      for await (const path of walk(root)) {
+      for await (const path of walk(root, { skip: ['node_modules', 'dist', 'vendor'] })) {
         if (!EXTENSIONS.test(path)) continue;
-        const normalized = normalize(path);
+        const normalized = normalizeSlashes(path);
         if (EXCLUDED_FILES.has(normalized)) continue;
         files.push(normalized);
       }

@@ -12,7 +12,7 @@
 import type { ExternalManifest } from '@openelement/protocol/ssg';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { writeJson } from '@openelement/content/write-json';
+import { writeJson } from '@openelement/core/write-json';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
 interface DenoInfoModule {

@@ -90,6 +90,7 @@ export {
 export {
   detectAndClassifyCemPackages,
   fileToTagName,
+  parseRouteFilePath,
   scanCemManifests,
   scanIslandMeta,
   scanIslands,

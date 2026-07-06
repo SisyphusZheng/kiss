@@ -5,8 +5,9 @@
  * that are embedded in the generated Hono entry module.
  *
  * These helpers provide SSR rendering, locale resolution, lifecycle
- * control (redirect/not-found), status page HTML, and app shell
- * rendering.
+ * control (redirect/not-found detection is imported from @openelement/app),
+ * status page HTML, app shell rendering, and canonical page-definition
+ * extraction shared by the Hono handlers and the SSG render pipeline.
  */
 
 import type { AppShellPlan } from '@openelement/protocol/ssg';
@@ -17,11 +18,11 @@ import type { AppShellPlan } from '@openelement/protocol/ssg';
  * Generated functions:
  *   - __ssr       — render a registered custom element to DSD HTML
  *   - __localeFromPath — extract locale from a URL path
- *   - __isOpenElementRedirect — detect redirect lifecycle errors
- *   - __isOpenElementNotFound — detect not-found lifecycle errors
  *   - __statusHtml — render a simple status page HTML string
  *   - __resolveAppShell — resolve app shell from route meta
  *   - __renderAppShell — render route content inside the app shell layout
+ *   - __pageDefinition — canonical extractor for a route module's page descriptor
+ *   - __routeMeta — canonical route metadata derived from a route module
  */
 export function renderRuntimeHelpers(appShell: AppShellPlan): string {
   const lines: string[] = [];
@@ -53,15 +54,20 @@ export function renderRuntimeHelpers(appShell: AppShellPlan): string {
   lines.push('}');
   lines.push('');
 
-  lines.push('function __isOpenElementRedirect(error) {');
-  lines.push(
-    '  return error && error.name === "OpenElementRedirect" && typeof error.location === "string" && typeof error.status === "number";',
-  );
+  lines.push('function __pageDefinition(module) {');
+  lines.push('  return module?.default?.openElementPage || {};');
   lines.push('}');
   lines.push('');
 
-  lines.push('function __isOpenElementNotFound(error) {');
-  lines.push('  return error && error.name === "OpenElementNotFound" && error.status === 404;');
+  lines.push('function __routeMeta(module) {');
+  lines.push('  const page = __pageDefinition(module);');
+  lines.push('  return {');
+  lines.push('    ...(page.route !== undefined ? { route: page.route } : {}),');
+  lines.push('    ...(page.head?.title !== undefined ? { title: page.head.title } : {}),');
+  lines.push(
+    '    ...(page.head?.description !== undefined ? { description: page.head.description } : {}),',
+  );
+  lines.push('  };');
   lines.push('}');
   lines.push('');
 

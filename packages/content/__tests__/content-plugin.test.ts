@@ -80,7 +80,7 @@ Deno.test('createBlogPlugin writes generated blog data module via adapter', asyn
   cleanup();
 });
 
-Deno.test('createNavPlugin writes nav module and search index via adapter', () => {
+Deno.test('createNavPlugin writes nav module and search index via adapter', async () => {
   setup();
 
   const routesDir = join(TMP_DIR, 'routes');
@@ -96,7 +96,7 @@ Deno.test('createNavPlugin writes nav module and search index via adapter', () =
     undefined,
     fakeFs,
   );
-  callBuildStart(plugin);
+  await callBuildStart(plugin);
 
   const navPath = join(TMP_DIR, 'app', 'data', '_generated-nav.ts');
   const searchPath = join(TMP_DIR, 'public', 'search-index.json');

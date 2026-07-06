@@ -6,6 +6,7 @@
  */
 
 import type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
+import { normalizeSeparators } from './path-utils.ts';
 export type { IslandTransformOptions, IslandTransformResult };
 
 /**
@@ -21,11 +22,11 @@ export function transformIslandSource(
 ): IslandTransformResult {
   const { islandsDir, filePath } = options;
   // Normalize to forward slashes and ensure leading slash for reliable matching
-  let normalizedPath = filePath.replace(/\\/g, '/');
+  let normalizedPath = normalizeSeparators(filePath);
   if (!normalizedPath.startsWith('/')) {
     normalizedPath = '/' + normalizedPath;
   }
-  const normalizedIslandsDir = islandsDir.replace(/\\/g, '/');
+  const normalizedIslandsDir = normalizeSeparators(islandsDir);
 
   // Only transform files in the islands directory
   if (!normalizedPath.includes(`/${normalizedIslandsDir}/`)) {
@@ -37,9 +38,9 @@ export function transformIslandSource(
   // e.g. "nested/my-widget.tsx" → "my-widget", "my-widget.tsx" → "my-widget"
   const relativePath = normalizedPath.split(`/${islandsDir}/`)[1] ??
     normalizedPath.split('/').pop()!;
-  const tagName = relativePath
-    .replace(/\.(tsx?|jsx?)$/, '')
-    .replace(/[/\\]/g, '-')
+  const tagName = normalizeSeparators(relativePath)
+    .replace(/\.[^.]+$/, '')
+    .replace(/\//g, '-')
     .toLowerCase();
 
   // Validate tag name (must contain a hyphen for Custom Elements)

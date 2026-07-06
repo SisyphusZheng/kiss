@@ -21,6 +21,8 @@ import type {
   ValidationWarning,
 } from '@openelement/protocol/framework';
 
+import { isValidTagName } from './tag-utils.ts';
+
 const _packages: OpenElementPackageManifest[] = [];
 
 /** Register a package manifest with the local registry. */
@@ -99,7 +101,7 @@ export function validate(manifest: OpenElementPackageManifest): ValidationResult
     }
 
     // 3. Invalid custom element name
-    if (!isValidCustomElementName(decl.tagName)) {
+    if (!isValidTagName(decl.tagName)) {
       errors.push({
         code: 'INVALID_TAG_NAME',
         message:
@@ -230,26 +232,6 @@ export function generateIndex(): RegistryIndex {
 /** Clear all registered manifests (useful for testing). */
 export function clear(): void {
   _packages.length = 0;
-}
-
-/** Check if a tag name is a valid custom element name per HTML spec. */
-function isValidCustomElementName(name: string): boolean {
-  // Must contain a hyphen, start with a lowercase letter, and only
-  // contain allowed characters. Must not be a reserved name.
-  if (!name) return false;
-  const reserved = new Set([
-    'annotation-xml',
-    'color-profile',
-    'font-face',
-    'font-face-src',
-    'font-face-uri',
-    'font-face-format',
-    'font-face-name',
-    'missing-glyph',
-  ]);
-  if (reserved.has(name)) return false;
-  // Basic check: starts with letter, contains hyphen, only [a-z0-9-]
-  return /^[a-z][a-z0-9]*-[a-z0-9-]*$/.test(name);
 }
 
 /** Check if a module path contains unsafe patterns. */

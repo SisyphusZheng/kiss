@@ -103,21 +103,17 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    16,
+    15,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map
   assertEquals(denoJson.imports['@preact/signals-core'], 'npm:@preact/signals-core@^1.12.1');
   assertEquals(denoJson.imports['@deno/vite-plugin'], 'npm:@deno/vite-plugin');
-  assertEquals(denoJson.imports['entities'], 'npm:entities@^4.5.0');
   assertEquals(denoJson.imports['hono'], 'npm:hono@4.12.23');
   assertEquals(denoJson.imports['hono/cors'], 'npm:hono@4.12.23/cors');
   assertEquals(denoJson.imports['hono/logger'], 'npm:hono@4.12.23/logger');
   assertEquals(denoJson.imports['hono/request-id'], 'npm:hono@4.12.23/request-id');
-  assertEquals(
-    denoJson.imports['hono/secure-headers'],
-    'npm:hono@4.12.23/secure-headers',
-  );
+  assertEquals(denoJson.imports['hono/secure-headers'], 'npm:hono@4.12.23/secure-headers');
   assertEquals(denoJson.imports['marked'], 'npm:marked@15.0.12');
   assertEquals(denoJson.imports['@openelement/app'], 'npm:@openelement/app@^${v.app}');
   assertEquals(
@@ -339,8 +335,6 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
     denoJson.imports['hono'] = 'npm:hono@4.12.23';
     denoJson.imports['@hono/vite-dev-server'] = 'npm:@hono/vite-dev-server@^0.25.3';
-    denoJson.imports['entities'] = 'npm:entities@^4';
-    denoJson.imports['entities/'] = 'npm:entities@^4/';
     denoJson.tasks.build = `deno run -A ${
       join(repoRoot, 'packages', 'adapter-vite', 'src', 'cli', 'build.ts')
     }`;
