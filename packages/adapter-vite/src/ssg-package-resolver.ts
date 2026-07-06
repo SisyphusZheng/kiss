@@ -77,6 +77,8 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
     static: 'src/static.ts',
     'style-sheet': 'src/style-sheet.ts',
     'tag-utils': 'src/tag-utils.ts',
+    'path-utils': 'src/path-utils.ts',
+    'write-json': 'src/write-json.ts',
   },
   create: { '.': 'cli.ts' },
   element: {

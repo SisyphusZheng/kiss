@@ -1,13 +1,6 @@
-const failures: string[] = [];
+import { exists } from './lib/fs.ts';
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await Deno.stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
+const failures: string[] = [];
 
 for (
   const removed of [

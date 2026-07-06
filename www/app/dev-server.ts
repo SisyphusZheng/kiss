@@ -12,7 +12,7 @@
  *     ├── SSR middleware — import dist/server/entry.js and call renderRoute()
  *     └── SPA fallback — serve dist/index.html for unrecognized paths
  *
- * Pre-requisite: `deno task build:docs` must have been run to generate dist/.
+ * Pre-requisite: `deno task build` must have been run to generate dist/.
  */
 
 import { Hono } from 'hono';
@@ -42,7 +42,7 @@ app.use('*', serveStaticAssets(`${DIST_ROOT}/client/`));
 // ── SSR catch-all ───────────────────────────────────────────
 app.get('*', async (c) => {
   try {
-    // Import the pre-built SSR bundle (produced by `deno task build:docs`)
+    // Import the pre-built SSR bundle (produced by `deno task build`)
     // Uses cache-busting query param so changes are picked up between builds.
     // Must use file:// protocol for cross-platform path compatibility.
     const cacheBuster = Date.now();
@@ -64,7 +64,7 @@ app.get('*', async (c) => {
       return c.html(indexHtml);
     } catch {
       return c.html(
-        '<!DOCTYPE html><html><body><h1>openElement dev:fast</h1><p>No build output found. Run <code>deno task build:docs</code> first.</p></body></html>',
+        '<!DOCTYPE html><html><body><h1>openElement dev:fast</h1><p>No build output found. Run <code>deno task build</code> first.</p></body></html>',
         503,
       );
     }

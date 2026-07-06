@@ -1,3 +1,6 @@
+import { exists } from './lib/fs.ts';
+import { gitTrackedFiles, gitTrackedIgnoredFiles, gitUntrackedFiles } from './lib/git.ts';
+
 type Failure = {
   path: string;
   message: string;
@@ -94,74 +97,6 @@ const allowedRemovedPackageMentions = [
 
 const failures: Failure[] = [];
 
-function normalize(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function gitFiles(): Promise<string[]> {
-  const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '-z'],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(new TextDecoder().decode(output.stderr).trim() || 'git ls-files failed');
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalize);
-}
-
-async function gitOthers(): Promise<string[]> {
-  const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard', '-z'],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(
-      new TextDecoder().decode(output.stderr).trim() || 'git ls-files --others failed',
-    );
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalize);
-}
-
-async function gitTrackedIgnored(): Promise<string[]> {
-  const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '-ci', '--exclude-standard', '-z'],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(
-      new TextDecoder().decode(output.stderr).trim() || 'git ls-files -ci failed',
-    );
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalize);
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await Deno.stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function isActiveScanFile(path: string): boolean {
   if (!activeScanExtensions.test(path)) return false;
   return activeScanRoots.some((root) => path === root || path.startsWith(root));
@@ -179,7 +114,7 @@ for (const path of removedAutoflow2Paths) {
   }
 }
 
-const files = await gitFiles();
+const files = await gitTrackedFiles();
 for (const file of files) {
   if (!(await exists(file))) continue;
   if (forbiddenRootTracked.some((pattern) => pattern.test(file))) {
@@ -187,13 +122,13 @@ for (const file of files) {
   }
 }
 
-for (const file of await gitOthers()) {
+for (const file of await gitUntrackedFiles()) {
   if (forbiddenUntrackedResidue.some((pattern) => pattern.test(file))) {
     failures.push({ path: file, message: 'untracked workflow or root tool residue is present' });
   }
 }
 
-for (const file of await gitTrackedIgnored()) {
+for (const file of await gitTrackedIgnoredFiles()) {
   failures.push({ path: file, message: 'tracked file is also ignored by .gitignore' });
 }
 

@@ -26,12 +26,12 @@ export function createNavPlugin(
   return {
     name: 'open:content:nav',
 
-    buildStart() {
+    async buildStart() {
       const resolvedNavOpts = {
         ...options,
         routesDir: options.routesDir ?? 'app/routes',
       };
-      const navSections = scanNavData(resolvedNavOpts);
+      const navSections = await scanNavData(resolvedNavOpts);
       const headerNav = resolvedNavOpts.headerNav || [];
       if (ctx) {
         ctx.registerPlugin('navSections', navSections);

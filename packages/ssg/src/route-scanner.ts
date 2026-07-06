@@ -56,6 +56,7 @@ import type {
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import { formatError, OpenElementError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
+import { normalizeSeparators } from '@openelement/core';
 import { join, posix, sep } from 'node:path';
 import { classifyCemManifest, parseCem } from './cem-compat.ts';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
@@ -165,25 +166,36 @@ export function readStaticOpenElementExport(source: string): {
   return meta;
 }
 
+export interface ParseRouteFilePathOptions {
+  /** Dynamic segment syntax. ':' produces Hono/URLPattern params; 'bracket' keeps `[param]`. */
+  paramSyntax: ':' | 'bracket';
+}
+
 /**
- * Convert a file path to a URL path pattern.
+ * Convert a route file path to a URL path pattern.
  * e.g., 'index.ts' -> '/', 'about.ts' -> '/about', 'posts/[id].ts' -> '/posts/:id'
  *
  * v0.6': Uses URLPattern-compatible syntax where possible.
  * URLPattern is the WHATWG standard for URL matching (section7.2).
  * Pattern :param is compatible with both Hono and URLPattern.
+ *
+ * With `paramSyntax: 'bracket'`, dynamic segments stay as `[param]` to match the
+ * file-system convention (used by the route type generator).
  */
-function filePathToRoutePath(filePath: string): string {
+export function parseRouteFilePath(
+  filePath: string,
+  options: ParseRouteFilePathOptions = { paramSyntax: ':' },
+): string {
   // Normalize separators - handle Windows backslash paths
-  // v0.14.3: Use posix.join to ensure all output paths use forward slashes
-  // regardless of platform. This prevents \ from leaking into URL patterns.
-  let p = filePath.split(sep).join(posix.sep);
+  let p = normalizeSeparators(filePath);
 
   // v0.25: AST-verified — path utility, regex is the appropriate tool
   p = p.replace(/\.[^.]+$/, '');
 
-  // v0.25: AST-verified — path utility, converts [param] to :param
-  p = p.replace(/\[([^\]]+)\]/g, ':$1');
+  if (options.paramSyntax === ':') {
+    // v0.25: AST-verified — path utility, converts [param] to :param
+    p = p.replace(/\[([^\]]+)\]/g, ':$1');
+  }
 
   // Handle index
   if (p === 'index') return '/';
@@ -247,9 +259,19 @@ function isIgnoredFile(fileName: string): boolean {
  * Recursively scan a directory for route files.
  * Also collects _renderer.ts and _middleware.ts special files.
  */
+export interface ScanRoutesOptions {
+  /** Capture source text for page routes so consumers can extract metadata. */
+  includeSource?: boolean;
+}
+
+/**
+ * Recursively scan a directory for route files.
+ * Also collects _renderer.ts and _middleware.ts special files.
+ */
 export async function scanRoutes(
   routesDir: string,
   baseDir: string = '',
+  options: ScanRoutesOptions = {},
 ): Promise<RouteEntry[]> {
   const entries: RouteEntry[] = [];
   const files = await safeReadDir(routesDir);
@@ -272,7 +294,7 @@ export async function scanRoutes(
 
     if (fileStat.isDirectory()) {
       // Recurse into subdirectories
-      const subEntries = await scanRoutes(fullPath, relativePath);
+      const subEntries = await scanRoutes(fullPath, relativePath, options);
       entries.push(...subEntries);
     } else if (/\.(ts|tsx|js|jsx)$/.test(file)) {
       // Check for special files
@@ -280,34 +302,41 @@ export async function scanRoutes(
       if (specialType) {
         // Add as a special entry - not a route handler, but loadable
         entries.push({
-          path: filePathToRoutePath(relativePath),
-          filePath: relativePath.split(sep).join(posix.sep),
+          path: parseRouteFilePath(relativePath, { paramSyntax: ':' }),
+          filePath: normalizeSeparators(relativePath),
           type: 'special', // Not a page or API route - renderer/middleware only
           varName: `Special_${specialType}_${baseDir.replace(/[\\/]/g, '_') || 'root'}`,
           special: specialType,
         });
       } else if (!file.startsWith('_')) {
         // Regular route file
-        const routePath = filePathToRoutePath(relativePath);
+        const routePath = parseRouteFilePath(relativePath, { paramSyntax: ':' });
         const routeType = getRouteType(relativePath);
         // v0.25: AST-verified — path utility, extracts [param] patterns
         const paramMatches = relativePath.match(/\[([^\]]+)\]/g);
         const params = paramMatches ? paramMatches.map((m) => m.slice(1, -1)) : undefined;
         let tagName: string | undefined;
+        let source: string | undefined;
         if (routeType === 'page') {
           // Regex-based scanning reads `export const tagName` without executing the module.
-          tagName = await readRouteTagNameFromModule(fullPath);
-          if (tagName === undefined) {
-            // tagName not found is normal — not all page routes define one
-            log.debug(`No tagName export found in route module: ${fullPath}`);
+          source = await safeReadFile(fullPath);
+          if (source === undefined) {
+            log.debug(`Unable to read route module: ${fullPath}`);
+          } else {
+            tagName = readRouteTagName(source);
+            if (tagName === undefined) {
+              // tagName not found is normal — not all page routes define one
+              log.debug(`No tagName export found in route module: ${fullPath}`);
+            }
           }
         }
         entries.push({
           path: routePath,
-          filePath: relativePath.split(sep).join(posix.sep),
+          filePath: normalizeSeparators(relativePath),
           type: routeType,
           varName: pathToVarName(routePath),
           tagName,
+          ...(options.includeSource && source !== undefined ? { source } : {}),
           params,
         });
       }
@@ -342,9 +371,9 @@ export async function scanRoutes(
  *   'admin\\dashboard.ts'  -> 'admin-dashboard'
  */
 export function fileToTagName(fileName: string): string {
-  return fileName
+  return normalizeSeparators(fileName)
     .replace(/\.[^.]+$/, '') // v0.25: AST-verified — remove extension
-    .replace(/[\\/]/g, '-') // v0.25: AST-verified — replace path separators with hyphens
+    .replace(/\//g, '-') // v0.25: AST-verified — replace path separators with hyphens
     .toLowerCase();
 }
 

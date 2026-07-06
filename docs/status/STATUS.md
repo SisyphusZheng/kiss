@@ -24,8 +24,8 @@ syncs product truth under ADR-0110, records the App ownership boundary in
 ADR-0111, makes OpenElement App own route/render/request concepts, keeps
 Vite/Hono/Nitro/Deno Desktop as official drivers/adapters, closes
 CodeQL/doc-truth cleanup, and promotes Reader into regression-grade dogfood.
-The front-half cleanup audit (#205 through #212), product-truth backlog
-(#192 through #194), architecture slices (#145 through #154), and CodeQL
+The front-half cleanup audit (#205 through #212, #226, #227), product-truth
+backlog (#192 through #194), architecture slices (#145 through #154), and CodeQL
 cleanup issues (#186 through #191) are closed. The final release-candidate
 cleanup closes the remaining CodeQL dynamic-import code generation alert before
 the `0.41.0-alpha.6` package workflow runs.
@@ -72,7 +72,7 @@ implementation PR train has closed the alpha.6 issue set:
 - App/protocol architecture slices: #145 through #154.
 - CodeQL and trust-boundary cleanup: #186 through #191.
 - Product-truth/docs gates: #192 through #194.
-- Front-half repository cleanup audit: #205 through #212.
+- Front-half repository cleanup audit: #205 through #212, #226, #227.
 
 Release-candidate cleanup closes the final CodeQL alert for island dynamic
 import code generation with an explicit admitted module-specifier boundary plus
@@ -191,7 +191,7 @@ Runtime functions that need protocol re-exports:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Dead npm deps           | `hono` in `adapter-vite/deno.json`, `hono` in `ssg/deno.json`, `typescript` in `adapter-vite/deno.json`                  |
 | Stale import-map (root) | `flexsearch`, `sanitize-html`, `@types/sanitize-html`, `@types/node` — zero .ts imports                                  |
-| Broken tool             | `tools/verify-package-configs.ts` — stale `deno.land` URL + references deleted `i18n` package                            |
+| Removed dead tools      | `tools/verify-package-configs.ts` + `tools/config-templates.ts` deleted as redundant with graph/surface checks           |
 | API leak                | `adapter-vite/build-pipeline.ts` re-exports `FrameworkOptions` from `@openelement/core` — should re-export from protocol |
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)

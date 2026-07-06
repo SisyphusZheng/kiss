@@ -7,6 +7,8 @@
  */
 
 import { extname } from 'node:path';
+import { normalizeSlashes } from './lib/path.ts';
+import { gitTrackedFiles } from './lib/git.ts';
 
 interface Issue {
   check: string;
@@ -103,25 +105,6 @@ const issues: Issue[] = [];
 
 function addIssue(check: string, file: string, message: string, line?: number): void {
   issues.push({ check, file, line, message });
-}
-
-function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function gitFiles(): Promise<string[]> {
-  const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '-z'],
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(new TextDecoder().decode(output.stderr).trim() || 'git ls-files failed');
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalizePath);
 }
 
 function isTextPath(path: string): boolean {
@@ -283,7 +266,7 @@ function assertMojibake(files: TextFile[]): void {
 }
 
 async function main(): Promise<void> {
-  const files = await gitFiles();
+  const files = (await gitTrackedFiles()).map(normalizeSlashes);
   let totalBytes = 0;
   let readFailures = 0;
   const textFiles: TextFile[] = [];

@@ -11,7 +11,7 @@
  */
 
 import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
-import { getSsrProps } from '@openelement/core';
+import { assertValidTagName, getSsrProps } from '@openelement/core';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import type { IslandConfig } from './authoring.ts';
@@ -35,15 +35,6 @@ export type PreactIslandComponent<
 
 export interface PreactIslandOptions extends IslandConfig {
   props?: PreactIslandProps;
-}
-
-function assertCustomElementTag(tagName: string): void {
-  if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(tagName)) {
-    throw new Error(
-      `openElement: "${tagName}" is not a valid custom element name. ` +
-        'Use lowercase ASCII letters, digits, and at least one hyphen.',
-    );
-  }
 }
 
 function collectAttributes(host: HTMLElement): PreactIslandProps {
@@ -75,7 +66,7 @@ export function definePreactIsland<
   Component: PreactIslandComponent<Props>,
   options: PreactIslandOptions = {},
 ): CustomElementConstructor {
-  assertCustomElementTag(tagName);
+  assertValidTagName(tagName);
   const baseProps = options.props ?? {};
 
   class OpenElementPreactIsland extends OpenElement {

@@ -7,6 +7,7 @@
  */
 
 import { walkSync } from '@std/fs/walk';
+import { stripCommentsLine } from './lib/text.ts';
 
 const RESTRICTED_ROOTS = [
   'packages/core/src',
@@ -19,31 +20,6 @@ const RESTRICTED_ROOTS = [
 ];
 
 const EXTENSIONS = new Set(['.ts', '.tsx']);
-
-function stripComments(line: string, inBlock: boolean): { line: string; inBlock: boolean } {
-  let text = line;
-
-  if (inBlock) {
-    const end = text.indexOf('*/');
-    if (end === -1) return { line: '', inBlock: true };
-    text = text.slice(end + 2);
-    // The local parameter is reassigned only to keep the control-flow contract
-    // explicit; callers consume the returned `inBlock` value, not this variable.
-    return stripComments(text, false);
-  }
-
-  for (;;) {
-    const start = text.indexOf('/*');
-    if (start === -1) break;
-    const end = text.indexOf('*/', start + 2);
-    if (end === -1) {
-      return { line: text.slice(0, start).replace(/\/\/.*/, ''), inBlock: true };
-    }
-    text = text.slice(0, start) + text.slice(end + 2);
-  }
-
-  return { line: text.replace(/\/\/.*/, ''), inBlock: false };
-}
 
 function scan(root: string): string[] {
   const violations: string[] = [];
@@ -64,7 +40,7 @@ function scan(root: string): string[] {
     let inBlockComment = false;
     for (let i = 0; i < lines.length; i++) {
       const raw = lines[i];
-      const { line, inBlock } = stripComments(raw, inBlockComment);
+      const { line, inBlock } = stripCommentsLine(raw, inBlockComment);
       inBlockComment = inBlock;
 
       if (/'node:[^']*'/.test(line) || /"node:[^"]*"/.test(line)) {

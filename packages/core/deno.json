@@ -21,7 +21,9 @@
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./jsx-dev-runtime": "./src/jsx-runtime.ts",
     "./island-transform": "./src/island-transform.ts",
-    "./dsd-hydration": "./src/dsd-hydration.ts"
+    "./dsd-hydration": "./src/dsd-hydration.ts",
+    "./path-utils": "./src/path-utils.ts",
+    "./write-json": "./src/write-json.ts"
   },
   "imports": {},
   "publish": {

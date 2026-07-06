@@ -251,7 +251,7 @@ Deno.test('renderEntry: package islands are not imported by SSR entry', () => {
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, '"open-layout":"@openelement/ui/open-layout"');
+  assertStringIncludes(code, '"open-layout": "@openelement/ui/open-layout"');
   assertFalse(code.includes("import * as __island_kiss_layout from '@openelement/ui/open-layout'"));
   assertFalse(code.includes('__kiss_get_default_export'));
   assertFalse(code.includes("customElements.define('open-layout'"));
@@ -280,10 +280,10 @@ Deno.test('renderEntry: API routes support Hono apps and direct functions', () =
   const desc = buildEntryDescriptor(basicRoutes);
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "app.route('/api/hello'");
-  assertStringIncludes(code, "app.all('/api/hello'");
+  assertStringIncludes(code, 'app.route("/api/hello"');
+  assertStringIncludes(code, 'app.all("/api/hello"');
   assertStringIncludes(code, 'request: c.req.raw');
-  assertEquals(code.includes("app.get('/api/hello'"), false);
+  assertEquals(code.includes('app.get("/api/hello"'), false);
 });
 
 Deno.test('renderEntry: exports default app', () => {
@@ -310,7 +310,7 @@ Deno.test('renderEntry: app shell is built from VNode tree, not HTML replace', (
 
   assertStringIncludes(code, 'async function __renderAppShell(routeNode, routePath');
   assertStringIncludes(code, '"tagName": "open-layout"');
-  assertStringIncludes(code, "import '@openelement/ui/open-layout';");
+  assertStringIncludes(code, 'import "@openelement/ui/open-layout";');
   assertStringIncludes(code, 'renderDsd(shell.tagName, { props: layoutProps })');
   assertStringIncludes(code, 'layoutResult.html.slice(0, index) + pageHtml');
 });
@@ -319,7 +319,7 @@ Deno.test('renderEntry: appShell false renders route content without default lay
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true, appShell: false });
   const code = renderEntry(desc);
 
-  assertFalse(code.includes("import '@openelement/ui/open-layout';"));
+  assertFalse(code.includes('import "@openelement/ui/open-layout";'));
   assertStringIncludes(code, '"default": false');
   assertStringIncludes(code, 'if (!shell) return pageHtml;');
 });
@@ -335,7 +335,7 @@ Deno.test('renderEntry: custom appShell import and props are generated from conf
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "import '/app/components/blog-layout.tsx';");
+  assertStringIncludes(code, 'import "/app/components/blog-layout.tsx";');
   assertStringIncludes(code, '"tagName": "blog-layout"');
   assertStringIncludes(code, '"siteName": "Field Notes"');
 });
@@ -353,7 +353,7 @@ Deno.test('renderEntry: route meta layout can select named layouts', () => {
   });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "import '/app/components/post-layout.tsx';");
+  assertStringIncludes(code, 'import "/app/components/post-layout.tsx";');
   assertStringIncludes(
     code,
     'const layout = Object.prototype.hasOwnProperty.call(routeMeta, "layout")',
@@ -366,7 +366,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, 'let __page = ($pageIndex.default?.openElementPage || {})');
+  assertStringIncludes(code, 'let __page = __pageDefinition($pageIndex)');
   assertStringIncludes(
     code,
     'const __data = typeof $pageIndex.loader === "function" ? await $pageIndex.loader(__loadContext) : undefined',
@@ -378,7 +378,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     'Generated code should use `data` prop not `__openElementData`',
   );
   assertStringIncludes(code, '__openElementRoute: __routeContext');
-  assertStringIncludes(code, '__openElementMeta: __routeMeta');
+  assertStringIncludes(code, '__openElementMeta: __routeMetaValue');
   assertEquals(code.includes('module?.meta'), false);
   assertEquals(code.includes('page.layout'), false);
   assertStringIncludes(code, 'title: __page.head?.title || "openElement"');
@@ -391,8 +391,12 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
     'dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || []',
   );
   assertStringIncludes(code, 'function __pageDefinition(module) {');
-  assertStringIncludes(code, 'function __isOpenElementRedirect(error) {');
-  assertStringIncludes(code, 'function __isOpenElementNotFound(error) {');
+  assertStringIncludes(
+    code,
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';",
+  );
+  assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
+  assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
   assertStringIncludes(
     code,
     'data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
@@ -407,7 +411,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'title: title || page.head?.title || "openElement"');
   assertStringIncludes(
     code,
-    'revalidate: (($pageIndex.default?.openElementPage || {}).renderIntent?.revalidate ?? false)',
+    'revalidate: (__pageDefinition($pageIndex).renderIntent?.revalidate ?? false)',
   );
 });
 
@@ -639,7 +643,7 @@ Deno.test('renderEntry: local island with ssr===true is registered in SSR', () =
   const code = renderEntry(desc);
 
   // SSR registration should happen
-  assertStringIncludes(code, "customElements.define('my-counter'");
+  assertStringIncludes(code, 'customElements.define("my-counter"');
 });
 
 Deno.test('renderEntry: local island with ssr===false is excluded from SSR registration', () => {
@@ -654,7 +658,7 @@ Deno.test('renderEntry: local island with ssr===false is excluded from SSR regis
   const code = renderEntry(desc);
 
   // SSR registration should NOT happen for ssr:false islands
-  assertFalse(code.includes("customElements.define('client-only-widget'"));
+  assertFalse(code.includes('customElements.define("client-only-widget"'));
   assertFalse(code.includes('import * as __island_client_only_widget from'));
   // But it should still be in the island map for client-side upgrade
   assertStringIncludes(code, 'client-only-widget');
@@ -686,12 +690,12 @@ Deno.test('renderEntry: package island with ssr===false excluded from SSR but in
   const code = renderEntry(desc);
 
   // v0.17.4: Package islands with ssr:true are now SSR-registered
-  assertStringIncludes(code, "customElements.define('open-layout'");
+  assertStringIncludes(code, 'customElements.define("open-layout"');
   // Package islands with ssr:false remain client-only
-  assertFalse(code.includes("customElements.define('open-widget'"));
+  assertFalse(code.includes('customElements.define("open-widget"'));
   // But both should be in the island map
-  assertStringIncludes(code, '"open-layout":"@openelement/ui/open-layout"');
-  assertStringIncludes(code, '"open-widget":"@openelement/ui/open-widget"');
+  assertStringIncludes(code, '"open-layout": "@openelement/ui/open-layout"');
+  assertStringIncludes(code, '"open-widget": "@openelement/ui/open-widget"');
 });
 
 Deno.test('buildEntryDescriptor: ssr field is extracted from manifest declarations', () => {

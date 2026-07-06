@@ -56,13 +56,17 @@ import type { OpenElementPackageManifest } from '@openelement/protocol/manifest'
 import type { SsrAdmissionDecision } from '@openelement/protocol/render';
 import { fileToTagName } from './route-scanner.ts';
 import {
-  renderActionRoute,
+  admitIslandModuleSpecifier,
+  type AdmittedIslandModuleSpecifier,
+} from './entry-generators.ts';
+import {
+  jsStringLiteral,
   renderApiRoute,
   renderDataEndpoint,
   renderDataRouteMap,
   renderImport,
   renderMiddleware,
-  renderPageRoute,
+  renderRouteHandler,
   routeTagNameExpr,
 } from './entry-render-helpers.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
@@ -86,8 +90,13 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
 
   // --- Island lookup (build-time known list) ---
-  const islandLookup: Record<string, string> = {};
-  for (const island of desc.islands) {
+  // Admit every island module specifier before it reaches emitted JavaScript.
+  const admittedIslands = desc.islands.map((island) => ({
+    ...island,
+    modulePath: admitIslandModuleSpecifier(island.modulePath),
+  }));
+  const islandLookup: Record<string, AdmittedIslandModuleSpecifier> = {};
+  for (const island of admittedIslands) {
     islandLookup[island.tagName] = island.modulePath;
   }
   const appShellImports = new Set<string>();
@@ -100,7 +109,10 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(
     `// Known islands (determined at build time by scanning islandsDir)`,
   );
-  lines.push(`const __islandMap = ${JSON.stringify(islandLookup)}`);
+  const islandMapEntries = Object.entries(islandLookup)
+    .map(([tag, modulePath]) => `  ${jsStringLiteral(tag)}: ${jsStringLiteral(modulePath)}`)
+    .join(',\n');
+  lines.push(`const __islandMap = {\n${islandMapEntries}\n};`);
   lines.push('');
 
   // --- Document wrapper ---
@@ -109,26 +121,29 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { createLogger } from '@openelement/core/logger';`);
   lines.push(`import { createRuntimeAdapter } from '@openelement/core/runtime';`);
   lines.push(
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';`,
+  );
+  lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,
   );
   lines.push(
     `import { getDefaultLocale as __getDefaultLocale, locales as __locales } from '@openelement/generated/i18n';`,
   );
   for (const importPath of appShellImports) {
-    lines.push(`import '${importPath}';`);
+    lines.push(`import ${jsStringLiteral(importPath)};`);
   }
   lines.push(`const log = createLogger('core');`);
   lines.push('');
 
   // --- Route module imports ---
   for (const route of [...desc.apiRoutes, ...desc.pageRoutes]) {
-    lines.push(`import * as ${route.varName} from '${route.importPath}'`);
+    lines.push(`import * as ${route.varName} from ${jsStringLiteral(route.importPath)}`);
   }
   for (const renderer of desc.renderers) {
-    lines.push(`import * as ${renderer.varName} from '${renderer.importPath}'`);
+    lines.push(`import * as ${renderer.varName} from ${jsStringLiteral(renderer.importPath)}`);
   }
   for (const mwScope of desc.middlewareScopes) {
-    lines.push(`import * as ${mwScope.varName} from '${mwScope.importPath}'`);
+    lines.push(`import * as ${mwScope.varName} from ${jsStringLiteral(mwScope.importPath)}`);
   }
   lines.push('');
 
@@ -166,28 +181,28 @@ export function renderEntry(desc: EntryDescriptor): string {
 
   // --- Register island components in SSR customElements registry ---
   const ssrRenderableTags = new Set(ssrAdmissionPlan.renderableTags);
-  const ssrIslands = desc.islands.filter((island) => ssrRenderableTags.has(island.tagName));
+  const ssrIslands = admittedIslands.filter((island) => ssrRenderableTags.has(island.tagName));
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
-    lines.push(`import * as ${varName} from '${island.modulePath}'`);
+    lines.push(`import * as ${varName} from ${jsStringLiteral(island.modulePath)}`);
   }
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
     const componentVar = `__island_component_${island.tagName.replace(/-/g, '_')}`;
     lines.push(`const ${componentVar} = ${varName}?.default`);
     lines.push(
-      `if (${componentVar} && !customElements.get('${island.tagName}')) {`,
+      `if (${componentVar} && !customElements.get(${jsStringLiteral(island.tagName)})) {`,
     );
-    lines.push(`  customElements.define('${island.tagName}', ${componentVar})`);
+    lines.push(`  customElements.define(${jsStringLiteral(island.tagName)}, ${componentVar})`);
     lines.push(`}`);
   }
   lines.push('');
 
   lines.push('// v0.17.4: SSR admission plan');
   lines.push(
-    `(globalThis).__CLIENT_ONLY_TAGS__ = new Set(${
-      JSON.stringify(ssrAdmissionPlan.clientOnlyTags)
-    })`,
+    `(globalThis).__CLIENT_ONLY_TAGS__ = new Set([${
+      ssrAdmissionPlan.clientOnlyTags.map((tag) => jsStringLiteral(tag)).join(', ')
+    }])`,
   );
   lines.push(
     `export const ssrAdmissionPlan = ${JSON.stringify(ssrAdmissionPlan, null, 2)};`,
@@ -219,8 +234,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   // --- Middleware scopes (v0.3.0: _middleware.ts files) ---
   for (const mwScope of desc.middlewareScopes) {
     lines.push(`// Middleware scope: ${mwScope.scope} (${mwScope.importPath})`);
+    const scopePattern = mwScope.scope === '/' ? '/*' : `${mwScope.scope}/*`;
     lines.push(
-      `app.use('${mwScope.scope === '/' ? '' : mwScope.scope}/*', ${mwScope.varName}.default)`,
+      `app.use(${jsStringLiteral(scopePattern)}, ${mwScope.varName}.default)`,
     );
     lines.push('');
   }
@@ -238,12 +254,24 @@ export function renderEntry(desc: EntryDescriptor): string {
     allowHeadExtrasScripts: desc.document.allowHeadExtrasScripts,
   };
   for (const route of desc.pageRoutes) {
-    renderPageRoute(lines, route, desc.renderers, docConfig, desc.isSSG);
+    renderRouteHandler(lines, {
+      method: 'get',
+      route,
+      renderers: desc.renderers,
+      docConfig,
+      isSSG: desc.isSSG,
+    });
   }
 
   // --- Action POST handlers ---
   for (const route of desc.pageRoutes) {
-    renderActionRoute(lines, route, desc.renderers, docConfig, desc.isSSG);
+    renderRouteHandler(lines, {
+      method: 'post',
+      route,
+      renderers: desc.renderers,
+      docConfig,
+      isSSG: desc.isSSG,
+    });
   }
 
   // --- /_data endpoint for SPA navigation ---
