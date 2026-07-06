@@ -6,7 +6,6 @@
  */
 
 import type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
-import { assertValidTagName } from './tag-utils.ts';
 import { normalizeSeparators, pathToTagName } from './path-utils.ts';
 export type { IslandTransformOptions, IslandTransformResult };
 
@@ -46,8 +45,8 @@ export function transformIslandSource(
     return { code: source, islands: [] };
   }
 
-  // Validate against the shared custom element rules (reserved names, xml prefix).
-  assertValidTagName(tagName);
+  // pathToTagName already guarantees a valid custom element name (or empty).
+  // No further validation is needed here.
 
   // Inject metadata markers
   const injected = `

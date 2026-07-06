@@ -16,4 +16,4 @@ export function formatJson(value: unknown): string {
  * @deprecated Use {@link formatJson} instead. This name incorrectly implies a
  * filesystem side effect; the function only returns a formatted string.
  */
-export const writeJson = formatJson;
+export { formatJson as writeJson };
