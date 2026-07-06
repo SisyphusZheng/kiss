@@ -375,7 +375,7 @@ export async function scanRoutes(
  *   '404.ts'               -> 'el-404'
  */
 export function fileToTagName(fileName: string): string {
-  return pathToTagName(normalizeSeparators(fileName));
+  return pathToTagName(fileName);
 }
 
 /**
