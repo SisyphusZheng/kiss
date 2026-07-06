@@ -30,7 +30,7 @@ async function run(
   args: string[],
   cwd?: string,
 ): Promise<{ success: boolean; output: string }> {
-  const result = await runWithOutput(cmd, args, cwd);
+  const result = await runWithOutput(cmd, args, { cwd });
   return {
     success: result.success,
     output: (result.stdout + result.stderr).slice(0, 2000),

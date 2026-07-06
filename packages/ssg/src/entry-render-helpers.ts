@@ -22,8 +22,7 @@ export function renderImport(imp: ImportDecl): string {
   return `import { ${names} } from '${imp.from}'`;
 }
 
-export function routeTagNameExpr(varName: string, fallback: string): string {
-  void varName;
+export function routeTagNameExpr(fallback: string): string {
   return jsStringLiteral(fallback);
 }
 
@@ -70,7 +69,7 @@ export function renderRouteHandler(
   });
 
   const pathLiteral = jsStringLiteral(route.path);
-  const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
+  const tagNameExpr = routeTagNameExpr(route.tagName);
   const pageDefExpr = pageDefinitionExpr(route.varName);
   const routeMeta = routeMetaExpr(route.varName);
   const routeContext = `{ path: ${jsStringLiteral(route.path)}, filePath: ${

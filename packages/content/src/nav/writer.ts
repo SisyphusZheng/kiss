@@ -8,7 +8,7 @@
 
 import type { HeaderNavLink, NavSection } from '../types.ts';
 import type { NavData } from './scanner.ts';
-import { writeJson } from '../write-json.ts';
+import { formatJson } from '../write-json.ts';
 
 /**
  * Generate TypeScript module source code for navigation data.
@@ -66,5 +66,5 @@ export function writeSearchIndex(
     }
   }
 
-  return writeJson([...entries.values()]);
+  return formatJson([...entries.values()]);
 }

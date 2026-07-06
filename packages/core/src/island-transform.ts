@@ -6,6 +6,8 @@
  */
 
 import type { IslandTransformOptions, IslandTransformResult } from '@openelement/protocol/island';
+import { assertValidTagName } from './tag-utils.ts';
+import { ERROR_PREFIX } from './errors.ts';
 import { normalizeSeparators } from './path-utils.ts';
 export type { IslandTransformOptions, IslandTransformResult };
 
@@ -43,18 +45,28 @@ export function transformIslandSource(
     .replace(/\//g, '-')
     .toLowerCase();
 
-  // Validate tag name (must contain a hyphen for Custom Elements)
+  // Files that do not yield any name are skipped silently.
+  if (!tagName) {
+    return { code: source, islands: [] };
+  }
+
+  // Reject file names containing characters outside the safe custom-element
+  // alphabet. This is a hard error: the user has named an island file in a
+  // way that cannot be turned into a valid tag name.
+  if (!/^[a-z0-9-]+$/.test(tagName)) {
+    throw new Error(
+      `${ERROR_PREFIX} Island tag name "${tagName}" contains unsafe characters. ` +
+        'Use lowercase ASCII letters, digits, and hyphens only.',
+    );
+  }
+
+  // Files without a hyphen are silently skipped (not valid custom element names).
   if (!tagName.includes('-')) {
     return { code: source, islands: [] };
   }
 
-  // Security: only allow lowercase letters, digits, and hyphens
-  if (!/^[a-z0-9-]+$/.test(tagName)) {
-    throw new Error(
-      `Island tag name "${tagName}" contains unsafe characters. ` +
-        `Only lowercase letters, digits, and hyphens are allowed.`,
-    );
-  }
+  // Validate against the shared custom element rules (reserved names, xml prefix).
+  assertValidTagName(tagName);
 
   // Inject metadata markers
   const injected = `

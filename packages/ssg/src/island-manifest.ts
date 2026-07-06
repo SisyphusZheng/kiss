@@ -8,8 +8,8 @@
 import { join } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '@openelement/protocol/framework';
-import { writeJson } from '@openelement/core/write-json';
-import { isCustomElementName } from './custom-element-name.ts';
+import { formatJson } from '@openelement/core/write-json';
+import { isValidTagName } from '@openelement/core';
 import { stableHash } from './ssg-helpers.ts';
 
 /** Island manifest entry for a single custom element */
@@ -98,7 +98,7 @@ export function extractCustomElementTags(html: string): string[] {
       continue;
     }
 
-    if (isCustomElementName(tag.name)) {
+    if (isValidTagName(tag.name)) {
       tags.add(tag.name);
     }
 
@@ -176,7 +176,7 @@ export async function writeIslandManifests(
   for (const manifest of manifests) {
     const hash = await stableHash(manifest.route);
     const filename = `page-${hash}.json`;
-    writeFileSync(join(manifestDir, filename), writeJson(manifest), 'utf-8');
+    writeFileSync(join(manifestDir, filename), formatJson(manifest), 'utf-8');
   }
 }
 

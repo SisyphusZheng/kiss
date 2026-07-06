@@ -39,15 +39,22 @@ export async function runCommand(
   }
 }
 
+export interface RunWithOutputOptions {
+  cwd?: string;
+  env?: Record<string, string>;
+}
+
 /** Run a command capturing stdout/stderr and return the result without throwing. */
 export async function runWithOutput(
   command: string,
   args: string[],
-  cwd?: string,
+  options: RunWithOutputOptions = {},
 ): Promise<RunWithOutputResult> {
+  const { cwd, env } = options;
   const result = await new Deno.Command(command, {
     args,
     cwd,
+    env,
     stdout: 'piped',
     stderr: 'piped',
   }).output();

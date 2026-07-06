@@ -53,7 +53,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   // --- routeInfo: structured route metadata ---
   lines.push('export const routeInfo = [');
   for (const r of desc.pageRoutes) {
-    const tagNameExpr = routeTagNameExpr(r.varName, r.tagName);
+    const tagNameExpr = routeTagNameExpr(r.tagName);
     lines.push(
       `  { path: ${jsStringLiteral(r.path)}, filePath: ${
         jsStringLiteral(r.filePath)

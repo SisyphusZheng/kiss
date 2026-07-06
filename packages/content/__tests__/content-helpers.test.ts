@@ -3,13 +3,13 @@
  */
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { writeJson } from '../src/write-json.ts';
+import { formatJson } from '../src/write-json.ts';
 import { createSitemapPlugin } from '../src/sitemap/plugin.ts';
 import { type FileSystemAdapter, nodeFsAdapter } from '../src/fs-adapter.ts';
 
-Deno.test('writeJson serializes value with trailing newline', () => {
-  assertEquals(writeJson({ a: 1 }), '{\n  "a": 1\n}\n');
-  assertEquals(writeJson([1, 2]), '[\n  1,\n  2\n]\n');
+Deno.test('formatJson serializes value with trailing newline', () => {
+  assertEquals(formatJson({ a: 1 }), '{\n  "a": 1\n}\n');
+  assertEquals(formatJson([1, 2]), '[\n  1,\n  2\n]\n');
 });
 
 Deno.test('createSitemapPlugin records options on build context', () => {
