@@ -196,7 +196,10 @@ Deno.test('ssgRender: throws when no default export', async () => {
   await assertRejects(
     () =>
       ssgRender(
-        { default: null, routeInfo: [] },
+        {
+          default: null,
+          routeInfo: [{ path: '/', tagName: 'home', isDynamic: false, paramNames: [] }],
+        },
         { root, outDir: 'dist' },
       ),
     Error,
@@ -234,4 +237,25 @@ Deno.test('resolveDynamicRoutePath: rejects path traversal', () => {
     threw = true;
   }
   assertEquals(threw, true);
+});
+
+Deno.test('ssgRender: throws when routeInfo is empty', async () => {
+  const { ssgRender } = await import('../src/ssg-render.ts');
+  const root = Deno.makeTempDirSync({ prefix: 'ssg-empty-routes-' });
+
+  const app = {
+    fetch: () => Promise.resolve(new Response('ok')),
+  };
+
+  await assertRejects(
+    () =>
+      ssgRender(
+        { default: app, routeInfo: [] },
+        { root, outDir: 'dist' },
+      ),
+    Error,
+    'routeInfo is empty',
+  );
+
+  rmSync(root, { recursive: true, force: true });
 });

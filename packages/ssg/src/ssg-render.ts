@@ -55,6 +55,12 @@ export async function ssgRender(
     | ((path: string) => Promise<Array<Record<string, string>>>)
     | undefined;
 
+  if (routeInfo.length === 0) {
+    throw new Error(
+      '[openElement] SSG failed: routeInfo is empty. No routes were exported by the SSR bundle.',
+    );
+  }
+
   const dynamicRoutes = routeInfo.filter((r) => r.isDynamic);
   log.info(
     `Routes: ${routeInfo.length} total` +
