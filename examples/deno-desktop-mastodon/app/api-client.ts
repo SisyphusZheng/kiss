@@ -1,17 +1,17 @@
 /**
- * Mastodon Desktop — cached API client used by route loaders.
+ * Mastodon Desktop — browser-safe cached API client used by route loaders.
  *
- * Wraps the raw fixture/live client with a localStorage TTL cache so repeated
- * navigations between timeline, profile, and status feel instant.
+ * Talks to the local backend endpoints served by `main.ts`:
+ *   /api/timeline
+ *   /api/profile/:acct
+ *   /api/profile/:acct/statuses
+ *   /api/status/:id
+ *   /api/status/:id/context
+ *
+ * The backend decides whether to return fixtures or call live Mastodon APIs,
+ * so the client does not need Deno APIs and can run in the desktop webview.
  */
 
-import {
-  fetchAccount,
-  fetchAccountStatuses,
-  fetchPublicTimeline,
-  fetchStatus,
-  fetchStatusContext,
-} from './api.ts';
 import { getCache, setCache } from './cache.ts';
 import { loadSettings } from './settings.ts';
 import type {
@@ -32,6 +32,35 @@ function currentInstance(): string {
   return 'mastodon.social';
 }
 
+async function fetchJson<T>(url: string): Promise<ApiResult<T>> {
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: {
+          type: 'http',
+          status: res.status,
+          message: await res.text(),
+        },
+      };
+    }
+    return { ok: true, data: await res.json() as T };
+  } catch (err) {
+    return {
+      ok: false,
+      error: {
+        type: 'network',
+        message: err instanceof Error ? err.message : 'Network error',
+      },
+    };
+  }
+}
+
+function encodeAcct(acct: string): string {
+  return encodeURIComponent(acct);
+}
+
 export async function getTimeline(
   options: Partial<Omit<TimelineRequest, 'instance'>> & { ttlMs?: number } = {},
 ): Promise<ApiResult<MastodonStatus[]>> {
@@ -48,7 +77,14 @@ export async function getTimeline(
   const cached = getCache<MastodonStatus[]>(cacheKey, ttlMs);
   if (cached) return { ok: true, data: cached };
 
-  const result = await fetchPublicTimeline(request);
+  const params = new URLSearchParams();
+  params.set('instance', request.instance);
+  params.set('local', String(request.timeline === 'local'));
+  if (request.maxId) params.set('maxId', request.maxId);
+  if (request.sinceId) params.set('sinceId', request.sinceId);
+  params.set('limit', String(request.limit));
+
+  const result = await fetchJson<MastodonStatus[]>(`/api/timeline?${params.toString()}`);
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
@@ -62,7 +98,12 @@ export async function getProfile(
   const cached = getCache<MastodonAccount>(cacheKey, ttlMs);
   if (cached) return { ok: true, data: cached };
 
-  const result = await fetchAccount(request);
+  const params = new URLSearchParams();
+  params.set('instance', request.instance);
+
+  const result = await fetchJson<MastodonAccount>(
+    `/api/profile/${encodeAcct(acct)}?${params.toString()}`,
+  );
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
@@ -76,7 +117,12 @@ export async function getProfileStatuses(
   const cached = getCache<MastodonStatus[]>(cacheKey, ttlMs);
   if (cached) return { ok: true, data: cached };
 
-  const result = await fetchAccountStatuses(request);
+  const params = new URLSearchParams();
+  params.set('instance', request.instance);
+
+  const result = await fetchJson<MastodonStatus[]>(
+    `/api/profile/${encodeAcct(acct)}/statuses?${params.toString()}`,
+  );
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
@@ -90,7 +136,10 @@ export async function getStatus(
   const cached = getCache<MastodonStatus>(cacheKey, ttlMs);
   if (cached) return { ok: true, data: cached };
 
-  const result = await fetchStatus(request);
+  const params = new URLSearchParams();
+  params.set('instance', request.instance);
+
+  const result = await fetchJson<MastodonStatus>(`/api/status/${id}?${params.toString()}`);
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
@@ -107,7 +156,12 @@ export async function getStatusContext(
   );
   if (cached) return { ok: true, data: cached };
 
-  const result = await fetchStatusContext(request);
+  const params = new URLSearchParams();
+  params.set('instance', request.instance);
+
+  const result = await fetchJson<{ ancestors: MastodonStatus[]; descendants: MastodonStatus[] }>(
+    `/api/status/${id}/context?${params.toString()}`,
+  );
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
