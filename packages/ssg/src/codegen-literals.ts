@@ -9,7 +9,15 @@ const UNSAFE_JS_LITERAL_CHAR_ESCAPES: Record<string, string> = {
 // CodeQL treats generated JavaScript literals as code construction, even after
 // JSON.stringify. Keep this post-stringify escape set explicit at codegen boundaries.
 export function quoteGeneratedJavaScriptStringLiteral(value: string): string {
-  return JSON.stringify(value).replace(
+  return quoteGeneratedJavaScriptValue(value);
+}
+
+/** Serialize any JSON-serializable value for safe embedding in generated JS. */
+export function quoteGeneratedJavaScriptValue(
+  value: unknown,
+  space?: string | number,
+): string {
+  return JSON.stringify(value, null, space).replace(
     UNSAFE_JS_LITERAL_CHARS_RE,
     (char) => UNSAFE_JS_LITERAL_CHAR_ESCAPES[char],
   );

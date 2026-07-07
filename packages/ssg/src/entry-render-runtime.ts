@@ -11,6 +11,7 @@
  */
 
 import type { AppShellPlan } from '@openelement/protocol/ssg';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
 /**
  * Render all runtime helper function definitions as a single code block.
@@ -78,7 +79,7 @@ export function renderRuntimeHelpers(appShell: AppShellPlan): string {
   lines.push('}');
   lines.push('');
 
-  lines.push(`const __appShellPlan = ${JSON.stringify(appShell, null, 2)};`);
+  lines.push(`const __appShellPlan = ${quoteGeneratedJavaScriptValue(appShell, 2)};`);
   lines.push('');
 
   lines.push('function __resolveAppShell(routeMeta = {}) {');

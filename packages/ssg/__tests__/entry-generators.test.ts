@@ -1,12 +1,22 @@
 import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
 import { generateClientEntry, validateIslandModuleSpecifier } from '../src/entry-generators.ts';
-import { quoteGeneratedJavaScriptStringLiteral } from '../src/codegen-literals.ts';
+import {
+  quoteGeneratedJavaScriptStringLiteral,
+  quoteGeneratedJavaScriptValue,
+} from '../src/codegen-literals.ts';
 
 Deno.test('generated client entry string literals escape JavaScript code boundaries', () => {
   assertEquals(
     quoteGeneratedJavaScriptStringLiteral('</script>\u2028\u2029'),
     '"\\u003C/script\\u003E\\u2028\\u2029"',
+  );
+});
+
+Deno.test('quoteGeneratedJavaScriptValue escapes code boundaries in object values', () => {
+  assertEquals(
+    quoteGeneratedJavaScriptValue({ reason: '</script>\u2028' }),
+    '{"reason":"\\u003C/script\\u003E\\u2028"}',
   );
 });
 
