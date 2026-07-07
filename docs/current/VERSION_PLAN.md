@@ -55,10 +55,10 @@ official OpenElement build adapter.
 
 ### Toolchain
 
-- Keep Deno 2.8+ as the public target for `deno pack`; if `.dvmrc` must remain
-  `canary` to unblock release automation, document it as a temporary CI
-  toolchain exception and restore a pinned stable primary before beta.1 unless
-  canary becomes an explicit release requirement.
+- Pin `.dvmrc` to Deno `2.9.0` (stable). CI reads `.dvmrc` via
+  `setup-deno-workspace`, and the standalone JSR consumer monitor reads the same
+  `.dvmrc`. Deno 2.8+ remains the documented public minimum; the repo itself
+  converges on the latest stable release that passes the full gate matrix.
 - Convert all internal `@openelement/*` imports from `jsr:` to `npm:` in root
   and `packages/*/deno.json`.
 - Add `deno task pack` and `deno task publish:npm` that pack and publish the
@@ -246,8 +246,9 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
 - Alpha.6 front-half cleanup debt is closed: release behavior, package surface,
   router internals, generated artifacts, resolver maps, tooling helpers, scanner
   test ownership, stale design artifacts, and active-source audit labels.
-- Deno toolchain truth is explicit: stable primary or documented canary
-  exception, with beta.1 convergence criteria.
+- Deno toolchain truth is explicit: `.dvmrc` pinned to stable `2.9.0`, CI and
+  consumer monitor aligned, canary reserved only for Deno Desktop preview
+  features outside the main gate matrix.
 
 ## Verification
 
