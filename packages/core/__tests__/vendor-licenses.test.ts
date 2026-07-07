@@ -15,5 +15,8 @@ Deno.test('vendored @std packages include MIT LICENSE attribution', async () => 
     );
   }
 
-  assert(packages.length > 0, `Expected at least one @std package in vendor dir, found ${packages.length}`);
+  assert(
+    packages.length > 0,
+    `Expected at least one @std package in vendor dir, found ${packages.length}`,
+  );
 });
