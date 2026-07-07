@@ -14,3 +14,14 @@ export function quoteGeneratedJavaScriptStringLiteral(value: string): string {
     (char) => UNSAFE_JS_LITERAL_CHAR_ESCAPES[char],
   );
 }
+
+/** Serialize any JSON-serializable value for safe embedding in generated JS. */
+export function quoteGeneratedJavaScriptValue(
+  value: unknown,
+  space?: string | number,
+): string {
+  return JSON.stringify(value, null, space).replace(
+    UNSAFE_JS_LITERAL_CHARS_RE,
+    (char) => UNSAFE_JS_LITERAL_CHAR_ESCAPES[char],
+  );
+}

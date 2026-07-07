@@ -59,6 +59,7 @@ import {
   admitIslandModuleSpecifier,
   type AdmittedIslandModuleSpecifier,
 } from './entry-generators.ts';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   jsStringLiteral,
   renderApiRoute,
@@ -213,7 +214,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     }])`,
   );
   lines.push(
-    `export const ssrAdmissionPlan = ${JSON.stringify(ssrAdmissionPlan, null, 2)};`,
+    `export const ssrAdmissionPlan = ${quoteGeneratedJavaScriptValue(ssrAdmissionPlan, 2)};`,
   );
   lines.push('');
 
