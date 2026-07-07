@@ -42,31 +42,77 @@ export function createIsrCacheKey(
   routePath: string,
   params: Record<string, string> = {},
 ): string {
+  // Encode each path segment so characters like '?' or '&' in a route path
+  // cannot collide with the param-suffix delimiter or each other. Slashes are
+  // preserved as segment separators.
+  const encodedPath = routePath
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
   const sortedParams = Object.entries(params).sort(([a], [b]) => a.localeCompare(b));
   const suffix = sortedParams.length === 0 ? '' : '?' +
     sortedParams.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-  return `openelement:isr:${routePath}${suffix}`;
+  return `openelement:isr:${encodedPath}${suffix}`;
+}
+
+export interface MemoryIsrCacheOptions {
+  /** Maximum number of entries to keep in memory. Defaults to 1000. */
+  maxEntries?: number;
 }
 
 export class MemoryIsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();
+  readonly #maxEntries: number;
+
+  constructor(options?: MemoryIsrCacheOptions) {
+    const max = options?.maxEntries ?? 1000;
+    if (!Number.isInteger(max) || max <= 0) {
+      throw new RangeError('MemoryIsrCache maxEntries must be a positive integer');
+    }
+    this.#maxEntries = max;
+  }
 
   get(key: string, now: number = Date.now()): IsrCacheResult {
     const entry = this.#entries.get(key);
     if (!entry) return { state: 'miss' };
+
     const ageSeconds = Math.max(0, Math.floor((now - entry.createdAt) / 1000));
+    if (ageSeconds >= entry.revalidate) {
+      return {
+        state: 'stale',
+        entry,
+      };
+    }
+
+    // LRU: move accessed entry to the end (most-recently-used).
+    this.#entries.delete(key);
+    this.#entries.set(key, entry);
+
     return {
-      state: ageSeconds >= entry.revalidate ? 'stale' : 'hit',
+      state: 'hit',
       entry,
     };
   }
 
   set(key: string, entry: IsrCacheEntry): void {
+    // Update position for LRU ordering.
+    this.#entries.delete(key);
     this.#entries.set(key, entry);
+
+    // Evict oldest entries when over capacity.
+    while (this.#entries.size > this.#maxEntries) {
+      const firstKey = this.#entries.keys().next().value;
+      if (firstKey === undefined) break;
+      this.#entries.delete(firstKey);
+    }
   }
 
   delete(key: string): void {
     this.#entries.delete(key);
+  }
+
+  get size(): number {
+    return this.#entries.size;
   }
 }
