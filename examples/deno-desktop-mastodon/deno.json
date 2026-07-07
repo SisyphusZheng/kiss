@@ -5,7 +5,8 @@
     "dev": "deno run -A main.ts & deno run -A npm:vite",
     "dev:api": "deno run -A main.ts",
     "dev:web": "deno run -A npm:vite",
-    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net main.ts",
+    "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist --include fixtures main.ts",
+    "start": "deno task build && open deno-desktop-mastodon.app",
     "check": "deno check main.ts mastodon.tsx",
     "smoke": "deno test -A --no-check app/__tests__/"
   },

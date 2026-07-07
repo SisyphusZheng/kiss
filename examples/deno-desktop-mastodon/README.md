@@ -65,6 +65,12 @@ deno task build
 
 This builds the SPA with Vite and then packages the Deno Desktop app.
 
+To build and open the desktop window:
+
+```bash
+deno task start
+```
+
 ## Live mode
 
 ```bash
