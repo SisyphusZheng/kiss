@@ -103,7 +103,7 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    15,
+    20,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map
@@ -130,8 +130,14 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
     'npm:@openelement/element@^${v.element}',
   );
   assertEquals(denoJson.imports['@openelement/ui'], 'npm:@openelement/ui@^${v.ui}');
+  assertEquals(denoJson.imports['@openelement/signal'], 'npm:@openelement/signal@^${v.signal}');
+  assertEquals(denoJson.imports['@openelement/content'], 'npm:@openelement/content@^${v.content}');
+  assertEquals(denoJson.imports['@openelement/ssg'], 'npm:@openelement/ssg@^${v.ssg}');
+  assertEquals(denoJson.imports['@openelement/protocol'], 'npm:@openelement/protocol@^${v.protocol}');
+  assertEquals(denoJson.imports['@openelement/router'], 'npm:@openelement/router@^${v.router}');
   assertEquals(denoJson.imports['vite'], 'npm:vite@8.0.10');
   assertEquals(denoJson.nodeModulesDir, 'auto');
+  assertEquals(denoJson.minimumDependencyAge, 0);
 });
 
 Deno.test('create-open: deno.json maps vite because vite.config.ts imports it directly', () => {

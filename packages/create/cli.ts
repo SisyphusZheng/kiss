@@ -32,6 +32,9 @@ const PKG_DIR_MAP: Record<string, string> = {
   ui: 'ui',
   signal: 'signal',
   element: 'element',
+  protocol: 'protocol',
+  router: 'router',
+  ssg: 'ssg',
 };
 
 function loadWorkspaceVersion(pkg: string): string {
@@ -141,9 +144,15 @@ plugin configuration can build immediately.
     "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
     "@openelement/element": "npm:@openelement/element@^${v.element}",
     "@openelement/ui": "npm:@openelement/ui@^${v.ui}",
+    "@openelement/signal": "npm:@openelement/signal@^${v.signal}",
+    "@openelement/content": "npm:@openelement/content@^${v.content}",
+    "@openelement/ssg": "npm:@openelement/ssg@^${v.ssg}",
+    "@openelement/protocol": "npm:@openelement/protocol@^${v.protocol}",
+    "@openelement/router": "npm:@openelement/router@^${v.router}",
     "vite": "npm:vite@8.0.10"
   },
   "nodeModulesDir": "auto",
+  "minimumDependencyAge": 0,
   "tasks": {
     "dev": "deno run --config deno.json -A npm:vite",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build",
