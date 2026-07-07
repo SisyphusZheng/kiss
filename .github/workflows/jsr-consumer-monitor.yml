@@ -11,9 +11,10 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: '2'
+          deno-version-file: .dvmrc
       - name: Create project from JSR latest
         shell: pwsh
         run: |

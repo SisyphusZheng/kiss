@@ -10,7 +10,7 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.6 Released / beta.1 Active Next
+## Current Version Line: v0.41.0-alpha.7 Active / beta.1 Active Next
 
 v0.41.0-alpha.6 is the current released package line. It closes the front-half
 cleanup audit (#205 through #212, #226, #227), syncs product truth under
@@ -45,6 +45,15 @@ release-state control plane, but it cannot decide minor/major product scope,
 public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
+
+## Toolchain Truth
+
+`.dvmrc` is pinned to Deno `2.9.0` (stable). CI installs Deno via
+`setup-deno-workspace`, which reads `.dvmrc`; the standalone JSR consumer
+monitor also reads `.dvmrc`. The full gate matrix — including `deno pack` /
+`pack:dry-run` — passes on this stable version. Deno 2.8+ remains the
+documented public minimum. Canary is reserved for Deno Desktop preview
+features and is not a release requirement.
 
 ## v0.41.0-alpha.5 Release State: Released
 
