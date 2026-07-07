@@ -18,14 +18,9 @@ daisyStyle.textContent = [...daisyClassSheet.cssRules].map((r) => r.cssText)
 document.head.appendChild(daisyStyle);
 
 // Apply persisted theme before app mount to avoid flash.
+import { applyTheme, loadSettings } from './app/settings.ts';
 try {
-  const stored = localStorage.getItem('mastodon:settings');
-  if (stored) {
-    const parsed = JSON.parse(stored);
-    if (parsed.theme === 'dark' || parsed.theme === 'light') {
-      document.documentElement.setAttribute('data-theme', parsed.theme);
-    }
-  }
+  applyTheme(loadSettings().theme);
 } catch {
   // ignore
 }
@@ -36,10 +31,15 @@ import './app/styles.css';
 import TimelinePage, { loader as timelineLoader, tagName as timelineTag } from './routes/index.tsx';
 import ProfilePage, { loader as profileLoader, tagName as profileTag } from './routes/profile.tsx';
 import StatusPage, { loader as statusLoader, tagName as statusTag } from './routes/status.tsx';
+import SettingsPage, { tagName as settingsTag } from './routes/settings.tsx';
+
+// Import islands for side-effect: customElements.define registers custom elements.
+import './islands/settings-island.tsx';
 
 void TimelinePage;
 void ProfilePage;
 void StatusPage;
+void SettingsPage;
 
 // ─── Route config ────────────────────────────────────────────
 
@@ -47,12 +47,14 @@ const routes = [
   { path: '/', loader: timelineLoader, tagName: timelineTag },
   { path: '/profile/:acct', loader: profileLoader, tagName: profileTag },
   { path: '/status/:id', loader: statusLoader, tagName: statusTag },
+  { path: '/settings', tagName: settingsTag },
 ];
 
 // ─── Top navigation ──────────────────────────────────────────
 
 const NAV_ITEMS = [
   { path: '/', label: 'Timeline' },
+  { path: '/settings', label: 'Settings' },
 ];
 
 function createTopNav() {
