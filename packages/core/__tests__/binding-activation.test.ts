@@ -517,6 +517,61 @@ Deno.test('list binding renders Fragment/multi-node items', () =>
     );
   }));
 
+Deno.test('conditional binding clears Fragment/multi-node branch when falsy', () =>
+  withMockDocument(() => {
+    const when = signal(true);
+    const anchor = document.createComment('show');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindConditional(
+      anchor as ChildNode,
+      when,
+      () => [jsx('span', { children: 'a' }), jsx('span', { children: 'b' })],
+      () => null,
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+
+    when.value = false;
+    assertEquals(asTestElement(host).innerHTML, '');
+
+    when.value = true;
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+  }));
+
+Deno.test('list binding removes Fragment/multi-node items when list shrinks', () =>
+  withMockDocument(() => {
+    const items = signal(['a', 'b']);
+    const anchor = document.createComment('for');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindList(
+      anchor as ChildNode,
+      items,
+      (item: unknown) => [
+        jsx('span', { children: item as string }),
+        jsx('b', { children: item as string }),
+      ],
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(
+      asTestElement(host).innerHTML,
+      '<span>a</span><b>a</b><span>b</span><b>b</b>',
+    );
+
+    items.value = ['a'];
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><b>a</b>');
+
+    items.value = [];
+    assertEquals(asTestElement(host).innerHTML, '');
+  }));
+
 Deno.test('registerBindingKind dispatches custom binding kind', () =>
   withMockDocument(() => {
     const el = document.createElement('div');
