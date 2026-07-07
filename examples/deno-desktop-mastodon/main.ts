@@ -85,7 +85,9 @@ function closeApp(): Response {
 
 const DEFAULT_INSTANCE = 'mastodon.social';
 
-const server = Deno.serve(async (req: Request) => {
+const PORT = Number(Deno.env.get('PORT') ?? 8000);
+
+const server = Deno.serve({ port: PORT }, async (req: Request) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname;

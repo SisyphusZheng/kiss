@@ -1,22 +1,21 @@
 /** @jsxImportSource @openelement/core */
 import { OpenElement } from '@openelement/element';
 import type { MastodonStatus } from '../app/types.ts';
+import { getTimeline } from '../app/api-client.ts';
+import StatusCard, { StatusCardSkeleton } from '../components/StatusCard.tsx';
 
 export interface TimelineData {
   statuses: MastodonStatus[];
+  loading?: boolean;
   error?: string;
 }
 
 export async function loader(): Promise<TimelineData> {
-  try {
-    const res = await fetch('/api/timeline?limit=20');
-    if (!res.ok) {
-      return { statuses: [], error: `${res.status} ${await res.text()}` };
-    }
-    return { statuses: await res.json() as MastodonStatus[] };
-  } catch (err) {
-    return { statuses: [], error: err instanceof Error ? err.message : String(err) };
+  const result = await getTimeline({ limit: 20 });
+  if (!result.ok) {
+    return { statuses: [], error: result.error.message };
   }
+  return { statuses: result.data };
 }
 
 export const tagName = 'mastodon-timeline';
@@ -34,13 +33,21 @@ export default class TimelinePage extends OpenElement {
         </div>
 
         {data.error && (
-          <div class='mastodon-card' style='border-color: var(--error-fg, #c8392a);'>
-            <p class='mastodon-card-title'>Error</p>
+          <div class='mastodon-card mastodon-error'>
+            <p class='mastodon-card-title'>Error loading timeline</p>
             <p class='mastodon-card-body'>{data.error}</p>
           </div>
         )}
 
-        {statuses.length === 0 && !data.error && (
+        {data.loading && statuses.length === 0 && (
+          <>
+            <StatusCardSkeleton />
+            <StatusCardSkeleton />
+            <StatusCardSkeleton />
+          </>
+        )}
+
+        {statuses.length === 0 && !data.error && !data.loading && (
           <div class='mastodon-empty'>
             <p class='mastodon-empty-title'>Timeline is empty</p>
             <p class='mastodon-empty-hint'>
@@ -50,12 +57,11 @@ export default class TimelinePage extends OpenElement {
           </div>
         )}
 
-        {statuses.map((status) => (
-          <article key={status.id} class='mastodon-card'>
-            <p class='mastodon-card-title'>{status.account.displayName}</p>
-            <p class='mastodon-card-body'>{status.content}</p>
-          </article>
-        ))}
+        <div class='mastodon-status-list' role='feed'>
+          {statuses.map((status) => (
+            <StatusCard key={status.id} status={status} reblog={!!status.reblog} />
+          ))}
+        </div>
       </main>
     );
   }

@@ -1,6 +1,9 @@
 /** @jsxImportSource @openelement/core */
 import { OpenElement } from '@openelement/element';
 import type { MastodonAccount, MastodonStatus } from '../app/types.ts';
+import { getProfile, getProfileStatuses } from '../app/api-client.ts';
+import { formatCount } from '../app/format.ts';
+import StatusCard from '../components/StatusCard.tsx';
 
 export interface ProfileData {
   account?: MastodonAccount;
@@ -12,23 +15,19 @@ export async function loader(ctx: { params?: Record<string, string> }): Promise<
   const acct = ctx.params?.acct;
   if (!acct) return { statuses: [], error: 'Missing account handle' };
 
-  try {
-    const [accountRes, statusesRes] = await Promise.all([
-      fetch(`/api/profile/${encodeURIComponent(acct)}`),
-      fetch(`/api/profile/${encodeURIComponent(acct)}/statuses`),
-    ]);
+  const [accountResult, statusesResult] = await Promise.all([
+    getProfile(acct),
+    getProfileStatuses(acct),
+  ]);
 
-    if (!accountRes.ok) {
-      return { statuses: [], error: `${accountRes.status} ${await accountRes.text()}` };
-    }
-
-    return {
-      account: await accountRes.json() as MastodonAccount,
-      statuses: statusesRes.ok ? await statusesRes.json() as MastodonStatus[] : [],
-    };
-  } catch (err) {
-    return { statuses: [], error: err instanceof Error ? err.message : String(err) };
+  if (!accountResult.ok) {
+    return { statuses: [], error: accountResult.error.message };
   }
+
+  return {
+    account: accountResult.data,
+    statuses: statusesResult.ok ? statusesResult.data : [],
+  };
 }
 
 export const tagName = 'mastodon-profile';
@@ -40,14 +39,9 @@ export default class ProfilePage extends OpenElement {
 
     return (
       <main class='mastodon-main'>
-        <div class='mastodon-page-header'>
-          <h1>Profile</h1>
-          {account && <p>@{account.acct}</p>}
-        </div>
-
         {data.error && (
-          <div class='mastodon-card' style='border-color: var(--error-fg, #c8392a);'>
-            <p class='mastodon-card-title'>Error</p>
+          <div class='mastodon-card mastodon-error'>
+            <p class='mastodon-card-title'>Error loading profile</p>
             <p class='mastodon-card-body'>{data.error}</p>
           </div>
         )}
@@ -60,21 +54,64 @@ export default class ProfilePage extends OpenElement {
         )}
 
         {account && (
-          <div class='mastodon-card'>
-            <p class='mastodon-card-title'>{account.displayName}</p>
-            <p class='mastodon-card-body'>{account.note}</p>
-            <p class='mastodon-card-body'>
-              {account.followersCount} followers · {account.followingCount} following ·{' '}
-              {account.statusesCount} posts
-            </p>
-          </div>
-        )}
+          <>
+            <header class='mastodon-profile-header'>
+              <div
+                class='mastodon-profile-header-bg'
+                style={account.headerStatic || account.header
+                  ? { backgroundImage: `url(${account.headerStatic || account.header})` }
+                  : undefined}
+              />
+              <div class='mastodon-profile-identity'>
+                <img
+                  class='mastodon-profile-avatar'
+                  src={account.avatarStatic || account.avatar}
+                  alt={account.displayName}
+                  width='80'
+                  height='80'
+                />
+                <div class='mastodon-profile-names'>
+                  <h1 class='mastodon-profile-displayname'>{account.displayName}</h1>
+                  <p class='mastodon-profile-acct'>@{account.acct}</p>
+                </div>
+              </div>
+              <div
+                class='mastodon-profile-note'
+                dangerouslySetInnerHTML={{ __html: account.note }}
+              />
+              <div class='mastodon-profile-stats'>
+                <span>
+                  <strong>{formatCount(account.statusesCount)}</strong> posts
+                </span>
+                <span>
+                  <strong>{formatCount(account.followingCount)}</strong> following
+                </span>
+                <span>
+                  <strong>{formatCount(account.followersCount)}</strong> followers
+                </span>
+                <span>
+                  <strong>{account.bot ? 'Yes' : 'No'}</strong> bot
+                </span>
+              </div>
+            </header>
 
-        {data.statuses.map((status) => (
-          <article key={status.id} class='mastodon-card'>
-            <p class='mastodon-card-body'>{status.content}</p>
-          </article>
-        ))}
+            <h2 class='mastodon-section-title'>
+              Recent posts <span class='mastodon-count'>{data.statuses.length}</span>
+            </h2>
+
+            {data.statuses.length === 0 && (
+              <div class='mastodon-empty compact'>
+                <p class='mastodon-empty-title'>No posts yet</p>
+              </div>
+            )}
+
+            <div class='mastodon-status-list' role='feed'>
+              {data.statuses.map((status) => (
+                <StatusCard key={status.id} status={status} reblog={!!status.reblog} compact />
+              ))}
+            </div>
+          </>
+        )}
       </main>
     );
   }

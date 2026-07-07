@@ -21,7 +21,7 @@ import type {
 
 const USE_FIXTURES = Deno.env.get('MASTODON_LIVE') !== 'true';
 
-const FIXTURES_BASE = new URL('../fixtures/', import.meta.url);
+const FIXTURES_BASE = new URL(/* @vite-ignore */ '../fixtures/', import.meta.url);
 
 function fixturePath(name: string): URL {
   return new URL(`./${name}.json`, FIXTURES_BASE);
