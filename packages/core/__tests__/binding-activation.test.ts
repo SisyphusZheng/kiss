@@ -401,6 +401,31 @@ Deno.test('conditional binding disposes nested renders on update', () =>
     assertEquals(nestedDisposers.size, 0);
   }));
 
+Deno.test('conditional binding renders Fragment/multi-node branch', () =>
+  withMockDocument(() => {
+    const when = signal(true);
+    const anchor = document.createComment('show');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindConditional(
+      anchor as ChildNode,
+      when,
+      () => [jsx('span', { children: 'a' }), jsx('span', { children: 'b' })],
+      () => [jsx('em', { children: 'x' }), jsx('em', { children: 'y' })],
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+
+    when.value = false;
+    assertEquals(asTestElement(host).innerHTML, '<em>x</em><em>y</em>');
+
+    when.value = true;
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+  }));
+
 Deno.test('list binding renders items and reacts', () =>
   withMockDocument(() => {
     const items = signal(['a', 'b']);
@@ -463,6 +488,33 @@ Deno.test('list binding disposes nested renders on update', () =>
 
     dispose();
     assertEquals(nestedDisposers.size, 0);
+  }));
+
+Deno.test('list binding renders Fragment/multi-node items', () =>
+  withMockDocument(() => {
+    const items = signal(['a']);
+    const anchor = document.createComment('for');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindList(
+      anchor as ChildNode,
+      items,
+      (item: unknown) => [
+        jsx('span', { children: item as string }),
+        jsx('b', { children: item as string }),
+      ],
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(asTestElement(host).innerHTML, '<span>a</span><b>a</b>');
+
+    items.value = ['x', 'y'];
+    assertEquals(
+      asTestElement(host).innerHTML,
+      '<span>x</span><b>x</b><span>y</span><b>y</b>',
+    );
   }));
 
 Deno.test('registerBindingKind dispatches custom binding kind', () =>

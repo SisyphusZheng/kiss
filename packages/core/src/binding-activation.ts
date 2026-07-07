@@ -409,11 +409,11 @@ function applyConditional(
     if (result.nodeType === 11) {
       const fragChildren: ChildNode[] = [];
       while (result.firstChild) {
-        fragChildren.push(result.firstChild as ChildNode);
+        fragChildren.push(result.removeChild(result.firstChild) as ChildNode);
       }
       const ref = anchor.nextSibling;
-      for (let i = fragChildren.length - 1; i >= 0; i--) {
-        anchor.parentNode?.insertBefore(fragChildren[i], ref);
+      for (const child of fragChildren) {
+        anchor.parentNode?.insertBefore(child, ref);
       }
       currentChildren = fragChildren;
     } else {
@@ -490,10 +490,10 @@ function applyList(
       if (dom.nodeType === 11) {
         const fragChildren: ChildNode[] = [];
         while (dom.firstChild) {
-          fragChildren.push(dom.firstChild as ChildNode);
+          fragChildren.push(dom.removeChild(dom.firstChild) as ChildNode);
         }
-        for (let j = fragChildren.length - 1; j >= 0; j--) {
-          anchor.parentNode?.insertBefore(fragChildren[j], ref);
+        for (const child of fragChildren) {
+          anchor.parentNode?.insertBefore(child, ref);
         }
         rendered.push(...fragChildren);
       } else {
