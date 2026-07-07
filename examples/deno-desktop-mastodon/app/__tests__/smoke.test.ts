@@ -1,5 +1,10 @@
 import { assertEquals } from '@std/assert';
 
+function parsePort(stdout: string): number | undefined {
+  const match = stdout.match(/Listening on http:\/\/[^:]+:(\d+)\//);
+  return match ? Number(match[1]) : undefined;
+}
+
 async function waitForServer(port: number, timeoutMs = 5000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -14,15 +19,36 @@ async function waitForServer(port: number, timeoutMs = 5000): Promise<void> {
 }
 
 Deno.test('server endpoints serve fixtures', async () => {
-  const port = 18123;
   const command = new Deno.Command(Deno.execPath(), {
     args: ['run', '-A', 'main.ts'],
     cwd: new URL('../../', import.meta.url).pathname,
-    env: { PORT: String(port) },
-    stdout: 'null',
-    stderr: 'null',
+    env: { PORT: '0' },
+    stdout: 'piped',
+    stderr: 'piped',
   });
   const process = command.spawn();
+  const decoder = new TextDecoder();
+  let stdout = '';
+
+  // Read stdout until we see the listening line.
+  const reader = process.stdout.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      stdout += decoder.decode(value, { stream: true });
+      if (stdout.includes('Listening on')) break;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const port = parsePort(stdout);
+  if (!port) {
+    process.kill();
+    await process.status;
+    throw new Error(`Could not parse listening port from stdout: ${stdout}`);
+  }
 
   try {
     await waitForServer(port);

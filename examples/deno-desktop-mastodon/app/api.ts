@@ -19,7 +19,9 @@ import type {
   TimelineRequest,
 } from './types.ts';
 
-const USE_FIXTURES = Deno.env.get('MASTODON_LIVE') !== 'true';
+function useFixtures(): boolean {
+  return Deno.env.get('MASTODON_LIVE') !== 'true';
+}
 
 const FIXTURES_BASE = new URL(/* @vite-ignore */ '../fixtures/', import.meta.url);
 
@@ -53,7 +55,7 @@ function normalizeInstance(instance: string): string {
 export async function fetchPublicTimeline(
   req: TimelineRequest,
 ): Promise<ApiResult<MastodonStatus[]>> {
-  if (USE_FIXTURES) {
+  if (useFixtures()) {
     return readFixture<MastodonStatus[]>('timeline');
   }
 
@@ -91,7 +93,7 @@ export async function fetchPublicTimeline(
 export async function fetchAccount(
   req: ProfileRequest,
 ): Promise<ApiResult<MastodonAccount>> {
-  if (USE_FIXTURES) {
+  if (useFixtures()) {
     return readFixture<MastodonAccount>('account');
   }
 
@@ -123,7 +125,7 @@ export async function fetchAccount(
 export async function fetchAccountStatuses(
   req: ProfileRequest,
 ): Promise<ApiResult<MastodonStatus[]>> {
-  if (USE_FIXTURES) {
+  if (useFixtures()) {
     return readFixture<MastodonStatus[]>('account-statuses');
   }
 
@@ -157,7 +159,7 @@ export async function fetchAccountStatuses(
 export async function fetchStatus(
   req: StatusRequest,
 ): Promise<ApiResult<MastodonStatus>> {
-  if (USE_FIXTURES) {
+  if (useFixtures()) {
     return readFixture<MastodonStatus>('status');
   }
 
@@ -189,7 +191,7 @@ export async function fetchStatus(
 export async function fetchStatusContext(
   req: StatusRequest,
 ): Promise<ApiResult<{ ancestors: MastodonStatus[]; descendants: MastodonStatus[] }>> {
-  if (USE_FIXTURES) {
+  if (useFixtures()) {
     return readFixture<{ ancestors: MastodonStatus[]; descendants: MastodonStatus[] }>(
       'status-context',
     );

@@ -171,3 +171,6 @@ const server = Deno.serve({ port: PORT }, async (req: Request) => {
     return serverError();
   }
 });
+
+const addr = server.addr as Deno.NetAddr;
+console.log(`[mastodon] Listening on http://${addr.hostname}:${addr.port}/`);
