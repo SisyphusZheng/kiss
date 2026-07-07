@@ -10,6 +10,7 @@
 
 import type { RouteEntry } from '@openelement/protocol/framework';
 import { parseRouteFilePath } from './route-scanner.ts';
+import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
 
 /**
  * Generate TypeScript type literal for route params.
@@ -72,7 +73,7 @@ export function generateRouteTypes(routes: RouteEntry[]): string {
   // Generate entries for each route with params
   const paramEntries = paramRoutes.map((r) => {
     const bracketPath = parseRouteFilePath(r.filePath, { paramSyntax: 'bracket' });
-    const path = JSON.stringify(bracketPath);
+    const path = quoteGeneratedJavaScriptStringLiteral(bracketPath);
     const type = generateParamsType(r.params!);
     return `    ${path}: ${type};`;
   });
