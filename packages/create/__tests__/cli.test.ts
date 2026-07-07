@@ -526,7 +526,7 @@ Deno.test('create-open: generated project builds through the one-command pipelin
     });
 
     const build = new Deno.Command(Deno.execPath(), {
-      args: ['task', 'build'],
+      args: ['task', 'build', '--minimum-dependency-age=1'],
       cwd: appDir,
       stdout: 'piped',
       stderr: 'piped',
