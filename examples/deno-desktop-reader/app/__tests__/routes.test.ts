@@ -312,7 +312,10 @@ Deno.test('Bookshelf renders a large library without hanging', async () => {
   const elapsed = performance.now() - start;
 
   assert(vnode !== null && typeof vnode === 'object', 'render should return a non-null VNode');
-  assert((vnode as VNode).children.length > 1, 'large library render should produce multiple children');
+  assert(
+    (vnode as VNode).children.length > 1,
+    'large library render should produce multiple children',
+  );
   assertEquals(elapsed < 1000, true, `Large bookshelf render took ${elapsed}ms`);
 });
 
