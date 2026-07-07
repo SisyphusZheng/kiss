@@ -1,8 +1,8 @@
 # openElement Roadmap
 
 > Source of truth for forward version planning.\
-> Current package line: v0.41.0-alpha.6 Mac Mastodon Desktop Incubation.\
-> Current implementation line: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.\
+> Current package line: v0.41.0-alpha.6 Networked Desktop Dogfood preparation.\
+> Current implementation line: v0.41.0-alpha.7 Networked Desktop Dogfood.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-07-03.
 
@@ -47,7 +47,7 @@ products. `@openelement/core`, `@openelement/adapter-vite`,
 the two products without replacing them.
 
 Dogfood apps validate OpenElement; they do not define it. Reader and the
-alpha.7 Mastodon Desktop line are proof surfaces for framework contracts, not
+alpha.7 networked desktop dogfood line are proof surfaces for framework contracts, not
 additional product lines. AutoFlow3, docs truth, release evidence, and workflow
 gates are infrastructure, not Framework features.
 
@@ -94,7 +94,7 @@ v0.41-v1.0 blocker.
 | v0.41.0-alpha.4 | OpenElement in Fresh                               | Prove openElement components inside Fresh through the lightweight client runtime and Preact island proof.                                                                                                                                  | Released                 |
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Reader Proof               | First-class single-page-application mode with client-side router; WeRead-style Deno Desktop reader backed by local/open fixtures; no WeRead private API integration.                                                                       | Released                 |
 | v0.41.0-alpha.6 | App Protocol Architecture Hardening                | Close the front-half cleanup audit, sync product truth, make App own RouteGraph/RenderPipeline/RequestContext, keep Vite/Hono/Nitro as official adapters, close CodeQL/trust-boundary backlog, and promote Reader into regression dogfood. | Released                 |
-| v0.41.0-alpha.7 | Mac Mastodon Desktop Incubation                    | OpenElement + Deno Desktop macOS social/IM-shaped dogfood app; accountless Mastodon/GoToSocial reading first, no OAuth/DM/notifications yet.                                                                                               | Active Next              |
+| v0.41.0-alpha.7 | Networked Desktop Dogfood                          | Read-only/accountless Mastodon/GoToSocial desktop dogfood; stress-tests SPA mode, Deno Desktop, third-party WC interop, render pipeline, local state/cache, error boundaries. No OAuth/DM/notifications/mutations.                         | Active Next              |
 | v0.41.0-beta.1  | Adoption Freeze                                    | Freeze the five-minute starter path, API docs, website positioning, public surface labels, Deno toolchain truth, logo/brand rendering, npm metadata, and release truth before stable v0.41.0.                                              | Planned                  |
 | v0.41.0         | WC fullstack framework + Basic Element proof       | Stable npm-first distribution, hardened signal-DOM architecture, validated WC integration, SPA reader proof, app architecture hardening, desktop app incubation, and adoption-ready docs.                                                  | Planned                  |
 | v0.42.0         | Server Primitives                                  | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                                                                                                  | Planned                  |
@@ -944,31 +944,38 @@ Core work:
 Detailed execution lives in `docs/release/v0.41.0-alpha.6-plan.md` and GitHub
 issues #145 through #154, #186 through #194, and #205 through #212.
 
-## v0.41.0-alpha.7 - Mac Mastodon Desktop Incubation
+## v0.41.0-alpha.7 - Networked Desktop Dogfood
 
 After alpha.6 validates the App/protocol architecture and first-party Deno
-Desktop target contract, alpha.7 starts the OpenElement + Deno Desktop macOS
-Mastodon/IM incubation project.
+Desktop target contract, alpha.7 runs the second framework dogfood app after
+Reader. The goal is to stress-test the current v0.41 framework surface with real
+networked public APIs, not to build a social client product.
 
-This is the second dogfood app after Reader:
+Reader proved local-first documents, annotations, sources, PDF/text rendering,
+and desktop ergonomics. Mastodon Desktop proves a different surface:
 
-- Reader proves local-first reading, notes, sources, PDF/text rendering, and
-  desktop ergonomics.
-- Mac Mastodon Desktop proves a networked desktop social app loop: remote
-  public APIs, timeline/profile/status reading, cache/error/rate-limit states,
-  desktop navigation, and app-shell reuse.
+- Remote public API fetching with realistic failure modes.
+- Timeline-style navigation with dynamic content.
+- Cache, error, retry, and rate-limit states as normal UI flows.
+- Third-party Web Components used inside a desktop shell.
+- Long-running SPA behavior under continuous data updates.
 
 Alpha.7 stays deliberately narrow:
 
 - macOS/Deno Desktop shell.
 - Instance selector for Mastodon/GoToSocial-compatible public instances.
-- Public timeline.
-- Profile page.
-- Status detail / thread reading.
+- Public timeline, profile page, and status detail / thread reading.
 - Local saved accounts/statuses as a bookmark-like feature.
 - Basic search where public instance APIs support it.
+- Deterministic fixtures for CI; live-network smoke is opt-in.
 - Reuse Reader/app-shell learnings for sidebars, panels, settings, keyboard
   flow, local cache, and verification.
+
+In addition to the dogfood implementation, alpha.7 closes two cross-cutting
+items before beta.1:
+
+- Decide and document the `.dvmrc` / Deno toolchain strategy.
+- Create the beta.1 Adoption Freeze issue train.
 
 Deferred until later framework primitives:
 
@@ -978,9 +985,13 @@ Deferred until later framework primitives:
 - Streaming/background sync.
 - Compose, reply, favorite, boost, or any authenticated mutation.
 - Encrypted credential storage.
+- Server/data/forms/session/cache framework primitives.
 
+Detailed design lives in `docs/dogfood/mastodon-desktop/README.md`.
 Detailed execution lives in `docs/release/v0.41.0-alpha.7-plan.md`.
-GitHub execution slices are #195 through #201, with #57 as the parent PRD.
+GitHub execution slices are #195 through #201 plus #221, with #57 as the parent
+PRD. `.dvmrc` strategy is tracked in #230 and beta.1 issue creation is tracked
+in #231.
 
 ## Explicit Non-Goals
 

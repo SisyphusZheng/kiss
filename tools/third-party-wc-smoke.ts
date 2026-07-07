@@ -8,6 +8,7 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { Page } from 'npm:playwright@1.59.1';
 import { allPackageAliases } from './lib/package-graph.ts';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -112,6 +113,56 @@ function serveDist(distDir: string): Deno.HttpServer {
   });
 }
 
+async function readEventCount(page: Page): Promise<number> {
+  return await page.evaluate(() => {
+    const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+    const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
+      | HTMLElement
+      | null;
+    const root = fixture?.shadowRoot;
+    const eventText = root?.querySelector('#event-count')?.textContent ?? '';
+    return Number(eventText.replace(/\D+/g, ''));
+  });
+}
+
+async function interactAndVerifyEventCount(page: Page, startCount: number): Promise<void> {
+  const expectCount = async (expected: number, label: string): Promise<void> => {
+    await page.waitForFunction((target) => {
+      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
+        | HTMLElement
+        | null;
+      const root = fixture?.shadowRoot;
+      const eventText = root?.querySelector('#event-count')?.textContent ?? '';
+      return Number(eventText.replace(/\D+/g, '')) >= target;
+    }, expected);
+    const actual = await readEventCount(page);
+    if (actual < expected) {
+      throw new Error(`${label}: expected event count >= ${expected}, got ${actual}`);
+    }
+  };
+
+  // Lit counter click dispatches a composed CustomEvent('lit-count').
+  await page.locator('alpha3-lit-counter').locator('#lit-button').click();
+  await expectCount(startCount + 1, 'Lit counter click');
+
+  // Shoelace button click.
+  await page.locator('sl-button#sl-button').click();
+  await expectCount(startCount + 2, 'Shoelace button click');
+
+  // Shoelace switch change.
+  await page.locator('sl-switch#sl-switch').click();
+  await expectCount(startCount + 3, 'Shoelace switch change');
+
+  // Material button click.
+  await page.locator('md-filled-button#md-button').click();
+  await expectCount(startCount + 4, 'Material button click');
+
+  // Material switch change.
+  await page.locator('md-switch#md-switch').click();
+  await expectCount(startCount + 5, 'Material switch change');
+}
+
 async function verifyBrowser(distDir: string): Promise<void> {
   const { chromium } = await import('npm:playwright@1.59.1');
   const server = serveDist(distDir);
@@ -180,14 +231,15 @@ async function verifyBrowser(distDir: string): Promise<void> {
     });
 
     if (!Number.isFinite(summary.eventCount)) throw new Error('Event counter did not render');
-    // Interaction event propagation is tracked separately in #221. This smoke
-    // focuses on SSR output and browser upgrade readiness without fixed sleeps.
     if (!summary.litSlot) throw new Error('Lit slot content did not render');
     if (!summary.litHostContainsOpenElement) {
       throw new Error('Lit host did not contain openElement child');
     }
     if (!summary.shoelaceReady) throw new Error('Shoelace components were not present');
     if (!summary.materialReady) throw new Error('Material Web components were not present');
+
+    // Interaction event propagation checks for #221.
+    await interactAndVerifyEventCount(page, summary.eventCount);
   } finally {
     await browser.close();
     await server.shutdown();
