@@ -55,11 +55,6 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
       'Native CSSStyleSheet has CSSRuleList while the SSR facade exposes an array-like rule contract.',
   },
   {
-    file: 'packages/core/src/island.ts',
-    fragment: 'el as unknown as Record<string, unknown>',
-    reason: 'Custom element prop assignment by dynamic prop name.',
-  },
-  {
     file: 'packages/core/src/binding-activation.ts',
     fragment: 'desc.el as unknown as Record<string, unknown>',
     reason: 'Direct DOM property assignment by dynamic prop name.',

@@ -18,7 +18,7 @@ import type { Signal } from '@openelement/protocol/signal';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '@openelement/signal';
 import { eventTypeFromProp } from './event-marker.ts';
-import { trustRenderHtml } from './security.ts';
+import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { commitBindings } from './binding-activation.ts';
@@ -343,9 +343,7 @@ function renderNode(
   if (isComponentCtor(tag)) {
     try {
       const instance = new tag();
-      for (const [k, v] of Object.entries(props)) {
-        (instance as Record<string, unknown>)[k] = v;
-      }
+      injectPropsSafe(instance, props ?? {}, `renderToDom<${String(tag)}>`);
       const result = instance.render();
       return renderNode(result, lifecycle, signalRegistry, descriptors);
     } catch (err) {

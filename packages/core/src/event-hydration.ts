@@ -16,6 +16,7 @@ import { applyBindingDescriptor } from './binding-activation.ts';
 import { bindEvent } from './binding-descriptor.ts';
 import type { EventBindingDescriptor } from './binding-descriptor.ts';
 import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
+import { injectPropsSafe } from './security.ts';
 
 // Re-export pure marker helpers so existing consumers keep working.
 export {
@@ -86,9 +87,7 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     if (isComponentCtor(tag)) {
       try {
         const instance = new tag();
-        for (const [k, v] of Object.entries(props)) {
-          (instance as Record<string, unknown>)[k] = v;
-        }
+        injectPropsSafe(instance, props ?? {}, `event-hydration<${String(tag)}>`);
         visit(instance.render());
       } catch {
         return;
