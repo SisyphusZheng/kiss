@@ -4,7 +4,7 @@
  * registration.
  */
 
-import { assertEquals } from '@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import type { VNode } from '@openelement/core/static';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
@@ -311,7 +311,8 @@ Deno.test('Bookshelf renders a large library without hanging', async () => {
   const vnode = page.render();
   const elapsed = performance.now() - start;
 
-  assertEquals(typeof vnode, 'object');
+  assert(vnode !== null && typeof vnode === 'object', 'render should return a non-null VNode');
+  assert((vnode as VNode).children.length > 1, 'large library render should produce multiple children');
   assertEquals(elapsed < 1000, true, `Large bookshelf render took ${elapsed}ms`);
 });
 
