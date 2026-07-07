@@ -66,9 +66,13 @@ Deno.test('ssgRender - rejects when module has no default export', async () => {
   );
 });
 
-Deno.test('ssgRender - handles empty routeInfo gracefully', async () => {
+Deno.test('ssgRender - throws when routeInfo is empty', async () => {
   const bundle = createMockBundle({ routeInfo: [] });
-  await ssgRender(bundle, defaultOptions);
+  await assertRejects(
+    () => ssgRender(bundle, defaultOptions),
+    Error,
+    'routeInfo is empty',
+  );
 });
 
 Deno.test('ssgRender - writes ISR manifest for revalidate routes', async () => {

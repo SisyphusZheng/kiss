@@ -17,6 +17,8 @@ import { bindEvent } from './binding-descriptor.ts';
 import type { EventBindingDescriptor } from './binding-descriptor.ts';
 import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
 import { injectPropsSafe } from './security.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
 
 // Re-export pure marker helpers so existing consumers keep working.
 export {
@@ -89,7 +91,10 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
         const instance = new tag();
         injectPropsSafe(instance, props ?? {}, `event-hydration<${String(tag)}>`);
         visit(instance.render());
-      } catch {
+      } catch (e) {
+        createLogger('event-hydration').error(
+          `Failed to hydrate component <${String(tag)}>: ${formatError(e)}`,
+        );
         return;
       }
       return;
@@ -98,7 +103,10 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     if (typeof tag === 'function') {
       try {
         visit((tag as (props: Record<string, unknown>) => unknown)({ ...props, children }));
-      } catch {
+      } catch (e) {
+        createLogger('event-hydration').error(
+          `Failed to hydrate function component <${String(tag)}>: ${formatError(e)}`,
+        );
         return;
       }
       return;

@@ -162,8 +162,16 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('customElements.define = (name, ctor, options) => {');
     lines.push('  if (customElements.get(name)) return;');
     lines.push(
-      '  try { _origDefine(name, ctor, options); } catch { /* already defined */ }',
+      '  try { _origDefine(name, ctor, options); } catch (e) {',
     );
+    lines.push(
+      '    // Only swallow the duplicate-definition DOMException; rethrow real errors (invalid names, etc.)',
+    );
+    lines.push(
+      '    if (e && e.name === "NotSupportedError") return;',
+    );
+    lines.push('    throw e;');
+    lines.push('  }');
     lines.push('};');
     lines.push('');
   }

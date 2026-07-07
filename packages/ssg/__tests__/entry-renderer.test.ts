@@ -374,3 +374,11 @@ Deno.test('generateHonoEntryCode: generates action handlers for all routes', () 
   assertStringIncludes(code, '// Action POST: / (index.ts)');
   assertStringIncludes(code, '// Action POST: /about (about.ts)');
 });
+
+Deno.test('renderEntry: customElements.define patch only swallows duplicate-definition errors', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'if (e && e.name === "NotSupportedError") return;');
+  assertStringIncludes(code, 'throw e;');
+});
