@@ -154,6 +154,18 @@ Deno.test('renderEntry: action POST handler parses form data', () => {
   assertStringIncludes(code, 'const __actionCtx = { ...__loadContext, formData: __formData }');
 });
 
+Deno.test('renderEntry: API route handler safely resolves platform when ExecutionContext is unavailable', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  // API route wrapper should tolerate Hono contexts without an ExecutionContext
+  // (e.g. during static prerender), matching the page loader behaviour.
+  assertStringIncludes(
+    code,
+    'platform: (() => { try { return c.executionCtx } catch { return undefined } })()',
+  );
+});
+
 // ─── /_data endpoint tests ─────────────────────────────────────
 
 Deno.test('renderEntry: generates /_data route map', () => {
