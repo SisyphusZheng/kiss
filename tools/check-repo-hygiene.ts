@@ -95,6 +95,15 @@ const allowedRemovedPackageMentions = [
   'README.zh.md',
 ];
 
+// Vendored MIT LICENSE files are intentionally tracked despite the vendor/
+// directory being gitignored. Force-adding them is required so that the
+// attribution files are included in the repository while the rest of the
+// vendored code remains ignored.
+const allowedTrackedIgnoredPaths = [
+  /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/LICENSE$/,
+  /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/[^/]+\/LICENSE$/,
+];
+
 const failures: Failure[] = [];
 
 function isActiveScanFile(path: string): boolean {
@@ -129,6 +138,7 @@ for (const file of await gitUntrackedFiles()) {
 }
 
 for (const file of await gitTrackedIgnoredFiles()) {
+  if (allowedTrackedIgnoredPaths.some((pattern) => pattern.test(file))) continue;
   failures.push({ path: file, message: 'tracked file is also ignored by .gitignore' });
 }
 
