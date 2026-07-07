@@ -25,11 +25,12 @@ post-publish npm consumer smoke evidence is recorded in
 v0.41.0-alpha.5 proved SPA mode plus the Deno Desktop Reader proof. It is now
 the prior released line.
 
-v0.41.0-alpha.7 is the active next real-app dogfood line: a read-only,
-accountless Mac Mastodon Desktop incubation that proves networked public API
-fetching, timeline/profile/status routes, local cache, desktop shell behavior,
-and screenshot/API verification without OAuth, direct messages, notifications,
-or authenticated mutations.
+v0.41.0-alpha.7 is the active next dogfood line: a read-only/accountless
+networked Mastodon/GoToSocial desktop app whose job is to stress-test the
+current openElement framework surface (SPA mode, Deno Desktop, third-party WC
+interop, render pipeline under dynamic content, local state/cache, error
+boundaries) without adding server/data/forms/session/cache primitives or OAuth.
+Design source: `docs/dogfood/mastodon-desktop/README.md`.
 
 v0.41.0-beta.1 is the Adoption Freeze before stable v0.41.0. It adds no new
 product surface; it freezes the five-minute starter path, public API docs,

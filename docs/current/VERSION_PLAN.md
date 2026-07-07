@@ -29,10 +29,11 @@ The release is staged through alpha lines with explicit execution plans:
   architecture hardening, official stack contracts, Deno Desktop target
   contract, and Reader regression-grade dogfood. Published to npm as
   `0.41.0-alpha.6` with provenance.
-- **alpha.7** (active next): Mac Mastodon Desktop incubation after alpha.6 validates the
-  framework architecture. This keeps the OpenElement + Deno Desktop social/IM
-  idea alive as a narrow networked desktop dogfood app, not a full authenticated
-  IM product.
+- **alpha.7** (active next): Networked desktop dogfood. A read-only/accountless
+  Mastodon/GoToSocial desktop app that stress-tests SPA mode, Deno Desktop,
+  third-party Web Components interop, render pipeline performance, local
+  state/cache, and error boundaries. Design source:
+  `docs/dogfood/mastodon-desktop/README.md`.
 - **beta.1**: Adoption Freeze. Starter, docs, API reference, website,
   package metadata, release notes, and visual brand polish must agree before
   stable v0.41.0.
@@ -161,7 +162,7 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
 - `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
-- `docs/release/v0.41.0-alpha.7-plan.md` — Mac Mastodon Desktop incubation
+- `docs/release/v0.41.0-alpha.7-plan.md` — Networked Desktop Dogfood
 - `docs/release/v0.41.0-beta.1-plan.md` — Adoption Freeze
 
 Alpha.7 starts only after alpha.6 closes the framework architecture loop. The
