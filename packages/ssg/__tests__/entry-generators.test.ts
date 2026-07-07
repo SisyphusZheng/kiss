@@ -1,7 +1,10 @@
 import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
 import { generateClientEntry, validateIslandModuleSpecifier } from '../src/entry-generators.ts';
-import { quoteGeneratedJavaScriptStringLiteral, quoteGeneratedJavaScriptValue } from '../src/codegen-literals.ts';
+import {
+  quoteGeneratedJavaScriptStringLiteral,
+  quoteGeneratedJavaScriptValue,
+} from '../src/codegen-literals.ts';
 
 Deno.test('generated client entry string literals escape JavaScript code boundaries', () => {
   assertEquals(
