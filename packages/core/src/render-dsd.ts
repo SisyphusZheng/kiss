@@ -37,7 +37,7 @@ import {
   serializeRenderNode,
   trustedHtmlNode,
 } from './render-ir.ts';
-import { DANGEROUS_KEYS } from './security.ts';
+import { injectPropsSafe } from './security.ts';
 
 const log = createLogger('core');
 
@@ -117,21 +117,7 @@ function injectProps(
   tagName: string,
   props: Record<string, unknown>,
 ): void {
-  for (const [key, value] of Object.entries(props)) {
-    if (DANGEROUS_KEYS.has(key)) {
-      log.warn(
-        `Skipping dangerous prop key "${key}" on <${tagName}> - potential prototype pollution`,
-      );
-      continue;
-    }
-    try {
-      (instance as Record<string, unknown>)[key] = value;
-    } catch (e) {
-      log.debug(
-        `Cannot set read-only property "${key}" on <${tagName}>: ${formatError(e)}`,
-      );
-    }
-  }
+  injectPropsSafe(instance, props, `<${tagName}>`);
 }
 
 // ─── DSD Template Attributes ───────────────────────────────────
