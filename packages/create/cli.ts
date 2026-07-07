@@ -12,7 +12,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '@openelement/core/logger';
 
-// ??? Package versions ??????????????????????????????????????????
+// Package version resolution
 // ADR 0016: Handle both local (workspace file://) and remote (npm registry) execution.
 //
 // - Local:  read version from workspace deno.json (single source of truth)

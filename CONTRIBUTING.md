@@ -28,16 +28,19 @@ build, and release toolchain.
 
 ```text
 packages/
-  app/            # JSX-first application authoring API
-  core/           # DSD renderer, DsdElement, JSX runtime
-  adapter-vite/   # Vite plugin, SSG pipeline, generated entries
-  runtime/        # runtime convenience facade
-  ui/             # DSD-first open-* UI components
+  protocol/       # framework contracts (vnode, render, signal, SSG, ISR)
+  router/         # client-side router and data context
+  signal/         # signal engine abstraction + Preact engine
+  core/           # DSD renderer, JSX runtime, hydration, client runtime
+  create/         # `@openelement/create` CLI and starter templates
+  element/        # OpenElement custom element base class
+  app/            # JSX-first application authoring API + Hono integration
+  ssg/            # static site generation drivers and helpers
   content/        # Markdown, MDX, nav, blog, sitemap
-  i18n/           # locale data and static path helpers
-  router/         # route utilities
-  protocols/      # small structured contracts
+  adapter-vite/   # Vite plugin, SSG pipeline, generated entries
+  ui/             # DSD-first open-* UI components
 www/              # openelement.org website
+examples/         # dogfood apps (reader, mastodon, spa)
 docs/             # ADR, SOP, NextVersion, status, roadmap, release docs
 ```
 
