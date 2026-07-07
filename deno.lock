@@ -2341,6 +2341,14 @@
       "npm:vite@8.0.10"
     ],
     "members": {
+      "examples/deno-desktop-mastodon": {
+        "dependencies": [
+          "jsr:@std/assert@1",
+          "npm:@preact/signals@^2.9.0",
+          "npm:preact@^10.28.0",
+          "npm:vite@8.0.10"
+        ]
+      },
       "examples/deno-desktop-reader": {
         "dependencies": [
           "jsr:@std/assert@1",

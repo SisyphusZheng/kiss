@@ -13,7 +13,8 @@
     "./packages/router",
     "./packages/protocol",
     "./www",
-    "./examples/deno-desktop-reader"
+    "./examples/deno-desktop-reader",
+    "./examples/deno-desktop-mastodon"
   ],
   "imports": {
     "@std/fs/walk": "jsr:@std/fs@^1.0.0/walk",
