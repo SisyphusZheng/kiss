@@ -280,6 +280,41 @@ Deno.test('Reader Preact islands register deterministic custom elements', async 
   assertEquals(typeof customElements.get('sync-status-island'), 'function');
 });
 
+Deno.test('Bookshelf action surfaces sync errors instead of throwing', async () => {
+  const mod = await import('../../routes/index.tsx');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response('boom', { status: 500 }));
+
+  try {
+    const result = await mod.action({ formData: new FormData() });
+    assertEquals(typeof result.error, 'string');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test('Bookshelf renders a large library without hanging', async () => {
+  const mod = await import('../../routes/index.tsx');
+  const page = new mod.default();
+  const books = Array.from({ length: 500 }, (_, i) => ({
+    id: `book-${i}`,
+    title: `Book ${i}`,
+    author: 'Author',
+    coverUrl: '',
+    sourceId: 'fixtures',
+  }));
+  (page as unknown as Record<string, unknown>).books = books;
+  (page as unknown as Record<string, unknown>).progressByBook = {};
+  (page as unknown as Record<string, unknown>).sources = [];
+
+  const start = performance.now();
+  const vnode = page.render();
+  const elapsed = performance.now() - start;
+
+  assertEquals(typeof vnode, 'object');
+  assertEquals(elapsed < 1000, true, `Large bookshelf render took ${elapsed}ms`);
+});
+
 function collectElementTags(node: unknown, tags = new Set<string>()): Set<string> {
   if (node === null || node === undefined || typeof node === 'string') return tags;
   if (Array.isArray(node)) {
