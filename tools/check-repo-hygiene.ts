@@ -101,7 +101,6 @@ const allowedRemovedPackageMentions = [
 // vendored code remains ignored.
 const allowedTrackedIgnoredPaths = [
   /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/LICENSE$/,
-  /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/[^/]+\/LICENSE$/,
 ];
 
 const failures: Failure[] = [];
