@@ -407,8 +407,9 @@ Deno.test('conditional binding renders Fragment/multi-node branch', () =>
     const anchor = document.createComment('show');
     const host = document.createElement('div');
     host.appendChild(anchor);
+    const nestedDisposers = new Set<() => void>();
     const renderer: BindingRenderer = {
-      render: (node, lifecycle) => renderToDom(node, lifecycle),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
     };
     const desc: BindingDescriptor = bindConditional(
       anchor as ChildNode,
@@ -416,7 +417,7 @@ Deno.test('conditional binding renders Fragment/multi-node branch', () =>
       () => [jsx('span', { children: 'a' }), jsx('span', { children: 'b' })],
       () => [jsx('em', { children: 'x' }), jsx('em', { children: 'y' })],
     );
-    applyBindingDescriptor(desc, {}, renderer);
+    const dispose = applyBindingDescriptor(desc, {}, renderer);
     assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
 
     when.value = false;
@@ -424,6 +425,9 @@ Deno.test('conditional binding renders Fragment/multi-node branch', () =>
 
     when.value = true;
     assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+
+    dispose();
+    assertEquals(nestedDisposers.size, 0);
   }));
 
 Deno.test('list binding renders items and reacts', () =>
@@ -496,8 +500,9 @@ Deno.test('list binding renders Fragment/multi-node items', () =>
     const anchor = document.createComment('for');
     const host = document.createElement('div');
     host.appendChild(anchor);
+    const nestedDisposers = new Set<() => void>();
     const renderer: BindingRenderer = {
-      render: (node, lifecycle) => renderToDom(node, lifecycle),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
     };
     const desc: BindingDescriptor = bindList(
       anchor as ChildNode,
@@ -507,7 +512,7 @@ Deno.test('list binding renders Fragment/multi-node items', () =>
         jsx('b', { children: item as string }),
       ],
     );
-    applyBindingDescriptor(desc, {}, renderer);
+    const dispose = applyBindingDescriptor(desc, {}, renderer);
     assertEquals(asTestElement(host).innerHTML, '<span>a</span><b>a</b>');
 
     items.value = ['x', 'y'];
@@ -515,6 +520,9 @@ Deno.test('list binding renders Fragment/multi-node items', () =>
       asTestElement(host).innerHTML,
       '<span>x</span><b>x</b><span>y</span><b>y</b>',
     );
+
+    dispose();
+    assertEquals(nestedDisposers.size, 0);
   }));
 
 Deno.test('conditional binding clears Fragment/multi-node branch when falsy', () =>
@@ -523,8 +531,9 @@ Deno.test('conditional binding clears Fragment/multi-node branch when falsy', ()
     const anchor = document.createComment('show');
     const host = document.createElement('div');
     host.appendChild(anchor);
+    const nestedDisposers = new Set<() => void>();
     const renderer: BindingRenderer = {
-      render: (node, lifecycle) => renderToDom(node, lifecycle),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
     };
     const desc: BindingDescriptor = bindConditional(
       anchor as ChildNode,
@@ -532,7 +541,7 @@ Deno.test('conditional binding clears Fragment/multi-node branch when falsy', ()
       () => [jsx('span', { children: 'a' }), jsx('span', { children: 'b' })],
       () => null,
     );
-    applyBindingDescriptor(desc, {}, renderer);
+    const dispose = applyBindingDescriptor(desc, {}, renderer);
     assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
 
     when.value = false;
@@ -540,6 +549,9 @@ Deno.test('conditional binding clears Fragment/multi-node branch when falsy', ()
 
     when.value = true;
     assertEquals(asTestElement(host).innerHTML, '<span>a</span><span>b</span>');
+
+    dispose();
+    assertEquals(nestedDisposers.size, 0);
   }));
 
 Deno.test('list binding removes Fragment/multi-node items when list shrinks', () =>
@@ -548,8 +560,9 @@ Deno.test('list binding removes Fragment/multi-node items when list shrinks', ()
     const anchor = document.createComment('for');
     const host = document.createElement('div');
     host.appendChild(anchor);
+    const nestedDisposers = new Set<() => void>();
     const renderer: BindingRenderer = {
-      render: (node, lifecycle) => renderToDom(node, lifecycle),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, nestedDisposers),
     };
     const desc: BindingDescriptor = bindList(
       anchor as ChildNode,
@@ -559,7 +572,7 @@ Deno.test('list binding removes Fragment/multi-node items when list shrinks', ()
         jsx('b', { children: item as string }),
       ],
     );
-    applyBindingDescriptor(desc, {}, renderer);
+    const dispose = applyBindingDescriptor(desc, {}, renderer);
     assertEquals(
       asTestElement(host).innerHTML,
       '<span>a</span><b>a</b><span>b</span><b>b</b>',
@@ -570,6 +583,9 @@ Deno.test('list binding removes Fragment/multi-node items when list shrinks', ()
 
     items.value = [];
     assertEquals(asTestElement(host).innerHTML, '');
+
+    dispose();
+    assertEquals(nestedDisposers.size, 0);
   }));
 
 Deno.test('registerBindingKind dispatches custom binding kind', () =>
