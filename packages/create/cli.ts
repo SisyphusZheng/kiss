@@ -10,7 +10,12 @@
 
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createLogger } from '@openelement/core/logger';
+
+// Minimal local logger so the CLI has zero runtime dependency on
+// @openelement/core when executed from the npm registry.
+const log = {
+  error: (message: string) => console.error(message),
+};
 
 // Package version resolution
 // ADR 0016: Handle both local (workspace file://) and remote (npm registry) execution.
@@ -19,7 +24,6 @@ import { createLogger } from '@openelement/core/logger';
 // - Remote: query npm Registry API for latest version (zero hardcoding)
 
 const NPM_SCOPE = '@openelement';
-const log = createLogger('create');
 const PKG_DIR_MAP: Record<string, string> = {
   core: 'core',
   adapterVite: 'adapter-vite',

@@ -382,10 +382,6 @@ Deno.test('create-open: generated project builds through the one-command pipelin
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'errors.ts')),
       },
       {
-        find: '@openelement/core/logger',
-        replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'logger.ts')),
-      },
-      {
         find: '@openelement/core/prop',
         replacement: vitePath(join(repoRoot, 'packages', 'core', 'src', 'prop.ts')),
       },
