@@ -300,14 +300,6 @@ export function createReleasePlan(
       command: ['git', 'merge', '--ff-only', 'dev'],
     },
     ...publishSteps,
-    {
-      name: 'deploy:pages',
-      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
-    },
-    {
-      name: 'smoke:deploy',
-      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-    },
     ...evidenceSteps,
     {
       name: 'push main (release + evidence)',

@@ -1,13 +1,13 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 /**
- * bump-version — v0.35.6 (Cell 001)
+ * bump-version — openElement release tooling
  *
- * Updates version across all 19 packages and root deno.json imports.
+ * Updates version across all workspace packages and root deno.json imports.
  *
  * Usage:
- *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.35.6
- *   deno run --allow-read --allow-write tools/bump-version.ts --from 0.35.4 --to 0.35.6
- *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.35.6 --dry-run
+ *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.41.0-alpha.7
+ *   deno run --allow-read --allow-write tools/bump-version.ts --from 0.41.0-alpha.6 --to 0.41.0-beta.1
+ *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.41.0 --dry-run
  */
 
 const PACKAGES_DIR = 'packages';
@@ -24,6 +24,71 @@ function getArg(flag: string): string | null {
     return Deno.args[idx + 1];
   }
   return null;
+}
+
+interface ParsedVersion {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease?: string;
+  prereleaseNumber: number;
+}
+
+function parseVersion(version: string): ParsedVersion {
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
+  if (!match) {
+    throw new Error(`Invalid semver version: ${version}`);
+  }
+  const [, major, minor, patch, pre] = match;
+  if (!pre) {
+    return {
+      major: Number(major),
+      minor: Number(minor),
+      patch: Number(patch),
+      prereleaseNumber: 0,
+    };
+  }
+  const [label, numStr] = pre.split('.');
+  return {
+    major: Number(major),
+    minor: Number(minor),
+    patch: Number(patch),
+    prerelease: label,
+    prereleaseNumber: numStr ? Number(numStr) : 0,
+  };
+}
+
+const PRERELEASE_RANK: Record<string, number> = {
+  alpha: 1,
+  beta: 2,
+  rc: 3,
+};
+
+function validateVersionStep(fromVersion: string, toVersion: string): void {
+  const from = parseVersion(fromVersion);
+  const to = parseVersion(toVersion);
+
+  const fromBase = from.major * 1_000_000 + from.minor * 1_000 + from.patch;
+  const toBase = to.major * 1_000_000 + to.minor * 1_000 + to.patch;
+  if (toBase < fromBase) {
+    throw new Error(
+      `Version step regresses the release base: ${fromVersion} → ${toVersion}`,
+    );
+  }
+
+  // Same-base prerelease steps must not move backwards (e.g. beta → alpha).
+  if (toBase === fromBase && from.prerelease && to.prerelease) {
+    const fromRank = PRERELEASE_RANK[from.prerelease] ?? 99;
+    const toRank = PRERELEASE_RANK[to.prerelease] ?? 99;
+    if (
+      toRank < fromRank ||
+      (toRank === fromRank && to.prereleaseNumber < from.prereleaseNumber)
+    ) {
+      throw new Error(
+        `Prerelease step regresses: ${fromVersion} → ${toVersion}`,
+      );
+    }
+  }
 }
 
 function findPackageDenos(root: string): string[] {
@@ -161,6 +226,8 @@ function main(): void {
     console.log(`Already at version ${toVersion}. Nothing to do.`);
     return;
   }
+
+  validateVersionStep(resolvedFrom, toVersion);
 
   console.log(`Bumping: ${resolvedFrom} → ${toVersion}${dryRun ? ' (dry-run)' : ''}`);
   console.log('');

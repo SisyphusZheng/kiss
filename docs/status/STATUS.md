@@ -586,3 +586,8 @@ after repository-controlled gates, dev CI, merge, and release work. This is the
 v0.41 npm-only distribution closure path. JSR publish remains available only as
 a historical observation task (`publish:jsr:*`) and is no longer a release exit
 gate.
+
+Cloudflare Pages website deployment is handled by an external integration and is
+not an AutoFlow release gate. The `deploy:pages` and `smoke:deploy` steps have
+been removed from the automated release matrix to avoid false-positive passes
+when Cloudflare credentials are not present.
