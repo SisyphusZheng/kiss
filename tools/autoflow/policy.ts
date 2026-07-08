@@ -242,16 +242,15 @@ export const GATES: readonly GateDefinition[] = [
     ],
   },
   {
-    name: 'deploy:pages',
-    command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
+    name: 'publish:npm:dry-run',
+    command: ['deno', 'task', 'publish:npm:dry-run'],
     tiers: ['release'],
-    triggers: [/^www\//, /^packages\//, /^tools\/deploy-pages\.ts$/],
-  },
-  {
-    name: 'smoke:deploy',
-    command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-    tiers: ['release'],
-    triggers: [/^www\//, /^packages\//, /^tools\/smoke-deploy\.ts$/],
+    triggers: [
+      /^packages\//,
+      /^deno\.json$/,
+      /^tools\/publish-npm\.ts$/,
+      /^tools\/lib\/package-graph\.ts$/,
+    ],
   },
 ];
 

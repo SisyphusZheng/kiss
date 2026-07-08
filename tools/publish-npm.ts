@@ -35,6 +35,16 @@ function tarballPath(pkg: PackageInfo): string {
   return `${pkg.dir}/${npmTarballName(pkg)}`;
 }
 
+function cleanStaleTarballs(packages: PackageInfo[]): void {
+  for (const pkg of packages) {
+    for (const entry of Deno.readDirSync(pkg.dir)) {
+      if (entry.isFile && entry.name.endsWith('.tgz')) {
+        Deno.removeSync(`${pkg.dir}/${entry.name}`);
+      }
+    }
+  }
+}
+
 async function assertCleanWorktree(): Promise<void> {
   const command = new Deno.Command('git', {
     args: ['status', '--porcelain'],
@@ -92,7 +102,7 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
           const base = slashIdx === -1 ? specifier : prefix + rest.slice(0, slashIdx);
           if (base === pkg.name) continue;
           const depPkg = byName.get(base);
-          if (depPkg) deps[base] = `^${depPkg.version}`;
+          if (depPkg) deps[base] = depPkg.version;
         }
       }
     }
@@ -122,12 +132,16 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 async function packPackage(
   pkg: PackageInfo,
   allPackages: PackageInfo[],
+  dryRun: boolean,
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
-  // Release pack tolerates dirty worktree (deno fmt may touch files outside
-  // the staged bump list). Dry-run pack always tolerates dirty worktree.
-  const args = ['pack', '--allow-dirty', '--output', filename];
+  // Only dry-run packs tolerate a dirty worktree. Real publishes must pack
+  // from a clean worktree (asserted before the main loop) without --allow-dirty.
+  const args = ['pack', '--output', filename];
+  if (dryRun) {
+    args.push('--allow-dirty');
+  }
   await runCommand('deno', args, { cwd: pkg.dir });
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });
@@ -169,12 +183,12 @@ async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> 
   const args = dryRun
     ? ['publish', tar, '--dry-run', '--access', 'public']
     : ['publish', tar, '--access', 'public'];
-  // Provenance requires a supported CI provider (GitHub Actions); skip locally.
-  if (!dryRun && Deno.env.get('CI') === 'true') {
+  // Provenance requires GitHub Actions OIDC; skip locally and on other CI providers.
+  if (!dryRun && Deno.env.get('GITHUB_ACTIONS') === 'true') {
     args.push('--provenance');
   }
   if (isPrerelease(pkg.version)) {
-    args.push('--tag', 'next');
+    args.push('--tag', npmPublishTag(pkg.version));
   }
   try {
     await runCommand('npm', args);
@@ -186,6 +200,12 @@ async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> 
     }
     throw error;
   }
+}
+
+function npmPublishTag(version: string): string {
+  if (version.includes('-alpha')) return 'alpha';
+  if (version.includes('-beta')) return 'beta';
+  return 'next';
 }
 
 function assertVersionConsistency(packages: PackageInfo[]): void {
@@ -231,9 +251,13 @@ async function main(): Promise<void> {
       packages.map((pkg) => pkg.name).join(' -> '),
   );
 
+  // Remove stale tarballs from previous pack runs so the working tree does not
+  // accumulate `.tgz` artifacts.
+  cleanStaleTarballs(packages);
+
   const tarballs: string[] = [];
   for (const pkg of packages) {
-    const tar = await packPackage(pkg, packages);
+    const tar = await packPackage(pkg, packages, dryRun);
     tarballs.push(tar);
   }
 

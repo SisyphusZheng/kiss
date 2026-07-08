@@ -12,11 +12,13 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - uses: anomalyco/opencode/github@latest
+      # Pinned to the current `latest` tag (anomalyco/opencode@latest)
+      # SHA: 2c14fc5586fe0b88e5c04732d2e846769cc35671
+      - uses: anomalyco/opencode/github@2c14fc5586fe0b88e5c04732d2e846769cc35671
         env:
           # DeepSeek API key. Get one at https://platform.deepseek.com/api_keys
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

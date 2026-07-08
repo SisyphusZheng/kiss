@@ -356,7 +356,9 @@ export function renderApiRoute(lines: string[], route: ApiRouteDecl): void {
   lines.push(`      request: c.req.raw,`);
   lines.push(`      params: c.req.param() || {},`);
   lines.push(`      env: c.env || {},`);
-  lines.push(`      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`);
+  lines.push(
+    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
+  );
   lines.push(`    })`);
   lines.push(`  })`);
   lines.push(`} else {`);

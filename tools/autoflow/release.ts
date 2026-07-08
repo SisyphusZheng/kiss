@@ -296,14 +296,6 @@ export function createReleasePlan(
       command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,
-    {
-      name: 'deploy:pages',
-      command: ['deno', 'run', '-A', 'tools/deploy-pages.ts'],
-    },
-    {
-      name: 'smoke:deploy',
-      command: ['deno', 'run', '-A', 'tools/smoke-deploy.ts'],
-    },
     ...evidenceSteps,
     {
       name: 'push main evidence',

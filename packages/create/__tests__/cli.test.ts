@@ -133,7 +133,10 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   assertEquals(denoJson.imports['@openelement/signal'], 'npm:@openelement/signal@^${v.signal}');
   assertEquals(denoJson.imports['@openelement/content'], 'npm:@openelement/content@^${v.content}');
   assertEquals(denoJson.imports['@openelement/ssg'], 'npm:@openelement/ssg@^${v.ssg}');
-  assertEquals(denoJson.imports['@openelement/protocol'], 'npm:@openelement/protocol@^${v.protocol}');
+  assertEquals(
+    denoJson.imports['@openelement/protocol'],
+    'npm:@openelement/protocol@^${v.protocol}',
+  );
   assertEquals(denoJson.imports['@openelement/router'], 'npm:@openelement/router@^${v.router}');
   assertEquals(denoJson.imports['vite'], 'npm:vite@8.0.10');
   assertEquals(denoJson.nodeModulesDir, 'auto');
