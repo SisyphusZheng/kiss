@@ -110,7 +110,7 @@ console.log(`Generating test project from local workspace...`);
 const createResult = await runCommand([
   'run',
   '-A',
-  join(repoRoot, 'packages', 'create', 'cli.ts'),
+  join(repoRoot, 'packages', 'create', 'src', 'cli.ts'),
   projectName,
 ], tmpRoot);
 
