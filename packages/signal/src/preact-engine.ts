@@ -1,9 +1,9 @@
 /**
- * Optional SignalEngine candidate backed by @preact/signals-core.
+ * SignalEngine candidate backed by @preact/signals-core.
  *
- * This is not the default engine in v0.40.x. It exists so the shared
- * SignalEngine conformance suite can evaluate Preact Signals without pulling
- * the dependency into core or elements.
+ * This IS the default engine: framework.ts wires it up via createPreactEngine()
+ * at module load. It is also kept available so the shared SignalEngine conformance
+ * suite can evaluate Preact Signals without pulling the dependency into core or elements.
  */
 
 import {
