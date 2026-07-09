@@ -108,7 +108,7 @@ function staticOpenElementError(message: string): OpenElementError {
  * defineIslandConfig() call with boolean `ssr`/`dsd` and string `hydrate`
  * literal values. Dynamic metadata is rejected instead of guessed.
  */
-export function readStaticOpenElementExport(source: string): {
+export function readIslandConfig(source: string): {
   ssr?: boolean;
   dsd?: boolean;
   hydrate?: LocalIslandMeta['hydrate'];
@@ -419,23 +419,23 @@ export async function scanIslandMeta(
     }
 
     // Read the `openElement` export directly; no regex needed.
-    const openElementExport = readStaticOpenElementExport(source);
-    if (!openElementExport) continue;
+    const islandConfig = readIslandConfig(source);
+    if (!islandConfig) continue;
 
-    const hydrate: LocalIslandMeta['hydrate'] = openElementExport.hydrate &&
-        ['load', 'idle', 'visible', 'only'].includes(openElementExport.hydrate)
-      ? openElementExport.hydrate
+    const hydrate: LocalIslandMeta['hydrate'] = islandConfig.hydrate &&
+        ['load', 'idle', 'visible', 'only'].includes(islandConfig.hydrate)
+      ? islandConfig.hydrate
       : undefined;
 
     meta[tagName] = {
       tagName,
       filePath,
-      ssr: hydrate === 'only' ? false : openElementExport.ssr,
-      dsd: hydrate === 'only' ? false : openElementExport.dsd,
+      ssr: hydrate === 'only' ? false : islandConfig.ssr,
+      dsd: hydrate === 'only' ? false : islandConfig.dsd,
       hydrate,
       reason: hydrate === 'only'
         ? 'local island exports openElement.hydrate=only'
-        : openElementExport.ssr === false
+        : islandConfig.ssr === false
         ? 'local island exports openElement.ssr=false'
         : undefined,
     };
