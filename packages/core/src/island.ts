@@ -110,31 +110,14 @@ export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
  * v0.14.7: Extended to cover all Object.prototype methods that could be
  * exploited via arbitrary property assignment (C-03 fix).
  */
-import { DANGEROUS_KEYS } from './security.ts';
+import { injectPropsSafe } from './security.ts';
 
 export function bindSsrProps(el: HTMLElement): void {
   const props = getSsrProps(el);
   if (!props) return;
 
-  for (const [key, value] of Object.entries(props)) {
-    // v0.14.3: Prevent prototype pollution - skip dangerous keys
-    if (DANGEROUS_KEYS.has(key)) {
-      log.warn(
-        `Skipping dangerous key "${key}" in data-ssr-props on <${el.tagName.toLowerCase()}>`,
-      );
-      continue;
-    }
-    try {
-      (el as unknown as Record<string, unknown>)[key] = value;
-    } catch (e) {
-      // Some properties may be read-only - safe to skip, but log for debuggability
-      log.debug(
-        `Cannot set read-only property "${key}" on <${el.tagName.toLowerCase()}>: ${
-          formatError(e)
-        }`,
-      );
-    }
-  }
+  // v0.14.3: Prevent prototype pollution - shared guarded assignment
+  injectPropsSafe(el as unknown as Record<string, unknown>, props, el.tagName.toLowerCase(), log);
 }
 
 /**

@@ -37,7 +37,7 @@ import {
   serializeRenderNode,
   trustedHtmlNode,
 } from './render-ir.ts';
-import { DANGEROUS_KEYS } from './security.ts';
+import { injectPropsSafe } from './security.ts';
 
 const log = createLogger('core');
 
@@ -110,28 +110,6 @@ function isDsdComponent(value: unknown): value is DsdComponent {
   return typeof value === 'object' &&
     value !== null &&
     typeof Reflect.get(value, 'render') === 'function';
-}
-
-function injectProps(
-  instance: DsdComponent,
-  tagName: string,
-  props: Record<string, unknown>,
-): void {
-  for (const [key, value] of Object.entries(props)) {
-    if (DANGEROUS_KEYS.has(key)) {
-      log.warn(
-        `Skipping dangerous prop key "${key}" on <${tagName}> - potential prototype pollution`,
-      );
-      continue;
-    }
-    try {
-      (instance as Record<string, unknown>)[key] = value;
-    } catch (e) {
-      log.debug(
-        `Cannot set read-only property "${key}" on <${tagName}>: ${formatError(e)}`,
-      );
-    }
-  }
 }
 
 // ─── DSD Template Attributes ───────────────────────────────────
@@ -310,7 +288,7 @@ export async function renderDsd(
     return result;
   }
 
-  injectProps(instance, tagName, props);
+  injectPropsSafe(instance as unknown as Record<string, unknown>, props, tagName, log);
 
   let content = '';
   try {
