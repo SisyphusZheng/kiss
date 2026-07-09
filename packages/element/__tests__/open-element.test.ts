@@ -1358,6 +1358,27 @@ Deno.test('OpenElement params setter is reactive', () => {
   document.body.removeChild(el);
 });
 
+Deno.test('OpenElement surfaces malformed params attribute as a logged error', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('params-malformed');
+  class ParamsMalformedElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ParamsMalformedElement);
+
+  const el = document.createElement(tagName) as ParamsMalformedElement;
+  el.setAttribute('params', '{not valid json');
+  document.body.appendChild(el);
+
+  // params should remain empty/default, not crash, and the element should still render.
+  assertEquals(el.params, {});
+
+  document.body.removeChild(el);
+});
+
 // ─── 8. Global styles (v0.41.0 / ADR-0061) ─────────────────────────
 
 Deno.test('registerGlobalStyles applies to new OpenElement shadow roots', () => {
