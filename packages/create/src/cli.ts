@@ -99,278 +99,46 @@ async function resolveVersions(): Promise<Record<string, string>> {
 }
 
 /** Build the template map with resolved version numbers. */
-function buildTemplates(v: Record<string, string>): Record<string, string> {
+// [sourceTemplate, targetRelativePath] pairs. The starter manifest is stored
+// as deno.json.tmpl so deno does not treat the templates/ directory as a
+// nested workspace config; it is renamed to deno.json when written.
+const TEMPLATE_FILES: [string, string][] = [
+  ['.gitignore', '.gitignore'],
+  ['public/openelement-mark.svg', 'public/openelement-mark.svg'],
+  ['content/blog/welcome.md', 'content/blog/welcome.md'],
+  ['deno.json.tmpl', 'deno.json'],
+  ['vite.config.ts', 'vite.config.ts'],
+  ['app/components/app-shell.tsx', 'app/components/app-shell.tsx'],
+  ['app/routes/index.tsx', 'app/routes/index.tsx'],
+  ['app/routes/freshness.tsx', 'app/routes/freshness.tsx'],
+  ['app/routes/api/health.ts', 'app/routes/api/health.ts'],
+  ['app/islands/my-counter.tsx', 'app/islands/my-counter.tsx'],
+];
+
+/** Map of `${v.X}` placeholder tokens to resolved version values. */
+function versionTokens(v: Record<string, string>): Record<string, string> {
   return {
-    '.gitignore': `dist/
-node_modules/
-`,
-    'public/openelement-mark.svg':
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="openElement mark">
-  <rect width="96" height="96" rx="18" fill="#212529"/>
-  <path d="M26 58V38l22-13 22 13v20L48 71 26 58Z" fill="none" stroke="#f8f9fa" stroke-width="6" stroke-linejoin="round"/>
-  <path d="M36 48h24" stroke="#7cc7ff" stroke-width="6" stroke-linecap="round"/>
-</svg>
-`,
-    'content/blog/welcome.md': `---
-title: Welcome
-date: 2026-01-01
----
-
-# Welcome
-
-This starter keeps the blog content directory present so the default content
-plugin configuration can build immediately.
-`,
-    'deno.json': `{
-  "imports": {
-    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
-    "@deno/vite-plugin": "npm:@deno/vite-plugin",
-    "entities": "npm:entities@^4.5.0",
-    "hono": "npm:hono@4.12.23",
-    "hono/cors": "npm:hono@4.12.23/cors",
-    "hono/logger": "npm:hono@4.12.23/logger",
-    "hono/request-id": "npm:hono@4.12.23/request-id",
-    "hono/secure-headers": "npm:hono@4.12.23/secure-headers",
-    "marked": "npm:marked@15.0.12",
-    "@openelement/app": "npm:@openelement/app@^${v.app}",
-    "@openelement/adapter-vite": "npm:@openelement/adapter-vite@^${v.adapterVite}",
-    "@openelement/core": "npm:@openelement/core@^${v.core}",
-    "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
-    "@openelement/element": "npm:@openelement/element@^${v.element}",
-    "@openelement/ui": "npm:@openelement/ui@^${v.ui}",
-    "vite": "npm:vite@8.0.10"
-  },
-  "nodeModulesDir": "auto",
-  "tasks": {
-    "dev": "deno run --config deno.json -A npm:vite",
-    "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build",
-    "build:ssr": "deno run --config deno.json -A npm:vite build",
-    "build:client": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-client",
-    "build:ssg": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-ssg",
-    "preview": "deno run --config deno.json -A npm:vite preview"
-  },
-  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/core" }
-}
-`,
-    'vite.config.ts': `import { openElement } from '@openelement/adapter-vite';
-import { defineConfig } from 'vite';
-import deno from '@deno/vite-plugin';
-
-// Design tokens (from Open Props)
-const colorTokensStyle =
-  '<style>' +
-  '--gray-0:#f8f9fa;--gray-1:#f1f3f5;--gray-3:#dee2e6;--gray-5:#adb5bd;--gray-7:#495057;--gray-9:#212529;' +
-  '--brand:#534ab7;--size-1:4px;--size-2:8px;--size-3:12px;--size-4:16px;--border-size-1:1px;--radius-2:8px;' +
-  '--font-sans:system-ui,-apple-system,sans-serif;--font-size-0:0.875rem;--font-weight-5:500;' +
-  '--shadow-1:0 1px 3px 0 rgb(0 0 0 / 0.1);' +
-  'body{margin:0;background:var(--gray-1);color:var(--gray-9);font-family:var(--font-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</style>';
-
-export default defineConfig({
-  plugins: [
-    // SOP-015: Virtual module passthrough — @deno/vite-plugin doesn't
-    // support the "virtual:" scheme. This resolve hook intercepts virtual
-    // module IDs before @deno/vite-plugin, letting the openElement plugin handle them.
-    { name: 'virtual-passthrough', resolveId(id) { if (id.startsWith('virtual:')) return '\0' + id; }, enforce: 'pre' },
-    deno(),
-    openElement({
-    html: { title: 'My openElement App' },
-    appShell: {
-      tagName: 'app-shell',
-      import: './app/components/app-shell.tsx',
-      props: {
-        siteName: 'My openElement App',
-      },
-    },
-    // Use pre-built UI components from @openelement/ui
-    // (npm distributes compiled JS - no decorator errors)
-    packageIslands: ['@openelement/ui'],
-    // SSR must bundle @openelement/ui (decorators need compilation)
-    ssr: {
-      noExternal: ['@openelement/ui'],
-    },
-    inject: {
-      headFragments: [
-        // Design tokens - DRY: values from @openelement/ui/open-props-tokens.ts
-        colorTokensStyle,
-      ],
-    },
-    // Blog + Navigation + Sitemap (from @openelement/content)
-    content: {
-      blog: {
-        contentDir: 'content/blog',
-        basePath: '/blog',
-      },
-      nav: {
-        routesDir: 'app/routes',
-        headerNav: [
-          { href: '/', label: 'Home' },
-          { href: '/blog', label: 'Blog' },
-        ],
-      },
-    },
-  })],
-});
-`,
-    'app/components/app-shell.tsx': `/** @jsxImportSource @openelement/core */
-import { defineLayout } from '@openelement/app';
-import { StyleSheet } from '@openelement/element';
-
-export const tagName = 'app-shell';
-
-const styles = new StyleSheet();
-styles.replaceSync(\`
-  :host { display: block; min-height: 100vh; background: var(--gray-1); }
-  header, main, footer { max-width: 860px; margin: 0 auto; padding: 1rem; }
-  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-3); }
-  footer { color: var(--gray-7); font-size: 0.875rem; border-top: 1px solid var(--gray-3); }
-  a { color: var(--brand); text-decoration: none; font-weight: 600; }
-\`);
-
-export default defineLayout(tagName, {
-  styles,
-  render(props: { siteName?: string }) {
-    return (
-      <>
-        <header data-open-layout="app-shell">
-          <a href="/">{props.siteName ?? 'openElement'}</a>
-          <nav>
-            <a href="/freshness">Freshness</a>
-            <a href="/api/health">API health</a>
-          </nav>
-        </header>
-        <main>
-          <slot></slot>
-        </main>
-        <footer>Generated by @openelement/create.</footer>
-      </>
-    );
-  },
-});
-`,
-    'app/routes/index.tsx': `/** @jsxImportSource @openelement/core */
-import { defineElement, definePage } from '@openelement/app';
-import { StyleSheet } from '@openelement/element';
-
-export const tagName = 'home-page';
-
-const styles = new StyleSheet();
-styles.replaceSync(\`
-  :host { display: block; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-  p { color: var(--text-secondary, #666); }
-  img { width: 64px; height: 64px; }
-\`);
-
-defineElement(tagName, {
-  styles,
-  render() {
-    return (
-      <>
-        <h1>Hello from openElement!</h1>
-        <p>
-          Your openElement app is running. Edit <code>app/routes/index.tsx</code> to
-          get started.
-        </p>
-        <img src="/openelement-mark.svg" alt="openElement mark" />
-        <my-counter></my-counter>
-      </>
-    );
-  },
-});
-
-export default definePage({
-  route: { path: '/' },
-  head: {
-    title: 'My openElement App',
-    description: 'Generated openElement starter app',
-  },
-  renderIntent: {
-    mode: 'static',
-    streaming: 'auto',
-    revalidate: false,
-  },
-  render() {
-    return <home-page />;
-  },
-});
-`,
-    'app/routes/freshness.tsx': `/** @jsxImportSource @openelement/core */
-import { defineElement, definePage } from '@openelement/app';
-import { StyleSheet } from '@openelement/element';
-
-export const tagName = 'freshness-page';
-
-const styles = new StyleSheet();
-styles.replaceSync(\`
-  :host { display: block; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-  p { color: var(--text-secondary, #666); }
-\`);
-
-defineElement(tagName, {
-  styles,
-  render() {
-    return (
-      <>
-        <h1>Freshness proof</h1>
-        <p>This page records ISR/cache intent with a 300 second revalidate window.</p>
-      </>
-    );
-  },
-});
-
-export default definePage({
-  route: { path: '/freshness' },
-  head: {
-    title: 'Freshness proof',
-    description: 'Generated openElement ISR intent route',
-  },
-  renderIntent: {
-    mode: 'static',
-    streaming: 'auto',
-    revalidate: 300,
-  },
-  render() {
-    return <freshness-page />;
-  },
-});
-`,
-    'app/routes/api/health.ts': `export default function health() {
-  return Response.json({
-    ok: true,
-    framework: 'openElement',
-    route: '/api/health',
-  });
-}
-`,
-    'app/islands/my-counter.tsx': `/** @jsxImportSource @openelement/core */
-import { defineIsland, defineIslandConfig } from '@openelement/app';
-import { signal, StyleSheet } from '@openelement/element';
-
-export const tagName = 'my-counter';
-export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
-
-const styles = new StyleSheet();
-styles.replaceSync(\`
-  :host { display: inline-flex; gap: 0.5rem; align-items: center; margin-top: 1rem; }
-  button { padding: 0.25rem 0.75rem; cursor: pointer; }
-\`);
-
-const count = signal(0);
-
-export default defineIsland(tagName, {
-  styles,
-  render() {
-    return (
-      <>
-        <button onClick={() => count.value--}>-</button>
-        <span>{count.value}</span>
-        <button onClick={() => count.value++}>+</button>
-      </>
-    );
-  },
-}, { hydrate: openElement.hydrate, dsd: openElement.dsd, ssr: openElement.ssr });
-`,
+    '${v.app}': v.app,
+    '${v.adapterVite}': v.adapterVite,
+    '${v.core}': v.core,
+    '${v.element}': v.element,
+    '${v.ui}': v.ui,
   };
+}
+
+/** Build the template map with resolved version numbers. */
+function buildTemplates(v: Record<string, string>): Record<string, string> {
+  const templatesDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
+  const tokens = versionTokens(v);
+  const out: Record<string, string> = {};
+  for (const [source, target] of TEMPLATE_FILES) {
+    let content = Deno.readTextFileSync(join(templatesDir, source));
+    for (const [token, value] of Object.entries(tokens)) {
+      if (content.includes(token)) content = content.split(token).join(value);
+    }
+    out[target] = content;
+  }
+  return out;
 }
 
 async function main() {

@@ -9,13 +9,15 @@
   "publish": {
     "include": [
       "src/cli.ts",
+      "templates",
       "deno.json",
       "README.md",
       "LICENSE"
     ]
   },
   "include": [
-    "src"
+    "src",
+    "templates"
   ],
   "exclude": [
     "node_modules",
