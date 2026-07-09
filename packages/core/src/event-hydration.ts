@@ -74,7 +74,7 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
       return;
     }
 
-    if (tag === FOR_TAG || tag === 'fore') {
+    if (tag === FOR_TAG || tag === 'for') {
       const items = (isSignalLike(props?.each)
         ? (props!.each as { value: unknown }).value
         : props?.each) as unknown[];

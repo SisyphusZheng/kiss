@@ -328,7 +328,7 @@ function renderNode(
     return marker;
   }
 
-  if (tag === FOR_TAG || tag === 'fore') {
+  if (tag === FOR_TAG || tag === 'for') {
     const eachSig = props?.each;
     const renderFn = (children[0] as RenderFn) ??
       ((() => document.createTextNode('') as unknown) as RenderFn);
