@@ -3,7 +3,12 @@ node_modules/
 
 # Deno
 .deno/
-vendor/
+vendor/*
+# Keep vendored dependency attribution tracked for license compliance
+!vendor/jsr.io/
+!vendor/jsr.io/@std/
+!vendor/jsr.io/@std/LICENSE
+!vendor/jsr.io/@std/ATTRIBUTION.md
 
 # Build output
 dist/
