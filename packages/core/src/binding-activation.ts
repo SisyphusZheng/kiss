@@ -180,6 +180,22 @@ function applyStaticStyle(
   return noop;
 }
 
+/**
+ * Run a binding update/render function inside a reactive effect, catching and
+ * logging any error so one failing binding does not break the rest of the
+ * render. Consolidates the previously duplicated try/catch + log boilerplate
+ * shared by every binding activation function.
+ */
+function wrapBindingEffect(kind: string, run: () => void): () => void {
+  return effect(() => {
+    try {
+      run();
+    } catch (err) {
+      bindingLog.error(`${kind} binding failed: ${formatError(err)}`);
+    }
+  });
+}
+
 function applySignalText(
   desc: Extract<BindingDescriptor, { kind: 'signal-text' }>,
   lifecycle: BindingLifecycle,
@@ -193,13 +209,7 @@ function applySignalText(
     target.textContent = text;
   };
 
-  const dispose = effect(() => {
-    try {
-      update();
-    } catch (err) {
-      bindingLog.error(`signal-text binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('signal-text', update);
   registerDispose(dispose, lifecycle);
   return dispose;
 }
@@ -215,13 +225,7 @@ function applySignalClass(
     el.classList.toggle(className, value);
   };
 
-  const dispose = effect(() => {
-    try {
-      update();
-    } catch (err) {
-      bindingLog.error(`signal-class binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('signal-class', update);
   registerDispose(dispose, lifecycle);
   return dispose;
 }
@@ -245,13 +249,7 @@ function applySignalAttr(
     }
   };
 
-  const dispose = effect(() => {
-    try {
-      update();
-    } catch (err) {
-      bindingLog.error(`signal-attr binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('signal-attr', update);
   registerDispose(dispose, lifecycle);
   return dispose;
 }
@@ -272,13 +270,7 @@ function applySignalHtml(
     }
   };
 
-  const dispose = effect(() => {
-    try {
-      update();
-    } catch (err) {
-      bindingLog.error(`signal-html binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('signal-html', update);
   registerDispose(dispose, lifecycle);
   return dispose;
 }
@@ -346,13 +338,7 @@ function applySignalRender(
     }
   };
 
-  const dispose = effect(() => {
-    try {
-      render();
-    } catch (err) {
-      bindingLog.error(`signal-render binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('signal-render', render);
 
   const fullDispose: BindingDispose = () => {
     clearRender();
@@ -425,13 +411,7 @@ function applyConditional(
     }
   };
 
-  const dispose = effect(() => {
-    try {
-      render();
-    } catch (err) {
-      bindingLog.error(`conditional binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('conditional', render);
 
   const fullDispose: BindingDispose = () => {
     clearRender();
@@ -510,13 +490,7 @@ function applyList(
     anchors = rendered;
   };
 
-  const dispose = effect(() => {
-    try {
-      render();
-    } catch (err) {
-      bindingLog.error(`list binding failed: ${formatError(err)}`);
-    }
-  });
+  const dispose = wrapBindingEffect('list', render);
 
   const fullDispose: BindingDispose = () => {
     clearRender();
