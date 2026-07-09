@@ -4,8 +4,9 @@
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.41.0-alpha.6",
   "targetVersion": "0.41.0-alpha.6",
-  "status": "running",
+  "status": "completed",
   "startedAt": "2026-07-06T23:55:21.058Z",
+  "completedAt": "2026-07-06T23:56:49.000Z",
   "approvalId": "ADR-0105/v0.40.x-cleanup-train",
   "steps": [
     {
@@ -179,7 +180,7 @@
         "origin",
         "main"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "push main evidence",
@@ -189,11 +190,11 @@
         "origin",
         "main"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "tag release",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "push tag",
@@ -204,11 +205,11 @@
         "origin",
         "v0.41.0-alpha.6"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "create GitHub release",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }
