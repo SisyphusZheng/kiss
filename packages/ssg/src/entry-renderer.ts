@@ -147,7 +147,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('customElements.define = (name, ctor, options) => {');
     lines.push('  if (customElements.get(name)) return;');
     lines.push(
-      '  try { _origDefine(name, ctor, options); } catch { /* already defined */ }',
+      '  try { _origDefine(name, ctor, options); } catch (err) { console.error(`[ssg] Failed to register custom element <${name}>:`, err); throw err; }',
     );
     lines.push('};');
     lines.push('');
@@ -158,7 +158,7 @@ export function renderEntry(desc: EntryDescriptor): string {
       `if (!customElements.get(${tagNameExpr})) {`,
     );
     lines.push(
-      `  customElements.define(${tagNameExpr}, ${route.varName}.default)`,
+      `  try { customElements.define(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
     );
     lines.push(`}`);
   }
@@ -178,7 +178,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push(
       `if (${componentVar} && !customElements.get('${island.tagName}')) {`,
     );
-    lines.push(`  customElements.define('${island.tagName}', ${componentVar})`);
+    lines.push(`  try { customElements.define('${island.tagName}', ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`);
     lines.push(`}`);
   }
   lines.push('');
