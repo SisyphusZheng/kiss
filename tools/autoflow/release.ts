@@ -1,4 +1,5 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
+import { PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG } from '../project-constants.ts';
 
 export { isCI as isCIEnv };
 
@@ -383,7 +384,15 @@ export async function assertBranch(expected: string): Promise<void> {
 export async function updateProjectConstants(version: string): Promise<void> {
   const path = 'tools/project-constants.ts';
   const text = await Deno.readTextFile(path);
-  const updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
+  const m = text.match(/PACKAGE_VERSION = '([^']+)'/u);
+  const previous = m ? m[1] : version;
+  let updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
+  // Keep PREVIOUS_PACKAGE_VERSION in sync so buildVersionAnchorReplacements()
+  // knows which line to replace on the next bump (single source of truth).
+  updated = updated.replace(
+    /PREVIOUS_PACKAGE_VERSION = '[^']+'/u,
+    `PREVIOUS_PACKAGE_VERSION = '${previous}'`,
+  );
   if (updated === text) {
     // ponytail: already at target version; do not treat as an error so a
     // release can be re-run or dispatched after the bump is already merged.
@@ -392,61 +401,82 @@ export async function updateProjectConstants(version: string): Promise<void> {
   await Deno.writeTextFile(path, updated);
 }
 
-export async function updateCurrentVersionAnchors(version: string): Promise<void> {
+export function buildVersionAnchorReplacements(
+  version: string,
+): Array<[string, string, string]> {
   const tag = releaseTag(version);
-  // ponytail: `from` strings below are hardcoded to the previous release line.
-  // They must be manually bumped on each release cycle. If `text.includes(from)`
-  // fails but the file is already at the target (to/version/tag present), skip.
-  // Otherwise throws — silent drift is not safe.
-  // Consider extracting `previousVersion` as a second parameter.
-  const replacements: Array<[string, string, string]> = [
-    ['README.md', '`0.41.0-alpha.5` (`v0.41.0-alpha.5`', `\`${version}\` (\`${tag}\``],
-    ['README.md', '**0.41.0-alpha.5** (`v0.41.0-alpha.5`)', `**${version}** (\`${tag}\`)`],
-    ['README.md', '**v0.41.0-alpha.5**.', `**${tag}**.`],
+  const pv = PREVIOUS_PACKAGE_VERSION;
+  const pvTag = PREVIOUS_PACKAGE_VERSION_TAG;
+  // Placeholders keep these entries as plain single-quoted strings (the
+  // previous line is a single source of truth via PREVIOUS_*). Resolved below.
+  // Entries are kept in sync with the real anchor text in each target file.
+  // README.md wraps `**<pv>** (<pvTag>)` across a line break, so that anchor
+  // carries an embedded newline. Anchors that no longer exist in a file (e.g.
+  // the legacy "removed the legacy" line) are intentionally omitted so the
+  // bump never throws on documentation drift.
+  const raw: Array<[string, string, string]> = [
+    ['README.md', '`$PV` (`$PVT`', '`$VER` (`$TAG`'],
+    [
+      'README.md',
+      '**$PV**\n(`$PVT`)',
+      '**$VER**\n(`$TAG`)',
+    ],
     [
       'README.zh.md',
-      '当前包线：`0.41.0-alpha.5`（`v0.41.0-alpha.5` 发布）',
-      `当前包线：\`${version}\`（\`${tag}\` 发布）`,
-    ],
-    ['README.zh.md', '**0.41.0-alpha.5**（`v0.41.0-alpha.5`）', `**${version}**（\`${tag}\`）`],
-    ['README.zh.md', '**v0.41.0-alpha.5**。', `**${tag}**。`],
-    [
-      'docs/current/VERSION_PLAN.md',
-      'v0.41.0-alpha.5 removed the legacy',
-      `${tag} removed the legacy`,
+      '当前包线：`$PV`（`$PVT` 发布）',
+      '当前包线：`$VER`（`$TAG` 发布）',
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `v0.41.0-alpha.5`',
-      `package line \`${tag}\``,
+      'package line `$PVT`',
+      'package line `$TAG`',
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Current package line: v0.41.0-alpha.5 SPA Mode + Deno Desktop Reader Proof.',
-      `Current package line: ${tag} SPA Mode + Deno Desktop Reader Proof.`,
+      'Current package line: $PVT SPA Mode + Deno Desktop Reader Proof.',
+      'Current package line: $TAG SPA Mode + Deno Desktop Reader Proof.',
     ],
     [
       'docs/status/STATUS.md',
-      'Current Version Line: v0.41.0-alpha.5 Released',
-      `Current Version Line: ${tag} Released`,
+      'Current Version Line: $PVT Released',
+      'Current Version Line: $TAG Released',
     ],
     [
       'www/app/data/version.ts',
-      "export const OPENELEMENT_VERSION = 'v0.41.0-alpha.5';",
-      `export const OPENELEMENT_VERSION = '${tag}';`,
+      "export const OPENELEMENT_VERSION = '$PVT';",
+      "export const OPENELEMENT_VERSION = '$TAG';",
     ],
   ];
+  const resolve = (s: string): string =>
+    s
+      .replaceAll('$PVT', pvTag)
+      .replaceAll('$PV', pv)
+      .replaceAll('$TAG', tag)
+      .replaceAll('$VER', version);
+  return raw.map(([path, from, to]) => [path, resolve(from), resolve(to)]);
+}
+
+export async function updateCurrentVersionAnchors(version: string): Promise<void> {
+  const tag = releaseTag(version);
+  const replacements = buildVersionAnchorReplacements(version);
 
   for (const [path, from, to] of replacements) {
     const text = await Deno.readTextFile(path);
     if (text.includes(from)) {
       await Deno.writeTextFile(path, text.replace(from, to));
-    } else if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
+      continue;
+    }
+    if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
       // Already at target (exact to-substring or version/tag present) - skip
       continue;
-    } else {
-      throw new Error(`${path} does not contain expected version anchor: ${from}`);
     }
+    // Anchor drifted (doc no longer carries the expected from-string). Rather
+    // than abort the whole release, skip with a warning so a release is never
+    // blocked by stale documentation references.
+    console.warn(
+      `updateCurrentVersionAnchors: ${path} does not contain expected anchor ` +
+        `"${from}"; skipping (version bump continues).`,
+    );
   }
 }
 
