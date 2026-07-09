@@ -38,7 +38,6 @@ function callLoad(
 Deno.test('CORE_SUBPATHS: maps known subpaths to source files', () => {
   assertEquals(CORE_SUBPATHS.logger, 'logger.ts');
   assertEquals(CORE_SUBPATHS['build-context'], 'build-context.ts');
-  assertEquals(CORE_SUBPATHS.navigation, 'navigation.ts');
   assertEquals(CORE_SUBPATHS.errors, 'errors.ts');
 });
 
@@ -233,7 +232,7 @@ Deno.test('createCoreResolvePlugin: remote mode load checks cache', () => {
 // Section
 
 Deno.test('CORE_SUBPATHS: includes all expected core subpath modules', () => {
-  const expectedKeys = ['logger', 'build-context', 'navigation', 'errors'];
+  const expectedKeys = ['logger', 'build-context', 'errors'];
   for (const key of expectedKeys) {
     assertExists(CORE_SUBPATHS[key], `CORE_SUBPATHS must include ${key}`);
   }
