@@ -48,6 +48,11 @@ export async function ssgRender(
     paramNames: string[];
     revalidate?: number;
   }>;
+  if (!module.routeInfo || !Array.isArray(module.routeInfo)) {
+    throw new Error(
+      'SSR bundle does not export routeInfo; SSG cannot generate routes.',
+    );
+  }
   const renderRoute = module.renderRoute as
     | ((path: string, opts?: Record<string, unknown>) => Promise<SsgPageOutput>)
     | undefined;
