@@ -68,9 +68,11 @@ function generateParamsType(params: string[]): string {
  * @returns TypeScript declaration file content as a string
  */
 export function generateRouteTypes(routes: RouteEntry[]): string {
-  // Filter for page routes that have dynamic params
+  // Filter for page routes that have dynamic params (type predicate narrows
+  // params to string[], removing the need for a non-null assertion later).
   const paramRoutes = routes.filter(
-    (r) => r.type === 'page' && r.params && r.params.length > 0,
+    (r): r is RouteEntry & { params: string[] } =>
+      r.type === 'page' && !!r.params && r.params.length > 0,
   );
 
   if (paramRoutes.length === 0) {
@@ -94,7 +96,7 @@ export function generateRouteTypes(routes: RouteEntry[]): string {
   const paramEntries = paramRoutes.map((r) => {
     const bracketPath = filePathToBracketRoute(r.filePath);
     const path = JSON.stringify(bracketPath);
-    const type = generateParamsType(r.params!);
+    const type = generateParamsType(r.params);
     return `    ${path}: ${type};`;
   });
 

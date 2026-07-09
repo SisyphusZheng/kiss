@@ -127,11 +127,13 @@ export function scanNavData(options: NavOptions): NavSection[] {
   const sectionItems = new Map<string, NavItem[]>();
 
   for (const item of itemsWithSection) {
-    if (!sectionItems.has(item.section)) {
+    let bucket = sectionItems.get(item.section);
+    if (!bucket) {
+      bucket = [];
+      sectionItems.set(item.section, bucket);
       sectionOrder.push(item.section);
-      sectionItems.set(item.section, []);
     }
-    sectionItems.get(item.section)!.push({
+    bucket.push({
       path: item.path,
       label: item.label,
       order: item.order,
