@@ -11,43 +11,50 @@ export default defineConfig({
     // SOP-015: Virtual module passthrough — @deno/vite-plugin doesn't
     // support the "virtual:" scheme. This resolve hook intercepts virtual
     // module IDs before @deno/vite-plugin, letting the openElement plugin handle them.
-    { name: 'virtual-passthrough', resolveId(id) { if (id.startsWith('virtual:')) return '\0' + id; }, enforce: 'pre' },
+    {
+      name: 'virtual-passthrough',
+      resolveId(id) {
+        if (id.startsWith('virtual:')) return '\0' + id;
+      },
+      enforce: 'pre',
+    },
     deno(),
     openElement({
-    html: { title: 'My openElement App' },
-    appShell: {
-      tagName: 'app-shell',
-      import: './app/components/app-shell.tsx',
-      props: {
-        siteName: 'My openElement App',
+      html: { title: 'My openElement App' },
+      appShell: {
+        tagName: 'app-shell',
+        import: './app/components/app-shell.tsx',
+        props: {
+          siteName: 'My openElement App',
+        },
       },
-    },
-    // Use pre-built UI components from @openelement/ui
-    // (npm distributes compiled JS - no decorator errors)
-    packageIslands: ['@openelement/ui'],
-    // SSR must bundle @openelement/ui (decorators need compilation)
-    ssr: {
-      noExternal: ['@openelement/ui'],
-    },
-    inject: {
-      headFragments: [
-        // Design tokens - DRY: values from @openelement/ui/open-props-tokens.ts
-        colorTokensStyle,
-      ],
-    },
-    // Blog + Navigation + Sitemap (from @openelement/content)
-    content: {
-      blog: {
-        contentDir: 'content/blog',
-        basePath: '/blog',
+      // Use pre-built UI components from @openelement/ui
+      // (npm distributes compiled JS - no decorator errors)
+      packageIslands: ['@openelement/ui'],
+      // SSR must bundle @openelement/ui (decorators need compilation)
+      ssr: {
+        noExternal: ['@openelement/ui'],
       },
-      nav: {
-        routesDir: 'app/routes',
-        headerNav: [
-          { href: '/', label: 'Home' },
-          { href: '/blog', label: 'Blog' },
+      inject: {
+        headFragments: [
+          // Design tokens - DRY: values from @openelement/ui/open-props-tokens.ts
+          colorTokensStyle,
         ],
       },
-    },
-  })],
+      // Blog + Navigation + Sitemap (from @openelement/content)
+      content: {
+        blog: {
+          contentDir: 'content/blog',
+          basePath: '/blog',
+        },
+        nav: {
+          routesDir: 'app/routes',
+          headerNav: [
+            { href: '/', label: 'Home' },
+            { href: '/blog', label: 'Blog' },
+          ],
+        },
+      },
+    }),
+  ],
 });

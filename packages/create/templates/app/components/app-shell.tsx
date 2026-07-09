@@ -18,11 +18,11 @@ export default defineLayout(tagName, {
   render(props: { siteName?: string }) {
     return (
       <>
-        <header data-open-layout="app-shell">
-          <a href="/">{props.siteName ?? 'openElement'}</a>
+        <header data-open-layout='app-shell'>
+          <a href='/'>{props.siteName ?? 'openElement'}</a>
           <nav>
-            <a href="/freshness">Freshness</a>
-            <a href="/api/health">API health</a>
+            <a href='/freshness'>Freshness</a>
+            <a href='/api/health'>API health</a>
           </nav>
         </header>
         <main>

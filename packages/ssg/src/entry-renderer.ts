@@ -178,7 +178,9 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push(
       `if (${componentVar} && !customElements.get('${island.tagName}')) {`,
     );
-    lines.push(`  try { customElements.define('${island.tagName}', ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`);
+    lines.push(
+      `  try { customElements.define('${island.tagName}', ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`,
+    );
     lines.push(`}`);
   }
   lines.push('');

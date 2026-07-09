@@ -438,7 +438,9 @@ Deno.test('list binding renders multi-node items and reacts', () =>
     const desc: BindingDescriptor = bindList(
       anchor as ChildNode,
       items,
-      (item: unknown) => [jsx('span', { children: item as string }), jsx('span', { children: '|' })],
+      (
+        item: unknown,
+      ) => [jsx('span', { children: item as string }), jsx('span', { children: '|' })],
     );
     applyBindingDescriptor(desc, {}, renderer);
     assertEquals(asTestElement(host).textContent, 'a|b|');

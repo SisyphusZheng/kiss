@@ -35,7 +35,7 @@ const projectName = 'import-check-app';
 console.log(`Generating test project in ${tmpDir}...`);
 
 const createResult = await new Deno.Command(Deno.execPath(), {
-  args: ['run', '-A', join(repoRootPath, 'packages', 'create', 'cli.ts'), projectName],
+  args: ['run', '-A', join(repoRootPath, 'packages', 'create', 'src', 'cli.ts'), projectName],
   cwd: tmpDir,
   stdout: 'piped',
   stderr: 'piped',
