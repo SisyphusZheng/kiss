@@ -183,7 +183,7 @@ Deno.test('release: local plan includes publish, smoke, gates, and GitHub releas
     assert(commands.some(([name]) => name === 'run release gates after bump'));
     assert(commands.some(([name]) => name === 'package artifact gate'));
     assert(commands.some(([name]) => name === 'push dev'));
-    assert(commands.some(([name]) => name === 'sync dev to main'));
+    assert(commands.some(([name]) => name === 'sync main from dev (fast-forward)'));
     assert(
       commands.some(([, command]) => command.includes('deno task publish:npm')),
     );
