@@ -204,18 +204,16 @@ export async function renderToNode(
 
   // Show
   if (tag === SHOW_TAG || tag === 'show') {
-    const whenVal = isSignalLike(props?.when)
-      ? (props!.when as { value: unknown }).value
-      : props?.when;
+    const whenProp = props?.when;
+    const whenVal = isSignalLike(whenProp) ? whenProp.value : whenProp;
     const target = whenVal ? children[0] : children[1];
     return target ? await renderToNode(target, eventContext) : fragmentNode([]);
   }
 
   // For
   if (tag === FOR_TAG || tag === 'for') {
-    const items = (isSignalLike(props?.each)
-      ? (props!.each as { value: unknown }).value
-      : props?.each) as unknown[];
+    const eachProp = props?.each;
+    const items = isSignalLike(eachProp) ? eachProp.value : eachProp;
     const renderFn = children[0] as RenderFn;
     if (!Array.isArray(items) || typeof renderFn !== 'function') {
       return fragmentNode([]);
