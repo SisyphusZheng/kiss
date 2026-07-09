@@ -16,6 +16,10 @@ import { applyBindingDescriptor } from './binding-activation.ts';
 import { bindEvent } from './binding-descriptor.ts';
 import type { EventBindingDescriptor } from './binding-descriptor.ts';
 import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
+
+const hydrationLog = createLogger('hydration');
 
 // Re-export pure marker helpers so existing consumers keep working.
 export {
@@ -90,7 +94,8 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
           (instance as Record<string, unknown>)[k] = v;
         }
         visit(instance.render());
-      } catch {
+      } catch (err) {
+        hydrationLog.error(`Hydration component instantiation failed: ${formatError(err)}`);
         return;
       }
       return;
@@ -99,7 +104,8 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     if (typeof tag === 'function') {
       try {
         visit((tag as (props: Record<string, unknown>) => unknown)({ ...props, children }));
-      } catch {
+      } catch (err) {
+        hydrationLog.error(`Hydration function component invocation failed: ${formatError(err)}`);
         return;
       }
       return;

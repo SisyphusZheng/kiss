@@ -145,3 +145,52 @@ Deno.test('event hydration: eventRecordsToDescriptors binds owner and mirrors de
   assertEquals(clicked, true);
   assertEquals(descriptors[1].type, 'keydown');
 });
+
+// #293: hydration errors must be observable, not silently swallowed.
+Deno.test('event hydration: component-instantiation failure is logged, not swallowed', () => {
+  class BoomComponent {
+    constructor() {
+      throw new Error('boom-constructor');
+    }
+    render() {
+      return jsx('button', { children: ['x'] });
+    }
+  }
+
+  const originalError = console.error;
+  let logged = '';
+  console.error = (...args: unknown[]) => {
+    logged += args.map((a) => String(a)).join(' ');
+  };
+  try {
+    const tree = jsx(BoomComponent, { children: [] });
+    // Must not throw — resilience is preserved, only made observable.
+    const bindings = collectEventBindings(tree);
+    assertEquals(bindings.size, 0);
+    assertStringIncludes(logged, 'boom-constructor');
+    assertStringIncludes(logged, '[hydration]');
+  } finally {
+    console.error = originalError;
+  }
+});
+
+Deno.test('event hydration: function-component invocation failure is logged, not swallowed', () => {
+  const boomFn = () => {
+    throw new Error('boom-fn');
+  };
+
+  const originalError = console.error;
+  let logged = '';
+  console.error = (...args: unknown[]) => {
+    logged += args.map((a) => String(a)).join(' ');
+  };
+  try {
+    const tree = jsx(boomFn as unknown as (props: { children?: unknown }) => unknown, { children: [] });
+    const bindings = collectEventBindings(tree);
+    assertEquals(bindings.size, 0);
+    assertStringIncludes(logged, 'boom-fn');
+    assertStringIncludes(logged, '[hydration]');
+  } finally {
+    console.error = originalError;
+  }
+});
