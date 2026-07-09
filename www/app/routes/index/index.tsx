@@ -810,12 +810,12 @@ export class DocsHome extends OpenElement {
           <div class='measure'><span>OE<br />01</span></div>
           <div class='hero-grid'>
             <div class='copy'>
-              <p class='kicker'>Web Components, full-stack</p>
-              <h1>The Web Components fullstack framework.</h1>
+              <p class='kicker'>Standards-first Web Components</p>
+              <h1>Ship real web apps on native Web Components.</h1>
               <p class='lede'>
-                openElement pairs an app framework for routes, rendering,
-                islands, deployment, and desktop targets with Basic Element,
-                a small native Web Components authoring layer.
+                openElement gives you full-stack routing, SSR, islands, and
+                desktop targets without a virtual DOM or vendor lock-in —
+                your components stay portable, inspectable, and standards-based.
               </p>
               <p class='lede'>
                 Current package line: {OPENELEMENT_VERSION}. Active plan:
