@@ -1,5 +1,9 @@
 /**
  * @openelement/docs - Comparison: openElement vs Alternatives
+ *
+ * Honest, benchmark-free comparison of openElement against the frameworks
+ * teams commonly evaluate. Each card covers architecture, rendering model,
+ * developer experience, and lock-in. No invented performance numbers.
  */
 
 import { OpenElement } from '@openelement/element';
@@ -24,6 +28,10 @@ routeSheet.replaceSync(
       min-height: 100%;
     }
 
+    open-card[variant='artifact'] {
+      border-color: var(--brand);
+    }
+
     .label {
       color: var(--brand);
       font-family: var(--font-mono);
@@ -41,6 +49,18 @@ routeSheet.replaceSync(
     li {
       color: var(--text-secondary);
       line-height: var(--font-lineheight-4);
+    }
+
+    .dim {
+      margin: var(--size-1) 0;
+      font-size: var(--font-size-1);
+    }
+
+    .dim .k {
+      display: inline-block;
+      min-width: 5.5em;
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     ul {
@@ -64,50 +84,172 @@ export default class ComparisonPage extends OpenElement {
         <h1>openElement vs Alternatives</h1>
         <p class='subtitle'>
           A conservative comparison of product direction. This page describes
-          what openElement optimizes for; it does not invent benchmark claims.
+          what each framework optimizes for; it does not invent benchmark
+          claims. Use it to understand fit, not to rank speed.
         </p>
 
         <div class='comparison-grid'>
           <open-card variant='artifact'>
             <span class='label'>openElement</span>
-            <h3>Web Components first</h3>
-            <p>
-              The framework centers Custom Elements, Declarative Shadow DOM,
-              route metadata, and package protocols as first-class contracts.
-            </p>
+            <h3>Web Components fullstack</h3>
+            <p class='dim'><span class='k'>Architecture</span> Custom Elements +
+              Declarative Shadow DOM are first-class; protocol-first contracts;
+              the app owns routes/render; Vite, Hono, and Nitro are swappable
+              adapters.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSG by default,
+              DSD/shadow default, streaming DSD, islands (client:load/idle/
+              visible/only), static zero-JS default.</p>
+            <p class='dim'><span class='k'>DX</span> JSX + Signal,
+              definePage / defineIsland, TypeScript-first.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Standards-based
+              (Web Components, DSD); core protocol is runtime-free; adapters
+              are replaceable.</p>
           </open-card>
+
           <open-card>
-            <span class='label'>Astro / Fresh</span>
-            <h3>Island-oriented sites</h3>
-            <p>
-              These ecosystems are useful references for island architecture,
-              but openElement keeps the public component contract on standards.
-            </p>
+            <span class='label'>Next.js</span>
+            <h3>React meta-framework</h3>
+            <p class='dim'><span class='k'>Architecture</span> File-based
+              routing, React Server Components, app router, server actions.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSR / SSG / ISR,
+              RSC streaming, client components hydrated on the client.</p>
+            <p class='dim'><span class='k'>DX</span> React/JSX, large ecosystem,
+              first-class on Vercel.</p>
+            <p class='dim'><span class='k'>Lock-in</span> React runtime plus
+              Next.js abstractions; platform affinity with Vercel.</p>
           </open-card>
+
           <open-card>
-            <span class='label'>Next.js / React</span>
-            <h3>Application framework</h3>
-            <p>
-              React frameworks optimize around a React runtime and app model.
-              openElement optimizes around authored elements and browser-native
-              rendering boundaries.
-            </p>
+            <span class='label'>Nuxt</span>
+            <h3>Vue meta-framework</h3>
+            <p class='dim'><span class='k'>Architecture</span> File routing,
+              Vue Single-File Components, Nitro server engine.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSR / SSG / ISR,
+              hybrid rendering, client hydration.</p>
+            <p class='dim'><span class='k'>DX</span> Vue SFCs, auto-imports,
+              convention-driven.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Vue runtime plus Nuxt
+              and Nitro conventions.</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>SvelteKit</span>
+            <h3>Svelte meta-framework</h3>
+            <p class='dim'><span class='k'>Architecture</span> File routing,
+              Svelte components, Vite, adapter-based deployment.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSR / SSG / CSR,
+              progressive hydration, no virtual DOM.</p>
+            <p class='dim'><span class='k'>DX</span> Svelte compiler, concise
+              syntax, small runtime.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Svelte compiler/runtime;
+              deploy adapters are swappable (lower lock-in than Next.js).</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>Astro</span>
+            <h3>Islands / content engine</h3>
+            <p class='dim'><span class='k'>Architecture</span> File routing,
+              multi-framework islands, content collections.</p>
+            <p class='dim'><span class='k'>Rendering</span> Static-first, island
+              hydration, server islands, View Transitions.</p>
+            <p class='dim'><span class='k'>DX</span> .astro components,
+              framework-agnostic islands, Markdown/MDX.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Low — islands can be any
+              framework; some Astro-specific component syntax.</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>Fresh</span>
+            <h3>Deno + Preact</h3>
+            <p class='dim'><span class='k'>Architecture</span> File routing,
+              Preact islands, Deno-native, zero build step.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSR with Preact
+              islands; minimal client JavaScript by default.</p>
+            <p class='dim'><span class='k'>DX</span> Preact/TypeScript, Deno
+              runtime, no bundler config.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Deno runtime plus
+              Preact; islands are Preact components.</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>Lit</span>
+            <h3>Web Components base</h3>
+            <p class='dim'><span class='k'>Architecture</span> Base class for
+              Custom Elements with reactive properties; no router/SSR built in.</p>
+            <p class='dim'><span class='k'>Rendering</span> Client-side Web
+              Components; pairs with any bundler or meta-framework for SSR.</p>
+            <p class='dim'><span class='k'>DX</span> TypeScript, decorators,
+              tagged-template rendering.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Low — pure standards
+              Web Components; no framework of its own.</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>Enhance</span>
+            <h3>Web Components + SSR</h3>
+            <p class='dim'><span class='k'>Architecture</span> Custom Elements,
+              file-based routes, Node/Express-style handlers.</p>
+            <p class='dim'><span class='k'>Rendering</span> SSR to Web Components,
+              zero-JS by default, progressive enhancement.</p>
+            <p class='dim'><span class='k'>DX</span> HTML-first, single-file
+              components, minimal abstraction.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Low — standards Web
+              Components; Enhance adds helpers, not a runtime.</p>
+          </open-card>
+
+          <open-card>
+            <span class='label'>Stencil</span>
+            <h3>Web Components compiler</h3>
+            <p class='dim'><span class='k'>Architecture</span> Compiler that
+              outputs standards Web Components; framework-agnostic output.</p>
+            <p class='dim'><span class='k'>Rendering</span> Client Web Components
+              with prerendering, lazy loading, internal virtual DOM.</p>
+            <p class='dim'><span class='k'>DX</span> TSX, decorators, design-system
+              oriented tooling.</p>
+            <p class='dim'><span class='k'>Lock-in</span> Output is lock-in-free
+              Web Components; authoring uses the Stencil toolchain.</p>
           </open-card>
         </div>
+
+        <h2>How to read this</h2>
+        <ul>
+          <li>
+            <strong>Architecture</strong> — how routing, components, and the
+            server are composed.
+          </li>
+          <li>
+            <strong>Rendering</strong> — SSR/SSG/CSR defaults, hydration, and
+            island strategy.
+          </li>
+          <li>
+            <strong>DX</strong> — language, tooling, and learning curve.
+          </li>
+          <li>
+            <strong>Lock-in</strong> — how tied you are to a proprietary runtime
+            or platform versus open standards.
+          </li>
+        </ul>
 
         <h2>Decision criteria</h2>
         <ul>
           <li>
-            Choose openElement when Web Components are the public integration
-            surface.
+            Choose <strong>openElement</strong> when Web Components are the
+            public integration surface and SSR output should preserve
+            browser-native component boundaries.
           </li>
           <li>
-            Choose openElement when SSR output should preserve browser-native
-            component boundaries.
+            Choose <strong>Astro / Enhance / Lit / Stencil</strong> when a
+            standards-first Web Components story matters and you want to avoid a
+            heavy application runtime.
           </li>
           <li>
-            Choose another framework when your product is intentionally locked
-            to a React, Preact, or Vue component runtime.
+            Choose <strong>Next.js / Nuxt / SvelteKit</strong> when your product
+            is intentionally built around a React, Vue, or Svelte application
+            model.
+          </li>
+          <li>
+            Choose <strong>Fresh</strong> when you want a Deno-native,
+            near-zero-build Preact island experience.
           </li>
         </ul>
       </div>

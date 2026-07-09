@@ -124,6 +124,7 @@ contracts frozen enough for external consumers.
 | Guide         | [openelement.org/guide/getting-started](https://openelement.org/guide/getting-started)         |
 | API Reference | [openelement.org/apilist](https://openelement.org/apilist)                                     |
 | Architecture  | [openelement.org/architecture/architecture](https://openelement.org/architecture/architecture) |
+| Comparison    | [openelement.org/architecture/comparison](https://openelement.org/architecture/comparison)     |
 
 ## Contributing
 
