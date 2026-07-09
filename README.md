@@ -53,36 +53,43 @@ packages. Historical details remain in git history and release evidence.
 
 ## Why openElement
 
-openElement renders Web Components on the server through Declarative Shadow DOM
-where that mode is selected. Static content ships as HTML first. Interactive
-pieces are islands that upgrade only when their hydration strategy says they
-should.
+You want the ergonomics of a full framework without handing your UI over to a
+virtual DOM, a bespoke build pipeline, or a single vendor's component model.
+openElement is for teams shipping real web apps on **native Web Components** —
+SSR, routing, islands, and desktop targets included — while keeping every
+component inspectable, portable, and standards-based.
 
-```tsx
-import { definePage } from '@openelement/app';
+**The pain it removes**
 
-export default definePage({
-  route: { path: '/' },
-  head: { title: 'Home' },
-  render() {
-    return <main>Hello openElement</main>;
-  },
-});
+- **No framework lock-in.** Your components are real custom elements that run
+  anywhere the platform runs, not a dialect that only compiles inside one tool.
+- **No hydration tax by default.** Static content ships as platform HTML via
+  Declarative Shadow DOM; islands upgrade only where interaction is required, so
+  first paint is real and the JS payload stays small.
+- **No SSR/CSR split-brain.** One authoring model renders to DSD on the server
+  and upgrades in place on the client — no duplicate templates, no hydration
+  mismatch.
+- **No build-tool churn.** A Deno-first toolchain takes you from zero to a
+  running app in minutes:
+
+```sh
+deno run -A npm:@openelement/create my-app
+cd my-app && deno task dev
 ```
 
-For browser-upgraded UI:
+**Why it beats the adjacent options**
 
-```tsx
-import { defineIsland } from '@openelement/app';
-import { signal } from '@openelement/element';
+- **vs. Next.js / Nuxt / SvelteKit:** native Web Components instead of a
+  framework runtime; the output stays portable and inspectable, not bound to one
+  meta-framework.
+- **vs. Astro / Fresh:** islands are first-class OpenElement contracts with
+  shared route and package graphs, not an afterthought wrapper around arbitrary
+  components.
+- **vs. Lit / Enhance / Stencil:** a full app framework — routing, data, deploy,
+  desktop — on top of the same standards, not just a component library.
 
-const count = signal(0);
-
-export default defineIsland(
-  'my-counter',
-  () => <button onClick={() => count.value++}>Count: {count.value}</button>,
-);
-```
+If you want components that outlive the current framework cycle and an app story
+that works with the platform instead of fighting it, openElement is the lane.
 
 ## Current Line
 
