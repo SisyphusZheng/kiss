@@ -33,3 +33,19 @@ export function unwrapSignalLike<T>(value: T): T extends SignalLike<infer V> ? V
   }
   return value as T extends SignalLike<infer V> ? V : T;
 }
+
+/**
+ * Resolve a property that may hold a signal to its current value.
+ *
+ * Used by `show`/`for` control-flow bindings: a prop like `when` or `each`
+ * can be either a plain value or a signal. This collapses the
+ * `isSignalLike(x) ? x.value : x` pattern into a single call site.
+ */
+export function resolveSignalProp<T = unknown>(
+  value: T,
+): T extends SignalLike<infer V> ? V : T {
+  if (isSignalLike(value)) {
+    return value.value as T extends SignalLike<infer V> ? V : T;
+  }
+  return value as T extends SignalLike<infer V> ? V : T;
+}

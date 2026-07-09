@@ -8,7 +8,7 @@
  */
 
 import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
-import { isSignalLike } from '@openelement/signal';
+import { isSignalLike, resolveSignalProp } from '@openelement/signal';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '@openelement/protocol/vnode';
 import { DATA_EID } from '@openelement/protocol/hydration-markers';
@@ -66,16 +66,14 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     }
 
     if (tag === SHOW_TAG || tag === 'show') {
-      const whenProp = props?.when;
-      const whenVal = isSignalLike(whenProp) ? whenProp.value : whenProp;
+      const whenVal = resolveSignalProp(props?.when);
       const target = whenVal ? children[0] : children[1];
       visit(target);
       return;
     }
 
     if (tag === FOR_TAG || tag === 'for') {
-      const eachProp = props?.each;
-      const items = isSignalLike(eachProp) ? eachProp.value : eachProp;
+      const items = resolveSignalProp(props?.each) as unknown[];
       const renderFn = children[0] as RenderFn;
       if (Array.isArray(items) && typeof renderFn === 'function') {
         items.forEach((item, i) => visit(renderFn(item, i)));
