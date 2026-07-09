@@ -30,13 +30,16 @@ build, and release toolchain.
 packages/
   app/            # JSX-first application authoring API
   core/           # DSD renderer, DsdElement, JSX runtime
-  adapter-vite/   # Vite plugin, SSG pipeline, generated entries
-  runtime/        # runtime convenience facade
+  element/        # base custom-element class (open-element), themes, hydration
+  signal/         # reactive signal primitives and engine abstraction
   ui/             # DSD-first open-* UI components
   content/        # Markdown, MDX, nav, blog, sitemap
-  i18n/           # locale data and static path helpers
+  protocol/       # small structured contracts (types + tiny runtime)
   router/         # route utilities
-  protocols/      # small structured contracts
+  ssg/            # static-site generation pipeline (Hono-based)
+  adapter-vite/   # Vite plugin, SSG driver, generated entries
+  create/         # npm:@openelement/create project scaffolder
+tools/            # release (AutoFlow), architecture/coverage/doc gates
 www/              # openelement.org website
 docs/             # ADR, SOP, NextVersion, status, roadmap, release docs
 ```
