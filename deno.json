@@ -48,6 +48,8 @@
     "docs:check-current": "deno run --allow-read tools/check-current-docs-no-legacy.ts",
     "docs:truth": "deno task docs:check-public && deno task docs:check-current && deno task docs:check-strategy",
     "package-surface:check": "deno run --allow-read tools/check-package-surface.ts",
+    "export-files:generate": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts",
+    "export-files:check": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts --check",
     "signals:check-protocol-boundary": "deno run --allow-read tools/check-signal-protocol-boundary.ts",
     "arch:check": "deno run --allow-read --allow-run tools/check-architecture-contract.ts",
     "type-safety:check": "deno run --allow-read tools/check-type-safety.ts",

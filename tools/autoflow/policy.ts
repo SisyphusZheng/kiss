@@ -61,6 +61,18 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^deno\.json$/, /^tools\/lib\/package-graph\.ts$/],
   },
   {
+    name: 'export-files:check',
+    command: ['deno', 'task', 'export-files:check'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [
+      /^packages\/[^/]+\/deno\.json$/,
+      /^packages\/adapter-vite\/src\/ssg-package-resolver\.ts$/,
+      /^packages\/adapter-vite\/src\/generated-export-files\.ts$/,
+      /^tools\/generate-openelement-export-files\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'workflow:check-slimming',
     command: ['deno', 'task', 'workflow:check-slimming'],
     tiers: ['push', 'ci', 'release'],

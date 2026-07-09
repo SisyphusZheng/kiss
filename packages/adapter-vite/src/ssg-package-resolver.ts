@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import type { Alias, Plugin } from 'vite';
 import { formatError } from '@openelement/core/errors';
+import { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
 
 const VIRTUAL_OPENELEMENT_PACKAGE_PREFIX = '\0openelement:ssg-pkg/';
 // Packages resolved by this plugin for JSR consumer SSG builds.
@@ -18,106 +19,6 @@ const DEFAULT_OPENELEMENT_PACKAGES = new Set([
   'signal',
   'ui',
 ]);
-
-const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
-  'adapter-vite': {
-    '.': 'src/index.ts',
-    'app-vite': 'src/app-vite.ts',
-    'build-context': 'src/build-context.ts',
-    'route-manifest': 'src/route-manifest.ts',
-    'head-injection': 'src/head-injection.ts',
-    'nitro-mount': 'src/nitro-mount.ts',
-    plugin: 'src/plugin.ts',
-    'subpath-resolver': 'src/subpath-resolver.ts',
-    'generated-data-resolver': 'src/generated-data-resolver.ts',
-    'plugin-mdx': 'src/plugin-mdx.ts',
-    'cli/build': 'src/cli/build.ts',
-    'cli/build-client': 'src/cli/build-client.ts',
-    'cli/build-ssg': 'src/cli/build-ssg.ts',
-  },
-  app: {
-    '.': 'src/index.ts',
-    spa: 'src/spa.ts',
-    i18n: 'src/i18n.ts',
-    'i18n-plugin': 'src/i18n-plugin.ts',
-    preact: 'src/preact.ts',
-  },
-  content: {
-    '.': 'src/index.ts',
-    'blog-data': 'src/blog/blog-data.ts',
-    mdx: 'src/mdx/compile.ts',
-    nav: 'src/nav/scanner.ts',
-    'nav-data': 'src/nav/writer.ts',
-    sitemap: 'src/sitemap/generator.ts',
-  },
-  core: {
-    '.': 'src/index.ts',
-    csr: 'src/csr.ts',
-    context: 'src/context.ts',
-    'dsd-hydration': 'src/dsd-hydration.ts',
-    errors: 'src/errors.ts',
-    hydrate: 'src/hydrate.ts',
-    'html-escape': 'src/html-escape.ts',
-    'island-transform': 'src/island-transform.ts',
-    isr: 'src/isr.ts',
-    'isr-runtime': 'src/isr-runtime.ts',
-    'jsx-runtime': 'src/jsx-runtime.ts',
-    'jsx-dev-runtime': 'src/jsx-runtime.ts',
-    logger: 'src/logger.ts',
-    prop: 'src/prop.ts',
-    'render-dsd-stream': 'src/render-dsd-stream.ts',
-    runtime: 'src/runtime.ts',
-    'signal-context': 'src/signal-context.ts',
-    static: 'src/static.ts',
-    'style-sheet': 'src/style-sheet.ts',
-    'tag-utils': 'src/tag-utils.ts',
-  },
-  create: { '.': 'src/cli.ts' },
-  element: {
-    '.': 'src/index.ts',
-    'open-element-hydration': 'src/open-element-hydration.ts',
-    'open-element-render': 'src/open-element-render.ts',
-  },
-  router: {
-    '.': 'src/data-context.ts',
-    'client-router': 'src/client-router.ts',
-    'data-context': 'src/data-context.ts',
-    i18n: 'src/i18n.ts',
-  },
-  signal: {
-    '.': 'src/index.ts',
-    framework: 'src/framework.ts',
-    'preact-engine': 'src/preact-engine.ts',
-  },
-  ssg: {
-    '.': 'src/index.ts',
-  },
-  ui: {
-    '.': 'src/index.ts',
-    'open-button': 'src/open-button.tsx',
-    'open-callout': 'src/open-callout.tsx',
-    'open-card': 'src/open-card.tsx',
-    'open-code-block': 'src/open-code-block.tsx',
-    'open-dialog': 'src/open-dialog.tsx',
-    'open-dropdown': 'src/open-dropdown.tsx',
-    'open-hero-ping': 'src/open-hero-ping.tsx',
-    'open-input': 'src/open-input.tsx',
-    'open-layout': 'src/open-layout.tsx',
-    'open-modal': 'src/open-modal.tsx',
-    'open-props-tokens': 'src/open-props-tokens.ts',
-    'open-props-tokens.js': 'src/open-props-tokens.ts',
-    'open-step-card': 'src/open-step-card.tsx',
-    'open-tabs': 'src/open-tabs.tsx',
-    'open-theme-toggle': 'src/open-theme-toggle.tsx',
-    'open-badge': 'src/open-badge.tsx',
-    'open-brand-mark': 'src/open-brand-mark.tsx',
-    'open-lab-panel': 'src/open-lab-panel.tsx',
-    'open-lab-stage': 'src/open-lab-stage.tsx',
-    'open-standards-visual': 'src/open-standards-visual.tsx',
-    'daisy-classes': 'src/daisy-classes.ts',
-    'daisy-classes.js': 'src/daisy-classes.ts',
-  },
-};
 
 export interface OpenJsrPackageSpecifier {
   packageName: string;
