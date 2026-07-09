@@ -196,6 +196,30 @@ function wrapBindingEffect(kind: string, run: () => void): () => void {
   });
 }
 
+/**
+ * Render a VNode (or VNode[]) through the renderer and return the resulting DOM
+ * nodes as a flat ChildNode[] - extracting children out of a DocumentFragment
+ * result. Shared by signal-render and conditional bindings so the
+ * fragment-unpacking logic is defined in one place (see #301).
+ */
+function renderToChildren(
+  node: unknown,
+  renderer: BindingRenderer,
+  renderLifecycle: BindingLifecycle,
+): ChildNode[] {
+  const result = renderer.render(node, renderLifecycle);
+  if (result.nodeType === 11) {
+    const children: ChildNode[] = [];
+    while (result.firstChild) {
+      const child = result.firstChild as ChildNode;
+      children.push(child);
+      result.removeChild(child);
+    }
+    return children;
+  }
+  return [result as ChildNode];
+}
+
 function applySignalText(
   desc: Extract<BindingDescriptor, { kind: 'signal-text' }>,
   lifecycle: BindingLifecycle,
@@ -318,24 +342,10 @@ function applySignalRender(
       renderLifecycle.signal = descLifecycle.signal ?? lifecycle.signal;
     }
 
-    // Normalize VNode[] into a Fragment so multiple rendered nodes can be
-    // tracked and replaced together across updates.
     const node = Array.isArray(raw) ? { tag: Fragment, props: {}, children: raw } : raw;
-    const result = renderer.render(node, renderLifecycle);
-
-    if (result.nodeType === 11) {
-      const fragChildren: ChildNode[] = [];
-      while (result.firstChild) {
-        const child = result.firstChild as ChildNode;
-        fragChildren.push(child);
-        el.appendChild(child);
-      }
-      currentChildren = fragChildren;
-    } else {
-      const child = result as ChildNode;
-      el.appendChild(child);
-      currentChildren = [child];
-    }
+    const children = renderToChildren(node, renderer, renderLifecycle);
+    for (const child of children) el.appendChild(child);
+    currentChildren = children;
   };
 
   const dispose = wrapBindingEffect('signal-render', render);
@@ -390,25 +400,10 @@ function applyConditional(
     }
 
     const node = Array.isArray(target) ? { tag: Fragment, props: {}, children: target } : target;
-    const result = renderer.render(node, renderLifecycle);
-
-    if (result.nodeType === 11) {
-      const fragChildren: ChildNode[] = [];
-      while (result.firstChild) {
-        const child = result.firstChild as ChildNode;
-        fragChildren.push(child);
-        result.removeChild(child);
-      }
-      const ref = anchor.nextSibling;
-      for (let i = 0; i < fragChildren.length; i++) {
-        anchor.parentNode?.insertBefore(fragChildren[i], ref);
-      }
-      currentChildren = fragChildren;
-    } else {
-      const child = result as ChildNode;
-      anchor.parentNode?.insertBefore(child, anchor.nextSibling);
-      currentChildren = [child];
-    }
+    const children = renderToChildren(node, renderer, renderLifecycle);
+    const ref = anchor.nextSibling;
+    for (const child of children) anchor.parentNode?.insertBefore(child, ref);
+    currentChildren = children;
   };
 
   const dispose = wrapBindingEffect('conditional', render);
