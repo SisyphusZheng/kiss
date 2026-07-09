@@ -318,7 +318,7 @@ Deno.test('renderDsd - error handling', async (t) => {
     const output = await renderDsdForTest('obj-el-1', asCtor(cls), {});
     assertStringIncludes(output.html, '<obj-el-1>');
     assertFalse(output.html.includes('Render Error'));
-    assertEquals(output.errors[0]?.code, 'LESS_RENDER_INVALID_OUTPUT');
+    assertEquals(output.errors[0]?.code, 'OPEN_ELEMENT_RENDER_INVALID_OUTPUT');
   });
 });
 
