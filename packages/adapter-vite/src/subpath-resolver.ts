@@ -26,7 +26,6 @@ export const VIRTUAL_CORE_PREFIX = '\0openelement:core/src/';
 export const CORE_SUBPATHS: Record<string, string> = {
   logger: 'logger.ts',
   'build-context': 'build-context.ts',
-  navigation: 'navigation.ts',
   errors: 'errors.ts',
 };
 
