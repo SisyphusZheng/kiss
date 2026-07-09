@@ -6,7 +6,7 @@
  * Forbidden: \x60as any\x60, \x60: any\x60, \x60any[]\x60 in active code.
  */
 
-interface Issue {
+export interface Issue {
   file: string;
   line: number;
   text: string;
@@ -27,6 +27,10 @@ const ACTIVE_ROOTS = [
 const EXCLUDED_FILES = new Set([
   'tools/check-type-safety.ts',
   'tools/check-architecture-contract.ts',
+  // Test files that exercise the detector necessarily contain any-escape tokens,
+  // so they are excluded from scanning just like the gate tools themselves.
+  'tools/check-type-safety.test.ts',
+  'tools/check-architecture-contract.test.ts',
 ]);
 
 const EXTENSIONS = /\.(ts|tsx)$/;
@@ -49,44 +53,63 @@ async function* walk(dir: string): AsyncGenerator<string> {
   }
 }
 
-function isCodeLine(line: string): boolean {
+export function isCodeLine(line: string): boolean {
   const trimmed = line.trim();
   if (trimmed.startsWith('//')) return false;
   if (trimmed.startsWith('*') || trimmed.startsWith('/*')) return false;
   return true;
 }
 
-async function main(): Promise<void> {
-  const issues: Issue[] = [];
-  const files: string[] = [];
+export interface SourceFile {
+  path: string;
+  text: string;
+}
 
+/**
+ * Scan already-loaded source files for explicit `any` escapes.
+ *
+ * Pure: does not touch the filesystem and does not apply EXCLUDED_FILES, so it
+ * can be exercised directly in tests with synthetic inputs.
+ */
+export function scanSourcesForAnyIssues(files: SourceFile[]): Issue[] {
+  const issues: Issue[] = [];
+  for (const file of files) {
+    const lines = file.text.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!isCodeLine(line)) continue;
+      for (const { re, name } of ANY_PATTERNS) {
+        if (re.test(line)) {
+          issues.push({ file: file.path, line: i + 1, text: name });
+          break;
+        }
+      }
+    }
+  }
+  return issues;
+}
+
+/** Walk the active roots and read every scannable, non-excluded source file. */
+export async function collectActiveSourceFiles(): Promise<SourceFile[]> {
+  const files: SourceFile[] = [];
   for (const root of ACTIVE_ROOTS) {
     try {
       for await (const path of walk(root)) {
         if (!EXTENSIONS.test(path)) continue;
         const normalized = normalize(path);
         if (EXCLUDED_FILES.has(normalized)) continue;
-        files.push(normalized);
+        files.push({ path: normalized, text: await Deno.readTextFile(normalized) });
       }
     } catch {
       // Root may not exist in all contexts.
     }
   }
+  return files;
+}
 
-  for (const file of files) {
-    const text = await Deno.readTextFile(file);
-    const lines = text.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (!isCodeLine(line)) continue;
-      for (const { re, name } of ANY_PATTERNS) {
-        if (re.test(line)) {
-          issues.push({ file, line: i + 1, text: name });
-          break;
-        }
-      }
-    }
-  }
+async function main(): Promise<void> {
+  const files = await collectActiveSourceFiles();
+  const issues = scanSourcesForAnyIssues(files);
 
   if (issues.length > 0) {
     console.error(`Type-safety check failed: ${issues.length} explicit any escape(s) found.`);
@@ -99,4 +122,6 @@ async function main(): Promise<void> {
   console.log(`Type-safety check passed (${files.length} active TS/TSX files, 0 explicit any).`);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

@@ -8,14 +8,14 @@
 
 import { extname } from 'node:path';
 
-interface Issue {
+export interface Issue {
   check: string;
   file: string;
   line?: number;
   message: string;
 }
 
-interface TextFile {
+export interface TextFile {
   path: string;
   text: string;
 }
@@ -104,13 +104,17 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   },
 ];
 
-const issues: Issue[] = [];
-
-function addIssue(check: string, file: string, message: string, line?: number): void {
+function addIssue(
+  issues: Issue[],
+  check: string,
+  file: string,
+  message: string,
+  line?: number,
+): void {
   issues.push({ check, file, line, message });
 }
 
-function normalizePath(path: string): string {
+export function normalizePath(path: string): string {
   return path.replace(/\\/g, '/');
 }
 
@@ -129,11 +133,11 @@ async function gitFiles(): Promise<string[]> {
     .map(normalizePath);
 }
 
-function isTextPath(path: string): boolean {
+export function isTextPath(path: string): boolean {
   return TEXT_EXTENSIONS.has(extname(path));
 }
 
-function isCurrentDocOrExample(path: string): boolean {
+export function isCurrentDocOrExample(path: string): boolean {
   if (path.startsWith('docs/arch/')) return true;
   if (path.startsWith('docs/reference/')) return true;
   if (path.startsWith('docs/guide/')) return true;
@@ -146,9 +150,13 @@ function isCurrentDocOrExample(path: string): boolean {
   return false;
 }
 
-function isProductionSource(path: string): boolean {
+export function isProductionSource(path: string): boolean {
   if (path.includes('/__tests__/') || path.includes('/test/fixtures/')) return false;
   if (path === 'tools/check-architecture-contract.ts') return false;
+  // Test files that exercise the architecture contract necessarily contain
+  // escape tokens, so they are excluded from production scanning.
+  if (path === 'tools/check-architecture-contract.test.ts') return false;
+  if (path === 'tools/check-type-safety.test.ts') return false;
   if (path.startsWith('packages/') && path.includes('/src/') && /\.(ts|tsx)$/.test(path)) {
     return true;
   }
@@ -168,20 +176,21 @@ function eachLine(file: TextFile, fn: (line: string, lineNumber: number) => void
   file.text.split(/\r?\n/).forEach((line, index) => fn(line, index + 1));
 }
 
-function failMatches(
+export function failMatches(
   check: string,
   files: TextFile[],
   re: RegExp,
   message: string,
+  issues: Issue[],
 ): void {
   for (const file of files) {
     eachLine(file, (line, lineNo) => {
-      if (re.test(line)) addIssue(check, file.path, message, lineNo);
+      if (re.test(line)) addIssue(issues, check, file.path, message, lineNo);
     });
   }
 }
 
-function assertAllowedTypeEscapes(files: TextFile[]): void {
+export function assertAllowedTypeEscapes(files: TextFile[], issues: Issue[]): void {
   const found = new Set<string>();
   for (const file of files) {
     eachLine(file, (line, lineNo) => {
@@ -191,6 +200,7 @@ function assertAllowedTypeEscapes(files: TextFile[]): void {
       );
       if (!allow) {
         addIssue(
+          issues,
           'type-escape',
           file.path,
           'production as unknown as is not in the reviewed allowlist',
@@ -206,6 +216,7 @@ function assertAllowedTypeEscapes(files: TextFile[]): void {
     const key = `${entry.file}\0${entry.fragment}`;
     if (!found.has(key)) {
       addIssue(
+        issues,
         'type-escape',
         entry.file,
         `allowlist entry is stale: ${entry.reason}`,
@@ -214,7 +225,7 @@ function assertAllowedTypeEscapes(files: TextFile[]): void {
   }
 }
 
-function assertDuplicateCounts(files: TextFile[]): void {
+export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void {
   const compatibilityHits: Array<{ file: string; line: number }> = [];
   for (const file of files.filter((f) => f.path.startsWith('packages/'))) {
     eachLine(file, (line, lineNo) => {
@@ -228,6 +239,7 @@ function assertDuplicateCounts(files: TextFile[]): void {
   if (compatibilityHits.length !== 1 || compatibilityHits[0].file !== canonicalFile) {
     for (const hit of compatibilityHits) {
       addIssue(
+        issues,
         'duplicate-type',
         hit.file,
         `CompatibilityClassification must have exactly one canonical interface in ${canonicalFile}`,
@@ -236,6 +248,7 @@ function assertDuplicateCounts(files: TextFile[]): void {
     }
     if (compatibilityHits.length === 0) {
       addIssue(
+        issues,
         'duplicate-type',
         canonicalFile,
         'missing canonical CompatibilityClassification interface',
@@ -244,7 +257,7 @@ function assertDuplicateCounts(files: TextFile[]): void {
   }
 }
 
-function assertStructuredMetadata(files: TextFile[]): void {
+export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): void {
   const scannerFiles = files.filter((f) =>
     f.path === 'packages/adapter-vite/src/route-scanner.ts' ||
     f.path === 'packages/content/src/nav/scanner.ts'
@@ -254,10 +267,11 @@ function assertStructuredMetadata(files: TextFile[]): void {
     scannerFiles,
     /exportMatch|splitOnCommas|parseValue\(raw/,
     'route/nav metadata must use AST or structured data, not source regex parsing',
+    issues,
   );
 }
 
-function assertMojibake(files: TextFile[]): void {
+export function assertMojibake(files: TextFile[], issues: Issue[]): void {
   const badChars = [
     '\uFFFD',
     '\u951f',
@@ -277,6 +291,7 @@ function assertMojibake(files: TextFile[]): void {
       const idx = file.text.indexOf(bad);
       if (idx !== -1) {
         addIssue(
+          issues,
           'encoding',
           file.path,
           'current source/doc contains replacement/mojibake text',
@@ -292,6 +307,7 @@ async function main(): Promise<void> {
   let totalBytes = 0;
   let readFailures = 0;
   const textFiles: TextFile[] = [];
+  const issues: Issue[] = [];
 
   for (const path of files) {
     try {
@@ -306,6 +322,7 @@ async function main(): Promise<void> {
       if (error instanceof Deno.errors.NotFound) continue;
       readFailures++;
       addIssue(
+        issues,
         'byte-read',
         path,
         `could not read tracked file: ${error instanceof Error ? error.message : String(error)}`,
@@ -322,31 +339,36 @@ async function main(): Promise<void> {
     currentDocs,
     /render\(\):\s*(?:Promise<)?string\b|string\s*\|\s*VNode/,
     'current source/docs must teach render(): VNode | null only',
+    issues,
   );
   failMatches(
     'trust-boundary',
     currentDocs,
     /\brawHtml\b|data-on-/,
     'current source/docs must use trustedHtml and VNode event handlers',
+    issues,
   );
   failMatches(
     'core-render',
     coreSource,
     /wrongTypeErrorHtml|typeof\s+result\s*===\s*['"]string['"]|Components must return a string/,
     'core must not carry the legacy string-render branch',
+    issues,
   );
   failMatches(
     'type-escape',
     production,
     /\bas\s+any\b/,
     'production as any is forbidden',
+    issues,
   );
-  assertAllowedTypeEscapes(production);
+  assertAllowedTypeEscapes(production, issues);
   failMatches(
     'ts-suppression',
     production,
     /@ts-ignore|@ts-expect-error/,
     'production TypeScript suppressions are forbidden',
+    issues,
   );
   const taskMarkerPattern = new RegExp(
     `\\b${'TO' + 'DO'}\\b|\\b${'FIX' + 'ME'}\\b`,
@@ -356,13 +378,14 @@ async function main(): Promise<void> {
     production.filter((f) => !f.path.startsWith('www/app/data/')),
     taskMarkerPattern,
     'production task markers must be removed or moved to classified SOP debt',
+    issues,
   );
-  assertDuplicateCounts(textFiles);
-  assertStructuredMetadata(textFiles);
-  assertMojibake(production.concat(currentDocs));
+  assertDuplicateCounts(textFiles, issues);
+  assertStructuredMetadata(textFiles, issues);
+  assertMojibake(production.concat(currentDocs), issues);
 
   if (readFailures > 0) {
-    addIssue('byte-read', '<inventory>', `${readFailures} tracked files could not be read`);
+    addIssue(issues, 'byte-read', '<inventory>', `${readFailures} tracked files could not be read`);
   }
 
   if (issues.length > 0) {
@@ -379,4 +402,6 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
