@@ -63,17 +63,17 @@ export function classifyError(
 
 // ponytail: lookup table replaces 5-case if/else chain
 const ERROR_CODES: Record<string, RenderErrorCode> = {
-  instantiate: 'LESS_RENDER_INSTANTIATE_FAILED',
-  nested: 'LESS_RENDER_NESTED_FAILED',
-  style: 'LESS_RENDER_STYLE_FAILED',
-  serialize: 'LESS_RENDER_SERIALIZE_FAILED',
+  instantiate: 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED',
+  nested: 'OPEN_ELEMENT_RENDER_NESTED_FAILED',
+  style: 'OPEN_ELEMENT_RENDER_STYLE_FAILED',
+  serialize: 'OPEN_ELEMENT_RENDER_SERIALIZE_FAILED',
 };
 
 function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCode {
   if (message.includes('Components must return a VNode')) {
-    return 'LESS_RENDER_INVALID_OUTPUT';
+    return 'OPEN_ELEMENT_RENDER_INVALID_OUTPUT';
   }
-  return ERROR_CODES[phase] ?? 'LESS_RENDER_RENDER_FAILED';
+  return ERROR_CODES[phase] ?? 'OPEN_ELEMENT_RENDER_RENDER_FAILED';
 }
 
 function instantiationErrorHtml(
