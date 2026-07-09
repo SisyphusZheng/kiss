@@ -219,7 +219,14 @@ export async function renderDsd(
     }
   } else {
     componentClass = input;
-    tagName = (input as DsdComponentConstructor).tagName ?? 'unknown';
+    const resolvedName = (input as DsdComponentConstructor).tagName;
+    if (!resolvedName) {
+      throw new Error(
+        'renderDsd: component constructor is missing a static `tagName`; ' +
+          'pass the registered tag name as the first argument instead.',
+      );
+    }
+    tagName = resolvedName;
   }
 
   const sourceInfo = options.sourceInfo;
