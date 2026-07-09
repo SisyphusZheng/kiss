@@ -449,7 +449,11 @@ export class OpenElement extends _Base {
     if (attrParams) {
       try {
         this.#params.value = JSON.parse(attrParams);
-      } catch { /* ignore malformed JSON */ }
+      } catch (err) {
+        createLogger('element').error(
+          `Failed to parse params attribute on <${this.tagName.toLowerCase()}>: ${formatError(err)}`,
+        );
+      }
     }
 
     // v0.25.0 (SOP-012): Unified render path — DSD and CSR both go through
