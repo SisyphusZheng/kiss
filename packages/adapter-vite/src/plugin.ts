@@ -247,16 +247,19 @@ export function createOpenPlugin(
           if (ctx.phase1.packageManifests.length > 0) {
             // Extract island declarations from manifests
             ctx.phase1.packageIslandDecls = ctx.phase1.packageManifests.flatMap((pkg) =>
-              pkg.declarations
-                .filter((d) => d.openElement?.module)
-                .map((d) => ({
+              pkg.declarations.flatMap((d) => {
+                const openElement = d.openElement;
+                const module = openElement?.module;
+                if (!module) return [];
+                return [{
                   tagName: d.tagName,
-                  modulePath: d.openElement!.module!,
+                  modulePath: module,
                   isPackage: true,
-                  hydrate: d.openElement?.hydrate as HydrationStrategy | undefined,
-                  ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
-                  dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
-                }))
+                  hydrate: openElement.hydrate as HydrationStrategy | undefined,
+                  ssr: openElement.hydrate === 'only' ? false : openElement.ssr,
+                  dsd: openElement.hydrate === 'only' ? false : openElement.dsd,
+                }];
+              })
             );
             log.info(
               `Package islands: ${ctx.phase1.packageIslandDecls.map((i) => i.tagName).join(', ')}`,
