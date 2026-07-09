@@ -309,6 +309,31 @@ Deno.test('event binding supports object options', () =>
 
 // ─── Conditional / list bindings ─────────────────────────────────────────────
 
+Deno.test('conditional binding renders multi-node fragment branch and reacts', () =>
+  withMockDocument(() => {
+    const when = signal(true);
+    const anchor = document.createComment('show');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindConditional(
+      anchor as ChildNode,
+      when,
+      () => [jsx('span', { children: 'a' }), jsx('span', { children: 'b' })],
+      () => [jsx('span', { children: 'x' }), jsx('span', { children: 'y' })],
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(asTestElement(host).textContent, 'ab');
+
+    when.value = false;
+    assertEquals(asTestElement(host).textContent, 'xy');
+
+    when.value = true;
+    assertEquals(asTestElement(host).textContent, 'ab');
+  }));
+
 Deno.test('conditional binding renders truthy branch and reacts', () =>
   withMockDocument(() => {
     const when = signal(true);
@@ -399,6 +424,30 @@ Deno.test('conditional binding disposes nested renders on update', () =>
 
     dispose();
     assertEquals(nestedDisposers.size, 0);
+  }));
+
+Deno.test('list binding renders multi-node items and reacts', () =>
+  withMockDocument(() => {
+    const items = signal(['a', 'b']);
+    const anchor = document.createComment('for');
+    const host = document.createElement('div');
+    host.appendChild(anchor);
+    const renderer: BindingRenderer = {
+      render: (node, lifecycle) => renderToDom(node, lifecycle),
+    };
+    const desc: BindingDescriptor = bindList(
+      anchor as ChildNode,
+      items,
+      (item: unknown) => [jsx('span', { children: item as string }), jsx('span', { children: '|' })],
+    );
+    applyBindingDescriptor(desc, {}, renderer);
+    assertEquals(asTestElement(host).textContent, 'a|b|');
+
+    items.value = ['x'];
+    assertEquals(asTestElement(host).textContent, 'x|');
+
+    items.value = ['p', 'q', 'r'];
+    assertEquals(asTestElement(host).textContent, 'p|q|r|');
   }));
 
 Deno.test('list binding renders items and reacts', () =>
