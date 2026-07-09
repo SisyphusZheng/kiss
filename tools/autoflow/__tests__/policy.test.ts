@@ -153,6 +153,12 @@ Deno.test('release: next patch version and tag are deterministic', () => {
   assertEquals(evidenceFile('0.39.1'), 'docs/release/autoflow3/v0.39.1.json');
 });
 
+Deno.test('release: next patch version preserves pre-release line', () => {
+  assertEquals(nextPatchVersion('0.41.0-alpha.6'), '0.41.0-alpha.7');
+  assertEquals(nextPatchVersion('1.2.3-rc.1'), '1.2.3-rc.2');
+  assertEquals(nextPatchVersion('0.41.0'), '0.41.1');
+});
+
 Deno.test('release: GitHub prerelease flag follows semver prerelease tags', () => {
   assert(githubReleaseCreateCommand('v0.41.0-alpha.5', 'notes.md').includes('--prerelease'));
   assert(githubReleaseCreateCommand('0.41.0-rc.1', 'notes.md').includes('--prerelease'));

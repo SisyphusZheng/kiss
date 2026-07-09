@@ -49,8 +49,22 @@ export function parseSemver(version: string): Semver {
 }
 
 export function nextPatchVersion(version: string): string {
-  const parsed = parseSemver(version);
-  return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`;
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$/);
+  if (!match) throw new Error(`Invalid semver version: ${version}`);
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  const patch = Number(match[3]);
+  const preName = match[4];
+  const preNum = match[5];
+
+  // Pre-release line: bump the pre-release counter, not the patch, so a
+  // version like 0.41.0-alpha.6 advances to 0.41.0-alpha.7 instead of
+  // the stable 0.41.1 (which would silently leave pre-release scope).
+  if (preName !== undefined && preNum !== undefined) {
+    return `${major}.${minor}.${patch}-${preName}.${Number(preNum) + 1}`;
+  }
+
+  return `${major}.${minor}.${patch + 1}`;
 }
 
 export function releaseTag(version: string): string {
