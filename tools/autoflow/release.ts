@@ -185,7 +185,10 @@ export function createReleasePlan(
     },
     {
       name: 'push tag',
-      command: ['git', 'push', '--force', 'origin', tag],
+      // No force-push: a tag that already exists at a different commit is left
+      // untouched (the local `git tag -f` above is guarded and only runs when
+      // the existing tag points at a different commit, with a warning).
+      command: ['git', 'push', 'origin', tag],
     },
     ...(canCreateGitHubRelease()
       ? [
@@ -278,7 +281,10 @@ export function createReleasePlan(
     ];
   }
 
-  // Local/manual release: work on dev, then fast-forward main from dev.
+  // Local/manual release: bump on dev, fast-forward main from dev in a single
+  // transition, then keep dev in sync with main. This removes the redundant
+  // pull/push round-trips that previously bounced between dev and main and
+  // reduces the chance of a half-released state.
   return [
     ...baseSteps,
     {
@@ -294,20 +300,8 @@ export function createReleasePlan(
       command: ['git', 'checkout', 'main'],
     },
     {
-      name: 'refresh main',
-      command: ['git', 'pull', '--ff-only', 'origin', 'main'],
-    },
-    {
-      name: 'sync dev to main',
+      name: 'sync main from dev (fast-forward)',
       command: ['git', 'merge', '--ff-only', 'dev'],
-    },
-    {
-      name: 'pull main (before publish)',
-      command: ['git', 'pull', '--rebase', 'origin', 'main'],
-    },
-    {
-      name: 'push main (before publish)',
-      command: ['git', 'push', 'origin', 'main'],
     },
     ...publishSteps,
     {
@@ -320,22 +314,22 @@ export function createReleasePlan(
     },
     ...evidenceSteps,
     {
-      name: 'push main evidence',
+      name: 'push main (release + evidence)',
       command: ['git', 'push', 'origin', 'main'],
     },
+    ...tagSteps,
     {
       name: 'checkout dev',
       command: ['git', 'checkout', 'dev'],
     },
     {
-      name: 'sync main evidence to dev',
+      name: 'sync dev from main (fast-forward)',
       command: ['git', 'merge', '--ff-only', 'main'],
     },
     {
-      name: 'push dev evidence',
+      name: 'push dev',
       command: ['git', 'push', 'origin', 'dev'],
     },
-    ...tagSteps,
   ];
 }
 
