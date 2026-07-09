@@ -1,6 +1,6 @@
 {
   "name": "@openelement/example-fresh",
-  "version": "0.41.0-alpha.4",
+  "version": "0.41.0-alpha.6",
   "nodeModulesDir": "manual",
   "tasks": {
     "dev": "vite",
