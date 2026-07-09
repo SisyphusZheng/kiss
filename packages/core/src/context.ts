@@ -42,7 +42,9 @@ export function extractParams(
     log.error(
       `URLPattern failed for pattern "${pattern}" on pathname "${pathname}": ${formatError(err)}`,
     );
-    return {};
+    // Fail fast: an invalid route pattern must not silently resolve to an
+    // empty params object, which would let the router treat it as a match.
+    throw err;
   }
 }
 

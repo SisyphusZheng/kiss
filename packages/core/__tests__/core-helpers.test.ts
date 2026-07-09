@@ -7,7 +7,7 @@
  * cases, signal-context, dsd-hydration, and the static prop runtime.
  */
 
-import { assert, assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { isValidTagName } from '../src/tag-utils.ts';
 import { StyleSheet } from '../src/style-sheet.ts';
 import { escapeHtml, renderSsrError, wrapInDocument } from '../src/html-escape.ts';
@@ -261,10 +261,12 @@ Deno.test('errors - telemetry hook errors are swallowed', () => {
 
 // ─── context ─────────────────────────────────────────────────────────────────
 
-Deno.test('context - extractParams returns empty on invalid pattern', () => {
-  // An unbalanced group should cause URLPattern to throw.
-  const params = extractParams('/foo/((', '/foo/bar');
-  assertEquals(params, {});
+Deno.test('context - extractParams throws on invalid pattern instead of returning empty', () => {
+  // An unbalanced group should cause URLPattern construction to throw rather
+  // than silently resolving to an empty params object (which would look like a match).
+  assertThrows(() => extractParams('/foo/((', '/foo/bar'));
+  // A valid pattern with no matching params still returns an empty record.
+  assertEquals(extractParams('/about', '/about'), {});
 });
 
 // ─── html-escape edge cases ──────────────────────────────────────────────────
