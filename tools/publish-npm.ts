@@ -22,8 +22,8 @@ const REPOSITORY = {
 const KEYWORDS = ['openelement', 'web-components', 'ssg', 'framework', 'deno'];
 
 const CREATE_BIN = {
-  'openelement-create': './cli.js',
-  'create-openelement': './cli.js',
+  'openelement-create': './src/cli.js',
+  'create-openelement': './src/cli.js',
 };
 
 function npmTarballName(pkg: PackageInfo): string {

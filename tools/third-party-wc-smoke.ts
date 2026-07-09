@@ -218,7 +218,10 @@ async function main(): Promise<void> {
   const tmpRoot = await Deno.makeTempDir({ prefix: 'openelement-third-party-wc-' });
   const keep = Deno.env.get('OPEN_ELEMENT_KEEP_THIRD_PARTY_WC_SMOKE') === '1';
   try {
-    await run(['run', '-A', join(repoRoot, 'packages', 'create', 'cli.ts'), PROJECT_NAME], tmpRoot);
+    await run(
+      ['run', '-A', join(repoRoot, 'packages', 'create', 'src', 'cli.ts'), PROJECT_NAME],
+      tmpRoot,
+    );
     const appDir = join(tmpRoot, PROJECT_NAME);
     await patchDenoJson(appDir);
     await patchViteConfig(appDir);

@@ -19,7 +19,7 @@ export type {
   Unsubscribe,
   WritableSignal,
 } from '@openelement/protocol/signal';
-export { isSignalLike, unwrapSignalLike, resolveSignalProp } from './types.ts';
+export { isSignalLike, resolveSignalProp, unwrapSignalLike } from './types.ts';
 
 // ─── Engine factory (available at subpath) ──────────────────────
 export { createPreactEngine } from './preact-engine.ts';

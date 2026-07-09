@@ -19,10 +19,9 @@ defineElement(tagName, {
       <>
         <h1>Hello from openElement!</h1>
         <p>
-          Your openElement app is running. Edit <code>app/routes/index.tsx</code> to
-          get started.
+          Your openElement app is running. Edit <code>app/routes/index.tsx</code> to get started.
         </p>
-        <img src="/openelement-mark.svg" alt="openElement mark" />
+        <img src='/openelement-mark.svg' alt='openElement mark' />
         <my-counter></my-counter>
       </>
     );

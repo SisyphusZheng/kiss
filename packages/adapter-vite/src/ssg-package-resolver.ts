@@ -72,7 +72,7 @@ const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
     'style-sheet': 'src/style-sheet.ts',
     'tag-utils': 'src/tag-utils.ts',
   },
-  create: { '.': 'cli.ts' },
+  create: { '.': 'src/cli.ts' },
   element: {
     '.': 'src/index.ts',
     'open-element-hydration': 'src/open-element-hydration.ts',

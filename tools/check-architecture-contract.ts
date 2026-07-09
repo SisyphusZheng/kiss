@@ -97,6 +97,11 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment: 'instance.constructor as unknown as OpenElementLikeConstructor',
     reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
   },
+  {
+    file: 'packages/core/src/render-dsd.ts',
+    fragment: 'instance as unknown as Record<string, unknown>',
+    reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
+  },
 ];
 
 const issues: Issue[] = [];

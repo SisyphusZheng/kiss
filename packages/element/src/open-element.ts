@@ -451,7 +451,9 @@ export class OpenElement extends _Base {
         this.#params.value = JSON.parse(attrParams);
       } catch (err) {
         createLogger('element').error(
-          `Failed to parse params attribute on <${this.tagName.toLowerCase()}>: ${formatError(err)}`,
+          `Failed to parse params attribute on <${this.tagName.toLowerCase()}>: ${
+            formatError(err)
+          }`,
         );
       }
     }

@@ -1,5 +1,5 @@
-import { assertEquals, assertArrayIncludes } from 'jsr:@std/assert@1';
-import type { VNode, ComponentFn, ComponentCtor } from '../src/vnode.ts';
+import { assertArrayIncludes, assertEquals } from 'jsr:@std/assert@1';
+import type { ComponentCtor, ComponentFn, VNode } from '../src/vnode.ts';
 
 const fnComponent: ComponentFn = () => null;
 class CtorComponent {

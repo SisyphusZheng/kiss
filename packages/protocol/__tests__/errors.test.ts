@@ -1,5 +1,5 @@
 import { assertEquals, assertExists } from 'jsr:@std/assert@1';
-import { ErrorCode, ERROR_PREFIX, type OpenElementError } from '../src/errors.ts';
+import { ERROR_PREFIX, ErrorCode, type OpenElementError } from '../src/errors.ts';
 
 Deno.test('ErrorCode: every key maps to its own string value', () => {
   for (const [key, value] of Object.entries(ErrorCode)) {

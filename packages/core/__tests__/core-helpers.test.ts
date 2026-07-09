@@ -7,7 +7,13 @@
  * cases, signal-context, dsd-hydration, and the static prop runtime.
  */
 
-import { assert, assertEquals, assertFalse, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+  assertStringIncludes,
+  assertThrows,
+} from 'jsr:@std/assert@^1.0.0';
 import { isValidTagName } from '../src/tag-utils.ts';
 import { StyleSheet } from '../src/style-sheet.ts';
 import { escapeHtml, renderSsrError, wrapInDocument } from '../src/html-escape.ts';

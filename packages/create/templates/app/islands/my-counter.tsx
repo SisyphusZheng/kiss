@@ -18,9 +18,9 @@ export default defineIsland(tagName, {
   render() {
     return (
       <>
-        <button type="button" onClick={() => count.value--}>-</button>
+        <button type='button' onClick={() => count.value--}>-</button>
         <span>{count.value}</span>
-        <button type="button" onClick={() => count.value++}>+</button>
+        <button type='button' onClick={() => count.value++}>+</button>
       </>
     );
   },

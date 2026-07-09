@@ -185,7 +185,9 @@ Deno.test('event hydration: function-component invocation failure is logged, not
     logged += args.map((a) => String(a)).join(' ');
   };
   try {
-    const tree = jsx(boomFn as unknown as (props: { children?: unknown }) => unknown, { children: [] });
+    const tree = jsx(boomFn as unknown as (props: { children?: unknown }) => unknown, {
+      children: [],
+    });
     const bindings = collectEventBindings(tree);
     assertEquals(bindings.size, 0);
     assertStringIncludes(logged, 'boom-fn');
