@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..', '..');
-const cliSource = readFileSync(join(__dirname, '..', 'cli.ts'), 'utf-8');
+const cliSource = readFileSync(join(__dirname, '..', 'src', 'cli.ts'), 'utf-8');
 
 function vitePath(path: string): string {
   return path.replace(/\\/g, '/');
@@ -251,7 +251,7 @@ Deno.test('create-open: generated project builds through the one-command pipelin
 
   try {
     const create = new Deno.Command(Deno.execPath(), {
-      args: ['run', '-A', join(repoRoot, 'packages', 'create', 'cli.ts'), projectName],
+      args: ['run', '-A', join(repoRoot, 'packages', 'create', 'src', 'cli.ts'), projectName],
       cwd: tmpRoot,
       stdout: 'piped',
       stderr: 'piped',
@@ -566,7 +566,7 @@ Deno.test('create-open: generated project builds through the one-command pipelin
 
 Deno.test('create-open: --help flag prints usage info', async () => {
   const help = new Deno.Command(Deno.execPath(), {
-    args: ['run', '-A', join(__dirname, '..', 'cli.ts'), '--help'],
+    args: ['run', '-A', join(__dirname, '..', 'src', 'cli.ts'), '--help'],
     cwd: Deno.makeTempDirSync({ prefix: 'open-help-' }),
     stdout: 'piped',
     stderr: 'piped',
@@ -582,7 +582,7 @@ Deno.test('create-open: rejects project name with spaces', async () => {
   const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-' });
   try {
     const create = new Deno.Command(Deno.execPath(), {
-      args: ['run', '-A', join(__dirname, '..', 'cli.ts'), 'my app'],
+      args: ['run', '-A', join(__dirname, '..', 'src', 'cli.ts'), 'my app'],
       cwd: tmpRoot,
       stdout: 'piped',
       stderr: 'piped',
