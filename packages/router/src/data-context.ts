@@ -12,7 +12,13 @@
  *
  * v0.41.0: Replaced module-level currentState with render-scoped stack.
  */
-import { currentActionData, currentLoaderData } from './data-context-store.ts';
+import {
+  currentActionData,
+  currentLoaderData,
+  popData,
+  pushActionData,
+  pushLoaderData,
+} from './data-context-store.ts';
 
 // ─── Public hooks ────────────────────────────────────────────────
 
@@ -42,3 +48,8 @@ export function useLoaderData<T = unknown>(): T {
 export function useActionData<T = unknown>(): T | undefined {
   return currentActionData() as T | undefined;
 }
+
+// Internal compatibility hooks used by generated route code and legacy tests.
+export const __internal_pushLoaderData = pushLoaderData;
+export const __internal_pushActionData = pushActionData;
+export const __internal_popData = popData;

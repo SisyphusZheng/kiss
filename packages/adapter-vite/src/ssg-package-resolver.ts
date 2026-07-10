@@ -3,6 +3,8 @@ import type { Alias, Plugin } from 'vite';
 import { formatError } from '@openelement/core/errors';
 import { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
 
+export { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
+
 const VIRTUAL_OPENELEMENT_PACKAGE_PREFIX = '\0openelement:ssg-pkg/';
 // Packages resolved by this plugin for JSR consumer SSG builds.
 // Retained optional packages (content, i18n) are handled by optionalPackageStubsPlugin
@@ -17,6 +19,8 @@ const DEFAULT_OPENELEMENT_PACKAGES = new Set([
   'element',
   'router',
   'signal',
+  'ssg',
+  'protocol',
   'ui',
 ]);
 
@@ -68,6 +72,20 @@ export function resolveOpenPackageExport(packageName: string, subpath: string): 
   throw new Error(
     `[openElement/SSG] Unknown @openelement/${packageName} export subpath: ${subpath}`,
   );
+}
+
+/** Build a validated JSR source URL for a published openElement module. */
+export function buildJsrSourceUrl(packageName: string, version: string, filePath: string): string {
+  if (!OPENELEMENT_EXPORT_FILES[packageName]) {
+    throw new Error(`[openElement/SSG] Unknown openElement package: @openelement/${packageName}`);
+  }
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
+    throw new Error(`[openElement/SSG] Unsafe JSR package version: ${version}`);
+  }
+  if (filePath.startsWith('/') || filePath.includes('..')) {
+    throw new Error(`[openElement/SSG] Unsafe package source path: ${filePath}`);
+  }
+  return new URL(`/@openelement/${packageName}/${version}/${filePath}`, 'https://jsr.io').href;
 }
 
 export function toVirtualOpenPackageId(packageName: string, sourcePath: string): string {

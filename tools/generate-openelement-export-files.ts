@@ -22,8 +22,6 @@ const REPO_ROOT = new URL('../', import.meta.url).pathname;
 const TARGET = `${REPO_ROOT}packages/adapter-vite/src/generated-export-files.ts`;
 
 // Packages that participate in the JSR SSG package resolver export map.
-// `protocol` is intentionally excluded: it is a runtime-free shared contract
-// resolved by a different path and is not part of the resolver lookup table.
 const RESOLVER_PACKAGES = [
   'adapter-vite',
   'app',
@@ -31,6 +29,7 @@ const RESOLVER_PACKAGES = [
   'core',
   'create',
   'element',
+  'protocol',
   'router',
   'signal',
   'ssg',

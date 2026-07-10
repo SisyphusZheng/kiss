@@ -22,8 +22,9 @@ export function renderImport(imp: ImportDecl): string {
   return `import { ${names} } from '${imp.from}'`;
 }
 
-export function routeTagNameExpr(fallback: string): string {
-  return jsStringLiteral(fallback);
+export function routeTagNameExpr(varNameOrFallback: string, fallback?: string): string {
+  const tagName = fallback ?? varNameOrFallback;
+  return jsStringLiteral(tagName);
 }
 
 export function pageDefinitionExpr(varName: string): string {
@@ -201,6 +202,27 @@ export function renderRouteHandler(
   lines.push('');
 }
 
+/** Compatibility-facing focused entry points used by the entry orchestrator. */
+export function renderPageRoute(
+  lines: string[],
+  route: PageRouteDecl,
+  renderers: RendererDecl[],
+  docConfig: RouteHandlerDocConfig,
+  isSSG: boolean,
+): void {
+  renderRouteHandler(lines, { method: 'get', route, renderers, docConfig, isSSG });
+}
+
+export function renderActionRoute(
+  lines: string[],
+  route: PageRouteDecl,
+  renderers: RendererDecl[],
+  docConfig: RouteHandlerDocConfig,
+  isSSG: boolean,
+): void {
+  renderRouteHandler(lines, { method: 'post', route, renderers, docConfig, isSSG });
+}
+
 /** Generate the route-to-module map for /_data endpoint. */
 export function renderDataRouteMap(
   lines: string[],
@@ -356,7 +378,9 @@ export function renderApiRoute(lines: string[], route: ApiRouteDecl): void {
   lines.push(`      request: c.req.raw,`);
   lines.push(`      params: c.req.param() || {},`);
   lines.push(`      env: c.env || {},`);
-  lines.push(`      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`);
+  lines.push(
+    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
+  );
   lines.push(`    })`);
   lines.push(`  })`);
   lines.push(`} else {`);
