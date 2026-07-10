@@ -6,6 +6,7 @@
  */
 
 import { waitForJsrPackageMetadata } from './wait-jsr-release-metadata.ts';
+import { runCommand } from './lib/process.ts';
 import {
   type PackageInfo,
   readPackages,
@@ -30,25 +31,6 @@ function exportEntries(pkg: PackageInfo): string[] {
     .filter((value): value is string => typeof value === 'string')
     .filter((value) => value.endsWith('.ts') || value.endsWith('.tsx'));
   return [...new Set(entries)];
-}
-
-async function runCommand(
-  command: string,
-  args: string[],
-  cwd?: string,
-): Promise<void> {
-  console.log(`$ ${[command, ...args].join(' ')}${cwd ? `  # cwd=${cwd}` : ''}`);
-  const proc = new Deno.Command(command, {
-    args,
-    cwd,
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
-  });
-  const status = await proc.spawn().status;
-  if (!status.success) {
-    throw new Error(`Command failed with exit code ${status.code}: ${command} ${args.join(' ')}`);
-  }
 }
 
 async function runPublishCommand(
@@ -82,12 +64,10 @@ async function runPublishCommand(
     try {
       child.kill(signal);
     } catch (err) {
-      if (!stopped) {
-        console.warn(
-          `[publish] ${pkg.name}@${pkg.version}: unable to send ${signal} to ` +
-            `deno publish: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
+      console.warn(
+        `[publish] ${pkg.name}@${pkg.version}: unable to send ${signal} to ` +
+          `deno publish: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -111,11 +91,15 @@ async function runPublishCommand(
     await Promise.race([sleep(ms), stopWatcherPromise]);
   }
 
+  function isPublishActive(): boolean {
+    return !stopped && !timedOut && !visibleOnJsr;
+  }
+
   const watcher = (async () => {
     let attempt = 1;
-    while (!stopped && !timedOut && !visibleOnJsr) {
+    while (isPublishActive()) {
       await sleepOrStop(JSR_PUBLISH_POLL_DELAY_MS);
-      if (stopped || timedOut || visibleOnJsr) break;
+      if (!isPublishActive()) break;
 
       try {
         if (await jsrVersionExists(pkg.name, pkg.version)) {
@@ -320,7 +304,7 @@ async function publishPackage(
   const args = ['publish', '-c', 'deno.json', '--allow-slow-types', '--allow-dirty'];
   if (dryRun) {
     args.push('--dry-run');
-    await runCommand('deno', args, pkg.dir);
+    await runCommand('deno', args, { cwd: pkg.dir });
     return 'dry-run';
   }
 

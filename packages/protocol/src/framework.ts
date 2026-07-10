@@ -101,6 +101,8 @@ export interface RouteEntry {
   type: 'page' | 'api' | 'island' | 'special';
   varName: string;
   tagName?: string;
+  /** Source text captured during scanning when includeSource is enabled. */
+  source?: string;
   special?: SpecialFileType;
   revalidate?: number;
   params?: string[];

@@ -39,6 +39,30 @@ Deno.test('extractCustomElementTags: handles tags with attributes', () => {
   assertEquals(tags.sort(), ['open-button', 'open-input']);
 });
 
+Deno.test('extractCustomElementTags: matches the client island custom-element name contract', () => {
+  const html = '<my_component-v1></my_component-v1><my.component-v1></my.component-v1>';
+  const tags = extractCustomElementTags(html);
+  assertEquals(tags.sort(), ['my.component-v1', 'my_component-v1']);
+});
+
+Deno.test('extractCustomElementTags: ignores false positives outside real markup', () => {
+  const html = `
+    <!-- <open-commented></open-commented> -->
+    <script>
+      const text = '<open-script></open-script>';
+    </script>
+    <style>
+      open-style { display: block; }
+    </style>
+    <div data-template="<open-attribute></open-attribute>">
+      &lt;open-text&gt;
+      <open-real></open-real>
+    </div>
+  `;
+
+  assertEquals(extractCustomElementTags(html), ['open-real']);
+});
+
 Deno.test('generateIslandManifests: produces manifests with known islands', () => {
   setup();
   writeFileSync(join(TMP_DIR, 'index.html'), '<open-theme-toggle></open-theme-toggle>');

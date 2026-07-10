@@ -1,13 +1,7 @@
 /**
- * @openelement/content - JSON serialization helper
+ * @openelement/content - JSON formatting helper
  *
- * Shared helper for code generation and file writes that need
- * pretty-printed JSON with a trailing newline.
+ * Re-exported from `@openelement/core` for backwards compatibility.
  */
 
-/**
- * Serialize a value to pretty-printed JSON ending with a newline.
- */
-export function writeJson(value: unknown): string {
-  return JSON.stringify(value, null, 2) + '\n';
-}
+export { formatJson, writeJson } from '@openelement/core/write-json';

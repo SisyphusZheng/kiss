@@ -8,7 +8,7 @@ Deno.serve((_req) => {
   <script type="importmap">
     {
       "imports": {
-        "@openelement/app": "https://esm.sh/@openelement/app@0.41.0-alpha.5"
+        "@openelement/app": "https://esm.sh/@openelement/app@0.41.0-alpha.6"
       }
     }
   </script>

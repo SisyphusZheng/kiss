@@ -13,6 +13,8 @@
  *   deno run -A tools/consumer-smoke.ts --version 0.41.0 --jsdelivr --nitro
  */
 
+import { runWithOutput } from './lib/process.ts';
+
 function getArg(flag: string): string | null {
   const idx = Deno.args.indexOf(flag);
   if (idx !== -1 && idx + 1 < Deno.args.length) return Deno.args[idx + 1];
@@ -28,40 +30,10 @@ async function run(
   args: string[],
   cwd?: string,
 ): Promise<{ success: boolean; output: string }> {
-  const result = await new Deno.Command(cmd, {
-    args,
-    cwd,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-
-  const decoder = new TextDecoder();
-  const output = decoder.decode(result.stdout) + decoder.decode(result.stderr);
-
+  const result = await runWithOutput(cmd, args, { cwd });
   return {
-    success: result.code === 0,
-    output: output.slice(0, 2000),
-  };
-}
-
-async function runWithOutput(
-  cmd: string,
-  args: string[],
-  cwd?: string,
-): Promise<{ success: boolean; output: string }> {
-  const result = await new Deno.Command(cmd, {
-    args,
-    cwd,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-
-  const decoder = new TextDecoder();
-  const output = decoder.decode(result.stdout) + decoder.decode(result.stderr);
-
-  return {
-    success: result.code === 0,
-    output,
+    success: result.success,
+    output: (result.stdout + result.stderr).slice(0, 2000),
   };
 }
 
@@ -247,15 +219,16 @@ async function nitroSmoke(): Promise<void> {
   for (const target of ['node', 'workers']) {
     console.log(`  deno task nitro:proof:${target}`);
     const result = await runWithOutput('deno', ['task', `nitro:proof:${target}`]);
+    const output = result.stdout + result.stderr;
     if (!result.success) {
-      console.error(`  ${target} failed:\n${result.output.slice(0, 2000)}`);
+      console.error(`  ${target} failed:\n${output.slice(0, 2000)}`);
       Deno.exit(1);
     }
-    if (!result.output.includes(`nitro proof ${target}:`)) {
+    if (!output.includes(`nitro proof ${target}:`)) {
       console.error(`  ${target} missing success marker`);
       Deno.exit(1);
     }
-    const lastLine = result.output.trim().split('\n').slice(-1)[0];
+    const lastLine = output.trim().split('\n').slice(-1)[0];
     console.log(`  ok: ${lastLine}`);
   }
 }

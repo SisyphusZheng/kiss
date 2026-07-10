@@ -85,11 +85,12 @@ export class ArchitecturePage extends OpenElement {
             </div>
             <h1>Current Architecture</h1>
             <p class='lede'>
-              openElement is organized as Web Components Fullstack Framework +
-              Basic Element. The v0.41 package graph is intentionally small:
-              product packages expose the app and element authoring surfaces,
-              while UI, Protocols, SSG, Vite, Hono, Nitro, and Deno Desktop
-              support those products through explicit contracts.
+              openElement is a Web Components-native fullstack framework with a
+              JSX-first Basic Element authoring layer. The v0.41 package graph
+              is intentionally small: product packages expose the app and
+              element authoring surfaces, while UI, Protocols, SSG, Vite, Hono,
+              Nitro, and Deno Desktop support those products through explicit
+              contracts.
             </p>
           </div>
           <div class='artifact'>
@@ -126,7 +127,7 @@ export class ArchitecturePage extends OpenElement {
             <div class='layer'>
               <strong>ui</strong>
               <span>@openelement/ui</span>
-              <p>Open Props-backed reference components and docs/Reader dogfood surface.</p>
+              <p>Open Props-backed reference components and docs/Reader dogfood evidence surface.</p>
             </div>
             <div class='layer'>
               <strong>protocols</strong>

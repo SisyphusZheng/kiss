@@ -1,4 +1,5 @@
 import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/core/runtime';
+import type { OpenElementRequestContext } from '@openelement/app/model';
 
 export interface NitroLikeRequestEvent<
   Env extends Record<string, unknown> = Record<string, unknown>,
@@ -27,6 +28,12 @@ export interface OpenElementNitroMountOptions<
   baseUrl?: string;
   env?: Env;
   platform?: unknown;
+  /**
+   * Observes the normalized OpenElement request context before the application
+   * handler runs. Route params are empty here unless a future driver supplies
+   * them before dispatch.
+   */
+  onBeforeRequestContext?: (context: OpenElementRequestContext<Env>) => void | Promise<void>;
 }
 
 function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
@@ -39,6 +46,28 @@ function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
     headers: event.headers,
     body: event.body,
   });
+}
+
+function createNitroRequestContext<Env extends Record<string, unknown>>(
+  request: Request,
+  context: RuntimeContext<Env>,
+): OpenElementRequestContext<Env> {
+  // Keep this runtime-local. Nitro node output imports this module directly, so
+  // a value import from @openelement/app/model would leave an unresolved bare
+  // package in generated server output. The type-only import above still pins
+  // this shape to the app model contract.
+  const url = new URL(request.url);
+
+  return {
+    request,
+    url,
+    path: url.pathname,
+    method: request.method,
+    params: {},
+    searchParams: url.searchParams,
+    env: context.env,
+    platform: context.platform,
+  };
 }
 
 export function createOpenElementNitroHandler<
@@ -54,6 +83,9 @@ export function createOpenElementNitroHandler<
       env: event.env || options.env,
       platform: event.platform || options.platform,
     };
+    await options.onBeforeRequestContext?.(
+      createNitroRequestContext(request, context),
+    );
     const response = await options.handler(request, context);
 
     return {

@@ -32,6 +32,18 @@ Deno.test('fileToTagName: preserves multi-hyphen names', () => {
   assertEquals(fileToTagName('my-cool-component.ts'), 'my-cool-component');
 });
 
+Deno.test('fileToTagName: prefixes top-level numeric names', () => {
+  assertEquals(fileToTagName('404.ts'), 'el-404');
+});
+
+Deno.test('fileToTagName: adds suffix to hyphen-less names', () => {
+  assertEquals(fileToTagName('about.ts'), 'about-page');
+});
+
+Deno.test('fileToTagName: normalizes unsafe characters to hyphens', () => {
+  assertEquals(fileToTagName('my-mod!.ts'), 'my-mod');
+});
+
 // ─── scanIslands ───────────────────────────────────────────────
 
 Deno.test('scanIslands: finds all island files recursively', async () => {
@@ -258,6 +270,169 @@ Deno.test('scanCemManifests: returns empty when node_modules missing', async () 
   const { scanCemManifests } = await import('../src/route-scanner.ts');
   const results = await scanCemManifests(join(routesDir, 'node_modules'));
   assertEquals(results, []);
+});
+
+Deno.test('scanPackageManifests: returns empty array for empty package list', async () => {
+  const { scanPackageManifests } = await import('../src/route-scanner.ts');
+  const result = await scanPackageManifests([]);
+  assertEquals(result, []);
+});
+
+Deno.test('scanPackageManifests: rejects packages without manifest export', async () => {
+  const { OpenElementError } = await import('@openelement/core/errors');
+  const { scanPackageManifests } = await import('../src/route-scanner.ts');
+  try {
+    await scanPackageManifests(['jsr:@std/assert']);
+  } catch (error) {
+    assertEquals(error instanceof OpenElementError, true);
+  }
+});
+
+Deno.test('scanCemManifests: finds custom-elements.json files', async () => {
+  const { scanCemManifests } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-test-' });
+  try {
+    const pkgWithCem = join(tmpDir, 'wc-with-cem');
+    const pkgNoCem = join(tmpDir, 'no-cem-pkg');
+    mkdirSync(pkgWithCem, { recursive: true });
+    mkdirSync(pkgNoCem, { recursive: true });
+    writeFileSync(
+      join(pkgWithCem, 'custom-elements.json'),
+      JSON.stringify({ schemaVersion: '1.0.0', modules: [] }),
+      'utf-8',
+    );
+    writeFileSync(join(pkgNoCem, 'package.json'), '{"name":"no-cem-pkg"}', 'utf-8');
+
+    const results = await scanCemManifests(tmpDir);
+    assertEquals(results.length, 1);
+    assertEquals(results[0].packageName, 'wc-with-cem');
+    assertEquals(typeof results[0].json, 'string');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('scanCemManifests: handles scoped packages', async () => {
+  const { scanCemManifests } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-scoped-test-' });
+  try {
+    const scopedPkg = join(tmpDir, '@my-org', 'my-wc');
+    mkdirSync(scopedPkg, { recursive: true });
+    writeFileSync(
+      join(scopedPkg, 'custom-elements.json'),
+      JSON.stringify({ schemaVersion: '1.0.0', modules: [] }),
+      'utf-8',
+    );
+
+    const results = await scanCemManifests(tmpDir);
+    assertEquals(results.length, 1);
+    assertEquals(results[0].packageName, '@my-org/my-wc');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('detectAndClassifyCemPackages: classifies client-only by default', async () => {
+  const { detectAndClassifyCemPackages } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-classify-test-' });
+  try {
+    const pkg = join(tmpDir, 'vanilla-wc');
+    mkdirSync(pkg, { recursive: true });
+    writeFileSync(
+      join(pkg, 'custom-elements.json'),
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        modules: [{
+          kind: 'javascript-module',
+          path: './src/index.js',
+          declarations: [{
+            kind: 'custom-element',
+            tagName: 'my-button',
+            name: 'MyButton',
+          }],
+        }],
+      }),
+      'utf-8',
+    );
+
+    const result = await detectAndClassifyCemPackages(tmpDir);
+    assertEquals(result.length, 1);
+    assertEquals(result[0].tagName, 'my-button');
+    assertEquals(result[0].tier, 'client-only');
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+Deno.test('cemToOpenElementPackageManifest: generates third-party WC manifest path', async () => {
+  const { cemToOpenElementPackageManifest, parseCem } = await import('../src/cem-compat.ts');
+  const parseResult = parseCem(JSON.stringify({
+    schemaVersion: '1.0.0',
+    packageName: 'plain-wc',
+    version: '1.2.3',
+    modules: [{
+      kind: 'javascript-module',
+      path: './plain-card.js',
+      declarations: [{
+        kind: 'custom-element',
+        tagName: 'plain-card',
+        name: 'PlainCard',
+        superClass: { name: 'HTMLElement' },
+        openElement: { hydrate: 'only', ssr: false },
+      }],
+    }],
+  }));
+
+  assertEquals(parseResult.success, true);
+  const manifest = cemToOpenElementPackageManifest(parseResult.manifest!);
+  assertEquals(manifest.packageName, 'plain-wc');
+  assertEquals(manifest.declarations[0].tagName, 'plain-card');
+  assertEquals(manifest.declarations[0].contract?.authoring, 'third-party-wc');
+  assertEquals(manifest.declarations[0].contract?.render, 'client-only');
+  assertEquals(manifest.declarations[0].openElement?.module, './plain-card.js');
+  assertEquals(manifest.declarations[0].openElement?.contract?.authoring, 'third-party-wc');
+});
+
+Deno.test('cemToOpenElementPackageManifest: preserves Basic Element SSR contract', async () => {
+  const { cemToOpenElementPackageManifest, parseCem } = await import('../src/cem-compat.ts');
+  const parseResult = parseCem(JSON.stringify({
+    schemaVersion: '1.0.0',
+    packageName: 'basic-element-package',
+    version: '1.0.0',
+    modules: [{
+      kind: 'javascript-module',
+      path: './open-panel.js',
+      declarations: [{
+        kind: 'custom-element',
+        tagName: 'open-panel',
+        name: 'OpenPanel',
+        superClass: { name: 'OpenElement' },
+        openElement: { hydrate: 'visible', ssr: true, dsd: true, layer: 'dsd-interactive' },
+      }],
+    }],
+  }));
+
+  assertEquals(parseResult.success, true);
+  const manifest = cemToOpenElementPackageManifest(parseResult.manifest!);
+  assertEquals(manifest.declarations[0].contract?.authoring, 'basic-element');
+  assertEquals(manifest.declarations[0].contract?.render, 'ssr-dsd');
+  assertEquals(manifest.declarations[0].openElement?.ssr, true);
+  assertEquals(manifest.declarations[0].openElement?.dsd, true);
+});
+
+Deno.test('detectAndClassifyCemPackages: skips invalid CEM JSON', async () => {
+  const { detectAndClassifyCemPackages } = await import('../src/route-scanner.ts');
+  const tmpDir = Deno.makeTempDirSync({ prefix: 'ssg-cem-invalid-test-' });
+  try {
+    const pkg = join(tmpDir, 'broken-wc');
+    mkdirSync(pkg, { recursive: true });
+    writeFileSync(join(pkg, 'custom-elements.json'), 'not-valid-json{{{', 'utf-8');
+
+    const result = await detectAndClassifyCemPackages(tmpDir);
+    assertEquals(result.length, 0);
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
 });
 
 // Cleanup

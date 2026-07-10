@@ -1,10 +1,11 @@
 /**
  * Smoke tests for route components.
- * Each route module exports a default function that returns JSX.
- * These tests verify the exports exist and are callable.
+ * Tests verify route exports, VNode tag structure, and custom element
+ * registration.
  */
 
-import { assertEquals } from '@std/assert';
+import { assert, assertEquals } from '@std/assert';
+import type { VNode } from '@openelement/core/static';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
 // ponytail: inline mock covering only the DOM APIs used by route components.
@@ -51,7 +52,7 @@ class MockElement extends MockNode {
     getProperty(k: string): string;
   };
 
-  constructor(tag: string) {
+  constructor(tag = 'mock-element') {
     super();
     this.tagName = tag.toUpperCase();
   }
@@ -132,10 +133,14 @@ function mockDocument() {
 (globalThis as any).DocumentFragment = MockDocumentFragment;
 // deno-lint-ignore no-explicit-any
 (globalThis as any).HTMLElement = MockElement;
+/** In-memory registry backing the customElements mock. */
+const definedCustomElements = new Map<string, CustomElementConstructor>();
 // deno-lint-ignore no-explicit-any
 (globalThis as any).customElements = {
-  get: () => undefined,
-  define: () => {},
+  get: (tagName: string) => definedCustomElements.get(tagName),
+  define: (tagName: string, ctor: CustomElementConstructor) => {
+    definedCustomElements.set(tagName, ctor);
+  },
 };
 
 // Mock localStorage
@@ -238,3 +243,95 @@ Deno.test('WC Interop route exports a function', async () => {
   const mod = await import('../../routes/wc-interop.tsx');
   assertEquals(typeof mod.default, 'function');
 });
+
+Deno.test('WC Interop route renders third-party, OpenElement UI, and island tags', async () => {
+  const mod = await import('../../routes/wc-interop.tsx');
+  // Inspect pure VNode output; this test does not need DOM rendering.
+  const page = new mod.default();
+  const tags = collectElementTags(page.render());
+
+  const expectedTags = [
+    'sl-button',
+    'open-button',
+    'open-card',
+    'open-input',
+    'sync-status-island',
+  ];
+  const missingTags = expectedTags.filter((tag) => !tags.has(tag));
+  assertEquals(missingTags, []);
+});
+
+Deno.test('Shoelace sl-button registers via route side-effect import', async () => {
+  await import('../../routes/wc-interop.tsx');
+  assertEquals(typeof customElements.get('sl-button'), 'function');
+});
+
+Deno.test('Reader Preact islands register deterministic custom elements', async () => {
+  await Promise.all([
+    import('../../islands/note-panel-island.tsx'),
+    import('../../islands/pdf-reader-island.tsx'),
+    import('../../islands/search-box-island.tsx'),
+    import('../../islands/sync-status-island.tsx'),
+  ]);
+
+  assertEquals(typeof customElements.get('note-panel-island'), 'function');
+  assertEquals(typeof customElements.get('pdf-reader-island'), 'function');
+  assertEquals(typeof customElements.get('search-box-island'), 'function');
+  assertEquals(typeof customElements.get('sync-status-island'), 'function');
+});
+
+Deno.test('Bookshelf action surfaces sync errors instead of throwing', async () => {
+  const mod = await import('../../routes/index.tsx');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response('boom', { status: 500 }));
+
+  try {
+    const result = await mod.action({ formData: new FormData() });
+    assertEquals(typeof result.error, 'string');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test('Bookshelf renders a large library without hanging', async () => {
+  const mod = await import('../../routes/index.tsx');
+  const page = new mod.default();
+  const books = Array.from({ length: 500 }, (_, i) => ({
+    id: `book-${i}`,
+    title: `Book ${i}`,
+    author: 'Author',
+    coverUrl: '',
+    sourceId: 'fixtures',
+  }));
+  (page as unknown as Record<string, unknown>).books = books;
+  (page as unknown as Record<string, unknown>).progressByBook = {};
+  (page as unknown as Record<string, unknown>).sources = [];
+
+  const start = performance.now();
+  const vnode = page.render();
+  const elapsed = performance.now() - start;
+
+  assert(vnode !== null && typeof vnode === 'object', 'render should return a non-null VNode');
+  assert(
+    (vnode as VNode).children.length > 1,
+    'large library render should produce multiple children',
+  );
+  assertEquals(elapsed < 1000, true, `Large bookshelf render took ${elapsed}ms`);
+});
+
+function collectElementTags(node: unknown, tags = new Set<string>()): Set<string> {
+  if (node === null || node === undefined || typeof node === 'string') return tags;
+  if (Array.isArray(node)) {
+    for (const child of node) collectElementTags(child, tags);
+    return tags;
+  }
+  if (typeof node !== 'object') return tags;
+
+  const vnode = node as VNode;
+  if (typeof vnode.tag === 'string') tags.add(vnode.tag);
+  for (const child of vnode.children) {
+    if (typeof child === 'function') continue;
+    collectElementTags(child, tags);
+  }
+  return tags;
+}

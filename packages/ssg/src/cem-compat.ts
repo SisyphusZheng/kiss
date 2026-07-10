@@ -1,8 +1,14 @@
 import type {
   CompatibilityClassification,
   CompatibilityTier,
+  ComponentLayer,
   HydrationStrategy,
 } from '@openelement/protocol/framework';
+import type {
+  OpenElementDeclaration,
+  OpenElementPackageManifest,
+  WebComponentRenderCapability,
+} from '@openelement/protocol/manifest';
 import { isValidTagName } from '@openelement/core';
 import { formatError } from '@openelement/core/errors';
 
@@ -17,6 +23,7 @@ export interface OpenElementExtensions {
 
 interface CemBase {
   kind?: string;
+  name?: string;
   [key: string]: unknown;
 }
 
@@ -247,7 +254,7 @@ export function classifyCemManifest(manifest: CustomElementsManifest): CemClassi
   const clientOnlyTags: string[] = [];
   const experimentalDomTags: string[] = [];
 
-  // ponytail: bucket lookup replaces 4-case switch
+  // bucket lookup replaces 4-case switch
   const buckets: Record<string, string[]> = {
     rejected: rejectedTags,
     'ssr-capable': ssrCapableTags,
@@ -273,6 +280,84 @@ export function classifyCemManifest(manifest: CustomElementsManifest): CemClassi
       experimentalDomCount: experimentalDomTags.length,
     },
   };
+}
+
+export function cemToOpenElementPackageManifest(
+  manifest: CustomElementsManifest,
+): OpenElementPackageManifest {
+  const declarations: OpenElementDeclaration[] = [];
+  const modules = manifest.modules.map((module) => ({
+    path: module.path,
+    declarations: (module.declarations ?? [])
+      .filter(isCemCustomElement)
+      .map((declaration) => declaration.tagName)
+      .filter((tagName): tagName is string => typeof tagName === 'string'),
+  }));
+
+  for (const module of manifest.modules) {
+    for (const declaration of module.declarations ?? []) {
+      if (!isCemCustomElement(declaration) || !declaration.tagName) continue;
+
+      const classification = classifyCemDeclaration(manifest, module, declaration);
+      const render = renderCapabilityForTier(classification.tier);
+      const authoring = declaration.superClass?.name === 'OpenElement'
+        ? 'basic-element'
+        : 'third-party-wc';
+
+      declarations.push({
+        tagName: declaration.tagName,
+        className: declaration.name,
+        superclassName: declaration.superClass?.name,
+        contract: {
+          authoring,
+          render,
+          metadataSource: 'cem',
+          reason: classification.reason,
+        },
+        openElement: {
+          ssr: declaration.openElement?.ssr,
+          dsd: declaration.openElement?.dsd,
+          hydrate: normalizeHydrationStrategy(declaration.openElement?.hydrate),
+          layer: normalizeComponentLayer(declaration.openElement?.layer),
+          export: declaration.openElement?.export,
+          module: module.path,
+          contract: {
+            authoring,
+            render,
+            metadataSource: 'cem',
+            reason: classification.reason,
+          },
+        },
+      });
+    }
+  }
+
+  return {
+    schemaVersion: manifest.schemaVersion ?? '1.0.0',
+    packageName: manifest.packageName ?? 'unknown-cem-package',
+    version: manifest.version ?? '0.0.0',
+    declarations,
+    modules,
+  };
+}
+
+function renderCapabilityForTier(tier: CompatibilityTier): WebComponentRenderCapability {
+  if (tier === 'ssr-capable') return 'ssr-dsd';
+  if (tier === 'rejected') return 'unsupported';
+  return 'client-only';
+}
+
+function normalizeHydrationStrategy(value: unknown): HydrationStrategy | undefined {
+  return value === 'load' || value === 'idle' || value === 'visible' || value === 'only'
+    ? value
+    : undefined;
+}
+
+function normalizeComponentLayer(value: unknown): ComponentLayer | undefined {
+  return value === 'dsd-static' || value === 'dsd-interactive' || value === 'pure-island' ||
+      value === 'light-dom'
+    ? value
+    : undefined;
 }
 
 function classifyCemDeclaration(

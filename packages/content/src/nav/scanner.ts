@@ -6,9 +6,10 @@
  */
 
 import { join, resolve } from 'node:path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import type { HeaderNavLink, NavItem, NavOptions, NavSection, RouteMeta } from '../types.ts';
 import { createLogger } from '@openelement/core/logger';
+import { scanRoutes } from '@openelement/ssg';
 
 /** Aggregated navigation data ready for module generation */
 export interface NavData {
@@ -57,36 +58,27 @@ function toRouteMeta(value: Record<string, unknown>): RouteMeta | null {
   };
 }
 
-/**
- * Convert a relative file path to a URL route path.
- * e.g. 'guide/getting-started.ts' -> '/guide/getting-started'
- *      'index/index.ts' -> '/'
- *      'blog/[slug].ts' -> '/blog/:slug'
- */
-function filePathToNavPath(filePath: string): string {
-  let p = filePath.replace(/\\/g, '/'); // normalize separators
-  p = p.replace(/\.[^.]+$/, ''); // remove extension
-  p = p.replace(/\[([^\]]+)\]/g, ':$1'); // [slug] -> :slug
-
-  // Handle index
-  if (p === 'index') return '/';
-  if (p.endsWith('/index')) p = p.slice(0, -6);
-
-  // Ensure leading slash
-  if (!p.startsWith('/')) p = '/' + p;
-
-  return p;
+function isExcludedEntry(filePath: string, exclude: string[]): boolean {
+  return exclude.some((pattern) => {
+    if (pattern === '_') return filePath.startsWith('_');
+    return filePath.includes(pattern);
+  });
 }
 
 /**
- * Recursively scan a directory for route files with meta exports.
+ * Scan route files and aggregate NavSection[].
+ *
+ * Reuses the SSG route scanner so route discovery, index handling, and dynamic
+ * parameter mapping are defined in a single place. Source text captured during
+ * scanning is used to extract `meta` exports without a second disk read.
  */
-export function scanNavData(options: NavOptions): NavSection[] {
+export async function scanNavData(options: NavOptions): Promise<NavSection[]> {
   const routesDir = resolve(options.routesDir ?? 'app/routes');
   const exclude = options.exclude || [];
 
-  // Default excludes: _renderer, _middleware, 404, dot-files
-  const defaultExclude = ['_', '404'];
+  // Default excludes: 404. Files starting with _ and dot-files are already
+  // skipped by the shared route scanner.
+  const defaultExclude = ['404'];
   const allExclude = [...defaultExclude, ...exclude];
 
   if (!existsSync(routesDir)) {
@@ -94,31 +86,50 @@ export function scanNavData(options: NavOptions): NavSection[] {
     return [];
   }
 
-  // Collect all route files
-  const routeFiles = collectRouteFiles(routesDir, '', allExclude);
+  // Collect route entries with source text so we can extract meta inline.
+  const entries = await scanRoutes(routesDir, '', { includeSource: true });
 
-  // Extract meta from each file, collecting section info
+  // Extract meta from each page route, collecting section info
   const itemsWithSection: Array<{
     path: string;
     label: string;
     order: number;
     section: string;
   }> = [];
-  for (const file of routeFiles) {
-    const fullPath = join(routesDir, file);
-    try {
-      const source = readFileSync(fullPath, 'utf-8');
-      const meta = extractMeta(source);
-      if (meta) {
-        itemsWithSection.push({
-          path: filePathToNavPath(file),
-          label: meta.label,
-          order: meta.order ?? 100,
-          section: meta.section,
-        });
+
+  for (const entry of entries) {
+    if (entry.type !== 'page') continue;
+    if (isExcludedEntry(entry.filePath, allExclude)) continue;
+
+    const source = entry.source;
+    if (!source) {
+      // Fallback for consumers that call scanRoutes without includeSource.
+      try {
+        const fullPath = join(routesDir, entry.filePath);
+        const fallback = readFileSync(fullPath, 'utf-8');
+        const meta = extractMeta(fallback);
+        if (meta) {
+          itemsWithSection.push({
+            path: entry.path,
+            label: meta.label,
+            order: meta.order ?? 100,
+            section: meta.section,
+          });
+        }
+      } catch (e) {
+        log.debug(`Failed to read route file ${entry.filePath}: ${e}`);
       }
-    } catch (e) {
-      log.debug(`Failed to read route file ${file}: ${e}`);
+      continue;
+    }
+
+    const meta = extractMeta(source);
+    if (meta) {
+      itemsWithSection.push({
+        path: entry.path,
+        label: meta.label,
+        order: meta.order ?? 100,
+        section: meta.section,
+      });
     }
   }
 
@@ -152,53 +163,4 @@ export function scanNavData(options: NavOptions): NavSection[] {
     `Nav: ${sections.length} section(s), ${itemsWithSection.length} item(s) from ${routesDir}`,
   );
   return sections;
-}
-
-/**
- * Recursively collect route file paths relative to routesDir.
- * Skips files starting with _ and files matching exclude patterns.
- */
-function collectRouteFiles(
-  dir: string,
-  baseDir: string,
-  exclude: string[],
-): string[] {
-  const files: string[] = [];
-  let entries: string[];
-
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return files;
-  }
-
-  for (const entry of entries) {
-    if (entry.startsWith('.')) continue;
-
-    const fullPath = join(dir, entry);
-    const relativePath = baseDir ? `${baseDir}/${entry}` : entry;
-
-    // Skip excluded patterns
-    if (
-      exclude.some((pattern) => {
-        if (pattern === '_') return entry.startsWith('_');
-        return relativePath.includes(pattern);
-      })
-    ) {
-      continue;
-    }
-
-    try {
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        files.push(...collectRouteFiles(fullPath, relativePath, exclude));
-      } else if (/\.(ts|tsx|js|jsx)$/.test(entry)) {
-        files.push(relativePath);
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  return files.sort();
 }

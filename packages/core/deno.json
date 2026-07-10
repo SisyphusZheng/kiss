@@ -1,6 +1,6 @@
 {
   "name": "@openelement/core",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "exports": {
     ".": "./src/index.ts",
     "./static": "./src/static.ts",
@@ -21,7 +21,9 @@
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./jsx-dev-runtime": "./src/jsx-runtime.ts",
     "./island-transform": "./src/island-transform.ts",
-    "./dsd-hydration": "./src/dsd-hydration.ts"
+    "./dsd-hydration": "./src/dsd-hydration.ts",
+    "./path-utils": "./src/path-utils.ts",
+    "./write-json": "./src/write-json.ts"
   },
   "imports": {},
   "publish": {

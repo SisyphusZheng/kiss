@@ -343,7 +343,7 @@ Deno.test('mount with no routes renders nothing but does not throw', async () =>
   resetMocks({ pathname: '/' });
   stubRoot = new StubElement();
 
-  // ponytail: empty routes is valid — user may add them later or use dynamic routing.
+  // empty routes is valid — user may add them later or use dynamic routing.
   const app = defineApp({ mode: 'spa' });
   app.mount('#root');
   await awaitTick();
@@ -377,7 +377,7 @@ Deno.test('same instance dispose then mount with different routes works', async 
   stubRoot = new StubElement();
 
   const app = defineApp({ mode: 'spa' });
-  // ponytail: routes can be set at construction time only; re-mount with same instance uses same options.
+  // routes can be set at construction time only; re-mount with same instance uses same options.
   // This tests that options are preserved across dispose/mount cycles.
   app.mount('#root');
   await awaitTick();

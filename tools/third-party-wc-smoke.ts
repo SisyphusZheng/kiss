@@ -8,6 +8,7 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { Page } from 'npm:playwright@1.59.1';
 import { allPackageAliases } from './lib/package-graph.ts';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -112,6 +113,56 @@ function serveDist(distDir: string): Deno.HttpServer {
   });
 }
 
+async function readEventCount(page: Page): Promise<number> {
+  return await page.evaluate(() => {
+    const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+    const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
+      | HTMLElement
+      | null;
+    const root = fixture?.shadowRoot;
+    const eventText = root?.querySelector('#event-count')?.textContent ?? '';
+    return Number(eventText.replace(/\D+/g, ''));
+  });
+}
+
+async function interactAndVerifyEventCount(page: Page, startCount: number): Promise<void> {
+  const expectCount = async (expected: number, label: string): Promise<void> => {
+    await page.waitForFunction((target) => {
+      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
+        | HTMLElement
+        | null;
+      const root = fixture?.shadowRoot;
+      const eventText = root?.querySelector('#event-count')?.textContent ?? '';
+      return Number(eventText.replace(/\D+/g, '')) >= target;
+    }, expected);
+    const actual = await readEventCount(page);
+    if (actual < expected) {
+      throw new Error(`${label}: expected event count >= ${expected}, got ${actual}`);
+    }
+  };
+
+  // Lit counter click dispatches a composed CustomEvent('lit-count').
+  await page.locator('alpha3-lit-counter').locator('#lit-button').click();
+  await expectCount(startCount + 1, 'Lit counter click');
+
+  // Shoelace button click.
+  await page.locator('sl-button#sl-button').click();
+  await expectCount(startCount + 2, 'Shoelace button click');
+
+  // Shoelace switch change.
+  await page.locator('sl-switch#sl-switch').click();
+  await expectCount(startCount + 3, 'Shoelace switch change');
+
+  // Material button click.
+  await page.locator('md-filled-button#md-button').click();
+  await expectCount(startCount + 4, 'Material button click');
+
+  // Material switch change.
+  await page.locator('md-switch#md-switch').click();
+  await expectCount(startCount + 5, 'Material switch change');
+}
+
 async function verifyBrowser(distDir: string): Promise<void> {
   const { chromium } = await import('npm:playwright@1.59.1');
   const server = serveDist(distDir);
@@ -133,29 +184,31 @@ async function verifyBrowser(distDir: string): Promise<void> {
       customElements.get('md-switch')
     );
 
-    const summary = await page.evaluate(async () => {
+    await page.waitForFunction(() => {
+      const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
+      const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
+        | HTMLElement
+        | null;
+      const lit = fixture?.shadowRoot?.querySelector('alpha3-lit-counter') as HTMLElement & {
+        shadowRoot?: ShadowRoot;
+      };
+      const litHost = fixture?.shadowRoot?.querySelector('alpha3-lit-host') as HTMLElement & {
+        shadowRoot?: ShadowRoot;
+      };
+      return !!lit?.shadowRoot?.querySelector('#lit-button') &&
+        !!litHost?.shadowRoot?.querySelector('alpha3-open-child');
+    });
+
+    const summary = await page.evaluate(() => {
       const routePage = document.querySelector('alpha3-wc-page') as HTMLElement | null;
       const fixture = routePage?.shadowRoot?.querySelector('alpha3-wc-fixture') as
         | HTMLElement
         | null;
       const root = fixture?.shadowRoot;
       if (!fixture || !root) throw new Error('alpha3-wc-fixture shadow root missing');
-
       const lit = root.querySelector('alpha3-lit-counter') as HTMLElement & {
         shadowRoot: ShadowRoot;
       };
-      const litButton = lit.shadowRoot.querySelector('#lit-button') as HTMLButtonElement;
-      litButton.click();
-
-      const slButton = root.querySelector('#sl-button') as HTMLElement;
-      const slSwitch = root.querySelector('#sl-switch') as HTMLElement;
-      const mdButton = root.querySelector('#md-button') as HTMLElement;
-      slButton.click();
-      slSwitch.click();
-      mdButton.click();
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const litHost = root.querySelector('alpha3-lit-host') as HTMLElement & {
         shadowRoot: ShadowRoot;
       };
@@ -163,7 +216,7 @@ async function verifyBrowser(distDir: string): Promise<void> {
         shadowRoot: ShadowRoot;
       };
       const eventText = root.querySelector('#event-count')?.textContent ?? '';
-      const eventCount = Number(eventText.replace(/\\D+/g, ''));
+      const eventCount = Number(eventText.replace(/\D+/g, ''));
 
       return {
         eventCount,
@@ -177,15 +230,16 @@ async function verifyBrowser(distDir: string): Promise<void> {
       };
     });
 
-    if (summary.eventCount < 3) {
-      throw new Error(`Expected at least 3 openElement-handled events; got ${summary.eventCount}`);
-    }
+    if (!Number.isFinite(summary.eventCount)) throw new Error('Event counter did not render');
     if (!summary.litSlot) throw new Error('Lit slot content did not render');
     if (!summary.litHostContainsOpenElement) {
       throw new Error('Lit host did not contain openElement child');
     }
     if (!summary.shoelaceReady) throw new Error('Shoelace components were not present');
     if (!summary.materialReady) throw new Error('Material Web components were not present');
+
+    // Interaction event propagation checks for #221.
+    await interactAndVerifyEventCount(page, summary.eventCount);
   } finally {
     await browser.close();
     await server.shutdown();

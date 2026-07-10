@@ -82,7 +82,13 @@ export { consumeContext, createContext, provideContext } from './signal-context.
 export type { Context } from './signal-context.ts';
 
 // Misc static utilities
-export { isValidTagName } from './tag-utils.ts';
+export { assertValidTagName, isValidTagName } from './tag-utils.ts';
+export {
+  normalizeBasePath,
+  normalizeRoutePath,
+  normalizeSeparators,
+  pathToTagName,
+} from './path-utils.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '@openelement/protocol/style-sheet';
 

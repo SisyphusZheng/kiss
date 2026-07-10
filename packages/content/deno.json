@@ -1,13 +1,15 @@
 {
   "name": "@openelement/content",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "//": "content is an engine-layer Vite plugin, not runtime-free",
   "exports": {
     ".": "./src/index.ts",
     "./blog-data": "./src/blog/blog-data.ts",
+    "./core": "./src/core.ts",
     "./mdx": "./src/mdx/compile.ts",
     "./nav": "./src/nav/scanner.ts",
     "./sitemap": "./src/sitemap/generator.ts",
+    "./vite": "./src/vite.ts",
     "./write-json": "./src/write-json.ts"
   },
   "imports": {

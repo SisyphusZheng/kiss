@@ -1,5 +1,20 @@
 import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
-import { generateClientEntry } from '@openelement/ssg';
+import { generateClientEntry, validateClientIslandEntry } from '@openelement/ssg';
+
+const REJECTED_ISLAND_MODULE_PATHS = [
+  'https://example.com/island.js',
+  'data:text/javascript,alert(1)',
+  'javascript:alert(1)',
+  '../outside.ts',
+  './nested/../../outside.ts',
+  './bad path.ts',
+  './bad\npath.ts',
+  './bad\\path.ts',
+  './bad%0a.ts',
+  './bad<path.ts',
+  './bad\u2028path.ts',
+  '',
+] as const;
 
 Deno.test('empty -> zero JS', () => {
   assert(generateClientEntry([]).includes('zero client JS needed'));
@@ -133,13 +148,37 @@ Deno.test('client entry safely escapes tag names and module paths', () => {
   const code = generateClientEntry([
     {
       tagName: 'x-safe',
-      modulePath: './safe"quote.ts',
+      modulePath: './safe-module.ts',
       strategy: 'load',
     },
   ]);
 
-  assert(code.includes('"x-safe": () => import("./safe\\"quote.ts")'));
+  assert(code.includes('"x-safe": () => import("./safe-module.ts")'));
   new Function(code);
+});
+
+Deno.test('client entry admits only validated module specifiers before code generation', () => {
+  const admitted = validateClientIslandEntry({
+    tagName: 'x-safe',
+    modulePath: '@openelement/ui/open-button',
+    strategy: 'load',
+  });
+
+  assertEquals(admitted.modulePath, '@openelement/ui/open-button');
+  assertEquals(admitted.tagName, 'x-safe');
+
+  for (const modulePath of REJECTED_ISLAND_MODULE_PATHS) {
+    assertThrows(
+      () =>
+        validateClientIslandEntry({
+          tagName: 'x-safe',
+          modulePath,
+          strategy: 'load',
+        }),
+      Error,
+      'Invalid island modulePath',
+    );
+  }
 });
 
 Deno.test('client entry rejects malicious package island metadata', () => {
@@ -168,6 +207,21 @@ Deno.test('client entry rejects malicious package island metadata', () => {
     Error,
     'Invalid island modulePath',
   );
+
+  for (const modulePath of REJECTED_ISLAND_MODULE_PATHS) {
+    assertThrows(
+      () =>
+        generateClientEntry([
+          {
+            tagName: 'x-safe',
+            modulePath,
+            strategy: 'idle',
+          },
+        ]),
+      Error,
+      'Invalid island modulePath',
+    );
+  }
 });
 
 Deno.test('client entry rejects legacy eager/lazy strategy values', () => {

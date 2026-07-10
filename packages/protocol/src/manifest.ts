@@ -31,6 +31,21 @@ export interface OpenElementCssPart {
   description?: string;
 }
 
+export type WebComponentAuthoringKind = 'basic-element' | 'third-party-wc';
+
+export type WebComponentRenderCapability = 'ssr-dsd' | 'client-only' | 'unsupported';
+
+export interface WebComponentContract {
+  /** Default OpenElement Basic Element path, or explicit third-party WC interop. */
+  authoring: WebComponentAuthoringKind;
+  /** What the framework may do with this component during build/render. */
+  render: WebComponentRenderCapability;
+  /** Whether metadata came from OpenElement source, package manifest, or CEM. */
+  metadataSource?: 'openElement' | 'manifest' | 'cem';
+  /** Human-facing diagnostic for conservative or unsupported paths. */
+  reason?: string;
+}
+
 export interface OpenElementExtensions {
   ssr?: boolean;
   dsd?: boolean;
@@ -38,6 +53,7 @@ export interface OpenElementExtensions {
   hydrate?: HydrationStrategy;
   module?: string;
   export?: string;
+  contract?: WebComponentContract;
 }
 
 export interface OpenElementExport {
@@ -54,6 +70,7 @@ export interface OpenElementDeclaration {
   events?: OpenElementEvent[];
   slots?: OpenElementSlot[];
   cssParts?: OpenElementCssPart[];
+  contract?: WebComponentContract;
   openElement?: OpenElementExtensions;
   description?: string;
 }

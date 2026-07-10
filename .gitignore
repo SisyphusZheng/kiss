@@ -59,9 +59,8 @@ docs/autoflow/cells/*/state.json
 .vite/
 /.wrangler/
 
-# Generated data modules (typed stubs are tracked as .d.ts)
-www/app/data/_generated-*.ts
-packages/ui/src/generated-manifest.json
+# Generated www data modules and the UI manifest are intentionally tracked.
+# repo:hygiene fails if a tracked file also matches .gitignore.
 
 # Test / build / lint / coverage output files
 test-*.txt

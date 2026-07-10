@@ -150,7 +150,7 @@ class StubNode {
  * Minimal HTMLElement stub that supports OpenElement's lifecycle APIs:
  * attachShadow, shadowRoot, attributes (iterable), getAttribute/setAttribute/hasAttribute/removeAttribute.
  *
- * ponytail: this is a self-contained stub shared by all test cases.
+ * this is a self-contained stub shared by all test cases.
  * When Deno's HTMLElement becomes available natively, delete this.
  */
 class TestElement extends StubNode {
@@ -352,7 +352,7 @@ Deno.test('Preact island smoke: SSR passes props from element attributes', () =>
     const ctor = definePreactIsland('test-attr-props', Component as never);
     const instance = new ctor() as OpenElement;
 
-    // ponytail: _Base locked at module load (no HTMLElement).
+    // _Base locked at module load (no HTMLElement).
     // Monkey-patch attributes so resolveProps picks them up during SSR.
     Object.defineProperty(instance, 'attributes', {
       get: () => [{ name: 'label', value: 'FromAttribute' }],
@@ -376,7 +376,7 @@ Deno.test('Preact island smoke: element attributes override options.props', () =
     });
     const instance = new ctor() as OpenElement;
 
-    // ponytail: _Base locked at module load. Monkey-patch attributes.
+    // _Base locked at module load. Monkey-patch attributes.
     Object.defineProperty(instance, 'attributes', {
       get: () => [{ name: 'label', value: 'Overridden' }],
     });
@@ -522,7 +522,7 @@ Deno.test('Preact island smoke: clientActivate creates shadow root', () => {
       shadowRoot: ShadowRoot | null;
     };
 
-    // ponytail: _Base locked at module load (no HTMLElement).
+    // _Base locked at module load (no HTMLElement).
     // Provide a stub shadow root so clientActivate doesn't call attachShadow.
     const stubRoot = new StubNode() as unknown as ShadowRoot;
     instance.shadowRoot = stubRoot;
@@ -552,7 +552,7 @@ Deno.test('Preact island smoke: clientActivate with ssr=false uses render path',
       shadowRoot: ShadowRoot | null;
     };
 
-    // ponytail: _Base locked at module load. Provide a stub shadow root.
+    // _Base locked at module load. Provide a stub shadow root.
     const stubRoot = new StubNode() as unknown as ShadowRoot;
     instance.shadowRoot = stubRoot;
 

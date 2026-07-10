@@ -25,7 +25,7 @@ import type {
 import { createLogger } from '@openelement/core/logger';
 import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
 import { buildIsrManifestEntries, findHtmlFiles } from './ssg-helpers.ts';
-import { writeJson } from '@openelement/content/write-json';
+import { formatJson } from '@openelement/core/write-json';
 
 const log = createLogger('ssg');
 
@@ -59,6 +59,12 @@ export async function ssgRender(
   const getStaticPaths = module.getStaticPaths as
     | ((path: string) => Promise<Array<Record<string, string>>>)
     | undefined;
+
+  if (routeInfo.length === 0) {
+    throw new Error(
+      '[openElement] SSG failed: routeInfo is empty. No routes were exported by the SSR bundle.',
+    );
+  }
 
   const dynamicRoutes = routeInfo.filter((r) => r.isDynamic);
   log.info(
@@ -118,7 +124,7 @@ export async function ssgRender(
   if (isrRoutes.length > 0) {
     writeFileSync(
       join(outputDir, 'isr-manifest.json'),
-      writeJson(isrRoutes),
+      formatJson(isrRoutes),
       'utf-8',
     );
     log.info(

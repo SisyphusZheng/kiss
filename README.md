@@ -2,13 +2,14 @@
 
 English | [Simplified Chinese](./README.zh.md)
 
-**JSX-first Web Components fullstack framework. Package line:
-`0.41.0-alpha.5` (`v0.41.0-alpha.5` release). Active execution:
-v0.41.0-alpha.6 App/protocol architecture hardening.**
+**Web Components-native fullstack framework with a JSX-first Basic Element
+authoring layer. Package line: `0.41.0-alpha.6` (`v0.41.0-alpha.6` release).
+Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.**
 
-openElement builds static-first applications with Web Components, JSX/VNode
-rendering, progressive islands, API routes, and Vite + Nitro output. Shadow/DSD
-is the default component render mode; light DOM is explicit opt-in.
+openElement treats Web Components as the application's native component model.
+It builds static-first applications with JSX/VNode rendering, progressive
+islands, API routes, and Vite + Nitro output. Shadow/DSD is the default
+component render mode; light DOM is explicit opt-in.
 
 Mandatory project workflow:
 [`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md).
@@ -36,7 +37,7 @@ supporting packages = Protocols + UI + official stack adapters
 | Product                            | Surface                                   | Role                                                                                 |
 | ---------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
 | Web Components Fullstack Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, routes, islands, app targets, and official Vite/Hono/Nitro adapters. |
-| Basic Element                      | `@openelement/element`, `OpenElement`     | Native Web Components authoring layer, competing with Lit and FAST.                  |
+| Basic Element                      | `@openelement/element`, `OpenElement`     | JSX-first native Web Components authoring layer for Shadow/DSD output.               |
 
 Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
 `@openelement/signal`, `@openelement/router`, `@openelement/content`, and
@@ -44,6 +45,12 @@ Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
 is the runtime-free contract foundation. `@openelement/ui` is the Open
 Props-backed reference component library and dogfood surface. These packages
 support the two products; they are not separate first-class product lines.
+
+Dogfood apps validate openElement; they do not define it. The Deno Desktop
+Reader and alpha.7 Mastodon Desktop line are evidence surfaces for the framework
+contract, not additional product lines. AutoFlow3, docs truth, release evidence,
+and workflow gates are project infrastructure; they stay out of the Framework
+product story.
 
 The active workspace is the 11-package v0.41 line. Hub, RPC, CEM,
 compat-check, Lit/React/vanilla interop adapters, and standalone
@@ -93,16 +100,16 @@ that works with the platform instead of fighting it, openElement is the lane.
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.5**
-(`v0.41.0-alpha.5`) under
-[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.5 release
-proved SPA mode plus the Deno Desktop Reader proof. The active next line is
-**v0.41.0-alpha.6 App/protocol architecture hardening**. ADR-0101 keeps
+All 11 current workspace packages are aligned at **0.41.0-alpha.6**
+(`v0.41.0-alpha.6`) under
+[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 release
+proves a read-only, accountless networked desktop app. The active next line is
+**v0.41.0-alpha.7 Mac Mastodon Desktop Incubation**. ADR-0101 keeps
 AutoFlow3 as the single workflow/gate control plane while reserving minor/major
 product decisions for human-approved ADR and version-plan evidence.
 
-The next staged lines are **v0.41.0-alpha.7 Mac Mastodon Desktop incubation**
-and **v0.41.0-beta.1 Adoption Freeze**. Alpha.7 proves a read-only,
+The next staged lines are **v0.41.0-beta.1 Adoption Freeze**
+and **stable v0.41.0**. Alpha.7 proves a read-only,
 accountless networked desktop app; beta.1 freezes the five-minute starter path,
 API docs, website positioning, logo/brand rendering, npm metadata, and release
 truth before stable v0.41.0.

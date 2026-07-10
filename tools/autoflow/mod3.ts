@@ -9,6 +9,7 @@ import {
 import {
   assertBranch,
   assertCleanWorktree,
+  cleanupReleaseGateGeneratedArtifacts,
   createReleaseEvidence,
   createReleasePlan,
   evidenceFile,
@@ -248,6 +249,7 @@ async function runPatchRelease(
   if (!decision.allowed) Deno.exit(1);
 
   await runTier('release', dryRun);
+  if (!dryRun) await cleanupReleaseGateGeneratedArtifacts();
   await executePatchRelease(dryRun);
 }
 
@@ -278,6 +280,7 @@ async function runApprovedRelease(
   if (!decision.allowed) Deno.exit(1);
 
   await runTier('release', dryRun);
+  if (!dryRun) await cleanupReleaseGateGeneratedArtifacts();
   await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 
@@ -294,7 +297,7 @@ async function runReleaseDispatch(
     Deno.exit(1);
   }
 
-  // ponytail: gates and release plan validation happen in dry-run mode first.
+  // gates and release plan validation happen in dry-run mode first.
   // Only when --dispatch is given and the local repo is on a clean main branch
   // do we push and trigger the real workflow.
   await runApprovedRelease(approvedPlan, targetVersion, true);

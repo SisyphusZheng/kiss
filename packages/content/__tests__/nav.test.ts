@@ -49,7 +49,7 @@ Deno.test('extractMeta: handles single-quoted values', () => {
   assertEquals(meta, { section: 'Start Here', label: 'Framework Positioning', order: 5 });
 });
 
-Deno.test('scanNavData: scans route files and aggregates NavSection[]', () => {
+Deno.test('scanNavData: scans route files and aggregates NavSection[]', async () => {
   setup();
 
   // Create mock route files
@@ -67,7 +67,7 @@ Deno.test('scanNavData: scans route files and aggregates NavSection[]', () => {
     `export const meta = { section: 'Start Here', label: 'Positioning', order: 10 };\nexport class Page {}`,
   );
 
-  const sections = scanNavData({ routesDir: TMP_DIR });
+  const sections = await scanNavData({ routesDir: TMP_DIR });
 
   assertEquals(sections.length, 1);
   assertEquals(sections[0].section, 'Start Here');
@@ -81,7 +81,7 @@ Deno.test('scanNavData: scans route files and aggregates NavSection[]', () => {
   cleanup();
 });
 
-Deno.test('scanNavData: groups multiple sections', () => {
+Deno.test('scanNavData: groups multiple sections', async () => {
   setup();
 
   mkdirSync(join(TMP_DIR, 'guide'), { recursive: true });
@@ -95,7 +95,7 @@ Deno.test('scanNavData: groups multiple sections', () => {
     `export const meta = { section: 'Examples', label: 'Hello World', order: 10 };\nexport class Page {}`,
   );
 
-  const sections = scanNavData({ routesDir: TMP_DIR });
+  const sections = await scanNavData({ routesDir: TMP_DIR });
 
   assertEquals(sections.length, 2);
   // Sections preserve first-seen order (directory scan order)
@@ -106,7 +106,7 @@ Deno.test('scanNavData: groups multiple sections', () => {
   cleanup();
 });
 
-Deno.test('scanNavData: skips files starting with _', () => {
+Deno.test('scanNavData: skips files starting with _', async () => {
   setup();
 
   mkdirSync(join(TMP_DIR, 'guide'), { recursive: true });
@@ -119,7 +119,7 @@ Deno.test('scanNavData: skips files starting with _', () => {
     `// This should be skipped\nexport const renderer = {};`,
   );
 
-  const sections = scanNavData({ routesDir: TMP_DIR });
+  const sections = await scanNavData({ routesDir: TMP_DIR });
 
   assertEquals(sections.length, 1);
   assertEquals(sections[0].items.length, 1);
@@ -128,12 +128,12 @@ Deno.test('scanNavData: skips files starting with _', () => {
   cleanup();
 });
 
-Deno.test('scanNavData: returns empty for missing directory', () => {
-  const sections = scanNavData({ routesDir: '/nonexistent/path' });
+Deno.test('scanNavData: returns empty for missing directory', async () => {
+  const sections = await scanNavData({ routesDir: '/nonexistent/path' });
   assertEquals(sections, []);
 });
 
-Deno.test('scanNavData: defaults routesDir to app/routes when omitted', () => {
-  const sections = scanNavData({});
+Deno.test('scanNavData: defaults routesDir to app/routes when omitted', async () => {
+  const sections = await scanNavData({});
   assertEquals(Array.isArray(sections), true);
 });

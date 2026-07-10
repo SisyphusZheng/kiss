@@ -1,14 +1,18 @@
 {
   "name": "@openelement/app",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "exports": {
     ".": "./src/index.ts",
+    "./hono": "./src/hono.ts",
+    "./model": "./src/model.ts",
     "./spa": "./src/spa.ts",
     "./i18n": "./src/i18n.ts",
     "./i18n-plugin": "./src/i18n-plugin.ts",
     "./preact": "./src/preact.ts"
   },
-  "imports": {},
+  "imports": {
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
+  },
   "publish": {
     "include": [
       "src/**",
@@ -28,7 +32,7 @@
     "build": "deno check src/"
   },
   "peerDependencies": {
-    "@openelement/router": "npm:@openelement/router@^0.41.0-alpha.5",
+    "@openelement/router": "npm:@openelement/router@^0.41.0-alpha.6",
     "preact": "npm:preact@^10.28.0",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0"
   }

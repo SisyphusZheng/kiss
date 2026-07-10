@@ -36,22 +36,12 @@ const ALLOWED = [
   'docs/status/',
 ];
 
+import { walk } from './lib/fs.ts';
+
 const issues: Array<{ f: string; l: number; t: string }> = [];
 
 function css(line: string): boolean {
   return /grid-template|repeat\(.*,\s*\d/.test(line);
-}
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  try {
-    for await (const entry of Deno.readDir(dir)) {
-      const path = `${dir}/${entry.name}`;
-      if (entry.isDirectory) yield* walk(path);
-      else yield path;
-    }
-  } catch {
-    // Missing optional docs folders are allowed.
-  }
 }
 
 async function check(file: string): Promise<void> {
@@ -69,7 +59,9 @@ async function check(file: string): Promise<void> {
 }
 
 for (const dir of ['www/app/routes', 'docs']) {
-  for await (const file of walk(dir)) await check(file);
+  for await (const file of walk(dir, { skip: ['node_modules', 'dist', '.git'] })) {
+    await check(file);
+  }
 }
 
 for (

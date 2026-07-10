@@ -57,7 +57,7 @@ function collectDsdTemplates(root: ParentNode): HTMLTemplateElement[] {
     }
   } else {
     // Fallback for environments without a real TreeWalker (e.g. test doubles).
-    // ponytail: walk childNodes instead of children since test doubles may not
+    // walk childNodes instead of children since test doubles may not
     // implement ParentNode.children. Only process ELEMENT_NODE children.
     const walk = (node: ParentNode) => {
       const container = node as ChildContainer;
@@ -102,7 +102,7 @@ function createShadowRootFromTemplate(
   if (template.content) {
     shadow.append(...Array.from(template.content.childNodes));
   } else {
-    // ponytail: template.content may not exist in test doubles; fall back to
+    // template.content may not exist in test doubles; fall back to
     // moving childNodes directly. Real User-Agents always have template.content.
     while (template.firstChild) {
       shadow.appendChild(template.firstChild);
@@ -187,7 +187,7 @@ export function hydrateOpenElement(
  * `hydrateOpenElement` and calls their cleanup functions.
  */
 export function disposeOpenElement(root: ParentNode): void {
-  // ponytail: O(n) walk so callers can dispose an arbitrary container.
+  // O(n) walk so callers can dispose an arbitrary container.
   const walk = (node: Node) => {
     if (node.nodeType !== 1) return;
     const el = node as Element;

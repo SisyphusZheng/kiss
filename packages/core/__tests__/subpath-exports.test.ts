@@ -46,6 +46,26 @@ Deno.test('@openelement/core/hydrate subpath exports expected API', async () => 
   assertEquals(typeof hydrateMod.HydrationScope, 'function');
 });
 
+Deno.test('@openelement/core/hydrate is a building-block surface, not full CSR', async () => {
+  const hydrateMod = await import('../src/hydrate.ts');
+  const csrMod = await import('../src/csr.ts');
+
+  assertEquals(typeof hydrateMod.hydrateOpenElement, 'function');
+  assertEquals(typeof hydrateMod.disposeOpenElement, 'function');
+  assertEquals('renderToDom' in hydrateMod, false);
+  assertEquals(typeof csrMod.renderToDom, 'function');
+});
+
+Deno.test('higher-level authoring surfaces own app and element imports', async () => {
+  const appMod = await import('../../app/src/index.ts');
+  const elementMod = await import('../../element/src/index.ts');
+
+  assertEquals(typeof appMod.definePage, 'function');
+  assertEquals(typeof appMod.defineApp, 'function');
+  assertEquals(typeof elementMod.defineElement, 'function');
+  assertEquals(typeof elementMod.OpenElement, 'function');
+});
+
 Deno.test('@openelement/core/csr subpath exports expected API', async () => {
   const csrMod = await import('../src/csr.ts');
 

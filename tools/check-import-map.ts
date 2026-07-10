@@ -11,7 +11,8 @@
  *   4. Fail with non-zero exit code if any undeclared imports are found
  */
 
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
+import { walk } from './lib/fs.ts';
 
 const repoRoot = new URL('../', import.meta.url);
 const repoRootPath = fileURLToPath(repoRoot);
@@ -79,24 +80,9 @@ interface UndeclaredImport {
 
 const errors: UndeclaredImport[] = [];
 
-async function* walkTsAndConfigFiles(
-  root: string,
-  prefix = '',
-): AsyncGenerator<{ path: string; relativePath: string }> {
-  for await (const entry of Deno.readDir(root)) {
-    const childPath = join(root, entry.name);
-    const childRelPath = `${prefix}${entry.name}`;
-    if (entry.isDirectory) {
-      if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === '.git') continue;
-      yield* walkTsAndConfigFiles(childPath, `${childRelPath}/`);
-    } else if (
-      entry.isFile &&
-      (childRelPath.endsWith('.ts') || childRelPath.endsWith('.js') ||
-        childRelPath === 'vite.config.ts')
-    ) {
-      yield { path: childPath, relativePath: childRelPath };
-    }
-  }
+function isSourceOrConfig(relativePath: string): boolean {
+  return relativePath.endsWith('.ts') || relativePath.endsWith('.js') ||
+    relativePath === 'vite.config.ts';
 }
 
 /**
@@ -117,8 +103,11 @@ function isImportDeclared(specifier: string, declared: Set<string>): boolean {
   return false;
 }
 
-for await (const file of walkTsAndConfigFiles(projectDir)) {
-  const text = await Deno.readTextFile(file.path);
+for await (const filePath of walk(projectDir, { skip: ['node_modules', 'dist', '.git'] })) {
+  const relativePath = relative(projectDir, filePath).replace(/\\/g, '/');
+  if (!isSourceOrConfig(relativePath)) continue;
+
+  const text = await Deno.readTextFile(filePath);
   const lines = text.split(/\r?\n/);
 
   for (const line of lines) {
@@ -151,7 +140,7 @@ for await (const file of walkTsAndConfigFiles(projectDir)) {
       // But keep the full specifier for the declared check — we need exact or prefix match
       if (!isImportDeclared(specifier, declaredImports)) {
         errors.push({
-          file: file.relativePath,
+          file: relativePath,
           specifier,
         });
       }

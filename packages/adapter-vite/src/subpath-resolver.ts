@@ -48,6 +48,7 @@ function cacheSet(key: string, value: string): void {
 }
 
 const OPENELEMENT_PACKAGE_SRC_BASE_RE = /\/@openelement\/([^/]+)\/([^/]+)\/src\/.*$/;
+const SAFE_CORE_SOURCE_PATH_RE = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.(?:ts|js)$/;
 
 /**
  * Extract the JSR package source base URL from import.meta.url.
@@ -65,6 +66,35 @@ function getOpenPackageSrcBase(metaUrl: string, packageName: string): string {
   return metaUrl
     .replace(/\/@openelement\/[^/]+@([^/]+)\/src\/.*$/, `/@openelement/${packageName}/$1/src/`)
     .replace(/\/src\/.*$/, '/src/');
+}
+
+function assertSafeCoreSourcePath(filePath: string): void {
+  if (!SAFE_CORE_SOURCE_PATH_RE.test(filePath)) {
+    throw new OpenElementError(
+      `Unsafe @openelement/core source path: ${filePath}`,
+      {
+        code: 'JSR_INVALID_SOURCE_PATH',
+        statusCode: 400,
+        recoverable: false,
+      },
+    );
+  }
+}
+
+export function buildCoreJsrSourceUrl(jsrSrcBase: string, filePath: string): string {
+  assertSafeCoreSourcePath(filePath);
+  const base = new URL(jsrSrcBase);
+  if (base.protocol !== 'https:' && base.protocol !== 'http:') {
+    throw new OpenElementError(
+      `Unsafe @openelement/core source base URL: ${jsrSrcBase}`,
+      {
+        code: 'JSR_INVALID_SOURCE_BASE',
+        statusCode: 400,
+        recoverable: false,
+      },
+    );
+  }
+  return new URL(filePath, base).toString();
 }
 
 /**
@@ -139,7 +169,7 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
       }
 
       // Fetch TypeScript source from JSR
-      const url = `${jsrSrcBase}${filePath}`;
+      const url = buildCoreJsrSourceUrl(jsrSrcBase, filePath);
       let tsCode: string;
       // M-09 fix: Add 30s timeout for JSR fetches to prevent hanging builds
       const controller = new AbortController();

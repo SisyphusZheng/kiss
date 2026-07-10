@@ -66,36 +66,11 @@ const requiredTruth = [
   },
 ];
 
+import { normalizeSlashes } from './lib/path.ts';
+import { exists } from './lib/fs.ts';
+import { gitTrackedFiles } from './lib/git.ts';
+
 const issues: Issue[] = [];
-
-function normalize(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await Deno.stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function gitFiles(): Promise<string[]> {
-  const output = await new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '-z'],
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  if (!output.success) {
-    throw new Error(new TextDecoder().decode(output.stderr).trim() || 'git ls-files failed');
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalize);
-}
 
 function shouldScan(file: string): boolean {
   if (!textExtensions.test(file)) return false;
@@ -114,7 +89,7 @@ function isCurrentTruth(file: string): boolean {
     file === 'www/app/routes/guide/architecture.tsx';
 }
 
-const files = (await gitFiles()).filter(shouldScan);
+const files = (await gitTrackedFiles()).map(normalizeSlashes).filter(shouldScan);
 
 for (const file of files) {
   if (!(await exists(file))) continue;

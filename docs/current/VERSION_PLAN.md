@@ -9,7 +9,8 @@ supporting packages = Protocols + UI + official stack adapters
 
 Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`,
 harden the signal-DOM architecture, and turn OpenElement into a credible
-Web Components-first fullstack framework powered by a small Basic Element layer.
+Web Components-native fullstack framework with a JSX-first Basic Element
+authoring layer.
 Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party Web
 Components are first-party stack decisions, but they must enter through
 OpenElement-owned package contracts and protocol concepts.
@@ -24,12 +25,15 @@ The release is staged through alpha lines with explicit execution plans:
   interop proof; pure-ESM/ECMAScript npm gates.
 - **alpha.5**: SPA mode + Deno Desktop Reader proof, Reader polish, and current
   PR/framework closure.
-- **alpha.6**: OpenElement App/protocol architecture hardening, official stack
-  contracts, Deno Desktop target contract, and Reader regression-grade dogfood.
-- **alpha.7**: Mac Mastodon Desktop incubation after alpha.6 validates the
-  framework architecture. This keeps the OpenElement + Deno Desktop social/IM
-  idea alive as a narrow networked desktop dogfood app, not a full authenticated
-  IM product.
+- **alpha.6** (released): Front-half cleanup audit closure, OpenElement App/protocol
+  architecture hardening, official stack contracts, Deno Desktop target
+  contract, and Reader regression-grade dogfood. Published to npm as
+  `0.41.0-alpha.6` with provenance.
+- **alpha.7** (active next): Networked desktop dogfood. A read-only/accountless
+  Mastodon/GoToSocial desktop app that stress-tests SPA mode, Deno Desktop,
+  third-party Web Components interop, render pipeline performance, local
+  state/cache, and error boundaries. Design source:
+  `docs/dogfood/mastodon-desktop/README.md`.
 - **beta.1**: Adoption Freeze. Starter, docs, API reference, website,
   package metadata, release notes, and visual brand polish must agree before
   stable v0.41.0.
@@ -51,7 +55,10 @@ official OpenElement build adapter.
 
 ### Toolchain
 
-- Bump minimum Deno version to 2.8.0 across docs, READMEs, and CI.
+- Pin `.dvmrc` to Deno `2.9.0` (stable). CI reads `.dvmrc` via
+  `setup-deno-workspace`, and the standalone JSR consumer monitor reads the same
+  `.dvmrc`. Deno 2.8+ remains the documented public minimum; the repo itself
+  converges on the latest stable release that passes the full gate matrix.
 - Convert all internal `@openelement/*` imports from `jsr:` to `npm:` in root
   and `packages/*/deno.json`.
 - Add `deno task pack` and `deno task publish:npm` that pack and publish the
@@ -118,12 +125,22 @@ private APIs, account cookies, scraping, or copyrighted book content.
 React/Vue/Svelte adapters stayed out of alpha.5 unless required to validate SPA
 navigation disposal semantics.
 
-alpha.6 is the next architecture line. It keeps Vite/Hono/Nitro as official
-defaults, but moves framework ownership to OpenElement concepts: RouteGraph,
-RenderPipeline, RequestContext, AssetManifest, IslandManifest, DeploymentTarget,
-and Deno Desktop target contracts. It also closes the product-truth and
-CodeQL/code-scanning backlog (#192 through #194 and #186 through #191) as part
-of A6.6/A6.8 governance and release hygiene.
+alpha.6 is released. It keeps Vite/Hono/Nitro as official defaults, but moves
+framework ownership to OpenElement concepts: RouteGraph, RenderPipeline,
+RequestContext, AssetManifest, IslandManifest, DeploymentTarget, and Deno Desktop
+target contracts. It closed the cleanup-audit front half (#205 through #212):
+release truth, package surface drift, router internal exports, tracked ignored
+generated artifacts, stale resolver maps, duplicate tooling helpers,
+route-scanner test ownership, stale design artifacts, and active-source audit
+labels. Final review extended the front-half slice with #226 and #227 to
+capture duplicate implementations across packages and redundant
+dependencies/configs/tooling helpers discovered during release-candidate review.
+It also closed the product-truth and CodeQL/code-scanning backlog
+(#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
+release hygiene. The final release-candidate cleanup closed the remaining
+CodeQL dynamic-import code-generation alert with admitted island module
+specifiers and shared CodeQL-recognized JavaScript literal escaping for generated
+client and server entry code before the `0.41.0-alpha.6` package workflow ran.
 
 ## Non-Goals
 
@@ -132,6 +149,9 @@ of A6.6/A6.8 governance and release hygiene.
 - No further upstream Vite+ Deno PM advocacy in this release.
 - No removal of existing JSR published versions.
 - No server/data/forms/session/cache primitives (deferred to v0.42.0+).
+- No new product line for Reader, Mastodon Desktop, AutoFlow, or governance
+  tooling. Dogfood apps validate the Framework contract; governance tooling
+  protects releases.
 
 ## Staged Alpha/Beta Plans
 
@@ -141,8 +161,8 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.3-plan.md` — Third-party Web Components inside OpenElement
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
-- `docs/release/v0.41.0-alpha.6-plan.md` — App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
-- `docs/release/v0.41.0-alpha.7-plan.md` — Mac Mastodon Desktop incubation
+- `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
+- `docs/release/v0.41.0-alpha.7-plan.md` — Networked Desktop Dogfood
 - `docs/release/v0.41.0-beta.1-plan.md` — Adoption Freeze
 
 Alpha.7 starts only after alpha.6 closes the framework architecture loop. The
@@ -171,6 +191,18 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
 - `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
+- `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
+  Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
+  Web Components.
+- `docs/current/HYDRATION_CONTRACT.md` defines `@openelement/core/hydrate` as a
+  low-level building-block subpath and points higher-level authoring to
+  `@openelement/app` and `@openelement/element`.
+- `docs/current/DENO_DESKTOP_TARGET.md` defines Deno Desktop as a first-party
+  app target and records Reader's regression-grade dogfood evidence.
+- Dogfood apps may block release quality only as evidence. They must not define
+  OpenElement's public product identity.
+- AutoFlow3 and docs-truth gates are infrastructure. They should become more
+  reusable over time, but they are not Framework product features.
 
 ## Test Matrix
 
@@ -208,6 +240,15 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
   provenance.
 - npm consumer smoke passes for Node ESM and Deno `npm:`.
 - jsDelivr browser-safe export smoke passes.
+- Alpha.6 trust-boundary debt is closed or replaced by stricter evidence:
+  route codegen literals, island manifest extraction, JSR source URL
+  construction, and dynamic import specifier admission.
+- Alpha.6 front-half cleanup debt is closed: release behavior, package surface,
+  router internals, generated artifacts, resolver maps, tooling helpers, scanner
+  test ownership, stale design artifacts, and active-source audit labels.
+- Deno toolchain truth is explicit: `.dvmrc` pinned to stable `2.9.0`, CI and
+  consumer monitor aligned, canary reserved only for Deno Desktop preview
+  features outside the main gate matrix.
 
 ## Verification
 

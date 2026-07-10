@@ -1,13 +1,13 @@
 {
   "name": "@openelement/example-desktop-spa",
-  "version": "0.41.0-alpha.5",
+  "version": "0.41.0-alpha.6",
   "tasks": {
     "dev": "deno run -A main.ts",
     "build": "deno desktop main.ts"
   },
   "imports": {
     "@/": "./",
-    "@openelement/app": "npm:@openelement/app@^0.41.0-alpha.5",
+    "@openelement/app": "npm:@openelement/app@^0.41.0-alpha.6",
     "preact": "npm:preact@^10.29.1",
     "@preact/signals": "npm:@preact/signals@^2.9.0"
   },

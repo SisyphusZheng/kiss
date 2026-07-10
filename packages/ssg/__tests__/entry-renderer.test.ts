@@ -8,8 +8,18 @@
  * - SSG renderRoute using `data` prop (not `__openElementData`)
  */
 
-import { assertFalse, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '@openelement/ssg';
+import {
+  assertEquals,
+  assertFalse,
+  assertStringIncludes,
+  assertThrows,
+} from 'jsr:@std/assert@^1.0.0';
+import {
+  buildEntryDescriptor,
+  buildSsrAdmissionPlan,
+  generateHonoEntryCode,
+  renderEntry,
+} from '@openelement/ssg';
 import type { RouteEntry } from '@openelement/core';
 
 // ─── Fixtures ──────────────────────────────────────────────────
@@ -30,6 +40,27 @@ const dynamicRoutes: RouteEntry[] = [
     params: ['slug'],
   },
 ];
+
+Deno.test('buildSsrAdmissionPlan: third-party WC package without SSR metadata is explicit client-only', () => {
+  const plan = buildSsrAdmissionPlan([
+    {
+      tagName: 'plain-card',
+      modulePath: './plain-card.js',
+      source: 'package',
+      isPackage: true,
+      authoring: 'third-party-wc',
+      hydrate: 'idle',
+    },
+  ]);
+
+  assertEquals(plan.clientOnlyTags, ['plain-card']);
+  assertEquals(plan.renderableTags, []);
+  assertEquals(
+    plan.reasons['plain-card'],
+    'third-party WC package island has no validated SSR capability (explicit client-only interop)',
+  );
+  assertEquals(plan.decisions[0].renderPath, 'client-only');
+});
 
 // ─── Loader handler tests ──────────────────────────────────────
 
@@ -84,8 +115,8 @@ Deno.test('renderEntry: action POST handler uses app.post', () => {
   const code = renderEntry(desc);
 
   // Verify action POST routes
-  assertStringIncludes(code, "app.post('/'");
-  assertStringIncludes(code, "app.post('/about'");
+  assertStringIncludes(code, 'app.post("/",');
+  assertStringIncludes(code, 'app.post("/about"');
 });
 
 Deno.test('renderEntry: action POST handler calls module.loader', () => {
@@ -123,6 +154,18 @@ Deno.test('renderEntry: action POST handler parses form data', () => {
   assertStringIncludes(code, 'const __actionCtx = { ...__loadContext, formData: __formData }');
 });
 
+Deno.test('renderEntry: API route handler safely resolves platform when ExecutionContext is unavailable', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  // API route wrapper should tolerate Hono contexts without an ExecutionContext
+  // (e.g. during static prerender), matching the page loader behaviour.
+  assertStringIncludes(
+    code,
+    'platform: (() => { try { return c.executionCtx } catch { return undefined } })()',
+  );
+});
+
 // ─── /_data endpoint tests ─────────────────────────────────────
 
 Deno.test('renderEntry: generates /_data route map', () => {
@@ -138,7 +181,7 @@ Deno.test('renderEntry: generates /_data GET endpoint', () => {
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "app.get('/_data'");
+  assertStringIncludes(code, 'app.get("/_data"');
   assertStringIncludes(code, "const routePath = c.req.query('route')");
   assertStringIncludes(code, "typeof mod.loader !== 'function'");
   assertStringIncludes(code, 'const data = await mod.loader(loadContext)');
@@ -212,8 +255,46 @@ Deno.test('renderEntry: getStaticPaths dispatches to dynamic route modules', () 
   const desc = buildEntryDescriptor(dynamicRoutes, { ssg: true });
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "if (routePath === '/blog/:slug')");
+  assertStringIncludes(code, 'if (routePath === "/blog/:slug")');
   assertStringIncludes(code, '$pageBlogSlug.getStaticPaths');
+});
+
+Deno.test('renderEntry: admits island module specifiers before emitting server entry', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    ssg: true,
+    islandTagNames: ['evil-island'],
+    islandFiles: ['https://evil.com/x.js'],
+  });
+
+  assertThrows(() => renderEntry(desc), Error, 'Invalid island modulePath');
+});
+
+Deno.test('renderEntry: escapes admitted island module paths in server entry', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    ssg: true,
+    islandTagNames: ['my-island'],
+    islandFiles: ['my-island.ts'],
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'import * as __island_my_island from "/app/islands/my-island.ts"');
+  assertStringIncludes(code, '"my-island": "/app/islands/my-island.ts"');
+});
+
+Deno.test('renderEntry: route paths are emitted as structured JS string literals', () => {
+  const desc = buildEntryDescriptor([
+    {
+      path: "/docs/'quoted-\\\\path",
+      filePath: "docs/'quoted-\\\\path.ts",
+      type: 'page',
+      varName: 'pageQuotedPath',
+    },
+  ], { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, `app.get("/docs/'quoted-\\\\\\\\path"`);
+  assertStringIncludes(code, `app.post("/docs/'quoted-\\\\\\\\path"`);
+  assertEquals(code.includes(`app.get('/docs/\\'quoted-`), false);
 });
 
 // ─── head handling ─────────────────────────────────────────────
@@ -255,12 +336,44 @@ Deno.test('renderEntry: wrapInDocument receives meta fields', () => {
   );
 });
 
+// ─── shared runtime helpers ────────────────────────────────────
+
+Deno.test('renderEntry: lifecycle guards are imported from @openelement/app', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(
+    code,
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';",
+  );
+  assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
+  assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
+});
+
+Deno.test('renderEntry: page metadata uses shared runtime helpers', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'function __pageDefinition(module) {');
+  assertStringIncludes(code, 'function __routeMeta(module) {');
+  assertStringIncludes(code, 'let __page = __pageDefinition($pageIndex)');
+  assertStringIncludes(code, 'let __routeMetaValue = __routeMeta($pageIndex)');
+  assertStringIncludes(
+    code,
+    'rendering: (__pageDefinition($pageIndex).renderIntent?.mode || "auto")',
+  );
+  assertStringIncludes(
+    code,
+    'revalidate: (__pageDefinition($pageIndex).renderIntent?.revalidate ?? false)',
+  );
+});
+
 // ─── generateHonoEntryCode ─────────────────────────────────────
 
 Deno.test('generateHonoEntryCode: generates complete entry for basic routes', () => {
   const code = generateHonoEntryCode(basicRoutes, { ssg: true });
 
-  assertStringIncludes(code, "import { Hono } from 'hono'");
+  assertEquals(/import\s*{\s*Hono\s*}\s*from\s*['"]hono['"]/.test(code), true);
   assertStringIncludes(code, 'const app = new Hono()');
   assertStringIncludes(code, 'export default app');
   assertStringIncludes(code, 'export const openElementHandler');
@@ -272,4 +385,12 @@ Deno.test('generateHonoEntryCode: generates action handlers for all routes', () 
   // Each page route should have a POST handler
   assertStringIncludes(code, '// Action POST: / (index.ts)');
   assertStringIncludes(code, '// Action POST: /about (about.ts)');
+});
+
+Deno.test('renderEntry: customElements.define patch only swallows duplicate-definition errors', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(code, 'if (e && e.name === "NotSupportedError") return;');
+  assertStringIncludes(code, 'throw e;');
 });

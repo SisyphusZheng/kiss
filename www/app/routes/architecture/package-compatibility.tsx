@@ -31,23 +31,23 @@ export class PackageCompatibilityPage extends OpenElement {
       <div class='container'>
         <h1>Package Compatibility</h1>
         <p class='subtitle'>
-          The package graph is intentionally layered: runtime packages stay
-          small, adapters remain optional, and docs examples use public package
-          entry points.
+          Basic Element is the default authoring layer, while third-party Web
+          Components use explicit package or Custom Elements Manifest metadata
+          for supported interop.
         </p>
 
         <div class='compat-grid'>
           <open-card variant='artifact'>
-            <h3>Runtime</h3>
-            <p>@openelement/core and @openelement/element define the base layer.</p>
+            <h3>Basic Element</h3>
+            <p>@openelement/element provides OpenElement, StyleSheet, DSD, signals, and islands.</p>
           </open-card>
           <open-card>
-            <h3>Application</h3>
-            <p>@openelement/app coordinates routes, metadata, and islands.</p>
+            <h3>Third-party WC</h3>
+            <p>External custom elements are supported through manifest or CEM metadata.</p>
           </open-card>
           <open-card>
-            <h3>Adapters</h3>
-            <p>Build and framework adapters sit outside the core runtime.</p>
+            <h3>Diagnostics</h3>
+            <p>Unknown SSR capability becomes explicit client-only interop or a rejected admission.</p>
           </open-card>
         </div>
       </div>

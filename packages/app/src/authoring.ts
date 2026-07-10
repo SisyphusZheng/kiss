@@ -14,11 +14,7 @@ import {
   type VNode,
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland } from '@openelement/core';
-import {
-  __internal_popData,
-  __internal_pushActionData,
-  __internal_pushLoaderData,
-} from '@openelement/router';
+import { popData, pushActionData, pushLoaderData } from '@openelement/router/internal/data-context';
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
@@ -259,8 +255,8 @@ export function definePage<
 
     override render(): VNode | null {
       // Provide loader/action data to hooks (useLoaderData / useActionData)
-      __internal_pushLoaderData(this.data);
-      __internal_pushActionData(this.__openElementActionData);
+      pushLoaderData(this.data);
+      pushActionData(this.__openElementActionData);
 
       try {
         const params = (this.__openElementParams ?? this.params ?? {}) as Params;
@@ -280,7 +276,7 @@ export function definePage<
 
         return definition.render(context);
       } finally {
-        __internal_popData();
+        popData();
       }
     }
   }

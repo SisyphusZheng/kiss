@@ -1,5 +1,5 @@
 /**
- * @openelement/core - Entry Generators
+ * @openelement/ssg - Entry Generators
  *
  * v0.21.0: manifest-driven hydration strategies.
  * Zero DOM interaction - cannot interfere with DSD rendering.
@@ -7,10 +7,24 @@
 
 import type { HydrationStrategy } from '@openelement/protocol/framework';
 import type { ClientIslandEntry } from '@openelement/protocol/ssg';
+import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
+import { isValidTagName } from '@openelement/core';
 
-const CUSTOM_ELEMENT_NAME_RE = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/;
-const UNSAFE_IMPORT_PROTOCOL_RE = /^(?:javascript|data|vbscript|node):/i;
+const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
+const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
+const SAFE_BARE_SPECIFIER_RE =
+  /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
 const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
+
+declare const admittedIslandModuleSpecifier: unique symbol;
+export type AdmittedIslandModuleSpecifier = string & {
+  readonly [admittedIslandModuleSpecifier]: true;
+};
+
+interface AdmittedClientIslandEntry extends Omit<ClientIslandEntry, 'modulePath'> {
+  modulePath: AdmittedIslandModuleSpecifier;
+}
 
 function hasControlCharacter(value: string): boolean {
   for (let i = 0; i < value.length; i++) {
@@ -20,16 +34,59 @@ function hasControlCharacter(value: string): boolean {
   return false;
 }
 
-export function validateClientIslandEntry(entry: ClientIslandEntry): void {
-  if (!CUSTOM_ELEMENT_NAME_RE.test(entry.tagName)) {
-    throw new Error(`Invalid island tagName: ${entry.tagName}`);
+function hasTraversalSegment(value: string): boolean {
+  return value.split('/').includes('..');
+}
+
+/**
+ * Zero-dependency shared logger micro-implementation for the generated
+ * client entry. Keeps the browser bundle free of external logger imports
+ * while still prefixing messages with `[openElement]`.
+ */
+function renderClientLogger(tag = 'openElement'): string {
+  const prefix = quoteGeneratedJavaScriptStringLiteral(`[${tag}]`);
+  return `var log = {
+  warn: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.warn.apply(console, a); },
+  error: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.error.apply(console, a); },
+};`;
+}
+
+export function validateIslandModuleSpecifier(modulePath: string): void {
+  if (
+    !modulePath ||
+    hasControlCharacter(modulePath) ||
+    URL_OR_SCHEME_RE.test(modulePath) ||
+    modulePath.startsWith('//') ||
+    hasTraversalSegment(modulePath)
+  ) {
+    throw new Error(`Invalid island modulePath: ${modulePath}`);
   }
   if (
-    !entry.modulePath ||
-    hasControlCharacter(entry.modulePath) ||
-    /[\r\n]/.test(entry.modulePath) ||
-    UNSAFE_IMPORT_PROTOCOL_RE.test(entry.modulePath)
+    !SAFE_RELATIVE_SPECIFIER_RE.test(modulePath) &&
+    !SAFE_ROOT_SPECIFIER_RE.test(modulePath) &&
+    !SAFE_BARE_SPECIFIER_RE.test(modulePath)
   ) {
+    throw new Error(`Invalid island modulePath: ${modulePath}`);
+  }
+}
+
+export function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
+  validateIslandModuleSpecifier(modulePath);
+  return modulePath as AdmittedIslandModuleSpecifier;
+}
+
+function islandImportFactory(modulePath: AdmittedIslandModuleSpecifier): string {
+  return `() => import(${quoteGeneratedJavaScriptStringLiteral(modulePath)})`;
+}
+
+export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
+  if (!isValidTagName(entry.tagName)) {
+    throw new Error(`Invalid island tagName: ${entry.tagName}`);
+  }
+  let modulePath: AdmittedIslandModuleSpecifier;
+  try {
+    modulePath = admitIslandModuleSpecifier(entry.modulePath);
+  } catch {
     throw new Error(`Invalid island modulePath for ${entry.tagName}: ${entry.modulePath}`);
   }
   if (!VALID_STRATEGIES.has(entry.strategy)) {
@@ -38,37 +95,42 @@ export function validateClientIslandEntry(entry: ClientIslandEntry): void {
         'Use one of: load, idle, visible, only.',
     );
   }
+  return { ...entry, modulePath };
 }
 
 export function generateClientEntry(
   islands: ClientIslandEntry[],
 ): string {
-  islands.forEach(validateClientIslandEntry);
+  const admittedIslands = islands.map(validateClientIslandEntry);
 
-  if (islands.length === 0) {
+  if (admittedIslands.length === 0) {
     return '// openElement Client Entry - No islands detected, zero client JS needed\n';
   }
 
-  const islandMap = islands
-    .map((i) => `  ${JSON.stringify(i.tagName)}: () => import(${JSON.stringify(i.modulePath)})`)
+  const islandMap = admittedIslands
+    .map((i) =>
+      `  ${quoteGeneratedJavaScriptStringLiteral(i.tagName)}: ${islandImportFactory(i.modulePath)}`
+    )
     .join(',\n');
 
-  const tags = islands.map((i) => JSON.stringify(i.tagName)).join(', ');
-  const loadTags = islands
+  const tags = admittedIslands.map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName)).join(
+    ', ',
+  );
+  const loadTags = admittedIslands
     .filter((i) => i.strategy === 'load')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
-  const visibleTags = islands
+  const visibleTags = admittedIslands
     .filter((i) => i.strategy === 'visible')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
-  const idleTags = islands
+  const idleTags = admittedIslands
     .filter((i) => i.strategy === 'idle')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
-  const onlyTags = islands
+  const onlyTags = admittedIslands
     .filter((i) => i.strategy === 'only')
-    .map((i) => JSON.stringify(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
     .join(', ');
 
   return `// openElement Client Entry (v0.21 - load/idle/visible/only)
@@ -78,10 +140,7 @@ export function generateClientEntry(
 // only islands are client-only and import immediately (no DSD/SSR).
 // Zero DOM interaction - safe with DSD rendering.
 
-var log = {
-  warn: function() { var a = ['[openElement]']; a.push.apply(a, arguments); console.warn.apply(console, a); },
-  error: function() { var a = ['[openElement]']; a.push.apply(a, arguments); console.error.apply(console, a); },
-};
+${renderClientLogger()}
 
 var __map = {
 ${islandMap}

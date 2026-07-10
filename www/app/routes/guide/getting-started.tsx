@@ -32,15 +32,15 @@ export class GuideGuidePage extends OpenElement {
       <div class='container'>
         <h1>Getting Started</h1>
         <p class='subtitle'>
-          openElement = Web Components Fullstack Framework + Basic Element.
-          Start with the Deno-first workflow, then inspect pages, routes,
-          Web Components, API routes, and deployment as one app model.
+          openElement is a Web Components-native fullstack framework with a
+          JSX-first Basic Element authoring layer. Start with the Deno-first
+          workflow, then inspect pages, routes, Web Components, API routes, and
+          deployment as one app model.
         </p>
         <p class='subtitle'>
           The current package line is {OPENELEMENT_VERSION}. The active execution line
-          is v0.41.0-alpha.6 App/protocol hardening, followed by
-          v0.41.0-alpha.7 Mastodon Desktop dogfood and v0.41.0-beta.1 adoption
-          freeze.
+          is v0.41.0-alpha.7 Mastodon Desktop dogfood, followed by
+          v0.41.0-beta.1 adoption freeze.
         </p>
         <div class='guide-grid'>
           <open-card>

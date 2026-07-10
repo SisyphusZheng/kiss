@@ -6,6 +6,8 @@
 
 import { walkSync } from '@std/fs/walk';
 import { dirname } from 'node:path';
+import { stripComments } from './lib/text.ts';
+import { runCommand } from './lib/process.ts';
 import { type PackageInfo, readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const PUBLINT_VERSION = '0.3.21';
@@ -61,24 +63,6 @@ function tarballPath(pkg: PackageInfo): string {
 function extension(path: string): string {
   const idx = path.lastIndexOf('.');
   return idx === -1 ? '' : path.slice(idx);
-}
-
-/**
- * Strip comments from source text for pattern scanning.
- *
- * Block comment delimiters and their content are replaced with spaces of the same length
- * to avoid forming false // sequences when concatenating text across
- * comment boundaries (e.g. "http:" + "//example.com" was silently joining).
- * Line comments (// ...) are stripped entirely.
- */
-function stripComments(source: string): string {
-  // Replace block comments with spaces (same-length to preserve line numbers),
-  // then strip single-line comments. This is basic but sufficient for artifact
-  // scanning; false positives from edge cases like 'http:'/* */+ '//x' are
-  // extremely unlikely in real npm package output.
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
-    .replace(/\/\/.*/g, '');
 }
 
 function pushPackageJsonViolations(
@@ -176,26 +160,9 @@ export function scanExtractedPackage(packageName: string, packageRoot: string): 
   return { packageName, violations };
 }
 
-async function run(command: string, args: string[], cwd?: string): Promise<void> {
-  console.log(`$ ${[command, ...args].join(' ')}${cwd ? `  # cwd=${cwd}` : ''}`);
-  const output = await new Deno.Command(command, {
-    args,
-    cwd,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  if (output.success) return;
-
-  const stdout = new TextDecoder().decode(output.stdout).trim();
-  const stderr = new TextDecoder().decode(output.stderr).trim();
-  if (stdout) console.error(stdout);
-  if (stderr) console.error(stderr);
-  throw new Error(`Command failed with exit code ${output.code}: ${command} ${args.join(' ')}`);
-}
-
 async function extractTarball(tarball: string): Promise<string> {
   const tmp = await Deno.makeTempDir({ prefix: 'openelement-artifact-' });
-  await run('tar', ['-xzf', tarball, '-C', tmp], undefined);
+  await runCommand('tar', ['-xzf', tarball, '-C', tmp], undefined);
   return `${tmp}/package`;
 }
 
@@ -203,7 +170,7 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
   const tarball = tarballPath(pkg);
   await Deno.stat(tarball);
 
-  await run(Deno.execPath(), [
+  await runCommand(Deno.execPath(), [
     'run',
     '-A',
     `npm:publint@${PUBLINT_VERSION}`,
@@ -211,7 +178,7 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
     tarball,
     '--strict',
   ]);
-  await run(Deno.execPath(), [
+  await runCommand(Deno.execPath(), [
     'run',
     '-A',
     `npm:@arethetypeswrong/cli@${ATTW_VERSION}`,
@@ -233,7 +200,7 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
 async function main(): Promise<void> {
   const skipPack = Deno.args.includes('--skip-pack');
   if (!skipPack) {
-    await run(Deno.execPath(), ['task', 'pack:dry-run']);
+    await runCommand(Deno.execPath(), ['task', 'pack:dry-run']);
   }
 
   const packages = releasePublishOrder(await readPackages());

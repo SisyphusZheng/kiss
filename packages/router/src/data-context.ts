@@ -12,45 +12,7 @@
  *
  * v0.41.0: Replaced module-level currentState with render-scoped stack.
  */
-
-// ─── Render-scoped stack ─────────────────────────────────────────
-
-const dataStack: { loaderData: unknown; actionData: unknown }[] = [];
-
-// ─── Internal stack operations (called by ApplicationPageElement) ─
-
-/**
- * @internal Push loader data for the current render.
- * Called by ApplicationPageElement.render() before invoking the page render.
- */
-export function __internal_pushLoaderData(data: unknown): void {
-  dataStack.push({ loaderData: data, actionData: undefined });
-  // ponytail: warn if stack grows abnormally (missing pop indicates a leak).
-  // 10 is a generous upper bound for nested app-shell renders.
-  if (dataStack.length > 10) {
-    console.warn(
-      `[openelement:router] data-context stack depth ${dataStack.length} exceeds expected maximum. ` +
-        'This may indicate a missing __internal_popData() call.',
-    );
-  }
-}
-
-/**
- * @internal Push action data for the current render.
- * Called by ApplicationPageElement.render() after a form submission.
- */
-export function __internal_pushActionData(data: unknown): void {
-  const top = dataStack[dataStack.length - 1];
-  if (top) top.actionData = data;
-}
-
-/**
- * @internal Pop the render-scoped data stack.
- * Called by ApplicationPageElement.render() in a `finally` block.
- */
-export function __internal_popData(): void {
-  dataStack.pop();
-}
+import { currentActionData, currentLoaderData } from './data-context-store.ts';
 
 // ─── Public hooks ────────────────────────────────────────────────
 
@@ -64,7 +26,7 @@ export function __internal_popData(): void {
  * ```
  */
 export function useLoaderData<T = unknown>(): T {
-  return dataStack[dataStack.length - 1]?.loaderData as T;
+  return currentLoaderData() as T;
 }
 
 /**
@@ -78,5 +40,5 @@ export function useLoaderData<T = unknown>(): T {
  * ```
  */
 export function useActionData<T = unknown>(): T | undefined {
-  return dataStack[dataStack.length - 1]?.actionData as T | undefined;
+  return currentActionData() as T | undefined;
 }

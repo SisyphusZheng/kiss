@@ -144,6 +144,7 @@ export interface IslandDecl {
   hydrate?: HydrationStrategy;
   ssr?: boolean;
   dsd?: boolean;
+  authoring?: 'basic-element' | 'third-party-wc';
   source?: 'local' | 'package' | 'nested';
   reason?: string;
 }

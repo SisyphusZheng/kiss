@@ -3,11 +3,10 @@
  *
  * Functional component-style authoring for OpenElement.
  */
+import { assertValidTagName } from '@openelement/core';
 import { OpenElement } from './open-element.ts';
 import type { ElementDefinition } from './types.ts';
 import type { VNode } from '@openelement/protocol/vnode';
-
-const ERROR_PREFIX = '[openElement]';
 
 function collectPublicProps(host: Record<string, unknown>): Record<string, unknown> {
   const props: Record<string, unknown> = {};
@@ -24,20 +23,11 @@ function normalizeElementDefinition<Props extends Record<string, unknown>>(
   return typeof input === 'function' ? { render: input } : input;
 }
 
-function assertCustomElementTag(tagName: string): void {
-  if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(tagName)) {
-    throw new Error(
-      `${ERROR_PREFIX} "${tagName}" is not a valid custom element name. ` +
-        'Use lowercase ASCII letters, digits, and at least one hyphen.',
-    );
-  }
-}
-
 export function defineElement<Props extends Record<string, unknown> = Record<string, unknown>>(
   tagName: string,
   input: ((props: Props) => VNode | null) | ElementDefinition<Props>,
 ): typeof OpenElement {
-  assertCustomElementTag(tagName);
+  assertValidTagName(tagName);
   const definition = normalizeElementDefinition(input);
 
   class OpenElementComponent extends OpenElement {
@@ -57,7 +47,7 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
   return OpenElementComponent;
 }
 
-// ponytail: semantic alias for defineElement, trim when template/doc migration done
+// semantic alias for defineElement, trim when template/doc migration done
 export function defineLayout<Props extends Record<string, unknown> = Record<string, unknown>>(
   tagName: string,
   input: ((props: Props) => VNode | null) | ElementDefinition<Props>,

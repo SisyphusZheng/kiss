@@ -1,25 +1,17 @@
 /**
  * @openelement/core — Unified Error Architecture (ADR-0053 / SOP-011).
+ *
+ * ERROR_PREFIX and ErrorCode are re-exported from @openelement/protocol/errors.
+ * They are pure string constants (no runtime side effects), so importing them
+ * here is safe for SSG/browser bundles that tree-shake @openelement/core.
  */
 
 import type { RenderError as ProtocolRenderError } from '@openelement/protocol/render';
 
-/** Well-known error code constants for reference. String values are always accepted. */
-// ponytail: duplicated from protocol to avoid cross-package runtime import in SSG bundles
-export const ErrorCode = {
-  SSR_RENDER_ERROR: 'SSR_RENDER_ERROR',
-  ISLAND_RENDER_ERROR: 'ISLAND_RENDER_ERROR',
-  PROP_VALIDATION_ERROR: 'PROP_VALIDATION_ERROR',
-  TAG_VALIDATION_ERROR: 'TAG_VALIDATION_ERROR',
-  NAVIGATION_ERROR: 'NAVIGATION_ERROR',
-  BUILD_ERROR: 'BUILD_ERROR',
-  RENDER_ERROR: 'RENDER_ERROR',
-  BOUNDARY_CAUGHT: 'BOUNDARY_CAUGHT',
-  UNKNOWN: 'UNKNOWN',
-} as const;
+// ─── Well-known error codes / prefix (authoritative source in protocol) ───────
 
-/** Error message prefix for all openElement errors. */
-export const ERROR_PREFIX = '[openElement]';
+import { ERROR_PREFIX, ErrorCode } from '@openelement/protocol/errors';
+export { ERROR_PREFIX, ErrorCode };
 
 // ─── Error formatting helper ────────────────────────────────────────
 

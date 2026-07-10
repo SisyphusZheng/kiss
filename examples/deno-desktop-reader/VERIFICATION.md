@@ -1,8 +1,38 @@
 # Reader Verification Workflows
 
-Two smoke workflows are recorded here: one for the browser dev server and one
-for the Deno Desktop build. Run these before tagging an alpha release that
-touches the Reader.
+Reader is the regression-grade dogfood app for the OpenElement framework. Run
+these workflows before tagging an alpha release that touches the app model,
+router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader.
+
+## Smoke matrix
+
+| Area                         | Evidence                                                              |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Browser app boot             | Browser dev server smoke, `test:visual-smoke`                         |
+| Deno Desktop target          | Deno Desktop smoke, `desktop-reader:smoke`                            |
+| Local fixture source         | `desktop-reader:smoke` host-store tests                               |
+| Local folder source          | `desktop-reader:smoke` host-store tests                               |
+| GitHub PDF source            | `desktop-reader:smoke` host-store tests                               |
+| PDF/text reading             | Browser smoke, `test:visual-smoke`                                    |
+| Search                       | `desktop-reader:smoke` host-store tests                               |
+| Annotation and note jump     | Browser smoke, Reader route tests                                     |
+| Markdown export              | `desktop-reader:smoke` export tests                                   |
+| Reading settings             | Browser smoke, storage tests                                          |
+| OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests                                 |
+| Preact islands               | `desktop-reader:smoke` (island registration)                          |
+| Third-party WC compatibility | `desktop-reader:smoke` (`/wc-interop` VNode tag smoke), browser smoke |
+| Desktop/narrow screenshots   | `test:visual-smoke`                                                   |
+
+## Automated release checks
+
+```sh
+deno task desktop-reader:smoke
+deno task test:visual-smoke
+```
+
+`desktop-reader:smoke` runs the Reader unit and host-store tests. It fails when
+core Reader workflows regress. `test:visual-smoke` builds the docs site and
+Reader, then captures screenshot evidence for the docs shell and Reader shell.
 
 ## Browser dev server smoke
 
@@ -29,6 +59,8 @@ touches the Reader.
     ```sh
     deno task --cwd examples/deno-desktop-reader test
     ```
+13. Open `/wc-interop` and verify the third-party Web Component interop route
+    renders.
 
 ## Deno Desktop smoke
 
@@ -49,6 +81,9 @@ touches the Reader.
    `~/.open-reader/books` and appear on the shelf.
 8. Close the app with `Cmd/Ctrl + W` or navigate away → `/api/app/close` is
    called and the Deno process exits cleanly.
+
+> When filing issues, track close/minimize/maximize regressions separately from
+> browser UI regressions.
 
 ## Expected artifacts
 

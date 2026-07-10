@@ -134,7 +134,13 @@ export {
 export type { SignalLike, Unsubscribe } from '@openelement/protocol/signal';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.ts';
 export { createLogger } from './logger.ts';
-export { isValidTagName } from './tag-utils.ts';
+export { assertValidTagName, isValidTagName } from './tag-utils.ts';
+export {
+  normalizeBasePath,
+  normalizeRoutePath,
+  normalizeSeparators,
+  pathToTagName,
+} from './path-utils.ts';
 export {
   bindSsrProps,
   defineCustomElement,

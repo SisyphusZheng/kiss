@@ -15,24 +15,23 @@ import type {
   PageRouteDecl,
   RendererDecl,
 } from '@openelement/protocol/ssg';
+import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
 
 export function renderImport(imp: ImportDecl): string {
   const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');
   return `import { ${names} } from '${imp.from}'`;
 }
 
-export function routeTagNameExpr(varName: string, fallback: string): string {
-  void varName;
-  return JSON.stringify(fallback);
+export function routeTagNameExpr(fallback: string): string {
+  return jsStringLiteral(fallback);
 }
 
 export function pageDefinitionExpr(varName: string): string {
-  return `(${varName}.default?.openElementPage || {})`;
+  return `__pageDefinition(${varName})`;
 }
 
 export function routeMetaExpr(varName: string): string {
-  const pageDef = pageDefinitionExpr(varName);
-  return `({ ...(${pageDef}.route !== undefined ? { route: ${pageDef}.route } : {}), ...(${pageDef}.head?.title !== undefined ? { title: ${pageDef}.head.title } : {}), ...(${pageDef}.head?.description !== undefined ? { description: ${pageDef}.head.description } : {}) })`;
+  return `__routeMeta(${varName})`;
 }
 
 export function routeRevalidateExpr(varName: string): string {
@@ -40,39 +39,54 @@ export function routeRevalidateExpr(varName: string): string {
   return `(${pageDef}.renderIntent?.revalidate ?? false)`;
 }
 
-/** Generate a POST handler for a page route (form action handling). */
-export function renderActionRoute(
+export function jsStringLiteral(value: string): string {
+  return quoteGeneratedJavaScriptStringLiteral(value);
+}
+
+export interface RouteHandlerDocConfig {
+  title: string;
+  lang: string;
+  headExtras: string;
+  allowHeadExtrasScripts: boolean;
+}
+
+export interface RenderRouteHandlerOptions {
+  method: 'get' | 'post';
+  route: PageRouteDecl;
+  renderers: RendererDecl[];
+  docConfig: RouteHandlerDocConfig;
+  isSSG: boolean;
+}
+
+/** Generate a Hono route handler for a page route (GET) or its action (POST). */
+export function renderRouteHandler(
   lines: string[],
-  route: PageRouteDecl,
-  renderers: RendererDecl[],
-  docConfig: {
-    title: string;
-    lang: string;
-    headExtras: string;
-    allowHeadExtrasScripts: boolean;
-  },
-  isSSG: boolean,
+  { method, route, renderers, docConfig, isSSG }: RenderRouteHandlerOptions,
 ): void {
   const matchingRenderers = renderers.filter((r) => {
     if (r.scope === '/') return true;
     return route.path === r.scope || route.path.startsWith(r.scope + '/');
   });
 
-  const pathStr = route.path.replace(/'/g, "\\'");
-  const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
+  const pathLiteral = jsStringLiteral(route.path);
+  const tagNameExpr = routeTagNameExpr(route.tagName);
   const pageDefExpr = pageDefinitionExpr(route.varName);
   const routeMeta = routeMetaExpr(route.varName);
-  const routeContext = `{ path: ${JSON.stringify(route.path)}, filePath: ${
-    JSON.stringify(route.filePath)
+  const routeContext = `{ path: ${jsStringLiteral(route.path)}, filePath: ${
+    jsStringLiteral(route.filePath)
   } }`;
-  const headExtrasExpr = isSSG ? '__headExtras' : JSON.stringify(docConfig.headExtras);
+  const headExtrasExpr = isSSG ? '__headExtras' : jsStringLiteral(docConfig.headExtras);
+  const isAction = method === 'post';
 
-  lines.push(`// Action POST: ${route.path} (${route.filePath})`);
-  lines.push(`app.post('${pathStr}', async (c) => {`);
+  lines.push(`// ${isAction ? 'Action POST' : 'Page'}: ${route.path} (${route.filePath})`);
+  if (!isAction) {
+    lines.push('// GET handler - renders the page with loader data');
+  }
+  lines.push(`app.${method}(${pathLiteral}, async (c) => {`);
   lines.push(`  let __tag = ${tagNameExpr}`);
   lines.push(`  let __page = ${pageDefExpr}`);
   lines.push(`  let __params = {}`);
-  lines.push(`  let __routeMeta = ${routeMeta}`);
+  lines.push(`  let __routeMetaValue = ${routeMeta}`);
   lines.push(`  const __routeContext = ${routeContext}`);
   lines.push(`  try {`);
   lines.push(`    __params = c.req.param() || {}`);
@@ -88,15 +102,22 @@ export function renderActionRoute(
   lines.push(
     `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
   );
-  lines.push(`    const __formData = await c.req.parseBody()`);
-  lines.push(`    const __actionCtx = { ...__loadContext, formData: __formData }`);
-  lines.push(
-    `    const __actionData = typeof ${route.varName}.action === "function" ? await ${route.varName}.action(__actionCtx) : undefined`,
-  );
-  lines.push(
-    `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: __actionData, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMeta })`,
-  );
-  lines.push(``);
+
+  if (isAction) {
+    lines.push(`    const __formData = await c.req.parseBody()`);
+    lines.push(`    const __actionCtx = { ...__loadContext, formData: __formData }`);
+    lines.push(
+      `    const __actionData = typeof ${route.varName}.action === "function" ? await ${route.varName}.action(__actionCtx) : undefined`,
+    );
+    lines.push(
+      `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: __actionData, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
+    );
+  } else {
+    lines.push(
+      `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: undefined, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
+    );
+  }
+  lines.push('');
 
   if (matchingRenderers.length > 0) {
     lines.push(`    // Renderer tree wrapping (outer -> inner)`);
@@ -105,19 +126,18 @@ export function renderActionRoute(
     }
   }
   lines.push(
-    `    const content = await __renderAppShell(node, c.req.path || ${
-      JSON.stringify(route.path)
-    }, { routeMeta: __routeMeta })`,
+    `    const content = await __renderAppShell(node, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
   );
   lines.push(`    return c.html(wrapInDocument(content, {`);
-  lines.push(`      title: __page.head?.title || ${JSON.stringify(docConfig.title)},`);
-  lines.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
+  lines.push(`      title: __page.head?.title || ${jsStringLiteral(docConfig.title)},`);
+  lines.push(`      lang: ${jsStringLiteral(docConfig.lang)},`);
   lines.push(`      meta: { description: __page.head?.description, tags: __page.head?.meta },`);
   lines.push(`      headExtras: ${headExtrasExpr},`);
   lines.push(`      dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
   lines.push(`      allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`);
   lines.push(`      cspNonce: c.get('cspNonce'),`);
   lines.push(`    }))`);
+
   lines.push(`  } catch (err) {`);
   lines.push(`    if (__isOpenElementRedirect(err)) {`);
   lines.push(`      return c.redirect(err.location, err.status)`);
@@ -127,7 +147,7 @@ export function renderActionRoute(
     `      return c.html(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {`,
   );
   lines.push(`        title: "404 Not Found",`);
-  lines.push(`        lang: ${JSON.stringify(docConfig.lang)},`);
+  lines.push(`        lang: ${jsStringLiteral(docConfig.lang)},`);
   lines.push(`        headExtras: ${headExtrasExpr},`);
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
@@ -135,7 +155,41 @@ export function renderActionRoute(
   lines.push(`        cspNonce: c.get('cspNonce'),`);
   lines.push(`      }), 404)`);
   lines.push(`    }`);
-  lines.push(`    console.error('[openElement] Action POST failed for ${pathStr}:', err)`);
+
+  if (!isAction) {
+    lines.push(`    if (typeof __page.error === "function") {`);
+    lines.push(`      try {`);
+    lines.push(
+      `        const errorNode = jsx(__tag, { ...__params, __openElementParams: __params, __openElementError: err, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
+    );
+    lines.push(
+      `        const errorContent = await __renderAppShell(errorNode, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
+    );
+    lines.push(`        return c.html(wrapInDocument(errorContent, {`);
+    lines.push(`          title: __page.head?.title || ${jsStringLiteral(docConfig.title)},`);
+    lines.push(`          lang: ${jsStringLiteral(docConfig.lang)},`);
+    lines.push(
+      `          meta: { description: __page.head?.description, tags: __page.head?.meta },`,
+    );
+    lines.push(`          headExtras: ${headExtrasExpr},`);
+    lines.push(`          dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
+    lines.push(
+      `          allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
+    );
+    lines.push(`          cspNonce: c.get('cspNonce'),`);
+    lines.push(`        }), 500)`);
+    lines.push(`      } catch (errorRenderFailure) {`);
+    lines.push(
+      `        console.error('[openElement] Route error renderer failed for ' + ${pathLiteral} + ':', errorRenderFailure)`,
+    );
+    lines.push(`      }`);
+    lines.push(`    }`);
+  }
+
+  const failureLabel = isAction ? 'Action POST failed' : 'Route render failed';
+  lines.push(
+    `    console.error('[openElement] ${failureLabel} for ' + ${pathLiteral} + ':', err)`,
+  );
   lines.push(`    if (import.meta.env.PROD) {`);
   lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   lines.push(`    } else {`);
@@ -155,7 +209,7 @@ export function renderDataRouteMap(
   lines.push('// Route-to-module map for /_data endpoint (SPA client navigation)');
   lines.push('const __dataRouteMap = {');
   for (const r of pageRoutes) {
-    lines.push(`  ${JSON.stringify(r.path)}: ${r.varName},`);
+    lines.push(`  ${jsStringLiteral(r.path)}: ${r.varName},`);
   }
   lines.push('};');
   lines.push('');
@@ -164,7 +218,7 @@ export function renderDataRouteMap(
 /** Generate the /_data GET endpoint for SPA navigation data fetching. */
 export function renderDataEndpoint(lines: string[]): void {
   lines.push('// /_data endpoint - returns JSON loader data for SPA navigation');
-  lines.push(`app.get('/_data', async (c) => {`);
+  lines.push(`app.get(${jsStringLiteral('/_data')}, async (c) => {`);
   lines.push(`  const routePath = c.req.query('route');`);
   lines.push(`  if (!routePath) return c.json({ error: 'Missing route query' }, 400);`);
   lines.push(`  const mod = __dataRouteMap[routePath];`);
@@ -189,7 +243,10 @@ export function renderDataEndpoint(lines: string[]): void {
 
 function renderCorsOrigin(origin: CorsOriginConfig): string {
   if (typeof origin === 'object' && !Array.isArray(origin)) return origin.body;
-  return JSON.stringify(origin);
+  if (Array.isArray(origin)) {
+    return `[${origin.map((o) => jsStringLiteral(o)).join(', ')}]`;
+  }
+  return jsStringLiteral(origin);
 }
 
 const CORS_ALLOW =
@@ -261,7 +318,7 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
           lines.push(`  c.set('cspNonce', nonce)`);
           lines.push(
             `  const policy = ${
-              JSON.stringify(policyTemplate)
+              jsStringLiteral(policyTemplate)
             }.replace('NONCE_PLACEHOLDER', nonce)`,
           );
           lines.push(`  await next()`);
@@ -271,7 +328,7 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
           lines.push(`app.use('*', async (c, next) => {`);
           lines.push(`  await next()`);
           lines.push(
-            `  c.header('${headerName}', ${JSON.stringify(cspConfig.policy)})`,
+            `  c.header('${headerName}', ${jsStringLiteral(cspConfig.policy ?? '')})`,
           );
           lines.push(`})`);
         }
@@ -287,160 +344,25 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
  * Render an API route using Hono's standard app.route().
  */
 export function renderApiRoute(lines: string[], route: ApiRouteDecl): void {
+  const pathLiteral = jsStringLiteral(route.path);
   lines.push(`// API: ${route.path} (${route.filePath})`);
   lines.push(
     `if (${route.varName}.default && typeof ${route.varName}.default.fetch === 'function') {`,
   );
-  lines.push(`  app.route('${route.path}', ${route.varName}.default)`);
+  lines.push(`  app.route(${pathLiteral}, ${route.varName}.default)`);
   lines.push(`} else if (typeof ${route.varName}.default === 'function') {`);
-  lines.push(`  app.all('${route.path}', async (c) => {`);
+  lines.push(`  app.all(${pathLiteral}, async (c) => {`);
   lines.push(`    return await ${route.varName}.default({`);
   lines.push(`      request: c.req.raw,`);
   lines.push(`      params: c.req.param() || {},`);
   lines.push(`      env: c.env || {},`);
-  lines.push(`      platform: c.executionCtx,`);
+  lines.push(`      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`);
   lines.push(`    })`);
   lines.push(`  })`);
   lines.push(`} else {`);
   lines.push(
-    `  throw new Error('API route ${route.path} must default-export a Hono app or a function (ctx) => Response')`,
+    `  throw new Error('API route ' + ${pathLiteral} + ' must default-export a Hono app or a function (ctx) => Response')`,
   );
   lines.push(`}`);
-  lines.push('');
-}
-
-export function renderPageRoute(
-  lines: string[],
-  route: PageRouteDecl,
-  renderers: RendererDecl[],
-  docConfig: {
-    title: string;
-    lang: string;
-    headExtras: string;
-    allowHeadExtrasScripts: boolean;
-  },
-  isSSG: boolean,
-): void {
-  const matchingRenderers = renderers.filter((r) => {
-    if (r.scope === '/') return true;
-    return route.path === r.scope || route.path.startsWith(r.scope + '/');
-  });
-
-  lines.push(`// Page: ${route.path} (${route.filePath})`);
-  const pathStr = route.path.replace(/'/g, "\\'");
-  const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
-  const pageDefExpr = pageDefinitionExpr(route.varName);
-  const routeMeta = routeMetaExpr(route.varName);
-  const routeContext = `{ path: ${JSON.stringify(route.path)}, filePath: ${
-    JSON.stringify(route.filePath)
-  } }`;
-  lines.push(`// GET handler - renders the page with loader data`);
-  lines.push(`app.get('${pathStr}', async (c) => {`);
-  lines.push(`  let __tag = ${tagNameExpr}`);
-  lines.push(`  let __page = ${pageDefExpr}`);
-  lines.push(`  let __params = {}`);
-  lines.push(`  let __routeMeta = ${routeMeta}`);
-  lines.push(`  const __routeContext = ${routeContext}`);
-  lines.push(`  try {`);
-  lines.push(`    __params = c.req.param() || {}`);
-  lines.push(`    const __loadContext = {`);
-  lines.push(`      params: __params,`);
-  lines.push(`      request: c.req.raw,`);
-  lines.push(`      env: c.env || {},`);
-  lines.push(
-    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
-  );
-  lines.push(`      route: __routeContext,`);
-  lines.push(`    }`);
-  lines.push(
-    `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
-  );
-  lines.push(
-    `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: undefined, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMeta })`,
-  );
-  lines.push('');
-
-  const headExtrasExpr = isSSG ? '__headExtras' : JSON.stringify(docConfig.headExtras);
-
-  if (matchingRenderers.length > 0) {
-    lines.push(`    // Renderer tree wrapping (outer -> inner)`);
-    for (const renderer of matchingRenderers) {
-      lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
-    }
-  }
-  lines.push(
-    `    const content = await __renderAppShell(node, c.req.path || ${
-      JSON.stringify(route.path)
-    }, { routeMeta: __routeMeta })`,
-  );
-  lines.push(`    return c.html(wrapInDocument(content, {`);
-  lines.push(`      title: __page.head?.title || ${JSON.stringify(docConfig.title)},`);
-  lines.push(`      lang: ${JSON.stringify(docConfig.lang)},`);
-  lines.push(`      meta: { description: __page.head?.description, tags: __page.head?.meta },`);
-  lines.push(`      headExtras: ${headExtrasExpr},`);
-  lines.push(`      dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
-  lines.push(
-    `      allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
-  );
-  lines.push(`      cspNonce: c.get('cspNonce'),`);
-  lines.push(`    }))`);
-
-  lines.push(`  } catch (err) {`);
-  lines.push(`    if (__isOpenElementRedirect(err)) {`);
-  lines.push(`      return c.redirect(err.location, err.status)`);
-  lines.push(`    }`);
-  lines.push(`    if (__isOpenElementNotFound(err)) {`);
-  lines.push(
-    `      return c.html(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {`,
-  );
-  lines.push(`        title: "404 Not Found",`);
-  lines.push(`        lang: ${JSON.stringify(docConfig.lang)},`);
-  lines.push(`        headExtras: ${headExtrasExpr},`);
-  lines.push(
-    `        allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
-  );
-  lines.push(`        cspNonce: c.get('cspNonce'),`);
-  lines.push(`      }), 404)`);
-  lines.push(`    }`);
-  lines.push(`    if (typeof __page.error === "function") {`);
-  lines.push(`      try {`);
-  lines.push(
-    `        const errorNode = jsx(__tag, { ...__params, __openElementParams: __params, __openElementError: err, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMeta })`,
-  );
-  lines.push(
-    `        const errorContent = await __renderAppShell(errorNode, c.req.path || ${
-      JSON.stringify(route.path)
-    }, { routeMeta: __routeMeta })`,
-  );
-  lines.push(`        return c.html(wrapInDocument(errorContent, {`);
-  lines.push(`          title: __page.head?.title || ${JSON.stringify(docConfig.title)},`);
-  lines.push(`          lang: ${JSON.stringify(docConfig.lang)},`);
-  lines.push(`          meta: { description: __page.head?.description, tags: __page.head?.meta },`);
-  lines.push(`          headExtras: ${headExtrasExpr},`);
-  lines.push(`          dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
-  lines.push(
-    `          allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
-  );
-  lines.push(`          cspNonce: c.get('cspNonce'),`);
-  lines.push(`        }), 500)`);
-  lines.push(`      } catch (errorRenderFailure) {`);
-  lines.push(
-    `        console.error('[openElement] Route error renderer failed for ${pathStr}:', errorRenderFailure)`,
-  );
-  lines.push(`      }`);
-  lines.push(`    }`);
-  lines.push(
-    `    console.error('[openElement] Route render failed for ${pathStr}:', err)`,
-  );
-  lines.push(`    if (import.meta.env.PROD) {`);
-  lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
-  lines.push(`    } else {`);
-  lines.push(`      const safeErr = escapeHtml(String(err.stack || err))`);
-  lines.push(
-    `      return c.html('<h1>500</h1><pre>' + safeErr + '</pre>', 500)`,
-  );
-  lines.push(`    }`);
-  lines.push(`  }`);
-  lines.push(`})`);
   lines.push('');
 }

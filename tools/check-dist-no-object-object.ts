@@ -8,7 +8,7 @@
  * Usage: deno run --allow-read tools/check-dist-no-object-object.ts
  */
 
-const _SCAN_GLOB = 'www/dist/**/*.html';
+import { walk } from './lib/fs.ts';
 
 interface Match {
   file: string;
@@ -26,7 +26,7 @@ const ALLOWED_IN_FILES = [
 
 const matches: Match[] = [];
 
-for await (const entry of walkFiles('www/dist')) {
+for await (const entry of walk('www/dist')) {
   if (!entry.endsWith('.html')) continue;
 
   const isAllowed = ALLOWED_IN_FILES.some((p) => entry.includes(p));
@@ -43,26 +43,6 @@ for await (const entry of walkFiles('www/dist')) {
         context: line.trim().slice(0, 100),
       });
     }
-  }
-}
-
-async function* walkFiles(root: string): AsyncGenerator<string> {
-  try {
-    const stat = await Deno.stat(root);
-    if (!stat.isDirectory) {
-      yield root;
-      return;
-    }
-    for await (const entry of Deno.readDir(root)) {
-      const full = `${root}/${entry.name}`;
-      if (entry.isDirectory) {
-        yield* walkFiles(full);
-      } else {
-        yield full;
-      }
-    }
-  } catch {
-    // skip
   }
 }
 

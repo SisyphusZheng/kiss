@@ -5,32 +5,39 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-## Current Version Line: v0.41.0-alpha.5 Released / alpha.6 Active Next
+Public positioning: OpenElement is a Web Components-native fullstack framework
+with a JSX-first Basic Element authoring layer. Dogfood apps validate that
+framework; they do not define new product lines. AutoFlow3, docs truth,
+workflow gates, and release evidence are infrastructure.
 
-v0.41.0-alpha.5 is the current released package line. It follows the
-cross-framework WC integration work and adds a first-class SPA mode, client
-router, and Deno Desktop reader practice app. The desktop proof is intentionally
-WeRead-style rather than WeRead-integrated: it uses local/open fixtures, local
-PDF folders/repositories, and public GitHub repo/path sources, and does not use
-WeRead private APIs, account cookies, scraping, or copyrighted book content.
+## Current Version Line: v0.41.0-alpha.7 Active / beta.1 Active Next
 
-v0.41.0-alpha.6 is the active next architecture line. It syncs product truth
-under ADR-0110, records the App ownership boundary in ADR-0111, makes
-OpenElement App own route/render/request concepts, keeps Vite/Hono/Nitro/Deno
-Desktop as official drivers/adapters, closes CodeQL/doc truth cleanup, and
-promotes Reader into regression-grade dogfood.
+v0.41.0-alpha.6 is the current released package line. It closes the front-half
+cleanup audit (#205 through #212, #226, #227), syncs product truth under
+ADR-0110, records the App ownership boundary in ADR-0111, makes OpenElement App
+own RouteGraph/RenderPipeline/RequestContext concepts, keeps
+Vite/Hono/Nitro/Deno Desktop as official drivers/adapters, closes the CodeQL and
+doc-truth backlog (#186 through #191 and #192 through #194), and promotes Reader
+into regression-grade dogfood. The release was published to npm with provenance;
+post-publish npm consumer smoke evidence is recorded in
+`docs/release/autoflow3/v0.41.0-alpha.6.json`.
 
-v0.41.0-alpha.7 is the planned real-app dogfood line: a read-only,
-accountless Mac Mastodon Desktop incubation that proves networked public API
-fetching, timeline/profile/status routes, local cache, desktop shell behavior,
-and screenshot/API verification without OAuth, direct messages, notifications,
-or authenticated mutations.
+v0.41.0-alpha.5 proved SPA mode plus the Deno Desktop Reader proof. It is now
+the prior released line.
+
+v0.41.0-alpha.7 is the active next dogfood line: a read-only/accountless
+networked Mastodon/GoToSocial desktop app whose job is to stress-test the
+current openElement framework surface (SPA mode, Deno Desktop, third-party WC
+interop, render pipeline under dynamic content, local state/cache, error
+boundaries) without adding server/data/forms/session/cache primitives or OAuth.
+Design source: `docs/dogfood/mastodon-desktop/README.md`.
 
 v0.41.0-beta.1 is the Adoption Freeze before stable v0.41.0. It adds no new
 product surface; it freezes the five-minute starter path, public API docs,
-website positioning, logo/brand rendering, npm metadata, GitHub release notes,
-and release truth so openElement can be evaluated as the Web Components
-fullstack framework plus Basic Element product line.
+website positioning, public surface labels, Deno toolchain truth, logo/brand
+rendering, npm metadata, GitHub release notes, and release truth so openElement
+can be evaluated as the Web Components fullstack framework plus Basic Element
+product line.
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -38,6 +45,15 @@ release-state control plane, but it cannot decide minor/major product scope,
 public API, package topology, default runtime, default signal engine,
 security/auth/database ownership, or release policy without human ADR or
 approved version-plan evidence.
+
+## Toolchain Truth
+
+`.dvmrc` is pinned to Deno `2.9.0` (stable). CI installs Deno via
+`setup-deno-workspace`, which reads `.dvmrc`; the standalone JSR consumer
+monitor also reads `.dvmrc`. The full gate matrix — including `deno pack` /
+`pack:dry-run` — passes on this stable version. Deno 2.8+ remains the
+documented public minimum. Canary is reserved for Deno Desktop preview
+features and is not a release requirement.
 
 ## v0.41.0-alpha.5 Release State: Released
 
@@ -52,6 +68,23 @@ semantics. The Mastodon/GoToSocial practice train is also deferred: alpha.6 has
 no Mastodon/GoToSocial app, and alpha.7 is read-only/accountless public
 Mastodon/GoToSocial desktop incubation. Authenticated mutations remain out of
 scope until later framework primitives exist.
+
+## v0.41.0-alpha.6 Release State: Released
+
+v0.41.0-alpha.6 is the App/protocol architecture hardening line. The
+implementation PR train closed the alpha.6 issue set:
+
+- App/protocol architecture slices: #145 through #154.
+- CodeQL and trust-boundary cleanup: #186 through #191.
+- Product-truth/docs gates: #192 through #194.
+- Front-half repository cleanup audit: #205 through #212, #226, #227.
+
+Release-candidate cleanup closed the final CodeQL alert for island dynamic
+import code generation with an explicit admitted module-specifier boundary plus
+CodeQL-recognized JavaScript literal escaping shared by generated client and
+server entry code before emitted JavaScript receives route, tag, or module
+literals. After GitHub CodeQL, AutoFlow CI, review, and Cloudflare checks passed
+on PR #229, the release workflow published `0.41.0-alpha.6` from `main`.
 
 ## Prior Version Line: v0.40.6 Released (Audit-Driven Quality Cleanup)
 
@@ -162,7 +195,7 @@ Runtime functions that need protocol re-exports:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Dead npm deps           | `hono` in `adapter-vite/deno.json`, `hono` in `ssg/deno.json`, `typescript` in `adapter-vite/deno.json`                  |
 | Stale import-map (root) | `flexsearch`, `sanitize-html`, `@types/sanitize-html`, `@types/node` — zero .ts imports                                  |
-| Broken tool             | `tools/verify-package-configs.ts` — stale `deno.land` URL + references deleted `i18n` package                            |
+| Removed dead tools      | `tools/verify-package-configs.ts` + `tools/config-templates.ts` deleted as redundant with graph/surface checks           |
 | API leak                | `adapter-vite/build-pipeline.ts` re-exports `FrameworkOptions` from `@openelement/core` — should re-export from protocol |
 
 ## Prior Version Line: v0.39.0 (Framework RC + Four-Product Matrix Reset)
@@ -209,9 +242,10 @@ Local evidence: `deno task nitro:proof:node` builds Nitro `node-server` output
 and verifies the mounted openElement Web `Response`, public asset serving,
 route/render behavior, explicit island minimality, static zero-JS output, API
 routes, and Nitro-owned cache-control for `/isr`. `deno task
-nitro:proof:workers` builds Nitro `cloudflare-module` output and verifies the
-generated Workers server entry, wrangler config, public asset, openElement
-route/render markers, and route-rule cache markers. Local, `dev`, and `main`
+nitro:proof:workers` builds Nitro `cloudflare-module` output, imports the
+generated Workers module, executes its `fetch` handler with a local
+Cloudflare-compatible asset binding, and verifies the same public asset,
+route/render, island, API, and cache-intent behavior. Local, `dev`, and `main`
 non-JSR release gates passed. JSR publish ran locally and in CI under the
 ADR-0097-era distribution policy.
 

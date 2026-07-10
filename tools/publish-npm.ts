@@ -11,6 +11,7 @@ import {
   readPackages,
   releasePublishOrder,
 } from './lib/package-graph.ts';
+import { runCommand } from './lib/process.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -32,27 +33,6 @@ function npmTarballName(pkg: PackageInfo): string {
 
 function tarballPath(pkg: PackageInfo): string {
   return `${pkg.dir}/${npmTarballName(pkg)}`;
-}
-
-async function runCommand(
-  command: string,
-  args: string[],
-  cwd?: string,
-  env?: Record<string, string>,
-): Promise<void> {
-  console.log(`$ ${[command, ...args].join(' ')}${cwd ? `  # cwd=${cwd}` : ''}`);
-  const proc = new Deno.Command(command, {
-    args,
-    cwd,
-    env,
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
-  });
-  const status = await proc.spawn().status;
-  if (!status.success) {
-    throw new Error(`Command failed with exit code ${status.code}: ${command} ${args.join(' ')}`);
-  }
 }
 
 async function assertCleanWorktree(): Promise<void> {
@@ -148,12 +128,12 @@ async function packPackage(
   // Release pack tolerates dirty worktree (deno fmt may touch files outside
   // the staged bump list). Dry-run pack always tolerates dirty worktree.
   const args = ['pack', '--allow-dirty', '--output', filename];
-  await runCommand('deno', args, pkg.dir);
+  await runCommand('deno', args, { cwd: pkg.dir });
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });
   const tarEnv = { COPYFILE_DISABLE: '1' };
   try {
-    await runCommand('tar', ['-xzf', out, '-C', tmp], undefined, tarEnv);
+    await runCommand('tar', ['-xzf', out, '-C', tmp], { env: tarEnv });
     const pkgJsonPath = `${tmp}/package/package.json`;
     const pkgJson = JSON.parse(Deno.readTextFileSync(pkgJsonPath));
     applyPackageJsonOverrides(pkg, pkgJson);
@@ -162,7 +142,7 @@ async function packPackage(
       ...(pkgJson.dependencies ?? {}),
     };
     Deno.writeTextFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
-    await runCommand('tar', ['-czf', out, '-C', tmp, 'package'], undefined, tarEnv);
+    await runCommand('tar', ['-czf', out, '-C', tmp, 'package'], { env: tarEnv });
   } finally {
     await Deno.remove(tmp, { recursive: true });
   }

@@ -1,14 +1,11 @@
 # openElement Desktop SPA Proof
 
-Runs openElement SPA mode inside a Deno Desktop window (deno canary).
+Runs openElement SPA mode inside a Deno Desktop window.
 
 ## Setup
 
-Install deno canary:
-
-```sh
-deno upgrade canary
-```
+Use the Deno version pinned in the root `.dvmrc` (2.9.0+).
+`deno desktop` is available in stable Deno since 2.9.0.
 
 ## Run
 

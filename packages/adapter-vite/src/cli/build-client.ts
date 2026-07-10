@@ -39,11 +39,14 @@ type ViteInlineConfigWithManifest = Omit<InlineConfig, 'build'> & {
 };
 
 /** Workspace root derived from this module's location (packages/adapter-vite/src/cli/).
- * Only valid in local workspace (file:// import.meta.url). In JSR consumers, returns null. */
+ * Only valid in the local monorepo layout. In npm/JSR consumers, returns null. */
 const WORKSPACE_ROOT: string | null = (() => {
   if (!import.meta.url.startsWith('file:')) return null;
   try {
-    return fileURLToPath(new URL('../../../..', import.meta.url)).replace(/\\/g, '/');
+    const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/\\/g, '/');
+    // Sanity check: the real workspace has packages/core/src/style-sheet.ts.
+    if (!existsSync(join(root, 'packages', 'core', 'src', 'style-sheet.ts'))) return null;
+    return root;
   } catch {
     return null;
   }

@@ -30,7 +30,8 @@ capabilities.
 ## Setup
 
 ```sh
-deno upgrade canary    # deno desktop requires canary
+# Use the Deno version pinned in the root .dvmrc (2.9.0+).
+# `deno desktop` is available in stable Deno since 2.9.0.
 ```
 
 ## Dev
