@@ -26,7 +26,8 @@
  * Usage:
  * ```ts
  * // Import all components
- * import '@openelement/ui';
+ * import { registerOpenUi } from '@openelement/ui';
+ * registerOpenUi();
  *
  * // Or import specific components
  * import { OpenButton } from '@openelement/ui/open-button';
@@ -68,3 +69,4 @@ export { OpenTabs, tagName as openTabsTagName } from './open-tabs.tsx';
 // Package manifest (WC Package Protocol)
 // Consumers (adapter-vite) read manifest.declarations to derive island metadata.
 export { manifest } from './manifest.ts';
+export { registerOpenUi } from './register.ts';

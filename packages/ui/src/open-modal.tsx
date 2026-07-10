@@ -50,8 +50,3 @@ export class OpenModal extends OpenElement {
 }
 
 export default OpenModal;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenModal);
-}

@@ -75,8 +75,17 @@ export function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandMo
   return modulePath as AdmittedIslandModuleSpecifier;
 }
 
-function islandImportFactory(modulePath: AdmittedIslandModuleSpecifier): string {
-  return `() => import(${quoteGeneratedJavaScriptStringLiteral(modulePath)})`;
+function islandImportFactory(
+  modulePath: AdmittedIslandModuleSpecifier,
+  tagName: string,
+): string {
+  return `() => import(${
+    quoteGeneratedJavaScriptStringLiteral(modulePath)
+  }).then(function(mod) { if (mod.default && !customElements.get(${
+    quoteGeneratedJavaScriptStringLiteral(tagName)
+  })) customElements.define(${
+    quoteGeneratedJavaScriptStringLiteral(tagName)
+  }, mod.default); return mod; })`;
 }
 
 export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
@@ -109,7 +118,9 @@ export function generateClientEntry(
 
   const islandMap = admittedIslands
     .map((i) =>
-      `  ${quoteGeneratedJavaScriptStringLiteral(i.tagName)}: ${islandImportFactory(i.modulePath)}`
+      `  ${quoteGeneratedJavaScriptStringLiteral(i.tagName)}: ${
+        islandImportFactory(i.modulePath, i.tagName)
+      }`
     )
     .join(',\n');
 

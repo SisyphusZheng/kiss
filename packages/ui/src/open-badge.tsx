@@ -89,7 +89,3 @@ export class OpenBadge extends OpenElement {
 }
 
 export default OpenBadge;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenBadge);
-}

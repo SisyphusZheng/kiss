@@ -34,6 +34,19 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   assertEquals(mod.manifest.declarations.map((decl) => decl.tagName), expectedTags);
 });
 
+Deno.test('open-ui - explicit registration is complete and idempotent', async () => {
+  const { registerOpenUi } = await import('../src/index.ts');
+  const definitions = new Map<string, CustomElementConstructor>();
+  const registry = {
+    get: (name: string) => definitions.get(name),
+    define: (name: string, ctor: CustomElementConstructor) => definitions.set(name, ctor),
+  } as unknown as CustomElementRegistry;
+
+  registerOpenUi(registry);
+  registerOpenUi(registry);
+  assertEquals(definitions.size, 18);
+});
+
 Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
   const mod = await import('../src/open-theme-toggle.tsx');
   assertEquals(mod.tagName, 'open-theme-toggle');

@@ -624,7 +624,3 @@ export class OpenLabStage extends OpenElement {
 }
 
 export default OpenLabStage;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenLabStage);
-}

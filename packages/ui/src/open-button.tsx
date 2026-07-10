@@ -283,8 +283,3 @@ export class OpenButton extends OpenElement {
 }
 
 export default OpenButton;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenButton);
-}

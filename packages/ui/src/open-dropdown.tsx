@@ -46,8 +46,3 @@ export class OpenDropdown extends OpenElement {
 }
 
 export default OpenDropdown;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenDropdown);
-}

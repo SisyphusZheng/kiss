@@ -44,6 +44,7 @@ Deno.test('generateClientEntry emits admitted dynamic import factories', () => {
     code.includes('() => import("./islands/my-island.ts")'),
     true,
   );
+  assertEquals(code.includes('customElements.define("my-island", mod.default)'), true);
 });
 
 Deno.test('generateClientEntry rejects un-admitted module specifiers', () => {

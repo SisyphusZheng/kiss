@@ -1,5 +1,5 @@
 import { openElement } from '@openelement/adapter-vite';
-import { openPropsTokenSheet } from '@openelement/ui';
+import { openPropsTokenSheet, registerOpenUi } from '@openelement/ui';
 import { defineConfig } from 'vite';
 
 // www/ is an npm-first consumer; local workspace resolution during dev, npm
@@ -240,3 +240,4 @@ export default defineConfig({
     }),
   ],
 });
+registerOpenUi();

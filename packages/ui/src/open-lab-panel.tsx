@@ -154,7 +154,3 @@ export class OpenLabPanel extends OpenElement {
 }
 
 export default OpenLabPanel;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenLabPanel);
-}

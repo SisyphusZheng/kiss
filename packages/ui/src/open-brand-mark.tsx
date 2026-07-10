@@ -72,7 +72,3 @@ export class OpenBrandMark extends OpenElement {
 }
 
 export default OpenBrandMark;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenBrandMark);
-}

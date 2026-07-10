@@ -262,8 +262,3 @@ export class OpenInput extends OpenElement {
 }
 
 export default OpenInput;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenInput);
-}

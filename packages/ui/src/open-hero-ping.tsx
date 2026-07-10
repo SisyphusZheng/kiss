@@ -144,8 +144,3 @@ export default class HeroPing extends OpenElement {
     this.update();
   }
 }
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, HeroPing);
-}

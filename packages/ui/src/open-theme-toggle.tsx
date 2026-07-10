@@ -257,8 +257,3 @@ export class OpenThemeToggle extends OpenElement {
 }
 
 export default OpenThemeToggle;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenThemeToggle);
-}

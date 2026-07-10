@@ -436,7 +436,3 @@ export class OpenStandardsVisual extends OpenElement {
 }
 
 export default OpenStandardsVisual;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenStandardsVisual);
-}

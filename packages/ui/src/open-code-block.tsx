@@ -277,8 +277,3 @@ export class OpenCodeBlock extends OpenElement {
 }
 
 export default OpenCodeBlock;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenCodeBlock);
-}

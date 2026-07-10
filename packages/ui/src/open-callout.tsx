@@ -92,7 +92,3 @@ export class OpenCallout extends OpenElement {
 }
 
 export default OpenCallout;
-
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenCallout);
-}

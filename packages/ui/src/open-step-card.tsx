@@ -122,8 +122,3 @@ export class OpenStepCard extends OpenElement {
 }
 
 export default OpenStepCard;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenStepCard);
-}

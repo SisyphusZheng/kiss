@@ -1630,8 +1630,3 @@ export class OpenLayout extends OpenElement {
 }
 
 export default OpenLayout;
-
-// Guard: idempotent across SSR paths
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, OpenLayout);
-}
