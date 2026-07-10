@@ -12,7 +12,7 @@ import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 
 import { OpenElementBuildContext } from './build-context.ts';
 import { createOpenPlugin } from './plugin.ts';
-import { openContent } from '@openelement/content';
+import { openContent } from '@openelement/content/vite';
 import { openI18n } from './i18n-plugin.ts';
 import { createLogger } from '@openelement/core/logger';
 

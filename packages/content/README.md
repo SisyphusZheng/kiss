@@ -1,5 +1,15 @@
 # @openelement/content
 
+Runtime-safe content scanning and rendering utilities are exported from
+`@openelement/content`. Build integrations import the explicit Vite subpath:
+
+```ts
+import { openContent } from '@openelement/content/vite';
+```
+
+Keeping the plugin behind `/vite` prevents Vite types and build-only behavior
+from entering route and island runtime dependency graphs.
+
 Build-time content pipeline for openElement apps.
 
 > v0.39 surface: advanced Framework feature. Configure it through
