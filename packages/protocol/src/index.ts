@@ -19,3 +19,4 @@ export * from './island.ts';
 export * from './prop.ts';
 export * from './hydration-markers.ts';
 export * from './framework.ts';
+export * from './app-model.ts';

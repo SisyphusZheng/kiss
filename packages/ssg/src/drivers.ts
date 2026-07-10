@@ -12,8 +12,7 @@ import type {
   OpenElementRouteGraph,
   OpenElementRouteKind,
   OpenElementRouteNode,
-} from '@openelement/app/model';
-import { createRouteGraph } from '@openelement/app/model';
+} from '@openelement/protocol/app-model';
 import type { RouteEntry } from '@openelement/protocol/framework';
 import type { HonoEntryOptions } from './entry-renderer.ts';
 import { generateHonoEntryCode } from './entry-renderer.ts';
@@ -59,12 +58,12 @@ export function createRouteGraphFromEntries(
   routes: RouteEntry[],
   basePath = '/',
 ): OpenElementRouteGraph {
-  return createRouteGraph({
+  return {
     basePath: normalizeRouteBasePath(basePath),
     routes: routes
       .filter((route) => route.type === 'page' || route.type === 'api')
       .map(routeEntryToNode),
-  });
+  };
 }
 
 export function createAssetManifestFromViteManifest(
@@ -100,13 +99,15 @@ export function createAssetManifestFromViteManifest(
 function routeEntryToNode(route: RouteEntry): OpenElementRouteNode {
   const node: OpenElementRouteNode = {
     kind: route.type as OpenElementRouteKind,
-    path: route.path,
+    path: normalizeRoutePath(route.path),
     filePath: route.filePath,
     // RouteEntry has no separate importPath yet; scanned route files are also imports.
     importPath: route.filePath,
   };
-  if (route.tagName !== undefined) node.tagName = route.tagName;
-  if (route.params !== undefined) node.paramNames = route.params;
+  node.tagName = route.tagName;
+  node.paramNames = route.params ? [...route.params] : undefined;
+  node.children = undefined;
+  node.meta = undefined;
   return node;
 }
 
@@ -133,4 +134,11 @@ function normalizeBasePath(basePath: string): string {
 function normalizeRouteBasePath(basePath: string): string {
   const normalized = normalizeBasePath(basePath);
   return normalized.length > 1 ? normalized.replace(/\/$/, '') : normalized;
+}
+
+function normalizeRoutePath(path: string): string {
+  const trimmed = path.trim();
+  if (!trimmed) return '/';
+  const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return withSlash.length > 1 ? withSlash.replace(/\/+$/, '') : withSlash;
 }

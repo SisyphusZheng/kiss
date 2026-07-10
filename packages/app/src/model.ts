@@ -6,7 +6,21 @@
  * tested without booting Hono, Vite, Nitro, or a desktop shell.
  */
 
-export type OpenElementRouteKind = 'page' | 'api';
+import type {
+  OpenElementAssetManifest,
+  OpenElementRouteGraph,
+  OpenElementRouteGraphFactory,
+  OpenElementRouteNode,
+} from '@openelement/protocol/app-model';
+export type {
+  CreateRouteGraphOptions,
+  OpenElementAssetManifest,
+  OpenElementAssetManifestEntry,
+  OpenElementRouteGraph,
+  OpenElementRouteKind,
+  OpenElementRouteNode,
+} from '@openelement/protocol/app-model';
+
 export type OpenElementRenderPhase =
   | 'route'
   | 'layout'
@@ -16,22 +30,6 @@ export type OpenElementRenderPhase =
   | 'serialize'
   | 'error';
 export type OpenElementDeploymentRuntime = 'static' | 'node' | 'workers' | 'deno-desktop';
-
-export interface OpenElementRouteNode {
-  kind: OpenElementRouteKind;
-  path: string;
-  filePath?: string;
-  importPath?: string;
-  tagName?: string;
-  paramNames?: string[];
-  children?: OpenElementRouteNode[];
-  meta?: Record<string, unknown>;
-}
-
-export interface OpenElementRouteGraph {
-  routes: OpenElementRouteNode[];
-  basePath: string;
-}
 
 export interface OpenElementRequestContext<
   Env extends Record<string, unknown> = Record<string, unknown>,
@@ -56,19 +54,6 @@ export interface OpenElementRenderStep {
 
 export interface OpenElementRenderPipeline {
   steps: OpenElementRenderStep[];
-}
-
-export interface OpenElementAssetManifestEntry {
-  fileName: string;
-  href: string;
-  kind: 'script' | 'style' | 'asset';
-  sizeBytes?: number;
-  integrity?: string;
-}
-
-export interface OpenElementAssetManifest {
-  basePath: string;
-  entries: OpenElementAssetManifestEntry[];
 }
 
 export interface OpenElementIslandManifestEntry {
@@ -111,17 +96,12 @@ export function createAppModel(options: CreateAppModelOptions = {}): OpenElement
   };
 }
 
-export interface CreateRouteGraphOptions {
-  routes: OpenElementRouteNode[];
-  basePath?: string;
-}
-
-export function createRouteGraph(options: CreateRouteGraphOptions): OpenElementRouteGraph {
+export const createRouteGraph: OpenElementRouteGraphFactory = (options) => {
   return {
     routes: options.routes.map(normalizeRouteNode),
     basePath: normalizeRoutePath(options.basePath ?? '/'),
   };
-}
+};
 
 export interface CreateRequestContextOptions<
   Env extends Record<string, unknown> = Record<string, unknown>,

@@ -70,6 +70,7 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   },
   'protocol': {
     '.': 'src/index.ts',
+    'app-model': 'src/app-model.ts',
     'context': 'src/context.ts',
     'data': 'src/data.ts',
     'errors': 'src/errors.ts',

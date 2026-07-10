@@ -17,7 +17,8 @@
     "./style-sheet": "./src/style-sheet.ts",
     "./island": "./src/island.ts",
     "./prop": "./src/prop.ts",
-    "./hydration-markers": "./src/hydration-markers.ts"
+    "./hydration-markers": "./src/hydration-markers.ts",
+    "./app-model": "./src/app-model.ts"
   },
   "publish": {
     "include": [
