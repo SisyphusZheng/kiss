@@ -1,11 +1,6 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { addPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
-import {
-  evaluatePatchEligibility,
-  evaluateVersionAuthority,
-  selectGates,
-  V040_CLEANUP_TRAIN_APPROVAL_ID,
-} from '../policy.ts';
+import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {
   createReleasePlan,
   evidenceFile,
@@ -37,23 +32,6 @@ Deno.test('policy: package topology changes require human review', () => {
   });
   assertFalse(decision.allowed);
   assert(decision.reason.includes('package topology'));
-});
-
-Deno.test('policy: v0.40.x cleanup train patch requires approved plan id', () => {
-  const decision = evaluatePatchEligibility({
-    changedPaths: ['packages/element/src/index.ts'],
-  });
-  assertFalse(decision.allowed);
-  assert(decision.reason.includes('v0.40.x cleanup train'));
-});
-
-Deno.test('policy: v0.40.x cleanup train patch accepts explicit human approval id', () => {
-  const decision = evaluatePatchEligibility({
-    changedPaths: ['packages/element/src/index.ts'],
-    approvedPlanId: V040_CLEANUP_TRAIN_APPROVAL_ID,
-  });
-  assert(decision.allowed);
-  assert(decision.requiredEvidence.includes(`approval:${V040_CLEANUP_TRAIN_APPROVAL_ID}`));
 });
 
 Deno.test('policy: minor release without approved plan is blocked', () => {

@@ -16,7 +16,7 @@ on:
           - minor
           - major
       approvedPlan:
-        description: 'Approved plan id (required for patch cleanup train or minor/major releases)'
+        description: 'Approved plan id (required for minor/major releases)'
         required: false
 
 concurrency:
@@ -48,9 +48,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Resolve default approved plan
+      - name: Resolve approved plan
         id: plan
-        run: echo "value=${{ inputs.approvedPlan || 'ADR-0105/v0.40.x-cleanup-train' }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=${{ inputs.approvedPlan }}" >> "$GITHUB_OUTPUT"
       - name: Configure npm auth
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

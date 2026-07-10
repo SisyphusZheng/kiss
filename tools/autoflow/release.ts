@@ -174,20 +174,16 @@ export function createReleasePlan(
           return;
         }
         if (existing) {
-          console.warn(
-            `Tag ${tag} already exists at ${existing}; forcing to HEAD ${head}.`,
+          throw new Error(
+            `Refusing to overwrite existing tag ${tag} at ${existing}; HEAD is ${head}.`,
           );
-          await runCaptured(['git', 'tag', '-f', tag]);
-          return;
         }
         await runCaptured(['git', 'tag', tag]);
       },
     },
     {
       name: 'push tag',
-      // No force-push: a tag that already exists at a different commit is left
-      // untouched (the local `git tag -f` above is guarded and only runs when
-      // the existing tag points at a different commit, with a warning).
+      // Tags are immutable release evidence. A conflicting remote tag fails.
       command: ['git', 'push', 'origin', tag],
     },
     ...(canCreateGitHubRelease()

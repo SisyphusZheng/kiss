@@ -9,7 +9,6 @@ import {
 import {
   assertBranch,
   assertCleanWorktree,
-  cleanupReleaseGateGeneratedArtifacts,
   createReleaseEvidence,
   createReleasePlan,
   evidenceFile,
@@ -249,7 +248,6 @@ async function runPatchRelease(
   if (!decision.allowed) Deno.exit(1);
 
   await runTier('release', dryRun);
-  if (!dryRun) await cleanupReleaseGateGeneratedArtifacts();
   await executePatchRelease(dryRun);
 }
 
@@ -280,7 +278,6 @@ async function runApprovedRelease(
   if (!decision.allowed) Deno.exit(1);
 
   await runTier('release', dryRun);
-  if (!dryRun) await cleanupReleaseGateGeneratedArtifacts();
   await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 

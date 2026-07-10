@@ -16,9 +16,9 @@
  *   - params attribute parsing
  *
  * Deno's test runner does not provide a real browser DOM, so the file installs
- * a minimal DOM harness when `globalThis.HTMLElement` is missing. Tests that
- * depend on DOM features guard themselves with `hasDOM` and return early when
- * the harness is unavailable.
+ * a minimal DOM harness when `globalThis.HTMLElement` is missing. The harness
+ * is installed before the test capability is evaluated, so lifecycle tests
+ * exercise the same contract in both Deno and a browser-capable runtime.
  */
 
 import {
@@ -27,15 +27,9 @@ import {
   assertInstanceOf,
   assertStringIncludes,
 } from 'jsr:@std/assert@1';
-import { OpenElement } from '@openelement/element';
-import { ErrorBoundary } from '@openelement/element';
-import { jsx } from '@openelement/core/jsx-runtime';
+import type { OpenElement as OpenElementBase } from '@openelement/element';
 import type { VNode } from '@openelement/protocol/vnode';
-import { signal } from '@openelement/signal';
 import type { Signal } from '@openelement/protocol/signal';
-import { StyleSheet } from '@openelement/core/style-sheet';
-
-const hasDOM = typeof customElements !== 'undefined';
 
 // ─── Minimal DOM harness for Deno test environment ─────────────────
 
@@ -140,6 +134,14 @@ class TestNodeBase {
     }
     child.parentNode = this as unknown as TestNode;
     this.childNodes.push(child);
+    if ((this as unknown as { isConnected?: boolean }).isConnected) {
+      const element = child as unknown as {
+        isConnected?: boolean;
+        connectedCallback?(): void;
+      };
+      element.isConnected = true;
+      element.connectedCallback?.();
+    }
     return child;
   }
 
@@ -150,7 +152,17 @@ class TestNodeBase {
     }
     this.childNodes.splice(idx, 1);
     child.parentNode = null;
+    const element = child as unknown as {
+      isConnected?: boolean;
+      disconnectedCallback?(): void;
+    };
+    element.isConnected = false;
+    element.disconnectedCallback?.();
     return child;
+  }
+
+  remove(): void {
+    this.parentNode?.removeChild(this as unknown as TestNode);
   }
 
   insertBefore(newChild: TestNode, refChild: TestNode | null): TestNode {
@@ -229,6 +241,15 @@ class TestDocumentFragment extends TestNodeBase {
   get innerHTML(): string {
     return this.childNodes.map((c) => (c as TestElement | TestTextNode).innerHTML ?? '').join('');
   }
+
+  set innerHTML(html: string) {
+    while (this.childNodes.length > 0) {
+      this.removeChild(this.childNodes[0]);
+    }
+    for (const node of parseHtmlFragment(html)) {
+      this.appendChild(node);
+    }
+  }
 }
 
 class TestShadowRoot extends TestNodeBase {
@@ -253,6 +274,15 @@ class TestShadowRoot extends TestNodeBase {
 
   get innerHTML(): string {
     return this.childNodes.map((c) => (c as TestElement | TestTextNode).innerHTML ?? '').join('');
+  }
+
+  set innerHTML(html: string) {
+    while (this.childNodes.length > 0) {
+      this.removeChild(this.childNodes[0]);
+    }
+    for (const node of parseHtmlFragment(html)) {
+      this.appendChild(node);
+    }
   }
 }
 
@@ -280,7 +310,9 @@ class TestElement extends TestNodeBase {
   dataset: Record<string, string> = {};
   private _isConnected = false;
 
-  constructor(tag: string) {
+  constructor(
+    tag = (new.target as typeof TestElement & { __localName?: string }).__localName ?? 'div',
+  ) {
     super();
     this.localName = tag.toLowerCase();
     this.tagName = tag.toUpperCase();
@@ -429,9 +461,16 @@ class TestDocument extends TestNodeBase {
     this.body = this.createElement('body');
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
+    this.documentElement.isConnected = true;
+    this.head.isConnected = true;
+    this.body.isConnected = true;
   }
 
   createElement(tag: string): TestElement {
+    const ctor = globalThis.customElements?.get(tag) as unknown as
+      | (new () => TestElement)
+      | undefined;
+    if (ctor) return new ctor();
     return new TestElement(tag);
   }
 
@@ -777,6 +816,17 @@ function installDomHarness(): void {
 
 installDomHarness();
 
+// Imports must happen after the harness is installed: OpenElement captures its
+// HTMLElement base class at module evaluation time.
+const { OpenElement, ErrorBoundary } = await import('@openelement/element');
+const { jsx } = await import('@openelement/core/jsx-runtime');
+const { signal } = await import('@openelement/signal');
+const { StyleSheet } = await import('@openelement/core/style-sheet');
+
+// Deliberately evaluate this after installing the Deno harness. Evaluating it
+// at module load used to make every DOM lifecycle test silently return early.
+const hasDOM = typeof customElements !== 'undefined';
+
 // ─── Helpers ───────────────────────────────────────────────────────
 
 function uniqueTag(prefix: string): string {
@@ -785,6 +835,14 @@ function uniqueTag(prefix: string): string {
 
 function flushEffects(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function createHydratedElement(tagName: string, html: string): HTMLElement {
+  const element = document.createElement(tagName) as HTMLElement;
+  const root = element.attachShadow({ mode: 'open' }) as unknown as TestShadowRoot;
+  (root as unknown as { innerHTML: string }).innerHTML = html;
+  document.body.appendChild(element as unknown as Node);
+  return element;
 }
 
 // ─── 1. Instantiation and base properties ──────────────────────────
@@ -894,11 +952,7 @@ Deno.test('OpenElement hydrates pre-populated DSD shadow DOM', () => {
   }
   customElements.define(tagName, DsdElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><section>dsd content</section></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as DsdElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(tagName, '<section>dsd content</section>') as DsdElement;
 
   assertExists(el.shadowRoot);
   assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'dsd content');
@@ -1007,11 +1061,10 @@ Deno.test('OpenElement signal hydration binds data-signal markers', async () => 
   }
   customElements.define(tagName, SignalHydrateElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><span data-signal="count">42</span></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as SignalHydrateElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(
+    tagName,
+    '<span data-signal="count">42</span>',
+  ) as SignalHydrateElement;
 
   const span = el.shadowRoot?.querySelector('span') as TestElement | null;
   assertExists(span);
@@ -1043,11 +1096,10 @@ Deno.test('OpenElement signal hydration binds data-signal-class markers', async 
   }
   customElements.define(tagName, SignalClassElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><span data-signal="open" data-signal-class="open">false</span></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as SignalClassElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(
+    tagName,
+    '<span data-signal="open" data-signal-class="open">false</span>',
+  ) as SignalClassElement;
 
   const span = el.shadowRoot?.querySelector('span') as TestElement | null;
   assertExists(span);
@@ -1078,11 +1130,10 @@ Deno.test('OpenElement signal hydration binds data-signal-attr markers', async (
   }
   customElements.define(tagName, SignalAttrElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><input data-signal="label" data-signal-attr="value,aria-label" value="a" aria-label="a"></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as SignalAttrElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(
+    tagName,
+    '<input data-signal="label" data-signal-attr="value,aria-label" value="a" aria-label="a">',
+  ) as SignalAttrElement;
 
   const input = el.shadowRoot?.querySelector('input') as TestElement | null;
   assertExists(input);
@@ -1114,11 +1165,10 @@ Deno.test('OpenElement signal hydration binds data-signal-render markers', async
   }
   customElements.define(tagName, SignalRenderElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><div data-signal-render="nodes">placeholder</div></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as SignalRenderElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(
+    tagName,
+    '<div data-signal-render="nodes">placeholder</div>',
+  ) as SignalRenderElement;
 
   const root = el.shadowRoot as unknown as TestShadowRoot | null;
   assertExists(root);
@@ -1179,11 +1229,10 @@ Deno.test('OpenElement hydrates event markers in DSD shadow DOM', () => {
   }
   customElements.define(tagName, EventDsdElement);
 
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML =
-    `<${tagName}><template shadowrootmode="open"><button data-eid="e0">hydrated</button></template></${tagName}>`;
-  const el = wrapper.querySelector(tagName) as EventDsdElement;
-  customElements.upgrade(el);
+  const el = createHydratedElement(
+    tagName,
+    '<button data-eid="e0">hydrated</button>',
+  ) as EventDsdElement;
 
   const btn = el.shadowRoot?.querySelector('button') as TestElement | null;
   assertExists(btn);
@@ -1531,7 +1580,7 @@ Deno.test('connected OpenElement instances clear data-theme when document theme 
   docEl.dataset.theme = 'dark';
   docEl.setAttribute('data-theme', 'dark');
 
-  const el = document.createElement(tagName) as OpenElement;
+  const el = document.createElement(tagName) as OpenElementBase;
   document.body.appendChild(el);
   assertEquals(el.getAttribute('data-theme'), 'dark');
 

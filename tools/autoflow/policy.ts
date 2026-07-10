@@ -27,8 +27,6 @@ export interface PolicyDecision {
 }
 
 export const AUTOFLOW3_POLICY_VERSION = 'autoflow3-v0';
-export const V040_CLEANUP_TRAIN_APPROVAL_ID = 'ADR-0105/v0.40.x-cleanup-train';
-
 export function isCI(): boolean {
   return Deno.env.get('CI') === 'true';
 }
@@ -306,30 +304,6 @@ export function selectGates(tier: AutoFlowTier, changedPaths: string[]): GateDef
 export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDecision {
   const requiredEvidence = ['release-state:auto-classification'];
 
-  if (isV040CleanupTrainChange(input.changedPaths) && !input.approvedPlanId) {
-    return {
-      allowed: false,
-      reason:
-        'v0.40.x cleanup train changes are manually approved breaking patches and require an approved plan id',
-      requiredEvidence: ['ADR-0105', 'approved version plan', 'approval id'],
-    };
-  }
-
-  if (
-    isV040CleanupTrainChange(input.changedPaths) &&
-    input.approvedPlanId === V040_CLEANUP_TRAIN_APPROVAL_ID
-  ) {
-    return {
-      allowed: true,
-      reason: `v0.40.x cleanup train allowed with approved plan ${input.approvedPlanId}`,
-      requiredEvidence: [
-        'ADR-0105',
-        'docs/current/VERSION_PLAN.md',
-        `approval:${input.approvedPlanId}`,
-      ],
-    };
-  }
-
   const blockers: string[] = [];
   if (
     input.publicApiChanged ||
@@ -379,19 +353,6 @@ export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDe
     reason: 'patch automation allowed for bounded mechanical change',
     requiredEvidence,
   };
-}
-
-export function isV040CleanupTrainChange(changedPaths: string[]): boolean {
-  return changedPaths.some((path) =>
-    path === 'deno.json' ||
-    path === 'deno.lock' ||
-    path === 'tools/lib/package-graph.ts' ||
-    path === 'tools/project-constants.ts' ||
-    path === 'tools/check-package-surface.ts' ||
-    path.startsWith('packages/') ||
-    path.startsWith('docs/adr/ADR-0105') ||
-    path === 'docs/current/VERSION_PLAN.md'
-  );
 }
 
 export function evaluateVersionAuthority(
