@@ -18,7 +18,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
-import type { SpeculationRulesOptions } from '@openelement/protocol/ssg';
+export { buildSpeculationRulesJson } from './speculation-rules.ts';
 
 const log = createLogger('core');
 
@@ -286,127 +286,6 @@ export function injectViewTransitionMeta(dir: string): void {
  * @param routes - Known route entries from route scanner (for heuristic rules)
  * @returns Speculation Rules JSON string, or empty string if no rules apply
  */
-export function buildSpeculationRulesJson(
-  options: SpeculationRulesOptions,
-  routes?: Array<{ path: string; type: string }>,
-): string {
-  // If user provided explicit rules, use them
-  if (options.prerender?.length || options.prefetch?.length) {
-    const rules: Record<string, unknown[]> = {};
-
-    if (options.prerender && options.prerender.length > 0) {
-      rules.prerender = options.prerender.map((pattern) => ({
-        where: { href_matches: pattern },
-        ...(options.eagerness && options.eagerness !== 'moderate'
-          ? { eagerness: options.eagerness }
-          : {}),
-      }));
-    }
-
-    if (options.prefetch && options.prefetch.length > 0) {
-      rules.prefetch = options.prefetch.map((pattern) => ({
-        where: { href_matches: pattern },
-      }));
-    }
-
-    // Add exclusion if provided
-    if (options.exclude && options.exclude.length > 0) {
-      const excludeWhere = options.exclude.map((pattern) => ({
-        href_matches: pattern,
-      }));
-      // Apply exclusions to both prerender and prefetch
-      for (const key of ['prerender', 'prefetch'] as const) {
-        if (rules[key]) {
-          for (const rule of rules[key] as Record<string, unknown>[]) {
-            (rule.where as Record<string, unknown>).not = { or_matches: excludeWhere };
-          }
-        }
-      }
-    }
-
-    return JSON.stringify(rules, null, 2);
-  }
-
-  // Heuristic mode: generate rules from route list
-  if (!routes || routes.length === 0) return '';
-
-  const staticPagePaths = routes
-    .filter((r) => r.type === 'page' && !r.path.includes(':'))
-    .map((r) => r.path);
-
-  if (staticPagePaths.length === 0) return '';
-
-  // Two-tier strategy:
-  //   - Home page is the highest-probability target -> prerender (moderate)
-  //   - Top-level pages (e.g. /about, /blog) -> prerender (conservative)
-  //   - Nested pages (e.g. /blog/post-slug, /docs/guide) -> prefetch only
-  const prerenderPaths: string[] = [];
-  const prefetchPaths: string[] = [];
-
-  for (const path of staticPagePaths) {
-    if (path === '/') {
-      // Highest probability: prerender with moderate eagerness
-      prerenderPaths.push(path);
-    } else if (path.split('/').filter(Boolean).length <= 1) {
-      // v0.14.3: Top-level pages get exact-match patterns, NOT wildcards.
-      // Adding /about/* would waste bandwidth prefetching all /about/* sub-paths
-      // that may not exist. Use exact match for single pages.
-      prerenderPaths.push(path);
-    } else {
-      // Deeper pages: prefetch only (lighter than prerender)
-      // Use wildcard for nested sections (e.g., /blog/* matches /blog/post-1, /blog/post-2)
-      prefetchPaths.push(`${path}/*`);
-    }
-  }
-
-  const rules: Record<string, unknown[]> = {};
-
-  if (prerenderPaths.length > 0) {
-    rules.prerender = prerenderPaths.map((pattern) => {
-      // Home page (/): use list rule (source + urls) - no document matcher
-      if (pattern === '/') {
-        return {
-          source: 'list',
-          urls: ['/'],
-          eagerness: 'moderate',
-        };
-      }
-      // Top-level pages (/about, /blog): use document rule (where: href_matches)
-      return {
-        where: { href_matches: pattern },
-        eagerness: 'conservative',
-      };
-    });
-  }
-
-  if (prefetchPaths.length > 0) {
-    rules.prefetch = prefetchPaths.map((pattern) => ({
-      where: { href_matches: pattern },
-    }));
-  }
-
-  // Exclude API routes if any exist
-  const apiPaths = routes
-    .filter((r) => r.type === 'api')
-    .map((r) => `${r.path}/*`);
-
-  if (apiPaths.length > 0) {
-    const excludeWhere = apiPaths.map((p) => ({ href_matches: p }));
-    for (const key of ['prerender', 'prefetch'] as const) {
-      if (rules[key]) {
-        for (const rule of rules[key] as Record<string, unknown>[]) {
-          // Only add exclusion to document rules (where) - list rules (source+urls) don't have where
-          if (rule.where && typeof rule.where === 'object') {
-            (rule.where as Record<string, unknown>).not = { or_matches: excludeWhere };
-          }
-        }
-      }
-    }
-  }
-
-  return JSON.stringify(rules, null, 2);
-}
-
 /**
  * Inject Speculation Rules into all HTML files.
  *
