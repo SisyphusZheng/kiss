@@ -1,156 +1,68 @@
 #!/usr/bin/env -S deno run --allow-read --allow-run
-/**
- * check-coverage — v0.35.6 (Cell 003)
- *
- * Runs test coverage and checks against a minimum threshold.
- *
- * Usage:
- *   deno run --allow-read --allow-run tools/check-coverage.ts
- *   deno run --allow-read --allow-run tools/check-coverage.ts --threshold 70
- *   deno run --allow-read --allow-run tools/check-coverage.ts --report
- */
+/** Run repository tests and enforce production-package LCOV thresholds. */
 
-function getArg(flag: string): string | null {
-  const idx = Deno.args.indexOf(flag);
-  if (idx !== -1 && idx + 1 < Deno.args.length) {
-    return Deno.args[idx + 1];
-  }
-  return null;
+import { type CoverageMetric, parseLcov } from './coverage-summary.ts';
+
+function getNumberArg(flag: string, fallback: number): number {
+  const index = Deno.args.indexOf(flag);
+  const value = Number(index >= 0 ? Deno.args[index + 1] : fallback);
+  if (!Number.isFinite(value)) throw new Error(`${flag} must be a number`);
+  return value;
 }
 
-interface CoverageSummary {
-  totalLines: number;
-  coveredLines: number;
-  percentage: number;
-}
-
-async function runCoverage(): Promise<CoverageSummary> {
+async function runCoverage(): Promise<string> {
   const coverageDir = '.coverage-check';
-
-  // Run tests with coverage
-  const testCmd = new Deno.Command('deno', {
-    args: [
-      'test',
-      `--coverage=${coverageDir}`,
-      '--allow-read',
-      '--allow-write',
-      '--allow-env',
-      '--allow-net',
-      '--allow-run',
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-
-  const testResult = await testCmd.output();
-  if (!testResult.success) {
-    const stderr = new TextDecoder().decode(testResult.stderr);
-    console.error(`Tests failed:\n${stderr.slice(0, 1000)}`);
-    Deno.exit(1);
-  }
-
-  // Generate coverage summary
-  const summaryCmd = new Deno.Command('deno', {
-    args: ['coverage', coverageDir, '--lcov'],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-
-  const summaryResult = await summaryCmd.output();
-  const lcov = new TextDecoder().decode(summaryResult.stdout);
-
-  // Parse LCOV to compute overall coverage.
-  // Deno can emit multiple records for the same source file (e.g. when a
-  // module is loaded through different URLs). We merge by source-file path
-  // and take the union of hit lines so lines are not double-counted.
-  interface FileCoverage {
-    totalLines: number;
-    hitLines: Set<number>;
-  }
-
-  const fileCoverage = new Map<string, FileCoverage>();
-  let currentFile: string | null = null;
-  let currentTotal = 0;
-  const currentHits = new Set<number>();
-
-  const flushFile = () => {
-    if (!currentFile) return;
-    const existing = fileCoverage.get(currentFile);
-    if (!existing) {
-      fileCoverage.set(currentFile, {
-        totalLines: currentTotal,
-        hitLines: new Set(currentHits),
-      });
-    } else {
-      existing.totalLines = Math.max(existing.totalLines, currentTotal);
-      for (const line of currentHits) existing.hitLines.add(line);
-    }
-  };
-
-  for (const line of lcov.split('\n')) {
-    if (line.startsWith('SF:')) {
-      flushFile();
-      currentFile = line.slice(3);
-      currentTotal = 0;
-      currentHits.clear();
-    } else if (line.startsWith('LF:')) {
-      currentTotal = parseInt(line.slice(3), 10);
-    } else if (line.startsWith('DA:')) {
-      const [lineNo, hits] = line.slice(3).split(',').map((v) => parseInt(v, 10));
-      if (hits > 0) currentHits.add(lineNo);
-    } else if (line === 'end_of_record') {
-      flushFile();
-      currentFile = null;
-      currentTotal = 0;
-      currentHits.clear();
-    }
-  }
-  flushFile();
-
-  let totalLines = 0;
-  let coveredLines = 0;
-  for (const record of fileCoverage.values()) {
-    totalLines += record.totalLines;
-    coveredLines += record.hitLines.size;
-  }
-
-  const percentage = totalLines > 0 ? (coveredLines / totalLines) * 100 : 0;
-
-  // Cleanup
   try {
-    await Deno.remove(coverageDir, { recursive: true });
-  } catch { /* ok */ }
+    const test = await new Deno.Command(Deno.execPath(), {
+      args: [
+        'test',
+        `--coverage=${coverageDir}`,
+        '--allow-read',
+        '--allow-write',
+        '--allow-env',
+        '--allow-net',
+        '--allow-run',
+      ],
+      stdout: 'inherit',
+      stderr: 'inherit',
+    }).spawn().status;
+    if (!test.success) throw new Error(`tests failed with code ${test.code}`);
 
-  return { totalLines, coveredLines, percentage };
+    const report = await new Deno.Command(Deno.execPath(), {
+      args: ['coverage', coverageDir, '--lcov'],
+      stdout: 'piped',
+      stderr: 'inherit',
+    }).output();
+    if (!report.success) throw new Error(`coverage report failed with code ${report.code}`);
+    return new TextDecoder().decode(report.stdout);
+  } finally {
+    await Deno.remove(coverageDir, { recursive: true }).catch(() => undefined);
+  }
+}
+
+function formatMetric(name: string, metric: CoverageMetric, threshold: number): string {
+  return `${name}: ${metric.covered}/${metric.total} ${
+    metric.percentage.toFixed(2)
+  }% (minimum ${threshold}%)`;
 }
 
 async function main(): Promise<void> {
-  const threshold = parseInt(getArg('--threshold') ?? '50', 10);
-  const reportOnly = Deno.args.includes('--report');
-
-  console.log('🔍 Running test coverage...');
-  console.log('');
-
-  const summary = await runCoverage();
-
-  console.log(`   Lines: ${summary.coveredLines}/${summary.totalLines}`);
-  console.log(`   Coverage: ${summary.percentage.toFixed(1)}%`);
-  console.log(`   Threshold: ${threshold}%`);
-  console.log('');
-
-  if (reportOnly) {
-    console.log('📊 Coverage report complete.');
-    return;
+  const thresholds = {
+    lines: getNumberArg('--threshold', 80),
+    branches: getNumberArg('--branch-threshold', 80),
+    functions: getNumberArg('--function-threshold', 80),
+  };
+  console.log('Running production-package coverage...');
+  const summary = parseLcov(await runCoverage());
+  const failures: string[] = [];
+  for (const name of ['lines', 'branches', 'functions'] as const) {
+    console.log(formatMetric(name, summary[name], thresholds[name]));
+    if (summary[name].percentage < thresholds[name]) failures.push(name);
   }
-
-  if (summary.percentage >= threshold) {
-    console.log(`✅ Coverage ${summary.percentage.toFixed(1)}% >= ${threshold}%`);
-  } else {
-    console.error(
-      `❌ Coverage ${summary.percentage.toFixed(1)}% < ${threshold}% threshold`,
-    );
-    Deno.exit(1);
+  if (failures.length) {
+    throw new Error(`coverage threshold failed: ${failures.join(', ')}`);
   }
+  console.log('Coverage gate passed.');
 }
 
-main();
+if (import.meta.main) await main();
