@@ -73,13 +73,13 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'Static prop runtime writes element attributes and properties.',
   },
   {
-    file: 'packages/element/src/open-element.ts',
+    file: 'packages/element/src/open-element-implementation.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',
   },
   {
-    file: 'packages/element/src/open-element.ts',
-    fragment: '(target as unknown as {',
+    file: 'packages/element/src/open-element-theme.ts',
+    fragment: 'styles as unknown as CSSStyleSheet[]',
     reason: 'adoptedStyleSheets may not be in the configured DOM lib.',
   },
   {
