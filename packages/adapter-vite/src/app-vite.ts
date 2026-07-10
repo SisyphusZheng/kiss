@@ -13,7 +13,7 @@ import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 import { OpenElementBuildContext } from './build-context.ts';
 import { createOpenPlugin } from './plugin.ts';
 import { openContent } from '@openelement/content';
-import { openI18n } from '@openelement/app/i18n-plugin';
+import { openI18n } from './i18n-plugin.ts';
 import { createLogger } from '@openelement/core/logger';
 
 const log = createLogger('app');

@@ -2,7 +2,8 @@
  * @openelement/app/i18n - Runtime-safe i18n helpers (no node:* modules)
  *
  * Thin re-export barrel from i18n-runtime.ts.
- * The node-only Vite plugin is in i18n-plugin.ts and must NOT be re-exported here,
+ * The node-only Vite plugin is in @openelement/adapter-vite/i18n-plugin and
+ * must NOT be re-exported here,
  * to prevent node:process/node:path/node:fs from being pulled into client
  * island bundles via @openelement/app main re-exports.
  *

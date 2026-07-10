@@ -1,7 +1,7 @@
 /**
  * @openelement/app/i18n-runtime - Runtime-safe i18n helpers (no node:* modules)
  *
- * Separated from i18n-plugin.ts to prevent node:process/node:path/node:fs from
+ * Separated from @openelement/adapter-vite/i18n-plugin to prevent node built-ins from
  * being pulled into client island bundles via @openelement/app main re-exports.
  *
  * Route-level helpers:
