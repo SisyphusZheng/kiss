@@ -39,8 +39,8 @@ export class GuideGuidePage extends OpenElement {
         </p>
         <p class='subtitle'>
           The current package line is {OPENELEMENT_VERSION}. The active execution line
-          is v0.41.0-alpha.7 Mastodon Desktop dogfood, followed by
-          v0.41.0-beta.1 adoption freeze.
+          is v0.41.0-alpha.7 dogfood, architecture convergence, and adoption readiness,
+          followed by v0.41.0-beta.1 release-candidate validation.
         </p>
         <div class='guide-grid'>
           <open-card>

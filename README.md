@@ -4,7 +4,8 @@ English | [Simplified Chinese](./README.zh.md)
 
 **Web Components-native fullstack framework with a JSX-first Basic Element
 authoring layer. Package line: `0.41.0-alpha.6` (`v0.41.0-alpha.6` release).
-Active execution: v0.41.0-alpha.7 Mac Mastodon Desktop Incubation.**
+Active execution: v0.41.0-alpha.7 Dogfood, Architecture Convergence, and
+Adoption Readiness.**
 
 openElement treats Web Components as the application's native component model.
 It builds static-first applications with JSX/VNode rendering, progressive
@@ -42,15 +43,16 @@ supporting packages = Protocols + UI + official stack adapters
 Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
 `@openelement/signal`, `@openelement/router`, `@openelement/content`, and
 `@openelement/ssg` are advanced or implementation surfaces. `@openelement/protocol`
-is the runtime-free contract foundation. `@openelement/ui` is the Open
+is the contract foundation with tiny host-API-free runtime values. `@openelement/ui` is the Open
 Props-backed reference component library and dogfood surface. These packages
 support the two products; they are not separate first-class product lines.
 
 Dogfood apps validate openElement; they do not define it. The Deno Desktop
-Reader and alpha.7 Mastodon Desktop line are evidence surfaces for the framework
-contract, not additional product lines. AutoFlow3, docs truth, release evidence,
-and workflow gates are project infrastructure; they stay out of the Framework
-product story.
+Reader and Mastodon Desktop are completed foundation evidence for the alpha.7
+hardening train, not additional product lines. Alpha.7 now closes architecture,
+browser, security, distribution, adoption, and release-truth gaps exposed by
+that dogfood. AutoFlow3, docs truth, release evidence, and workflow gates are
+project infrastructure; they stay out of the Framework product story.
 
 The active workspace is the 11-package v0.41 line. Hub, RPC, CEM,
 compat-check, Lit/React/vanilla interop adapters, and standalone
@@ -84,16 +86,19 @@ deno run -A npm:@openelement/create my-app
 cd my-app && deno task dev
 ```
 
-**Why it beats the adjacent options**
+**How it differs from adjacent options**
 
 - **vs. Next.js / Nuxt / SvelteKit:** native Web Components instead of a
   framework runtime; the output stays portable and inspectable, not bound to one
   meta-framework.
-- **vs. Astro / Fresh:** islands are first-class OpenElement contracts with
-  shared route and package graphs, not an afterthought wrapper around arbitrary
-  components.
-- **vs. Lit / Enhance / Stencil:** a full app framework — routing, data, deploy,
-  desktop — on top of the same standards, not just a component library.
+- **vs. Astro / Fresh:** OpenElement makes native Custom Elements and DSD the
+  application component contract rather than one possible UI integration.
+- **vs. Lit / Stencil:** OpenElement adds application routing, SSG, deployment,
+  and islands around a Web Components authoring layer. Lit also has an
+  experimental Labs SSR package; alpha.7 will keep this comparison sourced.
+- **vs. Enhance:** both are standards-first full-stack choices; Enhance is
+  HTML/MPA-first, while OpenElement explores JSX, Shadow/DSD, islands, SPA, and
+  desktop targets.
 
 If you want components that outlive the current framework cycle and an app story
 that works with the platform instead of fighting it, openElement is the lane.
@@ -102,17 +107,19 @@ that works with the platform instead of fighting it, openElement is the lane.
 
 All 11 current workspace packages are aligned at **0.41.0-alpha.6**
 (`v0.41.0-alpha.6`) under
-[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 release
-proves a read-only, accountless networked desktop app. The active next line is
-**v0.41.0-alpha.7 Mac Mastodon Desktop Incubation**. ADR-0101 keeps
+[`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 dogfood
+foundation proves a read-only, accountless networked desktop app. The active
+line is **v0.41.0-alpha.7 Dogfood, Architecture Convergence, and Adoption
+Readiness**. Its 21-task exit train turns that evidence into a production build
+path, smaller authoring surface, explicit browser/security truth, five-minute
+starter, reproducible evidence, and external adopter proof. ADR-0101 keeps
 AutoFlow3 as the single workflow/gate control plane while reserving minor/major
 product decisions for human-approved ADR and version-plan evidence.
 
-The next staged lines are **v0.41.0-beta.1 Adoption Freeze**
-and **stable v0.41.0**. Alpha.7 proves a read-only,
-accountless networked desktop app; beta.1 freezes the five-minute starter path,
-API docs, website positioning, logo/brand rendering, npm metadata, and release
-truth before stable v0.41.0.
+The next staged lines are **v0.41.0-beta.1 release-candidate validation** and
+**stable v0.41.0**. Beta.1 re-runs and verifies the alpha.7-frozen starter,
+public API, website, package, evidence, and release surfaces; it does not own a
+new implementation train.
 
 v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
 adapters, and standalone runtime/style-sheet/i18n packages from the current

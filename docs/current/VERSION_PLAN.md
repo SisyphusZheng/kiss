@@ -29,14 +29,14 @@ The release is staged through alpha lines with explicit execution plans:
   architecture hardening, official stack contracts, Deno Desktop target
   contract, and Reader regression-grade dogfood. Published to npm as
   `0.41.0-alpha.6` with provenance.
-- **alpha.7** (active next): Networked desktop dogfood. A read-only/accountless
-  Mastodon/GoToSocial desktop app that stress-tests SPA mode, Deno Desktop,
-  third-party Web Components interop, render pipeline performance, local
-  state/cache, and error boundaries. Design source:
-  `docs/dogfood/mastodon-desktop/README.md`.
-- **beta.1**: Adoption Freeze. Starter, docs, API reference, website,
-  package metadata, release notes, and visual brand polish must agree before
-  stable v0.41.0.
+- **alpha.7** (active): Dogfood, Architecture Convergence, and Adoption
+  Readiness. The completed read-only/accountless Mastodon/GoToSocial desktop
+  foundation feeds a 21-slice train that closes production build ownership,
+  navigation/UI seams, browser and security truth, package adoption, evidence,
+  and external pilot gaps without adding new product primitives.
+- **beta.1** (planned validation): Re-run the alpha.7-frozen starter, API,
+  website, package, evidence, and release surfaces as a release candidate. It
+  owns no new implementation train.
 
 ## Context
 
@@ -162,13 +162,14 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
 - `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
-- `docs/release/v0.41.0-alpha.7-plan.md` — Networked Desktop Dogfood
-- `docs/release/v0.41.0-beta.1-plan.md` — Adoption Freeze
+- `docs/release/v0.41.0-alpha.7-plan.md` — Dogfood, Architecture Convergence, and Adoption Readiness
+- `docs/release/v0.41.0-beta.1-plan.md` — Release-candidate validation
 
-Alpha.7 starts only after alpha.6 closes the framework architecture loop. The
-beta.1 stabilization phase does not add a new product surface. It freezes
-starter, docs, API reference, website, package metadata, release notes, and
-visual brand polish so v0.41.0 can be adopted without maintainer context.
+Alpha.7 started after alpha.6 closed the first framework architecture loop. Its
+dogfood foundation is complete; the active A7.01–A7.21 issue train in the
+alpha.7 release plan must close before beta.1. Beta.1 does not add product
+surface or absorb alpha architecture debt; it validates the frozen result
+before stable v0.41.0.
 
 ## Governance Rules
 
@@ -190,6 +191,9 @@ visual brand polish so v0.41.0 can be adopted without maintainer context.
 - Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
 - AutoFlow3 remains the single CI/release gating plane.
 - Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
+- Moving package topology in #273 or changing the default signal engine in
+  #387 still requires the normal ADR and approved version-plan authority;
+  inclusion in alpha.7 is not independent permission for a public reset.
 - `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
 - `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
   Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
@@ -249,6 +253,11 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
 - Deno toolchain truth is explicit: `.dvmrc` pinned to stable `2.9.0`, CI and
   consumer monitor aligned, canary reserved only for Deno Desktop preview
   features outside the main gate matrix.
+- Alpha.7 exit additionally requires all 21 hardening/adoption slices, native
+  browser-baseline evidence, production BuildPlan artifacts, app/router-owned
+  navigation, risk-weighted critical-path tests, auditable dependencies,
+  a clean five-minute npm starter, reproducible performance reports, and the
+  external adopter pilot.
 
 ## Verification
 

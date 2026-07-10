@@ -10,7 +10,7 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.7 Active / beta.1 Active Next
+## Current Version Line: v0.41.0-alpha.7 Active / beta.1 Planned Validation
 
 v0.41.0-alpha.6 is the current released package line. It closes the front-half
 cleanup audit (#205 through #212, #226, #227), syncs product truth under
@@ -25,19 +25,29 @@ post-publish npm consumer smoke evidence is recorded in
 v0.41.0-alpha.5 proved SPA mode plus the Deno Desktop Reader proof. It is now
 the prior released line.
 
-v0.41.0-alpha.7 is the active next dogfood line: a read-only/accountless
-networked Mastodon/GoToSocial desktop app whose job is to stress-test the
-current openElement framework surface (SPA mode, Deno Desktop, third-party WC
-interop, render pipeline under dynamic content, local state/cache, error
-boundaries) without adding server/data/forms/session/cache primitives or OAuth.
-Design source: `docs/dogfood/mastodon-desktop/README.md`.
+v0.41.0-alpha.7 is the active Dogfood, Architecture Convergence, and Adoption
+Readiness line. Its read-only/accountless Mastodon/GoToSocial desktop foundation
+is complete and remains evidence for SPA mode, Deno Desktop, third-party WC
+interop, dynamic rendering, local state/cache, and error boundaries. The active
+A7.01–A7.21 train now closes the production build, navigation/UI, browser,
+security, package surface, starter, evidence, positioning, and external-adoption
+gaps exposed by that proof. It adds no server/data/forms/session/cache
+primitives or OAuth. Design source: `docs/release/v0.41.0-alpha.7-plan.md`.
 
-v0.41.0-beta.1 is the Adoption Freeze before stable v0.41.0. It adds no new
-product surface; it freezes the five-minute starter path, public API docs,
-website positioning, public surface labels, Deno toolchain truth, logo/brand
-rendering, npm metadata, GitHub release notes, and release truth so openElement
-can be evaluated as the Web Components fullstack framework plus Basic Element
-product line.
+v0.41.0-beta.1 is planned release-candidate validation before stable v0.41.0.
+It adds no product surface and owns no implementation train. It re-runs the
+alpha.7-frozen starter, public API, website, package metadata, evidence,
+consumer, and release checks.
+
+### v0.41.0-alpha.7 Execution State
+
+| Phase                  | Issues                                   | State |
+| ---------------------- | ---------------------------------------- | ----- |
+| Truth and trust        | #385, #386, #382, #383                   | open  |
+| Architecture           | #380, #381, #274, #272, #273, #387, #388 | open  |
+| Adoption/distribution  | #236, #379, #237, #241                   | open  |
+| Positioning/evidence   | #384, #389, #238, #242                   | open  |
+| External proof/closure | #390, #240                               | open  |
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and
@@ -441,7 +451,7 @@ historical context, not the current public product formula.
 ## Package Version State
 
 The active v0.41 workspace contains 11 current `@openelement/*` packages aligned
-to local version **0.41.0**. Published package availability is completed by the
+to local version **0.41.0-alpha.6**. Published package availability is completed by the
 `main` branch npm publish workflow and its post-publish npm consumer smoke.
 
 Package governance for v0.41:

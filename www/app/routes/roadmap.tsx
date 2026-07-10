@@ -494,20 +494,20 @@ const phases = [
     version: 'v0.41.0-alpha.6',
     title: 'App protocol architecture hardening',
     copy: 'Make OpenElement App own RouteGraph, RenderPipeline, RequestContext, Deno Desktop target contracts, product truth, and CodeQL cleanup.',
-    status: 'current',
-    tone: 'brand',
+    status: 'released',
+    tone: 'success',
   },
   {
     version: 'v0.41.0-alpha.7',
-    title: 'Mac Mastodon Desktop incubation',
-    copy: 'Prove a read-only, accountless Mastodon/GoToSocial desktop app with public timeline, profile, status, local cache, and screenshot/API verification.',
-    status: 'planned',
-    tone: 'warning',
+    title: 'Dogfood, architecture convergence, adoption readiness',
+    copy: 'Turn completed Reader and Mastodon dogfood into one production build path, smaller public interfaces, browser/security truth, a five-minute starter, reproducible evidence, and external adopter proof.',
+    status: 'active',
+    tone: 'brand',
   },
   {
     version: 'v0.41.0-beta.1',
-    title: 'Adoption freeze',
-    copy: 'Freeze starter, API docs, website positioning, logo/brand rendering, npm metadata, release notes, and release truth.',
+    title: 'Release-candidate validation',
+    copy: 'Re-run the alpha.7-frozen starter, API, browser, package, evidence, consumer, and release checks without adding implementation scope.',
     status: 'planned',
     tone: 'warning',
   },
@@ -549,19 +549,19 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.6'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.7'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='brand'>alpha.6 released</open-badge>
-                  <h2>Architecture, app targets, docs truth, and release gates speak one language.</h2>
+                  <open-badge tone='brand'>alpha.7 active</open-badge>
+                  <h2>Dogfood evidence is converging into an adoption-ready framework path.</h2>
                   <p>
-                    The current line resolves the product doctrine into a
-                    readable WC-native fullstack framework plus JSX-first Basic
-                    Element authoring layer, with Protocols, UI, dogfood, and
-                    official stack adapters kept in supporting roles.
+                    The released package line remains alpha.6. The active
+                    alpha.7 train closes build ownership, navigation and UI
+                    seams, browser and security truth, distribution, evidence,
+                    and external adoption before candidate validation.
                   </p>
                 </div>
               </div>
@@ -582,7 +582,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.6' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.7' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>
