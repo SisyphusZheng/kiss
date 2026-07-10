@@ -55,6 +55,7 @@ import type {
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { SsrAdmissionDecision } from '@openelement/protocol/render';
 import { fileToTagName } from './route-scanner.ts';
+import { validateIslandModuleSpecifier } from './entry-generators.ts';
 import {
   renderActionRoute,
   renderApiRoute,
@@ -79,6 +80,7 @@ export type { EntryDescriptor } from '@openelement/protocol/ssg';
 export function renderEntry(desc: EntryDescriptor): string {
   const lines: string[] = [];
   const ssrAdmissionPlan = desc.ssrAdmissionPlan;
+  for (const island of desc.islands) validateIslandModuleSpecifier(island.modulePath);
 
   // --- Imports ---
   for (const imp of desc.imports) {
@@ -100,7 +102,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(
     `// Known islands (determined at build time by scanning islandsDir)`,
   );
-  lines.push(`const __islandMap = ${JSON.stringify(islandLookup)}`);
+  lines.push(`const __islandMap = ${JSON.stringify(islandLookup, null, 2)}`);
   lines.push('');
 
   // --- Document wrapper ---
@@ -108,6 +110,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { jsx } from '@openelement/core/jsx-runtime';`);
   lines.push(`import { createLogger } from '@openelement/core/logger';`);
   lines.push(`import { createRuntimeAdapter } from '@openelement/core/runtime';`);
+  lines.push(
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';`,
+  );
   lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,
   );
@@ -146,9 +151,10 @@ export function renderEntry(desc: EntryDescriptor): string {
     );
     lines.push('customElements.define = (name, ctor, options) => {');
     lines.push('  if (customElements.get(name)) return;');
-    lines.push(
-      '  try { _origDefine(name, ctor, options); } catch (err) { console.error(`[ssg] Failed to register custom element <${name}>:`, err); throw err; }',
-    );
+    lines.push('  try { _origDefine(name, ctor, options); } catch (e) {');
+    lines.push('    if (e && e.name === "NotSupportedError") return;');
+    lines.push('    throw e;');
+    lines.push('  }');
     lines.push('};');
     lines.push('');
   }
@@ -169,7 +175,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   const ssrIslands = desc.islands.filter((island) => ssrRenderableTags.has(island.tagName));
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
-    lines.push(`import * as ${varName} from '${island.modulePath}'`);
+    lines.push(`import * as ${varName} from ${JSON.stringify(island.modulePath)}`);
   }
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
@@ -623,7 +629,8 @@ export function buildSsrAdmissionPlan(
         reason = 'package island with openElement.ssr=true';
       } else {
         renderPath = 'client-only';
-        reason = 'package island has no validated SSR capability (conservative default)';
+        reason =
+          'third-party WC package island has no validated SSR capability (explicit client-only interop)';
       }
     } else {
       renderPath = 'ssr+client';
