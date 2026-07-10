@@ -19,7 +19,7 @@ import {
 } from '../app/api.ts';
 
 const DURATION_MS = Number(Deno.env.get('DURATION_MINUTES') ?? '30') * 60 * 1000;
-const INTERVAL_MS = 5000;
+const INTERVAL_MS = Number(Deno.env.get('INTERVAL_MS') ?? '5000');
 const INSTANCE = 'mastodon.social';
 
 interface Sample {

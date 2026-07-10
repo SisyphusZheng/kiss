@@ -179,3 +179,25 @@ examples/deno-desktop-mastodon/
 
 - Parent PRD: #57
 - Concrete slices: #195 through #201, plus #221 for third-party WC event interaction smoke.
+
+## Performance and Stress Gate
+
+Run the representative fixture-backed Mastodon workload from the repository root:
+
+```sh
+STRESS_DURATION_MINUTES=5 deno task stress:dogfood
+```
+
+The default duration is 30 minutes. The runner records backend RSS and end-to-end scenario render
+latency in `examples/deno-desktop-mastodon/stress-report.json`. It fails when requests error, RSS
+grows by more than 64 MB, or a scenario takes more than 5 seconds (treated as a UI-freeze signal).
+The limits can be adjusted with `STRESS_MAX_ERRORS`, `STRESS_MAX_RSS_GROWTH_MB`, and
+`STRESS_MAX_LATENCY_MS`; sampling can be shortened with `STRESS_INTERVAL_MS`.
+
+The nightly GitHub Actions workflow runs the default 30-minute gate and archives the JSON report.
+To validate an existing report without starting a new run:
+
+```sh
+deno run --allow-read --allow-env tools/run-dogfood-stress.ts \
+  --report-only examples/deno-desktop-mastodon/stress-report.json
+```
