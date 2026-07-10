@@ -18,19 +18,19 @@ while Vite, Hono, Nitro, and Deno Desktop implement official drivers/adapters.
 
 ## Current 11-package surface
 
-| Package                     | Class      | v0.41 decision                                                                                 |
-| --------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
-| `@openelement/app`          | product    | Web Components fullstack framework authoring API, including optional Preact island proof.      |
-| `@openelement/create`       | product    | Starter and consumer entry for the fullstack framework.                                        |
-| `@openelement/element`      | product    | Basic Element facade for `OpenElement`, `StyleSheet`, islands, and signals.                    |
-| `@openelement/protocol`     | supporting | Runtime-free contracts for renderers, routes, islands, adapters, build plans, and app targets. |
-| `@openelement/ui`           | supporting | Open Props-backed reference `open-*` component library and dogfood surface.                    |
-| `@openelement/ssg`          | supporting | Adapter-agnostic SSG engine (entry descriptor, render pipeline, route scanner, postprocess).   |
-| `@openelement/core`         | supporting | Low-level implementation kernel, now including `StyleSheet`, signal contracts, and SSG types.  |
-| `@openelement/router`       | supporting | Route support behind the fullstack framework.                                                  |
-| `@openelement/signal`       | supporting | Signal implementation; default is `@preact/signals-core`.                                      |
-| `@openelement/content`      | supporting | Content support behind framework recipes.                                                      |
-| `@openelement/adapter-vite` | supporting | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                    |
+| Package                     | Class      | v0.41 decision                                                                                            |
+| --------------------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| `@openelement/app`          | product    | Web Components fullstack framework authoring API, including optional Preact island proof.                 |
+| `@openelement/create`       | product    | Starter and consumer entry for the fullstack framework.                                                   |
+| `@openelement/element`      | product    | Basic Element facade for `OpenElement`, `StyleSheet`, islands, and signals.                               |
+| `@openelement/protocol`     | supporting | Contracts plus tiny host-API-free values and guards for renderers, routes, islands, adapters, and builds. |
+| `@openelement/ui`           | supporting | Open Props-backed reference `open-*` component library and dogfood surface.                               |
+| `@openelement/ssg`          | supporting | Adapter-agnostic SSG engine (entry descriptor, render pipeline, route scanner, postprocess).              |
+| `@openelement/core`         | supporting | Low-level implementation kernel, now including `StyleSheet`, signal contracts, and SSG types.             |
+| `@openelement/router`       | supporting | Route support behind the fullstack framework.                                                             |
+| `@openelement/signal`       | supporting | Signal implementation; default is `@preact/signals-core`.                                                 |
+| `@openelement/content`      | supporting | Content support behind framework recipes.                                                                 |
+| `@openelement/adapter-vite` | supporting | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                               |
 
 ## Removed from current graph
 
@@ -64,7 +64,7 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 
 | Package                     | Responsibility                                                                                                 | Public surface                                                                            | Internal surface                                                       | Runtime                                                                                    |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `@openelement/protocol`     | Shared type contracts (hydration, signal, vnode, render, manifest, data, errors).                              | `src/**/*.ts` re-exported at package root.                                                | Direct deep imports are allowed only inside the monorepo during alpha. | Runtime-free; no `Deno.*` or `node:*` APIs.                                                |
+| `@openelement/protocol`     | Shared contracts plus tiny pure runtime values and guards.                                                     | `src/**/*.ts` re-exported at package root.                                                | Direct deep imports are allowed only inside the monorepo during alpha. | Host-API-free; no DOM, `Deno.*`, or `node:*` APIs and no side effects.                     |
 | `@openelement/signal`       | Signal implementation; default is `@preact/signals-core`.                                                      | Package root.                                                                             | `signal-engine.ts` wiring.                                             | Runtime-free.                                                                              |
 | `@openelement/core`         | Low-level kernel: static renderer, hydration lifecycle, StyleSheet, signal integration, SSG contracts, logger. | `src/index.ts`, `src/static.ts`, `src/hydrate.ts`, `src/style-sheet.ts`, `src/logger.ts`. | Internal SSG postprocess helpers consumed by `@openelement/ssg`.       | Runtime-free; no `Deno.*` or `node:*` APIs.                                                |
 | `@openelement/element`      | Canonical authoring facade for `OpenElement`, `StyleSheet`, islands, and signals.                              | Package root.                                                                             | None.                                                                  | Runtime-free browser package; must import safely in SSR via `@openelement/core/static`.    |
@@ -78,7 +78,7 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 
 ### Boundary rules
 
-- **Runtime-free packages** (`protocol`, `signal`, `core`, `element`, `ui`, `router`, `app`) must not use `Deno.*` or `node:*` APIs in public `src/` code.
+- **Host-API-free packages** (`protocol`, `signal`, `core`, `element`, `ui`, `router`, `app`) must not use `Deno.*` or `node:*` APIs in public `src/` code. Protocol additionally permits only tiny pure runtime values and guards.
 - **Build/server glue packages** (`content`, `ssg`, `adapter-vite`, `create`) may use Deno/Node APIs; Deno is the development toolchain, but published helpers that npm consumers invoke directly must not crash outside Deno.
 - **Public surface** is what application authors import. **Internal surface** is what sibling packages import during the alpha line; internal subpaths may change without a deprecation period until v1.0.
 - The canonical component authoring import is `@openelement/element`.

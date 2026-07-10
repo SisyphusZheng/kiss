@@ -409,7 +409,7 @@ four-product wording for current docs:
 | ----------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
 | Web Components Fullstack Framework  | `@openelement/app`, `@openelement/create`     | Active v0.41 app/protocol hardening and adoption target |
 | Web Components Basic Element        | `@openelement/element`, `OpenElement`         | Native custom-element authoring layer                   |
-| Supporting Protocols                | `@openelement/protocol`                       | Runtime-free replacement and conformance contracts      |
+| Supporting Protocols                | `@openelement/protocol`                       | Host-API-free contracts and tiny pure runtime values    |
 | Supporting UI and official adapters | `@openelement/ui`, `ssg`, `adapter-vite`, etc | Reference UI, dogfood, build/deploy/runtime glue        |
 
 Historical positioning note: earlier ADRs used the phrase DSD-first to protect
@@ -451,7 +451,7 @@ Package governance for v0.41:
   Preact island proof over the earlier Vue adapter plan, and any later package
   topology change must update package count, release order, import maps, graph
   checks, docs, and migration notes;
-- keep protocol contracts small and runtime-free;
+- keep protocol contracts small with only a tiny host-API-free runtime;
 - keep UI independent from framework routing;
 - keep database, ORM, auth, backend, runtime, cache, storage, and deployment
   choices at protocol, adapter, or recipe boundaries.
@@ -486,7 +486,7 @@ supporting packages = Protocols + UI + official stack adapters
 2. **Basic Element** - `@openelement/element` and `OpenElement` provide native
    Web Components authoring with JSX, signals, shadow/DSD defaults, explicit
    light DOM opt-in, SSR-safe lifecycle, and render hooks.
-3. **Protocols** - `@openelement/protocol` is the runtime-free foundation for
+3. **Protocols** - `@openelement/protocol` is the host-API-free foundation for
    renderer, route, hydration, manifest, data, error, and signal contracts.
 4. **UI** - `@openelement/ui` is the Open Props-backed reference component
    library and dogfood surface, not a separate design-system empire.

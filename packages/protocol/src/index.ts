@@ -1,5 +1,5 @@
 /**
- * @openelement/protocol - Minimal, type-only protocol package.
+ * @openelement/protocol - Contracts plus a tiny host-API-free runtime.
  *
  * Barrel re-export of all protocol subpath modules.
  */

@@ -12,12 +12,13 @@ current product truth. For v0.41 alpha.6, start with these current documents:
 | ------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------- |
 | Product doctrine   | ADR-0110                                                         | Current two-product framing and 11-package package truth.   |
 | App ownership      | ADR-0111                                                         | OpenElement-owned app concepts; Vite/Hono/Nitro as drivers. |
+| Protocol runtime   | ADR-0112                                                         | Contracts plus a tiny host-API-free runtime.                |
 | Distribution       | ADR-0108                                                         | npm-primary distribution via `deno pack` for v0.41+.        |
 | Cleanup governance | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.       |
 | Active stack truth | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.    |
 
 Older ADRs remain useful evidence, but they are historical when they conflict
-with ADR-0110, ADR-0111, or docs under `docs/current/`.
+with ADR-0110, ADR-0111, ADR-0112, or docs under `docs/current/`.
 
 ## Format
 
@@ -120,6 +121,7 @@ decision set above to decide which records are authoritative for new work.
 | 0109 | Unified Signal-DOM Activation Layer                      | Accepted                                         |
 | 0110 | Two-Product Doctrine and Package Truth                   | Accepted                                         |
 | 0111 | OpenElement App Ownership Boundary                       | Accepted                                         |
+| 0112 | Protocol Types and Tiny Runtime                          | Accepted                                         |
 
 ## Superseded / Historical
 
