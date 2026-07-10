@@ -120,7 +120,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     `import { getDefaultLocale as __getDefaultLocale, locales as __locales } from '@openelement/generated/i18n';`,
   );
   for (const importPath of appShellImports) {
-    lines.push(`import '${importPath}';`);
+    lines.push(`import ${JSON.stringify(importPath)};`);
   }
   lines.push(`const log = createLogger('core');`);
   lines.push('');
@@ -182,10 +182,12 @@ export function renderEntry(desc: EntryDescriptor): string {
     const componentVar = `__island_component_${island.tagName.replace(/-/g, '_')}`;
     lines.push(`const ${componentVar} = ${varName}?.default`);
     lines.push(
-      `if (${componentVar} && !customElements.get('${island.tagName}')) {`,
+      `if (${componentVar} && !customElements.get(${JSON.stringify(island.tagName)})) {`,
     );
     lines.push(
-      `  try { customElements.define('${island.tagName}', ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`,
+      `  try { customElements.define(${
+        JSON.stringify(island.tagName)
+      }, ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`,
     );
     lines.push(`}`);
   }
@@ -228,7 +230,9 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const mwScope of desc.middlewareScopes) {
     lines.push(`// Middleware scope: ${mwScope.scope} (${mwScope.importPath})`);
     lines.push(
-      `app.use('${mwScope.scope === '/' ? '' : mwScope.scope}/*', ${mwScope.varName}.default)`,
+      `app.use(${
+        JSON.stringify(mwScope.scope === '/' ? '/*' : `${mwScope.scope}/*`)
+      }, ${mwScope.varName}.default)`,
     );
     lines.push('');
   }

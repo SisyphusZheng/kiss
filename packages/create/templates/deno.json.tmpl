@@ -14,10 +14,16 @@
     "@openelement/core": "npm:@openelement/core@^${v.core}",
     "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
     "@openelement/element": "npm:@openelement/element@^${v.element}",
+    "@openelement/signal": "npm:@openelement/signal@^${v.signal}",
+    "@openelement/content": "npm:@openelement/content@^${v.content}",
+    "@openelement/ssg": "npm:@openelement/ssg@^${v.ssg}",
+    "@openelement/protocol": "npm:@openelement/protocol@^${v.protocol}",
+    "@openelement/router": "npm:@openelement/router@^${v.router}",
     "@openelement/ui": "npm:@openelement/ui@^${v.ui}",
     "vite": "npm:vite@8.0.10"
   },
   "nodeModulesDir": "auto",
+  "minimumDependencyAge": 0,
   "tasks": {
     "dev": "deno run --config deno.json -A npm:vite",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build",

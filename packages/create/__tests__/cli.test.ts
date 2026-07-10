@@ -71,7 +71,7 @@ Deno.test('create-open: deno.json maps openElement package imports (v0.23 runtim
   const importKeys = Object.keys(denoJson.imports);
   assertEquals(
     importKeys.length,
-    20,
+    21,
     `Expected starter imports, got ${importKeys.length}: ${importKeys.join(', ')}`,
   );
   // v0.23.6: external SSR dependencies declared in consumer import map

@@ -11,7 +11,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // Anchors are kept in sync with the real anchor text in each file. Dead
   // anchors (doc drift) are intentionally omitted, so this count reflects the
   // files that currently carry the previous package line.
-  assertEquals(reps.length, 7);
+  assertEquals(reps.length, 5);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -47,8 +47,8 @@ Deno.test('buildVersionAnchorReplacements: from side derives from single source 
       `from must derive from PREVIOUS_*: ${from}`,
     );
   }
-  assertEquals(PREVIOUS_PACKAGE_VERSION, '0.41.0-alpha.5');
-  assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, 'v0.41.0-alpha.5');
+  assertEquals(PREVIOUS_PACKAGE_VERSION, '0.41.0-alpha.6');
+  assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, 'v0.41.0-alpha.6');
 });
 
 Deno.test('buildVersionAnchorReplacements: every target still carries the previous line', () => {

@@ -422,16 +422,6 @@ export function buildVersionAnchorReplacements(
       'package line `$TAG`',
     ],
     [
-      'docs/roadmap/ROADMAP.md',
-      'Current package line: $PVT SPA Mode + Deno Desktop Reader Proof.',
-      'Current package line: $TAG SPA Mode + Deno Desktop Reader Proof.',
-    ],
-    [
-      'docs/status/STATUS.md',
-      'Current Version Line: $PVT Released',
-      'Current Version Line: $TAG Released',
-    ],
-    [
       'www/app/data/version.ts',
       "export const OPENELEMENT_VERSION = '$PVT';",
       "export const OPENELEMENT_VERSION = '$TAG';",
