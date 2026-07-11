@@ -209,6 +209,18 @@ export default class ComparisonPage extends OpenElement {
             <p class='dim'><span class='k'>Lock-in</span> Output is lock-in-free
               Web Components; authoring uses the Stencil toolchain.</p>
           </open-card>
+
+          <open-card>
+            <span class='label'>FAST / Web Awesome</span>
+            <h3>Component systems</h3>
+            <p class='dim'><span class='k'>Architecture</span> FAST provides
+              Web Component authoring foundations; Web Awesome distributes a
+              component library and design assets.</p>
+            <p class='dim'><span class='k'>Fit</span> Choose either when your
+              primary need is a component system. OpenElement does not replace
+              an established design system and should be evaluated as an app
+              framework around components.</p>
+          </open-card>
         </div>
 
         <h2>How to read this</h2>
@@ -251,6 +263,25 @@ export default class ComparisonPage extends OpenElement {
             Choose <strong>Fresh</strong> when you want a Deno-native,
             near-zero-build Preact island experience.
           </li>
+          <li>
+            Do not choose <strong>openElement</strong> when a mature ecosystem,
+            a framework-specific UI runtime, or a ready-made enterprise design
+            system is the main requirement. Alpha releases also require teams
+            to validate the documented starter and deployment path themselves.
+          </li>
+        </ul>
+
+        <h2>Sources and review scope</h2>
+        <p>Reviewed 2026-07-11 against primary project documentation. This is
+          a decision guide, not a benchmark or compatibility certification.</p>
+        <ul>
+          <li><a href='https://lit.dev/docs/'>Lit documentation</a></li>
+          <li><a href='https://stenciljs.com/docs/introduction'>Stencil documentation</a></li>
+          <li><a href='https://www.fast.design/docs/fast-element/getting-started'>FAST documentation</a></li>
+          <li><a href='https://enhance.dev/docs/'>Enhance documentation</a></li>
+          <li><a href='https://docs.astro.build/en/concepts/islands/'>Astro islands documentation</a></li>
+          <li><a href='https://docs.deno.com/runtime/frameworks/fresh/'>Fresh documentation</a></li>
+          <li><a href='https://webawesome.com/docs/'>Web Awesome documentation</a></li>
         </ul>
       </div>
     );
