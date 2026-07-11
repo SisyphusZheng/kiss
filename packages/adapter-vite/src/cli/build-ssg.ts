@@ -19,7 +19,11 @@ import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { FrameworkOptions, HydrationStrategy } from '@openelement/protocol/framework';
+import type {
+  FrameworkOptions,
+  HydrationStrategy,
+  RouteEntry,
+} from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { ssgRender } from '@openelement/ssg';
@@ -81,6 +85,9 @@ interface BuildSSGOptions {
   middleware?: FrameworkOptions['middleware'];
   ssr?: FrameworkOptions['ssr'];
   islandTagNames?: string[];
+  /** Phase 1 discoveries reused by the production BuildPlan path. */
+  routes?: RouteEntry[];
+  islandFiles?: string[];
   islandMeta?: Record<string, Partial<import('@openelement/protocol/ssg').IslandDecl>>;
   packageManifests?: OpenElementPackageManifest[];
   /** @security Injected as raw HTML without sanitization */
@@ -159,7 +166,7 @@ async function buildSSG(
   );
   const { generateHonoEntryCode } = await import('@openelement/ssg');
 
-  const routes = await scanRoutes(routesDir);
+  const routes = options.routes ?? await scanRoutes(routesDir);
 
   // v0.25.0: Generate type-safe route parameter declarations for `virtual:open-routes`
   const { generateRouteTypes } = await import('@openelement/ssg');
@@ -170,7 +177,7 @@ async function buildSSG(
   log.info(`Route types generated -> .openElement/routes.d.ts`);
 
   const islandsRoot = join(root, islandsDir);
-  const ssgIslandFiles = await scanIslands(islandsRoot);
+  const ssgIslandFiles = options.islandFiles ?? await scanIslands(islandsRoot);
   const ssgIslandTagNames = islandTagNames.length > 0
     ? islandTagNames
     : ssgIslandFiles.map((f) => fileToTagName(f));

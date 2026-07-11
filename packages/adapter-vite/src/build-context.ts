@@ -29,7 +29,12 @@ import type {
   RouteEntry,
 } from '@openelement/protocol/framework';
 import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
-import type { IslandDecl, SsrAdmissionPlan } from '@openelement/protocol/ssg';
+import type {
+  BuildArtifacts,
+  BuildPlan,
+  IslandDecl,
+  SsrAdmissionPlan,
+} from '@openelement/protocol/ssg';
 
 export type Phase = 1 | 2 | 3;
 
@@ -147,6 +152,11 @@ export class Phase3Meta {
 }
 
 export class OpenElementBuildContext {
+  /** Canonical production plan computed once after Phase 1 discovery. */
+  buildPlan: BuildPlan | null = null;
+
+  /** Canonical result consumed by release evidence and deployment adapters. */
+  buildArtifacts: BuildArtifacts | null = null;
   /** Phase 1: Route scanning & build metadata */
   readonly phase1: Phase1Meta = new Phase1Meta();
 
@@ -244,6 +254,8 @@ export class OpenElementBuildContext {
   /** Reset all mutable state (for watch mode / testing) */
   reset(): void {
     this.completed.clear();
+    this.buildPlan = null;
+    this.buildArtifacts = null;
 
     const userResolveAlias = this.phase1.userResolveAlias;
     // NOTE: userResolveAlias is NOT reset - it's user configuration, not

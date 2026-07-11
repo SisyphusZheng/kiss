@@ -18,6 +18,11 @@ import { createLogger } from '@openelement/core/logger';
 import { escapeAttr, escapeHtml } from '@openelement/core';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
 import { writeRouteManifest } from './route-manifest.ts';
+import {
+  collectBuildArtifacts,
+  createProductionBuildPlan,
+  writeBuildEvidence,
+} from './build-plan.ts';
 
 const log = createLogger('core');
 
@@ -71,6 +76,7 @@ export function buildPlugin(
       // Phase 2 runs last because client chunks have content hashes that
       // don't affect HTML content, and injection is a post-processing step.
       ctx.markComplete(1);
+      ctx.buildPlan = createProductionBuildPlan(ctx);
 
       // SPA mode: skip Phase 3 SSG, generate SPA shell + route manifest
       if (ctx.options.mode === 'spa') {
@@ -148,7 +154,13 @@ export function buildPlugin(
       log.info('[3/3] Static site generation...');
       try {
         const { buildSSG } = await import('./cli/build-ssg.ts');
-        await buildSSG({}, ctx);
+        await buildSSG({
+          routes: ctx.phase1.cachedRoutes,
+          islandFiles: ctx.phase1.islandFiles,
+          islandTagNames: ctx.phase1.islandTagNames,
+          islandMeta: ctx.phase1.islandMeta,
+          packageManifests: ctx.phase1.packageManifests,
+        }, ctx);
         ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');
       } catch (error) {
@@ -210,6 +222,11 @@ export function buildPlugin(
       }
 
       log.info('Build complete.');
+      ctx.buildArtifacts = collectBuildArtifacts(ctx.buildPlan);
+      writeBuildEvidence(ctx.buildPlan, ctx.buildArtifacts);
+      if (!ctx.buildArtifacts.success) {
+        throw new Error(`BuildPlan failed: ${ctx.buildArtifacts.errors.join('; ')}`);
+      }
     },
   };
 }
