@@ -6,7 +6,6 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
     '.': 'src/index.ts',
     'app-vite': 'src/app-vite.ts',
     'build-context': 'src/build-context.ts',
-    'build-plan': 'src/build-plan.ts',
     'cli/build': 'src/cli/build.ts',
     'cli/build-client': 'src/cli/build-client.ts',
     'cli/build-ssg': 'src/cli/build-ssg.ts',

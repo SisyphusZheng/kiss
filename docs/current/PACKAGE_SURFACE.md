@@ -76,6 +76,19 @@ authors, an internal surface for sibling packages, and a runtime constraint.
 | `@openelement/adapter-vite` | Vite/Nitro build bridge; delegates SSG orchestration to `@openelement/ssg`.                                    | Package root, `nitro-mount`, and CLI build entry.                                         | Other exported build/plugin subpaths are alpha-internal.               | Build/server glue; prefers Node APIs in public helpers so npm consumers can run the build. |
 | `@openelement/create`       | Starter and consumer entry.                                                                                    | CLI binary, scaffold templates.                                                           | None.                                                                  | Build/server glue; may use Deno/Node APIs.                                                 |
 
+### adapter-vite subpath classification
+
+| Classification           | Subpaths                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Product                  | `.`, `app-vite`, `nitro-mount`, `cli/build`                                                                           |
+| Advanced                 | `plugin`, `plugin-mdx`, `i18n-plugin`, `head-injection`                                                               |
+| Alpha-internal           | `build-context`, `generated-data-resolver`, `subpath-resolver`, `route-manifest`, `cli/build-client`, `cli/build-ssg` |
+| Deprecated compatibility | Root re-exports of Nitro helpers; use `nitro-mount` directly.                                                         |
+| Removed                  | `build-plan` (the plan is emitted as build evidence, not an application import).                                      |
+
+The package export map and generated resolver table are checked together by
+`deno task package-surface:check`; the starter uses only the product root.
+
 ### Boundary rules
 
 - **Host-API-free packages** (`protocol`, `signal`, `core`, `element`, `ui`, `router`, `app`) must not use `Deno.*` or `node:*` APIs in public `src/` code. Protocol additionally permits only tiny pure runtime values and guards.

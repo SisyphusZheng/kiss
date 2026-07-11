@@ -5,7 +5,6 @@
     ".": "./src/index.ts",
     "./app-vite": "./src/app-vite.ts",
     "./build-context": "./src/build-context.ts",
-    "./build-plan": "./src/build-plan.ts",
     "./head-injection": "./src/head-injection.ts",
     "./i18n-plugin": "./src/i18n-plugin.ts",
     "./nitro-mount": "./src/nitro-mount.ts",
