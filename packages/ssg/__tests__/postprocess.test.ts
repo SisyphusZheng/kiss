@@ -99,13 +99,19 @@ Deno.test('injectCspMeta inserts escaped CSP meta after head', () => {
   }
 });
 
-Deno.test('injectDsdPolyfill adds the polyfill once', () => {
+Deno.test('injectDsdPolyfill adds the explicit fallback once', () => {
   const dir = tmpDir();
   try {
     writeFileSync(join(dir, 'index.html'), '<html><head></head><body></body></html>');
     injectDsdPolyfill(dir);
     const out = readFileSync(join(dir, 'index.html'), 'utf-8');
-    assertStringIncludes(out, 'DSD Polyfill');
+    assertStringIncludes(out, 'data-openelement-dsd-fallback');
+    injectDsdPolyfill(dir);
+    assertEquals(
+      (readFileSync(join(dir, 'index.html'), 'utf-8').match(/data-openelement-dsd-fallback/g) || [])
+        .length,
+      1,
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -5,7 +5,7 @@
  * Uses mock SSR bundles and temporary filesystem.
  */
 
-import { assertEquals, assertExists, assertRejects } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse, assertRejects } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'node:path';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolveDynamicRoutePath } from '../src/ssg-helpers.ts';
@@ -187,6 +187,12 @@ Deno.test('ssgRender: exists and has correct signature', async () => {
   assertEquals(typeof ssgRender, 'function');
   // At least 2 required params (module, options). evidence has default value.
   assertEquals(ssgRender.length >= 2, true);
+});
+
+Deno.test('ssgRender: keeps the legacy DSD fallback opt-in', async () => {
+  const source = await Deno.readTextFile(new URL('../src/ssg-render.ts', import.meta.url));
+  assertFalse(source.includes('injectDsdPolyfill(outputDir);\n  log.info'));
+  assertEquals(source.includes('if (options.legacyDsdPolyfill)'), true);
 });
 
 Deno.test('ssgRender: throws when no default export', async () => {

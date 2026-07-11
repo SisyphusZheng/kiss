@@ -80,7 +80,9 @@ Declarative Shadow DOM is available in current Chromium, Firefox, and WebKit.
 The project still carries a legacy injected fallback, so alpha.7 #386 must turn
 the browser target into an executable contract and either remove the default
 fallback or make legacy support explicit. Current output must not claim that
-modern Firefox lacks `shadowrootmode`, and strict CSP behavior must be tested.
+the legacy fallback is explicit because current Chromium, Firefox, and WebKit
+support `shadowrootmode`; strict CSP output must never silently depend on an
+inline fallback script.
 
 ## Boundary Rules
 

@@ -60,6 +60,12 @@ export interface SsgRenderOptions {
   upgradeStrategy?: string;
   viewTransition?: boolean;
   speculation?: boolean | Record<string, unknown>;
+  /**
+   * Opt into the legacy, inline DSD fallback for browsers outside the supported
+   * baseline. It is disabled by default because current Chromium, Firefox, and
+   * WebKit implement Declarative Shadow DOM natively.
+   */
+  legacyDsdPolyfill?: boolean;
   islandTagNames?: string[];
   routesDir?: string;
 }

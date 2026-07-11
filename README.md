@@ -149,6 +149,11 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). Current truth lives in
 decisions live in [docs/adr/](./docs/adr/), and historical SOP/NextVersion
 packages remain release evidence until archived by the v0.40 cleanup.
 
+For help, use [SUPPORT.md](./SUPPORT.md). Read [SECURITY.md](./SECURITY.md)
+before reporting a vulnerability, [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+for community expectations, and [MAINTAINERS.md](./MAINTAINERS.md) for review
+and release ownership.
+
 ## License
 
 MIT

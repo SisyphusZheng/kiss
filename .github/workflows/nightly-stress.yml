@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
+      # v4.2.2
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      # v2.0.5
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: v2.x
       - name: Run representative 30-minute workload
@@ -26,7 +28,8 @@ jobs:
         run: deno task stress:dogfood
       - name: Archive stress evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: mastodon-desktop-stress-report
           path: examples/deno-desktop-mastodon/stress-report.json

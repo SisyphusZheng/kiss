@@ -49,6 +49,12 @@ const staleCurrentClaims: RegExp[] = [
 ];
 
 const failures: Failure[] = [];
+const requiredCommunityFiles = [
+  'SECURITY.md',
+  'CODE_OF_CONDUCT.md',
+  'SUPPORT.md',
+  'MAINTAINERS.md',
+];
 
 async function read(file: string): Promise<string> {
   try {
@@ -100,6 +106,21 @@ for (const file of readmeDocs) {
     if (match) {
       failures.push({ file, message: `mojibake/replacement text matched: ${match[0]}` });
     }
+  }
+}
+
+for (const file of requiredCommunityFiles) {
+  const text = await read(file);
+  if (!text) continue;
+  if (text.trim().length < 80) {
+    failures.push({ file, message: 'public entry point is unexpectedly empty' });
+  }
+}
+
+const contributing = await read('CONTRIBUTING.md');
+for (const file of requiredCommunityFiles) {
+  if (!contributing.includes(file)) {
+    failures.push({ file: 'CONTRIBUTING.md', message: `missing link to ${file}` });
   }
 }
 

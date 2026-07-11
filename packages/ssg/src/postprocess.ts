@@ -11,7 +11,7 @@
  * 2. injectViewTransitionMeta() - enable cross-page View Transitions
  * 3. injectSpeculationRules() - prefetch/prerender for navigation performance
  * 4. injectCspMeta() - Content-Security-Policy meta tag
- * 5. injectDsdPolyfill() - DSD polyfill for Firefox
+ * 5. injectDsdPolyfill() - explicit legacy DSD fallback
  */
 
 import { join, resolve } from 'node:path';
@@ -171,14 +171,14 @@ export function injectCspMeta(
 }
 
 /**
- * DSD polyfill for browsers that don't support Declarative Shadow DOM.
- * Firefox does NOT support shadowrootmode as of 2025.
- * This polyfill attaches Shadow Roots manually via attachShadow().
+ * Explicit legacy fallback for browsers outside the supported DSD baseline.
+ * Current Chromium, Firefox, and WebKit support Declarative Shadow DOM, so
+ * production SSG output does not inject this inline script by default.
  */
 const DSD_POLYFILL = `
 <style>html{visibility:visible!important}</style>
-<script>
-// DSD Polyfill (Firefox, older browsers)
+<script data-openelement-dsd-fallback>
+// Explicit legacy DSD fallback
 (function() {
   try {
     const t = document.createElement('template');
@@ -229,12 +229,14 @@ const DSD_POLYFILL = `
 `;
 
 /**
- * Inject DSD polyfill into all HTML files.
- * Handles browsers that don't natively support Declarative Shadow DOM.
+ * Inject the explicit legacy DSD fallback into all HTML files.
+ *
+ * This helper is intentionally opt-in. Its inline script is not compatible
+ * with a strict CSP unless the caller has explicitly allowed it.
  */
 export function injectDsdPolyfill(dir: string): void {
   walkHtmlFiles(dir, (content) => {
-    if (content.includes('DSD Polyfill')) return null;
+    if (content.includes('data-openelement-dsd-fallback')) return null;
     return insertAfterHead(content, DSD_POLYFILL);
   });
 }

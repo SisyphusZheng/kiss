@@ -42,6 +42,7 @@
     "build:docs": "deno task build",
     "workflow:check": "deno run --allow-read --allow-run=git tools/check-project-workflow.ts",
     "workflow:check-slimming": "deno run --allow-read tools/check-workflow-slimming.ts",
+    "actions:check-pins": "deno run --allow-read tools/check-action-pins.ts",
     "repo:hygiene": "deno run --allow-read --allow-run=git tools/check-repo-hygiene.ts",
     "docs:check-public": "deno run --allow-read tools/check-public-docs-integrity.ts",
     "docs:check-strategy": "deno run --allow-read tools/check-strategic-docs.ts",

@@ -2,6 +2,11 @@
 
 Read first: `docs/governance/PROJECT_WORKFLOW.md`.
 
+Before opening a contribution, read [SECURITY.md](./SECURITY.md),
+[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md), [SUPPORT.md](./SUPPORT.md), and
+[MAINTAINERS.md](./MAINTAINERS.md). They define private reports, community
+expectations, support routing, and review ownership.
+
 openElement uses AutoWorkflow for project management. A change should identify
 the version SOP, ADR impact, NextVersion package, implementation evidence, and
 release-document impact before it is merged.

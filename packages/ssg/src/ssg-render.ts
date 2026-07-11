@@ -228,8 +228,10 @@ export async function ssgRender(
     log.info('CSP meta tag injected');
   }
 
-  injectDsdPolyfill(outputDir);
-  log.info('DSD polyfill injected');
+  if (options.legacyDsdPolyfill) {
+    injectDsdPolyfill(outputDir);
+    log.warn('Legacy DSD fallback injected; it requires an explicit CSP exception.');
+  }
 
   // ── Sitemap (via ctx) ──────────────────────────────────────
   await evidence.onPrintBuildManifest?.({
