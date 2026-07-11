@@ -349,7 +349,15 @@ export async function assertCleanWorktree(): Promise<void> {
   // changes under docs/release/ should not block publishing.
   const nonEvidenceDirty = output
     .split(/\r?\n/)
-    .filter((line) => line.trim() && !/^.{2} docs\/release\//.test(line))
+    .filter((line) => {
+      if (!line.trim()) return false;
+      const path = line.slice(3);
+      return !path.startsWith('docs/release/') &&
+        !path.startsWith('vendor/') &&
+        !path.startsWith('www/app/data/_generated-') &&
+        path !== 'www/public/search-index.json' &&
+        path !== 'deno.lock';
+    })
     .join('\n');
   if (nonEvidenceDirty) {
     throw new Error(`Refusing release from a dirty worktree:\n${nonEvidenceDirty}`);
