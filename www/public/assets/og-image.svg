@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
-  <title>openElement - Kinetic Web Standards Lab</title>
+  <title>openElement - Web Components fullstack framework</title>
   <defs>
     <linearGradient id="mark" x1="138" y1="132" x2="378" y2="372" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#91a7ff" />

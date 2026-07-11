@@ -1,7 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img"
-  aria-label="openElement mark">
-  <rect width="96" height="96" rx="18" fill="#212529" />
-  <path d="M26 58V38l22-13 22 13v20L48 71 26 58Z" fill="none" stroke="#f8f9fa" stroke-width="6"
-    stroke-linejoin="round" />
-  <path d="M36 48h24" stroke="#7cc7ff" stroke-width="6" stroke-linecap="round" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img">
+  <title>&lt;open/&gt; mark</title>
+  <desc>Compact mark using the canonical openElement word mark.</desc>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#0d0d10" />
+  <text x="32" y="38" text-anchor="middle"
+    font-family="'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace"
+    font-size="12" font-weight="800" letter-spacing="-0.6" fill="#ffffff">
+    <tspan>&lt;</tspan>
+    <tspan>open</tspan>
+    <tspan fill="#b59cff">/</tspan>
+    <tspan>&gt;</tspan>
+  </text>
 </svg>

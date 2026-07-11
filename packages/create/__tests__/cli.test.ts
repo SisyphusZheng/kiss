@@ -46,7 +46,7 @@ Deno.test('create-open: gitignore hides generated build artifacts', () => {
 Deno.test('create-open: starter includes a public static asset', () => {
   const mark = readTemplate('public/openelement-mark.svg');
   assert(mark.includes('<svg'));
-  assert(mark.includes('openElement mark'));
+  assert(mark.includes('&lt;open/&gt; mark'));
 });
 
 Deno.test('create-open: starter includes default blog content directory', () => {
