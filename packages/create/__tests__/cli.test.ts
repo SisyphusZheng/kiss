@@ -151,10 +151,10 @@ Deno.test('create-open: vite.config.ts includes packageIslands config', () => {
   assertFalse(viteConfig.includes('https://jsr.io/@openelement/ui/'));
 });
 
-Deno.test('create-open: vite.config.ts includes virtual-passthrough resolve plugin (SOP-015)', () => {
+Deno.test('create-open: vite.config.ts hides virtual-module mechanics', () => {
   const viteConfig = readTemplate('vite.config.ts');
-  assert(viteConfig.includes('virtual-passthrough'));
-  assert(viteConfig.includes("return '\\0' + id"));
+  assertFalse(viteConfig.includes('virtual-passthrough'));
+  assertFalse(viteConfig.includes("return '\\0' + id"));
   assert(viteConfig.includes("from '@deno/vite-plugin'"));
 });
 

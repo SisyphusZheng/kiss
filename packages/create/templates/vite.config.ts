@@ -8,17 +8,6 @@ const colorTokensStyle =
 
 export default defineConfig({
   plugins: [
-    // SOP-015: Virtual module passthrough — @deno/vite-plugin doesn't
-    // support the "virtual:" scheme. This resolve hook intercepts virtual
-    // module IDs before @deno/vite-plugin, letting the openElement plugin handle them.
-    {
-      name: 'virtual-passthrough',
-      resolveId(id) {
-        if (id.startsWith('virtual:')) return '\0' + id;
-      },
-      enforce: 'pre',
-    },
-    deno(),
     openElement({
       html: { title: 'My openElement App' },
       appShell: {
@@ -56,5 +45,6 @@ export default defineConfig({
         },
       },
     }),
+    deno(),
   ],
 });
