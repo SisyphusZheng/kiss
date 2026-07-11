@@ -7,5 +7,5 @@ export const PACKAGE_COUNT = 11;
 // single source of truth for the "from" side of version-anchor replacements
 // (see buildVersionAnchorReplacements in tools/autoflow/release.ts). It is
 // kept in sync automatically by updateProjectConstants() during a bump.
-export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.6';
+export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.8';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
