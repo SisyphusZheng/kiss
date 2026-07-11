@@ -11,7 +11,7 @@ import type {
   OpenElementRouteGraph,
   OpenElementRouteGraphFactory,
   OpenElementRouteNode,
-} from '@openelement/protocol/app-model';
+} from '@openelement/element';
 export type {
   CreateRouteGraphOptions,
   OpenElementAssetManifest,
@@ -19,7 +19,7 @@ export type {
   OpenElementRouteGraph,
   OpenElementRouteKind,
   OpenElementRouteNode,
-} from '@openelement/protocol/app-model';
+} from '@openelement/element';
 
 export type OpenElementRenderPhase =
   | 'route'

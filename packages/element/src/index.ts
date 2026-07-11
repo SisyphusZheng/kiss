@@ -41,6 +41,7 @@ export { Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
 export type { OpenElementRenderer } from './internal/protocol/framework.ts';
 export type { VNode } from './internal/protocol/vnode.ts';
 export { isVNode } from './internal/core/index.ts';
+export { assertValidTagName } from './internal/core/tag-utils.ts';
 
 // ─── Renderers (re-export from core) ─────────────────────
 
@@ -60,6 +61,7 @@ export type {
   SsrRenderError,
 } from './internal/core/index.ts';
 export type { ErrorCode, ErrorPhase, ErrorSeverity } from './internal/protocol/errors.ts';
+export { ERROR_PREFIX } from './internal/protocol/errors.ts';
 
 // ─── Signals (re-export) ─────────────────────────────────
 
@@ -86,3 +88,16 @@ export type { IslandOptions } from './internal/protocol/island.ts';
 
 export { StyleSheet } from './internal/core/style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';
+
+// App-owned contracts use these types without reopening the retired protocol package.
+export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';
+export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';
+export type {
+  CreateRouteGraphOptions,
+  OpenElementAssetManifest,
+  OpenElementAssetManifestEntry,
+  OpenElementRouteGraph,
+  OpenElementRouteGraphFactory,
+  OpenElementRouteKind,
+  OpenElementRouteNode,
+} from './internal/protocol/app-model.ts';

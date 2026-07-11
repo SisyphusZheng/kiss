@@ -1,4 +1,4 @@
-import { ERROR_PREFIX } from '@openelement/core';
+import { ERROR_PREFIX } from '@openelement/element';
 /**
  * @openelement/app - JSX-first application authoring API.
  *
@@ -13,9 +13,13 @@ import {
   OpenElement,
   type VNode,
 } from '@openelement/element';
-import { defineIsland as defineRuntimeIsland } from '@openelement/core';
-import { popData, pushActionData, pushLoaderData } from '@openelement/router/internal/data-context';
-import type { HydrationStrategy } from '@openelement/protocol/framework';
+import { defineIsland as defineRuntimeIsland } from '@openelement/element';
+import {
+  popData,
+  pushActionData,
+  pushLoaderData,
+} from './internal/router/internal/data-context.ts';
+import type { HydrationStrategy } from '@openelement/element';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
 export type PageStreamingMode = 'auto' | 'force' | false;

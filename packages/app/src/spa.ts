@@ -9,10 +9,14 @@ import {
   type RouteConfig,
   type RouterInstance,
   type RouterMode,
-} from '@openelement/router/client-router';
-import { useActionData, useLoaderData } from '@openelement/router/data-context';
-import { popData, pushActionData, pushLoaderData } from '@openelement/router/internal/data-context';
-import { renderToDom } from '@openelement/core/csr';
+} from './internal/router/client-router.ts';
+import { useActionData, useLoaderData } from './internal/router/data-context.ts';
+import {
+  popData,
+  pushActionData,
+  pushLoaderData,
+} from './internal/router/internal/data-context.ts';
+import { renderToDom } from '@openelement/element';
 
 // ─── Public types ──────────────────────────────────────────────
 

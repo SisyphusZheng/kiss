@@ -11,7 +11,7 @@
  */
 
 import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
-import { assertValidTagName, getSsrProps } from '@openelement/core';
+import { assertValidTagName, getSsrProps } from '@openelement/element';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import type { IslandConfig } from './authoring.ts';
