@@ -161,16 +161,15 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 async function packPackage(
   pkg: PackageInfo,
   allPackages: PackageInfo[],
-  dryRun: boolean,
+  _dryRun: boolean,
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
-  // Only dry-run packs tolerate a dirty worktree. Real publishes must pack
-  // from a clean worktree (asserted before the main loop) without --allow-dirty.
-  const args = ['pack', '--output', filename];
-  if (dryRun) {
-    args.push('--allow-dirty');
-  }
+  // The explicit release cleanliness check runs before this loop and rejects
+  // every change except deterministic gate output. Deno itself cannot express
+  // that allowlist, so packing must allow those known generated files in both
+  // dry-run and publish mode.
+  const args = ['pack', '--output', filename, '--allow-dirty'];
   await runCommand('deno', args, { cwd: pkg.dir });
 
   const tmp = await Deno.makeTempDir({ prefix: 'pack-' });
