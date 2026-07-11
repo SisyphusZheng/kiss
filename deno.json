@@ -60,7 +60,7 @@
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
     "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
     "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
-    "desktop-reader:smoke": "cd examples/deno-desktop-reader && deno test -A --no-check app/__tests__/",
+    "desktop-reader:smoke": "cd examples/deno-desktop-reader && deno test -A app/__tests__/",
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",
     "dogfood:evidence": "deno run --allow-read --allow-write --allow-run tools/run-dogfood-evidence.ts",
     "package-artifacts:check": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env tools/check-package-artifacts.ts",
