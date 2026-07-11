@@ -83,7 +83,8 @@ async function assertCleanWorktree(): Promise<void> {
         !path.startsWith('vendor/') &&
         !path.startsWith('www/app/data/_generated-') &&
         path !== 'www/public/search-index.json' &&
-        path !== 'deno.lock';
+        path !== 'deno.lock' &&
+        path !== 'examples/deno-desktop-mastodon/deno.lock';
     })
     .join('\n');
   if (nonEvidenceDirty) {
