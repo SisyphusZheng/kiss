@@ -6,13 +6,13 @@
  */
 
 import type { Plugin } from 'vite';
-import type { FrameworkOptions } from '@openelement/protocol/framework';
-import type { OpenElementContentOptions } from '@openelement/content';
+import type { FrameworkOptions } from './internal/protocol/framework.ts';
+import type { OpenElementContentOptions } from './internal/content/index.ts';
 import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 
 import { OpenElementBuildContext } from './build-context.ts';
 import { createOpenPlugin } from './plugin.ts';
-import { openContent } from '@openelement/content/vite';
+import { openContent } from './internal/content/vite.ts';
 import { openI18n } from './i18n-plugin.ts';
 import { createLogger } from '@openelement/core/logger';
 

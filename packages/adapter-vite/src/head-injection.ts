@@ -10,7 +10,7 @@
  *                          into a single headExtras string
  */
 
-import type { FrameworkOptions } from '@openelement/protocol/framework';
+import type { FrameworkOptions } from './internal/protocol/framework.ts';
 
 import { OpenElementError } from '@openelement/core/errors';
 import { escapeAttr as escapeHtmlAttr } from '@openelement/core';

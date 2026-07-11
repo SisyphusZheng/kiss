@@ -9,14 +9,14 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
-import type { FrameworkOptions } from '@openelement/protocol/framework';
+import type { FrameworkOptions } from './internal/protocol/framework.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
 import { mkdir, open } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/core/logger';
 import { escapeAttr, escapeHtml } from '@openelement/core';
-import { cleanSsrArtifacts, postProcessClientIslandBuild } from '@openelement/ssg';
+import { cleanSsrArtifacts, postProcessClientIslandBuild } from './internal/ssg/index.ts';
 import { writeRouteManifest } from './route-manifest.ts';
 import {
   collectBuildArtifacts,

@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import type { BuildArtifacts, BuildPlan } from '@openelement/protocol/ssg';
+import type { BuildArtifacts, BuildPlan } from './internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 
 export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPlan {

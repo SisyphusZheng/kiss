@@ -33,7 +33,7 @@
  * @module route-manifest
  */
 
-import { scanRoutes } from '@openelement/ssg';
+import { scanRoutes } from './internal/ssg/index.ts';
 import { dirname, join, posix, sep, win32 } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 

@@ -14,7 +14,7 @@
  */
 
 import type { Plugin } from 'vite';
-import type { OpenElementBuildContextLike } from '@openelement/protocol/framework';
+import type { OpenElementBuildContextLike } from './internal/protocol/framework.ts';
 import { createLogger } from '@openelement/core/logger';
 import { formatError } from '@openelement/core/errors';
 // build-time Vite plugin, deno-api-free:ignore applies

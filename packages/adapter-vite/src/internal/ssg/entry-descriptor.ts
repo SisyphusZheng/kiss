@@ -1,0 +1,433 @@
+/** Build the entry descriptor and SSR admission plan from scanned project metadata. */
+import type {
+  ApiRouteDecl,
+  AppShellPlan,
+  CorsOriginConfig,
+  DocumentConfig,
+  EntryDescriptor,
+  ImportDecl,
+  IslandDecl,
+  MiddlewareDecl,
+  PageRouteDecl,
+  RendererDecl,
+  ResolvedAppShell,
+  SsrAdmissionPlan,
+} from '../protocol/ssg.ts';
+import type {
+  AppShellConfig,
+  CompatibilityClassification,
+  FrameworkOptions,
+  HydrationStrategy,
+  RouteEntry,
+} from '../protocol/framework.ts';
+import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
+import type { SsrAdmissionDecision } from '../protocol/render.ts';
+import { fileToTagName } from './route-scanner.ts';
+
+function normalizeAppShellImport(importPath: string): string {
+  if (importPath.startsWith('./')) return `/${importPath.slice(2)}`;
+  if (importPath.startsWith('../')) return importPath;
+  return importPath;
+}
+
+function normalizeAppShell(config: AppShellConfig | undefined): ResolvedAppShell {
+  if (config === false) return false;
+  if (config === undefined || config === 'default') {
+    return {
+      tagName: 'open-layout',
+      importPath: '@openelement/ui/open-layout',
+      props: {},
+    };
+  }
+  return {
+    tagName: config.tagName,
+    importPath: normalizeAppShellImport(config.import),
+    props: config.props ?? {},
+  };
+}
+
+function buildAppShellPlan(options: {
+  appShell?: FrameworkOptions['appShell'];
+  layouts?: FrameworkOptions['layouts'];
+}): AppShellPlan {
+  const defaultShell = normalizeAppShell(options.layouts?.default ?? options.appShell);
+  const layouts: Record<string, ResolvedAppShell> = {};
+  for (const [name, config] of Object.entries(options.layouts ?? {})) {
+    if (name === 'default' || config === undefined) continue;
+    layouts[name] = normalizeAppShell(config);
+  }
+  return { default: defaultShell, layouts };
+}
+
+export function buildEntryDescriptor(
+  routes: RouteEntry[],
+  options: {
+    routesDir?: string;
+    islandsDir?: string;
+    middleware?: FrameworkOptions['middleware'];
+    ssg?: boolean;
+    islandTagNames?: string[];
+    /** Relative file paths for local islands (preserves subdirectory structure) */
+    islandFiles?: string[];
+    /** Local island metadata indexed by tag name. */
+    islandMeta?: Record<string, Partial<IslandDecl>>;
+    /** Package manifests discovered from npm/JSR packages */
+    packageManifests?: OpenElementPackageManifest[];
+    /** CEM-derived compatibility classifications (from compatibility classifier) */
+    cemClassifications?: CompatibilityClassification[];
+    /** @security Injected as raw HTML without sanitization */
+    headExtras?: string;
+    allowHeadExtrasScripts?: boolean;
+    html?: { lang?: string; title?: string };
+    upgradeStrategy?: HydrationStrategy;
+    /** Additional client-only tag names from external registries (ADR-0035 A1) */
+    clientOnlyTags?: string[];
+    appShell?: FrameworkOptions['appShell'];
+    layouts?: FrameworkOptions['layouts'];
+  } = {},
+): EntryDescriptor {
+  const routesDir = options.routesDir || 'app/routes';
+  const islandsDir = options.islandsDir || 'app/islands';
+  const isSSG = options.ssg === true;
+
+  // --- Imports ---
+  const imports: ImportDecl[] = [];
+
+  // Always needed
+  imports.push({ from: 'hono', names: ['Hono'] });
+  imports.push({
+    from: '@openelement/element',
+    names: ['renderDsd', 'renderDsdTree', 'escapeHtml'],
+  });
+
+  // Conditional middleware imports
+  const mw = options.middleware;
+  if (mw?.requestId !== false) {
+    imports.push({ from: 'hono/request-id', names: ['requestId'] });
+  }
+  if (mw?.logger !== false) {
+    imports.push({ from: 'hono/logger', names: ['logger'], alias: 'honoLogger' });
+  }
+  if (mw?.cors !== false) {
+    imports.push({ from: 'hono/cors', names: ['cors'] });
+  }
+  if (mw?.securityHeaders !== false) {
+    imports.push({ from: 'hono/secure-headers', names: ['secureHeaders'] });
+  }
+
+  // --- Middleware ---
+  const middleware: MiddlewareDecl[] = [];
+
+  if (mw?.requestId !== false) {
+    middleware.push({
+      kind: 'requestId',
+      comment: '1. Request ID - base for logging and error tracking',
+    });
+  }
+  if (mw?.logger !== false) {
+    middleware.push({
+      kind: 'logger',
+      comment: '2. Logger - structured request logging',
+    });
+  }
+  if (mw?.cors !== false) {
+    let corsOrigin: CorsOriginConfig | undefined;
+    if (mw?.corsOrigin !== undefined) {
+      if (typeof mw.corsOrigin === 'string') {
+        corsOrigin = mw.corsOrigin;
+      } else if (Array.isArray(mw.corsOrigin)) {
+        corsOrigin = mw.corsOrigin;
+      } else {
+        corsOrigin = { type: 'function', body: mw.corsOrigin.toString() };
+      }
+    }
+    middleware.push({
+      kind: 'cors',
+      comment: '3. CORS - Web Standards (no process.env)',
+      config: { corsOrigin },
+    });
+  }
+  if (mw?.securityHeaders !== false) {
+    middleware.push({
+      kind: 'securityHeaders',
+      comment: '4. Security headers',
+    });
+  }
+  if (mw?.csp) {
+    middleware.push({
+      kind: 'csp',
+      comment: '5. Content Security Policy',
+      config: { csp: mw.csp },
+    });
+  }
+
+  // --- Routes ---
+  const apiRoutes: ApiRouteDecl[] = routes
+    .filter((r) => r.type === 'api' && !r.special)
+    .map((r) => ({
+      kind: 'api' as const,
+      path: r.path,
+      varName: `$${r.varName}`,
+      filePath: r.filePath,
+      importPath: `/${routesDir}/${r.filePath}`,
+    }));
+
+  const pageRoutes: PageRouteDecl[] = routes
+    .filter((r) => r.type === 'page' && !r.special)
+    .map((r) => {
+      const isDynamic = r.path.includes(':');
+      const paramNames = isDynamic ? [...r.path.matchAll(/:([^/]+)/g)].map((m) => m[1]) : [];
+      return {
+        kind: 'page' as const,
+        path: r.path,
+        varName: `$${r.varName}`,
+        filePath: r.filePath,
+        defaultTagName: fileToTagName(r.filePath),
+        tagName: r.tagName || fileToTagName(r.filePath),
+        importPath: `/${routesDir}/${r.filePath}`,
+        isDynamic,
+        paramNames,
+      };
+    });
+
+  // --- Special files: _renderer.ts / _middleware.ts (v0.3.0) ---
+  const specialRoutes = routes.filter((r) => r.type === 'special');
+
+  const renderers: RendererDecl[] = specialRoutes
+    .filter((r) => r.special === 'renderer')
+    .map((r) => {
+      const scope = r.path.replace(/\/?_renderer$/, '') || '/';
+      const depth = scope === '/' ? 0 : scope.split('/').filter(Boolean).length;
+      return {
+        varName: `$${r.varName}`,
+        scope,
+        importPath: `/${routesDir}/${r.filePath}`,
+        depth,
+      };
+    })
+    .sort((a, b) => b.depth - a.depth);
+
+  const middlewareScopes = specialRoutes
+    .filter((r) => r.special === 'middleware')
+    .map((r) => ({
+      varName: `$${r.varName}`,
+      scope: r.path.replace(/\/?_middleware$/, '') || '/',
+      importPath: `/${routesDir}/${r.filePath}`,
+    }));
+
+  // --- Islands ---
+  const islandTagNames = options.islandTagNames || [];
+  const islandFiles = options.islandFiles || [];
+  const islandMeta = options.islandMeta || {};
+  const packageManifests = options.packageManifests || [];
+
+  const localIslands: IslandDecl[] = islandTagNames.map((tagName, i) => ({
+    tagName,
+    modulePath: islandFiles[i]
+      ? `/${islandsDir}/${islandFiles[i]}`
+      : `/${islandsDir}/${tagName}.ts`,
+    source: 'local',
+    ssr: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.ssr,
+    dsd: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.dsd,
+    hydrate: islandMeta[tagName]?.hydrate || options.upgradeStrategy || 'idle',
+    reason: islandMeta[tagName]?.reason,
+  }));
+
+  const packageIslandDecls: IslandDecl[] = packageManifests.flatMap((pkg) =>
+    pkg.declarations
+      .filter((d) => d.openElement?.module)
+      .map((d) => {
+        const modulePath = d.openElement?.module;
+        if (!modulePath) {
+          throw new Error(
+            `Package manifest declaration "${d.tagName}" is missing openElement.module`,
+          );
+        }
+        return {
+          tagName: d.tagName,
+          modulePath,
+          isPackage: true,
+          source: 'package',
+          hydrate:
+            (d.openElement?.hydrate || options.upgradeStrategy || 'idle') as IslandDecl['hydrate'],
+          ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
+          dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
+        };
+      })
+  );
+
+  const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];
+  const cemClassifications = options.cemClassifications || [];
+  const ssrAdmissionPlan = buildSsrAdmissionPlan(
+    islands,
+    cemClassifications,
+    options.clientOnlyTags || [],
+  );
+
+  // --- Document ---
+  const document: DocumentConfig = {
+    lang: options.html?.lang || 'en',
+    title: options.html?.title || 'openElement',
+    headExtras: options.headExtras || '',
+    allowHeadExtrasScripts: options.allowHeadExtrasScripts || false,
+  };
+  const appShell = buildAppShellPlan({
+    appShell: options.appShell,
+    layouts: options.layouts,
+  });
+
+  // --- Debug routes (dev only) ---
+  const debugRoutes = isSSG ? undefined : routes
+    .filter((r) => !r.special)
+    .map((r) => ({ path: r.path, type: r.type }));
+
+  return {
+    isSSG,
+    imports,
+    middleware,
+    apiRoutes,
+    pageRoutes,
+    islands,
+    ssrAdmissionPlan,
+    cemClassifications,
+    clientOnlyTags: options.clientOnlyTags,
+    renderers,
+    middlewareScopes,
+    document,
+    appShell,
+    upgradeStrategy: options.upgradeStrategy || 'idle',
+    debugRoutes,
+  };
+}
+
+export function buildSsrAdmissionPlan(
+  islands: IslandDecl[],
+  cemClassifications: CompatibilityClassification[] = [],
+  clientOnlyTags: string[] = [],
+): SsrAdmissionPlan {
+  const renderableTags: string[] = [];
+  const mergedClientOnlyTags: string[] = [];
+  const rejectedTags: string[] = [];
+  const reasons: Record<string, string> = {};
+  const decisions: SsrAdmissionDecision[] = [];
+  const seen = new Set<string>();
+  const admittedTags = new Set<string>();
+
+  const cemMap = new Map<string, CompatibilityClassification>();
+  for (const classification of cemClassifications) {
+    cemMap.set(classification.tagName, classification);
+  }
+
+  for (const island of islands) {
+    const source = island.source || (island.isPackage ? 'package' : 'local');
+
+    if (seen.has(island.tagName)) {
+      const reason = 'duplicate custom element tag';
+      rejectedTags.push(island.tagName);
+      reasons[island.tagName] = reason;
+
+      if (admittedTags.has(island.tagName)) {
+        const rIdx = renderableTags.indexOf(island.tagName);
+        if (rIdx !== -1) renderableTags.splice(rIdx, 1);
+        const cIdx = mergedClientOnlyTags.indexOf(island.tagName);
+        if (cIdx !== -1) mergedClientOnlyTags.splice(cIdx, 1);
+        admittedTags.delete(island.tagName);
+      }
+
+      decisions.push({
+        tagName: island.tagName,
+        modulePath: island.modulePath,
+        source,
+        renderPath: 'rejected',
+        reason,
+      });
+      continue;
+    }
+    seen.add(island.tagName);
+
+    let renderPath: SsrAdmissionDecision['renderPath'];
+    let reason: string;
+
+    const cemClassification = cemMap.get(island.tagName);
+
+    if (cemClassification) {
+      const TIER_RENDER_PATH: Record<string, string> = {
+        'ssr-capable': 'ssr+client',
+        'client-only': 'client-only',
+        'experimental-dom': 'client-only',
+        rejected: 'rejected',
+      };
+
+      const knownTier = cemClassification.tier in TIER_RENDER_PATH;
+      renderPath = (TIER_RENDER_PATH[cemClassification.tier] ?? 'client-only') as typeof renderPath;
+      reason = knownTier
+        ? `CEM ${cemClassification.tier}: ${cemClassification.reason}`
+        : `Unknown CEM tier (${cemClassification.tier}) - conservative default to client-only`;
+    } else if (island.hydrate === 'only') {
+      renderPath = 'client-only';
+      reason = island.reason || 'client:only island is excluded from SSR';
+    } else if (island.ssr === false) {
+      renderPath = 'client-only';
+      reason = island.reason || 'openElement.ssr is false';
+    } else if (source === 'package') {
+      if (island.ssr === true) {
+        renderPath = 'ssr+client';
+        reason = 'package island with openElement.ssr=true';
+      } else {
+        renderPath = 'client-only';
+        reason =
+          'third-party WC package island has no validated SSR capability (explicit client-only interop)';
+      }
+    } else {
+      renderPath = 'ssr+client';
+      reason = island.ssr === true ? 'openElement.ssr is true' : 'local island default SSR path';
+    }
+
+    if (renderPath === 'ssr+client') {
+      renderableTags.push(island.tagName);
+      admittedTags.add(island.tagName);
+    }
+    if (renderPath === 'client-only') {
+      mergedClientOnlyTags.push(island.tagName);
+      admittedTags.add(island.tagName);
+    }
+    if (renderPath === 'rejected') {
+      rejectedTags.push(island.tagName);
+      admittedTags.delete(island.tagName);
+    }
+
+    reasons[island.tagName] = reason;
+    decisions.push({
+      tagName: island.tagName,
+      modulePath: island.modulePath,
+      source,
+      renderPath,
+      reason,
+    });
+  }
+
+  for (const tag of clientOnlyTags) {
+    if (!seen.has(tag) && !admittedTags.has(tag)) {
+      mergedClientOnlyTags.push(tag);
+      admittedTags.add(tag);
+      seen.add(tag);
+      reasons[tag] = 'Registry client-only component (ADR-0035)';
+      decisions.push({
+        tagName: tag,
+        modulePath: '',
+        source: 'nested',
+        renderPath: 'client-only',
+        reason: 'Registry client-only component (ADR-0035)',
+      });
+    }
+  }
+
+  return {
+    renderableTags,
+    clientOnlyTags: mergedClientOnlyTags,
+    rejectedTags,
+    reasons,
+    decisions,
+    cemClassifications,
+  };
+}

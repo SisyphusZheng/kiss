@@ -23,16 +23,16 @@ import type {
   FrameworkOptions,
   HydrationStrategy,
   RouteEntry,
-} from '@openelement/protocol/framework';
-import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+} from '../internal/protocol/framework.ts';
+import type { OpenElementPackageManifest } from '../internal/protocol/manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
-import { ssgRender } from '@openelement/ssg';
+import { ssgRender } from '../internal/ssg/index.ts';
 import { SsrRenderError } from '@openelement/core/errors';
 import { createLogger } from '@openelement/core/logger';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
-import { generateSsrPolyfillBanner, resolveExternalManifest } from '@openelement/ssg';
+import { generateSsrPolyfillBanner, resolveExternalManifest } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
 
@@ -88,7 +88,7 @@ interface BuildSSGOptions {
   /** Phase 1 discoveries reused by the production BuildPlan path. */
   routes?: RouteEntry[];
   islandFiles?: string[];
-  islandMeta?: Record<string, Partial<import('@openelement/protocol/ssg').IslandDecl>>;
+  islandMeta?: Record<string, Partial<import('../internal/protocol/ssg.ts').IslandDecl>>;
   packageManifests?: OpenElementPackageManifest[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
@@ -112,7 +112,7 @@ interface BuildSSGOptions {
    * Enables browser prefetch/prerender of pages before the user navigates.
    * Can be a boolean (true = auto-generate from routes) or explicit rules.
    */
-  speculation?: boolean | import('@openelement/protocol/ssg').SpeculationRulesOptions;
+  speculation?: boolean | import('../internal/protocol/ssg.ts').SpeculationRulesOptions;
   /** ADR-0047: Skip Deno pre-resolution, use regex fallback for external deps. */
   skipPreResolution?: boolean;
 }
@@ -162,14 +162,14 @@ async function buildSSG(
 
   // Generate SSG entry code
   const { scanRoutes, scanIslands, scanIslandMeta, fileToTagName } = await import(
-    '@openelement/ssg'
+    '../internal/ssg/index.ts'
   );
-  const { generateHonoEntryCode } = await import('@openelement/ssg');
+  const { generateHonoEntryCode } = await import('../internal/ssg/index.ts');
 
   const routes = options.routes ?? await scanRoutes(routesDir);
 
   // v0.25.0: Generate type-safe route parameter declarations for `virtual:open-routes`
-  const { generateRouteTypes } = await import('@openelement/ssg');
+  const { generateRouteTypes } = await import('../internal/ssg/index.ts');
   const routeTypeDts = generateRouteTypes(routes);
   const dotOpenElementDir = join(root, '.openElement');
   mkdirSync(dotOpenElementDir, { recursive: true });
@@ -184,7 +184,7 @@ async function buildSSG(
   const ssgIslandMeta = Object.keys(islandMeta).length > 0
     ? islandMeta
     : await scanIslandMeta(islandsRoot, ssgIslandFiles);
-  const { buildEntryDescriptor } = await import('@openelement/ssg');
+  const { buildEntryDescriptor } = await import('../internal/ssg/index.ts');
 
   ctx.phase1.ssrAdmissionPlan = buildEntryDescriptor(routes, {
     routesDir,

@@ -6,8 +6,8 @@
  * build orchestration uses the local SSG helpers.
  */
 
-import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '@openelement/ssg';
-import type { SsgRenderEvidence, SsgRenderOptions, SsrBundle } from '@openelement/protocol/ssg';
+import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '../internal/ssg/index.ts';
+import type { SsgRenderEvidence, SsgRenderOptions, SsrBundle } from '../internal/protocol/ssg.ts';
 import { printBuildManifest } from '../build-manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 
@@ -17,7 +17,7 @@ export type {
   SsgRenderEvidence,
   SsgRenderOptions,
   SsrBundle,
-} from '@openelement/protocol/ssg';
+} from '../internal/protocol/ssg.ts';
 
 export async function ssgRender(
   module: SsrBundle,
@@ -44,7 +44,7 @@ export function createSsgRenderEvidence(
     },
     onGenerateSitemap: async (outputDir) => {
       if (!ctx.plugins.sitemapOptions) return;
-      const { generateSitemap } = await import('@openelement/content/sitemap') as {
+      const { generateSitemap } = await import('../internal/content/sitemap/generator.ts') as {
         generateSitemap: (dir: string, opts: unknown) => string[];
       };
       generateSitemap(outputDir, ctx.plugins.sitemapOptions);

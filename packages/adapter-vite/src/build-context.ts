@@ -27,14 +27,14 @@ import type {
   OpenElementI18nContextOptions,
   OpenElementNavSection,
   RouteEntry,
-} from '@openelement/protocol/framework';
-import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+} from './internal/protocol/framework.ts';
+import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 import type {
   BuildArtifacts,
   BuildPlan,
   IslandDecl,
   SsrAdmissionPlan,
-} from '@openelement/protocol/ssg';
+} from './internal/protocol/ssg.ts';
 
 export type Phase = 1 | 2 | 3;
 
@@ -145,7 +145,7 @@ export class Phase3Meta {
   componentsDir: string = 'app/components';
 
   /** ADR-0047: Pre-resolved external dependency manifest (auto-generated from deno info). */
-  externalManifest?: import('@openelement/protocol/ssg').ExternalManifest;
+  externalManifest?: import('./internal/protocol/ssg.ts').ExternalManifest;
 
   /** Skip Deno pre-resolution, use regex fallback. */
   skipPreResolution?: boolean;

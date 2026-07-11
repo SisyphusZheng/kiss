@@ -12,8 +12,8 @@ import type {
   FrameworkOptions,
   HydrationStrategy,
   RouteEntry,
-} from '@openelement/protocol/framework';
-import type { OpenElementPackageManifest } from '@openelement/protocol/manifest';
+} from './internal/protocol/framework.ts';
+import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 
 import { join } from 'node:path';
 import process from 'node:process';
@@ -27,7 +27,7 @@ import { OpenElementBuildContext } from './build-context.ts';
 import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.ts';
 import { normalizeViteAliases } from './alias-utils.ts';
 import { buildPlugin } from './build.ts';
-import { generateHonoEntryCode } from '@openelement/ssg';
+import { generateHonoEntryCode } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
@@ -37,7 +37,7 @@ import {
   scanIslands,
   scanPackageManifests,
   scanRoutes,
-} from '@openelement/ssg';
+} from './internal/ssg/index.ts';
 import { createCoreResolvePlugin } from './subpath-resolver.ts';
 import { mdxPlugin } from './plugin-mdx.ts';
 
@@ -68,9 +68,9 @@ function mergeAliasOptions(
 }
 
 const OPTIONAL_PACKAGE_STUBS: Record<string, string> = {
-  '@openelement/content':
+  './internal/content/index.ts':
     'export async function loadBlogData() { return { posts: [], basePath: "" }; }',
-  '@openelement/content/sitemap': 'export function generateSitemap() { return []; }',
+  './internal/content/index.ts/sitemap': 'export function generateSitemap() { return []; }',
   '@openelement/app/i18n':
     'export function loadI18nData() { return { locales: [], defaultLocale: "en" }; }',
 };
@@ -234,7 +234,7 @@ export function createOpenPlugin(
         const islandFiles = await scanIslands(islandsRoot);
         ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
         ctx.phase1.islandFiles = islandFiles;
-        const { scanIslandMeta } = await import('@openelement/ssg');
+        const { scanIslandMeta } = await import('./internal/ssg/index.ts');
         ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
 
         if (
@@ -292,7 +292,7 @@ export function createOpenPlugin(
           ctx.phase1.packageManifests,
           ctx.phase1.islandFiles,
         );
-        const { buildEntryDescriptor } = await import('@openelement/ssg');
+        const { buildEntryDescriptor } = await import('./internal/ssg/index.ts');
 
         // v0.18.0: CEM auto-detection - scan node_modules for custom-elements.json
         // without importing or executing any package code.
