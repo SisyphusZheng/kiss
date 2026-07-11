@@ -155,6 +155,12 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^(packages|tools)\//, /^deno\.json$/],
   },
   {
+    name: 'test:critical-paths',
+    command: ['deno', 'task', 'test:critical-paths'],
+    tiers: ['ci', 'release'],
+    triggers: [/^(packages|tools|www\/e2e)\//, /^deno\.json$/],
+  },
+  {
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
