@@ -9,8 +9,7 @@
  *   - CSSStyleSheet replaces Lit css``
  *   - render() returns string
  *   - @click bindings for mobile menu toggle
- *   - SPA navigation via Navigation API (navigate/fetch/swap) preserved
- *   - Event delegation at shadow root level for nav clicks
+ *   - Native links; application/router code owns navigation policy
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
  * @csspart container - The app-layout root div
@@ -61,7 +60,6 @@ function isSafeLayoutUrl(url: string): boolean {
   }
 }
 
-/* --- Navigation API types (for SPA routing) --- */
 interface NavigationLike extends EventTarget {
   addEventListener(type: 'navigate', listener: EventListener): void;
   removeEventListener(type: 'navigate', listener: EventListener): void;
@@ -1178,15 +1176,6 @@ export class OpenLayout extends OpenElement {
       this._setupDetailsToggle();
     }
 
-    this._setupSpaNavigation({
-      contentLoader: async (path: string, locale: string) => {
-        await this._loadContent(path, locale);
-      },
-      onAfterSwap: (_path: string) => {
-        this._updateActiveNav();
-      },
-    });
-
     // v0.23.0: Integrated from www/public/mobile-menu.js.
     // Close mobile menu on backdrop click or sidebar nav link click.
     this._docClickCleanup = this._setupBackdropClose();
@@ -1197,7 +1186,6 @@ export class OpenLayout extends OpenElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._teardownSpaNavigation();
     this._docClickCleanup?.();
     if (this._themeHandler) {
       globalThis.removeEventListener?.('open:theme-change', this._themeHandler);
