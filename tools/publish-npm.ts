@@ -21,6 +21,22 @@ const REPOSITORY = {
 };
 
 const KEYWORDS = ['openelement', 'web-components', 'ssg', 'framework', 'deno'];
+const HOMEPAGE = 'https://openelement.org';
+const BUGS = 'https://github.com/open-element/openelement/issues';
+const PACKAGE_DESCRIPTIONS: Record<string, string> = {
+  '@openelement/adapter-vite': 'Vite build adapter for the OpenElement Web Components framework.',
+  '@openelement/app': 'Application authoring APIs for the OpenElement Web Components framework.',
+  '@openelement/content': 'Content, MDX, navigation, and sitemap helpers for OpenElement.',
+  '@openelement/core': 'Core rendering primitives for the OpenElement Web Components framework.',
+  '@openelement/create': 'Project generator for the OpenElement Web Components framework.',
+  '@openelement/element': 'Custom element base class and authoring APIs for OpenElement.',
+  '@openelement/protocol':
+    'Dependency-neutral framework contracts for OpenElement adapters and integrations.',
+  '@openelement/router': 'Routing utilities for OpenElement applications.',
+  '@openelement/signal': 'Reactive signal primitives for OpenElement.',
+  '@openelement/ssg': 'Adapter-agnostic static site generation engine for OpenElement.',
+  '@openelement/ui': 'Reference Web Components and UI primitives for OpenElement.',
+};
 
 const CREATE_BIN = {
   'openelement-create': './src/cli.js',
@@ -123,6 +139,10 @@ function isPrerelease(version: string): boolean {
 function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unknown>): void {
   pkgJson.type = 'module';
   pkgJson.repository = REPOSITORY;
+  pkgJson.homepage = HOMEPAGE;
+  pkgJson.bugs = BUGS;
+  pkgJson.license = 'MIT';
+  pkgJson.description = PACKAGE_DESCRIPTIONS[pkg.name];
   pkgJson.keywords = KEYWORDS;
   if (pkg.name === '@openelement/create') {
     pkgJson.bin = CREATE_BIN;
