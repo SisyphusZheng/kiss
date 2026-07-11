@@ -18,7 +18,7 @@ import { getCustomElementTags } from './helpers.js';
 test.describe('DSD Layers', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for the page to be fully rendered (DSD polyfill + theme init)
+    // Wait for native DSD parsing, custom-element upgrade, and theme init.
     await page.waitForLoadState('networkidle');
   });
 
@@ -43,6 +43,11 @@ test.describe('DSD Layers', () => {
       return false;
     });
     expect(hasShadowRoots).toBe(true);
+  });
+
+  test('default output relies on native DSD without an inline fallback', async ({ page }) => {
+    const fallbackCount = await page.locator('script[data-openelement-dsd-fallback]').count();
+    expect(fallbackCount).toBe(0);
   });
 
   test('shadow root content includes style elements', async ({ page }) => {

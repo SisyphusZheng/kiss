@@ -84,6 +84,9 @@ the legacy fallback is explicit because current Chromium, Firefox, and WebKit
 support `shadowrootmode`; strict CSP output must never silently depend on an
 inline fallback script.
 
+See [BROWSER_BASELINE.md](./BROWSER_BASELINE.md) for the supported baseline,
+source, and executable browser evidence.
+
 ## Boundary Rules
 
 - App model tests must run without booting Hono.
