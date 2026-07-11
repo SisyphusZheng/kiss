@@ -46,19 +46,19 @@
  * @module @openelement/element/open-element
  */
 
-import { formatError } from '@openelement/core/errors';
-import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
+import { formatError } from './internal/core/errors.ts';
+import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import {
   disposeStaticProps,
   handleStaticPropAttributeChange,
   initializeStaticProps,
   syncStaticPropsFromAttributes,
-} from '@openelement/core/prop';
-import type { VNode } from '@openelement/protocol/vnode';
-import type { Signal } from '@openelement/protocol/signal';
-import { signal } from '@openelement/signal';
-import { createLogger } from '@openelement/core/logger';
-import { HydrationScope } from '@openelement/core/hydrate';
+} from './internal/core/prop.ts';
+import type { VNode } from './internal/protocol/vnode.ts';
+import type { Signal } from './internal/protocol/signal.ts';
+import { signal } from './internal/signal/index.ts';
+import { createLogger } from './internal/core/logger.ts';
+import { HydrationScope } from './internal/core/hydrate.ts';
 import {
   renderErrorFallback,
   renderIntoLightDom,

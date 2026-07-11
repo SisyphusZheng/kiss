@@ -1,2 +1,2 @@
 /** Supported JSX transform entrypoint for Element authors. */
-export { Fragment, jsx, jsxs } from '@openelement/core/jsx-runtime';
+export { Fragment, jsx, jsxs } from './internal/core/jsx-runtime.ts';

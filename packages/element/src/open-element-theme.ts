@@ -1,4 +1,4 @@
-import type { StyleSheetLike } from '@openelement/protocol/style-sheet';
+import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 
 /** Owns global styles and document-theme propagation for OpenElement hosts. */
 export class OpenElementThemeManager {

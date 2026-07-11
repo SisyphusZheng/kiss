@@ -10,12 +10,12 @@
  * @module @openelement/element/open-element-render
  */
 
-import type { VNode } from '@openelement/protocol/vnode';
-import type { Signal } from '@openelement/protocol/signal';
-import { renderToDom } from '@openelement/core';
-import { formatError } from '@openelement/core/errors';
-import { createLogger } from '@openelement/core/logger';
-import type { HydrationScope } from '@openelement/core/hydrate';
+import type { VNode } from './internal/protocol/vnode.ts';
+import type { Signal } from './internal/protocol/signal.ts';
+import { renderToDom } from './internal/core/index.ts';
+import { formatError } from './internal/core/errors.ts';
+import { createLogger } from './internal/core/logger.ts';
+import type { HydrationScope } from './internal/core/hydrate.ts';
 
 /**
  * Minimal structural stand-in for OpenElement instances.

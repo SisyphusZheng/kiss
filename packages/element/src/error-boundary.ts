@@ -20,10 +20,10 @@
  * ```
  */
 
-import type { VNode } from '@openelement/protocol/vnode';
+import type { VNode } from './internal/protocol/vnode.ts';
 import { OpenElement } from './open-element.ts';
-import { ErrorCode, OpenElementError } from '@openelement/core';
-import type { ErrorSeverity } from '@openelement/protocol/errors';
+import { ErrorCode, OpenElementError } from './internal/core/index.ts';
+import type { ErrorSeverity } from './internal/protocol/errors.ts';
 
 export abstract class ErrorBoundary extends OpenElement {
   private _error: OpenElementError | null = null;
