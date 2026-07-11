@@ -28,6 +28,11 @@ for (const root of workflowRoots) {
   }
 }
 
+const ciWorkflow = await Deno.readTextFile('.github/workflows/autoflow-ci.yml');
+if (!ciWorkflow.includes('actions/dependency-review-action@')) {
+  failures.push('autoflow-ci.yml must run dependency-review-action for pull requests');
+}
+
 if (failures.length > 0) {
   console.error('Action pin check failed:');
   for (const failure of failures) console.error(`- ${failure}`);

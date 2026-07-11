@@ -12,3 +12,11 @@ credit reporters when requested, and publish an advisory when users need to act.
 Only the latest published `0.41.x` line is supported while alpha.7 is active.
 Pre-release packages may change before stable release; security fixes are made
 on the active release line whenever practical.
+
+## Dependency policy
+
+GitHub Dependabot alerts are enabled for this repository and Dependabot opens
+weekly update proposals. Pull requests that change dependencies run immutable
+`actions/dependency-review-action`; high or critical findings fail the check.
+An open high/critical alert blocks a release until it is remediated or a
+maintainer records a time-bounded exception in the release evidence.
