@@ -128,6 +128,19 @@ console.log(`Project generated at ${appDir}`);
 const denoJsonPath = join(appDir, 'deno.json');
 const denoJson = JSON.parse(readFileSync(denoJsonPath, 'utf-8'));
 const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
+const productImports = [
+  '@deno/vite-plugin',
+  '@openelement/adapter-vite',
+  '@openelement/app',
+  '@openelement/element',
+  'vite',
+];
+if (Object.keys(generatedImportMap).sort().join('\n') !== productImports.join('\n')) {
+  console.error('Generated starter exposes a non-product import surface.');
+  console.error(Object.keys(generatedImportMap).sort().join('\n'));
+  cleanup();
+  Deno.exit(1);
+}
 
 for (const [specifier, url] of allPackageAliases(repoRoot)) {
   denoJson.imports[specifier] = url;
@@ -152,9 +165,8 @@ delete denoJson.tasks['build:ssg'];
 
 writeFileSync(denoJsonPath, JSON.stringify(denoJson, null, 2));
 
-// Step 3: Patch vite.config.ts for local source resolution
-const uiSrc = join(repoRoot, 'packages', 'ui', 'src');
-
+// Step 3: Patch Vite only with workspace aliases needed to execute the local
+// implementation. The generated app itself remains limited to product imports.
 const aliases = [...allPackageAliases(repoRoot)]
   .filter(([find]) => find !== '@openelement/ui/')
   .map(([find, url]) => ({
@@ -170,19 +182,9 @@ if (avIdx !== -1) {
   );
 }
 
-// @openelement/ui directory catch-all (after all specific subpath aliases)
-aliases.push({
-  find: '@openelement/ui',
-  replacement: vitePath(uiSrc),
-});
-
 const viteConfigPath = join(appDir, 'vite.config.ts');
 let viteConfig = readFileSync(viteConfigPath, 'utf-8');
 
-viteConfig = viteConfig.replace(
-  "packageIslands: ['@openelement/ui'],",
-  `packageIslands: [${JSON.stringify(pathToFileURL(join(uiSrc, 'index.ts')).href)}],`,
-);
 viteConfig = viteConfig.replace(
   'plugins: [',
   `resolve: { alias: ${JSON.stringify(aliases, null, 4)} },\n  plugins: [`,
@@ -290,33 +292,26 @@ if (!existsSync(serverEntryPath)) {
 
 const serverEntry = readFileSync(serverEntryPath, 'utf-8');
 const missingGeneratedImports = findMissingGeneratedImports(serverEntry, generatedImportMap);
-if (missingGeneratedImports.length > 0) {
+const missingProductImports = missingGeneratedImports.filter((specifier) =>
+  specifier.startsWith('@openelement/')
+);
+if (missingProductImports.length > 0) {
   console.error(
-    'Generated starter import map does not cover SSR bundle bare imports. ' +
-      'This would fail after immutable package publish.',
+    'Generated SSR bundle leaks non-product OpenElement imports. ' +
+      'A consumer must not need internal package aliases.',
   );
-  for (const specifier of missingGeneratedImports) {
+  for (const specifier of missingProductImports) {
     console.error(`- ${specifier}`);
   }
   cleanup();
   Deno.exit(1);
 }
 
-const denoInfoResult = await runCommand([
-  'info',
-  '--config',
-  denoJsonPath,
-  serverEntryPath,
-], appDir);
-if (denoInfoResult.code !== 0) {
-  console.error(
-    'Generated starter import map cannot resolve the SSR bundle with real Deno resolution. ' +
-      'This would fail after immutable package publish.',
+if (missingGeneratedImports.length > 0) {
+  console.log(
+    'Local bundle contains third-party runtime dependencies; packed npm smoke validates their ' +
+      'published dependency metadata.',
   );
-  console.error(denoInfoResult.stdout);
-  console.error(denoInfoResult.stderr);
-  cleanup();
-  Deno.exit(1);
 }
 
 if (packagedImportMapCheckOnly) {

@@ -1,36 +1,19 @@
 {
   "imports": {
-    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@deno/vite-plugin": "npm:@deno/vite-plugin",
-    "entities": "npm:entities@^4.5.0",
-    "hono": "npm:hono@4.12.23",
-    "hono/cors": "npm:hono@4.12.23/cors",
-    "hono/logger": "npm:hono@4.12.23/logger",
-    "hono/request-id": "npm:hono@4.12.23/request-id",
-    "hono/secure-headers": "npm:hono@4.12.23/secure-headers",
-    "marked": "npm:marked@15.0.12",
     "@openelement/app": "npm:@openelement/app@^${v.app}",
     "@openelement/adapter-vite": "npm:@openelement/adapter-vite@^${v.adapterVite}",
-    "@openelement/core": "npm:@openelement/core@^${v.core}",
-    "@openelement/core/jsx-runtime": "npm:@openelement/core@^${v.core}/jsx-runtime",
     "@openelement/element": "npm:@openelement/element@^${v.element}",
-    "@openelement/signal": "npm:@openelement/signal@^${v.signal}",
-    "@openelement/content": "npm:@openelement/content@^${v.content}",
-    "@openelement/ssg": "npm:@openelement/ssg@^${v.ssg}",
-    "@openelement/protocol": "npm:@openelement/protocol@^${v.protocol}",
-    "@openelement/router": "npm:@openelement/router@^${v.router}",
-    "@openelement/ui": "npm:@openelement/ui@^${v.ui}",
     "vite": "npm:vite@8.0.10"
   },
   "nodeModulesDir": "auto",
   "minimumDependencyAge": 0,
   "tasks": {
     "dev": "deno run --config deno.json -A npm:vite",
+    "check": "deno check --config deno.json app/routes/index.tsx app/routes/freshness.tsx app/islands/my-counter.tsx",
+    "test": "deno test --config deno.json",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build",
-    "build:ssr": "deno run --config deno.json -A npm:vite build",
-    "build:client": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-client",
-    "build:ssg": "deno run --config deno.json -A npm:@openelement/adapter-vite@^${v.adapterVite}/cli/build-ssg",
     "preview": "deno run --config deno.json -A npm:vite preview"
   },
-  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/core" }
+  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/element" }
 }

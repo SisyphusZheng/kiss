@@ -164,6 +164,22 @@ async function amendReleaseEvidenceCommit(evidence: ReleaseEvidence): Promise<vo
   }
 }
 
+async function commitFinalReleaseEvidence(
+  evidence: ReleaseEvidence,
+  branch: string,
+): Promise<void> {
+  await writeAndStageReleaseEvidence(evidence);
+  if (await hasStagedChanges()) {
+    await runCaptured([
+      'git',
+      'commit',
+      '-m',
+      `docs(release): finalize ${releaseTag(evidence.targetVersion)} evidence`,
+    ]);
+    await runCaptured(['git', 'push', 'origin', branch]);
+  }
+}
+
 async function persistReleaseEvidenceAfterStep(
   evidence: ReleaseEvidence,
   stepName: string,
@@ -219,8 +235,10 @@ async function executeReleasePlan(
     }
     evidence.status = 'completed';
     evidence.completedAt = new Date().toISOString();
-    await writeReleaseEvidence(evidence);
-    await writeReleaseNote(evidence);
+    // The original evidence commit is intentionally created before tagging.
+    // Persist completion in a follow-up commit after tag/npm/GitHub success so
+    // the repository's durable evidence cannot remain stuck at "running".
+    await commitFinalReleaseEvidence(evidence, expectedBranch);
   } catch (error) {
     evidence.status = 'failed';
     evidence.completedAt = new Date().toISOString();

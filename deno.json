@@ -142,7 +142,7 @@
     "strict": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core"
+    "jsxImportSource": "@openelement/element"
   },
   "exclude": [
     "node_modules",

@@ -819,7 +819,7 @@ installDomHarness();
 // Imports must happen after the harness is installed: OpenElement captures its
 // HTMLElement base class at module evaluation time.
 const { OpenElement, ErrorBoundary } = await import('@openelement/element');
-const { jsx } = await import('@openelement/core/jsx-runtime');
+const { jsx } = await import('@openelement/element/jsx-runtime');
 const { signal } = await import('@openelement/signal');
 const { StyleSheet } = await import('@openelement/core/style-sheet');
 

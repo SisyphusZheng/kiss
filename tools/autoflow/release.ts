@@ -236,6 +236,7 @@ export function createReleasePlan(
         'add',
         'deno.json',
         'packages/*/deno.json',
+        'packages/create/src/version.ts',
         'tools/project-constants.ts',
         'README.md',
         'README.zh.md',

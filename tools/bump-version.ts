@@ -198,6 +198,21 @@ function updatePackageImports(
   return totalUpdated;
 }
 
+function updateEmbeddedCreateVersion(
+  root: string,
+  fromVersion: string,
+  toVersion: string,
+  dryRun: boolean,
+): boolean {
+  const path = `${root}/packages/create/src/version.ts`;
+  const text = Deno.readTextFileSync(path);
+  if (!text.includes(`'${fromVersion}'`)) return false;
+  if (!dryRun) {
+    Deno.writeTextFileSync(path, text.replace(`'${fromVersion}'`, `'${toVersion}'`));
+  }
+  return true;
+}
+
 function main(): void {
   const root = Deno.cwd();
   const dryRun = Deno.args.includes('--dry-run');
@@ -262,6 +277,16 @@ function main(): void {
   const pkgImportCount = updatePackageImports(packageDenos, resolvedFrom, toVersion, dryRun);
   if (pkgImportCount > 0) {
     console.log(`Updated ${pkgImportCount} cross-package import(s).`);
+  }
+
+  const embeddedCreateVersionUpdated = updateEmbeddedCreateVersion(
+    root,
+    resolvedFrom,
+    toVersion,
+    dryRun,
+  );
+  if (!embeddedCreateVersionUpdated) {
+    console.log('⚠️  Embedded @openelement/create version was not updated.');
   }
 
   // Report mismatches

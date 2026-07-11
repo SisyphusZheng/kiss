@@ -3,7 +3,7 @@
  * consumer-smoke — v0.41.0
  *
  * Post-publish npm smoke test: creates temporary consumer projects and
- * verifies @openelement/core can be consumed from npm in Deno and Node.
+ * verifies @openelement/element can be consumed from npm in Deno and Node.
  * Also checks the jsDelivr CDN browser-safe export and Nitro build output.
  *
  * Usage:
@@ -38,7 +38,7 @@ async function run(
 }
 
 const denoSource = `
-import { isVNode, type VNode } from '@openelement/core';
+import { isVNode, type VNode } from '@openelement/element';
 
 const node: VNode = {
   tag: 'div',
@@ -53,7 +53,7 @@ console.log('Smoke test passed!');
 `.trim();
 
 const nodeSource = `
-import { isVNode } from '@openelement/core';
+import { isVNode } from '@openelement/element';
 
 const node = {
   tag: 'div',
@@ -107,7 +107,7 @@ async function denoNpmSmoke(version: string, projectRoot: string, local: boolean
     await Deno.writeTextFile(
       `${tmpDir}/deno.json`,
       JSON.stringify(
-        { imports: { '@openelement/core': `npm:@openelement/core@^${version}` } },
+        { imports: { '@openelement/element': `npm:@openelement/element@^${version}` } },
         null,
         2,
       ),
@@ -140,7 +140,7 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
 
   try {
     if (local) {
-      const workspacePackages = ['signal', 'protocol', 'core'];
+      const workspacePackages = ['signal', 'protocol', 'core', 'element'];
       for (const pkg of workspacePackages) {
         console.log(`  deno pack packages/${pkg}`);
         const pack = await run(
@@ -155,15 +155,16 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
       }
     }
 
-    const dep = local ? 'file:./openelement-core.tgz' : `^${version}`;
+    const dep = local ? 'file:./openelement-element.tgz' : `^${version}`;
     const localDeps = local
       ? {
+        '@openelement/element': 'file:./openelement-element.tgz',
         '@openelement/core': 'file:./openelement-core.tgz',
         '@openelement/signal': 'file:./openelement-signal.tgz',
         '@openelement/protocol': 'file:./openelement-protocol.tgz',
         '@preact/signals-core': '^1.12.1',
       }
-      : { '@openelement/core': dep };
+      : { '@openelement/element': dep };
 
     await Deno.writeTextFile(
       `${tmpDir}/package.json`,
@@ -193,7 +194,7 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
 }
 
 async function jsdelivrSmoke(version: string): Promise<void> {
-  const url = `https://cdn.jsdelivr.net/npm/@openelement/core@${version}/+esm`;
+  const url = `https://cdn.jsdelivr.net/npm/@openelement/element@${version}/+esm`;
   console.log(`\n[jsDelivr CDN browser-safe export] ${url}`);
 
   const response = await fetch(url);
@@ -253,15 +254,15 @@ async function main(): Promise<void> {
   const runNitro = getArgFlag('--nitro') || (versionProvided && !local);
 
   console.log('Consumer npm smoke test');
-  console.log(`  mode: ${local ? 'local workspace' : `npm @openelement/core@${version}`}`);
+  console.log(`  mode: ${local ? 'local workspace' : `npm @openelement/element@${version}`}`);
   if (runJsDelivr) console.log('  + jsDelivr CDN smoke');
   if (runNitro) console.log('  + Nitro output smoke');
 
   if (!local) {
-    const exists = await npmPackageExists('@openelement/core', version);
+    const exists = await npmPackageExists('@openelement/element', version);
     if (!exists) {
       console.log(
-        `\n@openelement/core@${version} is not yet available on npm; skipping npm consumer smoke.`,
+        `\n@openelement/element@${version} is not yet available on npm; skipping npm consumer smoke.`,
       );
       console.log('Run again after publish, or use --local to test against workspace sources.');
       return;

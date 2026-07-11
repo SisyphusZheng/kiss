@@ -23,7 +23,7 @@
  */
 
 // Primary public API
-import type { Plugin } from 'vite';
+import { build as viteBuild, type InlineConfig, type Plugin } from 'vite';
 import type { FrameworkOptions } from '@openelement/protocol/framework';
 import { createOpenPlugin } from './plugin.ts';
 
@@ -50,6 +50,17 @@ export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
     build: config.output as FrameworkOptions['build'],
   };
   return createOpenPlugin(options);
+}
+
+/**
+ * Build an OpenElement application through the supported adapter boundary.
+ *
+ * Consumers configure the adapter in `vite.config.ts`; this function owns the
+ * invocation so CLI callers do not need to know the adapter's internal build
+ * phases or Vite plugin ordering.
+ */
+export async function buildApp(config: InlineConfig = {}): Promise<unknown> {
+  return await viteBuild({ configLoader: 'native', ...config });
 }
 
 export { openElement, type OpenElementOptions } from './app-vite.ts';

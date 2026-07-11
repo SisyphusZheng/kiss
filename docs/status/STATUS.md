@@ -12,7 +12,7 @@ with Basic Element standalone and full-application adoption modes. Dogfood apps
 validate the framework; they do not define new product lines. AutoFlow3, docs
 truth, workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.8 Package / beta Architecture Planning
+## Current Version Line: v0.41.0-alpha.8 Package / beta.4 Implementation
 
 v0.41.0-alpha.8 is the current package line and carries the completed alpha.7
 implementation train. The `0.41.0-alpha.7` npm version had already been
@@ -46,6 +46,12 @@ now the final breaking architecture and adoption-convergence train before stable
 v0.41.0. npm beta.1, beta.2, and beta.3 already exist as immutable partial
 8-of-11 package publishes, so the first coherent candidate must be
 `0.41.0-beta.4`.
+
+ADR-0113 authorizes the beta.4 five-package boundary: `element`, `app`,
+`adapter-vite`, `create`, and optional `ui`. The implementation begins by
+repairing the packed starter and moving JSX to the Element public entrypoint;
+the six alpha implementation packages are migration sources with no beta
+compatibility promise.
 
 ### 2026-07-11 beta audit blockers
 

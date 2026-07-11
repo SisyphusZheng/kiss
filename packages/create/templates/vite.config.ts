@@ -17,20 +17,11 @@ export default defineConfig({
           siteName: 'My openElement App',
         },
       },
-      // Use pre-built UI components from @openelement/ui
-      // (npm distributes compiled JS - no decorator errors)
-      packageIslands: ['@openelement/ui'],
-      // SSR must bundle @openelement/ui (decorators need compilation)
-      ssr: {
-        noExternal: ['@openelement/ui'],
-      },
       inject: {
         headFragments: [
-          // Design tokens - DRY: values from @openelement/ui/open-props-tokens.ts
           colorTokensStyle,
         ],
       },
-      // Blog + Navigation + Sitemap (from @openelement/content)
       content: {
         blog: {
           contentDir: 'content/blog',

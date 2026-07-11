@@ -10,18 +10,15 @@
  *   deno task build
  */
 
-import { build as viteBuild } from 'vite';
 import process from 'node:process';
-import { formatError } from '@openelement/core/errors';
-import { createLogger } from '@openelement/core/logger';
+import { buildApp } from '../index.ts';
 
 if (import.meta.main) {
   try {
-    await viteBuild({ configLoader: 'native' });
+    await buildApp();
     process.exit(0);
   } catch (error) {
-    const log = createLogger('adapter-vite');
-    log.error(`Build failed: ${formatError(error)}`);
+    console.error(`Build failed: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 }

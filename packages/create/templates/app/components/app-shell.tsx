@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { defineLayout } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 
