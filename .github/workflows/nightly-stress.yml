@@ -26,6 +26,8 @@ jobs:
           STRESS_MAX_RSS_GROWTH_MB: '64'
           STRESS_MAX_LATENCY_MS: '5000'
         run: deno task stress:dogfood
+      - name: Record build and dogfood evidence
+        run: deno task dogfood:evidence
       - name: Archive stress evidence
         if: always()
         # v4.6.2
@@ -33,3 +35,9 @@ jobs:
         with:
           name: mastodon-desktop-stress-report
           path: examples/deno-desktop-mastodon/stress-report.json
+      - name: Archive combined framework evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: openelement-dogfood-evidence
+          path: docs/evidence/dogfood-performance.json

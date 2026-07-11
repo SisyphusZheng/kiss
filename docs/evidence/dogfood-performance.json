@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-07-11T03:43:02.307Z",
+  "environment": {
+    "deno": "2.9.1",
+    "os": "darwin",
+    "arch": "aarch64"
+  },
+  "web": {
+    "buildTimeMs": 2379,
+    "pages": 210,
+    "generatedHtmlBytes": 20997239,
+    "initialJavaScriptBytes": 1652424
+  },
+  "mastodonStress": {
+    "startRssMb": 39,
+    "endRssMb": 25,
+    "minLatencyMs": 0,
+    "maxLatencyMs": 13,
+    "avgLatencyMs": 1
+  },
+  "desktopArtifactBytes": null,
+  "limitations": [
+    "Local results vary by hardware and cache state.",
+    "Desktop artifact size is null when no platform bundle is produced on this host.",
+    "Reader and Mastodon are framework dogfood, not separate product lines."
+  ]
+}
