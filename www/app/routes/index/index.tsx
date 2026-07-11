@@ -764,9 +764,11 @@ const workflowSteps = [
 ] as const;
 
 const surfaces = [
-  ['Docs', '/docs', 'Guides, route concepts, deployment notes, and architecture entry points.'],
+  ['Start', '/guide/getting-started', 'Five-minute create, element, island, and production build path.'],
   ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Roadmap', '/roadmap', 'Alpha.6 release, alpha.7 hardening and adoption readiness, beta.1 validation, and v1.0 direction.'],
+  ['Deploy', '/guide/deployment', 'Verified Node and Workers output from the same BuildPlan.'],
+  ['Compare', '/architecture/comparison', 'Sourced fit and non-fit guidance for adjacent frameworks.'],
+  ['Evidence', '/architecture/benchmark', 'Reproducible build, output, latency, and memory methodology.'],
 ] as const;
 
 function moduleVisual(kind: 'target' | 'graph' | 'layers') {
