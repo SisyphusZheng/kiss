@@ -3,7 +3,7 @@
 [English](./README.md) | 简体中文
 
 **以 Web Components 为原生组件模型的全栈框架，并内置 JSX-first Basic Element
-authoring layer。当前包线：`0.41.0-alpha.6`（`v0.41.0-alpha.6` 发布）。当前执行线：v0.41.0-alpha.7 Dogfood、架构收口与采用准备。**
+authoring layer。当前包线：`0.41.0-alpha.8`（`v0.41.0-alpha.8` 发布）。当前执行线：v0.41.0-alpha.7 Dogfood、架构收口与采用准备。**
 
 openElement 把 Web Components 当作应用的原生组件模型，使用 JSX/VNode 渲染、渐进式 islands、API routes，以及 Vite + Nitro 输出，构建静态优先的全栈应用。Shadow/DSD 是默认组件渲染模式；light DOM 是显式 opt-in。
 

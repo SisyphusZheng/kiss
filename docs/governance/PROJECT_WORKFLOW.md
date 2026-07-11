@@ -11,7 +11,7 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: package line `v0.41.0-alpha.6`, active execution line
+Current execution anchor: package line `v0.41.0-alpha.8`, active execution line
 `v0.41.0-alpha.7`, active version plan `docs/current/VERSION_PLAN.md`, and
 product formula
 `openElement = Web Components Fullstack Framework + Basic Element`.

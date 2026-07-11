@@ -3,7 +3,7 @@
 English | [Simplified Chinese](./README.zh.md)
 
 **Web Components-native fullstack framework with a JSX-first Basic Element
-authoring layer. Package line: `0.41.0-alpha.6` (`v0.41.0-alpha.6` release).
+authoring layer. Package line: `0.41.0-alpha.8` (`v0.41.0-alpha.8` release).
 Active execution: v0.41.0-alpha.7 Dogfood, Architecture Convergence, and
 Adoption Readiness.**
 
@@ -105,8 +105,8 @@ that works with the platform instead of fighting it, openElement is the lane.
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.6**
-(`v0.41.0-alpha.6`) under
+All 11 current workspace packages are aligned at **0.41.0-alpha.8**
+(`v0.41.0-alpha.8`) under
 [`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 dogfood
 foundation proves a read-only, accountless networked desktop app. The active
 line is **v0.41.0-alpha.7 Dogfood, Architecture Convergence, and Adoption
