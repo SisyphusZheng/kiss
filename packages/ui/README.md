@@ -1,11 +1,11 @@
 # @openelement/ui
 
-openElement UI product package.
+First-party reference UI package for the OpenElement framework.
 
 The components are first-party `open-*` Web Components. They are designed to
-prove the openElement Elements model with shadow/DSD output, explicit light DOM
-where needed, and island upgrade. ADR-0099 makes UI one of the four first-class
-products and keeps external UI libraries out of the current default target.
+prove the OpenElement authoring model with shadow/DSD output, explicit light DOM
+where needed, and island upgrade. UI is a supporting reference surface, not a
+separate application-framework promise.
 
 As of v0.40.8, there is **no Linear compatibility layer**. The legacy
 `open-*-linear` components and `linear-token-sheet` token sheet have been
@@ -32,6 +32,24 @@ npm install @openelement/ui
 | `OpenDialog`      | `open-dialog`       | Dialog component.              |
 | `OpenCallout`     | `open-callout`      | Callout/notice box.            |
 | `OpenStepCard`    | `open-step-card`    | Step card.                     |
+
+## Layering contract
+
+Dependencies flow in one direction:
+
+```text
+tokens (`open-props-tokens`, `daisy-classes`)
+  -> primitives (`open-button`, `open-input`, `open-badge`, `open-brand-mark`)
+    -> composites (`open-card`, `open-dialog`, `open-layout`, tabs and lab components)
+```
+
+Tokens contain shared style values and classes and import no components.
+Primitives may consume tokens but never composites. Composites may compose
+primitives and tokens. `OpenLayout` owns only reusable layout, theme,
+keyboard, and accessibility behavior; application routing and document
+navigation belong to `@openelement/app` and `@openelement/router`.
+
+Existing per-component imports remain stable across this layering change.
 
 ## Package Manifest
 
