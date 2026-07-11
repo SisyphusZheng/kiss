@@ -267,7 +267,7 @@ export function createReleasePlan(
       ...evidenceSteps,
       {
         name: 'pull latest main',
-        command: ['git', 'pull', '--rebase', 'origin', 'main'],
+        command: ['git', 'pull', '--rebase', '--autostash', 'origin', 'main'],
       },
       {
         name: 'push main evidence',
