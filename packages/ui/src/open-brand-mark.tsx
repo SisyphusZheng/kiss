@@ -5,7 +5,7 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 
 export const tagName = 'open-brand-mark';
 

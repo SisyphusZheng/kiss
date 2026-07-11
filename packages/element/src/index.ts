@@ -87,6 +87,7 @@ export type { IslandOptions } from './internal/protocol/island.ts';
 // ─── StyleSheet (re-export from core) ────────────────────
 
 export { StyleSheet } from './internal/core/style-sheet.ts';
+export { createLogger } from './internal/core/logger.ts';
 export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
@@ -101,3 +102,4 @@ export type {
   OpenElementRouteKind,
   OpenElementRouteNode,
 } from './internal/protocol/app-model.ts';
+export type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';

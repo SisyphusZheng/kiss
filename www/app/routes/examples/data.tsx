@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * Example route demonstrating the Fresh-style data layer in the v0.41.0-alpha.6 site.
  *

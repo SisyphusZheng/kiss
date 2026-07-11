@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-dropdown
  *
@@ -19,7 +19,7 @@
  */
 
 import { OpenElement, type VNode } from '@openelement/element';
-import { signal } from '@openelement/signal';
+import { signal } from '@openelement/element';
 import { daisyClassSheet } from './daisy-classes.ts';
 
 export const tagName = 'open-dropdown';

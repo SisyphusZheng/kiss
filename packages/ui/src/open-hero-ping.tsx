@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * Hero Ping - Ocean component (v0.20.0 Ocean-Island).
  *
@@ -12,7 +12,7 @@
  * @csspart dot-animated - The animated ping button
  */
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 export const tagName = 'open-hero-ping';
 
 const styles: StyleSheetLike = new StyleSheet();

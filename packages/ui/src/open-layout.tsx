@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-layout
  *
@@ -29,10 +29,10 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { type Context, createContext, provideContext } from '@openelement/core';
-import { escapeAttr, escapeHtml } from '@openelement/core';
-import { createLogger } from '@openelement/core/logger';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { type Context, createContext, provideContext } from '@openelement/element';
+import { escapeAttr, escapeHtml } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 import './open-theme-toggle.tsx';
 import './open-brand-mark.tsx';
 

@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-theme-toggle
  *
@@ -19,8 +19,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { signal } from '@openelement/signal';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { signal } from '@openelement/element';
 export const tagName = 'open-theme-toggle';
 
 const sheet: StyleSheetLike = new StyleSheet();

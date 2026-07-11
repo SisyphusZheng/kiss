@@ -60,7 +60,7 @@ export default defineConfig({
 import { compileMdx } from '@openelement/content/mdx';
 
 const mod = await compileMdx(source, {
-  jsxImportSource: '@openelement/core',
+  jsxImportSource: '@openelement/element',
 });
 ```
 

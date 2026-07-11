@@ -40,7 +40,7 @@ Generated projects configure automatic JSX:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core"
+    "jsxImportSource": "@openelement/element"
   }
 }
 ```

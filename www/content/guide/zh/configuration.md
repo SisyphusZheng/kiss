@@ -39,7 +39,7 @@ openElement({
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core"
+    "jsxImportSource": "@openelement/element"
   }
 }
 ```

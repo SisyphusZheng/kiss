@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-button
  *
@@ -22,8 +22,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { escapeAttr } from '@openelement/core/static';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { escapeAttr } from '@openelement/element';
 
 export const tagName = 'open-button';
 

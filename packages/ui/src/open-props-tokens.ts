@@ -5,7 +5,7 @@
  * and SSR bundles do not depend on a file-system path next to import.meta.url.
  */
 
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 
 function toRootCss(hostCss: string): string {
   return hostCss

@@ -113,7 +113,7 @@ export default defineConfig({
   // Must match root deno.json compilerOptions.jsx / jsxImportSource.
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: '@openelement/core',
+    jsxImportSource: '@openelement/element',
   },
   plugins: [
     openElement({

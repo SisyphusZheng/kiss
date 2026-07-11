@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-code-block
  *
@@ -21,8 +21,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { createLogger } from '@openelement/core/logger';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 export const tagName = 'open-code-block';
 
 const log = createLogger('ui');

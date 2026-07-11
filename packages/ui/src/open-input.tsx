@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-input
  *
@@ -30,8 +30,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { escapeAttr, escapeHtml } from '@openelement/core';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { escapeAttr, escapeHtml } from '@openelement/element';
 
 export const tagName = 'open-input';
 

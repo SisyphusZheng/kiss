@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-card
  *
@@ -25,7 +25,7 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 export const tagName = 'open-card';
 
 const sheet: StyleSheetLike = new StyleSheet();

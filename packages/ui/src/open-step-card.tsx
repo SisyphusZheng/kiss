@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - OpenStepCard Component
  *
@@ -23,8 +23,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/core/style-sheet';
-import { escapeHtml } from '@openelement/core';
+import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { escapeHtml } from '@openelement/element';
 
 export const tagName = 'open-step-card';
 

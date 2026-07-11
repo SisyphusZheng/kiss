@@ -29,7 +29,7 @@
   "imports": {},
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core"
+    "jsxImportSource": "@openelement/element"
   },
   "publish": {
     "include": [
