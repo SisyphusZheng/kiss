@@ -8,7 +8,7 @@
     "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --include dist --include fixtures main.ts",
     "start": "deno task build && open deno-desktop-mastodon.app",
     "check": "deno check main.ts mastodon.tsx",
-    "smoke": "deno test -A --no-check app/__tests__/",
+    "smoke": "deno test -A app/__tests__/",
     "stress": "deno run -A tools/stress.ts"
   },
   "imports": {
@@ -16,6 +16,7 @@
     "@openelement/core/hydrate": "../../packages/core/src/hydrate.ts",
     "@openelement/ui": "../../packages/ui/src/index.ts",
     "@openelement/element": "../../packages/element/src/index.ts",
+    "@openelement/element/": "../../packages/element/src/",
     "@openelement/app": "../../packages/app/src/index.ts",
     "@openelement/app/spa": "../../packages/app/src/spa.ts",
     "@openelement/app/preact": "../../packages/app/src/preact.ts",
@@ -33,7 +34,7 @@
   "exports": {},
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core",
+    "jsxImportSource": "@openelement/element",
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
   },
   "desktop": {

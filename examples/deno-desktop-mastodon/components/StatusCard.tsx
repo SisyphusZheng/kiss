@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import type { MastodonStatus } from '../app/types.ts';
 import { formatCount } from '../app/format.ts';
 import { navigate } from '../router.ts';

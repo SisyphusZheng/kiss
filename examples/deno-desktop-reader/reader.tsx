@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { defineApp } from '@openelement/app/spa';
 import { OpenElement } from '@openelement/element';
 import { setRouter } from './router.ts';

@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import { addSource, listSources, syncSource } from '../app/api.ts';
 import { loadSettings, saveSettings } from '../app/storage.ts';

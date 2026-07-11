@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import type { ReaderProgress, ReaderSource } from '../app/types.ts';
 import { getBookDetails, listBooks, listSources, syncSource } from '../app/api.ts';

@@ -5,13 +5,13 @@ const { openElement } = await import(/* @vite-ignore */ '@openelement/adapter-vi
 export default defineConfig({
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: '@openelement/core',
+    jsxImportSource: '@openelement/element',
   },
   resolve: {
     dedupe: ['preact', 'preact/hooks'],
     alias: {
-      'react/jsx-dev-runtime': '@openelement/core/jsx-dev-runtime',
-      'react/jsx-runtime': '@openelement/core/jsx-runtime',
+      'react/jsx-dev-runtime': '@openelement/element/jsx-dev-runtime',
+      'react/jsx-runtime': '@openelement/element/jsx-runtime',
     },
   },
   optimizeDeps: {

@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import type { MastodonAccount, MastodonStatus } from '../app/types.ts';
 import { getProfile, getProfileStatuses } from '../app/api-client.ts';

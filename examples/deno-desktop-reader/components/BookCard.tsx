@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import type { ReaderBook, ReaderProgress } from '../app/types.ts';
 import BookCover from './BookCover.tsx';
 

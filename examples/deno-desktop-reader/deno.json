@@ -7,13 +7,14 @@
     "dev:web": "deno run -A npm:vite",
     "build": "deno run -A --config ../../deno.json npm:vite build && deno desktop --allow-env --allow-read --allow-net --allow-run=osascript --include dist --include fixtures main.ts",
     "check": "deno check main.ts reader.tsx",
-    "smoke": "deno test -A --no-check app/__tests__/"
+    "smoke": "deno test -A app/__tests__/"
   },
   "imports": {
     "@openelement/core": "../../packages/core/src/index.ts",
     "@openelement/core/hydrate": "../../packages/core/src/hydrate.ts",
     "@openelement/ui": "../../packages/ui/src/index.ts",
     "@openelement/element": "../../packages/element/src/index.ts",
+    "@openelement/element/": "../../packages/element/src/",
     "@openelement/app": "../../packages/app/src/index.ts",
     "@openelement/app/spa": "../../packages/app/src/spa.ts",
     "@openelement/app/preact": "../../packages/app/src/preact.ts",
@@ -34,7 +35,7 @@
   "exports": {},
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@openelement/core",
+    "jsxImportSource": "@openelement/element",
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"]
   },
   "desktop": {

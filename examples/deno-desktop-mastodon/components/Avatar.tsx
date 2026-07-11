@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import type { MastodonAccount } from '../app/types.ts';
 
 export interface AvatarProps {

@@ -1,9 +1,22 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@std/assert@1": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@preact/signals@^2.9.0": "2.9.2_preact@10.29.2",
     "npm:preact@^10.28.0": "10.29.2",
     "npm:vite@8.0.10": "8.0.10"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    }
   },
   "npm": {
     "@emnapi/core@1.10.0": {
@@ -307,7 +320,7 @@
       "npm:vite@8.0.10"
     ],
     "links": {
-      "jsr:@openelement/adapter-vite@0.41.0-alpha.6": {
+      "jsr:@openelement/adapter-vite@0.41.0-alpha.8": {
         "dependencies": [
           "npm:@hono/vite-dev-server@~0.25.3",
           "npm:@mdx-js/rollup@^3.1.1",
@@ -316,12 +329,12 @@
           "npm:vite@8.0.10"
         ]
       },
-      "jsr:@openelement/app@0.41.0-alpha.6": {
+      "jsr:@openelement/app@0.41.0-alpha.8": {
         "dependencies": [
           "npm:preact-render-to-string@^6.5.0"
         ]
       },
-      "jsr:@openelement/content@0.41.0-alpha.6": {
+      "jsr:@openelement/content@0.41.0-alpha.8": {
         "dependencies": [
           "npm:@mdx-js/mdx@^3.1.1",
           "npm:@types/sanitize-html@2",
@@ -331,9 +344,9 @@
           "npm:vite@8.0.10"
         ]
       },
-      "jsr:@openelement/core@0.41.0-alpha.6": {},
-      "jsr:@openelement/create@0.41.0-alpha.6": {},
-      "jsr:@openelement/element@0.41.0-alpha.6": {},
+      "jsr:@openelement/core@0.41.0-alpha.8": {},
+      "jsr:@openelement/create@0.41.0-alpha.8": {},
+      "jsr:@openelement/element@0.41.0-alpha.8": {},
       "jsr:@openelement/example-desktop-reader@0.41.0-alpha.6": {
         "dependencies": [
           "jsr:@std/assert@1",
@@ -345,15 +358,15 @@
           "npm:vite@8.0.10"
         ]
       },
-      "jsr:@openelement/protocol@0.41.0-alpha.6": {},
-      "jsr:@openelement/router@0.41.0-alpha.6": {},
-      "jsr:@openelement/signal@0.41.0-alpha.6": {
+      "jsr:@openelement/protocol@0.41.0-alpha.8": {},
+      "jsr:@openelement/router@0.41.0-alpha.8": {},
+      "jsr:@openelement/signal@0.41.0-alpha.8": {
         "dependencies": [
           "npm:@preact/signals-core@^1.12.1"
         ]
       },
-      "jsr:@openelement/ssg@0.41.0-alpha.6": {},
-      "jsr:@openelement/ui@0.41.0-alpha.6": {}
+      "jsr:@openelement/ssg@0.41.0-alpha.8": {},
+      "jsr:@openelement/ui@0.41.0-alpha.8": {}
     }
   }
 }

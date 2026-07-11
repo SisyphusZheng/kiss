@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 // Book cover SVGs — designed per book's atmosphere, not CSS color blocks.
 // Each cover is a 200x280 SVG with visual subject + serif title.
 

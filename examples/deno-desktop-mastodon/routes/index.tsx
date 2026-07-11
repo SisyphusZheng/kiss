@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import type { MastodonStatus } from '../app/types.ts';
 import { getTimeline } from '../app/api-client.ts';

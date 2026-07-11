@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { absoluteTime, relativeTime } from '../app/format.ts';
 
 export interface RelativeTimeProps {

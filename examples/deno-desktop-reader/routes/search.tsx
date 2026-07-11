@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { OpenElement } from '@openelement/element';
 import type { ReaderSearchResult } from '../app/types.ts';
 import { searchLibrary } from '../app/api.ts';
