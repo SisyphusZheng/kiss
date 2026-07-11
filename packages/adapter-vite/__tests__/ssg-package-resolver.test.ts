@@ -42,7 +42,7 @@ Deno.test('resolveOpenPackageExport maps public subpaths to source files', () =>
   assertEquals(resolveOpenPackageExport('core', 'runtime'), 'src/runtime.ts');
   assertEquals(resolveOpenPackageExport('ui', 'open-card'), 'src/open-card.tsx');
   assertEquals(resolveOpenPackageExport('signal', 'framework'), 'src/framework.ts');
-  assertEquals(resolveOpenPackageExport('signal', 'preact-engine'), 'src/preact-engine.ts');
+  assertThrows(() => resolveOpenPackageExport('signal', 'preact-engine'));
   assertEquals(resolveOpenPackageExport('app', '.'), 'src/index.ts');
   assertEquals(resolveOpenPackageExport('app', 'hono'), 'src/hono.ts');
   assertEquals(resolveOpenPackageExport('app', 'spa'), 'src/spa.ts');

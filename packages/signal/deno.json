@@ -3,8 +3,7 @@
   "version": "0.41.0-alpha.6",
   "exports": {
     ".": "./src/index.ts",
-    "./framework": "./src/framework.ts",
-    "./preact-engine": "./src/preact-engine.ts"
+    "./framework": "./src/framework.ts"
   },
   "imports": {
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1"

@@ -21,11 +21,8 @@ export type {
 } from '@openelement/protocol/signal';
 export { isSignalLike, resolveSignalProp, unwrapSignalLike } from './types.ts';
 
-// ─── Engine factory (available at subpath) ──────────────────────
-export { createPreactEngine } from './preact-engine.ts';
-
 // ─── Framework layer ────────────────────────────────────────────
-export { computed, effect, setSignalEngine, signal } from './framework.ts';
+export { computed, effect, signal } from './framework.ts';
 
 // ─── Default export (tree-shakeable) ────────────────────────────
 import { computed, effect, signal } from './framework.ts';

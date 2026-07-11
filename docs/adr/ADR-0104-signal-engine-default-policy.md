@@ -1,6 +1,6 @@
 # ADR-0104: Signal Engine Default Policy
 
-- Status: Accepted (Updated 2026-06-14)
+- Status: Superseded by alpha.7 fixed-engine policy (Updated 2026-07-11)
 - Date: 2026-06-13
 - Target: v0.40.x
 - Depends on: ADR-0096, ADR-0101
@@ -25,22 +25,17 @@ The switch is safe because:
 - Both engines pass the same conformance test suite.
 - `@preact/signals-core` is already a declared dependency of `@openelement/signal`
   (added in v0.40.0 as a candidate).
-- `alien-signals` remains available as an optional engine via
-  `@openelement/signal/alien-engine` and can be activated at runtime via
-  `setSignalEngine()`.
+- `@preact/signals-core` is the fixed private implementation. The protocol
+  `SignalEngine` type remains useful for conformance tests, but runtime engine
+  replacement is not a supported application feature.
 - `@openelement/core` and `@openelement/element` do not import
   `@preact/signals-core` directly — they depend on `@openelement/signal` which
   bundles the dependency.
 
 ### Runtime switching
 
-```ts
-import { setSignalEngine } from '@openelement/signal';
-import { createAlienEngine } from '@openelement/signal/alien-engine';
-import { computed, effect, signal } from 'alien-signals';
-
-setSignalEngine(createAlienEngine({ signal, computed, effect }));
-```
+Runtime switching was removed in alpha.7 because a process-global mutable
+engine made SSR, tests, and effect cleanup dependent on execution order.
 
 ## Non-Goals
 
@@ -55,21 +50,17 @@ setSignalEngine(createAlienEngine({ signal, computed, effect }));
 
 - `@preact/signals-core` is a smaller, well-maintained engine with broad ecosystem
   compatibility.
-- Runtime engine switching allows users to choose alien-signals when they need
-  its specific primitives (e.g. `effectScope`).
-- `effectScope` is removed from the main public API since it is alien-specific
-  and unused in the codebase.
+- A single fixed engine keeps SSR, CSR, test, and cleanup behavior deterministic.
 
 ### Negative
 
-- Existing consumers using alien-signals-specific behavior (e.g. `effectScope`,
-  `batch`, `untrack`) must explicitly switch to the alien engine.
-- The project carries two signal-engine concepts.
+- Consumers must use the documented portable signal API; engine-specific
+  behavior is not part of the OpenElement contract.
 
 ## Acceptance
 
 - Existing signal tests remain green after the switch.
-- Both engines pass `runSignalEngineConformance`.
+- Preact Signals passes `runSignalEngineConformance`.
 - `@openelement/core` and `@openelement/element` do not require Preact signal
   packages.
 - `effectScope` is not in the main `@openelement/signal` export.

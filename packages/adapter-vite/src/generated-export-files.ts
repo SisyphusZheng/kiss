@@ -97,7 +97,6 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   'signal': {
     '.': 'src/index.ts',
     'framework': 'src/framework.ts',
-    'preact-engine': 'src/preact-engine.ts',
   },
   'ssg': {
     '.': 'src/index.ts',

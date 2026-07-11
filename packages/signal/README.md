@@ -15,18 +15,18 @@ npm install @openelement/signal
 
 ## Exports
 
-| Path              | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| `.`               | Public signals API (signal, computed, effect)                |
-| `./framework`     | Framework-level integration (setSignalEngine, engine access) |
-| `./preact-engine` | @preact/signals-core engine factory (createPreactEngine)     |
+| Path          | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `.`           | Public signals API (signal, computed, effect)        |
+| `./framework` | Compatibility entry point for the public signals API |
 
 ## Features
 
 - Fine-grained reactivity with automatic dependency tracking.
 - Computed signals with lazy evaluation.
 - Effect system for side effects with cleanup.
-- No framework lock-in — works with any Web Component.
+- Works with any Web Component; `@preact/signals-core` is an implementation
+  detail and is not mutable at runtime.
 
 ## License
 
