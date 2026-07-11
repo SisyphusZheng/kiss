@@ -1,6 +1,6 @@
 # First-Party Stack Contract
 
-This page defines the current v0.41 alpha.7 stack vocabulary. OpenElement owns the
+This page defines the current v0.41 alpha.8 stack vocabulary. OpenElement owns the
 framework concepts; the official tools implement those concepts as drivers or
 adapters.
 
@@ -68,20 +68,20 @@ adapter bridge. The adapter-vite root keeps a temporary alpha compatibility
 re-export, but stack docs and new proof code should use the explicit subpath.
 
 These are the current proven implementations, not evidence of unlimited
-replaceability. Alpha.7 makes BuildPlan the production owner (#380), converges
-the adapter-vite interface (#272), separates build/deploy/resolver ownership
-(#273), and resolves whether SignalEngine is fixed or genuinely replaceable
-(#387). Until those slices close, public claims should name the implemented
+replaceability. Alpha.7/alpha.8 made BuildPlan the production evidence owner,
+converged the adapter-vite interface, separated build/deploy/resolver concepts,
+and fixed SignalEngine to the Preact implementation. The beta audit found that
+some driver/model interfaces remain test-only and build correctness still
+depends on shared plugin phase state. Beta must wire those interfaces into one
+production path or delete them. Public claims should name the implemented
 Vite/Hono/Nitro/Preact path directly.
 
 ## Browser Baseline
 
 Declarative Shadow DOM is available in current Chromium, Firefox, and WebKit.
-The project still carries a legacy injected fallback, so alpha.7 #386 must turn
-the browser target into an executable contract and either remove the default
-fallback or make legacy support explicit. Current output must not claim that
-the legacy fallback is explicit because current Chromium, Firefox, and WebKit
-support `shadowrootmode`; strict CSP output must never silently depend on an
+Alpha.8 enforces that baseline in browser tests and keeps the legacy injected
+fallback explicitly opt-in. Beta will decide whether its maintenance cost still
+has a demonstrated consumer; strict CSP output must never silently depend on an
 inline fallback script.
 
 See [BROWSER_BASELINE.md](./BROWSER_BASELINE.md) for the supported baseline,
@@ -105,4 +105,9 @@ source, and executable browser evidence.
 - Dogfood apps prove the framework contract; they do not create extra product
   lines.
 - Generic SPA navigation belongs to app/router, not the reusable OpenLayout;
-  #381 migrates the current implementation and #274 layers the remaining UI.
+  the alpha.8 implementation has removed layout-owned document navigation.
+- During beta, one adapter does not justify a public replacement seam. Build,
+  content, SSG and deployment interfaces remain internal until multiple real
+  adapters prove variation.
+- The target author interfaces are `element` and `app`; starter and dogfood must
+  not require direct imports from implementation support packages.

@@ -5,12 +5,14 @@
 Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`. Active version plan:
 `docs/current/VERSION_PLAN.md`.
 
-Public positioning: OpenElement is a Web Components-native fullstack framework
-with a JSX-first Basic Element authoring layer. Dogfood apps validate that
-framework; they do not define new product lines. AutoFlow3, docs truth,
-workflow gates, and release evidence are infrastructure.
+Current public positioning: OpenElement is a Web Components-native fullstack
+framework with a JSX-first Basic Element authoring layer. The beta target
+narrows this to one Web Components-native, static-first application framework
+with Basic Element standalone and full-application adoption modes. Dogfood apps
+validate the framework; they do not define new product lines. AutoFlow3, docs
+truth, workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.8 Package / beta.1 Planned Validation
+## Current Version Line: v0.41.0-alpha.8 Package / beta Architecture Planning
 
 v0.41.0-alpha.8 is the current package line and carries the completed alpha.7
 implementation train. The `0.41.0-alpha.7` npm version had already been
@@ -34,16 +36,33 @@ the prior released line.
 v0.41.0-alpha.7 is the completed Dogfood, Architecture Convergence, and Adoption
 Readiness line. Its read-only/accountless Mastodon/GoToSocial desktop foundation
 is complete and remains evidence for SPA mode, Deno Desktop, third-party WC
-interop, dynamic rendering, local state/cache, and error boundaries. The active
-A7.01–A7.21 train now closes the production build, navigation/UI, browser,
-security, package surface, starter, evidence, positioning, and external-adoption
-gaps exposed by that proof. It adds no server/data/forms/session/cache
-primitives or OAuth. Design source: `docs/release/v0.41.0-alpha.7-plan.md`.
+interop, dynamic rendering, local state/cache, and error boundaries. Its
+package-gated A7.01–A7.21 work shipped on alpha.8; external adopter pilot #390
+remains open. It adds no server/data/forms/session/cache primitives or OAuth.
+Design source: `docs/release/v0.41.0-alpha.7-plan.md`.
 
-v0.41.0-beta.1 is planned release-candidate validation before stable v0.41.0.
-It adds no product surface and owns no implementation train. It re-runs the
-alpha.7-frozen starter, public API, website, package metadata, evidence,
-consumer, and release checks.
+The former v0.41.0-beta.1 validation-only plan is superseded. The beta stage is
+now the final breaking architecture and adoption-convergence train before stable
+v0.41.0. npm beta.1, beta.2, and beta.3 already exist as immutable partial
+8-of-11 package publishes, so the first coherent candidate must be
+`0.41.0-beta.4`.
+
+### 2026-07-11 beta audit blockers
+
+| Priority | Finding                                                                                                                                                | Required outcome                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| P0       | Published `@openelement/create@0.41.0-alpha.8` fails because `templates/.gitignore` is absent from the tarball                                         | execute the exact published CLI and full generated-app lifecycle as a release gate      |
+| P0       | Starter exposes all 11 packages, leaves version placeholders outside its replacement map, and resolves prerelease dependencies from stale npm `latest` | one coherent version manifest and product-only imports                                  |
+| P0       | npm beta.1–beta.3 are partial immutable package sets                                                                                                   | mark withdrawn; publish first coherent candidate as beta.4                              |
+| P0       | Alpha.8 evidence JSON remains `running` with pending final steps after a successful release                                                            | transactional, resumable release finalization and truth verifier                        |
+| P1       | 11 packages expose 103 subpaths; starter/dogfood depend on implementation packages                                                                     | approve and execute a smaller deep-module graph                                         |
+| P1       | App-model and SSG-driver factories are largely test-only; plugin correctness depends on shared phase state and hook order                              | wire claimed interfaces into production or delete them; create one deep build interface |
+| P1       | UI mixes primitives with website-specific artifacts; old compatibility and unused exports remain                                                       | prune, absorb, or prove every retained surface                                          |
+| P1       | Dogfood maps internal workspace packages and uses `--no-check`                                                                                         | consume packed public artifacts with typechecking                                       |
+
+Full evidence and dispositions:
+`docs/audit/2026-07-11-beta-architecture-product-audit.md`. Execution plan:
+`docs/release/v0.41.0-beta.1-plan.md`.
 
 ### v0.41.0-alpha.7 Execution State
 

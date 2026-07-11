@@ -2,7 +2,8 @@
 
 > Source of truth for forward version planning.\
 > Current package line: v0.41.0-alpha.8.\
-> Current implementation line: v0.41.0-alpha.7 complete except external pilot #390.\
+> Completed implementation line: v0.41.0-alpha.7, shipped coherently as alpha.8; external pilot #390 open.\
+> Next architecture stage: v0.41.0-beta.1 planning, first coherent publish `0.41.0-beta.4`.\
 > Active version plan: docs/current/VERSION_PLAN.md.\
 > Updated: 2026-07-11.
 
@@ -10,31 +11,42 @@ Mandatory workflow: `docs/governance/PROJECT_WORKFLOW.md`.
 
 ## Product Position
 
-openElement now centers on two primary products:
+The alpha.8 doctrine described two primary products:
 
 ```text
 openElement = Web Components Fullstack Framework + Basic Element
 supporting packages = Protocols + UI + official stack adapters
 ```
 
-In natural language: OpenElement is a Web Components-native fullstack framework
-with a JSX-first Basic Element authoring layer.
+The beta target consolidates that story into one product with two adoption
+depths:
+
+```text
+openElement = Web Components-native application framework
+authoring modes = Basic Element standalone + full application
+default path = DSD/static-first + selective islands + Vite/Nitro
+```
+
+In natural language: OpenElement is for teams that want native Custom Elements
+to remain the durable application UI contract while gaining JSX authoring,
+Declarative Shadow DOM, selective islands, routing, static generation and
+proven deployment output.
 
 The Web Components fullstack framework owns application concepts: route graph,
 request context, render pipeline, layouts, islands, assets, deployment, and
 desktop targets. Vite, Hono, Nitro, and Deno Desktop are official defaults, but
 they enter through OpenElement-owned contracts.
 
-Basic Element is the native Web Components authoring surface. Its public surface
+Basic Element is the native Web Components authoring mode. Its current surface
 is `@openelement/element` and `OpenElement`. Lit and FAST are authoring-layer
 reference points; Basic Element's job is to make that layer native to
 OpenElement's fullstack app model while keeping shadow/DSD as the default render
 mode and explicit light DOM opt-in.
 
-UI and Protocols support those products. UI is the Open Props-backed reference
+UI and Protocols currently support those modes. UI is the Open Props-backed reference
 component library and dogfood surface, not a separate design-system empire.
-Protocols are the runtime-free replacement boundary for renderers, routes,
-islands, adapters, runtime, cache, data, sessions, forms, and signals.
+Protocols currently carry shared contracts, but beta removes protocol surfaces
+that do not sit at a real seam with multiple adapters.
 
 Historical positioning note: earlier ADRs used the phrase DSD-first to protect
 shadow/DSD output as the default. ADR-0096 refines that into Web Components
@@ -95,8 +107,8 @@ v0.41-v1.0 blocker.
 | v0.41.0-alpha.5 | SPA Mode + Deno Desktop Reader Proof                  | First-class single-page-application mode with client-side router; WeRead-style Deno Desktop reader backed by local/open fixtures; no WeRead private API integration.                                                                                                                 | Released                 |
 | v0.41.0-alpha.6 | App Protocol Architecture Hardening                   | Close the front-half cleanup audit, sync product truth, make App own RouteGraph/RenderPipeline/RequestContext, keep Vite/Hono/Nitro as official adapters, close CodeQL/trust-boundary backlog, and promote Reader into regression dogfood.                                           | Released                 |
 | v0.41.0-alpha.7 | Dogfood, Architecture Convergence, Adoption Readiness | Preserve completed networked desktop dogfood evidence while closing production build ownership, UI/navigation seams, browser/security truth, starter, distribution, evidence, and positioning. The complete package set ships as alpha.8 after an immutable partial alpha.7 publish. | Complete except #390     |
-| v0.41.0-beta.1  | Release-candidate validation                          | Re-run and verify the alpha.7-frozen starter, API, website, package, evidence, consumer, and release surfaces without adding implementation scope.                                                                                                                                   | Planned                  |
-| v0.41.0         | WC fullstack framework + Basic Element proof          | Stable npm-first distribution, hardened signal-DOM architecture, validated WC integration, SPA reader proof, app architecture hardening, desktop app incubation, and adoption-ready docs.                                                                                            | Planned                  |
+| v0.41.0-beta.1  | Interface Depth + Adoption Closure                    | Use the final breaking window to repair the published starter, converge product positioning, collapse shallow package/interfaces, delete compatibility and dead code, realign tests, and complete external adoption. First coherent npm candidate: beta.4.                           | Planning / authorized    |
+| v0.41.0         | WC-native application framework                       | Freeze the deep app/element/build interfaces proven by the installed starter, packed dogfood, WC/DSD/islands behavior, Node/Workers output, external adoption, and coherent npm release truth.                                                                                       | Planned after beta.4     |
 | v0.42.0         | Server Primitives                                     | Add server request/action primitives and prove Node + Workers runtime paths through Nitro                                                                                                                                                                                            | Planned                  |
 | v0.43.0         | Data + Cache Primitives                               | Add loader/action/data/cache contracts and recipes without built-in ORM ownership                                                                                                                                                                                                    | Planned                  |
 | v0.44.0         | Forms + Mutations                                     | Add progressive-enhancement forms, action result serialization, validation protocol, and island handoff                                                                                                                                                                              | Planned                  |
@@ -107,7 +119,7 @@ v0.41-v1.0 blocker.
 | v0.49.0         | v1.0 Freeze Candidate                                 | Freeze public package graph, exports, server/data/forms/session/cache protocols, and release gates                                                                                                                                                                                   | Planned                  |
 | v1.0.0          | Stable Web Components Full-stack Framework            | Stable npm-first Elements, UI, Framework, Protocols, server/data/forms/session/cache primitives, and auth/database recipes                                                                                                                                                           | Vision                   |
 
-## v0.41.0 - WC Fullstack Framework + npm Distribution
+## v0.41.0 - WC-native Application Framework + npm Distribution
 
 Strategic realignment: Vite+ upstream (voidzero-dev/vite-plus#1888) declined to
 add Deno as a first-class package manager. Instead of pushing upstream, v0.41.0
@@ -302,23 +314,14 @@ Non-goals:
 - No server/data/forms/session/cache primitives.
 - No Reader or Deno Desktop work before alpha.5.
 
-## v0.41.0-beta.1 - Release-Candidate Validation
+## v0.41.0-beta - Breaking convergence
 
-Beta.1 starts only after all A7.01–A7.21 exit conditions close. It does not own
-the starter, API, website, positioning, metadata, architecture, or security
-implementation work; alpha.7 freezes those surfaces.
-
-Beta.1 scope is deliberately mechanical:
-
-- bump and publish the release-candidate package line;
-- run the complete static, test, browser, consumer, package, Nitro, and
-  post-publish verification matrix against installed artifacts;
-- verify documentation, npm metadata, GitHub prerelease, provenance, and
-  release notes tell the same story;
-- reject any candidate that introduces a new public surface or reopens an
-  alpha.7 architecture decision.
-
-Detailed verification lives in `docs/release/v0.41.0-beta.1-plan.md`.
+The validation-only beta.1 proposal is superseded by the 2026-07-11 audit.
+Beta now owns the installed starter, product positioning, package topology,
+interface depth, old-code deletion, robustness and external adoption work that
+must close before stable. npm beta.1–beta.3 are withdrawn partial artifacts;
+the first coherent candidate is beta.4. Detailed execution lives in
+`docs/release/v0.41.0-beta.1-plan.md` and the expanded beta section below.
 
 ## v0.40.7 - Release Readiness & CI Hardening
 
@@ -963,8 +966,8 @@ Alpha.7 stays deliberately narrow:
 - Reuse Reader/app-shell learnings for sidebars, panels, settings, keyboard
   flow, local cache, and verification.
 
-The active alpha.7 train now turns those proofs and the follow-up architecture
-review into adoption readiness across five phases:
+The completed alpha.7 train turned those proofs and its follow-up architecture
+review into package-level adoption readiness across five phases:
 
 - truth and trust: #385, #386, #382, #383;
 - production architecture: #380, #381, #274, #272, #273, #387, #388;
@@ -989,6 +992,57 @@ Dogfood design lives in `docs/dogfood/mastodon-desktop/README.md`. The complete
 foundation history, A7.01–A7.21 dependency register, and exit criteria live in
 `docs/release/v0.41.0-alpha.7-plan.md`. Historical dogfood slices #195 through
 #201, #221, #230, and #231 remain completed evidence rather than current work.
+
+## v0.41.0-beta - Interface Depth and Adoption Closure
+
+The former beta.1 validation-only plan is withdrawn. The 2026-07-11 audit found
+that alpha.8 gates prove the monorepo and package graph but do not yet prove the
+actual new-user interface:
+
+- the published create CLI fails on an omitted template dotfile;
+- generated projects expose the 11-package implementation graph and can mix a
+  prerelease CLI with the older npm `latest` line;
+- several app-model and driver interfaces are tested but not executed by the
+  production path;
+- content/SSG/Vite responsibilities and plugin phase mutation remain spread
+  across shallow modules;
+- UI and dogfood retain website-specific, compatibility, unchecked, and
+  redundant surfaces;
+- release evidence can remain incomplete after the real release succeeds.
+
+npm `0.41.0-beta.1`, `.beta.2`, and `.beta.3` already exist as incomplete
+8-of-11 package sets. They are historical withdrawn artifacts, not candidate
+releases. The first coherent beta publish is `0.41.0-beta.4`.
+
+Beta is explicitly allowed to break alpha interfaces. Its target is one product
+with two adoption modes and a proposed five-package public graph:
+
+- `@openelement/element` — standalone element/runtime authoring;
+- `@openelement/app` — pages, routes, islands and application semantics;
+- `@openelement/adapter-vite` — one build/content/SSG/Nitro implementation;
+- `@openelement/create` — coherent zero-context entry;
+- `@openelement/ui` — optional, pruned reference primitives.
+
+The package target requires a beta ADR and migration spike. `core`, `signal`,
+`router`, `content`, `ssg`, and `protocol` should be absorbed into the module
+that owns their behavior unless independent consumers or multiple real adapters
+justify retention.
+
+Execution order:
+
+1. Repair release truth and the exact published starter.
+2. Approve positioning, package topology and retained interfaces.
+3. Deepen app, element and build modules; migrate starter and dogfood first.
+4. Delete compatibility, dead, duplicate UI/example and test-only architecture
+   surfaces.
+5. Replace tests at retained interfaces and run packed/typechecked dogfood.
+6. Complete external pilot #390 and publish the coherent beta.4 candidate.
+
+Stable v0.41.0 is not eligible until every retained interface runs in
+production, the installed starter completes without maintainer knowledge, and
+Git/npm/GitHub/docs/evidence agree. Detailed evidence and acceptance live in
+`docs/audit/2026-07-11-beta-architecture-product-audit.md` and
+`docs/release/v0.41.0-beta.1-plan.md`.
 
 ## Explicit Non-Goals
 

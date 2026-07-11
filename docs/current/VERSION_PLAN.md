@@ -1,16 +1,27 @@
 # v0.41.0 Version Plan - Web Components Fullstack Framework + Basic Element
 
+Current alpha.8 doctrine:
+
 ```text
 openElement = Web Components Fullstack Framework + Basic Element
 supporting packages = Protocols + UI + official stack adapters
 ```
 
+Beta target positioning:
+
+```text
+openElement = Web Components-native application framework
+authoring modes = Basic Element standalone + full application
+default path = DSD/static-first + selective islands + Vite/Nitro
+```
+
 ## Objective
 
-Execute the npm-primary distribution migration using Deno 2.8+ `deno pack`,
-harden the signal-DOM architecture, and turn OpenElement into a credible
-Web Components-native fullstack framework with a JSX-first Basic Element
-authoring layer.
+Complete the npm-primary distribution migration using Deno 2.8+ `deno pack`,
+then use the final pre-stable beta window to turn OpenElement into a coherent
+Web Components-native application framework with a JSX-first Basic Element
+adoption mode. The beta objective is interface depth and installed-user truth,
+not feature count.
 Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party Web
 Components are first-party stack decisions, but they must enter through
 OpenElement-owned package contracts and protocol concepts.
@@ -34,9 +45,11 @@ The release is staged through alpha lines with explicit execution plans:
   slices ship on the complete `v0.41.0-alpha.8` package set because the
   partially published `alpha.7` npm version is immutable. External adopter
   pilot #390 remains a post-release validation item and is not a package gate.
-- **beta.1** (planned validation): Re-run the alpha.7-frozen starter, API,
-  website, package, evidence, and release surfaces as a release candidate. It
-  owns no new implementation train.
+- **beta architecture train** (breaking implementation): collapse shallow
+  interfaces, repair the real npm starter, align release truth, prune old and
+  redundant surfaces, and validate adoption. npm `beta.1` through `beta.3` are
+  immutable partial publishes; the first coherent candidate will be
+  `0.41.0-beta.4`.
 
 ## Context
 
@@ -152,6 +165,10 @@ client and server entry code before the `0.41.0-alpha.6` package workflow ran.
 - No new product line for Reader, Mastodon Desktop, AutoFlow, or governance
   tooling. Dogfood apps validate the Framework contract; governance tooling
   protects releases.
+- No general-purpose fullstack parity claim before request-time data, forms,
+  sessions, and cache are production interfaces.
+- No compatibility promise for alpha-only support-package imports during the
+  beta package-depth convergence.
 
 ## Staged Alpha/Beta Plans
 
@@ -163,13 +180,17 @@ The active work is tracked in per-alpha plan files:
 - `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
 - `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
 - `docs/release/v0.41.0-alpha.7-plan.md` — Dogfood, Architecture Convergence, and Adoption Readiness
-- `docs/release/v0.41.0-beta.1-plan.md` — Release-candidate validation
+- `docs/release/v0.41.0-beta.1-plan.md` — Breaking interface depth, package
+  convergence, installed adoption, and beta.4 release closure
 
 Alpha.7 started after alpha.6 closed the first framework architecture loop. Its
-dogfood foundation is complete; the active A7.01–A7.21 issue train in the
-alpha.7 release plan must close before beta.1. Beta.1 does not add product
-surface or absorb alpha architecture debt; it validates the frozen result
-before stable v0.41.0.
+package-gated work shipped coherently as alpha.8; external pilot #390 remains
+open. The 2026-07-11 audit proved that validation-only beta planning was unsafe:
+the published create CLI fails on a missing template dotfile, the starter leaks
+the 11-package implementation graph, several architecture interfaces are not on
+the production path, release evidence is not finalized, and npm beta.1–beta.3
+are partial immutable publishes. The beta plan therefore owns a breaking
+implementation train before stable v0.41.0.
 
 ## Governance Rules
 
@@ -194,6 +215,11 @@ before stable v0.41.0.
 - Moving package topology in #273 or changing the default signal engine in
   #387 still requires the normal ADR and approved version-plan authority;
   inclusion in alpha.7 is not independent permission for a public reset.
+- The beta plan explicitly authorizes package/interface removal after a beta
+  topology ADR records the target graph and migration evidence. Alpha-only
+  compatibility is not a reason to preserve a shallow module.
+- A seam is public only when at least two real adapters justify it. Until then,
+  the implementation belongs inside the module that owns the behavior.
 - `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
 - `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
   Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
@@ -205,6 +231,8 @@ before stable v0.41.0.
   app target and records Reader's regression-grade dogfood evidence.
 - Dogfood apps may block release quality only as evidence. They must not define
   OpenElement's public product identity.
+- Dogfood must consume packed/public product interfaces and run with
+  typechecking before it can count as beta release evidence.
 - AutoFlow3 and docs-truth gates are infrastructure. They should become more
   reusable over time, but they are not Framework product features.
 
@@ -258,6 +286,24 @@ Build/test gates: `deno task test`, `deno task test:coverage:check`,
   navigation, risk-weighted critical-path tests, auditable dependencies,
   a clean five-minute npm starter, reproducible performance reports, and the
   external adopter pilot.
+
+Beta exit replaces the former validation-only acceptance:
+
+- The exact published create CLI creates, checks, tests, builds, previews, and
+  proves Node/Workers output in a clean directory.
+- Starter and dogfood import only retained product packages; no application
+  author needs `core`, `protocol`, `router`, `signal`, `ssg`, or `content`.
+- The approved beta ADR defines the retained package graph. Every public export
+  has a production or external consumer, and every claimed architecture
+  interface executes on the production path.
+- Compatibility exports, dead code, duplicated UI/example behavior, legacy SPA
+  routing, deprecated JSON helpers, and test-only adapters are removed or
+  explicitly retained with owner and removal policy.
+- Release evidence, Git, GitHub, npm, docs, provenance and dist-tags converge.
+- External pilot #390 completes the installed beta path with no unresolved
+  P0/P1 finding.
+- The first coherent beta publishes as `0.41.0-beta.4`; beta.1–beta.3 remain
+  documented as withdrawn partial artifacts.
 
 ## Verification
 

@@ -823,7 +823,9 @@ export class DocsHome extends OpenElement {
                 Current package line: {OPENELEMENT_VERSION}. Active plan:
                 v0.41.0-alpha.6 released packages, v0.41.0-alpha.7 dogfood,
                 architecture convergence and adoption readiness, then
-                v0.41.0-beta.1 release-candidate validation.
+                the breaking v0.41.0 beta architecture train; because beta.1
+                through beta.3 are partial immutable npm publishes, the first
+                coherent candidate will be beta.4.
               </p>
               <div class='actions'>
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>

@@ -4,8 +4,9 @@ English | [Simplified Chinese](./README.zh.md)
 
 **Web Components-native fullstack framework with a JSX-first Basic Element
 authoring layer. Package line: `0.41.0-alpha.8` (`v0.41.0-alpha.8` release).
-Active execution: v0.41.0-alpha.7 Dogfood, Architecture Convergence, and
-Adoption Readiness.**
+Completed execution anchor: v0.41.0-alpha.7 Dogfood, Architecture Convergence,
+and Adoption Readiness. Next: breaking beta architecture and adoption
+convergence; first coherent candidate will be `0.41.0-beta.4`.**
 
 openElement treats Web Components as the application's native component model.
 It builds static-first applications with JSX/VNode rendering, progressive
@@ -20,19 +21,29 @@ Mandatory project workflow:
 [![npm](https://img.shields.io/badge/npm-@openelement%2Fcore-red)](https://www.npmjs.com/package/@openelement/core)
 [![CI](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml/badge.svg)](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml)
 
-## Quick Start
+## Alpha package status
 
-```bash
-deno run -A npm:@openelement/create my-app
-cd my-app
-deno task dev
-```
+All 11 alpha.8 packages are published with provenance, but the published
+`@openelement/create@0.41.0-alpha.8` CLI currently fails because its required
+template `.gitignore` was omitted from the tarball. Do not treat the alpha.8
+create command as an adoption-ready quick start. Repairing and executing the
+exact published CLI is the first beta P0 gate.
 
 ## Product Doctrine
+
+Current alpha.8 doctrine:
 
 ```text
 openElement = Web Components Fullstack Framework + Basic Element
 supporting packages = Protocols + UI + official stack adapters
+```
+
+Beta target:
+
+```text
+openElement = Web Components-native application framework
+authoring modes = Basic Element standalone + full application
+default path = DSD/static-first + selective islands + Vite/Nitro
 ```
 
 | Product                            | Surface                                   | Role                                                                                 |
@@ -62,7 +73,7 @@ packages. Historical details remain in git history and release evidence.
 
 ## Why openElement
 
-You want the ergonomics of a full framework without handing your UI over to a
+You want application-framework ergonomics without handing your UI over to a
 virtual DOM, a bespoke build pipeline, or a single vendor's component model.
 openElement is for teams shipping real web apps on **native Web Components** —
 SSR, routing, islands, and desktop targets included — while keeping every
@@ -78,13 +89,9 @@ component inspectable, portable, and standards-based.
 - **No SSR/CSR split-brain.** One authoring model renders to DSD on the server
   and upgrades in place on the client — no duplicate templates, no hydration
   mismatch.
-- **No build-tool churn.** A Deno-first toolchain takes you from zero to a
-  running app in minutes:
-
-```sh
-deno run -A npm:@openelement/create my-app
-cd my-app && deno task dev
-```
+- **One native component contract.** The beta target makes standalone Basic
+  Element and full applications two depths of one product, while hiding build,
+  protocol, router, signal and rendering internals from ordinary authors.
 
 **How it differs from adjacent options**
 
@@ -108,18 +115,19 @@ that works with the platform instead of fighting it, openElement is the lane.
 All 11 current workspace packages are aligned at **0.41.0-alpha.8**
 (`v0.41.0-alpha.8`) under
 [`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 dogfood
-foundation proves a read-only, accountless networked desktop app. The active
-line is **v0.41.0-alpha.7 Dogfood, Architecture Convergence, and Adoption
-Readiness**. Its 21-task exit train turns that evidence into a production build
-path, smaller authoring surface, explicit browser/security truth, five-minute
-starter, reproducible evidence, and external adopter proof. ADR-0101 keeps
+foundation proves a read-only, accountless networked desktop app. The completed
+**v0.41.0-alpha.7 Dogfood, Architecture Convergence, and Adoption Readiness**
+line shipped its package-gated work as alpha.8; external adopter pilot #390
+remains open. ADR-0101 keeps
 AutoFlow3 as the single workflow/gate control plane while reserving minor/major
 product decisions for human-approved ADR and version-plan evidence.
 
-The next staged lines are **v0.41.0-beta.1 release-candidate validation** and
-**stable v0.41.0**. Beta.1 re-runs and verifies the alpha.7-frozen starter,
-public API, website, package, evidence, and release surfaces; it does not own a
-new implementation train.
+The next stage is the breaking **v0.41.0-beta architecture train**, followed by
+stable v0.41.0. It repairs the published starter, narrows product positioning,
+deepens app/element/build interfaces, collapses or hides shallow support
+packages, removes old and redundant surfaces, realigns tests around retained
+interfaces, and completes external adoption. npm beta.1–beta.3 are already
+immutable partial publishes, so the first coherent candidate will be beta.4.
 
 v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
 adapters, and standalone runtime/style-sheet/i18n packages from the current

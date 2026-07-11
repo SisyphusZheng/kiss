@@ -1,6 +1,7 @@
 # Package Surface Inventory
 
-This is the v0.41.0-alpha.7 11-package product-line truth table.
+This is the v0.41.0-alpha.8 11-package product-line truth table. It records
+current implementation truth, not the planned beta topology.
 
 <!-- 11-package -->
 
@@ -104,3 +105,33 @@ The v0.40.4 cleanup train is manually approved breaking work consolidated into
 the v0.40.4 release, not normal AutoFlow patch automation. AutoFlow3 patch
 release must refuse this train unless the release state references approval id
 `ADR-0105/v0.40.x-cleanup-train`.
+
+## Beta topology hypothesis
+
+The 2026-07-11 audit found that the current graph is acyclic and publishable but
+too shallow for stable adoption: 11 packages expose 103 subpaths, the starter
+declares the whole implementation graph, and several replacement-shaped
+interfaces have only one real adapter or no production caller.
+
+The beta plan is explicitly allowed to break this alpha surface. Its proposed
+published graph is:
+
+| Package                     | Proposed beta ownership                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| `@openelement/element`      | complete standalone Custom Element authoring/runtime interface, JSX runtime, DSD and fixed signals |
+| `@openelement/app`          | pages, routes, islands, request/render semantics and application lifecycle                         |
+| `@openelement/adapter-vite` | one Vite/content/SSG/Nitro build and deployment implementation                                     |
+| `@openelement/create`       | installed consumer entry and coherent version manifest                                             |
+| `@openelement/ui`           | optional pruned reference primitives                                                               |
+
+Candidate absorption:
+
+- `core`, `signal`, and element contracts into `element` internals;
+- `router` and app contracts into `app` internals;
+- `content`, `ssg`, and build contracts into `adapter-vite` internals;
+- `protocol` into interfaces placed at the seams owned by the retained modules.
+
+This is a hypothesis until a beta ADR and migration spike prove it. A package
+may remain only with independent-consumer, runtime-isolation, dependency-cycle,
+artifact-size, or multiple-real-adapter evidence. Alpha publication by itself
+is not retention evidence.

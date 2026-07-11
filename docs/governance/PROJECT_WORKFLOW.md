@@ -11,10 +11,13 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: package line `v0.41.0-alpha.8`, active execution line
-`v0.41.0-alpha.7`, active version plan `docs/current/VERSION_PLAN.md`, and
-product formula
-`openElement = Web Components Fullstack Framework + Basic Element`.
+Current execution anchor: package line `v0.41.0-alpha.8`, completed execution
+line `v0.41.0-alpha.7`, beta architecture planning under
+`docs/current/VERSION_PLAN.md`, and current alpha product formula
+`openElement = Web Components Fullstack Framework + Basic Element`. The beta
+target is one Web Components-native application framework with Basic Element
+standalone and full-application adoption modes; first coherent beta publish is
+`0.41.0-beta.4`.
 
 ## Required Reading Order
 
