@@ -250,7 +250,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     // does not recognize (causes [object Object] rendering).
     esbuild: {
       jsx: 'automatic',
-      jsxImportSource: '@openelement/core',
+      jsxImportSource: '@openelement/element',
     },
     build: {
       outDir: clientOutDir,

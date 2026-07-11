@@ -368,7 +368,7 @@ if (typeof globalThis.customElements === 'undefined') {
         // ADR-0057: JSX automatic runtime, same reason as build-client.ts.
         // SSG build also processes .tsx island files for SSR rendering.
         jsx: 'automatic',
-        jsxImportSource: '@openelement/core',
+        jsxImportSource: '@openelement/element',
         tsconfigRaw: {
           compilerOptions: {
             useDefineForClassFields: false,

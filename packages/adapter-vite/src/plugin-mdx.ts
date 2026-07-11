@@ -8,7 +8,7 @@ export interface OpenMdxPluginOptions {
 
 export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {
   const plugin = mdx({
-    jsxImportSource: options.jsxImportSource ?? '@openelement/core',
+    jsxImportSource: options.jsxImportSource ?? '@openelement/element',
     providerImportSource: undefined,
     development: options.development ?? false,
   }) as Plugin;
