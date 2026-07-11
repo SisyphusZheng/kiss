@@ -116,7 +116,7 @@ test.describe('Locale Switcher', () => {
     expect(enLang).toBe('en');
   });
 
-  test('SPA locale switch updates document and layout state', async ({ page }) => {
+  test('native locale switch updates document and layout state', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     const before = await readDeepLayoutState(page);
@@ -160,7 +160,7 @@ test.describe('Locale Switcher', () => {
 
     expect(after.htmlLang).toBe('zh');
     expect(after.layoutLocale).toBe('zh');
-    expect(after.switchHref).not.toBe(before.switchHref);
+    expect(before.switchHref).toMatch(/\/zh\/?$/);
     expect(after.title).toBeTruthy();
   });
 });

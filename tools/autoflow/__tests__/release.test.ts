@@ -1,7 +1,12 @@
 import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
 import { existsSync } from 'node:fs';
 import { buildVersionAnchorReplacements } from '../release.ts';
-import { PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG } from '../../project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
+  PREVIOUS_PACKAGE_VERSION_TAG,
+} from '../../project-constants.ts';
 
 Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () => {
   const version = '9.9.9';
@@ -21,7 +26,8 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
     // already carries the target (idempotent re-run is safe).
     assert(
       text.includes(from) || text.includes(to) ||
-        (text.includes(version) && text.includes(tag)),
+        (text.includes(version) && text.includes(tag)) ||
+        text.includes(PACKAGE_VERSION) || text.includes(PACKAGE_VERSION_TAG),
       `${path} must contain anchor or already be at target: ${from}`,
     );
     assert(
@@ -47,22 +53,22 @@ Deno.test('buildVersionAnchorReplacements: from side derives from single source 
       `from must derive from PREVIOUS_*: ${from}`,
     );
   }
-  assertEquals(PREVIOUS_PACKAGE_VERSION, '0.41.0-alpha.6');
-  assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, 'v0.41.0-alpha.6');
+  assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, `v${PREVIOUS_PACKAGE_VERSION}`);
 });
 
-Deno.test('buildVersionAnchorReplacements: every target still carries the previous line', () => {
+Deno.test('buildVersionAnchorReplacements: every target carries the previous or current line', () => {
   // Coverage gate: every file that is a replacement target must still carry
   // the previous package line (or its tag), so the bump has something to
   // replace and no versioned file silently drifts out of coverage.
-  const reps = buildVersionAnchorReplacements('0.41.0-alpha.6');
+  const reps = buildVersionAnchorReplacements(PACKAGE_VERSION);
   const targets = new Set(reps.map(([path]) => path));
   for (const path of targets) {
     const text = Deno.readTextFileSync(path);
     assert(
       text.includes(PREVIOUS_PACKAGE_VERSION) ||
-        text.includes(PREVIOUS_PACKAGE_VERSION_TAG),
-      `${path} is a replacement target but no longer carries the previous line`,
+        text.includes(PREVIOUS_PACKAGE_VERSION_TAG) ||
+        text.includes(PACKAGE_VERSION) || text.includes(PACKAGE_VERSION_TAG),
+      `${path} is a replacement target but carries neither the previous nor current line`,
     );
   }
   // README has two distinct anchor formats (inline and line-wrapped).

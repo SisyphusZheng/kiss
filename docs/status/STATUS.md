@@ -10,9 +10,15 @@ with a JSX-first Basic Element authoring layer. Dogfood apps validate that
 framework; they do not define new product lines. AutoFlow3, docs truth,
 workflow gates, and release evidence are infrastructure.
 
-## Current Version Line: v0.41.0-alpha.7 Active / beta.1 Planned Validation
+## Current Version Line: v0.41.0-alpha.8 Package / beta.1 Planned Validation
 
-v0.41.0-alpha.6 is the current released package line. It closes the front-half
+v0.41.0-alpha.8 is the current package line and carries the completed alpha.7
+implementation train. The `0.41.0-alpha.7` npm version had already been
+partially published and is immutable, so the coherent eleven-package closure
+is released as alpha.8. External adopter pilot #390 remains open by explicit
+scope decision and is not a package-release gate.
+
+v0.41.0-alpha.6 closed the front-half
 cleanup audit (#205 through #212, #226, #227), syncs product truth under
 ADR-0110, records the App ownership boundary in ADR-0111, makes OpenElement App
 own RouteGraph/RenderPipeline/RequestContext concepts, keeps
@@ -25,7 +31,7 @@ post-publish npm consumer smoke evidence is recorded in
 v0.41.0-alpha.5 proved SPA mode plus the Deno Desktop Reader proof. It is now
 the prior released line.
 
-v0.41.0-alpha.7 is the active Dogfood, Architecture Convergence, and Adoption
+v0.41.0-alpha.7 is the completed Dogfood, Architecture Convergence, and Adoption
 Readiness line. Its read-only/accountless Mastodon/GoToSocial desktop foundation
 is complete and remains evidence for SPA mode, Deno Desktop, third-party WC
 interop, dynamic rendering, local state/cache, and error boundaries. The active
@@ -41,13 +47,13 @@ consumer, and release checks.
 
 ### v0.41.0-alpha.7 Execution State
 
-| Phase                  | Issues                                   | State |
-| ---------------------- | ---------------------------------------- | ----- |
-| Truth and trust        | #385, #386, #382, #383                   | open  |
-| Architecture           | #380, #381, #274, #272, #273, #387, #388 | open  |
-| Adoption/distribution  | #236, #379, #237, #241                   | open  |
-| Positioning/evidence   | #384, #389, #238, #242                   | open  |
-| External proof/closure | #390, #240                               | open  |
+| Phase                  | Issues                                   | State                      |
+| ---------------------- | ---------------------------------------- | -------------------------- |
+| Truth and trust        | #385, #386, #382, #383                   | complete                   |
+| Architecture           | #380, #381, #274, #272, #273, #387, #388 | complete                   |
+| Adoption/distribution  | #236, #379, #237, #241                   | complete                   |
+| Positioning/evidence   | #384, #389, #238, #242                   | complete                   |
+| External proof/closure | #240 / #390                              | complete / explicitly open |
 
 v0.41.0 is executed under ADR-0108 and the active version plan in
 `docs/current/VERSION_PLAN.md`. AutoFlow3 is the workflow, gate, evidence, and

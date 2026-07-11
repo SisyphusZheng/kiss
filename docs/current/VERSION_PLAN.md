@@ -29,11 +29,11 @@ The release is staged through alpha lines with explicit execution plans:
   architecture hardening, official stack contracts, Deno Desktop target
   contract, and Reader regression-grade dogfood. Published to npm as
   `0.41.0-alpha.6` with provenance.
-- **alpha.7** (active): Dogfood, Architecture Convergence, and Adoption
-  Readiness. The completed read-only/accountless Mastodon/GoToSocial desktop
-  foundation feeds a 21-slice train that closes production build ownership,
-  navigation/UI seams, browser and security truth, package adoption, evidence,
-  and external pilot gaps without adding new product primitives.
+- **alpha.7** (implementation complete): Dogfood, Architecture Convergence, and
+  Adoption Readiness. Its implementation, distribution, evidence, and adoption
+  slices ship on the complete `v0.41.0-alpha.8` package set because the
+  partially published `alpha.7` npm version is immutable. External adopter
+  pilot #390 remains a post-release validation item and is not a package gate.
 - **beta.1** (planned validation): Re-run the alpha.7-frozen starter, API,
   website, package, evidence, and release surfaces as a release candidate. It
   owns no new implementation train.

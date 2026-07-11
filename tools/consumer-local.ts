@@ -505,7 +505,7 @@ try {
     if (
       asset.status !== 200 ||
       !assetBody.includes('<svg') ||
-      !assetBody.includes('openElement mark')
+      !assetBody.includes('&lt;open/&gt; mark')
     ) {
       console.error(
         JSON.stringify({ status: asset.status, body: assetBody.slice(0, 200) }, null, 2),

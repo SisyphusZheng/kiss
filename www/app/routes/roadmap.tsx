@@ -501,8 +501,8 @@ const phases = [
     version: 'v0.41.0-alpha.7',
     title: 'Dogfood, architecture convergence, adoption readiness',
     copy: 'Turn completed Reader and Mastodon dogfood into one production build path, smaller public interfaces, browser/security truth, a five-minute starter, reproducible evidence, and external adopter proof.',
-    status: 'active',
-    tone: 'brand',
+    status: 'complete as alpha.8; pilot #390 open',
+    tone: 'success',
   },
   {
     version: 'v0.41.0-beta.1',
@@ -549,19 +549,18 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.7'>
+            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.8'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='brand'>alpha.7 active</open-badge>
+                  <open-badge tone='success'>alpha.7 implementation complete</open-badge>
                   <h2>Dogfood evidence is converging into an adoption-ready framework path.</h2>
                   <p>
-                    The released package line remains alpha.6. The active
-                    alpha.7 train closes build ownership, navigation and UI
-                    seams, browser and security truth, distribution, evidence,
-                    and external adoption before candidate validation.
+                    The coherent package line is alpha.8 because the partial
+                    alpha.7 npm version is immutable. All package-gated alpha.7
+                    work is complete; external adopter pilot #390 stays open.
                   </p>
                 </div>
               </div>
