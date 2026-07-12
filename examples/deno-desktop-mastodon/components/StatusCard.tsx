@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 import type { MastodonStatus } from '../app/types.ts';
-import { formatCount } from '../app/format.ts';
+import { formatCount, stripHtml } from '../app/format.ts';
 import { navigate } from '../router.ts';
 import Avatar from './Avatar.tsx';
 import RelativeTime from './RelativeTime.tsx';
@@ -54,10 +54,7 @@ function StatusBody({ status, compact }: { status: MastodonStatus; compact?: boo
         </div>
       </header>
 
-      <div
-        class='mastodon-status-content'
-        dangerouslySetInnerHTML={{ __html: effective.content }}
-      />
+      <div class='mastodon-status-content'>{stripHtml(effective.content)}</div>
 
       {effective.mediaAttachments.length > 0 && (
         <div class='mastodon-status-media'>

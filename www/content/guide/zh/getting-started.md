@@ -78,7 +78,7 @@ export default defineIsland(
 
 ```ts
 import { defineConfig } from 'vite';
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 
 export default defineConfig({
   plugins: [openElement()],
@@ -86,4 +86,4 @@ export default defineConfig({
 ```
 
 根入口 `@openelement/app` 用于应用编写。构建配置入口是
-`@openelement/app/vite`。
+`@openelement/adapter-vite`。

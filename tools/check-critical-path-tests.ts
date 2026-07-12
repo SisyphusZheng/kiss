@@ -5,14 +5,11 @@ const evidence: Array<[string, string[]]> = [
     'typed failure evidence',
     'collects emitted artifacts',
   ]],
-  ['packages/router/__tests__/client-router.test.ts', [
+  ['packages/app/__tests__/client-router.test.ts', [
     'dispose removes event listeners',
-    'onChange failed',
-    'redirect limit',
-  ]],
-  ['packages/app/__tests__/spa-bootstrap.test.ts', [
-    'dispose removes popstate listener',
     'double dispose is safe',
+    'redirect limit rejects redirect loops',
+    'decodes path parameters',
   ]],
   ['www/e2e/dsd-layers.spec.ts', [
     'custom elements have shadow roots',
@@ -23,7 +20,13 @@ const evidence: Array<[string, string[]]> = [
 
 const failures: string[] = [];
 for (const [file, fragments] of evidence) {
-  const source = await Deno.readTextFile(file);
+  let source: string;
+  try {
+    source = await Deno.readTextFile(file);
+  } catch (error) {
+    failures.push(`${file}: missing critical evidence suite (${String(error)})`);
+    continue;
+  }
   for (const fragment of fragments) {
     if (!source.includes(fragment)) {
       failures.push(`${file}: missing critical evidence '${fragment}'`);

@@ -10,12 +10,6 @@ import {
   type RouterInstance,
   type RouterMode,
 } from './internal/router/client-router.ts';
-import { useActionData, useLoaderData } from './internal/router/data-context.ts';
-import {
-  popData,
-  pushActionData,
-  pushLoaderData,
-} from './internal/router/internal/data-context.ts';
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -30,7 +24,7 @@ export interface SpaAppOptions {
 export interface SpaAppInstance {
   /** Mount the SPA into the given CSS selector. Idempotent — re-mount starts fresh. */
   mount(selector: string): void;
-  /** Dispose the SPA: clear DOM, dispose router, remove listeners, pop all data. Idempotent. */
+  /** Dispose the SPA: clear DOM, dispose router, and remove listeners. Idempotent. */
   dispose(): void;
   /** The client-side router instance. Null before mount. */
   readonly router: RouterInstance | null;
@@ -43,12 +37,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let rootEl: Element | null = null;
   let submitHandler: ((e: Event) => void) | null = null;
   let renderId = 0;
-
-  /** Pop the last render cycle's data frame from the stack. */
-  function clearDataStack(): void {
-    // pop on empty array returns undefined; one render cycle leaves at most one frame.
-    popData();
-  }
+  let currentLoaderData: unknown;
+  let currentActionData: unknown;
 
   /**
    * Run loader for current route (if any) and push its result.
@@ -77,10 +67,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // OpenElement route: create custom element from tagName, set loader data as properties
     if (!route.tagName) return;
     const el = document.createElement(route.tagName) as HTMLElement & Record<string, unknown>;
-    const loaderData = useLoaderData();
-    if (loaderData && typeof loaderData === 'object') Object.assign(el, loaderData);
-    const actionData = useActionData();
-    if (actionData !== undefined) el.actionData = actionData;
+    if (currentLoaderData && typeof currentLoaderData === 'object') {
+      Object.assign(el, currentLoaderData);
+    }
+    if (currentActionData !== undefined) el.actionData = currentActionData;
     rootEl.appendChild(el);
   }
 
@@ -91,14 +81,11 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     if (!router || !rootEl) return;
     const currentRender = ++renderId;
 
-    // Pop previous render's data (safe no-op on empty stack)
-    popData();
-
-    // Run loader and push result
+    // Load before committing so stale navigations cannot overwrite the current route.
     const loaderData = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
-
-    pushLoaderData(loaderData);
+    currentLoaderData = loaderData;
+    currentActionData = undefined;
 
     renderComponent();
   }
@@ -151,9 +138,6 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     event.preventDefault();
 
-    // Pop old data first
-    popData();
-
     // Run action
     let actionData: unknown = undefined;
     try {
@@ -170,9 +154,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const loaderData = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
 
-    // Push loader data, then action data on top (so both are visible to the render)
-    pushLoaderData(loaderData);
-    pushActionData(actionData);
+    currentLoaderData = loaderData;
+    currentActionData = actionData;
 
     renderComponent();
   }
@@ -227,8 +210,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       rootEl = null;
     }
 
-    // Pop all remaining data from the stack
-    clearDataStack();
+    currentLoaderData = undefined;
+    currentActionData = undefined;
   }
 
   return {

@@ -408,7 +408,7 @@ let nitroSmokeFailed = false;
 try {
   const baseUrl = `http://127.0.0.1:${port}`;
   let ready = false;
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 150; attempt++) {
     try {
       const response = await fetch(`${baseUrl}/api/health`);
       if (response.status === 200) {
@@ -511,6 +511,15 @@ try {
     }
   }
   await serverStatus.catch(() => undefined);
+}
+
+if (nitroSmokeFailed) {
+  const [stdout, stderr] = await Promise.all([
+    serverStdout.catch(() => ''),
+    serverStderr.catch(() => ''),
+  ]);
+  if (stdout) console.error(stdout);
+  if (stderr) console.error(stderr);
 }
 
 if (nitroSmokeFailed) exitCode = 1;

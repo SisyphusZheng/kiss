@@ -39,7 +39,6 @@ export interface OpenElementBlogOptions {
    * Only use when you fully trust the content source (e.g. hand-authored ADRs).
    * Default: false - all HTML is sanitized via allow-list.
    */
-  trustedHtml?: boolean;
   /**
    * Layout component tag name for wrapping blog pages.
    * Default: 'open-layout' (from @openelement/ui)

@@ -41,34 +41,34 @@ const TEXT_EXTENSIONS = new Set([
 
 const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
   {
-    file: 'packages/content/src/sitemap/plugin.ts',
+    file: 'packages/adapter-vite/src/internal/content/sitemap/plugin.ts',
     fragment:
       "ctx.registerPlugin('sitemapOptions', options as unknown as Record<string, unknown>);",
     reason: 'Plugin option bag crosses a protocol boundary via registerPlugin.',
   },
   {
-    file: 'packages/core/src/style-sheet.ts',
+    file: 'packages/element/src/internal/core/style-sheet.ts',
     fragment: 'globalThis.CSSStyleSheet as unknown as new () => StyleSheetLike',
     reason:
       'Native CSSStyleSheet has CSSRuleList while the SSR facade exposes an array-like rule contract.',
   },
   {
-    file: 'packages/core/src/island.ts',
+    file: 'packages/element/src/internal/core/island.ts',
     fragment: 'el as unknown as Record<string, unknown>',
     reason: 'Custom element prop assignment by dynamic prop name.',
   },
   {
-    file: 'packages/core/src/binding-activation.ts',
+    file: 'packages/element/src/internal/core/binding-activation.ts',
     fragment: 'desc.el as unknown as Record<string, unknown>',
     reason: 'Direct DOM property assignment by dynamic prop name.',
   },
   {
-    file: 'packages/core/src/island.ts',
+    file: 'packages/element/src/internal/core/island.ts',
     fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
     reason: 'Preserve original connectedCallback signature after wrapping.',
   },
   {
-    file: 'packages/core/src/prop.ts',
+    file: 'packages/element/src/internal/core/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',
   },
@@ -98,7 +98,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
   },
   {
-    file: 'packages/core/src/render-dsd.ts',
+    file: 'packages/element/src/internal/core/render-dsd.ts',
     fragment: 'instance as unknown as Record<string, unknown>',
     reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
   },
@@ -235,7 +235,7 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
     });
   }
   // v0.41.0: canonical home moved to protocol/src/framework.ts
-  const canonicalFile = 'packages/protocol/src/framework.ts';
+  const canonicalFile = 'packages/element/src/internal/protocol/framework.ts';
   if (compatibilityHits.length !== 1 || compatibilityHits[0].file !== canonicalFile) {
     for (const hit of compatibilityHits) {
       addIssue(
@@ -260,7 +260,7 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
 export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): void {
   const scannerFiles = files.filter((f) =>
     f.path === 'packages/adapter-vite/src/route-scanner.ts' ||
-    f.path === 'packages/content/src/nav/scanner.ts'
+    f.path === 'packages/adapter-vite/src/internal/content/nav/scanner.ts'
   );
   failMatches(
     'metadata-boundary',
@@ -332,7 +332,9 @@ async function main(): Promise<void> {
 
   const currentDocs = textFiles.filter((f) => isCurrentDocOrExample(f.path));
   const production = textFiles.filter((f) => isProductionSource(f.path));
-  const coreSource = production.filter((f) => f.path.startsWith('packages/core/src/'));
+  const coreSource = production.filter((f) =>
+    f.path.startsWith('packages/element/src/internal/core/')
+  );
 
   failMatches(
     'render-contract',

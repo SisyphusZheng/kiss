@@ -232,7 +232,7 @@ export async function renderToNode(
         `render failed for <${String(tag)}>:` +
           ` ${formatError(err)}`,
       );
-      return fragmentNode([]);
+      throw err;
     }
   }
 
@@ -266,6 +266,7 @@ export async function renderToNode(
         `renderDsd failed for registered CE <${tagName}>:` +
           ` ${formatError(err)}`,
       );
+      throw err;
     }
   }
 

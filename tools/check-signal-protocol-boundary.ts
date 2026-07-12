@@ -6,23 +6,20 @@ type Failure = {
 import { walkSync } from '@std/fs/walk';
 
 const failures: Failure[] = [];
-const sourceRoots = ['packages/core/src', 'packages/element/src'];
-const protectedPackageConfigs = [
-  'packages/core/deno.json',
-  'packages/element/deno.json',
-];
+const sourceRoots = ['packages/element/src'];
+const protectedPackageConfigs = ['packages/element/deno.json'];
 const forbiddenRequiredDeps = ['@preact/signals-core', '@preact/signals'];
 
 for (const root of sourceRoots) {
   for (const entry of walkSync(root, { includeDirs: false })) {
     if (!entry.name.endsWith('.ts')) continue;
+    if (entry.path.includes('/internal/signal/')) continue;
     const text = await Deno.readTextFile(entry.path);
     for (const dep of forbiddenRequiredDeps) {
       if (text.includes(dep)) {
         failures.push({
           file: entry.path,
-          message:
-            `${dep} must not be required by core or elements; ADR-0104 only allows candidates behind SignalEngine`,
+          message: `${dep} must not be imported directly outside Element's internal signal engine`,
         });
       }
     }
@@ -35,8 +32,7 @@ for (const file of protectedPackageConfigs) {
     if (text.includes(dep)) {
       failures.push({
         file,
-        message:
-          `${dep} must not be a required dependency of @openelement/core or @openelement/element`,
+        message: `${dep} must not be a required package dependency of @openelement/element`,
       });
     }
   }

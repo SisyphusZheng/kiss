@@ -49,7 +49,7 @@ import { Counter } from '../islands/counter.tsx';
 
 ## Content Collections
 
-Place MDX files in `app/content` and let the `@openelement/app/vite` content
+Place MDX files in `app/content` and let the `@openelement/adapter-vite` content
 plugin generate collection pages and individual routes from them.
 
 ## Routes

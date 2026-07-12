@@ -42,7 +42,7 @@ export default definePage({
 
 ```tsx
 import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/router';
+import { useLoaderData } from '@openelement/app';
 
 export const loader = async () => {
   return { posts: await fetchPosts() };

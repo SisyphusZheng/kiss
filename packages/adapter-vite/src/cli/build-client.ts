@@ -150,24 +150,13 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
   const resolveAlias = ctx.phase1.userResolveAlias;
   const serializedAlias = resolveAlias
     ? (Array.isArray(resolveAlias)
-      ? resolveAlias.filter((a) => typeof a.find === 'string').map((a) => ({
-        find: a.find as string,
+      ? resolveAlias.map((a) => ({
+        find: a.find,
         replacement: a.replacement,
       }))
       : Object.entries(resolveAlias).map(([find, replacement]) => ({ find, replacement })))
     : [];
 
-  // Always resolve @openelement/element/style-sheet from workspace (core re-exports it)
-  if (WORKSPACE_ROOT) {
-    serializedAlias.push({
-      find: '@openelement/element/style-sheet',
-      replacement: join(WORKSPACE_ROOT, 'packages', 'core', 'src', 'style-sheet.ts'),
-    });
-    (serializedAlias as Array<{ find: string | RegExp; replacement: string }>).push({
-      find: /^@openelement\/router/,
-      replacement: join(WORKSPACE_ROOT, 'packages', 'router', 'src'),
-    });
-  }
   serializedAlias.sort((a, b) => {
     const findA = typeof a.find === 'string' ? a.find.length : 0;
     const findB = typeof b.find === 'string' ? b.find.length : 0;

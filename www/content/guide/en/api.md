@@ -19,7 +19,7 @@ Declares a route component.
 
 ```tsx
 import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/router';
+import { useLoaderData } from '@openelement/app';
 
 export const loader = async () => {
   return { message: 'Hello' };
@@ -56,22 +56,20 @@ render mode; light DOM remains explicit opt-in.
 
 Declares a layout element. It is a semantic alias for `defineElement()`.
 
-## `@openelement/app/vite`
+## `@openelement/adapter-vite`
 
 ```ts
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 ```
 
 `openElement()` configures Vite, route scanning, SSG, islands, AppShell,
 content, and i18n.
 
-## Product And Runtime Packages
+## Product Packages
 
-- `@openelement/app` and `@openelement/create`: Framework product surface.
-- `@openelement/ui`: first-party UI product surface.
-- `@openelement/protocol`: runtime-free Protocols product surface.
-- `@openelement/element`: Elements product surface with `OpenElement`, signals,
-  and stylesheet helpers.
-- `@openelement/core`: renderer kernel and JSX runtime.
-- `@openelement/signal`: signal primitives.
-- `@openelement/core/style-sheet`: CSSStyleSheet abstraction.
+- `@openelement/element`: JSX, Custom Elements, DSD, hydration, signals, and
+  stylesheet helpers.
+- `@openelement/app`: pages, routes, loaders, actions, and islands.
+- `@openelement/adapter-vite`: Vite, content, SSG, and Nitro integration.
+- `@openelement/create`: starter CLI.
+- `@openelement/ui`: optional reusable primitives.

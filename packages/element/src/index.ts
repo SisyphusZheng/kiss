@@ -103,6 +103,10 @@ export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-s
 export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';
 export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';
 export type {
+  CompatibilityClassification,
+  CompatibilityTier,
+} from './internal/protocol/framework.ts';
+export type {
   CreateRouteGraphOptions,
   OpenElementAssetManifest,
   OpenElementAssetManifestEntry,

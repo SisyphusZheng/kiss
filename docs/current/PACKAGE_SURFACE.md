@@ -12,13 +12,13 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package | Responsibility | Supported public interface |
-| --- | --- | --- |
-| `@openelement/element` | Custom Elements, JSX, DSD, hydration and signals | root, `jsx-runtime`, `jsx-dev-runtime` |
-| `@openelement/app` | Pages, routing, islands and request/render semantics | root plus documented app modes |
-| `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation | root, `nitro-mount`, `cli/build` |
-| `@openelement/create` | Installed starter and coherent version entry | CLI binary |
-| `@openelement/ui` | Optional, proven general-purpose primitives | root and retained primitive subpaths |
+| Package                     | Responsibility                                       | Supported public interface             |
+| --------------------------- | ---------------------------------------------------- | -------------------------------------- |
+| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     | root, `jsx-runtime`, `jsx-dev-runtime` |
+| `@openelement/app`          | Pages, routing, islands and request/render semantics | root plus documented app modes         |
+| `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation    | root, `nitro-mount`, `cli/build`       |
+| `@openelement/create`       | Installed starter and coherent version entry         | CLI binary                             |
+| `@openelement/ui`           | Optional, proven general-purpose primitives          | root and retained primitive subpaths   |
 
 Application authors should normally learn `element`, `app`, `adapter-vite`,
 and `create`; `ui` is optional.
@@ -39,6 +39,8 @@ Earlier removed product experiments and adapters remain historical only:
 ## Ownership and runtime rules
 
 - Element owns the browser/runtime implementation and runtime contracts.
+- `@preact/signals-core` is Element's internal signal engine, not a consumer
+  OpenElement package surface.
 - App owns routing and application semantics; its router is internal.
 - Adapter Vite owns content, static generation, deployment and build contracts.
 - Create templates and current docs may import only retained product packages.

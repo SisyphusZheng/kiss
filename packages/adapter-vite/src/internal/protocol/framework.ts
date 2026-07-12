@@ -4,6 +4,8 @@
  */
 
 import type { VNode } from './vnode.ts';
+import type { CompatibilityClassification, CompatibilityTier } from '@openelement/element';
+export type { CompatibilityClassification, CompatibilityTier };
 
 // --- API context --------------------------------------------------
 
@@ -193,19 +195,6 @@ export interface IsrManifestEntry {
   revalidate: number;
   cacheKey: string;
   params: Record<string, string>;
-}
-
-export type CompatibilityTier = 'ssr-capable' | 'client-only' | 'rejected' | 'experimental-dom';
-
-export interface CompatibilityClassification {
-  tagName: string;
-  tier: CompatibilityTier;
-  reason: string;
-  source: 'local' | 'package' | 'nested';
-  modulePath?: string;
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: string;
 }
 
 // --- Validation ---------------------------------------------------

@@ -79,7 +79,7 @@ export default defineIsland(
 
 ```ts
 import { defineConfig } from 'vite';
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 
 export default defineConfig({
   plugins: [openElement()],
@@ -87,4 +87,4 @@ export default defineConfig({
 ```
 
 The root `@openelement/app` package is for authoring. Build configuration lives
-under `@openelement/app/vite`.
+under `@openelement/adapter-vite`.

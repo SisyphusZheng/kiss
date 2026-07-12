@@ -12,6 +12,7 @@ export interface RuntimeContext<Env extends Record<string, unknown> = Record<str
   env?: Env;
   platform?: unknown;
   cache?: CacheAdapter<Response>;
+  params?: Record<string, string>;
 }
 
 export interface RuntimePrerenderResult {

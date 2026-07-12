@@ -19,7 +19,7 @@ import { defineElement, defineIsland, defineLayout, definePage } from '@openelem
 
 ```tsx
 import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/router';
+import { useLoaderData } from '@openelement/app';
 
 export const loader = async () => {
   return { message: 'Hello' };
@@ -56,21 +56,19 @@ light DOM 必须显式选择。
 
 声明 layout element。它是 `defineElement()` 的语义别名。
 
-## `@openelement/app/vite`
+## `@openelement/adapter-vite`
 
 ```ts
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 ```
 
 `openElement()` 配置 Vite、route scanning、SSG、islands、AppShell、content 和
 i18n。
 
-## 产品和 Runtime packages
+## 产品包
 
-- `@openelement/app` 和 `@openelement/create`：Framework 产品面。
-- `@openelement/ui`：第一方 UI 产品面。
-- `@openelement/protocol`：runtime-free Protocols 产品面。
-- `@openelement/element`：当前 Elements 产品面和规范作者层，提供 `OpenElement`、signals 和 stylesheet facade。
-- `@openelement/core`：renderer kernel 和 JSX runtime。
-- `@openelement/signal`：signal primitives。
-- `@openelement/core/style-sheet`：CSSStyleSheet abstraction。
+- `@openelement/element`：JSX、Custom Elements、DSD、hydration、signals 和样式工具。
+- `@openelement/app`：pages、routes、loaders、actions 和 islands。
+- `@openelement/adapter-vite`：Vite、content、SSG 和 Nitro 集成。
+- `@openelement/create`：starter CLI。
+- `@openelement/ui`：可选的通用 primitives。

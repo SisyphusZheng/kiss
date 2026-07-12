@@ -30,8 +30,17 @@ const SSR_ENTRY_PATH = `${DIST_ROOT}/server/entry.js`;
 
 const app = new Hono();
 
-// ── CORS (dev-friendly) ─────────────────────────────────────
-app.use('*', cors());
+// ── CORS (local development only) ───────────────────────────
+app.use(
+  '*',
+  cors({
+    origin: (origin) => {
+      if (!origin) return null;
+      const host = new URL(origin).hostname;
+      return host === 'localhost' || host === '127.0.0.1' || host === '::1' ? origin : null;
+    },
+  }),
+);
 
 // ── Health check ────────────────────────────────────────────
 app.get('/__health', (c) => c.json({ ok: true, mode: 'dev:fast', port: PORT }));
@@ -70,20 +79,16 @@ app.get('*', async (c) => {
     }
   } catch (err) {
     console.error('[dev:fast] SSR error:', err);
-
-    // Try serving index.html as SPA fallback
-    try {
-      const indexPath = `${DIST_ROOT}/index.html`;
-      const indexHtml = await Deno.readTextFile(indexPath);
-      return c.html(indexHtml);
-    } catch {
-      return c.html(
-        `<!DOCTYPE html><html><body><h1>Dev Server Error</h1><pre>${
-          String(err instanceof Error ? err.stack || err.message : err)
-        }</pre></body></html>`,
-        500,
-      );
-    }
+    const message = String(err instanceof Error ? err.stack || err.message : err)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+    return c.html(
+      `<!DOCTYPE html><html><body><h1>Dev Server Error</h1><pre>${message}</pre></body></html>`,
+      500,
+    );
   }
 });
 

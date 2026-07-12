@@ -1,113 +1,41 @@
 # First-Party Stack Contract
 
-This page defines the current v0.41 alpha.8 stack vocabulary. OpenElement owns the
-framework concepts; the official tools implement those concepts as drivers or
-adapters.
+The v0.41 beta workspace has five packages. Framework concepts are exposed by
+deep product interfaces; implementation contracts stay inside their owner.
 
-## OpenElement-Owned Concepts
+| Package                     | Responsibility                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 |
 
-`@openelement/app` owns the application model:
+## Official implementation
 
-- `RouteGraph` describes page and API routes without requiring Hono.
-- `RequestContext` normalizes a Web `Request`, params, environment, platform,
-  and matched route without depending on a server driver.
-- `RenderPipeline` names the framework phases: route, layout, head, assets,
-  islands, serialization, and error handling.
-- `AssetManifest` and `IslandManifest` describe output evidence consumed by
-  build, render, deploy, and dogfood checks.
-- `DeploymentTarget` names the runtime shape before a concrete deploy adapter
-  writes platform output.
+- Vite is the single supported development and build implementation.
+- Hono provides the generated request application.
+- Nitro provides verified Node and Workers deployment output.
+- Preact Signals Core is internal to the Element signal implementation.
+- Deno Desktop Reader and Mastodon are dogfood targets, not product packages.
 
-OpenElement App owns the semantics. Dependency-neutral route and asset contracts
-are carried by `@openelement/protocol/app-model`, then re-exported through
-`@openelement/app/model` and `@openelement/app` for authors.
+One App descriptor drives route, render, build and deploy semantics. `buildApp()`
+owns build invocation; consumers do not coordinate plugin phases. Runtime
+contracts needed by apps and adapters are exported from Element or App, while
+content, scanning, SSG and deployment contracts remain Adapter internals unless
+independent adapters demonstrate a real replacement seam.
 
-`@openelement/app/hono` is the official default request-driver bridge. It maps a
-Hono-like context into `RequestContext` before OpenElement framework code sees
-request data.
+## Boundary rules
 
-## Page And Component Contracts
+- Application and starter sources use product imports only.
+- Alpha implementation packages and internal subpaths have no compatibility
+  promise and must not reappear in generated artifacts.
+- Nitro and Hono must normalize request path, method, params, environment and
+  platform consistently.
+- Third-party Web Components use explicit manifest/CEM admission; unknown SSR
+  capability becomes client-only or rejected rather than a partial render.
+- Browser candidates must pass Chromium, Firefox and WebKit with native DSD.
+- External adopter pilot #390 remains the only repository-external beta.4
+  condition.
 
-OpenElement has two supported Web Component page/component paths:
-
-- **Basic Element pages** use `@openelement/element` and the `OpenElement`
-  class. They are the default authoring path and may use OpenElement render,
-  StyleSheet, signal, DSD, hydration, and island conveniences.
-- **Third-party WC interop pages** use custom elements from outside Basic
-  Element. They enter the build through explicit package manifest metadata or
-  Custom Elements Manifest input. They are first-class compatibility targets,
-  but only the capabilities declared in metadata are assumed.
-
-The protocol-level `WebComponentContract` records `authoring`,
-`render`, `metadataSource`, and a diagnostic `reason`. Unsupported or unknown
-third-party SSR behavior must become a clear client-only or rejected admission
-decision, not a silent partial render.
-
-## Official Defaults
-
-| Tool / target       | Role                                                                 |
-| ------------------- | -------------------------------------------------------------------- |
-| Vite                | Default dev/build and asset-manifest driver.                         |
-| Hono                | Default request/server driver over OpenElement request concepts.     |
-| Nitro               | Default deployment output adapter for Node and Workers proofs.       |
-| Deno Desktop        | First-party desktop app target for local-first OpenElement dogfood.  |
-| Open Props          | Token foundation for `@openelement/ui` and Reader visual regression. |
-| Preact islands      | Optional island authoring adapter, not the default UI model.         |
-| Third-party WC libs | Compatibility target beside Basic Element conveniences.              |
-
-`@openelement/ssg/drivers` contains adapter-facing driver contracts:
-
-- `createHonoRequestDriver()` keeps Hono entry generation behind an explicit
-  request-driver boundary.
-- `createViteAssetDriver()` maps Vite manifest output into OpenElement
-  `AssetManifest`.
-- `createRouteGraphFromEntries()` maps scanned route entries into `RouteGraph`.
-
-`@openelement/adapter-vite/nitro-mount` contains the first-party Nitro deploy
-adapter bridge. The adapter-vite root keeps a temporary alpha compatibility
-re-export, but stack docs and new proof code should use the explicit subpath.
-
-These are the current proven implementations, not evidence of unlimited
-replaceability. Alpha.7/alpha.8 made BuildPlan the production evidence owner,
-converged the adapter-vite interface, separated build/deploy/resolver concepts,
-and fixed SignalEngine to the Preact implementation. The beta audit found that
-some driver/model interfaces remain test-only and build correctness still
-depends on shared plugin phase state. Beta must wire those interfaces into one
-production path or delete them. Public claims should name the implemented
-Vite/Hono/Nitro/Preact path directly.
-
-## Browser Baseline
-
-Declarative Shadow DOM is available in current Chromium, Firefox, and WebKit.
-Alpha.8 enforces that baseline in browser tests and keeps the legacy injected
-fallback explicitly opt-in. Beta will decide whether its maintenance cost still
-has a demonstrated consumer; strict CSP output must never silently depend on an
-inline fallback script.
-
-See [BROWSER_BASELINE.md](./BROWSER_BASELINE.md) for the supported baseline,
-source, and executable browser evidence.
-
-## Boundary Rules
-
-- App model tests must run without booting Hono.
-- Hono request-driver tests must prove request data crosses into
-  `RequestContext` before app code uses it.
-- Hono, Nitro, Vite, and Deno Desktop may optimize their implementations, but
-  public docs and tests should name OpenElement concepts first.
-- Nitro output proof must execute generated Node and Workers output. Nitro
-  route files are deploy-adapter glue, not the authoring API for OpenElement
-  pages.
-- Basic Element conveniences must not be promised to arbitrary third-party Web
-  Components unless their manifest declares the capability. Third-party WC
-  packages without validated SSR metadata use explicit client-only interop.
-- Deno Desktop proof is a native app target check, not merely a localhost
-  browser preview.
-- Dogfood apps prove the framework contract; they do not create extra product
-  lines.
-- Generic SPA navigation belongs to app/router, not the reusable OpenLayout;
-  the alpha.8 implementation has removed layout-owned document navigation.
-- During beta, one adapter does not justify a public replacement seam. Build,
-  content, SSG and deployment interfaces remain internal until multiple real
-  adapters prove variation.
-- The target author interfaces are `element` and `app`; starter and dogfood must
-  not require direct imports from implementation support packages.
+See [PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) for the exact export inventory.

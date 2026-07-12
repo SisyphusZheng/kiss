@@ -35,7 +35,7 @@ Deno.test('arch: failMatches ignores clean input', () => {
 
 Deno.test('arch: allowed `as unknown as` escape is not flagged as unapproved', () => {
   const files: TextFile[] = [{
-    path: 'packages/core/src/island.ts',
+    path: 'packages/element/src/internal/core/island.ts',
     text: 'const x = el as unknown as Record<string, unknown>;',
   }];
   const issues: Issue[] = [];
@@ -46,7 +46,7 @@ Deno.test('arch: allowed `as unknown as` escape is not flagged as unapproved', (
 
 Deno.test('arch: unallowed `as unknown as` escape is flagged', () => {
   const files: TextFile[] = [{
-    path: 'packages/core/src/foo.ts',
+    path: 'packages/element/src/internal/core/foo.ts',
     text: 'const y = a as unknown as Bar;',
   }];
   const issues: Issue[] = [];
@@ -55,14 +55,14 @@ Deno.test('arch: unallowed `as unknown as` escape is flagged', () => {
     issues.some(
       (i) =>
         i.message.includes('not in the reviewed allowlist') &&
-        i.file === 'packages/core/src/foo.ts',
+        i.file === 'packages/element/src/internal/core/foo.ts',
     ),
   );
 });
 
 Deno.test('arch: single canonical CompatibilityClassification passes', () => {
   const files: TextFile[] = [{
-    path: 'packages/protocol/src/framework.ts',
+    path: 'packages/element/src/internal/protocol/framework.ts',
     text: 'export interface CompatibilityClassification { level: string; }',
   }];
   const issues: Issue[] = [];
@@ -73,7 +73,7 @@ Deno.test('arch: single canonical CompatibilityClassification passes', () => {
 Deno.test('arch: duplicate CompatibilityClassification is flagged', () => {
   const files: TextFile[] = [
     {
-      path: 'packages/protocol/src/framework.ts',
+      path: 'packages/element/src/internal/protocol/framework.ts',
       text: 'interface CompatibilityClassification {}',
     },
     { path: 'packages/element/src/other.ts', text: 'interface CompatibilityClassification {}' },

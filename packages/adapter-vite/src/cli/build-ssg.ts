@@ -31,7 +31,7 @@ import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
-import { generateSsrPolyfillBanner, resolveExternalManifest } from '../internal/ssg/index.ts';
+import { generateSsrPolyfillBanner } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
 
@@ -39,19 +39,6 @@ import { normalizeViteAliases } from '../alias-utils.ts';
 const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
 
 /** Rollup/Vite output paths mapping for known externals. */
-const SSR_EXTERNAL_PATHS: Record<string, string> = {
-  '@preact/signals-core': 'npm:@preact/signals-core@^1.12.1',
-  'gray-matter': 'npm:gray-matter@^4.0.3',
-  'marked': 'npm:marked@^15.0.0',
-  'sanitize-html': 'npm:sanitize-html@^2.17.4',
-  'hono': 'npm:hono@^4.12',
-  'hono/cors': 'npm:hono@^4.12/cors',
-  'hono/logger': 'npm:hono@^4.12/logger',
-  'hono/request-id': 'npm:hono@^4.12/request-id',
-  'hono/secure-headers': 'npm:hono@^4.12/secure-headers',
-  'hono/ssg': 'npm:hono@^4.12/ssg',
-};
-
 const log = createLogger('ssg');
 
 const VIRTUAL_SSG_ENTRY_ID = 'virtual:open-ssg-entry';
@@ -189,61 +176,9 @@ async function buildSSG(
   try {
     const { build: viteBuild } = await import('vite');
 
-    // SSR noExternal: packages that MUST be inlined into the SSR bundle.
-    // Without these, the SSR bundle contains bare specifier imports that cannot
-    // be resolved in non-workspace environments (e.g. CF Pages), causing
-    // import(entry.js) to fail and the entire SSG pipeline to produce empty HTML.
-    const defaultNoExternal = [
-      /^@openelement\//,
-    ];
-    // ADR-0047: External packages are externalized, not bundled.
-    // ADR-0054: AST-based exports resolution covers ALL subpath exports
-    // so Rolldown externalizes them correctly via manifest.specifiers.
-    // Consumer template deno.json declares these packages so Deno can
-    // resolve them at runtime when buildSSG() executes import(entry.js).
-    // Hono stays external unless the user explicitly requests adapter-specific
-    // bundling through options.ssr.noExternal.
-    const ssrExternalDefaults = [
-      'hono',
-    ];
-
-    // Step 0: Deno pre-resolution + AST subpath discovery (ADR-0047 + ADR-0054)
-    const manifest = await resolveExternalManifest(
-      ssrExternalDefaults,
-      root,
-      options.skipPreResolution || ctx.phase3?.skipPreResolution,
-    );
-
-    const userNoExternal = options.ssr?.noExternal || [];
-    const allNoExternal = [...defaultNoExternal, ...userNoExternal];
-
     // Handle alias - prefer CLI options, then ctx from Phase 1
     const alias = metadataResolveAlias;
     const viteResolveAlias = normalizeViteAliases(alias, root);
-    if (alias) {
-      if (Array.isArray(alias)) {
-        for (const a of alias) {
-          if (a.find === '@openelement/ui') {
-            // v0.14.6: Check if replacement is already covered by defaultNoExternal
-            const isAlreadyCovered = defaultNoExternal.some(
-              (pattern: string | RegExp) =>
-                pattern instanceof RegExp && pattern.test(a.replacement),
-            );
-            if (!isAlreadyCovered) {
-              allNoExternal.push(a.replacement);
-            }
-          }
-        }
-      } else if ('@openelement/ui' in alias) {
-        const isAlreadyCovered = defaultNoExternal.some(
-          (pattern: string | RegExp) =>
-            pattern instanceof RegExp && pattern.test(alias['@openelement/ui']),
-        );
-        if (!isAlreadyCovered) {
-          allNoExternal.push(alias['@openelement/ui']);
-        }
-      }
-    }
 
     // Build the self-contained SSR bundle (ADR 0008 Phase C)
     // Replaces createServer() + ssrLoadModule() with viteBuild + import().
@@ -300,10 +235,6 @@ async function buildSSG(
           },
           output: {
             format: 'esm',
-            // Workspace sources may use explicit npm: specifiers that Rolldown
-            // rewrites to bare imports while bundling. Re-emit known externals
-            // as Deno-resolvable npm: imports for fresh JSR consumers.
-            paths: SSR_EXTERNAL_PATHS,
             // ADR-0044: customElements polyfill must run before ESM imports.
             // Uses Map-backed define()/get(); renderDsdByName() looks up
             // components via customElements.get(tagName) during SSG rendering.
@@ -322,7 +253,10 @@ if (typeof globalThis.customElements === 'undefined') {
           },
         },
       },
-      ssr: { noExternal: allNoExternal, external: manifest.specifiers },
+      // The generated SSR entry is a portable deployment artifact. Bundle all
+      // runtime dependencies so Node, Deno, Workers and Nitro never inherit
+      // the build machine's import map or `npm:` URL semantics.
+      ssr: { noExternal: true },
       // ADR 0008 Phase A: Inject headExtras via define instead of .openElement/head-extras.html
       // The generated entry code uses __HEAD_EXTRAS__ which gets replaced
       // at build time. This avoids the Vite SSR AsyncFunction syntax errors
@@ -389,7 +323,7 @@ if (typeof globalThis.customElements === 'undefined') {
         },
       ],
       resolve: {
-        preserveSymlinks: true,
+        preserveSymlinks: false,
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
         ...(viteResolveAlias ? { alias: viteResolveAlias } : {}),
       },

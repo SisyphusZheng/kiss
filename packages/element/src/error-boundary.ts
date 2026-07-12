@@ -109,9 +109,7 @@ export abstract class ErrorBoundary extends OpenElement {
     super.connectedCallback();
   }
 
-  /**
-   * Wrap child render in try/catch.
-   */
+  /** Render the captured fallback or the boundary's normal content. */
   override render(): VNode | null {
     if (this._error) {
       return this.onError(this._error);
@@ -119,9 +117,7 @@ export abstract class ErrorBoundary extends OpenElement {
     return super.render();
   }
 
-  /**
-   * Call this from parent to catch a child's error.
-   */
+  /** Capture an error explicitly at an application render boundary. */
   catchError(error: Error): void {
     const openElementError = error instanceof OpenElementError ? error : new OpenElementError(
       error.message,

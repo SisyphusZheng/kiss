@@ -100,7 +100,7 @@ function setParam(
   value: string,
 ): void {
   if (!isSafeParamName(name)) return;
-  target.set(name, value);
+  target.set(name, decodeURIComponent(value));
 }
 
 function parseQuery(search: string): ParamMap {

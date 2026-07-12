@@ -77,8 +77,11 @@ export async function renderIsrResponse(
   if (cached.state === 'stale' && cached.entry) {
     const regenerate = regenerateEntry(entry, options, request, now);
     if (options.regenerate === 'background') {
-      options.schedule?.(regenerate);
-      if (!options.schedule) regenerate.catch((error) => options.onRegenerateError?.(error, entry));
+      // Observe the rejection before handing the task to a host scheduler so a
+      // fire-and-forget scheduler cannot create an unhandled rejection.
+      const observed = regenerate.catch(() => undefined);
+      if (options.schedule) options.schedule(observed);
+      else void observed;
       return {
         state: 'stale',
         entry,

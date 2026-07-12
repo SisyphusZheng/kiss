@@ -22,6 +22,8 @@ async function runCoverage(): Promise<string> {
         '--allow-env',
         '--allow-net',
         '--allow-run',
+        '--allow-ffi',
+        '--allow-sys',
       ],
       stdout: 'inherit',
       stderr: 'inherit',

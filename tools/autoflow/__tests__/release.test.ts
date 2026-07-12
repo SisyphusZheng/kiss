@@ -1,6 +1,6 @@
-import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { existsSync } from 'node:fs';
-import { buildVersionAnchorReplacements } from '../release.ts';
+import { buildVersionAnchorReplacements, createReleasePlan } from '../release.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
@@ -74,4 +74,12 @@ Deno.test('buildVersionAnchorReplacements: every target carries the previous or 
   // README has two distinct anchor formats (inline and line-wrapped).
   const readmeReps = reps.filter(([p]) => p === 'README.md');
   assertEquals(readmeReps.length, 2);
+});
+
+Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () => {
+  assertThrows(
+    () => createReleasePlan('0.41.0-beta.4', 'approval; touch /tmp/pwned'),
+    Error,
+    'Invalid approval id',
+  );
 });

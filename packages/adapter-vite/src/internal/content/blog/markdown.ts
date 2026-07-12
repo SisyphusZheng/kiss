@@ -101,10 +101,9 @@ export async function parseMarkdownFile(
 
   let html: string;
   if (options?.markdown) {
-    // v0.14.10: Custom markdown renderer output is also sanitized by default.
-    // Use options.trustedHtml = true to skip sanitization for trusted content.
+    // Custom renderer output crosses a content trust boundary and is always sanitized.
     const raw = await options.markdown(content);
-    html = options.trustedHtml ? raw : sanitizeHtml(raw, SANITIZE_OPTIONS);
+    html = sanitizeHtml(raw, SANITIZE_OPTIONS);
   } else {
     const raw = await marked(content, { async: true });
     html = sanitizeHtml(raw, SANITIZE_OPTIONS);

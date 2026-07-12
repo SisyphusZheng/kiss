@@ -10,6 +10,7 @@ export interface NitroLikeRequestEvent<
   url?: string;
   headers?: HeadersInit;
   body?: BodyInit | null;
+  params?: Record<string, string>;
   env?: Env;
   platform?: unknown;
 }
@@ -63,7 +64,7 @@ function createNitroRequestContext<Env extends Record<string, unknown>>(
     url,
     path: url.pathname,
     method: request.method,
-    params: {},
+    params: context.params ?? {},
     searchParams: url.searchParams,
     env: context.env,
     platform: context.platform,
@@ -82,6 +83,7 @@ export function createOpenElementNitroHandler<
     const context: RuntimeContext<Env> = {
       env: event.env || options.env,
       platform: event.platform || options.platform,
+      params: event.params,
     };
     await options.onBeforeRequestContext?.(
       createNitroRequestContext(request, context),

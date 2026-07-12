@@ -117,6 +117,9 @@ export function createReleasePlan(
   targetVersion: string,
   approvalId?: string,
 ): ReleaseCommandStep[] {
+  if (approvalId && !/^[A-Za-z0-9._/-]+$/.test(approvalId)) {
+    throw new Error(`Invalid approval id: ${approvalId}`);
+  }
   const tag = releaseTag(targetVersion);
   const note = releaseNoteFile(targetVersion);
   const commitMessage = approvalId
@@ -251,11 +254,7 @@ export function createReleasePlan(
     },
     {
       name: 'commit release bump',
-      command: [
-        'sh',
-        '-c',
-        `git diff --cached --quiet || git commit -m '${commitMessage.replace(/'/g, "'\\''")}'`,
-      ],
+      command: ['git', 'commit', '-m', commitMessage],
     },
   ];
 

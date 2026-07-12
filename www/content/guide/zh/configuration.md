@@ -13,7 +13,7 @@ openElement 通过 Vite 配置。根入口用于应用编写；Vite 集成使用
 
 ```ts
 import { defineConfig } from 'vite';
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 
 export default defineConfig({
   plugins: [openElement()],

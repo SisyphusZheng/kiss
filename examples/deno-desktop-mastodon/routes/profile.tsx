@@ -2,7 +2,7 @@
 import { OpenElement } from '@openelement/element';
 import type { MastodonAccount, MastodonStatus } from '../app/types.ts';
 import { getProfile, getProfileStatuses } from '../app/api-client.ts';
-import { formatCount } from '../app/format.ts';
+import { formatCount, stripHtml } from '../app/format.ts';
 import StatusCard from '../components/StatusCard.tsx';
 
 export interface ProfileData {
@@ -75,10 +75,7 @@ export default class ProfilePage extends OpenElement {
                   <p class='mastodon-profile-acct'>@{account.acct}</p>
                 </div>
               </div>
-              <div
-                class='mastodon-profile-note'
-                dangerouslySetInnerHTML={{ __html: account.note }}
-              />
+              <div class='mastodon-profile-note'>{stripHtml(account.note)}</div>
               <div class='mastodon-profile-stats'>
                 <span>
                   <strong>{formatCount(account.statusesCount)}</strong> posts

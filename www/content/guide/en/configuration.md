@@ -14,7 +14,7 @@ authoring helpers; Vite integration uses the `/vite` subpath.
 
 ```ts
 import { defineConfig } from 'vite';
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 
 export default defineConfig({
   plugins: [openElement()],

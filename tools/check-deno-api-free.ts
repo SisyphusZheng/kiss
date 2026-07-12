@@ -10,12 +10,8 @@ import { walkSync } from '@std/fs/walk';
 import { stripCommentsLine } from './lib/text.ts';
 
 const RESTRICTED_ROOTS = [
-  'packages/core/src',
   'packages/element/src',
   'packages/ui/src',
-  'packages/protocol/src',
-  'packages/signal/src',
-  'packages/router/src',
   'packages/app/src',
 ];
 
@@ -55,14 +51,7 @@ function scan(root: string): string[] {
 }
 
 const violations: string[] = [];
-for (const root of RESTRICTED_ROOTS) {
-  try {
-    violations.push(...scan(root));
-  } catch (error) {
-    console.error(`Failed to scan ${root}: ${error}`);
-    Deno.exit(1);
-  }
-}
+for (const root of RESTRICTED_ROOTS) violations.push(...scan(root));
 
 if (violations.length > 0) {
   console.error('Deno API usage detected in runtime-free product packages:');
