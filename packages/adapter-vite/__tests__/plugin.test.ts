@@ -48,16 +48,15 @@ function callLoad(plugin: unknown, id: string): unknown {
 
 // ─── Plugin Order & Structure ─────────────────────────────────
 
-Deno.test('openPlugin: returns 9 plugins in correct order', () => {
+Deno.test('openPlugin: returns retained plugins in correct order', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 
   const names = plugins.map((p) => p.name);
   assertEquals(names, [
     'open:mdx',
     'open:core',
     'open:generated-data',
-    'open:core-resolve',
     'open:optional-package-stubs',
     'open:virtual-entry',
     '@hono/vite-dev-server',
@@ -66,57 +65,43 @@ Deno.test('openPlugin: returns 9 plugins in correct order', () => {
   ]);
 });
 
-Deno.test('openPlugin: core-resolve plugin has enforce=pre', () => {
-  const plugins = createOpenPlugin();
-  const resolvePlugin = plugins.find((p) => p.name === 'open:core-resolve')!;
-  assertExists(resolvePlugin);
-  assertEquals(resolvePlugin.enforce, 'pre');
-});
-
-Deno.test('openPlugin: core-resolve has enforce=pre', () => {
-  const plugins = createOpenPlugin();
-  // Only core-resolve explicitly needs enforce: 'pre' for resolution priority
-  const resolvePlugin = plugins.find((p) => p.name === 'open:core-resolve')!;
-  assertEquals(resolvePlugin.enforce, 'pre');
-});
-
 // ─── Option Defaults ──────────────────────────────────────────
 
 Deno.test('openPlugin: defaults routesDir to app/routes', () => {
   const plugins = createOpenPlugin({});
   // Default is applied internally - verify plugin creation succeeds
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: defaults islandsDir to app/islands', () => {
   const plugins = createOpenPlugin({});
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: defaults componentsDir to app/components', () => {
   const plugins = createOpenPlugin({});
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: respects custom routesDir', () => {
   const plugins = createOpenPlugin({ routesDir: 'src/pages' });
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: respects custom islandsDir', () => {
   const plugins = createOpenPlugin({ islandsDir: 'src/widgets' });
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: respects custom componentsDir', () => {
   const plugins = createOpenPlugin({ componentsDir: 'src/ui' });
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 // ─── Upgrade Strategy Default ─────────────────────────────────
@@ -158,12 +143,12 @@ Deno.test('openPlugin: rejects script tags in inject.headFragments', () => {
 
 Deno.test('openPlugin: handles empty options object', () => {
   const plugins = createOpenPlugin({});
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: handles undefined options', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 // ─── Virtual Entry Plugin Behaviors ───────────────────────────
@@ -275,14 +260,14 @@ Deno.test('openPlugin: core config sorts aliases by subpath specificity', () => 
   const result = callConfig(corePlugin, {
     resolve: {
       alias: [
-        { find: '@openelement/core', replacement: '/repo/packages/core/src/index.ts' },
+        { find: '@openelement/element', replacement: '/repo/packages/core/src/index.ts' },
         { find: '@openelement/core/csr', replacement: '/repo/packages/core/src/csr.ts' },
       ],
     },
   });
   const resolve = result.resolve as { alias: Array<{ find: string; replacement: string }> };
   const coreCsrIndex = resolve.alias.findIndex((alias) => alias.find === '@openelement/core/csr');
-  const coreRootIndex = resolve.alias.findIndex((alias) => alias.find === '@openelement/core');
+  const coreRootIndex = resolve.alias.findIndex((alias) => alias.find === '@openelement/element');
 
   assertEquals(coreCsrIndex >= 0, true);
   assertEquals(coreRootIndex >= 0, true);
@@ -329,9 +314,9 @@ Deno.test('openPlugin: dev server plugin is @hono/vite-dev-server', () => {
 // which crashes in a server context. SPA is client-only, so the @hono/vite-dev-server
 // middleware (which SSR-imports route modules) must NOT be registered.
 
-Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (8 plugins)', () => {
+Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (7 plugins)', () => {
   const plugins = createOpenPlugin({ mode: 'spa' });
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 7);
 
   const names = plugins.map((p) => p.name);
   assertEquals(
@@ -340,7 +325,6 @@ Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (8 plugins)', () => 
       'open:mdx',
       'open:core',
       'open:generated-data',
-      'open:core-resolve',
       'open:optional-package-stubs',
       'open:virtual-entry',
       'open:island-transform',
@@ -357,15 +341,15 @@ Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (8 plugins)', () => 
   );
 });
 
-Deno.test('openPlugin: SSG mode (default) includes @hono/vite-dev-server (9 plugins)', () => {
+Deno.test('openPlugin: SSG mode (default) includes @hono/vite-dev-server (8 plugins)', () => {
   const plugins = createOpenPlugin({});
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
   assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
 });
 
 Deno.test('openPlugin: explicit SSG mode includes @hono/vite-dev-server', () => {
   const plugins = createOpenPlugin({ mode: 'ssg' });
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
   assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
 });
 
@@ -374,18 +358,18 @@ Deno.test('openPlugin: explicit SSG mode includes @hono/vite-dev-server', () => 
 Deno.test('openPlugin: accepts packageIslands option', () => {
   const plugins = createOpenPlugin({ packageIslands: ['@openelement/ui'] });
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: accepts empty packageIslands', () => {
   const plugins = createOpenPlugin({ packageIslands: [] });
   assertExists(plugins);
-  assertEquals(plugins.length, 9);
+  assertEquals(plugins.length, 8);
 });
 
 Deno.test('openPlugin: accepts multiple packageIslands', () => {
   const plugins = createOpenPlugin({
-    packageIslands: ['@openelement/ui', '@openelement/core'],
+    packageIslands: ['@openelement/ui', '@openelement/element'],
   });
   assertExists(plugins);
 });

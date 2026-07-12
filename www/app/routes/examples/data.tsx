@@ -8,7 +8,7 @@
  */
 
 import { definePage } from '@openelement/app';
-import { useActionData, useLoaderData } from '@openelement/router';
+import { useActionData, useLoaderData } from '@openelement/app';
 import type { Action, ActionContext, Loader, LoaderContext } from '@openelement/app';
 
 // ─── Types ────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import { defineElement, defineIsland, defineIslandConfig } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 

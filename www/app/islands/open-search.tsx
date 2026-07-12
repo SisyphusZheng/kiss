@@ -15,12 +15,12 @@
  * @csspart shortcut - The keyboard shortcut kbd
  */
 
-import { defineCustomElement } from '@openelement/core';
+import { defineCustomElement } from '@openelement/element';
 import { OpenElement } from '@openelement/element';
-import type { VNode } from '@openelement/protocol/vnode';
+import type { VNode } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-import { computed, signal } from '@openelement/signal';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { computed, signal } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
 import { daisyClassSheet } from '@openelement/ui';
 
 interface SearchEntry {

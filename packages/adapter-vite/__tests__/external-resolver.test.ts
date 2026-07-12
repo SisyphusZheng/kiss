@@ -13,7 +13,7 @@ import {
   extractExternalSpecifiers,
   resolvePackageExports,
   walkExports,
-} from '@openelement/ssg';
+} from '../src/internal/ssg/index.ts';
 
 // Non-existent root to force AST fallback to bare package names
 const NO_MODULES_ROOT = join(Deno.cwd(), 'no-node-modules-here');
@@ -204,7 +204,7 @@ Deno.test('buildFallbackManifest: generatedAt is valid ISO string', () => {
 // ─── Type exports ───────────────────────────────────────────────────
 
 Deno.test('external-resolver: module exports resolveExternalManifest as function', async () => {
-  const mod = await import('@openelement/ssg');
+  const mod = await import('../src/internal/ssg/index.ts');
   assertEquals(typeof mod.resolveExternalManifest, 'function');
 });
 

@@ -1,7 +1,7 @@
 ﻿export const meta = { section: 'Guide', label: 'Getting Started', order: 1 };
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';

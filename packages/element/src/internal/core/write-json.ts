@@ -11,9 +11,3 @@
 export function formatJson(value: unknown): string {
   return JSON.stringify(value, null, 2) + '\n';
 }
-
-/**
- * @deprecated Use {@link formatJson} instead. This name incorrectly implies a
- * filesystem side effect; the function only returns a formatted string.
- */
-export { formatJson as writeJson };

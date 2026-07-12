@@ -9,12 +9,11 @@ openElement 把 Web Components 当作应用的原生组件模型，使用 JSX/VN
 
 强制项目流程见 [`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md)。
 
-## Alpha 包状态
+## Beta 包状态
 
-alpha.8 的 11 个包均已带 provenance 发布，但 npm 上的
-`@openelement/create@0.41.0-alpha.8` 因 tarball 遗漏模板 `.gitignore` 而无法
-完成创建。当前不能把该命令当作 adoption-ready quick start；执行真实发布 CLI
-并跑完整生成项目生命周期是 beta 的第一个 P0 gate。
+源码 workspace 已收敛为五包：`element`、`app`、`adapter-vite`、`create` 和可选
+`ui`。beta.1-beta.3 是 withdrawn partial artifacts；首个完整候选固定为
+`0.41.0-beta.4`，外部采用试点 #390 是唯一剩余的仓库外发布条件。
 
 ## 产品原则
 
@@ -38,7 +37,9 @@ default path = DSD/static-first + selective islands + Vite/Nitro
 | Web Components Fullstack Framework | `@openelement/app`, `@openelement/create` | Pages、layouts、routes、islands、app targets，以及官方 stack adapters。 |
 | Basic Element                      | `@openelement/element`, `OpenElement`     | JSX-first 原生 Web Components authoring layer，面向 Shadow/DSD 输出。   |
 
-支持包包括 `@openelement/core`、`@openelement/adapter-vite`、`@openelement/signal`、`@openelement/router`、`@openelement/content` 和 `@openelement/ssg`。`@openelement/protocol` 是带少量 host-API-free 运行时值的契约基础，`@openelement/ui` 是 Open Props-backed 参考组件库和 dogfood surface。它们支撑两个主产品，但不是独立的一线产品。
+`@openelement/adapter-vite` 统一负责 Vite、content、SSG 与 Nitro 构建实现；
+`@openelement/ui` 只保留可复用的可选 primitives。运行时、signals、router、
+protocol、content 与 SSG 均已吸收为内部实现，不再是消费者包接口。
 
 Dogfood apps 用来验证 openElement，不能定义 openElement。Deno Desktop Reader
 和 Mastodon Desktop 是 alpha.7 hardening train 已完成的基础证据，不是额外
@@ -46,7 +47,7 @@ Dogfood apps 用来验证 openElement，不能定义 openElement。Deno Desktop 
 开放。AutoFlow3、docs truth、release evidence 和 workflow gates
 是项目基础设施，不进入 Framework 产品叙事。
 
-当前 workspace 是 v0.41 的 11 包线。Hub、RPC、CEM、compat-check、Lit/React/vanilla interop adapters，standalone runtime/style-sheet/i18n 包已退出当前包图；`@openelement/protocol` 和 `@openelement/ssg` 保留为 support packages。`@preact/signals-core` 是默认 signal engine。
+当前 workspace 是 v0.41 的五包 beta 线；旧包名只保留在历史 ADR 与发布证据中。
 
 alpha.7 的 package-gated 工作已由 alpha.8 完整发布，外部 adopter pilot #390
 仍然开放。下一阶段 beta 不再是“只复跑”的验证窗口，而是最终 breaking

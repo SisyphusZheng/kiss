@@ -29,7 +29,7 @@ async function withPackage(
 
 Deno.test('package artifacts: accepts ESM runtime package with Web APIs', async () => {
   await withPackage(
-    '@openelement/core',
+    '@openelement/element',
     {
       'index.js': `
         export function makeRequest(url) {
@@ -39,7 +39,7 @@ Deno.test('package artifacts: accepts ESM runtime package with Web APIs', async 
       `,
     },
     (root) => {
-      const result = scanExtractedPackage('@openelement/core', root);
+      const result = scanExtractedPackage('@openelement/element', root);
       assertEquals(result.violations, []);
     },
   );
@@ -47,7 +47,7 @@ Deno.test('package artifacts: accepts ESM runtime package with Web APIs', async 
 
 Deno.test('package artifacts: rejects CJS and host APIs in runtime-free packages', async () => {
   await withPackage(
-    '@openelement/core',
+    '@openelement/element',
     {
       'index.js': `
         import process from 'node:process';
@@ -56,7 +56,7 @@ Deno.test('package artifacts: rejects CJS and host APIs in runtime-free packages
       `,
     },
     (root) => {
-      const messages = scanExtractedPackage('@openelement/core', root).violations.map((v) =>
+      const messages = scanExtractedPackage('@openelement/element', root).violations.map((v) =>
         v.message
       );
       assert(messages.includes('node:* import'));
@@ -88,11 +88,11 @@ Deno.test('package artifacts: rejects missing module type and CJS entry', async 
   try {
     await Deno.writeTextFile(
       `${root}/package.json`,
-      JSON.stringify({ name: '@openelement/core', main: './index.cjs' }, null, 2),
+      JSON.stringify({ name: '@openelement/element', main: './index.cjs' }, null, 2),
     );
     await Deno.writeTextFile(`${root}/index.cjs`, 'module.exports = {};');
 
-    const messages = scanExtractedPackage('@openelement/core', root).violations.map((v) =>
+    const messages = scanExtractedPackage('@openelement/element', root).violations.map((v) =>
       v.message
     );
     assert(messages.includes('package.json must declare "type": "module"'));

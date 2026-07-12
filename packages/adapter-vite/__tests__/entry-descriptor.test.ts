@@ -9,8 +9,12 @@
  */
 
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '@openelement/ssg';
-import type { RouteEntry } from '@openelement/core';
+import {
+  buildEntryDescriptor,
+  generateHonoEntryCode,
+  renderEntry,
+} from '../src/internal/ssg/index.ts';
+import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Test fixtures
 
@@ -131,7 +135,7 @@ Deno.test('renderEntry: produces valid module code', () => {
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(
     code,
-    "import { renderDsd, renderDsdTree, escapeHtml } from '@openelement/core'",
+    "import { renderDsd, renderDsdTree, escapeHtml } from '@openelement/element'",
   );
   assertStringIncludes(code, 'export default app');
   assertStringIncludes(code, 'const app = new Hono()');

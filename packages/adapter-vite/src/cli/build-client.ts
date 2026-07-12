@@ -20,7 +20,7 @@ import process from 'node:process';
 import { generateClientEntry } from '../internal/ssg/index.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
-import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
+import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
 import { formatError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 
@@ -28,7 +28,6 @@ const log = createLogger('ssg');
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
 const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
-const FALLBACK_openElement_VERSION = '0.23.0';
 
 type ViteBuildOptionsWithManifest = NonNullable<InlineConfig['build']> & {
   manifest?: boolean;
@@ -44,18 +43,12 @@ const WORKSPACE_ROOT: string | null = (() => {
   if (!import.meta.url.startsWith('file:')) return null;
   try {
     const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/\\/g, '/');
-    // Sanity check: the real workspace has packages/core/src/style-sheet.ts.
-    if (!existsSync(join(root, 'packages', 'core', 'src', 'style-sheet.ts'))) return null;
+    if (!existsSync(join(root, 'packages', 'element', 'deno.json'))) return null;
     return root;
   } catch {
     return null;
   }
 })();
-
-function getJsrPackageVersion(metaUrl: string): string {
-  const match = metaUrl.match(/\/@openelement\/adapter-vite\/([^/]+)\//);
-  return match?.[1] ?? FALLBACK_openElement_VERSION;
-}
 
 /**
  * Look up a bare specifier in a deno.json import map.
@@ -292,10 +285,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
         | undefined,
     },
     plugins: [
-      createOpenJsrPackageResolverPlugin({
-        workspaceRoot: WORKSPACE_ROOT,
-        version: getJsrPackageVersion(import.meta.url),
-      }),
+      createNpmSpecifierPlugin(),
       {
         name: 'open:exclude-preact-rts',
         resolveId(id: string) {

@@ -13,11 +13,11 @@
  * Zero framework runtime — pure DSD + Signals.
  * Replaces Lit Island pattern with Ocean (OpenElement) reactivity.
  */
-import { defineCustomElement } from '@openelement/core';
+import { defineCustomElement } from '@openelement/element';
 import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-import { computed, signal } from '@openelement/signal';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { computed, signal } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
 import { daisyClassSheet } from '@openelement/ui';
 
 export const tagName = 'reactive-showcase';

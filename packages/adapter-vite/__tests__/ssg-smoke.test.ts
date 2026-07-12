@@ -143,7 +143,11 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       'SSG output should preserve Declarative Shadow DOM',
     );
     assertStringIncludes(indexHtml, '<open-layout');
-    assert(hasIslandChunk('open-layout-'), 'UI package island chunk should exist');
+    assertEquals(
+      hasIslandChunk('open-layout-'),
+      false,
+      'Static site layout must not ship as a UI island',
+    );
     assert(existsSync(join(WWW_DIST, 'roadmap', 'index.html')), 'Clean URL output should exist');
     assert(existsSync(join(WWW_DIST, 'en', 'roadmap', 'index.html')), 'i18n roadmap should exist');
     const roadmapHtml = readFileSync(join(WWW_DIST, 'roadmap', 'index.html'), 'utf-8');

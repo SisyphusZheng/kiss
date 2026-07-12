@@ -2,7 +2,7 @@
  * Generates packages/adapter-vite/src/generated-export-files.ts from the
  * "exports" maps declared in each package deno.json.
  *
- * OPENELEMENT_EXPORT_FILES in ssg-package-resolver.ts used to be a
+ * OPENELEMENT_EXPORT_FILES used to be a
  * hand-maintained copy of those export maps, which drifted (e.g. content's
  * nav-data was renamed to write-json in its deno.json but never updated in
  * the resolver). This script makes deno.json the single source of truth.
@@ -25,14 +25,8 @@ const TARGET = `${REPO_ROOT}packages/adapter-vite/src/generated-export-files.ts`
 const RESOLVER_PACKAGES = [
   'adapter-vite',
   'app',
-  'content',
-  'core',
   'create',
   'element',
-  'protocol',
-  'router',
-  'signal',
-  'ssg',
   'ui',
 ];
 

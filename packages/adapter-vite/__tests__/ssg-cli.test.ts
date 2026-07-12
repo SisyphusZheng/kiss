@@ -6,12 +6,12 @@
  */
 
 Deno.test('ssg CLI - module can be imported', async () => {
-  const mod = await import('@openelement/ssg');
+  const mod = await import('../src/internal/ssg/index.ts');
   _assert(mod !== null && typeof mod === 'object');
 });
 
 Deno.test('ssg CLI - ssgRender is exported from ssg-render', async () => {
-  const mod = await import('@openelement/ssg');
+  const mod = await import('../src/internal/ssg/index.ts');
   _assert(typeof mod.ssgRender === 'function');
 });
 

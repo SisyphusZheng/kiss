@@ -3,7 +3,7 @@
  */
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import { islandTransformPlugin } from '../src/island-transform.ts';
-import { generateClientEntry } from '@openelement/ssg';
+import { generateClientEntry } from '../src/internal/ssg/index.ts';
 
 type TransformFn = (code: string, id: string) => string | null;
 

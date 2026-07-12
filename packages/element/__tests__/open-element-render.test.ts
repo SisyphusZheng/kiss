@@ -15,7 +15,7 @@ import {
   renderIntoLightDom,
   renderIntoShadowRoot,
 } from '../src/open-element-render.ts';
-import type { VNode } from '@openelement/protocol/vnode';
+import type { VNode } from '@openelement/element';
 
 class FakeScope {
   resetCount = 0;

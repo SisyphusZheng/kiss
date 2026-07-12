@@ -8,9 +8,9 @@
  */
 
 import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
-import { buildSsrAdmissionPlan } from '@openelement/ssg';
-import type { IslandDecl } from '@openelement/ssg';
-import type { CompatibilityClassification } from '@openelement/core';
+import { buildSsrAdmissionPlan } from '../src/internal/ssg/index.ts';
+import type { IslandDecl } from '../src/internal/ssg/index.ts';
+import type { CompatibilityClassification } from '../src/internal/protocol/manifest.ts';
 
 // Section
 

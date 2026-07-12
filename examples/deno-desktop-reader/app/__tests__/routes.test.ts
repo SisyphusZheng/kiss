@@ -5,7 +5,7 @@
  */
 
 import { assert, assertEquals } from '@std/assert';
-import type { VNode } from '@openelement/core/static';
+import type { VNode } from '@openelement/element';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
 // ponytail: inline mock covering only the DOM APIs used by route components.

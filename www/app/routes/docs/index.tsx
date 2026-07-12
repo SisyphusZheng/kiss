@@ -5,12 +5,12 @@ export const meta = { section: 'Quick Start', label: 'Docs', order: 0 };
 export const tagName = 'page-docs';
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import '@openelement/ui/open-input';
-import '@openelement/ui/open-lab-panel';
-import '@openelement/ui/open-standards-visual';
+import '@openelement/site-ui/open-lab-panel.tsx';
+import '@openelement/site-ui/open-standards-visual.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`

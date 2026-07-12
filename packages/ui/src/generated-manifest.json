@@ -406,137 +406,6 @@
       }
     },
     {
-      "tagName": "open-brand-mark",
-      "className": "OpenBrandMark",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "size",
-          "type": "string",
-          "description": "size attribute"
-        },
-        {
-          "name": "tone",
-          "type": "string",
-          "description": "tone attribute"
-        },
-        {
-          "name": "variant",
-          "type": "string",
-          "description": "variant attribute"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-brand-mark",
-        "export": "OpenBrandMark"
-      }
-    },
-    {
-      "tagName": "open-lab-panel",
-      "className": "OpenLabPanel",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "variant",
-          "type": "string",
-          "description": "variant attribute"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "description": "label attribute"
-        },
-        {
-          "name": "meta",
-          "type": "string",
-          "description": "meta attribute"
-        },
-        {
-          "name": "compact",
-          "type": "boolean",
-          "description": "compact attribute",
-          "default": "false"
-        }
-      ],
-      "slots": [
-        {
-          "name": "",
-          "description": "Default slot"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-lab-panel",
-        "export": "OpenLabPanel"
-      }
-    },
-    {
-      "tagName": "open-standards-visual",
-      "className": "OpenStandardsVisual",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "variant",
-          "type": "string",
-          "description": "variant attribute"
-        },
-        {
-          "name": "motion",
-          "type": "string",
-          "description": "motion attribute"
-        },
-        {
-          "name": "emphasis",
-          "type": "string",
-          "description": "emphasis attribute"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-standards-visual",
-        "export": "OpenStandardsVisual"
-      }
-    },
-    {
-      "tagName": "open-lab-stage",
-      "className": "OpenLabStage",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "motion",
-          "type": "string",
-          "description": "motion attribute"
-        },
-        {
-          "name": "emphasis",
-          "type": "string",
-          "description": "emphasis attribute"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-lab-stage",
-        "export": "OpenLabStage"
-      }
-    },
-    {
       "tagName": "open-dialog",
       "className": "OpenDialog",
       "superclassName": "OpenElement",
@@ -596,98 +465,6 @@
         "hydrate": "idle",
         "module": "@openelement/ui/open-dialog",
         "export": "OpenDialog"
-      }
-    },
-    {
-      "tagName": "open-layout",
-      "className": "OpenLayout",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "current-path",
-          "type": "string",
-          "description": "current-path attribute"
-        },
-        {
-          "name": "nav-items",
-          "type": "array",
-          "description": "nav-items attribute"
-        },
-        {
-          "name": "header-nav",
-          "type": "array",
-          "description": "header-nav attribute"
-        },
-        {
-          "name": "logo-sub",
-          "type": "string",
-          "description": "logo-sub attribute"
-        },
-        {
-          "name": "github-url",
-          "type": "string",
-          "description": "github-url attribute"
-        },
-        {
-          "name": "edit-url",
-          "type": "string",
-          "description": "edit-url attribute"
-        },
-        {
-          "name": "locale",
-          "type": "string",
-          "description": "locale attribute"
-        },
-        {
-          "name": "locales",
-          "type": "array",
-          "description": "locales attribute"
-        }
-      ],
-      "slots": [
-        {
-          "name": "",
-          "description": "Default slot"
-        }
-      ],
-      "cssParts": [
-        {
-          "name": "container",
-          "description": "The app-layout root div"
-        },
-        {
-          "name": "header",
-          "description": "The sticky header element"
-        },
-        {
-          "name": "sidebar",
-          "description": "The docs-sidebar nav"
-        },
-        {
-          "name": "main",
-          "description": "The layout-main element"
-        },
-        {
-          "name": "footer",
-          "description": "The app-footer element"
-        },
-        {
-          "name": "nav",
-          "description": "The header-nav element"
-        },
-        {
-          "name": "nav-toggle",
-          "description": "The mobile menu toggle button"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-interactive",
-        "hydrate": "load",
-        "module": "@openelement/ui/open-layout",
-        "export": "OpenLayout"
       }
     },
     {
@@ -756,30 +533,6 @@
         "hydrate": "load",
         "module": "@openelement/ui/open-tabs",
         "export": "OpenTabs"
-      }
-    },
-    {
-      "tagName": "open-hero-ping",
-      "className": "HeroPing",
-      "superclassName": "OpenElement",
-      "description": "",
-      "cssParts": [
-        {
-          "name": "dot-static",
-          "description": "The static status dot"
-        },
-        {
-          "name": "dot-animated",
-          "description": "The animated ping button"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-hero-ping",
-        "export": "HeroPing"
       }
     }
   ],
@@ -881,54 +634,6 @@
       ]
     },
     {
-      "path": "./open-brand-mark.js",
-      "exports": [
-        {
-          "name": "OpenBrandMark",
-          "path": "./open-brand-mark.js"
-        }
-      ],
-      "declarations": [
-        "open-brand-mark"
-      ]
-    },
-    {
-      "path": "./open-lab-panel.js",
-      "exports": [
-        {
-          "name": "OpenLabPanel",
-          "path": "./open-lab-panel.js"
-        }
-      ],
-      "declarations": [
-        "open-lab-panel"
-      ]
-    },
-    {
-      "path": "./open-standards-visual.js",
-      "exports": [
-        {
-          "name": "OpenStandardsVisual",
-          "path": "./open-standards-visual.js"
-        }
-      ],
-      "declarations": [
-        "open-standards-visual"
-      ]
-    },
-    {
-      "path": "./open-lab-stage.js",
-      "exports": [
-        {
-          "name": "OpenLabStage",
-          "path": "./open-lab-stage.js"
-        }
-      ],
-      "declarations": [
-        "open-lab-stage"
-      ]
-    },
-    {
       "path": "./open-dialog.js",
       "exports": [
         {
@@ -938,18 +643,6 @@
       ],
       "declarations": [
         "open-dialog"
-      ]
-    },
-    {
-      "path": "./open-layout.js",
-      "exports": [
-        {
-          "name": "OpenLayout",
-          "path": "./open-layout.js"
-        }
-      ],
-      "declarations": [
-        "open-layout"
       ]
     },
     {
@@ -986,18 +679,6 @@
       ],
       "declarations": [
         "open-tabs"
-      ]
-    },
-    {
-      "path": "./open-hero-ping.js",
-      "exports": [
-        {
-          "name": "HeroPing",
-          "path": "./open-hero-ping.js"
-        }
-      ],
-      "declarations": [
-        "open-hero-ping"
       ]
     }
   ]

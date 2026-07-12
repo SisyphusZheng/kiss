@@ -28,8 +28,8 @@ import {
   assertStringIncludes,
 } from 'jsr:@std/assert@1';
 import type { OpenElement as OpenElementBase } from '@openelement/element';
-import type { VNode } from '@openelement/protocol/vnode';
-import type { Signal } from '@openelement/protocol/signal';
+import type { VNode } from '@openelement/element';
+import type { Signal } from '@openelement/element';
 
 // ─── Minimal DOM harness for Deno test environment ─────────────────
 
@@ -820,8 +820,8 @@ installDomHarness();
 // HTMLElement base class at module evaluation time.
 const { OpenElement, ErrorBoundary } = await import('@openelement/element');
 const { jsx } = await import('@openelement/element/jsx-runtime');
-const { signal } = await import('@openelement/signal');
-const { StyleSheet } = await import('@openelement/core/style-sheet');
+const { signal } = await import('@openelement/element');
+const { StyleSheet } = await import('@openelement/element');
 
 // Deliberately evaluate this after installing the Deno harness. Evaluating it
 // at module load used to make every DOM lifecycle test silently return early.

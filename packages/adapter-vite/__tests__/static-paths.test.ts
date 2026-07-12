@@ -8,8 +8,8 @@
  */
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { buildEntryDescriptor } from '@openelement/ssg';
-import type { RouteEntry } from '@openelement/core';
+import { buildEntryDescriptor } from '../src/internal/ssg/index.ts';
+import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // ─── Helper: create a RouteEntry ──────────────────────────────
 

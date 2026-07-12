@@ -3,8 +3,8 @@
  */
 import { assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { Hono } from 'hono';
-import { resolveDynamicRoutePath, ssgRender } from '@openelement/ssg';
-import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '@openelement/ssg';
+import { resolveDynamicRoutePath, ssgRender } from '../src/internal/ssg/index.ts';
+import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
 
 function createMockBundle(overrides: Partial<SsrBundle> = {}): SsrBundle {
   const app = new Hono();

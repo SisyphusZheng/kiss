@@ -18,7 +18,10 @@ if (import.meta.main) {
     await buildApp();
     process.exit(0);
   } catch (error) {
-    console.error(`Build failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Build failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`,
+    );
+    if (error instanceof Error && error.cause) console.error('Caused by:', error.cause);
     process.exit(1);
   }
 }

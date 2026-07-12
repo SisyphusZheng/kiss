@@ -2,7 +2,7 @@
 export const tagName = 'page-islands-deep-guide';
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 
 const routeSheet = new StyleSheet();

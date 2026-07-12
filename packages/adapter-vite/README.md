@@ -8,7 +8,7 @@ openElement build orchestration for Vite.
 
 This package scans routes and islands, generates virtual entries, builds client
 island chunks, runs SSG, and writes post-processed HTML. It is build-time
-infrastructure; runtime primitives live in `@openelement/core`.
+infrastructure; runtime primitives live in `@openelement/element`.
 
 ## Install
 

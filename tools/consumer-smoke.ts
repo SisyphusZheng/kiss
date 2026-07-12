@@ -140,7 +140,7 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
 
   try {
     if (local) {
-      const workspacePackages = ['signal', 'protocol', 'core', 'element'];
+      const workspacePackages = ['element'];
       for (const pkg of workspacePackages) {
         console.log(`  deno pack packages/${pkg}`);
         const pack = await run(
@@ -159,9 +159,6 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
     const localDeps = local
       ? {
         '@openelement/element': 'file:./openelement-element.tgz',
-        '@openelement/core': 'file:./openelement-core.tgz',
-        '@openelement/signal': 'file:./openelement-signal.tgz',
-        '@openelement/protocol': 'file:./openelement-protocol.tgz',
         '@preact/signals-core': '^1.12.1',
       }
       : { '@openelement/element': dep };

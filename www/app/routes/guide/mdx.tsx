@@ -1,7 +1,7 @@
 ﻿export const meta = { section: 'Guide', label: 'MDX', order: 50 };
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
 

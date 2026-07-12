@@ -15,10 +15,9 @@
  */
 
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import process from 'node:process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import type {
   FrameworkOptions,
   HydrationStrategy,
@@ -31,52 +30,32 @@ import { SsrRenderError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
-import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
+import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
 import { generateSsrPolyfillBanner, resolveExternalManifest } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
-
-/** Fallback package version when adapter-vite cannot read its own deno.json. */
-const DEFAULT_ADAPTER_VERSION_FALLBACK = '0.35.1';
 
 /** Chunk size warning limit (kB) for the SSR bundle build. */
 const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
 
 /** Rollup/Vite output paths mapping for known externals. */
 const SSR_EXTERNAL_PATHS: Record<string, string> = {
+  '@preact/signals-core': 'npm:@preact/signals-core@^1.12.1',
+  'gray-matter': 'npm:gray-matter@^4.0.3',
+  'marked': 'npm:marked@^15.0.0',
   'sanitize-html': 'npm:sanitize-html@^2.17.4',
+  'hono': 'npm:hono@^4.12',
+  'hono/cors': 'npm:hono@^4.12/cors',
+  'hono/logger': 'npm:hono@^4.12/logger',
+  'hono/request-id': 'npm:hono@^4.12/request-id',
+  'hono/secure-headers': 'npm:hono@^4.12/secure-headers',
+  'hono/ssg': 'npm:hono@^4.12/ssg',
 };
 
 const log = createLogger('ssg');
 
 const VIRTUAL_SSG_ENTRY_ID = 'virtual:open-ssg-entry';
 const RESOLVED_SSG_ENTRY_ID = '\0' + VIRTUAL_SSG_ENTRY_ID;
-function getJsrPackageVersion(metaUrl: string): string {
-  const match = metaUrl.match(/\/@openelement\/adapter-vite\/([^/]+)\//);
-  if (match) return match[1];
-  // Read from own deno.json
-  try {
-    const denoJson = JSON.parse(
-      typeof Deno !== 'undefined'
-        ? Deno.readTextFileSync(new URL('../deno.json', import.meta.url))
-        : readFileSync(new URL('../deno.json', import.meta.url), 'utf-8'),
-    );
-    return denoJson.version || DEFAULT_ADAPTER_VERSION_FALLBACK;
-  } catch {
-    return DEFAULT_ADAPTER_VERSION_FALLBACK;
-  }
-}
-
-function getLocalOpenElementPackageRoot(metaUrl: string): string | null {
-  if (!metaUrl.startsWith('file:')) return null;
-  try {
-    const root = resolve(fileURLToPath(new URL('.', metaUrl)), '..', '..', '..', '..');
-    return existsSync(resolve(root, 'packages', 'core', 'deno.json')) ? root : null;
-  } catch {
-    return null;
-  }
-}
-
 interface BuildSSGOptions {
   root?: string;
   outDir?: string;
@@ -127,19 +106,6 @@ async function buildSSG(
   const islandsDir = options.islandsDir || ctx.phase3.islandsDir || 'app/islands';
   const appShell = options.appShell ?? ctx.phase3.appShell;
   const layouts = options.layouts ?? ctx.phase3.layouts;
-
-  // SOP-v0.21.6: Detect if we're running from a Deno workspace.
-  // In workspace mode, @deno/vite-plugin resolves bare specifiers.
-  // In JSR mode, we need the open:ssg-core-resolve plugin.
-  const workspaceRoot = (() => {
-    try {
-      for (let d = resolve(root); d !== resolve(d, '..'); d = resolve(d, '..')) {
-        const cfg = JSON.parse(readFileSync(resolve(d, 'deno.json'), 'utf-8'));
-        if (cfg.workspace && Array.isArray(cfg.workspace)) return d;
-      }
-    } catch { /* deno.json not found, keep walking up */ }
-    return null;
-  })();
 
   // Read island metadata from ctx (ADR 0010: no .openElement/ fallback)
   const islandTagNames = options.islandTagNames || ctx.phase1.islandTagNames || [];
@@ -388,8 +354,7 @@ if (typeof globalThis.customElements === 'undefined') {
           },
         },
         // ADR 0008 Phase C: Provide stubs for retained optional packages.
-        // The generated entry code can import @openelement/content and
-        // @openelement/i18n, but these may not be installed.
+        // Generated optional application modules may not be installed.
         // This plugin resolves them to empty stubs when missing, so the
         // viteBuild() succeeds regardless of which packages are available.
         optionalPackageStubsPlugin(),
@@ -397,12 +362,7 @@ if (typeof globalThis.customElements === 'undefined') {
           root,
           name: 'open:ssg-generated-data',
         }),
-        createOpenJsrPackageResolverPlugin({
-          workspaceRoot,
-          version: getJsrPackageVersion(import.meta.url),
-          localPackageRoot: getLocalOpenElementPackageRoot(import.meta.url),
-          userAliases: metadataResolveAlias,
-        }),
+        createNpmSpecifierPlugin(),
         {
           name: 'open:ssg-client-only-island-stubs',
           enforce: 'pre',

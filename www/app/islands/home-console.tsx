@@ -1,10 +1,10 @@
 import { defineIslandConfig } from '@openelement/app';
-import { defineCustomElement } from '@openelement/core';
-import { consumeContext } from '@openelement/core';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { defineCustomElement } from '@openelement/element';
+import { consumeContext } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
 import { OpenElement } from '@openelement/element';
-import { signal } from '@openelement/signal';
-import { THEME_CTX } from '@openelement/ui/open-layout';
+import { signal } from '@openelement/element';
+import { THEME_CTX } from '@openelement/site-ui/open-layout.tsx';
 
 export const tagName = 'home-console';
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });

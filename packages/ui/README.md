@@ -47,7 +47,7 @@ Tokens contain shared style values and classes and import no components.
 Primitives may consume tokens but never composites. Composites may compose
 primitives and tokens. `OpenLayout` owns only reusable layout, theme,
 keyboard, and accessibility behavior; application routing and document
-navigation belong to `@openelement/app` and `@openelement/router`.
+navigation belongs to `@openelement/app`.
 
 Existing per-component imports remain stable across this layering change.
 

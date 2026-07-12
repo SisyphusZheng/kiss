@@ -16,7 +16,6 @@
  * v0.22 (SOP-004): Decomposed into focused modules:
  *   head-injection.ts      - HTML fragment validation & serialization
  *   plugin.ts              - Internal plugin factory (used by openPipeline)
- *   subpath-resolver.ts    - JSR remote resolution (ADR 0016)
  *   generated-data-resolver.ts - Generated app data namespace resolver
  *
  * This file is now a pure re-export hub (~60 lines).
@@ -82,7 +81,6 @@ export {
   generateIslandManifests,
   injectClientScript,
   injectCspMeta,
-  injectDsdPolyfill,
   injectSpeculationRules,
   injectViewTransitionMeta,
   insertAfterHead,
@@ -99,9 +97,6 @@ export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';
 // External resolver types used by the adapter-vite build pipeline
 export type { ExternalManifest } from './internal/protocol/ssg.ts';
 
-// Subpath resolver (public constants)
-export { CORE_SUBPATHS, VIRTUAL_CORE_PREFIX } from './subpath-resolver.ts';
-
 // Head injection (public helpers)
 export { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from './head-injection.ts';
 export type { HeadExtrasResult } from './head-injection.ts';
@@ -110,15 +105,8 @@ export type { HeadExtrasResult } from './head-injection.ts';
 export { mdxPlugin, openMdx } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
-// Nitro deploy adapter compatibility export.
-// Canonical alpha.6 import: @openelement/adapter-vite/nitro-mount.
-// Kept on the root surface during alpha so existing proof consumers do not break.
-export { createOpenElementNitroHandler } from './nitro-mount.ts';
-export type {
-  NitroLikeRequestEvent,
-  NitroLikeResponse,
-  OpenElementNitroMountOptions,
-} from './nitro-mount.ts';
+// Content/build utilities owned by the adapter implementation.
+export { generateSitemap } from './internal/content/index.ts';
 
 // Default export
 export { openPipeline as default };

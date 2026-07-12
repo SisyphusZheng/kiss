@@ -14,12 +14,8 @@ const PUBLINT_VERSION = '0.3.21';
 const ATTW_VERSION = '0.18.4';
 
 const RUNTIME_FREE_PACKAGES = new Set([
-  '@openelement/core',
   '@openelement/element',
   '@openelement/ui',
-  '@openelement/protocol',
-  '@openelement/signal',
-  '@openelement/router',
   '@openelement/app',
 ]);
 

@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertRejects, assertStringIncludes } from 'jsr:@std/assert@1';
-import { compileMdx } from '@openelement/content/mdx';
-import { renderDsdTree } from '@openelement/core';
-import { jsx } from '@openelement/core/jsx-runtime';
+import { compileMdx } from '../../packages/adapter-vite/src/internal/content/mdx/compile.ts';
+import { renderDsdTree } from '@openelement/element';
+import { jsx } from '@openelement/element/jsx-runtime';
 
 Deno.test('v0.28.3 MDX: simple source compiles with frontmatter', async () => {
   const mod = await compileMdx(`---
@@ -10,7 +10,7 @@ title: Simple
 
 # Simple`);
   assertEquals(mod.frontmatter.title, 'Simple');
-  assertStringIncludes(mod.code, '@openelement/core');
+  assertStringIncludes(mod.code, '@openelement/element');
 });
 
 Deno.test('v0.28.3 MDX: island syntax survives compile', async () => {

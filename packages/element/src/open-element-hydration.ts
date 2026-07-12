@@ -7,7 +7,7 @@
  * use OpenElement instead.
  *
  * v0.41.0-alpha.2: The active hydration state now lives in a
- * `@openelement/core/hydrate` HydrationScope. This module keeps thin adapter
+ * the internal hydration scope. This module keeps a thin adapter
  * functions that forward to the scope so the OpenElement base class does not
  * need to reach into HydrationScope internals directly.
  *

@@ -50,7 +50,7 @@ import { defineElement, defineIsland, defineLayout, definePage } from '@openelem
 - `defineElement(tagName, render)` creates a DSD component.
 - `defineLayout(tagName, render)` is the layout-specific form of `defineElement()`.
 
-`DsdElement` remains the runtime primitive in `@openelement/core`, but application
+`OpenElement` remains the runtime primitive in `@openelement/element`, but application
 authors should start from this package.
 
 Build configuration is owned by `@openelement/adapter-vite`; generated projects

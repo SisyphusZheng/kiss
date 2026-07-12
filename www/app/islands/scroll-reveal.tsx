@@ -7,11 +7,11 @@
  * v0.28: Signal-driven visibility via data-signal-class. querySelector +
  *   classList.add replaced with registerSignal + data-signal-class marker.
  */
-import { defineCustomElement } from '@openelement/core';
+import { defineCustomElement } from '@openelement/element';
 import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
-import { signal } from '@openelement/signal';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { signal } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
 export const tagName = 'scroll-reveal';
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 

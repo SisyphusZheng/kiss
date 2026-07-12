@@ -2,7 +2,7 @@
  * check-current-docs-no-legacy.ts - current docs staleness gate.
  */
 const LEGACY: Array<{ re: RegExp; name: string }> = [
-  { re: /html`/, name: 'html template' },
+  { re: /(?<!`)html`/, name: 'html template' },
   { re: /@prop\(/, name: '@prop()' },
   { re: /choose\(/, name: 'choose()' },
   { re: /unsafeHTML\(/, name: 'unsafeHTML()' },
@@ -66,8 +66,11 @@ for (const dir of ['www/app/routes', 'docs']) {
 
 for (
   const file of [
-    'packages/core/README.md',
     'packages/element/README.md',
+    'packages/app/README.md',
+    'packages/adapter-vite/README.md',
+    'packages/create/README.md',
+    'packages/ui/README.md',
     'README.md',
     'README.zh.md',
   ]

@@ -6,7 +6,7 @@
  * Data comes from generated app data, not @openelement/content module state.
  */
 import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/core/style-sheet";
+import { StyleSheet } from "@openelement/element";
 import "@openelement/ui/open-button";
 import { pageStyles } from "../../components/page-styles.js";
 import { getPostBySlug, posts } from "@openelement/generated/blog-data";

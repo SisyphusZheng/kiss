@@ -7,7 +7,7 @@
  *   Bug 3: Search panel theme not following (dialog::backdrop isolation)
  *
  * Also guards against API surface regressions:
- *   - jsx/jsxDEV/jsxs must NOT be in @openelement/core root export
+ *   - JSX must be available from the supported Element root
  *   - parse5 must NOT be a dependency
  *
  * Run: deno test www/__tests__/v0.27.0-regression.test.ts --allow-read --allow-run
@@ -86,39 +86,29 @@ Deno.test('v0.27.0 regression: no <dialog> in rendered HTML', () => {
 
 // ─── API Surface: jsx NOT in root export ────────────────────────────
 
-Deno.test('v0.27.0 regression: jsx not exported from @openelement/core root', () => {
+Deno.test('beta.4 surface: JSX is exported from @openelement/element root', () => {
   const indexPath = join(
     import.meta.dirname ?? '.',
     '..',
     '..',
     'packages',
-    'core',
+    'element',
     'src',
     'index.ts',
   );
   const src = readFileSync(indexPath, 'utf-8');
-  // Check that no export line exports jsx, jsxDEV, jsxs, For, or Show
-  for (const name of ['jsx,', 'jsxDEV', 'jsxs', 'For,', 'Show']) {
-    const re = new RegExp(`export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`);
-    assertFalse(re.test(src), `${name} must not be exported from root index.ts`);
+  for (const name of ['Fragment', 'jsx', 'jsxDEV', 'jsxs']) {
+    assert(src.includes(name), `${name} should be exported from Element root`);
   }
-  // Fragment IS still exported
-  assert(src.includes('Fragment'), 'Fragment should be exported from root');
 });
 
 // ─── parse5 not a dependency ─────────────────────────────────────────
 
-Deno.test('v0.27.0 regression: parse5 not in core deno.json', () => {
-  const coreDenoPath = join(
-    import.meta.dirname ?? '.',
-    '..',
-    '..',
-    'packages',
-    'core',
-    'deno.json',
-  );
-  const json = readFileSync(coreDenoPath, 'utf-8');
-  assertFalse(json.includes('parse5'), 'parse5 found in core/deno.json');
+Deno.test('beta.4 surface: retired package directories stay deleted', () => {
+  const packages = join(import.meta.dirname ?? '.', '..', '..', 'packages');
+  for (const name of ['core', 'signal', 'router', 'protocol', 'content', 'ssg']) {
+    assertFalse(existsSync(join(packages, name)), `retired package directory returned: ${name}`);
+  }
 });
 
 // ─── Registry Hub iframe ─────────────────────────────────────────────

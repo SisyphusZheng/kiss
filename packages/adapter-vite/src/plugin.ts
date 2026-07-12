@@ -38,7 +38,6 @@ import {
   scanPackageManifests,
   scanRoutes,
 } from './internal/ssg/index.ts';
-import { createCoreResolvePlugin } from './subpath-resolver.ts';
 import { mdxPlugin } from './plugin-mdx.ts';
 
 type LessAliasOptions = Record<string, string> | Alias[] | null | undefined;
@@ -68,9 +67,6 @@ function mergeAliasOptions(
 }
 
 const OPTIONAL_PACKAGE_STUBS: Record<string, string> = {
-  './internal/content/index.ts':
-    'export async function loadBlogData() { return { posts: [], basePath: "" }; }',
-  './internal/content/index.ts/sitemap': 'export function generateSitemap() { return []; }',
   '@openelement/app/i18n':
     'export function loadI18nData() { return { locales: [], defaultLocale: "en" }; }',
 };
@@ -108,8 +104,6 @@ export function createOpenPlugin(
   options: FrameworkOptions = {},
   externalCtx?: OpenElementBuildContext,
 ): Plugin[] {
-  const metaUrl = import.meta.url;
-
   // Build head extras (validated HTML fragments, stylesheets, scripts)
   const { headExtras, allowHeadExtrasScripts } = buildHeadExtras(options);
 
@@ -384,7 +378,6 @@ export function createOpenPlugin(
     mdxPlugin(),
     corePlugin,
     createGeneratedDataResolverPlugin({ root: process.cwd() }),
-    createCoreResolvePlugin(metaUrl),
     optionalPackageStubsPlugin(),
     virtualEntryPlugin,
   ];

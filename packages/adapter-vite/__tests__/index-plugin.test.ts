@@ -35,9 +35,10 @@ function assertOpenPluginArray(plugins: ReturnType<typeof createOpenPlugin>): vo
   assertEquals(Array.isArray(plugins), true);
   const names = plugins.map((p) => p.name);
   assertArrayIncludes(names, [
+    'open:mdx',
     'open:core',
     'open:generated-data',
-    'open:core-resolve',
+    'open:optional-package-stubs',
     'open:virtual-entry',
     '@hono/vite-dev-server',
     'open:island-transform',
@@ -69,9 +70,10 @@ Deno.test('createOpenPlugin() includes required plugin types', () => {
   const plugins = createOpenPlugin();
   const names = plugins.map((p) => p.name);
 
-  // Must include these plugins (html-template removed in v0.3.1, core-resolve added v0.10.3)
+  // The pipeline owns content, optional-package handling, rendering, and build ordering.
+  assertArrayIncludes(names, ['open:mdx']);
   assertArrayIncludes(names, ['open:core']);
-  assertArrayIncludes(names, ['open:core-resolve']);
+  assertArrayIncludes(names, ['open:optional-package-stubs']);
   assertArrayIncludes(names, ['open:virtual-entry']);
   assertArrayIncludes(names, ['open:island-transform']);
   assertArrayIncludes(names, ['open:build']);

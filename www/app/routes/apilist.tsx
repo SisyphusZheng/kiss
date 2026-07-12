@@ -2,11 +2,11 @@
  * @openelement/docs - API Reference
  */
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
-import '@openelement/ui/open-lab-panel';
+import '@openelement/site-ui/open-lab-panel.tsx';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 
 export const tagName = 'api-core-page';
@@ -276,7 +276,7 @@ const packages: ApiPackage[] = [
   {
     id: 'router',
     surface: 'Supporting',
-    title: '@openelement/router',
+    title: '@openelement/app',
     copy: 'Runtime-free route support behind the framework, including data context and client routing.',
     importPath: '@openelement/router/client-router',
     exports: ['.', './data-context', './i18n', './client-router'],
@@ -304,7 +304,7 @@ const packages: ApiPackage[] = [
     surface: 'Supporting',
     title: '@openelement/ui',
     copy: 'First-party `open-*` Web Components and Open Props token foundation used by the docs site.',
-    importPath: '@openelement/ui/open-layout',
+    importPath: '@openelement/site-ui/open-layout.tsx',
     exports: [
       '.',
       './open-button',
@@ -327,9 +327,9 @@ const packages: ApiPackage[] = [
   {
     id: 'core',
     surface: 'Supporting',
-    title: '@openelement/core',
+    title: '@openelement/element',
     copy: 'Low-level runtime kernel for JSX, VNode rendering, DSD, hydration, StyleSheet, errors, and trust boundaries.',
-    importPath: '@openelement/core/static, @openelement/core/style-sheet',
+    importPath: '@openelement/core/static, @openelement/element',
     exports: [
       '.',
       './static',
@@ -378,9 +378,9 @@ const packages: ApiPackage[] = [
   {
     id: 'signal',
     surface: 'Supporting',
-    title: '@openelement/signal',
+    title: '@openelement/element',
     copy: 'Reactive primitive layer built on `@preact/signals-core` with framework integration hooks.',
-    importPath: '@openelement/signal',
+    importPath: '@openelement/element',
     exports: ['.', './framework', './preact-engine'],
     notes: [
       'Exports signal, computed, and effect primitives at the package root.',

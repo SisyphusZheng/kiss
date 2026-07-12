@@ -105,6 +105,11 @@ const colorTokensStyle =
   `<style>${rootCSS}body{font-family:'Instrument Sans','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@openelement/site-ui': new URL('./app/site-ui', import.meta.url).pathname,
+    },
+  },
   base: '/',
   build: {
     chunkSizeWarningLimit: 600,
@@ -125,7 +130,7 @@ export default defineConfig({
       },
       appShell: {
         tagName: 'open-layout',
-        import: '@openelement/ui/open-layout',
+        import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
         props: {
           footerText: 'Built with openElement - Web Components Fullstack Framework + Basic Element',
           githubUrl: 'https://github.com/open-element/openelement',

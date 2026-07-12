@@ -4,7 +4,7 @@
  * Scope: docs typography, prose width, code, tables, callouts, and simple
  * content navigation. Product components still come from @openelement/ui.
  */
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 
 export const pageStyles = `
   :host {

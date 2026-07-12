@@ -56,8 +56,8 @@ const requiredTruth = [
   },
   {
     file: 'docs/current/PACKAGE_SURFACE.md',
-    includes: '@openelement/ssg',
-    message: 'package surface must retain @openelement/ssg',
+    includes: '@openelement/adapter-vite',
+    message: 'package surface must document the retained adapter-vite build surface',
   },
   {
     file: 'docs/adr/ADR-0105-v040x-cleanup-train-exception.md',

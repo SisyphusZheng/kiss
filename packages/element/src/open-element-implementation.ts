@@ -195,7 +195,7 @@ export class OpenElement extends _Base {
    *
    * Replaces the separate #effectDisposers, #eventCleanups, and #vnodeCache
    * fields. The scope is owned by the element and disposed on disconnect.
-   * It is exposed to @openelement/core/hydrate so the same lifecycle model
+   * It is exposed to the hydration adapter so the same lifecycle model
    * can be reused by third-party framework runtimes later.
    *
    * Initialized after signalRegistry in the constructor to avoid field-order

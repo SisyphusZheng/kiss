@@ -8,9 +8,8 @@ export type RouterMode = 'history' | 'hash' | 'auto';
 
 export interface RouteConfig {
   path: string; // e.g. '/products/:id'
-  component?: () => unknown;
   /** Custom element tag to instantiate directly in SPA mode. */
-  tagName?: string;
+  tagName: string;
   /** Client-side loader — runs before component render. Receives matched route params. */
   loader?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
   /** Client-side action — runs on form submit. Receives matched route params and form data. */

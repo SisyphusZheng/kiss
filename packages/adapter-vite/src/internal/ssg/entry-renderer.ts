@@ -14,10 +14,9 @@
  * - DSD output must remain plain HTML, without Lit SSR marker comments.
  *
  * H-16 KNOWN ISSUE: Circular dependency between adapter-vite <-> content
- *   adapter-vite generates code that imports @openelement/content/sitemap
+ *   adapter-vite generates code that imports its public sitemap utility
  *   content package imports @openelement/adapter-vite/build-context
- * Shared contracts now live in @openelement/element, ./index.ts, @openelement/router,
- * and @openelement/element. Generated optional package imports are still emitted explicitly
+ * Shared contracts now live in @openelement/element and adapter internals.
  * so consumer import maps can be checked.
  *
  * Thin orchestrator: delegates code generation to focused sub-modules:

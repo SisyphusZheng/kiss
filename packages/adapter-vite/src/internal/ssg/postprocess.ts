@@ -11,7 +11,6 @@
  * 2. injectViewTransitionMeta() - enable cross-page View Transitions
  * 3. injectSpeculationRules() - prefetch/prerender for navigation performance
  * 4. injectCspMeta() - Content-Security-Policy meta tag
- * 5. injectDsdPolyfill() - explicit legacy DSD fallback
  */
 
 import { join, resolve } from 'node:path';
@@ -167,77 +166,6 @@ export function injectCspMeta(
   walkHtmlFiles(dir, (content) => {
     if (content.includes(`http-equiv="${headerName}"`)) return null;
     return insertAfterHead(content, metaTag);
-  });
-}
-
-/**
- * Explicit legacy fallback for browsers outside the supported DSD baseline.
- * Current Chromium, Firefox, and WebKit support Declarative Shadow DOM, so
- * production SSG output does not inject this inline script by default.
- */
-const DSD_POLYFILL = `
-<style>html{visibility:visible!important}</style>
-<script data-openelement-dsd-fallback>
-// Explicit legacy DSD fallback
-(function() {
-  try {
-    const t = document.createElement('template');
-    t.setAttribute('shadowrootmode', 'open');
-    if ('shadowRootMode' in t) return; // Native support
-  } catch { /* native detection failed - fallback to polyfill */ }
-  
-  const attachDSD = (root) => {
-    root.querySelectorAll('template[shadowrootmode]').forEach(tpl => {
-      const parent = tpl.parentNode;
-      if (!parent || parent.shadowRoot) return;
-      try {
-        const mode = tpl.getAttribute('shadowrootmode');
-        const opts = { mode: mode === 'open' ? 'open' : 'closed' };
-        if (tpl.hasAttribute('shadowrootdelegatesfocus')) opts.delegatesFocus = true;
-        const sr = parent.attachShadow(opts);
-        sr.innerHTML = tpl.innerHTML;
-        tpl.remove();
-        attachDSD(sr); // Handle nested DSD
-      } catch { /* non-fatal: skip malformed DSD templates */ }
-    });
-  };
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => attachDSD(document));
-  } else {
-    attachDSD(document);
-  }
-
-  // Fallback: if after polyfill some templates remain unattached, inline them
-  // into light DOM so content is still visible even if attachShadow failed.
-  const fallbackRender = () => {
-    document.querySelectorAll('template[shadowrootmode]').forEach((tpl) => {
-      const parent = tpl.parentNode;
-      if (!parent || parent.shadowRoot) return;
-      const frag = tpl.content.cloneNode(true);
-      parent.appendChild(frag);
-      tpl.remove();
-    });
-  };
-  if (document.readyState === 'complete') {
-    fallbackRender();
-  } else {
-    window.addEventListener('load', fallbackRender, { once: true });
-  }
-})();
-</script>
-`;
-
-/**
- * Inject the explicit legacy DSD fallback into all HTML files.
- *
- * This helper is intentionally opt-in. Its inline script is not compatible
- * with a strict CSP unless the caller has explicitly allowed it.
- */
-export function injectDsdPolyfill(dir: string): void {
-  walkHtmlFiles(dir, (content) => {
-    if (content.includes('data-openelement-dsd-fallback')) return null;
-    return insertAfterHead(content, DSD_POLYFILL);
   });
 }
 

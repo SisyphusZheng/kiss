@@ -10,11 +10,6 @@
  * - open-input: Input field with label and error states
  * - open-code-block: Code block with copy button
  * - open-badge: Open Props status badge
- * - open-brand-mark: <open/> code-tag brand mark
- * - open-lab-panel: Standards-lab artifact/spec panel
- * - open-lab-stage: Kinetic standards-lab hero primitive
- * - open-standards-visual: Product-art standards diagrams
- * - open-layout: App layout with header, sidebar, footer
  * - open-theme-toggle: Theme toggle Island (Dark/Light)
  * - open-dialog: Dialog component using native <dialog>
  * - open-callout: Callout/notice box (info/warning/danger/tip)
@@ -48,17 +43,7 @@ export { OpenCard, tagName as openCardTagName } from './open-card.tsx';
 export { OpenInput, tagName as openInputTagName } from './open-input.tsx';
 export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.tsx';
 export { OpenBadge, tagName as openBadgeTagName } from './open-badge.tsx';
-export { OpenBrandMark, tagName as openBrandMarkTagName } from './open-brand-mark.tsx';
-export { OpenLabPanel, tagName as openLabPanelTagName } from './open-lab-panel.tsx';
-export { OpenLabStage, tagName as openLabStageTagName } from './open-lab-stage.tsx';
-export {
-  OpenStandardsVisual,
-  tagName as openStandardsVisualTagName,
-} from './open-standards-visual.tsx';
-export { OpenLayout, tagName as openLayoutTagName } from './open-layout.tsx';
-export type { HeaderNavLink, NavItem, NavSection } from './open-layout.tsx';
 export { OpenThemeToggle, tagName as openThemeToggleTagName } from './open-theme-toggle.tsx';
-export { default as OpenHeroPing, tagName as openHeroPingTagName } from './open-hero-ping.tsx';
 export { OpenDialog, tagName as openDialogTagName } from './open-dialog.tsx';
 export { OpenCallout, tagName as openCalloutTagName } from './open-callout.tsx';
 export { OpenStepCard, tagName as openStepCardTagName } from './open-step-card.tsx';

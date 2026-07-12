@@ -1,7 +1,7 @@
 /**
  * Shared router reference for SPA navigation.
  */
-import type { RouterInstance } from '@openelement/router/client-router';
+import type { RouterInstance } from '@openelement/app';
 
 let _router: RouterInstance | null = null;
 

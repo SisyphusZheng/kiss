@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
-import { generateClientEntry, validateClientIslandEntry } from '@openelement/ssg';
+import { generateClientEntry, validateClientIslandEntry } from '../src/internal/ssg/index.ts';
 
 const REJECTED_ISLAND_MODULE_PATHS = [
   'https://example.com/island.js',

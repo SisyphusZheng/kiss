@@ -15,8 +15,12 @@ import {
   assertFalse,
   assertStringIncludes,
 } from 'jsr:@std/assert@^1.0.0';
-import { buildEntryDescriptor, generateHonoEntryCode, renderEntry } from '@openelement/ssg';
-import type { RouteEntry } from '@openelement/core';
+import {
+  buildEntryDescriptor,
+  generateHonoEntryCode,
+  renderEntry,
+} from '../src/internal/ssg/index.ts';
+import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Fixtures
 
@@ -301,7 +305,7 @@ Deno.test('renderEntry: imports Hono and DSD renderer', () => {
   // v0.5.0: DSD renderer replaces @lit-labs/ssr
   assertStringIncludes(code, 'renderDsd');
   assertStringIncludes(code, 'renderDsdTree');
-  assertStringIncludes(code, "import { jsx } from '@openelement/core/jsx-runtime'");
+  assertStringIncludes(code, "import { jsx } from '@openelement/element'");
 });
 
 Deno.test('renderEntry: app shell is built from VNode tree, not HTML replace', () => {

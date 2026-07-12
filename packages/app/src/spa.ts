@@ -16,7 +16,6 @@ import {
   pushActionData,
   pushLoaderData,
 } from './internal/router/internal/data-context.ts';
-import { renderToDom } from '@openelement/element';
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -45,11 +44,6 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let submitHandler: ((e: Event) => void) | null = null;
   let renderId = 0;
 
-  /** Duck-type check since `Node` may not exist in test environments (e.g. Deno). */
-  function isRenderableNode(value: unknown): value is Node {
-    return value !== null && typeof value === 'object' && 'nodeType' in value;
-  }
-
   /** Pop the last render cycle's data frame from the stack. */
   function clearDataStack(): void {
     // pop on empty array returns undefined; one render cycle leaves at most one frame.
@@ -72,20 +66,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     }
   }
 
-  function resolveComponentResult(value: unknown): unknown {
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      'default' in value &&
-      typeof (value as { default?: unknown }).default === 'function'
-    ) {
-      return (value as { default: () => unknown }).default();
-    }
-    return value;
-  }
-
-  /** Render the current route component into rootEl. */
-  async function renderComponent(expectedRender: number): Promise<void> {
+  /** Render the current custom-element route into rootEl. */
+  function renderComponent(): void {
     if (!router || !rootEl) return;
     const route = router.currentRoute as (RouteConfig & { tagName?: string });
     rootEl.innerHTML = '';
@@ -93,38 +75,13 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     if (!route) return;
 
     // OpenElement route: create custom element from tagName, set loader data as properties
-    if (route.tagName) {
-      const el = document.createElement(route.tagName) as
-        & HTMLElement
-        & Record<string, unknown>;
-      const loaderData = useLoaderData();
-      if (loaderData && typeof loaderData === 'object') {
-        Object.assign(el as Record<string, unknown>, loaderData);
-      }
-      // Also assign actionData so OpenElement page components can read
-      // `this.actionData` in their render() after a form submission.
-      // Without this, SPA-mode custom-element pages never see action results
-      // (e.g. success toasts, validation errors).
-      const actionData = useActionData();
-      if (actionData !== undefined) {
-        el.actionData = actionData;
-      }
-      rootEl.appendChild(el);
-      return;
-    }
-
-    if (!route.component) return;
-
-    // Legacy VNode route: call component(), convert VNode → DOM
-    const vnode = resolveComponentResult(await route.component());
-    if (expectedRender !== renderId || !router || !rootEl) return;
-    if (isRenderableNode(vnode)) {
-      rootEl.appendChild(vnode);
-      return;
-    }
-    if (vnode != null && vnode !== false) {
-      rootEl.appendChild(renderToDom(vnode));
-    }
+    if (!route.tagName) return;
+    const el = document.createElement(route.tagName) as HTMLElement & Record<string, unknown>;
+    const loaderData = useLoaderData();
+    if (loaderData && typeof loaderData === 'object') Object.assign(el, loaderData);
+    const actionData = useActionData();
+    if (actionData !== undefined) el.actionData = actionData;
+    rootEl.appendChild(el);
   }
 
   /**
@@ -143,7 +100,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     pushLoaderData(loaderData);
 
-    await renderComponent(currentRender);
+    renderComponent();
   }
 
   /** Duck-type check: is this element a form? Works in test environments without HTMLElement globals. */
@@ -217,7 +174,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     pushLoaderData(loaderData);
     pushActionData(actionData);
 
-    await renderComponent(currentRender);
+    renderComponent();
   }
 
   function mount(selector: string): void {

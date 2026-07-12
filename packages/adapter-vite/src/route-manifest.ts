@@ -11,7 +11,7 @@
  * // Generated to `${outDir}/route-manifest.ts`; import from that generated
  * // module or alias it from your client entry.
  * import { routeManifest } from './route-manifest.ts';
- * import { createRouter } from '@openelement/router/client-router';
+ * import { createRouter } from '@openelement/app';
  *
  * const router = createRouter({
  *   mode: 'history',

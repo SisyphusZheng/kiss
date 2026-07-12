@@ -4,9 +4,9 @@
 export const meta = { section: 'History', label: 'Blog', order: 10 };
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
-import '@openelement/ui/open-lab-panel';
+import '@openelement/site-ui/open-lab-panel.tsx';
 import { posts } from '@openelement/generated/blog-data';
 
 const routeSheet = new StyleSheet();

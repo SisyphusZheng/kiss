@@ -1,6 +1,6 @@
 import { PACKAGE_COUNT } from './project-constants.ts';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
-import { OPENELEMENT_EXPORT_FILES } from '../packages/adapter-vite/src/ssg-package-resolver.ts';
+import { OPENELEMENT_EXPORT_FILES } from '../packages/adapter-vite/src/generated-export-files.ts';
 
 const retainedPackages = [
   '@openelement/app',
@@ -32,6 +32,28 @@ const removedPackages = [
 ].sort();
 
 const failures: string[] = [];
+const retiredImport =
+  /(?:^|\n)\s*(?:(?:import|export)[^\n]*from\s+['"]|import\s*\(\s*['"]|\/\*\*?\s*@jsxImportSource\s+)@openelement\/(?:core|signal|router|protocol|content|ssg)(?:\/|['"])/;
+
+async function rejectRetiredImports(dir: string): Promise<void> {
+  for await (const entry of Deno.readDir(dir)) {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory) {
+      if (!['dist', 'node_modules', 'vendor', 'content'].includes(entry.name)) {
+        await rejectRetiredImports(path);
+      }
+    } else if (
+      !entry.name.startsWith('_generated') && /\.(?:ts|tsx|js|jsx|json|md)$/.test(entry.name)
+    ) {
+      const text = await Deno.readTextFile(path);
+      if (retiredImport.test(text)) failures.push(`${path} imports a retired package surface.`);
+    }
+  }
+}
+
+for (const dir of ['packages', 'examples', 'www/app', 'tools/third-party-wc-smoke']) {
+  await rejectRetiredImports(dir);
+}
 
 function normalizeExports(exports: unknown): Record<string, string> {
   if (typeof exports === 'string') return { '.': exports.replace(/^\.\//, '') };
@@ -110,7 +132,7 @@ for (const pkg of removedPackages) {
   }
 }
 
-for (const required of ['11-package', 'v0.40.x', 'ADR-0105']) {
+for (const required of ['5-package', 'v0.41 beta', 'ADR-0113']) {
   if (!docs.includes(required)) {
     failures.push(`PACKAGE_SURFACE.md missing required anchor: ${required}`);
   }
@@ -122,4 +144,4 @@ if (failures.length > 0) {
   Deno.exit(1);
 }
 
-console.log('Package surface check passed (11 packages retained).');
+console.log(`Package surface check passed (${retainedPackages.length} packages retained).`);

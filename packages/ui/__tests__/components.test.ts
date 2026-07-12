@@ -7,7 +7,7 @@ import {
   assertFalse,
   assertStringIncludes,
 } from 'jsr:@std/assert@^1.0.0';
-import type { VNode } from '@openelement/core';
+import type { VNode } from '@openelement/element';
 
 type TestAttributeStore = WeakMap<object, Map<string, string>>;
 type TestListenerStore = WeakMap<object, Map<string, Set<EventListener>>>;
@@ -389,7 +389,6 @@ const COMPONENT_FILES = [
   'open-card',
   'open-input',
   'open-code-block',
-  'open-layout',
   'open-theme-toggle',
   'open-dialog',
   'open-callout',
@@ -418,11 +417,6 @@ const REACTIVE_PROPERTY_CASES: ReadonlyArray<{
     fileName: 'open-input',
     className: 'OpenInput',
     props: ['type', 'placeholder', 'label', 'value', 'name', 'disabled', 'required', 'error'],
-  },
-  {
-    fileName: 'open-layout',
-    className: 'OpenLayout',
-    props: ['home', 'currentPath', 'navItems', 'headerNav', 'logoSub', 'githubUrl'],
   },
   {
     fileName: 'open-theme-toggle',
@@ -460,9 +454,7 @@ Deno.test('index: re-exports all public components', async () => {
       'OpenCard',
       'OpenInput',
       'OpenCodeBlock',
-      'OpenLayout',
       'OpenThemeToggle',
-      'OpenHeroPing',
       'OpenDialog',
       'OpenCallout',
       'OpenStepCard',
@@ -837,54 +829,6 @@ Deno.test('open-code-block: copy button writes text to clipboard', async () => {
   }
 });
 
-Deno.test('open-layout: has correct tagName and layout structure', async () => {
-  const module = asComponentModule(await import('../src/open-layout.tsx'));
-  assertEquals(module.tagName, 'open-layout');
-
-  const Component = exportedConstructor(module);
-  const instance = new Component();
-  const vnode = instance.render() as VNode;
-  assertStringIncludes(String(vnode.props.className), 'app-layout');
-  assertExists(findByTag(vnode, 'open-brand-mark'));
-  assertExists(findByPart(vnode, 'header'));
-  assertExists(findByPart(vnode, 'main'));
-});
-
-Deno.test('open-layout: home attribute hides sidebar', async () => {
-  const { OpenLayout } = await import('../src/open-layout.tsx');
-  const instance = new OpenLayout();
-  instance.setAttribute('home', '');
-  const vnode = instance.render() as VNode;
-  assertEquals(vnode.props.home, true);
-});
-
-Deno.test('open-layout: header-nav renders navigation links', async () => {
-  const { OpenLayout } = await import('../src/open-layout.tsx');
-  const instance = new OpenLayout();
-  instance.setAttribute(
-    'header-nav',
-    JSON.stringify([{ href: '/guide', label: 'Guide' }]),
-  );
-  const vnode = instance.render() as VNode;
-  assertStringIncludes(vnodeText(vnode), 'Guide');
-});
-
-Deno.test('open-layout: nav-items render sidebar sections', async () => {
-  const { OpenLayout } = await import('../src/open-layout.tsx');
-  const instance = new OpenLayout();
-  instance.setAttribute(
-    'nav-items',
-    JSON.stringify([
-      { section: 'Quick Start', items: [{ path: '/guide/start', label: 'Start' }] },
-    ]),
-  );
-  instance.setAttribute('current-path', '/guide/start');
-  const vnode = instance.render() as VNode;
-  assertStringIncludes(vnodeText(vnode), 'Quick Start');
-  assertStringIncludes(vnodeText(vnode), 'Start');
-  assertExists(findByPart(vnode, 'sidebar'));
-});
-
 Deno.test('open-theme-toggle: has correct tagName and toggle button', async () => {
   const module = asComponentModule(await import('../src/open-theme-toggle.tsx'));
   assertEquals(module.tagName, 'open-theme-toggle');
@@ -1158,45 +1102,6 @@ Deno.test('open-tabs: selecting tab updates active panel', async () => {
     .filter((c): c is VNode => isVNodeObject(c) && c.tag === 'button');
   assertStringIncludes(classNameOf(buttons2[1]), 'tab-active');
   assertFalse(classNameOf(buttons2[0]).includes('tab-active'));
-});
-
-Deno.test('open-hero-ping: has correct tagName and renders status UI', async () => {
-  const module = asComponentModule(await import('../src/open-hero-ping.tsx'));
-  assertEquals(module.tagName, 'open-hero-ping');
-
-  const Component = exportedConstructor(module);
-  const instance = new Component();
-  const vnode = instance.render() as VNode;
-  assertExists(findByPart(vnode, 'dot-static'));
-  const btn = findByPart(vnode, 'dot-animated') as VNode;
-  assertEquals(btn.tag, 'button');
-  assertStringIncludes(vnodeText(btn), 'ping server');
-});
-
-Deno.test('open-hero-ping: fetch updates state', async () => {
-  const module = await import('../src/open-hero-ping.tsx');
-  const HeroPing = module.default as new () => RenderableElement & {
-    apiUrl: string;
-    _fetch: () => Promise<void>;
-    _state: string;
-  };
-  const instance = new HeroPing();
-  instance.apiUrl = 'https://demo.openelement.org/api';
-
-  const originalFetch = globalThis.fetch;
-  try {
-    globalThis.fetch = () =>
-      Promise.resolve(
-        new Response(
-          JSON.stringify({ framework: 'deno', version: '1.0', timestamp: '2024-01-01T12:34:56Z' }),
-          { status: 200 },
-        ),
-      );
-    await instance._fetch();
-    assertEquals(instance._state, 'ok');
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
 });
 
 Deno.test('manifest: declares metadata for manifest-registered components', async () => {

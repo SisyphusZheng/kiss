@@ -64,7 +64,7 @@ export const GATES: readonly GateDefinition[] = [
     tiers: ['push', 'ci', 'release'],
     triggers: [
       /^packages\/[^/]+\/deno\.json$/,
-      /^packages\/adapter-vite\/src\/ssg-package-resolver\.ts$/,
+      /^packages\/adapter-vite\/src\/npm-specifier-plugin\.ts$/,
       /^packages\/adapter-vite\/src\/generated-export-files\.ts$/,
       /^tools\/generate-openelement-export-files\.ts$/,
       /^deno\.json$/,

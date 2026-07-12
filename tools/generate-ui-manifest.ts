@@ -15,7 +15,7 @@ import type {
   OpenElementEvent,
   OpenElementPackageManifest,
   OpenElementSlot,
-} from '@openelement/protocol/manifest';
+} from '@openelement/element';
 
 const UI_SRC_DIR = new URL('../packages/ui/src/', import.meta.url);
 const UI_DENO_JSON = new URL('../packages/ui/deno.json', import.meta.url);

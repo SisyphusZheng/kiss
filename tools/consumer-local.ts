@@ -174,14 +174,6 @@ const aliases = [...allPackageAliases(repoRoot)]
     replacement: vitePath(fileURLToPath(url)),
   }));
 
-// Override adapter-vite main entry to use app-vite.ts
-const avIdx = aliases.findIndex((a) => a.find === '@openelement/adapter-vite');
-if (avIdx !== -1) {
-  aliases[avIdx].replacement = vitePath(
-    join(repoRoot, 'packages', 'adapter-vite', 'src', 'app-vite.ts'),
-  );
-}
-
 const viteConfigPath = join(appDir, 'vite.config.ts');
 let viteConfig = readFileSync(viteConfigPath, 'utf-8');
 

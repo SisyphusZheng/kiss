@@ -5,7 +5,7 @@
  * The SSR admission plan should treat it as client-only.
  */
 
-import type { OpenElementPackageManifest } from '@openelement/core';
+import type { OpenElementPackageManifest } from '@openelement/element';
 
 export const manifest: OpenElementPackageManifest = {
   packageName: '@test/package-island-ssr-false',

@@ -3,7 +3,7 @@
  */
 export const meta = { section: "", label: "Contributing", order: 30 };
 import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/core/style-sheet";
+import { StyleSheet } from "@openelement/element";
 import { pageStyles } from "../components/page-styles.js";
 import "@openelement/ui/open-code-block";
 import "@openelement/ui/open-button";

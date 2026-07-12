@@ -19,7 +19,7 @@ import {
   assertStringIncludes,
 } from 'jsr:@std/assert@^1.0.0';
 import { OpenElement } from '@openelement/element';
-import { signal } from '@openelement/signal';
+import { signal } from '@openelement/element';
 import { h } from 'preact';
 import { definePreactIsland } from '../src/preact.ts';
 

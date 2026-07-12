@@ -3,7 +3,7 @@
  */
 export const meta = { section: "", label: "Changelog", order: 20 };
 import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/core/style-sheet";
+import { StyleSheet } from "@openelement/element";
 import "@openelement/ui/open-button";
 import { pageStyles } from "../components/page-styles.js";
 import { marked } from "marked";

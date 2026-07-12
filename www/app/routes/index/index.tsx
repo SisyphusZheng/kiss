@@ -4,7 +4,7 @@
  * Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
  */
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '../../islands/home-console.tsx';
 

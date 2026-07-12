@@ -19,6 +19,6 @@ Deno.test('mdxPlugin transforms MDX with openElement JSX runtime', async () => {
     '/content/example.mdx',
   );
   const code = String(typeof result === 'string' ? result : result?.code ?? '');
-  assertStringIncludes(code, '@openelement/core');
+  assertStringIncludes(code, '@openelement/element');
   assertStringIncludes(code, 'open-counter');
 });

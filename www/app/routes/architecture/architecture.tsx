@@ -2,7 +2,7 @@
 export const tagName = 'engine-architecture';
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';

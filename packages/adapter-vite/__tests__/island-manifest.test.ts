@@ -7,7 +7,7 @@ import {
   generateIslandManifests,
   type PageIslandManifest,
   writeIslandManifests,
-} from '@openelement/ssg';
+} from '../src/internal/ssg/index.ts';
 
 const TMP_DIR = join(import.meta.dirname!, '__tmp_manifest_test__');
 

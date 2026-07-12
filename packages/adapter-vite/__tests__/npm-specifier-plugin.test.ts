@@ -1,0 +1,17 @@
+import { assertEquals } from '@std/assert';
+import { createNpmSpecifierPlugin, rewriteNpmSpecifiers } from '../src/npm-specifier-plugin.ts';
+
+Deno.test('rewriteNpmSpecifiers converts scoped, unscoped and subpath imports', () => {
+  assertEquals(
+    rewriteNpmSpecifiers(
+      "import x from 'npm:marked@15.0.12'; export { y } from 'npm:@scope/pkg@1.2.3/sub';",
+    ),
+    "import x from 'marked'; export { y } from '@scope/pkg/sub';",
+  );
+});
+
+Deno.test('npm specifier plugin leaves ordinary imports untouched', () => {
+  const plugin = createNpmSpecifierPlugin();
+  const transform = plugin.transform as (code: string) => unknown;
+  assertEquals(transform("import x from 'vite';"), null);
+});

@@ -13,11 +13,15 @@
 
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'jsr:@std/path@^1.0.0';
-import { buildIslandChunkMap, injectClientScript, injectCspMeta } from '@openelement/ssg';
+import {
+  buildIslandChunkMap,
+  injectClientScript,
+  injectCspMeta,
+} from '../src/internal/ssg/index.ts';
 
 // ─── Test fixtures ─────────────────────────────────────────────
 
-const FIXTURES_DIR = join(Deno.cwd(), 'packages/core/__test_fixtures__/ssg');
+const FIXTURES_DIR = join(Deno.cwd(), 'packages/adapter-vite/__test_fixtures__/ssg');
 
 async function setupSsgFixtures() {
   const islandsDir = join(FIXTURES_DIR, 'dist', 'client', 'islands');

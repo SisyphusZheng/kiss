@@ -184,7 +184,6 @@ export async function ssgRender(
   const {
     buildIslandChunkMap,
     injectCspMeta,
-    injectDsdPolyfill,
     injectViewTransitionMeta,
     injectSpeculationRules,
     buildSpeculationRulesJson,
@@ -226,11 +225,6 @@ export async function ssgRender(
       options.middleware?.csp?.nonce || false,
     );
     log.info('CSP meta tag injected');
-  }
-
-  if (options.legacyDsdPolyfill) {
-    injectDsdPolyfill(outputDir);
-    log.warn('Legacy DSD fallback injected; it requires an explicit CSP exception.');
   }
 
   // ── Sitemap (via ctx) ──────────────────────────────────────

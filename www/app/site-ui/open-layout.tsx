@@ -33,7 +33,8 @@ import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { type Context, createContext, provideContext } from '@openelement/element';
 import { escapeAttr, escapeHtml } from '@openelement/element';
 import { createLogger } from '@openelement/element';
-import './open-theme-toggle.tsx';
+import { defineCustomElement } from '@openelement/element';
+import '@openelement/ui/open-theme-toggle';
 import './open-brand-mark.tsx';
 
 export const tagName = 'open-layout';
@@ -1301,3 +1302,5 @@ export class OpenLayout extends OpenElement {
 }
 
 export default OpenLayout;
+
+defineCustomElement(tagName, OpenLayout);

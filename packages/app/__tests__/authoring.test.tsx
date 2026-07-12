@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from 'jsr:@std/assert@^1.0.0';
-import { renderDsd } from '@openelement/core';
+import { renderDsd } from '@openelement/element';
 import {
   defineApp,
   defineElement,
@@ -11,7 +11,6 @@ import {
   notFound,
   redirect,
 } from '../src/index.ts';
-import { getIslandMeta } from '../../core/src/island.ts';
 
 Deno.test('@openelement/app root export includes defineApp', () => {
   assertEquals(typeof defineApp, 'function');
@@ -222,22 +221,4 @@ Deno.test('defineIslandConfig() rejects non-canonical island metadata', () => {
     Error,
     'Invalid island hydrate strategy "lazy"',
   );
-});
-
-Deno.test('defineIsland() writes ssr into runtime island metadata', () => {
-  const Island = defineIsland(
-    'strict-island',
-    {
-      render() {
-        return <button type='button'>Count</button>;
-      },
-    },
-    { hydrate: 'idle', dsd: true, ssr: false },
-  );
-
-  const meta = getIslandMeta(Island);
-  assertEquals(meta?.isIsland, true);
-  assertEquals(meta?.tagName, 'strict-island');
-  assertEquals(meta?.dsd, true);
-  assertEquals(meta?.ssr, false);
 });

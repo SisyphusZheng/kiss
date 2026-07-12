@@ -18,16 +18,15 @@ Mandatory project workflow:
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)
-[![npm](https://img.shields.io/badge/npm-@openelement%2Fcore-red)](https://www.npmjs.com/package/@openelement/core)
+[![npm](https://img.shields.io/badge/npm-@openelement%2Felement-red)](https://www.npmjs.com/package/@openelement/element)
 [![CI](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml/badge.svg)](https://github.com/open-element/openelement/actions/workflows/autoflow-ci.yml)
 
-## Alpha package status
+## Beta package status
 
-All 11 alpha.8 packages are published with provenance, but the published
-`@openelement/create@0.41.0-alpha.8` CLI currently fails because its required
-template `.gitignore` was omitted from the tarball. Do not treat the alpha.8
-create command as an adoption-ready quick start. Repairing and executing the
-exact published CLI is the first beta P0 gate.
+The source workspace has converged on five products: `element`, `app`,
+`adapter-vite`, `create`, and optional `ui`. Beta.1-beta.3 are withdrawn partial
+artifacts. The first complete candidate is `0.41.0-beta.4`; external adopter
+pilot #390 remains the only non-repository release condition.
 
 ## Product Doctrine
 
@@ -51,12 +50,10 @@ default path = DSD/static-first + selective islands + Vite/Nitro
 | Web Components Fullstack Framework | `@openelement/app`, `@openelement/create` | Pages, layouts, routes, islands, app targets, and official Vite/Hono/Nitro adapters. |
 | Basic Element                      | `@openelement/element`, `OpenElement`     | JSX-first native Web Components authoring layer for Shadow/DSD output.               |
 
-Supporting packages such as `@openelement/core`, `@openelement/adapter-vite`,
-`@openelement/signal`, `@openelement/router`, `@openelement/content`, and
-`@openelement/ssg` are advanced or implementation surfaces. `@openelement/protocol`
-is the contract foundation with tiny host-API-free runtime values. `@openelement/ui` is the Open
-Props-backed reference component library and dogfood surface. These packages
-support the two products; they are not separate first-class product lines.
+`@openelement/adapter-vite` owns the Vite, content, SSG, and Nitro build
+implementation. `@openelement/ui` contains only reusable optional primitives.
+Runtime, signal, routing, protocol, content, and SSG internals are absorbed and
+are not consumer package surfaces.
 
 Dogfood apps validate openElement; they do not define it. The Deno Desktop
 Reader and Mastodon Desktop are completed foundation evidence for the alpha.7
@@ -65,11 +62,8 @@ browser, security, distribution, adoption, and release-truth gaps exposed by
 that dogfood. AutoFlow3, docs truth, release evidence, and workflow gates are
 project infrastructure; they stay out of the Framework product story.
 
-The active workspace is the 11-package v0.41 line. Hub, RPC, CEM,
-compat-check, Lit/React/vanilla interop adapters, and standalone
-runtime/style-sheet/i18n packages are removed from the current package graph;
-`@openelement/protocol` and `@openelement/ssg` are retained as support
-packages. Historical details remain in git history and release evidence.
+The active workspace is the five-package v0.41 beta line. Historical package
+names remain only in ADRs and release evidence.
 
 ## Why openElement
 
@@ -112,8 +106,7 @@ that works with the platform instead of fighting it, openElement is the lane.
 
 ## Current Line
 
-All 11 current workspace packages are aligned at **0.41.0-alpha.8**
-(`v0.41.0-alpha.8`) under
+All five current workspace packages are preparing **0.41.0-beta.4** under
 [`@openelement`](https://www.npmjs.com/org/openelement). The alpha.7 dogfood
 foundation proves a read-only, accountless networked desktop app. The completed
 **v0.41.0-alpha.7 Dogfood, Architecture Convergence, and Adoption Readiness**
@@ -129,11 +122,8 @@ packages, removes old and redundant surfaces, realigns tests around retained
 interfaces, and completes external adoption. npm beta.1–beta.3 are already
 immutable partial publishes, so the first coherent candidate will be beta.4.
 
-v0.40.x removes Hub, RPC, CEM, compat-check, Lit/React/vanilla interop
-adapters, and standalone runtime/style-sheet/i18n packages from the current
-product line, keeps `@openelement/ssg` as the adapter-agnostic SSG engine,
-keeps Vite + Nitro as the Framework base, and keeps Preact island work bounded
-behind the v0.40 plan. `@preact/signals-core` is the signal engine.
+Vite + Nitro remain the official build and deployment path. New database,
+authentication, ORM, and additional framework adapters remain scoped to v0.42+.
 
 The v1.0 target is a stable Web Components fullstack framework and Basic
 Element authoring layer, with supporting UI, Protocols, and official adapter

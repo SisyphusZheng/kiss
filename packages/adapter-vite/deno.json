@@ -10,9 +10,9 @@
     "./nitro-mount": "./src/nitro-mount.ts",
     "./plugin": "./src/plugin.ts",
     "./generated-data-resolver": "./src/generated-data-resolver.ts",
-    "./subpath-resolver": "./src/subpath-resolver.ts",
     "./plugin-mdx": "./src/plugin-mdx.ts",
     "./route-manifest": "./src/route-manifest.ts",
+    "./sitemap": "./src/sitemap.ts",
     "./cli/build": "./src/cli/build.ts",
     "./cli/build-client": "./src/cli/build-client.ts",
     "./cli/build-ssg": "./src/cli/build-ssg.ts"
@@ -20,6 +20,8 @@
   "imports": {
     "@mdx-js/rollup": "npm:@mdx-js/rollup@^3.1.1",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3",
+    "gray-matter": "npm:gray-matter@^4.0.3",
+    "marked": "npm:marked@^15.0.0",
     "sanitize-html": "npm:sanitize-html@^2.17.4",
     "@types/sanitize-html": "npm:@types/sanitize-html@^2",
     "vite": "npm:vite@8.0.10"

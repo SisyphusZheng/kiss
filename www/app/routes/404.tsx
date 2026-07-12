@@ -2,7 +2,7 @@
  * 404 Not Found Page - with search, helpful links, and old URL redirects
  */
 import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/core/style-sheet';
+import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-input';
 
