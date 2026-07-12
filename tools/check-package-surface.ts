@@ -5,14 +5,8 @@ import { OPENELEMENT_EXPORT_FILES } from '../packages/adapter-vite/src/ssg-packa
 const retainedPackages = [
   '@openelement/app',
   '@openelement/adapter-vite',
-  '@openelement/content',
-  '@openelement/core',
   '@openelement/create',
   '@openelement/element',
-  '@openelement/protocol',
-  '@openelement/router',
-  '@openelement/signal',
-  '@openelement/ssg',
   '@openelement/ui',
 ].sort();
 
@@ -29,6 +23,12 @@ const removedPackages = [
   '@openelement/runtime',
   '@openelement/signals',
   '@openelement/style-sheet',
+  '@openelement/content',
+  '@openelement/core',
+  '@openelement/protocol',
+  '@openelement/router',
+  '@openelement/signal',
+  '@openelement/ssg',
 ].sort();
 
 const failures: string[] = [];

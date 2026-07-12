@@ -1,13 +1,13 @@
 /**
  * @openelement/adapter-vite — Island transform Vite plugin.
  *
- * Thin wrapper around @openelement/core/island-transform.
+ * Thin wrapper around @openelement/element/island-transform.
  * The core logic is a pure function with zero Vite dependency;
  * this file only adapts it to the Vite Plugin interface.
  */
 
 import type { Plugin } from 'vite';
-import { normalizeSeparators, transformIslandSource } from '@openelement/core';
+import { normalizeSeparators, transformIslandSource } from '@openelement/element';
 
 /** Vite plugin that injects `__island` and `__tagName` markers into island components */
 export function islandTransformPlugin(islandsDir: string): Plugin {

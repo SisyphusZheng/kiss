@@ -17,7 +17,7 @@
 
 import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { createLogger } from '@openelement/core/logger';
+import { createLogger } from '@openelement/element';
 
 const log = createLogger('ssg');
 

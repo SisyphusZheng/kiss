@@ -41,7 +41,7 @@ const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
       preact: 'preact.ts',
     },
   },
-  '@openelement/core': {
+  '@openelement/element': {
     rootFile: 'index.ts',
     files: {
       static: 'static.ts',

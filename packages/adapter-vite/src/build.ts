@@ -14,8 +14,8 @@ import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
 import { mkdir, open } from 'node:fs/promises';
 import process from 'node:process';
-import { createLogger } from '@openelement/core/logger';
-import { escapeAttr, escapeHtml } from '@openelement/core';
+import { createLogger } from '@openelement/element';
+import { escapeAttr, escapeHtml } from '@openelement/element';
 import { cleanSsrArtifacts, postProcessClientIslandBuild } from './internal/ssg/index.ts';
 import { writeRouteManifest } from './route-manifest.ts';
 import {

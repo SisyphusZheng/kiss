@@ -12,9 +12,9 @@
 
 import type { FrameworkOptions } from './internal/protocol/framework.ts';
 
-import { OpenElementError } from '@openelement/core/errors';
-import { escapeAttr as escapeHtmlAttr } from '@openelement/core';
-import { createLogger } from '@openelement/core/logger';
+import { OpenElementError } from '@openelement/element';
+import { escapeAttr as escapeHtmlAttr } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 // @deno-types="npm:@types/sanitize-html@^2"
 import sanitizeHtml, { type IOptions as SanitizeHtmlOptions } from 'sanitize-html';
 

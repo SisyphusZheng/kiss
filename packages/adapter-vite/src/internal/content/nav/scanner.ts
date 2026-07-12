@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import type { HeaderNavLink, NavItem, NavOptions, NavSection, RouteMeta } from '../types.ts';
 import { createLogger } from '@openelement/element';
-import { scanRoutes } from '@openelement/ssg';
+import { scanRoutes } from '../../ssg/index.ts';
 
 /** Aggregated navigation data ready for module generation */
 export interface NavData {

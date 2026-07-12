@@ -17,8 +17,8 @@ import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts
 
 import { join } from 'node:path';
 import process from 'node:process';
-import { formatError, OpenElementError } from '@openelement/core/errors';
-import { createLogger } from '@openelement/core/logger';
+import { formatError, OpenElementError } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 
 const log = createLogger('adapter-vite');
 

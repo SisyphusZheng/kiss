@@ -1,9 +1,9 @@
 /**
  * Extracted from index.ts in v0.22 (SOP-004: adapter-vite decomposition).
  *
- * When @openelement/core is loaded from JSR (https:// import.meta.url),
+ * When @openelement/element is loaded from JSR (https:// import.meta.url),
  * Vite's SSR runner cannot load https:// URLs via Node.js ESM loader.
- * This module intercepts @openelement/core/* imports and loads source code
+ * This module intercepts @openelement/element/* imports and loads source code
  * through virtual modules, bypassing Node.js ESM loader entirely.
  *
  * ADR 0018 Phase 0: buildCoreSubpathAliases() DELETED.
@@ -14,13 +14,13 @@
 
 import type { Plugin } from 'vite';
 
-import { formatError, OpenElementError } from '@openelement/core/errors';
+import { formatError, OpenElementError } from '@openelement/element';
 
 /** Virtual module ID prefix for JSR remote resolution */
 export const VIRTUAL_CORE_PREFIX = '\0openelement:core/src/';
 
 /**
- * Mapping of @openelement/core/* subpath specifiers to source files
+ * Mapping of @openelement/element/* subpath specifiers to source files
  * (used by JSR remote resolution only).
  */
 export const CORE_SUBPATHS: Record<string, string> = {
@@ -71,7 +71,7 @@ function getOpenPackageSrcBase(metaUrl: string, packageName: string): string {
 function assertSafeCoreSourcePath(filePath: string): void {
   if (!SAFE_CORE_SOURCE_PATH_RE.test(filePath)) {
     throw new OpenElementError(
-      `Unsafe @openelement/core source path: ${filePath}`,
+      `Unsafe @openelement/element source path: ${filePath}`,
       {
         code: 'JSR_INVALID_SOURCE_PATH',
         statusCode: 400,
@@ -86,7 +86,7 @@ export function buildCoreJsrSourceUrl(jsrSrcBase: string, filePath: string): str
   const base = new URL(jsrSrcBase);
   if (base.protocol !== 'https:' && base.protocol !== 'http:') {
     throw new OpenElementError(
-      `Unsafe @openelement/core source base URL: ${jsrSrcBase}`,
+      `Unsafe @openelement/element source base URL: ${jsrSrcBase}`,
       {
         code: 'JSR_INVALID_SOURCE_BASE',
         statusCode: 400,
@@ -100,9 +100,9 @@ export function buildCoreJsrSourceUrl(jsrSrcBase: string, filePath: string): str
 /**
  * Create the core subpath resolution plugin for JSR remote execution.
  *
- * When @openelement/core is loaded from JSR (https:// import.meta.url),
+ * When @openelement/element is loaded from JSR (https:// import.meta.url),
  * Vite's SSR runner cannot load https:// URLs via Node.js ESM loader.
- * This plugin intercepts @openelement/core/* imports and loads source code
+ * This plugin intercepts @openelement/element/* imports and loads source code
  * through virtual modules, bypassing Node.js ESM loader entirely.
  */
 export function createCoreResolvePlugin(metaUrl: string): Plugin {
@@ -121,12 +121,12 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
     resolveId(source, importer, options) {
       if (!isRemote) return;
 
-      // Case 1: Bare specifier @openelement/core or @openelement/core/*
-      if (source === '@openelement/core' || source.startsWith('@openelement/core/')) {
-        const subpath = source === '@openelement/core'
+      // Case 1: Bare specifier @openelement/element or @openelement/element/*
+      if (source === '@openelement/element' || source.startsWith('@openelement/element/')) {
+        const subpath = source === '@openelement/element'
           ? 'index.ts'
-          : CORE_SUBPATHS[source.slice('@openelement/core/'.length)] ||
-            `${source.slice('@openelement/core/'.length)}.ts`;
+          : CORE_SUBPATHS[source.slice('@openelement/element/'.length)] ||
+            `${source.slice('@openelement/element/'.length)}.ts`;
         return `${VIRTUAL_CORE_PREFIX}${subpath}`;
       }
 
@@ -186,7 +186,7 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
       } catch (err) {
         clearTimeout(timeoutId);
         throw new OpenElementError(
-          `Failed to load @openelement/core module from JSR: ${filePath}. ` +
+          `Failed to load @openelement/element module from JSR: ${filePath}. ` +
             `URL: ${url}. Error: ${formatError(err)}`,
           {
             code: 'JSR_FETCH_ERROR',
@@ -208,7 +208,7 @@ export function createCoreResolvePlugin(metaUrl: string): Plugin {
         jsCode = result.code;
       } catch (err) {
         throw new OpenElementError(
-          `Failed to compile @openelement/core module from JSR: ${filePath}. ` +
+          `Failed to compile @openelement/element module from JSR: ${filePath}. ` +
             `Error: ${formatError(err)}`,
           {
             code: 'JSR_COMPILE_ERROR',

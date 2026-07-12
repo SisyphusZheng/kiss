@@ -54,7 +54,7 @@ export type { Context } from './internal/core/index.ts';
 
 // ─── Error types (re-export from core) ───────────────────
 
-export type { PropValidationError, RenderError, SsrRenderError } from './internal/core/index.ts';
+export type { PropValidationError, RenderError } from './internal/core/index.ts';
 export type { ErrorCode, ErrorPhase, ErrorSeverity } from './internal/protocol/errors.ts';
 export { ERROR_PREFIX } from './internal/protocol/errors.ts';
 
@@ -88,6 +88,9 @@ export { formatJson, writeJson } from './internal/core/write-json.ts';
 export { isValidTagName } from './internal/core/tag-utils.ts';
 export { normalizeSeparators, pathToTagName } from './internal/core/path-utils.ts';
 export { createIsrCacheKey } from './internal/core/isr.ts';
+export { SsrRenderError } from './internal/core/errors.ts';
+export { transformIslandSource } from './internal/core/island-transform.ts';
+export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';
 export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.

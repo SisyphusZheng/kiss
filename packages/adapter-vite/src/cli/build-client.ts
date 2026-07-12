@@ -21,8 +21,8 @@ import { generateClientEntry } from '../internal/ssg/index.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
-import { formatError } from '@openelement/core/errors';
-import { createLogger } from '@openelement/core/logger';
+import { formatError } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 
 const log = createLogger('ssg');
 
@@ -164,10 +164,10 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
       : Object.entries(resolveAlias).map(([find, replacement]) => ({ find, replacement })))
     : [];
 
-  // Always resolve @openelement/core/style-sheet from workspace (core re-exports it)
+  // Always resolve @openelement/element/style-sheet from workspace (core re-exports it)
   if (WORKSPACE_ROOT) {
     serializedAlias.push({
-      find: '@openelement/core/style-sheet',
+      find: '@openelement/element/style-sheet',
       replacement: join(WORKSPACE_ROOT, 'packages', 'core', 'src', 'style-sheet.ts'),
     });
     (serializedAlias as Array<{ find: string | RegExp; replacement: string }>).push({

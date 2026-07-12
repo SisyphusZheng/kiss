@@ -27,8 +27,8 @@ import type {
 import type { OpenElementPackageManifest } from '../internal/protocol/manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { ssgRender } from '../internal/ssg/index.ts';
-import { SsrRenderError } from '@openelement/core/errors';
-import { createLogger } from '@openelement/core/logger';
+import { SsrRenderError } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createOpenJsrPackageResolverPlugin } from '../ssg-package-resolver.ts';
@@ -341,7 +341,7 @@ async function buildSSG(
             // ADR-0044: customElements polyfill must run before ESM imports.
             // Uses Map-backed define()/get(); renderDsdByName() looks up
             // components via customElements.get(tagName) during SSG rendering.
-            // SOP-016: HTMLElement stub is self-contained in @openelement/core/dsd-element.ts.
+            // SOP-016: HTMLElement stub is self-contained in @openelement/element/dsd-element.ts.
             banner: `\
 if (typeof globalThis.customElements === 'undefined') {
   const __openCeRegistry = new Map();

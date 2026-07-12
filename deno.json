@@ -1,17 +1,11 @@
 {
   "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
   "workspace": [
-    "./packages/core",
     "./packages/element",
     "./packages/ui",
     "./packages/adapter-vite",
     "./packages/create",
-    "./packages/signal",
-    "./packages/content",
-    "./packages/ssg",
     "./packages/app",
-    "./packages/router",
-    "./packages/protocol",
     "./www",
     "./examples/deno-desktop-reader"
   ],

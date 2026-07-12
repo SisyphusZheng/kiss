@@ -14,7 +14,7 @@ import { OpenElementBuildContext } from './build-context.ts';
 import { createOpenPlugin } from './plugin.ts';
 import { openContent } from './internal/content/vite.ts';
 import { openI18n } from './i18n-plugin.ts';
-import { createLogger } from '@openelement/core/logger';
+import { createLogger } from '@openelement/element';
 
 const log = createLogger('app');
 

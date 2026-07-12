@@ -8,14 +8,7 @@
     "./open-element-render": "./src/open-element-render.ts",
     "./open-element-hydration": "./src/open-element-hydration.ts"
   },
-  "imports": {
-    "@openelement/core": "./src/internal/core/index.ts",
-    "@openelement/core/": "./src/internal/core/",
-    "@openelement/protocol": "./src/internal/protocol/index.ts",
-    "@openelement/protocol/": "./src/internal/protocol/",
-    "@openelement/signal": "./src/internal/signal/index.ts",
-    "@openelement/signal/": "./src/internal/signal/"
-  },
+  "imports": {},
   "publish": {
     "include": [
       "src/**",

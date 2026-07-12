@@ -8,7 +8,7 @@
  * - SSG build pipeline (Phase 1/2/3)
  * - Core subpath resolution (ADR 0016)
  *
- * Runtime code (renderDsd, defineIsland, escapeHtml, etc.) lives in @openelement/core.
+ * Runtime code (renderDsd, defineIsland, escapeHtml, etc.) lives in @openelement/element.
  * This package only contains Vite-specific build orchestration.
  *
  * For the unified openElement() entry, use @openelement/adapter-vite.

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import type { Alias, Plugin } from 'vite';
-import { formatError } from '@openelement/core/errors';
+import { formatError } from '@openelement/element';
 import { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
 
 export { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
