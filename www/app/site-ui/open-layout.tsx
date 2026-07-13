@@ -138,15 +138,20 @@ sheet.replaceSync(`
   .layout-body {
     display: flex;
     flex: 1;
-    max-width: 1400px;
+    max-width: none;
     margin: 0 auto;
     width: 100%;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--border) 18%, transparent) 1px, transparent 1px),
+      var(--bg-base);
+    background-size: 220px 100%;
   }
 
   .layout-main {
     flex: 1;
     min-width: 0;
     width: 100%;
+    isolation: isolate;
   }
 
   .app-layout[home] .layout-body,
@@ -170,7 +175,7 @@ sheet.replaceSync(`
     border-bottom: var(--border-size-1) solid var(--border);
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
-    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: background .32s var(--motion-standard), border-color .32s var(--motion-standard), box-shadow .32s var(--motion-standard), padding .32s var(--motion-standard);
   }
   .app-header.scrolled {
     background: color-mix(in srgb, var(--bg-base) 88%, transparent);
@@ -265,25 +270,41 @@ sheet.replaceSync(`
 
   .header-nav {
     display: flex;
-    gap: clamp(var(--size-5), 3vw, var(--size-8));
+    gap: var(--size-1);
     flex: 1;
     min-width: 0;
     justify-content: center;
+    width: fit-content;
+    max-width: fit-content;
+    margin-inline: auto;
+    padding: var(--size-1);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 78%, var(--brand));
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--bg-elevated) 68%, transparent);
+    box-shadow: inset 0 1px 0 var(--edge-highlight);
   }
   .header-nav a {
     color: var(--nav-link-color);
     text-decoration: none;
     font-size: var(--font-size-1);
     font-weight: var(--font-weight-5);
-    padding: var(--size-2) 0;
-    transition: color 0.15s ease, background 0.15s ease;
+    padding: var(--size-2) var(--size-4);
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    letter-spacing: .02em;
+    transition: color .2s var(--motion-standard), background .2s var(--motion-standard), transform .2s var(--motion-standard);
   }
   .header-nav a:hover {
     color: var(--nav-link-hover);
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    transform: translateY(-1px);
   }
   .header-nav a[aria-current="page"] {
-    color: var(--brand-deep);
+    color: var(--text-primary);
     font-weight: var(--font-weight-8);
+    background: color-mix(in srgb, var(--brand) 18%, var(--bg-elevated));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 44%, transparent);
   }
 
   .header-right {
@@ -377,7 +398,9 @@ sheet.replaceSync(`
     position: sticky;
     top: var(--nav-height);
     scrollbar-width: thin;
-    background: color-mix(in srgb, var(--bg-elevated) 42%, transparent);
+    background: linear-gradient(180deg,color-mix(in srgb,var(--violet-2) 26%,var(--bg-base)),color-mix(in srgb,var(--bg-elevated) 72%,transparent));
+    backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset -1px 0 0 color-mix(in srgb,var(--brand) 10%,transparent);
   }
   :host([home]) .docs-sidebar,
   :host([full-width]) .docs-sidebar {
@@ -410,8 +433,10 @@ sheet.replaceSync(`
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.85rem;
-    padding: 0.35rem 1.5rem;
+    margin: .12rem .7rem;
+    padding: .5rem .8rem;
     border-left: 2px solid transparent;
+    border-radius: var(--radius-2);
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
   .docs-sidebar a:hover {

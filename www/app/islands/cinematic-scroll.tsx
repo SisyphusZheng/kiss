@@ -28,7 +28,9 @@ export default class CinematicScroll extends OpenElement {
       const distance = Math.max(1, film.offsetHeight - innerHeight);
       const progress = Math.min(1, Math.max(0, -rect.top / distance));
       film.style.setProperty('--film-progress', String(reduced ? 1 : progress));
-      film.style.setProperty('--scene-progress', String(Math.min(6, progress * 6)));
+      // A longer six-act cadence keeps each transformation legible instead of
+      // collapsing the whole composition into the first wheel gesture.
+      film.style.setProperty('--scene-progress', String(Math.min(6, progress * 4.2)));
     };
     const schedule = () => this.#frame || (this.#frame = requestAnimationFrame(update));
     const pointer = (event: PointerEvent) => {
