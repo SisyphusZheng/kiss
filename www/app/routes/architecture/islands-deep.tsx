@@ -23,7 +23,7 @@ export class IslandsDeepGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Island Deep Dive</h1>
         <p class='subtitle'>
           Islands are the only client JavaScript units in openElement. The public model is VNode
@@ -116,4 +116,3 @@ export class IslandsDeepGuidePage extends OpenElement {
 
 customElements.define(tagName, IslandsDeepGuidePage);
 export default IslandsDeepGuidePage;
-

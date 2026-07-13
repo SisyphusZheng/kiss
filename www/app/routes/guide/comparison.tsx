@@ -32,7 +32,7 @@ export class GuideComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/architecture' next='/guide/routing-and-data'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>How openElement compares</h1>
         <p class='subtitle'>
           openElement occupies a specific niche: a Web Components-native

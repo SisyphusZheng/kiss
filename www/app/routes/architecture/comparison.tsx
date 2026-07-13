@@ -80,7 +80,7 @@ export default class ComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>openElement vs Alternatives</h1>
         <p class='subtitle'>
           A conservative comparison of product direction. This page describes

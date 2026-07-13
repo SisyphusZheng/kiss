@@ -13,6 +13,8 @@ import '@openelement/ui/open-input';
 import '@openelement/site-ui/open-lab-panel.tsx';
 import '@openelement/site-ui/open-lab-stage.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -291,17 +293,10 @@ export class UIShowcase extends OpenElement {
   override render() {
     return (
       <main class='system'>
-        <section class='hero'>
-          <div>
-            <p class='kicker'>Web Standards Lab</p>
-            <h1>Design System</h1>
-            <p class='subtitle'>
-              This page documents the active `www` dogfood contract: Open Props
-              tokens, retained UI primitives, product-art diagrams, and
-              first-class dark mode. It is not a requirement for applications.
-            </p>
-          </div>
-          <open-lab-panel label='rules' meta='v3'>
+        <open-page-hero variant='technical'>
+          <span slot='eyebrow'>Web Standards Lab</span><span slot='title'>Design System</span><span slot='lede'>The active www dogfood contract: audited Open Props tokens, retained UI primitives, product-art diagrams and full dark-mode parity. It is not a framework requirement.</span>
+          <open-artifact-panel slot='artifact'>
+            <span slot='label'>rules</span><span slot='meta'>v3</span>
             <ul class='rule-list'>
               <li>Strict Open Props and semantic tokens only.</li>
               <li>Only reusable primitives live in `@openelement/ui`; site visuals stay in `www`.</li>
@@ -309,8 +304,8 @@ export class UIShowcase extends OpenElement {
               <li>No Linear clone, decorative blobs, or local color systems.</li>
               <li>Letter spacing remains `0`.</li>
             </ul>
-          </open-lab-panel>
-        </section>
+          </open-artifact-panel>
+        </open-page-hero>
 
         <section class='section'>
           <div>

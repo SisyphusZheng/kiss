@@ -7,6 +7,8 @@ import { StyleSheet } from "@openelement/element";
 import { pageStyles } from "../components/page-styles.js";
 import "@openelement/ui/open-code-block";
 import "@openelement/ui/open-button";
+import "@openelement/site-ui/open-page-hero.tsx";
+import "@openelement/site-ui/open-artifact-panel.tsx";
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -53,8 +55,8 @@ export class ContributingPage extends OpenElement {
 
   private _renderEn() {
     return (
-      <open-reading-shell><div class="container">
-        <h1>Contributing to openElement</h1>
+      <><open-page-hero variant="technical"><span slot="eyebrow">Maintainer guide</span><span slot="title">Contributing</span><span slot="lede">A precise, Deno-first contributor workflow for the Web Standards Lab.</span><open-artifact-panel slot="artifact"><span slot="label">contribution contract</span><span slot="meta">public repository</span><p>Use the same product interfaces, checks and release evidence that the framework requires of itself.</p></open-artifact-panel></open-page-hero><open-reading-shell rail footer><open-page-rail slot="rail"><a href="#start">Overview</a></open-page-rail><div class="container">
+        <h1 id="start">Contributing to openElement</h1>
         <p class="subtitle">
           Thank you for your interest in the openElement Framework!
         </p>
@@ -126,7 +128,7 @@ deno task dev</code></pre>
             Roadmap
           </open-button>
         </div>
-      </div></open-reading-shell>
+      </div></open-reading-shell></>
     );
   }
 }
@@ -134,4 +136,3 @@ deno task dev</code></pre>
 customElements.define("page-contributing", ContributingPage);
 export default ContributingPage;
 export const tagName = "page-contributing";
-

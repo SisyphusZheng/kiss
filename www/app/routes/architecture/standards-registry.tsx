@@ -28,7 +28,7 @@ export class StandardsRegistryPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>WC Standards Contract</h1>
         <p class='subtitle'>
           OpenElement relies on web-platform contracts rather than a proprietary

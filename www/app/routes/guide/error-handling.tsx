@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/configuration' next='/guide/islands-and-ssr'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Error Handling</h1>
         <p class='subtitle'>Error handling should preserve platform semantics and keep route failures visible.</p>
         <div class='guide-grid'>

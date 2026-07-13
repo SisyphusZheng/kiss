@@ -7,6 +7,8 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/site-ui/open-lab-panel.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 import { posts } from '@openelement/generated/blog-data';
 
 const routeSheet = new StyleSheet();
@@ -289,18 +291,12 @@ export class BlogIndexPage extends OpenElement {
 
     return (
       <main class='blog-page'>
-        <section class='hero'>
-          <div class='hero-copy'>
-            <p class='kicker'>Editorial lab journal</p>
-            <h1>Design notes, release truth, and architecture decisions.</h1>
-            <p class='lede'>
-              The blog is the public audit trail for openElement: what changed,
-              why the package graph moved, and which standards boundary matters next.
-            </p>
-          </div>
-          <div class='featured-shell'>
+        <open-page-hero variant='editorial'>
+          <span slot='eyebrow'>Editorial lab journal</span><span slot='title'>Design notes, release truth, and architecture decisions.</span><span slot='lede'>The public audit trail: what changed, why the package graph moved, and which standards boundary matters next.</span>
+          <open-artifact-panel slot='artifact'>
+            <span slot='label'>featured dispatch</span><span slot='meta'>{featured?.frontmatter.date ?? 'journal'}</span>
             {featured && (
-              <open-lab-panel class='featured' label='featured dispatch' meta={featured.frontmatter.date}>
+              <div class='featured'>
                 <a href={'/blog/' + featured.slug}>
                   <h2>{featured.frontmatter.title}</h2>
                 </a>
@@ -309,10 +305,10 @@ export class BlogIndexPage extends OpenElement {
                   <open-badge tone='brand'>latest</open-badge>
                   {postTags(featured).slice(0, 3).map((tag) => <span class='post-tag'>{tag}</span>)}
                 </div>
-              </open-lab-panel>
+              </div>
             )}
-          </div>
-        </section>
+          </open-artifact-panel>
+        </open-page-hero>
 
         <section class='sections'>
           <open-lab-panel class='journal-note' label='journal map' meta='docs as product'>

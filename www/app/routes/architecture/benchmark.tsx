@@ -29,7 +29,7 @@ export default class Benchmark extends OpenElement {
 
   _renderEn() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Performance &amp; Benchmarks</h1>
         <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
@@ -77,4 +77,3 @@ export default class Benchmark extends OpenElement {
 }
 customElements.define('benchmark-page', Benchmark);
 export const tagName = 'benchmark-page';
-

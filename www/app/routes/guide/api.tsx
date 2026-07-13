@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/mdx' next='/guide/configuration'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>API Routes</h1>
         <p class='subtitle'>API routes use platform request and response primitives. Keep route handlers explicit, typed, and close to the app boundary.</p>
         <div class='guide-grid'>

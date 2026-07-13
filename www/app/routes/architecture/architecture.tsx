@@ -6,6 +6,8 @@ import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '@openelement/site-ui/open-section-frame.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -56,26 +58,13 @@ export class ArchitecturePage extends OpenElement {
   override render() {
     return (
       <div class='shell'>
-        <section class='hero'>
-          <div>
-            <div class='eyebrow'>
-              <open-badge>ADR-0113</open-badge>
-              <open-badge>{OPENELEMENT_VERSION}</open-badge>
-              <open-badge tone='success'>five-package graph</open-badge>
-            </div>
-            <h1>Current Architecture</h1>
-            <p class='lede'>
-              OpenElement is a Web Components-native, static-first application
-              framework. Standard Custom Elements are the durable component
-              contract; JSX and Basic Element are authoring modes; Vite and
-              Nitro are the official build and output path.
-            </p>
-          </div>
-          <div class='artifact'>
-            <div class='artifact-head'><strong>package graph</strong><span>{OPENELEMENT_VERSION} published line</span></div>
+        <open-page-hero variant='technical'>
+          <span slot='eyebrow'>ADR-0113 / {OPENELEMENT_VERSION}</span><span slot='title'>Current Architecture</span><span slot='lede'>OpenElement is a Web Components-native, static-first application framework. Custom Elements are the durable component contract; JSX and Basic Element are authoring modes; Vite and Nitro are the official build and output path.</span>
+          <open-artifact-panel slot='artifact'>
+            <span slot='label'>package graph</span><span slot='meta'>{OPENELEMENT_VERSION} published line</span>
             <pre><code>{PACKAGE_GRAPH}</code></pre>
-          </div>
-        </section>
+          </open-artifact-panel>
+        </open-page-hero>
 
         <open-section-frame>
           <span slot='index'>01 / ownership</span>

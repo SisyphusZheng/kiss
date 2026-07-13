@@ -33,7 +33,7 @@ export class DsdGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Declarative Shadow DOM Rendering</h1>
         <p class='subtitle'>
           openElement treats Declarative Shadow DOM as the server-rendered

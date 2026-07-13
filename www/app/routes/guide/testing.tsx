@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/deployment'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Testing</h1>
         <p class='subtitle'>Use checks that match the changed surface: type checks for routes, build checks for generated output, and visual checks for design changes.</p>
         <div class='guide-grid'>

@@ -28,7 +28,7 @@ export class IslandsGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Island Hydration</h1>
         <p class='subtitle'>
           openElement keeps documents and Web Components server-rendered by

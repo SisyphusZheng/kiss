@@ -6,6 +6,7 @@ import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-input';
 import '@openelement/site-ui/open-brand-mark.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
 
 const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
@@ -118,9 +119,12 @@ export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
     return (
-      <div class='container'>
+      <main>
+        <open-page-hero variant='error'>
+          <span slot='eyebrow'>Recovery scene</span><span slot='title'>404</span><span slot='lede'>The requested route is not part of the current public map.</span>
+        </open-page-hero>
+        <div class='container'>
         <open-brand-mark class='mark' size='xl'></open-brand-mark>
-        <h1 class='title'>404</h1>
         <p class='subtitle'>Page not found</p>
         <p class='description'>
           The page you are looking for doesn't exist or has been moved.
@@ -139,7 +143,8 @@ export default class Page404 extends OpenElement {
         <open-button variant='primary' href='/'>
           Go home
         </open-button>
-      </div>
+        </div>
+      </main>
     );
   }
 }

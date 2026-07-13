@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/core-concepts' next='/guide/comparison'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Architecture Guide</h1>
         <p class='subtitle'>openElement is organized around elements, routes, islands, and package layers rather than a single client app shell.</p>
         <div class='guide-grid'>

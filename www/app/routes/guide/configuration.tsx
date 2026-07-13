@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/api' next='/guide/error-handling'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Configuration</h1>
         <p class='subtitle'>Configuration should stay close to the route, build, or package surface it affects.</p>
         <div class='guide-grid'>

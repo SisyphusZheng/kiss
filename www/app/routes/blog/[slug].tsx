@@ -11,6 +11,7 @@ import "@openelement/ui/open-button";
 import { pageStyles } from "../../components/page-styles.js";
 import { getPostBySlug, posts } from "@openelement/generated/blog-data";
 import "@openelement/site-ui/open-reading-shell.tsx";
+import "@openelement/site-ui/open-page-rail.tsx";
 
 export const tagName = "page-blog-slug";
 
@@ -75,8 +76,9 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <open-reading-shell meta>
+      <open-reading-shell meta rail footer>
         <div slot="meta"><a href="/blog" class="blog-back">鈫?鍗氬</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
+        <open-page-rail slot="rail" auto></open-page-rail>
         {tags.length > 0
           ? (
             <div class="blog-tags">
@@ -114,8 +116,9 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <open-reading-shell meta>
+      <open-reading-shell meta rail footer>
         <div slot="meta"><a href="/blog" class="blog-back">Blog</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
+        <open-page-rail slot="rail" auto></open-page-rail>
         {tags.length > 0
           ? (
             <div class="blog-tags">

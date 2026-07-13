@@ -3,7 +3,10 @@ import { OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
-import '@openelement/site-ui/open-lab-panel.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-reading-shell.tsx';
+import '@openelement/site-ui/open-page-rail.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 
 export const tagName = 'api-core-page';
@@ -74,17 +77,17 @@ export class ApiCorePage extends OpenElement {
   static override styles = [routeSheet];
   override render() {
     return <main>
-      <section class='hero'>
-        <div class='hero-copy'><p class='kicker'>Public contract</p><h1>API Reference</h1><p class='lede'>The {OPENELEMENT_VERSION} published line documents only the five consumer packages. Retired alpha packages and internal subpaths are not authoring surfaces.</p></div>
-        <div class='hero-panel'><open-lab-panel label='five-package surface' meta={OPENELEMENT_VERSION}><p>OpenElement keeps Element, App and Build interfaces small so authors do not need to learn renderer, protocol, router or build-phase implementation.</p><open-button href='/guide/getting-started'>Start building</open-button></open-lab-panel></div>
-      </section>
-      <div class='shell'>
-        <aside class='rail' aria-label='API packages'>{packages.map((pkg) => <a class='rail-link' href={`#${pkg.id}`}>{pkg.title}</a>)}</aside>
+      <open-page-hero variant='technical'>
+        <span slot='eyebrow'>Public contract</span><span slot='title'>API Reference</span><span slot='lede'>The {OPENELEMENT_VERSION} published line documents only the five consumer packages. Retired alpha packages and internal subpaths are not authoring surfaces.</span>
+        <open-artifact-panel slot='artifact'><span slot='label'>five-package surface</span><span slot='meta'>{OPENELEMENT_VERSION}</span><p>Element, App and Build interfaces stay small so authors do not need renderer, protocol, router or build-phase internals.</p><open-button href='/guide/getting-started'>Start building</open-button></open-artifact-panel>
+      </open-page-hero>
+      <open-reading-shell rail>
+        <open-page-rail slot='rail'>{packages.map((pkg) => <a href={`#${pkg.id}`}>{pkg.title}</a>)}</open-page-rail>
         <div class='api-grid'>
           <section><div class='section-head'><div><p class='section-kicker'>Surface rule</p><h2>Authoring starts at product packages.</h2></div><p>Current documentation, starters and dogfood use the five supported interfaces. Future load, action, form and revalidation capabilities are roadmap work, not current stable claims.</p></div></section>
           <div class='package-grid'>{packages.map((pkg) => <open-card class='package-card' id={pkg.id}><div class='card-top'><div><span class='surface'>Supported product</span><h3>{pkg.title}</h3></div><open-badge tone='brand'>{pkg.exports.length} entries</open-badge></div><p>{pkg.copy}</p><code class='sig'>{pkg.importPath}</code><ul><li>Supported entries: {pkg.exports.join(', ')}</li>{pkg.notes.map((note) => <li>{note}</li>)}</ul></open-card>)}</div>
         </div>
-      </div>
+      </open-reading-shell>
     </main>;
   }
 }

@@ -10,6 +10,8 @@ import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
 import '@openelement/site-ui/open-lab-panel.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -498,23 +500,16 @@ export class RoadmapPage extends OpenElement {
   override render() {
     return (
       <main class='roadmap'>
-        <section class='hero'>
-          <div class='hero-copy'>
-            <p class='kicker'>Product truth / release line</p>
-            <h1>Roadmap</h1>
-            <p class='subtitle'>
-              openElement roadmap labels describe the public product surface,
-              not a wish list. Every release stage is tied to package truth,
-              docs truth, CI evidence, and the rule that dogfood validates the
-              framework without defining a new product line.
-            </p>
-            <div class='hero-actions'>
+        <open-page-hero variant='timeline'>
+            <span slot='eyebrow'>Product truth / release line</span>
+            <span slot='title'>Roadmap</span>
+            <span slot='lede'>OpenElement roadmap labels describe the public product surface, tied to package truth, docs truth and CI evidence rather than a wish list.</span>
+            <open-artifact-panel slot='artifact' class='now'>
+              <span slot='label'>current</span><span slot='meta'>alpha.8 published → beta.4 candidate</span>
+              <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
-            </div>
-          </div>
-          <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='alpha.8 published → beta.4 candidate'>
+              </div>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
@@ -530,9 +525,8 @@ export class RoadmapPage extends OpenElement {
                   </p>
                 </div>
               </div>
-            </open-lab-panel>
-          </div>
-        </section>
+            </open-artifact-panel>
+        </open-page-hero>
 
         <section class='release-rail' aria-label='Roadmap release rail'>
           <div class='rail-head'>

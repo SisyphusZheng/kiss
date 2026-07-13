@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/islands-and-ssr' next='/guide/testing'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Deployment</h1>
         <p class='subtitle'>Deployment is built around generated static output and adapter-specific runtime boundaries.</p>
         <div class='guide-grid'>

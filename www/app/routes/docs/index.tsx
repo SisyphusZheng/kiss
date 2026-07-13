@@ -11,6 +11,8 @@ import '@openelement/ui/open-card';
 import '@openelement/ui/open-input';
 import '@openelement/site-ui/open-lab-panel.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -309,17 +311,12 @@ export class DocsPage extends OpenElement {
   override render() {
     return (
       <main class='desk'>
-        <section class='hero'>
-          <div>
-            <p class='kicker'>Documentation entry desk</p>
-            <h1>Find the contract, then follow the route.</h1>
-            <p class='lede'>
-              openElement docs are organized like an engineering workspace:
-              build paths, API surface, architecture decisions, and release
-              truth sit next to each other.
-            </p>
-          </div>
-          <open-lab-panel label='command palette' meta='docs nav'>
+        <open-page-hero variant='technical'>
+          <span slot='eyebrow'>Documentation entry desk</span>
+          <span slot='title'>Find the contract, then follow the route.</span>
+          <span slot='lede'>OpenElement docs put build paths, API surface, architecture decisions and release truth in one engineering workspace.</span>
+          <open-artifact-panel slot='artifact'>
+            <span slot='label'>command palette</span><span slot='meta'>docs nav</span>
             <div class='command'>
               <div class='command__header'>
                 <open-input value='Search routes, APIs, package graph' readonly></open-input>
@@ -334,8 +331,8 @@ export class DocsPage extends OpenElement {
                 ))}
               </ul>
             </div>
-          </open-lab-panel>
-        </section>
+          </open-artifact-panel>
+        </open-page-hero>
 
         <nav class='paths' aria-label='Documentation paths'>
           {paths.map(([index, title, copy, href]) => (

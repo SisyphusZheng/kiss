@@ -29,7 +29,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer next='/guide/core-concepts'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Getting Started</h1>
         <p class='subtitle'>
           OpenElement is a Web Components-native, static-first application

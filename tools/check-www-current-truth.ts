@@ -35,6 +35,9 @@ async function checkFile(file: string): Promise<void> {
   for (const { name, re } of forbidden) {
     if (re.test(text)) issues.push({ file, text: name });
   }
+  if (file.startsWith('www/app/routes/') && file !== 'www/app/routes/index/index.tsx' && /<(?:section|div)\s+class=['"]hero['"]/.test(text)) {
+    issues.push({ file, text: 'legacy per-page hero markup' });
+  }
 }
 
 for (const root of sourceRoots) {

@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/comparison' next='/guide/mdx'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Routing and Data</h1>
         <p class='subtitle'>Routes are file-based surfaces with explicit metadata and data boundaries.</p>
         <div class='guide-grid'>

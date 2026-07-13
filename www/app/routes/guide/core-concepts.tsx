@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell><div class='container'>
+      <open-reading-shell rail footer previous='/guide/getting-started' next='/guide/architecture'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
         <h1>Core Concepts</h1>
         <p class='subtitle'>The core model is standards-first: authored elements, declarative rendering, file routes, and optional islands.</p>
         <div class='guide-grid'>
