@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>MDX</h1>
         <p class='subtitle'>Documentation content should compile into the same route and component system as authored pages.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Validate generated pages through the normal site build.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

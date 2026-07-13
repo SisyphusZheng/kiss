@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Testing</h1>
         <p class='subtitle'>Use checks that match the changed surface: type checks for routes, build checks for generated output, and visual checks for design changes.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Capture desktop and mobile states for layout-sensitive work.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

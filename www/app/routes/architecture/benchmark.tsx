@@ -29,7 +29,7 @@ export default class Benchmark extends OpenElement {
 
   _renderEn() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Performance &amp; Benchmarks</h1>
         <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
@@ -70,12 +70,11 @@ export default class Benchmark extends OpenElement {
           openElement ships zero runtime JS for DSD components. Islands load on-demand by strategy.
           No framework runtime in the critical path.
         </p>
-      </div>
+      </div></open-reading-shell>
     );
   }
 
 }
 customElements.define('benchmark-page', Benchmark);
 export const tagName = 'benchmark-page';
-
 

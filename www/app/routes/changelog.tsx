@@ -57,7 +57,7 @@ export class ChangelogPage extends OpenElement {
           <span slot="lede">Published, candidate, withdrawn and historical release evidence for OpenElement.</span>
           <div slot="artifact"><open-button href="/roadmap">Read roadmap</open-button></div>
         </open-page-hero>
-        <open-reading-shell>
+        <open-reading-shell meta rail>
           <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.8</code>.</p></div>
           <div slot="rail"><a href="#published">Published</a><br /><a href="#historical">History</a></div>
         <p id="published">

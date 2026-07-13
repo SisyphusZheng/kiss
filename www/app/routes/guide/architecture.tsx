@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Architecture Guide</h1>
         <p class='subtitle'>openElement is organized around elements, routes, islands, and package layers rather than a single client app shell.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Core, app, UI, adapters, and SSG stay as separate package layers.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

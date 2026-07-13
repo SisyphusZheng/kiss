@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Deployment</h1>
         <p class='subtitle'>Deployment is built around generated static output and adapter-specific runtime boundaries.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Build output should be checked before publishing or pushing release changes.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

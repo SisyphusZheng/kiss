@@ -53,7 +53,7 @@ export class ContributingPage extends OpenElement {
 
   private _renderEn() {
     return (
-      <div class="container">
+      <open-reading-shell><div class="container">
         <h1>Contributing to openElement</h1>
         <p class="subtitle">
           Thank you for your interest in the openElement Framework!
@@ -126,7 +126,7 @@ deno task dev</code></pre>
             Roadmap
           </open-button>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }
@@ -134,5 +134,4 @@ deno task dev</code></pre>
 customElements.define("page-contributing", ContributingPage);
 export default ContributingPage;
 export const tagName = "page-contributing";
-
 

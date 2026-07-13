@@ -80,7 +80,7 @@ export default class ComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>openElement vs Alternatives</h1>
         <p class='subtitle'>
           A conservative comparison of product direction. This page describes
@@ -284,7 +284,7 @@ export default class ComparisonPage extends OpenElement {
           <li><a href='https://docs.deno.com/runtime/frameworks/fresh/'>Fresh documentation</a></li>
           <li><a href='https://webawesome.com/docs/'>Web Awesome documentation</a></li>
         </ul>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

@@ -3,10 +3,11 @@ export const tagName = 'page-islands-deep-guide';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
+import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 
 const routeSheet = new StyleSheet();
-routeSheet.replaceSync(`
+routeSheet.replaceSync(pageStyles + `
   .layer-card { padding: 20px var(--size-6); margin: var(--size-4) 0; border-left: 2px solid var(--color-border); background: var(--surface-1); border-radius: 0 3px 3px 0; }
   .layer-card .layer-tag { font-size: 11px; font-weight: var(--font-weight-5); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.25rem; }
   .layer-card h3 { margin: 0 0 var(--size-2); }
@@ -22,7 +23,7 @@ export class IslandsDeepGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Island Deep Dive</h1>
         <p class='subtitle'>
           Islands are the only client JavaScript units in openElement. The public model is VNode
@@ -108,12 +109,11 @@ export class IslandsDeepGuidePage extends OpenElement {
           <a href='/architecture/dsd' style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)'>DSD Architecture</a>
           <a href='/guide/islands-and-ssr' style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)'>Islands and SSR</a>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }
 
 customElements.define(tagName, IslandsDeepGuidePage);
 export default IslandsDeepGuidePage;
-
 

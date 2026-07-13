@@ -5,6 +5,7 @@
  * content navigation. Product components still come from @openelement/ui.
  */
 import { StyleSheet } from '@openelement/element';
+import '@openelement/site-ui/open-reading-shell.tsx';
 
 export const pageStyles = `
   :host {

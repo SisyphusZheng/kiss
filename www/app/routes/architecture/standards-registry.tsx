@@ -28,7 +28,7 @@ export class StandardsRegistryPage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>WC Standards Contract</h1>
         <p class='subtitle'>
           OpenElement relies on web-platform contracts rather than a proprietary
@@ -50,7 +50,7 @@ export class StandardsRegistryPage extends OpenElement {
             <p>Element, App, Adapter Vite, Create and optional UI are the current consumer surface; internal contracts stay internal.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Core Concepts</h1>
         <p class='subtitle'>The core model is standards-first: authored elements, declarative rendering, file routes, and optional islands.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Hydrate only the components that need browser runtime behavior.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

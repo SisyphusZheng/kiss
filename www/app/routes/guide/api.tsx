@@ -28,7 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>API Routes</h1>
         <p class='subtitle'>API routes use platform request and response primitives. Keep route handlers explicit, typed, and close to the app boundary.</p>
         <div class='guide-grid'>
@@ -45,7 +45,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Use Deno-first tasks and avoid Node-only assumptions in docs examples.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

@@ -32,7 +32,7 @@ export class GuideComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>How openElement compares</h1>
         <p class='subtitle'>
           openElement occupies a specific niche: a Web Components-native
@@ -94,7 +94,7 @@ export class GuideComparisonPage extends OpenElement {
             </li>
           </ul>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

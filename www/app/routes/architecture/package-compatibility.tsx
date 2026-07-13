@@ -28,7 +28,7 @@ export class PackageCompatibilityPage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Package Compatibility</h1>
         <p class='subtitle'>
           OpenElement treats third-party Custom Elements as standards-based
@@ -50,7 +50,7 @@ export class PackageCompatibilityPage extends OpenElement {
             <p>Universal DSD/light/client-only classification and hydration-mismatch diagnostics are `0.43` roadmap work, not a current market claim.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

@@ -29,7 +29,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <div class='container'>
+      <open-reading-shell><div class='container'>
         <h1>Getting Started</h1>
         <p class='subtitle'>
           OpenElement is a Web Components-native, static-first application
@@ -56,7 +56,7 @@ export class GuideGuidePage extends OpenElement {
             <p>Run build, package, docs truth, and visual smoke gates before release.</p>
           </open-card>
         </div>
-      </div>
+      </div></open-reading-shell>
     );
   }
 }

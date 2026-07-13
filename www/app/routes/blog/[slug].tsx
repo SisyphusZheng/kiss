@@ -75,7 +75,7 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <open-reading-shell>
+      <open-reading-shell meta>
         <div slot="meta"><a href="/blog" class="blog-back">鈫?鍗氬</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
         {tags.length > 0
           ? (
@@ -114,7 +114,7 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <open-reading-shell>
+      <open-reading-shell meta>
         <div slot="meta"><a href="/blog" class="blog-back">Blog</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
         {tags.length > 0
           ? (
