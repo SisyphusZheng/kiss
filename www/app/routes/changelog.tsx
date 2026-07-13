@@ -60,7 +60,7 @@ export class ChangelogPage extends OpenElement {
         </open-page-hero>
         <open-reading-shell meta rail footer>
           <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.8</code>.</p></div>
-          <open-page-rail slot="rail"><a href="#published">Published</a><a href="#candidate">Candidate</a><a href="#withdrawn">Withdrawn</a><a href="#historical">Historical archive</a></open-page-rail>
+          <open-page-rail slot="rail" items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Candidate"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'></open-page-rail>
         <p id="published">
           The project follows Keep a Changelog and SemVer. Historical entries
           preserve older names where they describe older releases; current docs

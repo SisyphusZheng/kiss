@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/getting-started' previous-label='Getting Started' next='/guide/architecture' next-label='Architecture'><open-page-rail slot='rail' items='[{"id":"openelement","label":"OpenElement","level":3},{"id":"dsd","label":"DSD","level":3},{"id":"islands","label":"Islands","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Core Concepts</h1>
-        <p class='subtitle'>The core model is standards-first: authored elements, declarative rendering, file routes, and optional islands.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Core Concepts","lede":"The core model is standards-first: authored elements, declarative rendering, file routes and optional islands."}' previous='/guide/getting-started' previous-label='Getting Started' next='/guide/architecture' next-label='Architecture'><open-page-rail slot='rail' items='[{"id":"openelement","label":"OpenElement","level":3},{"id":"dsd","label":"DSD","level":3},{"id":"islands","label":"Islands","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='openelement'>OpenElement</h3>

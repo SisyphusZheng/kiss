@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/comparison' previous-label='Comparison' next='/guide/mdx' next-label='MDX'><open-page-rail slot='rail' items='[{"id":"file-routes","label":"File routes","level":3},{"id":"metadata","label":"Metadata","level":3},{"id":"data-boundary","label":"Data boundary","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Routing and Data</h1>
-        <p class='subtitle'>Routes are file-based surfaces with explicit metadata and data boundaries.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Routing and Data","lede":"Routes are file-based surfaces with explicit metadata and data boundaries."}' previous='/guide/comparison' previous-label='Comparison' next='/guide/mdx' next-label='MDX'><open-page-rail slot='rail' items='[{"id":"file-routes","label":"File routes","level":3},{"id":"metadata","label":"Metadata","level":3},{"id":"data-boundary","label":"Data boundary","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='file-routes'>File routes</h3>

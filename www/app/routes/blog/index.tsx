@@ -34,45 +34,6 @@ routeSheet.replaceSync(`
     background: var(--bg-base);
   }
 
-  .hero {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, .7fr) minmax(360px, .42fr);
-    min-height: 460px;
-    overflow: hidden;
-    border-block-end: var(--border-size-1) solid var(--border);
-    background:
-      linear-gradient(112deg, var(--violet-2), transparent 48%),
-      radial-gradient(circle at 80% 46%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 34%),
-      var(--bg-base);
-  }
-
-  .hero::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: var(--size-10);
-    inset-block-start: 50%;
-    width: 390px;
-    aspect-ratio: 1;
-    transform: translateY(-50%);
-    border: var(--size-6) solid color-mix(in srgb, var(--brand) 18%, transparent);
-    border-radius: var(--radius-round);
-    pointer-events: none;
-  }
-
-  .hero-copy,
-  .featured-shell {
-    position: relative;
-    z-index: 1;
-    padding: var(--size-10);
-  }
-
-  .hero-copy {
-    display: grid;
-    align-content: end;
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
   .kicker,
   .section-kicker,
   .post-date,
@@ -173,24 +134,25 @@ routeSheet.replaceSync(`
 
   .post-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--size-4);
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-block-start: var(--border-size-1) solid var(--border);
   }
 
   .post-card {
     display: grid;
     gap: var(--size-4);
-    min-height: 210px;
-    padding: var(--size-5);
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-3);
-    background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+    min-height: 0;
+    padding: var(--size-5) 0;
+    border-block-end: var(--border-size-1) solid var(--border);
+    border-radius: 0;
+    background: transparent;
     transition: border-color var(--duration-2) var(--ease-2), background var(--duration-2) var(--ease-2);
   }
 
   .post-card:hover {
     border-color: var(--brand);
-    background: var(--brand-subtle);
+    background: linear-gradient(90deg, color-mix(in srgb,var(--brand) 8%,transparent),transparent);
   }
 
   .post-card h3 {
@@ -230,7 +192,6 @@ routeSheet.replaceSync(`
   }
 
   @media (max-width: 1120px) {
-    .hero,
     .sections,
     .post-grid {
       grid-template-columns: 1fr;
@@ -240,19 +201,12 @@ routeSheet.replaceSync(`
       width: min(100% - var(--size-8), 1120px);
     }
 
-    .hero-copy {
-      border-inline-end: 0;
-      border-block-end: var(--border-size-1) solid var(--border);
-    }
-
     .journal-note {
       position: static;
     }
   }
 
   @media (max-width: 640px) {
-    .hero-copy,
-    .featured-shell,
     .sections {
       padding: var(--size-5) var(--size-4);
     }

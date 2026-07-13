@@ -118,6 +118,9 @@ styles.replaceSync(`
 export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
+    const locale = this._getLocale('zh');
+    const homeHref = locale === 'en' ? '/en/' : '/zh/';
+    const requestedPath = typeof globalThis.location === 'undefined' ? '/404' : globalThis.location.pathname;
     return (
       <main>
         <open-page-hero variant='error'>
@@ -129,6 +132,7 @@ export default class Page404 extends OpenElement {
         <p class='description'>
           The page you are looking for doesn't exist or has been moved.
         </p>
+        <p class='description'>Requested path: <code>{requestedPath}</code></p>
         <div class='search-wrapper'>
           <open-input placeholder='Search docs and API'></open-input>
         </div>
@@ -140,7 +144,7 @@ export default class Page404 extends OpenElement {
             </open-button>
           ))}
         </div>
-        <open-button variant='primary' href='/'>
+        <open-button variant='primary' href={homeHref}>
           Go home
         </open-button>
         </div>

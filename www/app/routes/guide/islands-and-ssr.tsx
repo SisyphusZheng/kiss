@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/error-handling' previous-label='Error Handling' next='/guide/deployment' next-label='Deployment'><open-page-rail slot='rail' items='[{"id":"server-first","label":"Server first","level":3},{"id":"declared-islands","label":"Declared islands","level":3},{"id":"small-runtime","label":"Small runtime","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Islands and SSR</h1>
-        <p class='subtitle'>SSR and DSD provide the document baseline. Islands add client behavior at declared boundaries.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Islands and SSR","lede":"SSR and DSD provide the document baseline. Islands add client behavior at declared boundaries."}' previous='/guide/error-handling' previous-label='Error Handling' next='/guide/deployment' next-label='Deployment'><open-page-rail slot='rail' items='[{"id":"server-first","label":"Server first","level":3},{"id":"declared-islands","label":"Declared islands","level":3},{"id":"small-runtime","label":"Small runtime","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='server-first'>Server first</h3>

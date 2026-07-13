@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/mdx' previous-label='MDX' next='/guide/configuration' next-label='Configuration'><open-page-rail slot='rail' items='[{"id":"request-boundary","label":"Request boundary","level":3},{"id":"handler-shape","label":"Handler shape","level":3},{"id":"runtime-fit","label":"Runtime fit","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>API Routes</h1>
-        <p class='subtitle'>API routes use platform request and response primitives. Keep route handlers explicit, typed, and close to the app boundary.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"API Routes","lede":"API routes use platform request and response primitives. Keep route handlers explicit, typed, and close to the app boundary."}' previous='/guide/mdx' previous-label='MDX' next='/guide/configuration' next-label='Configuration'><open-page-rail slot='rail' items='[{"id":"request-boundary","label":"Request boundary","level":3},{"id":"handler-shape","label":"Handler shape","level":3},{"id":"runtime-fit","label":"Runtime fit","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='request-boundary'>Request boundary</h3>

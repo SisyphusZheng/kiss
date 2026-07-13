@@ -36,7 +36,7 @@ export class PackageCompatibilityPage extends OpenElement {
           and available Custom Elements Manifest metadata for SSR admission.
         </p>
 
-        <div class='compat-grid'>
+        <open-artifact-panel><span slot='label'>capability matrix</span><span slot='meta'>current / admitted / planned</span><div class='compat-grid'>
           <open-card variant='artifact'>
             <h3 id='current-contract'>Current contract</h3>
             <p>@openelement/element owns authoring; app and adapter-vite keep application and build behavior separate.</p>
@@ -49,7 +49,7 @@ export class PackageCompatibilityPage extends OpenElement {
             <h3 id='roadmap-diagnostics'>Roadmap diagnostics</h3>
             <p>Universal DSD/light/client-only classification and hydration-mismatch diagnostics are `0.43` roadmap work, not a current market claim.</p>
           </open-card>
-        </div>
+        </div></open-artifact-panel>
       </div></open-reading-shell>
     );
   }

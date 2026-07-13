@@ -104,7 +104,7 @@ body {
   color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+  `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   resolve: {
@@ -202,17 +202,14 @@ export default defineConfig({
           },
         ],
         headFragments: [
-          '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />',
-          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
-          '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />',
-          '<meta property="og:site_name" content="openElement">',
+          '<meta property="og:site_name" content="OpenElement">',
           '<meta property="og:type" content="website">',
-          '<meta property="og:title" content="openElement - Web Components Fullstack Framework">',
-          '<meta property="og:description" content="openElement pairs a Web Components fullstack framework with Basic Element, a small native custom-element authoring layer.">',
+          '<meta property="og:title" content="OpenElement - The Web, composed.">',
+          '<meta property="og:description" content="A Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
           '<meta property="og:url" content="https://openelement.org">',
           '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
           '<meta name="twitter:card" content="summary_large_image">',
-          '<meta name="description" content="openElement is a Web Components fullstack framework with Basic Element, DSD output, islands, API routes, deployment, and desktop app targets.">',
+          '<meta name="description" content="OpenElement is a Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
           '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
           '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
           '<link rel="apple-touch-icon" href="/assets/open-avatar.svg" />',

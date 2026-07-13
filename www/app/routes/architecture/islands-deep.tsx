@@ -5,6 +5,7 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(pageStyles + `
@@ -37,6 +38,7 @@ export class IslandsDeepGuidePage extends OpenElement {
         </p>
 
         <h2 id='three-layers'>Three Layers</h2>
+        <open-artifact-panel><span slot='label'>island activation model</span><span slot='meta'>DSD static → selective upgrade</span>
         <div class='layer-card'>
           <div class='layer-tag'>Layer 1 - dsd-static</div>
           <h3>No client JavaScript</h3>
@@ -62,6 +64,7 @@ export class IslandsDeepGuidePage extends OpenElement {
             host tag and data-ssr-props; the client owns rendering.
           </p>
         </div>
+        </open-artifact-panel>
 
         <h2 id='strategies'>Strategies</h2>
         <div class='strategy-grid'>

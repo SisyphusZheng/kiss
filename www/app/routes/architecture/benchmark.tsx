@@ -33,22 +33,22 @@ export default class Benchmark extends OpenElement {
         <h1 id='start'>Performance &amp; Benchmarks</h1>
         <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
-        <h2 id='build-performance'>Build Performance</h2>
+        <open-artifact-panel><span slot='label'>build evidence</span><span slot='meta'>deterministic site build</span><h2 id='build-performance'>Build Performance</h2>
         <div class='metric'>
           <span class='label'>SSG build (www)</span>
-          <span class='value'>~3s (37 pages, 478 URLs)</span>
+          <span class='value'>30 route modules, 205 sitemap URLs</span>
         </div>
         <div class='metric'>
           <span class='label'>Dev cold start</span>
-          <span class='value'>~100ms (deno task dev)</span>
+          <span class='value'>Measured by CI performance evidence</span>
         </div>
         <div class='metric'>
           <span class='label'>Vite dev start</span>
-          <span class='value'>~2s (deno task dev)</span>
+          <span class='value'>Measured by CI performance evidence</span>
         </div>
         <div class='metric'>
           <span class='label'>Client bundle</span>
-          <span class='value'>~0 KB (islands only, generated data modules)</span>
+          <span class='value'>Budgeted island chunks; no mandatory page runtime</span>
         </div>
 
         <h2 id='rendering'>Rendering</h2>
@@ -61,9 +61,10 @@ export default class Benchmark extends OpenElement {
           <span class='value'>Per-component, strategy-gated</span>
         </div>
         <div class='metric'>
-          <span class='label'>Route switch (SPA)</span>
-          <span class='value'>~0ms (no full page reload)</span>
+          <span class='label'>Navigation</span>
+          <span class='value'>Browser-native navigation with optional View Transitions</span>
         </div>
+        </open-artifact-panel>
 
         <h2 id='bundle-size'>Bundle Size</h2>
         <p>

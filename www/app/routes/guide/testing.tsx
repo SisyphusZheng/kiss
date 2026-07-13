@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/deployment' previous-label='Deployment'><open-page-rail slot='rail' items='[{"id":"type-checks","label":"Type checks","level":3},{"id":"build-checks","label":"Build checks","level":3},{"id":"visual-checks","label":"Visual checks","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Testing</h1>
-        <p class='subtitle'>Use checks that match the changed surface: type checks for routes, build checks for generated output, and visual checks for design changes.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Testing","lede":"Use checks that match the changed surface: type checks for routes, build checks for generated output and visual checks for design changes."}' previous='/guide/deployment' previous-label='Deployment'><open-page-rail slot='rail' items='[{"id":"type-checks","label":"Type checks","level":3},{"id":"build-checks","label":"Build checks","level":3},{"id":"visual-checks","label":"Visual checks","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='type-checks'>Type checks</h3>

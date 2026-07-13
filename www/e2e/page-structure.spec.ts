@@ -39,7 +39,7 @@ test.describe('Unified page structure', () => {
     test(`${route} uses the WWW reading shell`, async ({ page }) => {
       await page.goto(route);
       await expect(page.locator('open-reading-shell')).toHaveCount(1);
-      await expect(page.locator('open-reading-shell').locator('h1')).toBeVisible();
+      await expect(page.locator('h1')).toBeVisible();
     });
   }
 
@@ -81,7 +81,86 @@ test.describe('Unified page structure', () => {
     ) {
       await page.goto(route);
       await expect(page.locator('open-page-hero')).toHaveCount(1);
-      await expect(page.locator('open-artifact-panel')).toHaveCount(1);
+      await expect(page.locator('open-page-hero open-artifact-panel')).toHaveCount(1);
     }
+  });
+
+  test('entry pages compose their body with shared section frames', async ({ page }) => {
+    for (
+      const route of [
+        '/docs',
+        '/apilist',
+        '/roadmap',
+        '/architecture/architecture',
+        '/architecture/design-system',
+      ]
+    ) {
+      await page.goto(route);
+      expect(await page.locator('open-section-frame').count()).toBeGreaterThan(0);
+    }
+  });
+
+  test('blog articles SSR their outline and deterministic navigation without mojibake', async ({ page }) => {
+    await page.goto('/zh/blog/0001-keep-hono-vite-dev-server');
+    const rail = page.locator('open-page-rail');
+    await expect(rail).toBeVisible();
+    expect(await rail.locator('a[href^="#"]').count()).toBeGreaterThan(0);
+    await expect(page.locator('body')).not.toContainText(/鏂|鈫|鍗|杩|鏈/);
+    await expect(page.locator('open-reading-shell').locator('nav[aria-label="Page navigation"]'))
+      .toBeVisible();
+  });
+
+  test('mobile rail is a native details drawer', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/guide/getting-started');
+    const details = page.locator('open-page-rail details');
+    await expect(details).toBeVisible();
+    await expect(details).not.toHaveAttribute('open', '');
+    await details.locator('summary').click();
+    await expect(details).toHaveAttribute('open', '');
+  });
+
+  test('reading information remains complete without IntersectionObserver or View Transitions', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'IntersectionObserver', {
+        value: undefined,
+        configurable: true,
+      });
+      Object.defineProperty(document, 'startViewTransition', {
+        value: undefined,
+        configurable: true,
+      });
+    });
+    await page.goto('/guide/core-concepts');
+    await expect(page.locator('open-reading-shell').locator('h1')).toContainText('Core Concepts');
+    expect(await page.locator('open-page-rail a').count()).toBe(3);
+  });
+
+  test('non-home routes never load the WebGL atmosphere layer', async ({ page }) => {
+    for (
+      const route of [
+        '/docs',
+        '/apilist',
+        '/roadmap',
+        '/architecture/dsd',
+        '/guide/getting-started',
+        '/blog',
+        '/changelog',
+        '/404',
+      ]
+    ) {
+      await page.goto(route);
+      await expect(page.locator('open-cinematic-atmosphere')).toHaveCount(0);
+    }
+  });
+
+  test('reading shell remains usable at 200 percent zoom', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/guide/getting-started');
+    await page.evaluate(() => {
+      document.documentElement.style.zoom = '2';
+    });
+    await expect(page.locator('open-reading-shell').locator('h1')).toBeVisible();
+    await expect(page.locator('open-page-rail')).toBeVisible();
   });
 });

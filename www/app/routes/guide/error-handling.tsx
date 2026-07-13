@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/configuration' previous-label='Configuration' next='/guide/islands-and-ssr' next-label='Islands and SSR'><open-page-rail slot='rail' items='[{"id":"route-errors","label":"Route errors","level":3},{"id":"component-errors","label":"Component errors","level":3},{"id":"build-errors","label":"Build errors","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Error Handling</h1>
-        <p class='subtitle'>Error handling should preserve platform semantics and keep route failures visible.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Error Handling","lede":"Error handling preserves platform semantics and keeps route failures visible."}' previous='/guide/configuration' previous-label='Configuration' next='/guide/islands-and-ssr' next-label='Islands and SSR'><open-page-rail slot='rail' items='[{"id":"route-errors","label":"Route errors","level":3},{"id":"component-errors","label":"Component errors","level":3},{"id":"build-errors","label":"Build errors","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='route-errors'>Route errors</h3>

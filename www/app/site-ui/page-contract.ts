@@ -14,6 +14,19 @@ export type ReadingContract = Readonly<{
   next?: Readonly<{ href: string; label: string }>;
 }>;
 
+export type ReadingMetadata = Readonly<{
+  breadcrumb: string;
+  title: string;
+  lede?: string;
+  date?: string;
+  tags?: readonly string[];
+}>;
+
+export type ReadingNavigation = Readonly<{
+  previous?: Readonly<{ href: string; label: string }>;
+  next?: Readonly<{ href: string; label: string }>;
+}>;
+
 export function defineReadingContract(contract: ReadingContract): ReadingContract {
   if (!contract.breadcrumb || !contract.title || !contract.outline.length) {
     throw new Error('WWW reading contracts require breadcrumb, title, and an outline.');

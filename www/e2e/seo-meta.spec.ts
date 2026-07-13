@@ -19,7 +19,7 @@ test.describe('SEO Meta Tags', () => {
 
   test('has Open Graph site name', async ({ page }) => {
     const content = await page.locator('meta[property="og:site_name"]').getAttribute('content');
-    expect(content).toBe('openElement');
+    expect(content).toBe('OpenElement');
   });
 
   test('has Open Graph type', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('SEO Meta Tags', () => {
 
   test('has Open Graph title', async ({ page }) => {
     const content = await page.locator('meta[property="og:title"]').getAttribute('content');
-    expect(content).toContain('openElement');
+    expect(content).toBe('OpenElement - The Web, composed.');
   });
 
   test('has Open Graph description', async ({ page }) => {
@@ -57,7 +57,8 @@ test.describe('SEO Meta Tags', () => {
   test('has description meta tag', async ({ page }) => {
     const content = await page.locator('meta[name="description"]').getAttribute('content');
     expect(content).toBeTruthy();
-    expect(content).toContain('openElement');
+    expect(content).toContain('OpenElement');
+    expect(content).toContain('Web Components-native');
   });
 });
 

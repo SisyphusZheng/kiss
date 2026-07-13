@@ -9,10 +9,10 @@ import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import '@openelement/ui/open-input';
-import '@openelement/site-ui/open-lab-panel.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import '@openelement/site-ui/open-section-frame.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -29,50 +29,6 @@ pageSheet.replaceSync(`
     width: 100%;
     margin-inline: auto;
     padding-block: 0 var(--site-section-block);
-  }
-
-  .hero {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, .56fr) minmax(360px, .44fr);
-    gap: 0;
-    align-items: stretch;
-    min-height: 480px;
-    padding-block-end: 0;
-    border-block-end: var(--border-size-1) solid var(--border);
-    background:
-      linear-gradient(126deg, color-mix(in srgb, var(--violet-2) 42%, transparent), transparent 54%),
-      color-mix(in srgb, var(--bg-base) 86%, var(--violet-0));
-    overflow: hidden;
-  }
-
-  .hero::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: var(--size-8);
-    inset-block: 50% auto;
-    width: 360px;
-    aspect-ratio: 1;
-    transform: translateY(-50%);
-    border: var(--size-6) solid color-mix(in srgb, var(--brand) 24%, transparent);
-    border-radius: var(--radius-round);
-    opacity: .32;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .hero > div:first-child {
-    display: grid;
-    align-content: end;
-    position: relative;
-    z-index: 1;
-    padding: var(--size-10) var(--size-8);
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .hero open-lab-panel {
-    position: relative;
-    z-index: 1;
   }
 
   .kicker,
@@ -239,7 +195,6 @@ pageSheet.replaceSync(`
   }
 
   @media (max-width: 1120px) {
-    .hero,
     .reference {
       grid-template-columns: 1fr;
     }
@@ -257,10 +212,6 @@ pageSheet.replaceSync(`
   @media (max-width: 640px) {
     .desk {
       padding-block-start: var(--size-5);
-    }
-
-    .hero {
-      padding-block-end: var(--size-5);
     }
 
     h1 {
@@ -334,24 +285,33 @@ export class DocsPage extends OpenElement {
           </open-artifact-panel>
         </open-page-hero>
 
-        <nav class='paths' aria-label='Documentation paths'>
-          {paths.map(([index, title, copy, href]) => (
-            <a class='path-link' href={href}>
-              <open-card class='path-card'>
-                <span class='index'>{index}</span>
-                <h2>{title}</h2>
-                <p>{copy}</p>
-              </open-card>
-            </a>
-          ))}
-        </nav>
+        <open-section-frame>
+          <span slot='index'>01 / routes</span>
+          <span slot='title'>Choose the shortest path to evidence.</span>
+          <span slot='copy'>Build, inspect, decide, then contribute through the same five-package product map.</span>
+          <nav class='paths' aria-label='Documentation paths'>
+            {paths.map(([index, title, copy, href]) => (
+              <a class='path-link' href={href}>
+                <open-card class='path-card'>
+                  <span class='index'>{index}</span>
+                  <h2>{title}</h2>
+                  <p>{copy}</p>
+                </open-card>
+              </a>
+            ))}
+          </nav>
+        </open-section-frame>
 
-        <section class='reference'>
-          <open-lab-panel class='route-panel' variant='artifact' label='route graph' meta='fast paths'>
+        <open-section-frame>
+          <span slot='index'>02 / evidence</span>
+          <span slot='title'>Documentation is a product surface.</span>
+          <span slot='copy'>Routes, generated search and current package truth are rebuilt together.</span>
+          <div class='reference'>
+          <open-artifact-panel class='route-panel'><span slot='label'>route graph</span><span slot='meta'>fast paths</span>
             <open-standards-visual variant='routes' emphasis='high' motion='auto'></open-standards-visual>
-          </open-lab-panel>
+          </open-artifact-panel>
 
-          <open-lab-panel class='workflow-panel' label='usage workflow' meta='docs as product'>
+          <open-artifact-panel class='workflow-panel'><span slot='label'>usage workflow</span><span slot='meta'>docs as product</span>
             <h2>How to use this site</h2>
             <div class='workflow-list'>
               {workflow.map(([label, copy]) => (
@@ -361,8 +321,9 @@ export class DocsPage extends OpenElement {
                 </div>
               ))}
             </div>
-          </open-lab-panel>
-        </section>
+          </open-artifact-panel>
+          </div>
+        </open-section-frame>
       </main>
     );
   }

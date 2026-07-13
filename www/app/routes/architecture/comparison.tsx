@@ -10,6 +10,7 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 
 export const tagName = 'comparison-page';
 export const meta = { section: 'Principles', label: 'Comparison', order: 20 };
@@ -88,7 +89,7 @@ export default class ComparisonPage extends OpenElement {
           claims. Use it to understand fit, not to rank speed.
         </p>
 
-        <div class='comparison-grid'>
+        <open-artifact-panel><span slot='label'>framework decision surface</span><span slot='meta'>reviewed 2026-07-11</span><div class='comparison-grid'>
           <open-card variant='artifact'>
             <span class='label'>openElement</span>
             <h3>WC-native application framework</h3>
@@ -222,7 +223,7 @@ export default class ComparisonPage extends OpenElement {
               an established design system and should be evaluated as an app
               framework around components.</p>
           </open-card>
-        </div>
+        </div></open-artifact-panel>
 
         <h2 id='how-to-read'>How to read this</h2>
         <ul>

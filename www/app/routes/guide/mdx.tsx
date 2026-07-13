@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/routing-and-data' previous-label='Routing and Data' next='/guide/api' next-label='API Routes'><open-page-rail slot='rail' items='[{"id":"content-source","label":"Content source","level":3},{"id":"components","label":"Components","level":3},{"id":"build-path","label":"Build path","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>MDX</h1>
-        <p class='subtitle'>Documentation content should compile into the same route and component system as authored pages.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"MDX","lede":"Documentation content compiles into the same route and component system as authored pages."}' previous='/guide/routing-and-data' previous-label='Routing and Data' next='/guide/api' next-label='API Routes'><open-page-rail slot='rail' items='[{"id":"content-source","label":"Content source","level":3},{"id":"components","label":"Components","level":3},{"id":"build-path","label":"Build path","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='content-source'>Content source</h3>

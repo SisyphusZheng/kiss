@@ -7,6 +7,7 @@ import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import '@openelement/site-ui/open-section-frame.tsx';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 
 export const tagName = 'api-core-page';
@@ -16,18 +17,12 @@ const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
   :host { display: block; color: var(--text-primary); }
   * { box-sizing: border-box; }
-  .hero { display: grid; grid-template-columns: minmax(0, .68fr) minmax(320px, .32fr); min-height: 420px; border-block-end: var(--border-size-1) solid var(--border); background: linear-gradient(112deg, color-mix(in srgb, var(--brand-pale) 56%, transparent), transparent 44%), var(--bg-base); }
-  .hero-copy, .hero-panel { display: grid; align-content: end; padding: var(--size-10); }
-  .hero-copy { border-inline-end: var(--border-size-1) solid var(--border); }
   .kicker, .section-kicker, .surface { color: var(--brand); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); text-transform: uppercase; }
   h1 { max-width: 780px; margin: var(--size-4) 0; font-size: var(--font-size-7); line-height: .94; font-weight: var(--font-weight-9); }
   h2 { margin: 0; font-size: var(--font-size-4); }
   h3 { margin: var(--size-2) 0; font-size: var(--font-size-3); }
   .lede, p, li { color: var(--text-secondary); line-height: var(--font-lineheight-4); }
   .lede { max-width: 720px; font-size: var(--font-size-3); }
-  .shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--size-7); width: min(1180px, calc(100% - var(--size-10))); margin-inline: auto; padding: var(--size-10) 0; }
-  .rail { position: sticky; top: calc(var(--nav-height) + var(--size-5)); align-self: start; display: grid; gap: var(--size-2); }
-  .rail-link { display: block; padding: var(--size-3) 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); text-decoration: none; border-block-end: var(--border-size-1) solid var(--border); }
   .api-grid { display: grid; gap: var(--size-7); }
   .section-head { display: grid; grid-template-columns: minmax(0, .45fr) minmax(0, .55fr); gap: var(--size-6); }
   .package-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--size-4); }
@@ -35,7 +30,7 @@ routeSheet.replaceSync(`
   .card-top { display: flex; justify-content: space-between; gap: var(--size-3); }
   .sig { display: block; overflow-x: auto; padding: var(--size-2); color: var(--brand); background: var(--code-bg); font-family: var(--font-mono); font-size: var(--font-size-00); }
   ul { padding-inline-start: var(--size-4); }
-  @media (max-width: 860px) { .hero, .shell, .section-head, .package-grid { grid-template-columns: 1fr; } .hero-copy, .hero-panel { padding: var(--size-7) var(--size-4); } .rail { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 860px) { .section-head, .package-grid { grid-template-columns: 1fr; } }
 `);
 
 type ApiPackage = { id: string; title: string; copy: string; importPath: string; exports: string[]; notes: string[] };
@@ -82,10 +77,10 @@ export class ApiCorePage extends OpenElement {
         <open-artifact-panel slot='artifact'><span slot='label'>five-package surface</span><span slot='meta'>{OPENELEMENT_VERSION}</span><p>Element, App and Build interfaces stay small so authors do not need renderer, protocol, router or build-phase internals.</p><open-button href='/guide/getting-started'>Start building</open-button></open-artifact-panel>
       </open-page-hero>
       <open-reading-shell rail>
-        <open-page-rail slot='rail'>{packages.map((pkg) => <a href={`#${pkg.id}`}>{pkg.title}</a>)}</open-page-rail>
+        <open-page-rail slot='rail' items={JSON.stringify(packages.map((pkg) => ({ id: pkg.id, label: pkg.title })))}></open-page-rail>
         <div class='api-grid'>
-          <section><div class='section-head'><div><p class='section-kicker'>Surface rule</p><h2>Authoring starts at product packages.</h2></div><p>Current documentation, starters and dogfood use the five supported interfaces. Future load, action, form and revalidation capabilities are roadmap work, not current stable claims.</p></div></section>
-          <div class='package-grid'>{packages.map((pkg) => <open-card class='package-card' id={pkg.id}><div class='card-top'><div><span class='surface'>Supported product</span><h3>{pkg.title}</h3></div><open-badge tone='brand'>{pkg.exports.length} entries</open-badge></div><p>{pkg.copy}</p><code class='sig'>{pkg.importPath}</code><ul><li>Supported entries: {pkg.exports.join(', ')}</li>{pkg.notes.map((note) => <li>{note}</li>)}</ul></open-card>)}</div>
+          <open-section-frame><span slot='index'>01 / interface rule</span><span slot='title'>Authoring starts at product packages.</span><span slot='copy'>Current documentation, starters and dogfood use the five supported interfaces. Future load, action, form and revalidation capabilities are roadmap work, not current stable claims.</span></open-section-frame>
+          <open-section-frame><span slot='index'>02 / supported surface</span><span slot='title'>Five products, one application path.</span><span slot='copy'>Each package owns a distinct consumer decision; absorbed implementation packages remain private.</span><div class='package-grid'>{packages.map((pkg) => <open-card class='package-card' id={pkg.id}><div class='card-top'><div><span class='surface'>Supported product</span><h3>{pkg.title}</h3></div><open-badge tone='brand'>{pkg.exports.length} entries</open-badge></div><p>{pkg.copy}</p><code class='sig'>{pkg.importPath}</code><ul><li>Supported entries: {pkg.exports.join(', ')}</li>{pkg.notes.map((note) => <li>{note}</li>)}</ul></open-card>)}</div></open-section-frame>
         </div>
       </open-reading-shell>
     </main>;

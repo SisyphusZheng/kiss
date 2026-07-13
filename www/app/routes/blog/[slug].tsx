@@ -19,6 +19,24 @@ export function getStaticPaths(): Array<Record<string, string>> {
   return posts.map((post) => ({ slug: post.slug }));
 }
 
+type ArticleOutline = Readonly<{ id: string; label: string; level: 2 | 3 }>;
+
+function prepareArticle(html: string): { html: string; outline: ArticleOutline[] } {
+  const outline: ArticleOutline[] = [];
+  const seen = new Map<string, number>();
+  const withIds = html.replace(/<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi, (_match, depth, attrs, body) => {
+    const label = String(body).replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+    const stem = label.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/(^-|-$)/g, '') || 'section';
+    const count = seen.get(stem) ?? 0;
+    seen.set(stem, count + 1);
+    const id = count ? `${stem}-${count + 1}` : stem;
+    outline.push({ id, label, level: Number(depth) as 2 | 3 });
+    const cleanAttrs = String(attrs).replace(/\s+id=(?:"[^"]*"|'[^']*')/i, '');
+    return `<h${depth}${cleanAttrs} id="${id}">${body}</h${depth}>`;
+  });
+  return { html: withIds, outline };
+}
+
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
@@ -46,6 +64,9 @@ routeSheet.replaceSync(
     .blog-content blockquote { border-left: 2px solid var(--brand); padding-left: var(--size-4); margin: var(--size-4) 0; color: var(--text-secondary); }
     .not-found { text-align: center; padding: var(--size-12) var(--size-4); color: var(--text-secondary); }
     .nav-row { margin-top: var(--size-11); }
+    .related { display:grid; gap:var(--size-2); margin-block-end:var(--size-5); }
+    .related a { color:var(--text-secondary); text-decoration:none; }
+    .related a:hover,.related a:focus-visible { color:var(--brand); }
   `,
 );
 
@@ -55,30 +76,38 @@ export default class BlogPostPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    return (this._getLocale("zh")) === "en"
-      ? this._renderEn()
-      : this._renderZh();
-  }
-
-  private _renderZh() {
+    const locale = this._getLocale("zh") === "en" ? "en" : "zh";
+    const blogHref = `/${locale}/blog`;
     const post = getPostBySlug(this.slug);
-
     if (!post) {
       return (
         <div class="container">
           <div class="not-found">
             <h1>404</h1>
-            <p>鏂囩珷鏈壘鍒? {this.slug}</p>
-            <a href="/blog">鈫?杩斿洖鍗氬</a>
+            <p>{locale === "en" ? "Post not found" : "未找到文章"}: {this.slug}</p>
+            <a href={blogHref}>← {locale === "en" ? "Back to Blog" : "返回博客"}</a>
           </div>
         </div>
       );
     }
     const tags = post.frontmatter.tags ?? [];
+    const article = prepareArticle(post.html);
+    const index = posts.findIndex((candidate) => candidate.slug === post.slug);
+    const previous = index >= 0 ? posts[index + 1] : undefined;
+    const next = index > 0 ? posts[index - 1] : undefined;
+    const related = posts.filter((candidate) => candidate.slug !== post.slug && (candidate.frontmatter.tags ?? []).some((tag) => tags.includes(tag))).slice(0, 3);
     return (
-      <open-reading-shell meta rail footer>
-        <div slot="meta"><a href="/blog" class="blog-back">鈫?鍗氬</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
-        <open-page-rail slot="rail" auto></open-page-rail>
+      <open-reading-shell
+        meta
+        rail
+        footer
+        previous={previous ? `${blogHref}/${previous.slug}` : undefined}
+        previous-label={previous?.frontmatter.title}
+        next={next ? `${blogHref}/${next.slug}` : undefined}
+        next-label={next?.frontmatter.title}
+      >
+        <div slot="meta"><a href={blogHref} class="blog-back">← {locale === "en" ? "Blog" : "博客"}</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
+        <open-page-rail slot="rail" items={JSON.stringify(article.outline)}></open-page-rail>
         {tags.length > 0
           ? (
             <div class="blog-tags">
@@ -89,51 +118,12 @@ export default class BlogPostPage extends OpenElement {
           )
           : null}
         <p class="blog-date">{post.frontmatter.date}</p>
-        <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
+        <div class="blog-content" innerHTML={article.html} trustedHtml={true}>
         </div>
-        <div slot="footer" class="nav-row">
-          <open-button variant="ghost" size="sm" href="/blog">
-            Back to Blog
-          </open-button>
-        </div>
-      </open-reading-shell>
-    );
-  }
-
-  private _renderEn() {
-    const post = getPostBySlug(this.slug);
-
-    if (!post) {
-      return (
-        <div class="container">
-          <div class="not-found">
-            <h1>404</h1>
-            <p>Post not found: {this.slug}</p>
-            <a href="/en/blog">鈫?Back to Blog</a>
-          </div>
-        </div>
-      );
-    }
-    const tags = post.frontmatter.tags ?? [];
-    return (
-      <open-reading-shell meta rail footer>
-        <div slot="meta"><a href="/blog" class="blog-back">Blog</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
-        <open-page-rail slot="rail" auto></open-page-rail>
-        {tags.length > 0
-          ? (
-            <div class="blog-tags">
-              {tags.map((tag: string) => (
-                <span key={tag} class="blog-tag">{tag}</span>
-              ))}
-            </div>
-          )
-          : null}
-        <p class="blog-date">{post.frontmatter.date}</p>
-        <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
-        </div>
-        <div slot="footer" class="nav-row">
-          <open-button variant="ghost" size="sm" href="/blog">
-            Back to Blog
+        <div class="nav-row">
+          {related.length ? <nav class="related" aria-label="Related posts"><strong>{locale === "en" ? "Related" : "相关文章"}</strong>{related.map((item) => <a href={`${blogHref}/${item.slug}`}>{item.frontmatter.title}</a>)}</nav> : null}
+          <open-button variant="ghost" size="sm" href={blogHref}>
+            {locale === "en" ? "Back to Blog" : "返回博客"}
           </open-button>
         </div>
       </open-reading-shell>

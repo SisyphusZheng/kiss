@@ -47,14 +47,14 @@ export class DsdGuidePage extends OpenElement {
           {' '}<code>shadowrootmode</code>{' '}so HTML can carry shadow-root
           content before client JavaScript loads.
         </p>
-        <open-code-block>
+        <open-artifact-panel><span slot='label'>template / shadow tree</span><span slot='meta'>browser-parsed DSD</span><open-code-block>
           <pre><code>{`<my-card>
   <template shadowrootmode="open">
     <style>:host { display: block; }</style>
     <p>Visible before client JavaScript.</p>
   </template>
 </my-card>`}</code></pre>
-        </open-code-block>
+        </open-code-block></open-artifact-panel>
 
         <div class='comparison'>
           <open-card>

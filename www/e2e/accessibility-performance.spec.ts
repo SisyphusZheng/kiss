@@ -115,10 +115,10 @@ test.describe('Performance', () => {
   });
 
   test('no critical console errors on homepage', async ({ page }) => {
-    const errors: string[] = [];
+    const errors: Array<{ text: string; url: string }> = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
-        errors.push(msg.text());
+        errors.push({ text: msg.text(), url: msg.location().url });
       }
     });
 
@@ -133,17 +133,17 @@ test.describe('Performance', () => {
 
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)
     const criticalErrors = errors.filter(
-      (e) =>
-        !e.includes('goatcounter') &&
-        !e.includes('gc.zgo.at') &&
-        !e.includes('net::ERR') &&
-        !e.includes('favicon') &&
-        !e.includes('Manifest') &&
+      ({ text, url }) =>
+        !url.includes('gc.zgo.at') &&
+        !url.includes('openelement.goatcounter.com') &&
+        !text.includes('net::ERR') &&
+        !text.includes('favicon') &&
+        !text.includes('Manifest') &&
         // CDN integrity hash mismatches - external CDN resources change
         // independently of the app; these are infrastructure noise, not bugs.
-        !e.includes('cdnjs.cloudflare.com') &&
-        !e.includes('cdn.jsdelivr.net') &&
-        !e.includes("Failed to find a valid digest in the 'integrity' attribute"),
+        !url.includes('cdnjs.cloudflare.com') &&
+        !url.includes('cdn.jsdelivr.net') &&
+        !text.includes("Failed to find a valid digest in the 'integrity' attribute"),
     );
 
     expect(criticalErrors.length).toBe(0);

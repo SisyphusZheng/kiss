@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/islands-and-ssr' previous-label='Islands and SSR' next='/guide/testing' next-label='Testing'><open-page-rail slot='rail' items='[{"id":"static-output","label":"Static output","level":3},{"id":"adapters","label":"Adapters","level":3},{"id":"verification","label":"Verification","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Deployment</h1>
-        <p class='subtitle'>Deployment is built around generated static output and adapter-specific runtime boundaries.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Deployment","lede":"Deployment is built around generated static output and adapter-specific runtime boundaries."}' previous='/guide/islands-and-ssr' previous-label='Islands and SSR' next='/guide/testing' next-label='Testing'><open-page-rail slot='rail' items='[{"id":"static-output","label":"Static output","level":3},{"id":"adapters","label":"Adapters","level":3},{"id":"verification","label":"Verification","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='static-output'>Static output</h3>

@@ -32,13 +32,7 @@ export class GuideComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/architecture' previous-label='Architecture' next='/guide/routing-and-data' next-label='Routing and Data'><open-page-rail slot='rail' items='[{"id":"lit","label":"Lit","level":3},{"id":"stencil","label":"Stencil","level":3},{"id":"enhance","label":"Enhance","level":3},{"id":"astro-fresh","label":"Astro / Fresh","level":3},{"id":"when-to-choose","label":"When to choose openElement","level":2}]'></open-page-rail><div class='container'>
-        <h1 id='start'>How openElement compares</h1>
-        <p class='subtitle'>
-          openElement occupies a specific niche: a Web Components-native
-          fullstack framework with a JSX-first authoring layer. Other tools are
-          adjacent or solve a different slice of the problem.
-        </p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"How OpenElement compares","lede":"OpenElement is a Web Components-native application framework with a JSX-first authoring layer; adjacent tools solve different slices."}' previous='/guide/architecture' previous-label='Architecture' next='/guide/routing-and-data' next-label='Routing and Data'><open-page-rail slot='rail' items='[{"id":"lit","label":"Lit","level":3},{"id":"stencil","label":"Stencil","level":3},{"id":"enhance","label":"Enhance","level":3},{"id":"astro-fresh","label":"Astro / Fresh","level":3},{"id":"when-to-choose","label":"When to choose openElement","level":2}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='lit'>Lit</h3>

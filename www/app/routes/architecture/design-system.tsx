@@ -15,6 +15,7 @@ import '@openelement/site-ui/open-lab-stage.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import '@openelement/site-ui/open-section-frame.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -31,50 +32,6 @@ pageSheet.replaceSync(`
     width: 100%;
     margin-inline: auto;
     padding-block: 0 var(--site-section-block);
-  }
-
-  .hero {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, .58fr) minmax(360px, .42fr);
-    gap: 0;
-    align-items: stretch;
-    min-height: 480px;
-    padding-block-end: 0;
-    border-block-end: var(--border-size-1) solid var(--border);
-    background:
-      linear-gradient(126deg, color-mix(in srgb, var(--violet-2) 42%, transparent), transparent 54%),
-      color-mix(in srgb, var(--bg-base) 86%, var(--violet-0));
-    overflow: hidden;
-  }
-
-  .hero::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: var(--size-8);
-    inset-block: 50% auto;
-    width: 360px;
-    aspect-ratio: 1;
-    transform: translateY(-50%);
-    border: var(--size-6) solid color-mix(in srgb, var(--brand) 24%, transparent);
-    border-radius: var(--radius-round);
-    opacity: .32;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .hero > div:first-child {
-    display: grid;
-    align-content: end;
-    position: relative;
-    z-index: 1;
-    padding: var(--size-10) var(--size-8);
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .hero open-lab-panel {
-    position: relative;
-    z-index: 1;
   }
 
   .kicker,
@@ -132,37 +89,6 @@ pageSheet.replaceSync(`
 
   .rule-list li + li {
     margin-block-start: var(--size-2);
-  }
-
-  .section {
-    display: grid;
-    grid-template-columns: minmax(280px, .34fr) minmax(0, 1fr);
-    gap: 0;
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    margin-block-start: 0;
-    border-block-end: var(--border-size-1) solid var(--border);
-  }
-
-  .section > div:first-child {
-    padding: var(--size-8);
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .section > open-lab-panel,
-  .section > .component-grid,
-  .section > .visual-grid,
-  .section > .principles {
-    padding: var(--size-8);
-  }
-
-  .section-title {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--font-size-6);
-    line-height: .96;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
   }
 
   .token-grid,
@@ -239,8 +165,6 @@ pageSheet.replaceSync(`
   }
 
   @media (max-width: 1120px) {
-    .hero,
-    .section,
     .token-grid,
     .component-grid,
     .principles,
@@ -248,9 +172,6 @@ pageSheet.replaceSync(`
       grid-template-columns: 1fr;
     }
 
-    .section {
-      width: min(100% - var(--size-8), 1120px);
-    }
   }
 
   @media (max-width: 620px) {
@@ -307,11 +228,10 @@ export class UIShowcase extends OpenElement {
           </open-artifact-panel>
         </open-page-hero>
 
-        <section class='section'>
-          <div>
-            <p class='label'>Token contract</p>
-            <h2 class='section-title'>Semantic roles mapped to Open Props.</h2>
-          </div>
+        <open-section-frame>
+          <span slot='index'>01 / token contract</span>
+          <span slot='title'>Semantic roles mapped to Open Props.</span>
+          <span slot='copy'>Raw Open Props values stop at the audited token boundary; pages and primitives consume semantic roles.</span>
           <open-lab-panel label='token roles' meta='source: openPropsTokenSheet'>
             {tokenRows.map(([role, token, copy]) => (
               <div class='token-row'>
@@ -320,13 +240,13 @@ export class UIShowcase extends OpenElement {
               </div>
             ))}
           </open-lab-panel>
-        </section>
+        </open-section-frame>
 
-        <section class='section'>
-          <div>
-            <p class='label'>Primitives</p>
-            <h2 class='section-title'>The site dogfoods optional UI primitives.</h2>
-          </div>
+        <open-section-frame>
+          <span slot='index'>02 / primitives</span>
+          <span slot='title'>The site dogfoods optional UI primitives.</span>
+          <span slot='copy'>Button, input, badge and card behavior stays reusable; brand and cinematic objects remain private to the website.</span>
+          <open-artifact-panel><span slot='label'>token → recipe → primitive</span><span slot='meta'>ownership chain</span><div class='token-row'><strong class='token-name'>Token</strong><span>surface, text, brand, focus, motion and elevation roles</span></div><div class='token-row'><strong class='token-name'>Recipe</strong><span>interactive state, typography and material composition</span></div><div class='token-row'><strong class='token-name'>Primitive</strong><span>ten reusable Web Components with tested semantics</span></div></open-artifact-panel>
           <div class='component-grid'>
             <open-card class='component-card'>
               <h3>Buttons</h3>
@@ -352,26 +272,24 @@ export class UIShowcase extends OpenElement {
               <p>Status labels and motion states are readable text first and color second.</p>
             </open-card>
           </div>
-        </section>
+        </open-section-frame>
 
-        <section class='section'>
-          <div>
-            <p class='label'>Product art</p>
-            <h2 class='section-title'>Code and diagrams are the visual asset.</h2>
-          </div>
+        <open-section-frame>
+          <span slot='index'>03 / product art</span>
+          <span slot='title'>Code and diagrams are the visual asset.</span>
+          <span slot='copy'>Real standards objects carry the visual identity without stock illustration or framework-shaped decoration.</span>
           <div class='visual-grid'>
             <open-lab-stage class='stage-demo' emphasis='normal' motion='auto'></open-lab-stage>
             <open-lab-panel label='token board' meta='Open Props'>
               <open-standards-visual variant='tokens' emphasis='high' motion='auto'></open-standards-visual>
             </open-lab-panel>
           </div>
-        </section>
+        </open-section-frame>
 
-        <section class='section'>
-          <div>
-            <p class='label'>Layout</p>
-            <h2 class='section-title'>Composition principles</h2>
-          </div>
+        <open-section-frame>
+          <span slot='index'>04 / composition</span>
+          <span slot='title'>Composition principles</span>
+          <span slot='copy'>Each page begins with a product object, preserves dark/light parity and keeps motion subordinate to comprehension.</span>
           <div class='principles'>
             {principles.map(([title, copy], index) => (
               <open-card class='principle'>
@@ -381,7 +299,7 @@ export class UIShowcase extends OpenElement {
               </open-card>
             ))}
           </div>
-        </section>
+        </open-section-frame>
 
         <nav class='nav-row'>
           <open-button href='/docs'>Docs</open-button>

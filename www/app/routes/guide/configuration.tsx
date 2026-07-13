@@ -28,9 +28,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/api' previous-label='API Routes' next='/guide/error-handling' next-label='Error Handling'><open-page-rail slot='rail' items='[{"id":"route-config","label":"Route config","level":3},{"id":"build-config","label":"Build config","level":3},{"id":"package-config","label":"Package config","level":3}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Configuration</h1>
-        <p class='subtitle'>Configuration should stay close to the route, build, or package surface it affects.</p>
+      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Configuration","lede":"Configuration stays close to the route, build or package surface it affects."}' previous='/guide/api' previous-label='API Routes' next='/guide/error-handling' next-label='Error Handling'><open-page-rail slot='rail' items='[{"id":"route-config","label":"Route config","level":3},{"id":"build-config","label":"Build config","level":3},{"id":"package-config","label":"Package config","level":3}]'></open-page-rail><div class='container'>
         <div class='guide-grid'>
           <open-card>
             <h3 id='route-config'>Route config</h3>

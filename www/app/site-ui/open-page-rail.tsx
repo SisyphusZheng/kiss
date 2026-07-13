@@ -16,6 +16,9 @@ export default class OpenPageRail extends OpenElement {
     super.connectedCallback();
     requestAnimationFrame(() => {
       this.#buildAutomaticOutline();
+      if (matchMedia('(max-width: 900px)').matches) {
+        this.shadowRoot?.querySelector('details')?.removeAttribute('open');
+      }
       this.#activate();
     });
   }

@@ -7,6 +7,7 @@
 import { StyleSheet } from '@openelement/element';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
+import '@openelement/site-ui/open-artifact-panel.tsx';
 import '../islands/open-page-rail.tsx';
 
 export const pageStyles = `

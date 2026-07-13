@@ -32,9 +32,11 @@ or a full-screen canvas as its content layer.
 | Guides/Blog/Changelog         | Reading-first material, shared dark material and restrained motion only. |
 | 404                           | A concise `<open/>` recovery moment, never a dead end.                   |
 
-The private page system is documented in
-[specs/page-architecture.md](specs/page-architecture.md). It owns page hero,
-reading shell and section-frame geometry; it is never exported from `ui`.
+The private page system contract is documented in
+[specs/page-system.md](specs/page-system.md); the supporting layout rationale is
+kept in [specs/page-architecture.md](specs/page-architecture.md). The page system
+owns hero, reading shell, rail, section-frame and artifact geometry and is never
+exported from `ui`.
 
 ## Motion and rendering
 

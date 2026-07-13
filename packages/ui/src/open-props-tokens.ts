@@ -87,8 +87,8 @@ const tokenCss = `
   /* ═══════════════════════════════════════════════
      Typography
      ═══════════════════════════════════════════════ */
-  --font-sans: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-sans: 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
   --font-size-00: 0.75rem;
   --font-size-0: 0.875rem;
   --font-size-1: 1rem;

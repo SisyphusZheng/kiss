@@ -113,7 +113,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       }
     >)('/roadmap', { lang: 'en' });
     assertStringIncludes(result.html, '<!DOCTYPE html>');
-    assertStringIncludes(result.html, 'Web Components Fullstack Framework');
+    assertStringIncludes(result.html, 'Web Components-native');
     assertStringIncludes(result.html, '<open-layout');
   });
 
@@ -151,7 +151,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assert(existsSync(join(WWW_DIST, 'roadmap', 'index.html')), 'Clean URL output should exist');
     assert(existsSync(join(WWW_DIST, 'en', 'roadmap', 'index.html')), 'i18n roadmap should exist');
     const roadmapHtml = readFileSync(join(WWW_DIST, 'roadmap', 'index.html'), 'utf-8');
-    assertStringIncludes(roadmapHtml, 'Web Components Fullstack Framework');
+    assertStringIncludes(roadmapHtml, 'Web Components-native');
     assertStringIncludes(roadmapHtml, '<open-layout');
   });
 });

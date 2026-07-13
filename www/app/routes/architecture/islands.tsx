@@ -36,7 +36,7 @@ export class IslandsGuidePage extends OpenElement {
           state or framework interop.
         </p>
 
-        <div class='island-grid'>
+        <open-artifact-panel><span slot='label'>activation boundary</span><span slot='meta'>static → interactive</span><div class='island-grid'>
           <open-card>
             <h3 id='static-surface'>Static surface</h3>
             <p>HTML and DSD render first, without forcing a client app shell.</p>
@@ -54,7 +54,7 @@ export class IslandsGuidePage extends OpenElement {
               document.
             </p>
           </open-card>
-        </div>
+        </div></open-artifact-panel>
       </div></open-reading-shell>
     );
   }

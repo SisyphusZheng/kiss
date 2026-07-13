@@ -31,14 +31,7 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer next={reading.next?.href}><div slot='meta'><p class='section-label'>{reading.breadcrumb}</p></div><open-page-rail slot='rail' items={serializeOutline(reading.outline)}></open-page-rail><div class='container'>
-        <h1 id='start'>Getting Started</h1>
-        <p class='subtitle'>
-          OpenElement is a Web Components-native, static-first application
-          framework. Start with the Deno-first workflow, then use standard
-          Custom Elements, pages, routes, selective upgrades and deployable
-          Vite/Nitro output through one application model.
-        </p>
+      <open-reading-shell rail footer metadata={JSON.stringify({ breadcrumb: reading.breadcrumb, title: reading.title, lede: 'OpenElement is a Web Components-native, static-first application framework. Start with standard Custom Elements, pages, routes, selective upgrades and deployable Vite/Nitro output.' })} next={reading.next?.href} next-label={reading.next?.label}><open-page-rail slot='rail' items={serializeOutline(reading.outline)}></open-page-rail><div class='container'>
         <p class='subtitle'>
           The current published package line is {OPENELEMENT_VERSION}. The
           repository-side beta.4 five-package convergence is complete; external

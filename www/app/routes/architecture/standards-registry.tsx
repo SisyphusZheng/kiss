@@ -36,7 +36,7 @@ export class StandardsRegistryPage extends OpenElement {
           FormData define the direction of the public application model.
         </p>
 
-        <div class='registry-grid'>
+        <open-artifact-panel><span slot='label'>browser standards contract</span><span slot='meta'>platform ownership</span><div class='registry-grid'>
           <open-card variant='artifact'>
             <h3 id='elements-dsd'>Elements + DSD</h3>
             <p>Standard Custom Elements and Declarative Shadow DOM define the durable component boundary.</p>
@@ -49,7 +49,7 @@ export class StandardsRegistryPage extends OpenElement {
             <h3 id='five-package-ownership'>Five-package ownership</h3>
             <p>Element, App, Adapter Vite, Create and optional UI are the current consumer surface; internal contracts stay internal.</p>
           </open-card>
-        </div>
+        </div></open-artifact-panel>
       </div></open-reading-shell>
     );
   }

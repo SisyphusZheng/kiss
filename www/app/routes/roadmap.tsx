@@ -8,10 +8,10 @@ import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
-import '@openelement/site-ui/open-lab-panel.tsx';
 import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import '@openelement/site-ui/open-section-frame.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -35,50 +35,6 @@ pageSheet.replaceSync(`
     display: grid;
     width: 100%;
     background: var(--bg-base);
-  }
-
-  .hero {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, .62fr) minmax(390px, .38fr);
-    min-height: min(660px, calc(100svh - var(--nav-height)));
-    border-block-end: var(--border-size-1) solid var(--border);
-    overflow: hidden;
-    isolation: isolate;
-    background:
-      linear-gradient(112deg, var(--violet-2), transparent 48%),
-      radial-gradient(circle at 74% 42%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 36%),
-      linear-gradient(180deg, var(--bg-base), var(--bg-base));
-  }
-
-  .hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    background:
-      linear-gradient(color-mix(in srgb, var(--brand) 16%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, color-mix(in srgb, var(--brand) 12%, transparent) var(--border-size-1), transparent var(--border-size-1));
-    background-size: 220px 132px;
-    mask-image: linear-gradient(90deg, transparent, black 12%, black 94%, transparent);
-  }
-
-  .hero-copy,
-  .hero-artifact {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    align-content: end;
-    min-width: 0;
-    padding: var(--size-10);
-  }
-
-  .hero-copy {
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .hero-artifact {
-    align-content: center;
   }
 
   .kicker,
@@ -207,31 +163,6 @@ pageSheet.replaceSync(`
     background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
   }
 
-  .rail-head {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: var(--size-5);
-  }
-
-  .rail-head h2,
-  .section-title {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--font-size-5);
-    line-height: .98;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
-  }
-
-  .rail-head p {
-    max-width: 560px;
-    margin-block-end: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-1);
-    line-height: 1.36;
-  }
-
   .phase-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(210px, 1fr));
@@ -290,26 +221,8 @@ pageSheet.replaceSync(`
     padding-inline-start: var(--size-5);
   }
 
-  .studio-section {
-    display: grid;
-    grid-template-columns: minmax(300px, .38fr) minmax(0, 1fr);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    border-block-end: var(--border-size-1) solid var(--border);
-  }
-
-  .section-head,
   .section-body {
     padding: var(--size-8);
-  }
-
-  .section-head {
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .section-title {
-    margin-block-start: var(--size-4);
-    max-width: 640px;
   }
 
   .matrix {
@@ -364,40 +277,18 @@ pageSheet.replaceSync(`
   }
 
   @media (max-width: 1120px) {
-    .hero,
     .truth-grid,
-    .studio-section,
     .visual-grid {
       grid-template-columns: 1fr;
-    }
-
-    .hero-copy {
-      border-inline-end: 0;
-      border-block-end: var(--border-size-1) solid var(--border);
-    }
-
-    .hero-artifact {
-      padding-block-start: 0;
     }
 
     .phase-grid {
       grid-template-columns: repeat(5, minmax(240px, 1fr));
     }
 
-    .section-head {
-      border-inline-end: 0;
-      border-block-end: var(--border-size-1) solid var(--border);
-    }
   }
 
   @media (max-width: 640px) {
-    .hero {
-      min-height: auto;
-    }
-
-    .hero-copy,
-    .hero-artifact,
-    .section-head,
     .section-body,
     .nav-row {
       padding: var(--size-5) var(--size-4);
@@ -408,24 +299,15 @@ pageSheet.replaceSync(`
       line-height: .94;
     }
 
-    .subtitle,
-    .rail-head p {
+    .subtitle {
       font-size: var(--font-size-1);
       line-height: 1.34;
-    }
-
-    .rail-head {
-      display: grid;
     }
 
     .release-rail,
     .truth-grid {
       width: min(100% - var(--size-8), 1120px);
       padding-inline: 0;
-    }
-
-    .studio-section {
-      width: min(100% - var(--size-8), 1120px);
     }
 
     .now {
@@ -528,17 +410,11 @@ export class RoadmapPage extends OpenElement {
             </open-artifact-panel>
         </open-page-hero>
 
-        <section class='release-rail' aria-label='Roadmap release rail'>
-          <div class='rail-head'>
-            <div>
-              <p class='section-kicker'>Release rail</p>
-              <h2>From shipped evidence to v1.0 freeze.</h2>
-            </div>
-            <p>
-              The rail is deliberately narrow: only claims that can survive docs,
-              package exports, and build validation stay visible.
-            </p>
-          </div>
+        <open-section-frame>
+          <span slot='index'>01 / release rail</span>
+          <span slot='title'>From shipped evidence to v1.0 freeze.</span>
+          <span slot='copy'>The rail is deliberately narrow: only claims that can survive docs, package exports and build validation stay visible.</span>
+          <div class='release-rail' aria-label='Roadmap release rail'>
           <div class='phase-grid'>
             {phases.map((phase) => (
               <open-card class='phase-card' variant={phase.version === 'v0.41.0-beta.4' ? 'elevated' : undefined}>
@@ -551,10 +427,15 @@ export class RoadmapPage extends OpenElement {
               </open-card>
             ))}
           </div>
-        </section>
+          </div>
+        </open-section-frame>
 
-        <section class='truth-grid'>
-          <open-lab-panel class='truth' variant='artifact' label='in product'>
+        <open-section-frame>
+          <span slot='index'>02 / product boundary</span>
+          <span slot='title'>Scope is explicit.</span>
+          <span slot='copy'>Current capability, excluded promises and the visual contract are kept separate.</span>
+          <div class='truth-grid'>
+          <open-artifact-panel class='truth'><span slot='label'>in product</span>
             <h2>In product</h2>
             <ul>
               <li>JSX-first application API</li>
@@ -563,9 +444,9 @@ export class RoadmapPage extends OpenElement {
               <li>Hono API routes and adapter-vite integration</li>
               <li>Verified package and release boundaries</li>
             </ul>
-          </open-lab-panel>
+          </open-artifact-panel>
 
-          <open-lab-panel class='truth' label='out of current scope'>
+          <open-artifact-panel class='truth'><span slot='label'>out of current scope</span>
             <h2>Out of current scope</h2>
             <ul>
               <li>Hub product language</li>
@@ -574,23 +455,23 @@ export class RoadmapPage extends OpenElement {
               <li>Generic auth, ORM, or database platform claims</li>
               <li>Old package-count public graph language</li>
             </ul>
-          </open-lab-panel>
+          </open-artifact-panel>
 
-          <open-lab-panel class='truth' label='design rule' variant='muted'>
+          <open-artifact-panel class='truth'><span slot='label'>design rule</span>
             <h2>Design rule</h2>
             <p>
               The public website should read like a Web Standards Lab:
               dark-first, diagrammatic, useful, and grounded in artifacts users
               can inspect.
             </p>
-          </open-lab-panel>
-        </section>
-
-        <section class='studio-section'>
-          <div class='section-head'>
-            <p class='section-kicker'>Decision matrix</p>
-            <h2 class='section-title'>Roadmap language stays inside the product boundary.</h2>
+          </open-artifact-panel>
           </div>
+        </open-section-frame>
+
+        <open-section-frame>
+          <span slot='index'>03 / decision matrix</span>
+          <span slot='title'>Roadmap language stays inside the product boundary.</span>
+          <span slot='copy'>Ship, prove and freeze are evidence states rather than marketing labels.</span>
           <div class='section-body'>
             <div class='matrix'>
               <div class='matrix-row'>
@@ -607,18 +488,17 @@ export class RoadmapPage extends OpenElement {
               </div>
             </div>
           </div>
-        </section>
+        </open-section-frame>
 
-        <section class='studio-section'>
-          <div class='section-head'>
-            <p class='section-kicker'>System visual</p>
-            <h2 class='section-title'>The package graph is part of the release artifact.</h2>
-          </div>
+        <open-section-frame>
+          <span slot='index'>04 / system visual</span>
+          <span slot='title'>The package graph is part of the release artifact.</span>
+          <span slot='copy'>Published package ownership and the public architecture must remain mechanically identical.</span>
           <div class='section-body visual-grid'>
-            <open-lab-panel variant='surface' label='package matrix' meta='product boundary'>
+            <open-artifact-panel><span slot='label'>package matrix</span><span slot='meta'>product boundary</span>
               <open-standards-visual variant='packages' emphasis='high' motion='auto'></open-standards-visual>
-            </open-lab-panel>
-            <open-lab-panel label='release discipline' meta='v1.0 posture'>
+            </open-artifact-panel>
+            <open-artifact-panel><span slot='label'>release discipline</span><span slot='meta'>v1.0 posture</span>
               <ul class='rule-list'>
                 <li>
                   <strong class='rule-label'>No drift</strong>
@@ -636,9 +516,9 @@ export class RoadmapPage extends OpenElement {
                   <span class='rule-copy'>Users should understand what is shipped, current, planned, and explicitly out of scope.</span>
                 </li>
               </ul>
-            </open-lab-panel>
+            </open-artifact-panel>
           </div>
-        </section>
+        </open-section-frame>
 
         <nav class='nav-row'>
           <open-button href='/architecture/architecture'>Architecture</open-button>
