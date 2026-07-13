@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/api' next='/guide/error-handling'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Configuration</h1>
+      <open-reading-shell rail footer previous='/guide/api' previous-label='API Routes' next='/guide/error-handling' next-label='Error Handling'><open-page-rail slot='rail' items='[{"id":"route-config","label":"Route config","level":3},{"id":"build-config","label":"Build config","level":3},{"id":"package-config","label":"Package config","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Configuration</h1>
         <p class='subtitle'>Configuration should stay close to the route, build, or package surface it affects.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Route config</h3>
+            <h3 id='route-config'>Route config</h3>
             <p>Declare route-facing behavior where the route can be audited.</p>
           </open-card>
           <open-card>
-            <h3>Build config</h3>
+            <h3 id='build-config'>Build config</h3>
             <p>Keep Vite and SSG settings explicit in project tasks.</p>
           </open-card>
           <open-card>
-            <h3>Package config</h3>
+            <h3 id='package-config'>Package config</h3>
             <p>Use package manifests for publish and dependency boundaries.</p>
           </open-card>
         </div>

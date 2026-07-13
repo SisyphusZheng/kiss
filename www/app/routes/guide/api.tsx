@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/mdx' next='/guide/configuration'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>API Routes</h1>
+      <open-reading-shell rail footer previous='/guide/mdx' previous-label='MDX' next='/guide/configuration' next-label='Configuration'><open-page-rail slot='rail' items='[{"id":"request-boundary","label":"Request boundary","level":3},{"id":"handler-shape","label":"Handler shape","level":3},{"id":"runtime-fit","label":"Runtime fit","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>API Routes</h1>
         <p class='subtitle'>API routes use platform request and response primitives. Keep route handlers explicit, typed, and close to the app boundary.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Request boundary</h3>
+            <h3 id='request-boundary'>Request boundary</h3>
             <p>Use Web Request and Response objects at the edge of the API contract.</p>
           </open-card>
           <open-card>
-            <h3>Handler shape</h3>
+            <h3 id='handler-shape'>Handler shape</h3>
             <p>Keep input parsing, validation, and response serialization visible in the route.</p>
           </open-card>
           <open-card>
-            <h3>Runtime fit</h3>
+            <h3 id='runtime-fit'>Runtime fit</h3>
             <p>Use Deno-first tasks and avoid Node-only assumptions in docs examples.</p>
           </open-card>
         </div>

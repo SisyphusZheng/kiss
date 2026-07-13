@@ -10,13 +10,28 @@ const readingRoutes = [
 ];
 
 const guideRoutes = [
-  '/guide/getting-started', '/guide/core-concepts', '/guide/routing-and-data',
-  '/guide/api', '/guide/configuration', '/guide/deployment', '/guide/testing',
+  '/guide/getting-started',
+  '/guide/core-concepts',
+  '/guide/architecture',
+  '/guide/comparison',
+  '/guide/routing-and-data',
+  '/guide/mdx',
+  '/guide/api',
+  '/guide/configuration',
+  '/guide/error-handling',
+  '/guide/islands-and-ssr',
+  '/guide/deployment',
+  '/guide/testing',
 ];
 
 const architectureRoutes = [
-  '/architecture/dsd', '/architecture/islands', '/architecture/islands-deep',
-  '/architecture/package-compatibility', '/architecture/benchmark', '/architecture/standards-registry',
+  '/architecture/dsd',
+  '/architecture/comparison',
+  '/architecture/islands',
+  '/architecture/islands-deep',
+  '/architecture/package-compatibility',
+  '/architecture/benchmark',
+  '/architecture/standards-registry',
 ];
 
 test.describe('Unified page structure', () => {
@@ -53,7 +68,17 @@ test.describe('Unified page structure', () => {
   });
 
   test('entry pages use the shared hero and inspectable artifact panel', async ({ page }) => {
-    for (const route of ['/docs', '/apilist', '/roadmap', '/blog', '/contributing', '/architecture/architecture', '/architecture/design-system']) {
+    for (
+      const route of [
+        '/docs',
+        '/apilist',
+        '/roadmap',
+        '/blog',
+        '/contributing',
+        '/architecture/architecture',
+        '/architecture/design-system',
+      ]
+    ) {
       await page.goto(route);
       await expect(page.locator('open-page-hero')).toHaveCount(1);
       await expect(page.locator('open-artifact-panel')).toHaveCount(1);

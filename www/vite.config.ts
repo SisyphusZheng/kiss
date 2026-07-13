@@ -104,7 +104,7 @@ body {
   color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>${rootCSS}body{font-family:'JetBrains Mono','SFMono-Regular',Consolas,monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+  `<style>${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   resolve: {

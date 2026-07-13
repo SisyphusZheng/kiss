@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/routing-and-data' next='/guide/api'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>MDX</h1>
+      <open-reading-shell rail footer previous='/guide/routing-and-data' previous-label='Routing and Data' next='/guide/api' next-label='API Routes'><open-page-rail slot='rail' items='[{"id":"content-source","label":"Content source","level":3},{"id":"components","label":"Components","level":3},{"id":"build-path","label":"Build path","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>MDX</h1>
         <p class='subtitle'>Documentation content should compile into the same route and component system as authored pages.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Content source</h3>
+            <h3 id='content-source'>Content source</h3>
             <p>Keep source content reviewable in the repository.</p>
           </open-card>
           <open-card>
-            <h3>Components</h3>
+            <h3 id='components'>Components</h3>
             <p>Use shared UI primitives for examples and callouts.</p>
           </open-card>
           <open-card>
-            <h3>Build path</h3>
+            <h3 id='build-path'>Build path</h3>
             <p>Validate generated pages through the normal site build.</p>
           </open-card>
         </div>

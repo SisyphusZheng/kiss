@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/getting-started' next='/guide/architecture'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Core Concepts</h1>
+      <open-reading-shell rail footer previous='/guide/getting-started' previous-label='Getting Started' next='/guide/architecture' next-label='Architecture'><open-page-rail slot='rail' items='[{"id":"openelement","label":"OpenElement","level":3},{"id":"dsd","label":"DSD","level":3},{"id":"islands","label":"Islands","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Core Concepts</h1>
         <p class='subtitle'>The core model is standards-first: authored elements, declarative rendering, file routes, and optional islands.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>OpenElement</h3>
+            <h3 id='openelement'>OpenElement</h3>
             <p>The base element class provides the component authoring surface.</p>
           </open-card>
           <open-card>
-            <h3>DSD</h3>
+            <h3 id='dsd'>DSD</h3>
             <p>Declarative Shadow DOM carries server-rendered shadow roots in HTML.</p>
           </open-card>
           <open-card>
-            <h3>Islands</h3>
+            <h3 id='islands'>Islands</h3>
             <p>Hydrate only the components that need browser runtime behavior.</p>
           </open-card>
         </div>

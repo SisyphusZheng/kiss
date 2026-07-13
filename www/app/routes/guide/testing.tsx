@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/deployment'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Testing</h1>
+      <open-reading-shell rail footer previous='/guide/deployment' previous-label='Deployment'><open-page-rail slot='rail' items='[{"id":"type-checks","label":"Type checks","level":3},{"id":"build-checks","label":"Build checks","level":3},{"id":"visual-checks","label":"Visual checks","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Testing</h1>
         <p class='subtitle'>Use checks that match the changed surface: type checks for routes, build checks for generated output, and visual checks for design changes.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Type checks</h3>
+            <h3 id='type-checks'>Type checks</h3>
             <p>Run Deno checks on changed route and component files.</p>
           </open-card>
           <open-card>
-            <h3>Build checks</h3>
+            <h3 id='build-checks'>Build checks</h3>
             <p>Use the site build to catch generation regressions.</p>
           </open-card>
           <open-card>
-            <h3>Visual checks</h3>
+            <h3 id='visual-checks'>Visual checks</h3>
             <p>Capture desktop and mobile states for layout-sensitive work.</p>
           </open-card>
         </div>

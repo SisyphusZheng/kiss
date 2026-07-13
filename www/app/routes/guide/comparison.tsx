@@ -32,8 +32,8 @@ export class GuideComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/architecture' next='/guide/routing-and-data'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>How openElement compares</h1>
+      <open-reading-shell rail footer previous='/guide/architecture' previous-label='Architecture' next='/guide/routing-and-data' next-label='Routing and Data'><open-page-rail slot='rail' items='[{"id":"lit","label":"Lit","level":3},{"id":"stencil","label":"Stencil","level":3},{"id":"enhance","label":"Enhance","level":3},{"id":"astro-fresh","label":"Astro / Fresh","level":3},{"id":"when-to-choose","label":"When to choose openElement","level":2}]'></open-page-rail><div class='container'>
+        <h1 id='start'>How openElement compares</h1>
         <p class='subtitle'>
           openElement occupies a specific niche: a Web Components-native
           fullstack framework with a JSX-first authoring layer. Other tools are
@@ -41,7 +41,7 @@ export class GuideComparisonPage extends OpenElement {
         </p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Lit</h3>
+            <h3 id='lit'>Lit</h3>
             <p>
               A Web Components authoring library. Use Lit when you need
               standalone components; use openElement when you need a fullstack
@@ -49,7 +49,7 @@ export class GuideComparisonPage extends OpenElement {
             </p>
           </open-card>
           <open-card>
-            <h3>Stencil</h3>
+            <h3 id='stencil'>Stencil</h3>
             <p>
               A compiler and design-system production tool. Use Stencil to ship
               a component library; use openElement to build the application that
@@ -57,7 +57,7 @@ export class GuideComparisonPage extends OpenElement {
             </p>
           </open-card>
           <open-card>
-            <h3>Enhance</h3>
+            <h3 id='enhance'>Enhance</h3>
             <p>
               The closest fullstack Web Components peer, but HTML-first. Choose
               Enhance if you prefer HTML templates; choose openElement if you
@@ -65,7 +65,7 @@ export class GuideComparisonPage extends OpenElement {
             </p>
           </open-card>
           <open-card>
-            <h3>Astro / Fresh</h3>
+            <h3 id='astro-fresh'>Astro / Fresh</h3>
             <p>
               Adjacent app frameworks. Astro is content-first and treats Web
               Components as one integration; Fresh is Preact-first. Choose
@@ -74,7 +74,7 @@ export class GuideComparisonPage extends OpenElement {
           </open-card>
         </div>
         <div class='when-to-choose'>
-          <h2>When to choose openElement</h2>
+          <h2 id='when-to-choose'>When to choose openElement</h2>
           <ul>
             <li>
               You want DSD-native SSR out of the box, not an opt-in rendering

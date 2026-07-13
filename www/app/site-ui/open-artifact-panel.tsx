@@ -10,7 +10,21 @@ sheet.replaceSync(`
 export default class OpenArtifactPanel extends OpenElement {
   static override styles = [sheet];
   override render() {
-    return <section class='panel'><header class='head'><p class='label'><slot name='label'></slot></p><p class='meta'><slot name='meta'></slot></p></header><div class='body'><slot></slot></div></section>;
+    return (
+      <section class='panel'>
+        <header class='head'>
+          <p class='label'>
+            <slot name='label'></slot>
+          </p>
+          <p class='meta'>
+            <slot name='meta'></slot>
+          </p>
+        </header>
+        <div class='body'>
+          <slot></slot>
+        </div>
+      </section>
+    );
   }
 }
 customElements.define(tagName, OpenArtifactPanel);

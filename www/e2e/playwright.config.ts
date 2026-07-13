@@ -13,6 +13,8 @@
 import { defineConfig } from '@playwright/test';
 import process from 'node:process';
 
+// This value must be derived once for both the web server and every worker.
+// Deriving it from process.pid makes the workers navigate to different ports.
 const PORT = Number(process.env.openElement_E2E_PORT ?? 4174);
 const baseURL = `http://127.0.0.1:${PORT}`;
 
@@ -32,12 +34,14 @@ export default defineConfig({
   },
 
   // Auto-start a Deno static file server for www/dist/.
-  // Locally, reuse an existing server to avoid failing when a residual Deno
-  // process still holds the default port. CI always starts a fresh server.
+  // Callers that need parallel isolation can pass openElement_E2E_PORT.  A
+  // deterministic default keeps the server and all workers on the same URL.
   webServer: {
-    command: `deno run -A static-server.ts --port ${PORT} --dir ../dist`,
+    // `exec` prevents the shell Playwright launches from orphaning Deno when
+    // the suite finishes or is interrupted.
+    command: `exec deno run -A static-server.ts --port ${PORT} --dir ../dist`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 

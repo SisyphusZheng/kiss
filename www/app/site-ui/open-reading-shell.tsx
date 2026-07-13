@@ -11,6 +11,8 @@ export default class OpenReadingShell extends OpenElement {
   override render() {
     const previous = this.getAttribute('previous');
     const next = this.getAttribute('next');
+    const previousLabel = this.getAttribute('previous-label') ?? 'Previous';
+    const nextLabel = this.getAttribute('next-label') ?? 'Next';
     return (
       <div class='shell'>
         <article class='main'>
@@ -20,7 +22,12 @@ export default class OpenReadingShell extends OpenElement {
           </header>
           <slot></slot>
           <footer class='footer'>
-            <slot name='footer'><nav class='pager' aria-label='Guide navigation'>{previous ? <a href={previous}>← Previous</a> : <span></span>}{next ? <a href={next}>Next →</a> : <span></span>}</nav></slot>
+            <slot name='footer'>
+              <nav class='pager' aria-label='Page navigation'>
+                {previous ? <a href={previous}>← {previousLabel}</a> : <span></span>}
+                {next ? <a href={next}>{nextLabel} →</a> : <span></span>}
+              </nav>
+            </slot>
           </footer>
         </article>
         <aside class='rail' aria-label='On this page'>

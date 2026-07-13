@@ -28,8 +28,8 @@ export class StandardsRegistryPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>WC Standards Contract</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"elements-dsd","label":"Elements + DSD","level":3},{"id":"request-semantics","label":"Request semantics","level":3},{"id":"five-package-ownership","label":"Five-package ownership","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>WC Standards Contract</h1>
         <p class='subtitle'>
           OpenElement relies on web-platform contracts rather than a proprietary
           registry product. Custom Elements, DSD, CEM, Request/Response and
@@ -38,15 +38,15 @@ export class StandardsRegistryPage extends OpenElement {
 
         <div class='registry-grid'>
           <open-card variant='artifact'>
-            <h3>Elements + DSD</h3>
+            <h3 id='elements-dsd'>Elements + DSD</h3>
             <p>Standard Custom Elements and Declarative Shadow DOM define the durable component boundary.</p>
           </open-card>
           <open-card>
-            <h3>Request semantics</h3>
+            <h3 id='request-semantics'>Request semantics</h3>
             <p>Request, Response and FormData guide future application interaction without inventing a proprietary transport.</p>
           </open-card>
           <open-card>
-            <h3>Five-package ownership</h3>
+            <h3 id='five-package-ownership'>Five-package ownership</h3>
             <p>Element, App, Adapter Vite, Create and optional UI are the current consumer surface; internal contracts stay internal.</p>
           </open-card>
         </div>

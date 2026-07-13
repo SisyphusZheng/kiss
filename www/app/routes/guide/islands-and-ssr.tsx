@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/error-handling' next='/guide/deployment'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Islands and SSR</h1>
+      <open-reading-shell rail footer previous='/guide/error-handling' previous-label='Error Handling' next='/guide/deployment' next-label='Deployment'><open-page-rail slot='rail' items='[{"id":"server-first","label":"Server first","level":3},{"id":"declared-islands","label":"Declared islands","level":3},{"id":"small-runtime","label":"Small runtime","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Islands and SSR</h1>
         <p class='subtitle'>SSR and DSD provide the document baseline. Islands add client behavior at declared boundaries.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Server first</h3>
+            <h3 id='server-first'>Server first</h3>
             <p>Render useful HTML before client modules run.</p>
           </open-card>
           <open-card>
-            <h3>Declared islands</h3>
+            <h3 id='declared-islands'>Declared islands</h3>
             <p>Hydration should be visible from route metadata.</p>
           </open-card>
           <open-card>
-            <h3>Small runtime</h3>
+            <h3 id='small-runtime'>Small runtime</h3>
             <p>Keep browser JavaScript scoped to interactive surfaces.</p>
           </open-card>
         </div>

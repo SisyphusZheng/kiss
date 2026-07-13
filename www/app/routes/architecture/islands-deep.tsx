@@ -23,20 +23,20 @@ export class IslandsDeepGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Island Deep Dive</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"upgrade-model","label":"Upgrade Model"},{"id":"three-layers","label":"Three Layers"},{"id":"strategies","label":"Strategies"},{"id":"ssr-props","label":"SSR Props Are Not Events"},{"id":"dynamic-content","label":"Dynamic Content"}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Island Deep Dive</h1>
         <p class='subtitle'>
           Islands are the only client JavaScript units in openElement. The public model is VNode
           output plus JSX event handlers; SSR props are restored separately.
         </p>
 
-        <h2>Upgrade Model</h2>
+        <h2 id='upgrade-model'>Upgrade Model</h2>
         <p>
           openElement uses the browser Custom Element upgrade mechanism. SSG writes HTML first, then
           the client entry imports only the island modules used by the current page.
         </p>
 
-        <h2>Three Layers</h2>
+        <h2 id='three-layers'>Three Layers</h2>
         <div class='layer-card'>
           <div class='layer-tag'>Layer 1 - dsd-static</div>
           <h3>No client JavaScript</h3>
@@ -63,7 +63,7 @@ export class IslandsDeepGuidePage extends OpenElement {
           </p>
         </div>
 
-        <h2>Strategies</h2>
+        <h2 id='strategies'>Strategies</h2>
         <div class='strategy-grid'>
           <div class='strategy-item'>
             <div class='strat-name'>
@@ -91,14 +91,14 @@ export class IslandsDeepGuidePage extends OpenElement {
           </div>
         </div>
 
-        <h2>SSR Props Are Not Events</h2>
+        <h2 id='ssr-props'>SSR Props Are Not Events</h2>
         <p>
           <span class='inline-code'>bindSsrProps()</span>{' '}
           restores data-ssr-props into the upgraded element. It does not bind DOM events. Events are
           owned by VNode markers generated from JSX handlers.
         </p>
 
-        <h2>Dynamic Content</h2>
+        <h2 id='dynamic-content'>Dynamic Content</h2>
         <p>
           Dynamic island content should return VNode or VNode arrays. HTML injection stays behind
           the explicit <span class='inline-code'>trustedHtml</span>{' '}

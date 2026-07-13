@@ -561,7 +561,7 @@ export class RoadmapPage extends OpenElement {
               <li>Declarative Shadow DOM rendering</li>
               <li>Routes, layouts, content, islands, and i18n</li>
               <li>Hono API routes and adapter-vite integration</li>
-              <li>WC Package Protocol for package and release boundaries</li>
+              <li>Verified package and release boundaries</li>
             </ul>
           </open-lab-panel>
 
@@ -579,8 +579,8 @@ export class RoadmapPage extends OpenElement {
           <open-lab-panel class='truth' label='design rule' variant='muted'>
             <h2>Design rule</h2>
             <p>
-              The public website should read like an editorial standards lab:
-              light-first, diagrammatic, useful, and grounded in artifacts users
+              The public website should read like a Web Standards Lab:
+              dark-first, diagrammatic, useful, and grounded in artifacts users
               can inspect.
             </p>
           </open-lab-panel>

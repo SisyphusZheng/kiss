@@ -29,11 +29,11 @@ export default class Benchmark extends OpenElement {
 
   _renderEn() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Performance &amp; Benchmarks</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"build-performance","label":"Build Performance"},{"id":"rendering","label":"Rendering"},{"id":"bundle-size","label":"Bundle Size"}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Performance &amp; Benchmarks</h1>
         <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
-        <h2>Build Performance</h2>
+        <h2 id='build-performance'>Build Performance</h2>
         <div class='metric'>
           <span class='label'>SSG build (www)</span>
           <span class='value'>~3s (37 pages, 478 URLs)</span>
@@ -51,7 +51,7 @@ export default class Benchmark extends OpenElement {
           <span class='value'>~0 KB (islands only, generated data modules)</span>
         </div>
 
-        <h2>Rendering</h2>
+        <h2 id='rendering'>Rendering</h2>
         <div class='metric'>
           <span class='label'>DSD SSR</span>
           <span class='value'>Zero JS parse cost (browser native)</span>
@@ -65,7 +65,7 @@ export default class Benchmark extends OpenElement {
           <span class='value'>~0ms (no full page reload)</span>
         </div>
 
-        <h2>Bundle Size</h2>
+        <h2 id='bundle-size'>Bundle Size</h2>
         <p>
           openElement ships zero runtime JS for DSD components. Islands load on-demand by strategy.
           No framework runtime in the critical path.

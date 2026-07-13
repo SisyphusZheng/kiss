@@ -25,7 +25,7 @@ pageSheet.replaceSync(`
   .artifact, .layer-map { border:1px solid color-mix(in srgb,var(--color-border) 72%,var(--brand)); border-radius:var(--radius-2); overflow:hidden; background:color-mix(in srgb,var(--surface-1) 82%,transparent); box-shadow:inset 0 1px 0 var(--edge-highlight),0 28px 90px color-mix(in srgb,var(--violet-10) 24%,transparent); backdrop-filter:blur(18px); }
   .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-0); color: var(--text-muted); }
   pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--code-bg); color: var(--code-text); font-size: var(--font-size-0); line-height: 1.65; }
-  code { font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace; }
+  code { font-family: "JetBrains Mono", monospace; }
   .section { width:min(1180px,calc(100% - 4rem)); margin-inline:auto; padding:clamp(4rem,9vh,7rem) 0 0; }
   .section-head { display: flex; justify-content: space-between; gap: var(--size-6); margin-bottom: 20px; }
   .kicker { margin: 0 0 var(--size-2); color: var(--color-brand); font-size: var(--font-size-0); font-weight: 800; text-transform: uppercase; }

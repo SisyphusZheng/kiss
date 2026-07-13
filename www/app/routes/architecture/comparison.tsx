@@ -80,8 +80,8 @@ export default class ComparisonPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>openElement vs Alternatives</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"how-to-read","label":"How to read this"},{"id":"decision-criteria","label":"Decision criteria"},{"id":"sources","label":"Sources and review scope"}]'></open-page-rail><div class='container'>
+        <h1 id='start'>openElement vs Alternatives</h1>
         <p class='subtitle'>
           A conservative comparison of product direction. This page describes
           what each framework optimizes for; it does not invent benchmark
@@ -224,7 +224,7 @@ export default class ComparisonPage extends OpenElement {
           </open-card>
         </div>
 
-        <h2>How to read this</h2>
+        <h2 id='how-to-read'>How to read this</h2>
         <ul>
           <li>
             <strong>Architecture</strong> — how routing, components, and the
@@ -243,7 +243,7 @@ export default class ComparisonPage extends OpenElement {
           </li>
         </ul>
 
-        <h2>Decision criteria</h2>
+        <h2 id='decision-criteria'>Decision criteria</h2>
         <ul>
           <li>
             Choose <strong>openElement</strong> when Web Components are the
@@ -272,7 +272,7 @@ export default class ComparisonPage extends OpenElement {
           </li>
         </ul>
 
-        <h2>Sources and review scope</h2>
+        <h2 id='sources'>Sources and review scope</h2>
         <p>Reviewed 2026-07-11 against primary project documentation. This is
           a decision guide, not a benchmark or compatibility certification.</p>
         <ul>

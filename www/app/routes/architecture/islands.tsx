@@ -28,8 +28,8 @@ export class IslandsGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Island Hydration</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"static-surface","label":"Static surface","level":3},{"id":"hydration-boundary","label":"Hydration boundary","level":3},{"id":"progressive-behavior","label":"Progressive behavior","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Island Hydration</h1>
         <p class='subtitle'>
           openElement keeps documents and Web Components server-rendered by
           default. Islands are reserved for client components that need runtime
@@ -38,17 +38,17 @@ export class IslandsGuidePage extends OpenElement {
 
         <div class='island-grid'>
           <open-card>
-            <h3>Static surface</h3>
+            <h3 id='static-surface'>Static surface</h3>
             <p>HTML and DSD render first, without forcing a client app shell.</p>
           </open-card>
           <open-card variant='artifact'>
-            <h3>Hydration boundary</h3>
+            <h3 id='hydration-boundary'>Hydration boundary</h3>
             <p>
               Client modules attach where the route metadata declares an island.
             </p>
           </open-card>
           <open-card>
-            <h3>Progressive behavior</h3>
+            <h3 id='progressive-behavior'>Progressive behavior</h3>
             <p>
               Interactive pieces can load independently from the surrounding
               document.

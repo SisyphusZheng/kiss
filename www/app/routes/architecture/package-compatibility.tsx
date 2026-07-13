@@ -28,8 +28,8 @@ export class PackageCompatibilityPage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Package Compatibility</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"current-contract","label":"Current contract","level":3},{"id":"explicit-admission","label":"Explicit admission","level":3},{"id":"roadmap-diagnostics","label":"Roadmap diagnostics","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Package Compatibility</h1>
         <p class='subtitle'>
           OpenElement treats third-party Custom Elements as standards-based
           dependencies. Current builds use explicit package-island configuration
@@ -38,15 +38,15 @@ export class PackageCompatibilityPage extends OpenElement {
 
         <div class='compat-grid'>
           <open-card variant='artifact'>
-            <h3>Current contract</h3>
+            <h3 id='current-contract'>Current contract</h3>
             <p>@openelement/element owns authoring; app and adapter-vite keep application and build behavior separate.</p>
           </open-card>
           <open-card>
-            <h3>Explicit admission</h3>
+            <h3 id='explicit-admission'>Explicit admission</h3>
             <p>Known packages can be configured as package islands and use available CEM metadata without importing retired package surfaces.</p>
           </open-card>
           <open-card>
-            <h3>Roadmap diagnostics</h3>
+            <h3 id='roadmap-diagnostics'>Roadmap diagnostics</h3>
             <p>Universal DSD/light/client-only classification and hydration-mismatch diagnostics are `0.43` roadmap work, not a current market claim.</p>
           </open-card>
         </div>

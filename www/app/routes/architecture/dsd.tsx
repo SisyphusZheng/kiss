@@ -33,15 +33,15 @@ export class DsdGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Declarative Shadow DOM Rendering</h1>
+      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"platform-contract","label":"The platform contract"},{"id":"traditional-hydration","label":"Traditional hydration","level":3},{"id":"dsd-first","label":"DSD-first rendering","level":3},{"id":"openelement-layers","label":"openElement layers"}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Declarative Shadow DOM Rendering</h1>
         <p class='subtitle'>
           openElement treats Declarative Shadow DOM as the server-rendered
           boundary for Web Components, then upgrades only the behavior that must
           run in the browser.
         </p>
 
-        <h2>The platform contract</h2>
+        <h2 id='platform-contract'>The platform contract</h2>
         <p>
           Declarative Shadow DOM uses a template with
           {' '}<code>shadowrootmode</code>{' '}so HTML can carry shadow-root
@@ -58,14 +58,14 @@ export class DsdGuidePage extends OpenElement {
 
         <div class='comparison'>
           <open-card>
-            <h3>Traditional hydration</h3>
+            <h3 id='traditional-hydration'>Traditional hydration</h3>
             <p>
               A client runtime often reconstructs the component tree before the
               page is fully interactive.
             </p>
           </open-card>
           <open-card variant='artifact'>
-            <h3>DSD-first rendering</h3>
+            <h3 id='dsd-first'>DSD-first rendering</h3>
             <p>
               The browser parses shadow roots from HTML. Custom Elements then
               upgrade existing hosts and attach only the needed behavior.
@@ -73,7 +73,7 @@ export class DsdGuidePage extends OpenElement {
           </open-card>
         </div>
 
-        <h2>openElement layers</h2>
+        <h2 id='openelement-layers'>openElement layers</h2>
         <ul>
           <li>Static DSD components for content, layout, and documentation.</li>
           <li>Interactive elements for local browser behavior.</li>

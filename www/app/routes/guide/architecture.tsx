@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/core-concepts' next='/guide/comparison'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Architecture Guide</h1>
+      <open-reading-shell rail footer previous='/guide/core-concepts' previous-label='Core Concepts' next='/guide/comparison' next-label='Comparison'><open-page-rail slot='rail' items='[{"id":"elements","label":"Elements","level":3},{"id":"routes","label":"Routes","level":3},{"id":"packages","label":"Packages","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Architecture Guide</h1>
         <p class='subtitle'>openElement is organized around elements, routes, islands, and package layers rather than a single client app shell.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Elements</h3>
+            <h3 id='elements'>Elements</h3>
             <p>Custom Elements and DSD define the component surface.</p>
           </open-card>
           <open-card>
-            <h3>Routes</h3>
+            <h3 id='routes'>Routes</h3>
             <p>Route metadata drives navigation, generated pages, and documentation.</p>
           </open-card>
           <open-card>
-            <h3>Packages</h3>
+            <h3 id='packages'>Packages</h3>
             <p>Core, app, UI, adapters, and SSG stay as separate package layers.</p>
           </open-card>
         </div>

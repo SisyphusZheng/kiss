@@ -28,20 +28,20 @@ export class GuideGuidePage extends OpenElement {
 
   override render() {
     return (
-      <open-reading-shell rail footer previous='/guide/configuration' next='/guide/islands-and-ssr'><open-page-rail slot='rail'><a href='#start'>Overview</a></open-page-rail><div class='container'>
-        <h1>Error Handling</h1>
+      <open-reading-shell rail footer previous='/guide/configuration' previous-label='Configuration' next='/guide/islands-and-ssr' next-label='Islands and SSR'><open-page-rail slot='rail' items='[{"id":"route-errors","label":"Route errors","level":3},{"id":"component-errors","label":"Component errors","level":3},{"id":"build-errors","label":"Build errors","level":3}]'></open-page-rail><div class='container'>
+        <h1 id='start'>Error Handling</h1>
         <p class='subtitle'>Error handling should preserve platform semantics and keep route failures visible.</p>
         <div class='guide-grid'>
           <open-card>
-            <h3>Route errors</h3>
+            <h3 id='route-errors'>Route errors</h3>
             <p>Return clear status codes and response bodies from API boundaries.</p>
           </open-card>
           <open-card>
-            <h3>Component errors</h3>
+            <h3 id='component-errors'>Component errors</h3>
             <p>Keep component fallback states local and inspectable.</p>
           </open-card>
           <open-card>
-            <h3>Build errors</h3>
+            <h3 id='build-errors'>Build errors</h3>
             <p>Treat generation failures as release blockers, not cosmetic warnings.</p>
           </open-card>
         </div>
