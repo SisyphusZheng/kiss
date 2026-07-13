@@ -17,7 +17,7 @@ const REPO_ROOT = fromFileUrl(new URL('../..', import.meta.url));
 const WWW_ISLANDS_DIR = join(REPO_ROOT, 'www', 'app', 'islands');
 
 const REQUIRED_LOCAL_ISLANDS = {
-  'home-console': { hydrate: 'idle', ssr: true, dsd: true },
+  'cinematic-atmosphere': { hydrate: 'idle', ssr: true, dsd: true },
   'open-search': { hydrate: 'load', ssr: true, dsd: true },
   'reactive-showcase': { hydrate: 'idle', ssr: true, dsd: true },
   'scroll-reveal': { hydrate: 'idle', ssr: true, dsd: true },

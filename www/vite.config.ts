@@ -87,11 +87,12 @@ html[data-theme="dark"],
 body {
   margin: 0;
   background:
+    radial-gradient(circle at 50% -12%, color-mix(in srgb, var(--violet-5) 24%, transparent), transparent 42%),
     linear-gradient(115deg, color-mix(in srgb, var(--violet-1) 38%, transparent), transparent 46%),
     linear-gradient(color-mix(in srgb, var(--border) 34%, transparent) var(--border-size-1), transparent var(--border-size-1)),
     linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) var(--border-size-1), transparent var(--border-size-1)),
     var(--bg-canvas);
-  background-size: auto, 220px 128px, 220px 128px, auto;
+  background-size: auto, auto, 220px 128px, 220px 128px, auto;
   color: var(--text-primary);
 }
 ::selection {

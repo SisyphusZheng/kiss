@@ -3,7 +3,8 @@
  * @openelement/ui - open-layout
  *
  * App layout component with header, sidebar, and footer.
- * Web Standards Lab: light-first, restrained, documentation-focused.
+ * Web Standards Lab: dark-first, cinematic at the brand surface and calm in
+ * long-form reading modes.
  *
  * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
  *   - CSSStyleSheet replaces Lit css``
@@ -96,7 +97,7 @@ function switchLabel(currentLocale: string): string {
 /** SignalContext key: theme state shared across all components */
 export const THEME_CTX: Context<'dark' | 'light'> = createContext<'dark' | 'light'>(
   Symbol('theme'),
-  'light',
+  'dark',
 );
 
 export interface NavItem {
@@ -175,6 +176,16 @@ sheet.replaceSync(`
     background: color-mix(in srgb, var(--bg-base) 88%, transparent);
     border-bottom-color: var(--border-hover);
     box-shadow: 0 var(--size-2) var(--size-10) color-mix(in srgb, var(--brand) 5%, transparent);
+  }
+  .app-layout[home] .app-header:not(.scrolled) {
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-base) 45%, transparent), transparent);
+    border-bottom-color: transparent;
+    box-shadow: none;
+  }
+  .app-layout[home] .app-header.scrolled {
+    background: color-mix(in srgb, var(--bg-base) 88%, transparent);
+    border-bottom-color: var(--border-hover);
+    box-shadow: 0 var(--size-2) var(--size-10) color-mix(in srgb, var(--brand) 12%, transparent);
   }
 
   .header-inner {
@@ -1139,7 +1150,7 @@ export class OpenLayout extends OpenElement {
       this.setAttribute('data-theme', docTheme);
     }
     // SignalContext: provide theme state to all child components
-    const initialTheme = (docTheme as 'dark' | 'light') || 'light';
+    const initialTheme = (docTheme as 'dark' | 'light') || 'dark';
     provideContext(this, THEME_CTX, initialTheme);
 
     // Listen for theme change events from open-theme-toggle

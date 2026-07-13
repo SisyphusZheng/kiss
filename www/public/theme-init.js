@@ -1,8 +1,8 @@
 // openElement Theme Initialization - L2 (browser API)
 // Runs before page render to prevent FOUC (Flash of Unstyled Content).
 // Reads saved theme from localStorage or prefers-color-scheme.
-// Default: light theme. The docs site is now reading-first; dark is reserved
-// for code artifacts and explicit user preference.
+// Default: dark. The public site is a violet, cinematic Web Standards Lab;
+// light remains a fully supported reading mode and user preference wins.
 (function () {
   if (typeof document === 'undefined') return;
 
@@ -34,7 +34,7 @@
     // matchMedia may be unavailable in old WebViews
   }
 
-  const theme = saved || (prefersDark ? 'dark' : 'light');
+  const theme = saved || (prefersDark ? 'dark' : 'dark');
   try {
     document.documentElement.setAttribute('data-theme', theme);
   } catch {

@@ -1,1018 +1,111 @@
-/**
- * Homepage for the current public product doctrine.
- *
- * Strategic anchors: Web Components-native, static-first application framework.
- */
-import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/element';
+/** @jsxImportSource @openelement/element */
+/** The public WWW flagship: a real-DOM, progressively enhanced product film. */
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
-import '../../islands/home-console.tsx';
+import '../../islands/cinematic-atmosphere.tsx';
 
 export const tagName = 'docs-home';
 
-const pageSheet = new StyleSheet();
-pageSheet.replaceSync(`
-  :host {
-    display: block;
-    color: var(--text-primary);
-  }
-
-  * { box-sizing: border-box; }
-
-  h1,
-  h2,
-  h3,
-  p {
-    margin-block-start: 0;
-  }
-
-  .home {
-    min-height: 100%;
-    background:
-      radial-gradient(circle at 72% 44%, color-mix(in srgb, var(--brand-pale) 42%, transparent), transparent 30%),
-      radial-gradient(circle at 18% 32%, color-mix(in srgb, var(--bg-elevated) 82%, transparent), transparent 36%),
-      var(--bg-base);
-  }
-
-  .draft-stage {
-    position: relative;
-    min-height: calc(100svh - var(--nav-height));
-    overflow: hidden;
-    isolation: isolate;
-    border-block-end: var(--border-size-1) solid var(--border);
-    background:
-      linear-gradient(color-mix(in srgb, var(--border) 72%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, color-mix(in srgb, var(--border) 70%, transparent) var(--border-size-1), transparent var(--border-size-1));
-    background-size: calc(var(--size-16) * 2) calc(var(--size-16) * 2);
-  }
-
-  .swiss-grid {
-    background:
-      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1));
-    background-size: calc(var(--size-16) * 2) calc(var(--size-16) * 2);
-  }
-
-  .draft-stage::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    background:
-      radial-gradient(circle at 52% 50%, transparent 0 24%, color-mix(in srgb, var(--brand) 18%, transparent) 24.2% 24.35%, transparent 24.6%),
-      radial-gradient(circle at 67% 50%, transparent 0 30%, color-mix(in srgb, var(--text-muted) 28%, transparent) 30.1% 30.25%, transparent 30.4%),
-      linear-gradient(118deg, transparent 0 45%, color-mix(in srgb, var(--border) 60%, transparent) 45.1% 45.2%, transparent 45.3%),
-      linear-gradient(62deg, transparent 0 62%, color-mix(in srgb, var(--border) 48%, transparent) 62.1% 62.2%, transparent 62.3%);
-  }
-
-  .draft-stage::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    height: calc(var(--size-16) * 1.3);
-    border-block-start: var(--border-size-1) solid var(--border);
-    background: color-mix(in srgb, var(--bg-base) 74%, transparent);
-  }
-
-  .hero-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(360px, .44fr) minmax(460px, .56fr);
-    align-items: center;
-    min-height: calc(100svh - var(--nav-height) - calc(var(--size-16) * 1.3));
-    padding: calc(var(--size-16) * 1.35) var(--size-10) var(--size-9);
-    gap: var(--size-9);
-  }
-
-  .measure {
-    position: absolute;
-    inset-inline-start: var(--size-8);
-    inset-block: 34% auto;
-    width: var(--size-9);
-    height: 168px;
-    border-inline-start: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 42%, transparent);
-    color: var(--brand);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-  }
-
-  .measure::before,
-  .measure::after {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    width: var(--size-3);
-    border-block-start: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 42%, transparent);
-  }
-
-  .measure::before { inset-block-start: 0; }
-  .measure::after { inset-block-end: 0; }
-
-  .measure span {
-    position: absolute;
-    inset-inline-start: var(--size-3);
-    inset-block-start: 44%;
-    display: grid;
-    gap: var(--size-2);
-  }
-
-  .copy {
-    position: relative;
-    z-index: 2;
-    display: grid;
-    align-content: center;
-    gap: var(--size-6);
-    padding-inline-start: clamp(var(--size-8), 7vw, calc(var(--size-16) * 2));
-  }
-
-  .kicker,
-  .micro,
-  .panel-title,
-  .module-index {
-    color: var(--brand);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    letter-spacing: 0;
-    text-transform: uppercase;
-  }
-
-  .content {
-    display: grid;
-    gap: var(--size-10);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    padding-block: var(--size-10) var(--size-12);
-  }
-
-  .section-head {
-    display: grid;
-    grid-template-columns: minmax(0, .48fr) minmax(0, .52fr);
-    gap: var(--size-8);
-    align-items: end;
-  }
-
-  .section-head h2 {
-    margin: var(--size-2) 0 0;
-    font-size: var(--font-size-6);
-    line-height: .96;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
-  }
-
-  .section-head p,
-  .artifact-copy,
-  .workflow-copy,
-  .surface-card p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-1);
-    line-height: var(--font-lineheight-3);
-  }
-
-  h1 {
-    max-width: 720px;
-    margin: 0;
-    font-size: clamp(var(--font-size-7), 7.2vw, calc(var(--font-size-8) * 1.22));
-    line-height: .92;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
-  }
-
-  .lede {
-    max-width: 520px;
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-3);
-    line-height: 1.45;
-    font-weight: var(--font-weight-4);
-  }
-
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--size-4);
-    align-items: center;
-  }
-
-  .action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 176px;
-    min-height: 52px;
-    padding-inline: var(--size-5);
-    border: var(--border-size-1) solid var(--text-primary);
-    border-radius: 0;
-    color: var(--text-primary);
-    background: transparent;
-    text-decoration: none;
-    font-weight: var(--font-weight-7);
-    transition: transform var(--duration-2) var(--ease-2), border-color var(--duration-2) var(--ease-2);
-  }
-
-  .action.primary {
-    color: var(--on-brand);
-    border-color: var(--brand);
-    background: var(--brand);
-  }
-
-  .action:hover {
-    transform: translateY(calc(var(--border-size-1) * -2));
-    border-color: var(--brand);
-  }
-
-  .console-line {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--size-3);
-    max-width: 520px;
-    padding: var(--size-3) var(--size-4);
-    border: var(--border-size-1) solid color-mix(in srgb, var(--brand) 36%, var(--border));
-    color: var(--brand);
-    background: color-mix(in srgb, var(--bg-elevated) 58%, transparent);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-0);
-  }
-
-  .terminal {
-    background: var(--bg-elevated);
-  }
-
-  .console-line small {
-    grid-column: 2;
-    color: var(--text-muted);
-  }
-
-  .art {
-    position: relative;
-    min-height: 680px;
-  }
-
-  .art-note {
-    position: absolute;
-    inset-block-start: 16%;
-    inset-inline-start: 8%;
-    display: grid;
-    gap: var(--size-2);
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    text-transform: uppercase;
-  }
-
-  .aperture {
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-start: 50%;
-    width: min(680px, 58vw);
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    border-radius: var(--radius-round);
-    background:
-      radial-gradient(circle at 50% 50%, var(--bg-base) 0 34%, transparent 34.4%),
-      conic-gradient(
-        from 222deg,
-        var(--brand-deep) 0 18%,
-        var(--brand) 18% 72%,
-        var(--brand-light) 72% 86%,
-        transparent 86% 91%,
-        var(--brand-deep) 91% 100%
-      );
-    box-shadow:
-      inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--brand-light) 34%, transparent),
-      0 var(--size-8) calc(var(--size-16) * 2) color-mix(in srgb, var(--brand) 13%, transparent);
-  }
-
-  .aperture::before {
-    content: "";
-    position: absolute;
-    inset: 13%;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 30%, transparent);
-    border-radius: var(--radius-round);
-  }
-
-  .aperture::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: 8%;
-    inset-block-start: 7%;
-    width: 22%;
-    height: 18%;
-    border-radius: var(--radius-round);
-    background: var(--bg-base);
-    transform: rotate(-46deg);
-  }
-
-  .axis-x,
-  .axis-y,
-  .route-axis,
-  .origin {
-    position: absolute;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .axis-x {
-    inset-inline: 8% 4%;
-    inset-block-start: 50%;
-    border-block-start: var(--border-size-1) solid color-mix(in srgb, var(--brand) 54%, var(--border));
-  }
-
-  .axis-y {
-    inset-block: 8% 7%;
-    inset-inline-start: 50%;
-    border-inline-start: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 32%, transparent);
-  }
-
-  .route-axis {
-    inset-inline: 8% 4%;
-    inset-block-start: 54%;
-    border-block-start: var(--border-size-1) solid color-mix(in srgb, var(--brand) 54%, transparent);
-  }
-
-  .origin {
-    inset-inline-start: 50%;
-    inset-block-end: 8%;
-    width: var(--size-2);
-    height: var(--size-2);
-    border-radius: var(--radius-round);
-    background: var(--text-secondary);
-    transform: translateX(-50%);
-  }
-
-  .dot {
-    position: absolute;
-    z-index: 3;
-    width: var(--size-3);
-    height: var(--size-3);
-    border: var(--border-size-1) solid var(--brand);
-    border-radius: var(--radius-round);
-    background: var(--bg-base);
-    transform: translate(-50%, -50%);
-  }
-
-  .dot.one { inset-inline-start: 42%; inset-block-start: 50%; }
-  .dot.two { inset-inline-start: 64%; inset-block-start: 50%; }
-  .dot.three { inset-inline-start: 82%; inset-block-start: 50%; }
-
-  .panel {
-    position: absolute;
-    z-index: 4;
-    display: grid;
-    gap: var(--size-3);
-    width: min(270px, 24vw);
-    min-height: 132px;
-    padding: var(--size-4);
-    border: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 42%, var(--border));
-    background: color-mix(in srgb, var(--bg-base) 76%, transparent);
-    backdrop-filter: blur(14px);
-  }
-
-  .panel p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    line-height: 1.9;
-  }
-
-  .panel.spec {
-    inset-block-start: 13%;
-    inset-inline-end: 8%;
-  }
-
-  .panel.route {
-    inset-block-start: 39%;
-    inset-inline-end: 4%;
-  }
-
-  .panel.layers {
-    inset-block-end: 10%;
-    inset-inline-end: 5%;
-  }
-
-  .route-drawing,
-  .layer-drawing,
-  .module-visual {
-    width: 100%;
-    height: auto;
-    color: var(--brand);
-  }
-
-  .caption-line {
-    position: absolute;
-    inset-inline: 21% 14%;
-    inset-block-end: var(--size-8);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    text-transform: uppercase;
-  }
-
-  .caption-line::before {
-    content: "";
-    position: absolute;
-    inset-inline: 90px 118px;
-    inset-block-start: 50%;
-    border-block-start: var(--border-size-1) solid color-mix(in srgb, var(--text-muted) 36%, transparent);
-  }
-
-  .modules {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-    padding: 0;
-    border: var(--border-size-1) solid var(--border);
-    background: color-mix(in srgb, var(--bg-card) 82%, transparent);
-  }
-
-  .module {
-    display: grid;
-    grid-template-columns: 160px minmax(0, 1fr);
-    gap: var(--size-6);
-    min-height: 190px;
-    padding: var(--size-6);
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .module:last-child {
-    border-inline-end: 0;
-  }
-
-  .module h2 {
-    margin-block: var(--size-3) var(--size-3);
-    font-size: var(--font-size-4);
-    line-height: 1;
-  }
-
-  .module p {
-    max-width: 310px;
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.55;
-  }
-
-  .artifact-section {
-    display: grid;
-    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
-    gap: var(--size-5);
-    align-items: stretch;
-  }
-
-  .artifact-panel {
-    border: var(--border-size-1) solid var(--border);
-    background:
-      linear-gradient(var(--border) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, var(--border) var(--border-size-1), transparent var(--border-size-1)),
-      var(--bg-card);
-    background-size: var(--size-12) var(--size-12);
-    min-height: 440px;
-    padding: var(--size-6);
-  }
-
-  .artifact-map {
-    display: grid;
-    align-items: center;
-    height: 100%;
-  }
-
-  .artifact-map svg {
-    width: 100%;
-    height: auto;
-    color: var(--brand);
-  }
-
-  .artifact-copy {
-    display: grid;
-    align-content: center;
-    gap: var(--size-4);
-    padding: var(--size-6);
-    border: var(--border-size-1) solid var(--border);
-    background: var(--bg-card);
-  }
-
-  .artifact-copy h2,
-  .workflow h2,
-  .surfaces h2 {
-    margin: 0;
-    font-size: var(--font-size-5);
-    line-height: 1;
-    letter-spacing: 0;
-  }
-
-  .code-spec {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--size-5);
-  }
-
-  .spec-block {
-    display: grid;
-    gap: var(--size-3);
-    padding: var(--size-5);
-    border: var(--border-size-1) solid var(--code-border);
-    background: var(--bg-code);
-    color: var(--code-text);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-0);
-    line-height: 1.7;
-    overflow-x: auto;
-  }
-
-  .workflow {
-    display: grid;
-    gap: var(--size-5);
-    padding-block: var(--size-4);
-  }
-
-  .workflow-rail {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    border: var(--border-size-1) solid var(--border);
-    background: var(--bg-card);
-  }
-
-  .workflow-step {
-    display: grid;
-    gap: var(--size-3);
-    min-height: 180px;
-    padding: var(--size-4);
-    border-inline-end: var(--border-size-1) solid var(--border);
-  }
-
-  .workflow-step:last-child {
-    border-inline-end: 0;
-  }
-
-  .workflow-step strong {
-    color: var(--text-primary);
-    font-size: var(--font-size-2);
-  }
-
-  .workflow-copy {
-    font-size: var(--font-size-0);
-  }
-
-  .surfaces {
-    display: grid;
-    gap: var(--size-5);
-  }
-
-  .surface-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--size-4);
-  }
-
-  .surface-card {
-    display: grid;
-    gap: var(--size-4);
-    min-height: 240px;
-    padding: var(--size-5);
-    border: var(--border-size-1) solid var(--border);
-    background: var(--bg-card);
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .surface-card h3 {
-    margin: 0;
-    font-size: var(--font-size-3);
-  }
-
-  .verification {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-    gap: var(--size-8);
-    align-items: center;
-    padding: var(--size-6);
-    border: var(--border-size-1) solid var(--border);
-    background: color-mix(in srgb, var(--bg-elevated) 44%, var(--bg-base));
-  }
-
-  .verification h2 {
-    margin-block: var(--size-2);
-    font-size: var(--font-size-5);
-    line-height: var(--font-lineheight-1);
-  }
-
-  .verification p {
-    max-width: 580px;
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: var(--font-lineheight-3);
-  }
-
-  @media (max-width: 1080px) {
-    .hero-grid {
-      grid-template-columns: 1fr;
-      padding: var(--size-10) var(--size-5) var(--size-8);
-    }
-
-    .copy {
-      padding-inline-start: 0;
-    }
-
-    .measure,
-    .art-note,
-    .caption-line {
-      display: none;
-    }
-
-    .art {
-      min-height: 520px;
-    }
-
-    .aperture {
-      width: min(560px, 90vw);
-    }
-
-    .panel {
-      width: min(260px, 42vw);
-    }
-
-    .content {
-      width: min(100% - var(--size-8), 1120px);
-      padding-block: var(--size-8);
-    }
-
-    .section-head,
-    .artifact-section,
-    .code-spec {
-      grid-template-columns: 1fr;
-    }
-
-    .modules {
-      grid-template-columns: 1fr;
-    }
-
-    .verification {
-      grid-template-columns: 1fr;
-      padding: var(--size-6) var(--size-4);
-    }
-
-    .module {
-      grid-template-columns: 120px 1fr;
-      border-inline-end: 0;
-      border-block-end: var(--border-size-1) solid var(--border);
-    }
-
-    .workflow-rail,
-    .surface-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .workflow-step {
-      border-inline-end: 0;
-      border-block-end: var(--border-size-1) solid var(--border);
-    }
-  }
-
-  @media (max-width: 640px) {
-    .draft-stage {
-      min-height: auto;
-    }
-
-    .hero-grid {
-      grid-template-columns: minmax(0, 1fr);
-      min-height: auto;
-      padding: var(--size-8) var(--size-4) var(--size-6);
-      gap: var(--size-5);
-      overflow: hidden;
-    }
-
-    h1 {
-      max-width: 100%;
-      font-size: clamp(3.1rem, 14vw, var(--font-size-7));
-      line-height: .96;
-      overflow-wrap: anywhere;
-    }
-
-    .lede {
-      max-width: 100%;
-      font-size: var(--font-size-2);
-      overflow-wrap: anywhere;
-    }
-
-    .action {
-      min-width: 148px;
-    }
-
-    .console-line {
-      font-size: var(--font-size-00);
-    }
-
-    .art {
-      min-height: 420px;
-    }
-
-    .panel {
-      display: none;
-    }
-
-    .module {
-      grid-template-columns: 1fr;
-      gap: var(--size-3);
-      padding: var(--size-6) var(--size-3);
-    }
-
-    .content {
-      width: min(100% - var(--size-6), 1120px);
-      gap: var(--size-8);
-    }
-  }
+const sheet = new StyleSheet();
+sheet.replaceSync(`
+  :host { display:block; color:var(--text-primary); background:var(--bg-base); }
+  * { box-sizing:border-box; }
+  h1,h2,h3,p { margin:0; }
+  .home { overflow:clip; background:radial-gradient(circle at 50% 0%, color-mix(in srgb,var(--violet-4) 16%,transparent), transparent 34rem),var(--bg-base); }
+  .swiss-grid { background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px); background-size:72px 72px; }
+  .film { position:relative; min-height:calc(100svh - var(--nav-height)); isolation:isolate; border-block-end:1px solid color-mix(in srgb,var(--violet-6) 35%,var(--border)); }
+  .hero { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr); align-items:center; gap:clamp(2rem,7vw,9rem); width:min(1440px,100%); min-height:calc(100svh - var(--nav-height)); margin:auto; padding:clamp(5rem,10vh,9rem) clamp(1.5rem,6vw,7rem) 4rem; }
+  .eyebrow,.scene-index,.tag { color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .eyebrow { display:flex; align-items:center; gap:.75rem; margin-block-end:1.5rem; }
+  .eyebrow::before { content:""; width:2.5rem; border-block-start:1px solid currentColor; }
+  h1 { max-width:760px; font-size:clamp(4.1rem,10vw,10.5rem); font-weight:900; line-height:.82; letter-spacing:-.075em; text-wrap:balance; }
+  .lede { max-width:620px; margin-block:2rem; color:var(--text-secondary); font-size:clamp(1.12rem,1.6vw,1.45rem); line-height:1.5; text-wrap:pretty; }
+  .actions { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; }
+  .action { display:inline-flex; align-items:center; justify-content:center; min-height:3.25rem; padding:0 1.2rem; border:1px solid color-mix(in srgb,var(--text-primary) 42%,transparent); border-radius:999px; color:var(--text-primary); background:color-mix(in srgb,var(--bg-base) 56%,transparent); font-weight:700; text-decoration:none; transition:transform .22s var(--ease-3),background .22s var(--ease-3),border-color .22s var(--ease-3); }
+  .action:hover,.action:focus-visible { transform:translateY(-3px); border-color:var(--violet-7); background:color-mix(in srgb,var(--violet-5) 22%,var(--bg-base)); outline:none; }
+  .action.primary { border-color:var(--violet-7); background:linear-gradient(120deg,var(--violet-6),var(--violet-4)); color:#fff; box-shadow:0 16px 45px color-mix(in srgb,var(--violet-6) 42%,transparent); }
+  .version { display:block; margin-block-start:1.1rem; color:var(--text-muted); font-family:var(--font-mono); font-size:var(--font-size-00); }
+  .aperture-stage { position:relative; aspect-ratio:1; width:min(100%,680px); margin-inline:auto; transform-style:preserve-3d; }
+  .aperture { position:absolute; inset:10%; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--violet-7) 66%,transparent); border-radius:50%; background:radial-gradient(circle at 31% 28%,color-mix(in srgb,var(--violet-5) 32%,transparent),transparent 31%),radial-gradient(circle at 68% 70%,color-mix(in srgb,var(--violet-9) 32%,transparent),transparent 45%); box-shadow:inset 0 0 90px color-mix(in srgb,var(--violet-7) 18%,transparent),0 0 120px color-mix(in srgb,var(--violet-7) 22%,transparent); animation:orbit 12s linear infinite; }
+  .aperture::before,.aperture::after { content:""; position:absolute; border:1px solid color-mix(in srgb,var(--violet-6) 40%,transparent); border-radius:50%; }
+  .aperture::before { inset:8%; } .aperture::after { inset:22%; }
+  .mark { position:relative; z-index:1; color:var(--text-primary); font-family:var(--font-mono); font-size:clamp(3rem,7vw,6.8rem); font-weight:800; letter-spacing:-.09em; text-shadow:0 0 36px color-mix(in srgb,var(--violet-6) 55%,transparent); }
+  .mark b { color:var(--violet-8); }
+  .orbit { position:absolute; inset:0; border:1px dashed color-mix(in srgb,var(--violet-6) 24%,transparent); border-radius:50%; animation:reverse-orbit 20s linear infinite; }
+  .node { position:absolute; display:grid; place-items:center; width:3.2rem; aspect-ratio:1; border:1px solid color-mix(in srgb,var(--violet-6) 62%,transparent); border-radius:50%; background:color-mix(in srgb,var(--bg-base) 70%,transparent); color:var(--violet-8); font-family:var(--font-mono); font-size:.72rem; box-shadow:0 0 22px color-mix(in srgb,var(--violet-7) 24%,transparent); }
+  .node.one { inset:9% auto auto 13%; }.node.two { inset:auto 5% 17% auto; }.node.three { inset:44% auto auto -3%; }
+  .scroll-cue { position:absolute; inset:auto 0 1.5rem; z-index:1; display:flex; justify-content:center; gap:.7rem; color:var(--text-muted); font-family:var(--font-mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; }
+  .scroll-cue::after { content:"↓"; color:var(--violet-8); animation:bob 1.6s ease-in-out infinite; }
+  .scenes { position:relative; }
+  .scene { position:relative; display:grid; grid-template-columns:minmax(0,.45fr) minmax(0,.55fr); align-items:center; min-height:100svh; gap:clamp(2rem,8vw,10rem); padding:clamp(4.5rem,12vh,9rem) clamp(1.5rem,8vw,10rem); border-block-end:1px solid color-mix(in srgb,var(--violet-6) 25%,var(--border)); }
+  .scene-copy { max-width:540px; }.scene-index { margin-block-end:1.2rem; }.scene h2 { font-size:clamp(2.8rem,5.8vw,6.8rem); line-height:.9; letter-spacing:-.065em; text-wrap:balance; }.scene p:not(.scene-index) { margin-block-start:1.6rem; color:var(--text-secondary); font-size:clamp(1rem,1.4vw,1.22rem); line-height:1.55; }
+  .scene-art { position:relative; min-height:min(62vw,660px); display:grid; place-items:center; perspective:1000px; }
+  .component-stack { display:grid; width:min(100%,560px); transform:rotateX(8deg) rotateY(-12deg); transform-style:preserve-3d; }
+  .component { position:relative; display:grid; gap:.8rem; padding:1.4rem; border:1px solid color-mix(in srgb,var(--violet-6) 45%,var(--border)); background:linear-gradient(135deg,color-mix(in srgb,var(--violet-4) 18%,var(--bg-elevated)),color-mix(in srgb,var(--bg-base) 84%,transparent)); box-shadow:0 25px 65px color-mix(in srgb,var(--violet-11) 45%,transparent); font-family:var(--font-mono); transform:translateZ(var(--depth,0)); }
+  .component:nth-child(2) { margin:1.4rem 0 0 3rem; --depth:45px; }.component:nth-child(3) { margin:1.4rem 0 0 6rem; --depth:90px; }.component strong { color:var(--violet-8); }.component span { color:var(--text-secondary); font-size:.84rem; }
+  .pulse-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(100%,560px); }.island { display:grid; place-items:center; min-height:150px; border:1px solid color-mix(in srgb,var(--violet-6) 42%,var(--border)); border-radius:1.1rem; background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--violet-6) 25%,transparent),transparent 60%),var(--bg-elevated); color:var(--text-primary); font-family:var(--font-mono); animation:pulse 3s ease-in-out infinite; }.island:nth-child(2){animation-delay:-1s}.island:nth-child(3){animation-delay:-2s}.island small{color:var(--violet-8)}
+  .output { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(100%,620px); }.target { min-height:230px; display:grid; align-content:space-between; padding:1.25rem; border:1px solid color-mix(in srgb,var(--violet-6) 43%,var(--border)); background:linear-gradient(145deg,color-mix(in srgb,var(--violet-5) 18%,transparent),var(--bg-elevated)); box-shadow:0 18px 50px color-mix(in srgb,var(--violet-10) 38%,transparent); }.target svg{width:42px;color:var(--violet-8)}.target strong{font-size:1.1rem}.target span{color:var(--text-secondary);font-family:var(--font-mono);font-size:.75rem}
+  .final { grid-template-columns:1fr; text-align:center; min-height:82svh; }.final .scene-copy { max-width:800px; margin:auto; }.command { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:min(100%,680px); margin:2.5rem auto; padding:1rem 1.1rem 1rem 1.35rem; border:1px solid color-mix(in srgb,var(--violet-6) 52%,var(--border)); border-radius:999px; background:color-mix(in srgb,var(--bg-elevated) 72%,transparent); color:var(--violet-8); font-family:var(--font-mono); text-align:left; }.command code{overflow:auto;white-space:nowrap}.final-actions{justify-content:center}
+  .reference { width:min(1180px,calc(100% - 3rem)); margin:0 auto; padding:7rem 0; }.reference header{display:flex;justify-content:space-between;gap:2rem;align-items:end;margin-block-end:2rem}.reference h2{font-size:clamp(2.2rem,4vw,4.5rem);letter-spacing:-.06em;line-height:.92}.reference p{max-width:500px;color:var(--text-secondary);line-height:1.5}.links{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border)}.links a{display:grid;gap:.6rem;min-height:180px;padding:1.4rem;border-inline-end:1px solid var(--border);color:inherit;text-decoration:none;background:color-mix(in srgb,var(--bg-elevated) 55%,transparent);transition:background .2s ease,transform .2s ease}.links a:last-child{border:0}.links a:hover{background:color-mix(in srgb,var(--violet-5) 18%,var(--bg-elevated));transform:translateY(-4px)}.links span{color:var(--violet-8);font-family:var(--font-mono);font-size:.75rem}.links strong{font-size:1.25rem}.links small{color:var(--text-secondary);line-height:1.4}
+  @keyframes orbit{50%{transform:rotate(12deg) scale(1.035)}} @keyframes reverse-orbit{to{transform:rotate(-360deg)}} @keyframes bob{50%{transform:translateY(5px)}} @keyframes pulse{50%{border-color:var(--violet-8);box-shadow:0 0 38px color-mix(in srgb,var(--violet-6) 36%,transparent)}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}.film,.scene{min-height:auto}.hero{min-height:auto}.scene{padding-block:6rem}.component-stack{transform:none}}
+  @media (max-width:800px){.hero,.scene{grid-template-columns:1fr;min-height:auto;padding:6rem 1.4rem}.hero{padding-block-start:5rem}.aperture-stage{width:min(92vw,540px)}.scene-art{min-height:420px}.component:nth-child(2){margin-inline-start:1.5rem}.component:nth-child(3){margin-inline-start:3rem}.output{grid-template-columns:1fr 1fr}.target:last-child{grid-column:span 2}.links{grid-template-columns:1fr 1fr}.links a:nth-child(2){border-inline-end:0}.links a:nth-child(-n+2){border-block-end:1px solid var(--border)}}
+  @media (max-width:480px){h1{font-size:clamp(3.6rem,18vw,5.6rem)}.pulse-grid{gap:.65rem}.island{min-height:105px;font-size:.72rem}.output{grid-template-columns:1fr}.target:last-child{grid-column:auto;min-height:150px}.command{border-radius:1.1rem;align-items:start;flex-direction:column}.links{grid-template-columns:1fr}.links a{border-inline-end:0;border-block-end:1px solid var(--border)}.links a:last-child{border-block-end:0}.reference header{display:grid}.scene h2{font-size:clamp(2.8rem,13vw,4.4rem)}}
 `);
 
-const modules = [
-  {
-    index: '01',
-    title: 'Application framework',
-    copy:
-      'Pages, routes, islands, rendering and deployable output owned by one Web Components application contract.',
-    visual: 'target',
-  },
-  {
-    index: '02',
-    title: 'Element authoring',
-    copy:
-      'A small native Custom Elements authoring layer with JSX, shadow/DSD default output and explicit light DOM opt-in.',
-    visual: 'graph',
-  },
-  {
-    index: '03',
-    title: 'Portable output',
-    copy:
-      'Vite and Nitro provide the official build path while packed public artifacts prove portable output and third-party WC interop.',
-    visual: 'layers',
-  },
+const references = [
+  ['01', 'Get started', '/guide/getting-started', 'Create a real app from the supported public interface.'],
+  ['02', 'API reference', '/apilist', 'Inspect the five-package surface and optional primitives.'],
+  ['03', 'Architecture', '/architecture/architecture', 'Follow the element, app and build contracts.'],
+  ['04', 'Roadmap', '/roadmap', 'See current truth and the next product boundary.'],
 ] as const;
-
-const workflowSteps = [
-  ['01', 'Create', 'Scaffold the app shell and package graph from the public create surface.'],
-  ['02', 'Compose', 'Author Basic Element or third-party custom elements.'],
-  ['03', 'Route', 'Map pages through OpenElement-owned route graph metadata.'],
-  ['04', 'Render', 'Emit platform HTML with Declarative Shadow DOM boundaries.'],
-  ['05', 'Hydrate', 'Upgrade islands only where interaction is required.'],
-  ['06', 'Ship', 'Publish static output, npm artifacts, and app target evidence.'],
-] as const;
-
-const surfaces = [
-  ['Start', '/guide/getting-started', 'Five-minute create, element, island, and production build path.'],
-  ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Deploy', '/guide/deployment', 'Verified Node and Workers output through the supported build interface.'],
-  ['Compare', '/architecture/comparison', 'Sourced fit and non-fit guidance for adjacent frameworks.'],
-  ['Evidence', '/architecture/benchmark', 'Reproducible build, output, latency, and memory methodology.'],
-] as const;
-
-function moduleVisual(kind: 'target' | 'graph' | 'layers') {
-  if (kind === 'target') {
-    return (
-      <svg class='module-visual' viewBox='0 0 160 140' aria-hidden='true'>
-        <circle cx='80' cy='70' r='54' fill='none' stroke='currentColor' stroke-width='1' opacity='.35' />
-        <circle cx='80' cy='70' r='31' fill='none' stroke='currentColor' stroke-width='1' opacity='.42' />
-        <path d='M80 12v116M22 70h116' stroke='currentColor' stroke-width='1' opacity='.32' />
-        <rect x='66' y='56' width='28' height='28' fill='currentColor' opacity='.72' />
-        <circle cx='121' cy='59' r='4' fill='currentColor' />
-      </svg>
-    );
-  }
-  if (kind === 'graph') {
-    return (
-      <svg class='module-visual' viewBox='0 0 160 140' aria-hidden='true'>
-        <path d='M30 92 76 52 128 30M44 31l42 62 43-42M30 92l70 12 28-74' fill='none' stroke='currentColor' stroke-width='1' opacity='.44' />
-        <path d='M30 112c22-30 42-43 60-38 14 4 21 18 44-16' fill='none' stroke='currentColor' stroke-width='2' />
-        <g fill='var(--bg-base)' stroke='currentColor' stroke-width='2'>
-          <circle cx='30' cy='112' r='6' /><circle cx='90' cy='74' r='7' /><circle cx='134' cy='58' r='6' />
-        </g>
-      </svg>
-    );
-  }
-  return (
-    <svg class='module-visual' viewBox='0 0 160 140' aria-hidden='true'>
-      <path d='M80 18 132 42 80 66 28 42zM80 46l52 24-52 24-52-24zM80 74l52 24-52 24-52-24z' fill='none' stroke='currentColor' stroke-width='1' />
-      <path d='M80 18 132 42 80 66 28 42z' fill='currentColor' opacity='.12' />
-    </svg>
-  );
-}
 
 export class DocsHome extends OpenElement {
-  static override styles = [pageSheet];
+  static override styles = [sheet];
 
   override render() {
-    return (
-      <main class='home'>
-        <section class='draft-stage swiss-grid'>
-          <div class='measure'><span>OE<br />01</span></div>
-          <div class='hero-grid'>
-            <div class='copy'>
-              <p class='kicker'>Standards-first Web Components</p>
-              <h1>Ship real web apps on native Web Components.</h1>
-              <p class='lede'>
-                openElement gives you static-first routing, DSD, selective
-                upgrades and deployable output without a virtual DOM or vendor lock-in —
-                your components stay portable, inspectable, and standards-based.
-              </p>
-              <p class='lede'>
-                Published package line: {OPENELEMENT_VERSION}. The repository
-                has completed beta.4 five-package convergence; beta.4 remains
-                the first coherent candidate because beta.1 through beta.3 are
-                partial immutable npm publishes. External adopter pilot #390 is
-                the remaining repository-external condition.
-              </p>
-              <div class='actions'>
-                <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>
-                <a class='action' href='/apilist'>View API</a>
-              </div>
-              <div class='console-line terminal' aria-label='Install command'>
-                <span>$</span>
-                <span>deno run -A npm:@openelement/create my-app</span>
-                <small>Scaffolding your project...</small>
-              </div>
-            </div>
-
-            <div class='art' aria-hidden='true'>
-              <div class='art-note'>
-                <span>&lt;open/&gt;</span>
-                <span>App contract<br />&amp; DSD output</span>
-              </div>
-              <div class='aperture'></div>
-              <span class='axis-x'></span>
-              <span class='axis-y'></span>
-              <span class='route-axis'></span>
-              <span class='origin'></span>
-              <span class='dot one'></span>
-              <span class='dot two'></span>
-              <span class='dot three'></span>
-
-              <div class='panel spec'>
-                <span class='panel-title'>Element</span>
-                <p>APP: &lt;oe-app&gt;<br />ROUTE: /about<br />ISLANDS: 3<br />TARGET: desktop</p>
-              </div>
-              <div class='panel route'>
-                <span class='panel-title'>Route graph</span>
-                <svg class='route-drawing' viewBox='0 0 220 84'>
-                  <path d='M12 38c32-28 58 22 92-2 28-20 54-8 94-28' fill='none' stroke='currentColor' stroke-width='2' />
-                  <path d='M12 38h54l36 28 42-26 54 24' fill='none' stroke='currentColor' stroke-width='1' opacity='.45' />
-                  <g fill='var(--bg-base)' stroke='currentColor' stroke-width='2'>
-                    <circle cx='12' cy='38' r='6' /><circle cx='66' cy='38' r='6' /><circle cx='102' cy='66' r='6' /><circle cx='144' cy='40' r='6' /><circle cx='198' cy='8' r='6' />
-                  </g>
-                </svg>
-                <p>o /<br />o /about<br />o /docs<br />o /blog</p>
-              </div>
-              <div class='panel layers'>
-                <span class='panel-title'>Package protocol layers</span>
-                <svg class='layer-drawing' viewBox='0 0 220 84'>
-                  <path d='M18 20h80M18 42h80M18 64h80' stroke='currentColor' stroke-width='1' opacity='.42' />
-                  <ellipse cx='150' cy='20' rx='46' ry='10' fill='none' stroke='currentColor' />
-                  <ellipse cx='150' cy='42' rx='46' ry='10' fill='none' stroke='currentColor' opacity='.7' />
-                  <ellipse cx='150' cy='64' rx='46' ry='10' fill='none' stroke='currentColor' opacity='.45' />
-                </svg>
-              </div>
-            </div>
+    return <main class='home'>
+      <section class='film swiss-grid'>
+        <open-cinematic-atmosphere></open-cinematic-atmosphere>
+        <div class='hero'>
+          <div>
+            <p class='eyebrow'>OpenElement / Web Standards Lab</p>
+            <h1>The Web,<br />composed.</h1>
+            <p class='lede'>A Web Components-native application framework for beautiful, static-first applications — composed from real browser primitives.</p>
+            <div class='actions'><a class='action primary' href='/guide/getting-started'>Start building</a><a class='action' href='#element'>Watch it unfold</a></div>
+            <small class='version'>Published line: {OPENELEMENT_VERSION}</small>
           </div>
-          <div class='caption-line'>
-            <span>DSD boundary</span>
-            <span>Route graph</span>
+          <div class='aperture-stage' aria-label='OpenElement brand mark visual'>
+            <div class='orbit'></div><div class='aperture'><span class='mark'>&lt;open<b>/</b>&gt;</span></div>
+            <span class='node one'>DSD</span><span class='node two'>APP</span><span class='node three'>WC</span>
           </div>
-        </section>
-
-        <div class='content'>
-          <section class='section-head' aria-labelledby='standards-heading'>
-            <div>
-              <p class='kicker'>Standards become an interface</p>
-              <h2 id='standards-heading'>The app model and element model share one contract.</h2>
-            </div>
-            <p>
-              openElement is presented as a standards-first WC fullstack
-              surface: native components, generated route metadata, DSD output,
-              and package boundaries stay inspectable.
-            </p>
-          </section>
-
-          <section class='modules' aria-label='Product modules'>
-            {modules.map((module) => (
-              <article class='module'>
-                {moduleVisual(module.visual)}
-                <div>
-                  <span class='module-index'>{module.index}</span>
-                  <h2>{module.title}</h2>
-                  <p>{module.copy}</p>
-                </div>
-              </article>
-            ))}
-          </section>
-
-          <section class='artifact-section' aria-label='System model'>
-            <div class='artifact-panel'>
-              <div class='artifact-map'>
-                <svg viewBox='0 0 720 420' aria-hidden='true'>
-                  <path d='M82 88h156l84 88h156l112 118' fill='none' stroke='currentColor' stroke-width='3' />
-                  <path d='M82 294h170l76-76h144l118-128' fill='none' stroke='currentColor' stroke-width='2' opacity='.48' />
-                  <path d='M96 90v208M252 90v208M408 176v118M576 90v210' stroke='currentColor' stroke-width='1' opacity='.28' />
-                  <g fill='var(--bg-base)' stroke='currentColor' stroke-width='3'>
-                    <circle cx='82' cy='88' r='12' /><circle cx='238' cy='88' r='12' />
-                    <circle cx='322' cy='176' r='12' /><circle cx='478' cy='176' r='12' />
-                    <circle cx='590' cy='294' r='12' /><circle cx='82' cy='294' r='12' />
-                    <circle cx='328' cy='218' r='12' /><circle cx='590' cy='90' r='12' />
-                  </g>
-                  <text x='82' y='44' fill='currentColor' font-size='16'>DOM TREE</text>
-                  <text x='312' y='144' fill='currentColor' font-size='16'>ROUTE GRAPH</text>
-                  <text x='452' y='344' fill='currentColor' font-size='16'>PACKAGE GRAPH</text>
-                </svg>
-              </div>
-            </div>
-            <div class='artifact-copy'>
-              <p class='kicker'>System model</p>
-              <h2>DOM tree, route graph, island hydration, package graph.</h2>
-              <p>
-                The page language uses real project boundaries: route metadata
-                from the app, DSD as render output, hydrated islands for
-                interaction, and package contracts as the reference surface.
-              </p>
-            </div>
-          </section>
-
-          <section class='code-spec' aria-label='Build path'>
-            <pre class='spec-block'><code>deno run -A npm:@openelement/create my-app
-deno task dev
-deno task build</code></pre>
-            <pre class='spec-block'><code>{`<open-layout>
-  <docs-home></docs-home>
-</open-layout>`}</code></pre>
-          </section>
-
-          <section class='workflow' aria-labelledby='workflow-heading'>
-            <div class='section-head'>
-              <div>
-                <p class='kicker'>Developer workflow</p>
-                <h2 id='workflow-heading'>Create, compose, route, render, hydrate, ship.</h2>
-              </div>
-              <p>
-                The homepage middle section is no longer a sparse card strip.
-                It explains the actual work path a developer follows through the
-                framework.
-              </p>
-            </div>
-            <div class='workflow-rail'>
-              {workflowSteps.map(([index, title, copy]) => (
-                <article class='workflow-step'>
-                  <span class='module-index'>{index}</span>
-                  <strong>{title}</strong>
-                  <span class='workflow-copy'>{copy}</span>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section class='surfaces' aria-labelledby='surfaces-heading'>
-            <div class='section-head'>
-              <div>
-                <p class='kicker'>Reference surfaces</p>
-                <h2 id='surfaces-heading'>Follow the docs, API, and roadmap truth.</h2>
-              </div>
-              <p>
-                The site keeps content grounded in generated routes, package
-                surfaces, and current roadmap anchors instead of invented
-                marketing copy.
-              </p>
-            </div>
-            <div class='surface-grid'>
-              {surfaces.map(([title, href, copy]) => (
-                <a class='surface-card' href={href}>
-                  <span class='module-index'>{href}</span>
-                  <h3>{title}</h3>
-                  <p>{copy}</p>
-                </a>
-              ))}
-            </div>
-          </section>
-
-          <section class='verification' aria-label='Live verification'>
-            <div>
-              <p class='kicker'>Island hydration smoke line</p>
-              <h2>Native components stay inspectable.</h2>
-              <p>
-                The same composed surface hydrates as a real custom element, with
-                shadow DOM boundaries and signal updates preserved after static generation.
-              </p>
-            </div>
-            <home-console></home-console>
-          </section>
         </div>
-      </main>
-    );
+        <div class='scroll-cue'>Scroll to compose</div>
+      </section>
+
+      <div class='scenes'>
+        <section class='scene' id='element'>
+          <div class='scene-copy'><p class='scene-index'>01 / Element</p><h2>Start with a native boundary.</h2><p>A reusable element is not an abstraction to escape the web. It is the durable, inspectable contract your application is built from.</p></div>
+          <div class='scene-art'><div class='component-stack'><div class='component'><strong>&lt;open-app&gt;</strong><span>application shell / browser-native</span></div><div class='component'><strong>&lt;open-page&gt;</strong><span>route descriptor / static render</span></div><div class='component'><strong>&lt;open-card&gt;</strong><span>custom element / light from shadow</span></div></div></div>
+        </section>
+        <section class='scene'>
+          <div class='scene-copy'><p class='scene-index'>02 / DSD</p><h2>Give every component its own room.</h2><p>Declarative Shadow DOM preserves real component boundaries in the document. What ships is still HTML: visible, inspectable and ready before client JavaScript.</p></div>
+          <div class='scene-art'><div class='component-stack'><div class='component'><strong>&lt;template shadowrootmode="open"&gt;</strong><span>shadow root attached by the browser</span></div><div class='component'><strong>slot="content"</strong><span>encapsulation without an invented runtime</span></div><div class='component'><strong>&lt;/template&gt;</strong><span>rendered once, understood everywhere</span></div></div></div>
+        </section>
+        <section class='scene'>
+          <div class='scene-copy'><p class='scene-index'>03 / Islands</p><h2>Wake only what needs to move.</h2><p>Static composition remains still. Small islands light up exactly where interaction earns its cost, keeping the rest of the page close to the platform.</p></div>
+          <div class='scene-art'><div class='pulse-grid'><div class='island'><span>static<br /><small>0 JS</small></span></div><div class='island'><span>visible<br /><small>island</small></span></div><div class='island'><span>idle<br /><small>island</small></span></div></div></div>
+        </section>
+        <section class='scene'>
+          <div class='scene-copy'><p class='scene-index'>04 / Output</p><h2>One composition. Portable output.</h2><p>The same supported build interface produces static output proven for browser delivery, Node and Workers. The deployment target changes; the component contract does not.</p></div>
+          <div class='scene-art'><div class='output'><article class='target'><span>01</span><strong>Browser</strong><span>HTML · DSD · islands</span></article><article class='target'><span>02</span><strong>Node</strong><span>SSR admission · output proof</span></article><article class='target'><span>03</span><strong>Workers</strong><span>portable deployment · standards</span></article></div></div>
+        </section>
+        <section class='scene final'><div class='scene-copy'><p class='scene-index'>05 / Begin</p><h2>Compose your next application in the open.</h2><p>Use the public starter, author the parts that matter, and let the browser keep the rest honest.</p><div class='command'><code>$ deno run -A npm:@openelement/create my-app</code><a class='action primary' href='/guide/getting-started'>Start building</a></div><div class='actions final-actions'><a class='action' href='/docs'>Explore docs</a><a class='action' href='/architecture/architecture'>See architecture</a></div></div></section>
+      </div>
+      <section class='reference'><header><div><p class='scene-index'>Continue the composition</p><h2>Facts behind the feeling.</h2></div><p>Every scene is grounded in the public product surface, architecture and release truth — not a decorative fiction.</p></header><div class='links'>{references.map(([index,title,href,copy]) => <a href={href}><span>{index}</span><strong>{title}</strong><small>{copy}</small></a>)}</div></section>
+    </main>;
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, DocsHome);
-}
-
+defineCustomElement(tagName, DocsHome);
 export default DocsHome;

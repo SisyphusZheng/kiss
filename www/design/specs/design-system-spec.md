@@ -2,8 +2,8 @@
 
 ## Purpose
 
-The design-system page documents the active Web Standards Lab rules. It is a
-live implementation contract for `www`, not a gallery or moodboard.
+The design-system page documents the active dark-first Web Standards Lab rules.
+It is a live implementation contract for `www`, not a gallery or moodboard.
 
 ## Required Sections
 
@@ -18,7 +18,8 @@ live implementation contract for `www`, not a gallery or moodboard.
 
 - Show actual UI primitives, not local mock components.
 - Every swatch or token example is expressed as a token name.
-- The page must render cleanly in light and dark mode.
+- Dark is the primary brand composition; light is the complete daylight mode.
 - Typography uses fixed token steps, never viewport-scaled font sizes.
 - Kinetic examples must respect `prefers-reduced-motion`.
-- `open-lab-stage` is the canonical first-viewport product-art primitive.
+- Site-only cinematic visuals remain in `www`; only proven generic primitives
+  belong in `@openelement/ui`.

@@ -1,129 +1,56 @@
-# openElement www Design Direction
+# OpenElement WWW Design Direction
 
-> Version: 4.0.0
-> Date: 2026-06-19
-> Product line: openElement v0.41.0-alpha.6
-> Direction: Monet Aperture Editorial Lab
-> Status: Required implementation spec for `www`
+> Version: 5.0.0 · Date: 2026-07-13 · Status: required implementation truth
 
-`www` uses one unified art system: Vue-like documentation clarity, Enerblock-like
-industrial drafting, the current `<open/>` brand mark, and real openElement
-product surfaces. The site must feel designed, but every content claim must come
-from the repository, generated metadata, public package surfaces, or current
-roadmap/changelog files.
+## Web Standards Lab
 
-## Locked Layout Rule
+`www` is a dark, violet, cinematic product surface. It should make OpenElement
+feel beautiful before it asks visitors to understand its architecture, then
+prove that feeling with real browser primitives. `<open/>` is the primary mark;
+`OpenElement` is the formal wordmark.
 
-| Area                               | Rule                                                                    |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| Homepage hero                      | Full viewport width. This is the only full-width cinematic composition. |
-| Homepage middle                    | Centered content container, target width 1120px. Never full width.      |
-| Docs/API/Roadmap/Blog/Architecture | Centered readable containers after any page header.                     |
-| Footer                             | Aligned to the same site rhythm as content containers.                  |
+The first impression is high-end digital product design (70%) with precise,
+inspectable technical instruments (30%). The site never uses stock imagery,
+people, generic device renders, fake screenshots, video demos, Three.js, GSAP,
+or a full-screen canvas as its content layer.
 
-The user-approved homepage rule is simple: hero may be full width; content after
-hero must not be full width and must contain enough real substance.
+## Product truth
 
-## Truth Policy
+- Current product fact is the five-package surface and published alpha.8 line.
+- Home scenes show actual Custom Elements, DSD, islands and portable output.
+- `@openelement/ui` is optional; site-only visuals remain in `www`.
+- Blog and changelog are History; their archive copy is not a current design or
+  product claim.
 
-| Page          | Content source                                                                                                                                               |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Homepage      | Product anchors in route code, package concepts, real docs/API/roadmap links.                                                                                |
-| Docs          | Generated route metadata and existing guide/architecture routes.                                                                                             |
-| API Reference | Real package boundaries and public UI primitives; no invented API signatures.                                                                                |
-| Blog index    | `www/app/data/_generated-blog-data.ts` and content frontmatter.                                                                                              |
-| Blog article  | The current post payload only. No fake read time, dates, or summaries.                                                                                       |
-| Roadmap       | Current roadmap file and required anchors: `v0.41.0-alpha.6`, `v0.41.0-alpha.7`, `v0.41.0-beta.1`, and `Web Components Fullstack Framework + Basic Element`. |
-| Changelog     | Root `CHANGELOG.md`.                                                                                                                                         |
-| Contributing  | Current contributing route content and repo workflow.                                                                                                        |
-| Design System | Real `@openelement/ui` primitives and Open Props semantic tokens.                                                                                            |
+## Layout and page roles
 
-Generated mockups are visual references only. They are never a source of truth.
+| Surface                       | Required behaviour                                                       |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Homepage                      | Six-scene product film, real DOM first, native Web APIs as enhancement.  |
+| Docs/API/Architecture/Roadmap | A short expressive hero followed by quiet, readable reference content.   |
+| Guides/Blog/Changelog         | Reading-first material, shared dark material and restrained motion only. |
+| 404                           | A concise `<open/>` recovery moment, never a dead end.                   |
 
-## Page System
+## Motion and rendering
 
-### Homepage
+- CSS 3D, Scroll-driven Animations, WAAPI, View Transitions and
+  IntersectionObserver are the default toolkit.
+- WebGL may render only delayed violet atmosphere/particles. It never owns
+  text, controls, branding or product structure. CSS is its complete fallback.
+- Prefer real components and semantic HTML. The first viewport is complete
+  without JavaScript. `prefers-reduced-motion` receives a complete static
+  storyboard rather than an empty animation shell.
+- Desktop and mobile are separately composed. Do not scale a desktop timeline
+  down into a narrow viewport.
 
-- Full-width hero with `<open/>`, route graph, DSD boundary, spec panels.
-- Below hero, use a centered editorial container.
-- Middle content must include:
-  - standards/product model
-  - Elements / Routes / Protocols
-  - DOM tree / route graph / island hydration / package graph
-  - build/code panels
-  - developer workflow rail
-  - Docs / API / Roadmap reference surfaces
-  - live island verification section outside the first viewport
+## Quality gates
 
-### Docs
+- Dark is the default brand theme; light is a complete violet daylight mode.
+- New homepage interaction JS stays near 60 KB gzip. Atmosphere is lazy and
+  non-blocking. No visible layout shift may be introduced by motion.
+- Validate modern Chromium experience, Firefox/WebKit graceful fallback,
+  keyboard navigation, focus, 200% zoom, touch, reduced motion, WebGL failure
+  and context loss.
+- Generated visual baselines are reviewed for desktop/mobile in both themes.
 
-- Header area may be expressive, but content below must be constrained.
-- Use docs sidebar/navigation as the primary wayfinding.
-- Show command/search, route graph, and guide entry surfaces with true links.
-
-### API Reference
-
-- Use one left category rail only.
-- Do not add duplicate unclickable `Core / Framework / UI` tabs or chips.
-- Content sections describe real package surfaces and real UI primitives.
-- A right rail may show on-this-page anchors for current sections only.
-
-### Roadmap
-
-- Use a centered release rail and product truth panels.
-- Preserve all SSG smoke anchors and current release-line facts.
-- Roadmap visuals explain status; they must not create new commitments.
-
-### Blog
-
-- Blog index is an editorial release and architecture journal.
-- Post metadata comes from generated blog data.
-- Article pages use a readable article container with a right on-this-page rail.
-- Do not invent read times, post summaries, or category counts.
-
-### Architecture / Design System
-
-- Architecture pages use the same reference container and drafting panels.
-- Design System shows only real UI primitives:
-  `open-brand-mark`, `open-button`, `open-card`, `open-badge`,
-  `open-lab-panel`, `open-lab-stage`, `open-standards-visual`,
-  `open-theme-toggle`, and related exported primitives.
-
-### Changelog / Contributing / 404
-
-- Remove legacy Linear visual language from public pages.
-- Use `openPropsTokenSheet` and current `@openelement/ui` primitives.
-- Keep content factual and tied to `CHANGELOG.md` or current route text.
-
-## Art Direction
-
-| Token      | Requirement                                                                      |
-| ---------- | -------------------------------------------------------------------------------- |
-| Color      | Monet purple is the accent, not a page wash.                                     |
-| Background | Off-white/light surfaces with drafting lines; dark mode must preserve hierarchy. |
-| Typography | Instrument Sans for UI and prose; mono only for code, labels, commands.          |
-| Shape      | Interface containers use restrained radii, generally 8px or less.                |
-| Graphics   | Use route graphs, package layers, DSD boundaries, and `<open/>` geometry.        |
-| Cards      | Use cards for repeated items only; avoid card walls.                             |
-
-## Implementation Rules
-
-| Rule       | Requirement                                                                             |
-| ---------- | --------------------------------------------------------------------------------------- |
-| Tokens     | `openPropsTokenSheet` and semantic tokens only.                                         |
-| Components | `www` composes `@openelement/ui` primitives where practical.                            |
-| Legacy     | Public pages should not use `linearTokenSheet` or `open-*-linear`.                      |
-| API        | No fake signatures. If an API cannot be verified, describe the package surface instead. |
-| Width      | Middle/body content uses `min(..., calc(100% - ...))` container constraints.            |
-| Motion     | Motion clarifies diagrams only; reduced motion must remain usable.                      |
-| Validation | Build, targeted e2e, visual screenshots, and AutoFlow hooks before push.                |
-
-## Version History
-
-| Version | Date       | Changes                                                                      |
-| ------- | ---------- | ---------------------------------------------------------------------------- |
-| 4.0.0   | 2026-06-19 | Monet Aperture Editorial Lab, constrained body content, truth-source policy. |
-| 3.1.0   | 2026-06-18 | Kinetic Standards Lab and AutoFlow-clean delivery.                           |
-| 3.0.0   | 2026-06-17 | Strict Open Props, UI-package-first redesign.                                |
-| 2.0.0   | 2026-06-17 | Web Standards Lab direction.                                                 |
-| 1.0.0   | 2026-06-16 | Legacy dark external-brand direction.                                        |
+The detailed homepage storyboard and QA matrix are in `specs/cinematic-motion.md`.

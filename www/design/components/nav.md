@@ -2,8 +2,8 @@
 
 ## Purpose
 
-The navigation shell should feel like a documentation workbench: stable,
-readable, and fast to scan.
+The navigation shell is a transparent cinematic overlay at the homepage first
+viewport, then a compact dark command bar: stable, readable, and fast to scan.
 
 ## Desktop
 
@@ -24,9 +24,10 @@ openElement mark + wordmark | Guide API Architecture Blog Roadmap | GitHub Get s
 
 ## Rules
 
-- Logo uses a small square product mark plus wordmark.
+- Logo uses the `<open/>` mark plus the `OpenElement` wordmark.
 - Header links use compact readable text, no negative letter spacing.
 - Active page uses stronger text weight.
 - Mobile drawer starts below `--nav-height`.
 - Mobile bottom tabs use the first five header links.
 - Header must not wrap into two rows at common desktop widths.
+- Reverse scroll and keyboard focus restore the expanded header immediately.

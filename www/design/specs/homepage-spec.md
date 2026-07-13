@@ -1,42 +1,33 @@
-# Homepage Spec
+# Homepage Spec — The Web, composed.
 
-## Purpose
+The homepage is OpenElement's flagship dogfood. The first viewport contains
+real HTML: `<open/>`, the title **The Web, composed.**, a short product lede,
+published version, `Start building`, and `Watch it unfold`. None depend on
+JavaScript.
 
-The homepage sells the product by showing the product: Web Components,
-Declarative Shadow DOM, routes, islands, packages, and public contracts.
+## Storyboard
 
-## First Viewport
+1. **Element** — a native Custom Element is the durable application boundary.
+2. **DSD** — Shadow DOM becomes visible as browser-native, static output.
+3. **Islands** — only selected components wake for interaction.
+4. **Output** — one composition reaches Browser, Node and Workers.
+5. **Begin** — public starter command and final build CTA.
 
-- H1 identifies openElement as the Web Components fullstack framework.
-- Left side: product statement, lede, primary/secondary actions.
-- Right side: `open-lab-stage emphasis="high" motion="auto"`.
-- Below the stage/copy: four compact proof points.
-- The first viewport must feel like a browser/devtools/spec workbench, not a
-  card stack.
-- Desktop first viewport must leave a hint of the product doctrine section.
+The opening `<open/>` aperture is the visual prologue, not a separate product
+claim. Scene content is concise; detailed architecture lives behind real Docs,
+API, Architecture and Roadmap links.
 
-## Required Sections
+## Interaction
 
-1. Hero with `open-lab-stage` browser/devtools/spec artifact.
-2. Product doctrine: Web Components Fullstack Framework + Basic Element.
-3. Workflow: Author, Render DSD, Hydrate islands, Serve API, Prove contracts.
-4. System map: product doctrine and package boundary sketch.
-5. Entry paths: Guide, API, Architecture, Roadmap.
-6. Closing CTA using `open-button`.
+- The desktop film may use long scroll scenes and spatial transforms.
+- Mobile uses the same narrative in vertical scenes with reduced parallel
+  movement.
+- `Watch it unfold` anchors scene one. All CTA links remain native anchors.
+- WebGL atmosphere is optional; a CSS violet field remains if it does not run.
 
-## Component Rules
+## Non-negotiable checks
 
-- Use `open-button` for actions.
-- Use `open-card` for repeated proof, pillar, workflow, and entry items.
-- Use `open-badge` for state labels.
-- Use `open-lab-panel` for spec, route, package, and artifact panels.
-- Use `open-standards-visual` for engineering graphics.
-- Use `open-lab-stage` for the first-viewport kinetic product object.
-
-## Layout Rules
-
-- Desktop hero: two columns with the visual artifact visible in the first viewport.
-- Tablet/mobile hero: stacked, with actions and artifact still above secondary sections.
-- Cards are not nested inside cards.
-- All colors, spacing, radius, and type come from Open Props or semantic tokens.
-- `prefers-reduced-motion` must disable non-essential stage animation.
+- No screenshots, videos or fake controls replace framework behaviour.
+- `prefers-reduced-motion` makes every scene readable without animation.
+- The first paint and LCP do not wait for a client island.
+- Every scene has meaningful text and a visible keyboard focus path.
