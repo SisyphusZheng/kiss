@@ -1,7 +1,7 @@
 export const meta = { section: '', label: 'Roadmap', order: 10 };
 export const tagName = 'page-roadmap';
 
-// Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
+// Strategic anchors: Web Components-native, static-first application framework.
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
@@ -449,79 +449,44 @@ pageSheet.replaceSync(`
 
 const phases = [
   {
-    version: 'v0.39',
-    title: 'Framework RC + product doctrine reset',
-    copy: 'Validated app generation, public docs integrity, and the path toward a Web Components fullstack framework.',
+    version: 'v0.41.0-alpha.8',
+    title: 'Published alpha package line',
+    copy: 'The last published alpha line; its implementation work converged the consumer product around five packages.',
     status: 'done',
     tone: 'success',
   },
   {
-    version: 'v0.40',
-    title: 'Elements + repository slimming',
-    copy: 'Slimmed the public surface, removed archived promises, and kept the framework direction standards-first.',
-    status: 'released',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.2',
-    title: 'Release readiness and site truth',
-    copy: 'Align design, docs, WC Package Protocol language, and CI readiness around the current product graph.',
-    status: 'shipped',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.3',
-    title: 'Cross-framework WC integration',
-    copy: 'Proved Lit, Shoelace, and Material Web consumption while keeping the interop contract standards-first.',
-    status: 'shipped',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.4',
-    title: 'openElement components in Fresh',
-    copy: 'PR-green Fresh proof for the lightweight client runtime; awaiting main merge, npm publish, and post-publish smoke evidence.',
-    status: 'release candidate',
+    version: 'v0.41.0-beta.4',
+    title: 'Five-package candidate closure',
+    copy: 'The first coherent beta candidate: external adopter #390, browser candidate proof and release-truth closure remain before publish.',
+    status: 'candidate closure',
     tone: 'warning',
   },
   {
-    version: 'v0.41.0-alpha.5',
-    title: 'SPA mode + Deno Desktop reader',
-    copy: 'Client-side router, SPA bootstrap, and a WeRead-style Deno Desktop PDF reader backed by fixtures, local folders, and public GitHub sources.',
-    status: 'released',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.6',
-    title: 'App protocol architecture hardening',
-    copy: 'Make OpenElement App own RouteGraph, RenderPipeline, RequestContext, Deno Desktop target contracts, product truth, and CodeQL cleanup.',
-    status: 'released',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.7',
-    title: 'Dogfood, architecture convergence, adoption readiness',
-    copy: 'Turn completed Reader and Mastodon dogfood into one production build path, smaller public interfaces, browser/security truth, a five-minute starter, reproducible evidence, and external adopter proof.',
-    status: 'complete as alpha.8; pilot #390 open',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-beta.1',
-    title: 'Interface depth + adoption closure',
-    copy: 'Final breaking window: repair the published starter, deepen app/element/build, collapse shallow surfaces, delete compatibility debt, and publish the first coherent candidate as beta.4.',
-    status: 'architecture planning',
+    version: 'v0.41.0',
+    title: 'Core interface freeze',
+    copy: 'Freeze the five-package graph and deep Element, App and Build interfaces only when beta.4 exposes no further breaking work.',
+    status: 'after beta.4',
     tone: 'warning',
   },
   {
-    version: 'v0.41',
-    title: 'npm-first distribution + app proofs',
-    copy: 'Stabilize npm artifacts, WC interop, SPA reader proof, architecture hardening, desktop app evidence, and adoption docs before the v0.41 tag.',
+    version: 'v0.42',
+    title: 'WC Application Loop',
+    copy: 'One route-to-interaction loop: load, DSD render, progressive form, action, error or redirect, and revalidation with a no-JavaScript path.',
     status: 'planned',
     tone: 'warning',
   },
   {
-    version: 'v1.0',
-    title: 'Stable WC fullstack framework',
-    copy: 'Freeze public APIs after contracts, examples, starter adoption, and release evidence are all stable.',
+    version: 'v0.43–0.46',
+    title: 'SSR, production runtime, ecosystem and v1 freeze',
+    copy: 'Earn WC fullstack leadership through compatibility diagnostics, portable runtime proof, external adoption and a stability-only release candidate.',
+    status: 'direction',
+    tone: 'warning',
+  },
+  {
+    version: 'v1.0.0',
+    title: 'Stable five-package product',
+    copy: 'Release only after external production users prove that the Element, App and Build interfaces need no further architecture change.',
     status: 'direction',
     tone: 'warning',
   },
@@ -549,20 +514,19 @@ export class RoadmapPage extends OpenElement {
             </div>
           </div>
           <div class='hero-artifact'>
-            <open-lab-panel class='now' label='current' meta='v0.41.0-alpha.8 → beta.4'>
+            <open-lab-panel class='now' label='current' meta='alpha.8 published → beta.4 candidate'>
               <div class='now-layout'>
                 <div class='aperture' aria-hidden='true'>
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='warning'>beta architecture planning</open-badge>
-                  <h2>The last breaking window is focused on interface depth and real adoption.</h2>
+                  <open-badge tone='warning'>beta candidate closure</open-badge>
+                  <h2>The five-package implementation is complete; adoption and release evidence now decide beta.4.</h2>
                   <p>
-                    The coherent package line is alpha.8 because the partial
-                    alpha.7 npm version is immutable. The audit found a broken
-                    published starter and shallow package seams; partial npm
-                    beta.1–beta.3 are withdrawn, so the first coherent candidate
-                    will be beta.4. External adopter pilot #390 stays open.
+                    alpha.8 is the published package line. beta.1–beta.3 are
+                    withdrawn partial npm artifacts, so beta.4 is the first
+                    coherent candidate. External adopter pilot #390, browser
+                    candidate gates and release truth remain before publishing.
                   </p>
                 </div>
               </div>
@@ -583,7 +547,7 @@ export class RoadmapPage extends OpenElement {
           </div>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-beta.1' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-beta.4' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

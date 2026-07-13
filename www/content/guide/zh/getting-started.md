@@ -7,18 +7,18 @@ order: 1
 
 # 快速开始
 
-openElement 是以 Web Components 为原生组件模型的 fullstack framework，并内置
-JSX-first Basic Element authoring layer：
+openElement 是以 Web Components 为原生组件契约、static-first 的应用框架；
+JSX 与 Basic Element 是作者层：
 
 ```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
 ```
 
-页面使用 JSX 编写。Framework 负责 routes、layouts、islands、API routes、
-deployment 和 desktop targets。Basic Element 是原生 custom-element authoring
-layer。Shadow/DSD 是默认渲染模式，需要交互的部分再作为 islands 升级。Dogfood
-apps 验证 framework，但不定义新的产品线。
+页面使用 JSX 编写。Framework 负责 pages、routes、islands 与 rendering
+semantics；Vite 和 Nitro 是官方构建与输出路径。Basic Element 是原生
+custom-element authoring layer。Shadow/DSD 是默认渲染模式，需要交互的部分再按需
+升级。Dogfood apps 验证 framework，但不定义新的产品线。
 
 ## 创建项目
 

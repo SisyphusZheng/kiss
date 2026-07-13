@@ -7,20 +7,19 @@ order: 2
 
 # Core Concepts
 
-openElement is built around one application model, one renderer pipeline, and
-two primary products:
+OpenElement is built around one application model and one renderer pipeline:
 
 ```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
 ```
 
-The Web Components fullstack framework owns pages, layouts, routes, islands, API
-routes, deployment, and desktop targets. Basic Element is the native
-custom-element authoring surface. Protocols, UI, SSG, adapter-vite, router,
-signal, content, and core support those products without becoming separate
-product lines. Reader, Mastodon Desktop, AutoFlow3, and docs-truth tooling are
-evidence or infrastructure, not extra product surfaces.
+The framework owns pages, routes, islands and render semantics; Vite and Nitro
+provide the official build and output path. Basic Element is the native
+custom-element authoring surface. `element`, `app`, `adapter-vite`, `create` and
+optional `ui` are the current consumer packages. Reader, Mastodon Desktop,
+AutoFlow3 and docs-truth tooling are evidence or infrastructure, not product
+surfaces.
 
 ## Application API
 

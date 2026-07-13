@@ -22,7 +22,6 @@ const publicDocs = [
   'docs/roadmap/ROADMAP.md',
   'docs/status/STATUS.md',
   'docs/archive/README.md',
-  'docs/release/v0.40.0-product-line-cleanup.md',
   'www/app/data/version.ts',
   'www/app/routes/index/index.tsx',
   'www/app/routes/roadmap.tsx',
@@ -31,6 +30,7 @@ const publicDocs = [
   'www/app/routes/architecture/comparison.tsx',
   'www/app/routes/architecture/dsd.tsx',
   'www/app/routes/architecture/islands.tsx',
+  'www/app/routes/apilist.tsx',
 ];
 
 const currentDocs = [
@@ -43,13 +43,28 @@ const currentDocs = [
   'www/app/routes/index/index.tsx',
   'www/app/routes/roadmap.tsx',
   'www/app/routes/guide/getting-started.tsx',
+  'www/app/routes/apilist.tsx',
+  'www/app/routes/architecture/architecture.tsx',
 ];
 
 const checks: Check[] = [
   {
     name: 'current product-position anchors',
     files: ['docs/current/VERSION_PLAN.md', 'docs/roadmap/ROADMAP.md'],
-    required: ['openElement = Web Components Fullstack Framework + Basic Element'],
+    required: ['OpenElement = Web Components-native fullstack application framework'],
+  },
+  {
+    name: 'published alpha is distinct from beta candidate',
+    files: [
+      'README.md',
+      'README.zh.md',
+      'docs/current/VERSION_PLAN.md',
+      'docs/roadmap/ROADMAP.md',
+      'docs/status/STATUS.md',
+      'www/app/routes/roadmap.tsx',
+    ],
+    required: ['0.41.0-beta.4'],
+    accept: (text) => text.includes('alpha.8') && text.includes('beta.4'),
   },
   {
     name: `${PACKAGE_VERSION_TAG} is the current package line`,
@@ -60,12 +75,12 @@ const checks: Check[] = [
       (file.endsWith('.tsx') && text.includes('OPENELEMENT_VERSION')),
   },
   {
-    name: `${ACTIVE_EXECUTION_VERSION} is the active execution line`,
-    files: currentDocs,
+    name: `${ACTIVE_EXECUTION_VERSION} is historical implementation evidence`,
+    files: ['docs/current/VERSION_PLAN.md'],
     required: [ACTIVE_EXECUTION_VERSION],
   },
   {
-    name: 'v1.0 is the stable engine target',
+    name: 'v1.0 is the stable product target',
     files: [
       'README.md',
       'README.zh.md',
@@ -73,15 +88,7 @@ const checks: Check[] = [
       'docs/status/STATUS.md',
       'www/app/routes/roadmap.tsx',
     ],
-    required: ['v1.0'],
-  },
-  {
-    name: 'v0.37 roadmap is split into a validation train',
-    files: [
-      'docs/roadmap/ROADMAP.md',
-      'docs/status/STATUS.md',
-    ],
-    required: ['v0.37.6'],
+    required: ['1.0.0'],
   },
   {
     name: 'stale version and stale roadmap claims are absent',
@@ -106,6 +113,10 @@ const checks: Check[] = [
       /Vue adapter proof/i,
       /Vue is .*heavy-framework island/i,
       /Vue 是.*heavy-framework island/i,
+      /Web Components Fullstack Framework \+ Basic Element/i,
+      /supporting packages = Protocols \+ UI/i,
+      /11-package graph/i,
+      /11 packages expose/i,
     ],
   },
   {

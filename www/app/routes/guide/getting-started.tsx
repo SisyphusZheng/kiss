@@ -32,15 +32,15 @@ export class GuideGuidePage extends OpenElement {
       <div class='container'>
         <h1>Getting Started</h1>
         <p class='subtitle'>
-          openElement is a Web Components-native fullstack framework with a
-          JSX-first Basic Element authoring layer. Start with the Deno-first
-          workflow, then inspect pages, routes, Web Components, API routes, and
-          deployment as one app model.
+          OpenElement is a Web Components-native, static-first application
+          framework. Start with the Deno-first workflow, then use standard
+          Custom Elements, pages, routes, selective upgrades and deployable
+          Vite/Nitro output through one application model.
         </p>
         <p class='subtitle'>
-          The current package line is {OPENELEMENT_VERSION}. The active execution line
-          is v0.41.0-alpha.7 dogfood, architecture convergence, and adoption readiness,
-          followed by v0.41.0-beta.1 release-candidate validation.
+          The current published package line is {OPENELEMENT_VERSION}. The
+          repository-side beta.4 five-package convergence is complete; external
+          adopter pilot #390 and candidate release evidence remain open.
         </p>
         <div class='guide-grid'>
           <open-card>

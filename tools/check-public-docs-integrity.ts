@@ -1,4 +1,4 @@
-import { ACTIVE_EXECUTION_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { PACKAGE_VERSION_TAG } from './project-constants.ts';
 
 type Failure = {
   file: string;
@@ -16,8 +16,8 @@ const currentPublicDocs = [
 
 const readmeDocs = ['README.md', 'README.zh.md'];
 const productDoctrinePatterns = [
-  'openElement = Web Components Fullstack Framework + Basic Element',
-  'supporting packages = Protocols + UI + official stack adapters',
+  'OpenElement = Web Components-native fullstack application framework',
+  'current proven scope = static-first applications with fullstack output paths',
 ];
 
 const mojibakePatterns: RegExp[] = [
@@ -76,10 +76,10 @@ for (const file of currentPublicDocs) {
     failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
   }
 
-  if (!text.includes(ACTIVE_EXECUTION_VERSION)) {
+  if (!text.includes('0.41.0-beta.4')) {
     failures.push({
       file,
-      message: `missing active execution version ${ACTIVE_EXECUTION_VERSION}`,
+      message: 'missing beta.4 candidate truth',
     });
   }
 
@@ -97,7 +97,7 @@ for (const file of readmeDocs) {
 
   for (const doctrine of productDoctrinePatterns) {
     if (!text.includes(doctrine)) {
-      failures.push({ file, message: `missing two-product doctrine formula: ${doctrine}` });
+      failures.push({ file, message: `missing product doctrine formula: ${doctrine}` });
     }
   }
 
@@ -133,5 +133,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, active ${ACTIVE_EXECUTION_VERSION}).`,
+  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, beta.4 candidate).`,
 );

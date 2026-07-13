@@ -1,7 +1,7 @@
 /**
  * Homepage for the current public product doctrine.
  *
- * Strategic anchors: openElement = Web Components Fullstack Framework + Basic Element.
+ * Strategic anchors: Web Components-native, static-first application framework.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
@@ -733,23 +733,23 @@ pageSheet.replaceSync(`
 const modules = [
   {
     index: '01',
-    title: 'Fullstack framework',
+    title: 'Application framework',
     copy:
-      'Routes, layouts, islands, API paths, assets, deploy targets, and desktop targets owned by OpenElement contracts.',
+      'Pages, routes, islands, rendering and deployable output owned by one Web Components application contract.',
     visual: 'target',
   },
   {
     index: '02',
-    title: 'Basic Element',
+    title: 'Element authoring',
     copy:
-      'A small native Web Components authoring layer with shadow/DSD default output and explicit light DOM opt-in.',
+      'A small native Custom Elements authoring layer with JSX, shadow/DSD default output and explicit light DOM opt-in.',
     visual: 'graph',
   },
   {
     index: '03',
-    title: 'Official stack',
+    title: 'Portable output',
     copy:
-      'Protocols, UI, Vite, Hono, Nitro, Deno Desktop, Preact islands, and third-party WC compatibility support the two products.',
+      'Vite and Nitro provide the official build path while packed public artifacts prove portable output and third-party WC interop.',
     visual: 'layers',
   },
 ] as const;
@@ -815,17 +815,16 @@ export class DocsHome extends OpenElement {
               <p class='kicker'>Standards-first Web Components</p>
               <h1>Ship real web apps on native Web Components.</h1>
               <p class='lede'>
-                openElement gives you full-stack routing, SSR, islands, and
-                desktop targets without a virtual DOM or vendor lock-in —
+                openElement gives you static-first routing, DSD, selective
+                upgrades and deployable output without a virtual DOM or vendor lock-in —
                 your components stay portable, inspectable, and standards-based.
               </p>
               <p class='lede'>
-                Current package line: {OPENELEMENT_VERSION}. Active plan:
-                v0.41.0-alpha.6 released packages, v0.41.0-alpha.7 dogfood,
-                architecture convergence and adoption readiness, then
-                the breaking v0.41.0 beta architecture train; because beta.1
-                through beta.3 are partial immutable npm publishes, the first
-                coherent candidate will be beta.4.
+                Published package line: {OPENELEMENT_VERSION}. The repository
+                has completed beta.4 five-package convergence; beta.4 remains
+                the first coherent candidate because beta.1 through beta.3 are
+                partial immutable npm publishes. External adopter pilot #390 is
+                the remaining repository-external condition.
               </p>
               <div class='actions'>
                 <a class='action primary' href='/guide/getting-started'>Get Started -&gt;</a>

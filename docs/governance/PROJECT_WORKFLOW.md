@@ -11,13 +11,12 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: package line `v0.41.0-alpha.8`, completed execution
-line `v0.41.0-alpha.7`, beta architecture planning under
-`docs/current/VERSION_PLAN.md`, and current alpha product formula
-`openElement = Web Components Fullstack Framework + Basic Element`. The beta
-target is one Web Components-native application framework with Basic Element
-standalone and full-application adoption modes; first coherent beta publish is
-`0.41.0-beta.4`.
+Current execution anchor: published package line `v0.41.0-alpha.8`, completed
+implementation anchor `v0.41.0-alpha.7`, and beta.4 release closure under
+`docs/current/VERSION_PLAN.md`. OpenElement is one Web Components-native,
+static-first application framework: Basic Element is an authoring mode, not a
+second product. The first coherent beta publish is `0.41.0-beta.4`; it remains
+unpublished until #390 and candidate release evidence close.
 
 ## Required Reading Order
 

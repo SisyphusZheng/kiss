@@ -91,19 +91,19 @@ export default class ComparisonPage extends OpenElement {
         <div class='comparison-grid'>
           <open-card variant='artifact'>
             <span class='label'>openElement</span>
-            <h3>Web Components fullstack</h3>
+            <h3>WC-native application framework</h3>
             <p class='dim'><span class='k'>Architecture</span> Custom Elements +
-              Declarative Shadow DOM are first-class; protocol-first contracts;
-              the app owns routes/render; Vite, Hono, and Nitro are swappable
-              adapters.</p>
+              Declarative Shadow DOM are first-class; standard Custom Elements
+              remain the application contract; App owns routes and rendering;
+              Vite and Nitro are the official build path.</p>
             <p class='dim'><span class='k'>Rendering</span> SSG by default,
-              DSD/shadow default, streaming DSD, islands (client:load/idle/
-              visible/only), static zero-JS default.</p>
-            <p class='dim'><span class='k'>DX</span> JSX + Signal,
-              definePage / defineIsland, TypeScript-first.</p>
-            <p class='dim'><span class='k'>Lock-in</span> Standards-based
-              (Web Components, DSD); core protocol is runtime-free; adapters
-              are replaceable.</p>
+              DSD/shadow default, selective element upgrades, and static output
+              with no framework JavaScript when interaction is unnecessary.</p>
+            <p class='dim'><span class='k'>DX</span> JSX + Basic Element,
+              defineElement / definePage / defineApp / buildApp.</p>
+            <p class='dim'><span class='k'>Fit</span> Choose it when Custom
+              Elements must span component libraries and application runtime;
+              current scope is static-first, not general fullstack parity.</p>
           </open-card>
 
           <open-card>
@@ -175,9 +175,10 @@ export default class ComparisonPage extends OpenElement {
             <span class='label'>Lit</span>
             <h3>Web Components base</h3>
             <p class='dim'><span class='k'>Architecture</span> Base class for
-              Custom Elements with reactive properties; no router/SSR built in.</p>
-            <p class='dim'><span class='k'>Rendering</span> Client-side Web
-              Components; pairs with any bundler or meta-framework for SSR.</p>
+              Custom Elements with reactive properties; application routing is
+              deliberately outside its component model.</p>
+            <p class='dim'><span class='k'>Rendering</span> Lit provides SSR
+              tooling with server-specific authoring constraints.</p>
             <p class='dim'><span class='k'>DX</span> TypeScript, decorators,
               tagged-template rendering.</p>
             <p class='dim'><span class='k'>Lock-in</span> Low — pure standards
@@ -186,9 +187,9 @@ export default class ComparisonPage extends OpenElement {
 
           <open-card>
             <span class='label'>Enhance</span>
-            <h3>Web Components + SSR</h3>
+            <h3>HTML-first Web Components fullstack</h3>
             <p class='dim'><span class='k'>Architecture</span> Custom Elements,
-              file-based routes, Node/Express-style handlers.</p>
+              file-based routes and server-side Custom Elements.</p>
             <p class='dim'><span class='k'>Rendering</span> SSR to Web Components,
               zero-JS by default, progressive enhancement.</p>
             <p class='dim'><span class='k'>DX</span> HTML-first, single-file

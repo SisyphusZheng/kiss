@@ -1,313 +1,87 @@
-# v0.41.0 Version Plan - Web Components Fullstack Framework + Basic Element
+# v0.41 Version Plan — five-package beta closure
 
-Current alpha.8 doctrine:
+> Published package line: `v0.41.0-alpha.8`\
+> Active implementation anchor: `v0.41.0-alpha.7`\
+> First coherent beta candidate: `0.41.0-beta.4`
 
-```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
-```
-
-Beta target positioning:
+## Product truth
 
 ```text
-openElement = Web Components-native application framework
-authoring modes = Basic Element standalone + full application
-default path = DSD/static-first + selective islands + Vite/Nitro
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
+component contract = standard Custom Elements
+authoring = JSX + Basic Element
+rendering = DSD/shadow default + explicit light DOM
+interactivity = selective element upgrade
+official build path = Vite + Nitro
 ```
 
-## Objective
+OpenElement has one product with two adoption depths: standalone elements and
+complete applications. The current consumer graph contains `element`, `app`,
+`adapter-vite`, `create` and optional `ui`. The alpha implementation packages
+that supplied their internals have no current compatibility promise.
 
-Complete the npm-primary distribution migration using Deno 2.8+ `deno pack`,
-then use the final pre-stable beta window to turn OpenElement into a coherent
-Web Components-native application framework with a JSX-first Basic Element
-adoption mode. The beta objective is interface depth and installed-user truth,
-not feature count.
-Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party Web
-Components are first-party stack decisions, but they must enter through
-OpenElement-owned package contracts and protocol concepts.
+## Beta.4 state
 
-The release is staged through alpha lines with explicit execution plans:
+The final breaking convergence is complete in the repository:
 
-- **alpha.1** (shipped): npm distribution + audit cleanup.
-- **alpha.2**: Signal-DOM deepening (`HydrationScope` to `@openelement/core/hydrate`,
-  renderer/activation split, `BindingDescriptor` registry).
-- **alpha.3–4** (merged): Cross-Framework WC Integration —
-  consume Lit/Shoelace/MWC + client runtime for Deno Fresh
-  interop proof; pure-ESM/ECMAScript npm gates.
-- **alpha.5**: SPA mode + Deno Desktop Reader proof, Reader polish, and current
-  PR/framework closure.
-- **alpha.6** (released): Front-half cleanup audit closure, OpenElement App/protocol
-  architecture hardening, official stack contracts, Deno Desktop target
-  contract, and Reader regression-grade dogfood. Published to npm as
-  `0.41.0-alpha.6` with provenance.
-- **alpha.7** (implementation complete): Dogfood, Architecture Convergence, and
-  Adoption Readiness. Its implementation, distribution, evidence, and adoption
-  slices ship on the complete `v0.41.0-alpha.8` package set because the
-  partially published `alpha.7` npm version is immutable. External adopter
-  pilot #390 remains a post-release validation item and is not a package gate.
-- **beta architecture train** (breaking implementation): collapse shallow
-  interfaces, repair the real npm starter, align release truth, prune old and
-  redundant surfaces, and validate adoption. npm `beta.1` through `beta.3` are
-  immutable partial publishes; the first coherent candidate will be
-  `0.41.0-beta.4`.
+- the consumer graph has five packages;
+- the generated starter exposes product interfaces and lifecycle tasks;
+- packed consumer, Node/Nitro, third-party WC and artifact checks are present;
+- current docs, examples and dogfood use product imports;
+- legacy compatibility paths and shallow public surfaces were removed.
 
-## Context
+npm beta.1 through beta.3 are immutable partial publishes. They are historical
+withdrawn artifacts, not compatibility baselines. `0.41.0-beta.4` is the first
+complete candidate and has not been published.
 
-v0.41.0-alpha.1 removed the legacy Linear UI surface, closed the audit-driven
-cleanup train, and shipped the first npm-only alpha under ADR-0107. JSR publish
-was removed as a release gate; distribution evidence is produced by `deno pack`
-and the npm provenance workflow. The next strategic blockers are signal-DOM
-architecture hardening and WC ecosystem integration.
+## Remaining release conditions
 
-A previous v0.41.0 line proposed making Vite+ treat Deno as a first-class
-package manager. That upstream PR (voidzero-dev/vite-plus#1888) was declined,
-so this plan pivots to Deno's own `deno pack` tooling while keeping Vite as the
-official OpenElement build adapter.
+1. Complete external adopter pilot #390. The report must cover install, author,
+   build, deploy and maintainer intervention; internal smoke is not a proxy.
+2. Run the candidate browser matrix in Chromium, Firefox and WebKit.
+3. Publish one coherent five-package graph under the `beta` dist-tag with
+   provenance.
+4. Verify Git tag, npm versions and dist-tag, GitHub Release, provenance, docs
+   and final release evidence agree.
+5. Cut stable `0.41.0` only when beta.4 requires no additional architecture,
+   interface or adoption work.
 
-## Scope
+## Supported authoring surface
 
-### Toolchain
+Ordinary authors use the following deep modules:
 
-- Pin `.dvmrc` to Deno `2.9.0` (stable). CI reads `.dvmrc` via
-  `setup-deno-workspace`, and the standalone JSR consumer monitor reads the same
-  `.dvmrc`. Deno 2.8+ remains the documented public minimum; the repo itself
-  converges on the latest stable release that passes the full gate matrix.
-- Convert all internal `@openelement/*` imports from `jsr:` to `npm:` in root
-  and `packages/*/deno.json`.
-- Add `deno task pack` and `deno task publish:npm` that pack and publish the
-  11-package graph in dependency order.
-- Add `deno task pack:dry-run` for CI validation.
+```ts
+import { defineElement } from '@openelement/element';
+import { defineApp, definePage } from '@openelement/app';
+import { buildApp } from '@openelement/adapter-vite';
+```
 
-### Runtime-agnostic boundaries
+`@openelement/ui` is optional. Renderer, signal, hydration, router, request
+driver, content scan and build-phase details remain implementation knowledge.
+The adapter root, `nitro-mount` and CLI build entry are the documented build
+path; auxiliary adapter exports are not an ordinary authoring contract.
 
-- ~~Move `FileIsrCache` from `@openelement/core/isr` to
-  `@openelement/ssg/file-isr-cache`; keep the interface and `MemoryIsrCache` in
-  `core`.~~ Superseded by architecture audit cleanup: `FileIsrCache` was removed
-  because no production code consumed it. `MemoryIsrCache` remains the reference
-  implementation in `@openelement/core/isr`.
-- ~~Change `router/src/page-loader.ts` `loadPage()` to accept raw markdown text
-  instead of reading files with `Deno.readTextFile`.~~ Superseded by cleanup:
-  `router/src/page-loader.ts` was removed during architecture audit. Raw markdown
-  rendering remains available in `@openelement/content`.
-- Add `tools/check-deno-api-free.ts` and a `deno task deno-api:check` gate that
-  fails if `core/element/ui/protocol/signal/router/app` source files use
-  `Deno.*` or host-specific runtime APIs that do not belong in browser-facing
-  package surfaces.
+## Post-v0.41 direction
 
-### Adapter-vite
+The stable release freezes the five-package graph and the Element, App and
+Build interfaces. It does not claim general fullstack parity before request-time
+data, forms, sessions and cache have production semantics.
 
-- Default `createOpenJsrPackageResolverPlugin` to npm mode: skip virtual-module
-  source fetching and let Vite resolve `@openelement/*` from `node_modules`.
-- Keep JSR source resolution available via explicit `registry: 'jsr'` option.
+The next roadmap work is driven by complete user loops:
 
-### Starter template
+- `0.42.0`: WC Application Loop.
+- `0.43.0`: Universal WC SSR.
+- `0.44.0`: Production Runtime.
+- `0.45.0`: WC Ecosystem Platform.
+- `0.46.0`: v1 Product Freeze.
 
-- Update `@openelement/create` to emit `npm:@openelement/*` imports.
-- Resolve remote package versions from the npm registry instead of JSR.
+See [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.md) for the exit evidence and
+scope rules.
 
-### Release flow
+## Historical evidence
 
-- Replace JSR publish with `deno pack` + `npm publish --provenance` in
-  `tools/autoflow/release.ts`.
-- Keep `jsr-consumer-monitor.yml` and `wait-jsr-release-metadata.ts` as
-  historical observation tools, not release gates.
-
-### Consumer smoke
-
-- Add npm-registry consumer smoke for Node ESM, Deno `npm:`, jsDelivr CDN, and
-  Nitro Node/Workers output.
-- Add third-party WC smoke for Lit, Shoelace, Material Web Components, and
-  bidirectional Lit/openElement nesting.
-- Add packed artifact quality gate using publint, arethetypeswrong, and
-  tarball extraction scans.
-- Add Fresh example smoke for openElement component hydration.
-
-### alpha.4 Merge and Release Closure
-
-alpha.4 is merge-ready when PR #113 is green on `dev`: both AutoFlow CI jobs,
-CodeQL/Analyze jobs, Cloudflare Pages preview, and review bot must pass. After
-merge, alpha.4 is not called released until `main` CI is green and the approved
-release workflow records npm publish plus post-publish npm consumer smoke
-evidence.
-
-alpha.5 is released: SPA mode + Deno Desktop Reader proof, Reader
-usability/polish, and framework closure for the alpha.5 PR. The Reader is a
-WeRead-style desktop practice app backed by fixtures, local PDF
-folders/repositories, and public GitHub repo/path sources; it must not use WeRead
-private APIs, account cookies, scraping, or copyrighted book content.
-React/Vue/Svelte adapters stayed out of alpha.5 unless required to validate SPA
-navigation disposal semantics.
-
-alpha.6 is released. It keeps Vite/Hono/Nitro as official defaults, but moves
-framework ownership to OpenElement concepts: RouteGraph, RenderPipeline,
-RequestContext, AssetManifest, IslandManifest, DeploymentTarget, and Deno Desktop
-target contracts. It closed the cleanup-audit front half (#205 through #212):
-release truth, package surface drift, router internal exports, tracked ignored
-generated artifacts, stale resolver maps, duplicate tooling helpers,
-route-scanner test ownership, stale design artifacts, and active-source audit
-labels. Final review extended the front-half slice with #226 and #227 to
-capture duplicate implementations across packages and redundant
-dependencies/configs/tooling helpers discovered during release-candidate review.
-It also closed the product-truth and CodeQL/code-scanning backlog
-(#192 through #194 and #186 through #191) as part of A6.6/A6.8 governance and
-release hygiene. The final release-candidate cleanup closed the remaining
-CodeQL dynamic-import code-generation alert with admitted island module
-specifiers and shared CodeQL-recognized JavaScript literal escaping for generated
-client and server entry code before the `0.41.0-alpha.6` package workflow ran.
-
-## Non-Goals
-
-- No Node runtime migration for openElement development.
-- No npm/pnpm/yarn workspace source of truth.
-- No further upstream Vite+ Deno PM advocacy in this release.
-- No removal of existing JSR published versions.
-- No server/data/forms/session/cache primitives (deferred to v0.42.0+).
-- No new product line for Reader, Mastodon Desktop, AutoFlow, or governance
-  tooling. Dogfood apps validate the Framework contract; governance tooling
-  protects releases.
-- No general-purpose fullstack parity claim before request-time data, forms,
-  sessions, and cache are production interfaces.
-- No compatibility promise for alpha-only support-package imports during the
-  beta package-depth convergence.
-
-## Staged Alpha/Beta Plans
-
-The active work is tracked in per-alpha plan files:
-
-- `docs/release/v0.41.0-alpha.2-plan.md` — Signal-DOM Deepening
-- `docs/release/v0.41.0-alpha.3-plan.md` — Third-party Web Components inside OpenElement
-- `docs/release/v0.41.0-alpha.4-plan.md` — OpenElement components inside Fresh
-- `docs/release/v0.41.0-alpha.5-plan.md` — SPA Mode + Deno Desktop Reader Proof
-- `docs/release/v0.41.0-alpha.6-plan.md` — Front-half cleanup audit, App/protocol architecture hardening, CodeQL cleanup, and Reader dogfood
-- `docs/release/v0.41.0-alpha.7-plan.md` — Dogfood, Architecture Convergence, and Adoption Readiness
-- `docs/release/v0.41.0-beta.1-plan.md` — Breaking interface depth, package
-  convergence, installed adoption, and beta.4 release closure
-
-Alpha.7 started after alpha.6 closed the first framework architecture loop. Its
-package-gated work shipped coherently as alpha.8; external pilot #390 remains
-open. The 2026-07-11 audit proved that validation-only beta planning was unsafe:
-the published create CLI fails on a missing template dotfile, the starter leaks
-the 11-package implementation graph, several architecture interfaces are not on
-the production path, release evidence is not finalized, and npm beta.1–beta.3
-are partial immutable publishes. The beta plan therefore owns a breaking
-implementation train before stable v0.41.0.
-
-## Governance Rules
-
-- ADR-0101 (Product-Line Reset + AutoFlow3 Governance) — current governance baseline.
-- ADR-0104 (Architecture Audit + PACKAGE_SURFACE definition).
-- ADR-0105 (Cleanup Train Implementation + approval-gated patch releases).
-- ADR-0107 (npm-only distribution) is the authority for this release.
-- ADR-0110 (Two-Product Doctrine and Package Truth) is the current public
-  product doctrine.
-- ADR-0111 (OpenElement App Ownership Boundary) is the alpha.6 app/protocol
-  ownership boundary.
-- ADR-0096 (protocol-first Vite + Nitro runtime) and ADR-0098
-  (EntryDescriptor route manifest) remain in force.
-- Runtime-free/browser-facing packages must not use `Deno.*` or `node:*` APIs
-  in their public source surface, and should prefer native W3C/WHATWG/Web
-  Platform APIs before custom wrappers. Build/server glue (`ssg`, `content`,
-  `adapter-vite`, `create`) may use Deno/Node APIs, with Deno-first
-  implementations preferred when a host API is necessary.
-- Package Graph Collapse: reduced from 20 to 11 packages (ADR-0105 cleanup train).
-- AutoFlow3 remains the single CI/release gating plane.
-- Preact + SignalEngine: default reactive stack is `@preact/signals-core` via `@openelement/signal`.
-- Moving package topology in #273 or changing the default signal engine in
-  #387 still requires the normal ADR and approved version-plan authority;
-  inclusion in alpha.7 is not independent permission for a public reset.
-- The beta plan explicitly authorizes package/interface removal after a beta
-  topology ADR records the target graph and migration evidence. Alpha-only
-  compatibility is not a reason to preserve a shallow module.
-- A seam is public only when at least two real adapters justify it. Until then,
-  the implementation belongs inside the module that owns the behavior.
-- `docs/current/PACKAGE_SURFACE.md` defines the current 11-package surface.
-- `docs/current/STACK_CONTRACT.md` defines the first-party stack roles for
-  Vite, Hono, Nitro, Deno Desktop, Open Props, Preact islands, and third-party
-  Web Components.
-- `docs/current/HYDRATION_CONTRACT.md` defines `@openelement/core/hydrate` as a
-  low-level building-block subpath and points higher-level authoring to
-  `@openelement/app` and `@openelement/element`.
-- `docs/current/DENO_DESKTOP_TARGET.md` defines Deno Desktop as a first-party
-  app target and records Reader's regression-grade dogfood evidence.
-- Dogfood apps may block release quality only as evidence. They must not define
-  OpenElement's public product identity.
-- Dogfood must consume packed/public product interfaces and run with
-  typechecking before it can count as beta release evidence.
-- AutoFlow3 and docs-truth gates are infrastructure. They should become more
-  reusable over time, but they are not Framework product features.
-
-## Test Matrix
-
-Static gates: `deno task fmt:check`, `deno task lint`, `deno task typecheck`,
-`deno task graph:check`, `deno task package-surface:check`,
-`deno task repo:hygiene`, `deno task workflow:check`,
-`deno task workflow:check-slimming`, `deno task docs:check-public`,
-`deno task docs:check-current`, `deno task docs:check-strategy`,
-`deno task arch:check`, `deno task signals:check-protocol-boundary`,
-`deno task type-safety:check`, `deno task text-integrity:check`,
-`deno task deno-api:check`.
-Alpha.3 also adds `deno task third-party-wc:smoke` and
-`deno task package-artifacts:check`.
-
-Build/test gates: `deno task test`, `deno task test:coverage:check`,
-`deno task build`, `deno task test:e2e`, `deno task pack:dry-run`,
-`deno task consumer:packaged`, `deno task third-party-wc:smoke`,
-`deno task package-artifacts:check`, `deno task autoflow:dev`,
-`deno task autoflow:push`, `deno task autoflow:ci`,
-`deno task nitro:proof:node`, `deno task nitro:proof:workers`.
-
-## Acceptance
-
-- `deno task deno-api:check` passes.
-- Runtime-free/browser-facing package artifacts stay pure ESM, avoid
-  host-specific APIs, and use modern Web Platform APIs as the default runtime
-  substrate.
-- `deno task pack:dry-run` succeeds for all 11 packages.
-- `deno task package-artifacts:check` passes for all 11 packed npm artifacts.
-- `deno task third-party-wc:smoke` proves Lit, Shoelace, and Material Web
-  Components can be consumed directly in an openElement app.
-- No `jsr:@openelement/` or `@jsr/openelement__*` specifiers remain in product
-  code or generated tarballs.
-- GitHub Actions `autoflow-release.yml` successfully publishes to npm with
-  provenance.
-- npm consumer smoke passes for Node ESM and Deno `npm:`.
-- jsDelivr browser-safe export smoke passes.
-- Alpha.6 trust-boundary debt is closed or replaced by stricter evidence:
-  route codegen literals, island manifest extraction, JSR source URL
-  construction, and dynamic import specifier admission.
-- Alpha.6 front-half cleanup debt is closed: release behavior, package surface,
-  router internals, generated artifacts, resolver maps, tooling helpers, scanner
-  test ownership, stale design artifacts, and active-source audit labels.
-- Deno toolchain truth is explicit: `.dvmrc` pinned to stable `2.9.0`, CI and
-  consumer monitor aligned, canary reserved only for Deno Desktop preview
-  features outside the main gate matrix.
-- Alpha.7 exit additionally requires all 21 hardening/adoption slices, native
-  browser-baseline evidence, production BuildPlan artifacts, app/router-owned
-  navigation, risk-weighted critical-path tests, auditable dependencies,
-  a clean five-minute npm starter, reproducible performance reports, and the
-  external adopter pilot.
-
-Beta exit replaces the former validation-only acceptance:
-
-- The exact published create CLI creates, checks, tests, builds, previews, and
-  proves Node/Workers output in a clean directory.
-- Starter and dogfood import only retained product packages; no application
-  author needs `core`, `protocol`, `router`, `signal`, `ssg`, or `content`.
-- The approved beta ADR defines the retained package graph. Every public export
-  has a production or external consumer, and every claimed architecture
-  interface executes on the production path.
-- Compatibility exports, dead code, duplicated UI/example behavior, legacy SPA
-  routing, deprecated JSON helpers, and test-only adapters are removed or
-  explicitly retained with owner and removal policy.
-- Release evidence, Git, GitHub, npm, docs, provenance and dist-tags converge.
-- External pilot #390 completes the installed beta path with no unresolved
-  P0/P1 finding.
-- The first coherent beta publishes as `0.41.0-beta.4`; beta.1–beta.3 remain
-  documented as withdrawn partial artifacts.
-
-## Verification
-
-- `docs/release/v0.41.0.md` summarizing the distribution migration.
-- Updated `docs/status/STATUS.md` active line section.
-- Updated `docs/roadmap/ROADMAP.md` version ladder and v0.41.0 section.
-- CI run evidence showing `deno-api:check` and `pack:dry-run` pass.
+Alpha plans, release records, audits and ADRs preserve their original package
+names and decisions. They are historical evidence rather than current consumer
+documentation. The controlling beta product boundary is
+[`ADR-0113`](../adr/ADR-0113-beta-four-product-boundary.md).

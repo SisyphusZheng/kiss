@@ -2,91 +2,83 @@
 
 [English](./README.md) | 简体中文
 
-**以 Web Components 为原生组件模型的全栈框架，并内置 JSX-first Basic Element
-authoring layer。当前包线：`0.41.0-alpha.8`（`v0.41.0-alpha.8` 发布）。已完成执行锚点：v0.41.0-alpha.7 Dogfood、架构收口与采用准备。下一阶段是允许 breaking 的 beta 架构与采用收口；首个完整候选将是 `0.41.0-beta.4`。**
+**以 Web Components 为原生组件契约、static-first 的应用框架。** Custom
+Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作者层；
+Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
 
-openElement 把 Web Components 当作应用的原生组件模型，使用 JSX/VNode 渲染、渐进式 islands、API routes，以及 Vite + Nitro 输出，构建静态优先的全栈应用。Shadow/DSD 是默认组件渲染模式；light DOM 是显式 opt-in。
+已发布包线为 `0.41.0-alpha.8`（`v0.41.0-alpha.8`）。首个完整 beta 候选是
+`0.41.0-beta.4`，尚未发布。
 
-强制项目流程见 [`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md)。
-
-## Beta 包状态
-
-源码 workspace 已收敛为五包：`element`、`app`、`adapter-vite`、`create` 和可选
-`ui`。beta.1-beta.3 是 withdrawn partial artifacts；首个完整候选固定为
-`0.41.0-beta.4`，外部采用试点 #390 是唯一剩余的仓库外发布条件。
-
-## 产品原则
-
-当前 alpha.8 原则：
+## 当前产品
 
 ```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
+official build path = Vite + Nitro
 ```
 
-Beta 目标：
+当前消费者包图为五包：
 
-```text
-openElement = Web Components-native application framework
-authoring modes = Basic Element standalone + full application
-default path = DSD/static-first + selective islands + Vite/Nitro
+| 包                          | 角色                                            |
+| --------------------------- | ----------------------------------------------- |
+| `@openelement/element`      | Custom Elements、JSX、DSD、hydration 与 signals |
+| `@openelement/app`          | 页面、路由、islands 与 request/render 语义      |
+| `@openelement/adapter-vite` | Vite、content、静态构建与 Nitro 输出            |
+| `@openelement/create`       | 已安装 starter 与零上下文入口                   |
+| `@openelement/ui`           | 可选、经过证明的通用 primitives                 |
+
+旧的 `core`、`signal`、`router`、`protocol`、`content` 与 `ssg` 是实现历史，
+不再是受支持的消费者导入。
+
+## 为什么使用 openElement
+
+当一个标准 Custom Element 应同时服务于独立组件库和完整应用时，OpenElement
+提供统一契约。它把原生元素作者体验、路由、静态生成、DSD、选择性升级和可部署
+输出组合在一起，而不把某个框架专有 virtual DOM 变成长期 UI 模型。
+
+“WC 全栈第一”是明确的战略目标，必须通过 WC SSR 兼容性、第三方元素互操作、
+可移植部署与外部采用来证明；当前不将其表述为已取得的市场结论。
+
+## 当前发布状态
+
+五包 beta 实施已在仓库内完成。npm beta.1 至 beta.3 是已撤回的不完整历史产物；
+`0.41.0-beta.4` 是首个完整候选。外部 adopter pilot #390 是唯一仓库外条件，之后
+还需候选浏览器矩阵与发布真相验证。
+
+只有 beta.4 不再需要架构、公开接口或采用工作时，才发布 stable `0.41.0`。
+request-time data、forms、sessions 与 cache 仍是后续产品工作；当前承诺是具有
+fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
+
+`1.0.0` 路径是在 Application Loop、WC SSR、Production Runtime 与外部采用证据完成后，
+形成稳定的五包产品。
+
+## 开始使用
+
+```sh
+deno run -A npm:@openelement/create my-app
+cd my-app
+deno task dev
 ```
 
-| 产品                               | Surface                                   | 角色                                                                    |
-| ---------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| Web Components Fullstack Framework | `@openelement/app`, `@openelement/create` | Pages、layouts、routes、islands、app targets，以及官方 stack adapters。 |
-| Basic Element                      | `@openelement/element`, `OpenElement`     | JSX-first 原生 Web Components authoring layer，面向 Shadow/DSD 输出。   |
-
-`@openelement/adapter-vite` 统一负责 Vite、content、SSG 与 Nitro 构建实现；
-`@openelement/ui` 只保留可复用的可选 primitives。运行时、signals、router、
-protocol、content 与 SSG 均已吸收为内部实现，不再是消费者包接口。
-
-Dogfood apps 用来验证 openElement，不能定义 openElement。Deno Desktop Reader
-和 Mastodon Desktop 是 alpha.7 hardening train 已完成的基础证据，不是额外
-产品线。其 package-gated 工作已由 alpha.8 发布，外部 adopter pilot #390 保持
-开放。AutoFlow3、docs truth、release evidence 和 workflow gates
-是项目基础设施，不进入 Framework 产品叙事。
-
-当前 workspace 是 v0.41 的五包 beta 线；旧包名只保留在历史 ADR 与发布证据中。
-
-alpha.7 的 package-gated 工作已由 alpha.8 完整发布，外部 adopter pilot #390
-仍然开放。下一阶段 beta 不再是“只复跑”的验证窗口，而是最终 breaking
-architecture train：修复真实 npm starter、收窄定位、深化 app/element/build
-interfaces、吸收或隐藏 shallow support packages、删除旧代码和冗余，并围绕保留
-interfaces 重建验证。npm beta.1–beta.3 已是不完整且不可覆盖的历史发布，因此
-首个完整候选必须使用 beta.4。
-
-v1.0 目标是稳定的 Web Components fullstack framework 和 Basic Element authoring layer，并冻结 supporting UI、Protocols、official adapter contracts。
-
-## 示例
-
-```tsx
-import { definePage } from '@openelement/app';
-
-export default definePage({
-  route: { path: '/' },
-  head: { title: 'Home' },
-  render() {
-    return <main>Hello openElement</main>;
-  },
-});
-```
-
-组件作者优先使用 `@openelement/element`：
-
-```tsx
-import { OpenElement, signal, StyleSheet } from '@openelement/element';
-```
+生成项目提供 `dev`、`check`、`test`、`build` 和 `preview`。
 
 ## 文档
 
-| 主题         | 链接                                                                 |
-| ------------ | -------------------------------------------------------------------- |
-| 项目状态     | [docs/status/STATUS.md](./docs/status/STATUS.md)                     |
-| 路线图       | [docs/roadmap/ROADMAP.md](./docs/roadmap/ROADMAP.md)                 |
-| 当前版本计划 | [docs/current/VERSION_PLAN.md](./docs/current/VERSION_PLAN.md)       |
-| 包表面       | [docs/current/PACKAGE_SURFACE.md](./docs/current/PACKAGE_SURFACE.md) |
-| ADR          | [docs/adr/](./docs/adr/)                                             |
+| 主题     | 链接                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------- |
+| 指南     | [openelement.org/guide/getting-started](https://openelement.org/guide/getting-started)         |
+| API 参考 | [openelement.org/apilist](https://openelement.org/apilist)                                     |
+| 架构     | [openelement.org/architecture/architecture](https://openelement.org/architecture/architecture) |
+| 路线图   | [docs/roadmap/ROADMAP.md](./docs/roadmap/ROADMAP.md)                                           |
+| 当前状态 | [docs/status/STATUS.md](./docs/status/STATUS.md)                                               |
+
+强制项目流程见
+[`docs/governance/PROJECT_WORKFLOW.md`](./docs/governance/PROJECT_WORKFLOW.md)。
+
+## 贡献
+
+参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。架构决策在 [docs/adr/](./docs/adr/)；
+历史 release 与 audit 记录保留为证据，不再作为当前产品文档。
 
 ## 许可
 

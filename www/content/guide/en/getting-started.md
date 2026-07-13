@@ -7,19 +7,20 @@ order: 1
 
 # Getting Started
 
-openElement is a Web Components-native fullstack framework with a JSX-first
-Basic Element authoring layer:
+OpenElement is a Web Components-native, static-first application framework.
+Standard Custom Elements are the component contract; JSX and Basic Element are
+the authoring layer:
 
 ```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
 ```
 
-Pages are written as JSX. The framework owns routes, layouts, islands, API
-routes, deployment, and desktop targets. Basic Element is the native
-custom-element authoring layer. Shadow/DSD is the default render mode, and
-interactive parts are upgraded as islands. Dogfood apps validate the framework;
-they do not define new product lines.
+Pages are written as JSX. The framework owns pages, routes, islands and
+rendering semantics; Vite and Nitro provide the official build and output path.
+Basic Element is the native custom-element authoring layer. Shadow/DSD is the
+default render mode, and interactive parts are upgraded selectively. Dogfood
+apps validate the framework; they do not define new product lines.
 
 ## Create a Project
 

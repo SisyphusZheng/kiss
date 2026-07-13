@@ -7,18 +7,17 @@ order: 2
 
 # 核心概念
 
-openElement 围绕一个应用模型、一条渲染管线和两个主产品构建：
+openElement 围绕一个应用模型和一条渲染管线构建：
 
 ```text
-openElement = Web Components Fullstack Framework + Basic Element
-supporting packages = Protocols + UI + official stack adapters
+OpenElement = Web Components-native fullstack application framework
+current proven scope = static-first applications with fullstack output paths
 ```
 
-Web Components Fullstack Framework 负责 pages、layouts、routes、islands、API
-routes、deployment 和 desktop targets。Basic Element 是原生 custom-element
-authoring surface。Protocols、UI、SSG、adapter-vite、router、signal、content 和
-core 支撑这两个产品，但不是独立的一线产品。Reader、Mastodon Desktop、
-AutoFlow3 和 docs-truth tooling 是证据或基础设施，不是额外产品面。
+Framework 负责 pages、routes、islands 与 render semantics；Vite 和 Nitro 是官方
+构建与输出路径。Basic Element 是原生 custom-element authoring surface。`element`、
+`app`、`adapter-vite`、`create` 与可选 `ui` 是当前消费者包。Reader、Mastodon
+Desktop、AutoFlow3 与 docs-truth tooling 是证据或基础设施，不是额外产品面。
 
 ## Application API
 
