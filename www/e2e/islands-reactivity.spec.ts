@@ -1,20 +1,20 @@
 /**
  * E2E: Island Reactivity
  *
- * Verifies that currently rendered island components upgrade without fixed
- * sleeps. The homepage no longer renders the historical home-console island, so
+ * Verifies that currently rendered island components are available without
+ * fixed sleeps. The homepage no longer renders the historical home-console island, so
  * this suite follows the current layout shell instead:
- *   - open-layout upgrades and owns a shadow root
+ *   - open-layout owns a native Declarative Shadow DOM root
  *   - layout header islands are present inside the shell
  *   - island client script is present
  */
 
 import { expect, type Page, test } from '@playwright/test';
 
-async function waitForLayoutUpgrade(page: Page): Promise<void> {
+async function waitForLayoutReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const layout = document.querySelector('open-layout');
-    return !!customElements.get('open-layout') && !!layout?.shadowRoot;
+    return !!layout?.shadowRoot;
   });
 }
 
@@ -28,8 +28,8 @@ test.describe('Layout Island Shell', () => {
     await expect(page.locator('open-layout')).toHaveCount(1);
   });
 
-  test('layout has shadow root after upgrade', async ({ page }) => {
-    await waitForLayoutUpgrade(page);
+  test('layout has a native shadow root', async ({ page }) => {
+    await waitForLayoutReady(page);
 
     const hasShadowRoot = await page.evaluate(() => {
       const layout = document.querySelector('open-layout');
@@ -38,8 +38,8 @@ test.describe('Layout Island Shell', () => {
     expect(hasShadowRoot).toBe(true);
   });
 
-  test('layout header islands are rendered inside the upgraded shell', async ({ page }) => {
-    await waitForLayoutUpgrade(page);
+  test('layout header islands are rendered inside the static shell', async ({ page }) => {
+    await waitForLayoutReady(page);
 
     const headerIslands = await page.locator('open-layout').evaluate((layout) => {
       const root = layout.shadowRoot;
@@ -71,10 +71,10 @@ test.describe('Island Script Loading', () => {
     });
   });
 
-  test('custom elements are upgraded after island load', async ({ page }) => {
+  test('component shadow roots remain available after island load', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await waitForLayoutUpgrade(page);
+    await waitForLayoutReady(page);
 
     const upgradedCount = await page.evaluate(() => {
       let count = 0;

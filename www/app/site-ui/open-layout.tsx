@@ -226,7 +226,10 @@ sheet.replaceSync(`
     gap: var(--size-3);
     flex: 0 0 auto;
     min-height: var(--size-10);
-    max-width: min(38vw, calc(var(--size-10) * 3.45));
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    background: url('/assets/open-favicon.svg') center / 48px 48px no-repeat;
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
@@ -244,6 +247,11 @@ sheet.replaceSync(`
     align-self: center;
     max-width: 100%;
     transition: transform var(--duration-2) var(--ease-2);
+  }
+  .logo:focus-visible {
+    outline: var(--focus-size) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--radius-2);
   }
 
   .logo-sub {
@@ -670,6 +678,16 @@ export class OpenLayout extends OpenElement {
     }
   }
 
+  private _homeHref(): string {
+    try {
+      const pathname = globalThis.location?.pathname || this._getStr('current-path', '/');
+      const locale = pathname.match(/^\/(en|zh)(?:\/|$)/)?.[1];
+      return locale ? `/${locale}/` : '/';
+    } catch {
+      return '/';
+    }
+  }
+
   /** Compute GitHub edit URL from current path. */
   private _computeEditUrl(): string {
     const path = this._currentPath();
@@ -859,7 +877,7 @@ export class OpenLayout extends OpenElement {
       <div className='app-layout' part='container' home={home || undefined}>
         <header className='app-header' part='header'>
           <nav className='header-inner' aria-label='Primary navigation'>
-            <a className='logo' href='/' aria-label='open home'>
+            <a className='logo' href={this._homeHref()} data-nav='/' aria-label='OpenElement home'>
               <open-brand-mark size='md'></open-brand-mark>
               {logoSub && <span className='logo-sub'>{logoSub}</span>}
             </a>
@@ -1135,6 +1153,9 @@ export class OpenLayout extends OpenElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+
+    const logo = this.shadowRoot?.querySelector<HTMLAnchorElement>('a.logo');
+    if (logo) logo.href = this._homeHref();
 
     const locales = this._locales;
     if (locales.length > 1) {

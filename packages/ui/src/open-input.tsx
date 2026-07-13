@@ -32,6 +32,7 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { escapeAttr, escapeHtml } from '@openelement/element';
+import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-input';
 
@@ -50,7 +51,7 @@ sheet.replaceSync(`
   label {
     font-size: var(--font-size-0);
     font-weight: var(--font-weight-5);
-    color: var(--gray-6);
+    color: var(--text-secondary);
     letter-spacing: var(--font-letterspacing-2);
   }
 
@@ -59,20 +60,20 @@ sheet.replaceSync(`
     padding: var(--size-2) var(--size-3);
     font-family: var(--font-sans);
     font-size: var(--font-size-1);
-    color: var(--gray-9);
-    background: var(--gray-0);
-    border: var(--border-size-1) solid var(--gray-3);
-    border-radius: var(--radius-2);
+    color: var(--ui-control-text);
+    background: var(--ui-control-bg);
+    border: var(--border-size-1) solid var(--ui-control-border);
+    border-radius: var(--ui-control-radius);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     outline: none;
   }
 
   .input::placeholder {
-    color: var(--gray-5);
+    color: var(--text-muted);
   }
 
   .input:hover {
-    border-color: var(--gray-5);
+    border-color: var(--ui-control-border-hover);
   }
 
   .input:focus {
@@ -83,7 +84,7 @@ sheet.replaceSync(`
   .input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: var(--gray-1);
+    background: var(--bg-muted);
   }
 
   .input--error {
@@ -93,7 +94,7 @@ sheet.replaceSync(`
   :host(:state(disabled)) .input {
     opacity: 0.5;
     cursor: not-allowed;
-    background: var(--gray-1);
+    background: var(--bg-muted);
   }
 
   :host(:state(invalid)) .input {
@@ -107,7 +108,7 @@ sheet.replaceSync(`
 `);
 
 export class OpenInput extends OpenElement {
-  static override styles = [sheet];
+  static override styles = [controlRecipe, sheet];
   static override formAssociated = true;
   static override delegatesFocus = true;
   static override observedAttributes = [
@@ -142,7 +143,7 @@ export class OpenInput extends OpenElement {
         )}
         <input
           id='input'
-          className={`input${errorClass}`}
+          className={`control input${errorClass}`}
           part='control'
           type={type}
           placeholder={placeholder}

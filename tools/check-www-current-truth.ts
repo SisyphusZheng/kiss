@@ -22,6 +22,10 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'internal build contract', re: /\bBuildPlan\b|\bAppShell protocol\b/ },
   { name: 'retired alpha current claim', re: /v0\.41\.0-alpha\.[0-7]/i },
   { name: 'beta.4 published claim', re: /beta\.4 (?:is |was )?(?:released|published)/i },
+  {
+    name: 'retired UI surface',
+    re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
+  },
 ];
 
 const issues: Issue[] = [];

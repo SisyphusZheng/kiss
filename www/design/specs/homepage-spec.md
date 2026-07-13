@@ -7,11 +7,12 @@ JavaScript.
 
 ## Storyboard
 
-1. **Element** — a native Custom Element is the durable application boundary.
-2. **DSD** — Shadow DOM becomes visible as browser-native, static output.
-3. **Islands** — only selected components wake for interaction.
-4. **Output** — one composition reaches Browser, Node and Workers.
-5. **Begin** — public starter command and final build CTA.
+1. **Mark** — the canonical `<open/>` mark occupies the violet field.
+2. **Element** — the mark flies to navigation and splits into native DOM layers.
+3. **DSD** — the camera crosses the Shadow Root boundary.
+4. **Compose** — real components reform into an application interface.
+5. **Islands** — selected interaction points wake while static DOM remains still.
+6. **Output** — the application folds into Browser, Node and Workers, then the starter CTA.
 
 The opening `<open/>` aperture is the visual prologue, not a separate product
 claim. Scene content is concise; detailed architecture lives behind real Docs,
@@ -19,7 +20,8 @@ API, Architecture and Roadmap links.
 
 ## Interaction
 
-- The desktop film may use long scroll scenes and spatial transforms.
+- The desktop film uses 6–7 viewport heights, sticky scenes and reversible spatial transforms.
+- Native scroll remains authoritative; do not intercept wheels, touch inertia or keyboard scrolling.
 - Mobile uses the same narrative in vertical scenes with reduced parallel
   movement.
 - `Watch it unfold` anchors scene one. All CTA links remain native anchors.

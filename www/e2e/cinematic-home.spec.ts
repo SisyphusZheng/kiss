@@ -18,4 +18,28 @@ test.describe('Cinematic homepage', () => {
     );
     expect(canvasExists).toBe(true);
   });
+
+  test('renders a visible canonical logo linked to the current locale home', async ({ page }) => {
+    await page.goto('/zh/guide/getting-started');
+    const logo = page.locator('open-layout').locator('a.logo');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute('href', '/zh/');
+    await expect.poll(() => logo.evaluate((element) => getComputedStyle(element).backgroundImage))
+      .toContain('/assets/open-favicon.svg');
+  });
+
+  test('drives the native film timeline without hijacking scroll', async ({ page }) => {
+    await page.goto('/');
+    const home = page.locator('docs-home');
+    await page.evaluate(() => scrollTo({ top: innerHeight * 2, behavior: 'instant' }));
+    await expect.poll(() =>
+      home.evaluate((element) =>
+        Number(
+          getComputedStyle(element.shadowRoot!.querySelector('.cinematic-v2')!).getPropertyValue(
+            '--film-progress',
+          ),
+        )
+      )
+    ).toBeGreaterThan(0);
+  });
 });

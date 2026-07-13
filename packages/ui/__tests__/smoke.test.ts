@@ -11,7 +11,6 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
   const expectedTags = [
     'open-card',
     'open-callout',
-    'open-step-card',
     'open-button',
     'open-input',
     'open-theme-toggle',
@@ -19,7 +18,6 @@ Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => 
     'open-badge',
     'open-dialog',
     'open-dropdown',
-    'open-modal',
     'open-tabs',
   ];
   assertExists(mod.manifest, 'manifest export should exist');
@@ -38,7 +36,7 @@ Deno.test('open-ui - explicit registration is complete and idempotent', async ()
 
   registerOpenUi(registry);
   registerOpenUi(registry);
-  assertEquals(definitions.size, 12);
+  assertEquals(definitions.size, 10);
 });
 
 Deno.test('open-ui - open-theme-toggle exports tagName', async () => {
@@ -62,8 +60,6 @@ Deno.test('open-ui - all components export tagName', async () => {
     'open-dropdown',
     'open-badge',
     'open-input',
-    'open-modal',
-    'open-step-card',
     'open-tabs',
     'open-theme-toggle',
   ];

@@ -78,70 +78,6 @@
       }
     },
     {
-      "tagName": "open-step-card",
-      "className": "OpenStepCard",
-      "superclassName": "OpenElement",
-      "description": "",
-      "attributes": [
-        {
-          "name": "step",
-          "type": "number",
-          "description": "step attribute"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "description": "label attribute"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "description": "description attribute"
-        },
-        {
-          "name": "status",
-          "type": "string",
-          "description": "status attribute"
-        }
-      ],
-      "slots": [
-        {
-          "name": "",
-          "description": "Default slot"
-        }
-      ],
-      "cssParts": [
-        {
-          "name": "container",
-          "description": "The step card wrapper"
-        },
-        {
-          "name": "indicator",
-          "description": "The step number circle"
-        },
-        {
-          "name": "title",
-          "description": "The step label heading"
-        },
-        {
-          "name": "description",
-          "description": "The step description paragraph"
-        },
-        {
-          "name": "content",
-          "description": "The slot content area"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-static",
-        "hydrate": "idle",
-        "module": "@openelement/ui/open-step-card",
-        "export": "OpenStepCard"
-      }
-    },
-    {
       "tagName": "open-button",
       "className": "OpenButton",
       "superclassName": "OpenElement",
@@ -421,6 +357,11 @@
           "name": "label",
           "type": "string",
           "description": "label attribute"
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "description": "mode attribute"
         }
       ],
       "events": [
@@ -471,15 +412,25 @@
       "tagName": "open-dropdown",
       "className": "OpenDropdown",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Native Popover-first dropdown with a small fallback state.",
       "slots": [
         {
           "name": "trigger",
-          "description": "Click target to toggle the dropdown"
+          "description": "Control used to toggle the dropdown"
         },
         {
           "name": "",
-          "description": "Dropdown content (shown when open)"
+          "description": "Dropdown content"
+        }
+      ],
+      "cssParts": [
+        {
+          "name": "trigger",
+          "description": "Trigger wrapper"
+        },
+        {
+          "name": "content",
+          "description": "Popover content"
         }
       ],
       "openElement": {
@@ -492,40 +443,10 @@
       }
     },
     {
-      "tagName": "open-modal",
-      "className": "OpenModal",
-      "superclassName": "OpenElement",
-      "description": "",
-      "slots": [
-        {
-          "name": "",
-          "description": "Modal body content"
-        }
-      ],
-      "openElement": {
-        "ssr": true,
-        "dsd": true,
-        "layer": "dsd-interactive",
-        "hydrate": "load",
-        "module": "@openelement/ui/open-modal",
-        "export": "OpenModal"
-      }
-    },
-    {
       "tagName": "open-tabs",
       "className": "OpenTabs",
       "superclassName": "OpenElement",
       "description": "",
-      "slots": [
-        {
-          "name": "tab",
-          "description": "Tab button labels (multiple)"
-        },
-        {
-          "name": "panel",
-          "description": "Tab panel content (multiple, one per tab)"
-        }
-      ],
       "openElement": {
         "ssr": true,
         "dsd": true,
@@ -559,18 +480,6 @@
       ],
       "declarations": [
         "open-callout"
-      ]
-    },
-    {
-      "path": "./open-step-card.js",
-      "exports": [
-        {
-          "name": "OpenStepCard",
-          "path": "./open-step-card.js"
-        }
-      ],
-      "declarations": [
-        "open-step-card"
       ]
     },
     {
@@ -655,18 +564,6 @@
       ],
       "declarations": [
         "open-dropdown"
-      ]
-    },
-    {
-      "path": "./open-modal.js",
-      "exports": [
-        {
-          "name": "OpenModal",
-          "path": "./open-modal.js"
-        }
-      ],
-      "declarations": [
-        "open-modal"
       ]
     },
     {

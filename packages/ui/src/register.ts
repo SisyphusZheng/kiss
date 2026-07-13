@@ -6,8 +6,6 @@ import { OpenCodeBlock, tagName as codeBlock } from './open-code-block.tsx';
 import { OpenDialog, tagName as dialog } from './open-dialog.tsx';
 import { OpenDropdown, tagName as dropdown } from './open-dropdown.tsx';
 import { OpenInput, tagName as input } from './open-input.tsx';
-import { OpenModal, tagName as modal } from './open-modal.tsx';
-import { OpenStepCard, tagName as stepCard } from './open-step-card.tsx';
 import { OpenTabs, tagName as tabs } from './open-tabs.tsx';
 import { OpenThemeToggle, tagName as themeToggle } from './open-theme-toggle.tsx';
 
@@ -20,8 +18,6 @@ const COMPONENTS: ReadonlyArray<readonly [string, CustomElementConstructor]> = [
   [dialog, OpenDialog],
   [dropdown, OpenDropdown],
   [input, OpenInput],
-  [modal, OpenModal],
-  [stepCard, OpenStepCard],
   [tabs, OpenTabs],
   [themeToggle, OpenThemeToggle],
 ];

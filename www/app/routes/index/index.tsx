@@ -3,6 +3,7 @@
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '../../islands/cinematic-atmosphere.tsx';
+import '../../islands/cinematic-scroll.tsx';
 
 export const tagName = 'docs-home';
 
@@ -47,6 +48,17 @@ sheet.replaceSync(`
   .output { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(100%,620px); }.target { min-height:230px; display:grid; align-content:space-between; padding:1.25rem; border:1px solid color-mix(in srgb,var(--violet-6) 43%,var(--border)); background:linear-gradient(145deg,color-mix(in srgb,var(--violet-5) 18%,transparent),var(--bg-elevated)); box-shadow:0 18px 50px color-mix(in srgb,var(--violet-10) 38%,transparent); }.target svg{width:42px;color:var(--violet-8)}.target strong{font-size:1.1rem}.target span{color:var(--text-secondary);font-family:var(--font-mono);font-size:.75rem}
   .final { grid-template-columns:1fr; text-align:center; min-height:82svh; }.final .scene-copy { max-width:800px; margin:auto; }.command { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:min(100%,680px); margin:2.5rem auto; padding:1rem 1.1rem 1rem 1.35rem; border:1px solid color-mix(in srgb,var(--violet-6) 52%,var(--border)); border-radius:999px; background:color-mix(in srgb,var(--bg-elevated) 72%,transparent); color:var(--violet-8); font-family:var(--font-mono); text-align:left; }.command code{overflow:auto;white-space:nowrap}.final-actions{justify-content:center}
   .reference { width:min(1180px,calc(100% - 3rem)); margin:0 auto; padding:7rem 0; }.reference header{display:flex;justify-content:space-between;gap:2rem;align-items:end;margin-block-end:2rem}.reference h2{font-size:clamp(2.2rem,4vw,4.5rem);letter-spacing:-.06em;line-height:.92}.reference p{max-width:500px;color:var(--text-secondary);line-height:1.5}.links{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border)}.links a{display:grid;gap:.6rem;min-height:180px;padding:1.4rem;border-inline-end:1px solid var(--border);color:inherit;text-decoration:none;background:color-mix(in srgb,var(--bg-elevated) 55%,transparent);transition:background .2s ease,transform .2s ease}.links a:last-child{border:0}.links a:hover{background:color-mix(in srgb,var(--violet-5) 18%,var(--bg-elevated));transform:translateY(-4px)}.links span{color:var(--violet-8);font-family:var(--font-mono);font-size:.75rem}.links strong{font-size:1.25rem}.links small{color:var(--text-secondary);line-height:1.4}
+  .cinematic-v2 { --film-progress:0; --scene-progress:0; --pointer-x:0; --pointer-y:0; position:relative; }
+  .cinematic-v2 .film { position:sticky; top:0; z-index:0; }
+  .cinematic-v2 .hero > div:first-child { opacity:clamp(0,calc(1 - var(--film-progress) * 8),1); transform:translateY(calc(var(--film-progress) * -8vh)); }
+  .hero-mark-wrap { position:relative; z-index:3; display:grid; place-items:center; width:clamp(15rem,34vw,31rem); aspect-ratio:1; background:url('/assets/open-favicon.svg') center/contain no-repeat; filter:drop-shadow(0 0 70px color-mix(in srgb,var(--violet-6) 48%,transparent)); transform:translate3d(calc(var(--film-progress) * -48vw + var(--pointer-x) * 8px),calc(var(--film-progress) * -42vh + var(--pointer-y) * 8px),0) scale(calc(1 - var(--film-progress) * .82)); transform-origin:center; will-change:transform; }
+  .hero-mark { --mark-size:clamp(15rem,34vw,31rem); opacity:0; }
+  .cinematic-v2 .scenes { position:relative; z-index:2; margin-block-start:100vh; }
+  .cinematic-v2 .scene { background:linear-gradient(90deg,color-mix(in srgb,var(--bg-base) 96%,transparent),color-mix(in srgb,var(--bg-base) 72%,transparent)); backdrop-filter:blur(2px); }
+  .cinematic-v2 .component-stack { transform:rotateX(calc(18deg - var(--film-progress) * 12deg)) rotateY(calc(-24deg + var(--film-progress) * 18deg)) translateZ(calc(var(--film-progress) * 90px)); }
+  .cinematic-v2 .island { animation-timeline:view(block 15% 15%); animation-name:pulse; }
+  @supports (animation-timeline:view()) { .scene-copy,.scene-art { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 12% cover 44%; } }
+  @keyframes scene-in { from{opacity:.08;transform:translateY(12vh) scale(.94)} to{opacity:1;transform:none} }
   @keyframes orbit{50%{transform:rotate(12deg) scale(1.035)}} @keyframes reverse-orbit{to{transform:rotate(-360deg)}} @keyframes bob{50%{transform:translateY(5px)}} @keyframes pulse{50%{border-color:var(--violet-8);box-shadow:0 0 38px color-mix(in srgb,var(--violet-6) 36%,transparent)}}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}.film,.scene{min-height:auto}.hero{min-height:auto}.scene{padding-block:6rem}.component-stack{transform:none}}
   @media (max-width:800px){.hero,.scene{grid-template-columns:1fr;min-height:auto;padding:6rem 1.4rem}.hero{padding-block-start:5rem}.aperture-stage{width:min(92vw,540px)}.scene-art{min-height:420px}.component:nth-child(2){margin-inline-start:1.5rem}.component:nth-child(3){margin-inline-start:3rem}.output{grid-template-columns:1fr 1fr}.target:last-child{grid-column:span 2}.links{grid-template-columns:1fr 1fr}.links a:nth-child(2){border-inline-end:0}.links a:nth-child(-n+2){border-block-end:1px solid var(--border)}}
@@ -64,7 +76,8 @@ export class DocsHome extends OpenElement {
   static override styles = [sheet];
 
   override render() {
-    return <main class='home'>
+    return <main class='home cinematic-v2'>
+      <open-cinematic-scroll></open-cinematic-scroll>
       <section class='film swiss-grid'>
         <open-cinematic-atmosphere></open-cinematic-atmosphere>
         <div class='hero'>
@@ -76,7 +89,7 @@ export class DocsHome extends OpenElement {
             <small class='version'>Published line: {OPENELEMENT_VERSION}</small>
           </div>
           <div class='aperture-stage' aria-label='OpenElement brand mark visual'>
-            <div class='orbit'></div><div class='aperture'><span class='mark'>&lt;open<b>/</b>&gt;</span></div>
+            <div class='orbit'></div><div class='aperture'><div class='hero-mark-wrap'><open-brand-mark class='hero-mark' size='xl'></open-brand-mark></div></div>
             <span class='node one'>DSD</span><span class='node two'>APP</span><span class='node three'>WC</span>
           </div>
         </div>

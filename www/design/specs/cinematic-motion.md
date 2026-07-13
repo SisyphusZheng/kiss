@@ -15,6 +15,8 @@ the field and exposes the same CSS background without a user-visible error.
 
 - Use one scene coordinator per page; route content must not scatter scroll
   listeners or call WebGL directly.
+- The Hero mark and navigation mark share `open-brand-mark` view-transition
+  identity. The navigation link always resolves to the current locale home.
 - Use `ResizeObserver` for canvas sizing, cap backing scale at 1.5 and request
   `low-power` WebGL. Stop animation when disconnected or context is lost.
 - Device pressure may reduce visual density but never hide product text.

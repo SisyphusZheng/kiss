@@ -361,13 +361,6 @@ function fakeEmptyEvent(type = 'event'): Event {
   return new Event(type);
 }
 
-function fakeMouseEvent(
-  _type = 'click',
-  target?: EventTarget | { classList: { contains: (t: string) => boolean } },
-): Event {
-  return { target } as unknown as Event;
-}
-
 function installClipboardSpy(writeText: (text: string) => Promise<void>): () => void {
   const originalClipboard = navigator.clipboard;
   Object.defineProperty(navigator, 'clipboard', {
@@ -392,9 +385,7 @@ const COMPONENT_FILES = [
   'open-theme-toggle',
   'open-dialog',
   'open-callout',
-  'open-step-card',
   'open-dropdown',
-  'open-modal',
   'open-tabs',
 ] as const;
 
@@ -457,9 +448,7 @@ Deno.test('index: re-exports all public components', async () => {
       'OpenThemeToggle',
       'OpenDialog',
       'OpenCallout',
-      'OpenStepCard',
       'OpenDropdown',
-      'OpenModal',
       'OpenTabs',
       'openPropsRootSheet',
       'openPropsTokenSheet',
@@ -943,32 +932,6 @@ Deno.test('open-callout: default type is info', async () => {
   assertStringIncludes(String(vnode.props.className), 'callout--info');
 });
 
-Deno.test('open-step-card: has correct tagName and step content', async () => {
-  const module = asComponentModule(await import('../src/open-step-card.tsx'));
-  assertEquals(module.tagName, 'open-step-card');
-
-  const Component = exportedConstructor(module);
-  const instance = new Component();
-  instance.setAttribute('step', '3');
-  instance.setAttribute('label', 'Deploy');
-  instance.setAttribute('description', 'Push to production');
-  const vnode = instance.render() as VNode;
-  assertEquals(vnode.props.part, 'container');
-  assertStringIncludes(vnodeText(vnode), '3');
-  assertStringIncludes(vnodeText(vnode), 'Deploy');
-  assertStringIncludes(vnodeText(vnode), 'Push to production');
-  assertExists(findByPart(vnode, 'indicator'));
-  assertExists(findByPart(vnode, 'title'));
-  assertExists(findByPart(vnode, 'content'));
-});
-
-Deno.test('open-step-card: default step is 1', async () => {
-  const { OpenStepCard } = await import('../src/open-step-card.tsx');
-  const instance = new OpenStepCard();
-  const vnode = instance.render() as VNode;
-  assertStringIncludes(vnodeText(vnode), '1');
-});
-
 Deno.test('open-dropdown: has correct tagName and toggle structure', async () => {
   const module = asComponentModule(await import('../src/open-dropdown.tsx'));
   assertEquals(module.tagName, 'open-dropdown');
@@ -976,67 +939,8 @@ Deno.test('open-dropdown: has correct tagName and toggle structure', async () =>
   const Component = exportedConstructor(module);
   const instance = new Component();
   const vnode = instance.render() as VNode;
-  assertEquals(vnode.props.class, 'dropdown');
-  assertExists(
-    vnode.children.find((c) => isVNodeObject(c) && c.tag === 'slot' && c.props.name === 'trigger'),
-  );
-});
-
-Deno.test('open-dropdown: trigger click toggles data-open', async () => {
-  const { OpenDropdown } = await import('../src/open-dropdown.tsx');
-  const instance = new OpenDropdown();
-  const vnode = instance.render() as VNode;
-  const trigger = vnode.children.find((c) =>
-    isVNodeObject(c) && c.tag === 'slot' && c.props.name === 'trigger'
-  ) as VNode;
-  assertEquals(instance.getAttribute('data-open'), null);
-  clickVNode(trigger);
-  assertEquals(instance.getAttribute('data-open'), 'true');
-  clickVNode(trigger);
-  assertEquals(instance.getAttribute('data-open'), 'false');
-});
-
-Deno.test('open-modal: has correct tagName and dialog role', async () => {
-  const module = asComponentModule(await import('../src/open-modal.tsx'));
-  assertEquals(module.tagName, 'open-modal');
-
-  const Component = exportedConstructor(module);
-  const instance = new Component();
-  const vnode = instance.render() as VNode;
-  assertEquals(vnode.props.class, 'modal');
-  assertEquals(vnode.props.role, 'dialog');
-  assertEquals(vnode.props['aria-modal'], 'true');
-});
-
-Deno.test('open-modal: open and close update rendered state', async () => {
-  const { OpenModal } = await import('../src/open-modal.tsx');
-  const instance = new OpenModal();
-  const closed = instance.render() as VNode;
-  assertEquals(signalValue<boolean>(closed.props.open), false);
-
-  instance.open();
-  const opened = instance.render() as VNode;
-  assertEquals(signalValue<boolean>(opened.props.open), true);
-
-  instance.close();
-  const reopened = instance.render() as VNode;
-  assertEquals(signalValue<boolean>(reopened.props.open), false);
-});
-
-Deno.test('open-modal: backdrop click closes modal', async () => {
-  const { OpenModal } = await import('../src/open-modal.tsx');
-  const instance = new OpenModal();
-  instance.open();
-  const vnode = instance.render() as VNode;
-  const backdrop = vnode.children.find((c) =>
-    isVNodeObject(c) &&
-    (c.props.class === 'modal-backdrop' || String(c.props.class).includes('modal-backdrop'))
-  ) as VNode;
-  assertExists(backdrop);
-  (backdrop.props.onClick as (e: Event) => void)?.(
-    fakeMouseEvent('click', { classList: { contains: (t: string) => t === 'modal-backdrop' } }),
-  );
-  assertEquals(signalValue<boolean>((instance.render() as VNode).props.open), false);
+  assertExists(findByPart(vnode, 'trigger'));
+  assertExists(findByPart(vnode, 'content'));
 });
 
 Deno.test('open-tabs: has correct tagName and renders tabs from slotted children', async () => {

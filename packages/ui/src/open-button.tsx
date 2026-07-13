@@ -24,6 +24,7 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { escapeAttr } from '@openelement/element';
+import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-button';
 
@@ -44,9 +45,9 @@ sheet.replaceSync(`
     cursor: pointer;
     border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
     background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
-    color: var(--text-primary);
-    border-radius: var(--btn-radius);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 72%, transparent);
+    color: var(--ui-control-text);
+    border-radius: var(--ui-control-radius);
+    box-shadow: var(--ui-control-highlight);
     transition: color var(--ease-3) var(--duration-2), border-color var(--ease-3) var(--duration-2), background var(--ease-3) var(--duration-2), transform var(--ease-3) var(--duration-2), box-shadow var(--ease-3) var(--duration-2);
     white-space: nowrap;
     letter-spacing: 0;
@@ -140,7 +141,7 @@ function closestForm(element: Element): HTMLFormElement | null {
 }
 
 export class OpenButton extends OpenElement {
-  static override styles = [sheet];
+  static override styles = [controlRecipe, sheet];
   static override delegatesFocus = true;
   static override formAssociated = true;
   static override observedAttributes = ['variant', 'size', 'disabled', 'href', 'target', 'type'];
@@ -152,7 +153,7 @@ export class OpenButton extends OpenElement {
     const href = this.getAttribute('href') || '';
     const target = this.getAttribute('target') || '';
     const type = this.getAttribute('type') || 'button';
-    const classes = `btn btn--${v} btn--${s}`;
+    const classes = `control btn btn--${v} btn--${s}`;
 
     if (href) {
       return (
@@ -201,7 +202,7 @@ export class OpenButton extends OpenElement {
     if (!el) return;
     const v = this.getAttribute('variant') || 'default';
     const s = this.getAttribute('size') || 'md';
-    el.className = `btn btn--${v} btn--${s}`;
+    el.className = `control btn btn--${v} btn--${s}`;
     if (el instanceof HTMLButtonElement) {
       el.disabled = this.hasAttribute('disabled');
     }

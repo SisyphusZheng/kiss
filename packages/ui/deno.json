@@ -11,12 +11,8 @@
     "./open-theme-toggle": "./src/open-theme-toggle.tsx",
     "./open-dialog": "./src/open-dialog.tsx",
     "./open-callout": "./src/open-callout.tsx",
-    "./open-step-card": "./src/open-step-card.tsx",
     "./open-dropdown": "./src/open-dropdown.tsx",
-    "./open-modal": "./src/open-modal.tsx",
     "./open-tabs": "./src/open-tabs.tsx",
-    "./daisy-classes": "./src/daisy-classes.ts",
-    "./daisy-classes.js": "./src/daisy-classes.ts",
     "./open-props-tokens": "./src/open-props-tokens.ts",
     "./open-props-tokens.js": "./src/open-props-tokens.ts"
   },

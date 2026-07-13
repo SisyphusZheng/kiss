@@ -14,7 +14,7 @@ sheet.replaceSync(`
   :host {
     --mark-size: var(--size-10);
     display: inline-grid;
-    width: calc(var(--mark-size) * 3.45);
+    width: var(--mark-size);
     height: var(--mark-size);
     flex: 0 0 auto;
     place-items: center;
@@ -26,31 +26,13 @@ sheet.replaceSync(`
   :host([size="lg"]) { --mark-size: var(--size-12); }
   :host([size="xl"]) { --mark-size: var(--size-16); }
 
-  svg {
+  img {
     display: block;
     width: 100%;
     height: 100%;
   }
 
-  .mark-text {
-    fill: var(--brand-deep);
-    font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-    font-size: 32px;
-    font-weight: var(--font-weight-8);
-    letter-spacing: 0;
-  }
-
-  .mark-accent {
-    fill: var(--brand);
-  }
-
-  :host([tone="inverted"]) .mark-text {
-    fill: #fff;
-  }
-
-  :host([tone="inverted"]) .mark-accent {
-    fill: var(--brand-light);
-  }
+  :host { view-transition-name: open-brand-mark; }
 `);
 
 export class OpenBrandMark extends OpenElement {
@@ -58,16 +40,7 @@ export class OpenBrandMark extends OpenElement {
   static override observedAttributes = ['size', 'tone', 'variant'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    return (
-      <svg className='mark' part='mark' viewBox='0 0 260 72' role='img' aria-hidden='true'>
-        <text className='mark-text' x='130' y='47' textAnchor='middle'>
-          <tspan>&lt;</tspan>
-          <tspan>open</tspan>
-          <tspan className='mark-accent'>/</tspan>
-          <tspan>&gt;</tspan>
-        </text>
-      </svg>
-    );
+    return <img className='mark' part='mark' src='/assets/open-favicon.svg' alt='' />;
   }
 }
 

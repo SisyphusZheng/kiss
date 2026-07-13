@@ -43,6 +43,46 @@ export default class CinematicAtmosphere extends OpenElement {
       powerPreference: 'low-power',
     });
     if (!gl) return;
+    const compile = (type: number, source: string) => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+    };
+    const vertex = compile(
+      gl.VERTEX_SHADER,
+      'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}',
+    );
+    const fragment = compile(
+      gl.FRAGMENT_SHADER,
+      `
+      precision mediump float;uniform vec2 r;uniform vec2 m;uniform float t;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      void main(){vec2 uv=(gl_FragCoord.xy*2.-r)/min(r.x,r.y);uv-=m*.09;
+        float d=length(uv);float glow=.12/(.08+abs(d-.54+sin(t*.22)*.025));
+        vec2 cell=floor((uv+2.)*18.);float stars=step(.965,hash(cell+t*.015))*smoothstep(1.5,.1,d);
+        vec3 violet=vec3(.37,.15,.78)*glow+vec3(.72,.55,1.)*stars*.8;
+        gl_FragColor=vec4(violet,min(.72,glow*.22+stars*.55));}
+    `,
+    );
+    if (!vertex || !fragment) return;
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    gl.useProgram(program);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const position = gl.getAttribLocation(program, 'p');
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    const resolution = gl.getUniformLocation(program, 'r');
+    const pointer = gl.getUniformLocation(program, 'm');
+    const time = gl.getUniformLocation(program, 't');
     const resize = () => {
       const scale = Math.min(devicePixelRatio || 1, 1.5);
       canvas.width = Math.max(1, Math.floor(canvas.clientWidth * scale));
@@ -63,9 +103,15 @@ export default class CinematicAtmosphere extends OpenElement {
     const render = (now: number) => {
       if (this.#contextLost || !this.isConnected) return;
       const t = (now - started) / 1000;
-      const wave = .055 + Math.sin(t * .36) * .018;
-      gl.clearColor(.16 + wave, .045, .34 + wave * 2, .22);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      const style = getComputedStyle(this);
+      gl.uniform2f(resolution, canvas.width, canvas.height);
+      gl.uniform2f(
+        pointer,
+        Number(style.getPropertyValue('--pointer-x')) || 0,
+        Number(style.getPropertyValue('--pointer-y')) || 0,
+      );
+      gl.uniform1f(time, t);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
       this.#frame = requestAnimationFrame(render);
     };
     this.#frame = requestAnimationFrame(render);

@@ -73,7 +73,7 @@ sheet.replaceSync(`
 export class OpenThemeToggle extends OpenElement {
   // Safari does not recompute adoptedStyleSheets when
   // :host([data-theme]) changes. The token sheets (openPropsTokenSheet,
-  // daisyClassSheet) are already injected as page-level <style> by
+  // semantic token sheets are already injected as page-level <style> by
   // vite.config.ts — CSS custom properties cascade from :root naturally.
   // Only adopt the component-specific sheet.
   static override styles = [sheet];

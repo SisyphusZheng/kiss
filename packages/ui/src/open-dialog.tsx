@@ -26,6 +26,7 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { escapeAttr, escapeHtml } from '@openelement/element';
+import { overlayRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-dialog';
 
@@ -40,19 +41,19 @@ sheet.replaceSync(`
   }
 
   dialog {
-    border: var(--border-size-1) solid var(--gray-3);
-    border-radius: var(--radius-3);
-    background: var(--gray-0);
-    color: var(--gray-9);
+    border: var(--border-size-1) solid var(--surface-border-strong);
+    border-radius: var(--overlay-radius);
+    background: var(--surface-overlay);
+    color: var(--text-primary);
     padding: var(--size-6);
     max-width: min(90vw, 480px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--surface-highlight), var(--overlay-shadow);
     font-family: var(--font-sans);
   }
 
   dialog::backdrop {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    background: color-mix(in srgb, var(--gray-12) 68%, transparent);
+    backdrop-filter: blur(8px);
   }
 
   dialog[open] {
@@ -74,7 +75,7 @@ sheet.replaceSync(`
   .dialog-title {
     font-size: var(--font-size-2);
     font-weight: var(--font-weight-6);
-    color: var(--gray-9);
+    color: var(--text-primary);
     margin: 0;
   }
 
@@ -82,7 +83,7 @@ sheet.replaceSync(`
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--gray-5);
+    color: var(--text-muted);
     font-size: var(--font-size-2);
     line-height: var(--font-lineheight-1);
     padding: var(--size-1);
@@ -91,13 +92,13 @@ sheet.replaceSync(`
   }
 
   .dialog-close:hover {
-    color: var(--gray-9);
-    background: rgba(83,74,183,0.06);
+    color: var(--text-primary);
+    background: var(--brand-subtle);
   }
 
   .dialog-body {
     font-size: var(--font-size-1);
-    color: var(--gray-7);
+    color: var(--text-secondary);
     line-height: var(--font-lineheight-3);
   }
 
@@ -114,9 +115,9 @@ sheet.replaceSync(`
 `);
 
 export class OpenDialog extends OpenElement {
-  static override styles = [sheet];
+  static override styles = [overlayRecipe, sheet];
   static override delegatesFocus = true;
-  static override observedAttributes = ['open', 'label'];
+  static override observedAttributes = ['open', 'label', 'mode'];
 
   private static _originalInertStates = new WeakMap<Element, boolean>();
 
@@ -191,7 +192,8 @@ export class OpenDialog extends OpenElement {
     const dialog = this.shadowRoot?.querySelector('dialog');
     if (!dialog) return;
     if (this.hasAttribute('open') && !dialog.open) {
-      dialog.showModal();
+      if ((this.getAttribute('mode') || 'modal') === 'modal') dialog.showModal();
+      else dialog.show();
     } else if (!this.hasAttribute('open') && dialog.open) {
       dialog.close();
     }
@@ -206,7 +208,7 @@ export class OpenDialog extends OpenElement {
     if (!parentEl) return;
 
     const children = [...parentEl.children];
-    const open = this.hasAttribute('open');
+    const open = this.hasAttribute('open') && (this.getAttribute('mode') || 'modal') === 'modal';
     if (open) {
       for (const child of children) {
         if (child !== this) {

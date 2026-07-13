@@ -18,7 +18,6 @@ import { OpenElement } from '@openelement/element';
 import { defineIslandConfig } from '@openelement/app';
 import { computed, signal } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import { daisyClassSheet } from '@openelement/ui';
 
 export const tagName = 'reactive-showcase';
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
@@ -88,7 +87,7 @@ const FRAMEWORKS = [
 ];
 
 export default class ReactiveShowcase extends OpenElement {
-  static override styles = [daisyClassSheet, showcaseStyles];
+  static override styles = [showcaseStyles];
 
   #count = signal(0);
   #isDark = signal(false);

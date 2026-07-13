@@ -87,8 +87,8 @@ const tokenCss = `
   /* ═══════════════════════════════════════════════
      Typography
      ═══════════════════════════════════════════════ */
-  --font-sans: 'Instrument Sans', Inter, Arial, Helvetica, system-ui, sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+  --font-sans: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
   --font-size-00: 0.75rem;
   --font-size-0: 0.875rem;
   --font-size-1: 1rem;
@@ -122,6 +122,11 @@ const tokenCss = `
   --ease-2: cubic-bezier(0.45, 0, 0.25, 1);
   --ease-3: cubic-bezier(0.5, 0, 0, 1);
   --duration-2: 200ms;
+  --motion-fast: 160ms;
+  --motion-medium: 320ms;
+  --motion-standard: cubic-bezier(.2,.8,.2,1);
+  --focus-size: 2px;
+  --focus-offset: 3px;
 
   /* ═══════════════════════════════════════════════
      Brand tokens
@@ -141,7 +146,7 @@ const tokenCss = `
   --site-section-gap: var(--size-8);
 
   /* ═══════════════════════════════════════════════
-     Component Semantic Tokens (for daisyUI classes)
+     Component semantic defaults
      ═══════════════════════════════════════════════ */
   --btn-padding-x: var(--size-4);
   --btn-padding-y: var(--size-2);
@@ -178,6 +183,24 @@ const tokenCss = `
   --dropdown-radius: var(--radius-2);
   --tab-padding: var(--size-2) var(--size-4);
   --tab-radius: var(--radius-1);
+
+  /* Shared component recipes: primitives consume these semantic roles only. */
+  --focus-ring: color-mix(in srgb, var(--brand-light) 84%, white);
+  --ui-control-text: var(--text-primary);
+  --ui-control-bg: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
+  --ui-control-border: color-mix(in srgb, var(--border) 72%, var(--brand));
+  --ui-control-border-hover: color-mix(in srgb, var(--brand-light) 74%, var(--border));
+  --ui-control-radius: var(--radius-round);
+  --ui-control-highlight: inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+  --surface-glass: linear-gradient(145deg, color-mix(in srgb, var(--brand) 9%, var(--bg-card)), color-mix(in srgb, var(--bg-card) 90%, transparent));
+  --surface-overlay: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  --surface-border: color-mix(in srgb, var(--border) 78%, var(--brand));
+  --surface-border-strong: color-mix(in srgb, var(--border-hover) 62%, var(--brand));
+  --surface-radius: var(--radius-2);
+  --overlay-radius: var(--radius-3);
+  --surface-highlight: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  --surface-shadow: 0 20px 60px color-mix(in srgb, var(--gray-12) 20%, transparent);
+  --overlay-shadow: 0 28px 90px color-mix(in srgb, var(--gray-12) 48%, transparent);
 
   /* ═══════════════════════════════════════════════
      UI Semantic Tokens (light defaults)

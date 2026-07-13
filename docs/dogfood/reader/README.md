@@ -14,7 +14,7 @@ A WeRead-style desktop reading practice app. It is backed by local/open fixtures
 - **Deno Desktop**: window lifecycle, menu/shortcuts, local storage persistence.
 - **Local-first state**: bookshelf, reading progress, theme/font settings, annotations, notes, search.
 - **Preact islands**: heavy-island integration inside a Basic Element app.
-- **UI components**: `open-dropdown`, `open-modal`, `open-tabs`, and Open Props token sheets.
+- **UI components**: `open-dropdown`, `open-dialog`, `open-tabs`, and semantic Open Props token sheets.
 - **Content rendering**: PDF/text rendering, Markdown export.
 
 ## Entry Points

@@ -126,7 +126,9 @@ test.describe('Performance', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const layout = document.querySelector('open-layout');
-      return !!customElements.get('open-layout') && !!layout?.shadowRoot;
+      // Native Declarative Shadow DOM is the static-first readiness signal.
+      // The layout does not need to upgrade before the page is usable.
+      return !!layout?.shadowRoot;
     });
 
     // Filter out known non-critical errors (e.g., analytics, CDN, external CDN integrity mismatch)

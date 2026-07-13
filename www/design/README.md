@@ -10,7 +10,8 @@ prove that feeling with real browser primitives. `<open/>` is the primary mark;
 `OpenElement` is the formal wordmark.
 
 The first impression is high-end digital product design (70%) with precise,
-inspectable technical instruments (30%). The site never uses stock imagery,
+inspectable technical instruments (30%). JetBrains Mono is the only brand and
+reading font. The site never uses stock imagery,
 people, generic device renders, fake screenshots, video demos, Three.js, GSAP,
 or a full-screen canvas as its content layer.
 
@@ -35,6 +36,8 @@ or a full-screen canvas as its content layer.
 
 - CSS 3D, Scroll-driven Animations, WAAPI, View Transitions and
   IntersectionObserver are the default toolkit.
+- One passive coordinator normalizes progress for browsers without native
+  scroll timelines; it never intercepts scrolling.
 - WebGL may render only delayed violet atmosphere/particles. It never owns
   text, controls, branding or product structure. CSS is its complete fallback.
 - Prefer real components and semantic HTML. The first viewport is complete
@@ -54,3 +57,10 @@ or a full-screen canvas as its content layer.
 - Generated visual baselines are reviewed for desktop/mobile in both themes.
 
 The detailed homepage storyboard and QA matrix are in `specs/cinematic-motion.md`.
+
+## UI package boundary
+
+The public UI package contains ten primitives: button, card, input, code-block,
+badge, theme-toggle, callout, dialog, dropdown and tabs. An audited Open Props
+subset feeds semantic tokens, shared recipes and then components. Modal and
+step-card are retired; the daisy class sheet is not a public or internal layer.

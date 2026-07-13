@@ -3,7 +3,7 @@ import { defineApp } from '@openelement/app/spa';
 import { setRouter } from './router.ts';
 
 import '@openelement/ui';
-import { daisyClassSheet, openPropsRootSheet } from '@openelement/ui';
+import { openPropsRootSheet } from '@openelement/ui';
 
 // ─── Inject design system ───────────────────────────────────
 
@@ -11,11 +11,6 @@ const tokenStyle = document.createElement('style');
 tokenStyle.textContent = [...openPropsRootSheet.cssRules].map((r) => r.cssText)
   .join('\n');
 document.head.appendChild(tokenStyle);
-
-const daisyStyle = document.createElement('style');
-daisyStyle.textContent = [...daisyClassSheet.cssRules].map((r) => r.cssText)
-  .join('\n');
-document.head.appendChild(daisyStyle);
 
 // Apply persisted theme before app mount to avoid flash.
 import { applyTheme, loadSettings } from './app/settings.ts';

@@ -26,21 +26,21 @@ npm install @openelement/ui
 | `OpenInput`       | `open-input`        | Input component.               |
 | `OpenCard`        | `open-card`         | Content card.                  |
 | `OpenCodeBlock`   | `open-code-block`   | Code block with copy behavior. |
-| `OpenLayout`      | `open-layout`       | Docs/layout shell.             |
 | `OpenThemeToggle` | `open-theme-toggle` | Theme switch island.           |
-| `OpenHeroPing`    | `open-hero-ping`    | Status indicator.              |
-| `OpenDialog`      | `open-dialog`       | Dialog component.              |
+| `OpenDialog`      | `open-dialog`       | Modal/non-modal dialog.        |
 | `OpenCallout`     | `open-callout`      | Callout/notice box.            |
-| `OpenStepCard`    | `open-step-card`    | Step card.                     |
+| `OpenDropdown`    | `open-dropdown`     | Popover-first dropdown.        |
+| `OpenTabs`        | `open-tabs`         | Accessible tab interface.      |
 
 ## Layering contract
 
 Dependencies flow in one direction:
 
 ```text
-tokens (`open-props-tokens`, `daisy-classes`)
-  -> primitives (`open-button`, `open-input`, `open-badge`, `open-brand-mark`)
-    -> composites (`open-card`, `open-dialog`, `open-layout`, tabs and lab components)
+audited Open Props subset
+  -> semantic tokens
+    -> component recipes
+      -> Web Component primitives
 ```
 
 Tokens contain shared style values and classes and import no components.
@@ -57,7 +57,7 @@ Existing per-component imports remain stable across this layering change.
 components in package manifest scanning:
 
 ```ts
-import { openElement } from '@openelement/app/vite';
+import { openElement } from '@openelement/adapter-vite';
 
 export default {
   plugins: [
@@ -78,17 +78,12 @@ DSD behavior, and hydration strategy metadata.
 @openelement/ui/open-input
 @openelement/ui/open-card
 @openelement/ui/open-code-block
-@openelement/ui/open-layout
-@openelement/ui/open-step-card
 @openelement/ui/open-callout
 @openelement/ui/open-theme-toggle
-@openelement/ui/open-hero-ping
 @openelement/ui/open-dialog
 @openelement/ui/open-dropdown
-@openelement/ui/open-modal
 @openelement/ui/open-tabs
 @openelement/ui/open-props-tokens
-@openelement/ui/daisy-classes
 ```
 
 ## License

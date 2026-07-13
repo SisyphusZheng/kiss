@@ -113,16 +113,15 @@ test.describe('HTML Structure', () => {
 });
 
 test.describe('Sitemap & Robots', () => {
-  test('sitemap.xml is accessible', async ({ page }) => {
-    const response = await page.goto('/sitemap.xml');
-    expect(response?.ok()).toBe(true);
-
-    const content = await page.textContent('body');
+  test('sitemap.xml is accessible', async ({ request }) => {
+    const response = await request.get('/sitemap.xml');
+    expect(response.ok()).toBe(true);
+    const content = await response.text();
     expect(content).toContain('openelement.org');
   });
 
-  test('robots.txt is accessible', async ({ page }) => {
-    const response = await page.goto('/robots.txt');
-    expect(response?.ok()).toBe(true);
+  test('robots.txt is accessible', async ({ request }) => {
+    const response = await request.get('/robots.txt');
+    expect(response.ok()).toBe(true);
   });
 });

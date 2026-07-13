@@ -39,7 +39,6 @@ interface ComponentMeta {
 const COMPONENT_ORDER = [
   'open-card',
   'open-callout',
-  'open-step-card',
   'open-button',
   'open-input',
   'open-theme-toggle',
@@ -52,7 +51,6 @@ const COMPONENT_ORDER = [
   'open-dialog',
   'open-layout',
   'open-dropdown',
-  'open-modal',
   'open-tabs',
   'open-hero-ping',
 ];
@@ -65,7 +63,6 @@ function layerFromClass(className: string): ComponentMeta['layer'] {
     'OpenDialog',
     'OpenLayout',
     'OpenDropdown',
-    'OpenModal',
     'OpenTabs',
     'OpenHeroPing',
   ]);
@@ -79,7 +76,6 @@ function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
     'OpenThemeToggle',
     'OpenLayout',
     'OpenDropdown',
-    'OpenModal',
     'OpenTabs',
   ]);
   return load.has(className) ? 'load' : 'idle';
