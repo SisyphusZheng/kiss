@@ -61,7 +61,9 @@ export default class CinematicAtmosphere extends OpenElement {
       float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
       void main(){vec2 uv=(gl_FragCoord.xy*2.-r)/min(r.x,r.y);uv-=m*.09;
         float d=length(uv);float glow=.12/(.08+abs(d-.54+sin(t*.22)*.025));
-        vec2 cell=floor((uv+2.)*18.);float stars=step(.965,hash(cell+t*.015))*smoothstep(1.5,.1,d);
+        vec2 cell=floor((uv+2.)*18.);float seed=hash(cell);float phase=hash(cell+19.7)*6.2831;
+        float twinkle=.78+.22*sin(t*.34+phase);
+        float stars=step(.965,seed)*smoothstep(1.5,.1,d)*twinkle;
         vec3 violet=vec3(.37,.15,.78)*glow+vec3(.72,.55,1.)*stars*.8;
         gl_FragColor=vec4(violet,min(.72,glow*.22+stars*.55));}
     `,
