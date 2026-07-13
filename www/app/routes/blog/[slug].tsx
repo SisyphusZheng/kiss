@@ -3,7 +3,7 @@
  *
  * Renders individual blog posts from @openelement/generated/blog-data.
  * The `slug` param is set by openElement dynamic routing: /blog/:slug
- * Data comes from generated app data, not @openelement/content module state.
+ * Data comes from generated site data rather than module-level runtime state.
  */
 import { OpenElement } from "@openelement/element";
 import { StyleSheet } from "@openelement/element";
@@ -142,5 +142,4 @@ export default class BlogPostPage extends OpenElement {
 }
 
 customElements.define(tagName, BlogPostPage);
-
 

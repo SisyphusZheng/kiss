@@ -7,7 +7,7 @@ order: 30
 
 # 错误处理
 
-openElement 区分 build-time framework errors、route render errors、API errors 和 browser island
+openElement 区分 build-time framework errors、route render errors、server response errors 和 browser island
 failures。
 
 ## 构建错误
@@ -18,9 +18,9 @@ failures。
 
 SSG 和 SSR route render failure 会记录 route path。生产响应不泄漏内部 stack trace。
 
-## API errors
+## Server response errors
 
-客户端 RPC 可以使用结构化 response helpers。业务性错误应带清晰 HTTP status
+server routes 使用标准 `Response` 的 status 与 message 语义。业务性错误应带清晰 HTTP status
 和 message；编程错误应让 build 或 server route 失败。
 
 ## Browser errors

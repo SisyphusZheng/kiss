@@ -1,4 +1,4 @@
-export const meta = { section: 'Reference', label: 'Standards Registry', order: 80 };
+export const meta = { section: 'Reference', label: 'WC Standards Contract', order: 80 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
@@ -29,24 +29,25 @@ export class StandardsRegistryPage extends OpenElement {
   override render() {
     return (
       <div class='container'>
-        <h1>Standards Registry</h1>
+        <h1>WC Standards Contract</h1>
         <p class='subtitle'>
-          openElement documents standards-facing contracts so routes, elements,
-          islands, and package layers can be reasoned about as public surfaces.
+          OpenElement relies on web-platform contracts rather than a proprietary
+          registry product. Custom Elements, DSD, CEM, Request/Response and
+          FormData define the direction of the public application model.
         </p>
 
         <div class='registry-grid'>
           <open-card variant='artifact'>
-            <h3>Elements</h3>
-            <p>Custom Elements and DSD define the component boundary.</p>
+            <h3>Elements + DSD</h3>
+            <p>Standard Custom Elements and Declarative Shadow DOM define the durable component boundary.</p>
           </open-card>
           <open-card>
-            <h3>Routes</h3>
-            <p>Route metadata keeps navigation and generated docs explicit.</p>
+            <h3>Request semantics</h3>
+            <p>Request, Response and FormData guide future application interaction without inventing a proprietary transport.</p>
           </open-card>
           <open-card>
-            <h3>Packages</h3>
-            <p>Package layers keep runtime, app, UI, and adapters separate.</p>
+            <h3>Five-package ownership</h3>
+            <p>Element, App, Adapter Vite, Create and optional UI are the current consumer surface; internal contracts stay internal.</p>
           </open-card>
         </div>
       </div>

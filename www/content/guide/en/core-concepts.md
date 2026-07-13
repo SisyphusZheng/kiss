@@ -24,7 +24,8 @@ surfaces.
 ## Application API
 
 ```tsx
-import { defineElement, defineIsland, definePage } from '@openelement/app';
+import { defineElement } from '@openelement/element';
+import { defineIsland, definePage } from '@openelement/app';
 ```
 
 - `definePage()` declares route components and page metadata.

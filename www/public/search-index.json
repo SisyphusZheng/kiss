@@ -13,9 +13,9 @@
   },
   {
     "path": "/architecture/standards-registry",
-    "title": "Standards Registry",
+    "title": "WC Standards Contract",
     "section": "Reference",
-    "text": "Standards Registry Reference"
+    "text": "WC Standards Contract Reference"
   },
   {
     "path": "/architecture/package-compatibility",
@@ -112,6 +112,12 @@
     "title": "Architecture",
     "section": "Guide",
     "text": "Architecture Guide"
+  },
+  {
+    "path": "/guide/comparison",
+    "title": "Comparison",
+    "section": "Guide",
+    "text": "Comparison Guide"
   },
   {
     "path": "/guide/routing-and-data",

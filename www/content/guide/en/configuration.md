@@ -7,8 +7,9 @@ order: 10
 
 # Configuration
 
-openElement is configured through Vite. The root app package is reserved for
-authoring helpers; Vite integration uses the `/vite` subpath.
+OpenElement is configured through Vite with the supported
+`@openelement/adapter-vite` root entry. Element and App packages remain focused
+on authoring rather than build implementation.
 
 ## Minimal Configuration
 
@@ -47,6 +48,18 @@ Generated projects configure automatic JSX:
 
 ## AppShell
 
-The AppShell protocol supports the default shell, no shell, and custom route
-layouts. The framework should own the routing contract; applications own the
-visual shell.
+Applications own their visual shell while the framework owns route and render
+semantics. Keep shell configuration in the supported adapter options; do not
+depend on internal shell or manifest types.
+
+## Product tasks
+
+Generated projects expose the product lifecycle:
+
+```sh
+deno task dev
+deno task check
+deno task test
+deno task build
+deno task preview
+```

@@ -7,8 +7,8 @@ order: 3
 
 # Routing and Data
 
-Files in `app/routes` become routes. The route module exports a page component,
-usually created with `definePage()`, and can export a `loader` for data.
+Files in `app/routes` become routes. A route module exports a page component,
+usually created with `definePage()`.
 
 ## Static Page
 
@@ -38,35 +38,9 @@ export default definePage({
 });
 ```
 
-## Load Data
-
-```tsx
-import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/app';
-import type { Loader } from '@openelement/app';
-
-export const loader: Loader = async () => {
-  return { posts: await fetchPosts() };
-};
-
-export default definePage({
-  render() {
-    const data = useLoaderData<{ posts: Post[] }>();
-    return (
-      <main>
-        {data.posts.map((post) => <article>{post.title}</article>)}
-      </main>
-    );
-  },
-});
-```
-
-`loader()` receives route params, the request, and runtime context. Use
-`useLoaderData()` inside `render()` to access the returned data.
-
 ## Rendering Intent
 
-Page descriptors can declare future rendering intent:
+Page descriptors declare static rendering intent:
 
 ```tsx
 export default definePage({
@@ -74,11 +48,12 @@ export default definePage({
   renderIntent: {
     mode: 'static',
     streaming: 'auto',
-    revalidate: 300,
+    revalidate: false,
   },
   render: () => <main>Cached page</main>,
 });
 ```
 
-v0.33 makes this descriptor the only page authoring path. Top-level `title`,
-`description`, `rendering`, `streaming`, and `revalidate` are no longer accepted.
+The canonical descriptor keeps route, head and render behavior together.
+Request-time data, forms, actions and revalidation are planned for the `0.42`
+WC Application Loop; they are not current stable authoring contracts.

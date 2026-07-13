@@ -31,23 +31,23 @@ export class PackageCompatibilityPage extends OpenElement {
       <div class='container'>
         <h1>Package Compatibility</h1>
         <p class='subtitle'>
-          Basic Element is the default authoring layer, while third-party Web
-          Components use explicit package or Custom Elements Manifest metadata
-          for supported interop.
+          OpenElement treats third-party Custom Elements as standards-based
+          dependencies. Current builds use explicit package-island configuration
+          and available Custom Elements Manifest metadata for SSR admission.
         </p>
 
         <div class='compat-grid'>
           <open-card variant='artifact'>
-            <h3>Basic Element</h3>
-            <p>@openelement/element provides OpenElement, StyleSheet, DSD, signals, and islands.</p>
+            <h3>Current contract</h3>
+            <p>@openelement/element owns authoring; app and adapter-vite keep application and build behavior separate.</p>
           </open-card>
           <open-card>
-            <h3>Third-party WC</h3>
-            <p>External custom elements are supported through manifest or CEM metadata.</p>
+            <h3>Explicit admission</h3>
+            <p>Known packages can be configured as package islands and use available CEM metadata without importing retired package surfaces.</p>
           </open-card>
           <open-card>
-            <h3>Diagnostics</h3>
-            <p>Unknown SSR capability becomes explicit client-only interop or a rejected admission.</p>
+            <h3>Roadmap diagnostics</h3>
+            <p>Universal DSD/light/client-only classification and hydration-mismatch diagnostics are `0.43` roadmap work, not a current market claim.</p>
           </open-card>
         </div>
       </div>

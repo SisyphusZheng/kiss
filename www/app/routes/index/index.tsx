@@ -766,7 +766,7 @@ const workflowSteps = [
 const surfaces = [
   ['Start', '/guide/getting-started', 'Five-minute create, element, island, and production build path.'],
   ['API Reference', '/apilist', 'Package surfaces and UI primitives that are actually exported.'],
-  ['Deploy', '/guide/deployment', 'Verified Node and Workers output from the same BuildPlan.'],
+  ['Deploy', '/guide/deployment', 'Verified Node and Workers output through the supported build interface.'],
   ['Compare', '/architecture/comparison', 'Sourced fit and non-fit guidance for adjacent frameworks.'],
   ['Evidence', '/architecture/benchmark', 'Reproducible build, output, latency, and memory methodology.'],
 ] as const;

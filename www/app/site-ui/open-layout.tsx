@@ -61,7 +61,7 @@ function isSafeLayoutUrl(url: string): boolean {
   }
 }
 
-/* --- Locale/path helpers (inlined from @openelement/router) --- */
+/* --- Locale/path helpers for the site shell --- */
 
 const LOCALE_LABELS: Record<string, string> = { en: '中文', zh: 'English' };
 
@@ -640,7 +640,7 @@ export class OpenLayout extends OpenElement {
 
   // _currentPathWithoutLocale, _currentLocale, _locales, _switchPath(),
   // _switchLabel(), _updateSwitch(), _localizePath()
-  // ?? all inlined (replaces former @openelement/router dependency)
+  // Site-local helpers keep the shell independent from application internals.
 
   private _currentPath(): string {
     // SSR-safe: prefer attribute/prop set by renderDsd over URL detection

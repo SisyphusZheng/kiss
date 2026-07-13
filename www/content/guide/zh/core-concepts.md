@@ -22,7 +22,8 @@ Desktop、AutoFlow3 与 docs-truth tooling 是证据或基础设施，不是额�
 ## Application API
 
 ```tsx
-import { defineElement, defineIsland, definePage } from '@openelement/app';
+import { defineElement } from '@openelement/element';
+import { defineIsland, definePage } from '@openelement/app';
 ```
 
 - `definePage()` 声明 route component 和页面 metadata。

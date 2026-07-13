@@ -281,7 +281,7 @@ const tokenRows = [
 
 const principles = [
   ['Lead with the product object', 'Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.'],
-  ['Use components as the design system', 'Buttons, cards, badges, panels, inputs, and visuals come from @openelement/ui.'],
+  ['Use components as the site system', 'The website dogfoods retained @openelement/ui primitives; UI remains optional for application authors.'],
   ['Treat dark mode as parity', 'Every page and shadow component must resolve through the same semantic tokens.'],
 ];
 
@@ -296,15 +296,15 @@ export class UIShowcase extends OpenElement {
             <p class='kicker'>Web Standards Lab</p>
             <h1>Design System</h1>
             <p class='subtitle'>
-              This page documents the active `www` implementation contract:
-              Open Props tokens, UI package primitives, product-art diagrams,
-              and first-class dark mode.
+              This page documents the active `www` dogfood contract: Open Props
+              tokens, retained UI primitives, product-art diagrams, and
+              first-class dark mode. It is not a requirement for applications.
             </p>
           </div>
           <open-lab-panel label='rules' meta='v3'>
             <ul class='rule-list'>
               <li>Strict Open Props and semantic tokens only.</li>
-              <li>Reusable visuals live in `@openelement/ui`.</li>
+              <li>Only reusable primitives live in `@openelement/ui`; site visuals stay in `www`.</li>
               <li>Kinetic motion respects reduced-motion preferences.</li>
               <li>No Linear clone, decorative blobs, or local color systems.</li>
               <li>Letter spacing remains `0`.</li>
@@ -330,7 +330,7 @@ export class UIShowcase extends OpenElement {
         <section class='section'>
           <div>
             <p class='label'>Primitives</p>
-            <h2 class='section-title'>The site is composed from UI package components.</h2>
+            <h2 class='section-title'>The site dogfoods optional UI primitives.</h2>
           </div>
           <div class='component-grid'>
             <open-card class='component-card'>

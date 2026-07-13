@@ -7,8 +7,8 @@ order: 30
 
 # Error Handling
 
-openElement separates build-time framework errors, route render errors, API
-errors, and browser island failures.
+OpenElement separates build-time framework errors, route render errors, server
+response errors, and browser island failures.
 
 ## Build Errors
 
@@ -20,9 +20,9 @@ present package that throws during import should be visible in diagnostics.
 SSG and SSR route render failures are logged with the route path. Production
 responses avoid leaking internal stack traces.
 
-## API Errors
+## Server Response Errors
 
-Use structured response helpers for server route and action errors.
+Use standard `Response` status and message semantics for server routes.
 Operational errors should carry a clear HTTP status and message; programming
 errors should fail the build or server route.
 

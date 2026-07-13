@@ -7,69 +7,65 @@ order: 70
 
 # API Reference
 
-## `@openelement/app`
+The current public product surface has five packages. Most authors use
+`@openelement/element`, `@openelement/app` and
+`@openelement/adapter-vite`; `create` starts a project and `ui` is optional.
+
+## Element authoring
 
 ```tsx
-import { defineElement, defineIsland, defineLayout, definePage } from '@openelement/app';
+import { defineElement, defineLayout } from '@openelement/element';
 ```
 
-### `definePage(input)`
+`defineElement()` declares a reusable native custom element. Shadow/DSD is the
+default render mode; light DOM remains explicit opt-in. `defineLayout()` is the
+semantic layout alias for element authoring.
 
-Declares a route component.
+## Application authoring
+
+```tsx
+import { defineApp, defineIsland, definePage } from '@openelement/app';
+```
+
+`definePage()` declares a route descriptor with route, head, render intent,
+render and error behavior.
 
 ```tsx
 import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/app';
-
-export const loader = async () => {
-  return { message: 'Hello' };
-};
 
 export default definePage({
-  head: {
-    title: 'Home',
-  },
+  route: { path: '/' },
+  head: { title: 'Home' },
   render() {
-    const data = useLoaderData<{ message: string }>();
-    return <main>{data.message}</main>;
+    return <main>Hello OpenElement</main>;
   },
 });
 ```
 
-### `defineIsland(tagName, render, options?)`
+`defineIsland()` marks an interactive custom element for selective upgrade.
+`defineApp()` starts the documented application mode, including SPA mode when
+that is the selected product path.
 
-Declares an interactive Custom Element and its hydration metadata.
-
-```tsx
-export default defineIsland('my-counter', () => <button>Count</button>, {
-  hydrate: 'idle',
-  dsd: true,
-});
-```
-
-### `defineElement(tagName, render)`
-
-Declares a reusable Elements-native custom element. Shadow/DSD is the default
-render mode; light DOM remains explicit opt-in.
-
-### `defineLayout(tagName, render)`
-
-Declares a layout element. It is a semantic alias for `defineElement()`.
-
-## `@openelement/adapter-vite`
+## Build and starter
 
 ```ts
-import { openElement } from '@openelement/adapter-vite';
+import { buildApp, openElement } from '@openelement/adapter-vite';
 ```
 
-`openElement()` configures Vite, route scanning, SSG, islands, AppShell,
-content, and i18n.
+`openElement()` configures the official Vite integration. `buildApp()` owns the
+supported build invocation so callers do not need to understand plugin ordering
+or internal manifests.
 
-## Product Packages
+```sh
+deno run -A npm:@openelement/create my-app
+cd my-app
+deno task dev
+```
 
-- `@openelement/element`: JSX, Custom Elements, DSD, hydration, signals, and
-  stylesheet helpers.
-- `@openelement/app`: pages, routes, loaders, actions, and islands.
-- `@openelement/adapter-vite`: Vite, content, SSG, and Nitro integration.
-- `@openelement/create`: starter CLI.
-- `@openelement/ui`: optional reusable primitives.
+Generated projects provide `dev`, `check`, `test`, `build` and `preview`.
+
+## Future application interaction
+
+The route-to-action loop—request-time data, progressive forms, actions and
+revalidation—is planned for the `0.42` WC Application Loop. It is not presented
+as a stable public contract in the current package line.

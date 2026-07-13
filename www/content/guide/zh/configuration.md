@@ -7,7 +7,8 @@ order: 10
 
 # 配置
 
-openElement 通过 Vite 配置。根入口用于应用编写；Vite 集成使用 `/vite` 子路径。
+openElement 通过 Vite 配置，并使用受支持的 `@openelement/adapter-vite` root
+入口。Element 和 App 包专注于作者体验，不承担构建实现。
 
 ## 最小配置
 
@@ -44,6 +45,19 @@ openElement({
 }
 ```
 
-## AppShell
+## 应用外壳
 
-AppShell 协议支持默认 shell、无 shell 和自定义 route layout。框架负责路由契约，应用负责视觉外壳。
+应用负责视觉外壳，Framework 负责 route 与 render semantics。外壳配置应使用
+受支持的 adapter options，不依赖内部 shell 或 manifest types。
+
+## 产品任务
+
+生成项目提供完整生命周期：
+
+```sh
+deno task dev
+deno task check
+deno task test
+deno task build
+deno task preview
+```

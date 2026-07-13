@@ -5,11 +5,8 @@ import { defineConfig } from 'vite';
 // www/ is an npm-first consumer; local workspace resolution during dev, npm
 // tarballs in production. No resolve.alias needed.
 
-// v0.20.0: migrated from lessRootColorCSS (deleted) to openPropsTokenSheet.
-// v0.23.0: :host rules don't apply in global CSS context. Replace :host with
-//   :root so CSS custom properties (--gray-*, --text-*, --bg-*, etc.) are
-//   available to regular DOM elements outside shadow trees. Shadow DOM still
-//   inherits these from :root per CSS spec.
+// Make token variables available to document-level elements while shadow trees
+// continue to inherit them from the document root.
 const _rawCSS = [...openPropsTokenSheet.cssRules].map((r) => r.cssText).join('\n');
 const rootCSS = _rawCSS
   .replace(/:host\s*\{/g, ':root, :host {')
@@ -114,8 +111,7 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,
   },
-  // v0.24.1 (ADR-0057): Configure esbuild JSX transform to use openElement automatic runtime.
-  // Must match root deno.json compilerOptions.jsx / jsxImportSource.
+  // Keep Vite's automatic JSX transform aligned with the workspace compiler.
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: '@openelement/element',
@@ -132,7 +128,7 @@ export default defineConfig({
         tagName: 'open-layout',
         import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
         props: {
-          footerText: 'Built with openElement - Web Components Fullstack Framework + Basic Element',
+          footerText: 'Built with OpenElement — Web Components-native application framework',
           githubUrl: 'https://github.com/open-element/openelement',
         },
       },

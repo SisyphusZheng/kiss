@@ -7,68 +7,63 @@ order: 70
 
 # API Reference
 
-## `@openelement/app`
+当前公开产品面为五包。大多数作者使用 `@openelement/element`、
+`@openelement/app` 与 `@openelement/adapter-vite`；`create` 用于开始项目，
+`ui` 是可选项。
+
+## Element 编写
 
 ```tsx
-import { defineElement, defineIsland, defineLayout, definePage } from '@openelement/app';
+import { defineElement, defineLayout } from '@openelement/element';
 ```
 
-### `definePage(input)`
+`defineElement()` 声明可复用的原生 custom element。Shadow/DSD 是默认渲染模式；
+light DOM 必须显式选择。`defineLayout()` 是 element authoring 的语义 layout
+别名。
 
-声明 route component。
+## 应用编写
+
+```tsx
+import { defineApp, defineIsland, definePage } from '@openelement/app';
+```
+
+`definePage()` 声明 route、head、render intent、render 与 error 行为组成的页面
+descriptor。
 
 ```tsx
 import { definePage } from '@openelement/app';
-import { useLoaderData } from '@openelement/app';
-
-export const loader = async () => {
-  return { message: 'Hello' };
-};
 
 export default definePage({
-  head: {
-    title: 'Home',
-  },
+  route: { path: '/' },
+  head: { title: 'Home' },
   render() {
-    const data = useLoaderData<typeof loader>();
-    return <main>{data.message}</main>;
+    return <main>Hello OpenElement</main>;
   },
 });
 ```
 
-### `defineIsland(tagName, render, options?)`
+`defineIsland()` 标记需要选择性升级的交互 Custom Element。`defineApp()` 启动
+受支持的应用模式，包括选定产品路径中的 SPA mode。
 
-声明可交互 Custom Element 及其 hydration metadata。
-
-```tsx
-export default defineIsland('my-counter', () => <button>Count</button>, {
-  hydrate: 'idle',
-  dsd: true,
-});
-```
-
-### `defineElement(tagName, render)`
-
-声明可复用的 Elements-native custom element。Shadow/DSD 是默认渲染模式；
-light DOM 必须显式选择。
-
-### `defineLayout(tagName, render)`
-
-声明 layout element。它是 `defineElement()` 的语义别名。
-
-## `@openelement/adapter-vite`
+## 构建与 starter
 
 ```ts
-import { openElement } from '@openelement/adapter-vite';
+import { buildApp, openElement } from '@openelement/adapter-vite';
 ```
 
-`openElement()` 配置 Vite、route scanning、SSG、islands、AppShell、content 和
-i18n。
+`openElement()` 配置官方 Vite 集成。`buildApp()` 负责受支持的构建调用，作者不必
+理解 plugin ordering 或内部 manifests。
 
-## 产品包
+```sh
+deno run -A npm:@openelement/create my-app
+cd my-app
+deno task dev
+```
 
-- `@openelement/element`：JSX、Custom Elements、DSD、hydration、signals 和样式工具。
-- `@openelement/app`：pages、routes、loaders、actions 和 islands。
-- `@openelement/adapter-vite`：Vite、content、SSG 和 Nitro 集成。
-- `@openelement/create`：starter CLI。
-- `@openelement/ui`：可选的通用 primitives。
+生成项目提供 `dev`、`check`、`test`、`build` 和 `preview`。
+
+## 后续应用交互
+
+request-time data、progressive forms、actions 与 revalidation 组成的
+route-to-action loop 属于 `0.42` WC Application Loop。在当前包线中，它们不被
+表述为稳定公开契约。
