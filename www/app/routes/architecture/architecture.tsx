@@ -5,6 +5,7 @@ import { OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import '@openelement/site-ui/open-section-frame.tsx';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -76,18 +77,17 @@ export class ArchitecturePage extends OpenElement {
           </div>
         </section>
 
-        <section class='section'>
-          <div class='section-head'>
-            <div><p class='kicker'>ownership</p><h2>Deep modules hide implementation complexity.</h2></div>
-            <p class='section-copy'>Authors use product interfaces. Renderer, router, signal, content and build-phase details stay internal until real variation proves a public seam.</p>
-          </div>
+        <open-section-frame>
+          <span slot='index'>01 / ownership</span>
+          <span slot='title'>Deep modules hide implementation complexity.</span>
+          <span slot='copy'>Authors use product interfaces. Renderer, router, signal, content and build-phase details stay internal until real variation proves a public seam.</span>
           <div class='layer-map'>
             <div class='layer'><strong>element</strong><span>@openelement/element</span><p>One authoring surface for Custom Elements, JSX, DSD, hydration and signals.</p></div>
             <div class='layer'><strong>application</strong><span>@openelement/app</span><p>Pages, routes, islands and render semantics for complete applications.</p></div>
             <div class='layer'><strong>build</strong><span>@openelement/adapter-vite</span><p>Vite integration, content, static generation and deployable Nitro output behind one build boundary.</p></div>
             <div class='layer'><strong>adoption</strong><span>@openelement/create, optional ui</span><p>Starter-first adoption and optional primitives; neither exposes retired implementation packages.</p></div>
           </div>
-        </section>
+        </open-section-frame>
 
         <section class='section'>
           <div class='section-head'>

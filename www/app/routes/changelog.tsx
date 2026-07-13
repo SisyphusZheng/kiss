@@ -9,13 +9,17 @@ import { pageStyles } from "../components/page-styles.js";
 import { marked } from "marked";
 // @deno-types="npm:@types/sanitize-html@^2"
 import sanitizeHtml from "npm:sanitize-html@^2.17.4";
+import "@openelement/site-ui/open-page-hero.tsx";
+import "@openelement/site-ui/open-reading-shell.tsx";
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
   :host { display: block; }
   .changelog-content { font-size: var(--font-size-1); line-height: var(--font-lineheight-4); color: var(--text-primary); }
-  .changelog-content h2 { font-size: var(--font-size-5); margin: var(--size-10) 0 var(--size-4); border-bottom: 0.5px solid var(--border); padding-bottom: var(--size-4); }
+  .changelog-content h2 { position:relative; font-size: var(--font-size-5); margin: var(--size-10) 0 var(--size-4); border-bottom: 0.5px solid var(--border); padding:0 0 var(--size-4) var(--size-6); }
+  .changelog-content h2::before { content:""; position:absolute; inset:0 auto 0 0; width:2px; background:var(--brand); box-shadow:0 0 22px color-mix(in srgb,var(--brand) 52%,transparent); }
+  .changelog-content h2:first-child::after { content:"published history"; display:block; margin-top:var(--size-2); color:var(--brand); font-family:var(--font-mono); font-size:var(--font-size-00); text-transform:uppercase; letter-spacing:.08em; }
   .changelog-content h3 { font-size: var(--font-size-3); margin: var(--size-6) 0 var(--size-2); }
   .changelog-content code { font-family: var(--font-mono); background: var(--bg-surface); padding: var(--size-1) var(--size-2); border-radius: var(--radius-1); font-size: var(--font-size-00); }
   .changelog-content pre { background: var(--bg-surface); padding: var(--size-5) var(--size-6); border-radius: var(--radius-3); overflow-x: auto; }
@@ -46,18 +50,23 @@ export class ChangelogPage extends OpenElement {
     }
 
     return (
-      <div class="container">
-        <h1>Changelog</h1>
-        <p class="subtitle">
-          Release history and architecture changes for openElement.
-        </p>
-        <p>
+      <main>
+        <open-page-hero variant="timeline">
+          <span slot="eyebrow">Release evidence</span>
+          <span slot="title">Changelog</span>
+          <span slot="lede">Published, candidate, withdrawn and historical release evidence for OpenElement.</span>
+          <div slot="artifact"><open-button href="/roadmap">Read roadmap</open-button></div>
+        </open-page-hero>
+        <open-reading-shell>
+          <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.8</code>.</p></div>
+          <div slot="rail"><a href="#published">Published</a><br /><a href="#historical">History</a></div>
+        <p id="published">
           The project follows Keep a Changelog and SemVer. Historical entries
           preserve older names where they describe older releases; current docs
           use the openElement contract.
         </p>
-        <div class="changelog-content" innerHTML={html} trustedHtml={true} />
-        <div class="nav-row">
+        <div id="historical" class="changelog-content" innerHTML={html} trustedHtml={true} />
+        <div slot="footer" class="nav-row">
           <open-button variant="ghost" size="sm" href="/roadmap">
             Roadmap
           </open-button>
@@ -69,7 +78,8 @@ export class ChangelogPage extends OpenElement {
             Getting Started
           </open-button>
         </div>
-      </div>
+        </open-reading-shell>
+      </main>
     );
   }
 }
@@ -77,5 +87,3 @@ export class ChangelogPage extends OpenElement {
 customElements.define("page-changelog", ChangelogPage);
 export default ChangelogPage;
 export const tagName = "page-changelog";
-
-

@@ -22,15 +22,13 @@ export const pageStyles = `
   }
 
   .container {
+    position: relative;
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: var(--size-10) var(--size-6) var(--size-16);
+    padding: clamp(4rem, 10vh, 8rem) var(--size-6) clamp(6rem, 14vh, 11rem);
     overflow-wrap: break-word;
     word-break: break-word;
-    background:
-      linear-gradient(color-mix(in srgb, var(--border) 44%, transparent) var(--border-size-1), transparent var(--border-size-1)),
-      linear-gradient(90deg, color-mix(in srgb, var(--border) 36%, transparent) var(--border-size-1), transparent var(--border-size-1));
-    background-size: calc(var(--size-16) * 1.5) calc(var(--size-16) * 1.5);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--violet-2) 20%, transparent), transparent) top / 100% 1px no-repeat;
   }
 
   img {
@@ -46,10 +44,10 @@ export const pageStyles = `
   }
 
   h1 {
-    font-size: var(--font-size-7);
+    font-size: clamp(2.7rem, 6vw, 5.5rem);
     font-weight: var(--font-weight-9);
-    letter-spacing: 0;
-    margin: 0 0 var(--size-3);
+    letter-spacing: -.06em;
+    margin: 0 0 var(--size-4);
     color: var(--text-primary);
     line-height: 1.05;
   }
@@ -95,7 +93,8 @@ export const pageStyles = `
     color: var(--text-secondary);
     margin-bottom: var(--size-10);
     font-size: var(--font-size-2);
-    line-height: 1.6;
+    line-height: 1.7;
+    max-width: 680px;
   }
 
   p {

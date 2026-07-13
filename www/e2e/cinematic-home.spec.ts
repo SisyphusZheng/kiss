@@ -30,7 +30,7 @@ test.describe('Cinematic homepage', () => {
 
   test('drives the native film timeline without hijacking scroll', async ({ page }) => {
     await page.goto('/');
-    const home = page.locator('docs-home');
+    const home = page.locator('open-home-page');
     await page.evaluate(() => scrollTo({ top: innerHeight * 2, behavior: 'instant' }));
     await expect.poll(() =>
       home.evaluate((element) =>

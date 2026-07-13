@@ -1,0 +1,31 @@
+/** @jsxImportSource @openelement/element */
+/** Private WWW long-form reading shell. */
+import { OpenElement, StyleSheet } from '@openelement/element';
+export const tagName = 'open-reading-shell';
+const sheet = new StyleSheet();
+sheet.replaceSync(`
+  :host{display:block}.shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(3rem,8vh,7rem) 0 clamp(5rem,12vh,10rem);display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:clamp(2rem,7vw,7rem)}.main{min-width:0;max-width:740px}.meta{margin-block-end:var(--size-8);padding-block-end:var(--size-5);border-block-end:1px solid var(--border)}.rail{position:sticky;top:calc(var(--nav-height) + var(--size-6));align-self:start;padding:var(--size-4);border:1px solid color-mix(in srgb,var(--border) 75%,var(--brand));border-radius:var(--radius-2);background:color-mix(in srgb,var(--bg-elevated) 72%,transparent);box-shadow:inset 0 1px 0 var(--edge-highlight)}.rail-label{margin:0 0 var(--size-3);color:var(--brand);font-size:var(--font-size-00);font-weight:var(--font-weight-8);text-transform:uppercase}.footer{margin-block-start:var(--size-10);padding-block-start:var(--size-5);border-block-start:1px solid var(--border)}@media(max-width:900px){.shell{grid-template-columns:1fr;width:min(100% - 2rem,740px);padding-block:var(--size-9)}.main{max-width:none}.rail{position:static;order:-1}.rail:empty{display:none}}
+`);
+export default class OpenReadingShell extends OpenElement {
+  static override styles = [sheet];
+  override render() {
+    return (
+      <div class='shell'>
+        <article class='main'>
+          <header class='meta'>
+            <slot name='meta'></slot>
+          </header>
+          <slot></slot>
+          <footer class='footer'>
+            <slot name='footer'></slot>
+          </footer>
+        </article>
+        <aside class='rail' aria-label='On this page'>
+          <p class='rail-label'>On this page</p>
+          <slot name='rail'></slot>
+        </aside>
+      </div>
+    );
+  }
+}
+customElements.define(tagName, OpenReadingShell);

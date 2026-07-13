@@ -10,6 +10,7 @@ import { StyleSheet } from "@openelement/element";
 import "@openelement/ui/open-button";
 import { pageStyles } from "../../components/page-styles.js";
 import { getPostBySlug, posts } from "@openelement/generated/blog-data";
+import "@openelement/site-ui/open-reading-shell.tsx";
 
 export const tagName = "page-blog-slug";
 
@@ -74,10 +75,8 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <div class="container">
-        <a href="/blog" class="blog-back">鈫?鍗氬</a>
-        <h1>{post.frontmatter.title}</h1>
-        <p class="subtitle">{post.frontmatter.excerpt ?? ""}</p>
+      <open-reading-shell>
+        <div slot="meta"><a href="/blog" class="blog-back">鈫?鍗氬</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
         {tags.length > 0
           ? (
             <div class="blog-tags">
@@ -90,12 +89,12 @@ export default class BlogPostPage extends OpenElement {
         <p class="blog-date">{post.frontmatter.date}</p>
         <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
         </div>
-        <div class="nav-row">
+        <div slot="footer" class="nav-row">
           <open-button variant="ghost" size="sm" href="/blog">
             Back to Blog
           </open-button>
         </div>
-      </div>
+      </open-reading-shell>
     );
   }
 
@@ -115,10 +114,8 @@ export default class BlogPostPage extends OpenElement {
     }
     const tags = post.frontmatter.tags ?? [];
     return (
-      <div class="container">
-        <a href="/blog" class="blog-back">Blog</a>
-        <h1>{post.frontmatter.title}</h1>
-        <p class="subtitle">{post.frontmatter.excerpt ?? ""}</p>
+      <open-reading-shell>
+        <div slot="meta"><a href="/blog" class="blog-back">Blog</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
         {tags.length > 0
           ? (
             <div class="blog-tags">
@@ -131,15 +128,14 @@ export default class BlogPostPage extends OpenElement {
         <p class="blog-date">{post.frontmatter.date}</p>
         <div class="blog-content" innerHTML={post.html} trustedHtml={true}>
         </div>
-        <div class="nav-row">
+        <div slot="footer" class="nav-row">
           <open-button variant="ghost" size="sm" href="/blog">
             Back to Blog
           </open-button>
         </div>
-      </div>
+      </open-reading-shell>
     );
   }
 }
 
 customElements.define(tagName, BlogPostPage);
-

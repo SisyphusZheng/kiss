@@ -5,7 +5,7 @@ import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
 
-export const tagName = 'docs-home';
+export const tagName = 'open-home-page';
 
 const sheet = new StyleSheet();
 sheet.replaceSync(`
@@ -13,7 +13,7 @@ sheet.replaceSync(`
   * { box-sizing:border-box; }
   h1,h2,h3,p { margin:0; }
   .home { overflow:clip; background:radial-gradient(circle at 50% 0%, color-mix(in srgb,var(--violet-4) 16%,transparent), transparent 34rem),var(--bg-base); }
-  .swiss-grid { background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px); background-size:72px 72px; }
+  .film-grid { background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px); background-size:72px 72px; }
   .film { position:relative; min-height:calc(100svh - var(--nav-height)); isolation:isolate; border-block-end:1px solid color-mix(in srgb,var(--violet-6) 35%,var(--border)); }
   .hero { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr); align-items:center; gap:clamp(2rem,7vw,9rem); width:min(1440px,100%); min-height:calc(100svh - var(--nav-height)); margin:auto; padding:clamp(5rem,10vh,9rem) clamp(1.5rem,6vw,7rem) 4rem; }
   .eyebrow,.scene-index,.tag { color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
@@ -78,7 +78,7 @@ export class DocsHome extends OpenElement {
   override render() {
     return <main class='home cinematic-v2'>
       <open-cinematic-scroll></open-cinematic-scroll>
-      <section class='film swiss-grid'>
+      <section class='film film-grid'>
         <open-cinematic-atmosphere></open-cinematic-atmosphere>
         <div class='hero'>
           <div>

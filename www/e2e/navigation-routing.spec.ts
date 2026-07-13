@@ -53,7 +53,7 @@ test.describe('Link Navigation', () => {
       // Walk light DOM
       document.querySelectorAll('a[href]').forEach((a) => allLinks.push(a as HTMLAnchorElement));
 
-      // Walk shadow roots (open-layout, docs-home, etc.)
+      // Walk shadow roots (open-layout, home page, etc.)
       document.querySelectorAll('*').forEach((el) => {
         if (el.shadowRoot) {
           el.shadowRoot.querySelectorAll('a[href]').forEach((a) =>

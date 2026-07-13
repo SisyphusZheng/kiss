@@ -5,6 +5,7 @@ import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-input';
+import '@openelement/site-ui/open-brand-mark.tsx';
 
 const POPULAR_LINKS = [
   { href: '/guide/getting-started', label: 'Getting Started' },
@@ -48,7 +49,8 @@ styles.replaceSync(`
   .container {
     display: grid;
     justify-items: center;
-    max-width: 820px;
+    max-width: none;
+    min-height: min(700px, calc(100svh - var(--nav-height)));
     margin: 0 auto;
     padding: var(--size-16) var(--size-6);
     text-align: center;
@@ -64,6 +66,7 @@ styles.replaceSync(`
     margin: 0;
     line-height: 1;
   }
+  .mark { width:clamp(5rem,12vw,9rem); margin-bottom:var(--size-6); filter:drop-shadow(0 0 44px color-mix(in srgb,var(--brand) 42%,transparent)); }
   .subtitle {
     font-size: var(--font-size-4);
     font-weight: var(--font-weight-8);
@@ -116,6 +119,7 @@ export default class Page404 extends OpenElement {
   override render() {
     return (
       <div class='container'>
+        <open-brand-mark class='mark' size='xl'></open-brand-mark>
         <h1 class='title'>404</h1>
         <p class='subtitle'>Page not found</p>
         <p class='description'>

@@ -1329,7 +1329,7 @@ export class OpenLayout extends OpenElement {
         }
       });
     };
-    // Walk light DOM children (slotted page components like docs-home, ui-showcase)
+    // Walk light DOM children (slotted page components like the home page and UI showcase)
     walk(this);
     // Walk shadow DOM content (internal layout elements)
     if (this.shadowRoot) {

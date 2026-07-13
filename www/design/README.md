@@ -32,6 +32,10 @@ or a full-screen canvas as its content layer.
 | Guides/Blog/Changelog         | Reading-first material, shared dark material and restrained motion only. |
 | 404                           | A concise `<open/>` recovery moment, never a dead end.                   |
 
+The private page system is documented in
+[specs/page-architecture.md](specs/page-architecture.md). It owns page hero,
+reading shell and section-frame geometry; it is never exported from `ui`.
+
 ## Motion and rendering
 
 - CSS 3D, Scroll-driven Animations, WAAPI, View Transitions and
