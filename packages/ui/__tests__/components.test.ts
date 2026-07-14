@@ -904,6 +904,14 @@ Deno.test('open-theme-toggle: initialization follows attribute, document, storag
       media: false,
       expected: 'light',
     },
+    { attribute: 'dark', documentTheme: 'light', stored: 'light', media: true, expected: 'dark' },
+    {
+      attribute: undefined,
+      documentTheme: 'light',
+      stored: 'dark',
+      media: false,
+      expected: 'light',
+    },
     { attribute: undefined, documentTheme: 'dark', stored: 'light', media: true, expected: 'dark' },
     {
       attribute: undefined,
@@ -925,6 +933,13 @@ Deno.test('open-theme-toggle: initialization follows attribute, document, storag
       stored: undefined,
       media: true,
       expected: 'light',
+    },
+    {
+      attribute: undefined,
+      documentTheme: undefined,
+      stored: undefined,
+      media: false,
+      expected: 'dark',
     },
   ] as const;
 
@@ -966,6 +981,86 @@ Deno.test('open-theme-toggle: initialization follows attribute, document, storag
     else delete (globalThis as Record<string, unknown>).localStorage;
     if (originalMatchMedia) Object.defineProperty(globalThis, 'matchMedia', originalMatchMedia);
     else delete (globalThis as Record<string, unknown>).matchMedia;
+  }
+});
+
+Deno.test('open-theme-toggle: blocked platform services and irrelevant attributes are harmless', async () => {
+  const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
+  const originalDocumentElement = document.documentElement;
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const originalMatchMedia = Object.getOwnPropertyDescriptor(globalThis, 'matchMedia');
+  Object.defineProperty(document, 'documentElement', {
+    configurable: true,
+    value: { dataset: {}, setAttribute() {} },
+  });
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem() {
+        throw new Error('blocked');
+      },
+      setItem() {
+        throw new Error('blocked');
+      },
+    },
+  });
+  delete (globalThis as Record<string, unknown>).matchMedia;
+  try {
+    const instance = new OpenThemeToggle();
+    instance.attributeChangedCallback('theme', 'dark', 'dark');
+    instance.attributeChangedCallback('unrelated', null, 'light');
+    instance.attributeChangedCallback('theme', 'dark', null);
+    instance.attributeChangedCallback('theme', null, 'system');
+    (instance as unknown as { _initTheme(): void })._initTheme();
+    assertEquals(signalValue<string>((instance.render() as VNode).props['data-theme']), 'dark');
+
+    const originalShadowRoot = Object.getOwnPropertyDescriptor(globalThis, 'ShadowRoot');
+    let hostTheme = '';
+    class TestShadowRoot {
+      host = { setAttribute: (_name: string, value: string) => (hostTheme = value) };
+    }
+    Object.defineProperty(globalThis, 'ShadowRoot', { configurable: true, value: TestShadowRoot });
+    Object.defineProperty(instance, 'getRootNode', {
+      configurable: true,
+      value: () => new TestShadowRoot(),
+    });
+    instance.attributeChangedCallback('theme', 'dark', 'light');
+    assertEquals(hostTheme, 'light');
+    if (originalShadowRoot) Object.defineProperty(globalThis, 'ShadowRoot', originalShadowRoot);
+    else delete (globalThis as Record<string, unknown>).ShadowRoot;
+
+    const originalCustomEvent = Object.getOwnPropertyDescriptor(globalThis, 'CustomEvent');
+    const originalDispatch = globalThis.dispatchEvent;
+    try {
+      delete (globalThis as Record<string, unknown>).CustomEvent;
+      (instance as unknown as { _dispatchThemeChange(theme: 'dark' | 'light'): void })
+        ._dispatchThemeChange('dark');
+      Object.defineProperty(globalThis, 'CustomEvent', {
+        configurable: true,
+        value: class extends Event {},
+      });
+      globalThis.dispatchEvent = undefined as unknown as typeof globalThis.dispatchEvent;
+      (instance as unknown as { _dispatchThemeChange(theme: 'dark' | 'light'): void })
+        ._dispatchThemeChange('dark');
+      globalThis.dispatchEvent = (() => {
+        throw new Error('blocked');
+      }) as typeof globalThis.dispatchEvent;
+      (instance as unknown as { _dispatchThemeChange(theme: 'dark' | 'light'): void })
+        ._dispatchThemeChange('dark');
+    } finally {
+      if (originalCustomEvent) {
+        Object.defineProperty(globalThis, 'CustomEvent', originalCustomEvent);
+      } else delete (globalThis as Record<string, unknown>).CustomEvent;
+      globalThis.dispatchEvent = originalDispatch;
+    }
+  } finally {
+    Object.defineProperty(document, 'documentElement', {
+      configurable: true,
+      value: originalDocumentElement,
+    });
+    if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+    else delete (globalThis as Record<string, unknown>).localStorage;
+    if (originalMatchMedia) Object.defineProperty(globalThis, 'matchMedia', originalMatchMedia);
   }
 });
 
