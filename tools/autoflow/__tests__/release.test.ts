@@ -91,6 +91,7 @@ Deno.test('two-phase release: prepare never publishes, tags, or pushes main', ()
   const names = steps.map((step) => step.name);
   const commands = steps.map((step) => step.command?.join(' ') ?? '');
   assert(names.includes('bump patch version'));
+  assert(names.includes('regenerate versioned artifacts'));
   assert(names.includes('run release gates after bump'));
   assertFalse(names.includes('publish npm packages'));
   assertFalse(names.includes('tag release'));
