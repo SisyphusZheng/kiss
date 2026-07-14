@@ -518,8 +518,8 @@ export function buildVersionAnchorReplacements(
     ['README.md', '`$PV` (`$PVT`', '`$VER` (`$TAG`'],
     [
       'README.zh.md',
-      '当前包线：`$PV`（`$PVT` 发布）',
-      '当前包线：`$VER`（`$TAG` 发布）',
+      '已发布包线为 `$PV`（`$PVT`）',
+      '已发布包线为 `$VER`（`$TAG`）',
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
