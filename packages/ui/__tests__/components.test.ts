@@ -1096,6 +1096,25 @@ Deno.test('open-dialog: show/close/toggle manage open attribute', async () => {
   assertEquals(instance.hasAttribute('open'), false);
 });
 
+Deno.test('open-dialog: custom states follow open transitions and ignore unrelated changes', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  const states = new Set<string>();
+  (instance as unknown as { _internals: { states: Set<string> } })._internals = { states };
+
+  instance.attributeChangedCallback('open', null, null);
+  instance.attributeChangedCallback('label', null, 'Ignored');
+  instance.setAttribute('open', '');
+  instance.attributeChangedCallback('open', null, '');
+  assertEquals(states.has('open'), true);
+  assertEquals(states.has('closed'), false);
+
+  instance.removeAttribute('open');
+  instance.attributeChangedCallback('open', '', null);
+  assertEquals(states.has('open'), false);
+  assertEquals(states.has('closed'), true);
+});
+
 Deno.test('open-dialog: trigger click toggles open state', async () => {
   const { OpenDialog } = await import('../src/open-dialog.tsx');
   const instance = new OpenDialog();
