@@ -17,4 +17,7 @@ export default defineNitroConfig({
     dir: outputDir,
   },
   compatibilityDate: '2026-06-12',
+  cloudflare: {
+    nodeCompat: true,
+  },
 });

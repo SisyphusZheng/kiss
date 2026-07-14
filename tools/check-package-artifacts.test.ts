@@ -104,3 +104,27 @@ Deno.test('package artifacts: rejects missing module type and CJS entry', async 
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test('package artifacts: rejects adapter tests and fixtures', async () => {
+  await withPackage(
+    '@openelement/adapter-vite',
+    {
+      'README.md': 'adapter',
+      'LICENSE': 'MIT',
+      'index.js': 'export {};',
+      'src/__tests__/compile.test.ts': 'Deno.test("internal", () => {});',
+      'fixtures/project.ts': 'export {};',
+    },
+    (root) => {
+      const messages = scanExtractedPackage('@openelement/adapter-vite', root).violations.map((v) =>
+        v.message
+      );
+      assertEquals(
+        messages.filter((message) =>
+          message === 'internal test and fixture files must not be published'
+        ).length,
+        2,
+      );
+    },
+  );
+});

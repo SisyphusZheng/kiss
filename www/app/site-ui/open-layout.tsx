@@ -917,7 +917,13 @@ export class OpenLayout extends OpenElement {
       <div className='app-layout' part='container' home={home || undefined}>
         <header className='app-header' part='header'>
           <nav className='header-inner' aria-label='Primary navigation'>
-            <a className='logo' href={this._homeHref()} data-nav='/' aria-label='OpenElement home'>
+            <a
+              className='logo'
+              href={this._homeHref()}
+              data-nav='/'
+              data-open-brand
+              aria-label='OpenElement home'
+            >
               <span className='logo-glyph' aria-hidden='true'>
                 &lt;open<span className='logo-slash'>/</span>&gt;
               </span>

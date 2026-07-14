@@ -25,7 +25,9 @@
     "@preact/signals": "npm:@preact/signals@^2.9.0",
     "flexsearch": "npm:flexsearch@^0.7",
     "@shoelace-style/shoelace": "npm:@shoelace-style/shoelace@^2.19.0",
-    "@material/web/checkbox/checkbox.js": "npm:@material/web@^2.0.0/checkbox/checkbox.js"
+    "@material/web/checkbox/checkbox.js": "npm:@material/web@^2.0.0/checkbox/checkbox.js",
+    "nitro": "npm:nitro@3.0.0",
+    "@rollup/plugin-terser": "npm:@rollup/plugin-terser@1.0.0"
   },
   "vendor": true,
   "nodeModulesDir": "manual",
@@ -81,8 +83,8 @@
     "consumer:core-smoke": "deno run -A tools/consumer-smoke.ts --local",
     "typecheck": "deno task generate:ui-manifest && deno run --allow-read --allow-run tools/run-package-graph-task.ts typecheck",
     "lint": "deno lint",
-    "fmt": "deno fmt --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,.deno_cache/",
-    "fmt:check": "deno fmt --check --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,.deno_cache/",
+    "fmt": "deno fmt --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,packages/adapter-vite/__fixtures__/nitro-proof/.nitro/,.deno_cache/",
+    "fmt:check": "deno fmt --check --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,packages/adapter-vite/__fixtures__/nitro-proof/.nitro/,.deno_cache/",
     "clean": "rm -rf packages/*/dist www/dist packages/*/*.tgz",
     "hooks:install": "git config core.hooksPath .githooks",
     "hooks:uninstall": "git config core.hooksPath",
