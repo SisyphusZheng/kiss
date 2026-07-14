@@ -2,8 +2,6 @@ import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
-  PREVIOUS_PACKAGE_VERSION,
-  PREVIOUS_PACKAGE_VERSION_TAG,
 } from '../project-constants.ts';
 
 export { isCI as isCIEnv };
@@ -490,8 +488,8 @@ export async function updateProjectConstants(version: string): Promise<void> {
   const m = text.match(/PACKAGE_VERSION = '([^']+)'/u);
   const previous = m ? m[1] : version;
   let updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
-  // Keep PREVIOUS_PACKAGE_VERSION in sync so buildVersionAnchorReplacements()
-  // knows which line to replace on the next bump (single source of truth).
+  // Preserve the previous line for historical diagnostics. Anchor replacement
+  // uses the module-loaded PACKAGE_VERSION so it always matches the source.
   updated = updated.replace(
     /PREVIOUS_PACKAGE_VERSION = '[^']+'/u,
     `PREVIOUS_PACKAGE_VERSION = '${previous}'`,
