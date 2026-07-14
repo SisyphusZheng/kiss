@@ -106,7 +106,8 @@ function scanRuntimeFile(
   }
 
   const text = Deno.readTextFileSync(path);
-  const hostScanAllowed = !text.includes('deno-api-free:ignore');
+  const firstCodeLine = text.split('\n').find((l) => l.trim() !== '') ?? '';
+  const hostScanAllowed = !firstCodeLine.trim().startsWith('// deno-api-free:ignore');
   const lines = stripComments(text).split('\n');
 
   for (let index = 0; index < lines.length; index++) {

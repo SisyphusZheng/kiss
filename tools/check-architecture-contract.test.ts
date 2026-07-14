@@ -33,6 +33,16 @@ Deno.test('arch: failMatches ignores clean input', () => {
   assertEquals(issues, []);
 });
 
+Deno.test('arch: failMatches ignores matches in inline and block comments', () => {
+  const files: TextFile[] = [{
+    path: 'README.md',
+    text: 'const value = 1; // rawHtml is retired\n/* data-on-click is unsafe */',
+  }];
+  const issues: Issue[] = [];
+  failMatches('trust-boundary', files, /\brawHtml\b|data-on-/, 'must use trustedHtml', issues);
+  assertEquals(issues, []);
+});
+
 Deno.test('arch: allowed `as unknown as` escape is not flagged as unapproved', () => {
   const files: TextFile[] = [{
     path: 'packages/element/src/internal/core/island.ts',
