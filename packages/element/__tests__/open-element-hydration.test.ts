@@ -10,6 +10,24 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import { hydrateExistingDom } from '../src/open-element-hydration.ts';
 import type { OpenElementLike } from '../src/open-element-render.ts';
+import { hasPopulatedShadowRoot } from '../src/internal/core/dsd-shadow-root.ts';
+
+Deno.test('DSD populated-root predicate accepts element, text, comment, and mixed content', () => {
+  const nodeKinds = [
+    [{ nodeType: 1 }],
+    [{ nodeType: 3 }],
+    [{ nodeType: 8 }],
+    [{ nodeType: 1 }, { nodeType: 3 }, { nodeType: 8 }],
+  ];
+  for (const childNodes of nodeKinds) {
+    const host = { shadowRoot: { childNodes } } as unknown as HTMLElement;
+    assertEquals(hasPopulatedShadowRoot(host), true);
+  }
+  assertEquals(
+    hasPopulatedShadowRoot({ shadowRoot: { childNodes: [] } } as unknown as HTMLElement),
+    false,
+  );
+});
 
 class FakeScope {
   resetCount = 0;

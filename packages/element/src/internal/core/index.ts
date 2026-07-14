@@ -77,7 +77,6 @@ export type {
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
 export { bindHydrateEvents } from './dsd-hydration-events.ts';
-export type { Constructor, DsdHydration } from './dsd-hydration.ts';
 export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.ts';
 export type { RenderDsdOptions } from './render-dsd.ts';
 export type {

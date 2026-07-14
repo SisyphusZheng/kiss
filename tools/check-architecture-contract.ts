@@ -335,6 +335,10 @@ async function main(): Promise<void> {
   const coreSource = production.filter((f) =>
     f.path.startsWith('packages/element/src/internal/core/')
   );
+  const adapterProtocol = production.filter((f) =>
+    f.path.startsWith('packages/adapter-vite/src/internal/protocol/') &&
+    !f.path.endsWith('/ssg.ts')
+  );
 
   failMatches(
     'render-contract',
@@ -364,6 +368,23 @@ async function main(): Promise<void> {
     'production as any is forbidden',
     issues,
   );
+  failMatches(
+    'protocol-seam',
+    adapterProtocol,
+    /export\s+(?:interface\s+|type\s+\w+\s*=)/,
+    'shared adapter protocol files must remain type-only re-export seams',
+    issues,
+  );
+  for (const file of adapterProtocol) {
+    if (!file.text.includes("export type * from '@openelement/element';")) {
+      addIssue(
+        issues,
+        'protocol-seam',
+        file.path,
+        'shared protocol seam must resolve through the @openelement/element root',
+      );
+    }
+  }
   assertAllowedTypeEscapes(production, issues);
   failMatches(
     'ts-suppression',
