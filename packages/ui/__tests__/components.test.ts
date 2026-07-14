@@ -852,6 +852,45 @@ Deno.test('open-theme-toggle: click toggles theme', async () => {
   assertEquals(signalValue<string>(after.props['data-theme']), 'dark');
 });
 
+Deno.test('open-theme-toggle: attribute and click share document and storage propagation', async () => {
+  const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
+  const originalDocumentElement = document.documentElement;
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const rootAttributes = new Map<string, string>();
+  const stored = new Map<string, string>();
+  Object.defineProperty(document, 'documentElement', {
+    configurable: true,
+    value: {
+      dataset: {},
+      style: { colorScheme: '' },
+      setAttribute(name: string, value: string) {
+        rootAttributes.set(name, value);
+      },
+    },
+  });
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: { setItem: (key: string, value: string) => stored.set(key, value) },
+  });
+  try {
+    const instance = new OpenThemeToggle();
+    instance.attributeChangedCallback('theme', null, 'light');
+    assertEquals(rootAttributes.get('data-theme'), 'light');
+    assertEquals(stored.get('open-theme'), 'light');
+
+    clickVNode(instance.render() as VNode);
+    assertEquals(rootAttributes.get('data-theme'), 'dark');
+    assertEquals(stored.get('open-theme'), 'dark');
+  } finally {
+    Object.defineProperty(document, 'documentElement', {
+      configurable: true,
+      value: originalDocumentElement,
+    });
+    if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+    else delete (globalThis as Record<string, unknown>).localStorage;
+  }
+});
+
 Deno.test('open-dialog: has correct tagName and dialog structure', async () => {
   const module = asComponentModule(await import('../src/open-dialog.tsx'));
   assertEquals(module.tagName, 'open-dialog');
@@ -909,6 +948,34 @@ Deno.test('open-dialog: close dispatches open-dialog-close event', async () => {
   assertExists(closeBtn);
   clickVNode(closeBtn, undefined, instance);
   assertEquals(fired, true);
+});
+
+Deno.test('open-dialog: restores each sibling inert state after close and DOM removal', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  for (const disconnectDirectly of [false, true]) {
+    const instance = new OpenDialog();
+    const activeSibling = document.createElement('main');
+    const inertSibling = document.createElement('aside');
+    inertSibling.setAttribute('inert', '');
+    const parent = { children: [activeSibling, instance, inertSibling] };
+    Object.defineProperty(instance, 'parentNode', { configurable: true, value: parent });
+
+    instance.setAttribute('open', '');
+    instance.attributeChangedCallback('open', null, '');
+    assertEquals(activeSibling.hasAttribute('inert'), true);
+    assertEquals(inertSibling.hasAttribute('inert'), true);
+
+    if (disconnectDirectly) {
+      Object.defineProperty(instance, 'parentNode', { configurable: true, value: null });
+      instance.disconnectedCallback();
+    } else {
+      instance.removeAttribute('open');
+      instance.attributeChangedCallback('open', '', null);
+    }
+
+    assertEquals(activeSibling.hasAttribute('inert'), false);
+    assertEquals(inertSibling.hasAttribute('inert'), true);
+  }
 });
 
 Deno.test('open-callout: has correct tagName and type classes', async () => {

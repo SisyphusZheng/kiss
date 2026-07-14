@@ -25,7 +25,7 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeAttr, escapeHtml } from '@openelement/element';
+import { escapeHtml } from '@openelement/element';
 import { overlayRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-dialog';
@@ -119,7 +119,7 @@ export class OpenDialog extends OpenElement {
   static override delegatesFocus = true;
   static override observedAttributes = ['open', 'label', 'mode'];
 
-  private static _originalInertStates = new WeakMap<Element, boolean>();
+  private _inertedSiblings = new Map<Element, boolean>();
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     const label = this._esc(this.getAttribute('label') || '');
@@ -200,39 +200,41 @@ export class OpenDialog extends OpenElement {
   }
 
   private _syncInert(): void {
+    const open = this.hasAttribute('open') && (this.getAttribute('mode') || 'modal') === 'modal';
+    if (!open) {
+      this._restoreInert();
+      return;
+    }
+
     const parent = this.parentNode;
     if (!parent) return;
-    const parentEl = parent instanceof ShadowRoot
+    const parentEl = typeof ShadowRoot !== 'undefined' && parent instanceof ShadowRoot
       ? (parent.host.parentNode as Element)
       : (parent as Element);
     if (!parentEl) return;
 
     const children = [...parentEl.children];
-    const open = this.hasAttribute('open') && (this.getAttribute('mode') || 'modal') === 'modal';
-    if (open) {
-      for (const child of children) {
-        if (child !== this) {
-          if (!OpenDialog._originalInertStates.has(child)) {
-            OpenDialog._originalInertStates.set(child, child.hasAttribute('inert'));
-          }
-          child.setAttribute('inert', '');
+    for (const child of children) {
+      if (child !== this) {
+        if (!this._inertedSiblings.has(child)) {
+          this._inertedSiblings.set(child, child.hasAttribute('inert'));
         }
-      }
-    } else {
-      for (const child of children) {
-        if (child !== this) {
-          const wasOriginallyInert = OpenDialog._originalInertStates.get(child);
-          if (wasOriginallyInert) child.setAttribute('inert', '');
-          else child.removeAttribute('inert');
-          OpenDialog._originalInertStates.delete(child);
-        }
+        child.setAttribute('inert', '');
       }
     }
   }
 
+  private _restoreInert(): void {
+    for (const [child, wasOriginallyInert] of this._inertedSiblings) {
+      if (wasOriginallyInert) child.setAttribute('inert', '');
+      else child.removeAttribute('inert');
+    }
+    this._inertedSiblings.clear();
+  }
+
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this.hasAttribute('open')) this._syncInert();
+    this._restoreInert();
   }
 
   private _handleClose(): void {
@@ -253,7 +255,6 @@ export class OpenDialog extends OpenElement {
   }
 
   private _esc = escapeHtml;
-  private _escAttr = escapeAttr;
 }
 
 export default OpenDialog;

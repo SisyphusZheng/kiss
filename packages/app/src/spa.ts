@@ -10,6 +10,7 @@ import {
   type RouterInstance,
   type RouterMode,
 } from './internal/router/client-router.ts';
+import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -66,11 +67,18 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     // OpenElement route: create custom element from tagName, set loader data as properties
     if (!route.tagName) return;
-    const el = document.createElement(route.tagName) as HTMLElement & Record<string, unknown>;
-    if (currentLoaderData && typeof currentLoaderData === 'object') {
-      Object.assign(el, currentLoaderData);
-    }
-    if (currentActionData !== undefined) el.actionData = currentActionData;
+    const el = document.createElement(route.tagName) as PageHostElement;
+    const request = typeof location === 'undefined'
+      ? undefined
+      : new Request(new URL(router.currentPath || '/', location.href ?? 'http://localhost/'));
+    applyPageHostData(el, {
+      data: currentLoaderData,
+      actionData: currentActionData,
+      params: router.params,
+      request,
+      route: { path: route.path },
+      meta: {},
+    });
     rootEl.appendChild(el);
   }
 

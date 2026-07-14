@@ -66,7 +66,7 @@ function matchPattern(
     if (clean.startsWith(':')) {
       const name = clean.slice(1);
       if (pi < pathParts.length) {
-        setParam(params, name, pathParts[pi]);
+        setParam(params, name, decodePathComponent(pathParts[pi]));
         pi++;
       } else if (!isOptional) {
         return null; // required param missing
@@ -87,7 +87,20 @@ function matchPattern(
 }
 
 function decodeQueryComponent(value: string): string {
-  return decodeURIComponent(value.replace(/\+/g, ' '));
+  const normalized = value.replace(/\+/g, ' ');
+  try {
+    return decodeURIComponent(normalized);
+  } catch {
+    return normalized;
+  }
+}
+
+function decodePathComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function isSafeParamName(name: string): boolean {
@@ -100,7 +113,7 @@ function setParam(
   value: string,
 ): void {
   if (!isSafeParamName(name)) return;
-  target.set(name, decodeURIComponent(value));
+  target.set(name, value);
 }
 
 function parseQuery(search: string): ParamMap {

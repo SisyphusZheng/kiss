@@ -23,7 +23,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeAttr } from '@openelement/element';
 import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-button';
@@ -279,8 +278,6 @@ export class OpenButton extends OpenElement {
       (form as HTMLFormElement).reset();
     }
   }
-
-  private _escAttr = escapeAttr;
 }
 
 export default OpenButton;
