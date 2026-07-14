@@ -78,7 +78,7 @@
     "test:e2e:browsers:install": "deno run -A npm:playwright@1.59.1 install chromium firefox webkit",
     "nitro:proof:node": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts node",
     "nitro:proof:workers": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts workers",
-    "test:coverage:check": "deno run --allow-read --allow-run --allow-write --allow-env --allow-net --allow-ffi --allow-sys tools/check-coverage.ts --threshold 68 --branch-threshold 80 --function-threshold 71",
+    "test:coverage:check": "deno run --allow-read --allow-run --allow-write --allow-env --allow-net --allow-ffi --allow-sys tools/check-coverage.ts --threshold 69 --branch-threshold 81 --function-threshold 72",
     "test:critical-paths": "deno run --allow-read tools/check-critical-path-tests.ts",
     "consumer:core-smoke": "deno run -A tools/consumer-smoke.ts --local",
     "typecheck": "deno task generate:ui-manifest && deno run --allow-read --allow-run tools/run-package-graph-task.ts typecheck",

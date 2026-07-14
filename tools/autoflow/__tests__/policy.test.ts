@@ -61,6 +61,8 @@ Deno.test('policy: push tier stays fast for package source changes', () => {
 Deno.test('policy: ci tier includes architecture check for package source changes', () => {
   const gates = selectGates('ci', ['packages/core/src/index.ts']).map((gate) => gate.name);
   assert(gates.includes('arch:check'));
+  assert(gates.includes('test:coverage:check'));
+  assertFalse(gates.includes('test'));
 });
 
 Deno.test('policy: ci tier includes architecture check for tool and hook changes', () => {
