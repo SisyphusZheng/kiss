@@ -60,7 +60,7 @@ function files(root: string): string[] {
 }
 
 export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
-  const root = plan.output.root ?? Deno.cwd();
+  const root = plan.output.root ?? (typeof Deno !== 'undefined' ? Deno.cwd() : process.cwd());
   const outputDir = join(root, plan.output.outDir ?? 'dist');
   try {
     const emitted = files(outputDir);
@@ -103,7 +103,7 @@ export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
 }
 
 export function writeBuildEvidence(plan: BuildPlan, artifacts: BuildArtifacts): void {
-  const root = plan.output.root ?? Deno.cwd();
+  const root = plan.output.root ?? (typeof Deno !== 'undefined' ? Deno.cwd() : process.cwd());
   const evidence = {
     success: artifacts.success,
     pages: artifacts.pages.map(({ path, errors }) => ({ path, errors })),

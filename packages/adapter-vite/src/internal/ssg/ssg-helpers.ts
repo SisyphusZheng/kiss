@@ -62,9 +62,15 @@ export function resolveDynamicRoutePath(
       );
     }
 
-    // Encode spaces and other URL-unsafe chars, but preserve @ for scoped packages.
+    // Encode spaces and URL-unsafe chars, but preserve @ for scoped packages.
     // Full encodeURIComponent would encode @ -> %40, breaking file-to-URL matching.
-    const safeValue = value.replace(/ /g, '%20');
+    // `%` is encoded first so an already-encoded sequence is not double-encoded.
+    const safeValue = value
+      .replace(/%/g, '%25')
+      .replace(/#/g, '%23')
+      .replace(/\?/g, '%3F')
+      .replace(/&/g, '%26')
+      .replace(/ /g, '%20');
     resolvedPath = resolvedPath.replace(`:${name}`, safeValue);
   }
   return resolvedPath;

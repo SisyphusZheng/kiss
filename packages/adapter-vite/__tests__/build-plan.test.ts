@@ -1,7 +1,11 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'node:path';
 import { OpenElementBuildContext } from '../src/build-context.ts';
-import { collectBuildArtifacts, createProductionBuildPlan } from '../src/build-plan.ts';
+import {
+  collectBuildArtifacts,
+  createProductionBuildPlan,
+  writeBuildEvidence,
+} from '../src/build-plan.ts';
 
 Deno.test('production BuildPlan reuses Phase 1 discoveries and collects emitted artifacts', async () => {
   const root = await Deno.makeTempDir({ prefix: 'oe-build-plan-' });
@@ -44,4 +48,71 @@ Deno.test('production BuildPlan returns typed failure evidence for a missing out
   assertEquals(result.success, false);
   assertEquals(result.errors.length, 1);
   assertStringIncludes(result.errors[0], 'no such file or directory');
+});
+
+Deno.test('writeBuildEvidence writes the build artifacts manifest', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'oe-build-plan-evidence-' });
+  try {
+    const ctx = new OpenElementBuildContext({ mode: 'ssg' });
+    ctx.phase3.root = root;
+    ctx.phase3.outDir = 'dist';
+    ctx.phase1.cachedRoutes = [{
+      path: '/',
+      filePath: 'app/routes/index.tsx',
+      type: 'page',
+      varName: 'Page0',
+      tagName: 'home-page',
+    }];
+    const plan = createProductionBuildPlan(ctx);
+    await Deno.mkdir(join(root, 'dist'), { recursive: true });
+    await Deno.writeTextFile(join(root, 'dist', 'index.html'), '<html>ok</html>');
+
+    const result = collectBuildArtifacts(plan);
+    assertEquals(result.success, true);
+    await Deno.mkdir(join(root, '.openElement'), { recursive: true });
+    writeBuildEvidence(plan, result);
+    const evidence = JSON.parse(
+      await Deno.readTextFile(join(root, '.openElement', 'build-artifacts.json')),
+    );
+    assertEquals(evidence.success, true);
+    assertEquals(evidence.pages.length, 1);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('build-plan uses process.cwd when Deno is unavailable', async () => {
+  const deno = Deno;
+  const originalCwd = deno.cwd();
+  const originalDeno = globalThis.Deno;
+  const root = await deno.makeTempDir({ prefix: 'oe-build-plan-node-' });
+  try {
+    deno.chdir(root);
+    Object.defineProperty(globalThis, 'Deno', {
+      configurable: true,
+      value: undefined,
+      writable: true,
+    });
+
+    const ctx = new OpenElementBuildContext({ mode: 'ssg' });
+    ctx.phase3.outDir = 'dist';
+    const plan = createProductionBuildPlan(ctx);
+    await deno.mkdir(join(root, 'dist'), { recursive: true });
+    await deno.writeTextFile(join(root, 'dist', 'index.html'), '<html>ok</html>');
+
+    const artifacts = collectBuildArtifacts(plan);
+    assertEquals(artifacts.success, true);
+    await deno.mkdir(join(root, '.openElement'), { recursive: true });
+    writeBuildEvidence(plan, artifacts);
+    const evidence = await deno.readTextFile(join(root, '.openElement', 'build-artifacts.json'));
+    assertStringIncludes(evidence, '"success": true');
+  } finally {
+    Object.defineProperty(globalThis, 'Deno', {
+      configurable: true,
+      value: originalDeno,
+      writable: true,
+    });
+    deno.chdir(originalCwd);
+    await deno.remove(root, { recursive: true });
+  }
 });

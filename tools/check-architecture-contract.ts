@@ -7,6 +7,7 @@
  */
 
 import { extname } from 'node:path';
+import { stripCommentsLine } from './lib/text.ts';
 
 export interface Issue {
   check: string;
@@ -184,8 +185,11 @@ export function failMatches(
   issues: Issue[],
 ): void {
   for (const file of files) {
-    eachLine(file, (line, lineNo) => {
-      if (re.test(line)) addIssue(issues, check, file.path, message, lineNo);
+    let inBlock = false;
+    file.text.split(/\r?\n/).forEach((rawLine, index) => {
+      const { line, inBlock: next } = stripCommentsLine(rawLine, inBlock);
+      inBlock = next;
+      if (re.test(line)) addIssue(issues, check, file.path, message, index + 1);
     });
   }
 }

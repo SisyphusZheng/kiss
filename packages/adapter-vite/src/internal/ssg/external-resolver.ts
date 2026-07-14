@@ -345,9 +345,10 @@ export async function resolveExternalManifest(
     mkdirSync(join(projectRoot, '.openElement'), { recursive: true });
     writeFileSync(probePath, probeCode, 'utf-8');
 
-    const { execSync } = await import('node:child_process');
-    const deno = execSync(
-      `deno info --json "${probePath}"`,
+    const { execFileSync } = await import('node:child_process');
+    const deno = execFileSync(
+      'deno',
+      ['info', '--json', probePath],
       { cwd: projectRoot, maxBuffer: 10 * 1024 * 1024, timeout: 15000 },
     );
 

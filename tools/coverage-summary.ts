@@ -18,10 +18,26 @@ interface FileCoverage {
 
 /** Only versioned, publishable runtime sources belong in the release coverage gate. */
 export function isProductionPackageSource(path: string): boolean {
-  return /\/packages\/[^/]+\/src\//.test(path) && !path.includes('/__tests__/');
+  return (
+    (isPackageSource(path) || isToolsLibSource(path)) &&
+    !path.includes('/__tests__/')
+  );
 }
 
-export function parseLcov(lcov: string): CoverageSummary {
+/** Publishable package runtime source under packages/<name>/src. */
+export function isPackageSource(path: string): boolean {
+  return /\/packages\/[^/]+\/src\//.test(path);
+}
+
+/** Shared release tooling library under tools/lib. */
+export function isToolsLibSource(path: string): boolean {
+  return /\/tools\/lib\//.test(path);
+}
+
+export function parseLcov(
+  lcov: string,
+  include: (path: string) => boolean = isProductionPackageSource,
+): CoverageSummary {
   const files = new Map<string, FileCoverage>();
   let currentPath = '';
   let current: FileCoverage | undefined;
@@ -55,7 +71,7 @@ export function parseLcov(lcov: string): CoverageSummary {
   }
 
   const included = [...files.entries()]
-    .filter(([path]) => isProductionPackageSource(path))
+    .filter(([path]) => include(path) && !path.includes('/__tests__/'))
     .map(([, coverage]) => coverage);
   return {
     lines: metric(included.flatMap((file) => [...file.lines.values()])),

@@ -34,7 +34,7 @@ interface ParsedVersion {
   prereleaseNumber: number;
 }
 
-function parseVersion(version: string): ParsedVersion {
+export function parseVersion(version: string): ParsedVersion {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
   if (!match) {
     throw new Error(`Invalid semver version: ${version}`);
@@ -64,7 +64,7 @@ const PRERELEASE_RANK: Record<string, number> = {
   rc: 3,
 };
 
-function validateVersionStep(fromVersion: string, toVersion: string): void {
+export function validateVersionStep(fromVersion: string, toVersion: string): void {
   const from = parseVersion(fromVersion);
   const to = parseVersion(toVersion);
 
@@ -321,4 +321,6 @@ function main(): void {
   console.log(dryRun ? '\n🔍 Dry-run complete. No changes made.' : '\n🚀 Version bump complete.');
 }
 
-main();
+if (import.meta.main) {
+  main();
+}
