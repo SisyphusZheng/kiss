@@ -151,8 +151,16 @@ export function createReleasePlan(
           command: ['deno', 'task', 'publish:npm'],
         },
         {
+          name: 'verify npm versions and alpha dist-tags',
+          command: ['deno', 'run', '-A', 'tools/verify-npm-release.ts', targetVersion],
+        },
+        {
           name: 'post-publish npm consumer smoke',
           command: ['deno', 'run', '-A', 'tools/consumer-smoke.ts', '--version', targetVersion],
+        },
+        {
+          name: 'post-publish third-party Web Component smoke',
+          command: ['deno', 'task', 'third-party-wc:smoke'],
         },
       ]
       : []),
@@ -397,7 +405,9 @@ async function verifyMainCiSuccessForHead(): Promise<void> {
 const PUBLISH_STEP_NAMES = new Set([
   'package artifact gate',
   'publish npm packages',
+  'verify npm versions and alpha dist-tags',
   'post-publish npm consumer smoke',
+  'post-publish third-party Web Component smoke',
   'stage release evidence',
   'commit release evidence',
   'tag release',

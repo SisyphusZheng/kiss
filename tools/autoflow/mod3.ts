@@ -262,25 +262,30 @@ async function executeReleasePlan(
   await assertCleanWorktree();
 
   evidence.status = 'running';
-  await writeReleaseEvidence(evidence);
-  await writeReleaseNote(evidence);
+  const persistsEvidence = kind !== 'release-prepare';
+  if (persistsEvidence) {
+    await writeReleaseEvidence(evidence);
+    await writeReleaseNote(evidence);
+  }
 
   try {
     for (const step of plan) {
       await runReleaseStep(evidence, step);
-      await persistReleaseEvidenceAfterStep(evidence, step.name);
+      if (persistsEvidence) await persistReleaseEvidenceAfterStep(evidence, step.name);
     }
     evidence.status = 'completed';
     evidence.completedAt = new Date().toISOString();
     // The original evidence commit is intentionally created before tagging.
     // Persist completion in a follow-up commit after tag/npm/GitHub success so
     // the repository's durable evidence cannot remain stuck at "running".
-    await commitFinalReleaseEvidence(evidence, expectedBranch);
+    if (persistsEvidence) await commitFinalReleaseEvidence(evidence, expectedBranch);
   } catch (error) {
     evidence.status = 'failed';
     evidence.completedAt = new Date().toISOString();
-    await writeReleaseEvidence(evidence);
-    await writeReleaseNote(evidence);
+    if (persistsEvidence) {
+      await writeReleaseEvidence(evidence);
+      await writeReleaseNote(evidence);
+    }
     throw error;
   }
 }

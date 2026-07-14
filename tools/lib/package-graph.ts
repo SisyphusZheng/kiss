@@ -295,7 +295,19 @@ export function sortPackages(packages: PackageInfo[]): PackageInfo[] {
 }
 
 export function releasePublishOrder(packages: PackageInfo[]): PackageInfo[] {
-  const ordered = sortPackages(packages);
+  const releasePriority = [
+    '@openelement/element',
+    '@openelement/app',
+    '@openelement/adapter-vite',
+    '@openelement/ui',
+    '@openelement/create',
+  ];
+  const topological = sortPackages(packages);
+  const rank = new Map(releasePriority.map((name, index) => [name, index]));
+  const ordered = [...topological].sort((a, b) =>
+    (rank.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+    (rank.get(b.name) ?? Number.MAX_SAFE_INTEGER)
+  );
   const position = new Map(ordered.map((pkg, index) => [pkg.name, index]));
 
   for (const pkg of ordered) {

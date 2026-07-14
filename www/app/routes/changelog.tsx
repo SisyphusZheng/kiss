@@ -66,7 +66,7 @@ export class ChangelogPage extends OpenElement {
           preserve older names where they describe older releases; current docs
           use the openElement contract.
         </p>
-        <section id="candidate"><h2>Active alpha</h2><p><code>0.41.0-alpha.10</code> publishes the coherent five-package product and repairs npm runtime dependency metadata. Further alpha releases remain possible while external adopter #390 and real use can still expose breaking interface work.</p></section>
+        <section id="candidate"><h2>Active alpha</h2><p><code>0.41.0-alpha.11</code> is the audit-remediation release candidate. Its source is not described as published until main CI, npm, post-publish consumers, tag, and GitHub prerelease agree. External adopter #390 remains a stable-release condition, not an alpha.11 blocker.</p></section>
         <section id="withdrawn"><h2>Withdrawn partial artifacts</h2><p>The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.</p></section>
         <div id="historical" class="changelog-content" innerHTML={html} trustedHtml={true} />
         <div slot="footer" class="nav-row">
