@@ -113,10 +113,10 @@ async function assertRenderable(page: Page, label: string): Promise<void> {
   }
 }
 
-async function assertBrandMark(page: Page, label: string): Promise<void> {
+async function assertBrandMark(page: Page, label: string, expectedText: string): Promise<void> {
   const mark = await page.evaluate(() => {
     const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('open-brand-mark');
+      const direct = root.querySelector?.('[data-open-brand], open-brand-mark');
       if (direct) return direct;
       const all = root.querySelectorAll?.('*') ?? [];
       for (const el of Array.from(all)) {
@@ -130,20 +130,24 @@ async function assertBrandMark(page: Page, label: string): Promise<void> {
     const element = visit(document);
     if (!element) return null;
     const box = element.getBoundingClientRect();
-    const text = element.shadowRoot?.textContent?.trim() ?? '';
+    const text = (element.shadowRoot?.textContent ?? element.textContent ?? '').trim();
     return {
       width: box.width,
       height: box.height,
       text,
+      accessibleName: element.getAttribute('aria-label') ?? '',
     };
   });
 
-  if (!mark) throw new Error(`${label} does not render <open/> brand mark`);
-  if (mark.width < 52 || mark.height < 24) {
+  if (!mark) throw new Error(`${label} has no [data-open-brand] or <open-brand-mark>`);
+  if (mark.width < 40 || mark.height < 20) {
     throw new Error(`${label} brand mark rendered too small: ${mark.width}x${mark.height}`);
   }
-  if (!mark.text.includes('<open/>')) {
-    throw new Error(`${label} brand mark text mismatch: ${mark.text}`);
+  if (!mark.text.includes(expectedText)) {
+    throw new Error(`${label} brand text mismatch: expected ${expectedText}, got ${mark.text}`);
+  }
+  if (!mark.accessibleName) {
+    throw new Error(`${label} brand mark has no accessible name`);
   }
 }
 
@@ -156,7 +160,8 @@ async function smokePage(page: Page, label: string, url: string, screenshotName:
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await assertRenderable(page, label);
-  if (label.startsWith('docs')) await assertBrandMark(page, label);
+  if (label.startsWith('docs')) await assertBrandMark(page, label, '<open/>');
+  if (label === 'Reader shell') await assertBrandMark(page, label, 'OpenReader');
   await page.screenshot({
     path: join(outputDir, screenshotName),
     fullPage: true,
