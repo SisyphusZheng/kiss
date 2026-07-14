@@ -190,6 +190,30 @@ async function nodeEsmSmoke(version: string, projectRoot: string, local: boolean
   }
 }
 
+async function exactVersionStarterSmoke(version: string): Promise<void> {
+  const tmpDir = await Deno.makeTempDir({ prefix: 'openelement-smoke-starter-' });
+  console.log(`\n[Exact-version starter] ${tmpDir}`);
+  try {
+    const create = await run(
+      'deno',
+      ['run', '-A', `npm:@openelement/create@${version}`, 'starter'],
+      tmpDir,
+    );
+    if (!create.success) throw new Error(`starter generation failed:\n${create.output}`);
+    const config = await Deno.readTextFile(`${tmpDir}/starter/deno.json`);
+    for (const pkg of ['app', 'adapter-vite', 'element']) {
+      if (!config.includes(`npm:@openelement/${pkg}@^${version}`)) {
+        throw new Error(`starter does not pin @openelement/${pkg} to ${version}`);
+      }
+    }
+    const check = await run('deno', ['task', 'check'], `${tmpDir}/starter`);
+    if (!check.success) throw new Error(`starter check failed:\n${check.output}`);
+    console.log('  ok: generated package graph and typecheck use the released version');
+  } finally {
+    await Deno.remove(tmpDir, { recursive: true }).catch(() => undefined);
+  }
+}
+
 async function jsdelivrSmoke(version: string): Promise<void> {
   const url = `https://cdn.jsdelivr.net/npm/@openelement/element@${version}/+esm`;
   console.log(`\n[jsDelivr CDN browser-safe export] ${url}`);
@@ -268,6 +292,7 @@ async function main(): Promise<void> {
 
   await denoNpmSmoke(version, projectRoot, local);
   await nodeEsmSmoke(version, projectRoot, local);
+  if (!local) await exactVersionStarterSmoke(version);
 
   if (runJsDelivr) {
     await jsdelivrSmoke(version);

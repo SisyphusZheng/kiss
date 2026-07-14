@@ -39,14 +39,14 @@ original ADR, release and audit records.
 
 ## alpha.11 release state
 
-| Condition                                                          | State                                       |
-| ------------------------------------------------------------------ | ------------------------------------------- |
-| Five-package implementation and current docs                       | Present in alpha.10 source                  |
-| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                    |
-| Node/Nitro output and artifact verification                        | Node passes; Workers repair tracked by #398 |
-| Chromium, Firefox and WebKit gates                                 | Alpha.11 matrix pending                     |
-| npm/tag/GitHub Release/docs/evidence truth                         | Reconciliation tracked by #396              |
-| External adopter pilot #390                                        | Open; required before stability commitment  |
+| Condition                                                          | State                                      |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| Five-package implementation and current docs                       | Present in alpha.10 source                 |
+| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                   |
+| Node/Nitro output and artifact verification                        | Node and clean Workers proofs pass on dev  |
+| Chromium, Firefox and WebKit gates                                 | Release matrix pending                     |
+| npm/tag/GitHub Release/docs/evidence truth                         | Reconciliation tracked by #396             |
+| External adopter pilot #390                                        | Open; required before stability commitment |
 
 ## Current risks
 
@@ -64,6 +64,7 @@ original ADR, release and audit records.
 | Version           | Focus                                                                        |
 | ----------------- | ---------------------------------------------------------------------------- |
 | `0.41.0-alpha.10` | Five-package convergence plus npm runtime dependency repair                  |
+| `0.41.0-alpha.11` | Audit remediation candidate; publish and post-publish proof pending          |
 | `0.41.0-alpha.x`  | External adoption and interface maturation                                   |
 | `0.41.0`          | Freeze deep Element, App and Build interfaces                                |
 | `0.42.0`          | WC Application Loop: load, render, progressive form, action and revalidation |
