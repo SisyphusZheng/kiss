@@ -143,12 +143,6 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^README/, /^docs\//, /^packages\//, /^tools\//, /^www\//, /^deno\.json$/],
   },
   {
-    name: 'test',
-    command: ['deno', 'task', 'test'],
-    tiers: ['ci', 'release'],
-    triggers: [/^(packages|tools)\//, /^deno\.json$/],
-  },
-  {
     name: 'test:coverage:check',
     command: ['deno', 'task', 'test:coverage:check'],
     tiers: ['ci', 'release'],

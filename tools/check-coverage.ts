@@ -54,7 +54,7 @@ async function main(): Promise<void> {
     branches: getNumberArg('--branch-threshold', 80),
     functions: getNumberArg('--function-threshold', 80),
   };
-  console.log('Running production-package coverage...');
+  console.log('Running tests with enforced coverage scope: packages/*/src (publishable runtime source only).');
   const summary = parseLcov(await runCoverage());
   const failures: string[] = [];
   for (const name of ['lines', 'branches', 'functions'] as const) {
