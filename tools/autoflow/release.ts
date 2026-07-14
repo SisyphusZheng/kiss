@@ -237,6 +237,10 @@ export function createReleasePlan(
       run: () => updateCurrentVersionAnchors(targetVersion),
     },
     {
+      name: 'regenerate versioned artifacts',
+      command: ['deno', 'task', 'generate:ui-manifest'],
+    },
+    {
       name: 'format release bump',
       command: ['deno', 'task', 'fmt'],
     },
@@ -248,6 +252,7 @@ export function createReleasePlan(
         'deno.json',
         'packages/*/deno.json',
         'packages/create/src/version.ts',
+        'packages/ui/src/generated-manifest.json',
         'tools/project-constants.ts',
         'README.md',
         'README.zh.md',
@@ -258,6 +263,7 @@ export function createReleasePlan(
         'www/app/data/version.ts',
         'www/app/routes/index/index.tsx',
         'www/app/routes/guide/getting-started.tsx',
+        'www/app/routes/roadmap.tsx',
       ],
     },
     {
@@ -333,6 +339,7 @@ const PREPARE_STEP_NAMES = new Set([
   'bump patch version',
   'update project constants',
   'update current version anchors',
+  'regenerate versioned artifacts',
   'format release bump',
   'stage release bump',
   'commit release bump',
