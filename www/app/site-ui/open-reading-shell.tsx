@@ -10,7 +10,7 @@ sheet.replaceSync(`
 export default class OpenReadingShell extends OpenElement {
   static override styles = [sheet];
   #value(name: string): string | null {
-    const property = (this as unknown as Record<string, unknown>)[name];
+    const property = Reflect.get(this, name);
     return typeof property === 'string' ? property : this.getAttribute(name);
   }
   #json<T>(name: string): T | null {

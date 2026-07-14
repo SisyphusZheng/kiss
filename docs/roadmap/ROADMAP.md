@@ -1,5 +1,8 @@
 # openElement Roadmap
 
+Execution and release state follow the
+[`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
+
 > Source of truth for forward product planning.\
 > Published package line: `v0.41.0-alpha.10`.\
 > Current implementation state: five-package convergence is published;

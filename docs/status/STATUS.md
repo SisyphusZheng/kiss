@@ -72,6 +72,7 @@ The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.m
 ## Evidence and history
 
 - Current package and release plan: [`docs/current/VERSION_PLAN.md`](../current/VERSION_PLAN.md)
+- Project workflow: [`docs/governance/PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)
 - Five-package surface: [`docs/current/PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
 - Alpha naming decision: [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md)
 - Release records: [`docs/release/`](../release/)

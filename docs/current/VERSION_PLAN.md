@@ -20,6 +20,7 @@ OpenElement has one product with two adoption depths: standalone elements and
 complete applications. The current consumer graph contains `element`, `app`,
 `adapter-vite`, `create` and optional `ui`. The alpha implementation packages
 that supplied their internals have no current compatibility promise.
+See [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) for the supported package contract.
 
 ## Alpha.10 state
 

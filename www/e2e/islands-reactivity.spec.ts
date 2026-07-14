@@ -46,7 +46,7 @@ test.describe('Layout Island Shell', () => {
       return {
         search: !!root?.querySelector('open-search'),
         themeToggle: !!root?.querySelector('open-theme-toggle'),
-        brand: !!root?.querySelector('open-brand-mark'),
+        brand: !!root?.querySelector('.logo-glyph'),
       };
     });
 
