@@ -143,14 +143,39 @@ export function scanExtractedPackage(packageName: string, packageRoot: string): 
   pushPackageJsonViolations(packageName, `${packageRoot}/package.json`, violations);
 
   const runtimeFree = RUNTIME_FREE_PACKAGES.has(packageName);
+  const files = new Set<string>();
   for (
     const entry of walkSync(packageRoot, {
       includeDirs: false,
       skip: [/^node_modules$/],
     })
   ) {
+    const relative = entry.path.slice(packageRoot.length + 1);
+    files.add(relative);
+    if (
+      packageName === '@openelement/adapter-vite' &&
+      relative.split('/').some((segment) =>
+        segment === '__tests__' || segment === '__fixtures__' || segment === 'fixtures'
+      )
+    ) {
+      violations.push({
+        path: `${packageName}/${relative}`,
+        message: 'internal test and fixture files must not be published',
+      });
+    }
     if (!RUNTIME_EXTENSIONS.has(extension(entry.path))) continue;
     violations.push(...scanRuntimeFile(packageRoot, entry.path, packageName, runtimeFree));
+  }
+
+  if (packageName === '@openelement/adapter-vite') {
+    for (const required of ['package.json', 'README.md', 'LICENSE']) {
+      if (!files.has(required)) {
+        violations.push({
+          path: `${packageName}/${required}`,
+          message: 'required package metadata is missing',
+        });
+      }
+    }
   }
 
   return { packageName, violations };
@@ -185,6 +210,12 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
 
   const packageRoot = await extractTarball(tarball);
   try {
+    let unpackedBytes = 0;
+    for (const entry of walkSync(packageRoot, { includeDirs: false })) {
+      unpackedBytes += Deno.statSync(entry.path).size;
+    }
+    const packedBytes = (await Deno.stat(tarball)).size;
+    console.log(`[artifact-size] ${pkg.name}: packed=${packedBytes}B unpacked=${unpackedBytes}B`);
     return scanExtractedPackage(pkg.name, packageRoot);
   } finally {
     await Deno.remove(dirname(packageRoot), {

@@ -36,6 +36,11 @@
       "deno.json",
       "README.md",
       "LICENSE"
+    ],
+    "exclude": [
+      "src/**/__tests__/**",
+      "__tests__/**",
+      "__fixtures__/**"
     ]
   },
   "include": [

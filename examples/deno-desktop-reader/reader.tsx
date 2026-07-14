@@ -1152,7 +1152,7 @@ function createTopNav() {
   const nav = document.createElement('nav');
   nav.className = 'reader-topnav';
   nav.innerHTML = `
-    <a class="reader-brand" href="/" data-nav="/">
+    <a class="reader-brand" href="/" data-nav="/" data-open-brand aria-label="OpenReader home">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       OpenReader
     </a>

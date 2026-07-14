@@ -28,7 +28,7 @@ async function removeIfExists(url: URL): Promise<void> {
   }
 }
 
-async function run(command: string[], env: Record<string, string> = {}): Promise<void> {
+async function run(command: string[], env: Record<string, string> = {}): Promise<string> {
   const child = new Deno.Command(command[0], {
     args: command.slice(1),
     cwd: fixture,
@@ -37,11 +37,14 @@ async function run(command: string[], env: Record<string, string> = {}): Promise
     stderr: 'piped',
   });
   const result = await child.output();
+  const stdout = new TextDecoder().decode(result.stdout);
+  const stderr = new TextDecoder().decode(result.stderr);
   if (result.code !== 0) {
-    console.error(new TextDecoder().decode(result.stdout));
-    console.error(new TextDecoder().decode(result.stderr));
+    console.error(stdout);
+    console.error(stderr);
     Deno.exit(result.code);
   }
+  return `${stdout}\n${stderr}`;
 }
 
 async function readJson<T>(url: URL): Promise<T> {
@@ -333,14 +336,30 @@ async function assertRuntimePublicAsset(
 }
 
 await removeIfExists(output);
-await run(['deno', 'run', '--node-modules-dir=auto', '-A', 'npm:nitro@3.0.0', 'build'], {
+const buildLog = await run([
+  'deno',
+  'run',
+  '--node-modules-dir=auto',
+  '-A',
+  'npm:nitro@3.0.0',
+  'build',
+], {
   OPEN_ELEMENT_NITRO_PRESET: nitroPreset,
 });
+assertNotIncludes(buildLog, 'Node.js compatibility is not enabled', 'Nitro build log');
+const serializationWarning =
+  'Runtime config option `nitro.routeRules./isr.cache` may not be able to be serialized.';
+if (buildLog.includes(serializationWarning)) {
+  console.log(
+    'Nitro emitted the known cache serialization warning; generated route-rule markers will be asserted.',
+  );
+}
 
 type NitroManifest = {
   preset?: string;
   serverEntry?: string;
   publicDir?: string;
+  config?: { cloudflare?: { nodeCompat?: boolean } };
 };
 
 const manifest = await readJson<NitroManifest>(new URL('nitro.json', output));
@@ -375,7 +394,10 @@ assertNitroIsrRouteRule(outputServerCode);
 if (preset === 'node') {
   await smokeNode(serverEntry);
 } else {
-  await assertFile(new URL('server/wrangler.json', output), 'Cloudflare Workers wrangler config');
+  if (manifest.config?.cloudflare?.nodeCompat !== true) {
+    console.error('Cloudflare Workers output did not preserve nodeCompat=true');
+    Deno.exit(1);
+  }
   await smokeWorkers(serverEntry, new URL(`${manifest.publicDir || 'public'}/`, output));
 }
 
@@ -383,15 +405,15 @@ console.log(`nitro proof ${preset}: real Nitro ${expectedPreset} output passed`)
 
 function assertNitroIsrRouteRule(serverCode: string): void {
   for (
-    const marker of [
-      '"/isr"',
-      '"cache"',
-      '"maxAge": 60',
-      '"swr": true',
-    ]
+    const [label, pattern] of [
+      ['route', /["']\/isr["']/],
+      ['cache middleware', /["']cache["']/],
+      ['maxAge', /["']?maxAge["']?\s*:\s*60/],
+      ['swr', /["']?swr["']?\s*:\s*(?:true|!0)/],
+    ] as const
   ) {
-    if (!serverCode.includes(marker)) {
-      console.error(`Nitro ISR route rule missing marker: ${marker}`);
+    if (!pattern.test(serverCode)) {
+      console.error(`Nitro ISR route rule missing ${label}: ${pattern}`);
       Deno.exit(1);
     }
   }
