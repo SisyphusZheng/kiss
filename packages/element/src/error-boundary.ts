@@ -64,7 +64,7 @@ export abstract class ErrorBoundary extends OpenElement {
           ? {
             tag: 'button',
             props: {
-              onclick: () => this.retry(),
+              onClick: () => this.retry(),
             },
             children: [`Retry (${this._retryCount}/${this.maxRetries})`],
           }

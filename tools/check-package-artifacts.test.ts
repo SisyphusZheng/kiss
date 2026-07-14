@@ -83,6 +83,26 @@ Deno.test('package artifacts: allows documented host API escape hatches', async 
   );
 });
 
+Deno.test('package artifacts: rejects a non-leading host API escape directive', async () => {
+  await withPackage(
+    '@openelement/app',
+    {
+      'i18n-plugin.js': `
+        import process from 'node:process';
+        // deno-api-free:ignore build-time plugin
+        export const cwd = process.cwd();
+      `,
+    },
+    (root) => {
+      const messages = scanExtractedPackage('@openelement/app', root).violations.map((v) =>
+        v.message
+      );
+      assert(messages.includes('node:* import'));
+      assert(messages.includes('Node process global'));
+    },
+  );
+});
+
 Deno.test('package artifacts: rejects missing module type and CJS entry', async () => {
   const root = await Deno.makeTempDir({ prefix: 'openelement-artifact-test-' });
   try {

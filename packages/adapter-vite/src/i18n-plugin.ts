@@ -1,7 +1,8 @@
+// deno-api-free:ignore
 /**
  * @openelement/adapter-vite/i18n-plugin - Node-only Vite plugin for i18n
  *
- * deno-api-free:ignore — build-time Vite plugin, allowed to use node:*.
+ * Build-time Vite plugin, allowed to use node:*.
  *
  * This module uses node:process, node:path, node:fs and MUST NOT be imported
  * from the main @openelement/app entry to avoid pulling Node built-ins into
@@ -17,7 +18,6 @@ import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from './internal/protocol/framework.ts';
 import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
-// build-time Vite plugin, deno-api-free:ignore applies
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';

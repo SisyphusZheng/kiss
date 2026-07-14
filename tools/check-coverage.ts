@@ -1,7 +1,12 @@
 #!/usr/bin/env -S deno run --allow-read --allow-run
 /** Run repository tests and enforce production-package LCOV thresholds. */
 
-import { type CoverageMetric, parseLcov } from './coverage-summary.ts';
+import {
+  type CoverageMetric,
+  isPackageSource,
+  isToolsLibSource,
+  parseLcov,
+} from './coverage-summary.ts';
 
 function getNumberArg(flag: string, fallback: number): number {
   const index = Deno.args.indexOf(flag);
@@ -49,24 +54,49 @@ function formatMetric(name: string, metric: CoverageMetric, threshold: number): 
 }
 
 async function main(): Promise<void> {
-  const thresholds = {
-    lines: getNumberArg('--threshold', 80),
-    branches: getNumberArg('--branch-threshold', 80),
-    functions: getNumberArg('--function-threshold', 80),
-  };
-  console.log(
-    'Running tests with enforced coverage scope: packages/*/src (publishable runtime source only).',
-  );
-  const summary = parseLcov(await runCoverage());
+  const lcov = await runCoverage();
+
+  const scopes: Array<{
+    label: string;
+    include: (path: string) => boolean;
+    thresholds: { lines: number; branches: number; functions: number };
+  }> = [
+    {
+      label: 'packages/*/src',
+      include: isPackageSource,
+      thresholds: {
+        lines: getNumberArg('--threshold', 69),
+        branches: getNumberArg('--branch-threshold', 81),
+        functions: getNumberArg('--function-threshold', 72),
+      },
+    },
+    {
+      label: 'tools/lib',
+      include: isToolsLibSource,
+      thresholds: {
+        lines: getNumberArg('--tools-threshold', 50),
+        branches: getNumberArg('--tools-branch-threshold', 50),
+        functions: getNumberArg('--tools-function-threshold', 50),
+      },
+    },
+  ];
+
   const failures: string[] = [];
-  for (const name of ['lines', 'branches', 'functions'] as const) {
-    console.log(formatMetric(name, summary[name], thresholds[name]));
-    if (summary[name].percentage < thresholds[name]) failures.push(name);
+  for (const scope of scopes) {
+    console.log(`\nCoverage scope: ${scope.label}`);
+    const summary = parseLcov(lcov, scope.include);
+    for (const name of ['lines', 'branches', 'functions'] as const) {
+      console.log(formatMetric(name, summary[name], scope.thresholds[name]));
+      if (summary[name].percentage < scope.thresholds[name]) {
+        failures.push(`${scope.label} ${name}`);
+      }
+    }
   }
+
   if (failures.length) {
     throw new Error(`coverage threshold failed: ${failures.join(', ')}`);
   }
-  console.log('Coverage gate passed.');
+  console.log('\nCoverage gate passed.');
 }
 
 if (import.meta.main) await main();

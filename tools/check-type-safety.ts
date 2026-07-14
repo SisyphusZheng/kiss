@@ -6,6 +6,8 @@
  * Forbidden: \x60as any\x60, \x60: any\x60, \x60any[]\x60 in active code.
  */
 
+import { stripCommentsLine } from './lib/text.ts';
+
 export interface Issue {
   file: string;
   line: number;
@@ -75,8 +77,10 @@ export function scanSourcesForAnyIssues(files: SourceFile[]): Issue[] {
   const issues: Issue[] = [];
   for (const file of files) {
     const lines = file.text.split(/\r?\n/);
+    let inBlock = false;
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+      const { line, inBlock: next } = stripCommentsLine(lines[i], inBlock);
+      inBlock = next;
       if (!isCodeLine(line)) continue;
       for (const { re, name } of ANY_PATTERNS) {
         if (re.test(line)) {

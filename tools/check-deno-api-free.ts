@@ -31,7 +31,8 @@ function scan(root: string): string[] {
 
   for (const entry of files) {
     const text = Deno.readTextFileSync(entry.path);
-    if (text.includes('deno-api-free:ignore')) continue;
+    const firstCodeLine = text.split('\n').find((l) => l.trim() !== '') ?? '';
+    if (firstCodeLine.trim().startsWith('// deno-api-free:ignore')) continue;
     const lines = text.split('\n');
     let inBlockComment = false;
     for (let i = 0; i < lines.length; i++) {

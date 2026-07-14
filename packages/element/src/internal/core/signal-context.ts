@@ -56,6 +56,7 @@ function findProvidedSignal<T>(
   ctx: Context<T>,
 ): WritableSignal<T> | undefined {
   let current: Node | null | undefined = host;
+  let lastNode: Node | null = host ?? null;
   while (current) {
     const store = hostSignals.get(current as object);
     if (store) {
@@ -63,9 +64,15 @@ function findProvidedSignal<T>(
       if (candidate) return candidate as WritableSignal<T>;
     }
     current = current.parentNode;
-    if (!current) {
-      const root = host?.getRootNode?.();
+    if (current) {
+      lastNode = current;
+    } else {
+      // Crossed the top of the current tree. Derive the next node from the last
+      // real node visited (not the original host) so each shadow boundary is
+      // crossed exactly once and the walk terminates at the document root.
+      const root = lastNode?.getRootNode?.();
       current = root instanceof ShadowRoot ? root.host : null;
+      if (current) lastNode = current;
     }
   }
   return undefined;

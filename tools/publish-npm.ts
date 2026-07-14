@@ -86,54 +86,83 @@ async function assertCleanWorktree(): Promise<void> {
   }
 }
 
-function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Record<string, string> {
+export interface DeriveDepsIo {
+  readPkgJson: (dir: string) => { imports?: Record<string, string> };
+  readRootJson: () => { imports?: Record<string, string> };
+  readSrcFiles: (dir: string) => string[];
+}
+
+const defaultDeriveDepsIo: DeriveDepsIo = {
+  readPkgJson: (dir) => JSON.parse(Deno.readTextFileSync(`${dir}/deno.json`)),
+  readRootJson: () => JSON.parse(Deno.readTextFileSync('deno.json')),
+  readSrcFiles: (dir) => {
+    const files: string[] = [];
+    const scan = (d: string): void => {
+      for (const entry of Deno.readDirSync(d)) {
+        const path = `${d}/${entry.name}`;
+        if (entry.isDirectory) {
+          if (entry.name === 'node_modules' || entry.name === 'dist') continue;
+          scan(path);
+        } else if (entry.isFile && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
+          files.push(Deno.readTextFileSync(path));
+        }
+      }
+    };
+    try {
+      scan(`${dir}/src`);
+    } catch {
+      // no src dir
+    }
+    return files;
+  },
+};
+
+function parseNpmSpec(value: string, label: string): { name: string; version: string } | null {
+  const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
+  if (!match) return null;
+  const name = match[1];
+  if (name.startsWith('@openelement/')) return null;
+  const version = match[2]?.replace(/^\^/, '');
+  if (!version) {
+    throw new Error(`npm dependency '${name}' (${label}) has no version; add an explicit version.`);
+  }
+  return { name, version };
+}
+
+export function deriveDependencies(
+  pkg: PackageInfo,
+  allPackages: PackageInfo[],
+  io: DeriveDepsIo = defaultDeriveDepsIo,
+): Record<string, string> {
   const deps: Record<string, string> = {};
-  const denoJson = JSON.parse(Deno.readTextFileSync(`${pkg.dir}/deno.json`));
+  const denoJson = io.readPkgJson(pkg.dir);
   const imports = denoJson.imports ?? {};
-  const rootImports = JSON.parse(Deno.readTextFileSync('deno.json')).imports ?? {};
+  const rootImports = io.readRootJson().imports ?? {};
   const sourceSpecifiers = new Set<string>();
 
   // External npm dependencies from deno.json imports.
   for (const value of Object.values(imports)) {
     if (typeof value !== 'string') continue;
-    const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
-    if (!match) continue;
-    const name = match[1];
-    if (name.startsWith('@openelement/')) continue;
-    const version = match[2]?.replace(/^\^/, '') ?? '0.0.0';
-    deps[name] = `^${version}`;
+    const spec = parseNpmSpec(value, `${pkg.name} deno.json`);
+    if (spec) deps[spec.name] = `^${spec.version}`;
   }
 
   // Internal workspace dependencies from source imports.
   const byName = new Map(allPackages.map((p) => [p.name, p]));
-  function scanDir(dir: string): void {
-    for (const entry of Deno.readDirSync(dir)) {
-      const path = `${dir}/${entry.name}`;
-      if (entry.isDirectory) {
-        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
-        scanDir(path);
-      } else if (entry.isFile && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
-        const text = Deno.readTextFileSync(path);
-        for (const match of text.matchAll(/(?:from\s+|import\s*\()\s*['"]([^'"]+)['"]/gu)) {
-          sourceSpecifiers.add(match[1]);
-        }
-        for (const specifier of extractOpenImports(text)) {
-          const prefix = '@openelement/';
-          if (!specifier.startsWith(prefix)) continue;
-          const rest = specifier.slice(prefix.length);
-          const slashIdx = rest.indexOf('/');
-          const base = slashIdx === -1 ? specifier : prefix + rest.slice(0, slashIdx);
-          if (base === pkg.name) continue;
-          const depPkg = byName.get(base);
-          if (depPkg) deps[base] = depPkg.version;
-        }
-      }
+  for (const text of io.readSrcFiles(pkg.dir)) {
+    for (const match of text.matchAll(/(?:from\s+|import\s*\()\s*['"]([^'"]+)['"]/gu)) {
+      sourceSpecifiers.add(match[1]);
     }
-  }
-  try {
-    scanDir(`${pkg.dir}/src`);
-  } catch {
-    // no src dir
+    for (const specifier of extractOpenImports(text)) {
+      const prefix = '@openelement/';
+      if (!specifier.startsWith(prefix)) continue;
+      const rest = specifier.slice(prefix.length);
+      const slashIdx = rest.indexOf('/');
+      const base = slashIdx === -1 ? specifier : prefix + rest.slice(0, slashIdx);
+      if (base === pkg.name) continue;
+      const depPkg = byName.get(base);
+      if (depPkg) deps[base] = depPkg.version;
+    }
   }
 
   // Workspace packages inherit the root import map. npm package.json files do
@@ -142,11 +171,8 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
   for (const specifier of sourceSpecifiers) {
     const value = rootImports[specifier];
     if (typeof value !== 'string') continue;
-    const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
-    if (!match) continue;
-    const name = match[1];
-    const version = match[2]?.replace(/^\^/, '') ?? '0.0.0';
-    deps[name] = `^${version}`;
+    const spec = parseNpmSpec(value, `${pkg.name} root import`);
+    if (spec) deps[spec.name] = `^${spec.version}`;
   }
 
   return deps;
@@ -310,4 +336,6 @@ async function main(): Promise<void> {
   for (const tar of tarballs) console.log(`  ${tar}`);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

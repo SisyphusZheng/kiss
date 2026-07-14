@@ -1342,6 +1342,21 @@ Deno.test('ErrorBoundary catches and displays fallback UI', () => {
   assertEquals(boundary.retryCount, 0);
 });
 
+Deno.test('ErrorBoundary default retry control clears the captured error', () => {
+  class Boundary extends ErrorBoundary {}
+
+  const boundary = new Boundary();
+  boundary.catchError(new Error('child failed'));
+  const fallback = boundary.onError(boundary.error!);
+  const retry = fallback.children?.[1] as VNode;
+  const onClick = retry.props?.onClick as (() => void) | undefined;
+
+  assertExists(onClick);
+  onClick();
+  assertEquals(boundary.hasError, false);
+  assertEquals(boundary.retryCount, 1);
+});
+
 // ─── 11. formAssociated / ElementInternals ─────────────────────────
 
 Deno.test('OpenElement attaches ElementInternals when formAssociated', () => {

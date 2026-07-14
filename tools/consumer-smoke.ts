@@ -196,7 +196,14 @@ async function exactVersionStarterSmoke(version: string): Promise<void> {
   try {
     const create = await run(
       'deno',
-      ['run', '-A', `npm:@openelement/create@${version}`, 'starter'],
+      [
+        'run',
+        '-A',
+        '--minimum-dependency-age',
+        '0',
+        `npm:@openelement/create@${version}`,
+        'starter',
+      ],
       tmpDir,
     );
     if (!create.success) throw new Error(`starter generation failed:\n${create.output}`);
