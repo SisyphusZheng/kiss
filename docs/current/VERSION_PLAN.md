@@ -117,6 +117,11 @@ dead-code #407/#408/#409, and CI observability #410 can proceed in parallel.
 
 ## Acceptance
 
+Implementation status on `dev` (2026-07-14): Batches 1-4 are merged and Batch
+5 has reached the 69/81/72 coverage gate. The unchecked items below are release
+facts and stay unchecked until the clean pre-release matrix, main CI, registry,
+post-publish consumers, tag, and GitHub prerelease are verified.
+
 - [ ] All A11.01-A11.16 issues are closed with code, test, docs, or deletion
       evidence matching their acceptance criteria.
 - [ ] A clean archive installs with `--frozen` and leaves the worktree clean.
@@ -148,6 +153,11 @@ dead-code #407/#408/#409, and CI observability #410 can proceed in parallel.
 | Deployment   | Nitro Node and Cloudflare Module Workers proofs from a clean environment                                                                   |
 | Distribution | five-package artifact checks, Deno/npm pack dry-runs, publint, type consumers, license/content inventory                                   |
 | Release      | frozen clean checkout, AutoFlow release tier, registry/dist-tag verification, post-publish npm consumers                                   |
+
+Current measured coverage for `packages/*/src`: lines 70.71%, branches 81.06%,
+functions 74.74% (745 tests, 35 nested steps, zero failures). The coverage gate
+is the full test execution in CI; AutoFlow no longer runs a redundant ordinary
+full-test gate immediately before it.
 
 ## Release evidence requirements
 

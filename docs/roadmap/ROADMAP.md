@@ -79,6 +79,7 @@ making the standard Custom Element contract span both layers. See the official
 | Version           | Theme                        | Required evidence                                                                                                                       |
 | ----------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `0.41.0-alpha.10` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                         |
+| `0.41.0-alpha.11` | Audit remediation            | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                           |
 | `0.41.0-alpha.x`  | Adoption and interface proof | #390 and further external use expose any remaining architectural or authoring corrections                                               |
 | `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
 | `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
