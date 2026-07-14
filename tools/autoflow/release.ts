@@ -1,6 +1,7 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
 import {
   PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
 } from '../project-constants.ts';
@@ -507,8 +508,10 @@ export function buildVersionAnchorReplacements(
   version: string,
 ): Array<[string, string, string]> {
   const tag = releaseTag(version);
-  const pv = PREVIOUS_PACKAGE_VERSION;
-  const pvTag = PREVIOUS_PACKAGE_VERSION_TAG;
+  // The module is loaded before updateProjectConstants() writes the target.
+  // PACKAGE_VERSION is therefore the actual source line being replaced.
+  const pv = PACKAGE_VERSION;
+  const pvTag = PACKAGE_VERSION_TAG;
   // Placeholders keep these entries as plain single-quoted strings (the
   // previous line is a single source of truth via PREVIOUS_*). Resolved below.
   // Entries are kept in sync with the real anchor text in each target file.
@@ -518,11 +521,6 @@ export function buildVersionAnchorReplacements(
   // bump never throws on documentation drift.
   const raw: Array<[string, string, string]> = [
     ['README.md', '`$PV` (`$PVT`', '`$VER` (`$TAG`'],
-    [
-      'README.md',
-      '**$PV**\n(`$PVT`)',
-      '**$VER**\n(`$TAG`)',
-    ],
     [
       'README.zh.md',
       '当前包线：`$PV`（`$PVT` 发布）',
@@ -537,6 +535,26 @@ export function buildVersionAnchorReplacements(
       'www/app/data/version.ts',
       "export const OPENELEMENT_VERSION = '$PVT';",
       "export const OPENELEMENT_VERSION = '$TAG';",
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      'Published package line: `$PVT`',
+      'Published package line: `$TAG`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'Repository package line: `$PVT`',
+      'Repository package line: `$TAG`',
+    ],
+    [
+      'www/app/routes/roadmap.tsx',
+      "version: '$PVT'",
+      "version: '$TAG'",
+    ],
+    [
+      'www/app/routes/roadmap.tsx',
+      "phase.version === '$PVT'",
+      "phase.version === '$TAG'",
     ],
   ];
   const resolve = (s: string): string =>

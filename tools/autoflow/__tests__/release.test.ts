@@ -21,7 +21,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // Anchors are kept in sync with the real anchor text in each file. Dead
   // anchors (doc drift) are intentionally omitted, so this count reflects the
   // files that currently carry the previous package line.
-  assertEquals(reps.length, 5);
+  assertEquals(reps.length, 8);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -47,15 +47,12 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   assert(seen.has('www/app/data/version.ts'));
 });
 
-Deno.test('buildVersionAnchorReplacements: from side derives from single source of truth', () => {
+Deno.test('buildVersionAnchorReplacements: from side derives from the loaded source version', () => {
   const reps = buildVersionAnchorReplacements('1.2.3');
   for (const [, from] of reps) {
-    // Every `from` anchor must be derived from PREVIOUS_* constants, not a
-    // repeated hard-coded previous-line literal.
     assert(
-      from.includes(PREVIOUS_PACKAGE_VERSION) ||
-        from.includes(PREVIOUS_PACKAGE_VERSION_TAG),
-      `from must derive from PREVIOUS_*: ${from}`,
+      from.includes(PACKAGE_VERSION) || from.includes(PACKAGE_VERSION_TAG),
+      `from must derive from PACKAGE_VERSION: ${from}`,
     );
   }
   assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, `v${PREVIOUS_PACKAGE_VERSION}`);
@@ -76,9 +73,9 @@ Deno.test('buildVersionAnchorReplacements: every target carries the previous or 
       `${path} is a replacement target but carries neither the previous nor current line`,
     );
   }
-  // README has two distinct anchor formats (inline and line-wrapped).
+  // README carries one current package-line anchor.
   const readmeReps = reps.filter(([p]) => p === 'README.md');
-  assertEquals(readmeReps.length, 2);
+  assertEquals(readmeReps.length, 1);
 });
 
 Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () => {
