@@ -9,6 +9,12 @@ vendor/*
 !vendor/jsr.io/@std/
 !vendor/jsr.io/@std/LICENSE
 !vendor/jsr.io/@std/ATTRIBUTION.md
+# Deno materializes JSR sources during a frozen install. Keep only license
+# attribution under each module; generated source/version metadata is cache.
+vendor/jsr.io/@std/*
+!vendor/jsr.io/@std/*/
+vendor/jsr.io/@std/*/*
+!vendor/jsr.io/@std/*/LICENSE
 
 # Build output
 dist/
@@ -16,9 +22,11 @@ custom-dist/
 npm/
 packages/adapter-vite/__fixtures__/nitro-proof/.output-*/
 packages/adapter-vite/__fixtures__/nitro-proof/.wrangler/
+packages/adapter-vite/__fixtures__/nitro-proof/.nitro/
 packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
 *.tsbuildinfo
 .tsbuildinfo
+www/app/data/_generated-blog-data.ts
 
 # npm (Deno project - no npm lockfiles)
 package-lock.json
