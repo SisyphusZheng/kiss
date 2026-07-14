@@ -20,6 +20,7 @@ import {
   pushLoaderData,
 } from './internal/router/internal/data-context.ts';
 import type { HydrationStrategy } from '@openelement/element';
+import type { PageHostElement } from './internal/page-host-data.ts';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
 export type PageStreamingMode = 'auto' | 'force' | false;
@@ -156,21 +157,11 @@ export interface OpenElementPageDescriptor<
   render: PageRenderFunction<Data, Params>;
 }
 
-type PageHostProps = {
-  __openElementParams?: Record<string, string>;
-  data?: unknown;
-  __openElementActionData?: unknown;
-  __openElementRequest?: Request;
-  __openElementRoute?: PageRouteContext;
-  __openElementMeta?: PageMeta;
-  __openElementError?: unknown;
-};
-
 abstract class ApplicationElement extends OpenElement {
   [key: string]: unknown;
 }
 
-abstract class ApplicationPageElement extends ApplicationElement implements PageHostProps {
+abstract class ApplicationPageElement extends ApplicationElement implements PageHostElement {
   __openElementParams?: Record<string, string>;
   data?: unknown;
   __openElementActionData?: unknown;

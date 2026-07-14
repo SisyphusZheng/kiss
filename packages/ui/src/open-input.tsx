@@ -31,7 +31,7 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeAttr, escapeHtml } from '@openelement/element';
+import { escapeHtml } from '@openelement/element';
 import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-input';
@@ -259,7 +259,6 @@ export class OpenInput extends OpenElement {
   }
 
   private _esc = escapeHtml;
-  private _escAttr = escapeAttr;
 }
 
 export default OpenInput;

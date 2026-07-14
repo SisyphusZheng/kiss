@@ -82,6 +82,7 @@ export class OpenThemeToggle extends OpenElement {
 
   private _theme = signal<'dark' | 'light'>('dark');
   private _initDone = false;
+  private _lastPropagatedTheme: 'dark' | 'light' | undefined;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -130,20 +131,28 @@ export class OpenThemeToggle extends OpenElement {
       }
     }
 
-    this.setAttribute('data-theme', this._theme.value);
-    document.documentElement.setAttribute('data-theme', this._theme.value);
-    if (document.documentElement.style) {
-      document.documentElement.style.colorScheme = this._theme.value;
-    }
-    // Propagate to parent open-layout
+    this._applyTheme(this._theme.value);
+  }
+
+  private _applyTheme(theme: 'dark' | 'light'): void {
+    const changed = this._lastPropagatedTheme !== theme;
+    this._theme.value = theme;
+    this.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    if (document.documentElement.style) document.documentElement.style.colorScheme = theme;
+
     try {
       const root = this.getRootNode();
-      if (root instanceof ShadowRoot && root.host) {
-        root.host.setAttribute('data-theme', this._theme.value);
+      if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot && root.host) {
+        root.host.setAttribute('data-theme', theme);
       }
-    } catch { /* not in shadow DOM */ }
-    this._dispatchThemeChange(this._theme.value);
-    this._persistTheme(this._theme.value);
+    } catch { /* getRootNode unavailable */ }
+
+    if (changed) {
+      this._lastPropagatedTheme = theme;
+      this._dispatchThemeChange(theme);
+      this._persistTheme(theme);
+    }
   }
 
   private _persistTheme(theme: 'dark' | 'light'): void {
@@ -210,31 +219,7 @@ export class OpenThemeToggle extends OpenElement {
 
   private _handleToggle(): void {
     const theme = this._theme.value === 'light' ? 'dark' : 'light';
-    this._theme.value = theme;
-
-    document.documentElement.setAttribute('data-theme', theme);
-    if (document.documentElement.style) {
-      document.documentElement.style.colorScheme = theme;
-    }
-
-    // Propagate data-theme to parent <open-layout> so :host([data-theme="dark"]) matches
-    try {
-      const root = this.getRootNode();
-      if (root instanceof ShadowRoot && root.host) {
-        root.host.setAttribute('data-theme', theme);
-      }
-    } catch (e) {
-      console.debug('[open-theme-toggle] getRootNode unavailable:', e);
-    }
-
-    this._dispatchThemeChange(theme);
-
-    try {
-      localStorage.setItem('open-theme', theme);
-    } catch (e) {
-      console.debug('[open-theme-toggle] localStorage.setItem unavailable:', e);
-    }
-    // data-theme attribute is managed by signal prop binding (data-theme={this._theme})
+    this._applyTheme(theme);
   }
 
   private _dispatchThemeChange(theme: 'dark' | 'light'): void {
@@ -250,8 +235,7 @@ export class OpenThemeToggle extends OpenElement {
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
     if (old === val) return;
     if (name === 'theme' && val) {
-      this._theme.value = val === 'light' ? 'light' : 'dark';
-      this.setAttribute('data-theme', this._theme.value);
+      this._applyTheme(val === 'light' ? 'light' : 'dark');
     }
   }
 }
