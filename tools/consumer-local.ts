@@ -386,7 +386,13 @@ if (!existsSync(nitroServerEntry)) {
   Deno.exit(1);
 }
 
-const port = 48000 + Math.floor(Math.random() * 1000);
+// Let the OS choose from its ephemeral range. The previous fixed 48000-48999
+// range collides with parallel CI jobs often enough to make this proof flaky.
+// There is still a small bind-after-close window, but avoiding the shared fixed
+// range removes the deterministic cross-job collision seen in GitHub Actions.
+const portProbe = Deno.listen({ hostname: '127.0.0.1', port: 0 });
+const port = (portProbe.addr as Deno.NetAddr).port;
+portProbe.close();
 const server = new Deno.Command('node', {
   args: [nitroServerEntry],
   cwd: appDir,
