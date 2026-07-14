@@ -1,5 +1,9 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
-import { PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG } from '../project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PREVIOUS_PACKAGE_VERSION,
+  PREVIOUS_PACKAGE_VERSION_TAG,
+} from '../project-constants.ts';
 
 export { isCI as isCIEnv };
 
@@ -15,7 +19,7 @@ export interface ReleaseStepEvidence {
 
 export interface ReleaseEvidence {
   id: string;
-  kind: 'patch-release' | 'approved-release';
+  kind: 'patch-release' | 'approved-release' | 'release-prepare' | 'publish-existing';
   policyVersion: string;
   currentVersion: string;
   targetVersion: string;
@@ -318,6 +322,96 @@ export function createReleasePlan(
       name: 'push dev',
       command: ['git', 'push', 'origin', 'dev'],
     },
+  ];
+}
+
+const PREPARE_STEP_NAMES = new Set([
+  'bump patch version',
+  'update project constants',
+  'update current version anchors',
+  'format release bump',
+  'stage release bump',
+  'commit release bump',
+  'run release gates after bump',
+]);
+
+/**
+ * Prepare a reviewable release commit without publishing, tagging, or pushing.
+ * The resulting commit must pass dev and main CI before publish-existing runs.
+ */
+export function createPreparePlan(
+  targetVersion: string,
+  approvalId?: string,
+): ReleaseCommandStep[] {
+  return createReleasePlan(targetVersion, approvalId)
+    .filter((step) => PREPARE_STEP_NAMES.has(step.name));
+}
+
+async function verifyPublishedSourceVersion(targetVersion: string): Promise<void> {
+  if (PACKAGE_VERSION !== targetVersion) {
+    throw new Error(
+      `Refusing publish-existing for ${targetVersion}; source is ${PACKAGE_VERSION}.`,
+    );
+  }
+  await assertBranch('main');
+  await assertCleanWorktree();
+}
+
+async function verifyMainCiSuccessForHead(): Promise<void> {
+  const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
+  const raw = await runCaptured([
+    'gh',
+    'run',
+    'list',
+    '--repo',
+    'open-element/openelement',
+    '--branch',
+    'main',
+    '--workflow',
+    'autoflow-ci.yml',
+    '--limit',
+    '20',
+    '--json',
+    'headSha,status,conclusion,url',
+  ]);
+  const runs = JSON.parse(raw) as Array<{
+    headSha?: string;
+    status?: string;
+    conclusion?: string;
+    url?: string;
+  }>;
+  const run = runs.find((candidate) => candidate.headSha === head);
+  if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
+    throw new Error(`Refusing publish-existing: main CI is not successful for HEAD ${head}.`);
+  }
+  console.log(`Verified main CI for ${head}: ${run.url ?? 'success'}`);
+}
+
+const PUBLISH_STEP_NAMES = new Set([
+  'package artifact gate',
+  'publish npm packages',
+  'post-publish npm consumer smoke',
+  'stage release evidence',
+  'commit release evidence',
+  'tag release',
+  'push tag',
+  'create GitHub release',
+]);
+
+/** Publish an already-reviewed version from a clean, CI-green main HEAD. */
+export function createPublishExistingPlan(targetVersion: string): ReleaseCommandStep[] {
+  const releaseSteps = createReleasePlan(targetVersion)
+    .filter((step) => PUBLISH_STEP_NAMES.has(step.name));
+  return [
+    {
+      name: 'verify published source version',
+      run: () => verifyPublishedSourceVersion(targetVersion),
+    },
+    {
+      name: 'verify main CI success for HEAD',
+      run: () => verifyMainCiSuccessForHead(),
+    },
+    ...releaseSteps,
   ];
 }
 

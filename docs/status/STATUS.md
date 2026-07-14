@@ -1,7 +1,9 @@
 # openElement Status
 
-> Updated: 2026-07-13\
-> Published package line: `v0.41.0-alpha.10`\
+> Updated: 2026-07-14\
+> Repository package line: `v0.41.0-alpha.10`\
+> npm registry line observed 2026-07-14: `v0.41.0-alpha.6`\
+> Active release target: `v0.41.0-alpha.11`\
 > Product graph: five packages\
 > Current maturity stage: alpha
 
@@ -13,9 +15,13 @@ are authoring modes; Declarative Shadow DOM is the default server output;
 interactive regions upgrade selectively. Vite and Nitro are the official build
 and output path.
 
-The five-package convergence is published as alpha.10. The project remains in
-alpha while external adoption and application-level interfaces are still
-allowed to drive breaking changes. The abandoned beta naming is retired.
+The five-package convergence is present in the alpha.10 repository source. The
+alpha.10 release record claims publication, but the 2026-07-14 authoritative
+npm query returned alpha.6 for all five packages. Issue #396 owns that evidence
+reconciliation; alpha.11 must publish one coherent graph before the claim is
+closed. The project remains in alpha while external adoption and
+application-level interfaces are still allowed to drive breaking changes. The
+abandoned beta naming is retired.
 
 ## Product surface
 
@@ -31,16 +37,16 @@ The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
 are not supported consumer imports. Historical references remain in their
 original ADR, release and audit records.
 
-## alpha.10 release state
+## alpha.11 release state
 
-| Condition                                                          | State                                      |
-| ------------------------------------------------------------------ | ------------------------------------------ |
-| Five-package implementation and current docs                       | Published in alpha.10                      |
-| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                   |
-| Node/Nitro output and artifact verification                        | Complete                                   |
-| Chromium, Firefox and WebKit gates                                 | Complete for alpha.10                      |
-| npm/tag/GitHub Release/docs/evidence truth                         | Verified at publish time                   |
-| External adopter pilot #390                                        | Open; required before stability commitment |
+| Condition                                                          | State                                       |
+| ------------------------------------------------------------------ | ------------------------------------------- |
+| Five-package implementation and current docs                       | Present in alpha.10 source                  |
+| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                    |
+| Node/Nitro output and artifact verification                        | Node passes; Workers repair tracked by #398 |
+| Chromium, Firefox and WebKit gates                                 | Alpha.11 matrix pending                     |
+| npm/tag/GitHub Release/docs/evidence truth                         | Reconciliation tracked by #396              |
+| External adopter pilot #390                                        | Open; required before stability commitment  |
 
 ## Current risks
 

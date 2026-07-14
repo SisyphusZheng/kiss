@@ -1,7 +1,8 @@
-# v0.41 Version Plan — alpha maturation
+# v0.41.0-alpha.11 Version Plan — audit remediation and release truth
 
-> Published package line: `v0.41.0-alpha.10`\
-> Active implementation anchor: `v0.41.0-alpha.7`\
+> Target package line: `v0.41.0-alpha.11`\
+> Repository source baseline: `v0.41.0-alpha.10`\
+> Registry baseline observed on 2026-07-14: `v0.41.0-alpha.6`\
 > Current maturity stage: alpha
 
 ## Product truth
@@ -22,9 +23,43 @@ complete applications. The current consumer graph contains `element`, `app`,
 that supplied their internals have no current compatibility promise.
 See [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) for the supported package contract.
 
-## Alpha.10 state
+## Alpha.11 objective
 
-The final breaking convergence is complete in the repository:
+Turn the 2026-07-14 deep audit into one executable release train. Alpha.11 must
+restore reproducible installation and the Workers release proof, correct the two
+confirmed application-runtime contracts, close the audited UI and packaging
+defects, remove verified internal redundancy, and make source, documentation,
+GitHub, npm, and post-publish evidence tell the same truth.
+
+The audit source is [`REVIEW-REPORT.md`](../../REVIEW-REPORT.md). GitHub issues
+#396 through #411 are the implementation records. An item is complete only when
+its acceptance criteria and the evidence in this plan are satisfied.
+
+## Scope
+
+Alpha.11 includes:
+
+- frozen-install and release-evidence reproducibility;
+- Nitro Node and Workers deployment proof;
+- router query and SPA page-data correctness;
+- dialog and theme lifecycle correctness;
+- one narrow protocol seam between Element and Adapter Vite;
+- visual-smoke, package-content, version-truth, CI-observability, dead-code, and
+  risk-weighted coverage cleanup.
+
+## Non-goals
+
+- No new public package, package-topology change, or compatibility shim.
+- No new application feature, server/data/forms/session/cache primitive, or
+  stable `0.41.0` declaration.
+- No broad dependency-major upgrade unless it is required for a listed release
+  proof and is isolated with migration evidence.
+- No deletion of public APIs based only on repository-local zero usage.
+- No rewriting of historical ADR, audit, or release evidence to look current.
+
+## Alpha.10 baseline
+
+The final breaking convergence is present in the repository source:
 
 - the consumer graph has five packages;
 - the generated starter exposes product interfaces and lifecycle tasks;
@@ -32,9 +67,107 @@ The final breaking convergence is complete in the repository:
 - current docs, examples and dogfood use product imports;
 - legacy compatibility paths and shallow public surfaces were removed.
 
+The historical completed implementation anchor remains `v0.41.0-alpha.7`;
+alpha.8-alpha.10 are convergence and packaging evidence layered on that
+implementation train. Alpha.11 is the active remediation train, not a rewrite
+of the alpha.7 historical record.
+
 npm beta.1 through beta.3 are immutable partial publishes. They are historical
 withdrawn artifacts, not compatibility baselines. The planned beta name is
-retired; the complete five-package convergence is published as alpha.10.
+retired. The prior alpha.10 release record claims publication, while the
+2026-07-14 registry query returned alpha.6 for all five packages; #396 owns the
+authoritative reconciliation and alpha.11 must not inherit the unverified claim.
+
+## Task train
+
+| Slice  |                                                          Issue | Priority | Outcome                                                                 | Blocked by             |
+| ------ | -------------------------------------------------------------: | -------: | ----------------------------------------------------------------------- | ---------------------- |
+| A11.01 | [#396](https://github.com/open-element/openelement/issues/396) |       P1 | npm registry, docs, release, and post-publish evidence agree            | none                   |
+| A11.02 | [#397](https://github.com/open-element/openelement/issues/397) |       P1 | a clean checkout installs with the frozen lock policy                   | none                   |
+| A11.03 | [#398](https://github.com/open-element/openelement/issues/398) |       P1 | Nitro Workers passes in a clean release environment                     | none                   |
+| A11.04 | [#399](https://github.com/open-element/openelement/issues/399) |       P1 | query keys and values decode exactly once without router crashes        | none                   |
+| A11.05 | [#400](https://github.com/open-element/openelement/issues/400) |       P1 | SPA loader/action data uses the page-host contract                      | none                   |
+| A11.06 | [#401](https://github.com/open-element/openelement/issues/401) |       P2 | removing an open dialog restores original inert state                   | none                   |
+| A11.07 | [#402](https://github.com/open-element/openelement/issues/402) |       P2 | click and attribute theme changes share one propagation path            | none                   |
+| A11.08 | [#403](https://github.com/open-element/openelement/issues/403) |       P2 | Element and Adapter Vite share one narrow type-only protocol seam       | none                   |
+| A11.09 | [#404](https://github.com/open-element/openelement/issues/404) |       P2 | visual smoke checks stable brand semantics, not one implementation      | none                   |
+| A11.10 | [#405](https://github.com/open-element/openelement/issues/405) |       P2 | published adapter artifacts exclude internal tests and fixtures         | none                   |
+| A11.11 | [#406](https://github.com/open-element/openelement/issues/406) |       P2 | documentation gates derive versions from one project source             | none                   |
+| A11.12 | [#407](https://github.com/open-element/openelement/issues/407) |       P3 | orphan DSD hydration helpers are deleted or connected and tested        | none                   |
+| A11.13 | [#408](https://github.com/open-element/openelement/issues/408) |       P3 | unused CEM and route-scanner internals are removed after deletion proof | none                   |
+| A11.14 | [#409](https://github.com/open-element/openelement/issues/409) |       P3 | write-only UI escape aliases are removed without behavior change        | none                   |
+| A11.15 | [#410](https://github.com/open-element/openelement/issues/410) |       P3 | changed-path reporting is truthful in shallow and edge-case histories   | none                   |
+| A11.16 | [#411](https://github.com/open-element/openelement/issues/411) |       P3 | audited runtime paths create meaningful coverage headroom               | #399, #400, #401, #402 |
+
+Execution order:
+
+```text
+release truth #396 ───────────────┐
+frozen install #397 ──────────────┼─> full release matrix -> alpha.11 publish evidence
+Workers proof #398 ────────────────┘
+
+query #399 ─┐
+SPA #400 ───┼─> risk-weighted coverage #411
+dialog #401 ┤
+theme #402 ─┘
+
+protocol #403, visual #404, package #405, version truth #406,
+dead-code #407/#408/#409, and CI observability #410 can proceed in parallel.
+```
+
+## Acceptance
+
+- [ ] All A11.01-A11.16 issues are closed with code, test, docs, or deletion
+      evidence matching their acceptance criteria.
+- [ ] A clean archive installs with `--frozen` and leaves the worktree clean.
+- [ ] Query decoding and SPA loader/action delivery have behavioral regression
+      tests, not only type or source-shape assertions.
+- [ ] Dialog removal and external theme changes pass DOM/browser lifecycle
+      tests.
+- [ ] The five-package graph remains acyclic and the public 39-subpath surface
+      changes only through an explicit compatibility decision.
+- [ ] Local, packaged, Node ESM, third-party WC, desktop, Nitro Node, and Nitro
+      Workers consumers pass.
+- [ ] Package artifacts contain no internal test/fixture source and retain
+      valid licenses, exports, and consumer types.
+- [ ] Chromium functional and visual checks pass; Firefox and WebKit functional
+      checks pass before release.
+- [ ] Registry versions and dist-tags, Git tag, GitHub release, current docs,
+      website, and post-publish consumer evidence agree on alpha.11.
+
+## Test matrix
+
+| Layer        | Required evidence                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Static       | format, lint, full typecheck, package graph/surface, architecture, type-safety, Deno API, signal boundary, docs truth, config, action pins |
+| Runtime      | full Deno tests plus targeted query, SPA data, dialog, theme, DSD, CEM, route-scanner, and AutoFlow regression tests                       |
+| Coverage     | package line/branch/function gate with explicit non-trivial headroom from risk-weighted tests                                              |
+| Build        | docs SSG build, artifact truth, visual smoke, generated starter                                                                            |
+| Browser      | Chromium E2E and visual baselines; Firefox/WebKit functional matrix                                                                        |
+| Consumers    | local, packaged, Deno/Node ESM, third-party WC, desktop reader/Mastodon                                                                    |
+| Deployment   | Nitro Node and Cloudflare Module Workers proofs from a clean environment                                                                   |
+| Distribution | five-package artifact checks, Deno/npm pack dry-runs, publint, type consumers, license/content inventory                                   |
+| Release      | frozen clean checkout, AutoFlow release tier, registry/dist-tag verification, post-publish npm consumers                                   |
+
+## Release evidence requirements
+
+Before version bump:
+
+1. Close #397-#411 and record the exact local commands in their issues or PRs.
+2. Run the complete static, test, coverage, build, browser, consumer, deployment,
+   and distribution matrix from a clean checkout.
+3. Confirm no gate updates a lock file or tracked generated evidence implicitly.
+
+After version bump and publish:
+
+1. Verify all five npm packages at exactly `0.41.0-alpha.11` and verify the
+   `alpha` dist-tag for each package.
+2. Run published-package Deno, Node ESM, packaged starter, Nitro Node, and Nitro
+   Workers consumers.
+3. Verify the Git tag, GitHub prerelease, source constants, package manifests,
+   status, version plan, website, changelog, and release record agree.
+4. Close #396 only after the evidence above is linked and no alpha.10 registry
+   claim remains unqualified.
 
 ## Remaining stability conditions
 

@@ -1,4 +1,8 @@
-import { ACTIVE_EXECUTION_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import {
+  ACTIVE_EXECUTION_VERSION,
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+} from './project-constants.ts';
 
 type Check = {
   name: string;
@@ -54,7 +58,7 @@ const checks: Check[] = [
     required: ['OpenElement = Web Components-native fullstack application framework'],
   },
   {
-    name: 'alpha.10 is the current maturity line',
+    name: `${PACKAGE_VERSION_TAG} is the current maturity line`,
     files: [
       'README.md',
       'README.zh.md',
@@ -63,8 +67,8 @@ const checks: Check[] = [
       'docs/status/STATUS.md',
       'www/app/routes/roadmap.tsx',
     ],
-    required: ['0.41.0-alpha.10'],
-    accept: (text) => text.includes('alpha.10'),
+    required: [PACKAGE_VERSION_TAG],
+    accept: (text) => text.includes(PACKAGE_VERSION_TAG) || text.includes(PACKAGE_VERSION),
   },
   {
     name: `${PACKAGE_VERSION_TAG} is the current package line`,
