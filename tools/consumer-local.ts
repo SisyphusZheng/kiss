@@ -321,8 +321,9 @@ console.log('Building generated app through Nitro node preset...');
 writeFileSync(
   join(appDir, 'nitro.config.ts'),
   `export default defineNitroConfig({
-  serverDir: 'server',
-  preset: 'node',
+  srcDir: 'server',
+  preset: 'node-server',
+  publicAssets: [{ dir: '../public' }],
   output: { dir: '.output-node' },
   compatibilityDate: '2026-06-12',
 });
@@ -364,7 +365,7 @@ const nitroResult = await runCommand([
   'run',
   '--node-modules-dir=auto',
   '-A',
-  'npm:nitro',
+  'npm:nitro@3.0.0',
   'build',
 ], appDir);
 
@@ -410,11 +411,12 @@ try {
   let ready = false;
   for (let attempt = 0; attempt < 150; attempt++) {
     try {
-      const response = await fetch(`${baseUrl}/api/health`);
-      if (response.status === 200) {
-        ready = true;
-        break;
-      }
+      await fetch(`${baseUrl}/api/health`);
+      // Any HTTP response proves the server is listening. Route correctness is
+      // asserted below with the full status and payload so a 4xx/5xx is not
+      // misreported as a startup timeout.
+      ready = true;
+      break;
     } catch {
       // wait below
     }

@@ -11,7 +11,7 @@ const root = new URL('../', import.meta.url);
 const fixture = new URL('packages/adapter-vite/__fixtures__/nitro-proof/', root);
 const outputName = preset === 'workers' ? '.output-workers' : '.output-node';
 const output = new URL(`${outputName}/`, fixture);
-const nitroPreset = preset === 'workers' ? 'cloudflare_module' : 'node';
+const nitroPreset = preset === 'workers' ? 'cloudflare_module' : 'node-server';
 
 async function exists(url: URL): Promise<boolean> {
   try {
@@ -333,7 +333,7 @@ async function assertRuntimePublicAsset(
 }
 
 await removeIfExists(output);
-await run(['deno', 'run', '--node-modules-dir=auto', '-A', 'npm:nitro', 'build'], {
+await run(['deno', 'run', '--node-modules-dir=auto', '-A', 'npm:nitro@3.0.0', 'build'], {
   OPEN_ELEMENT_NITRO_PRESET: nitroPreset,
 });
 
@@ -384,8 +384,8 @@ console.log(`nitro proof ${preset}: real Nitro ${expectedPreset} output passed`)
 function assertNitroIsrRouteRule(serverCode: string): void {
   for (
     const marker of [
-      'name: "cache"',
-      'route: "/isr"',
+      '"/isr"',
+      '"cache"',
       '"maxAge": 60',
       '"swr": true',
     ]
