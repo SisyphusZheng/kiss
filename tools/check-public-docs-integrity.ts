@@ -1,4 +1,4 @@
-import { PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
 
 type Failure = {
   file: string;
@@ -76,8 +76,8 @@ for (const file of currentPublicDocs) {
     failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
   }
 
-  if (!text.includes('0.41.0-alpha.10')) {
-    failures.push({ file, message: 'missing alpha.10 release truth' });
+  if (!text.includes(PACKAGE_VERSION)) {
+    failures.push({ file, message: `missing package version ${PACKAGE_VERSION}` });
   }
 
   for (const pattern of staleCurrentClaims) {

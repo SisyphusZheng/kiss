@@ -93,6 +93,8 @@
     "autoflow:minor-plan": "deno run --allow-read --allow-run tools/autoflow/mod3.ts minor-plan",
     "autoflow:release": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release",
     "autoflow:release-dispatch": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-dispatch",
+    "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-prepare",
+    "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts publish-existing",
     "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
     "verify:configs": "deno run --allow-read tools/verify-package-configs.ts",
     "verify:configs:fix": "deno run --allow-read --allow-write tools/verify-package-configs.ts --fix"
@@ -116,6 +118,7 @@
       "www/public/assets/",
       "custom-dist/",
       "dist-test-ssg-render/",
+      "**/.nitro/",
       ".deno_cache/"
     ]
   },
@@ -131,6 +134,7 @@
       "www/app/data/",
       "custom-dist/",
       "dist-test-ssg-render/",
+      "**/.nitro/",
       ".deno_cache/"
     ]
   },
@@ -153,6 +157,7 @@
     "custom-dist",
     "dist-test-ssg-render",
     "deliverables",
-    "vendor"
+    "vendor",
+    "**/.nitro"
   ]
 }

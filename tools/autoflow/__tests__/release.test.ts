@@ -1,6 +1,11 @@
-import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { existsSync } from 'node:fs';
-import { buildVersionAnchorReplacements, createReleasePlan } from '../release.ts';
+import {
+  buildVersionAnchorReplacements,
+  createPreparePlan,
+  createPublishExistingPlan,
+  createReleasePlan,
+} from '../release.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
@@ -82,4 +87,37 @@ Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () 
     Error,
     'Invalid approval id',
   );
+});
+
+Deno.test('two-phase release: prepare never publishes, tags, or pushes main', () => {
+  const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
+  const names = steps.map((step) => step.name);
+  const commands = steps.map((step) => step.command?.join(' ') ?? '');
+  assert(names.includes('bump patch version'));
+  assert(names.includes('run release gates after bump'));
+  assertFalse(names.includes('publish npm packages'));
+  assertFalse(names.includes('tag release'));
+  assertFalse(commands.some((command) => command.includes('git push')));
+});
+
+Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {
+  const originalNpmToken = Deno.env.get('NPM_TOKEN');
+  const originalGitHubToken = Deno.env.get('GITHUB_TOKEN');
+  Deno.env.set('NPM_TOKEN', 'test-token');
+  Deno.env.set('GITHUB_TOKEN', 'test-token');
+  try {
+    const steps = createPublishExistingPlan('0.41.0-alpha.11');
+    const names = steps.map((step) => step.name);
+    assertEquals(names[0], 'verify published source version');
+    assertEquals(names[1], 'verify main CI success for HEAD');
+    assert(names.includes('publish npm packages'));
+    assert(names.includes('post-publish npm consumer smoke'));
+    assert(names.indexOf('tag release') > names.indexOf('post-publish npm consumer smoke'));
+    assertFalse(names.includes('bump patch version'));
+  } finally {
+    if (originalNpmToken === undefined) Deno.env.delete('NPM_TOKEN');
+    else Deno.env.set('NPM_TOKEN', originalNpmToken);
+    if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
+    else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
+  }
 });

@@ -9,6 +9,8 @@ import {
 import {
   assertBranch,
   assertCleanWorktree,
+  createPreparePlan,
+  createPublishExistingPlan,
   createReleaseEvidence,
   createReleasePlan,
   evidenceFile,
@@ -56,6 +58,8 @@ export function parseArgs(args: string[]): CliOptions {
   return { command, dryRun, dispatch, approvedPlan, targetVersion };
 }
 
+export type GitOutput = (args: string[]) => Promise<string | undefined>;
+
 async function gitOutput(args: string[]): Promise<string | undefined> {
   const command = new Deno.Command('git', {
     args,
@@ -73,23 +77,50 @@ export function addPaths(paths: Set<string>, output: string | undefined): void {
   }
 }
 
-export async function gitChangedPaths(tier: AutoFlowTier): Promise<string[]> {
+export async function gitChangedPaths(
+  tier: AutoFlowTier,
+  output: GitOutput = gitOutput,
+): Promise<string[]> {
   const paths = new Set<string>();
 
   if (tier === 'dev') {
-    addPaths(paths, await gitOutput(['diff', '--cached', '--name-only']));
+    const changed = await output(['diff', '--cached', '--name-only']);
+    if (changed === undefined) throw new Error('Unable to determine changed paths for dev tier');
+    addPaths(paths, changed);
     return [...paths].sort();
   }
 
   if (tier === 'ci') {
-    addPaths(paths, await gitOutput(['diff', '--name-only', 'HEAD^', 'HEAD']));
+    const parentDiff = await output(['diff', '--name-only', 'HEAD^', 'HEAD']);
+    if (parentDiff !== undefined) {
+      addPaths(paths, parentDiff);
+      return [...paths].sort();
+    }
+    const treeDiff = await output([
+      'diff-tree',
+      '--root',
+      '--no-commit-id',
+      '--name-only',
+      '-r',
+      'HEAD',
+    ]);
+    if (treeDiff === undefined) throw new Error('Unable to determine changed paths for ci tier');
+    console.warn('HEAD^ is unavailable; using diff-tree --root for changed-path evidence.');
+    addPaths(paths, treeDiff);
     return [...paths].sort();
   }
 
-  addPaths(paths, await gitOutput(['diff', '--name-only', '@{u}...HEAD']));
-  addPaths(paths, await gitOutput(['diff', '--cached', '--name-only']));
-  addPaths(paths, await gitOutput(['diff', '--name-only']));
-  addPaths(paths, await gitOutput(['ls-files', '--others', '--exclude-standard']));
+  const upstream = await output(['diff', '--name-only', '@{u}...HEAD']);
+  const cached = await output(['diff', '--cached', '--name-only']);
+  const working = await output(['diff', '--name-only']);
+  const untracked = await output(['ls-files', '--others', '--exclude-standard']);
+  if ([upstream, cached, working, untracked].every((value) => value === undefined)) {
+    throw new Error(`Unable to determine changed paths for ${tier} tier`);
+  }
+  addPaths(paths, upstream);
+  addPaths(paths, cached);
+  addPaths(paths, working);
+  addPaths(paths, untracked);
 
   return [...paths].sort();
 }
@@ -199,13 +230,20 @@ async function persistReleaseEvidenceAfterStep(
 }
 
 async function executeReleasePlan(
-  kind: 'patch-release' | 'approved-release',
+  kind: ReleaseEvidence['kind'],
   targetVersion: string,
   approvalId: string | undefined,
   dryRun: boolean,
+  plan = createReleasePlan(targetVersion, approvalId),
+  expectedBranch = isCIEnv() ? 'main' : 'dev',
 ): Promise<void> {
   const evidence = createReleaseEvidence(kind, PACKAGE_VERSION, targetVersion, approvalId);
-  const plan = createReleasePlan(targetVersion, approvalId);
+  evidence.steps = plan.map((step) => ({
+    name: step.name,
+    command: step.command,
+    cwd: step.cwd,
+    status: 'pending',
+  }));
 
   if (dryRun) {
     console.log(
@@ -220,7 +258,6 @@ async function executeReleasePlan(
     return;
   }
 
-  const expectedBranch = isCIEnv() ? 'main' : 'dev';
   await assertBranch(expectedBranch);
   await assertCleanWorktree();
 
@@ -246,6 +283,42 @@ async function executeReleasePlan(
     await writeReleaseNote(evidence);
     throw error;
   }
+}
+
+async function runReleasePrepare(
+  approvedPlan: string | undefined,
+  targetVersion: string | undefined,
+  dryRun: boolean,
+): Promise<void> {
+  if (!targetVersion || !approvedPlan) {
+    throw new Error('release-prepare requires --to and --approved-plan');
+  }
+  const decision = evaluateVersionAuthority('minor', approvedPlan);
+  if (!decision.allowed) throw new Error(decision.reason);
+  await runTier('release', dryRun);
+  await executeReleasePlan(
+    'release-prepare',
+    targetVersion,
+    approvedPlan,
+    dryRun,
+    createPreparePlan(targetVersion, approvedPlan),
+    'dev',
+  );
+}
+
+async function runPublishExisting(
+  targetVersion: string | undefined,
+  dryRun: boolean,
+): Promise<void> {
+  if (!targetVersion) throw new Error('publish-existing requires --to');
+  await executeReleasePlan(
+    'publish-existing',
+    targetVersion,
+    undefined,
+    dryRun,
+    createPublishExistingPlan(targetVersion),
+    'main',
+  );
 }
 
 async function executePatchRelease(dryRun: boolean): Promise<void> {
@@ -389,9 +462,15 @@ export async function main(args: string[]): Promise<void> {
     case 'release-dispatch':
       await runReleaseDispatch(options.approvedPlan, options.targetVersion);
       break;
+    case 'release-prepare':
+      await runReleasePrepare(options.approvedPlan, options.targetVersion, options.dryRun);
+      break;
+    case 'publish-existing':
+      await runPublishExisting(options.targetVersion, options.dryRun);
+      break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/mod3.ts <dev|push|ci|patch-release|minor-plan|release|release-dispatch> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
+        'Usage: deno run tools/autoflow/mod3.ts <dev|push|ci|patch-release|minor-plan|release|release-dispatch|release-prepare|publish-existing> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
       );
       Deno.exit(1);
   }
