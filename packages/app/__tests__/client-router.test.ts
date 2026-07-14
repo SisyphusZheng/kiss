@@ -13,6 +13,25 @@ Deno.test('client router decodes path parameters and gives path values precedenc
   assertEquals(match?.params.view, 'full');
 });
 
+Deno.test('client router decodes query components exactly once', () => {
+  const cases = [
+    ['?value=%25', '%'],
+    ['?value=%2525', '%25'],
+    ['?value=hello+world', 'hello world'],
+    ['?value=%2B', '+'],
+  ] as const;
+  for (const [search, expected] of cases) {
+    assertEquals(matchRoute('/items/id', search, routes)?.params.value, expected);
+  }
+});
+
+Deno.test('client router preserves malformed query escapes without aborting matching', () => {
+  const match = matchRoute('/items/id', '?bad=%&also=%2&key%=value%', routes);
+  assertEquals(match?.params.bad, '%');
+  assertEquals(match?.params.also, '%2');
+  assertEquals(match?.params['key%'], 'value%');
+});
+
 Deno.test('client router dispose removes event listeners and double dispose is safe', () => {
   const original = {
     location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
