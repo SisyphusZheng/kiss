@@ -55,6 +55,7 @@ import {
   syncStaticPropsFromAttributes,
 } from './internal/core/prop.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
+import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { signal } from './internal/signal/index.ts';
 import { createLogger } from './internal/core/logger.ts';
@@ -391,7 +392,7 @@ export class OpenElement extends _Base {
         return;
       }
 
-      const isDsd = this.shadowRoot && this.shadowRoot.childNodes.length > 0;
+      const isDsd = hasPopulatedShadowRoot(this);
       if (isDsd) {
         // DSD: DOM already correct — bind events via VNode walk
         this._hydrateExistingDom();

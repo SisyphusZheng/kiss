@@ -62,11 +62,6 @@ export function readRouteTagName(source: string): string | undefined {
   return match?.[2];
 }
 
-export async function readRouteTagNameFromModule(filePath: string): Promise<string | undefined> {
-  const source = await safeReadFile(filePath);
-  return source === undefined ? undefined : readRouteTagName(source);
-}
-
 export interface ParseRouteFilePathOptions {
   /** Dynamic segment syntax. ':' produces Hono/URLPattern params; 'bracket' keeps `[param]`. */
   paramSyntax: ':' | 'bracket';

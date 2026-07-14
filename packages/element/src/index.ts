@@ -40,6 +40,12 @@ export {
 export { Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
 export type { OpenElementRenderer } from './internal/protocol/framework.ts';
 export type { VNode } from './internal/protocol/vnode.ts';
+// Additive type-only seam consumed by build adapters. Runtime code remains internal.
+export type * from './internal/protocol/framework.ts';
+export type * from './internal/protocol/manifest.ts';
+export type * from './internal/protocol/render.ts';
+export type * from './internal/protocol/style-sheet.ts';
+export type * from './internal/protocol/vnode.ts';
 export { isVNode } from './internal/core/index.ts';
 export { assertValidTagName } from './internal/core/tag-utils.ts';
 

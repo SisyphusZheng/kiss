@@ -49,10 +49,6 @@ export {
 } from './event-hydration.ts';
 export type { EventBinding, EventBindingRecord } from './event-hydration.ts';
 
-// DSD hydration contract
-export { createDsdRenderRoot, hydrateDsdEvents } from './dsd-hydration.ts';
-export type { Constructor, DsdHydration } from './dsd-hydration.ts';
-
 // Client runtime for third-party frameworks
 export { disposeOpenElement, hydrateOpenElement } from './client-runtime.ts';
 export type { ClientRuntimeOptions } from './client-runtime.ts';

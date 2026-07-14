@@ -9,6 +9,7 @@
 
 import type { Signal } from '../protocol/signal.ts';
 import { HydrationScope } from './hydration-scope.ts';
+import { hasPopulatedShadowRoot } from './dsd-shadow-root.ts';
 
 const hostDisposers = new WeakMap<Element, () => void>();
 
@@ -94,8 +95,8 @@ function createShadowRootFromTemplate(
 ): ShadowRoot {
   // If the host already has a shadow root (DSD was parsed by the browser),
   // return it directly.
-  const existing = (host as HTMLElement).shadowRoot;
-  if (existing && existing.childNodes.length > 0) return existing;
+  const element = host as HTMLElement;
+  if (hasPopulatedShadowRoot(element)) return element.shadowRoot;
 
   // Otherwise, create from template content.
   const shadow = host.attachShadow({ mode: 'open' });
