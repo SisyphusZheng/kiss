@@ -70,6 +70,7 @@
     "test:watch": "deno test --allow-read --allow-write --allow-env --allow-net --allow-run --watch",
     "test:e2e": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --project=chromium",
     "test:visual-smoke": "deno task build && cd examples/deno-desktop-reader && deno run -A --config ../../deno.json npm:vite build && cd ../.. && deno run -A tools/visual-smoke.ts",
+    "test:visual-baselines": "OPEN_VISUAL_REGRESSION=1 deno run -A npm:@playwright/test@1.59.1 test www/e2e/visual-baselines.spec.ts --config www/e2e/playwright.config.ts --project=chromium",
     "test:e2e:browsers": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts",
     "test:e2e:install": "deno run -A npm:playwright@1.59.1 install chromium",
     "test:e2e:browsers:install": "deno run -A npm:playwright@1.59.1 install chromium firefox webkit",
