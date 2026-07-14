@@ -90,6 +90,8 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
   const deps: Record<string, string> = {};
   const denoJson = JSON.parse(Deno.readTextFileSync(`${pkg.dir}/deno.json`));
   const imports = denoJson.imports ?? {};
+  const rootImports = JSON.parse(Deno.readTextFileSync('deno.json')).imports ?? {};
+  const sourceSpecifiers = new Set<string>();
 
   // External npm dependencies from deno.json imports.
   for (const value of Object.values(imports)) {
@@ -112,6 +114,9 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
         scanDir(path);
       } else if (entry.isFile && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
         const text = Deno.readTextFileSync(path);
+        for (const match of text.matchAll(/(?:from\s+|import\s*\()\s*['"]([^'"]+)['"]/gu)) {
+          sourceSpecifiers.add(match[1]);
+        }
         for (const specifier of extractOpenImports(text)) {
           const prefix = '@openelement/';
           if (!specifier.startsWith(prefix)) continue;
@@ -129,6 +134,19 @@ function deriveDependencies(pkg: PackageInfo, allPackages: PackageInfo[]): Recor
     scanDir(`${pkg.dir}/src`);
   } catch {
     // no src dir
+  }
+
+  // Workspace packages inherit the root import map. npm package.json files do
+  // not, so every root-mapped bare specifier used by package source must be
+  // materialized as a dependency in the packed artifact.
+  for (const specifier of sourceSpecifiers) {
+    const value = rootImports[specifier];
+    if (typeof value !== 'string') continue;
+    const match = value.match(/^npm:(@[^/]+\/[^@/]+|[^@/]+)(?:@(\^?[\d.]+(?:-[\w.]+)?))?/);
+    if (!match) continue;
+    const name = match[1];
+    const version = match[2]?.replace(/^\^/, '') ?? '0.0.0';
+    deps[name] = `^${version}`;
   }
 
   return deps;

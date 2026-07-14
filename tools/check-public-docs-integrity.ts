@@ -76,8 +76,8 @@ for (const file of currentPublicDocs) {
     failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
   }
 
-  if (!text.includes('0.41.0-alpha.9')) {
-    failures.push({ file, message: 'missing alpha.9 release truth' });
+  if (!text.includes('0.41.0-alpha.10')) {
+    failures.push({ file, message: 'missing alpha.10 release truth' });
   }
 
   for (const pattern of staleCurrentClaims) {

@@ -1,6 +1,6 @@
 # v0.41 Version Plan — alpha maturation
 
-> Published package line: `v0.41.0-alpha.9`\
+> Published package line: `v0.41.0-alpha.10`\
 > Active implementation anchor: `v0.41.0-alpha.7`\
 > Current maturity stage: alpha
 
@@ -21,7 +21,7 @@ complete applications. The current consumer graph contains `element`, `app`,
 `adapter-vite`, `create` and optional `ui`. The alpha implementation packages
 that supplied their internals have no current compatibility promise.
 
-## Alpha.9 state
+## Alpha.10 state
 
 The final breaking convergence is complete in the repository:
 
@@ -33,7 +33,7 @@ The final breaking convergence is complete in the repository:
 
 npm beta.1 through beta.3 are immutable partial publishes. They are historical
 withdrawn artifacts, not compatibility baselines. The planned beta name is
-retired; the complete five-package convergence is published as alpha.9.
+retired; the complete five-package convergence is published as alpha.10.
 
 ## Remaining stability conditions
 

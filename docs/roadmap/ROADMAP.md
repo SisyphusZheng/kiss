@@ -1,7 +1,7 @@
 # openElement Roadmap
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.41.0-alpha.9`.\
+> Published package line: `v0.41.0-alpha.10`.\
 > Current implementation state: five-package convergence is published;
 > external adopter pilot #390 remains open.\
 > Maturity stage: alpha; the abandoned beta naming is retired.
@@ -73,18 +73,18 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Forward versions
 
-| Version          | Theme                        | Required evidence                                                                                                                       |
-| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `0.41.0-alpha.9` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                         |
-| `0.41.0-alpha.x` | Adoption and interface proof | #390 and further external use expose any remaining architectural or authoring corrections                                               |
-| `0.41.0`         | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
-| `0.42.0`         | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
-| `0.43.0`         | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
-| `0.44.0`         | Production Runtime           | Node and Workers behavior, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof              |
-| `0.45.0`         | WC Ecosystem Platform        | Component and application starters, CEM/open-wc workflows, migration guides, compatibility registry and external adopters               |
-| `0.46.0`         | v1 Product Freeze            | Remove unused exports, decide the UI commitment, freeze errors, browser/runtime support and upgrade policy                              |
-| `1.0.0-rc.x`     | Stability only               | No new capability; compatibility, reliability and documentation fixes only                                                              |
-| `1.0.0`          | Stable five-package product  | External production users prove that the core interfaces are stable                                                                     |
+| Version           | Theme                        | Required evidence                                                                                                                       |
+| ----------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `0.41.0-alpha.10` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                         |
+| `0.41.0-alpha.x`  | Adoption and interface proof | #390 and further external use expose any remaining architectural or authoring corrections                                               |
+| `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
+| `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
+| `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
+| `0.44.0`          | Production Runtime           | Node and Workers behavior, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof              |
+| `0.45.0`          | WC Ecosystem Platform        | Component and application starters, CEM/open-wc workflows, migration guides, compatibility registry and external adopters               |
+| `0.46.0`          | v1 Product Freeze            | Remove unused exports, decide the UI commitment, freeze errors, browser/runtime support and upgrade policy                              |
+| `1.0.0-rc.x`      | Stability only               | No new capability; compatibility, reliability and documentation fixes only                                                              |
+| `1.0.0`           | Stable five-package product  | External production users prove that the core interfaces are stable                                                                     |
 
 ## Roadmap rules
 
@@ -103,7 +103,7 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.41.0-alpha.9` is the published package line. npm beta.1 through beta.3 are
+`0.41.0-alpha.10` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.

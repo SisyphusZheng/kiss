@@ -54,7 +54,7 @@ const checks: Check[] = [
     required: ['OpenElement = Web Components-native fullstack application framework'],
   },
   {
-    name: 'alpha.9 is the current maturity line',
+    name: 'alpha.10 is the current maturity line',
     files: [
       'README.md',
       'README.zh.md',
@@ -63,8 +63,8 @@ const checks: Check[] = [
       'docs/status/STATUS.md',
       'www/app/routes/roadmap.tsx',
     ],
-    required: ['0.41.0-alpha.9'],
-    accept: (text) => text.includes('alpha.9'),
+    required: ['0.41.0-alpha.10'],
+    accept: (text) => text.includes('alpha.10'),
   },
   {
     name: `${PACKAGE_VERSION_TAG} is the current package line`,

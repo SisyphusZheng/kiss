@@ -1,7 +1,7 @@
 # openElement Status
 
 > Updated: 2026-07-13\
-> Published package line: `v0.41.0-alpha.9`\
+> Published package line: `v0.41.0-alpha.10`\
 > Product graph: five packages\
 > Current maturity stage: alpha
 
@@ -13,7 +13,7 @@ are authoring modes; Declarative Shadow DOM is the default server output;
 interactive regions upgrade selectively. Vite and Nitro are the official build
 and output path.
 
-The five-package convergence is published as alpha.9. The project remains in
+The five-package convergence is published as alpha.10. The project remains in
 alpha while external adoption and application-level interfaces are still
 allowed to drive breaking changes. The abandoned beta naming is retired.
 
@@ -31,14 +31,14 @@ The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
 are not supported consumer imports. Historical references remain in their
 original ADR, release and audit records.
 
-## alpha.9 release state
+## alpha.10 release state
 
 | Condition                                                          | State                                      |
 | ------------------------------------------------------------------ | ------------------------------------------ |
-| Five-package implementation and current docs                       | Published in alpha.9                       |
+| Five-package implementation and current docs                       | Published in alpha.10                      |
 | Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                   |
 | Node/Nitro output and artifact verification                        | Complete                                   |
-| Chromium, Firefox and WebKit gates                                 | Complete for alpha.9                       |
+| Chromium, Firefox and WebKit gates                                 | Complete for alpha.10                      |
 | npm/tag/GitHub Release/docs/evidence truth                         | Verified at publish time                   |
 | External adopter pilot #390                                        | Open; required before stability commitment |
 
@@ -55,17 +55,17 @@ original ADR, release and audit records.
 
 ## Forward direction
 
-| Version          | Focus                                                                        |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `0.41.0-alpha.9` | Five-package convergence, product truth and unified website                  |
-| `0.41.0-alpha.x` | External adoption and interface maturation                                   |
-| `0.41.0`         | Freeze deep Element, App and Build interfaces                                |
-| `0.42.0`         | WC Application Loop: load, render, progressive form, action and revalidation |
-| `0.43.0`         | Universal WC SSR compatibility and diagnostics                               |
-| `0.44.0`         | Portable production runtime                                                  |
-| `0.45.0`         | WC ecosystem adoption                                                        |
-| `0.46.0`         | v1 product freeze                                                            |
-| `1.0.0`          | Stable five-package product                                                  |
+| Version           | Focus                                                                        |
+| ----------------- | ---------------------------------------------------------------------------- |
+| `0.41.0-alpha.10` | Five-package convergence plus npm runtime dependency repair                  |
+| `0.41.0-alpha.x`  | External adoption and interface maturation                                   |
+| `0.41.0`          | Freeze deep Element, App and Build interfaces                                |
+| `0.42.0`          | WC Application Loop: load, render, progressive form, action and revalidation |
+| `0.43.0`          | Universal WC SSR compatibility and diagnostics                               |
+| `0.44.0`          | Portable production runtime                                                  |
+| `0.45.0`          | WC ecosystem adoption                                                        |
+| `0.46.0`          | v1 product freeze                                                            |
+| `1.0.0`           | Stable five-package product                                                  |
 
 The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.md).
 

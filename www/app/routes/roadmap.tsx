@@ -333,7 +333,7 @@ pageSheet.replaceSync(`
 
 const phases = [
   {
-    version: 'v0.41.0-alpha.9',
+    version: 'v0.41.0-alpha.10',
     title: 'Five-package alpha release',
     copy: 'The published alpha line converges the consumer product around five packages and ships the unified product and website surface.',
     status: 'done',
@@ -387,7 +387,7 @@ export class RoadmapPage extends OpenElement {
             <span slot='title'>Roadmap</span>
             <span slot='lede'>OpenElement roadmap labels describe the public product surface, tied to package truth, docs truth and CI evidence rather than a wish list.</span>
             <open-artifact-panel slot='artifact' class='now'>
-              <span slot='label'>current</span><span slot='meta'>alpha.9 published → alpha adoption proof</span>
+              <span slot='label'>current</span><span slot='meta'>alpha.10 published → alpha adoption proof</span>
               <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
@@ -400,7 +400,7 @@ export class RoadmapPage extends OpenElement {
                   <open-badge tone='warning'>alpha maturation</open-badge>
                   <h2>The five-package product is published; adoption now decides when its interfaces are stable.</h2>
                   <p>
-                    alpha.9 is the published package line. beta.1–beta.3 remain
+                    alpha.10 is the published package line. beta.1–beta.3 remain
                     withdrawn partial npm artifacts. External adopter pilot
                     #390 and continued browser and release evidence guide the
                     remaining alpha maturation work.
@@ -417,7 +417,7 @@ export class RoadmapPage extends OpenElement {
           <div class='release-rail' aria-label='Roadmap release rail'>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.9' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.10' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

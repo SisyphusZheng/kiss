@@ -1,6 +1,6 @@
 {
   "name": "@openelement/element",
-  "version": "0.41.0-alpha.9",
+  "version": "0.41.0-alpha.10",
   "exports": {
     ".": "./src/index.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",

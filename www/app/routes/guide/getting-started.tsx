@@ -34,7 +34,7 @@ export class GuideGuidePage extends OpenElement {
       <open-reading-shell rail footer metadata={JSON.stringify({ breadcrumb: reading.breadcrumb, title: reading.title, lede: 'OpenElement is a Web Components-native, static-first application framework. Start with standard Custom Elements, pages, routes, selective upgrades and deployable Vite/Nitro output.' })} next={reading.next?.href} next-label={reading.next?.label}><open-page-rail slot='rail' items={serializeOutline(reading.outline)}></open-page-rail><div class='container'>
         <p class='subtitle'>
           The current published package line is {OPENELEMENT_VERSION}. The
-          five-package convergence is published in alpha.9; external adopter
+          five-package convergence is published in alpha.10; external adopter
           pilot #390 remains the primary stability evidence still open.
         </p>
         <div class='guide-grid'>

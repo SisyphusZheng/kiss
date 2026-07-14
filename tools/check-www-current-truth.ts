@@ -21,7 +21,7 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'eleven-package claim', re: /\b11[- ]package|\b11 packages\b/i },
   { name: 'retired app vite subpath', re: /@openelement\/app\/vite|\/vite subpath/i },
   { name: 'internal build contract', re: /\bBuildPlan\b|\bAppShell protocol\b/ },
-  { name: 'retired alpha current claim', re: /v0\.41\.0-alpha\.[0-7]/i },
+  { name: 'retired alpha current claim', re: /v0\.41\.0-alpha\.[0-7](?!\d)/i },
   { name: 'beta.4 published claim', re: /beta\.4 (?:is |was )?(?:released|published)/i },
   { name: 'externally hosted site font', re: /fonts\.(?:googleapis|gstatic)\.com/i },
   {
