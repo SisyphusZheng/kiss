@@ -1,8 +1,5 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
-import {
-  PACKAGE_VERSION,
-  PACKAGE_VERSION_TAG,
-} from '../project-constants.ts';
+import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from '../project-constants.ts';
 
 export { isCI as isCIEnv };
 
