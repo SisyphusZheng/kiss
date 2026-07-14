@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { defineApp, definePage, type RouteConfig } from '../src/index.ts';
 import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
 
@@ -115,6 +115,141 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
     assertEquals(context.params, { slug: 'hello', preview: 'yes' });
     assertEquals(context.request.url, 'https://example.test/articles/hello?preview=yes');
     assertEquals(context.route, { path: '/articles/:slug' });
+  } finally {
+    app.dispose();
+    globalThis.addEventListener = originalAdd;
+    globalThis.removeEventListener = originalRemove;
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete (globalThis as Record<string, unknown>)[key];
+    }
+  }
+});
+
+Deno.test('defineApp rejects missing targets and safely remounts and redisposes', () => {
+  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  const originalLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
+  const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
+  let found = false;
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { querySelector: () => found ? root : null, createElement: () => ({}) },
+  });
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'https:',
+      pathname: '/',
+      search: '',
+      hash: '',
+      href: 'https://example.test/',
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
+  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  const app = defineApp({ mode: 'spa', routes: [] });
+  try {
+    let message = '';
+    try {
+      app.mount('#missing');
+    } catch (error) {
+      message = String(error);
+    }
+    assertStringIncludes(message, 'Mount target not found');
+    found = true;
+    app.mount('#app');
+    app.mount('#app');
+    app.dispose();
+    app.dispose();
+    assertEquals(app.router, null);
+  } finally {
+    app.dispose();
+    if (originalDocument) Object.defineProperty(globalThis, 'document', originalDocument);
+    else delete (globalThis as Record<string, unknown>).document;
+    if (originalLocation) Object.defineProperty(globalThis, 'location', originalLocation);
+    else delete (globalThis as Record<string, unknown>).location;
+    if (originalHistory) Object.defineProperty(globalThis, 'history', originalHistory);
+    else delete (globalThis as Record<string, unknown>).history;
+    globalThis.addEventListener = originalAdd;
+    globalThis.removeEventListener = originalRemove;
+  }
+});
+
+Deno.test('defineApp action delegation handles shadow paths and action failures without crashing', async () => {
+  const descriptors = {
+    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+  };
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  let submit: ((event: Event) => void) | undefined;
+  let renders = 0;
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild() {
+      renders++;
+    },
+  };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { querySelector: () => root, createElement: () => ({}) },
+  });
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'https:',
+      pathname: '/',
+      search: '',
+      hash: '',
+      href: 'https://example.test/',
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
+  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: () => Promise.resolve({ renders }),
+      action: () => Promise.reject(new Error('save failed')),
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const form = { tagName: 'FORM' };
+    let prevented = false;
+    submit?.({
+      target: { tagName: 'OPEN-BUTTON' },
+      composedPath: () => [{ tagName: 'SPAN' }, form],
+      preventDefault: () => {
+        prevented = true;
+      },
+    } as unknown as Event);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(prevented, true);
+    assertEquals(renders, 2);
+
+    // Non-form submissions and routes without an action are ignored.
+    submit?.({ target: {}, composedPath: () => [], preventDefault() {} } as unknown as Event);
   } finally {
     app.dispose();
     globalThis.addEventListener = originalAdd;

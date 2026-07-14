@@ -891,6 +891,84 @@ Deno.test('open-theme-toggle: attribute and click share document and storage pro
   }
 });
 
+Deno.test('open-theme-toggle: initialization follows attribute, document, storage, and media priority', async () => {
+  const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
+  const originalDocumentElement = document.documentElement;
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const originalMatchMedia = Object.getOwnPropertyDescriptor(globalThis, 'matchMedia');
+  const scenarios = [
+    {
+      attribute: 'light',
+      documentTheme: undefined,
+      stored: undefined,
+      media: false,
+      expected: 'light',
+    },
+    { attribute: undefined, documentTheme: 'dark', stored: 'light', media: true, expected: 'dark' },
+    {
+      attribute: undefined,
+      documentTheme: undefined,
+      stored: 'light',
+      media: false,
+      expected: 'light',
+    },
+    {
+      attribute: undefined,
+      documentTheme: undefined,
+      stored: 'dark',
+      media: true,
+      expected: 'dark',
+    },
+    {
+      attribute: undefined,
+      documentTheme: undefined,
+      stored: undefined,
+      media: true,
+      expected: 'light',
+    },
+  ] as const;
+
+  try {
+    for (const scenario of scenarios) {
+      Object.defineProperty(document, 'documentElement', {
+        configurable: true,
+        value: {
+          dataset: { theme: scenario.documentTheme },
+          style: { colorScheme: '' },
+          setAttribute() {},
+        },
+      });
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        value: {
+          getItem: () => scenario.stored ?? null,
+          setItem() {},
+        },
+      });
+      Object.defineProperty(globalThis, 'matchMedia', {
+        configurable: true,
+        value: () => ({ matches: scenario.media }),
+      });
+
+      const instance = new OpenThemeToggle();
+      if (scenario.attribute) instance.setAttribute('theme', scenario.attribute);
+      (instance as unknown as { _initTheme(): void })._initTheme();
+      (instance as unknown as { _initTheme(): void })._initTheme(); // idempotent
+      const vnode = instance.render() as VNode;
+      assertEquals(signalValue<string>(vnode.props['data-theme']), scenario.expected);
+    }
+  } finally {
+    Object.defineProperty(document, 'documentElement', {
+      configurable: true,
+      value: originalDocumentElement,
+    });
+    if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+    else delete (globalThis as Record<string, unknown>).localStorage;
+    if (originalMatchMedia) Object.defineProperty(globalThis, 'matchMedia', originalMatchMedia);
+    else delete (globalThis as Record<string, unknown>).matchMedia;
+  }
+});
+
 Deno.test('open-dialog: has correct tagName and dialog structure', async () => {
   const module = asComponentModule(await import('../src/open-dialog.tsx'));
   assertEquals(module.tagName, 'open-dialog');
