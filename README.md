@@ -7,7 +7,7 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Published package line: `0.41.0-alpha.10` (`v0.41.0-alpha.10`). This release
+Published package line: `0.41.0-alpha.11` (`v0.41.0-alpha.11`). This release
 keeps the project in alpha while the five-package product and external adoption
 evidence continue to mature; the abandoned beta naming is not an active line.
 
