@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { addPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
+import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
 import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {
   createReleasePlan,
@@ -123,6 +123,60 @@ Deno.test('mod3: addPaths deduplicates multi-source diff output', () => {
     'docs/current/VERSION_PLAN.md',
     'packages/core/src/index.ts',
   ]);
+});
+
+Deno.test('mod3: ci changed paths fall back to diff-tree in a shallow clone', async () => {
+  const calls: string[][] = [];
+  const paths = await gitChangedPaths('ci', (args) => {
+    calls.push(args);
+    if (args[0] === 'diff') return Promise.resolve(undefined);
+    return Promise.resolve('deno.lock\npackages/app/src/spa.ts\n');
+  });
+  assertEquals(paths, ['deno.lock', 'packages/app/src/spa.ts']);
+  assertEquals(calls, [
+    ['diff', '--name-only', 'HEAD^', 'HEAD'],
+    ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+  ]);
+});
+
+Deno.test('mod3: changed-path discovery fails when every git strategy fails', async () => {
+  let message = '';
+  try {
+    await gitChangedPaths('ci', () => Promise.resolve(undefined));
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+  assert(message.includes('Unable to determine changed paths'));
+});
+
+Deno.test('mod3: parses two-phase release commands', () => {
+  assertEquals(
+    parseArgs([
+      'release-prepare',
+      '--approved-plan',
+      'docs/current/VERSION_PLAN.md',
+      '--to',
+      '0.41.0-alpha.11',
+      '--dry-run',
+    ]),
+    {
+      command: 'release-prepare',
+      dryRun: true,
+      dispatch: false,
+      approvedPlan: 'docs/current/VERSION_PLAN.md',
+      targetVersion: '0.41.0-alpha.11',
+    },
+  );
+  assertEquals(
+    parseArgs(['publish-existing', '--to', '0.41.0-alpha.11']),
+    {
+      command: 'publish-existing',
+      dryRun: false,
+      dispatch: false,
+      approvedPlan: undefined,
+      targetVersion: '0.41.0-alpha.11',
+    },
+  );
 });
 
 Deno.test('release: next patch version and tag are deterministic', () => {
