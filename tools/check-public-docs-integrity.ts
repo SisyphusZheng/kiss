@@ -76,11 +76,8 @@ for (const file of currentPublicDocs) {
     failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
   }
 
-  if (!text.includes('0.41.0-beta.4')) {
-    failures.push({
-      file,
-      message: 'missing beta.4 candidate truth',
-    });
+  if (!text.includes('0.41.0-alpha.9')) {
+    failures.push({ file, message: 'missing alpha.9 release truth' });
   }
 
   for (const pattern of staleCurrentClaims) {
@@ -133,5 +130,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, beta.4 candidate).`,
+  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, alpha maturity).`,
 );

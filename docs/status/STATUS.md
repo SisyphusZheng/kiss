@@ -1,9 +1,9 @@
 # openElement Status
 
 > Updated: 2026-07-13\
-> Published package line: `v0.41.0-alpha.8`\
+> Published package line: `v0.41.0-alpha.9`\
 > Product graph: five packages\
-> First coherent beta candidate: `0.41.0-beta.4`
+> Current maturity stage: alpha
 
 ## Current position
 
@@ -13,9 +13,9 @@ are authoring modes; Declarative Shadow DOM is the default server output;
 interactive regions upgrade selectively. Vite and Nitro are the official build
 and output path.
 
-The published alpha.8 package line is the last alpha artifact. The beta.4
-five-package convergence is complete in the repository. It is not a released
-beta yet.
+The five-package convergence is published as alpha.9. The project remains in
+alpha while external adoption and application-level interfaces are still
+allowed to drive breaking changes. The abandoned beta naming is retired.
 
 ## Product surface
 
@@ -31,17 +31,16 @@ The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
 are not supported consumer imports. Historical references remain in their
 original ADR, release and audit records.
 
-## beta.4 release conditions
+## alpha.9 release state
 
-| Condition                                                          | State                                         |
-| ------------------------------------------------------------------ | --------------------------------------------- |
-| Five-package implementation and current docs                       | Complete                                      |
-| Public starter lifecycle, packed consumer and third-party WC smoke | Complete locally                              |
-| Node/Nitro output and artifact verification                        | Complete locally                              |
-| Chromium candidate gate                                            | Complete locally                              |
-| Firefox and WebKit candidate gates                                 | Required for release candidate                |
-| npm/tag/GitHub Release/provenance/docs/evidence truth              | Required at publish time                      |
-| External adopter pilot #390                                        | Open; cannot be substituted by internal tests |
+| Condition                                                          | State                                      |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| Five-package implementation and current docs                       | Published in alpha.9                       |
+| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                   |
+| Node/Nitro output and artifact verification                        | Complete                                   |
+| Chromium, Firefox and WebKit gates                                 | Complete for alpha.9                       |
+| npm/tag/GitHub Release/docs/evidence truth                         | Verified at publish time                   |
+| External adopter pilot #390                                        | Open; required before stability commitment |
 
 ## Current risks
 
@@ -56,16 +55,17 @@ original ADR, release and audit records.
 
 ## Forward direction
 
-| Version         | Focus                                                                        |
-| --------------- | ---------------------------------------------------------------------------- |
-| `0.41.0-beta.4` | External adoption and release closure                                        |
-| `0.41.0`        | Freeze deep Element, App and Build interfaces                                |
-| `0.42.0`        | WC Application Loop: load, render, progressive form, action and revalidation |
-| `0.43.0`        | Universal WC SSR compatibility and diagnostics                               |
-| `0.44.0`        | Portable production runtime                                                  |
-| `0.45.0`        | WC ecosystem adoption                                                        |
-| `0.46.0`        | v1 product freeze                                                            |
-| `1.0.0`         | Stable five-package product                                                  |
+| Version          | Focus                                                                        |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `0.41.0-alpha.9` | Five-package convergence, product truth and unified website                  |
+| `0.41.0-alpha.x` | External adoption and interface maturation                                   |
+| `0.41.0`         | Freeze deep Element, App and Build interfaces                                |
+| `0.42.0`         | WC Application Loop: load, render, progressive form, action and revalidation |
+| `0.43.0`         | Universal WC SSR compatibility and diagnostics                               |
+| `0.44.0`         | Portable production runtime                                                  |
+| `0.45.0`         | WC ecosystem adoption                                                        |
+| `0.46.0`         | v1 product freeze                                                            |
+| `1.0.0`          | Stable five-package product                                                  |
 
 The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.md).
 
@@ -73,7 +73,7 @@ The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.m
 
 - Current package and release plan: [`docs/current/VERSION_PLAN.md`](../current/VERSION_PLAN.md)
 - Five-package surface: [`docs/current/PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
-- Beta boundary decision: [`ADR-0113`](../adr/ADR-0113-beta-four-product-boundary.md)
+- Alpha naming decision: [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md)
 - Release records: [`docs/release/`](../release/)
 - Architectural history: [`docs/adr/`](../adr/)
 - Audit history: [`docs/audit/`](../audit/)

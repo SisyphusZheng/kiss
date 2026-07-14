@@ -6,8 +6,8 @@
 Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作者层；
 Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
 
-已发布包线为 `0.41.0-alpha.8`（`v0.41.0-alpha.8`）。首个完整 beta 候选是
-`0.41.0-beta.4`，尚未发布。
+已发布包线为 `0.41.0-alpha.9`（`v0.41.0-alpha.9`）。项目继续使用 alpha
+命名，直到五包产品与外部采用证据充分成熟；已放弃的 beta 命名不再是当前版本线。
 
 ## 当前产品
 
@@ -41,11 +41,11 @@ official build path = Vite + Nitro
 
 ## 当前发布状态
 
-五包 beta 实施已在仓库内完成。npm beta.1 至 beta.3 是已撤回的不完整历史产物；
-`0.41.0-beta.4` 是首个完整候选。外部 adopter pilot #390 是唯一仓库外条件，之后
-还需候选浏览器矩阵与发布真相验证。
+五包收敛已作为 `0.41.0-alpha.9` 发布。npm beta.1 至 beta.3 仍是已撤回的
+不完整历史产物，不构成兼容基线。外部 adopter pilot #390 仍是作出稳定性承诺前
+最重要的仓库外条件。
 
-只有 beta.4 不再需要架构、公开接口或采用工作时，才发布 stable `0.41.0`。
+只有后续 alpha 不再需要架构、公开接口或采用工作时，才发布 stable `0.41.0`。
 request-time data、forms、sessions 与 cache 仍是后续产品工作；当前承诺是具有
 fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
 

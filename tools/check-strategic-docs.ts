@@ -54,7 +54,7 @@ const checks: Check[] = [
     required: ['OpenElement = Web Components-native fullstack application framework'],
   },
   {
-    name: 'published alpha is distinct from beta candidate',
+    name: 'alpha.9 is the current maturity line',
     files: [
       'README.md',
       'README.zh.md',
@@ -63,8 +63,8 @@ const checks: Check[] = [
       'docs/status/STATUS.md',
       'www/app/routes/roadmap.tsx',
     ],
-    required: ['0.41.0-beta.4'],
-    accept: (text) => text.includes('alpha.8') && text.includes('beta.4'),
+    required: ['0.41.0-alpha.9'],
+    accept: (text) => text.includes('alpha.9'),
   },
   {
     name: `${PACKAGE_VERSION_TAG} is the current package line`,

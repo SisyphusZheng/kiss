@@ -11,12 +11,12 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: published package line `v0.41.0-alpha.8`, completed
-implementation anchor `v0.41.0-alpha.7`, and beta.4 release closure under
+Current execution anchor: published package line `v0.41.0-alpha.9`, completed
+implementation anchor `v0.41.0-alpha.7`, and alpha maturation under
 `docs/current/VERSION_PLAN.md`. OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
-second product. The first coherent beta publish is `0.41.0-beta.4`; it remains
-unpublished until #390 and candidate release evidence close.
+second product. The abandoned beta naming is retired; alpha releases
+continue until external adoption and interfaces justify stability.
 
 ## Required Reading Order
 

@@ -1,8 +1,8 @@
-# v0.41 Version Plan — five-package beta closure
+# v0.41 Version Plan — alpha maturation
 
-> Published package line: `v0.41.0-alpha.8`\
+> Published package line: `v0.41.0-alpha.9`\
 > Active implementation anchor: `v0.41.0-alpha.7`\
-> First coherent beta candidate: `0.41.0-beta.4`
+> Current maturity stage: alpha
 
 ## Product truth
 
@@ -21,7 +21,7 @@ complete applications. The current consumer graph contains `element`, `app`,
 `adapter-vite`, `create` and optional `ui`. The alpha implementation packages
 that supplied their internals have no current compatibility promise.
 
-## Beta.4 state
+## Alpha.9 state
 
 The final breaking convergence is complete in the repository:
 
@@ -32,19 +32,19 @@ The final breaking convergence is complete in the repository:
 - legacy compatibility paths and shallow public surfaces were removed.
 
 npm beta.1 through beta.3 are immutable partial publishes. They are historical
-withdrawn artifacts, not compatibility baselines. `0.41.0-beta.4` is the first
-complete candidate and has not been published.
+withdrawn artifacts, not compatibility baselines. The planned beta name is
+retired; the complete five-package convergence is published as alpha.9.
 
-## Remaining release conditions
+## Remaining stability conditions
 
 1. Complete external adopter pilot #390. The report must cover install, author,
    build, deploy and maintainer intervention; internal smoke is not a proxy.
-2. Run the candidate browser matrix in Chromium, Firefox and WebKit.
-3. Publish one coherent five-package graph under the `beta` dist-tag with
-   provenance.
-4. Verify Git tag, npm versions and dist-tag, GitHub Release, provenance, docs
-   and final release evidence agree.
-5. Cut stable `0.41.0` only when beta.4 requires no additional architecture,
+2. Keep the Chromium, Firefox and WebKit matrix green for every alpha release.
+3. Publish every alpha as one coherent five-package graph under the `alpha`
+   dist-tag.
+4. Verify Git tag, npm versions and dist-tag, GitHub Release, docs and final
+   release evidence agree.
+5. Cut stable `0.41.0` only when alpha use requires no additional architecture,
    interface or adoption work.
 
 ## Supported authoring surface
@@ -83,5 +83,5 @@ scope rules.
 
 Alpha plans, release records, audits and ADRs preserve their original package
 names and decisions. They are historical evidence rather than current consumer
-documentation. The controlling beta product boundary is
-[`ADR-0113`](../adr/ADR-0113-beta-four-product-boundary.md).
+documentation. The controlling maturity and naming decision is
+[`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).

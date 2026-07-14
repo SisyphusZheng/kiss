@@ -333,24 +333,24 @@ pageSheet.replaceSync(`
 
 const phases = [
   {
-    version: 'v0.41.0-alpha.8',
-    title: 'Published alpha package line',
-    copy: 'The last published alpha line; its implementation work converged the consumer product around five packages.',
+    version: 'v0.41.0-alpha.9',
+    title: 'Five-package alpha release',
+    copy: 'The published alpha line converges the consumer product around five packages and ships the unified product and website surface.',
     status: 'done',
     tone: 'success',
   },
   {
-    version: 'v0.41.0-beta.4',
-    title: 'Five-package candidate closure',
-    copy: 'The first coherent beta candidate: external adopter #390, browser candidate proof and release-truth closure remain before publish.',
-    status: 'candidate closure',
+    version: 'v0.41.0-alpha.x',
+    title: 'Adoption and interface proof',
+    copy: 'External adopter #390 and further real use can still drive breaking architecture and authoring corrections.',
+    status: 'active alpha',
     tone: 'warning',
   },
   {
     version: 'v0.41.0',
     title: 'Core interface freeze',
-    copy: 'Freeze the five-package graph and deep Element, App and Build interfaces only when beta.4 exposes no further breaking work.',
-    status: 'after beta.4',
+    copy: 'Freeze the five-package graph and deep Element, App and Build interfaces only when alpha adoption exposes no further breaking work.',
+    status: 'after alpha proof',
     tone: 'warning',
   },
   {
@@ -387,7 +387,7 @@ export class RoadmapPage extends OpenElement {
             <span slot='title'>Roadmap</span>
             <span slot='lede'>OpenElement roadmap labels describe the public product surface, tied to package truth, docs truth and CI evidence rather than a wish list.</span>
             <open-artifact-panel slot='artifact' class='now'>
-              <span slot='label'>current</span><span slot='meta'>alpha.8 published → beta.4 candidate</span>
+              <span slot='label'>current</span><span slot='meta'>alpha.9 published → alpha adoption proof</span>
               <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
@@ -397,13 +397,13 @@ export class RoadmapPage extends OpenElement {
                   <span class='notch'></span>
                 </div>
                 <div>
-                  <open-badge tone='warning'>beta candidate closure</open-badge>
-                  <h2>The five-package implementation is complete; adoption and release evidence now decide beta.4.</h2>
+                  <open-badge tone='warning'>alpha maturation</open-badge>
+                  <h2>The five-package product is published; adoption now decides when its interfaces are stable.</h2>
                   <p>
-                    alpha.8 is the published package line. beta.1–beta.3 are
-                    withdrawn partial npm artifacts, so beta.4 is the first
-                    coherent candidate. External adopter pilot #390, browser
-                    candidate gates and release truth remain before publishing.
+                    alpha.9 is the published package line. beta.1–beta.3 remain
+                    withdrawn partial npm artifacts. External adopter pilot
+                    #390 and continued browser and release evidence guide the
+                    remaining alpha maturation work.
                   </p>
                 </div>
               </div>
@@ -417,7 +417,7 @@ export class RoadmapPage extends OpenElement {
           <div class='release-rail' aria-label='Roadmap release rail'>
           <div class='phase-grid'>
             {phases.map((phase) => (
-              <open-card class='phase-card' variant={phase.version === 'v0.41.0-beta.4' ? 'elevated' : undefined}>
+              <open-card class='phase-card' variant={phase.version === 'v0.41.0-alpha.9' ? 'elevated' : undefined}>
                 <div class='phase-top'>
                   <span class='version'>{phase.version}</span>
                   <open-badge tone={phase.tone}>{phase.status}</open-badge>

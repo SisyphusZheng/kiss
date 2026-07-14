@@ -35,7 +35,7 @@ independent adapters demonstrate a real replacement seam.
 - Third-party Web Components use explicit manifest/CEM admission; unknown SSR
   capability becomes client-only or rejected rather than a partial render.
 - Browser candidates must pass Chromium, Firefox and WebKit with native DSD.
-- External adopter pilot #390 remains the only repository-external beta.4
-  condition.
+- External adopter pilot #390 remains the primary repository-external
+  stability condition.
 
 See [PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) for the exact export inventory.

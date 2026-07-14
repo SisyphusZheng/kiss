@@ -7,8 +7,9 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Published package line: `0.41.0-alpha.8` (`v0.41.0-alpha.8`). The first
-coherent beta candidate will be `0.41.0-beta.4`; it is not published yet.
+Published package line: `0.41.0-alpha.9` (`v0.41.0-alpha.9`). This release
+keeps the project in alpha while the five-package product and external adoption
+evidence continue to mature; the abandoned beta naming is not an active line.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)
@@ -50,13 +51,12 @@ external adoption. It is not presented as an already-achieved market claim.
 
 ## Current release state
 
-The five-package beta implementation is complete inside the repository. npm
-beta.1 through beta.3 are withdrawn partial artifacts; `0.41.0-beta.4` is the
-first complete candidate. External adopter pilot #390 is the remaining
-repository-external condition, followed by the release-candidate browser matrix
-and release-truth verification.
+The five-package convergence is published as `0.41.0-alpha.9`. npm beta.1
+through beta.3 remain withdrawn partial artifacts and are not compatibility
+baselines. External adopter pilot #390 remains the primary repository-external
+condition before the project can make a stability commitment.
 
-Stable `0.41.0` is released only when beta.4 needs no more architecture,
+Stable `0.41.0` is released only when alpha releases need no more architecture,
 public-interface or adoption work. Request-time data, forms, sessions and cache
 remain future product work, so the current promise is static-first applications
 with fullstack output paths—not broad fullstack parity.

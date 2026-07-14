@@ -86,7 +86,7 @@ Deno.test('v0.27.0 regression: no <dialog> in rendered HTML', () => {
 
 // ─── API Surface: jsx NOT in root export ────────────────────────────
 
-Deno.test('beta.4 surface: JSX is exported from @openelement/element root', () => {
+Deno.test('alpha.9 surface: JSX is exported from @openelement/element root', () => {
   const indexPath = join(
     import.meta.dirname ?? '.',
     '..',
@@ -104,7 +104,7 @@ Deno.test('beta.4 surface: JSX is exported from @openelement/element root', () =
 
 // ─── parse5 not a dependency ─────────────────────────────────────────
 
-Deno.test('beta.4 surface: retired package directories stay deleted', () => {
+Deno.test('alpha.9 surface: retired package directories stay deleted', () => {
   const packages = join(import.meta.dirname ?? '.', '..', '..', 'packages');
   for (const name of ['core', 'signal', 'router', 'protocol', 'content', 'ssg']) {
     assertFalse(existsSync(join(packages, name)), `retired package directory returned: ${name}`);

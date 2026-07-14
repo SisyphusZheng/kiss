@@ -59,14 +59,14 @@ export class ChangelogPage extends OpenElement {
           <div slot="artifact"><open-button href="/roadmap">Read roadmap</open-button></div>
         </open-page-hero>
         <open-reading-shell meta rail footer>
-          <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.8</code>.</p></div>
+          <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.9</code>.</p></div>
           <open-page-rail slot="rail" items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Candidate"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'></open-page-rail>
         <p id="published">
           The project follows Keep a Changelog and SemVer. Historical entries
           preserve older names where they describe older releases; current docs
           use the openElement contract.
         </p>
-        <section id="candidate"><h2>Candidate</h2><p><code>0.41.0-beta.4</code> is an unpublished candidate. It needs the external adopter pilot #390 and final release evidence before it can become a published release.</p></section>
+        <section id="candidate"><h2>Active alpha</h2><p><code>0.41.0-alpha.9</code> publishes the coherent five-package product. Further alpha releases remain possible while external adopter #390 and real use can still expose breaking interface work.</p></section>
         <section id="withdrawn"><h2>Withdrawn partial artifacts</h2><p>The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.</p></section>
         <div id="historical" class="changelog-content" innerHTML={html} trustedHtml={true} />
         <div slot="footer" class="nav-row">

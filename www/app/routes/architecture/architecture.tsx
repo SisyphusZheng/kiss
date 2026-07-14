@@ -88,7 +88,7 @@ export class ArchitecturePage extends OpenElement {
           <span slot='copy'>Package surface, docs truth, artifacts, critical paths and browser tests reject a return to the retired product graph.</span>
           <div class='gate-grid'>
             <div class='gate'><strong>5 packages</strong><span>Current consumer surface, starter and docs agree.</span></div>
-            <div class='gate'><strong>#390</strong><span>External adoption remains a beta.4 condition.</span></div>
+            <div class='gate'><strong>#390</strong><span>External adoption remains a stability condition.</span></div>
             <div class='gate'><strong>3 browsers</strong><span>Candidate releases require Chromium, Firefox and WebKit proof.</span></div>
             <div class='gate'><strong>packed proof</strong><span>Consumers build from public artifacts, not workspace aliases.</span></div>
           </div>

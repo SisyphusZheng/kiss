@@ -136,6 +136,7 @@ test.describe('Performance', () => {
       ({ text, url }) =>
         !url.includes('gc.zgo.at') &&
         !url.includes('openelement.goatcounter.com') &&
+        !text.includes('gc.zgo.at/count.js') &&
         !text.includes('net::ERR') &&
         !text.includes('favicon') &&
         !text.includes('Manifest') &&
@@ -146,6 +147,6 @@ test.describe('Performance', () => {
         !text.includes("Failed to find a valid digest in the 'integrity' attribute"),
     );
 
-    expect(criticalErrors.length).toBe(0);
+    expect(criticalErrors, JSON.stringify(criticalErrors, null, 2)).toEqual([]);
   });
 });
