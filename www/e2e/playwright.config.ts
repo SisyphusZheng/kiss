@@ -27,6 +27,16 @@ export default defineConfig({
   workers: 1,
   reporter: 'html',
   timeout: 120_000,
+  // Visual baselines are product artifacts, not host-OS artifacts. JetBrains
+  // Mono is self-hosted and a small pixel allowance absorbs rasterizer-only
+  // differences between the macOS authoring environment and Linux CI.
+  snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}-chromium-canonical{ext}',
+
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+    },
+  },
 
   use: {
     baseURL,
