@@ -343,8 +343,15 @@ export function createPreparePlan(
   targetVersion: string,
   approvalId?: string,
 ): ReleaseCommandStep[] {
-  return createReleasePlan(targetVersion, approvalId)
+  const steps = createReleasePlan(targetVersion, approvalId)
     .filter((step) => PREPARE_STEP_NAMES.has(step.name));
+  if (!steps.some((step) => step.name === 'run release gates after bump')) {
+    steps.push({
+      name: 'run release gates after bump',
+      command: ['deno', 'task', 'autoflow:ci'],
+    });
+  }
+  return steps;
 }
 
 async function verifyPublishedSourceVersion(targetVersion: string): Promise<void> {
