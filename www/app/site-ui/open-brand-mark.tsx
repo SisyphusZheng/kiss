@@ -26,10 +26,23 @@ sheet.replaceSync(`
   :host([size="lg"]) { --mark-size: var(--size-12); }
   :host([size="xl"]) { --mark-size: var(--size-16); }
 
-  img {
-    display: block;
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
+    color: var(--text-primary, currentColor);
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: calc(var(--mark-size) * .25);
+    font-weight: 800;
+    letter-spacing: -.09em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .slash {
+    color: var(--violet-8, #8b5cf6);
   }
 
   :host { view-transition-name: open-brand-mark; }
@@ -40,7 +53,11 @@ export class OpenBrandMark extends OpenElement {
   static override observedAttributes = ['size', 'tone', 'variant'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    return <img className='mark' part='mark' src='/assets/open-favicon.svg' alt='' />;
+    return (
+      <span className='mark' part='mark' aria-hidden='true'>
+        &lt;open<span className='slash'>/</span>&gt;
+      </span>
+    );
   }
 }
 

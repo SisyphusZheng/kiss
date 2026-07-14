@@ -19,13 +19,19 @@ test.describe('Cinematic homepage', () => {
     expect(canvasExists).toBe(true);
   });
 
-  test('renders a visible canonical logo linked to the current locale home', async ({ page }) => {
+  test('renders a transparent theme-aware logo linked to the current locale home', async ({ page }) => {
     await page.goto('/zh/guide/getting-started');
     const logo = page.locator('open-layout').locator('a.logo');
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute('href', '/zh/');
     await expect.poll(() => logo.evaluate((element) => getComputedStyle(element).backgroundImage))
-      .toContain('/assets/open-favicon.svg');
+      .toBe('none');
+    const mark = logo.locator('.logo-glyph');
+    await expect(mark).toBeVisible();
+    const darkColor = await mark.evaluate((element) => getComputedStyle(element).color);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+    const lightColor = await mark.evaluate((element) => getComputedStyle(element).color);
+    expect(lightColor).not.toBe(darkColor);
   });
 
   test('drives the native film timeline without hijacking scroll', async ({ page }) => {
@@ -41,5 +47,9 @@ test.describe('Cinematic homepage', () => {
         )
       )
     ).toBeGreaterThan(0);
+    const vinyl = home.locator('.vinyl');
+    await expect(home.locator('.vinyl-wordmark')).toBeVisible();
+    const rotated = await vinyl.evaluate((element) => getComputedStyle(element).transform);
+    expect(rotated).not.toBe('none');
   });
 });

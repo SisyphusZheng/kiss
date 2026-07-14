@@ -36,7 +36,6 @@ import { escapeAttr, escapeHtml } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
 import '@openelement/ui/open-theme-toggle';
-import './open-brand-mark.tsx';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
@@ -234,7 +233,7 @@ sheet.replaceSync(`
     width: 52px;
     min-width: 52px;
     max-width: 52px;
-    background: url('/assets/open-favicon.svg') center / 48px 48px no-repeat;
+    background: transparent;
     font-size: var(--font-size-3);
     font-weight: var(--font-weight-8);
     color: var(--text-primary);
@@ -243,15 +242,31 @@ sheet.replaceSync(`
     white-space: nowrap;
   }
 
-  .logo:hover open-brand-mark {
+  .logo:hover .logo-glyph {
     transform: translateY(calc(var(--border-size-1) * -1));
   }
 
-  open-brand-mark {
-    display: inline-grid;
+  .logo-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     align-self: center;
+    width: 48px;
+    height: 48px;
     max-width: 100%;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: -.09em;
+    line-height: 1;
+    white-space: nowrap;
     transition: transform var(--duration-2) var(--ease-2);
+    view-transition-name: open-brand-mark;
+  }
+
+  .logo-slash {
+    color: var(--brand);
   }
   .logo:focus-visible {
     outline: var(--focus-size) solid var(--focus-ring);
@@ -903,7 +918,9 @@ export class OpenLayout extends OpenElement {
         <header className='app-header' part='header'>
           <nav className='header-inner' aria-label='Primary navigation'>
             <a className='logo' href={this._homeHref()} data-nav='/' aria-label='OpenElement home'>
-              <open-brand-mark size='md'></open-brand-mark>
+              <span className='logo-glyph' aria-hidden='true'>
+                &lt;open<span className='logo-slash'>/</span>&gt;
+              </span>
               {logoSub && <span className='logo-sub'>{logoSub}</span>}
             </a>
             {this._renderHeaderNav()}
