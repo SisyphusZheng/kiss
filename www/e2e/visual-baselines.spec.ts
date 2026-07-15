@@ -57,7 +57,11 @@ for (const locale of ['en', 'zh'] as const) {
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.addInitScript((value) => localStorage.setItem('open-theme', value), theme);
         for (const route of currentRoutes) {
-          const localized = route === '/' ? `/${locale}/` : `/${locale}${route}`;
+          const localized = locale === 'en'
+            ? route
+            : route === '/'
+            ? `/${locale}/`
+            : `/${locale}${route}`;
           await page.goto(localized, { waitUntil: 'networkidle' });
           await expect(page.locator('open-layout')).toBeVisible();
           await expect(page).toHaveScreenshot(

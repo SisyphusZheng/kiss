@@ -109,6 +109,18 @@ Deno.test('generateIslandManifests: defaults strategy to idle and layer to dsd-s
   cleanup();
 });
 
+Deno.test('generateIslandManifests: nested routes use one POSIX slash', () => {
+  setup();
+  mkdirSync(join(TMP_DIR, 'guide', 'start'), { recursive: true });
+  writeFileSync(join(TMP_DIR, 'guide', 'start', 'index.html'), '<open-button></open-button>');
+  const manifests = generateIslandManifests(TMP_DIR, {
+    'open-button': '/client/islands/island-open-button-a1b2.js',
+  });
+  assertEquals(manifests[0].route, '/guide/start');
+  assertEquals(manifests[0].route.includes('//'), false);
+  cleanup();
+});
+
 Deno.test('writeIslandManifests: creates JSON files in island-manifests dir', async () => {
   setup();
   const manifests: PageIslandManifest[] = [

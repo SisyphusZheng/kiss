@@ -5,30 +5,15 @@
  * This module sits at the bottom of the dependency graph.
  */
 
-import { join } from 'node:path';
-import { readdirSync } from 'node:fs';
 import type { IsrManifestEntry } from '../protocol/framework.ts';
 import { createIsrCacheKey } from '@openelement/element';
+import { walkHtmlFileEntries } from '../html-files.ts';
 
 // ─── Path / URL helpers ────────────────────────────────────────
 
 /** Recursively find all .html files under a directory. */
 export function findHtmlFiles(dir: string): string[] {
-  const results: string[] = [];
-  try {
-    const entries = readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        results.push(...findHtmlFiles(fullPath));
-      } else if (entry.name.endsWith('.html')) {
-        results.push(fullPath);
-      }
-    }
-  } catch {
-    // Directory may not exist yet
-  }
-  return results;
+  return walkHtmlFileEntries(dir).map((entry) => entry.absolutePath);
 }
 
 // ─── Route helpers ─────────────────────────────────────────────

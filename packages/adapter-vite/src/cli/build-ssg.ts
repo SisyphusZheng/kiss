@@ -152,7 +152,7 @@ async function buildSSG(
     layouts,
   }).ssrAdmissionPlan;
 
-  const rawSsgEntryCode = generateSsrPolyfillBanner() + '\n' + generateHonoEntryCode(routes, {
+  const ssgEntryCode = generateSsrPolyfillBanner() + '\n' + generateHonoEntryCode(routes, {
     routesDir,
     islandsDir,
     middleware: options.middleware,
@@ -171,7 +171,6 @@ async function buildSSG(
   });
   // Deno import map resolution handles bare specifiers (e.g. @openelement/ui/open-callout)
   // via the createDenoImportMapPlugin added to the Phase 3 viteBuild plugins below.
-  const ssgEntryCode = rawSsgEntryCode;
 
   try {
     const { build: viteBuild } = await import('vite');

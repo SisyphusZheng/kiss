@@ -577,6 +577,35 @@ Deno.test('renderEntry: CORS default (no corsOrigin) generates localhost regex',
   assertStringIncludes(code, 'localhost');
 });
 
+Deno.test('renderEntry: default CORS warns with config entry and security impact', () => {
+  const warnings: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...values: unknown[]) => warnings.push(values.map(String).join(' '));
+  try {
+    const desc = buildEntryDescriptor(basicRoutes, { middleware: { cors: true } });
+    renderEntry(desc);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assertStringIncludes(warnings.join('\n'), 'middleware.corsOrigin');
+  assertStringIncludes(warnings.join('\n'), 'production');
+});
+
+Deno.test('renderEntry: explicit CORS config is silent', () => {
+  const warnings: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...values: unknown[]) => warnings.push(values.map(String).join(' '));
+  try {
+    const desc = buildEntryDescriptor(basicRoutes, {
+      middleware: { cors: true, corsOrigin: 'https://example.com' },
+    });
+    renderEntry(desc);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assertEquals(warnings, []);
+});
+
 Deno.test('renderEntry: securityHeaders middleware', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     middleware: {

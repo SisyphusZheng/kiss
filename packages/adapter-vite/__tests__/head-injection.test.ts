@@ -168,6 +168,27 @@ Deno.test('buildHeadExtras: sanitizes unsafe direct headExtras markup', () => {
   assertEquals(result.headExtras!.includes('javascript:'), false);
 });
 
+Deno.test('buildHeadExtras: preserves style through restricted style path', () => {
+  const result = buildHeadExtras({
+    headExtras: '<style media="screen">:root { color: red; }</style>',
+  });
+  assertEquals(result.headExtras, '<style media="screen">:root { color: red; }</style>');
+});
+
+Deno.test('buildHeadExtras: rejects dangerous style content and attributes', () => {
+  assertThrows(
+    () =>
+      buildHeadExtras({ headExtras: '<style>body{background:url(javascript:alert(1))}</style>' }),
+    Error,
+    'Unsafe CSS',
+  );
+  assertThrows(
+    () => buildHeadExtras({ headExtras: '<style onclick="evil()">body{color:red}</style>' }),
+    Error,
+    'Unsafe style attribute',
+  );
+});
+
 Deno.test('buildHeadExtras: rejects script in headExtras', () => {
   assertThrows(
     () => buildHeadExtras({ headExtras: '<script src="/x.js"></script>' }),

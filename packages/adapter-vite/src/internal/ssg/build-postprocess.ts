@@ -52,7 +52,7 @@ export async function postProcessClientIslandBuild(
     ...(ctx.phase1.packageIslandDecls || []).map((island) => island.tagName),
   ];
 
-  const chunkMap = buildIslandChunkMap(root, outDir, islandTagNames, base);
+  const chunkMap = await buildIslandChunkMap(root, outDir, islandTagNames, base);
 
   const strategyMap = Object.fromEntries([
     ...Object.entries(ctx.phase1.islandMeta || {}).map(([tag, meta]) => [

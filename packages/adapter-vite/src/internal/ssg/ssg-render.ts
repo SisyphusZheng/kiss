@@ -38,7 +38,6 @@ export async function ssgRender(
 ): Promise<void> {
   const root = options.root || cwd();
   const outDir = options.outDir || 'dist';
-  const basePath = options.base || '/';
 
   // ── Dynamic route expansion via bundle.getStaticPaths() ──────
   const routeInfo = (module.routeInfo ?? []) as Array<{
@@ -182,20 +181,11 @@ export async function ssgRender(
 
   // ── Post-processing modules ─────────────────────────────────
   const {
-    buildIslandChunkMap,
     injectCspMeta,
     injectViewTransitionMeta,
     injectSpeculationRules,
     buildSpeculationRulesJson,
   } = await import('./postprocess.ts');
-
-  const islandTagNames = options.islandTagNames || [];
-  const _islandChunkMap = buildIslandChunkMap(
-    root,
-    outDir,
-    islandTagNames,
-    basePath,
-  );
 
   if (options.viewTransition !== false) {
     injectViewTransitionMeta(outputDir);

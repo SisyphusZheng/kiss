@@ -81,7 +81,7 @@ test.describe('HTML Structure', () => {
   });
 
   test('en locale page has lang="en"', async ({ page }) => {
-    await page.goto('/en/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     const lang = await page.getAttribute('html', 'lang');
