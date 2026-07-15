@@ -13,7 +13,7 @@ export type { OpenElementComponentConstructor } from './open-element.ts';
 
 export { ErrorBoundary } from './error-boundary.ts';
 
-export { defineElement, defineLayout } from './define-element.ts';
+export { defineElement } from './define-element.ts';
 export type { ElementDefinition } from './types.ts';
 
 // ─── Prop types ──────────────────────────────────────────

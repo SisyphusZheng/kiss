@@ -24,7 +24,14 @@ export class OpenElementThemeManager {
 
   applyStyles(root: ShadowRoot, component?: StyleSheetLike | StyleSheetLike[]): void {
     const componentStyles = component ? (Array.isArray(component) ? component : [component]) : [];
-    const styles = [...this.#styles, ...componentStyles];
+    const existing: readonly unknown[] = root.adoptedStyleSheets;
+    const styles = [
+      ...new Set([
+        ...existing,
+        ...this.#styles,
+        ...componentStyles,
+      ]),
+    ];
     if (styles.length > 0) root.adoptedStyleSheets = styles as unknown as CSSStyleSheet[];
   }
 

@@ -10,6 +10,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import type { HeaderNavLink, NavItem, NavOptions, NavSection, RouteMeta } from '../types.ts';
 import { createLogger } from '@openelement/element';
 import { scanRoutes } from '../../ssg/index.ts';
+import ts from 'typescript';
 
 /** Aggregated navigation data ready for module generation */
 export interface NavData {
@@ -22,29 +23,58 @@ export interface NavData {
 const log = createLogger('content:nav');
 
 /**
- * Extract `export const meta = { ... }` from source text using regex.
- * Only string values for section/label and numeric order are supported.
+ * Extract `export const meta = { ... }` from source text using TypeScript's AST.
+ * Only static string values for section/label and numeric order are supported;
+ * unrelated nested metadata is allowed and safely ignored.
  */
 export function extractMeta(source: string): RouteMeta | null {
-  const match = source.match(/export\s+const\s+meta\s*=\s*\{([\s\S]*?)\}/);
-  if (!match) return null;
-
-  const body = match[1];
   const result: Record<string, unknown> = {};
-  const propRe = /(section|label|order)\s*:\s*(["']([^"']*)["']|(\d+))/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = propRe.exec(body)) !== null) {
-    const key = m[1];
-    const value = m[2];
-    if (key === 'order') {
-      result[key] = Number(value);
-    } else {
-      result[key] = value.slice(1, -1);
+  const file = ts.createSourceFile(
+    'route.tsx',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    if (!statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
+      continue;
+    }
+    for (const declaration of statement.declarationList.declarations) {
+      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'meta') continue;
+      let initializer = declaration.initializer;
+      while (
+        initializer &&
+        (ts.isAsExpression(initializer) || ts.isSatisfiesExpression(initializer) ||
+          ts.isParenthesizedExpression(initializer))
+      ) initializer = initializer.expression;
+      if (!initializer || !ts.isObjectLiteralExpression(initializer)) {
+        return null;
+      }
+      for (const property of initializer.properties) {
+        if (!ts.isPropertyAssignment(property)) continue;
+        const name = ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)
+          ? property.name.text
+          : undefined;
+        if (name !== 'section' && name !== 'label' && name !== 'order') continue;
+        const value = property.initializer;
+        if (name === 'order') {
+          if (ts.isNumericLiteral(value)) result.order = Number(value.text);
+          else if (
+            ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.MinusToken &&
+            ts.isNumericLiteral(value.operand)
+          ) result.order = -Number(value.operand.text);
+        } else if (ts.isStringLiteralLike(value)) {
+          result[name] = value.text;
+        } else if (ts.isNoSubstitutionTemplateLiteral(value)) {
+          result[name] = value.text;
+        }
+      }
+      return toRouteMeta(result);
     }
   }
-
-  return toRouteMeta(result);
+  return null;
 }
 
 function toRouteMeta(value: Record<string, unknown>): RouteMeta | null {

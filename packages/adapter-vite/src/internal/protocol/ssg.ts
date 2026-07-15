@@ -382,7 +382,7 @@ export interface BuildPageArtifact {
 
 /** Manifest produced by the build pipeline. */
 export interface BuildManifestArtifact {
-  routes: Array<{ path: string; tagName?: string; isDynamic: boolean }>;
+  routes: Array<{ kind: 'page' | 'api'; path: string; tagName?: string; isDynamic: boolean }>;
   islands: BuildIslandInput[];
 }
 

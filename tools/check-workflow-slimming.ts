@@ -1,6 +1,7 @@
 import { exists } from './lib/fs.ts';
 
 const failures: string[] = [];
+const MAX_WORKFLOWS = 6;
 
 for (
   const removed of [
@@ -19,8 +20,8 @@ for (
 
 const workflowCount = Array.from(Deno.readDirSync('.github/workflows'))
   .filter((entry) => entry.isFile && /\.ya?ml$/.test(entry.name)).length;
-if (workflowCount > 6) {
-  failures.push(`Expected at most 6 active workflows, found ${workflowCount}.`);
+if (workflowCount > MAX_WORKFLOWS) {
+  failures.push(`Expected at most ${MAX_WORKFLOWS} active workflows, found ${workflowCount}.`);
 }
 
 const autoflowCi = await Deno.readTextFile('.github/workflows/autoflow-ci.yml');

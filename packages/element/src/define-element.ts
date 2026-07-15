@@ -1,5 +1,5 @@
 /**
- * @openelement/element — defineElement / defineLayout helpers.
+ * @openelement/element — defineElement helper.
  *
  * Functional component-style authoring for OpenElement.
  */
@@ -45,12 +45,4 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
   }
 
   return OpenElementComponent;
-}
-
-// semantic alias for defineElement, trim when template/doc migration done
-export function defineLayout<Props extends Record<string, unknown> = Record<string, unknown>>(
-  tagName: string,
-  input: ((props: Props) => VNode | null) | ElementDefinition<Props>,
-): typeof OpenElement {
-  return defineElement(tagName, input);
 }

@@ -2,7 +2,7 @@
  * check-current-docs-no-legacy.ts - current docs staleness gate.
  */
 const LEGACY: Array<{ re: RegExp; name: string }> = [
-  { re: /(?<!`)html`/, name: 'html template' },
+  { re: /\bhtml\s*`(?=[^`]*\$\{)/u, name: 'html tagged template' },
   { re: /@prop\(/, name: '@prop()' },
   { re: /choose\(/, name: 'choose()' },
   { re: /unsafeHTML\(/, name: 'unsafeHTML()' },

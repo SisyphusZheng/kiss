@@ -38,6 +38,22 @@ export interface RouterInstance {
 type ParamMap = Map<string, string>;
 const MAX_GUARD_REDIRECTS = 10;
 
+interface RouteTrieNode {
+  staticChildren: Map<string, RouteTrieNode>;
+  dynamicChild?: RouteTrieNode;
+  wildcardChild?: RouteTrieNode;
+  routeIndexes: number[];
+}
+
+export interface CompiledRouteMatcher {
+  match(
+    pathname: string,
+    search: string,
+  ): { route: RouteConfig; params: Record<string, string> } | null;
+  /** Diagnostic used by the large-table regression test. */
+  candidateCount(pathname: string): number;
+}
+
 // ─── Internal helpers ─────────────────────────────────────────────
 
 function resolveMode(mode: RouterMode): 'history' | 'hash' {
@@ -60,6 +76,16 @@ function matchPattern(
 
   for (let i = 0; i < patternParts.length; i++) {
     const part = patternParts[i];
+    if (part === '*') {
+      pi = pathParts.length;
+      break;
+    }
+    if (part.startsWith(':') && part.endsWith('*')) {
+      const name = part.slice(1, -1);
+      setParam(params, name, decodePathComponent(pathParts.slice(pi).join('/')));
+      pi = pathParts.length;
+      break;
+    }
     const isOptional = part.endsWith('?');
     const clean = isOptional ? part.slice(0, -1) : part;
 
@@ -164,6 +190,15 @@ export function matchRoute(
   search: string,
   routes: RouteConfig[],
 ): { route: RouteConfig; params: Record<string, string> } | null {
+  return matcherFor(routes).match(pathname, search);
+}
+
+/** Declaration-order matcher retained as an equivalence oracle for trie tests. */
+export function matchRouteLinearForTests(
+  pathname: string,
+  search: string,
+  routes: RouteConfig[],
+): { route: RouteConfig; params: Record<string, string> } | null {
   const queryParams = parseQuery(search);
 
   for (const route of routes) {
@@ -178,11 +213,115 @@ export function matchRoute(
   return null;
 }
 
+function createTrieNode(): RouteTrieNode {
+  return { staticChildren: new Map(), routeIndexes: [] };
+}
+
+function routeParts(path: string): string[] {
+  return path === '/' ? [] : path.split('/').filter(Boolean);
+}
+
+function addRouteToTrie(
+  node: RouteTrieNode,
+  parts: string[],
+  partIndex: number,
+  routeIndex: number,
+): void {
+  if (partIndex >= parts.length) {
+    if (!node.routeIndexes.includes(routeIndex)) node.routeIndexes.push(routeIndex);
+    return;
+  }
+
+  const part = parts[partIndex];
+  if (part.endsWith('?')) {
+    addRouteToTrie(node, parts, partIndex + 1, routeIndex);
+  }
+
+  if (part === '*' || (part.startsWith(':') && part.endsWith('*'))) {
+    node.wildcardChild ??= createTrieNode();
+    addRouteToTrie(node.wildcardChild, parts, parts.length, routeIndex);
+    return;
+  }
+
+  if (part.startsWith(':')) {
+    node.dynamicChild ??= createTrieNode();
+    addRouteToTrie(node.dynamicChild, parts, partIndex + 1, routeIndex);
+    return;
+  }
+
+  let child = node.staticChildren.get(part);
+  if (!child) {
+    child = createTrieNode();
+    node.staticChildren.set(part, child);
+  }
+  addRouteToTrie(child, parts, partIndex + 1, routeIndex);
+}
+
+function collectCandidateIndexes(root: RouteTrieNode, pathname: string): number[] {
+  const parts = routeParts(pathname);
+  const indexes = new Set<number>();
+
+  const visit = (node: RouteTrieNode, partIndex: number): void => {
+    if (partIndex === parts.length) {
+      for (const index of node.routeIndexes) indexes.add(index);
+      if (node.wildcardChild) {
+        for (const index of node.wildcardChild.routeIndexes) indexes.add(index);
+      }
+      return;
+    }
+
+    const staticChild = node.staticChildren.get(parts[partIndex]);
+    if (staticChild) visit(staticChild, partIndex + 1);
+    if (node.dynamicChild) visit(node.dynamicChild, partIndex + 1);
+    if (node.wildcardChild) {
+      for (const index of node.wildcardChild.routeIndexes) indexes.add(index);
+    }
+  };
+
+  visit(root, 0);
+  return [...indexes].sort((left, right) => left - right);
+}
+
+export function compileRouteMatcher(routes: RouteConfig[]): CompiledRouteMatcher {
+  const root = createTrieNode();
+  routes.forEach((route, index) => addRouteToTrie(root, routeParts(route.path), 0, index));
+
+  const candidates = (pathname: string) => collectCandidateIndexes(root, pathname);
+  return {
+    match(pathname, search) {
+      const queryParams = parseQuery(search);
+      for (const index of candidates(pathname)) {
+        const route = routes[index];
+        const pathParams = matchPattern(route.path, pathname);
+        if (pathParams !== null) {
+          return { route, params: createParamsRecord(queryParams, pathParams) };
+        }
+      }
+      return null;
+    },
+    candidateCount(pathname) {
+      return candidates(pathname).length;
+    },
+  };
+}
+
+const compiledMatchers = new WeakMap<RouteConfig[], CompiledRouteMatcher>();
+
+function matcherFor(routes: RouteConfig[]): CompiledRouteMatcher {
+  let matcher = compiledMatchers.get(routes);
+  if (!matcher) {
+    matcher = compileRouteMatcher(routes);
+    compiledMatchers.set(routes, matcher);
+  }
+  return matcher;
+}
+
 // ─── createRouter ─────────────────────────────────────────────────
 
 export function createRouter(options: RouterOptions): RouterInstance {
   const mode = resolveMode(options.mode);
   const { routes } = options;
+  const routeMatcher = compileRouteMatcher(routes);
 
   let currentPath = '';
   let currentRoute: RouteConfig | null = null;
@@ -216,7 +355,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
     const u = new URL(raw, 'http://x');
     const pathname = u.pathname;
     const search = u.search;
-    const matched = matchRoute(pathname, search, routes);
+    const matched = routeMatcher.match(pathname, search);
 
     currentPath = raw;
     currentRoute = matched?.route ?? null;
@@ -249,7 +388,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
     // Run guard if we have a matching target route
     const u = new URL(path, 'http://x');
-    const matched = matchRoute(u.pathname, u.search, routes);
+    const matched = routeMatcher.match(u.pathname, u.search);
     if (matched?.route.guard) {
       const result = await matched.route.guard();
       if (result === false) return; // blocked

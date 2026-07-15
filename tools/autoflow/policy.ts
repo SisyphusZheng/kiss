@@ -71,6 +71,16 @@ export const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    name: 'generate:ui-tokens:check',
+    command: ['deno', 'task', 'generate:ui-tokens:check'],
+    tiers: ['push', 'ci', 'release'],
+    triggers: [
+      /^packages\/ui\/src\/open-props-tokens\.(?:css|ts)$/,
+      /^tools\/generate-ui-token-module\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'workflow:check-slimming',
     command: ['deno', 'task', 'workflow:check-slimming'],
     tiers: ['push', 'ci', 'release'],

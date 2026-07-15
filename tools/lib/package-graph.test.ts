@@ -37,6 +37,15 @@ Deno.test('extractOpenImports finds static, type and dynamic imports', () => {
   ]);
 });
 
+Deno.test('extractOpenImports ignores comments and nested template text', () => {
+  const source = `
+    // import '@openelement/comment';
+    const sample = \`text \${\`import('@openelement/string')\`}\`;
+    const actual = import(\`@openelement/ui/theme\`);
+  `;
+  assertEquals(extractOpenImports(source), ['@openelement/ui/theme']);
+});
+
 Deno.test('detectCycles reports a cycle in the dependency graph', () => {
   const graph = new Map<string, string[]>([
     ['a', ['b']],

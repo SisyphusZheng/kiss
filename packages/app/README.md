@@ -41,14 +41,18 @@ export default defineConfig({
 ## Authoring API
 
 ```tsx
-import { defineElement, defineIsland, defineLayout, definePage } from '@openelement/app';
+import { defineElement, defineIsland, definePage } from '@openelement/app';
 ```
 
 - `definePage({ route, head, renderIntent, load, render, error })` creates a file-route page from a canonical object descriptor.
 - `defineIslandConfig({ ssr, dsd, hydrate })` defines static island metadata for adapter scanning.
 - `defineIsland(tagName, render, { hydrate, dsd, ssr })` creates a browser-upgraded island.
-- `defineElement(tagName, render)` creates a DSD component.
-- `defineLayout(tagName, render)` is the layout-specific form of `defineElement()`.
+- `defineElement(tagName, render)` creates a DSD component, including layout elements.
+
+SPA action failures expose `{ error: 'Action failed' }` to page renderers. Raw
+exceptions are logged only in development. Route matching preserves declaration
+order while compiling static segments into a trie; named parameters, optional
+parameters, and wildcards remain supported.
 
 `OpenElement` remains the runtime primitive in `@openelement/element`, but application
 authors should start from this package.

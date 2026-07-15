@@ -1,7 +1,12 @@
-import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  assertUnifiedProductVersions,
+  buildTemplates,
+  resolveVersions,
+} from '../src/template-builder.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageDir = join(__dirname, '..');
@@ -27,8 +32,18 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     '@openelement/adapter-vite',
     '@openelement/app',
     '@openelement/element',
+    '@openelement/element/jsx-dev-runtime',
+    '@openelement/element/jsx-runtime',
     'vite',
   ]);
+  assertEquals(
+    denoJson.imports['@openelement/element/jsx-runtime'],
+    'npm:@openelement/element@^${v.element}/jsx-runtime',
+  );
+  assertEquals(
+    denoJson.imports['@openelement/element/jsx-dev-runtime'],
+    'npm:@openelement/element@^${v.element}/jsx-dev-runtime',
+  );
   assertEquals(Object.keys(denoJson.tasks).sort(), ['build', 'check', 'dev', 'preview', 'test']);
   assertEquals(denoJson.compilerOptions.jsxImportSource, '@openelement/element');
   assertFalse(JSON.stringify(denoJson).includes('@openelement/core'));
@@ -40,6 +55,32 @@ Deno.test('embedded CLI version matches its package manifest', () => {
   const manifest = JSON.parse(readFileSync(join(packageDir, 'deno.json'), 'utf-8'));
   const versionSource = readFileSync(join(packageDir, 'src', 'version.ts'), 'utf-8');
   assert(versionSource.includes(`'${manifest.version}'`));
+});
+
+Deno.test('Create and all five packages share one release version', () => {
+  const versions = ['adapter-vite', 'app', 'create', 'element', 'ui'].map((name) =>
+    JSON.parse(readFileSync(join(packageDir, '..', name, 'deno.json'), 'utf-8')).version as string
+  );
+  assertEquals([...new Set(versions)], [resolveVersions().app]);
+});
+
+Deno.test('Create rejects mixed product versions instead of silently generating', () => {
+  assertThrows(
+    () =>
+      assertUnifiedProductVersions({
+        app: '0.41.0-alpha.13',
+        adapterVite: '0.41.0-alpha.12',
+        element: '0.41.0-alpha.13',
+      }),
+    Error,
+    'same-version release invariant',
+  );
+});
+
+Deno.test('async template build returns deterministic path order', async () => {
+  const templates = await buildTemplates(resolveVersions());
+  assertEquals(Object.keys(templates), Object.keys(templates).toSorted());
+  assertFalse(Object.values(templates).some((content) => content.includes('${v.')));
 });
 
 Deno.test('starter templates use the supported Element JSX entrypoint', () => {

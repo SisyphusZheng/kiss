@@ -149,7 +149,11 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       'Static site layout must not ship as a UI island',
     );
     assert(existsSync(join(WWW_DIST, 'roadmap', 'index.html')), 'Clean URL output should exist');
-    assert(existsSync(join(WWW_DIST, 'en', 'roadmap', 'index.html')), 'i18n roadmap should exist');
+    assertEquals(
+      existsSync(join(WWW_DIST, 'en', 'roadmap', 'index.html')),
+      false,
+      'default locale must not overwrite or duplicate the canonical output',
+    );
     const roadmapHtml = readFileSync(join(WWW_DIST, 'roadmap', 'index.html'), 'utf-8');
     assertStringIncludes(roadmapHtml, 'Web Components-native');
     assertStringIncludes(roadmapHtml, '<open-layout');

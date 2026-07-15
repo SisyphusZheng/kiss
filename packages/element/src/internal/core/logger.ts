@@ -31,3 +31,8 @@ export function warnOnce(key: string, logger: Logger, msg: string): void {
     logger.warn(msg);
   }
 }
+
+/** @internal Test isolation only. Not exported from the package public facade. */
+export function resetWarnOnceForTests(): void {
+  _warned.clear();
+}

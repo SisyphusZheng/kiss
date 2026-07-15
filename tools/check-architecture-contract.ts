@@ -238,7 +238,7 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
       }
     });
   }
-  // v0.41.0: canonical home moved to protocol/src/framework.ts
+  // v0.41.0: canonical home moved to packages/element/src/internal/protocol/framework.ts
   const canonicalFile = 'packages/element/src/internal/protocol/framework.ts';
   if (compatibilityHits.length !== 1 || compatibilityHits[0].file !== canonicalFile) {
     for (const hit of compatibilityHits) {
@@ -262,10 +262,8 @@ export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void 
 }
 
 export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): void {
-  const scannerFiles = files.filter((f) =>
-    f.path === 'packages/adapter-vite/src/route-scanner.ts' ||
-    f.path === 'packages/adapter-vite/src/internal/content/nav/scanner.ts'
-  );
+  const scannerPaths = new Set(discoverScannerFiles(files.map((file) => file.path)));
+  const scannerFiles = files.filter((file) => scannerPaths.has(file.path));
   failMatches(
     'metadata-boundary',
     scannerFiles,
@@ -273,6 +271,23 @@ export function assertStructuredMetadata(files: TextFile[], issues: Issue[]): vo
     'route/nav metadata must use AST or structured data, not source regex parsing',
     issues,
   );
+}
+
+export function discoverScannerFiles(paths: string[]): string[] {
+  return paths.filter((path) =>
+    path.startsWith('packages/adapter-vite/src/') &&
+    /(?:^|\/)[^/]*scanner[^/]*\.(?:ts|tsx)$/u.test(path) &&
+    !/\.(?:test|spec)\.(?:ts|tsx)$/u.test(path) &&
+    !path.includes('/__tests__/')
+  );
+}
+
+export function assertTypeEscapeAllowlistFiles(paths: Set<string>, issues: Issue[]): void {
+  for (const entry of TYPE_ESCAPE_ALLOWLIST) {
+    if (!paths.has(entry.file)) {
+      addIssue(issues, 'type-escape', entry.file, 'allowlist references a missing source file');
+    }
+  }
 }
 
 export function assertMojibake(files: TextFile[], issues: Issue[]): void {
@@ -397,9 +412,7 @@ async function main(): Promise<void> {
     'production TypeScript suppressions are forbidden',
     issues,
   );
-  const taskMarkerPattern = new RegExp(
-    `\\b${'TO' + 'DO'}\\b|\\b${'FIX' + 'ME'}\\b`,
-  );
+  const taskMarkerPattern = /\b(?:TODO|FIXME)\b/u;
   failMatches(
     'task-markers',
     production.filter((f) => !f.path.startsWith('www/app/data/')),
@@ -409,6 +422,7 @@ async function main(): Promise<void> {
   );
   assertDuplicateCounts(textFiles, issues);
   assertStructuredMetadata(textFiles, issues);
+  assertTypeEscapeAllowlistFiles(new Set(files), issues);
   assertMojibake(production.concat(currentDocs), issues);
 
   if (readFailures > 0) {

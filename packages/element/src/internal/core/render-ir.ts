@@ -13,7 +13,7 @@ import {
   serializeEventMarkers,
 } from './event-marker.ts';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
-import { DANGEROUS_KEYS, trustRenderHtml } from './security.ts';
+import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, resolveSignalProp, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
@@ -178,11 +178,12 @@ ${node.light.map(serializeRenderNode).join('')}</${node.tag}>`;
 export async function renderToNode(
   node: unknown,
   eventContext: EventMarkerContext = createEventMarkerContext(),
+  nestingDepth = 0,
 ): Promise<RenderNode> {
   if (node == null || node === false || typeof node === 'boolean') return fragmentNode([]);
   if (typeof node === 'string' || typeof node === 'number') return textNode(node);
   if (isSignalLike(node)) {
-    return await renderToNode((node as { value: unknown }).value, eventContext);
+    return await renderToNode((node as { value: unknown }).value, eventContext, nestingDepth);
   }
   if (!isVNode(node)) return textNode(String(node));
 
@@ -193,7 +194,7 @@ export async function renderToNode(
     tag === Fragment || (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.fragment)')
   ) {
     const parts: RenderNode[] = [];
-    for (const child of children) parts.push(await renderToNode(child, eventContext));
+    for (const child of children) parts.push(await renderToNode(child, eventContext, nestingDepth));
     return fragmentNode(parts);
   }
 
@@ -206,7 +207,7 @@ export async function renderToNode(
   if (tag === SHOW_TAG || tag === 'show') {
     const whenVal = resolveSignalProp(props?.when);
     const target = whenVal ? children[0] : children[1];
-    return target ? await renderToNode(target, eventContext) : fragmentNode([]);
+    return target ? await renderToNode(target, eventContext, nestingDepth) : fragmentNode([]);
   }
 
   // For
@@ -218,7 +219,7 @@ export async function renderToNode(
     }
     const parts: RenderNode[] = [];
     for (let index = 0; index < items.length; index++) {
-      parts.push(await renderToNode(renderFn(items[index], index), eventContext));
+      parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
     }
     return fragmentNode(parts);
   }
@@ -226,7 +227,7 @@ export async function renderToNode(
   // Component function/class
   if (isComponentCtor(tag) || isComponentFn(tag)) {
     try {
-      return await renderToNode(callComponent(tag, props, children), eventContext);
+      return await renderToNode(callComponent(tag, props, children), eventContext, nestingDepth);
     } catch (err) {
       createLogger('render').error(
         `render failed for <${String(tag)}>:` +
@@ -246,7 +247,9 @@ export async function renderToNode(
   } else if (props?.textContent !== undefined) {
     childNodes.push(textNode(unwrapSignalLike(props.textContent)));
   } else {
-    for (const child of children) childNodes.push(await renderToNode(child, eventContext));
+    for (const child of children) {
+      childNodes.push(await renderToNode(child, eventContext, nestingDepth));
+    }
   }
 
   if (
@@ -259,6 +262,7 @@ export async function renderToNode(
         componentClass: customElements.get(tagName) as CustomElementConstructor,
         props,
         lightDom: childNodes,
+        nestingDepth: nestingDepth + 1,
       });
       return trustedHtmlNode(dsdResult.html);
     } catch (err) {
@@ -285,8 +289,9 @@ export async function renderToNode(
 export async function renderDsdTree(
   node: unknown,
   eventContext: EventMarkerContext = createEventMarkerContext(),
+  nestingDepth = 0,
 ): Promise<string> {
-  return serializeRenderNode(await renderToNode(node, eventContext));
+  return serializeRenderNode(await renderToNode(node, eventContext, nestingDepth));
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -298,10 +303,7 @@ function callComponent(
 ): unknown {
   if (isComponentCtor(tag)) {
     const instance = new tag();
-    for (const [key, value] of Object.entries(props)) {
-      if (DANGEROUS_KEYS.has(key)) continue;
-      (instance as Record<string, unknown>)[key] = value;
-    }
+    injectPropsSafe(instance, props, `render<${String(tag)}>`);
     return instance.render();
   }
   if (isComponentFn(tag)) {

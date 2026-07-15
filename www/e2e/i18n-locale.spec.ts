@@ -3,7 +3,7 @@
  *
  * Verifies that the i18n system works correctly:
  *   - Default locale (zh) pages are accessible at root
- *   - English locale pages are accessible at /en/
+ *   - The default English locale uses canonical unprefixed routes
  *   - Chinese locale pages are accessible at /zh/
  *   - Locale switcher works
  *   - Pages have correct lang attribute per locale
@@ -38,18 +38,15 @@ async function readDeepLayoutState(page: Page) {
 }
 
 test.describe('Locale Routes', () => {
-  test('default root loads Chinese locale', async ({ page }) => {
+  test('default root loads English locale', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Root should serve zh locale (default)
-    const bodyText = await page.textContent('body');
-    // The Chinese homepage should have Chinese text
-    expect(bodyText).toBeTruthy();
+    expect(await page.getAttribute('html', 'lang')).toBe('en');
   });
 
-  test('/en/ loads English locale', async ({ page }) => {
-    await page.goto('/en/');
+  test('canonical guide route loads the default English locale', async ({ page }) => {
+    await page.goto('/guide/getting-started');
     await page.waitForLoadState('networkidle');
 
     const lang = await page.getAttribute('html', 'lang');
@@ -64,8 +61,8 @@ test.describe('Locale Routes', () => {
     expect(lang).toBe('zh');
   });
 
-  test('en guide page loads correctly', async ({ page }) => {
-    await page.goto('/en/guide/getting-started');
+  test('canonical English guide page loads correctly', async ({ page }) => {
+    await page.goto('/guide/getting-started');
     await page.waitForLoadState('networkidle');
 
     const lang = await page.getAttribute('html', 'lang');
@@ -110,7 +107,7 @@ test.describe('Locale Switcher', () => {
     expect(zhLang).toBe('zh');
 
     // Navigate to English version
-    await page.goto('/en/guide/getting-started');
+    await page.goto('/guide/getting-started');
     await page.waitForLoadState('networkidle');
     const enLang = await page.getAttribute('html', 'lang');
     expect(enLang).toBe('en');
@@ -168,27 +165,27 @@ test.describe('Locale Switcher', () => {
 test.describe('i18n SSG Output', () => {
   test('both locale versions of blog exist', async ({ page }) => {
     // Check Chinese blog
-    const zhRes = await page.goto('/blog');
+    const zhRes = await page.goto('/zh/blog');
     expect(zhRes?.ok()).toBe(true);
 
     // Check English blog
-    const enRes = await page.goto('/en/blog');
+    const enRes = await page.goto('/blog');
     expect(enRes?.ok()).toBe(true);
   });
 
   test('both locale versions of changelog exist', async ({ page }) => {
-    const zhRes = await page.goto('/changelog');
+    const zhRes = await page.goto('/zh/changelog');
     expect(zhRes?.ok()).toBe(true);
 
-    const enRes = await page.goto('/en/changelog');
+    const enRes = await page.goto('/changelog');
     expect(enRes?.ok()).toBe(true);
   });
 
   test('both locale versions of roadmap exist', async ({ page }) => {
-    const zhRes = await page.goto('/roadmap');
+    const zhRes = await page.goto('/zh/roadmap');
     expect(zhRes?.ok()).toBe(true);
 
-    const enRes = await page.goto('/en/roadmap');
+    const enRes = await page.goto('/roadmap');
     expect(enRes?.ok()).toBe(true);
   });
 });

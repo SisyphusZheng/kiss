@@ -1,63 +1,46 @@
-/**
- * CI gate: ensure runtime-free/browser-facing product packages do not use
- * Deno-specific APIs or node:* imports in their source code.
- *
- * Build/server glue packages (ssg, content, adapter-vite) and tests/tools are
- * allowed to use Deno/Node APIs and are intentionally excluded.
- */
+/** Ensure browser-facing product packages do not use Deno APIs or node imports. */
 
 import { walkSync } from '@std/fs/walk';
-import { stripCommentsLine } from './lib/text.ts';
+import { extractDenoAccesses, extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 
-const RESTRICTED_ROOTS = [
-  'packages/element/src',
-  'packages/ui/src',
-  'packages/app/src',
-];
-
+const RESTRICTED_ROOTS = ['packages/element/src', 'packages/ui/src', 'packages/app/src'];
 const EXTENSIONS = new Set(['.ts', '.tsx']);
 
-function scan(root: string): string[] {
+export function scanDenoApiSource(path: string, source: string): string[] {
   const violations: string[] = [];
-  const files = walkSync(root, {
-    includeDirs: false,
-    skip: [/^__tests__$/],
-  }).filter((entry) => {
-    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) return false;
-    const dot = entry.name.lastIndexOf('.');
-    if (dot === -1) return false;
-    return EXTENSIONS.has(entry.name.slice(dot));
-  });
-
-  for (const entry of files) {
-    const text = Deno.readTextFileSync(entry.path);
-    const firstCodeLine = text.split('\n').find((l) => l.trim() !== '') ?? '';
-    if (firstCodeLine.trim().startsWith('// deno-api-free:ignore')) continue;
-    const lines = text.split('\n');
-    let inBlockComment = false;
-    for (let i = 0; i < lines.length; i++) {
-      const raw = lines[i];
-      const { line, inBlock } = stripCommentsLine(raw, inBlockComment);
-      inBlockComment = inBlock;
-
-      if (/'node:[^']*'/.test(line) || /"node:[^"]*"/.test(line)) {
-        violations.push(`${entry.path}:${i + 1}: node import: ${raw.trim()}`);
-      }
-      if (/\bDeno\.[a-zA-Z_]/.test(line)) {
-        violations.push(`${entry.path}:${i + 1}: Deno API: ${raw.trim()}`);
-      }
+  for (const specifier of extractStaticModuleSpecifiers(source, path)) {
+    if (specifier.value.startsWith('node:')) {
+      violations.push(`${path}:${specifier.line}: node import: ${specifier.value}`);
     }
+  }
+  for (const access of extractDenoAccesses(source, path)) {
+    violations.push(`${path}:${access.line}: Deno API: Deno.${access.member}`);
   }
   return violations;
 }
 
-const violations: string[] = [];
-for (const root of RESTRICTED_ROOTS) violations.push(...scan(root));
-
-if (violations.length > 0) {
-  console.error('Deno API usage detected in runtime-free product packages:');
-  for (const v of violations) console.error(`  ${v}`);
-  Deno.exit(1);
+function scan(root: string): string[] {
+  const violations: string[] = [];
+  for (const entry of walkSync(root, { includeDirs: false, skip: [/^__tests__$/] })) {
+    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) continue;
+    const dot = entry.name.lastIndexOf('.');
+    if (dot === -1 || !EXTENSIONS.has(entry.name.slice(dot))) continue;
+    const text = Deno.readTextFileSync(entry.path);
+    const firstCodeLine = text.split('\n').find((line) => line.trim() !== '') ?? '';
+    if (firstCodeLine.trim().startsWith('// deno-api-free:ignore')) continue;
+    violations.push(...scanDenoApiSource(entry.path, text));
+  }
+  return violations;
 }
 
-console.log('No Deno API usage in runtime-free product packages.');
+function main(): void {
+  const violations = RESTRICTED_ROOTS.flatMap(scan);
+  if (violations.length > 0) {
+    console.error('Deno API usage detected in runtime-free product packages:');
+    for (const violation of violations) console.error(`  ${violation}`);
+    Deno.exit(1);
+  }
+  console.log('No Deno API usage in runtime-free product packages.');
+}
+
+if (import.meta.main) main();

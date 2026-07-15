@@ -79,14 +79,19 @@ function detectLocale(pathname: string, locales: string[], defaultLocale: string
   return defaultLocale;
 }
 
-function localizePath(path: string, locale: string): string {
+function localizePath(path: string, locale: string, defaultLocale: string): string {
   if (isSafeLayoutUrl(path) && /^https?:/i.test(path)) return path;
-  return `/${locale}${path}`;
+  return locale === defaultLocale ? path : `/${locale}${path}`;
 }
 
-function switchPath(currentPath: string, currentLocale: string, locales: string[]): string {
+function switchPath(
+  currentPath: string,
+  currentLocale: string,
+  locales: string[],
+  defaultLocale: string,
+): string {
   const other = locales.find((l) => l !== currentLocale) || currentLocale;
-  return `/${other}${currentPath}`;
+  return localizePath(currentPath, other, defaultLocale);
 }
 
 function switchLabel(currentLocale: string): string {
@@ -896,7 +901,9 @@ export class OpenLayout extends OpenElement {
     const safeHref = this._safeHref(href);
     const isExternal = this._isExternalHref(safeHref);
     return {
-      href: isExternal ? safeHref : localizePath(safeHref, this._currentLocale),
+      href: isExternal
+        ? safeHref
+        : localizePath(safeHref, this._currentLocale, this._defaultLocale),
       isExternal,
     };
   }
@@ -908,10 +915,14 @@ export class OpenLayout extends OpenElement {
     const noSearch = this.hasAttribute('no-search');
     const logoSub = this._getStr('logo-sub', '');
     const locales = this._locales;
+    const defaultLocale = this._defaultLocale;
     const currentLocale = this._currentLocale;
     const currentPath = this._currentPathWithoutLocale;
     const langLabel = locales.length > 1 ? switchLabel(currentLocale) : '';
-    const langHref = locales.length > 1 ? switchPath(currentPath, currentLocale, locales) : '';
+    const langHref = locales.length > 1
+      ? switchPath(currentPath, currentLocale, locales, defaultLocale)
+      : '';
+    const localePath = (path: string) => localizePath(path, currentLocale, defaultLocale);
 
     return (
       <div className='app-layout' part='container' home={home || undefined}>
@@ -980,26 +991,26 @@ export class OpenLayout extends OpenElement {
             <div className='footer-column'>
               <h4>Product</h4>
               <a
-                href={localizePath('/guide/core-concepts', currentLocale)}
-                data-nav={localizePath('/guide/core-concepts', currentLocale)}
+                href={localePath('/guide/core-concepts')}
+                data-nav={localePath('/guide/core-concepts')}
               >
                 Elements
               </a>
               <a
-                href={localizePath('/architecture/design-system', currentLocale)}
-                data-nav={localizePath('/architecture/design-system', currentLocale)}
+                href={localePath('/architecture/design-system')}
+                data-nav={localePath('/architecture/design-system')}
               >
                 UI
               </a>
               <a
-                href={localizePath('/architecture/architecture', currentLocale)}
-                data-nav={localizePath('/architecture/architecture', currentLocale)}
+                href={localePath('/architecture/architecture')}
+                data-nav={localePath('/architecture/architecture')}
               >
                 Framework
               </a>
               <a
-                href={localizePath('/architecture/standards-registry', currentLocale)}
-                data-nav={localizePath('/architecture/standards-registry', currentLocale)}
+                href={localePath('/architecture/standards-registry')}
+                data-nav={localePath('/architecture/standards-registry')}
               >
                 Protocols
               </a>
@@ -1007,26 +1018,26 @@ export class OpenLayout extends OpenElement {
             <div className='footer-column'>
               <h4>Resources</h4>
               <a
-                href={localizePath('/guide/getting-started', currentLocale)}
-                data-nav={localizePath('/guide/getting-started', currentLocale)}
+                href={localePath('/guide/getting-started')}
+                data-nav={localePath('/guide/getting-started')}
               >
                 Guide
               </a>
               <a
-                href={localizePath('/guide/api', currentLocale)}
-                data-nav={localizePath('/guide/api', currentLocale)}
+                href={localePath('/guide/api')}
+                data-nav={localePath('/guide/api')}
               >
                 API
               </a>
               <a
-                href={localizePath('/architecture/architecture', currentLocale)}
-                data-nav={localizePath('/architecture/architecture', currentLocale)}
+                href={localePath('/architecture/architecture')}
+                data-nav={localePath('/architecture/architecture')}
               >
                 Architecture
               </a>
               <a
-                href={localizePath('/blog', currentLocale)}
-                data-nav={localizePath('/blog', currentLocale)}
+                href={localePath('/blog')}
+                data-nav={localePath('/blog')}
               >
                 Blog
               </a>
@@ -1035,14 +1046,14 @@ export class OpenLayout extends OpenElement {
               <h4>Company</h4>
               <a href='https://github.com/open-element/openelement'>GitHub</a>
               <a
-                href={localizePath('/roadmap', currentLocale)}
-                data-nav={localizePath('/roadmap', currentLocale)}
+                href={localePath('/roadmap')}
+                data-nav={localePath('/roadmap')}
               >
                 Roadmap
               </a>
               <a
-                href={localizePath('/changelog', currentLocale)}
-                data-nav={localizePath('/changelog', currentLocale)}
+                href={localePath('/changelog')}
+                data-nav={localePath('/changelog')}
               >
                 Changelog
               </a>
@@ -1053,8 +1064,8 @@ export class OpenLayout extends OpenElement {
                 MIT License
               </a>
               <a
-                href={localizePath('/contributing', currentLocale)}
-                data-nav={localizePath('/contributing', currentLocale)}
+                href={localePath('/contributing')}
+                data-nav={localePath('/contributing')}
               >
                 Contributing
               </a>

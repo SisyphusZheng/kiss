@@ -15,6 +15,8 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { allPackageAliases } from './lib/package-graph.ts';
+import { assertCompatibilityDate } from './lib/compatibility-date.ts';
+import { NITRO_COMPATIBILITY_DATE } from './project-constants.ts';
 
 function findMissingGeneratedImports(
   source: string,
@@ -133,6 +135,8 @@ const productImports = [
   '@openelement/adapter-vite',
   '@openelement/app',
   '@openelement/element',
+  '@openelement/element/jsx-dev-runtime',
+  '@openelement/element/jsx-runtime',
   'vite',
 ];
 if (Object.keys(generatedImportMap).sort().join('\n') !== productImports.join('\n')) {
@@ -207,10 +211,26 @@ if (buildResult.code !== 0) {
   Deno.exit(1);
 }
 
-if (!stdout.includes('Routes: 2 page(s), 1 API route(s)')) {
-  console.error('Consumer build did not scan the expected page/API route surface.');
-  console.error(stdout);
-  console.error(stderr);
+const buildEvidencePath = join(appDir, '.openElement', 'build-artifacts.json');
+if (!existsSync(buildEvidencePath)) {
+  console.error('Structured build manifest was not emitted.');
+  cleanup();
+  Deno.exit(1);
+}
+const buildEvidence = JSON.parse(readFileSync(buildEvidencePath, 'utf-8')) as {
+  success?: boolean;
+  manifest?: { routes?: Array<{ kind?: string; path?: string }> };
+  pages?: Array<{ path?: string; errors?: string[] }>;
+};
+const manifestRoutes = buildEvidence.manifest?.routes ?? [];
+const pageRoutes = manifestRoutes.filter((route) => route.kind === 'page');
+const apiRoutes = manifestRoutes.filter((route) => route.kind === 'api');
+if (
+  buildEvidence.success !== true || pageRoutes.length !== 2 || apiRoutes.length !== 1 ||
+  (buildEvidence.pages ?? []).some((page) => (page.errors?.length ?? 0) > 0)
+) {
+  console.error('Structured build manifest did not contain the expected page/API surface.');
+  console.error(JSON.stringify(buildEvidence, null, 2));
   cleanup();
   Deno.exit(1);
 }
@@ -318,6 +338,7 @@ console.log(
 
 // Step 7: Mount the generated server entry in a real Nitro node output.
 console.log('Building generated app through Nitro node preset...');
+assertCompatibilityDate(NITRO_COMPATIBILITY_DATE);
 writeFileSync(
   join(appDir, 'nitro.config.ts'),
   `export default defineNitroConfig({
@@ -325,7 +346,7 @@ writeFileSync(
   preset: 'node-server',
   publicAssets: [{ dir: '../public' }],
   output: { dir: '.output-node' },
-  compatibilityDate: '2026-06-12',
+  compatibilityDate: '${NITRO_COMPATIBILITY_DATE}',
 });
 `,
 );

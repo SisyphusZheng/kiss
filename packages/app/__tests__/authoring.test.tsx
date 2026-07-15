@@ -10,7 +10,9 @@ import {
   isOpenElementRedirect,
   notFound,
   redirect,
+  useLoaderData,
 } from '../src/index.ts';
+import * as appSurface from '../src/index.ts';
 
 Deno.test('@openelement/app root export includes defineApp', () => {
   assertEquals(typeof defineApp, 'function');
@@ -196,6 +198,34 @@ Deno.test('@openelement/app root exports authoring helpers only', () => {
   assertExists(defineElement);
   assertExists(defineIsland);
   assertExists(defineIslandConfig);
+});
+
+Deno.test('application page types reject unknown host members', () => {
+  const Page = definePage({ render: () => null });
+  const host = Object.create(Page.prototype) as InstanceType<typeof Page> & { data?: unknown };
+  // @ts-expect-error arbitrary members are not part of the application host contract
+  host.notARealApplicationMember = true;
+  assertEquals('notARealApplicationMember' in host, true);
+});
+
+Deno.test('public App surface does not expose data-context mutation hooks', () => {
+  assertEquals('__internal_pushLoaderData' in appSurface, false);
+  assertEquals('__internal_pushActionData' in appSurface, false);
+  assertEquals('__internal_popData' in appSurface, false);
+});
+
+Deno.test('page rendering pops data context when the renderer throws', () => {
+  const Page = definePage({
+    render() {
+      throw new Error('render failed');
+    },
+  });
+  const host = Object.create(Page.prototype) as InstanceType<typeof Page> & { data?: unknown };
+  host.data = { secret: true };
+  Object.assign(host, { __openElementParams: {} });
+
+  assertThrows(() => host.render(), Error, 'render failed');
+  assertEquals(useLoaderData(), undefined);
 });
 
 Deno.test('defineIslandConfig() returns canonical island metadata shape', () => {

@@ -1,35 +1,13 @@
-import { PACKAGE_COUNT } from './project-constants.ts';
+import {
+  PACKAGE_COUNT,
+  REMOVED_PACKAGE_NAMES,
+  RETAINED_PACKAGE_NAMES,
+} from './project-constants.ts';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 import { OPENELEMENT_EXPORT_FILES } from '../packages/adapter-vite/src/generated-export-files.ts';
 
-const retainedPackages = [
-  '@openelement/app',
-  '@openelement/adapter-vite',
-  '@openelement/create',
-  '@openelement/element',
-  '@openelement/ui',
-].sort();
-
-const removedPackages = [
-  '@openelement/adapter-lit',
-  '@openelement/adapter-react',
-  '@openelement/adapter-vanilla',
-  '@openelement/cem',
-  '@openelement/compat-check',
-  '@openelement/elements',
-  '@openelement/hub',
-  '@openelement/protocols',
-  '@openelement/rpc',
-  '@openelement/runtime',
-  '@openelement/signals',
-  '@openelement/style-sheet',
-  '@openelement/content',
-  '@openelement/core',
-  '@openelement/protocol',
-  '@openelement/router',
-  '@openelement/signal',
-  '@openelement/ssg',
-].sort();
+const retainedPackages = [...RETAINED_PACKAGE_NAMES].sort();
+const removedPackages = [...REMOVED_PACKAGE_NAMES].sort();
 
 const failures: string[] = [];
 const retiredImport =

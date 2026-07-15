@@ -40,6 +40,7 @@ import {
 import { injectPropsSafe } from './security.ts';
 
 const log = createLogger('core');
+export const MAX_SSR_NESTING_DEPTH = 50;
 
 // ─── Error Classification ──────────────────────────────────────
 // RenderPhase and RenderErrorCode are imported from ../protocol/render.ts.
@@ -61,7 +62,7 @@ export function classifyError(
   };
 }
 
-// ponytail: lookup table replaces 5-case if/else chain
+// Lookup table replaces a multi-branch error-code chain.
 const ERROR_CODES: Record<string, RenderErrorCode> = {
   instantiate: 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED',
   nested: 'OPEN_ELEMENT_RENDER_NESTED_FAILED',
@@ -235,6 +236,9 @@ export async function renderDsd(
   const hooks = options.hooks;
 
   const _nestingDepth = nestingDepth ?? 0;
+  if (_nestingDepth > MAX_SSR_NESTING_DEPTH) {
+    throw new Error(`SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>`);
+  }
   const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
   const sourceStr = sourceInfo
     ? `${sourceInfo.route ? ` route="${sourceInfo.route}"` : ''}${
@@ -303,7 +307,7 @@ export async function renderDsd(
     if (result == null) {
       content = '';
     } else if (isVNode(result)) {
-      content = await renderDsdTree(result);
+      content = await renderDsdTree(result, undefined, _nestingDepth);
     } else {
       log.debug(`Unsupported render() return for <${tagName}>: ${describeRenderValue(result)}`);
       const errDetail = `Components must return a VNode from render(), got ${typeof result}.`;
@@ -329,7 +333,7 @@ export async function renderDsd(
         renderTimeMs: renderEndFallback - startTime,
         templateSize: 0,
         layer: 'dsd-static',
-        hasError: hasError,
+        hasError,
         nestingDepth: _nestingDepth,
       },
       hydrationHints: collectedHints,

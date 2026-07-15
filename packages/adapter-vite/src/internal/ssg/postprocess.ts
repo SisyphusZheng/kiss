@@ -15,6 +15,7 @@
 
 import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
 export { buildSpeculationRulesJson } from './speculation-rules.ts';
@@ -84,12 +85,12 @@ function insertBeforeBodyClose(html: string, content: string): string {
  * Scan client build output to build tagName -> chunk path mapping.
  * Reads Rollup manifest JSON (v0.3.0+ deterministic approach).
  */
-export function buildIslandChunkMap(
+export async function buildIslandChunkMap(
   root: string,
   outDir: string,
   islands: string[],
   basePath: string = '/',
-): Record<string, string> {
+): Promise<Record<string, string>> {
   const distDir = resolve(root, outDir);
   const clientDir = resolve(distDir, 'client');
   const islandChunkMap: Record<string, string> = {};
@@ -100,7 +101,7 @@ export function buildIslandChunkMap(
   if (!existsSync(manifestPath)) return islandChunkMap;
 
   try {
-    const manifestRaw = readFileSync(manifestPath, 'utf-8');
+    const manifestRaw = await readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(manifestRaw);
 
     for (const [_srcPath, entry] of Object.entries(manifest) as [string, { file?: string }][]) {

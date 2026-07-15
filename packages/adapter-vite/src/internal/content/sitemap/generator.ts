@@ -8,10 +8,11 @@
  * not during Vite's buildStart/closeBundle (dist/ is empty at that point).
  */
 
-import { join, resolve } from 'node:path';
-import { existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { existsSync, writeFileSync } from 'node:fs';
 import type { SitemapOptions, SitemapUrl } from '../types.ts';
 import { createLogger } from '@openelement/element';
+import { walkHtmlFileEntries } from '../../html-files.ts';
 
 const log = createLogger('content:sitemap');
 
@@ -20,36 +21,14 @@ const log = createLogger('content:sitemap');
  * Returns relative paths from the dist root (e.g., '/guide/getting-started').
  */
 export function scanHtmlFiles(dir: string, baseDir: string = ''): string[] {
-  const paths: string[] = [];
-  let entries: string[];
-
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return paths;
-  }
-
-  for (const entry of entries) {
-    if (entry.startsWith('.')) continue;
-
-    const fullPath = join(dir, entry);
-    const relativePath = baseDir ? `${baseDir}/${entry}` : entry;
-
-    try {
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        paths.push(...scanHtmlFiles(fullPath, relativePath));
-      } else if (entry === 'index.html') {
-        // Convert 'guide/getting-started/index.html' -> '/guide/getting-started'
-        const urlPath = '/' + baseDir.replace(/\\/g, '/');
-        paths.push(urlPath);
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  return paths.sort();
+  return walkHtmlFileEntries(dir)
+    .filter((entry) => entry.relativePath.replace(/\\/g, '/').endsWith('index.html'))
+    .map((entry) => {
+      const parent = dirname(entry.relativePath).replace(/\\/g, '/');
+      const path = parent === '.' ? '' : parent;
+      return `/${[baseDir, path].filter(Boolean).join('/')}`.replace(/\/+/g, '/');
+    })
+    .sort();
 }
 
 /**
@@ -97,6 +76,9 @@ Sitemap: ${hostname}/sitemap.xml
  * @returns Array of generated file paths
  */
 export function generateSitemap(distDir: string, options: SitemapOptions): string[] {
+  if (!options.hostname) {
+    throw new Error('SitemapOptions.hostname is required');
+  }
   const resolvedDist = resolve(distDir);
   const exclude = options.exclude || [];
   const defaultChangefreq = options.changefreq || 'weekly';
@@ -128,7 +110,7 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
 
   // Write sitemap.xml
   const sitemapPath = join(resolvedDist, 'sitemap.xml');
-  writeFileSync(sitemapPath, renderSitemapXml(urls), 'utf-8');
+  writeFileSync(sitemapPath, renderSitemapXml(urls), { encoding: 'utf-8', mode: 0o600 });
   log.info(`Sitemap: ${urls.length} URL(s) written to sitemap.xml`);
 
   const generated: string[] = [sitemapPath];
@@ -136,7 +118,7 @@ export function generateSitemap(distDir: string, options: SitemapOptions): strin
   // Optionally write robots.txt
   if (options.robotsTxt !== false) {
     const robotsPath = join(resolvedDist, 'robots.txt');
-    writeFileSync(robotsPath, renderRobotsTxt(hostname), 'utf-8');
+    writeFileSync(robotsPath, renderRobotsTxt(hostname), { encoding: 'utf-8', mode: 0o600 });
     generated.push(robotsPath);
     log.info('robots.txt generated');
   }

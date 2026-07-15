@@ -97,8 +97,8 @@ async function cleanupSsgFixtures() {
 Deno.test('SSG integration', { permissions: { read: true, write: true } }, async (t) => {
   await setupSsgFixtures();
 
-  await t.step('buildIslandChunkMap - returns empty without manifest', () => {
-    const chunkMap = buildIslandChunkMap(
+  await t.step('buildIslandChunkMap - returns empty without manifest', async () => {
+    const chunkMap = await buildIslandChunkMap(
       join(FIXTURES_DIR),
       'dist',
       ['my-counter', 'theme-toggle'],
@@ -109,8 +109,8 @@ Deno.test('SSG integration', { permissions: { read: true, write: true } }, async
     assertEquals(Object.keys(chunkMap).length, 0);
   });
 
-  await t.step('buildIslandChunkMap - returns empty map when no client dir', () => {
-    const chunkMap = buildIslandChunkMap(
+  await t.step('buildIslandChunkMap - returns empty map when no client dir', async () => {
+    const chunkMap = await buildIslandChunkMap(
       join(FIXTURES_DIR),
       'nonexistent',
       ['my-counter'],

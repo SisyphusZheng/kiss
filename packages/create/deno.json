@@ -1,6 +1,6 @@
 {
   "name": "@openelement/create",
-  "version": "0.41.0-alpha.12",
+  "version": "0.41.0-alpha.13",
   "exports": "./src/cli.ts",
   "imports": {},
   "tasks": {
@@ -9,6 +9,8 @@
   "publish": {
     "include": [
       "src/cli.ts",
+      "src/template-builder.ts",
+      "src/version.ts",
       "templates",
       "deno.json",
       "README.md",

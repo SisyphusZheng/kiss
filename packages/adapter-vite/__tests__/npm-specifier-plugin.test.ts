@@ -15,3 +15,10 @@ Deno.test('npm specifier plugin leaves ordinary imports untouched', () => {
   const transform = plugin.transform as (code: string) => unknown;
   assertEquals(transform("import x from 'vite';"), null);
 });
+
+Deno.test('rewriteNpmSpecifiers preserves scoped package and uppercase subpath', () => {
+  assertEquals(
+    rewriteNpmSpecifiers("import('npm:@Scope/Package@1.2.3/Feature/Client')"),
+    "import('@Scope/Package/Feature/Client')",
+  );
+});

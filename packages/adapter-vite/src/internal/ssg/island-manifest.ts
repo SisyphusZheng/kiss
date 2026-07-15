@@ -5,7 +5,7 @@
  * Each manifest lists the islands found on a page with their chunk URLs and strategies.
  */
 
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '../protocol/framework.ts';
 import { formatJson } from '@openelement/element';
@@ -133,7 +133,9 @@ export function generateIslandManifests(
         layerMap,
       );
       for (const m of subManifests) {
-        m.route = `/${entry.name}${m.route}`;
+        m.route = m.route === '/'
+          ? posix.join('/', entry.name)
+          : posix.join('/', entry.name, m.route);
       }
       manifests.push(...subManifests);
     } else if (entry.name.endsWith('.html')) {

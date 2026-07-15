@@ -24,8 +24,8 @@
     "npm:h3@2.0.1-rc.22": "2.0.1-rc.22_crossws@0.4.6__srvx@0.11.17",
     "npm:hono@^4.12.0": "4.12.25",
     "npm:marked@15": "15.0.12",
-    "npm:nitro@*": "3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0",
-    "npm:nitro@3.0.0": "3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0",
+    "npm:nitro@*": "3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0__yaml@2.9.0_yaml@2.9.0",
+    "npm:nitro@3.0.0": "3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0__yaml@2.9.0_yaml@2.9.0",
     "npm:pdf-parse@^1.1.1": "1.1.4",
     "npm:pdfjs-dist@4.8.69": "4.8.69",
     "npm:playwright@1.59.1": "1.59.1",
@@ -33,7 +33,8 @@
     "npm:preact@^10.28.0": "10.29.2",
     "npm:sanitize-html@^2.17.4": "2.17.5",
     "npm:typescript@^5.9.0": "5.9.3",
-    "npm:vite@8.0.10": "8.0.10_esbuild@0.25.12_jiti@2.7.0"
+    "npm:vite@8.0.10": "8.0.10_esbuild@0.25.12_jiti@2.7.0_yaml@2.9.0",
+    "npm:yaml@^2.8.1": "2.9.0"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -1695,7 +1696,7 @@
     "nf3@0.1.12": {
       "integrity": "sha512-qbMXT7RTGh74MYWPeqTIED8nDW70NXOULVHpdWcdZ7IVHVnAsMV9fNugSNnvooipDc1FMOzpis7T9nXJEbJhvQ=="
     },
-    "nitro@3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0": {
+    "nitro@3.0.0_vite@8.0.10__esbuild@0.25.12__jiti@2.7.0__yaml@2.9.0_yaml@2.9.0": {
       "integrity": "sha512-pPrH77/oiYz3q1xGgOYQPEkXERsCi4PkErL2DpHhg4raag3EX7Zh41KFJ0ploSmflmDOPRPeAtC1/19fVrOqoQ==",
       "dependencies": [
         "consola",
@@ -2281,7 +2282,7 @@
         "vfile-message"
       ]
     },
-    "vite@8.0.10_esbuild@0.25.12_jiti@2.7.0": {
+    "vite@8.0.10_esbuild@0.25.12_jiti@2.7.0_yaml@2.9.0": {
       "integrity": "sha512-rZuUu9j6J5uotLDs+cAA4O5H4K1SfPliUlQwqa6YEwSrWDZzP4rhm00oJR5snMewjxF5V/K3D4kctsUTsIU9Mw==",
       "dependencies": [
         "@types/node",
@@ -2291,7 +2292,8 @@
         "picomatch",
         "postcss",
         "rolldown",
-        "tinyglobby"
+        "tinyglobby",
+        "yaml"
       ],
       "optionalDependencies": [
         "fsevents@2.3.3"
@@ -2299,12 +2301,17 @@
       "optionalPeers": [
         "@types/node",
         "esbuild",
-        "jiti"
+        "jiti",
+        "yaml"
       ],
       "bin": true
     },
     "wrappy@1.0.2": {
       "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="
+    },
+    "yaml@2.9.0": {
+      "integrity": "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==",
+      "bin": true
     },
     "zwitch@2.0.4": {
       "integrity": "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="
@@ -2329,7 +2336,8 @@
       "npm:preact-render-to-string@^6.5.0",
       "npm:preact@^10.28.0",
       "npm:typescript@^5.9.0",
-      "npm:vite@8.0.10"
+      "npm:vite@8.0.10",
+      "npm:yaml@^2.8.1"
     ],
     "members": {
       "examples/deno-desktop-reader": {

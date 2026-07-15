@@ -68,6 +68,7 @@ function mergeAliasOptions(
 
 const OPTIONAL_PACKAGE_STUBS: Record<string, string> = {
   '@openelement/app/i18n':
+    'console.warn("[openElement] Optional i18n package is unavailable; install and configure @openelement/app/i18n to enable locale expansion.");\n' +
     'export function loadI18nData() { return { locales: [], defaultLocale: "en" }; }',
 };
 

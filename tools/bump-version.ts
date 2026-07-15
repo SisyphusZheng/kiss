@@ -198,19 +198,32 @@ function updatePackageImports(
   return totalUpdated;
 }
 
+export function replaceEmbeddedCreateVersion(
+  source: string,
+  fromVersion: string,
+  toVersion: string,
+): string {
+  const anchor = `'${fromVersion}'`;
+  if (!source.includes(anchor)) {
+    throw new Error(
+      `Embedded @openelement/create version does not contain expected version ${fromVersion}.`,
+    );
+  }
+  return source.replace(anchor, `'${toVersion}'`);
+}
+
 function updateEmbeddedCreateVersion(
   root: string,
   fromVersion: string,
   toVersion: string,
   dryRun: boolean,
-): boolean {
+): void {
   const path = `${root}/packages/create/src/version.ts`;
   const text = Deno.readTextFileSync(path);
-  if (!text.includes(`'${fromVersion}'`)) return false;
+  const updated = replaceEmbeddedCreateVersion(text, fromVersion, toVersion);
   if (!dryRun) {
-    Deno.writeTextFileSync(path, text.replace(`'${fromVersion}'`, `'${toVersion}'`));
+    Deno.writeTextFileSync(path, updated);
   }
-  return true;
 }
 
 function main(): void {
@@ -279,15 +292,12 @@ function main(): void {
     console.log(`Updated ${pkgImportCount} cross-package import(s).`);
   }
 
-  const embeddedCreateVersionUpdated = updateEmbeddedCreateVersion(
+  updateEmbeddedCreateVersion(
     root,
     resolvedFrom,
     toVersion,
     dryRun,
   );
-  if (!embeddedCreateVersionUpdated) {
-    console.log('⚠️  Embedded @openelement/create version was not updated.');
-  }
 
   // Report mismatches
   if (mismatched.length > 0) {

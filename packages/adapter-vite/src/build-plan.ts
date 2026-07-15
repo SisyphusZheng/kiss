@@ -79,6 +79,7 @@ export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
       pages,
       manifest: {
         routes: plan.routes.map((route) => ({
+          kind: route.kind,
           path: route.path,
           tagName: route.tagName,
           isDynamic: (route.paramNames?.length ?? 0) > 0,

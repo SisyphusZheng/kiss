@@ -96,6 +96,8 @@ Deno.test('two-phase release: prepare never publishes, tags, or pushes main', ()
   assertFalse(names.includes('publish npm packages'));
   assertFalse(names.includes('tag release'));
   assertFalse(commands.some((command) => command.includes('git push')));
+  const stage = steps.find((step) => step.name === 'stage release bump');
+  assert(stage?.command?.includes('packages/create/src/version.ts'));
 });
 
 Deno.test('two-phase release: publish-existing never bumps and verifies main CI first', () => {

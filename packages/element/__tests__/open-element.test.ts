@@ -1298,6 +1298,35 @@ Deno.test('OpenElement static props react to attribute changes', () => {
   document.body.removeChild(el);
 });
 
+Deno.test('OpenElement static props restore declared defaults when attributes are removed', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props-default');
+  class StaticPropsDefaultElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 7 },
+      label: { type: String, default: 'ready' },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, StaticPropsDefaultElement);
+
+  const el = document.createElement(tagName) as StaticPropsDefaultElement;
+  document.body.appendChild(el);
+  el.setAttribute('count', '12');
+  el.setAttribute('label', 'busy');
+  el.removeAttribute('count');
+  el.removeAttribute('label');
+
+  const props = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(props.count.value, 7);
+  assertEquals(props.label.value, 'ready');
+  document.body.removeChild(el);
+});
+
 // ─── 10. Error boundary / onRenderError ────────────────────────────
 
 Deno.test('OpenElement onRenderError renders fallback on render failure', () => {
@@ -1440,6 +1469,50 @@ Deno.test('OpenElement surfaces malformed params attribute as a logged error', (
   // params should remain empty/default, not crash, and the element should still render.
   assertEquals(el.params, {});
 
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement rejects params attributes larger than 64 KiB', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('params-too-large');
+  class ParamsTooLargeElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ParamsTooLargeElement);
+
+  const errors: string[] = [];
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => errors.push(args.join(' '));
+  try {
+    const el = document.createElement(tagName) as ParamsTooLargeElement;
+    el.setAttribute('params', JSON.stringify({ value: 'x'.repeat(65_536) }));
+    document.body.appendChild(el);
+    assertEquals(el.params, {});
+    assertEquals(errors.some((message) => message.includes('64 KiB')), true);
+    document.body.removeChild(el);
+  } finally {
+    console.error = originalError;
+  }
+});
+
+Deno.test('OpenElement preserves an author supplied display style during DSD hydration', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('display');
+  class DisplayElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, DisplayElement);
+
+  const el = createHydratedElement(tagName, '<span>ok</span>') as DisplayElement;
+  el.style.display = 'inline-flex';
+  el.connectedCallback();
+  assertEquals(el.style.display, 'inline-flex');
   document.body.removeChild(el);
 });
 

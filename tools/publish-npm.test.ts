@@ -1,5 +1,12 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { deriveDependencies, type DeriveDepsIo } from './publish-npm.ts';
+import {
+  deriveAllDependencies,
+  deriveDependencies,
+  type DeriveDepsIo,
+  npmPublishTag,
+  publishPackage,
+  type PublishPackageIo,
+} from './publish-npm.ts';
 import type { PackageInfo } from './lib/package-graph.ts';
 
 function pkg(name: string, version: string): PackageInfo {
@@ -19,6 +26,12 @@ const io: DeriveDepsIo = {
   readRootJson: () => ({ imports: {} }),
   readSrcFiles: () => [],
 };
+
+Deno.test('npm publish tag follows alpha, beta and rc prerelease names', () => {
+  assertEquals(npmPublishTag('1.0.0-alpha.1'), 'alpha');
+  assertEquals(npmPublishTag('1.0.0-beta.1'), 'beta');
+  assertEquals(npmPublishTag('1.0.0-rc.1'), 'rc');
+});
 
 Deno.test('deriveDependencies includes an external npm dependency with a version', () => {
   const localIo: DeriveDepsIo = {
@@ -72,4 +85,44 @@ Deno.test('deriveDependencies throws when a root-mapped npm dependency has no ve
     Error,
     'no version',
   );
+});
+
+Deno.test('deriveAllDependencies reads root imports once for the full package graph', () => {
+  let rootReads = 0;
+  const localIo: DeriveDepsIo = {
+    ...io,
+    readRootJson: () => {
+      rootReads++;
+      return { imports: { react: 'npm:react@^18.2.0' } };
+    },
+    readSrcFiles: () => ["import 'react';"],
+  };
+  const packages = [
+    pkg('@openelement/element', '1.0.0'),
+    pkg('@openelement/app', '1.0.0'),
+  ];
+  const dependencies = deriveAllDependencies(packages, localIo);
+  assertEquals(rootReads, 1);
+  assertEquals(dependencies.get('@openelement/element'), { react: '^18.2.0' });
+  assertEquals(dependencies.get('@openelement/app'), { react: '^18.2.0' });
+});
+
+Deno.test('publishPackage skips an immutable version that already exists', async () => {
+  const published: string[][] = [];
+  const logs: string[] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => Promise.resolve(true),
+    publish: (args) => {
+      published.push(args);
+      return Promise.resolve();
+    },
+    log: (message) => logs.push(message),
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0-alpha.13'), false, publishIo);
+
+  assertEquals(published, []);
+  assertEquals(logs, [
+    '[npm] @openelement/element@0.41.0-alpha.13 already published; skipping.',
+  ]);
 });

@@ -9,6 +9,12 @@ import { h } from 'preact';
 
 import { definePreactIsland } from '../src/preact.ts';
 
+Deno.test('preact bridge has no top-level await and remains synchronously renderable', async () => {
+  const source = await Deno.readTextFile(new URL('../src/preact.ts', import.meta.url));
+  assertEquals(/^\s*await\s+import\(/m.test(source), false);
+  assertEquals(source.includes('= await import('), false);
+});
+
 // ─── DOM stubs for Deno test environment ─────────────────────────
 
 class StubNode {

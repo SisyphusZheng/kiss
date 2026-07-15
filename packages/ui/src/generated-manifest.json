@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "packageName": "@openelement/ui",
-  "version": "0.41.0-alpha.12",
+  "version": "0.41.0-alpha.13",
   "description": "Open Props Web Component library for openElement",
   "author": "openElement",
   "license": "MIT",
@@ -195,12 +195,12 @@
       "events": [
         {
           "name": "open-input",
-          "type": "CustomEvent",
+          "type": "CustomEvent<{ value: unknown }>",
           "description": "Fired on open-input"
         },
         {
           "name": "open-change",
-          "type": "CustomEvent",
+          "type": "CustomEvent<{ value: unknown }>",
           "description": "Fired on open-change"
         },
         {
@@ -256,7 +256,7 @@
       "events": [
         {
           "name": "open:theme-change",
-          "type": "CustomEvent",
+          "type": "CustomEvent<{ theme: unknown }>",
           "description": "Fired on open:theme-change"
         }
       ],

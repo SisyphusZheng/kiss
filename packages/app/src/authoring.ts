@@ -157,11 +157,7 @@ export interface OpenElementPageDescriptor<
   render: PageRenderFunction<Data, Params>;
 }
 
-abstract class ApplicationElement extends OpenElement {
-  [key: string]: unknown;
-}
-
-abstract class ApplicationPageElement extends ApplicationElement implements PageHostElement {
+abstract class ApplicationPageElement extends OpenElement implements PageHostElement {
   __openElementParams?: Record<string, string>;
   data?: unknown;
   __openElementActionData?: unknown;
@@ -178,11 +174,11 @@ type PageConstructor<
   openElementPage: OpenElementPageDescriptor<Data, Params>;
 };
 
-function collectPublicProps(host: Record<string, unknown>): Record<string, unknown> {
+function collectPublicProps(host: object): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   for (const key of Object.keys(host)) {
     if (key.startsWith('__openElement')) continue;
-    props[key] = host[key];
+    props[key] = Reflect.get(host, key);
   }
   return props;
 }

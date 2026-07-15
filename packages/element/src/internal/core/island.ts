@@ -1,4 +1,4 @@
-import { ERROR_PREFIX } from './index.ts';
+import { ERROR_PREFIX } from '../protocol/errors.ts';
 import { formatError } from './errors.ts';
 /**
  * ./index.ts - defineIsland() wrapper
@@ -367,7 +367,7 @@ export function defineIsland<T extends CustomElementConstructor>(
 
   if (isBrowser) {
     switch (strategy) {
-      case 'load': // ponytail: fallthrough, both 'load' and 'only' call register()
+      case 'load': // Fall through: both load and only register immediately.
       case 'only':
         register();
         break;
