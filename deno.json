@@ -56,7 +56,7 @@
     "text-integrity:check": "deno run --allow-read --allow-run=git tools/check-text-integrity.ts",
     "graph:check": "deno run --allow-read tools/check-package-graph.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
-    "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
+    "consumer:packaged": "deno task pack:dry-run && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
     "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
     "desktop-reader:smoke": "cd examples/deno-desktop-reader && deno test -A app/__tests__/",
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",

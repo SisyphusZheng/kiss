@@ -239,10 +239,26 @@ async function npmPackageVersionExists(name: string, version: string): Promise<b
   return output.success && new TextDecoder().decode(output.stdout).trim() === version;
 }
 
-async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> {
+export interface PublishPackageIo {
+  versionExists: (name: string, version: string) => Promise<boolean>;
+  publish: (args: string[]) => Promise<void>;
+  log: (message: string) => void;
+}
+
+const defaultPublishPackageIo: PublishPackageIo = {
+  versionExists: npmPackageVersionExists,
+  publish: (args) => runCommand('npm', args),
+  log: console.log,
+};
+
+export async function publishPackage(
+  pkg: PackageInfo,
+  dryRun: boolean,
+  io: PublishPackageIo = defaultPublishPackageIo,
+): Promise<void> {
   const tar = tarballPath(pkg);
-  if (!dryRun && await npmPackageVersionExists(pkg.name, pkg.version)) {
-    console.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
+  if (!dryRun && await io.versionExists(pkg.name, pkg.version)) {
+    io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
     return;
   }
   const args = dryRun
@@ -256,11 +272,11 @@ async function publishPackage(pkg: PackageInfo, dryRun: boolean): Promise<void> 
     args.push('--tag', npmPublishTag(pkg.version));
   }
   try {
-    await runCommand('npm', args);
+    await io.publish(args);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     if (msg.includes('E403') || msg.includes('previously published versions')) {
-      console.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
+      io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
       return;
     }
     throw error;
