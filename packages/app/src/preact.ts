@@ -14,16 +14,8 @@ import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
 import { assertValidTagName, getSsrProps } from '@openelement/element';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
+import { renderToString } from 'preact-render-to-string';
 import type { IslandConfig } from './authoring.ts';
-
-let renderToString:
-  | typeof import('preact-render-to-string')['renderToString']
-  | undefined;
-
-// SSR-only: keep preact-render-to-string out of browser module evaluation.
-if (typeof document === 'undefined') {
-  ({ renderToString } = await import('preact-render-to-string'));
-}
 
 export type PreactIslandProps = Record<string, unknown>;
 
@@ -72,11 +64,6 @@ export function definePreactIsland<
   class OpenElementPreactIsland extends OpenElement {
     override render(): VNode | null {
       if (typeof document === 'undefined') {
-        if (!renderToString) {
-          throw new Error(
-            'openElement: preact-render-to-string failed to load for SSR.',
-          );
-        }
         // SSR path: render Preact component to string, return as trusted HTML
         const html = renderToString(
           h(Component, resolveProps(this, baseProps) as Props),

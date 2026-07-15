@@ -42,7 +42,8 @@ and boot the island on the client.
 ## Render paths
 
 1. **SSR**: `@openelement/app/preact` imports `preact-render-to-string` on the
-   server to emit static HTML into the page.
+   server without top-level await, so Nitro/CommonJS transforms can load the
+   bridge before it emits static HTML into the page.
 2. **Hydration**: the client bundle receives the Preact component and hydrates
    the server-rendered DOM nodes.
 3. **Client-only islands**: an island can set `ssr={false}` in its metadata to

@@ -192,14 +192,18 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
   const originalRemove = globalThis.removeEventListener;
   let submit: ((event: Event) => void) | undefined;
   let renders = 0;
+  const requests: Request[] = [];
+  const actionResults: unknown[] = [];
   const root = {
     innerHTML: '',
     addEventListener(type: string, listener: (event: Event) => void) {
       if (type === 'submit') submit = listener;
     },
     removeEventListener() {},
-    appendChild() {
+    appendChild(host: PageHostElement) {
       renders++;
+      if (host.__openElementRequest) requests.push(host.__openElementRequest);
+      actionResults.push(host.__openElementActionData);
     },
   };
   Object.defineProperty(globalThis, 'document', {
@@ -247,6 +251,8 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
     await new Promise((resolve) => setTimeout(resolve, 0));
     assertEquals(prevented, true);
     assertEquals(renders, 2);
+    assertEquals(actionResults[1], { error: 'Action failed' });
+    assertEquals(requests[0], requests[1]);
 
     // Non-form submissions and routes without an action are ignored.
     submit?.({ target: {}, composedPath: () => [], preventDefault() {} } as unknown as Event);

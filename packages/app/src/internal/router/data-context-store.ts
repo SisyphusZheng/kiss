@@ -1,13 +1,14 @@
 const dataStack: { loaderData: unknown; actionData: unknown }[] = [];
+export const MAX_DATA_CONTEXT_DEPTH = 50;
 
 export function pushLoaderData(data: unknown): void {
-  dataStack.push({ loaderData: data, actionData: undefined });
-  if (dataStack.length > 10) {
-    console.warn(
-      `[openelement:router] data-context stack depth ${dataStack.length} exceeds expected maximum. ` +
-        'This may indicate a missing popData() call.',
+  if (dataStack.length >= MAX_DATA_CONTEXT_DEPTH) {
+    throw new Error(
+      `Data context stack overflow at depth ${MAX_DATA_CONTEXT_DEPTH} ` +
+        '(possible recursive error renderer)',
     );
   }
+  dataStack.push({ loaderData: data, actionData: undefined });
 }
 
 export function pushActionData(data: unknown): void {
