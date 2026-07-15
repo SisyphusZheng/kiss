@@ -19,6 +19,9 @@ evidence.
 - Restores declared static-prop defaults when reflected attributes are removed.
 - Hardens SSR prop injection, custom-element hydration, params parsing, nested
   SSR depth, and adopted stylesheet composition.
+- Stabilizes SPA action errors, caches same-route GET requests, bounds render
+  data contexts, and compiles client routes into a declaration-ordered trie.
+- Removes Preact bridge top-level await and public data-context mutation hooks.
 
 ## 0.41.0-alpha.11 (release candidate)
 

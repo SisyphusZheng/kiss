@@ -49,6 +49,11 @@ import { defineElement, defineIsland, definePage } from '@openelement/app';
 - `defineIsland(tagName, render, { hydrate, dsd, ssr })` creates a browser-upgraded island.
 - `defineElement(tagName, render)` creates a DSD component, including layout elements.
 
+SPA action failures expose `{ error: 'Action failed' }` to page renderers. Raw
+exceptions are logged only in development. Route matching preserves declaration
+order while compiling static segments into a trie; named parameters, optional
+parameters, and wildcards remain supported.
+
 `OpenElement` remains the runtime primitive in `@openelement/element`, but application
 authors should start from this package.
 

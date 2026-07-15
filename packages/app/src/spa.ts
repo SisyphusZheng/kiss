@@ -11,6 +11,14 @@ import {
   type RouterMode,
 } from './internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
+import { normalizeActionFailure } from './internal/action-error.ts';
+import { SpaRequestCache } from './internal/spa-request-cache.ts';
+
+interface ImportMetaWithEnvironment extends ImportMeta {
+  env?: { DEV?: boolean };
+}
+
+const development = (import.meta as ImportMetaWithEnvironment).env?.DEV === true;
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -40,6 +48,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let renderId = 0;
   let currentLoaderData: unknown;
   let currentActionData: unknown;
+  const requestCache = new SpaRequestCache();
 
   /**
    * Run loader for current route (if any) and push its result.
@@ -68,9 +77,9 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     // OpenElement route: create custom element from tagName, set loader data as properties
     if (!route.tagName) return;
     const el = document.createElement(route.tagName) as PageHostElement;
-    const request = typeof location === 'undefined'
-      ? undefined
-      : new Request(new URL(router.currentPath || '/', location.href ?? 'http://localhost/'));
+    const request = typeof location === 'undefined' ? undefined : requestCache.get(
+      new URL(router.currentPath || '/', location.href ?? 'http://localhost/').href,
+    );
     applyPageHostData(el, {
       data: currentLoaderData,
       actionData: currentActionData,
@@ -154,8 +163,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
         formData: createFormData(form),
       });
     } catch (err) {
-      console.error('[spa] action failed:', err);
-      actionData = { error: String(err) };
+      actionData = normalizeActionFailure(err, development);
     }
 
     // Re-run loader for fresh data
@@ -220,6 +228,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     currentLoaderData = undefined;
     currentActionData = undefined;
+    requestCache.clear();
   }
 
   return {
