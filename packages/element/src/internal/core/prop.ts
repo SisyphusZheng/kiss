@@ -98,9 +98,9 @@ export function handleStaticPropAttributeChange(
     if (propName.toLowerCase() !== name.toLowerCase()) continue;
     const sig = sigMap.get(propName);
     if (!sig) continue;
-    const { type } = normalizePropDecl(decl);
+    const { type, default: defaultValue } = normalizePropDecl(decl);
     if (newValue === null) {
-      sig.value = type === Boolean ? false : type === Number ? 0 : '';
+      sig.value = defaultValue;
     } else if (type === Boolean) {
       sig.value = true;
     } else if (type === Number) {

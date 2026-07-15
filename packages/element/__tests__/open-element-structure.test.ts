@@ -17,3 +17,17 @@ Deno.test('OpenElementThemeManager registers styles idempotently and resets', ()
   manager.resetStyles();
   assertEquals(manager.getStyles(), []);
 });
+
+Deno.test('OpenElementThemeManager preserves and deduplicates adopted styles', () => {
+  const manager = new OpenElementThemeManager();
+  const sheet = () => ({ replaceSync: () => {}, cssRules: [] });
+  const existing = sheet();
+  const global = sheet();
+  const component = sheet();
+  const root = { adoptedStyleSheets: [existing, global] } as unknown as ShadowRoot;
+
+  manager.registerStyles(global);
+  manager.applyStyles(root, [component, existing]);
+
+  assertEquals(root.adoptedStyleSheets as unknown[], [existing, global, component]);
+});

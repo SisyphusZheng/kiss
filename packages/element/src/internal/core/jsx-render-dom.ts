@@ -330,8 +330,7 @@ function renderNode(
 
   if (tag === FOR_TAG || tag === 'for') {
     const eachSig = props?.each;
-    const renderFn = (children[0] as RenderFn) ??
-      ((() => document.createTextNode('') as unknown) as RenderFn);
+    const renderFn = (children[0] as RenderFn) ?? EMPTY_RENDER;
 
     const marker = document.createComment('for');
     descriptors.push(
@@ -374,3 +373,4 @@ function renderNode(
 
   return el;
 }
+const EMPTY_RENDER: RenderFn = () => null;

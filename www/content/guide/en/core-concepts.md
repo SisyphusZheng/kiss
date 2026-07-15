@@ -31,7 +31,6 @@ import { defineIsland, definePage } from '@openelement/app';
 - `definePage()` declares route components and page metadata.
 - `defineIsland()` declares interactive Custom Elements.
 - `defineElement()` declares reusable Elements-native custom elements.
-- `defineLayout()` is a semantic alias for layout elements.
 
 ## Renderer Pipeline
 
@@ -65,3 +64,7 @@ import { OpenElement, signal, StyleSheet } from '@openelement/element';
 ```
 
 Application routes should normally use `@openelement/app` first.
+
+Static prop getters return reactive `Signal` objects by design. Read or update
+their `.value`; when a reflected attribute is removed, its declared default is
+restored.

@@ -1,5 +1,5 @@
 /** @jsxImportSource @openelement/element */
-import { defineLayout } from '@openelement/app';
+import { defineElement } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 
 export const tagName = 'app-shell';
@@ -13,7 +13,7 @@ styles.replaceSync(`
   a { color: var(--brand); text-decoration: none; font-weight: 600; }
 `);
 
-export default defineLayout(tagName, {
+export default defineElement(tagName, {
   styles,
   render(props: { siteName?: string }) {
     return (

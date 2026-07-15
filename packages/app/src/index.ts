@@ -33,7 +33,7 @@ export type {
 export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/element';
 
 // Re-export from @openelement/element for convenience
-export { defineElement, defineLayout } from '@openelement/element';
+export { defineElement } from '@openelement/element';
 export type { ElementDefinition } from '@openelement/element';
 
 // SPA bootstrap
