@@ -1,14 +1,14 @@
-# v0.41.0-alpha.13 Release Planning — current source truth
+# v0.41.0-alpha.14 Release Planning — current source truth
 
-> Current package line: `v0.41.0-alpha.12`\
+> Current package line: `v0.41.0-alpha.14`\
 > Repository source baseline: `v0.41.0-alpha.10`\
 > Registry baseline observed on 2026-07-14: `v0.41.0-alpha.6`\
 > Current maturity stage: alpha
 
 ## Current release
 
-`v0.41.0-alpha.12` remains the current source and package line. Alpha.13 is
-the next release train; its blockers, acceptance criteria, and release evidence
+`v0.41.0-alpha.14` (0.41.0-alpha.14) remains the current source and package line. Alpha.13 was
+the prior recovery train; its blockers, acceptance criteria, and release evidence
 are recorded in [`v0.41.0-alpha.13-plan.md`](../release/v0.41.0-alpha.13-plan.md).
 Alpha.12 published five npm packages but did not close its release evidence:
 the exact published starter failed to typecheck because the Element JSX runtime
