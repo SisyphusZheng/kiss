@@ -123,14 +123,15 @@ export function scanClientBuild(
             sizeKB: formatSize(fileStat.size),
           };
         } else {
-          // Island chunk or shared chunk
-          const _isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
-          islands.push({
-            name: file,
-            path: `islands/${file}`,
-            sizeBytes: fileStat.size,
-            sizeKB: formatSize(fileStat.size),
-          });
+          const isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
+          if (isIslandChunk) {
+            islands.push({
+              name: file,
+              path: `islands/${file}`,
+              sizeBytes: fileStat.size,
+              sizeKB: formatSize(fileStat.size),
+            });
+          }
         }
         totalJsBytes += fileStat.size;
       } catch (e) {

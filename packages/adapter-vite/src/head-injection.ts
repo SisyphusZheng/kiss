@@ -22,7 +22,7 @@ const log = createLogger('adapter-vite:head-injection');
 
 const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel', 'sms'];
 const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
-  allowedTags: ['base', 'link', 'meta', 'noscript', 'style', 'title'],
+  allowedTags: ['base', 'link', 'meta', 'noscript', 'title'],
   allowedAttributes: {
     base: ['href', 'target'],
     link: [
@@ -42,7 +42,6 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
     ],
     meta: ['charset', 'content', 'http-equiv', 'name', 'property'],
     noscript: [],
-    style: ['media', 'nonce', 'title'],
     title: [],
   },
   allowedSchemes: SAFE_SCHEMES,
@@ -52,11 +51,64 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
   },
   allowedSchemesAppliedToAttributes: ['href', 'src', 'action', 'formaction', 'xlink:href'],
   allowProtocolRelative: false,
-  allowVulnerableTags: true,
 };
 
+function sanitizeStyleTag(attributes: string, css: string, context: string): string {
+  if (
+    /(?:@import|expression\s*\(|url\s*\(\s*["']?\s*(?:javascript|data|vbscript|file)\s*:)/i.test(
+      css,
+    )
+  ) {
+    throw new OpenElementError(`Unsafe CSS in ${context}`, {
+      code: 'UNSAFE_HEAD_INJECTION',
+      statusCode: 400,
+      recoverable: false,
+    });
+  }
+  const rendered: string[] = [];
+  const attributePattern = /\s+([A-Za-z_:][A-Za-z0-9_.:-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'))?/gy;
+  let offset = 0;
+  while (offset < attributes.length) {
+    attributePattern.lastIndex = offset;
+    const match = attributePattern.exec(attributes);
+    if (!match || match.index !== offset) {
+      throw new OpenElementError(`Malformed style attribute in ${context}`, {
+        code: 'UNSAFE_HEAD_INJECTION',
+        statusCode: 400,
+        recoverable: false,
+      });
+    }
+    const name = match[1].toLowerCase();
+    if (!['media', 'nonce', 'title'].includes(name) || /^on/i.test(name)) {
+      throw new OpenElementError(`Unsafe style attribute in ${context}: "${name}"`, {
+        code: 'UNSAFE_HEAD_INJECTION',
+        statusCode: 400,
+        recoverable: false,
+      });
+    }
+    const value = match[2] ?? match[3];
+    rendered.push(value === undefined ? name : `${name}="${escapeHtmlAttr(value)}"`);
+    offset = attributePattern.lastIndex;
+  }
+  return `<style${rendered.length ? ` ${rendered.join(' ')}` : ''}>${css}</style>`;
+}
+
 function sanitizeHeadHtml(html: string, context: string): string {
-  const sanitized = sanitizeHtml(html, HEAD_SANITIZE_OPTIONS);
+  const styles: string[] = [];
+  let marker = '__OPEN_ELEMENT_SAFE_STYLE_';
+  while (html.includes(marker)) marker += '_';
+  const withoutStyles = html.replace(
+    /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi,
+    (_, attrs, css) => {
+      const index = styles.push(sanitizeStyleTag(attrs, css, context)) - 1;
+      return `${marker}${index}__`;
+    },
+  );
+  let sanitized = sanitizeHtml(withoutStyles, HEAD_SANITIZE_OPTIONS);
+  sanitized = sanitized.replace(
+    new RegExp(`${marker}(\\d+)__`, 'g'),
+    (_, index) => styles[Number(index)],
+  );
   if (sanitized.trim() !== html.trim()) {
     log.warn(`${context} contained unsafe head markup; sanitized before injection`);
   }

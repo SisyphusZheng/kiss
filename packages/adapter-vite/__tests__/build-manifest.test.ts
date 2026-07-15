@@ -65,7 +65,7 @@ Deno.test('scanClientBuild skips non-js files', () => {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
 
-    writeFileSync(join(islandsDir, 'island-counter.js'), '// js file', 'utf-8');
+    writeFileSync(join(islandsDir, 'island-counter-a1b2.js'), '// js file', 'utf-8');
     writeFileSync(join(islandsDir, 'counter.css'), '.css { }', 'utf-8');
     writeFileSync(join(islandsDir, 'README.md'), '# readme', 'utf-8');
 
@@ -161,10 +161,14 @@ Deno.test('printBuildManifest: island budget warning', () => {
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'big-island.js'), 'x'.repeat(51 * 1024), 'utf-8');
+    writeFileSync(
+      join(islandsDir, 'island-big-a1b2.js'),
+      'x'.repeat(51 * 1024),
+      'utf-8',
+    );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
-    assertExists(manifest.warnings.find((w) => w.includes('exceeds') && w.includes('big-island')));
+    assertExists(manifest.warnings.find((w) => w.includes('exceeds') && w.includes('island-big')));
   } finally {
     cleanup(tmp);
   }
@@ -283,15 +287,13 @@ Deno.test('scanClientBuild: shared chunks counted in totalJsBytes', () => {
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'island-counter.js'), 'x'.repeat(1024), 'utf-8');
+    writeFileSync(join(islandsDir, 'island-counter-a1b2.js'), 'x'.repeat(1024), 'utf-8');
     writeFileSync(join(islandsDir, 'client.js'), '// entry'.padEnd(100, ' '), 'utf-8');
     // A shared chunk (not an island prefix, not client.js)
-    // scanClientBuild collects all .js files that aren't client.js as "islands"
     writeFileSync(join(islandsDir, 'vendor-abc.js'), 'x'.repeat(2048), 'utf-8');
 
     const result = scanClientBuild(tmp);
-    // Both island-counter.js and vendor-abc.js are counted as islands (all non-client.js .js files)
-    assertEquals(result.islands.length, 2);
+    assertEquals(result.islands.length, 1);
     assertExists(result.clientEntry);
     // Total should include both islands + client.js + shared chunk
     assert(result.totalJsBytes > 3000);
@@ -324,7 +326,11 @@ Deno.test('formatSize: large file displays in MB range', () => {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
     mkdirSync(islandsDir, { recursive: true });
     // 2MB file to trigger MB display format
-    writeFileSync(join(islandsDir, 'island-huge.js'), 'x'.repeat(2 * 1024 * 1024), 'utf-8');
+    writeFileSync(
+      join(islandsDir, 'island-huge-a1b2.js'),
+      'x'.repeat(2 * 1024 * 1024),
+      'utf-8',
+    );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
     assertEquals(manifest.islands.length, 1);

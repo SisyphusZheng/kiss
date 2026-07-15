@@ -158,6 +158,7 @@ export async function expandI18nLocales(
 
   log.info(`i18n: expanding for locales: ${locales.join(', ')}`);
   for (const locale of locales) {
+    if (locale === i18nOpts.defaultLocale) continue;
     for (const route of routeInfo) {
       let paramsList: Array<Record<string, string>>;
       if (!route.isDynamic) {

@@ -119,7 +119,7 @@ export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
     const locale = this._getLocale('zh');
-    const homeHref = locale === 'en' ? '/en/' : '/zh/';
+    const homeHref = locale === 'en' ? '/' : '/zh/';
     const requestedPath = typeof globalThis.location === 'undefined' ? '/404' : globalThis.location.pathname;
     return (
       <main>

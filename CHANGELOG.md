@@ -22,6 +22,9 @@ evidence.
 - Stabilizes SPA action errors, caches same-route GET requests, bounds render
   data contexts, and compiles client routes into a declaration-ordered trie.
 - Removes Preact bridge top-level await and public data-context mutation hooks.
+- Hardens Adapter Vite i18n, head sanitization, sitemap, island manifests,
+  npm-specifier rewriting, asynchronous manifest reads, CORS defaults, and
+  AST-based route metadata extraction.
 
 ## 0.41.0-alpha.11 (release candidate)
 

@@ -12,7 +12,7 @@ import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from './internal/protocol/framework.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
-import { mkdir, open } from 'node:fs/promises';
+import { mkdir, open, readFile } from 'node:fs/promises';
 import process from 'node:process';
 import { createLogger } from '@openelement/element';
 import { escapeAttr, escapeHtml } from '@openelement/element';
@@ -25,6 +25,19 @@ import {
 } from './build-plan.ts';
 
 const log = createLogger('core');
+
+export async function readClientEntryFromManifest(manifestPath: string): Promise<string> {
+  const manifestRaw = await readFile(manifestPath, 'utf-8');
+  const manifest = JSON.parse(manifestRaw);
+  for (const [src, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
+    if (
+      (src.includes('open-client-entry') || src.includes('virtual:open-client')) && entry.file
+    ) {
+      return entry.file;
+    }
+  }
+  throw new Error(`Client manifest exists but no open-client-entry was found: ${manifestPath}`);
+}
 
 /** Vite plugin: writes build metadata to ctx, then runs Phase 2 + Phase 3 */
 export function buildPlugin(
@@ -69,7 +82,7 @@ export function buildPlugin(
       const totalIslands = (ctx.phase1.islandTagNames?.length || 0) +
         (ctx.phase1.packageIslandDecls?.length || 0);
 
-      log.info('Phase 1/3 complete - SSR bundle + metadata written to ctx');
+      log.info('Phase 1 complete - SSR bundle and metadata written to build context');
 
       // ADR 0023: Phase 3 (SSG) runs before Phase 2 (client bundle).
       // SSG only needs Phase 1 - it renders HTML from the SSR bundle.
@@ -190,25 +203,17 @@ export function buildPlugin(
           const outDir = ctx.phase3.outDir || 'dist';
           const root = ctx.phase3.root || process.cwd();
           const clientManifestPath = join(root, outDir, 'client', '.vite', 'manifest.json');
-          const { existsSync, readFileSync } = await import('node:fs');
+          const { existsSync } = await import('node:fs');
           if (existsSync(clientManifestPath)) {
-            const manifestRaw = readFileSync(clientManifestPath, 'utf-8');
-            const manifest = JSON.parse(manifestRaw);
-            for (const [src, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
-              if (
-                (src.includes('open-client-entry') || src.includes('virtual:open-client')) &&
-                entry.file
-              ) {
-                const base = ctx.phase3.base || '/';
-                const scriptSrc = `${base}client/${entry.file}`;
-                await postProcessClientIslandBuild(ctx, scriptSrc);
-                log.info(`Client script injected: ${scriptSrc}`);
-                break;
-              }
-            }
+            const clientEntry = await readClientEntryFromManifest(clientManifestPath);
+            const base = ctx.phase3.base || '/';
+            const scriptSrc = `${base}client/${clientEntry}`;
+            await postProcessClientIslandBuild(ctx, scriptSrc);
+            log.info(`Client script injected: ${scriptSrc}`);
           }
         } catch (error) {
-          log.warn(`Failed to inject client script: ${error}`);
+          log.error(`Failed to inject client script: ${error}`);
+          throw error;
         }
       } else {
         log.info('No Phase 2 - client script injection skipped');
