@@ -51,9 +51,15 @@ try {
     imports: Record<string, string>;
     nodeModulesDir?: string;
   };
-  for (const subpath of ['jsx-runtime', 'jsx-dev-runtime']) {
-    const key = `@openelement/element/${subpath}`;
-    const expected = `npm:@openelement/element@^${PACKAGE_VERSION}/${subpath}`;
+  const expectedImports: Record<string, string> = {
+    '@openelement/app': `npm:@openelement/app@${PACKAGE_VERSION}`,
+    '@openelement/adapter-vite': `npm:@openelement/adapter-vite@${PACKAGE_VERSION}`,
+    '@openelement/element': `npm:@openelement/element@${PACKAGE_VERSION}`,
+    '@openelement/element/jsx-runtime': `npm:@openelement/element@${PACKAGE_VERSION}/jsx-runtime`,
+    '@openelement/element/jsx-dev-runtime':
+      `npm:@openelement/element@${PACKAGE_VERSION}/jsx-dev-runtime`,
+  };
+  for (const [key, expected] of Object.entries(expectedImports)) {
     if (config.imports[key] !== expected) {
       throw new Error(`Packed starter import ${key}=${config.imports[key]}, expected=${expected}`);
     }
