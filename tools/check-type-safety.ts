@@ -15,9 +15,9 @@ export interface Issue {
 }
 
 const ANY_PATTERNS = [
-  { re: new RegExp('\\bas\\s+any\\b'), name: 'as' + ' ' + 'any' },
-  { re: /:\s*any\b/, name: ':' + ' ' + 'any' },
-  { re: /\bany\s*\[\s*\]/, name: 'any' + '[]' },
+  { re: /\bas\s+any\b/u, name: 'unsafe cast' },
+  { re: /:\s*any\b/u, name: 'unsafe annotation' },
+  { re: /\bany\s*\[\s*\]/u, name: 'unsafe array element' },
 ];
 
 const ACTIVE_ROOTS = [

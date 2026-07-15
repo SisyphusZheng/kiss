@@ -32,6 +32,7 @@ Deno.test('production BuildPlan reuses Phase 1 discoveries and collects emitted 
 
     const result = collectBuildArtifacts(plan);
     assertEquals(result.success, true);
+    assertEquals(result.manifest.routes[0].kind, 'page');
     assertEquals(result.manifest.routes[0].path, '/');
     assertEquals(result.manifest.islands[0].tagName, 'counter-island');
     assertEquals(result.pages.length, 1);
@@ -76,6 +77,7 @@ Deno.test('writeBuildEvidence writes the build artifacts manifest', async () => 
     );
     assertEquals(evidence.success, true);
     assertEquals(evidence.pages.length, 1);
+    assertEquals(evidence.manifest.routes[0].kind, 'page');
   } finally {
     await Deno.remove(root, { recursive: true });
   }

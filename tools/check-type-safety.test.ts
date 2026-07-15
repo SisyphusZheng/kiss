@@ -8,13 +8,13 @@ Deno.test('type-safety: detects `as any` cast escape', () => {
   assertEquals(issues.length, 1);
   assertEquals(issues[0].line, 1);
   assertEquals(issues[0].file, SAMPLE);
-  assert(issues[0].text.includes('as any'));
+  assert(issues[0].text.includes('cast'));
 });
 
 Deno.test('type-safety: detects `: any` annotation escape', () => {
   const issues = scanSourcesForAnyIssues([{ path: SAMPLE, text: 'function f(x: any): void {}' }]);
   assertEquals(issues.length, 1);
-  assert(issues[0].text.includes(': any'));
+  assert(issues[0].text.includes('annotation'));
 });
 
 Deno.test('type-safety: detects `any[]` in a generic position', () => {
@@ -23,7 +23,7 @@ Deno.test('type-safety: detects `any[]` in a generic position', () => {
     { path: SAMPLE, text: 'const m: Map<string, any[]> = new Map();' },
   ]);
   assertEquals(issues.length, 1);
-  assert(issues[0].text.includes('any[]'));
+  assert(issues[0].text.includes('array'));
 });
 
 Deno.test('type-safety: allows `unknown` escapes', () => {
@@ -55,7 +55,7 @@ Deno.test('type-safety: reports the first matching escape per line only', () => 
   // `as any` matches before `: any`, so only one issue is recorded.
   const issues = scanSourcesForAnyIssues([{ path: SAMPLE, text: 'const x = y as any; // : any' }]);
   assertEquals(issues.length, 1);
-  assert(issues[0].text.includes('as any'));
+  assert(issues[0].text.includes('cast'));
 });
 
 Deno.test('type-safety: isCodeLine skips comments but keeps code', () => {

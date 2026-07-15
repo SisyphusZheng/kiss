@@ -93,7 +93,16 @@ const files = (await gitTrackedFiles()).map(normalizeSlashes).filter(shouldScan)
 
 for (const file of files) {
   if (!(await exists(file))) continue;
-  const text = await Deno.readTextFile(file);
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(await Deno.readFile(file));
+  } catch {
+    issues.push({ file, message: 'is not strict UTF-8 text' });
+    continue;
+  }
+  if (text.includes('\uFFFD')) {
+    issues.push({ file, message: 'contains Unicode replacement character U+FFFD' });
+  }
   if (mojibake.test(text)) {
     issues.push({ file, message: 'contains mojibake token' });
   }

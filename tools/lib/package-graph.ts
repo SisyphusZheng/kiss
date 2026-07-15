@@ -8,6 +8,7 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { walkSync } from '@std/fs/walk';
+import { extractStaticModuleSpecifiers } from './typescript-ast.ts';
 
 export interface PackageInfo {
   name: string;
@@ -92,23 +93,13 @@ export function collectImportStatements(source: string): string[] {
 }
 
 export function extractOpenImports(source: string): string[] {
-  const imports = new Set<string>();
-  const patterns = [
-    /\bimport\s+(?:type\s+)?(?:[^'"]+?\s+from\s+)?['"](@openelement\/[^'"]+)['"]/g,
-    /\bexport\s+(?:type\s+)?[^'"]+?\s+from\s+['"](@openelement\/[^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"](@openelement\/[^'"]+)['"]\s*\)/g,
+  return [
+    ...new Set(
+      extractStaticModuleSpecifiers(source)
+        .map(({ value }) => value)
+        .filter((value) => value.startsWith('@openelement/')),
+    ),
   ];
-
-  for (const statement of collectImportStatements(source)) {
-    for (const pattern of patterns) {
-      pattern.lastIndex = 0;
-      for (const match of statement.matchAll(pattern)) {
-        imports.add(match[1]);
-      }
-    }
-  }
-
-  return [...imports];
 }
 
 function collectInternalDeps(dir: string, exports: unknown): string[] {
@@ -364,10 +355,6 @@ export function allPackageAliases(repoRoot: string): Map<string, string> {
       }
     }
   }
-
-  // Directory-style import for ui components
-  const uiSrc = join(repoRoot, 'packages', 'ui', 'src');
-  entries.push(['@openelement/ui/', pathToFileURL(uiSrc + '/').href]);
 
   entries.sort((a, b) => b[0].length - a[0].length);
   return new Map(entries);

@@ -16,9 +16,13 @@ const PROJECT_NAME = Deno.env.get('CLOUDFLARE_PAGES_PROJECT') ?? 'openelement';
 const DIST_DIR = 'www/dist';
 
 if (!API_TOKEN || !ACCOUNT_ID) {
-  console.log(
-    '[deploy:pages] CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set; skipping Pages deploy.',
-  );
+  const message =
+    '[deploy:pages] CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set; Pages deploy cannot run.';
+  if (Deno.env.get('CI') === 'true') {
+    console.error(message);
+    Deno.exit(1);
+  }
+  console.warn(`${message} Skipping explicit local deployment.`);
   Deno.exit(0);
 }
 

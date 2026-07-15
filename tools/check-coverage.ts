@@ -17,10 +17,17 @@ function getNumberArg(flag: string, fallback: number): number {
 
 async function runCoverage(): Promise<string> {
   const coverageDir = '.coverage-check';
+  const preservedFiles = ['examples/deno-desktop-mastodon/deno.lock'];
+  const snapshots = new Map(
+    await Promise.all(
+      preservedFiles.map(async (path) => [path, await Deno.readFile(path)] as const),
+    ),
+  );
   try {
     const test = await new Deno.Command(Deno.execPath(), {
       args: [
         'test',
+        '--no-lock',
         `--coverage=${coverageDir}`,
         '--allow-read',
         '--allow-write',
@@ -44,6 +51,7 @@ async function runCoverage(): Promise<string> {
     return new TextDecoder().decode(report.stdout);
   } finally {
     await Deno.remove(coverageDir, { recursive: true }).catch(() => undefined);
+    for (const [path, bytes] of snapshots) await Deno.writeFile(path, bytes);
   }
 }
 
