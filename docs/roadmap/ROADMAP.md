@@ -4,7 +4,7 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.41.0-alpha.11`.\
+> Published package line: `v0.41.0-alpha.12`.\
 > Current implementation state: five-package convergence is published;
 > external adopter pilot #390 remains open.\
 > Maturity stage: alpha; the abandoned beta naming is retired.
