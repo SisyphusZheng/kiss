@@ -25,6 +25,9 @@ evidence.
 - Hardens Adapter Vite i18n, head sanitization, sitemap, island manifests,
   npm-specifier rewriting, asynchronous manifest reads, CORS defaults, and
   AST-based route metadata extraction.
+- Moves UI tokens to a CSS source of truth with generated-output drift checks,
+  and makes Create template generation asynchronous, deterministic, and bound
+  to the five-package same-version release invariant.
 
 ## 0.41.0-alpha.11 (release candidate)
 

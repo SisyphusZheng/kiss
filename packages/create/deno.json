@@ -9,6 +9,8 @@
   "publish": {
     "include": [
       "src/cli.ts",
+      "src/template-builder.ts",
+      "src/version.ts",
       "templates",
       "deno.json",
       "README.md",
