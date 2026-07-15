@@ -38,11 +38,11 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
   ]);
   assertEquals(
     denoJson.imports['@openelement/element/jsx-runtime'],
-    'npm:@openelement/element@^${v.element}/jsx-runtime',
+    'npm:@openelement/element@${v.element}/jsx-runtime',
   );
   assertEquals(
     denoJson.imports['@openelement/element/jsx-dev-runtime'],
-    'npm:@openelement/element@^${v.element}/jsx-dev-runtime',
+    'npm:@openelement/element@${v.element}/jsx-dev-runtime',
   );
   assertEquals(Object.keys(denoJson.tasks).sort(), ['build', 'check', 'dev', 'preview', 'test']);
   assertEquals(denoJson.compilerOptions.jsxImportSource, '@openelement/element');
@@ -81,6 +81,28 @@ Deno.test('async template build returns deterministic path order', async () => {
   const templates = await buildTemplates(resolveVersions());
   assertEquals(Object.keys(templates), Object.keys(templates).toSorted());
   assertFalse(Object.values(templates).some((content) => content.includes('${v.')));
+});
+
+Deno.test('generated starter pins every OpenElement import to the exact release', async () => {
+  const versions = resolveVersions();
+  const config = JSON.parse((await buildTemplates(versions))['deno.json']);
+  assertEquals(config.imports['@openelement/app'], `npm:@openelement/app@${versions.app}`);
+  assertEquals(
+    config.imports['@openelement/adapter-vite'],
+    `npm:@openelement/adapter-vite@${versions.adapterVite}`,
+  );
+  assertEquals(
+    config.imports['@openelement/element'],
+    `npm:@openelement/element@${versions.element}`,
+  );
+  assertEquals(
+    config.imports['@openelement/element/jsx-runtime'],
+    `npm:@openelement/element@${versions.element}/jsx-runtime`,
+  );
+  assertEquals(
+    config.imports['@openelement/element/jsx-dev-runtime'],
+    `npm:@openelement/element@${versions.element}/jsx-dev-runtime`,
+  );
 });
 
 Deno.test('starter templates use the supported Element JSX entrypoint', () => {
