@@ -6,7 +6,7 @@
 Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作者层；
 Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
 
-已发布包线为 `0.41.0-alpha.13`（`v0.41.0-alpha.13`）。项目继续使用 alpha
+已发布包线为 `0.41.0-alpha.14`（`v0.41.0-alpha.14`）。项目继续使用 alpha
 命名，直到五包产品与外部采用证据充分成熟；已放弃的 beta 命名不再是当前版本线。
 
 ## 当前产品

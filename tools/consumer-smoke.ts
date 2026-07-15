@@ -207,10 +207,17 @@ async function exactVersionStarterSmoke(version: string): Promise<void> {
       tmpDir,
     );
     if (!create.success) throw new Error(`starter generation failed:\n${create.output}`);
-    const config = await Deno.readTextFile(`${tmpDir}/starter/deno.json`);
+    const config = JSON.parse(await Deno.readTextFile(`${tmpDir}/starter/deno.json`)) as {
+      imports: Record<string, string>;
+    };
     for (const pkg of ['app', 'adapter-vite', 'element']) {
-      if (!config.includes(`npm:@openelement/${pkg}@^${version}`)) {
-        throw new Error(`starter does not pin @openelement/${pkg} to ${version}`);
+      const expected = `npm:@openelement/${pkg}@${version}`;
+      if (config.imports[`@openelement/${pkg}`] !== expected) {
+        throw new Error(
+          `starter import @openelement/${pkg}=${
+            config.imports[`@openelement/${pkg}`]
+          }, expected=${expected}`,
+        );
       }
     }
     const check = await run('deno', ['task', 'check'], `${tmpDir}/starter`);
