@@ -15,13 +15,14 @@ export interface Context<T> {
   defaultValue: T;
 }
 
-const defaultSignals = new Map<symbol, WritableSignal<unknown>>();
+const defaultSignals = new WeakMap<Context<unknown>, WritableSignal<unknown>>();
 const hostSignals = new WeakMap<object, Map<symbol, WritableSignal<unknown>>>();
 
 export function createContext<T>(key: symbol, defaultValue: T): Context<T> {
+  const context: Context<T> = { key, defaultValue };
   const s = signal<T>(defaultValue);
-  defaultSignals.set(key, s);
-  return { key, defaultValue };
+  defaultSignals.set(context as Context<unknown>, s as WritableSignal<unknown>);
+  return context;
 }
 
 function getOrCreateHostSignal<T>(
@@ -84,7 +85,7 @@ export function consumeContext<T>(
 ): WritableSignal<T> {
   const scoped = findProvidedSignal(host, ctx);
   if (scoped) return scoped;
-  const s = defaultSignals.get(ctx.key);
+  const s = defaultSignals.get(ctx as Context<unknown>);
   if (s) return s as WritableSignal<T>;
   return signal(ctx.defaultValue);
 }

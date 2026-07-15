@@ -84,3 +84,14 @@ Deno.test('signal-context: nested shadow boundaries are crossed exactly once', (
   const signal = consumeContext(ctx, leaf as unknown as HTMLElement);
   assertEquals(signal.value, true);
 });
+
+Deno.test('signal-context: defaults are isolated by Context identity even when keys match', () => {
+  const key = Symbol('shared');
+  const first = createContext(key, 'first');
+  const second = createContext(key, 'second');
+
+  consumeContext(first).value = 'changed';
+
+  assertEquals(consumeContext(first).value, 'changed');
+  assertEquals(consumeContext(second).value, 'second');
+});

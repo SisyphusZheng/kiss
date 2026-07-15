@@ -14,12 +14,13 @@ The current public product surface has five packages. Most authors use
 ## Element authoring
 
 ```tsx
-import { defineElement, defineLayout } from '@openelement/element';
+import { defineElement } from '@openelement/element';
 ```
 
-`defineElement()` declares a reusable native custom element. Shadow/DSD is the
-default render mode; light DOM remains explicit opt-in. `defineLayout()` is the
-semantic layout alias for element authoring.
+`defineElement()` declares a reusable native custom element, including layout
+elements. Shadow/DSD is the default render mode; light DOM remains explicit
+opt-in. The former `defineLayout()` alias was removed; migrate it directly to
+`defineElement()` with the same arguments.
 
 ## Application authoring
 

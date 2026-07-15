@@ -156,6 +156,13 @@ export function hydrateOpenElement(
     const ctor = registry.get(tagName);
     if (!ctor) continue; // Skip non-custom-element hosts.
 
+    try {
+      registry.upgrade(host);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to upgrade <${tagName}>: ${message}`, { cause: error });
+    }
+
     const shadowRoot = createShadowRootFromTemplate(host, template);
 
     // Read signal registry from the upgraded element instance.

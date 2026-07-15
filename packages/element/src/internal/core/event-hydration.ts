@@ -18,6 +18,7 @@ import type { EventBindingDescriptor } from './binding-descriptor.ts';
 import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
+import { injectPropsSafe } from './security.ts';
 
 const hydrationLog = createLogger('hydration');
 
@@ -84,9 +85,7 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     if (isComponentCtor(tag)) {
       try {
         const instance = new tag();
-        for (const [k, v] of Object.entries(props)) {
-          (instance as Record<string, unknown>)[k] = v;
-        }
+        injectPropsSafe(instance, props, `hydrate<${String(tag)}>`, hydrationLog);
         visit(instance.render());
       } catch (err) {
         hydrationLog.error(`Hydration component instantiation failed: ${formatError(err)}`);

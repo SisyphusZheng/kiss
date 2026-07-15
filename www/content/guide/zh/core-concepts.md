@@ -29,7 +29,6 @@ import { defineIsland, definePage } from '@openelement/app';
 - `definePage()` 声明 route component 和页面 metadata。
 - `defineIsland()` 声明可交互 Custom Element。
 - `defineElement()` 声明可复用的 Elements-native custom element。
-- `defineLayout()` 是 layout element 的语义别名。
 
 ## Renderer 管线
 
@@ -61,3 +60,6 @@ import { OpenElement, signal, StyleSheet } from '@openelement/element';
 ```
 
 应用路由通常应优先使用 `@openelement/app`。
+
+静态 prop getter 按设计返回响应式 `Signal` 对象，应通过 `.value` 读取或更新。
+删除反射属性时会恢复 `static props` 中声明的默认值。

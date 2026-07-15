@@ -9,7 +9,7 @@ is the default render mode; light DOM remains explicit opt-in.
 Also includes:
 
 - `ErrorBoundary` — catch child render errors with fallback UI
-- `defineElement` / `defineLayout` — functional component-style authoring
+- `defineElement` — functional component-style authoring for elements and layouts
 - Prop system: `PropDecl`, `PropsFrom`, `PropType`
 - Full re-export of JSX, VNode, context, signals, StyleSheet, and island utilities
 
@@ -48,6 +48,14 @@ defineElement('my-card', ({ title }) => (
   </article>
 ));
 ```
+
+Static prop getters intentionally return a `Signal`, so read and write through
+`.value` (for example, `this.count.value`). Removing a reflected attribute
+restores the default declared in `static props`.
+
+`defineLayout` was removed during the alpha public-surface freeze. Replace
+`defineLayout(tagName, definition)` with the identical
+`defineElement(tagName, definition)` call.
 
 ## Boundary
 

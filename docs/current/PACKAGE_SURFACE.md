@@ -23,6 +23,10 @@ authoring modes = Basic Element standalone + full application
 Application authors should normally learn `element`, `app`, `adapter-vite`,
 and `create`; `ui` is optional.
 
+The Element/App root surface exposes one functional element authoring helper:
+`defineElement`. The alpha-only `defineLayout` alias was removed in alpha.13;
+layouts use `defineElement` with the same definition object.
+
 ## Removed from current graph
 
 The following alpha implementation packages are absorbed and are not supported

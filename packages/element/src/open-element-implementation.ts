@@ -69,6 +69,7 @@ import { hydrateExistingDom } from './open-element-hydration.ts';
 import { OpenElementThemeManager } from './open-element-theme.ts';
 
 const themeManager = new OpenElementThemeManager();
+const MAX_PARAMS_ATTRIBUTE_BYTES = 64 * 1024;
 
 /**
  * SSR-safe base class for OpenElement.
@@ -344,7 +345,6 @@ export class OpenElement extends _Base {
       this.createRenderRoot();
     } else if (this.shadowRoot) {
       // DSD path: shadow root already populated.
-      this.style.display = 'block';
       this._applyStyles(ctor);
     }
 
@@ -355,6 +355,9 @@ export class OpenElement extends _Base {
     const attrParams = this.getAttribute('params');
     if (attrParams) {
       try {
+        if (new TextEncoder().encode(attrParams).byteLength > MAX_PARAMS_ATTRIBUTE_BYTES) {
+          throw new Error('params attribute exceeds the 64 KiB limit');
+        }
         this.#params.value = JSON.parse(attrParams);
       } catch (err) {
         createLogger('element').error(

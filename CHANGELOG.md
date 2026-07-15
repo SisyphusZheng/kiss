@@ -12,6 +12,14 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0-alpha.13 (unreleased)
+
+- Removes the alpha-only `defineLayout` alias; use `defineElement` with the same
+  arguments for layout elements.
+- Restores declared static-prop defaults when reflected attributes are removed.
+- Hardens SSR prop injection, custom-element hydration, params parsing, nested
+  SSR depth, and adopted stylesheet composition.
+
 ## 0.41.0-alpha.11 (release candidate)
 
 - Restores frozen-install and changed-path/release workflow truth.

@@ -14,12 +14,12 @@ order: 70
 ## Element 编写
 
 ```tsx
-import { defineElement, defineLayout } from '@openelement/element';
+import { defineElement } from '@openelement/element';
 ```
 
-`defineElement()` 声明可复用的原生 custom element。Shadow/DSD 是默认渲染模式；
-light DOM 必须显式选择。`defineLayout()` 是 element authoring 的语义 layout
-别名。
+`defineElement()` 声明可复用的原生 custom element，也用于 layout element。
+Shadow/DSD 是默认渲染模式；light DOM 必须显式选择。原 `defineLayout()` 别名已
+移除，可保持参数不变直接迁移到 `defineElement()`。
 
 ## 应用编写
 
