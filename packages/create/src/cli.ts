@@ -9,67 +9,7 @@
  */
 
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { CREATE_VERSION } from './version.ts';
-type ProductVersions = {
-  app: string;
-  adapterVite: string;
-  element: string;
-};
-
-function resolveVersions(): ProductVersions {
-  return {
-    app: CREATE_VERSION,
-    adapterVite: CREATE_VERSION,
-    element: CREATE_VERSION,
-  };
-}
-
-/** Build the template map with resolved version numbers. */
-// [sourceTemplate, targetRelativePath] pairs. The starter manifest is stored
-// as deno.json.tmpl so deno does not treat the templates/ directory as a
-// nested workspace config; it is renamed to deno.json when written.
-const TEMPLATE_FILES: [string, string][] = [
-  // npm tarballs omit dotfiles even when a directory is included. Keep the
-  // template non-hidden and write the expected dotfile into generated apps.
-  ['gitignore.tmpl', '.gitignore'],
-  ['public/openelement-mark.svg', 'public/openelement-mark.svg'],
-  ['content/blog/welcome.md', 'content/blog/welcome.md'],
-  ['deno.json.tmpl', 'deno.json'],
-  ['vite.config.ts', 'vite.config.ts'],
-  ['app/components/app-shell.tsx', 'app/components/app-shell.tsx'],
-  ['app/routes/index.tsx', 'app/routes/index.tsx'],
-  ['app/routes/freshness.tsx', 'app/routes/freshness.tsx'],
-  ['app/routes/api/health.ts', 'app/routes/api/health.ts'],
-  ['app/islands/my-counter.tsx', 'app/islands/my-counter.tsx'],
-];
-
-/** Map of `${v.X}` placeholder tokens to resolved version values. */
-function versionTokens(v: ProductVersions): Record<string, string> {
-  return {
-    '${v.app}': v.app,
-    '${v.adapterVite}': v.adapterVite,
-    '${v.element}': v.element,
-  };
-}
-
-/** Build the template map with resolved version numbers. */
-function buildTemplates(v: ProductVersions): Record<string, string> {
-  const templatesDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
-  const tokens = versionTokens(v);
-  const out: Record<string, string> = {};
-  for (const [source, target] of TEMPLATE_FILES) {
-    let content = Deno.readTextFileSync(join(templatesDir, source));
-    for (const [token, value] of Object.entries(tokens)) {
-      if (content.includes(token)) content = content.split(token).join(value);
-    }
-    if (content.includes('${v.')) {
-      throw new Error(`Unresolved package-version token in starter template: ${source}`);
-    }
-    out[target] = content;
-  }
-  return out;
-}
+import { buildTemplates, resolveVersions } from './template-builder.ts';
 
 async function main() {
   const name = Deno.args[0];
@@ -123,7 +63,7 @@ async function main() {
     Deno.exit(1);
   }
 
-  const TPL = buildTemplates(v);
+  const TPL = await buildTemplates(v);
   for (const [path, content] of Object.entries(TPL)) {
     const fullPath = join(targetDir, path);
     await Deno.mkdir(dirname(fullPath), { recursive: true });
