@@ -1,4 +1,5 @@
 import { walk } from './lib/fs.ts';
+import { PACKAGE_VERSION } from './project-constants.ts';
 
 type Issue = { file: string; text: string };
 
@@ -7,6 +8,17 @@ const sourceRoots = [
   'www/app/site-ui',
   'www/content/guide',
 ];
+
+const [versionBase, prerelease = ''] = PACKAGE_VERSION.split('-');
+const prereleaseMatch = prerelease.match(/^(alpha|beta|rc)\.(\d+)$/u);
+const earlierPrereleasePattern = prereleaseMatch && Number(prereleaseMatch[2]) > 0
+  ? new RegExp(
+    `v${versionBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}\\.(?:${
+      Array.from({ length: Number(prereleaseMatch[2]) }, (_, index) => index).join('|')
+    })(?!\\d)`,
+    'iu',
+  )
+  : null;
 
 const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'mojibake', re: /(?:鏂|鈫|鍗|杩|鏈)/ },
@@ -21,7 +33,6 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'eleven-package claim', re: /\b11[- ]package|\b11 packages\b/i },
   { name: 'retired app vite subpath', re: /@openelement\/app\/vite|\/vite subpath/i },
   { name: 'internal build contract', re: /\bBuildPlan\b|\bAppShell protocol\b/ },
-  { name: 'retired alpha current claim', re: /v0\.41\.0-alpha\.[0-7](?!\d)/i },
   { name: 'beta.4 published claim', re: /beta\.4 (?:is |was )?(?:released|published)/i },
   { name: 'externally hosted site font', re: /fonts\.(?:googleapis|gstatic)\.com/i },
   {
@@ -33,6 +44,9 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
     re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
   },
 ];
+if (earlierPrereleasePattern) {
+  forbidden.push({ name: 'retired prerelease current claim', re: earlierPrereleasePattern });
+}
 
 const issues: Issue[] = [];
 

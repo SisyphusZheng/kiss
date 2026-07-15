@@ -16,6 +16,8 @@ import type {
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '@openelement/element';
+import ts from 'typescript';
+import { parseTypeScript } from './lib/typescript-ast.ts';
 
 const UI_SRC_DIR = new URL('../packages/ui/src/', import.meta.url);
 const UI_DENO_JSON = new URL('../packages/ui/deno.json', import.meta.url);
@@ -94,7 +96,7 @@ function inferAttributeType(name: string): string {
 }
 
 function parseObservedAttributes(text: string): string[] {
-  // Greedy match to the last ] closes the array, safe for single-line and multi-line arrays.
+  // Lazy match stops at the first closing bracket; observed attributes are flat string arrays.
   const match = text.match(/static\s+(?:override\s+)?observedAttributes\s*=\s*\[([\s\S]*?)\]/);
   if (!match) return [];
   return match[1]
@@ -148,21 +150,60 @@ function parseSlots(text: string): OpenElementSlot[] {
   return slots;
 }
 
-function parseEvents(text: string): OpenElementEvent[] {
+export function parseEvents(text: string): OpenElementEvent[] {
   const events: OpenElementEvent[] = [];
   const seen = new Set<string>();
-  for (const m of text.matchAll(/new\s+CustomEvent\(['"]([^'"]+)['"],?\s*(?:\{([^}]*)\})?/g)) {
-    const name = m[1];
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const detail = (m[2] || '').match(/detail\s*:\s*\{([^}]*)\}/);
-    events.push({
-      name,
-      type: detail ? `CustomEvent<{ ${detail[1].trim()} }>` : 'CustomEvent',
-      description: `Fired on ${name}`,
-    });
-  }
+  const source = parseTypeScript(text, 'component.tsx');
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isNewExpression(node) && ts.isIdentifier(node.expression) &&
+      node.expression.text === 'CustomEvent'
+    ) {
+      const [nameNode, optionsNode] = node.arguments ?? [];
+      if (!nameNode || !ts.isStringLiteralLike(nameNode) || seen.has(nameNode.text)) return;
+      const name = nameNode.text;
+      seen.add(name);
+      let detailType: string | undefined;
+      if (optionsNode && ts.isObjectLiteralExpression(optionsNode)) {
+        const detail = optionsNode.properties.find((property) =>
+          ts.isPropertyAssignment(property) && property.name.getText(source) === 'detail'
+        );
+        if (detail && ts.isPropertyAssignment(detail)) {
+          detailType = inferExpressionType(detail.initializer, source);
+        }
+      }
+      events.push({
+        name,
+        type: detailType ? `CustomEvent<${detailType}>` : 'CustomEvent',
+        description: `Fired on ${name}`,
+      });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
   return events;
+}
+
+function inferExpressionType(node: ts.Expression, source: ts.SourceFile): string {
+  if (ts.isStringLiteralLike(node) || ts.isTemplateExpression(node)) return 'string';
+  if (ts.isNumericLiteral(node)) return 'number';
+  if (node.kind === ts.SyntaxKind.TrueKeyword || node.kind === ts.SyntaxKind.FalseKeyword) {
+    return 'boolean';
+  }
+  if (ts.isArrayLiteralExpression(node)) return 'unknown[]';
+  if (ts.isObjectLiteralExpression(node)) {
+    const fields = node.properties.flatMap((property) => {
+      if (ts.isPropertyAssignment(property)) {
+        return [
+          `${property.name.getText(source)}: ${inferExpressionType(property.initializer, source)}`,
+        ];
+      }
+      if (ts.isShorthandPropertyAssignment(property)) return [`${property.name.text}: unknown`];
+      return [];
+    });
+    return `{ ${fields.join('; ')} }`;
+  }
+  return 'unknown';
 }
 
 function parseDescription(text: string): string {
@@ -264,6 +305,8 @@ function buildManifest(): OpenElementPackageManifest {
   };
 }
 
-const manifest = buildManifest();
-Deno.writeTextFileSync(OUT_FILE, JSON.stringify(manifest, null, 2) + '\n');
-console.log(`Wrote ${manifest.declarations.length} declarations to ${OUT_FILE.pathname}`);
+if (import.meta.main) {
+  const manifest = buildManifest();
+  Deno.writeTextFileSync(OUT_FILE, JSON.stringify(manifest, null, 2) + '\n');
+  console.log(`Wrote ${manifest.declarations.length} declarations to ${OUT_FILE.pathname}`);
+}

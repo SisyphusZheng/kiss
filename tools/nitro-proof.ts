@@ -1,4 +1,6 @@
 import { walkSync } from '@std/fs/walk';
+import { assertCompatibilityDate } from './lib/compatibility-date.ts';
+import { NITRO_COMPATIBILITY_DATE } from './project-constants.ts';
 
 const preset = Deno.args[0];
 
@@ -188,7 +190,16 @@ async function fetchRuntimeText(
 }
 
 async function smokeNode(serverEntry: URL): Promise<void> {
-  const port = 47937;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const listener = Deno.listen({ hostname: '127.0.0.1', port: 0 });
+    const port = (listener.addr as Deno.NetAddr).port;
+    listener.close();
+    if (await smokeNodeAtPort(serverEntry, port)) return;
+  }
+  throw new Error('node smoke failed after 3 dynamic-port attempts');
+}
+
+async function smokeNodeAtPort(serverEntry: URL, port: number): Promise<boolean> {
   const baseUrl = `http://127.0.0.1:${port}`;
   const server = new Deno.Command('node', {
     args: [serverEntry.pathname],
@@ -212,8 +223,7 @@ async function smokeNode(serverEntry: URL): Promise<void> {
     }
 
     if (!response) {
-      console.error('node smoke failed: server did not accept connections');
-      Deno.exit(1);
+      return false;
     }
 
     if (response.status !== 200) {
@@ -231,8 +241,13 @@ async function smokeNode(serverEntry: URL): Promise<void> {
     await assertPublicAsset(baseUrl, '/open-element-proof.txt', 'openElement Nitro public asset');
     await assertPublicAsset(baseUrl, '/open-element-island-visible.js', 'open-proof-island');
     await assertPublicAsset(baseUrl, '/open-element-client-only.js', 'open-proof-client-only');
+    return true;
   } finally {
-    server.kill('SIGTERM');
+    try {
+      server.kill('SIGTERM');
+    } catch {
+      // The process may have already exited after losing a port race.
+    }
     await server.status.catch(() => undefined);
   }
 }
@@ -335,6 +350,7 @@ async function assertRuntimePublicAsset(
   }
 }
 
+assertCompatibilityDate(NITRO_COMPATIBILITY_DATE);
 await removeIfExists(output);
 const buildLog = await run([
   'deno',

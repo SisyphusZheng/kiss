@@ -1,40 +1,16 @@
 import { exists } from './lib/fs.ts';
 import { gitTrackedFiles, gitTrackedIgnoredFiles, gitUntrackedFiles } from './lib/git.ts';
+import { REMOVED_PACKAGE_DIRECTORY_NAMES } from './project-constants.ts';
 
 type Failure = {
   path: string;
   message: string;
 };
 
-const removedPackageNames = [
-  '@openelement/adapter-lit',
-  '@openelement/adapter-react',
-  '@openelement/adapter-vanilla',
-  '@openelement/cem',
-  '@openelement/compat-check',
-  '@openelement/elements',
-  '@openelement/hub',
-  '@openelement/protocols',
-  '@openelement/rpc',
-  '@openelement/runtime',
-  '@openelement/signals',
-  '@openelement/style-sheet',
-];
-
-const removedPackageDirs = [
-  'packages/adapter-lit',
-  'packages/adapter-react',
-  'packages/adapter-vanilla',
-  'packages/cem',
-  'packages/compat-check',
-  'packages/elements',
-  'packages/hub',
-  'packages/protocols',
-  'packages/rpc',
-  'packages/runtime',
-  'packages/signals',
-  'packages/style-sheet',
-];
+const removedPackageNames = [...REMOVED_PACKAGE_DIRECTORY_NAMES];
+const removedPackageDirs = removedPackageNames.map((name) =>
+  `packages/${name.replace('@openelement/', '')}`
+);
 
 const removedAutoflow2Paths = [
   'tools/autoflow/mod.ts',
@@ -87,6 +63,7 @@ const activeScanRoots = [
 const allowedRemovedPackageMentions = [
   'tools/check-package-surface.ts',
   'tools/check-repo-hygiene.ts',
+  'tools/project-constants.ts',
   'docs/current/PACKAGE_SURFACE.md',
   'docs/current/VERSION_PLAN.md',
   'docs/roadmap/ROADMAP.md',

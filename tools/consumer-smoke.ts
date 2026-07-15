@@ -272,9 +272,10 @@ async function npmPackageExists(name: string, version: string): Promise<boolean>
 }
 
 async function main(): Promise<void> {
+  const { PACKAGE_VERSION } = await import('./project-constants.ts');
   const local = getArgFlag('--local');
   const versionArg = getArg('--version');
-  const version = versionArg ?? '0.41.0';
+  const version = versionArg ?? PACKAGE_VERSION;
   const versionProvided = versionArg !== null;
   const projectRoot = Deno.cwd().replace(/\\/g, '/');
 

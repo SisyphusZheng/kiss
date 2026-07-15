@@ -1,0 +1,32 @@
+import { normalize } from 'node:path';
+
+export const RELEASE_EVIDENCE_PATHS = Object.freeze({
+  prefixes: ['docs/release/', 'vendor/', 'www/app/data/_generated-'],
+  exact: [
+    'www/public/search-index.json',
+    'deno.lock',
+    'examples/deno-desktop-mastodon/deno.lock',
+  ],
+});
+
+function normalizeGitPath(path: string): string {
+  return normalize(path).replace(/\\/g, '/').replace(/^\.\//, '');
+}
+
+export function parsePorcelainPath(line: string): string {
+  const raw = line.slice(3).trim();
+  const renamed = raw.includes(' -> ') ? raw.slice(raw.lastIndexOf(' -> ') + 4) : raw;
+  return normalizeGitPath(renamed.replace(/^"|"$/g, ''));
+}
+
+export function isReleaseEvidencePath(path: string): boolean {
+  const normalized = normalizeGitPath(path);
+  return RELEASE_EVIDENCE_PATHS.exact.includes(normalized) ||
+    RELEASE_EVIDENCE_PATHS.prefixes.some((prefix) => normalized.startsWith(prefix));
+}
+
+export function filterNonEvidenceDirty(status: string): string[] {
+  return status.split(/\r?\n/).filter((line) =>
+    line.trim() !== '' && !isReleaseEvidencePath(parsePorcelainPath(line))
+  );
+}
