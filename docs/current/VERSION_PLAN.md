@@ -1,17 +1,19 @@
-# v0.41.0-alpha.12 Version Plan — current release truth
+# v0.41.0-alpha.13 Release Planning — current source truth
 
-> Target package line: `v0.41.0-alpha.12`\
+> Current package line: `v0.41.0-alpha.12`\
 > Repository source baseline: `v0.41.0-alpha.10`\
 > Registry baseline observed on 2026-07-14: `v0.41.0-alpha.6`\
 > Current maturity stage: alpha
 
 ## Current release
 
-`v0.41.0-alpha.12` is the current maturity and package line. Its release
-blockers, acceptance criteria, and release evidence are recorded in
-[`v0.41.0-alpha.12-plan.md`](../release/v0.41.0-alpha.12-plan.md). The
-Alpha.11 material below is retained as the historical remediation record for
-the prior release train.
+`v0.41.0-alpha.12` remains the current source and package line. Alpha.13 is
+the next release train; its blockers, acceptance criteria, and release evidence
+are recorded in [`v0.41.0-alpha.13-plan.md`](../release/v0.41.0-alpha.13-plan.md).
+Alpha.12 published five npm packages but did not close its release evidence:
+the exact published starter failed to typecheck because the Element JSX runtime
+subpath was not resolvable. The Alpha.11 material below is retained as the
+historical remediation record for the prior release train.
 
 ## Product truth
 
