@@ -1,5 +1,10 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { deriveDependencies, type DeriveDepsIo } from './publish-npm.ts';
+import {
+  deriveDependencies,
+  type DeriveDepsIo,
+  publishPackage,
+  type PublishPackageIo,
+} from './publish-npm.ts';
 import type { PackageInfo } from './lib/package-graph.ts';
 
 function pkg(name: string, version: string): PackageInfo {
@@ -72,4 +77,24 @@ Deno.test('deriveDependencies throws when a root-mapped npm dependency has no ve
     Error,
     'no version',
   );
+});
+
+Deno.test('publishPackage skips an immutable version that already exists', async () => {
+  const published: string[][] = [];
+  const logs: string[] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => Promise.resolve(true),
+    publish: (args) => {
+      published.push(args);
+      return Promise.resolve();
+    },
+    log: (message) => logs.push(message),
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0-alpha.13'), false, publishIo);
+
+  assertEquals(published, []);
+  assertEquals(logs, [
+    '[npm] @openelement/element@0.41.0-alpha.13 already published; skipping.',
+  ]);
 });

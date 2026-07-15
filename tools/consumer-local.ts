@@ -133,6 +133,8 @@ const productImports = [
   '@openelement/adapter-vite',
   '@openelement/app',
   '@openelement/element',
+  '@openelement/element/jsx-dev-runtime',
+  '@openelement/element/jsx-runtime',
   'vite',
 ];
 if (Object.keys(generatedImportMap).sort().join('\n') !== productImports.join('\n')) {

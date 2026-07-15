@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from '@std/assert';
-import { parseVersion, validateVersionStep } from './bump-version.ts';
+import { parseVersion, replaceEmbeddedCreateVersion, validateVersionStep } from './bump-version.ts';
 
 Deno.test('parseVersion parses stable and prerelease versions', () => {
   assertEquals(parseVersion('1.2.3'), {
@@ -15,6 +15,30 @@ Deno.test('parseVersion parses stable and prerelease versions', () => {
     prerelease: 'alpha',
     prereleaseNumber: 7,
   });
+});
+
+Deno.test('replaceEmbeddedCreateVersion updates the exact embedded release anchor', () => {
+  assertEquals(
+    replaceEmbeddedCreateVersion(
+      "export const CREATE_VERSION = '0.41.0-alpha.12';\n",
+      '0.41.0-alpha.12',
+      '0.41.0-alpha.13',
+    ),
+    "export const CREATE_VERSION = '0.41.0-alpha.13';\n",
+  );
+});
+
+Deno.test('replaceEmbeddedCreateVersion rejects a missing or stale anchor', () => {
+  assertThrows(
+    () =>
+      replaceEmbeddedCreateVersion(
+        "export const CREATE_VERSION = '0.41.0-alpha.11';\n",
+        '0.41.0-alpha.12',
+        '0.41.0-alpha.13',
+      ),
+    Error,
+    'does not contain expected version 0.41.0-alpha.12',
+  );
 });
 
 Deno.test('parseVersion rejects invalid semver', () => {
