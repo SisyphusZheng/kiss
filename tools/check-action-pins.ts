@@ -5,6 +5,21 @@ import { parse } from 'yaml';
 const WORKFLOW_ROOTS = ['.github/workflows', '.github/actions'];
 const SHA_PATTERN = /@[0-9a-f]{40}$/i;
 
+/**
+ * Approved action releases. The version comment immediately preceding a use
+ * step is intentionally checked with its SHA: Dependabot updates cannot leave
+ * the human-readable audit trail stale.
+ */
+const ACTION_VERSION_PINS = new Map([
+  ['actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0', 'v7.0.0'],
+  ['actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a', 'v7.0.1'],
+  ['actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e', 'v6.4.0'],
+  [
+    'actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294',
+    'v5.0.0',
+  ],
+]);
+
 export interface WorkflowInspection {
   failures: string[];
   hasDependencyReview: boolean;
@@ -22,6 +37,24 @@ function collectUses(value: unknown, uses: string[]): void {
   }
 }
 
+function collectVersionCommentFailures(file: string, source: string): string[] {
+  const failures: string[] = [];
+  const lines = source.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index++) {
+    const action = lines[index].match(/\buses:\s*([^\s#]+)/)?.[1];
+    if (!action) continue;
+    const expectedVersion = ACTION_VERSION_PINS.get(action);
+    if (!expectedVersion) continue;
+    const previousLine = lines[index - 1]?.trim();
+    if (previousLine !== `# ${expectedVersion}`) {
+      failures.push(
+        `${file}:${index + 1}: ${action} must be immediately preceded by # ${expectedVersion}`,
+      );
+    }
+  }
+  return failures;
+}
+
 export function inspectWorkflowSource(file: string, source: string): WorkflowInspection {
   const uses: string[] = [];
   collectUses(parse(source), uses);
@@ -32,6 +65,7 @@ export function inspectWorkflowSource(file: string, source: string): WorkflowIns
       failures.push(`${file}: ${action} is not pinned to a full commit SHA`);
     }
   }
+  failures.push(...collectVersionCommentFailures(file, source));
   return {
     failures,
     hasDependencyReview: uses.some((action) =>
