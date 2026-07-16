@@ -30,6 +30,27 @@ const tag = PACKAGE_VERSION_TAG;
 const evidencePath = `docs/release/autoflow3/${tag}.json`;
 const closurePath = `docs/release/${tag}-closure.json`;
 const releaseNotePath = `docs/release/${tag}.md`;
+const tagExists = (await new Deno.Command('git', {
+  args: ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}`],
+  stdout: 'null',
+  stderr: 'null',
+}).output()).success;
+
+try {
+  await Deno.stat(closurePath);
+} catch (error) {
+  if (!(error instanceof Deno.errors.NotFound)) throw error;
+  if (tagExists) {
+    throw new Error(
+      `Published release tag ${tag} is missing its required closure record: ${closurePath}`,
+    );
+  }
+  console.log(
+    `Release evidence closure is pending for unpublished ${tag}; no tag exists yet.`,
+  );
+  Deno.exit(0);
+}
+
 const record = JSON.parse(await Deno.readTextFile(closurePath)) as ReleaseClosureRecord;
 const actualTagCommit = await git(['rev-parse', tag]);
 if (actualTagCommit !== record.tagCommit) {
