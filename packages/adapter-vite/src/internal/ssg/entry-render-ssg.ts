@@ -37,7 +37,6 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push(
     'export { posts, getPostBySlug, getBlogOptions } from "@openelement/generated/blog-data"',
   );
-  lines.push('export { generateSitemap } from "@openelement/adapter-vite/sitemap"');
   lines.push(
     'export { locales, getDefaultLocale, getI18nOptions } from "@openelement/generated/i18n"',
   );

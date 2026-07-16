@@ -17,6 +17,18 @@ import { createOpenPlugin } from '../src/plugin.ts';
 
 import { openPipeline } from '../src/index.ts';
 
+Deno.test('package exposes only the supported deep build interface', async () => {
+  const manifest = JSON.parse(
+    await Deno.readTextFile(new URL('../deno.json', import.meta.url)),
+  ) as { exports: Record<string, string> };
+
+  assertEquals(Object.keys(manifest.exports).sort(), [
+    '.',
+    './cli/build',
+    './nitro-mount',
+  ]);
+});
+
 type CallablePluginHook = (...args: unknown[]) => unknown;
 
 function callPluginHook(hook: unknown, ...args: unknown[]): unknown {

@@ -12,6 +12,15 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## Unreleased
+
+- Narrows `@openelement/adapter-vite` to its documented root,
+  `nitro-mount`, and `cli/build` interfaces. Import `openElement`, build
+  helpers, MDX helpers, and sitemap generation from the package root; internal
+  plugin factories and individual build phases are no longer published.
+- Refreshes the Mastodon dogfood lockfile to the current five-package
+  `0.41.0-alpha.15` dependency graph so clean verification is reproducible.
+
 ## 0.41.0-alpha.13 (unreleased)
 
 - Removes the alpha-only `defineLayout` alias; use `defineElement` with the same

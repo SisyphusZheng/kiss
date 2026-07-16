@@ -15,7 +15,7 @@
  *
  * H-16 KNOWN ISSUE: Circular dependency between adapter-vite <-> content
  *   adapter-vite generates code that imports its public sitemap utility
- *   content package imports @openelement/adapter-vite/build-context
+ *   adapter internals share the private OpenElementBuildContext implementation
  * Shared contracts now live in @openelement/element and adapter internals.
  * so consumer import maps can be checked.
  *

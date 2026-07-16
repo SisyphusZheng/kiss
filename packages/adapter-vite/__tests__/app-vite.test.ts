@@ -1,5 +1,5 @@
 /**
- * @openelement/adapter-vite/app-vite - Unified entry tests
+ * @openelement/adapter-vite unified entry tests.
  *
  * Tests that openElement() correctly combines openPipeline() + openContent() + openI18n()
  * with a shared OpenElementBuildContext. This is the primary user-facing API.

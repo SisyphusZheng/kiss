@@ -2,9 +2,8 @@
 
 openElement build orchestration for Vite.
 
-> v0.39 surface: advanced Framework infrastructure. First-run apps should use
-> `@openelement/adapter-vite/app-vite` or generated `@openelement/create` tasks instead of
-> importing this package directly.
+The package root is the supported Vite interface. Generated
+`@openelement/create` projects use the same interface.
 
 This package scans routes and islands, generates virtual entries, builds client
 island chunks, runs SSG, and writes post-processed HTML. It is build-time
@@ -19,12 +18,12 @@ npm install @openelement/adapter-vite
 ## Usage
 
 ```ts
-import { createOpenPlugin } from '@openelement/adapter-vite/plugin';
+import { openElement } from '@openelement/adapter-vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
-    createOpenPlugin({
+    openElement({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       componentsDir: 'app/components',
@@ -34,9 +33,9 @@ export default defineConfig({
 });
 ```
 
-Most applications should use `openElement()` from `@openelement/adapter-vite/app-vite`
-instead; it combines the core adapter, content pipeline, and i18n with one
-shared build context.
+`openElement()` combines the core adapter, content pipeline, and i18n behind one
+shared build context. Internal plugin factories and build phases are not
+published as package subpaths.
 
 ## Nitro Deploy Adapter
 
