@@ -79,7 +79,7 @@ const checks: Check[] = [
       (file.endsWith('.tsx') && text.includes('OPENELEMENT_VERSION')),
   },
   {
-    name: `${ACTIVE_EXECUTION_VERSION} is historical implementation evidence`,
+    name: `${ACTIVE_EXECUTION_VERSION} is the active execution version`,
     files: ['docs/current/VERSION_PLAN.md'],
     required: [ACTIVE_EXECUTION_VERSION],
   },

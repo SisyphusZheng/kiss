@@ -46,6 +46,9 @@ const staleCurrentClaims: RegExp[] = [
   /Vue adapter proof/i,
   /Vue is .*heavy-framework island/i,
   /Vue 是.*heavy-framework island/i,
+  /npm registry (?:line|baseline).*alpha\.6/i,
+  /active release target.*alpha\.11/i,
+  /alpha\.13 was\s+the prior recovery train/i,
 ];
 
 const failures: Failure[] = [];
