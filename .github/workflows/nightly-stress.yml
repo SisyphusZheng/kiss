@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      # v4.2.2
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/setup-deno-workspace
       - name: Run representative 30-minute workload
         env:
@@ -27,14 +27,15 @@ jobs:
         run: deno task dogfood:evidence
       - name: Archive stress evidence
         if: always()
-        # v4.6.2
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: mastodon-desktop-stress-report
           path: examples/deno-desktop-mastodon/stress-report.json
       - name: Archive combined framework evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: openelement-dogfood-evidence
           path: docs/evidence/dogfood-performance.json

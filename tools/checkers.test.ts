@@ -74,6 +74,21 @@ Deno.test('action checker rejects an unpinned real uses step', () => {
   assertEquals(result.failures.length, 1);
 });
 
+Deno.test('action checker rejects a stale version comment for a known pinned action', () => {
+  const result = inspectWorkflowSource(
+    'ci.yml',
+    `
+    jobs:
+      test:
+        steps:
+          # v4.2.2
+          - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+  `,
+  );
+  assertEquals(result.failures.length, 1);
+  assertStringIncludes(result.failures[0], 'immediately preceded by # v7.0.0');
+});
+
 Deno.test('scanner discovery follows directory and filename conventions after moves', () => {
   const paths = [
     'packages/adapter-vite/src/internal/ssg/island-scanner.ts',

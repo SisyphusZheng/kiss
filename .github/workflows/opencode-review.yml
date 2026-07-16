@@ -5,6 +5,9 @@ on:
 
 jobs:
   review:
+    # Third-party AI review is supplemental; Dependabot updates need no review and
+    # provider quota failures must not block the protected CI signal.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -12,14 +15,15 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      # v4.2.2
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       # Pinned to the current `latest` tag (anomalyco/opencode@latest)
       # SHA: 2c14fc5586fe0b88e5c04732d2e846769cc35671
       - uses: anomalyco/opencode/github@2c14fc5586fe0b88e5c04732d2e846769cc35671
+        continue-on-error: true
         env:
           # DeepSeek API key. Get one at https://platform.deepseek.com/api_keys
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
