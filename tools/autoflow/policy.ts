@@ -116,6 +116,17 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^docs\//, /^README/, /^www\/app\/routes\//],
   },
   {
+    name: 'release:evidence:check',
+    command: ['deno', 'task', 'release:evidence:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^docs\/release\//,
+      /^tools\/check-release-evidence-consistency\.ts$/,
+      /^tools\/lib\/release-evidence-consistency\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'arch:check',
     command: ['deno', 'task', 'arch:check'],
     tiers: ['ci', 'release'],
