@@ -59,6 +59,17 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^deno\.json$/, /^tools\/lib\/package-graph\.ts$/],
   },
   {
+    name: 'interface:snapshot',
+    command: ['deno', 'task', 'interface:snapshot'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\//,
+      /^docs\/release\/v0\.41\.0-interface-snapshot\.json$/,
+      /^tools\/check-public-interface-snapshot\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'export-files:check',
     command: ['deno', 'task', 'export-files:check'],
     tiers: ['push', 'ci', 'release'],
