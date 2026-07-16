@@ -139,7 +139,9 @@ alpha.15 line is green.
 - Four supported GitHub Action upgrades are pinned, commented and exercised;
   OpenCode is demonstrably advisory or removed.
 - Published consumers pass on Linux, macOS and Windows.
-- #390 has real, publishable evidence from three to five non-maintainers.
+- #390 remains open for real, publishable evidence from three to five
+  non-maintainers before any stable-release decision. It is intentionally not
+  represented as alpha.15 evidence.
 - The five-package interface snapshot and compatibility suite pass against
   packed artifacts.
 - There are no unresolved alpha.15 P0 findings; every P1 is resolved or an
