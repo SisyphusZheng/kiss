@@ -1,9 +1,9 @@
-# openElement Status
+# OpenElement Status
 
-> Updated: 2026-07-14\
+> Updated: 2026-07-16\
 > Repository package line: `v0.41.0-alpha.14`\
-> npm registry line observed 2026-07-14: `v0.41.0-alpha.6`\
-> Active release target: `v0.41.0-alpha.11`\
+> npm registry line: `v0.41.0-alpha.14`\
+> Active release target: `v0.41.0-alpha.14` closure complete\
 > Product graph: five packages\
 > Current maturity stage: alpha
 
@@ -15,13 +15,10 @@ are authoring modes; Declarative Shadow DOM is the default server output;
 interactive regions upgrade selectively. Vite and Nitro are the official build
 and output path.
 
-The five-package convergence is present in the alpha.10 repository source. The
-alpha.10 release record claims publication, but the 2026-07-14 authoritative
-npm query returned alpha.6 for all five packages. Issue #396 owns that evidence
-reconciliation; alpha.11 must publish one coherent graph before the claim is
-closed. The project remains in alpha while external adoption and
-application-level interfaces are still allowed to drive breaking changes. The
-abandoned beta naming is retired.
+Alpha.14 is published and verified. All five npm packages and the `alpha`
+dist-tag agree, the corrected exact-version starter typechecks from a clean
+workspace, and the post-publish Deno, Node, Nitro, third-party Web Component and
+CDN proofs passed.
 
 ## Product surface
 
@@ -34,44 +31,36 @@ abandoned beta naming is retired.
 | `@openelement/ui`           | Optional | Proven general-purpose primitives                   |
 
 The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
-are not supported consumer imports. Historical references remain in their
-original ADR, release and audit records.
+are not supported consumer imports. Historical references remain only in their
+original ADR, audit and failed-release records.
 
-## alpha.11 release state
+## Alpha.14 release state
 
-| Condition                                                          | State                                      |
-| ------------------------------------------------------------------ | ------------------------------------------ |
-| Five-package implementation and current docs                       | Present in alpha.10 source                 |
-| Public starter lifecycle, packed consumer and third-party WC smoke | Complete                                   |
-| Node/Nitro output and artifact verification                        | Node and clean Workers proofs pass on dev  |
-| Chromium, Firefox and WebKit gates                                 | Release matrix pending                     |
-| npm/tag/GitHub Release/docs/evidence truth                         | Reconciliation tracked by #396             |
-| External adopter pilot #390                                        | Open; required before stability commitment |
+| Condition                                             | State    |
+| ----------------------------------------------------- | -------- |
+| Five-package source and npm version alignment         | Complete |
+| Exact-version published starter and JSX subpaths      | Complete |
+| Chromium, Nitro Node/Workers and package artifacts    | Complete |
+| Deno, Node ESM, third-party WC and jsDelivr consumers | Complete |
+| Git tag, GitHub prerelease and completed evidence     | Complete |
+| Alpha.13 audit tasks and L1-L43 debt ledger           | Complete |
 
 ## Current risks
 
-1. **Adoption is the primary risk.** Internal evidence cannot prove that the
-   small public interface is understandable to an outside maintainer.
-2. **WC SSR compatibility needs broader evidence.** The framework has interop
-   proof, but the future compatibility corpus and diagnostics are roadmap work.
-3. **The current proven scope is static-first.** Request-time data, forms,
-   sessions and cache are not yet stable framework interfaces.
-4. **UI remains optional.** It must earn a v1 compatibility commitment through
-   non-site consumers.
+1. External adoption remains the primary product risk.
+2. WC SSR compatibility still needs a broader ecosystem corpus.
+3. Request-time data, forms, sessions and cache are not stable interfaces.
+4. UI remains optional until it earns a v1 compatibility commitment.
 
 ## Forward direction
 
 | Version           | Focus                                                                        |
 | ----------------- | ---------------------------------------------------------------------------- |
-| `0.41.0-alpha.10` | Five-package convergence plus npm runtime dependency repair                  |
-| `0.41.0-alpha.11` | Audit remediation candidate; publish and post-publish proof pending          |
+| `0.41.0-alpha.14` | Completed audit recovery and honest publication closure                      |
 | `0.41.0-alpha.x`  | External adoption and interface maturation                                   |
 | `0.41.0`          | Freeze deep Element, App and Build interfaces                                |
 | `0.42.0`          | WC Application Loop: load, render, progressive form, action and revalidation |
 | `0.43.0`          | Universal WC SSR compatibility and diagnostics                               |
-| `0.44.0`          | Portable production runtime                                                  |
-| `0.45.0`          | WC ecosystem adoption                                                        |
-| `0.46.0`          | v1 product freeze                                                            |
 | `1.0.0`           | Stable five-package product                                                  |
 
 The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.md).
@@ -79,9 +68,7 @@ The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.m
 ## Evidence and history
 
 - Current package and release plan: [`docs/current/VERSION_PLAN.md`](../current/VERSION_PLAN.md)
+- Alpha.14 release plan: [`docs/release/v0.41.0-alpha.14-plan.md`](../release/v0.41.0-alpha.14-plan.md)
 - Project workflow: [`docs/governance/PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)
 - Five-package surface: [`docs/current/PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
-- Alpha naming decision: [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md)
 - Release records: [`docs/release/`](../release/)
-- Architectural history: [`docs/adr/`](../adr/)
-- Audit history: [`docs/audit/`](../audit/)
