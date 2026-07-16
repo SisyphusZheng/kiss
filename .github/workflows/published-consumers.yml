@@ -46,6 +46,8 @@ jobs:
       # v7.0.0
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/setup-deno-workspace
+      - name: Install Chromium for browser-backed consumer smoke
+        run: ./node_modules/.bin/playwright install --with-deps chromium
       - name: Verify Deno and Node ESM public runtime consumers
         env:
           OPEN_ELEMENT_PUBLISHED_VERSION: ${{ inputs.version }}
