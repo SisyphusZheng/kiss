@@ -6,6 +6,11 @@ on:
       version:
         description: 'Target version (e.g., 0.41.0-alpha.1)'
         required: true
+      dry_run:
+        description: 'Validate the release plan without publishing, pushing, tagging, or writing evidence'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: openelement-release
@@ -49,5 +54,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
         run: |
-          deno task autoflow:publish-existing --to ${{ inputs.version }}
+          deno task autoflow:publish-existing --to ${{ inputs.version }} $RELEASE_DRY_RUN
