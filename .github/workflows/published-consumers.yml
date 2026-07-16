@@ -1,0 +1,73 @@
+name: Published consumer qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published package version to qualify (defaults to project constants)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  starter:
+    name: Starter (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: ./.github/actions/setup-deno-workspace
+      - name: Generate and exercise the published starter
+        env:
+          OPEN_ELEMENT_PUBLISHED_VERSION: ${{ inputs.version }}
+        run: >-
+          deno run --allow-read --allow-write --allow-run --allow-env --allow-net
+          tools/published-consumer-qualification.ts --mode starter
+          --report published-consumer-starter-${{ runner.os }}.json
+      - name: Archive published starter diagnostics
+        if: always()
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: published-consumer-starter-${{ runner.os }}
+          path: published-consumer-starter-${{ runner.os }}.json
+          if-no-files-found: error
+
+  runtime:
+    name: Published runtimes and deployment boundaries
+    runs-on: ubuntu-latest
+    steps:
+      # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: ./.github/actions/setup-deno-workspace
+      - name: Verify Deno and Node ESM public runtime consumers
+        env:
+          OPEN_ELEMENT_PUBLISHED_VERSION: ${{ inputs.version }}
+        run: >-
+          deno run --allow-read --allow-write --allow-run --allow-env --allow-net
+          tools/published-consumer-qualification.ts --mode runtime
+          --report published-consumer-runtime-linux.json
+      - name: Verify Nitro Node and Workers through nitro-mount
+        run: |
+          deno task nitro:proof:node
+          deno task nitro:proof:workers
+      - name: Verify third-party Web Components and CDN consumption
+        env:
+          OPEN_ELEMENT_PUBLISHED_VERSION: ${{ inputs.version }}
+        run: |
+          deno task third-party-wc:smoke
+          deno run -A tools/consumer-smoke.ts --version "$OPEN_ELEMENT_PUBLISHED_VERSION" --jsdelivr
+      - name: Archive published runtime diagnostics
+        if: always()
+        # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: published-consumer-runtime-linux
+          path: published-consumer-runtime-linux.json
+          if-no-files-found: error
