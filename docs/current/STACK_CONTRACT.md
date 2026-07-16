@@ -1,6 +1,6 @@
 # First-Party Stack Contract
 
-The v0.41 beta workspace has five packages. Framework concepts are exposed by
+The v0.41 alpha workspace has five packages. Framework concepts are exposed by
 deep product interfaces; implementation contracts stay inside their owner.
 
 | Package                     | Responsibility                                                                 |

@@ -14,6 +14,12 @@ const currentPublicDocs = [
   'docs/status/STATUS.md',
 ];
 
+const currentContractDocs = [
+  'docs/current/PACKAGE_SURFACE.md',
+  'docs/current/HYDRATION_CONTRACT.md',
+  'docs/current/STACK_CONTRACT.md',
+];
+
 const readmeDocs = ['README.md', 'README.zh.md'];
 const productDoctrinePatterns = [
   'OpenElement = Web Components-native fullstack application framework',
@@ -49,6 +55,10 @@ const staleCurrentClaims: RegExp[] = [
   /npm registry (?:line|baseline).*alpha\.6/i,
   /active release target.*alpha\.11/i,
   /alpha\.13 was\s+the prior recovery train/i,
+  /five-package convergence is published as\s+`?0\.41\.0-alpha\.10/i,
+  /五包收敛已作为\s+`0\.41\.0-alpha\.10/i,
+  /completed\s+implementation anchor\s+`?v0\.41\.0-alpha\.7/i,
+  /v0\.41 beta/i,
 ];
 
 const failures: Failure[] = [];
@@ -88,6 +98,15 @@ for (const file of currentPublicDocs) {
     if (match) {
       failures.push({ file, message: `stale current-line claim: ${match[0]}` });
     }
+  }
+}
+
+for (const file of currentContractDocs) {
+  const text = await read(file);
+  if (!text) continue;
+  const staleMaturity = text.match(/v0\.41 beta/i);
+  if (staleMaturity) {
+    failures.push({ file, message: `stale current maturity claim: ${staleMaturity[0]}` });
   }
 }
 
