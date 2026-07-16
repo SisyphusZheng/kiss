@@ -1,0 +1,385 @@
+{
+  "schema": 1,
+  "packages": [
+    {
+      "name": "@openelement/element",
+      "exports": {
+        ".": "./src/index.ts",
+        "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
+        "./jsx-runtime": "./src/jsx-runtime.ts",
+        "./open-element-hydration": "./src/open-element-hydration.ts",
+        "./open-element-render": "./src/open-element-render.ts"
+      },
+      "declarations": {
+        ".": {
+          "sha256": "ae2896eae67d4a2b998dd43d81471a34c263f81792c0b622df08aed675a42215",
+          "publicDeclarations": [
+            "export type { OpenElementComponentConstructor } from './open-element.ts';",
+            "export type { ElementDefinition } from './types.ts';",
+            "export type {",
+            "export type { OpenElementRenderer } from './internal/protocol/framework.ts';",
+            "export type { VNode } from './internal/protocol/vnode.ts';",
+            "export type * from './internal/protocol/framework.ts';",
+            "export type * from './internal/protocol/manifest.ts';",
+            "export type * from './internal/protocol/render.ts';",
+            "export type * from './internal/protocol/style-sheet.ts';",
+            "export type * from './internal/protocol/vnode.ts';",
+            "export type { Context } from './internal/core/index.ts';",
+            "export type { PropValidationError, RenderError } from './internal/core/index.ts';",
+            "export type { ErrorCode, ErrorPhase, ErrorSeverity } from './internal/protocol/errors.ts';",
+            "export type { SignalLike } from './internal/protocol/signal.ts';",
+            "export type { Signal } from './internal/protocol/signal.ts';",
+            "export type { SafeHtml, UnsafeHtml } from './internal/protocol/framework.ts';",
+            "export type { IslandOptions } from './internal/protocol/island.ts';",
+            "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';",
+            "export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';",
+            "export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';",
+            "export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';",
+            "export type {",
+            "export type {",
+            "export type {"
+          ]
+        },
+        "./jsx-dev-runtime": {
+          "sha256": "fcc6608876f75923e43bcc5f8f309a7d098019c608577b5b0ec78efd3c662e39",
+          "publicDeclarations": []
+        },
+        "./jsx-runtime": {
+          "sha256": "d63e409708a4a1e5203c5e68ec91b0daf8a06679824c6f6054c6f8e9ad44e2ef",
+          "publicDeclarations": []
+        },
+        "./open-element-hydration": {
+          "sha256": "8280f617f3dcb6fc7d03ade7ce22a15a74e3164b67a27d3670cbd97f42cc8dce",
+          "publicDeclarations": [
+            "export function hydrateExistingDom("
+          ]
+        },
+        "./open-element-render": {
+          "sha256": "ce4067ae7eb62fa958065b5d35f2c72409512228e7a5f412cfe7b5f5f3669d88",
+          "publicDeclarations": [
+            "export interface OpenElementLike {",
+            "export function renderIntoLightDom(",
+            "export function renderIntoShadowRoot(",
+            "export function renderErrorFallback("
+          ]
+        }
+      }
+    },
+    {
+      "name": "@openelement/app",
+      "exports": {
+        ".": "./src/index.ts",
+        "./hono": "./src/hono.ts",
+        "./i18n": "./src/i18n.ts",
+        "./model": "./src/model.ts",
+        "./preact": "./src/preact.ts",
+        "./spa": "./src/spa.ts"
+      },
+      "declarations": {
+        ".": {
+          "sha256": "b9945db87a1b598c9001f6cd047749fdf8ddd5ee9da8e5bf09a4ace754df3e7b",
+          "publicDeclarations": [
+            "export type {",
+            "export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/element';",
+            "export type { ElementDefinition } from '@openelement/element';",
+            "export type { SpaAppInstance, SpaAppOptions } from './spa.ts';",
+            "export type { RouteConfig, RouterInstance, RouterMode } from './internal/router/client-router.ts';",
+            "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';",
+            "export type { CreateHonoRequestContextOptions, HonoContextLike, HonoRequestLike } from './hono.ts';"
+          ]
+        },
+        "./hono": {
+          "sha256": "0b8ce3c0d3f53670c2376c4880077162d6acd47835856cda21cdeedff3fcbc30",
+          "publicDeclarations": [
+            "export interface HonoRequestLike {",
+            "export interface HonoContextLike<Env extends Record<string, unknown> = Record<string, unknown>> {",
+            "export interface CreateHonoRequestContextOptions<",
+            "export function createHonoRequestContext<"
+          ]
+        },
+        "./i18n": {
+          "sha256": "56dd01445bd8ada8b9ca5489eb8d0cb83a911f105c1226cd093ded19fdf8b505",
+          "publicDeclarations": [
+            "export type { OpenElementI18nOptions } from './i18n-runtime.ts';",
+            "export type { LocalePath } from './internal/router/i18n.ts';"
+          ]
+        },
+        "./model": {
+          "sha256": "198b7cd3201a0d10deaf3f2920f74507929b98b3e1d355f5eeddd7d41b14bf36",
+          "publicDeclarations": [
+            "export type { OpenElementRouteNode } from '@openelement/element';",
+            "export interface OpenElementRequestContext<",
+            "export interface CreateRequestContextOptions<",
+            "export function createRequestContext<"
+          ]
+        },
+        "./preact": {
+          "sha256": "f4580d5f92553d4d9f52c97790ce2a150180076010952141ef9e8c9086a91aef",
+          "publicDeclarations": [
+            "export type PreactIslandProps = Record<string, unknown>;",
+            "export type PreactIslandComponent<",
+            "export interface PreactIslandOptions extends IslandConfig {",
+            "export function definePreactIsland<"
+          ]
+        },
+        "./spa": {
+          "sha256": "d685b61816bdb46948fd5a28533191a49753f2e49afe3d75b1d34e1a210fe3ea",
+          "publicDeclarations": [
+            "export interface SpaAppOptions {",
+            "export interface SpaAppInstance {",
+            "export function defineApp(options: SpaAppOptions): SpaAppInstance {"
+          ]
+        }
+      }
+    },
+    {
+      "name": "@openelement/adapter-vite",
+      "exports": {
+        ".": "./src/index.ts",
+        "./app-vite": "./src/app-vite.ts",
+        "./build-context": "./src/build-context.ts",
+        "./cli/build": "./src/cli/build.ts",
+        "./cli/build-client": "./src/cli/build-client.ts",
+        "./cli/build-ssg": "./src/cli/build-ssg.ts",
+        "./generated-data-resolver": "./src/generated-data-resolver.ts",
+        "./head-injection": "./src/head-injection.ts",
+        "./i18n-plugin": "./src/i18n-plugin.ts",
+        "./nitro-mount": "./src/nitro-mount.ts",
+        "./plugin": "./src/plugin.ts",
+        "./plugin-mdx": "./src/plugin-mdx.ts",
+        "./route-manifest": "./src/route-manifest.ts",
+        "./sitemap": "./src/sitemap.ts"
+      },
+      "declarations": {
+        ".": {
+          "sha256": "5a08be3b210857b27462babb73c80eff1881ca6544f87fa15b3d03b6503b4603",
+          "publicDeclarations": [
+            "export interface OpenPipelineConfig {",
+            "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
+            "export type { FrameworkOptions };",
+            "export type { ArtifactInfo, BuildManifest } from './build-manifest.ts';",
+            "export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';",
+            "export type { ExternalManifest } from './internal/protocol/ssg.ts';",
+            "export type { HeadExtrasResult } from './head-injection.ts';",
+            "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
+          ]
+        },
+        "./app-vite": {
+          "sha256": "57646b30b6aef837c2929b4e0ac5cf19247cac2261ab2049fad306309f2ae64b",
+          "publicDeclarations": [
+            "export interface OpenElementOptions extends FrameworkOptions {",
+            "export function openElement(options: OpenElementOptions = {}): Plugin[] {"
+          ]
+        },
+        "./build-context": {
+          "sha256": "3a58c9c14a9ad04bce324e2877c81e826a5339c2497eab8b014c2cbeda921c5b",
+          "publicDeclarations": [
+            "export type Phase = 1 | 2 | 3;",
+            "export class Phase1Meta {",
+            "export class Phase2Meta {",
+            "export class Phase3Meta {",
+            "export class OpenElementBuildContext {"
+          ]
+        },
+        "./cli/build": {
+          "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
+          "publicDeclarations": []
+        },
+        "./cli/build-client": {
+          "sha256": "14e89ab366b2a2230c872baffb3519042fd1ac39cac15326906da537098a36ae",
+          "publicDeclarations": []
+        },
+        "./cli/build-ssg": {
+          "sha256": "55fed1e0cf8265222329dd036c709fc967054e1f1f3dd3e4f9b3856382a3ad42",
+          "publicDeclarations": []
+        },
+        "./generated-data-resolver": {
+          "sha256": "d18395cfa3eca7cd72f2e5481b24a0e76d49284d717a9c08274c085adf80788c",
+          "publicDeclarations": [
+            "export const GENERATED_NAV_ID = '@openelement/generated/nav';",
+            "export const GENERATED_BLOG_DATA_ID = '@openelement/generated/blog-data';",
+            "export const GENERATED_I18N_ID = '@openelement/generated/i18n';",
+            "export type GeneratedDataResolverOptions = {",
+            "export function generatedDataPath(",
+            "export function createGeneratedDataResolverPlugin("
+          ]
+        },
+        "./head-injection": {
+          "sha256": "28dab8f1b72b612847e1a158869ad8afc8fe89a242684ffffb44997c022a66e0",
+          "publicDeclarations": [
+            "export function assertNoScriptTags(html: string, context: string): void {",
+            "export function validateSafeUrl(url: string, context: string): string {",
+            "export interface HeadExtrasResult {",
+            "export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {"
+          ]
+        },
+        "./i18n-plugin": {
+          "sha256": "b24544efcdc71ff563a6a5ad4745bbfa3c3152a4694d42bdae2ec929a5f47cb3",
+          "publicDeclarations": [
+            "export function writeI18nDataModule(locales: string[], defaultLocale: string): string {",
+            "export function openI18n("
+          ]
+        },
+        "./nitro-mount": {
+          "sha256": "13667f6d4b8db527d5f5cf4f7f21e8764aa92732d48a7d2601760d81e5321a39",
+          "publicDeclarations": [
+            "export interface NitroLikeRequestEvent<",
+            "export interface NitroLikeResponse {",
+            "export interface OpenElementNitroMountOptions<",
+            "export function createOpenElementNitroHandler<"
+          ]
+        },
+        "./plugin": {
+          "sha256": "86180df73bccca4e4527599ff948e98f0cf49b3764bde8d844f4fb409e58c0d2",
+          "publicDeclarations": [
+            "export function optionalPackageStubsPlugin(): Plugin {",
+            "export function createOpenPlugin("
+          ]
+        },
+        "./plugin-mdx": {
+          "sha256": "5acc04ce17016f446a66384f859e24ef914743a71fa02c0cb10cdfa3adcc84eb",
+          "publicDeclarations": [
+            "export interface OpenMdxPluginOptions {",
+            "export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {"
+          ]
+        },
+        "./route-manifest": {
+          "sha256": "383a1fdf94c5df10b62fbbdcc3e9d021dfbab222e7c232c3358718d8a866a8f8",
+          "publicDeclarations": [
+            "export interface GenerateRouteManifestOptions {",
+            "export const routeManifest = {} as const;",
+            "export const routeManifest = {"
+          ]
+        },
+        "./sitemap": {
+          "sha256": "2c24151329624e9adde127f4762580ff3ac75fff4a66818fc83d7100d91a9135",
+          "publicDeclarations": [
+            "export type { SitemapOptions } from './internal/content/types.ts';"
+          ]
+        }
+      }
+    },
+    {
+      "name": "@openelement/ui",
+      "exports": {
+        ".": "./src/index.ts",
+        "./open-badge": "./src/open-badge.tsx",
+        "./open-button": "./src/open-button.tsx",
+        "./open-callout": "./src/open-callout.tsx",
+        "./open-card": "./src/open-card.tsx",
+        "./open-code-block": "./src/open-code-block.tsx",
+        "./open-dialog": "./src/open-dialog.tsx",
+        "./open-dropdown": "./src/open-dropdown.tsx",
+        "./open-input": "./src/open-input.tsx",
+        "./open-props-tokens": "./src/open-props-tokens.ts",
+        "./open-props-tokens.js": "./src/open-props-tokens.ts",
+        "./open-tabs": "./src/open-tabs.tsx",
+        "./open-theme-toggle": "./src/open-theme-toggle.tsx"
+      },
+      "declarations": {
+        ".": {
+          "sha256": "44a7cacc806416be1c35dbf0b0a4db120bae09489b321e1fd59b33e0fc40a2d3",
+          "publicDeclarations": []
+        },
+        "./open-badge": {
+          "sha256": "557712982869455871b9b41474c698582c41769371d2e94f6347f51fc612f2d5",
+          "publicDeclarations": [
+            "export const tagName = 'open-badge';",
+            "export class OpenBadge extends OpenElement {"
+          ]
+        },
+        "./open-button": {
+          "sha256": "57411b37ffc3d08f48c04f97df841a111ab32a2081d648fae1e1141dfe1cd360",
+          "publicDeclarations": [
+            "export const tagName = 'open-button';",
+            "export class OpenButton extends OpenElement {"
+          ]
+        },
+        "./open-callout": {
+          "sha256": "f667dabce2fbc4e719d43266a2ebd3c2d23add7c1088dfc9b8b49d4bb9812f6d",
+          "publicDeclarations": [
+            "export const tagName = 'open-callout';",
+            "export class OpenCallout extends OpenElement {"
+          ]
+        },
+        "./open-card": {
+          "sha256": "fdf1fd51c5526a65c828e6aeb77fe66b9b607d640806b82653d44d4a878a1619",
+          "publicDeclarations": [
+            "export const tagName = 'open-card';",
+            "export class OpenCard extends OpenElement {"
+          ]
+        },
+        "./open-code-block": {
+          "sha256": "b997436c5c07fc83aa7d79e9b2908b42aa85af2a2f5b7287840cd4bc014360a2",
+          "publicDeclarations": [
+            "export const tagName = 'open-code-block';",
+            "export class OpenCodeBlock extends OpenElement {"
+          ]
+        },
+        "./open-dialog": {
+          "sha256": "fd25902bfe740877bb87e125779afb5012e0327891b038a7b92ae49472cb21b5",
+          "publicDeclarations": [
+            "export const tagName = 'open-dialog';",
+            "export class OpenDialog extends OpenElement {"
+          ]
+        },
+        "./open-dropdown": {
+          "sha256": "f313090f945a6f1f27960825c25f1dbc3137a8a95a4effdf579c89efe0ea1272",
+          "publicDeclarations": [
+            "export const tagName = 'open-dropdown';",
+            "export class OpenDropdown extends OpenElement {"
+          ]
+        },
+        "./open-input": {
+          "sha256": "c85f90dc0687b52a9aa4e4926a6fd7f34f7197301d308c0acfa8d4bd5422286f",
+          "publicDeclarations": [
+            "export const tagName = 'open-input';",
+            "export class OpenInput extends OpenElement {"
+          ]
+        },
+        "./open-props-tokens": {
+          "sha256": "4115a636caa94b033491b6cb1e08827b6f7bd17201297223d37f38ae72e66e50",
+          "publicDeclarations": [
+            "export const OPEN_PROPS_TOKEN_CSS = `/**",
+            "export const openPropsTokenSheet: StyleSheetLike = sheet;",
+            "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
+          ]
+        },
+        "./open-props-tokens.js": {
+          "sha256": "4115a636caa94b033491b6cb1e08827b6f7bd17201297223d37f38ae72e66e50",
+          "publicDeclarations": [
+            "export const OPEN_PROPS_TOKEN_CSS = `/**",
+            "export const openPropsTokenSheet: StyleSheetLike = sheet;",
+            "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
+          ]
+        },
+        "./open-tabs": {
+          "sha256": "85fe927ef3e33b7eb8993e1572410f00cb21bcd07caf98a7fee1a40fb0bd3d06",
+          "publicDeclarations": [
+            "export const tagName = 'open-tabs';",
+            "export class OpenTabs extends OpenElement {"
+          ]
+        },
+        "./open-theme-toggle": {
+          "sha256": "0f3618577345a670e8eefff9927bc6757a5bd591a0a0f2ab0b7d019a74831a22",
+          "publicDeclarations": [
+            "export const tagName = 'open-theme-toggle';",
+            "export class OpenThemeToggle extends OpenElement {"
+          ]
+        }
+      }
+    },
+    {
+      "name": "@openelement/create",
+      "exports": {
+        ".": "./src/cli.ts"
+      },
+      "declarations": {
+        ".": {
+          "sha256": "bc38985ce6cbd8211e29424d4bb70080e281264ba3f011c80fc0d83cdc244ad0",
+          "publicDeclarations": []
+        }
+      }
+    }
+  ]
+}

@@ -4,9 +4,10 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.41.0-alpha.14`.\
+> Published package line: `v0.41.0-alpha.15`.\
+> Active execution target: `v0.41.0-alpha.15`.\
 > Current implementation state: five-package convergence is published;
-> external adopter pilot #390 remains open.\
+> adoption qualification and interface-freeze rehearsal are active.\
 > Maturity stage: alpha; the abandoned beta naming is retired.
 
 ## Product direction
@@ -80,7 +81,8 @@ making the standard Custom Element contract span both layers. See the official
 | ----------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `0.41.0-alpha.10` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                         |
 | `0.41.0-alpha.11` | Audit remediation            | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                           |
-| `0.41.0-alpha.x`  | Adoption and interface proof | #390 and further external use expose any remaining architectural or authoring corrections                                               |
+| `0.41.0-alpha.14` | Release recovery             | Exact-version starter, published consumers and honest two-stage evidence                                                                |
+| `0.41.0-alpha.15` | Adoption and interface proof | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                       |
 | `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
 | `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
 | `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
@@ -107,15 +109,16 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.41.0-alpha.10` is the published package line. npm beta.1 through beta.3 are
+`0.41.0-alpha.14` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.
 
-The repository-side five-package work is complete. Alpha releases continue
-through external adopter pilot #390 and any resulting interface maturation.
-Stable `0.41.0` is cut only when those efforts uncover no further architecture,
-public-interface or adoption work.
+The repository-side five-package work is complete. Alpha.15 qualifies that
+product through external adopter pilot #390, cross-platform consumers and a
+public-interface freeze rehearsal. Stable `0.41.0` requires a separate approved
+plan after those efforts uncover no further architecture, public-interface or
+adoption work.
 
 ## Historical record
 

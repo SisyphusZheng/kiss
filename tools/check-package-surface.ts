@@ -110,7 +110,7 @@ for (const pkg of removedPackages) {
   }
 }
 
-for (const required of ['5-package', 'v0.41 beta', 'ADR-0113']) {
+for (const required of ['5-package', 'v0.41 alpha', 'ADR-0113']) {
   if (!docs.includes(required)) {
     failures.push(`PACKAGE_SURFACE.md missing required anchor: ${required}`);
   }

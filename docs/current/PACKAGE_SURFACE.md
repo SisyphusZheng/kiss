@@ -1,7 +1,7 @@
 # Package Surface Inventory
 
-This is the v0.41 beta five-package product truth. ADR-0113 authorizes the
-breaking collapse from the alpha implementation graph.
+This is the v0.41 alpha five-package product truth. ADR-0113 authorizes the
+breaking collapse from the earlier implementation graph.
 
 <!-- 5-package -->
 

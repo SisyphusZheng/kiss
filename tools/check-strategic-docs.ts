@@ -121,6 +121,10 @@ const checks: Check[] = [
       /supporting packages = Protocols \+ UI/i,
       /11-package graph/i,
       /11 packages expose/i,
+      /five-package convergence is published as\s+`?0\.41\.0-alpha\.10/i,
+      /五包收敛已作为\s+`0\.41\.0-alpha\.10/i,
+      /completed\s+implementation anchor\s+`?v0\.41\.0-alpha\.7/i,
+      /v0\.41 beta/i,
     ],
   },
   {

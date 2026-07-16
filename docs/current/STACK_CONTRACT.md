@@ -1,6 +1,6 @@
 # First-Party Stack Contract
 
-The v0.41 beta workspace has five packages. Framework concepts are exposed by
+The v0.41 alpha workspace has five packages. Framework concepts are exposed by
 deep product interfaces; implementation contracts stay inside their owner.
 
 | Package                     | Responsibility                                                                 |
@@ -35,7 +35,7 @@ independent adapters demonstrate a real replacement seam.
 - Third-party Web Components use explicit manifest/CEM admission; unknown SSR
   capability becomes client-only or rejected rather than a partial render.
 - Browser candidates must pass Chromium, Firefox and WebKit with native DSD.
-- External adopter pilot #390 remains the primary repository-external
-  stability condition.
+- External adopter pilot #390 remains a stable-release condition. It does not
+  retroactively make an alpha prerelease claim external validation occurred.
 
 See [PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) for the exact export inventory.

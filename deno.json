@@ -49,6 +49,8 @@
     "www:check-current-truth": "deno run --allow-read tools/check-www-current-truth.ts",
     "www:check-artifact-truth": "deno run --allow-read tools/check-www-current-truth.ts --artifacts",
     "package-surface:check": "deno run --allow-read --allow-env tools/check-package-surface.ts",
+    "interface:snapshot": "deno run --allow-read --allow-env tools/check-public-interface-snapshot.ts",
+    "interface:snapshot:write": "deno run --allow-read --allow-write --allow-env tools/check-public-interface-snapshot.ts --write",
     "export-files:generate": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts",
     "export-files:check": "deno run --allow-read --allow-write --allow-run tools/generate-openelement-export-files.ts --check",
     "signals:check-protocol-boundary": "deno run --allow-read --allow-env tools/check-signal-protocol-boundary.ts",
