@@ -34,6 +34,7 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     '@openelement/element',
     '@openelement/element/jsx-dev-runtime',
     '@openelement/element/jsx-runtime',
+    'hono',
     'vite',
   ]);
   assertEquals(
@@ -45,6 +46,8 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     'npm:@openelement/element@${v.element}/jsx-dev-runtime',
   );
   assertEquals(Object.keys(denoJson.tasks).sort(), ['build', 'check', 'dev', 'preview', 'test']);
+  assertEquals(denoJson.tasks.test, 'deno test --config deno.json --permit-no-files');
+  assertEquals(denoJson.imports.hono, 'npm:hono@^4.12');
   assertEquals(denoJson.compilerOptions.jsxImportSource, '@openelement/element');
   assertFalse(JSON.stringify(denoJson).includes('@openelement/core'));
   assertFalse(JSON.stringify(denoJson).includes('@openelement/router'));

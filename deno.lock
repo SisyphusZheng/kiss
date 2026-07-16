@@ -2357,6 +2357,7 @@
           "npm:@mdx-js/rollup@^3.1.1",
           "npm:@types/sanitize-html@2",
           "npm:gray-matter@^4.0.3",
+          "npm:hono@^4.12.0",
           "npm:marked@15",
           "npm:sanitize-html@^2.17.4",
           "npm:vite@8.0.10"

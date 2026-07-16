@@ -137,10 +137,12 @@ const productImports = [
   '@openelement/element',
   '@openelement/element/jsx-dev-runtime',
   '@openelement/element/jsx-runtime',
+  // Hono is the explicit public runtime dependency of the generated SSG entry.
+  'hono',
   'vite',
 ];
 if (Object.keys(generatedImportMap).sort().join('\n') !== productImports.join('\n')) {
-  console.error('Generated starter exposes a non-product import surface.');
+  console.error('Generated starter exposes an unsupported import surface.');
   console.error(Object.keys(generatedImportMap).sort().join('\n'));
   cleanup();
   Deno.exit(1);
