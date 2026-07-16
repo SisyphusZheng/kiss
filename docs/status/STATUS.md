@@ -3,22 +3,22 @@
 > Updated: 2026-07-16\
 > Repository package line: `v0.41.0-alpha.14`\
 > npm registry line: `v0.41.0-alpha.14`\
-> Active release target: `v0.41.0-alpha.14` closure complete\
+> Active release target: `v0.41.0-alpha.15`\
+> Next stability candidate: `v0.41.0`\
 > Product graph: five packages\
 > Current maturity stage: alpha
 
 ## Current position
 
 OpenElement is a Web Components-native, static-first application framework.
+Alpha.14 is the current published and verified line. Alpha.15 is the active
+adoption-qualification and interface-freeze rehearsal before a separate
+decision about stable `0.41.0`.
+
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
 interactive regions upgrade selectively. Vite and Nitro are the official build
 and output path.
-
-Alpha.14 is published and verified. All five npm packages and the `alpha`
-dist-tag agree, the corrected exact-version starter typechecks from a clean
-workspace, and the post-publish Deno, Node, Nitro, third-party Web Component and
-CDN proofs passed.
 
 ## Product surface
 
@@ -28,47 +28,44 @@ CDN proofs passed.
 | `@openelement/app`          | Current  | Pages, routes, islands and request/render semantics |
 | `@openelement/adapter-vite` | Current  | Vite, content, static builds and Nitro output       |
 | `@openelement/create`       | Current  | Installed starter and consumer entrypoint           |
-| `@openelement/ui`           | Optional | Proven general-purpose primitives                   |
+| `@openelement/ui`           | Optional | Proven primitives; stable scope decided in alpha.15 |
 
-The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
-are not supported consumer imports. Historical references remain only in their
-original ADR, audit and failed-release records.
+## Alpha.15 active gates
 
-## Alpha.14 release state
-
-| Condition                                             | State    |
-| ----------------------------------------------------- | -------- |
-| Five-package source and npm version alignment         | Complete |
-| Exact-version published starter and JSX subpaths      | Complete |
-| Chromium, Nitro Node/Workers and package artifacts    | Complete |
-| Deno, Node ESM, third-party WC and jsDelivr consumers | Complete |
-| Git tag, GitHub prerelease and completed evidence     | Complete |
-| Alpha.13 audit tasks and L1-L43 debt ledger           | Complete |
+| Condition                                        | State                  |
+| ------------------------------------------------ | ---------------------- |
+| Formal alpha.15 plan and current-truth baseline  | In progress            |
+| GitHub Actions Node 24 runtime modernization     | Pending                |
+| Cross-platform published consumers               | Pending                |
+| External adopter pilot #390                      | Pending human evidence |
+| Five-package interface freeze rehearsal          | Pending                |
+| Stable-readiness dossier                         | Pending                |
+| Alpha.15 npm, tag, prerelease and final evidence | Pending                |
 
 ## Current risks
 
 1. External adoption remains the primary product risk.
-2. WC SSR compatibility still needs a broader ecosystem corpus.
-3. Request-time data, forms, sessions and cache are not stable interfaces.
-4. UI remains optional until it earns a v1 compatibility commitment.
+2. Current-document version drift needs stronger mechanical rejection.
+3. WC SSR compatibility still needs broader adopter evidence.
+4. Request-time data, forms, sessions and cache are not stable interfaces.
+5. UI remains optional until alpha.15 records its stable scope.
 
-## Forward direction
+## Release direction
 
-| Version           | Focus                                                                        |
-| ----------------- | ---------------------------------------------------------------------------- |
-| `0.41.0-alpha.14` | Completed audit recovery and honest publication closure                      |
-| `0.41.0-alpha.x`  | External adoption and interface maturation                                   |
-| `0.41.0`          | Freeze deep Element, App and Build interfaces                                |
-| `0.42.0`          | WC Application Loop: load, render, progressive form, action and revalidation |
-| `0.43.0`          | Universal WC SSR compatibility and diagnostics                               |
-| `1.0.0`           | Stable five-package product                                                  |
+| Version           | Focus                                                                   |
+| ----------------- | ----------------------------------------------------------------------- |
+| `0.41.0-alpha.14` | Current verified published baseline                                     |
+| `0.41.0-alpha.15` | CI modernization, adoption qualification and interface freeze rehearsal |
+| `0.41.0`          | Separate stable decision after alpha.15 evidence                        |
+| `0.42.0`          | WC Application Loop                                                     |
+| `0.43.0`          | Universal WC SSR compatibility and diagnostics                          |
+| `1.0.0`           | Stable five-package product                                             |
 
-The complete forward plan is in [`docs/roadmap/ROADMAP.md`](../roadmap/ROADMAP.md).
+## Evidence and workflow
 
-## Evidence and history
-
-- Current package and release plan: [`docs/current/VERSION_PLAN.md`](../current/VERSION_PLAN.md)
-- Alpha.14 release plan: [`docs/release/v0.41.0-alpha.14-plan.md`](../release/v0.41.0-alpha.14-plan.md)
-- Project workflow: [`docs/governance/PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)
-- Five-package surface: [`docs/current/PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
-- Release records: [`docs/release/`](../release/)
+- Mandatory workflow: [`PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)
+- Active version contract: [`VERSION_PLAN.md`](../current/VERSION_PLAN.md)
+- Alpha.15 execution plan: [`v0.41.0-alpha.15-plan.md`](../release/v0.41.0-alpha.15-plan.md)
+- Current package surface: [`PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
+- Alpha.14 immutable release record: [`v0.41.0-alpha.14.md`](../release/v0.41.0-alpha.14.md)
+- Complete forward roadmap: [`ROADMAP.md`](../roadmap/ROADMAP.md)

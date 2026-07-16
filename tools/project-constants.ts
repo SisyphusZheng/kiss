@@ -1,6 +1,6 @@
 export const PACKAGE_VERSION = '0.41.0-alpha.14';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
-export const ACTIVE_EXECUTION_VERSION = PACKAGE_VERSION_TAG;
+export const ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.15';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',

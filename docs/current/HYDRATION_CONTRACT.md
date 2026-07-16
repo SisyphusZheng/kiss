@@ -1,6 +1,6 @@
 # Hydration Surface Contract
 
-The v0.41 beta line exposes one supported component runtime:
+The v0.41 alpha line exposes one supported component runtime:
 `@openelement/element`. Hydration internals are deliberately not public
 subpaths.
 
