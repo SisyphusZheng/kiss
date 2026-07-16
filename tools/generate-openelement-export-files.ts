@@ -90,35 +90,37 @@ async function runFormatter(target: string): Promise<void> {
   }
 }
 
-async function gitDiffIsEmpty(target: string): Promise<boolean> {
-  const cmd = new Deno.Command('git', { args: ['diff', '--quiet', '--', target] });
-  const status = await cmd.output();
-  return status.code === 0;
-}
-
 async function main(args: string[]): Promise<void> {
   const checkOnly = args.includes('--check');
   const map = await buildExportFiles();
   const source = render(map);
 
-  await Deno.writeTextFile(TARGET, source);
-  await runFormatter(TARGET);
-
   if (checkOnly) {
-    const clean = await gitDiffIsEmpty(TARGET);
-    if (!clean) {
-      const diff = new Deno.Command('git', {
-        args: ['--no-pager', 'diff', '--', TARGET],
-      });
-      const out = await diff.output();
-      console.error('export-files sync check failed: generated file is stale.');
-      console.error(new TextDecoder().decode(out.stdout));
-      Deno.exit(1);
+    const temporary = await Deno.makeTempFile({
+      dir: `${REPO_ROOT}packages/adapter-vite/src`,
+      prefix: '.generated-export-files-',
+      suffix: '.ts',
+    });
+    try {
+      await Deno.writeTextFile(temporary, source);
+      await runFormatter(temporary);
+      const [actual, expected] = await Promise.all([
+        Deno.readTextFile(TARGET),
+        Deno.readTextFile(temporary),
+      ]);
+      if (actual !== expected) {
+        console.error('export-files sync check failed: generated file is stale.');
+        Deno.exit(1);
+      }
+    } finally {
+      await Deno.remove(temporary).catch(() => undefined);
     }
     console.log('export-files sync check passed (generated file matches deno.json exports).');
     return;
   }
 
+  await Deno.writeTextFile(TARGET, source);
+  await runFormatter(TARGET);
   console.log(`Wrote ${TARGET}`);
 }
 
