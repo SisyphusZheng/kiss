@@ -3,7 +3,8 @@
  *
  * This package is the single import surface for authoring custom elements,
  * DSD components, and islands. Build orchestration remains in
- * @openelement/app and @openelement/adapter-vite.
+ * @openelement/app and @openelement/adapter-vite; build adapters import
+ * build-time helpers from `@openelement/element/build-utils`.
  */
 
 // ─── Core exports ───────────────────────────────────────
@@ -95,14 +96,7 @@ export type { IslandOptions } from './internal/protocol/island.ts';
 export { StyleSheet } from './internal/core/style-sheet.ts';
 export { createLogger } from './internal/core/logger.ts';
 export { formatError, OpenElementError } from './internal/core/errors.ts';
-export { formatJson } from './internal/core/write-json.ts';
 export { isValidTagName } from './internal/core/tag-utils.ts';
-export { normalizeSeparators, pathToTagName } from './internal/core/path-utils.ts';
-export { createIsrCacheKey } from './internal/core/isr.ts';
-export { SsrRenderError } from './internal/core/errors.ts';
-export { transformIslandSource } from './internal/core/island-transform.ts';
-export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';
-export { createRuntimeAdapter } from './internal/core/runtime.ts';
 export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
