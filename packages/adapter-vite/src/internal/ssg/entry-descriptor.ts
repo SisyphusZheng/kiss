@@ -22,6 +22,7 @@ import type {
 } from '../protocol/framework.ts';
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import type { SsrAdmissionDecision } from '../protocol/render.ts';
+import { normalizeSeparators } from '@openelement/element';
 import { fileToTagName } from './route-scanner.ts';
 
 function normalizeAppShellImport(importPath: string): string {
@@ -221,11 +222,14 @@ export function buildEntryDescriptor(
   const islandMeta = options.islandMeta || {};
   const packageManifests = options.packageManifests || [];
 
+  // #460: islandsDir comes from user config and islandFiles from scanIslands;
+  // both must be POSIX-normalized before they become module specifiers.
+  const islandsSpecifierDir = normalizeSeparators(islandsDir);
   const localIslands: IslandDecl[] = islandTagNames.map((tagName, i) => ({
     tagName,
     modulePath: islandFiles[i]
-      ? `/${islandsDir}/${islandFiles[i]}`
-      : `/${islandsDir}/${tagName}.ts`,
+      ? `/${islandsSpecifierDir}/${normalizeSeparators(islandFiles[i])}`
+      : `/${islandsSpecifierDir}/${tagName}.ts`,
     source: 'local',
     ssr: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.ssr,
     dsd: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.dsd,
