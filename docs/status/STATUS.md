@@ -33,13 +33,13 @@ and output path.
 
 ## Alpha.17 active gates
 
-| Condition                                        | State                  |
-| ------------------------------------------------ | ---------------------- |
-| Alpha.17 plan and current-truth anchors          | In progress            |
-| P1 test-credibility package                      | Pending                |
-| P2 convergence and release-tooling package       | Pending                |
-| External adopter pilot #390                      | Pending human evidence |
-| Alpha.17 npm, tag, prerelease and final evidence | Pending                |
+| Condition                                        | State                            |
+| ------------------------------------------------ | -------------------------------- |
+| Alpha.17 plan and current-truth anchors          | Completed                        |
+| P1 test-credibility package                      | Completed                        |
+| P2 convergence and release-tooling package       | Completed                        |
+| External adopter pilot #390                      | Launched; pending human evidence |
+| Alpha.17 npm, tag, prerelease and final evidence | Pending                          |
 
 ## Current risks
 

@@ -85,6 +85,10 @@ until external evidence justifies a stability commitment.
   absence turned main CI red on the evidence-finalize commit.
 - Verify the #460 `/@fs/` island path branch in a real Windows build, or
   record an explicit limitation in the release note.
+- Resolve the root-level `<Show>`/`<For>` CSR edge: `renderToDom` commits
+  bindings before the returned node is attached, so a root branch anchor has
+  no parent and its content is silently dropped — either attach before
+  commit or document the constraint, with a regression test.
 
 ### C. P3 strategic items (alpha.16 package D, deferred)
 
