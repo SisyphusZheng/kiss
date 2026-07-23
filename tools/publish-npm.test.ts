@@ -126,3 +126,64 @@ Deno.test('publishPackage skips an immutable version that already exists', async
     '[npm] @openelement/element@0.41.0-alpha.13 already published; skipping.',
   ]);
 });
+
+Deno.test('publishPackage moves the latest dist-tag after a prerelease publish', async () => {
+  const published: string[][] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => Promise.resolve(false),
+    publish: (args) => {
+      published.push(args);
+      return Promise.resolve();
+    },
+    log: () => {},
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0-alpha.13'), false, publishIo);
+
+  assertEquals(published.length, 2);
+  assertEquals(published[0].slice(0, 2), [
+    'publish',
+    'packages/element/openelement-element-0.41.0-alpha.13.tgz',
+  ]);
+  assertEquals(published[0].slice(-2), ['--tag', 'alpha']);
+  assertEquals(published[1], [
+    'dist-tag',
+    'add',
+    '@openelement/element@0.41.0-alpha.13',
+    'latest',
+  ]);
+});
+
+Deno.test('publishPackage leaves latest to the npm default for stable versions', async () => {
+  const published: string[][] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => Promise.resolve(false),
+    publish: (args) => {
+      published.push(args);
+      return Promise.resolve();
+    },
+    log: () => {},
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0'), false, publishIo);
+
+  assertEquals(published.length, 1);
+  assertEquals(published[0].includes('--tag'), false);
+});
+
+Deno.test('publishPackage does not touch dist-tags during a dry run', async () => {
+  const published: string[][] = [];
+  const publishIo: PublishPackageIo = {
+    versionExists: () => Promise.resolve(false),
+    publish: (args) => {
+      published.push(args);
+      return Promise.resolve();
+    },
+    log: () => {},
+  };
+
+  await publishPackage(pkg('@openelement/element', '0.41.0-alpha.13'), true, publishIo);
+
+  assertEquals(published.length, 1);
+  assertEquals(published[0].includes('--dry-run'), true);
+});

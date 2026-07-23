@@ -111,7 +111,7 @@ Deno.test('two-phase release: publish-existing never bumps and verifies main CI 
     assertEquals(names[0], 'verify published source version');
     assertEquals(names[1], 'verify main CI success for HEAD');
     assert(names.includes('publish npm packages'));
-    assert(names.includes('verify npm versions and alpha dist-tags'));
+    assert(names.includes('verify npm versions and dist-tags'));
     assert(names.includes('post-publish npm consumer smoke'));
     assert(names.includes('post-publish third-party Web Component smoke'));
     assert(names.indexOf('tag release') > names.indexOf('post-publish npm consumer smoke'));

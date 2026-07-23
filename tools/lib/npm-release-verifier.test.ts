@@ -28,8 +28,28 @@ Deno.test('verifyNpmRelease retries transient registry misses and verifies the m
     '@openelement/element@0.41.0-alpha.13:version',
     '@openelement/element@0.41.0-alpha.13:version',
     '@openelement/element:dist-tags.alpha',
+    '@openelement/element:dist-tags.latest',
   ]);
   assertEquals(sleeps, [1, 2]);
+});
+
+Deno.test('verifyNpmRelease rejects a latest dist-tag that lags the release line', async () => {
+  // Policy: dist-tags.latest must equal the just-published version. A stale
+  // latest (e.g. the historical latest = alpha.6 drift) fails verification.
+  await assertRejects(
+    () =>
+      verifyNpmRelease({
+        version: '0.41.0-alpha.13',
+        packages: ['element'],
+        delaysMs: [0, 1],
+        sleep: () => Promise.resolve(),
+        query: (_specifier, field) =>
+          Promise.resolve(field === 'dist-tags.latest' ? '0.41.0-alpha.6' : '0.41.0-alpha.13'),
+      }),
+    Error,
+    '@openelement/element dist-tags.latest verification failed after 2 attempts: ' +
+      'expected=0.41.0-alpha.13, observed=0.41.0-alpha.6',
+  );
 });
 
 Deno.test('verifyNpmRelease reports the final observed state after exhausting retries', async () => {

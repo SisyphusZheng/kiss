@@ -279,6 +279,15 @@ export async function publishPackage(
     }
     throw error;
   }
+  // latest dist-tag policy (alpha line): every prerelease publish also points
+  // `latest` at the just-published version, so `latest` never lags the active
+  // prerelease line. tools/verify-npm-release.ts enforces the invariant by
+  // asserting dist-tags.latest === <published version>. Stable publishes need
+  // no explicit tag: npm defaults them to `latest`.
+  if (!dryRun && isPrerelease(pkg.version)) {
+    await io.publish(['dist-tag', 'add', `${pkg.name}@${pkg.version}`, 'latest']);
+    io.log(`[npm] ${pkg.name}@${pkg.version}: latest dist-tag updated.`);
+  }
 }
 
 export function npmPublishTag(version: string): string {
