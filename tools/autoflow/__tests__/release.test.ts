@@ -29,7 +29,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // Anchors are kept in sync with the real anchor text in each file. Dead
   // anchors (doc drift) are intentionally omitted, so this count reflects the
   // files that currently carry the previous package line.
-  assertEquals(reps.length, 8);
+  assertEquals(reps.length, 9);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -107,17 +107,17 @@ Deno.test('bumpProjectConstantsText: bump maintains previous line and active exe
   assert(updated !== undefined);
   assert(updated.includes("PACKAGE_VERSION = '0.41.0-alpha.17'"));
   assert(updated.includes("PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.16'"));
-  // The active execution target is the version worked on next: the patch
-  // successor of the bump target.
-  assert(updated.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.18'"));
+  // The active execution target is the version the active plan is delivering:
+  // the bump target itself, until a new plan advances it.
+  assert(updated.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17'"));
 });
 
-Deno.test('bumpProjectConstantsText: stable bump advances the active target to the next patch', () => {
+Deno.test('bumpProjectConstantsText: stable bump sets the active target to the bump target', () => {
   const fromPrevious = bumpProjectConstantsText(CONSTANTS_FIXTURE, '0.41.0');
   assert(fromPrevious !== undefined);
   assert(fromPrevious.includes("PACKAGE_VERSION = '0.41.0'"));
   assert(fromPrevious.includes("PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.16'"));
-  assert(fromPrevious.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.1'"));
+  assert(fromPrevious.includes("ACTIVE_EXECUTION_VERSION = 'v0.41.0'"));
 });
 
 Deno.test('bumpProjectConstantsText: re-running a bump is a no-op and keeps the true previous line', () => {

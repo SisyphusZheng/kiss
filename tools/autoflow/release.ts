@@ -562,9 +562,10 @@ export async function assertBranch(expected: string): Promise<void> {
  * PREVIOUS_PACKAGE_VERSION must keep recording the true previous line).
  *
  * ACTIVE_EXECUTION_VERSION is maintained mechanically: the active execution
- * target is always the version being worked on next, so after bumping the
- * package line to X it advances to the patch successor of X — the same value
- * a new VERSION_PLAN header writes as its "Active release target" anchor.
+ * target is the version the active plan is delivering, so after bumping the
+ * package line to X it equals X. It only advances past X when a new version
+ * plan is written, which is a deliberate human act — setting it to the patch
+ * successor here left every post-bump document anchor failing the gates.
  */
 export function bumpProjectConstantsText(text: string, version: string): string | undefined {
   const m = text.match(/PACKAGE_VERSION = '([^']+)'/u);
@@ -579,7 +580,7 @@ export function bumpProjectConstantsText(text: string, version: string): string 
   );
   updated = updated.replace(
     /ACTIVE_EXECUTION_VERSION = '[^']+'/u,
-    `ACTIVE_EXECUTION_VERSION = '${releaseTag(nextPatchVersion(version))}'`,
+    `ACTIVE_EXECUTION_VERSION = '${releaseTag(version)}'`,
   );
   return updated;
 }
@@ -638,6 +639,11 @@ export function buildVersionAnchorReplacements(
       'docs/status/STATUS.md',
       'Repository package line: `$PVT`',
       'Repository package line: `$TAG`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
     ],
     [
       'www/app/routes/roadmap.tsx',

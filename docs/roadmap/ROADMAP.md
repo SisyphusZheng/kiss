@@ -4,7 +4,7 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.41.0-alpha.16`.\
+> Published package line: `v0.41.0-alpha.17`.\
 > Active execution target: `v0.41.0-alpha.17`.\
 > Current implementation state: five-package convergence is published;
 > alpha.16 closed the P0 correctness reset and alpha.17 completes the

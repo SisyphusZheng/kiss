@@ -1,6 +1,6 @@
 {
   "name": "@openelement/app",
-  "version": "0.41.0-alpha.16",
+  "version": "0.41.0-alpha.17",
   "exports": {
     ".": "./src/index.ts",
     "./hono": "./src/hono.ts",
