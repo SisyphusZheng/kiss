@@ -79,7 +79,7 @@ export function findVersionAnchorFailures(read: (path: string) => string): strin
   return failures;
 }
 
-async function main(): Promise<void> {
+function main(): void {
   const texts = new Map<string, string>();
   const failures = findVersionAnchorFailures((path) => {
     const cached = texts.get(path);
@@ -99,4 +99,4 @@ async function main(): Promise<void> {
   );
 }
 
-if (import.meta.main) await main();
+if (import.meta.main) main();
