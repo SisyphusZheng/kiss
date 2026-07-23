@@ -50,7 +50,7 @@
 
 import type { RouteEntry, SpecialFileType } from '../protocol/framework.ts';
 import { createLogger } from '@openelement/element';
-import { normalizeSeparators, pathToTagName } from '@openelement/element';
+import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
 import { join, posix, sep } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
@@ -277,6 +277,8 @@ export function fileToTagName(fileName: string): string {
 export {
   type LocalIslandMeta,
   readIslandConfig,
+  resolveIslandHydrate,
+  resolveIslandSsrDsd,
   scanIslandMeta,
   scanIslands,
   scanPackageManifests,

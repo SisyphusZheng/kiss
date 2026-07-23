@@ -25,7 +25,7 @@ import type {
 import { createLogger } from '@openelement/element';
 import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
 import { buildIsrManifestEntries, findHtmlFiles } from './ssg-helpers.ts';
-import { formatJson } from '@openelement/element';
+import { formatJson } from '@openelement/element/build-utils';
 
 const log = createLogger('ssg');
 

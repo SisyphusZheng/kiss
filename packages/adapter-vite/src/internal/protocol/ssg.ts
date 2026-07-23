@@ -6,7 +6,7 @@
  */
 
 import type { CompatibilityClassification, HydrationStrategy } from './framework.ts';
-import type { HydrationHint, RenderError, SsrAdmissionDecision } from './render.ts';
+import type { RenderError, SsrAdmissionDecision } from './render.ts';
 import type { OpenElementPackageManifest } from './manifest.ts';
 
 // ─── Concurrency types ───────────────────────────────────────
@@ -62,20 +62,6 @@ export interface SsgRenderOptions {
   speculation?: boolean | Record<string, unknown>;
   islandTagNames?: string[];
   routesDir?: string;
-}
-
-// ─── External resolver types ─────────────────────────────────
-
-/** Manifest produced by Deno dependency pre-resolution. */
-export interface ExternalManifest {
-  /** Complete list of bare specifiers to mark as external. */
-  specifiers: string[];
-  /** Redirect map (bare specifier to npm: URL) for importmap generation. */
-  importMap: Record<string, string>;
-  /** ISO timestamp of generation. */
-  generatedAt: string;
-  /** SHA-256 hash prefix of deno.lock at time of generation. */
-  lockHash: string;
 }
 
 // ─── Entry generator types ───────────────────────────────────
@@ -200,7 +186,6 @@ export interface EntryDescriptor {
   islands: IslandDecl[];
   ssrAdmissionPlan: SsrAdmissionPlan;
   cemClassifications?: CompatibilityClassification[];
-  clientOnlyTags?: string[];
   renderers: RendererDecl[];
   middlewareScopes: MiddlewareScopeDecl[];
   document: DocumentConfig;
@@ -215,10 +200,13 @@ export interface EntryDescriptor {
 export interface SsgPageOutput {
   /** Rendered HTML string */
   html: string;
+  /**
+   * HTTP status for the rendered page. Undefined on the success path;
+   * set for redirect (3xx), not-found (404) and render-failure (500) results.
+   */
+  status?: number;
   /** Render errors collected during rendering */
   errors: RenderError[];
-  /** Hydration hints collected during rendering */
-  hydrationHints: HydrationHint[];
   /** Number of DSD components rendered on this page */
   componentCount: number;
   /** Total render time for all components on this page (ms) */

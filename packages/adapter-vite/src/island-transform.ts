@@ -7,7 +7,7 @@
  */
 
 import type { Plugin } from 'vite';
-import { normalizeSeparators, transformIslandSource } from '@openelement/element';
+import { normalizeSeparators, transformIslandSource } from '@openelement/element/build-utils';
 
 /** Vite plugin that injects `__island` and `__tagName` markers into island components */
 export function islandTransformPlugin(islandsDir: string): Plugin {

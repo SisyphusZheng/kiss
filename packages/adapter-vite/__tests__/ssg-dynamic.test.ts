@@ -13,7 +13,6 @@ Deno.test('expandI18nLocales skips the default locale output', async () => {
         return Promise.resolve({
           html: '<html></html>',
           errors: [],
-          hydrationHints: [],
           componentCount: 0,
           renderTimeMs: 0,
         });

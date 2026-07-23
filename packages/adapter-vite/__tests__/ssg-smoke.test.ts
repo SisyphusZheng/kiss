@@ -107,7 +107,6 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       {
         html: string;
         errors: unknown[];
-        hydrationHints: unknown[];
         componentCount: number;
         renderTimeMs: number;
       }

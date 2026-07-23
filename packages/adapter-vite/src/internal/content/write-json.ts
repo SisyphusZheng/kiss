@@ -4,4 +4,4 @@
  * Re-exported from `@openelement/element` for backwards compatibility.
  */
 
-export { formatJson } from '@openelement/element';
+export { formatJson } from '@openelement/element/build-utils';

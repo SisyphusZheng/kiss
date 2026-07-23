@@ -8,11 +8,7 @@
  */
 
 import type { Alias, Plugin } from 'vite';
-import type {
-  FrameworkOptions,
-  HydrationStrategy,
-  RouteEntry,
-} from './internal/protocol/framework.ts';
+import type { FrameworkOptions, RouteEntry } from './internal/protocol/framework.ts';
 import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 
 import { join } from 'node:path';
@@ -27,13 +23,16 @@ import { OpenElementBuildContext } from './build-context.ts';
 import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.ts';
 import { normalizeViteAliases } from './alias-utils.ts';
 import { buildPlugin } from './build.ts';
-import { generateHonoEntryCode } from './internal/ssg/index.ts';
+import type { EntryDescriptor } from './internal/ssg/index.ts';
+import { buildEntryDescriptor, renderEntry } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
+  resolveIslandHydrate,
+  resolveIslandSsrDsd,
   scanIslands,
   scanPackageManifests,
   scanRoutes,
@@ -143,29 +142,45 @@ export function createOpenPlugin(
   const VIRTUAL_BUILD_TRIGGER_ID = 'virtual:open-build-trigger';
   const RESOLVED_BUILD_TRIGGER_ID = '\0' + VIRTUAL_BUILD_TRIGGER_ID;
 
+  function buildDescriptor(
+    routes: RouteEntry[],
+    islandTagNames: string[] = [],
+    packageManifests: OpenElementPackageManifest[] = [],
+    islandFiles: string[] = [],
+  ): EntryDescriptor {
+    return buildEntryDescriptor(routes, {
+      routesDir: resolvedOptions.routesDir,
+      islandsDir: resolvedOptions.islandsDir,
+      middleware: resolvedOptions.middleware,
+      islandTagNames,
+      islandFiles,
+      islandMeta: ctx.phase1.islandMeta,
+      packageManifests,
+      cemClassifications: ctx.phase1.cemClassifications,
+      headExtras: resolvedOptions.headExtras,
+      allowHeadExtrasScripts,
+      html: resolvedOptions.html,
+      upgradeStrategy: resolvedOptions.island?.upgradeStrategy || 'idle',
+      appShell: resolvedOptions.appShell,
+      layouts: resolvedOptions.layouts,
+    });
+  }
+
+  // alpha.17 B1: the entry descriptor is instantiated once per buildStart and
+  // shared between the emitted virtual entry code (renderEntry) and
+  // ctx.phase1.ssrAdmissionPlan. Previously the descriptor was built twice
+  // with divergent options (the plan saw CEM classifications, the emitted
+  // entry did not).
+  let entryDescriptor: EntryDescriptor | null = null;
+
   function generateEntry(
     routes: RouteEntry[],
     islandTagNames: string[] = [],
     packageManifests: OpenElementPackageManifest[] = [],
     islandFiles: string[] = [],
   ): string {
-    return generateHonoEntryCode(routes, {
-      routesDir: resolvedOptions.routesDir,
-      islandsDir: resolvedOptions.islandsDir,
-      componentsDir: resolvedOptions.componentsDir,
-      middleware: resolvedOptions.middleware,
-      islandTagNames,
-      islandFiles,
-      islandMeta: ctx.phase1.islandMeta,
-      packageManifests,
-      headExtras: resolvedOptions.headExtras,
-      allowHeadExtrasScripts,
-      html: resolvedOptions.html,
-      upgradeStrategy: resolvedOptions.island?.upgradeStrategy || 'idle',
-      clientOnlyTags: [],
-      appShell: resolvedOptions.appShell,
-      layouts: resolvedOptions.layouts,
-    });
+    entryDescriptor = buildDescriptor(routes, islandTagNames, packageManifests, islandFiles);
+    return renderEntry(entryDescriptor);
   }
 
   const corePlugin: Plugin = {
@@ -250,9 +265,11 @@ export function createOpenPlugin(
                   tagName: d.tagName,
                   modulePath: module,
                   isPackage: true,
-                  hydrate: openElement.hydrate as HydrationStrategy | undefined,
-                  ssr: openElement.hydrate === 'only' ? false : openElement.ssr,
-                  dsd: openElement.hydrate === 'only' ? false : openElement.dsd,
+                  hydrate: resolveIslandHydrate(
+                    openElement.hydrate,
+                    resolvedOptions.island?.upgradeStrategy,
+                  ),
+                  ...resolveIslandSsrDsd(openElement),
                 }];
               })
             );
@@ -281,16 +298,10 @@ export function createOpenPlugin(
           return;
         }
 
-        ctx.phase1.honoEntryCode = generateEntry(
-          routes,
-          ctx.phase1.islandTagNames,
-          ctx.phase1.packageManifests,
-          ctx.phase1.islandFiles,
-        );
-        const { buildEntryDescriptor } = await import('./internal/ssg/index.ts');
-
         // v0.18.0: CEM auto-detection - scan node_modules for custom-elements.json
-        // without importing or executing any package code.
+        // without importing or executing any package code. Runs BEFORE the entry
+        // descriptor is built so the emitted entry and the SSR admission plan
+        // share one descriptor instantiation (alpha.17 B1).
         try {
           const nodeModulesDir = join(process.cwd(), 'node_modules');
           ctx.phase1.cemClassifications = await detectAndClassifyCemPackages(nodeModulesDir);
@@ -307,18 +318,17 @@ export function createOpenPlugin(
           ctx.phase1.cemClassifications = [];
         }
 
-        ctx.phase1.ssrAdmissionPlan = buildEntryDescriptor(routes, {
-          routesDir: resolvedOptions.routesDir,
-          islandsDir: resolvedOptions.islandsDir,
-          islandTagNames: ctx.phase1.islandTagNames,
-          islandFiles: ctx.phase1.islandFiles,
-          islandMeta: ctx.phase1.islandMeta,
-          packageManifests: ctx.phase1.packageManifests,
-          cemClassifications: ctx.phase1.cemClassifications,
-          clientOnlyTags: [],
-          appShell: resolvedOptions.appShell,
-          layouts: resolvedOptions.layouts,
-        }).ssrAdmissionPlan;
+        // Single descriptor instantiation: the emitted entry code and the
+        // admission plan come from the same object.
+        ctx.phase1.honoEntryCode = generateEntry(
+          routes,
+          ctx.phase1.islandTagNames,
+          ctx.phase1.packageManifests,
+          ctx.phase1.islandFiles,
+        );
+        if (entryDescriptor) {
+          ctx.phase1.ssrAdmissionPlan = entryDescriptor.ssrAdmissionPlan;
+        }
         const pageCount = routes.filter(
           (r) => r.type === 'page' && !r.special,
         ).length;
@@ -354,10 +364,11 @@ export function createOpenPlugin(
         return 'export default null;';
       }
       if (id === RESOLVED_ENTRY_ID) {
-        // Always regenerate to pick up late-settled ctx fields (e.g., blogOptions
-        // from openContent() buildStart() which runs after open:core buildStart()).
-        // In dev mode, load() is called lazily by the SSR runner, so all buildStart()
-        // hooks have completed by this point.
+        // Reuse the descriptor built in buildStart(): the emitted entry code
+        // and ctx.phase1.ssrAdmissionPlan must come from one instantiation.
+        // The descriptor does not depend on late-settled plugin data, so
+        // regeneration is only a fallback for the pre-buildStart placeholder.
+        if (entryDescriptor) return renderEntry(entryDescriptor);
         return generateEntry(
           ctx.phase1.cachedRoutes || [],
           ctx.phase1.islandTagNames,

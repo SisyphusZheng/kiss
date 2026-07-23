@@ -8,7 +8,7 @@
 import { join, posix } from 'node:path';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '../protocol/framework.ts';
-import { formatJson } from '@openelement/element';
+import { formatJson } from '@openelement/element/build-utils';
 import { isValidTagName } from '@openelement/element';
 import { stableHash } from './ssg-helpers.ts';
 

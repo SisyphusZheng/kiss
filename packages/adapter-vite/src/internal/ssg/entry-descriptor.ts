@@ -22,8 +22,9 @@ import type {
 } from '../protocol/framework.ts';
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import type { SsrAdmissionDecision } from '../protocol/render.ts';
-import { normalizeSeparators } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 import { fileToTagName } from './route-scanner.ts';
+import { resolveIslandHydrate, resolveIslandSsrDsd } from './island-scanner.ts';
 
 function normalizeAppShellImport(importPath: string): string {
   if (importPath.startsWith('./')) return `/${importPath.slice(2)}`;
@@ -81,8 +82,6 @@ export function buildEntryDescriptor(
     allowHeadExtrasScripts?: boolean;
     html?: { lang?: string; title?: string };
     upgradeStrategy?: HydrationStrategy;
-    /** Additional client-only tag names from external registries (ADR-0035 A1) */
-    clientOnlyTags?: string[];
     appShell?: FrameworkOptions['appShell'];
     layouts?: FrameworkOptions['layouts'];
   } = {},
@@ -225,23 +224,26 @@ export function buildEntryDescriptor(
   // #460: islandsDir comes from user config and islandFiles from scanIslands;
   // both must be POSIX-normalized before they become module specifiers.
   const islandsSpecifierDir = normalizeSeparators(islandsDir);
-  const localIslands: IslandDecl[] = islandTagNames.map((tagName, i) => ({
-    tagName,
-    modulePath: islandFiles[i]
-      ? `/${islandsSpecifierDir}/${normalizeSeparators(islandFiles[i])}`
-      : `/${islandsSpecifierDir}/${tagName}.ts`,
-    source: 'local',
-    ssr: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.ssr,
-    dsd: islandMeta[tagName]?.hydrate === 'only' ? false : islandMeta[tagName]?.dsd,
-    hydrate: islandMeta[tagName]?.hydrate || options.upgradeStrategy || 'idle',
-    reason: islandMeta[tagName]?.reason,
-  }));
+  const localIslands: IslandDecl[] = islandTagNames.map((tagName, i) => {
+    const meta = islandMeta[tagName];
+    return {
+      tagName,
+      modulePath: islandFiles[i]
+        ? `/${islandsSpecifierDir}/${normalizeSeparators(islandFiles[i])}`
+        : `/${islandsSpecifierDir}/${tagName}.ts`,
+      source: 'local',
+      ...resolveIslandSsrDsd(meta ?? {}),
+      hydrate: resolveIslandHydrate(meta?.hydrate, options.upgradeStrategy),
+      reason: meta?.reason,
+    };
+  });
 
   const packageIslandDecls: IslandDecl[] = packageManifests.flatMap((pkg) =>
     pkg.declarations
       .filter((d) => d.openElement?.module)
       .map((d) => {
-        const modulePath = d.openElement?.module;
+        const openElement = d.openElement;
+        const modulePath = openElement?.module;
         if (!modulePath) {
           throw new Error(
             `Package manifest declaration "${d.tagName}" is missing openElement.module`,
@@ -252,21 +254,15 @@ export function buildEntryDescriptor(
           modulePath,
           isPackage: true,
           source: 'package',
-          hydrate:
-            (d.openElement?.hydrate || options.upgradeStrategy || 'idle') as IslandDecl['hydrate'],
-          ssr: d.openElement?.hydrate === 'only' ? false : d.openElement?.ssr,
-          dsd: d.openElement?.hydrate === 'only' ? false : d.openElement?.dsd,
+          hydrate: resolveIslandHydrate(openElement?.hydrate, options.upgradeStrategy),
+          ...resolveIslandSsrDsd(openElement ?? {}),
         };
       })
   );
 
   const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];
   const cemClassifications = options.cemClassifications || [];
-  const ssrAdmissionPlan = buildSsrAdmissionPlan(
-    islands,
-    cemClassifications,
-    options.clientOnlyTags || [],
-  );
+  const ssrAdmissionPlan = buildSsrAdmissionPlan(islands, cemClassifications);
 
   // --- Document ---
   const document: DocumentConfig = {
@@ -294,7 +290,6 @@ export function buildEntryDescriptor(
     islands,
     ssrAdmissionPlan,
     cemClassifications,
-    clientOnlyTags: options.clientOnlyTags,
     renderers,
     middlewareScopes,
     document,
@@ -307,7 +302,6 @@ export function buildEntryDescriptor(
 export function buildSsrAdmissionPlan(
   islands: IslandDecl[],
   cemClassifications: CompatibilityClassification[] = [],
-  clientOnlyTags: string[] = [],
 ): SsrAdmissionPlan {
   const renderableTags: string[] = [];
   const mergedClientOnlyTags: string[] = [];
@@ -408,22 +402,6 @@ export function buildSsrAdmissionPlan(
       renderPath,
       reason,
     });
-  }
-
-  for (const tag of clientOnlyTags) {
-    if (!seen.has(tag) && !admittedTags.has(tag)) {
-      mergedClientOnlyTags.push(tag);
-      admittedTags.add(tag);
-      seen.add(tag);
-      reasons[tag] = 'Registry client-only component (ADR-0035)';
-      decisions.push({
-        tagName: tag,
-        modulePath: '',
-        source: 'nested',
-        renderPath: 'client-only',
-        reason: 'Registry client-only component (ADR-0035)',
-      });
-    }
   }
 
   return {
