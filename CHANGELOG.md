@@ -12,7 +12,24 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
-## 0.41.0-alpha.13 (unreleased)
+## 0.41.0-alpha.15
+
+- Modernizes the CI runtime (GitHub Actions Node 24 with reviewed immutable
+  SHAs) and makes external review advisory.
+- Enforces current-truth wording mechanically across governance documents and
+  the website.
+- Ships the #390 external-adopter pilot kit, cross-platform published-consumer
+  runs and a five-package public-interface snapshot for the freeze rehearsal.
+- Records the stable-readiness dossier; #390 and #37 remain open by design.
+
+## 0.41.0-alpha.14
+
+- Recovers the release line with an exact-version starter, verified published
+  consumers and honest two-stage release evidence.
+- Publishes all five packages under the `alpha` dist-tag with post-publish
+  Deno, Node ESM, Nitro and third-party Web Component smoke evidence.
+
+## 0.41.0-alpha.13 (publication failed; changes shipped in alpha.14)
 
 - Removes the alpha-only `defineLayout` alias; use `defineElement` with the same
   arguments for layout elements.

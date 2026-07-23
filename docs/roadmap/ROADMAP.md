@@ -5,9 +5,9 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Published package line: `v0.41.0-alpha.15`.\
-> Active execution target: `v0.41.0-alpha.15`.\
+> Active execution target: `v0.41.0-alpha.16`.\
 > Current implementation state: five-package convergence is published;
-> adoption qualification and interface-freeze rehearsal are active.\
+> an audit-driven correctness reset (ADR-0116) is active.\
 > Maturity stage: alpha; the abandoned beta naming is retired.
 
 ## Product direction
@@ -83,6 +83,7 @@ making the standard Custom Element contract span both layers. See the official
 | `0.41.0-alpha.11` | Audit remediation            | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                           |
 | `0.41.0-alpha.14` | Release recovery             | Exact-version starter, published consumers and honest two-stage evidence                                                                |
 | `0.41.0-alpha.15` | Adoption and interface proof | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                       |
+| `0.41.0-alpha.16` | Correctness reset            | ADR-0116 audit findings: hydration/props correctness, island chunk matching, npm `latest` policy, #460, drift clearance                 |
 | `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
 | `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
 | `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
@@ -109,16 +110,18 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.41.0-alpha.14` is the published package line. npm beta.1 through beta.3 are
+`0.41.0-alpha.15` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.
 
-The repository-side five-package work is complete. Alpha.15 qualifies that
-product through external adopter pilot #390, cross-platform consumers and a
-public-interface freeze rehearsal. Stable `0.41.0` requires a separate approved
-plan after those efforts uncover no further architecture, public-interface or
-adoption work.
+The repository-side five-package work is complete. Alpha.16 applies the
+2026-07-23 audit findings as a correctness reset (ADR-0116): hydration
+event-marker alignment, static-props attribute observation, island chunk
+matching, npm `latest` policy and the #460 Windows build fix land before the
+external adopter pilot #390 starts. Stable `0.41.0` requires a separate
+approved plan after those efforts uncover no further architecture,
+public-interface or adoption work.
 
 ## Historical record
 

@@ -49,9 +49,11 @@
 import { formatError } from './internal/core/errors.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import {
+  declareObservedAttributes,
   disposeStaticProps,
   handleStaticPropAttributeChange,
   initializeStaticProps,
+  resolveObservedAttributes,
   syncStaticPropsFromAttributes,
 } from './internal/core/prop.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
@@ -167,9 +169,29 @@ export class OpenElement extends _Base {
 
   /**
    * Attributes that trigger attributeChangedCallback.
-   * Subclasses override this to declare reactive attributes.
+   *
+   * v0.41.0-alpha.16 (defect B2): implemented as an accessor pair because
+   * browsers read `observedAttributes` exactly once, at
+   * `customElements.define()`. The getter unions the attribute names declared
+   * by a subclass's `static props` with any hand-written list, so components
+   * that only declare `static props` get attribute→signal synchronization
+   * without maintaining a parallel list.
+   *
+   * Declaration forms:
+   *   - `static props = {...}` only → getter supplies the prop attributes.
+   *   - `Ctor.observedAttributes = [...]` (assignment) → stored via the setter
+   *     and unioned with `static props` on read.
+   *   - `static override observedAttributes = [...]` (class field) → shadows
+   *     this accessor entirely (class fields use [[Define]] semantics); the
+   *     hand-written list is used verbatim, exactly as before this change.
    */
-  static observedAttributes?: string[];
+  static get observedAttributes(): string[] {
+    return resolveObservedAttributes(this);
+  }
+
+  static set observedAttributes(value: string[] | undefined) {
+    declareObservedAttributes(this, value);
+  }
 
   /**
    * Whether to delegate focus within the shadow root.

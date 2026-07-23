@@ -141,6 +141,7 @@ function wrapDsdOutput(params: {
   sourceStr: string;
   dsdOptions?: DsdOptions;
   lightDom?: RenderNode[];
+  hostEventAttrs?: string;
 }): string {
   const { tagName, props, content, styleCss, layer, sourceStr, dsdOptions, lightDom } = params;
   const publicProps = filterPublicDsdProps(props);
@@ -152,6 +153,7 @@ function wrapDsdOutput(params: {
     dsdHostNode({
       tag: tagName,
       attrs: publicProps,
+      eventAttrs: params.hostEventAttrs,
       ssrPropsAttr,
       source: sourceStr,
       templateAttrs: buildDsdTemplateAttrs(dsdOptions),
@@ -182,6 +184,15 @@ export interface RenderDsdOptions {
   nestingDepth?: number;
   hooks?: RenderHooks;
   lightDom?: RenderNode[];
+  /**
+   * Pre-serialized `data-eid` attribute for host-level event props.
+   *
+   * Function-valued props are stripped from host attributes by design, so the
+   * caller (renderToNode in render-ir) serializes the event marker itself and
+   * passes it here to keep SSR `data-eid` numbering aligned with hydration's
+   * collectEventBindings traversal. Internal use only; ignored when empty.
+   */
+  hostEventAttrs?: string;
 }
 
 export async function renderDsd(
@@ -391,6 +402,7 @@ export async function renderDsd(
     sourceStr,
     dsdOptions,
     lightDom: options.lightDom,
+    hostEventAttrs: options.hostEventAttrs,
   });
 
   const output: RenderOutput = {

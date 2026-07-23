@@ -186,7 +186,7 @@
           "publicDeclarations": []
         },
         "./cli/build-client": {
-          "sha256": "14e89ab366b2a2230c872baffb3519042fd1ac39cac15326906da537098a36ae",
+          "sha256": "53c2de58b712ed3dee2520df7d9ee6395de3c3665d2b10001dc915ea998a46a0",
           "publicDeclarations": []
         },
         "./cli/build-ssg": {

@@ -2,7 +2,7 @@
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import { formatError, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
-import { pathToTagName } from '@openelement/element';
+import { normalizeSeparators, pathToTagName } from '@openelement/element';
 import { join } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
@@ -96,7 +96,10 @@ export function readIslandConfig(source: string): {
 
 /**
  * Scan islands directory recursively for island files.
- * Returns paths relative to islandsDir (e.g., ['my-counter.ts', 'posts/index.ts']).
+ * Returns POSIX-separator paths relative to islandsDir (e.g.,
+ * ['my-counter.ts', 'posts/index.ts']). node:path join() emits backslashes on
+ * Windows, but these segments become module specifiers and tag names, so they
+ * are normalized here (#460); join() still reads them back fine on Windows.
  */
 export async function scanIslands(
   islandsDir: string,
@@ -126,7 +129,7 @@ export async function scanIslands(
       const subFiles = await scanIslands(fullPath, relativePath);
       files.push(...subFiles);
     } else if (/\.(ts|tsx|js|jsx)$/.test(entry)) {
-      files.push(relativePath);
+      files.push(normalizeSeparators(relativePath));
     }
   }
 

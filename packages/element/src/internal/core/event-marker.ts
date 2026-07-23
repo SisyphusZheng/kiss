@@ -10,7 +10,7 @@
  * @module ./event-marker.ts
  */
 
-import { DATA_EID } from '../protocol/hydration-markers.ts';
+import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
 
 const EVENT_PROP_RE = /^on[A-Z]/;
 const DASHED_EVENT_PROP_RE = /^on-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -66,4 +66,22 @@ export function serializeEventMarkers(
     }
   }
   return '';
+}
+
+/**
+ * Branch-state token for a `<Show>` vnode. `truthy` is the resolved value of
+ * the `when` prop at traversal time. Emitted as an HTML comment during SSR and
+ * recomputed from the cached VNode during hydration (see BRANCH_MARKER_PREFIX).
+ */
+export function showBranchMarker(truthy: boolean): string {
+  return `${BRANCH_MARKER_PREFIX}show:${truthy ? '1' : '0'}`;
+}
+
+/**
+ * Branch-state token for a `<For>` vnode. `itemCount` is the resolved item
+ * count at traversal time, or -1 when the `each` prop did not resolve to an
+ * array (mirrors the SSR fallback that renders an empty fragment).
+ */
+export function forBranchMarker(itemCount: number): string {
+  return `${BRANCH_MARKER_PREFIX}for:${itemCount}`;
 }

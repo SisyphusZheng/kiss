@@ -170,6 +170,137 @@ Deno.test(
   },
 );
 
+// Regression: Rolldown/Vite content hashes are base64url and may contain
+// `-`/`_` (real www/dist output: scroll-reveal-PciKqeu-.js,
+// open-tabs-CcG-LXBP.js, flexsearch.bundle.module.min-BKwbD_Kx.js).
+// The old filename regex ([A-Za-z0-9]+ hash, lazy tagName split) silently
+// dropped these chunks.
+
+Deno.test('buildIslandChunkMap matches base64url hashes with trailing dash via manifest name', async () => {
+  const tmp = makeTempDir();
+  try {
+    const viteDir = join(tmp, 'dist', 'client', '.vite');
+    mkdirSync(viteDir, { recursive: true });
+
+    // Mirrors the real www/dist/client/.vite/manifest.json shape.
+    const manifest = {
+      'app/islands/scroll-reveal.tsx': {
+        file: 'islands/scroll-reveal-PciKqeu-.js',
+        name: 'scroll-reveal',
+      },
+      '../packages/ui/src/open-tabs.tsx': {
+        file: 'islands/open-tabs-CcG-LXBP.js',
+        name: 'open-tabs',
+      },
+      // Shared (non-island) chunks living in islands/ — must not be
+      // matched and must not trigger the unmatched-chunk warning.
+      '_src-CT3H-DGJ.js': { file: 'islands/src-CT3H-DGJ.js', name: 'src' },
+      'flexsearch/dist/flexsearch.bundle.module.min.js': {
+        file: 'islands/flexsearch.bundle.module.min-BKwbD_Kx.js',
+        name: 'flexsearch.bundle.module.min',
+      },
+    };
+    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+
+    const origWarn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.join(' '));
+    };
+    let result: Record<string, string>;
+    try {
+      result = await buildIslandChunkMap(tmp, 'dist', ['scroll-reveal', 'open-tabs']);
+    } finally {
+      console.warn = origWarn;
+    }
+
+    assertEquals(
+      result['scroll-reveal'],
+      '/client/islands/scroll-reveal-PciKqeu-.js',
+    );
+    assertEquals(
+      result['open-tabs'],
+      '/client/islands/open-tabs-CcG-LXBP.js',
+    );
+    assertFalse('src' in result, 'Shared chunk must not be mapped as an island');
+    assertEquals(
+      warnings.filter((w) => w.includes('Unmatched island chunk')).length,
+      0,
+      'Shared chunks must not trigger the unmatched-chunk warning, got: ' + warnings.join(' | '),
+    );
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('buildIslandChunkMap falls back to filename matching when manifest has no name field', async () => {
+  const tmp = makeTempDir();
+  try {
+    const viteDir = join(tmp, 'dist', 'client', '.vite');
+    mkdirSync(viteDir, { recursive: true });
+
+    const manifest = {
+      // manualChunks naming: island-<tag>-<hash>.js, hash contains `-`/`_`.
+      'app/islands/scroll-reveal.ts': { file: 'islands/island-scroll-reveal-PciKqeu-.js' },
+      'app/islands/open-tabs.ts': { file: 'islands/island-open-tabs-CcG-LXBP.js' },
+      'app/islands/flex-search.ts': { file: 'islands/island-flex-search-BKwbD_Kx.js' },
+    };
+    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+
+    const result = await buildIslandChunkMap(
+      tmp,
+      'dist',
+      ['scroll-reveal', 'open-tabs', 'flex-search'],
+    );
+
+    assertEquals(result['scroll-reveal'], '/client/islands/island-scroll-reveal-PciKqeu-.js');
+    assertEquals(result['open-tabs'], '/client/islands/island-open-tabs-CcG-LXBP.js');
+    assertEquals(result['flex-search'], '/client/islands/island-flex-search-BKwbD_Kx.js');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+Deno.test('buildIslandChunkMap warns on unmatched island chunks instead of dropping silently', async () => {
+  const tmp = makeTempDir();
+  try {
+    const viteDir = join(tmp, 'dist', 'client', '.vite');
+    mkdirSync(viteDir, { recursive: true });
+
+    const manifest = {
+      'app/islands/ghost-widget.ts': {
+        file: 'islands/island-ghost-widget-AbCdEf12.js',
+        name: 'island-ghost-widget',
+      },
+    };
+    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+
+    const origWarn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.join(' '));
+    };
+    let result: Record<string, string>;
+    try {
+      result = await buildIslandChunkMap(tmp, 'dist', ['counter-island']);
+    } finally {
+      console.warn = origWarn;
+    }
+
+    assertEquals(Object.keys(result).length, 0);
+    assertExists(
+      warnings.find((w) => w.includes('Unmatched island chunk') && w.includes('ghost-widget')),
+      'Should warn about the unmatched island chunk, got: ' + warnings.join(' | '),
+    );
+    assertExists(
+      warnings.find((w) => w.includes('No client chunk found') && w.includes('counter-island')),
+      'Should warn about the island left without a chunk, got: ' + warnings.join(' | '),
+    );
+  } finally {
+    cleanup(tmp);
+  }
+});
+
 // ─── injectClientScript ──────────────────────────────────────
 
 Deno.test('injectClientScript adds script tag to HTML files', () => {

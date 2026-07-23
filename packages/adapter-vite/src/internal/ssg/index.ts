@@ -121,3 +121,5 @@ export type {
 } from './island-manifest.ts';
 
 export { generateClientEntry, validateClientIslandEntry } from './entry-generators.ts';
+
+export { fsPathToModuleSpecifier } from './module-specifier.ts';

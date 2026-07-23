@@ -18,6 +18,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import { generateClientEntry } from '../internal/ssg/index.ts';
+import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
@@ -175,12 +176,17 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
   const islandEntries: ClientIslandEntry[] = [
     ...localIslands.map((tagName: string, i: number) => ({
       tagName,
-      modulePath: resolve(
+      // #460: resolve() emits drive-letter backslash paths on Windows; convert
+      // to a Vite-resolvable specifier (root-relative or /@fs/).
+      modulePath: fsPathToModuleSpecifier(
+        resolve(
+          root,
+          localIslandFiles[i]
+            ? `${islandsDir}/${localIslandFiles[i]}`
+            : `${islandsDir}/${tagName}.ts`,
+        ),
         root,
-        localIslandFiles[i]
-          ? `${islandsDir}/${localIslandFiles[i]}`
-          : `${islandsDir}/${tagName}.ts`,
-      ).replace(/\\/g, '/'),
+      ),
       isPackage: false,
       strategy: ctx.phase1.islandMeta[tagName]?.hydrate || ctx.phase3.upgradeStrategy || 'idle',
       ssr: ctx.phase1.islandMeta[tagName]?.hydrate === 'only'
@@ -253,7 +259,10 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
               return 'preact';
             }
             if (id.includes(`/${islandsDir}/`)) {
-              const match = id.match(/\/([^/]+)\.(ts|js)$/);
+              // Extensions mirror resolve.extensions below and scanIslands
+              // (ts/tsx/js/jsx). Previously missing tsx/jsx meant .tsx
+              // islands skipped manualChunks and lost the `island-` prefix.
+              const match = id.match(/\/([^/]+)\.(ts|tsx|js|jsx)$/);
               if (match) return `island-${match[1]}`;
             }
             for (const island of packageIslandDecls) {

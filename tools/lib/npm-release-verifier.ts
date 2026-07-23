@@ -86,6 +86,18 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
       options.version,
       runtime,
     );
-    options.log?.(`${packageName}@${options.version}: ${tag} dist-tag verified`);
+    // latest dist-tag policy (alpha line): prerelease publishes also move
+    // `latest` (see tools/publish-npm.ts), so `latest` must equal the
+    // just-published version — it must never lag the active release line.
+    // Chosen invariant: dist-tags.latest === <published version> (exact match,
+    // not semver >=), so a stale `latest` fails verification immediately.
+    await verifyField(
+      `${packageName} dist-tags.latest`,
+      packageName,
+      'dist-tags.latest',
+      options.version,
+      runtime,
+    );
+    options.log?.(`${packageName}@${options.version}: ${tag} and latest dist-tags verified`);
   }
 }
