@@ -154,7 +154,10 @@ export const GATES: readonly GateDefinition[] = [
     name: 'signals:check-protocol-boundary',
     command: ['deno', 'task', 'signals:check-protocol-boundary'],
     tiers: ['ci', 'release'],
-    triggers: [/^packages\/core\//, /^packages\/protocol\//, /^packages\/signal\//],
+    triggers: [
+      /^packages\/element\/src\/internal\/(signal|protocol)\//,
+      /^tools\/check-signal-protocol-boundary\.ts$/,
+    ],
   },
   {
     name: 'type-safety:check',
@@ -166,7 +169,7 @@ export const GATES: readonly GateDefinition[] = [
     name: 'deno-api:check',
     command: ['deno', 'task', 'deno-api:check'],
     tiers: ['ci', 'release'],
-    triggers: [/^packages\/(core|element|ui|protocol|signal|router|app)\/src\//],
+    triggers: [/^packages\/(element|ui|app)\/src\//],
   },
   {
     name: 'text-integrity:check',
@@ -205,7 +208,6 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [
       /^packages\/adapter-vite\//,
       /^packages\/app\//,
-      /^packages\/ssg\//,
       /^tools\/nitro-proof\.ts$/,
       /^deno\.json$/,
     ],
@@ -217,7 +219,6 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [
       /^packages\/adapter-vite\//,
       /^packages\/app\//,
-      /^packages\/ssg\//,
       /^tools\/nitro-proof\.ts$/,
       /^deno\.json$/,
     ],
@@ -236,18 +237,15 @@ export const GATES: readonly GateDefinition[] = [
       /^packages\/create\//,
       /^packages\/app\//,
       /^packages\/adapter-vite\//,
-      /^packages\/content\//,
-      /^packages\/signal\//,
-      /^packages\/ssg\//,
       /^tools\/consumer-local\.ts$/,
       /^deno\.json$/,
     ],
   },
   {
-    name: 'consumer:core-smoke',
-    command: ['deno', 'task', 'consumer:core-smoke'],
+    name: 'consumer:element-smoke',
+    command: ['deno', 'task', 'consumer:element-smoke'],
     tiers: ['ci', 'release'],
-    triggers: [/^packages\/core\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
+    triggers: [/^packages\/element\//, /^tools\/consumer-smoke\.ts$/, /^deno\.json$/],
   },
   {
     name: 'third-party-wc:smoke',

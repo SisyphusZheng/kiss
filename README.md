@@ -51,11 +51,12 @@ external adoption. It is not presented as an already-achieved market claim.
 
 ## Current release state
 
-The five-package convergence is published as `0.41.0-alpha.14`. npm beta.1
+The five-package convergence is published as `0.41.0-alpha.15`. npm beta.1
 through beta.3 remain withdrawn partial artifacts and are not compatibility
 baselines. External adopter pilot #390 remains the primary repository-external
-condition before the project can make a stability commitment. Alpha.15 is the
-active adoption-qualification and interface-freeze rehearsal.
+condition before the project can make a stability commitment. Alpha.16 is the
+active audit-driven correctness reset (see
+[ADR-0116](./docs/adr/ADR-0116-audit-driven-alpha16-correctness-reset.md)).
 
 Stable `0.41.0` is released only when alpha releases need no more architecture,
 public-interface or adoption work. Request-time data, forms, sessions and cache

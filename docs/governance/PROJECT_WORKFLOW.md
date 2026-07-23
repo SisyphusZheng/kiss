@@ -12,8 +12,8 @@ complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
 Current execution anchor: published package line `v0.41.0-alpha.15`, completed
-implementation anchor `v0.41.0-alpha.14`, active qualification target
-`v0.41.0-alpha.15`, and alpha maturation under `docs/current/VERSION_PLAN.md`.
+implementation anchor `v0.41.0-alpha.15`, active correctness-reset target
+`v0.41.0-alpha.16`, and alpha maturation under `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
 second product. The abandoned beta naming is retired; alpha releases
@@ -34,15 +34,15 @@ code. The workflow is part of the product contract.
 
 ## Document Roles
 
-| Layer       | Location                | Purpose                                             |
-| ----------- | ----------------------- | --------------------------------------------------- |
-| Governance  | `docs/governance/`      | Mandatory process and release rules                 |
-| Status      | `docs/status/STATUS.md` | Current truth, active line, and release gate order  |
-| Roadmap     | `docs/roadmap/`         | Version sequence and product direction              |
-| ADR         | `docs/adr/`             | Architectural decisions and irreversible trade-offs |
-| VersionPlan | `docs/current/`         | Active version contract: goals, tasks, verification |
-| Changelog   | `docs/changelog/`       | User-visible changes after implementation is proven |
-| Release     | `docs/release/`         | Release note after local and remote gates are green |
+| Layer       | Location                   | Purpose                                             |
+| ----------- | -------------------------- | --------------------------------------------------- |
+| Governance  | `docs/governance/`         | Mandatory process and release rules                 |
+| Status      | `docs/status/STATUS.md`    | Current truth, active line, and release gate order  |
+| Roadmap     | `docs/roadmap/`            | Version sequence and product direction              |
+| ADR         | `docs/adr/`                | Architectural decisions and irreversible trade-offs |
+| VersionPlan | `docs/current/`            | Active version contract: goals, tasks, verification |
+| Changelog   | `CHANGELOG.md` (repo root) | User-visible changes after implementation is proven |
+| Release     | `docs/release/`            | Release note after local and remote gates are green |
 
 ## Active Version Plan
 
@@ -115,6 +115,12 @@ For v0.41.0 and later, npm package visibility and post-publish npm consumer
 smoke are release evidence, not telemetry. A version line is not closed until
 the status, roadmap, release checklist, release note, and public README files
 record the npm outcome truthfully.
+
+Dist-tag policy for the alpha line: every prerelease publish tags both its
+prerelease line (`alpha`/`beta`/`rc`) and `latest`, so `latest` never lags the
+active release line. `tools/verify-npm-release.ts` enforces this by asserting
+`dist-tags.latest` equals the just-published version; stable publishes keep the
+npm default of tagging `latest`.
 
 ## Automation Gates
 
