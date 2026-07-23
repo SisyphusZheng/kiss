@@ -12,6 +12,21 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0-alpha.16
+
+- Aligns SSR and hydration event markers for custom-element hosts and
+  `Show`/`For` branches; hydration validates marker counts and branch tokens
+  and falls back to client re-render on mismatch.
+- Merges static-props `observedAttributes` at class-definition time so
+  attribute-to-signal synchronization works in real browsers.
+- Matches island chunks via the client build manifest, fixes base64url hash
+  handling, names `.tsx`/`.jsx` island chunks, and normalizes Windows
+  drive-letter island paths (#460).
+- Enforces the npm `latest` dist-tag invariant for prereleases in the publish
+  tooling and release verifier.
+- Clears current-truth drift across governance documents and removes dead
+  gate triggers (ADR-0116 packages A and E).
+
 ## 0.41.0-alpha.15
 
 - Modernizes the CI runtime (GitHub Actions Node 24 with reviewed immutable
