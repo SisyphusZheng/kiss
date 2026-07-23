@@ -23,6 +23,17 @@ export const DATA_SIGNAL_RENDER = 'data-signal-render';
 /** Marker that identifies an element carrying serialized event bindings. */
 export const DATA_EID = 'data-eid';
 
+/**
+ * HTML comment prefix recording the SSR-evaluated branch state of `<Show>`/`<For>`.
+ *
+ * SSR emits one `<!--oe-branch:...-->` comment per Show/For vnode, ahead of the
+ * rendered branch content. Hydration replays the same traversal over the cached
+ * VNode and compares token sequences; a divergence means runtime signal values
+ * changed between SSR and hydration, so event-marker alignment can no longer be
+ * trusted and the scope must fall back to client-side rendering.
+ */
+export const BRANCH_MARKER_PREFIX = 'oe-branch:';
+
 /** All hydration marker attribute names. */
 export type HydrationMarkerAttr =
   | typeof DATA_SIGNAL

@@ -10,7 +10,9 @@ import { escapeAttr, escapeHtml } from './html-escape.ts';
 import {
   createEventMarkerContext,
   type EventMarkerContext,
+  forBranchMarker,
   serializeEventMarkers,
+  showBranchMarker,
 } from './event-marker.ts';
 import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
@@ -24,6 +26,7 @@ import { formatError } from './errors.ts';
 export type RenderNode =
   | { kind: 'text'; value: string }
   | { kind: 'trusted-html'; value: string }
+  | { kind: 'comment'; value: string }
   | { kind: 'fragment'; children: RenderNode[] }
   | {
     kind: 'element';
@@ -37,6 +40,7 @@ export type RenderNode =
     kind: 'dsd-host';
     tag: string;
     attrs: Record<string, unknown>;
+    eventAttrs?: string;
     ssrPropsAttr: string;
     source: string;
     templateAttrs: string;
@@ -65,6 +69,15 @@ export const VOID_ELEMENTS = new Set([
 
 export function textNode(value: unknown): RenderNode {
   return { kind: 'text', value: String(value) };
+}
+
+/**
+ * Internal branch-state comment (`<!--oe-branch:...-->`). Values are produced
+ * by showBranchMarker/forBranchMarker and contain only `[a-z0-9:-]`, so they
+ * are safe to serialize verbatim inside an HTML comment.
+ */
+export function branchCommentNode(value: string): RenderNode {
+  return { kind: 'comment', value };
 }
 
 export function trustedHtmlNode(value: unknown): RenderNode {
@@ -144,6 +157,8 @@ export function serializeRenderNode(node: RenderNode): string {
       return escapeHtml(node.value);
     case 'trusted-html':
       return node.value;
+    case 'comment':
+      return `<!--${node.value}-->`;
     case 'fragment':
       return node.children.map(serializeRenderNode).join('');
     case 'element': {
@@ -158,13 +173,14 @@ export function serializeRenderNode(node: RenderNode): string {
     }
     case 'dsd-host': {
       const attrs = serializeAttrs(node.tag, node.attrs);
+      const events = node.eventAttrs ?? '';
       if (node.layer === 'pure-island' || node.layer === 'light-dom') {
-        return `<${node.tag}${attrs}${node.ssrPropsAttr}${node.source}>${
+        return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}>${
           [...node.shadow, ...node.light].map(serializeRenderNode).join('')
         }</${node.tag}>`;
       }
       const style = node.styleCss ? `\n    <style>${node.styleCss}</style>` : '';
-      return `<${node.tag}${attrs}${node.ssrPropsAttr}${node.source}>
+      return `<${node.tag}${attrs}${events}${node.ssrPropsAttr}${node.source}>
   <template shadowrootmode="open"${node.templateAttrs}>${style}
     ${node.shadow.map(serializeRenderNode).join('')}
   </template>
@@ -207,17 +223,22 @@ export async function renderToNode(
   if (tag === SHOW_TAG || tag === 'show') {
     const whenVal = resolveSignalProp(props?.when);
     const target = whenVal ? children[0] : children[1];
-    return target ? await renderToNode(target, eventContext, nestingDepth) : fragmentNode([]);
+    // Record the branch taken so hydration can detect signal drift between SSR
+    // and hydration (a flipped branch shifts every subsequent data-eid).
+    const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
+    const rendered = target ? await renderToNode(target, eventContext, nestingDepth) : null;
+    return fragmentNode(rendered ? [branch, rendered] : [branch]);
   }
 
   // For
   if (tag === FOR_TAG || tag === 'for') {
     const items = resolveSignalProp(props?.each) as unknown[];
     const renderFn = children[0] as RenderFn;
+    const branch = branchCommentNode(forBranchMarker(Array.isArray(items) ? items.length : -1));
     if (!Array.isArray(items) || typeof renderFn !== 'function') {
-      return fragmentNode([]);
+      return fragmentNode([branch]);
     }
-    const parts: RenderNode[] = [];
+    const parts: RenderNode[] = [branch];
     for (let index = 0; index < items.length; index++) {
       parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
     }
@@ -258,11 +279,19 @@ export async function renderToNode(
     customElements.get(tagName)
   ) {
     try {
+      // Host-level event props on a registered custom element are dropped by
+      // serializeAttrs, so emit the data-eid marker explicitly and thread it
+      // onto the serialized host tag. Without this, hydration still counts an
+      // eid for the host and every following sibling binding shifts by one.
+      // Children are already rendered above, preserving the SSR/hydration
+      // children-first eid ordering.
+      const hostEventAttrs = serializeEventMarkers(props, eventContext);
       const dsdResult = await renderDsd(tagName, {
         componentClass: customElements.get(tagName) as CustomElementConstructor,
         props,
         lightDom: childNodes,
         nestingDepth: nestingDepth + 1,
+        hostEventAttrs,
       });
       return trustedHtmlNode(dsdResult.html);
     } catch (err) {

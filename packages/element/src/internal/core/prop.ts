@@ -71,7 +71,10 @@ export function initializeStaticProps(instance: _El): void {
     }
   }
 
-  registerStaticObservedAttributes(ctor, propsDef);
+  // NOTE: observedAttributes merging intentionally does NOT happen here.
+  // Browsers snapshot observedAttributes once at customElements.define(), so
+  // pushing names at connect time never registers them. The merge lives on the
+  // OpenElement base-class accessor instead (see resolveObservedAttributes).
 }
 
 export function disposeStaticProps(instance: _El): void {
@@ -179,18 +182,88 @@ export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
   return { type: String, default: '', reflect: false };
 }
 
+/**
+ * Merge static props attribute names into a constructor's observedAttributes.
+ *
+ * Copy-on-write: the input array is never mutated in place, so an array
+ * inherited from a base class prototype is not polluted. Kept for backward
+ * compatibility with the pre-accessor API; the primary merge path is the
+ * OpenElement base-class `observedAttributes` accessor, which browsers read
+ * once at customElements.define().
+ */
 export function registerStaticObservedAttributes(
   ctor: { props?: Record<string, unknown>; observedAttributes?: string[] },
   propsDef: Record<string, unknown>,
 ): void {
-  if (!ctor.observedAttributes) {
-    ctor.observedAttributes = [];
+  ctor.observedAttributes = mergePropsAttributeNames(ctor.observedAttributes, propsDef);
+}
+
+// ─── Define-time observedAttributes resolution (B2 fix) ─────────
+
+/**
+ * User-declared observedAttributes stored per constructor via the OpenElement
+ * base-class setter. Keyed by constructor so subclasses never share (or
+ * mutate) a parent class's array.
+ */
+const _declaredObservedAttributes = new WeakMap<object, readonly string[]>();
+
+/**
+ * Store a hand-written observedAttributes list for a constructor. Called by
+ * the OpenElement base-class static setter. The list is later unioned with
+ * the constructor's static props attribute names on read.
+ */
+export function declareObservedAttributes(
+  ctor: object,
+  value: readonly string[] | undefined,
+): void {
+  if (value === undefined) {
+    _declaredObservedAttributes.delete(ctor);
+  } else {
+    _declaredObservedAttributes.set(ctor, Object.freeze([...value]));
   }
+}
+
+/**
+ * Resolve the effective observedAttributes for a constructor: the union of
+ * every list stored via {@link declareObservedAttributes} along its prototype
+ * chain and the lowercased attribute names declared by its `static props`.
+ *
+ * Read by the OpenElement base-class static getter, which browsers invoke
+ * exactly once at customElements.define() — the only moment attribute
+ * observation can be registered.
+ */
+export function resolveObservedAttributes(ctor: unknown): string[] {
+  const merged: string[] = [];
+  let current: unknown = ctor;
+  while (typeof current === 'function') {
+    const declared = _declaredObservedAttributes.get(current);
+    if (declared) {
+      for (const name of declared) {
+        if (!merged.includes(name)) merged.push(name);
+      }
+    }
+    current = Object.getPrototypeOf(current);
+  }
+  const propsDef = (ctor as { props?: Record<string, unknown> }).props;
+  if (propsDef && typeof propsDef === 'object') {
+    return mergePropsAttributeNames(merged, propsDef);
+  }
+  return merged;
+}
+
+/** Union lowercased static props attribute names into a fresh array. */
+function mergePropsAttributeNames(
+  base: readonly string[] | undefined,
+  propsDef: Record<string, unknown>,
+): string[] {
+  const merged = base ? [...base] : [];
   for (const name of Object.keys(propsDef)) {
-    if (!ctor.observedAttributes.includes(name.toLowerCase())) {
-      ctor.observedAttributes.push(name.toLowerCase());
+    const attrName = name.toLowerCase();
+    if (!merged.includes(attrName)) {
+      merged.push(attrName);
     }
   }
+  return merged;
 }
 
 function createPropSignal(initial: unknown): PropSignal {

@@ -1,21 +1,29 @@
 /**
  * Marker-based event hydration for SSR VNode output.
  *
- * SSR emits deterministic `data-eid` markers. During DSD upgrade,
+ * SSR emits deterministic `data-eid` markers (plus `<!--oe-branch:...-->`
+ * branch-state comments for `<Show>`/`<For>`). During DSD upgrade,
  * DsdElement renders the same VNode tree in memory, collects event handlers in
  * the same traversal order, and binds them to matching DOM markers without
- * replacing the existing DSD DOM.
+ * replacing the existing DSD DOM. HydrationScope validates the marker count
+ * and branch-token sequence before binding; on any divergence it degrades the
+ * scope to a client-side re-render instead of mis-binding handlers.
  */
 
 import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, resolveSignalProp } from '../signal/index.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
-import { DATA_EID } from '../protocol/hydration-markers.ts';
+import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
 import { applyBindingDescriptor } from './binding-activation.ts';
 import { bindEvent } from './binding-descriptor.ts';
 import type { EventBindingDescriptor } from './binding-descriptor.ts';
-import { eventMarkerId, eventTypeFromProp } from './event-marker.ts';
+import {
+  eventMarkerId,
+  eventTypeFromProp,
+  forBranchMarker,
+  showBranchMarker,
+} from './event-marker.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { injectPropsSafe } from './security.ts';
@@ -27,7 +35,9 @@ export {
   createEventMarkerContext,
   eventMarkerId,
   eventTypeFromProp,
+  forBranchMarker,
   serializeEventMarkers,
+  showBranchMarker,
 } from './event-marker.ts';
 export type { EventMarkerContext } from './event-marker.ts';
 
@@ -40,7 +50,20 @@ export interface EventBindingRecord {
 /** Hydration-time event binding contract (mirrors BindingDescriptor). */
 export type EventBinding = EventBindingDescriptor;
 
-export function collectEventBindings(node: unknown): Map<string, EventBindingRecord[]> {
+/**
+ * Walk a VNode tree in the exact order the SSR renderer (renderToNode) uses and
+ * collect event bindings keyed by deterministic marker id (`e0`, `e1`, ...).
+ *
+ * When `branches` is provided, the resolved `<Show>`/`<For>` branch-state token
+ * is appended in traversal order. SSR serializes the same tokens as
+ * `<!--oe-branch:...-->` comments, so hydration can compare the two sequences
+ * and detect signal drift between SSR and hydration instead of silently
+ * mis-binding handlers (see HydrationScope.hydrate).
+ */
+export function collectEventBindings(
+  node: unknown,
+  branches?: string[],
+): Map<string, EventBindingRecord[]> {
   const bindings = new Map<string, EventBindingRecord[]>();
   let count = 0;
 
@@ -68,6 +91,7 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
 
     if (tag === SHOW_TAG || tag === 'show') {
       const whenVal = resolveSignalProp(props?.when);
+      branches?.push(showBranchMarker(Boolean(whenVal)));
       const target = whenVal ? children[0] : children[1];
       visit(target);
       return;
@@ -76,6 +100,7 @@ export function collectEventBindings(node: unknown): Map<string, EventBindingRec
     if (tag === FOR_TAG || tag === 'for') {
       const items = resolveSignalProp(props?.each) as unknown[];
       const renderFn = children[0] as RenderFn;
+      branches?.push(forBranchMarker(Array.isArray(items) ? items.length : -1));
       if (Array.isArray(items) && typeof renderFn === 'function') {
         items.forEach((item, i) => visit(renderFn(item, i)));
       }
@@ -159,4 +184,26 @@ export function hydrateEventMarkers(
       cleanupBag.push(dispose);
     }
   }
+}
+
+/**
+ * Collect SSR branch-state comments (`<!--oe-branch:...-->`) from a shadow root
+ * in document order. Compared against the tokens recomputed from the cached
+ * VNode by collectEventBindings; any divergence means signal values changed
+ * between SSR and hydration and marker-based binding must not proceed.
+ */
+export function collectDomBranchMarkers(root: Element | ShadowRoot): string[] {
+  const tokens: string[] = [];
+  const walk = (node: Element | ShadowRoot | ChildNode): void => {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 8) {
+        const data = (child as Comment).data;
+        if (data.startsWith(BRANCH_MARKER_PREFIX)) tokens.push(data);
+        continue;
+      }
+      walk(child);
+    }
+  };
+  walk(root);
+  return tokens;
 }
