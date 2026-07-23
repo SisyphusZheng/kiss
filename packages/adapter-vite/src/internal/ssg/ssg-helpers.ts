@@ -6,7 +6,7 @@
  */
 
 import type { IsrManifestEntry } from '../protocol/framework.ts';
-import { createIsrCacheKey } from '@openelement/element';
+import { createIsrCacheKey } from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
 
 // ─── Path / URL helpers ────────────────────────────────────────

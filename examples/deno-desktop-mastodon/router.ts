@@ -1,7 +1,9 @@
 /**
  * Shared router reference for SPA navigation.
  */
-import type { RouterInstance } from '@openelement/app';
+import type { SpaAppInstance } from '@openelement/app';
+
+type RouterInstance = NonNullable<SpaAppInstance['router']>;
 
 let _router: RouterInstance | null = null;
 

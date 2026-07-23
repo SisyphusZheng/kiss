@@ -46,6 +46,7 @@ const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
     files: {
       'jsx-runtime': 'jsx-runtime.ts',
       'jsx-dev-runtime': 'jsx-dev-runtime.ts',
+      'build-utils': 'build-utils.ts',
       'open-element-render': 'open-element-render.ts',
       'open-element-hydration': 'open-element-hydration.ts',
     },

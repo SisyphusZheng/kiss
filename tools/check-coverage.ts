@@ -2,9 +2,14 @@
 /** Run repository tests and enforce production-package LCOV thresholds. */
 
 import {
+  addUncoveredFiles,
+  countCoverableElements,
+  type CoverableCounts,
   type CoverageMetric,
+  enumerateCoverageFiles,
   isPackageSource,
   isToolsLibSource,
+  lcovFilePaths,
   parseLcov,
 } from './coverage-summary.ts';
 
@@ -63,7 +68,14 @@ function formatMetric(name: string, metric: CoverageMetric, threshold: number): 
 
 async function main(): Promise<void> {
   const lcov = await runCoverage();
+  const profiledFiles = lcovFilePaths(lcov);
 
+  // Threshold baseline: 2026-07-24 (v0.41.0-alpha.17 cycle), measured with the
+  // full-denominator logic below on a local `deno task test:coverage` run:
+  //   packages/*/src: lines 74.37%, branches 83.12%, functions 78.71%
+  //   tools/lib:      lines 57.03%, branches 77.97%, functions 67.44%
+  // Thresholds sit one point under the measured floor to absorb platform
+  // variance between local runs and CI. Raise them only after re-measuring.
   const scopes: Array<{
     label: string;
     include: (path: string) => boolean;
@@ -73,18 +85,18 @@ async function main(): Promise<void> {
       label: 'packages/*/src',
       include: isPackageSource,
       thresholds: {
-        lines: getNumberArg('--threshold', 69),
-        branches: getNumberArg('--branch-threshold', 81),
-        functions: getNumberArg('--function-threshold', 72),
+        lines: getNumberArg('--threshold', 73),
+        branches: getNumberArg('--branch-threshold', 82),
+        functions: getNumberArg('--function-threshold', 77),
       },
     },
     {
       label: 'tools/lib',
       include: isToolsLibSource,
       thresholds: {
-        lines: getNumberArg('--tools-threshold', 50),
-        branches: getNumberArg('--tools-branch-threshold', 50),
-        functions: getNumberArg('--tools-function-threshold', 50),
+        lines: getNumberArg('--tools-threshold', 56),
+        branches: getNumberArg('--tools-branch-threshold', 76),
+        functions: getNumberArg('--tools-function-threshold', 66),
       },
     },
   ];
@@ -92,7 +104,24 @@ async function main(): Promise<void> {
   const failures: string[] = [];
   for (const scope of scopes) {
     console.log(`\nCoverage scope: ${scope.label}`);
-    const summary = parseLcov(lcov, scope.include);
+    // Full denominator: every in-scope source file counts, even when no test
+    // loaded it (Deno only profiles imported modules). Unloaded files are
+    // folded in as fully uncovered via an AST estimate of their coverable
+    // elements.
+    const treeFiles = await enumerateCoverageFiles(Deno.cwd(), scope.include);
+    const uncovered: CoverableCounts[] = [];
+    const missing: string[] = [];
+    for (const path of treeFiles) {
+      if (profiledFiles.has(path)) continue;
+      missing.push(path);
+      uncovered.push(countCoverableElements(await Deno.readTextFile(path), path));
+    }
+    console.log(
+      `Denominator: ${treeFiles.length} source files ` +
+        `(${missing.length} never loaded by any test, counted at 0%).`,
+    );
+    for (const path of missing) console.log(`  not exercised: ${path}`);
+    const summary = addUncoveredFiles(parseLcov(lcov, scope.include), uncovered);
     for (const name of ['lines', 'branches', 'functions'] as const) {
       console.log(formatMetric(name, summary[name], scope.thresholds[name]));
       if (summary[name].percentage < scope.thresholds[name]) {

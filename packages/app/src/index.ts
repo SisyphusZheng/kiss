@@ -39,7 +39,6 @@ export type { ElementDefinition } from '@openelement/element';
 // SPA bootstrap
 export { defineApp } from './spa.ts';
 export type { SpaAppInstance, SpaAppOptions } from './spa.ts';
-export type { RouteConfig, RouterInstance, RouterMode } from './internal/router/client-router.ts';
 export { useActionData, useLoaderData } from './internal/router/data-context.ts';
 
 // OpenElement-owned application model

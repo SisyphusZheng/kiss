@@ -26,7 +26,7 @@ import type {
 import type { OpenElementPackageManifest } from '../internal/protocol/manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { ssgRender } from '../internal/ssg/index.ts';
-import { SsrRenderError } from '@openelement/element';
+import { SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
@@ -79,8 +79,6 @@ interface BuildSSGOptions {
    * Can be a boolean (true = auto-generate from routes) or explicit rules.
    */
   speculation?: boolean | import('../internal/protocol/ssg.ts').SpeculationRulesOptions;
-  /** ADR-0047: Skip Deno pre-resolution, use regex fallback for external deps. */
-  skipPreResolution?: boolean;
 }
 
 async function buildSSG(
@@ -117,7 +115,7 @@ async function buildSSG(
   const { scanRoutes, scanIslands, scanIslandMeta, fileToTagName } = await import(
     '../internal/ssg/index.ts'
   );
-  const { generateHonoEntryCode } = await import('../internal/ssg/index.ts');
+  const { buildEntryDescriptor, renderEntry } = await import('../internal/ssg/index.ts');
 
   const routes = options.routes ?? await scanRoutes(routesDir);
 
@@ -137,22 +135,11 @@ async function buildSSG(
   const ssgIslandMeta = Object.keys(islandMeta).length > 0
     ? islandMeta
     : await scanIslandMeta(islandsRoot, ssgIslandFiles);
-  const { buildEntryDescriptor } = await import('../internal/ssg/index.ts');
-
-  ctx.phase1.ssrAdmissionPlan = buildEntryDescriptor(routes, {
-    routesDir,
-    islandsDir,
-    ssg: true,
-    islandTagNames: ssgIslandTagNames,
-    islandFiles: ssgIslandFiles,
-    islandMeta: ssgIslandMeta,
-    packageManifests,
-    clientOnlyTags: [],
-    appShell,
-    layouts,
-  }).ssrAdmissionPlan;
-
-  const ssgEntryCode = generateSsrPolyfillBanner() + '\n' + generateHonoEntryCode(routes, {
+  // Single descriptor instantiation (alpha.17 B1): the SSR admission plan and
+  // the emitted SSG entry code come from the same descriptor. Previously the
+  // plan was built without middleware/html/upgradeStrategy and diverged from
+  // the descriptor used for rendering.
+  const ssgDescriptor = buildEntryDescriptor(routes, {
     routesDir,
     islandsDir,
     middleware: options.middleware,
@@ -165,10 +152,12 @@ async function buildSSG(
     allowHeadExtrasScripts: options.allowHeadExtrasScripts,
     html: options.html,
     upgradeStrategy: options.upgradeStrategy || 'idle',
-    clientOnlyTags: [],
     appShell,
     layouts,
   });
+  ctx.phase1.ssrAdmissionPlan = ssgDescriptor.ssrAdmissionPlan;
+
+  const ssgEntryCode = generateSsrPolyfillBanner() + '\n' + renderEntry(ssgDescriptor);
   // Deno import map resolution handles bare specifiers (e.g. @openelement/ui/open-callout)
   // via the createDenoImportMapPlugin added to the Phase 3 viteBuild plugins below.
 

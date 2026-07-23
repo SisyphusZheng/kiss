@@ -116,6 +116,85 @@ for (const required of ['5-package', 'v0.41 alpha', 'ADR-0113']) {
   }
 }
 
+// ─── Subpath inventory alignment (alpha.17 package B) ──────
+// The machine-readable package-surface-map block in PACKAGE_SURFACE.md must
+// exactly match each package's deno.json exports, and every supported
+// subpath must be visible in the prose outside the comment block.
+
+interface SurfaceMapEntry {
+  supported: string[];
+  internal: string[];
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function extractSurfaceMap(doc: string): Record<string, SurfaceMapEntry> | null {
+  const BEGIN = '<!-- package-surface-map';
+  const begin = doc.indexOf(BEGIN);
+  if (begin === -1) return null;
+  const end = doc.indexOf('-->', begin);
+  if (end === -1) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(doc.slice(begin + BEGIN.length, end).trim());
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  const map: Record<string, SurfaceMapEntry> = {};
+  for (const [name, entry] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!entry || typeof entry !== 'object') return null;
+    const { supported, internal } = entry as Record<string, unknown>;
+    if (!isStringArray(supported) || !isStringArray(internal)) return null;
+    map[name] = { supported, internal };
+  }
+  return map;
+}
+
+const surfaceMap = extractSurfaceMap(docs);
+if (!surfaceMap) {
+  failures.push(
+    'PACKAGE_SURFACE.md missing or invalid <!-- package-surface-map --> JSON block.',
+  );
+} else {
+  const mappedPackages = Object.keys(surfaceMap).sort();
+  if (JSON.stringify(mappedPackages) !== JSON.stringify(retainedPackages)) {
+    failures.push(
+      `package-surface-map packages mismatch. expected=${retainedPackages.join(', ')} actual=${
+        mappedPackages.join(', ')
+      }`,
+    );
+  }
+
+  // Prose with the machine-readable block removed: supported subpaths must be
+  // documented for humans, not only for the checker.
+  const prose = docs.replace(/<!-- package-surface-map[\s\S]*?-->/, '');
+
+  for (const pkg of packages) {
+    const entry = surfaceMap[pkg.name];
+    if (!entry) continue;
+    const actual = Object.keys(normalizeExports(pkg.exports)).sort();
+    const expected = [...entry.supported, ...entry.internal].sort();
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      failures.push(
+        `${pkg.name} exports drift from PACKAGE_SURFACE.md subpath inventory. expected=${
+          JSON.stringify(expected)
+        } actual=${JSON.stringify(actual)}`,
+      );
+    }
+    for (const subpath of entry.supported) {
+      if (subpath === '.') continue; // root is described as "root" in the table
+      if (!prose.includes(`\`${subpath}\``)) {
+        failures.push(
+          `${pkg.name} supported subpath "${subpath}" is not documented in PACKAGE_SURFACE.md prose.`,
+        );
+      }
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error('Package surface check failed:');
   for (const failure of failures) console.error(`- ${failure}`);

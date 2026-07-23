@@ -14,7 +14,7 @@
  * convention (`/@fs/C:/elsewhere/x.tsx`).
  */
 
-import { normalizeSeparators } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 
 const WINDOWS_DRIVE_PATH_RE = /^[A-Za-z]:\//;
 

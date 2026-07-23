@@ -35,7 +35,6 @@ export type {
   CspConfig,
   DocumentConfig,
   EntryDescriptor,
-  ExternalManifest,
   ImportDecl,
   IslandDecl,
   MiddlewareDecl,
@@ -77,19 +76,13 @@ export { cleanSsrArtifacts, postProcessClientIslandBuild } from './build-postpro
 export type { BuildContextView } from './build-postprocess.ts';
 
 export { generateSsrPolyfillBanner } from './ssr-polyfills.ts';
-export {
-  buildFallbackManifest,
-  completeExternalSpecifiers,
-  extractExternalSpecifiers,
-  resolveExternalManifest,
-  resolvePackageExports,
-  walkExports,
-} from './external-resolver.ts';
 
 export {
   detectAndClassifyCemPackages,
   fileToTagName,
   parseRouteFilePath,
+  resolveIslandHydrate,
+  resolveIslandSsrDsd,
   scanCemManifests,
   scanIslandMeta,
   scanIslands,

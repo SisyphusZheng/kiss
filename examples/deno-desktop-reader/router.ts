@@ -2,7 +2,9 @@
  * Shared router reference for SPA navigation.
  * Set by reader.tsx after mount, used by route components.
  */
-import type { RouterInstance } from '@openelement/app';
+import type { SpaAppInstance } from '@openelement/app';
+
+type RouterInstance = NonNullable<SpaAppInstance['router']>;
 
 let _router: RouterInstance | null = null;
 

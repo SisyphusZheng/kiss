@@ -1,4 +1,4 @@
-import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/element';
+import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/element/build-utils';
 import type { OpenElementRequestContext } from '@openelement/app/model';
 
 export interface NitroLikeRequestEvent<

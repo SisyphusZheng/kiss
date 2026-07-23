@@ -89,7 +89,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { wrapInDocument } from '@openelement/element';`);
   lines.push(`import { jsx } from '@openelement/element';`);
   lines.push(`import { createLogger } from '@openelement/element';`);
-  lines.push(`import { createRuntimeAdapter } from '@openelement/element';`);
+  lines.push(`import { createRuntimeAdapter } from '@openelement/element/build-utils';`);
   lines.push(
     `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';`,
   );
@@ -279,8 +279,6 @@ export interface HonoEntryOptions {
   allowHeadExtrasScripts?: boolean;
   html?: { lang?: string; title?: string };
   upgradeStrategy?: HydrationStrategy;
-  /** Additional client-only tag names from external registries (ADR-0035 A1) */
-  clientOnlyTags?: string[];
   appShell?: FrameworkOptions['appShell'];
   layouts?: FrameworkOptions['layouts'];
 }

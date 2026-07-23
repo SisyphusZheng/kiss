@@ -17,7 +17,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
-import { generateClientEntry } from '../internal/ssg/index.ts';
+import {
+  generateClientEntry,
+  resolveIslandHydrate,
+  resolveIslandSsrDsd,
+} from '../internal/ssg/index.ts';
 import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
@@ -174,37 +178,34 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
 
   // Generate client entry code
   const islandEntries: ClientIslandEntry[] = [
-    ...localIslands.map((tagName: string, i: number) => ({
-      tagName,
-      // #460: resolve() emits drive-letter backslash paths on Windows; convert
-      // to a Vite-resolvable specifier (root-relative or /@fs/).
-      modulePath: fsPathToModuleSpecifier(
-        resolve(
+    ...localIslands.map((tagName: string, i: number) => {
+      const meta = ctx.phase1.islandMeta[tagName];
+      return {
+        tagName,
+        // #460: resolve() emits drive-letter backslash paths on Windows; convert
+        // to a Vite-resolvable specifier (root-relative or /@fs/).
+        modulePath: fsPathToModuleSpecifier(
+          resolve(
+            root,
+            localIslandFiles[i]
+              ? `${islandsDir}/${localIslandFiles[i]}`
+              : `${islandsDir}/${tagName}.ts`,
+          ),
           root,
-          localIslandFiles[i]
-            ? `${islandsDir}/${localIslandFiles[i]}`
-            : `${islandsDir}/${tagName}.ts`,
         ),
-        root,
-      ),
-      isPackage: false,
-      strategy: ctx.phase1.islandMeta[tagName]?.hydrate || ctx.phase3.upgradeStrategy || 'idle',
-      ssr: ctx.phase1.islandMeta[tagName]?.hydrate === 'only'
-        ? false
-        : ctx.phase1.islandMeta[tagName]?.ssr,
-      dsd: ctx.phase1.islandMeta[tagName]?.hydrate === 'only'
-        ? false
-        : ctx.phase1.islandMeta[tagName]?.dsd,
-      reason: ctx.phase1.islandMeta[tagName]?.reason,
-    })),
+        isPackage: false,
+        strategy: resolveIslandHydrate(meta?.hydrate, ctx.phase3.upgradeStrategy),
+        ...resolveIslandSsrDsd(meta ?? {}),
+        reason: meta?.reason,
+      };
+    }),
     ...packageIslandDecls.map(
       (island) => ({
         tagName: island.tagName,
         modulePath: island.modulePath,
         isPackage: true,
-        strategy: island.hydrate || ctx.phase3.upgradeStrategy || 'idle',
-        ssr: island.hydrate === 'only' ? false : island.ssr,
-        dsd: island.hydrate === 'only' ? false : island.dsd,
+        strategy: resolveIslandHydrate(island.hydrate, ctx.phase3.upgradeStrategy),
+        ...resolveIslandSsrDsd(island),
         reason: island.reason,
       }),
     ),

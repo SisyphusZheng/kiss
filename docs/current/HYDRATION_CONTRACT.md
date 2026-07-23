@@ -1,16 +1,22 @@
 # Hydration Surface Contract
 
 The v0.41 alpha line exposes one supported component runtime:
-`@openelement/element`. Hydration internals are deliberately not public
-subpaths.
+`@openelement/element`. Hydration internals are not application-authoring
+surface: the implementation modules remain importable as internal subpaths
+(`@openelement/element/open-element-render` and
+`@openelement/element/open-element-hydration`) for build tooling and Deno
+type generation, but they carry no compatibility promise and application code
+must not import them. Build-time helpers for adapters live behind
+`@openelement/element/build-utils`.
 
 ## Supported imports
 
-| Use case                                          | Import                      |
-| ------------------------------------------------- | --------------------------- |
-| Components, JSX, signals, DSD and hydration       | `@openelement/element`      |
-| Pages, routes, loaders, actions and SPA bootstrap | `@openelement/app`          |
-| Vite, content, SSG and Nitro build integration    | `@openelement/adapter-vite` |
+| Use case                                          | Import                             |
+| ------------------------------------------------- | ---------------------------------- |
+| Components, JSX, signals, DSD and hydration       | `@openelement/element`             |
+| Build adapters (SSG, island transform, deploy)    | `@openelement/element/build-utils` |
+| Pages, routes, loaders, actions and SPA bootstrap | `@openelement/app`                 |
+| Vite, content, SSG and Nitro build integration    | `@openelement/adapter-vite`        |
 
 `OpenElement` detects a pre-existing Declarative Shadow DOM root and activates
 its markers in place. When no server-rendered root exists, the same authoring

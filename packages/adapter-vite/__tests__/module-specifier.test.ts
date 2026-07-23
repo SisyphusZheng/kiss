@@ -2,7 +2,7 @@ import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { fsPathToModuleSpecifier } from '../src/internal/ssg/module-specifier.ts';
 import { validateIslandModuleSpecifier } from '../src/internal/ssg/entry-generators.ts';
 import { scanIslands } from '../src/internal/ssg/island-scanner.ts';
-import { normalizeSeparators } from '@openelement/element';
+import { normalizeSeparators } from '@openelement/element/build-utils';
 
 // #460: published starter builds rejected Windows island paths. These tests
 // pin the path -> specifier conversion for both POSIX and Win32 input forms

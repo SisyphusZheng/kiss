@@ -5,6 +5,7 @@
     ".": "./src/index.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
+    "./build-utils": "./src/build-utils.ts",
     "./open-element-render": "./src/open-element-render.ts",
     "./open-element-hydration": "./src/open-element-hydration.ts"
   },
