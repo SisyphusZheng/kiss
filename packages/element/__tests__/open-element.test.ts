@@ -33,7 +33,12 @@ import type { Signal } from '@openelement/element';
 
 // ─── Minimal DOM harness for Deno test environment ─────────────────
 
-type TestNode = TestElement | TestTextNode | TestShadowRoot | TestDocumentFragment;
+type TestNode =
+  | TestElement
+  | TestTextNode
+  | TestCommentNode
+  | TestShadowRoot
+  | TestDocumentFragment;
 
 class TestEvent {
   type: string;
@@ -122,6 +127,13 @@ class TestNodeBase {
 
   get firstChild(): TestNode | null {
     return this.childNodes[0] ?? null;
+  }
+
+  get nextSibling(): TestNode | null {
+    if (!this.parentNode) return null;
+    const siblings = this.parentNode.childNodes;
+    const index = siblings.indexOf(this as unknown as TestNode);
+    return index === -1 ? null : siblings[index + 1] ?? null;
   }
 
   get lastChild(): TestNode | null {
@@ -235,6 +247,24 @@ class TestTextNode extends TestNodeBase {
   }
 }
 
+class TestCommentNode extends TestNodeBase {
+  nodeType = 8;
+  data: string;
+
+  constructor(data: string) {
+    super();
+    this.data = data;
+  }
+
+  get textContent(): string {
+    return this.data;
+  }
+
+  get innerHTML(): string {
+    return `<!--${this.data}-->`;
+  }
+}
+
 class TestDocumentFragment extends TestNodeBase {
   nodeType = 11;
 
@@ -337,17 +367,30 @@ class TestElement extends TestNodeBase {
   setAttribute(name: string, value: string): void {
     const old = this.#attributes.get(name) ?? null;
     this.#attributes.set(name, String(value));
-    const ctor = this.constructor as typeof HTMLElement & { observedAttributes?: string[] };
     const el = this as unknown as HTMLElement & {
       attributeChangedCallback?(n: string, o: string | null, v: string | null): void;
     };
     if (
-      ctor.observedAttributes?.includes(name) && typeof el.attributeChangedCallback === 'function'
+      this._observedAttributes()?.includes(name) &&
+      typeof el.attributeChangedCallback === 'function'
     ) {
       el.attributeChangedCallback(name, old, String(value));
     }
     // v0.41.0: Notify registered MutationObservers (for theme broadcast tests)
     _notifyMutationObservers(this, name);
+  }
+
+  /**
+   * Define-time snapshot of observedAttributes.
+   *
+   * Real browsers read `observedAttributes` exactly once, at
+   * `customElements.define()`; later mutations have no effect. The harness
+   * mirrors that semantics via `_defineTimeObservedAttributes` and only falls
+   * back to a live read for constructors that were never registered.
+   */
+  _observedAttributes(): string[] | undefined {
+    const ctor = this.constructor as typeof HTMLElement & { observedAttributes?: string[] };
+    return _defineTimeObservedAttributes.get(ctor) ?? ctor.observedAttributes;
   }
 
   hasAttribute(name: string): boolean {
@@ -357,12 +400,12 @@ class TestElement extends TestNodeBase {
   removeAttribute(name: string): void {
     const old = this.#attributes.get(name) ?? null;
     this.#attributes.delete(name);
-    const ctor = this.constructor as typeof HTMLElement & { observedAttributes?: string[] };
     const el = this as unknown as HTMLElement & {
       attributeChangedCallback?(n: string, o: string | null, v: string | null): void;
     };
     if (
-      ctor.observedAttributes?.includes(name) && typeof el.attributeChangedCallback === 'function'
+      this._observedAttributes()?.includes(name) &&
+      typeof el.attributeChangedCallback === 'function'
     ) {
       el.attributeChangedCallback(name, old, null);
     }
@@ -482,6 +525,10 @@ class TestDocument extends TestNodeBase {
     return new TestTextNode(text);
   }
 
+  createComment(data: string): TestCommentNode {
+    return new TestCommentNode(data);
+  }
+
   createDocumentFragment(): TestDocumentFragment {
     return new TestDocumentFragment();
   }
@@ -495,6 +542,12 @@ class TestDocument extends TestNodeBase {
   }
 }
 
+/**
+ * Define-time observedAttributes snapshots (see TestElement._observedAttributes).
+ * Keyed by constructor; populated by TestCustomElementRegistry.define().
+ */
+const _defineTimeObservedAttributes = new WeakMap<object, string[]>();
+
 class TestCustomElementRegistry {
   #defs = new Map<string, CustomElementConstructor>();
 
@@ -503,6 +556,9 @@ class TestCustomElementRegistry {
       throw new Error(`CustomElementRegistry already has "${name}" defined.`);
     }
     this.#defs.set(name, ctor);
+    // Browsers read observedAttributes exactly once here and never again.
+    const observed = (ctor as unknown as { observedAttributes?: string[] }).observedAttributes;
+    _defineTimeObservedAttributes.set(ctor, observed ? [...observed] : []);
     (ctor as unknown as { __localName?: string }).__localName = name;
   }
 
@@ -575,8 +631,9 @@ function parseHtmlFragment(html: string): TestNode[] {
     i = close + 1;
 
     if (tagContent.startsWith('!--')) {
-      const end = html.indexOf('-->', i);
-      i = end === -1 ? html.length : end + 3;
+      // Preserve comments (e.g. SSR oe-branch markers) instead of dropping them.
+      const data = tagContent.endsWith('--') ? tagContent.slice(3, -2) : tagContent.slice(3);
+      nodes.push(new TestCommentNode(data));
       continue;
     }
 
@@ -660,6 +717,8 @@ function parseElement(
     }
 
     if (nextTag.startsWith('!--')) {
+      const data = nextTag.endsWith('--') ? nextTag.slice(3, -2) : nextTag.slice(3);
+      el.appendChild(new TestCommentNode(data));
       const end = html.indexOf('-->', nextClose);
       i = end === -1 ? html.length : end + 3;
       continue;
@@ -822,6 +881,8 @@ const { OpenElement, ErrorBoundary } = await import('@openelement/element');
 const { jsx } = await import('@openelement/element/jsx-runtime');
 const { signal } = await import('@openelement/element');
 const { StyleSheet } = await import('@openelement/element');
+const { renderDsdTree } = await import('@openelement/element');
+const { Show } = await import('../src/internal/core/jsx-runtime.ts');
 
 // Deliberately evaluate this after installing the Deno harness. Evaluating it
 // at module load used to make every DOM lifecycle test silently return early.
@@ -1240,6 +1301,149 @@ Deno.test('OpenElement hydrates event markers in DSD shadow DOM', () => {
   assertEquals(clicked, true);
 });
 
+// ─── 8b. SSR/hydration event-marker alignment (defect B1) ────────
+
+Deno.test('DSD hydration binds events on registered custom element hosts in traversal order', async () => {
+  if (!hasDOM) return;
+
+  const cardTag = uniqueTag('card');
+  class CardElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'card' });
+    }
+  }
+  customElements.define(cardTag, CardElement);
+
+  const fired: string[] = [];
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        jsx('button', { onClick: () => fired.push('first'), children: 'first' }),
+        jsx(cardTag, { onClick: () => fired.push('host'), children: 'light' }),
+        jsx('button', { onClick: () => fired.push('last'), children: 'last' }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  // The CE host itself must carry the middle marker: children-first ordering
+  // gives first=e0, host=e1, last=e2.
+  assertStringIncludes(ssrHtml, `<${cardTag} data-eid="e1"`);
+
+  const tagName = uniqueTag('host-events');
+  class HostEventsElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, HostEventsElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+  const buttons = root.querySelectorAll('button');
+  const host = root.querySelector(cardTag);
+  assertEquals(buttons.length, 2);
+  assertExists(host);
+
+  buttons[0].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['first']);
+
+  // Pre-fix this fired the host handler: the uncounted SSR host shifted every
+  // following marker by one.
+  buttons[1].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['first', 'last']);
+
+  host.dispatchEvent(new Event('click'));
+  assertEquals(fired, ['first', 'last', 'host']);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('DSD hydration degrades to client render when a Show branch flips after SSR', async () => {
+  if (!hasDOM) return;
+
+  const when = signal(true);
+  const fired: string[] = [];
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        Show({
+          when,
+          children: [
+            jsx('button', { onClick: () => fired.push('yes'), children: 'yes' }),
+            jsx('span', { onClick: () => fired.push('no'), children: 'no' }),
+          ],
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  assertStringIncludes(ssrHtml, '<!--oe-branch:show:1-->');
+  assertStringIncludes(ssrHtml, '<button data-eid="e0">yes</button>');
+
+  // Signal drifts between SSR and hydration: the serialized branch no longer
+  // matches the branch the client vnode resolves to.
+  when.value = false;
+
+  const tagName = uniqueTag('show-flip');
+  class ShowFlipElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ShowFlipElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // The scope must not bind the 'no' handler onto the SSR 'yes' button; it
+  // degrades to a client-side render of the current branch instead.
+  assertEquals(root.querySelector('button'), null);
+  const span = root.querySelector('span');
+  assertExists(span);
+  span.dispatchEvent(new Event('click'));
+  assertEquals(fired, ['no']);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('DSD hydration degrades to client render when data-eid marker count diverges', async () => {
+  if (!hasDOM) return;
+
+  const fired: string[] = [];
+  const ssrHtml = await renderDsdTree(
+    jsx('div', {
+      children: [
+        jsx('button', { onClick: () => fired.push('one'), children: 'one' }),
+        jsx('button', { onClick: () => fired.push('two'), children: 'two' }),
+      ],
+    }),
+  );
+  assertStringIncludes(ssrHtml, 'data-eid="e1"');
+
+  const tagName = uniqueTag('eid-drift');
+  class EidDriftElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('div', {
+        children: [
+          jsx('button', { onClick: () => fired.push('one'), children: 'one' }),
+        ],
+      });
+    }
+  }
+  customElements.define(tagName, EidDriftElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // One binding vs two SSR markers: degrade re-renders from the client vnode.
+  const buttons = root.querySelectorAll('button');
+  assertEquals(buttons.length, 1);
+  buttons[0].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['one']);
+
+  document.body.removeChild(el);
+});
+
 // ─── 9. Props system (static props) ────────────────────────────────
 
 Deno.test('OpenElement static props initialize from attributes', () => {
@@ -1324,6 +1528,142 @@ Deno.test('OpenElement static props restore declared defaults when attributes ar
   const props = el as unknown as Record<string, { value: unknown }>;
   assertEquals(props.count.value, 7);
   assertEquals(props.label.value, 'ready');
+  document.body.removeChild(el);
+});
+
+// ─── 9b. Define-time observedAttributes merge (defect B2) ────────
+//
+// The harness registry snapshots observedAttributes once at define(), like a
+// real browser. The tests above ('react to attribute changes', 'restore
+// declared defaults') therefore only pass when static props attributes are
+// registered before define — the pre-fix runtime push happened at
+// connectedCallback and never reached the browser.
+
+Deno.test('OpenElement merges static props into observedAttributes read at define time', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props-define-time');
+  class DefineTimeElement extends OpenElement {
+    static props = {
+      count: Number,
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  assertEquals(DefineTimeElement.observedAttributes, ['count']);
+  customElements.define(tagName, DefineTimeElement);
+
+  const el = document.createElement(tagName) as DefineTimeElement;
+  document.body.appendChild(el);
+  el.setAttribute('count', '41');
+  const elProps = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(elProps.count.value, 41);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement unions assigned observedAttributes with static props attributes', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('static-props-union');
+  const changes: string[] = [];
+  class UnionElement extends OpenElement {
+    static props = {
+      count: Number,
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+
+    override attributeChangedCallback(
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ): void {
+      super.attributeChangedCallback(name, oldValue, newValue);
+      changes.push(name);
+    }
+  }
+  // Assignment form: stored by the base-class setter and unioned on read.
+  UnionElement.observedAttributes = ['manual'];
+  assertEquals(UnionElement.observedAttributes, ['manual', 'count']);
+  customElements.define(tagName, UnionElement);
+
+  const el = document.createElement(tagName) as UnionElement;
+  document.body.appendChild(el);
+
+  el.setAttribute('manual', 'x');
+  el.setAttribute('count', '5');
+  assertEquals(changes, ['manual', 'count']);
+  const elProps = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(elProps.count.value, 5);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement observedAttributes merge never mutates base or sibling classes', () => {
+  if (!hasDOM) return;
+
+  class ParentPropsElement extends OpenElement {
+    static props: Record<string, unknown> = { alpha: String };
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  class ChildPropsElement extends ParentPropsElement {
+    static override props: Record<string, unknown> = { beta: String };
+  }
+  class SiblingPropsElement extends ParentPropsElement {
+    static override props: Record<string, unknown> = { gamma: String };
+  }
+
+  customElements.define(uniqueTag('props-parent'), ParentPropsElement);
+  customElements.define(uniqueTag('props-child'), ChildPropsElement);
+  customElements.define(uniqueTag('props-sibling'), SiblingPropsElement);
+
+  assertEquals(ParentPropsElement.observedAttributes, ['alpha']);
+  assertEquals(ChildPropsElement.observedAttributes, ['beta']);
+  assertEquals(SiblingPropsElement.observedAttributes, ['gamma']);
+  assertEquals(OpenElement.observedAttributes, []);
+
+  // Reads return fresh arrays; mutating one does not poison later reads.
+  ParentPropsElement.observedAttributes.push('hacked');
+  assertEquals(ParentPropsElement.observedAttributes, ['alpha']);
+});
+
+Deno.test('OpenElement preserves hand-written class-field observedAttributes verbatim', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('manual-observed');
+  const changes: string[] = [];
+  class ManualObservedElement extends OpenElement {
+    static override observedAttributes = ['tone'];
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+
+    override attributeChangedCallback(
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ): void {
+      super.attributeChangedCallback(name, oldValue, newValue);
+      changes.push(name);
+    }
+  }
+  customElements.define(tagName, ManualObservedElement);
+  assertEquals(ManualObservedElement.observedAttributes, ['tone']);
+
+  const el = document.createElement(tagName) as ManualObservedElement;
+  document.body.appendChild(el);
+  el.setAttribute('tone', 'dark');
+  assertEquals(changes, ['tone']);
+
   document.body.removeChild(el);
 });
 

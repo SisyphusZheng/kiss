@@ -1,18 +1,20 @@
-# v0.41.0-alpha.15 — adoption qualification and stable-readiness plan
+# v0.41.0-alpha.16 — audit-driven correctness reset plan
 
-> Current source package line: `v0.41.0-alpha.14`\
-> Current npm registry line: `v0.41.0-alpha.14`\
-> Active release target: `v0.41.0-alpha.15`\
+> Current source package line: `v0.41.0-alpha.15`\
+> Current npm registry line: `v0.41.0-alpha.15`\
+> Active release target: `v0.41.0-alpha.16`\
 > Next stability candidate: `v0.41.0`\
 > Current maturity stage: alpha
 
 ## Objective
 
-Alpha.15 is the final planned qualification line before deciding whether the
-five-package `0.41.0` interface is ready to freeze. It does not add a new
-product area. It modernizes the CI runtime, removes remaining current-truth
-drift, exercises the published product with external adopters and records a
-mechanical public-interface baseline.
+Alpha.16 is an audit-driven correctness reset governed by
+[`ADR-0116`](../adr/ADR-0116-audit-driven-alpha16-correctness-reset.md). The
+2026-07-23 full-project audit found defects on the framework's core rendering
+correctness promises, test-credibility gaps that let them pass, and
+current-truth drift in governance documents. Alpha.16 fixes the P0
+correctness defects, clears the documented drift, and schedules the remaining
+audit findings as governed execution packages. It adds no new product area.
 
 ```text
 OpenElement = Web Components-native fullstack application framework
@@ -28,142 +30,171 @@ until external evidence justifies a stability commitment.
 
 ## Entry truth
 
-- `v0.41.0-alpha.14` is the current source and published npm package line.
-- All five npm `alpha` dist-tags resolve to alpha.14 and its published consumer
-  matrix is complete.
-- Alpha.14's immutable tag and two-stage evidence must not be rewritten.
-- The external adopter pilot #390 and stable gate #37 remain open.
-- Dependabot PRs #391–#395 are stale direct-to-main proposals and must be
-  superseded through the governed `feature -> dev -> main` flow.
+- `v0.41.0-alpha.15` is the current source and published npm package line.
+- All five npm `alpha` dist-tags resolve to alpha.15; the npm `latest`
+  dist-tag incorrectly resolves to alpha.6 and is corrected under package A.
+- Alpha.15's immutable tag and two-stage evidence must not be rewritten.
+- The external adopter pilot #390 and stable gate #37 remain open; the pilot
+  starts only after package A lands so adopters test corrected behavior.
+- Issue #460 (published starter rejects Windows island paths) is open and is
+  closed by package A.
 
-## Alpha.15 execution packages
+## Alpha.16 execution packages
 
-### A. CI runtime modernization
+### A. P0 correctness fixes (release-blocking)
 
-- Replace #391, #392, #394 and #395 with one coherent feature PR against
-  `dev`, updating checkout, upload-artifact, setup-node and dependency-review
-  to reviewed immutable SHAs.
-- Update adjacent version comments and make the workflow checker validate that
-  comments, action identities and pinned SHAs agree.
-- Resolve #393 explicitly: make OpenCode review advisory and skip Dependabot
-  actors, or remove the workflow if it cannot provide reliable value. External
-  review balance, permission or provider failures must not block AutoFlow.
-- Prove the Node 24 action runtime while retaining explicit Node 22 npm publish
-  execution.
-- Dispatch the nightly workflow and download both evidence artifacts; run the
-  release workflow through a no-publish dry-run.
+- Align SSR and hydration event-marker (`data-eid`) accounting so registered
+  custom-element hosts and `<Show>`/`<For>` runtime branches cannot
+  deterministically misalign handler binding; on any marker/binding count
+  mismatch, warn and fall back to client-side re-render instead of binding
+  handlers to the wrong nodes. Reproduction tests land before the fix.
+- Move static-props attribute observation to class-definition time:
+  `observedAttributes` must be complete before `customElements.define()` reads
+  it, inherited arrays must not be mutated in place, and a real-browser test
+  proves attribute-to-signal synchronization.
+- Fix island chunk matching in SSG post-processing so base64url hashes
+  (`-`/`_`) match, prefer the client build manifest over filename guessing,
+  and warn on unmatched island chunks instead of silently dropping them.
+- Establish and enforce an npm `latest` dist-tag policy for the alpha line in
+  the publish tooling, and correct the current `latest = alpha.6` drift.
+- Fix #460: normalize Windows drive-letter island module paths in
+  adapter-vite so the published starter builds on Windows, with path-logic
+  unit tests for POSIX and Win32 forms.
 
-### B. Current-truth enforcement
+### B. P1 test credibility
 
-- Align README, Chinese README, governance, roadmap, status, website and all
-  current contracts on alpha.14 as the published line and alpha.15 as the
-  active target.
-- Remove current-document claims that alpha.10, alpha.7 or a beta line is the
-  active implementation or maturity anchor.
-- Extend `docs:truth` so old active versions, old implementation anchors and
-  beta-current wording fail mechanically.
-- Preserve historical beta artifacts, failed alpha.13 publication evidence and
-  alpha.14 release evidence only in historical records.
+- Add a real-browser (Playwright) hydration suite for element's binding and
+  hydration layer alongside the DOM-shim unit tests; test-env fallback
+  branches in production code must either be covered or removed.
+- Add SSR error-path tests: a failing route render must produce defined 500
+  behavior, and the `errors`/`hydrationHints` diagnostics contract is either
+  wired to real collection or removed from the protocol.
+- Make the coverage denominator enumerate all source files, not only loaded
+  ones; re-baseline thresholds after the denominator fix.
+- Delete the skip-on-failure regex in `tools/check-critical-path-tests.ts` so
+  e2e suite failures cannot be reclassified as missing infrastructure.
+- Add a Firefox smoke project to CI so the DSD cross-browser claim has a
+  standing guard.
 
-### C. Adoption pilot infrastructure
+### C. P2 convergence and hygiene
 
-- Publish a repeatable #390 pilot kit containing environment capture, exact
-  starter commands, timing fields, failure taxonomy, consent/privacy guidance
-  and an anonymized result template.
-- Run the current exact-version npm starter on Linux, macOS and Windows across
-  supported Deno and Node consumer paths.
-- Provide one documented Node deployment and one Workers deployment path that
-  a non-maintainer can execute without private instructions.
-- Record actionable diagnostics for install, typecheck, build, preview and
-  deployment failures.
+- Converge island declaration construction (`hydrate === 'only' ? false :
+  meta?.ssr`) into one function; instantiate the entry descriptor once per
+  build; merge the duplicated SPA/SSG phase-2 blocks; share logic between
+  `renderRoute` and `renderRouteHandler`.
+- Remove dead code: `external-resolver.ts` (ADR-0047 implementation never
+  wired), the unwired `clientOnlyTags` parameter chain, dead build-context
+  fields, and existence-only assertions in tests; fix the display-only twin
+  of the island chunk regex in `build-manifest.ts`.
+- Add a mechanical gate asserting current-document version anchors equal
+  `tools/project-constants.ts`, extend drift scanning to `docs/`, README
+  files and the ADR index, and align the exports surface with
+  `PACKAGE_SURFACE.md`.
+- Slim the export surfaces: move adapter build-time utilities out of
+  element's root exports and stop exporting internal router types from app's
+  root; update the interface snapshot accordingly.
 
-### D. External adoption and interface freeze rehearsal
+### D. P3 strategic items
 
-- Three to five non-maintainers execute the pilot without private maintainer
-  guidance; at least one completes component authoring, SSR or SSG, an
-  interactive island and deployment.
-- Publish an anonymized pilot summary. Every P0/P1 finding becomes an issue;
-  P0 findings must be fixed and P1 findings fixed or explicitly block stable
-  readiness.
-- Snapshot public exports, TypeScript declarations, defaults, error shapes and
-  documented behavior for all five packages.
-- Establish compatibility tests for `defineElement`, `definePage`, `defineApp`
-  and `buildApp`, plus the documented package subpaths.
-- Any pilot-driven breaking change requires an ADR, migration note and explicit
-  alpha.15 acceptance evidence. No unproven abstraction or new package is
-  introduced.
+- Start the #390 external adopter pilot after package A lands; the pilot kit
+  from alpha.15 is reused unchanged.
+- Evaluate the governance toolchain (AutoFlow, evidence-driven release) as a
+  separable asset; record the outcome as a note, no new package.
+- Keep the v0.46 deadline for `@openelement/ui` requiring two non-site
+  consumers; no scope expansion.
 
-### E. Stable-readiness dossier
+### E. Current-truth drift clearance
 
-- Produce a `0.41.0` readiness report mapping every public interface to tests,
-  docs, packed artifacts and adopter evidence.
-- Decide the optional `@openelement/ui` commitment for `0.41.0`: explicitly
-  included, or retained as alpha-quality optional surface with documented
-  compatibility limits.
-- Record browser/runtime support, upgrade policy, error compatibility and
-  release rollback rules.
-- Keep #37 open unless every stable gate is genuinely satisfied; alpha.15 may
-  conclude that another alpha is necessary.
+- Align STATUS, both READMEs, ROADMAP, PROJECT_WORKFLOW, CHANGELOG and the
+  ADR index on alpha.15 as the published line and alpha.16 as the active
+  target; remove the stale `docs/changelog/` document-role row.
+- Remove dead gate triggers in `tools/autoflow/policy.ts` that point at
+  retired packages, and rename the `consumer:core-smoke` gate to match what
+  it actually smokes.
 
-### F. Alpha.15 release closure
+### F. Alpha.16 release closure
 
-- Run release-prepare only after A–E pass, synchronizing all five manifests,
-  Create CLI, starter mappings and current version anchors to
-  `0.41.0-alpha.15`.
+- Run release-prepare only after A and E pass, synchronizing all five
+  manifests, Create CLI, starter mappings and current version anchors to
+  `0.41.0-alpha.16`.
 - Pass AutoFlow, CodeQL, dependency review, Pages, all-browser E2E, Nitro,
   packaged consumers, artifacts and npm publish dry-run on `dev` and `main`.
-- Publish all five npm packages and the `alpha` dist-tag, then verify fresh
-  Deno, Node ESM, starter, Nitro Node/Workers, third-party Web Component and CDN
-  consumers.
-- Create an immutable `v0.41.0-alpha.15` tag, GitHub prerelease and completed
-  two-stage evidence record; finish with `origin/main` and `origin/dev` at the
-  same SHA.
+- Publish all five npm packages under the `alpha` dist-tag, then verify fresh
+  Deno, Node ESM, starter, Nitro Node/Workers, third-party Web Component and
+  CDN consumers, including the corrected `latest` policy.
+- Create an immutable `v0.41.0-alpha.16` tag, GitHub prerelease and completed
+  two-stage evidence record; finish with `origin/main` and `origin/dev` at
+  the same SHA.
 
 ## Pull request order
 
-1. Formal plan and current-truth baseline.
-2. CI runtime modernization and OpenCode disposition.
-3. Pilot kit, cross-platform consumers and deployment instructions.
-4. Pilot findings, interface corrections and public-contract snapshot.
-5. Stable-readiness dossier and alpha.15 release-prepare.
+1. ADR-0116, this plan, current-truth clearance and policy trigger cleanup.
+2. Event-marker alignment and static-props observation fixes with
+   reproduction tests.
+3. Island chunk matching fix.
+4. npm `latest` policy and #460 Windows path fix.
+5. P1/P2 implementation PRs as scheduled.
 6. `dev -> main` release PR and post-publish evidence finalization.
 
-Every implementation PR targets `dev`, identifies its plan package, and passes
-AutoFlow before merge. `dev` is merged to `main` only after the complete
-alpha.15 line is green.
+Every implementation PR targets `dev`, identifies its plan package, and
+passes AutoFlow before merge. `dev` is merged to `main` only after the
+complete alpha.16 line is green.
 
 ## Acceptance
 
-- No current public or governance document identifies alpha.10, alpha.7 or beta
-  as the active line.
-- Four supported GitHub Action upgrades are pinned, commented and exercised;
-  OpenCode is demonstrably advisory or removed.
-- Published consumers pass on Linux, macOS and Windows.
-- #390 remains open for real, publishable evidence from three to five
-  non-maintainers before any stable-release decision. It is intentionally not
-  represented as alpha.15 evidence.
-- The five-package interface snapshot and compatibility suite pass against
-  packed artifacts.
-- There are no unresolved alpha.15 P0 findings; every P1 is resolved or an
-  explicit release blocker.
+- Event-handler binding after hydration matches SSR intent for custom-element
+  hosts and signal-driven control flow, with reproduction tests and an
+  explicit CSR fallback on mismatch.
+- Static-props attribute synchronization works in a real browser, verified by
+  a Playwright test, not only by the DOM shim.
+- Island chunks with base64url hashes are matched and injected; unmatched
+  chunks produce a build warning.
+- npm `latest` and `alpha` dist-tags follow the documented policy, verified
+  by the release tooling; #460 is closed with path-form unit tests.
+- No current public or governance document identifies alpha.14 or earlier as
+  the published or active line; no gate trigger references a retired package.
+- The five-package interface snapshot is re-recorded after package A and
+  passes against packed artifacts.
 - Chromium, Firefox and WebKit pass the functional matrix.
 - Nitro Node and Workers pass through the supported `nitro-mount` seam.
-- npm, dist-tags, exact-version starter, tag, GitHub prerelease, docs and final
-  evidence all agree on `0.41.0-alpha.15`.
-- Alpha.14 evidence remains unchanged.
+- npm, dist-tags, exact-version starter, tag, GitHub prerelease, docs and
+  final evidence all agree on `0.41.0-alpha.16`.
+- Alpha.15 evidence remains unchanged.
 
 ## Non-goals
 
 - Do not add packages, publish JSR artifacts or claim broad fullstack parity.
 - Do not introduce speculative auth, database, session or cache products.
-- Do not promise stable `0.41.0` merely because alpha.15 publishes.
-- Do not fabricate, simulate or replace external adopter evidence with internal
-  CI runs.
+- Do not restructure the `OpenElement` base class or introduce a diffing
+  renderer; those are architecture-level changes outside this audit reset.
+- Do not promise stable `0.41.0` merely because alpha.16 publishes.
+- Do not fabricate, simulate or replace external adopter evidence with
+  internal CI runs.
 
-## Stable decision after alpha.15
+## Test matrix
 
-`0.41.0` may be prepared only when the adopter pilot finds no unresolved
-architecture-level break, the interface snapshot needs no further breaking
-change, the optional UI commitment is explicit, and #37's applicable `0.41.0`
-gates are evidenced. Otherwise the evidence selects a narrowly scoped next
-alpha instead of weakening the stable contract.
+- Package A reproduction tests fail before and pass after each fix; the
+  static-props attribute test runs in a real browser via Playwright.
+- `deno task test`, `arch:check`, `graph:check`, `package-surface:check`,
+  `type-safety:check` and `deno-api:check` pass for every PR.
+- `deno task test:e2e` (Chromium) passes for every PR; the all-browser matrix
+  runs before release closure.
+- Packaged consumer smoke, third-party Web Component smoke and Nitro proofs
+  run before release closure.
+
+## Release evidence requirements
+
+- Two-stage evidence under `docs/release/` for `v0.41.0-alpha.16`, including
+  npm version and dist-tag verification and post-publish consumer smoke.
+- The `latest` dist-tag correction is recorded as a release operation with
+  command output; historical tags are never rewritten.
+- #460 closure references the fixing PR and its path-form test evidence.
+
+## Stable decision after alpha.16
+
+`0.41.0` may be prepared only when package A fixes are proven in the
+published artifact, the re-recorded interface snapshot needs no further
+breaking change, the adopter pilot finds no unresolved architecture-level
+break, and #37's applicable `0.41.0` gates are evidenced. Otherwise the
+evidence selects a narrowly scoped next alpha instead of weakening the
+stable contract.

@@ -73,12 +73,12 @@ Deno.test('policy: ci tier includes architecture check for tool and hook changes
 });
 
 Deno.test('policy: release tier includes pack dry-run and nitro proofs', () => {
-  const gates = selectGates('release', ['packages/core/src/index.ts']).map((gate) => gate.name);
+  const gates = selectGates('release', ['packages/element/src/index.ts']).map((gate) => gate.name);
   assert(gates.includes('package-artifacts:check'));
   assert(gates.includes('pack:dry-run'));
   assert(gates.includes('nitro:proof:node'));
   assert(gates.includes('nitro:proof:workers'));
-  assert(gates.includes('consumer:core-smoke'));
+  assert(gates.includes('consumer:element-smoke'));
   assert(gates.includes('third-party-wc:smoke'));
 });
 

@@ -12,18 +12,27 @@
 
 import type { Signal } from '../protocol/signal.ts';
 import { applyBindingDescriptor } from './binding-activation.ts';
-import { collectEventBindings, hydrateEventMarkers } from './event-hydration.ts';
+import {
+  collectDomBranchMarkers,
+  collectEventBindings,
+  type EventBindingRecord,
+  hydrateEventMarkers,
+} from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.ts';
 import { isVNode } from './vnode.ts';
 import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.ts';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import {
+  DATA_EID,
   DATA_SIGNAL,
   DATA_SIGNAL_ATTR,
   DATA_SIGNAL_CLASS,
   DATA_SIGNAL_RENDER,
   parseSignalAttrSpec,
 } from '../protocol/hydration-markers.ts';
+import { createLogger } from './logger.ts';
+
+const scopeLog = createLogger('hydration');
 
 /** Options for creating a HydrationScope. */
 export interface HydrationScopeOptions {
@@ -99,6 +108,12 @@ function collectHydrationBindings(
  * Keeps effect disposers, event listener cleanups, and the cached VNode in one
  * place so they can be disposed as a unit. The scope does not depend on
  * OpenElement; callers provide the signal registry and optional render function.
+ *
+ * Event-marker hydration is guarded: when the marker count or the
+ * `<!--oe-branch:...-->` token sequence in the SSR DOM diverges from what the
+ * cached VNode implies (signal drift between SSR and hydration, or transformed
+ * SSR HTML), the scope warns and degrades to a client-side re-render of the
+ * shadow root rather than binding handlers to misaligned elements.
  */
 export class HydrationScope {
   #effectDisposers: Set<() => void> = new Set();
@@ -113,7 +128,7 @@ export class HydrationScope {
   constructor(options: HydrationScopeOptions = {}) {
     this.#signalRegistry = options.signalRegistry ?? new Map();
     this.#renderer = options.renderer ?? {
-      render: (node, lifecycle) => renderToDom(node, lifecycle),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, undefined, this.#signalRegistry),
     };
     this.#render = options.render;
   }
@@ -138,6 +153,45 @@ export class HydrationScope {
 
     const registry = signalRegistry ?? this.#signalRegistry;
     const lifecycle: BindingLifecycle = { disposers: this.#effectDisposers };
+
+    // Bind declarative event markers from the cached or freshly-rendered VNode.
+    const vnode = this.#resolveVNode();
+    if (isVNode(vnode)) {
+      const expectedBranches: string[] = [];
+      const eventBindings = collectEventBindings(vnode, expectedBranches);
+      if (!this.#matchesSsrDom(shadowRoot, eventBindings, expectedBranches)) {
+        // The SSR DOM cannot be trusted to line up with the VNode-derived
+        // bindings (eid count drift or Show/For branch flip between SSR and
+        // hydration). Binding anyway would attach handlers to the wrong
+        // elements, so degrade this scope to a client-side re-render.
+        scopeLog.warn(
+          'SSR/hydration mismatch (event markers or Show/For branch state); ' +
+            'falling back to client-side render for this shadow root.',
+        );
+        this.#renderClientSide(shadowRoot, vnode, lifecycle);
+        this.#scheduleLayoutFix(shadowRoot);
+        return;
+      }
+
+      this.#activateSignalBindings(shadowRoot, registry, lifecycle);
+      hydrateEventMarkers(
+        shadowRoot,
+        eventBindings,
+        this.#eventCleanups,
+        shadowRoot.host ?? undefined,
+      );
+    } else {
+      this.#activateSignalBindings(shadowRoot, registry, lifecycle);
+    }
+
+    this.#scheduleLayoutFix(shadowRoot);
+  }
+
+  #activateSignalBindings(
+    shadowRoot: ShadowRoot,
+    registry: Map<string, Signal<unknown>>,
+    lifecycle: BindingLifecycle,
+  ): void {
     const descriptors = collectHydrationBindings(
       shadowRoot,
       registry,
@@ -152,20 +206,45 @@ export class HydrationScope {
       }
       applyBindingDescriptor(desc, lifecycle, this.#renderer);
     }
+  }
 
-    // Bind declarative event markers from the cached or freshly-rendered VNode.
-    const vnode = this.#resolveVNode();
-    if (isVNode(vnode)) {
-      const eventBindings = collectEventBindings(vnode);
-      hydrateEventMarkers(
-        shadowRoot,
-        eventBindings,
-        this.#eventCleanups,
-        shadowRoot.host ?? undefined,
-      );
+  /**
+   * Determinism guard for marker-based event hydration.
+   *
+   * SSR (renderToNode) and hydration (collectEventBindings) assign `data-eid`
+   * values in the same traversal order, so the marker count in the serialized
+   * DOM must equal the binding count derived from the cached VNode, and the
+   * `<!--oe-branch:...-->` token sequence must match exactly. Any drift means
+   * runtime signal values changed between SSR and hydration (or the SSR HTML
+   * was transformed), in which case position-based binding would be wrong.
+   */
+  #matchesSsrDom(
+    shadowRoot: ShadowRoot,
+    eventBindings: Map<string, EventBindingRecord[]>,
+    expectedBranches: string[],
+  ): boolean {
+    const markerCount = shadowRoot.querySelectorAll(`[${DATA_EID}]`).length;
+    if (markerCount !== eventBindings.size) return false;
+
+    const domBranches = collectDomBranchMarkers(shadowRoot);
+    if (domBranches.length !== expectedBranches.length) return false;
+    return domBranches.every((token, index) => token === expectedBranches[index]);
+  }
+
+  /** Degrade to a full client-side render when SSR DOM alignment is broken. */
+  #renderClientSide(
+    shadowRoot: ShadowRoot,
+    vnode: unknown,
+    lifecycle: BindingLifecycle,
+  ): void {
+    while (shadowRoot.firstChild) {
+      shadowRoot.removeChild(shadowRoot.firstChild);
     }
+    shadowRoot.appendChild(this.#renderer.render(vnode, lifecycle));
+  }
 
-    // Chromium DSD layout fix: force reflow without DOM rebuild.
+  /** Chromium DSD layout fix: force reflow without DOM rebuild. */
+  #scheduleLayoutFix(shadowRoot: ShadowRoot): void {
     globalThis.requestAnimationFrame?.(() => {
       void (shadowRoot.host as HTMLElement | undefined)?.offsetHeight;
     });

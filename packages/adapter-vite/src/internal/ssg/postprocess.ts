@@ -22,6 +22,25 @@ export { buildSpeculationRulesJson } from './speculation-rules.ts';
 
 const log = createLogger('core');
 
+/** Hash suffix emitted by Rolldown/Vite content hashes: base64url — may contain `-`/`_`. */
+const ISLAND_CHUNK_SUFFIX_RE = /^[A-Za-z0-9_-]+\.js$/;
+
+/**
+ * Match an island chunk file against a known tagName without splitting off
+ * the content hash by position (hashes may contain `-`, so positional
+ * splits are ambiguous). Matches both manualChunks output
+ * (`island-<tag>-<hash>.js`) and Rolldown default chunk names
+ * (`<tag>-<hash>.js`).
+ */
+function matchIslandChunkFile(file: string, tagName: string): boolean {
+  for (const prefix of [`islands/island-${tagName}-`, `islands/${tagName}-`]) {
+    if (file.startsWith(prefix) && ISLAND_CHUNK_SUFFIX_RE.test(file.slice(prefix.length))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Shared directory walker
 
 /**
@@ -84,6 +103,12 @@ function insertBeforeBodyClose(html: string, content: string): string {
 /**
  * Scan client build output to build tagName -> chunk path mapping.
  * Reads Rollup manifest JSON (v0.3.0+ deterministic approach).
+ *
+ * Chunk identity comes from the manifest `name` field when present (exact,
+ * hash-agnostic). Filename matching is only a fallback for manifests
+ * without `name`: Rolldown/Vite content hashes are base64url and may
+ * contain `-`/`_`, so the hash is never split off by position — files are
+ * prefix-matched against each known tagName instead.
  */
 export async function buildIslandChunkMap(
   root: string,
@@ -104,18 +129,57 @@ export async function buildIslandChunkMap(
     const manifestRaw = await readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(manifestRaw);
 
-    for (const [_srcPath, entry] of Object.entries(manifest) as [string, { file?: string }][]) {
+    for (
+      const [_srcPath, entry] of Object.entries(manifest) as [
+        string,
+        { file?: string; name?: string },
+      ][]
+    ) {
       if (!entry.file) continue;
-      const chunkMatch = entry.file.match(/^islands\/island-(.+?)-[A-Za-z0-9]+\.js$/);
-      if (chunkMatch && islands.includes(chunkMatch[1])) {
-        islandChunkMap[chunkMatch[1]] = `${basePath}client/${entry.file}`;
-      }
-      if (entry.file === 'islands/client.js') {
+      const file = entry.file;
+
+      if (file === 'islands/client.js') {
         for (const tagName of islands) {
           if (!islandChunkMap[tagName]) {
             islandChunkMap[tagName] = `${basePath}client/islands/client.js`;
           }
         }
+        continue;
+      }
+
+      if (!file.startsWith('islands/') || !file.endsWith('.js')) continue;
+
+      // Primary: manifest chunk name (exact, hash-agnostic). manualChunks
+      // names island chunks `island-<tag>`; Rolldown default names them
+      // `<tag>` after the source file basename.
+      let tagName: string | undefined;
+      if (entry.name) {
+        const candidates = entry.name.startsWith('island-')
+          ? [entry.name.slice('island-'.length), entry.name]
+          : [entry.name];
+        tagName = candidates.find((candidate) => islands.includes(candidate));
+      }
+      // Fallback: filename prefix match (the hash may contain `-`/`_`).
+      if (!tagName) {
+        tagName = islands.find((island) => matchIslandChunkFile(file, island));
+      }
+
+      if (tagName) {
+        islandChunkMap[tagName] = `${basePath}client/${file}`;
+      } else if (entry.name?.startsWith('island-') || file.startsWith('islands/island-')) {
+        // Emitted as an island chunk (manualChunks `island-<tag>` naming) but
+        // no scanned island tag matched — previously dropped silently.
+        log.warn(
+          `Unmatched island chunk "${file}" does not correspond to any scanned island; skipping it.`,
+        );
+      }
+    }
+
+    // An island with neither a dedicated chunk nor the client.js fallback
+    // would silently never hydrate — surface that instead of dropping it.
+    for (const tagName of islands) {
+      if (!islandChunkMap[tagName]) {
+        log.warn(`No client chunk found for island "${tagName}" in the client manifest.`);
       }
     }
   } catch (e) {

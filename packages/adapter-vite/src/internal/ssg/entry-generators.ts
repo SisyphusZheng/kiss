@@ -13,6 +13,9 @@ import { isValidTagName } from '@openelement/element';
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
 const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
+// Vite `/@fs/` absolute-path convention; the optional drive-letter segment
+// (`C:/`) is how Windows absolute paths become valid specifiers (#460).
+const SAFE_FS_SPECIFIER_RE = /^\/@fs\/(?:[A-Za-z]:\/)?[A-Za-z0-9_./@-]+$/;
 const SAFE_BARE_SPECIFIER_RE =
   /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
 const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
@@ -64,6 +67,7 @@ export function validateIslandModuleSpecifier(modulePath: string): void {
   if (
     !SAFE_RELATIVE_SPECIFIER_RE.test(modulePath) &&
     !SAFE_ROOT_SPECIFIER_RE.test(modulePath) &&
+    !SAFE_FS_SPECIFIER_RE.test(modulePath) &&
     !SAFE_BARE_SPECIFIER_RE.test(modulePath)
   ) {
     throw new Error(`Invalid island modulePath: ${modulePath}`);
