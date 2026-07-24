@@ -39,7 +39,7 @@ and output path.
 | P1 test-credibility package                      | Completed                        |
 | P2 convergence and release-tooling package       | Completed                        |
 | External adopter pilot #390                      | Launched; pending human evidence |
-| Alpha.17 npm, tag, prerelease and final evidence | Pending                          |
+| Alpha.17 npm, tag, prerelease and final evidence | Completed                        |
 
 ## Current risks
 
