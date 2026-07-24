@@ -119,7 +119,6 @@ Deno.test('ssgRender - handles getStaticPaths failure gracefully', async () => {
         {
           html: '<html><body>test</body></html>',
           errors: [],
-          hydrationHints: [],
           componentCount: 0,
           renderTimeMs: 0,
         } as SsgPageOutput,
@@ -139,7 +138,6 @@ Deno.test('ssgRender - handles empty getStaticPaths gracefully', async () => {
         {
           html: '<html><body>test</body></html>',
           errors: [],
-          hydrationHints: [],
           componentCount: 0,
           renderTimeMs: 0,
         } as SsgPageOutput,

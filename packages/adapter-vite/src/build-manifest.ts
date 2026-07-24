@@ -123,7 +123,9 @@ export function scanClientBuild(
             sizeKB: formatSize(fileStat.size),
           };
         } else {
-          const isIslandChunk = /^island-(.+?)-[A-Za-z0-9]+\.js$/.test(file);
+          // Suffix charset matches postprocess.ts ISLAND_CHUNK_SUFFIX_RE:
+          // Rolldown/Vite content hashes are base64url and may contain `-`/`_`.
+          const isIslandChunk = /^island-(.+?)-[A-Za-z0-9_-]+\.js$/.test(file);
           if (isIslandChunk) {
             islands.push({
               name: file,

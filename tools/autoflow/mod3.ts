@@ -9,18 +9,24 @@ import {
 import {
   assertBranch,
   assertCleanWorktree,
+  closureFile,
   createPreparePlan,
   createPublishExistingPlan,
   createReleaseEvidence,
   createReleasePlan,
+  currentWorkflowRunUrl,
+  evidenceCurrentVersion,
   evidenceFile,
+  githubReleaseUrl,
   isCIEnv,
   nextPatchVersion,
+  type ReleaseClosureRecord,
   type ReleaseEvidence,
   releaseNoteFile,
   releaseTag,
   runCaptured,
   runReleaseStep,
+  writeReleaseClosure,
   writeReleaseEvidence,
   writeReleaseNote,
 } from './release.ts';
@@ -211,6 +217,68 @@ async function commitFinalReleaseEvidence(
   }
 }
 
+/**
+ * Generate the durable closure record (docs/release/<tag>-closure.json) plus
+ * the Durable closure section of the release note, and commit both. Without
+ * this the release:evidence:check gate on main turns red after every release.
+ */
+async function finalizeReleaseClosure(
+  evidence: ReleaseEvidence,
+  branch: string,
+): Promise<void> {
+  const tag = releaseTag(evidence.targetVersion);
+  const env = (name: string) => Deno.env.get(name);
+  const record: ReleaseClosureRecord = {
+    tagCommit: (await runCaptured(['git', 'rev-parse', tag])).trim(),
+    finalEvidenceCommit: (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim(),
+    // CI path: the workflow run executing this release. Local path: the main
+    // CI run verified by publish-existing (stored on the evidence). Last
+    // resort keeps the record honest instead of inventing a URL.
+    successfulReleaseRun: currentWorkflowRunUrl(env) ??
+      evidence.releaseRunUrl ??
+      `local release without a recorded CI run (${evidence.id})`,
+    releaseUrl: githubReleaseUrl(tag, env),
+  };
+  await writeReleaseClosure(evidence.targetVersion, record);
+  await runCaptured([
+    'git',
+    'add',
+    closureFile(evidence.targetVersion),
+    releaseNoteFile(evidence.targetVersion),
+  ]);
+  if (await hasStagedChanges()) {
+    await runCaptured(['git', 'commit', '-m', `docs(release): record ${tag} closure`]);
+    await runCaptured(['git', 'push', 'origin', branch]);
+  }
+}
+
+/**
+ * The GitHub release is created from the running snapshot of the note; sync
+ * the final note (status completed, Durable closure section) onto it. Editing
+ * is idempotent. gh absence, missing token, or a missing release degrades to
+ * a warning: the repository note remains the durable record.
+ */
+async function syncGitHubReleaseNotes(evidence: ReleaseEvidence): Promise<void> {
+  const tag = releaseTag(evidence.targetVersion);
+  try {
+    await runCaptured([
+      'gh',
+      'release',
+      'edit',
+      tag,
+      '--notes-file',
+      releaseNoteFile(evidence.targetVersion),
+    ]);
+    console.log(`GitHub release ${tag} notes updated from final evidence.`);
+  } catch (error) {
+    console.warn(
+      `[release] could not update GitHub release ${tag} notes ` +
+        `(${error instanceof Error ? error.message.split('\n')[0] : String(error)}); ` +
+        'the note committed to the repository is the durable record.',
+    );
+  }
+}
+
 async function persistReleaseEvidenceAfterStep(
   evidence: ReleaseEvidence,
   stepName: string,
@@ -237,7 +305,12 @@ async function executeReleasePlan(
   plan = createReleasePlan(targetVersion, approvalId),
   expectedBranch = isCIEnv() ? 'main' : 'dev',
 ): Promise<void> {
-  const evidence = createReleaseEvidence(kind, PACKAGE_VERSION, targetVersion, approvalId);
+  const evidence = createReleaseEvidence(
+    kind,
+    evidenceCurrentVersion(kind),
+    targetVersion,
+    approvalId,
+  );
   evidence.steps = plan.map((step) => ({
     name: step.name,
     command: step.command,
@@ -278,7 +351,11 @@ async function executeReleasePlan(
     // The original evidence commit is intentionally created before tagging.
     // Persist completion in a follow-up commit after tag/npm/GitHub success so
     // the repository's durable evidence cannot remain stuck at "running".
-    if (persistsEvidence) await commitFinalReleaseEvidence(evidence, expectedBranch);
+    if (persistsEvidence) {
+      await commitFinalReleaseEvidence(evidence, expectedBranch);
+      await finalizeReleaseClosure(evidence, expectedBranch);
+      await syncGitHubReleaseNotes(evidence);
+    }
   } catch (error) {
     evidence.status = 'failed';
     evidence.completedAt = new Date().toISOString();

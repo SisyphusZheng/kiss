@@ -1,6 +1,13 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
-import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from '../project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
+} from '../project-constants.ts';
 import { filterNonEvidenceDirty } from '../lib/git-cleanliness.ts';
+import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
+
+export type { ReleaseClosureRecord };
 
 export { isCI as isCIEnv };
 
@@ -24,7 +31,22 @@ export interface ReleaseEvidence {
   startedAt: string;
   completedAt?: string;
   approvalId?: string;
+  /**
+   * Successful CI run that gates this release. Set by the
+   * 'verify main CI success for HEAD' step on the local publish-existing
+   * path; CI releases use GITHUB_RUN_ID instead (see currentWorkflowRunUrl).
+   */
+  releaseRunUrl?: string;
   steps: ReleaseStepEvidence[];
+}
+
+/**
+ * The package line a release replaces. publish-existing runs after the bump
+ * is already merged, so PACKAGE_VERSION equals the target; the true previous
+ * line is the bump-maintained PREVIOUS_PACKAGE_VERSION.
+ */
+export function evidenceCurrentVersion(kind: ReleaseEvidence['kind']): string {
+  return kind === 'publish-existing' ? PREVIOUS_PACKAGE_VERSION : PACKAGE_VERSION;
 }
 
 export interface ReleaseCommandStep {
@@ -87,6 +109,60 @@ export function evidenceFile(version: string): string {
 
 export function releaseNoteFile(version: string): string {
   return `docs/release/${releaseTag(version)}.md`;
+}
+
+export function closureFile(version: string): string {
+  return `docs/release/${releaseTag(version)}-closure.json`;
+}
+
+export type EnvLookup = (name: string) => string | undefined;
+
+/** URL of the workflow run currently executing the release (CI path only). */
+export function currentWorkflowRunUrl(env: EnvLookup): string | undefined {
+  const server = env('GITHUB_SERVER_URL');
+  const repo = env('GITHUB_REPOSITORY');
+  const runId = env('GITHUB_RUN_ID');
+  if (!server || !repo || !runId) return undefined;
+  return `${server}/${repo}/actions/runs/${runId}`;
+}
+
+export function githubReleaseUrl(tag: string, env: EnvLookup): string {
+  const server = env('GITHUB_SERVER_URL') ?? 'https://github.com';
+  const repo = env('GITHUB_REPOSITORY') ?? 'open-element/openelement';
+  return `${server}/${repo}/releases/tag/${tag}`;
+}
+
+/** Durable closure section appended to the release note at finalize time. */
+export function renderClosureSection(record: ReleaseClosureRecord): string {
+  return [
+    '## Durable closure',
+    '',
+    `- Immutable tag commit: \`${record.tagCommit}\``,
+    `- Final completed evidence commit: \`${record.finalEvidenceCommit}\``,
+    `- Successful release run: ${record.successfulReleaseRun}`,
+    `- GitHub release: ${record.releaseUrl}`,
+    '',
+  ].join('\n');
+}
+
+const CLOSURE_SECTION_MARKER = '## Durable closure';
+
+/** Insert or replace the Durable closure section of a release note (idempotent). */
+export function mergeClosureSection(noteText: string, record: ReleaseClosureRecord): string {
+  const markerIndex = noteText.indexOf(CLOSURE_SECTION_MARKER);
+  const base = markerIndex === -1 ? noteText : noteText.slice(0, markerIndex);
+  return `${base.trimEnd()}\n\n${renderClosureSection(record)}`;
+}
+
+/** Write the closure record JSON and fold its section into the release note. */
+export async function writeReleaseClosure(
+  version: string,
+  record: ReleaseClosureRecord,
+): Promise<void> {
+  await Deno.writeTextFile(closureFile(version), `${JSON.stringify(record, null, 2)}\n`);
+  const notePath = releaseNoteFile(version);
+  const note = await Deno.readTextFile(notePath);
+  await Deno.writeTextFile(notePath, mergeClosureSection(note, record));
 }
 
 export function createReleaseEvidence(
@@ -376,7 +452,7 @@ async function verifyPublishedSourceVersion(targetVersion: string): Promise<void
   await assertCleanWorktree();
 }
 
-async function verifyMainCiSuccessForHead(): Promise<void> {
+async function verifyMainCiSuccessForHead(): Promise<string | undefined> {
   const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
   const raw = await runCaptured([
     'gh',
@@ -404,6 +480,7 @@ async function verifyMainCiSuccessForHead(): Promise<void> {
     throw new Error(`Refusing publish-existing: main CI is not successful for HEAD ${head}.`);
   }
   console.log(`Verified main CI for ${head}: ${run.url ?? 'success'}`);
+  return run.url;
 }
 
 const PUBLISH_STEP_NAMES = new Set([
@@ -430,7 +507,11 @@ export function createPublishExistingPlan(targetVersion: string): ReleaseCommand
     },
     {
       name: 'verify main CI success for HEAD',
-      run: () => verifyMainCiSuccessForHead(),
+      run: async (evidence) => {
+        // The verified run URL becomes the closure record's
+        // successfulReleaseRun on the local publish-existing path.
+        evidence.releaseRunUrl = await verifyMainCiSuccessForHead();
+      },
     },
     ...releaseSteps,
   ];
@@ -475,19 +556,40 @@ export async function assertBranch(expected: string): Promise<void> {
   }
 }
 
-export async function updateProjectConstants(version: string): Promise<void> {
-  const path = 'tools/project-constants.ts';
-  const text = await Deno.readTextFile(path);
+/**
+ * Apply a version bump to the project-constants source text. Returns
+ * `undefined` when the file is already at the target (idempotent re-run:
+ * PREVIOUS_PACKAGE_VERSION must keep recording the true previous line).
+ *
+ * ACTIVE_EXECUTION_VERSION is maintained mechanically: the active execution
+ * target is the version the active plan is delivering, so after bumping the
+ * package line to X it equals X. It only advances past X when a new version
+ * plan is written, which is a deliberate human act — setting it to the patch
+ * successor here left every post-bump document anchor failing the gates.
+ */
+export function bumpProjectConstantsText(text: string, version: string): string | undefined {
   const m = text.match(/PACKAGE_VERSION = '([^']+)'/u);
-  const previous = m ? m[1] : version;
+  const current = m ? m[1] : version;
+  if (current === version) return undefined;
   let updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
   // Preserve the previous line for historical diagnostics. Anchor replacement
   // uses the module-loaded PACKAGE_VERSION so it always matches the source.
   updated = updated.replace(
     /PREVIOUS_PACKAGE_VERSION = '[^']+'/u,
-    `PREVIOUS_PACKAGE_VERSION = '${previous}'`,
+    `PREVIOUS_PACKAGE_VERSION = '${current}'`,
   );
-  if (updated === text) {
+  updated = updated.replace(
+    /ACTIVE_EXECUTION_VERSION = '[^']+'/u,
+    `ACTIVE_EXECUTION_VERSION = '${releaseTag(version)}'`,
+  );
+  return updated;
+}
+
+export async function updateProjectConstants(version: string): Promise<void> {
+  const path = 'tools/project-constants.ts';
+  const text = await Deno.readTextFile(path);
+  const updated = bumpProjectConstantsText(text, version);
+  if (updated === undefined) {
     // Already at target version; keep reruns idempotent but make the no-op visible.
     // release can be re-run or dispatched after the bump is already merged.
     console.warn(`[release] ${path}: version anchor already equals ${version}; no change made.`);
@@ -537,6 +639,11 @@ export function buildVersionAnchorReplacements(
       'docs/status/STATUS.md',
       'Repository package line: `$PVT`',
       'Repository package line: `$TAG`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
     ],
     [
       'www/app/routes/roadmap.tsx',
@@ -590,7 +697,7 @@ export async function writeReleaseEvidence(evidence: ReleaseEvidence): Promise<v
   );
 }
 
-export async function writeReleaseNote(evidence: ReleaseEvidence): Promise<void> {
+export function renderReleaseNote(evidence: ReleaseEvidence): string {
   const lines = [
     `# ${releaseTag(evidence.targetVersion)}`,
     '',
@@ -610,7 +717,11 @@ export async function writeReleaseNote(evidence: ReleaseEvidence): Promise<void>
     ),
     '',
   ];
-  await Deno.writeTextFile(releaseNoteFile(evidence.targetVersion), lines.join('\n'));
+  return lines.join('\n');
+}
+
+export async function writeReleaseNote(evidence: ReleaseEvidence): Promise<void> {
+  await Deno.writeTextFile(releaseNoteFile(evidence.targetVersion), renderReleaseNote(evidence));
 }
 
 export async function runReleaseStep(

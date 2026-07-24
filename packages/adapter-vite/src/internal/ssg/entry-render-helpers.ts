@@ -44,6 +44,75 @@ export function jsStringLiteral(value: string): string {
   return quoteGeneratedJavaScriptStringLiteral(value);
 }
 
+/**
+ * Renderer scope matching, case-sensitive (URL paths are case-sensitive and
+ * Hono routes match case-sensitively). Used at codegen time by
+ * renderRouteHandler; the runtime __matchingRenderers function emitted by
+ * renderMatchingRenderersFn() must mirror these semantics exactly.
+ */
+export function rendererScopeMatches(routePath: string, scope: string): boolean {
+  if (scope === '/') return true;
+  return routePath === scope || routePath.startsWith(scope + '/');
+}
+
+/**
+ * Emit the runtime __matchingRenderers(routePath) function for the SSG
+ * renderRoute. Semantics mirror rendererScopeMatches() — keep them in sync.
+ */
+export function renderMatchingRenderersFn(lines: string[], renderers: RendererDecl[]): void {
+  lines.push('function __matchingRenderers(routePath) {');
+  lines.push('  const renderers = [];');
+  for (const renderer of renderers) {
+    if (renderer.scope === '/') {
+      lines.push(`  renderers.push(${renderer.varName}.default);`);
+    } else {
+      lines.push(
+        `  if (routePath === ${jsStringLiteral(renderer.scope)} || routePath.startsWith(${
+          jsStringLiteral(renderer.scope + '/')
+        })) renderers.push(${renderer.varName}.default);`,
+      );
+    }
+  }
+  lines.push('  return renderers;');
+  lines.push('}');
+}
+
+/** Props object passed to the page jsx() call (page GET, action POST and SSG renderRoute). */
+export function pagePropsExpr(options: {
+  paramsExpr: string;
+  dataExpr: string;
+  actionDataExpr: string;
+  requestExpr: string;
+  routeExpr: string;
+  metaExpr: string;
+}): string {
+  const { paramsExpr, dataExpr, actionDataExpr, requestExpr, routeExpr, metaExpr } = options;
+  return `{ ...${paramsExpr}, data: ${dataExpr}, __openElementActionData: ${actionDataExpr}, __openElementParams: ${paramsExpr}, __openElementRequest: ${requestExpr}, __openElementRoute: ${routeExpr}, __openElementMeta: ${metaExpr} }`;
+}
+
+/** wrapInDocument() options object shared by page handlers and the SSG renderRoute. */
+export function documentWrapOptionsLines(options: {
+  /** Expression yielding the page definition (head source), e.g. `__page`. */
+  pageExpr: string;
+  titleExpr: string;
+  langExpr: string;
+  headExtrasExpr: string;
+  allowHeadExtrasScripts: boolean;
+  /** Emit the per-request CSP nonce line (Hono handlers only). */
+  cspNonce?: boolean;
+}): string[] {
+  const lines = [
+    `title: ${options.titleExpr},`,
+    `lang: ${options.langExpr},`,
+    `meta: { description: ${options.pageExpr}.head?.description, tags: ${options.pageExpr}.head?.meta },`,
+    `headExtras: ${options.headExtrasExpr},`,
+    `dangerouslyHeadFragments: ${options.pageExpr}.head?.dangerouslyHeadFragments || [],`,
+    `allowHeadExtrasScripts: ${JSON.stringify(options.allowHeadExtrasScripts)},`,
+  ];
+  if (options.cspNonce) lines.push(`cspNonce: c.get('cspNonce'),`);
+  return lines;
+}
+
 export interface RouteHandlerDocConfig {
   title: string;
   lang: string;
@@ -64,10 +133,7 @@ export function renderRouteHandler(
   lines: string[],
   { method, route, renderers, docConfig, isSSG }: RenderRouteHandlerOptions,
 ): void {
-  const matchingRenderers = renderers.filter((r) => {
-    if (r.scope === '/') return true;
-    return route.path === r.scope || route.path.startsWith(r.scope + '/');
-  });
+  const matchingRenderers = renderers.filter((r) => rendererScopeMatches(route.path, r.scope));
 
   const pathLiteral = jsStringLiteral(route.path);
   const tagNameExpr = routeTagNameExpr(route.tagName);
@@ -110,14 +176,19 @@ export function renderRouteHandler(
     lines.push(
       `    const __actionData = typeof ${route.varName}.action === "function" ? await ${route.varName}.action(__actionCtx) : undefined`,
     );
-    lines.push(
-      `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: __actionData, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
-    );
-  } else {
-    lines.push(
-      `    let node = jsx(__tag, { ...__params, data: __data, __openElementActionData: undefined, __openElementParams: __params, __openElementRequest: c.req.raw, __openElementRoute: __routeContext, __openElementMeta: __routeMetaValue })`,
-    );
   }
+  lines.push(
+    `    let node = jsx(__tag, ${
+      pagePropsExpr({
+        paramsExpr: '__params',
+        dataExpr: '__data',
+        actionDataExpr: isAction ? '__actionData' : 'undefined',
+        requestExpr: 'c.req.raw',
+        routeExpr: '__routeContext',
+        metaExpr: '__routeMetaValue',
+      })
+    })`,
+  );
   lines.push('');
 
   if (matchingRenderers.length > 0) {
@@ -130,13 +201,18 @@ export function renderRouteHandler(
     `    const content = await __renderAppShell(node, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
   );
   lines.push(`    return c.html(wrapInDocument(content, {`);
-  lines.push(`      title: __page.head?.title || ${jsStringLiteral(docConfig.title)},`);
-  lines.push(`      lang: ${jsStringLiteral(docConfig.lang)},`);
-  lines.push(`      meta: { description: __page.head?.description, tags: __page.head?.meta },`);
-  lines.push(`      headExtras: ${headExtrasExpr},`);
-  lines.push(`      dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
-  lines.push(`      allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`);
-  lines.push(`      cspNonce: c.get('cspNonce'),`);
+  for (
+    const optionLine of documentWrapOptionsLines({
+      pageExpr: '__page',
+      titleExpr: `__page.head?.title || ${jsStringLiteral(docConfig.title)}`,
+      langExpr: jsStringLiteral(docConfig.lang),
+      headExtrasExpr,
+      allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
+      cspNonce: true,
+    })
+  ) {
+    lines.push(`      ${optionLine}`);
+  }
   lines.push(`    }))`);
 
   lines.push(`  } catch (err) {`);
@@ -167,17 +243,18 @@ export function renderRouteHandler(
       `        const errorContent = await __renderAppShell(errorNode, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
     );
     lines.push(`        return c.html(wrapInDocument(errorContent, {`);
-    lines.push(`          title: __page.head?.title || ${jsStringLiteral(docConfig.title)},`);
-    lines.push(`          lang: ${jsStringLiteral(docConfig.lang)},`);
-    lines.push(
-      `          meta: { description: __page.head?.description, tags: __page.head?.meta },`,
-    );
-    lines.push(`          headExtras: ${headExtrasExpr},`);
-    lines.push(`          dangerouslyHeadFragments: __page.head?.dangerouslyHeadFragments || [],`);
-    lines.push(
-      `          allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
-    );
-    lines.push(`          cspNonce: c.get('cspNonce'),`);
+    for (
+      const optionLine of documentWrapOptionsLines({
+        pageExpr: '__page',
+        titleExpr: `__page.head?.title || ${jsStringLiteral(docConfig.title)}`,
+        langExpr: jsStringLiteral(docConfig.lang),
+        headExtrasExpr,
+        allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
+        cspNonce: true,
+      })
+    ) {
+      lines.push(`          ${optionLine}`);
+    }
     lines.push(`        }), 500)`);
     lines.push(`      } catch (errorRenderFailure) {`);
     lines.push(

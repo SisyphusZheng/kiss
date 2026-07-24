@@ -94,9 +94,6 @@ export {
 // Protocol type re-exports
 export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';
 
-// External resolver types used by the adapter-vite build pipeline
-export type { ExternalManifest } from './internal/protocol/ssg.ts';
-
 // Head injection (public helpers)
 export { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from './head-injection.ts';
 export type { HeadExtrasResult } from './head-injection.ts';

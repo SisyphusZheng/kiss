@@ -69,12 +69,6 @@ export class Phase1Meta {
   /** SPA mode active (skips SSR entry generation + SSG rendering) */
   isSpa?: boolean;
 
-  /** Whether the SSR+client build has completed */
-  buildCompleted: boolean = false;
-
-  /** Vite resolved config (set in configResolved hook) */
-  resolvedConfig: ResolvedConfig | null = null;
-
   /** User-provided resolve.alias in its original format */
   userResolveAlias: Record<string, string> | Alias[] | null = null;
 }
@@ -143,12 +137,6 @@ export class Phase3Meta {
 
   /** Components directory */
   componentsDir: string = 'app/components';
-
-  /** ADR-0047: Pre-resolved external dependency manifest (auto-generated from deno info). */
-  externalManifest?: import('./internal/protocol/ssg.ts').ExternalManifest;
-
-  /** Skip Deno pre-resolution, use regex fallback. */
-  skipPreResolution?: boolean;
 }
 
 export class OpenElementBuildContext {
@@ -173,7 +161,6 @@ export class OpenElementBuildContext {
     headerNav: OpenElementHeaderNavLink[];
     sitemapOptions: Record<string, unknown> | null;
     i18nOptions: OpenElementI18nContextOptions | null;
-    [key: string]: unknown;
   } = {
     blogOptions: null,
     navSections: [],

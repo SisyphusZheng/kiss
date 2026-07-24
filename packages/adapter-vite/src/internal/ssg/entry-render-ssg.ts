@@ -7,7 +7,14 @@
  */
 
 import type { EntryDescriptor } from '../protocol/ssg.ts';
-import { jsStringLiteral, routeRevalidateExpr, routeTagNameExpr } from './entry-render-helpers.ts';
+import {
+  documentWrapOptionsLines,
+  jsStringLiteral,
+  pagePropsExpr,
+  renderMatchingRenderersFn,
+  routeRevalidateExpr,
+  routeTagNameExpr,
+} from './entry-render-helpers.ts';
 
 /**
  * Render the SSG-specific section of the entry code.
@@ -80,34 +87,20 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push('}');
   lines.push('');
 
-  lines.push('function __matchingRenderers(routePath) {');
-  lines.push('  const renderers = [];');
-  for (const renderer of desc.renderers) {
-    if (renderer.scope === '/') {
-      lines.push(`  renderers.push(${renderer.varName}.default);`);
-    } else {
-      lines.push(
-        `  if (routePath.toLowerCase() === ${
-          jsStringLiteral(renderer.scope.toLowerCase())
-        } || routePath.toLowerCase().startsWith(${
-          jsStringLiteral(renderer.scope.toLowerCase() + '/')
-        })) renderers.push(${renderer.varName}.default);`,
-      );
-    }
-  }
-  lines.push('  return renderers;');
-  lines.push('}');
+  renderMatchingRenderersFn(lines, desc.renderers);
   lines.push('');
 
   // --- renderRoute ---
   lines.push('/**');
   lines.push(' * Render a route to structured output with diagnostics (ADR 0014, v0.15.3).');
   lines.push(
-    ' * Returns { html, errors, hydrationHints, componentCount, renderTimeMs }.',
+    ' * Returns { html, errors, componentCount, renderTimeMs } on success.',
   );
   lines.push(
-    ' * Caller can inspect errors/hints for observability or use .html for output.',
+    ' * Loader/render failures produce a defined result instead of throwing:',
   );
+  lines.push(' * redirect (3xx), not-found (404) or a 500 page with the caught error');
+  lines.push(' * collected into errors as a RenderError.');
   lines.push(' */');
   lines.push('export async function renderRoute(routePath, options = {}) {');
   lines.push('  const info = routeInfo.find(r => r.path === routePath);');
@@ -126,27 +119,75 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push('    platform: options.platform,');
   lines.push('    route: { path: routePath, filePath: info.filePath },');
   lines.push('  };');
-  lines.push('  let data;');
+  lines.push('  const startTime = typeof performance !== "undefined" ? performance.now() : 0;');
+  lines.push(
+    '  const headExtrasValue = headExtras !== undefined ? headExtras : (typeof __headExtras !== "undefined" ? __headExtras : "");',
+  );
   lines.push('  try {');
   lines.push(
-    '    data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
+    '    const data = typeof info.module.loader === "function" ? await info.module.loader(loadContext) : undefined;',
   );
+  lines.push(
+    `    const props = ${
+      pagePropsExpr({
+        paramsExpr: 'params',
+        dataExpr: 'data',
+        actionDataExpr: 'undefined',
+        requestExpr: 'options.request',
+        routeExpr: 'loadContext.route',
+        metaExpr: 'routeMeta',
+      })
+    };`,
+  );
+  lines.push('    if (locale) props.locale = locale;');
+  lines.push('    let node = jsx(info.tagName, props);');
+  lines.push('    for (const renderer of __matchingRenderers(routePath)) {');
+  lines.push(
+    '      node = await renderer.wrap(node, __rendererContext(routePath, params));',
+  );
+  lines.push('    }');
+  lines.push(
+    '    const content = await __renderAppShell(node, routePath, { locale, routeMeta });',
+  );
+  lines.push(
+    '    const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
+  );
+  lines.push(
+    '    const componentCount = (content.match(/<template shadowrootmode="open"/g) || []).length;',
+  );
+  lines.push('    const fullHtml = wrapInDocument(content, {');
+  for (
+    const optionLine of documentWrapOptionsLines({
+      pageExpr: 'page',
+      titleExpr: `title || page.head?.title || ${jsStringLiteral(desc.document.title)}`,
+      langExpr: `lang || locale || ${jsStringLiteral(desc.document.lang)}`,
+      headExtrasExpr: 'headExtrasValue',
+      allowHeadExtrasScripts: desc.document.allowHeadExtrasScripts,
+    })
+  ) {
+    lines.push(`      ${optionLine}`);
+  }
+  lines.push('    });');
+  lines.push('    return {');
+  lines.push('      html: fullHtml,');
+  lines.push('      errors: [],');
+  lines.push('      componentCount,');
+  lines.push('      renderTimeMs,');
+  lines.push('    };');
   lines.push('  } catch (error) {');
   lines.push('    if (__isOpenElementRedirect(error)) {');
   lines.push(
     '      const html = wrapInDocument(__statusHtml("Redirect", "Redirecting to " + error.location), {',
   );
   lines.push('        title: "Redirect",');
-  lines.push('        lang: lang || locale || "en",');
-  lines.push(
-    '        headExtras: headExtras !== undefined ? headExtras : (typeof __headExtras !== "undefined" ? __headExtras : ""),',
-  );
+  lines.push(`        lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push('        headExtras: headExtrasValue,');
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
   );
   lines.push('      });');
   lines.push(
-    '      return { html, status: error.status, redirect: { location: error.location, status: error.status }, errors: [], hydrationHints: [], componentCount: 0, renderTimeMs: 0 };',
+    '      return { html, status: error.status, redirect: { location: error.location, status: error.status }, errors: [], componentCount: 0, renderTimeMs: 0 };',
   );
   lines.push('    }');
   lines.push('    if (__isOpenElementNotFound(error)) {');
@@ -154,57 +195,49 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '      const html = wrapInDocument(__statusHtml("404 Not Found", error.message || "Not Found"), {',
   );
   lines.push('        title: "404 Not Found",');
-  lines.push('        lang: lang || locale || "en",');
-  lines.push(
-    '        headExtras: headExtras !== undefined ? headExtras : (typeof __headExtras !== "undefined" ? __headExtras : ""),',
-  );
+  lines.push(`        lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push('        headExtras: headExtrasValue,');
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
   );
   lines.push('      });');
   lines.push(
-    '      return { html, status: 404, notFound: true, errors: [], hydrationHints: [], componentCount: 0, renderTimeMs: 0 };',
+    '      return { html, status: 404, notFound: true, errors: [], componentCount: 0, renderTimeMs: 0 };',
   );
   lines.push('    }');
-  lines.push('    throw error;');
+  lines.push(
+    "    console.error('[openElement] renderRoute failed for ' + routePath + ':', error);",
+  );
+  lines.push('    const renderError = {');
+  lines.push('      code: "OPEN_ELEMENT_RENDER_RENDER_FAILED",');
+  lines.push('      severity: "error",');
+  lines.push('      phase: "render",');
+  lines.push('      tagName: info.tagName,');
+  lines.push(
+    '      message: String(error && error.message ? error.message : error),',
+  );
+  lines.push('      recoverable: false,');
+  lines.push('    };');
+  lines.push(
+    '    const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
+  );
+  lines.push(
+    '    const detail = import.meta.env.PROD ? "Internal Server Error" : String(error && error.stack ? error.stack : error);',
+  );
+  lines.push(
+    '    const html = wrapInDocument(__statusHtml("500 Internal Server Error", detail), {',
+  );
+  lines.push('      title: "500 Internal Server Error",');
+  lines.push(`      lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push('      headExtras: headExtrasValue,');
+  lines.push(
+    `      allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
+  );
+  lines.push('    });');
+  lines.push(
+    '    return { html, status: 500, errors: [renderError], componentCount: 0, renderTimeMs };',
+  );
   lines.push('  }');
-  lines.push(
-    '  const props = { ...params, data, __openElementActionData: undefined, __openElementParams: params, __openElementRequest: options.request, __openElementRoute: loadContext.route, __openElementMeta: routeMeta };',
-  );
-  lines.push('  if (locale) props.locale = locale;');
-  lines.push('  const startTime = typeof performance !== "undefined" ? performance.now() : 0;');
-  lines.push('  let node = jsx(info.tagName, props);');
-  lines.push('  for (const renderer of __matchingRenderers(routePath)) {');
-  lines.push(
-    '    node = await renderer.wrap(node, __rendererContext(routePath, params));',
-  );
-  lines.push('  }');
-  lines.push('  const content = await __renderAppShell(node, routePath, { locale, routeMeta });');
-  lines.push(
-    '  const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
-  );
-  lines.push(
-    '  const componentCount = (content.match(/<template shadowrootmode="open"/g) || []).length;',
-  );
-  lines.push('  const fullHtml = wrapInDocument(content, {');
-  lines.push('    title: title || page.head?.title || "openElement",');
-  lines.push('    lang: lang || locale || "en",');
-  lines.push('    meta: { description: page.head?.description, tags: page.head?.meta },');
-  lines.push(
-    '    headExtras: headExtras !== undefined ? headExtras : (typeof __headExtras !== "undefined" ? __headExtras : ""),',
-  );
-  lines.push('    dangerouslyHeadFragments: page.head?.dangerouslyHeadFragments || [],');
-  lines.push(
-    `    allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
-  );
-  lines.push('  });');
-  lines.push('  return {');
-  lines.push('    html: fullHtml,');
-  lines.push('    errors: [],');
-  lines.push('    hydrationHints: [],');
-  lines.push('    componentCount,');
-  lines.push('    renderTimeMs,');
-  lines.push('  };');
   lines.push('}');
   lines.push('');
 

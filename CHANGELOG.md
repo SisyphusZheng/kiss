@@ -12,6 +12,37 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0-alpha.17
+
+- Covers hydration and binding behavior in a real browser: signal text
+  patching, event hydration, SSR/hydration mismatch fallback and form
+  submission through shadow boundaries.
+- Wires SSR error collection: a failing route render produces a defined 500
+  result with `RenderError` diagnostics; the unread `hydrationHints`
+  contract is removed.
+- Converges island declaration construction, single-instantiates the entry
+  descriptor, deduplicates the SPA/SSG phase-2 blocks and shares route
+  rendering helpers; deletes the unwired external-resolver, the
+  `clientOnlyTags` chain and dead build-context fields.
+- Counts every source file in the coverage denominator and re-baselines
+  thresholds on measured values; the critical-path gate runs its e2e suites
+  for real and can no longer skip them on failure output.
+- Adds a Firefox smoke project to CI for the core DSD/hydration/theme
+  specs.
+- Adds a mechanical version-anchor gate across governance documents, and
+  the release bump now maintains `ACTIVE_EXECUTION_VERSION`.
+- Fixes `publish-existing` evidence: records the true previous package
+  line, rewrites GitHub release notes from completed evidence, and
+  generates the release closure record automatically.
+- Moves adapter build-time utilities from the `@openelement/element` root
+  to `@openelement/element/build-utils`, stops exporting internal router
+  types from the `@openelement/app` root, and aligns `PACKAGE_SURFACE.md`
+  with a machine-checked exports inventory. Breaking surface removals:
+  element root build utilities (migrate to `./build-utils`), app root
+  `RouteConfig`/`RouterInstance`/`RouterMode` types, adapter-vite
+  `ExternalManifest` type and `SsgPageOutput.hydrationHints`.
+- Publishes the #390 external adopter pilot kit and launches recruitment.
+
 ## 0.41.0-alpha.16
 
 - Aligns SSR and hydration event markers for custom-element hosts and

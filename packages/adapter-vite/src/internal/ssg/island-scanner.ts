@@ -1,8 +1,9 @@
 /** Island and package-manifest discovery without executing local island modules. */
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
+import type { HydrationStrategy } from '../protocol/framework.ts';
 import { formatError, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
-import { normalizeSeparators, pathToTagName } from '@openelement/element';
+import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
 import { join } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
@@ -16,6 +17,37 @@ export interface LocalIslandMeta {
   dsd?: boolean;
   hydrate?: 'load' | 'idle' | 'visible' | 'only';
   reason?: string;
+}
+
+/**
+ * Single source of truth for island render directives (alpha.17 B1).
+ *
+ * Previously the `hydrate === 'only' ? false : meta?.ssr` coercion and the
+ * `hydrate || upgradeStrategy || 'idle'` fallback were copied across
+ * plugin.ts, entry-descriptor.ts, island-scanner.ts and build-client.ts,
+ * and the copies had diverged (package islands in plugin.ts skipped the
+ * upgrade-strategy fallback).
+ */
+
+/** Coerce ssr/dsd for client:only islands: hydrate 'only' forces both off. */
+export function resolveIslandSsrDsd(meta: {
+  ssr?: boolean;
+  dsd?: boolean;
+  hydrate?: HydrationStrategy;
+}): { ssr?: boolean; dsd?: boolean } {
+  const clientOnly = meta.hydrate === 'only';
+  return {
+    ssr: clientOnly ? false : meta.ssr,
+    dsd: clientOnly ? false : meta.dsd,
+  };
+}
+
+/** Effective hydrate strategy: island metadata -> configured upgrade strategy -> 'idle'. */
+export function resolveIslandHydrate(
+  hydrate: HydrationStrategy | undefined,
+  upgradeStrategy?: HydrationStrategy,
+): HydrationStrategy {
+  return hydrate || upgradeStrategy || 'idle';
 }
 
 function staticOpenElementError(message: string): OpenElementError {
@@ -137,17 +169,17 @@ export async function scanIslands(
 }
 
 /**
- * v0.41.0-alpha.1: Regex-based — reads island metadata by statically scanning the module
- * source for `export const openElement = defineIslandConfig({ ... })`.
+ * v0.41.0-alpha.1: Regex-based — reads island metadata by statically scanning the
+ * module source for `export const openElement = defineIslandConfig({ ... })`
+ * (see readIslandConfig). Island modules are never executed.
  *
  * Supported form:
  *   export const openElement = defineIslandConfig({ ssr: false, dsd: false, hydrate: 'only' })
  *
- * This is more reliable than regex because it handles:
- * - Comments inside the object literal
- * - Computed properties
- * - Destructured/re-exported values
- * - Canonical defineIslandConfig(...) calls
+ * hydrate:'only' coerces ssr/dsd to false via resolveIslandSsrDsd(). The
+ * hydrate fallback chain is NOT applied here — scanIslandMeta records raw
+ * authoring intent; resolveIslandHydrate() applies the upgrade-strategy
+ * fallback downstream where the configured strategy is known.
  *
  * If a module cannot be read, its metadata is silently skipped.
  */
@@ -167,7 +199,6 @@ export async function scanIslandMeta(
       continue;
     }
 
-    // Read the `openElement` export directly; no regex needed.
     const islandConfig = readIslandConfig(source);
     if (!islandConfig) continue;
 
@@ -176,11 +207,17 @@ export async function scanIslandMeta(
       ? islandConfig.hydrate
       : undefined;
 
+    const { ssr, dsd } = resolveIslandSsrDsd({
+      ssr: islandConfig.ssr,
+      dsd: islandConfig.dsd,
+      hydrate,
+    });
+
     meta[tagName] = {
       tagName,
       filePath,
-      ssr: hydrate === 'only' ? false : islandConfig.ssr,
-      dsd: hydrate === 'only' ? false : islandConfig.dsd,
+      ssr,
+      dsd,
       hydrate,
       reason: hydrate === 'only'
         ? 'local island exports openElement.hydrate=only'

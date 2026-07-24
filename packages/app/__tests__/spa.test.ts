@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import { defineApp, definePage, type RouteConfig } from '../src/index.ts';
+import { defineApp, definePage } from '../src/index.ts';
+import type { RouteConfig } from '../src/internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
 
 Deno.test('SPA interface accepts custom-element routes', () => {

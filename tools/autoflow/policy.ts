@@ -127,6 +127,18 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^docs\//, /^README/, /^www\/app\/routes\//],
   },
   {
+    name: 'docs:check-version-anchors',
+    command: ['deno', 'task', 'docs:check-version-anchors'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^docs\//,
+      /^README/,
+      /^tools\/project-constants\.ts$/,
+      /^tools\/check-version-anchors\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'release:evidence:check',
     command: ['deno', 'task', 'release:evidence:check'],
     tiers: ['ci', 'release'],
@@ -184,16 +196,18 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^(packages|tools)\//, /^deno\.json$/],
   },
   {
-    name: 'test:critical-paths',
-    command: ['deno', 'task', 'test:critical-paths'],
-    tiers: ['ci', 'release'],
-    triggers: [/^(packages|tools|www\/e2e)\//, /^deno\.json$/],
-  },
-  {
     name: 'build',
     command: ['deno', 'task', 'build'],
     tiers: ['ci', 'release'],
     triggers: [/^(packages|www)\//, /^deno\.json$/],
+  },
+  {
+    // Runs after build: the e2e critical-path suites serve www/dist, which a
+    // fresh CI checkout only has once the build gate has produced it.
+    name: 'test:critical-paths',
+    command: ['deno', 'task', 'test:critical-paths'],
+    tiers: ['ci', 'release'],
+    triggers: [/^(packages|tools|www\/e2e)\//, /^deno\.json$/],
   },
   {
     name: 'test:e2e',

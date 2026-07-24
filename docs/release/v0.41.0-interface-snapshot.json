@@ -5,6 +5,7 @@
       "name": "@openelement/element",
       "exports": {
         ".": "./src/index.ts",
+        "./build-utils": "./src/build-utils.ts",
         "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
         "./jsx-runtime": "./src/jsx-runtime.ts",
         "./open-element-hydration": "./src/open-element-hydration.ts",
@@ -12,7 +13,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "ae2896eae67d4a2b998dd43d81471a34c263f81792c0b622df08aed675a42215",
+          "sha256": "805e7850e04b743205883bba909dda297677412c0e967cec5c9ca42b89ac9905",
           "publicDeclarations": [
             "export type { OpenElementComponentConstructor } from './open-element.ts';",
             "export type { ElementDefinition } from './types.ts';",
@@ -31,13 +32,18 @@
             "export type { Signal } from './internal/protocol/signal.ts';",
             "export type { SafeHtml, UnsafeHtml } from './internal/protocol/framework.ts';",
             "export type { IslandOptions } from './internal/protocol/island.ts';",
-            "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';",
             "export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';",
             "export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';",
             "export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';",
             "export type {",
             "export type {",
             "export type {"
+          ]
+        },
+        "./build-utils": {
+          "sha256": "4e91519fd61f053a8e50898ae89e99385023d15dc81c9a04494c1690643ca8d4",
+          "publicDeclarations": [
+            "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';"
           ]
         },
         "./jsx-dev-runtime": {
@@ -77,13 +83,12 @@
       },
       "declarations": {
         ".": {
-          "sha256": "b9945db87a1b598c9001f6cd047749fdf8ddd5ee9da8e5bf09a4ace754df3e7b",
+          "sha256": "9143060e4b44f2c44df0656656a314772ced1321c00829339651e3f0710d0fd7",
           "publicDeclarations": [
             "export type {",
             "export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/element';",
             "export type { ElementDefinition } from '@openelement/element';",
             "export type { SpaAppInstance, SpaAppOptions } from './spa.ts';",
-            "export type { RouteConfig, RouterInstance, RouterMode } from './internal/router/client-router.ts';",
             "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';",
             "export type { CreateHonoRequestContextOptions, HonoContextLike, HonoRequestLike } from './hono.ts';"
           ]
@@ -152,14 +157,13 @@
       },
       "declarations": {
         ".": {
-          "sha256": "5a08be3b210857b27462babb73c80eff1881ca6544f87fa15b3d03b6503b4603",
+          "sha256": "a735a6ab7a856ba04dc13e83215b652780c5a2c3957e548744fc027b23c900fa",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
             "export type { FrameworkOptions };",
             "export type { ArtifactInfo, BuildManifest } from './build-manifest.ts';",
             "export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';",
-            "export type { ExternalManifest } from './internal/protocol/ssg.ts';",
             "export type { HeadExtrasResult } from './head-injection.ts';",
             "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
           ]
@@ -172,7 +176,7 @@
           ]
         },
         "./build-context": {
-          "sha256": "3a58c9c14a9ad04bce324e2877c81e826a5339c2497eab8b014c2cbeda921c5b",
+          "sha256": "e44780f20cb07559848863fd0217f8b0e1989a3bd5a083e2420c0d997e1fd9cc",
           "publicDeclarations": [
             "export type Phase = 1 | 2 | 3;",
             "export class Phase1Meta {",
@@ -186,11 +190,11 @@
           "publicDeclarations": []
         },
         "./cli/build-client": {
-          "sha256": "53c2de58b712ed3dee2520df7d9ee6395de3c3665d2b10001dc915ea998a46a0",
+          "sha256": "9d79685a263ebd1014826a40d0377631b26e6370b78aa9509aeb3966a4b30659",
           "publicDeclarations": []
         },
         "./cli/build-ssg": {
-          "sha256": "55fed1e0cf8265222329dd036c709fc967054e1f1f3dd3e4f9b3856382a3ad42",
+          "sha256": "de3c257dc6d26fac3f4fbf235edb566524fb19722528e7fa52bc5f2f5271ef58",
           "publicDeclarations": []
         },
         "./generated-data-resolver": {
@@ -221,7 +225,7 @@
           ]
         },
         "./nitro-mount": {
-          "sha256": "13667f6d4b8db527d5f5cf4f7f21e8764aa92732d48a7d2601760d81e5321a39",
+          "sha256": "33056a4b4e9c291ea90532ad68268aaa9ad7be1a7f4897986847bd4e54926c47",
           "publicDeclarations": [
             "export interface NitroLikeRequestEvent<",
             "export interface NitroLikeResponse {",
@@ -230,7 +234,7 @@
           ]
         },
         "./plugin": {
-          "sha256": "86180df73bccca4e4527599ff948e98f0cf49b3764bde8d844f4fb409e58c0d2",
+          "sha256": "d6606aed4c4bea1c6929d7136ba0f7f454af058cef6b3d30248a5c2c99dcd214",
           "publicDeclarations": [
             "export function optionalPackageStubsPlugin(): Plugin {",
             "export function createOpenPlugin("

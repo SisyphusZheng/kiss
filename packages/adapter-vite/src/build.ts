@@ -26,6 +26,20 @@ import {
 
 const log = createLogger('core');
 
+/** Phase 2: client island bundle. Shared by the SPA and SSG closeBundle paths. */
+async function runClientIslandBuild(ctx: OpenElementBuildContext): Promise<void> {
+  log.info('[2/3] Client island build...');
+  try {
+    const { buildClient } = await import('./cli/build-client.ts');
+    await buildClient(ctx);
+    ctx.markComplete(2);
+    log.info('[2/3] Client island build - complete');
+  } catch (error) {
+    log.error(`[2/3] Client island build - FAILED: ${error}`);
+    throw error;
+  }
+}
+
 export async function readClientEntryFromManifest(manifestPath: string): Promise<string> {
   const manifestRaw = await readFile(manifestPath, 'utf-8');
   const manifest = JSON.parse(manifestRaw);
@@ -148,16 +162,7 @@ export function buildPlugin(
 
         // Phase 2: Client island bundle (only if islands exist)
         if (totalIslands > 0) {
-          log.info('[2/3] Client island build...');
-          try {
-            const { buildClient } = await import('./cli/build-client.ts');
-            await buildClient(ctx);
-            ctx.markComplete(2);
-            log.info('[2/3] Client island build - complete');
-          } catch (error) {
-            log.error(`[2/3] Client island build - FAILED: ${error}`);
-            throw error;
-          }
+          await runClientIslandBuild(ctx);
         }
 
         log.info('SPA build complete.');
@@ -183,16 +188,7 @@ export function buildPlugin(
 
       // Phase 2: Client island bundle (only if islands exist)
       if (totalIslands > 0) {
-        log.info('[2/3] Client island build...');
-        try {
-          const { buildClient } = await import('./cli/build-client.ts');
-          await buildClient(ctx);
-          ctx.markComplete(2);
-          log.info('[2/3] Client island build - complete');
-        } catch (error) {
-          log.error(`[2/3] Client island build - FAILED: ${error}`);
-          throw error;
-        }
+        await runClientIslandBuild(ctx);
       }
 
       // -- Inject client script (only runs if Phase 2 completed) --
