@@ -130,6 +130,7 @@ decision set above to decide which records are authoritative for new work.
 | 0114 | Continue Alpha After Five-Package Convergence            | Accepted                                         |
 | 0115 | Single Element Authoring Helper                          | Accepted                                         |
 | 0116 | Audit-Driven Alpha.16 Correctness Reset                  | Accepted                                         |
+| 0117 | Second Audit Round and Alpha.18 Sweep                    | Accepted                                         |
 
 ## Superseded / Historical
 
