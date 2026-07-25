@@ -154,3 +154,256 @@ Deno.test('client router guard redirect limit rejects redirect loops', async () 
     else delete (globalThis as Record<string, unknown>).history;
   }
 });
+
+// ─── Browser-driven navigation (popstate/hashchange) guard coverage ───
+
+interface FakeBrowser {
+  /** URLs passed to pushState/replaceState, in order. */
+  readonly applied: string[];
+  /** Move the browser itself (back/forward buttons) without pushState. */
+  jumpTo(url: string): void;
+  /** Dispatch a captured window listener (popstate/hashchange). */
+  fire(type: string): void;
+  /** The current router-visible path (hash without '#' in hash mode). */
+  path(): string;
+  restore(): void;
+}
+
+function installFakeBrowser(initialUrl: string): FakeBrowser {
+  const descriptors = {
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+  };
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  const state = { pathname: '/', search: '', hash: '' };
+  const applyUrl = (url: string): void => {
+    if (url.startsWith('#')) {
+      state.hash = url;
+    } else {
+      const u = new URL(url, 'https://router.test');
+      state.pathname = u.pathname;
+      state.search = u.search;
+    }
+  };
+  applyUrl(initialUrl);
+  const applied: string[] = [];
+  const listeners = new Map<string, EventListener[]>();
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'https:',
+      href: 'https://router.test/',
+      get pathname() {
+        return state.pathname;
+      },
+      get search() {
+        return state.search;
+      },
+      get hash() {
+        return state.hash;
+      },
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: {
+      pushState(_state: unknown, _title: string, url: string) {
+        applied.push(url);
+        applyUrl(url);
+      },
+      replaceState(_state: unknown, _title: string, url: string) {
+        applied.push(url);
+        applyUrl(url);
+      },
+    },
+  });
+  globalThis.addEventListener = ((type: string, listener: EventListener) => {
+    listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+  }) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = ((type: string, listener: EventListener) => {
+    listeners.set(type, (listeners.get(type) ?? []).filter((entry) => entry !== listener));
+  }) as typeof globalThis.removeEventListener;
+  return {
+    applied,
+    jumpTo: applyUrl,
+    fire(type: string) {
+      for (const listener of listeners.get(type) ?? []) {
+        listener(new Event(type));
+      }
+    },
+    path() {
+      return state.hash ? state.hash.replace(/^#/, '') : state.pathname + state.search;
+    },
+    restore() {
+      globalThis.addEventListener = originalAdd;
+      globalThis.removeEventListener = originalRemove;
+      if (descriptors.location) Object.defineProperty(globalThis, 'location', descriptors.location);
+      else delete (globalThis as Record<string, unknown>).location;
+      if (descriptors.history) Object.defineProperty(globalThis, 'history', descriptors.history);
+      else delete (globalThis as Record<string, unknown>).history;
+    },
+  };
+}
+
+/** Guards are async; let the serialized browser-navigation queue drain. */
+async function flushBrowserNavigation(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+Deno.test('popstate runs the guard and restores the previous entry when blocked', async () => {
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          events.push('guard');
+          return Promise.resolve(false);
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    // The browser itself moved the history pointer onto /protected.
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // The guard ran, rejected the navigation, and the previous entry was
+    // restored without notifying a change that never committed.
+    assertEquals(events, ['guard']);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(browser.path(), '/public');
+    assertEquals(browser.applied, ['/public']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('popstate commits the landed route when the guard allows it', async () => {
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          events.push('guard');
+          return Promise.resolve(true);
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['guard', 'change']);
+    assertEquals(router.currentPath, '/protected');
+    assertEquals(router.currentRoute?.tagName, 'protected-page');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('popstate follows a guard redirect with replace semantics', async () => {
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/protected', tagName: 'protected-page', guard: () => Promise.resolve('/login') },
+      { path: '/login', tagName: 'login-page' },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['change']);
+    assertEquals(router.currentPath, '/login');
+    assertEquals(router.currentRoute?.tagName, 'login-page');
+    assertEquals(browser.path(), '/login');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('popstate follows a multi-hop guard redirect chain', async () => {
+  const browser = installFakeBrowser('/public');
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/old', tagName: 'old-page', guard: () => Promise.resolve('/newer') },
+      { path: '/newer', tagName: 'newer-page', guard: () => Promise.resolve('/newest') },
+      { path: '/newest', tagName: 'newest-page' },
+    ],
+  });
+  try {
+    browser.jumpTo('/old');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(router.currentPath, '/newest');
+    assertEquals(router.currentRoute?.tagName, 'newest-page');
+    assertEquals(browser.path(), '/newest');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('hashchange runs the guard and restores the previous hash entry when blocked', async () => {
+  const browser = installFakeBrowser('#/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'hash',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          events.push('guard');
+          return Promise.resolve(false);
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('#/protected');
+    browser.fire('hashchange');
+    await flushBrowserNavigation();
+    assertEquals(events, ['guard']);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(browser.path(), '/public');
+    assertEquals(browser.applied, ['#/public']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});

@@ -119,8 +119,6 @@ export class OpenDialog extends OpenElement {
   static override delegatesFocus = true;
   static override observedAttributes = ['open', 'label', 'mode'];
 
-  private _inertedSiblings = new Map<Element, boolean>();
-
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     const label = this._esc(this.getAttribute('label') || '');
     return (
@@ -160,7 +158,6 @@ export class OpenDialog extends OpenElement {
     if (name === 'open') {
       this._updateStates();
       this._syncDialogElement();
-      this._syncInert();
     }
   }
 
@@ -192,6 +189,10 @@ export class OpenDialog extends OpenElement {
     const dialog = this.shadowRoot?.querySelector('dialog');
     if (!dialog) return;
     if (this.hasAttribute('open') && !dialog.open) {
+      // Modal: showModal() puts the rest of the page on the inert top layer
+      // natively — focus, hit-testing, and the accessibility tree are all
+      // covered by the platform, so no hand-rolled sibling inert is needed.
+      // Non-modal: show() leaves the page interactive by design.
       if ((this.getAttribute('mode') || 'modal') === 'modal') dialog.showModal();
       else dialog.show();
     } else if (!this.hasAttribute('open') && dialog.open) {
@@ -199,49 +200,10 @@ export class OpenDialog extends OpenElement {
     }
   }
 
-  private _syncInert(): void {
-    const open = this.hasAttribute('open') && (this.getAttribute('mode') || 'modal') === 'modal';
-    if (!open) {
-      this._restoreInert();
-      return;
-    }
-
-    const parent = this.parentNode;
-    if (!parent) return;
-    const parentEl = typeof ShadowRoot !== 'undefined' && parent instanceof ShadowRoot
-      ? (parent.host.parentNode as Element)
-      : (parent as Element);
-    if (!parentEl) return;
-
-    const children = [...parentEl.children];
-    for (const child of children) {
-      if (child !== this) {
-        if (!this._inertedSiblings.has(child)) {
-          this._inertedSiblings.set(child, child.hasAttribute('inert'));
-        }
-        child.setAttribute('inert', '');
-      }
-    }
-  }
-
-  private _restoreInert(): void {
-    for (const [child, wasOriginallyInert] of this._inertedSiblings) {
-      if (wasOriginallyInert) child.setAttribute('inert', '');
-      else child.removeAttribute('inert');
-    }
-    this._inertedSiblings.clear();
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._restoreInert();
-  }
-
   private _handleClose(): void {
     this.removeAttribute('open');
     this._updateStates();
     this._syncDialogElement();
-    this._syncInert();
     this.dispatchEvent(new CustomEvent('open-dialog-close', { bubbles: true, composed: true }));
   }
 

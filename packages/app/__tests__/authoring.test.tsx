@@ -67,7 +67,6 @@ Deno.test('definePage() canonical descriptor exposes metadata and load data to r
     },
     renderIntent: {
       mode: 'static',
-      streaming: false,
       revalidate: 60,
     },
     render() {
@@ -81,7 +80,6 @@ Deno.test('definePage() canonical descriptor exposes metadata and load data to r
   assertEquals(Page.openElementPage.head?.meta?.[0].name, 'robots');
   assertEquals(Page.openElementPage.head?.dangerouslyHeadFragments?.length, 1);
   assertEquals(Page.openElementPage.renderIntent.mode, 'static');
-  assertEquals(Page.openElementPage.renderIntent.streaming, false);
   assertEquals(Page.openElementPage.renderIntent.revalidate, 60);
 
   const out = await renderDsd('loaded-page', {

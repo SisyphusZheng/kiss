@@ -5,7 +5,7 @@
  *   - Theme toggle element is present
  *   - Clicking toggle switches theme
  *   - Theme state is persisted to localStorage
- *   - Default theme is dark
+ *   - Initial theme follows prefers-color-scheme when nothing is saved
  *   - data-theme attribute is updated on document
  */
 
@@ -135,14 +135,6 @@ test.describe('Theme Toggle', () => {
     expect(stored).toMatch(/^(light|dark)$/);
   });
 
-  test('default theme is dark when no preference set', async ({ page }) => {
-    const theme = await page.evaluate(() => {
-      return document.documentElement.getAttribute('data-theme');
-    });
-    // Could be 'dark' or 'light' depending on prefers-color-scheme
-    expect(theme).toMatch(/^(light|dark)$/);
-  });
-
   test('multiple toggles cycle between dark and light', async ({ page }) => {
     const themeBefore = await page.evaluate(() => {
       return document.documentElement.getAttribute('data-theme');
@@ -198,5 +190,29 @@ test.describe('Theme Toggle', () => {
 
     expect(dark.canvas).not.toBe(light.canvas);
     expect(dark.surface).not.toBe(light.surface);
+  });
+});
+
+test.describe('Theme initialization', () => {
+  // theme-init.js runs synchronously in <head> before first paint: with no
+  // saved theme the initial data-theme must follow prefers-color-scheme
+  // exactly. A dark first paint that later flips to light is the FOUC this
+  // contract exists to prevent, so both directions are asserted strictly.
+  test('initial theme is light when prefers-color-scheme is light and nothing is saved', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    const theme = await page.evaluate(() => {
+      return document.documentElement.getAttribute('data-theme');
+    });
+    expect(theme).toBe('light');
+  });
+
+  test('initial theme is dark when prefers-color-scheme is dark and nothing is saved', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/');
+    const theme = await page.evaluate(() => {
+      return document.documentElement.getAttribute('data-theme');
+    });
+    expect(theme).toBe('dark');
   });
 });
