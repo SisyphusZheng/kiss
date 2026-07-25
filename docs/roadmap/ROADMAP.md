@@ -5,7 +5,7 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Published package line: `v0.41.0-alpha.19`.\
-> Active execution target: `v0.41.0-alpha.18`.\
+> Active execution target: `v0.41.0-alpha.19`.\
 > Current implementation state: five-package convergence is published;
 > alpha.17 closed the first audit remediation and alpha.18 completed the
 > second audit sweep (ADR-0117).\
