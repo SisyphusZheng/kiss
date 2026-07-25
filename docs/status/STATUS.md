@@ -35,13 +35,13 @@ and output path.
 
 | Condition                                        | State                            |
 | ------------------------------------------------ | -------------------------------- |
-| ADR-0117, alpha.18 plan and drift cleanup        | In progress                      |
-| P0 correctness package (reflect, CEM, 500, etc.) | Pending                          |
-| Release tooling closure package                  | Pending                          |
-| Evidence honesty package                         | Pending                          |
-| Convergence and redundancy package               | Pending                          |
+| ADR-0117, alpha.18 plan and drift cleanup        | Completed                        |
+| P0 correctness package (reflect, CEM, 500, etc.) | Completed                        |
+| Release tooling closure package                  | Completed                        |
+| Evidence honesty package                         | Completed                        |
+| Convergence and redundancy package               | Completed                        |
 | External adopter pilot #390                      | Launched; pending human evidence |
-| Alpha.18 npm, tag, prerelease and final evidence | Pending                          |
+| Alpha.18 npm, tag, prerelease and final evidence | Completed                        |
 
 ## Current risks
 
