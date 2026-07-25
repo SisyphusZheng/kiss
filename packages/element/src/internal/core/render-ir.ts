@@ -22,6 +22,9 @@ import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import { renderDsd } from './render-dsd.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
+import { camelToKebab } from './tag-utils.ts';
+
+export { camelToKebab };
 
 export type RenderNode =
   | { kind: 'text'; value: string }
@@ -90,10 +93,6 @@ export function fragmentNode(children: RenderNode[]): RenderNode {
 
 export function dsdHostNode(params: Omit<Extract<RenderNode, { kind: 'dsd-host' }>, 'kind'>) {
   return { kind: 'dsd-host', ...params } satisfies RenderNode;
-}
-
-export function camelToKebab(str: string): string {
-  return str.replace(/([A-Z])/g, '-$1').toLowerCase();
 }
 
 // ─── Unified Attribute Serialization ────────────────────────────
@@ -234,7 +233,7 @@ export async function renderToNode(
   if (tag === FOR_TAG || tag === 'for') {
     const items = resolveSignalProp(props?.each) as unknown[];
     const renderFn = children[0] as RenderFn;
-    const branch = branchCommentNode(forBranchMarker(Array.isArray(items) ? items.length : -1));
+    const branch = branchCommentNode(forBranchMarker(items));
     if (!Array.isArray(items) || typeof renderFn !== 'function') {
       return fragmentNode([branch]);
     }
@@ -344,9 +343,6 @@ function callComponent(
 function styleObjectToString(obj: Record<string, unknown>): string {
   return Object.entries(obj)
     .filter(([, value]) => value != null)
-    .map(([key, value]) => {
-      const prop = key.replace(/([A-Z])/g, (match) => `-${match.toLowerCase()}`);
-      return `${prop}: ${value}`;
-    })
+    .map(([key, value]) => `${camelToKebab(key)}: ${value}`)
     .join('; ');
 }

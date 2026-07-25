@@ -1,4 +1,4 @@
-import { walk } from './lib/fs.ts';
+import { exists, walk } from './lib/fs.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';
 
 type Issue = { file: string; text: string };
@@ -6,7 +6,6 @@ type Issue = { file: string; text: string };
 const sourceRoots = [
   'www/app/routes',
   'www/app/site-ui',
-  'www/content/guide',
 ];
 
 const [versionBase, prerelease = ''] = PACKAGE_VERSION.split('-');
@@ -50,6 +49,16 @@ if (earlierPrereleasePattern) {
 
 const issues: Issue[] = [];
 
+// The guide tsx routes under www/app/routes/guide/ are the single source of
+// truth for guide pages in every locale. A second guide content tree must not
+// reappear: it rendered zh pages in English and drifted from the tsx copy.
+if (await exists('www/content/guide')) {
+  issues.push({
+    file: 'www/content/guide',
+    text: 'second guide source of truth; guide content lives only in www/app/routes/guide/',
+  });
+}
+
 async function checkFile(file: string): Promise<void> {
   const text = await Deno.readTextFile(file);
   for (const { name, re } of forbidden) {
@@ -76,6 +85,12 @@ async function checkFile(file: string): Promise<void> {
   }
   if (file.startsWith('www/app/routes/guide/') && !/<open-reading-shell[^>]+metadata=/.test(text)) {
     issues.push({ file, text: 'guide route lacks structured reading metadata' });
+  }
+  if (file.startsWith('www/app/routes/guide/') && !text.includes("this._getLocale('en')")) {
+    issues.push({
+      file,
+      text: 'guide route does not select content by locale (zh must render zh)',
+    });
   }
   if (file.includes('www/app/routes/blog/[slug].tsx') && /open-page-rail[^>]+auto/.test(text)) {
     issues.push({ file, text: 'blog article relies on client-generated TOC' });

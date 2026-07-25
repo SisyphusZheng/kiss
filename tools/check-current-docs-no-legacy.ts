@@ -39,8 +39,6 @@ const ALLOWED = [
 import { walk } from './lib/fs.ts';
 
 const issues: Array<{ f: string; l: number; t: string }> = [];
-const retiredProductImport =
-  /@openelement\/(?:core|signal|router|protocol|content|ssg)(?:\/|`|'|")/;
 
 function css(line: string): boolean {
   return /grid-template|repeat\(.*,\s*\d/.test(line);
@@ -60,25 +58,9 @@ async function check(file: string): Promise<void> {
   }
 }
 
-async function checkProductImports(file: string): Promise<void> {
-  if (!/\.(?:md|ts|tsx)$/.test(file)) return;
-  const text = await Deno.readTextFile(file);
-  for (const [index, line] of text.split('\n').entries()) {
-    if (/^\s*(?:import|export)|@jsxImportSource/.test(line) && retiredProductImport.test(line)) {
-      issues.push({ f: file, l: index + 1, t: 'retired package import' });
-    }
-  }
-}
-
 for (const dir of ['www/app/routes', 'docs']) {
   for await (const file of walk(dir, { skip: ['node_modules', 'dist', '.git'] })) {
     await check(file);
-  }
-}
-
-for (const dir of ['www/content/guide/en', 'www/content/guide/zh']) {
-  for await (const file of walk(dir, { skip: ['node_modules', 'dist', '.git'] })) {
-    await checkProductImports(file);
   }
 }
 

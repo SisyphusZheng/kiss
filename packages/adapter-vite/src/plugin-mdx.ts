@@ -19,5 +19,3 @@ export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {
     enforce: 'pre',
   };
 }
-
-export { mdxPlugin as openMdx };

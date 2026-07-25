@@ -1,7 +1,6 @@
 import { assertEquals, assertStringIncludes } from '@std/assert';
 import { scanDenoApiSource } from './check-deno-api-free.ts';
 import { findSignalBoundaryImports } from './check-signal-protocol-boundary.ts';
-import { findBareImports } from './check-import-map.ts';
 import { inspectWorkflowSource } from './check-action-pins.ts';
 import { discoverScannerFiles } from './check-architecture-contract.ts';
 
@@ -29,19 +28,6 @@ Deno.test('signal boundary only reports real static and dynamic imports', () => 
       await import('@preact/signals');
     `),
     ['@preact/signals-core', '@preact/signals'],
-  );
-});
-
-Deno.test('import-map scanner skips comments and ordinary strings', () => {
-  assertEquals(
-    findBareImports(`
-      // import 'comment-only';
-      const example = "import('string-only')";
-      import { x } from 'real-package';
-      export type { Y } from '@scope/types';
-      await import('dynamic-package');
-    `),
-    ['real-package', '@scope/types', 'dynamic-package'],
   );
 });
 

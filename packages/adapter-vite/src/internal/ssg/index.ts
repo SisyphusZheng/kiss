@@ -53,10 +53,12 @@ export type {
   ResolvedAppShell,
   ResolvedSpecifier,
   SpeculationRulesOptions,
+  SsgBehaviorOptions,
   SsgPageInput,
   SsgPageOutput,
   SsgRenderEvidence,
   SsgRenderOptions,
+  SsgRenderSummary,
   SsrAdmissionPlan,
   SsrBundle,
 } from '../protocol/ssg.ts';

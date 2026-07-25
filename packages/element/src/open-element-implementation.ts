@@ -61,7 +61,7 @@ import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { signal } from './internal/signal/index.ts';
 import { createLogger } from './internal/core/logger.ts';
-import { HydrationScope } from './internal/core/hydrate.ts';
+import { HydrationScope, markSelfHydrated } from './internal/core/hydrate.ts';
 import {
   renderErrorFallback,
   renderIntoLightDom,
@@ -413,6 +413,9 @@ export class OpenElement extends _Base {
       const ctor = this.constructor as typeof OpenElement;
       if (ctor.renderMode === 'light') {
         this._renderIntoLightDom();
+        // The element now owns its bindings; client-runtime must not stack a
+        // second HydrationScope onto it (double hydration, M4).
+        markSelfHydrated(this);
         this.onCsrRendered();
         return;
       }
@@ -421,10 +424,12 @@ export class OpenElement extends _Base {
       if (isDsd) {
         // DSD: DOM already correct — bind events via VNode walk
         this._hydrateExistingDom();
+        markSelfHydrated(this);
         this.onDsdHydrated();
       } else if (this.shadowRoot) {
         // CSR: full render from VNode
         this._renderIntoShadowRoot();
+        markSelfHydrated(this);
         this.onCsrRendered();
       }
     } catch (err) {

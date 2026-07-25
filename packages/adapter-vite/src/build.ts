@@ -10,6 +10,7 @@
 
 import type { Plugin, ResolvedConfig } from 'vite';
 import type { FrameworkOptions } from './internal/protocol/framework.ts';
+import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { join } from 'node:path';
 import { mkdir, open, readFile } from 'node:fs/promises';
@@ -55,7 +56,7 @@ export async function readClientEntryFromManifest(manifestPath: string): Promise
 
 /** Vite plugin: writes build metadata to ctx, then runs Phase 2 + Phase 3 */
 export function buildPlugin(
-  options: FrameworkOptions & { allowHeadExtrasScripts?: boolean } = {},
+  options: FrameworkOptions & { allowHeadExtrasScripts?: boolean; ssg?: SsgBehaviorOptions } = {},
   ctx?: OpenElementBuildContext,
 ): Plugin {
   let config: ResolvedConfig;
@@ -178,6 +179,8 @@ export function buildPlugin(
           islandTagNames: ctx.phase1.islandTagNames,
           islandMeta: ctx.phase1.islandMeta,
           packageManifests: ctx.phase1.packageManifests,
+          cemClassifications: ctx.phase1.cemClassifications,
+          dynamicRouteFailure: options.ssg?.dynamicRouteFailure,
         }, ctx);
         ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');

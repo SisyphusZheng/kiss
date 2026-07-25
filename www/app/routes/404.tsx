@@ -18,29 +18,6 @@ const POPULAR_LINKS = [
   { href: '/roadmap', label: 'Roadmap' },
 ];
 
-/** Mapping of old URLs to new URLs for client-side redirects. */
-const REDIRECT_MAP: Record<string, string> = {
-  '/engine/architecture': '/architecture/architecture',
-  '/engine/dsd': '/architecture/dsd',
-  '/engine/islands': '/architecture/islands',
-  '/engine/islands-deep': '/architecture/islands-deep',
-  '/engine/design-system': '/architecture/design-system',
-  '/engine/comparison': '/architecture/comparison',
-  '/engine/package-compatibility': '/architecture/package-compatibility',
-  '/engine/standards-registry': '/architecture/standards-registry',
-  '/engine/reference/core': '/apilist',
-  '/guide/migration-v0.24': '/guide/getting-started',
-  '/guide/positioning': '/architecture/architecture',
-  '/guide/rpc': '/apilist',
-  '/guide/security-middleware': '/guide/error-handling',
-  '/guide/content-system': '/guide/routing-and-data',
-  '/guide/pwa': '/guide/deployment',
-  '/examples': '/architecture/comparison',
-  '/components': '/architecture/design-system',
-  '/decisions': '/blog',
-  '/zh/decisions': '/blog',
-};
-
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host {
@@ -120,33 +97,39 @@ export default class Page404 extends OpenElement {
   override render() {
     const locale = this._getLocale('zh');
     const homeHref = locale === 'en' ? '/' : '/zh/';
-    const requestedPath = typeof globalThis.location === 'undefined' ? '/404' : globalThis.location.pathname;
+    const requestedPath = typeof globalThis.location === 'undefined'
+      ? '/404'
+      : globalThis.location.pathname;
     return (
       <main>
         <open-page-hero variant='error'>
-          <span slot='eyebrow'>Recovery scene</span><span slot='title'>404</span><span slot='lede'>The requested route is not part of the current public map.</span>
+          <span slot='eyebrow'>Recovery scene</span>
+          <span slot='title'>404</span>
+          <span slot='lede'>The requested route is not part of the current public map.</span>
         </open-page-hero>
         <div class='container'>
-        <open-brand-mark class='mark' size='xl'></open-brand-mark>
-        <p class='subtitle'>Page not found</p>
-        <p class='description'>
-          The page you are looking for doesn't exist or has been moved.
-        </p>
-        <p class='description'>Requested path: <code>{requestedPath}</code></p>
-        <div class='search-wrapper'>
-          <open-input placeholder='Search docs and API'></open-input>
-        </div>
-        <p class='popular-label'>Popular pages</p>
-        <div class='links-grid'>
-          {POPULAR_LINKS.map((l) => (
-            <open-button size='sm' href={l.href}>
-              {l.label}
-            </open-button>
-          ))}
-        </div>
-        <open-button variant='primary' href={homeHref}>
-          Go home
-        </open-button>
+          <open-brand-mark class='mark' size='xl'></open-brand-mark>
+          <p class='subtitle'>Page not found</p>
+          <p class='description'>
+            The page you are looking for doesn't exist or has been moved.
+          </p>
+          <p class='description'>
+            Requested path: <code>{requestedPath}</code>
+          </p>
+          <div class='search-wrapper'>
+            <open-input placeholder='Search docs and API'></open-input>
+          </div>
+          <p class='popular-label'>Popular pages</p>
+          <div class='links-grid'>
+            {POPULAR_LINKS.map((l) => (
+              <open-button size='sm' href={l.href}>
+                {l.label}
+              </open-button>
+            ))}
+          </div>
+          <open-button variant='primary' href={homeHref}>
+            Go home
+          </open-button>
         </div>
       </main>
     );

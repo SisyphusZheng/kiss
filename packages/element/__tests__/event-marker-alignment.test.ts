@@ -15,6 +15,7 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderDsdTree } from '../src/internal/core/render-ir.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
+import { forBranchMarker } from '../src/internal/core/event-marker.ts';
 import { FOR_TAG, SHOW_TAG } from '../src/internal/core/jsx-runtime.ts';
 import type { VNode } from '../src/internal/protocol/vnode.ts';
 import { signal } from '../src/internal/signal/index.ts';
@@ -153,7 +154,7 @@ Deno.test('SSR serializes Show branch state and hydration recomputes the same to
   assertEquals(drifted, ['oe-branch:show:0']);
 });
 
-Deno.test('SSR serializes For item counts and hydration recomputes the same token', async () => {
+Deno.test('SSR serializes For item identity and hydration recomputes the same token', async () => {
   const items = signal([1, 2]);
   const vnode = forEach(items, (item) => ({
     tag: 'button',
@@ -161,18 +162,34 @@ Deno.test('SSR serializes For item counts and hydration recomputes the same toke
     children: [String(item)],
   }));
 
+  const expectedToken = forBranchMarker([1, 2]);
   const html = await renderDsdTree(vnode);
-  assertStringIncludes(html, '<!--oe-branch:for:2-->');
+  assertStringIncludes(html, `<!--${expectedToken}-->`);
 
   const aligned: string[] = [];
   const bindings = collectEventBindings(vnode, aligned);
-  assertEquals(aligned, ['oe-branch:for:2']);
+  assertEquals(aligned, [expectedToken]);
   assertEquals([...bindings.keys()], ['e0', 'e1']);
 
   items.value = [1, 2, 3];
   const drifted: string[] = [];
   collectEventBindings(vnode, drifted);
-  assertEquals(drifted, ['oe-branch:for:3']);
+  assertEquals(drifted, [forBranchMarker([1, 2, 3])]);
+
+  // The token is content-sensitive: same-length replacement or reordering
+  // also diverges it, so hydration degrades instead of mis-binding handlers.
+  assertEquals(forBranchMarker([1, 2]) !== forBranchMarker([1, 3]), true);
+  assertEquals(forBranchMarker([1, 2]) !== forBranchMarker([2, 1]), true);
+  // Identical content always produces the identical token (SSR/hydration parity).
+  assertEquals(forBranchMarker([1, 2]), forBranchMarker([1, 2]));
+  assertEquals(
+    forBranchMarker([{ id: 'a' }, { id: 'b' }]),
+    forBranchMarker([{ id: 'a' }, { id: 'b' }]),
+  );
+  assertEquals(
+    forBranchMarker([{ id: 'a' }]) !== forBranchMarker([{ id: 'b' }]),
+    true,
+  );
 });
 
 Deno.test('For with a non-array each resolves to the empty-branch token on both sides', async () => {

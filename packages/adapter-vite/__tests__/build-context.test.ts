@@ -13,7 +13,6 @@ Deno.test('OpenElementBuildContext has empty default mutable state', () => {
   const ctx = new OpenElementBuildContext({});
 
   // Empty state
-  assertEquals(ctx.phase1.honoEntryCode, '');
   assertEquals(ctx.phase1.islandTagNames.length, 0);
   assertEquals(ctx.phase1.packageManifests.length, 0);
   assertEquals(ctx.phase1.packageIslandDecls.length, 0);
@@ -24,14 +23,12 @@ Deno.test('OpenElementBuildContext reset clears all mutable state', () => {
   const ctx = new OpenElementBuildContext({});
 
   // Mutate
-  ctx.phase1.honoEntryCode = 'test code';
   ctx.phase1.islandTagNames = ['a', 'b'];
   ctx.phase1.packageIslandDecls = [{ tagName: 'x', modulePath: './x', hydrate: 'idle' }];
   ctx.phase1.userResolveAlias = { '@openelement/ui': './ui' };
 
   ctx.reset();
 
-  assertEquals(ctx.phase1.honoEntryCode, '');
   assertEquals(ctx.phase1.islandTagNames.length, 0);
   assertEquals(ctx.phase1.packageManifests.length, 0);
   assertEquals(ctx.phase1.packageIslandDecls.length, 0);

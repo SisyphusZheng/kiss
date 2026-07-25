@@ -5,7 +5,6 @@ const siteModules = [
   ['open-lab-panel', '../app/site-ui/open-lab-panel.tsx'],
   ['open-lab-stage', '../app/site-ui/open-lab-stage.tsx'],
   ['open-standards-visual', '../app/site-ui/open-standards-visual.tsx'],
-  ['open-hero-ping', '../app/site-ui/open-hero-ping.tsx'],
   ['open-layout', '../app/site-ui/open-layout.tsx'],
 ] as const;
 

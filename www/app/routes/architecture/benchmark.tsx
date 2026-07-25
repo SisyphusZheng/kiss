@@ -1,4 +1,4 @@
-﻿/**
+/**
  * openElement Benchmark & Performance
  *
  * Zero-noise performance characteristics: SSG build time, DSD rendering,
@@ -29,52 +29,61 @@ export default class Benchmark extends OpenElement {
 
   _renderEn() {
     return (
-      <open-reading-shell rail><open-page-rail slot='rail' items='[{"id":"build-performance","label":"Build Performance"},{"id":"rendering","label":"Rendering"},{"id":"bundle-size","label":"Bundle Size"}]'></open-page-rail><div class='container'>
-        <h1 id='start'>Performance &amp; Benchmarks</h1>
-        <p class='subtitle'>Zero-noise. What we actually measure.</p>
+      <open-reading-shell rail>
+        <open-page-rail
+          slot='rail'
+          items='[{"id":"build-performance","label":"Build Performance"},{"id":"rendering","label":"Rendering"},{"id":"bundle-size","label":"Bundle Size"}]'
+        >
+        </open-page-rail>
+        <div class='container'>
+          <h1 id='start'>Performance &amp; Benchmarks</h1>
+          <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
-        <open-artifact-panel><span slot='label'>build evidence</span><span slot='meta'>deterministic site build</span><h2 id='build-performance'>Build Performance</h2>
-        <div class='metric'>
-          <span class='label'>SSG build (www)</span>
-          <span class='value'>30 route modules, 205 sitemap URLs</span>
-        </div>
-        <div class='metric'>
-          <span class='label'>Dev cold start</span>
-          <span class='value'>Measured by CI performance evidence</span>
-        </div>
-        <div class='metric'>
-          <span class='label'>Vite dev start</span>
-          <span class='value'>Measured by CI performance evidence</span>
-        </div>
-        <div class='metric'>
-          <span class='label'>Client bundle</span>
-          <span class='value'>Budgeted island chunks; no mandatory page runtime</span>
-        </div>
+          <open-artifact-panel>
+            <span slot='label'>build evidence</span>
+            <span slot='meta'>deterministic site build</span>
+            <h2 id='build-performance'>Build Performance</h2>
+            <div class='metric'>
+              <span class='label'>SSG build (www)</span>
+              <span class='value'>30 route modules, 205 sitemap URLs</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Dev cold start</span>
+              <span class='value'>Measured by CI performance evidence</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Vite dev start</span>
+              <span class='value'>Measured by CI performance evidence</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Client bundle</span>
+              <span class='value'>Budgeted island chunks; no mandatory page runtime</span>
+            </div>
 
-        <h2 id='rendering'>Rendering</h2>
-        <div class='metric'>
-          <span class='label'>DSD SSR</span>
-          <span class='value'>Zero JS parse cost (browser native)</span>
-        </div>
-        <div class='metric'>
-          <span class='label'>Island hydrate</span>
-          <span class='value'>Per-component, strategy-gated</span>
-        </div>
-        <div class='metric'>
-          <span class='label'>Navigation</span>
-          <span class='value'>Browser-native navigation with optional View Transitions</span>
-        </div>
-        </open-artifact-panel>
+            <h2 id='rendering'>Rendering</h2>
+            <div class='metric'>
+              <span class='label'>DSD SSR</span>
+              <span class='value'>Zero JS parse cost (browser native)</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Island hydrate</span>
+              <span class='value'>Per-component, strategy-gated</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Navigation</span>
+              <span class='value'>Browser-native navigation with optional View Transitions</span>
+            </div>
+          </open-artifact-panel>
 
-        <h2 id='bundle-size'>Bundle Size</h2>
-        <p>
-          openElement ships zero runtime JS for DSD components. Islands load on-demand by strategy.
-          No framework runtime in the critical path.
-        </p>
-      </div></open-reading-shell>
+          <h2 id='bundle-size'>Bundle Size</h2>
+          <p>
+            openElement ships zero runtime JS for DSD components. Islands load on-demand by
+            strategy. No framework runtime in the critical path.
+          </p>
+        </div>
+      </open-reading-shell>
     );
   }
-
 }
 customElements.define('benchmark-page', Benchmark);
 export const tagName = 'benchmark-page';

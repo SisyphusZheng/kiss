@@ -33,14 +33,14 @@
 export { openPropsRootSheet, openPropsTokenSheet } from './open-props-tokens.ts';
 
 // Components
-export { OpenButton, tagName as openButtonTagName } from './open-button.tsx';
-export { OpenCard, tagName as openCardTagName } from './open-card.tsx';
-export { OpenInput, tagName as openInputTagName } from './open-input.tsx';
-export { OpenCodeBlock, tagName as openCodeBlockTagName } from './open-code-block.tsx';
-export { OpenBadge, tagName as openBadgeTagName } from './open-badge.tsx';
-export { OpenThemeToggle, tagName as openThemeToggleTagName } from './open-theme-toggle.tsx';
+export { OpenButton } from './open-button.tsx';
+export { OpenCard } from './open-card.tsx';
+export { OpenInput } from './open-input.tsx';
+export { OpenCodeBlock } from './open-code-block.tsx';
+export { OpenBadge } from './open-badge.tsx';
+export { OpenThemeToggle } from './open-theme-toggle.tsx';
 export { OpenDialog, tagName as openDialogTagName } from './open-dialog.tsx';
-export { OpenCallout, tagName as openCalloutTagName } from './open-callout.tsx';
+export { OpenCallout } from './open-callout.tsx';
 export { OpenDropdown, tagName as openDropdownTagName } from './open-dropdown.tsx';
 export { OpenTabs, tagName as openTabsTagName } from './open-tabs.tsx';
 

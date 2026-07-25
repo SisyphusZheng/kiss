@@ -71,9 +71,19 @@ sheet.replaceSync(`
 `);
 
 const references = [
-  ['01', 'Get started', '/guide/getting-started', 'Create a real app from the supported public interface.'],
+  [
+    '01',
+    'Get started',
+    '/guide/getting-started',
+    'Create a real app from the supported public interface.',
+  ],
   ['02', 'API reference', '/apilist', 'Inspect the five-package surface and optional primitives.'],
-  ['03', 'Architecture', '/architecture/architecture', 'Follow the element, app and build contracts.'],
+  [
+    '03',
+    'Architecture',
+    '/architecture/architecture',
+    'Follow the element, app and build contracts.',
+  ],
   ['04', 'Roadmap', '/roadmap', 'See current truth and the next product boundary.'],
 ] as const;
 
@@ -81,47 +91,205 @@ export class DocsHome extends OpenElement {
   static override styles = [sheet];
 
   override render() {
-    return <main class='home cinematic-v2'>
-      <open-cinematic-scroll></open-cinematic-scroll>
-      <section class='film film-grid'>
-        <open-cinematic-atmosphere></open-cinematic-atmosphere>
-        <div class='hero'>
-          <div>
-            <p class='eyebrow'>OpenElement / Web Standards Lab</p>
-            <h1>The Web,<br />composed.</h1>
-            <p class='lede'>A Web Components-native application framework for beautiful, static-first applications — composed from real browser primitives.</p>
-            <div class='actions'><a class='action primary' href='/guide/getting-started'>Start building</a><a class='action' href='#element'>Watch it unfold</a></div>
-            <small class='version'>Published line: {OPENELEMENT_VERSION}</small>
+    return (
+      <main class='home cinematic-v2'>
+        <open-cinematic-scroll></open-cinematic-scroll>
+        <section class='film film-grid'>
+          <open-cinematic-atmosphere></open-cinematic-atmosphere>
+          <div class='hero'>
+            <div>
+              <p class='eyebrow'>OpenElement / Web Standards Lab</p>
+              <h1>
+                The Web,<br />composed.
+              </h1>
+              <p class='lede'>
+                A Web Components-native application framework for beautiful, static-first
+                applications — composed from real browser primitives.
+              </p>
+              <div class='actions'>
+                <a class='action primary' href='/guide/getting-started'>Start building</a>
+                <a class='action' href='#element'>Watch it unfold</a>
+              </div>
+              <small class='version'>Published line: {OPENELEMENT_VERSION}</small>
+            </div>
+            <div class='aperture-stage' aria-label='OpenElement brand mark visual'>
+              <div class='orbit'></div>
+              <div class='aperture'>
+                <div class='hero-mark-wrap'>
+                  <div class='vinyl'>
+                    <div class='vinyl-label'>
+                      <span class='vinyl-wordmark' aria-hidden='true'>
+                        &lt;open<span class='vinyl-slash'>/</span>&gt;
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span class='node one'>DSD</span>
+              <span class='node two'>APP</span>
+              <span class='node three'>WC</span>
+            </div>
           </div>
-          <div class='aperture-stage' aria-label='OpenElement brand mark visual'>
-            <div class='orbit'></div><div class='aperture'><div class='hero-mark-wrap'><div class='vinyl'><div class='vinyl-label'><span class='vinyl-wordmark' aria-hidden='true'>&lt;open<span class='vinyl-slash'>/</span>&gt;</span></div></div></div></div>
-            <span class='node one'>DSD</span><span class='node two'>APP</span><span class='node three'>WC</span>
-          </div>
-        </div>
-        <div class='scroll-cue'>Scroll to compose</div>
-      </section>
+          <div class='scroll-cue'>Scroll to compose</div>
+        </section>
 
-      <div class='scenes'>
-        <section class='scene' id='element'>
-          <div class='scene-copy'><p class='scene-index'>01 / Element</p><h2>Start with a native boundary.</h2><p>A reusable element is not an abstraction to escape the web. It is the durable, inspectable contract your application is built from.</p></div>
-          <div class='scene-art'><div class='component-stack'><div class='component'><strong>&lt;open-app&gt;</strong><span>application shell / browser-native</span></div><div class='component'><strong>&lt;open-page&gt;</strong><span>route descriptor / static render</span></div><div class='component'><strong>&lt;open-card&gt;</strong><span>custom element / light from shadow</span></div></div></div>
+        <div class='scenes'>
+          <section class='scene' id='element'>
+            <div class='scene-copy'>
+              <p class='scene-index'>01 / Element</p>
+              <h2>Start with a native boundary.</h2>
+              <p>
+                A reusable element is not an abstraction to escape the web. It is the durable,
+                inspectable contract your application is built from.
+              </p>
+            </div>
+            <div class='scene-art'>
+              <div class='component-stack'>
+                <div class='component'>
+                  <strong>&lt;open-app&gt;</strong>
+                  <span>application shell / browser-native</span>
+                </div>
+                <div class='component'>
+                  <strong>&lt;open-page&gt;</strong>
+                  <span>route descriptor / static render</span>
+                </div>
+                <div class='component'>
+                  <strong>&lt;open-card&gt;</strong>
+                  <span>custom element / light from shadow</span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class='scene'>
+            <div class='scene-copy'>
+              <p class='scene-index'>02 / DSD</p>
+              <h2>Give every component its own room.</h2>
+              <p>
+                Declarative Shadow DOM preserves real component boundaries in the document. What
+                ships is still HTML: visible, inspectable and ready before client JavaScript.
+              </p>
+            </div>
+            <div class='scene-art'>
+              <div class='component-stack'>
+                <div class='component'>
+                  <strong>&lt;template shadowrootmode="open"&gt;</strong>
+                  <span>shadow root attached by the browser</span>
+                </div>
+                <div class='component'>
+                  <strong>slot="content"</strong>
+                  <span>encapsulation without an invented runtime</span>
+                </div>
+                <div class='component'>
+                  <strong>&lt;/template&gt;</strong>
+                  <span>rendered once, understood everywhere</span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class='scene'>
+            <div class='scene-copy'>
+              <p class='scene-index'>03 / Islands</p>
+              <h2>Wake only what needs to move.</h2>
+              <p>
+                Static composition remains still. Small islands light up exactly where interaction
+                earns its cost, keeping the rest of the page close to the platform.
+              </p>
+            </div>
+            <div class='scene-art'>
+              <div class='pulse-grid'>
+                <div class='island'>
+                  <span>
+                    static<br />
+                    <small>0 JS</small>
+                  </span>
+                </div>
+                <div class='island'>
+                  <span>
+                    visible<br />
+                    <small>island</small>
+                  </span>
+                </div>
+                <div class='island'>
+                  <span>
+                    idle<br />
+                    <small>island</small>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class='scene'>
+            <div class='scene-copy'>
+              <p class='scene-index'>04 / Output</p>
+              <h2>One composition. Portable output.</h2>
+              <p>
+                The same supported build interface produces static output proven for browser
+                delivery, Node and Workers. The deployment target changes; the component contract
+                does not.
+              </p>
+            </div>
+            <div class='scene-art'>
+              <div class='output'>
+                <article class='target'>
+                  <span>01</span>
+                  <strong>Browser</strong>
+                  <span>HTML · DSD · islands</span>
+                </article>
+                <article class='target'>
+                  <span>02</span>
+                  <strong>Node</strong>
+                  <span>SSR admission · output proof</span>
+                </article>
+                <article class='target'>
+                  <span>03</span>
+                  <strong>Workers</strong>
+                  <span>portable deployment · standards</span>
+                </article>
+              </div>
+            </div>
+          </section>
+          <section class='scene final'>
+            <div class='scene-copy'>
+              <p class='scene-index'>05 / Begin</p>
+              <h2>Compose your next application in the open.</h2>
+              <p>
+                Use the public starter, author the parts that matter, and let the browser keep the
+                rest honest.
+              </p>
+              <div class='command'>
+                <code>$ deno run -A npm:@openelement/create my-app</code>
+                <a class='action primary' href='/guide/getting-started'>Start building</a>
+              </div>
+              <div class='actions final-actions'>
+                <a class='action' href='/docs'>Explore docs</a>
+                <a class='action' href='/architecture/architecture'>See architecture</a>
+              </div>
+            </div>
+          </section>
+        </div>
+        <section class='reference'>
+          <header>
+            <div>
+              <p class='scene-index'>Continue the composition</p>
+              <h2>Facts behind the feeling.</h2>
+            </div>
+            <p>
+              Every scene is grounded in the public product surface, architecture and release truth
+              — not a decorative fiction.
+            </p>
+          </header>
+          <div class='links'>
+            {references.map(([index, title, href, copy]) => (
+              <a href={href}>
+                <span>{index}</span>
+                <strong>{title}</strong>
+                <small>{copy}</small>
+              </a>
+            ))}
+          </div>
         </section>
-        <section class='scene'>
-          <div class='scene-copy'><p class='scene-index'>02 / DSD</p><h2>Give every component its own room.</h2><p>Declarative Shadow DOM preserves real component boundaries in the document. What ships is still HTML: visible, inspectable and ready before client JavaScript.</p></div>
-          <div class='scene-art'><div class='component-stack'><div class='component'><strong>&lt;template shadowrootmode="open"&gt;</strong><span>shadow root attached by the browser</span></div><div class='component'><strong>slot="content"</strong><span>encapsulation without an invented runtime</span></div><div class='component'><strong>&lt;/template&gt;</strong><span>rendered once, understood everywhere</span></div></div></div>
-        </section>
-        <section class='scene'>
-          <div class='scene-copy'><p class='scene-index'>03 / Islands</p><h2>Wake only what needs to move.</h2><p>Static composition remains still. Small islands light up exactly where interaction earns its cost, keeping the rest of the page close to the platform.</p></div>
-          <div class='scene-art'><div class='pulse-grid'><div class='island'><span>static<br /><small>0 JS</small></span></div><div class='island'><span>visible<br /><small>island</small></span></div><div class='island'><span>idle<br /><small>island</small></span></div></div></div>
-        </section>
-        <section class='scene'>
-          <div class='scene-copy'><p class='scene-index'>04 / Output</p><h2>One composition. Portable output.</h2><p>The same supported build interface produces static output proven for browser delivery, Node and Workers. The deployment target changes; the component contract does not.</p></div>
-          <div class='scene-art'><div class='output'><article class='target'><span>01</span><strong>Browser</strong><span>HTML · DSD · islands</span></article><article class='target'><span>02</span><strong>Node</strong><span>SSR admission · output proof</span></article><article class='target'><span>03</span><strong>Workers</strong><span>portable deployment · standards</span></article></div></div>
-        </section>
-        <section class='scene final'><div class='scene-copy'><p class='scene-index'>05 / Begin</p><h2>Compose your next application in the open.</h2><p>Use the public starter, author the parts that matter, and let the browser keep the rest honest.</p><div class='command'><code>$ deno run -A npm:@openelement/create my-app</code><a class='action primary' href='/guide/getting-started'>Start building</a></div><div class='actions final-actions'><a class='action' href='/docs'>Explore docs</a><a class='action' href='/architecture/architecture'>See architecture</a></div></div></section>
-      </div>
-      <section class='reference'><header><div><p class='scene-index'>Continue the composition</p><h2>Facts behind the feeling.</h2></div><p>Every scene is grounded in the public product surface, architecture and release truth — not a decorative fiction.</p></header><div class='links'>{references.map(([index,title,href,copy]) => <a href={href}><span>{index}</span><strong>{title}</strong><small>{copy}</small></a>)}</div></section>
-    </main>;
+      </main>
+    );
   }
 }
 

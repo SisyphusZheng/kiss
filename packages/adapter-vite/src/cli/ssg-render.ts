@@ -7,7 +7,12 @@
  */
 
 import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '../internal/ssg/index.ts';
-import type { SsgRenderEvidence, SsgRenderOptions, SsrBundle } from '../internal/protocol/ssg.ts';
+import type {
+  SsgRenderEvidence,
+  SsgRenderOptions,
+  SsgRenderSummary,
+  SsrBundle,
+} from '../internal/protocol/ssg.ts';
 import { printBuildManifest } from '../build-manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 
@@ -16,6 +21,7 @@ export type {
   SsgPageOutput,
   SsgRenderEvidence,
   SsgRenderOptions,
+  SsgRenderSummary,
   SsrBundle,
 } from '../internal/protocol/ssg.ts';
 
@@ -23,7 +29,7 @@ export async function ssgRender(
   module: SsrBundle,
   options: SsgRenderOptions,
   ctx?: OpenElementBuildContext,
-): Promise<void> {
+): Promise<SsgRenderSummary> {
   return await ssgRenderCore(module, options, createSsgRenderEvidence(ctx));
 }
 

@@ -28,10 +28,18 @@ test.describe('Cinematic homepage', () => {
       .toBe('none');
     const mark = logo.locator('.logo-glyph');
     await expect(mark).toBeVisible();
-    const darkColor = await mark.evaluate((element) => getComputedStyle(element).color);
-    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
-    const lightColor = await mark.evaluate((element) => getComputedStyle(element).color);
-    expect(lightColor).not.toBe(darkColor);
+    const initialColor = await mark.evaluate((element) => getComputedStyle(element).color);
+    // theme-init follows prefers-color-scheme, so the initial theme varies by
+    // environment; toggle to the opposite of the current theme instead of
+    // assuming a fixed starting point.
+    await page.evaluate(() => {
+      const current = document.documentElement.getAttribute('data-theme') === 'light'
+        ? 'dark'
+        : 'light';
+      document.documentElement.setAttribute('data-theme', current);
+    });
+    const toggledColor = await mark.evaluate((element) => getComputedStyle(element).color);
+    expect(toggledColor).not.toBe(initialColor);
   });
 
   test('drives the native film timeline without hijacking scroll', async ({ page }) => {

@@ -14,16 +14,22 @@ import {
   createPublishExistingPlan,
   createReleaseEvidence,
   createReleasePlan,
+  currentBranchName,
   currentWorkflowRunUrl,
   evidenceCurrentVersion,
   evidenceFile,
   githubReleaseUrl,
+  hasStagedChanges,
   isCIEnv,
   nextPatchVersion,
+  planFinalizeBranch,
+  planStartBranches,
   type ReleaseClosureRecord,
+  type ReleaseCommandStep,
   type ReleaseEvidence,
   releaseNoteFile,
   releaseTag,
+  resumeEvidenceFromPrior,
   runCaptured,
   runReleaseStep,
   writeReleaseClosure,
@@ -174,15 +180,6 @@ async function runTier(tier: AutoFlowTier, dryRun: boolean): Promise<void> {
   }
 }
 
-async function hasStagedChanges(): Promise<boolean> {
-  const status = await new Deno.Command('git', {
-    args: ['diff', '--cached', '--quiet'],
-  }).spawn().status;
-  if (status.code === 0) return false;
-  if (status.code === 1) return true;
-  throw new Error(`git diff --cached --quiet failed with exit ${status.code}`);
-}
-
 async function writeAndStageReleaseEvidence(evidence: ReleaseEvidence): Promise<void> {
   await writeReleaseEvidence(evidence);
   await writeReleaseNote(evidence);
@@ -213,8 +210,10 @@ async function commitFinalReleaseEvidence(
       '-m',
       `docs(release): finalize ${releaseTag(evidence.targetVersion)} evidence`,
     ]);
-    await runCaptured(['git', 'push', 'origin', branch]);
   }
+  // Push even when there was nothing to commit: a previous attempt may have
+  // committed locally and failed at the push, and the resume must retry it.
+  await runCaptured(['git', 'push', 'origin', branch]);
 }
 
 /**
@@ -248,8 +247,9 @@ async function finalizeReleaseClosure(
   ]);
   if (await hasStagedChanges()) {
     await runCaptured(['git', 'commit', '-m', `docs(release): record ${tag} closure`]);
-    await runCaptured(['git', 'push', 'origin', branch]);
   }
+  // Push unconditionally for the same resume reason as the final evidence.
+  await runCaptured(['git', 'push', 'origin', branch]);
 }
 
 /**
@@ -279,22 +279,132 @@ async function syncGitHubReleaseNotes(evidence: ReleaseEvidence): Promise<void> 
   }
 }
 
+/**
+ * The local release plan starts on dev but publishes, tags and finalizes on
+ * main. Return the worktree to the start branch and fast-forward it so the
+ * next release cycle starts synced. A failure here does not undo the release
+ * (main already has every release commit); warn with the manual recovery
+ * instead of failing.
+ */
+export async function syncBackToStartBranch(
+  startBranch: string,
+  releaseBranch: string,
+): Promise<void> {
+  if (startBranch === releaseBranch) return;
+  try {
+    await runCaptured(['git', 'checkout', startBranch]);
+    await runCaptured(['git', 'merge', '--ff-only', releaseBranch]);
+    await runCaptured(['git', 'push', 'origin', startBranch]);
+  } catch (error) {
+    console.warn(
+      `[release] could not sync ${startBranch} from ${releaseBranch} (${
+        error instanceof Error ? error.message.split('\n')[0] : String(error)
+      }); run manually: git checkout ${startBranch} && git merge --ff-only ${releaseBranch} ` +
+        `&& git push origin ${startBranch}`,
+    );
+  }
+}
+
+/**
+ * Land the final completed evidence and the closure record on the release
+ * branch, then return to the start branch. The release branch is derived from
+ * the plan (its last checkout target), not from expectedBranch: the local
+ * plan starts on dev but publishes and tags on main, and main CI validates
+ * the release closure, so finalize commits that landed on dev left main
+ * evidence stuck at "running" with no closure.
+ *
+ * A finalize failure (commit or push) does not flip the release to failed:
+ * publish and tag already succeeded, the evidence on disk stays completed,
+ * and re-running the same command resumes at the finalize phase.
+ */
+export async function finalizeReleaseOnReleaseBranch(
+  evidence: ReleaseEvidence,
+  plan: ReleaseCommandStep[],
+  expectedBranch: string,
+): Promise<void> {
+  const current = await currentBranchName(expectedBranch);
+  const finalizeBranch = planFinalizeBranch(plan, current);
+  if (current !== finalizeBranch) {
+    // A resume that skipped every checkout step restarts on the start branch;
+    // move to the release branch explicitly before committing.
+    await runCaptured(['git', 'checkout', finalizeBranch]);
+  }
+  try {
+    await commitFinalReleaseEvidence(evidence, finalizeBranch);
+    await finalizeReleaseClosure(evidence, finalizeBranch);
+  } catch (error) {
+    console.warn(
+      `[release] finalize on ${finalizeBranch} failed (${
+        error instanceof Error ? error.message.split('\n')[0] : String(error)
+      }); publish and tag already succeeded, so the release stays completed. ` +
+        'Re-run the same command to retry the finalize commits.',
+    );
+  }
+  await syncGitHubReleaseNotes(evidence);
+  await syncBackToStartBranch(expectedBranch, finalizeBranch);
+}
+
 async function persistReleaseEvidenceAfterStep(
   evidence: ReleaseEvidence,
   stepName: string,
+  executed: boolean,
 ): Promise<void> {
   if (stepName === 'stage release evidence') {
+    // Staging is harmless on a skipped step and required when the matching
+    // commit step re-runs after a failed attempt.
     await writeAndStageReleaseEvidence(evidence);
     return;
   }
 
   if (stepName === 'commit release evidence') {
-    await amendReleaseEvidenceCommit(evidence);
+    if (executed) {
+      // HEAD is the commit this run just created; folding the latest step
+      // states into it with an amend is safe.
+      await amendReleaseEvidenceCommit(evidence);
+      return;
+    }
+    // Skipped on a resume: the evidence commit may already be pushed, so it
+    // must never be amended. Any status drift is persisted by the finalize
+    // commit instead.
+    await writeReleaseEvidence(evidence);
+    await writeReleaseNote(evidence);
     return;
   }
 
   await writeReleaseEvidence(evidence);
   await writeReleaseNote(evidence);
+}
+
+/**
+ * Load the evidence a previous attempt of the same release left behind, if
+ * any. The file is only reused for the same kind and target version; anything
+ * else starts a fresh run with a fresh evidence id.
+ */
+async function readPriorReleaseEvidence(
+  kind: ReleaseEvidence['kind'],
+  targetVersion: string,
+): Promise<ReleaseEvidence | undefined> {
+  const path = evidenceFile(targetVersion);
+  let text: string;
+  try {
+    text = await Deno.readTextFile(path);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return undefined;
+    throw error;
+  }
+  let prior: ReleaseEvidence;
+  try {
+    prior = JSON.parse(text) as ReleaseEvidence;
+  } catch (error) {
+    throw new Error(
+      `Prior release evidence ${path} is not readable JSON; repair or remove it before ` +
+        `re-running: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (prior.kind !== kind || prior.targetVersion !== targetVersion || !Array.isArray(prior.steps)) {
+    return undefined;
+  }
+  return prior;
 }
 
 async function executeReleasePlan(
@@ -305,18 +415,24 @@ async function executeReleasePlan(
   plan = createReleasePlan(targetVersion, approvalId),
   expectedBranch = isCIEnv() ? 'main' : 'dev',
 ): Promise<void> {
-  const evidence = createReleaseEvidence(
+  const persistsEvidence = kind !== 'release-prepare';
+  const prior = persistsEvidence && !dryRun
+    ? await readPriorReleaseEvidence(kind, targetVersion)
+    : undefined;
+  const evidence = prior ? resumeEvidenceFromPrior(prior, plan) : createReleaseEvidence(
     kind,
     evidenceCurrentVersion(kind),
     targetVersion,
     approvalId,
   );
-  evidence.steps = plan.map((step) => ({
-    name: step.name,
-    command: step.command,
-    cwd: step.cwd,
-    status: 'pending',
-  }));
+  if (!prior) {
+    evidence.steps = plan.map((step) => ({
+      name: step.name,
+      command: step.command,
+      cwd: step.cwd,
+      status: 'pending',
+    }));
+  }
 
   if (dryRun) {
     console.log(
@@ -331,11 +447,24 @@ async function executeReleasePlan(
     return;
   }
 
-  await assertBranch(expectedBranch);
+  // A fresh run starts on the expected branch. A resume must start where the
+  // passed prefix left the worktree: the local plan checks out main mid-run,
+  // so a run that failed after that point only resumes from main.
+  const startBranches = planStartBranches(plan, prior?.steps, expectedBranch);
+  const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
+  if (!startBranches.includes(branch)) {
+    throw new Error(
+      `Refusing release from branch ${branch}; expected ${startBranches.join(' or ')}.`,
+    );
+  }
   await assertCleanWorktree();
+  if (prior) {
+    console.log(
+      `Resuming release run ${prior.id} (${prior.status}); already-passed steps are skipped.`,
+    );
+  }
 
   evidence.status = 'running';
-  const persistsEvidence = kind !== 'release-prepare';
   if (persistsEvidence) {
     await writeReleaseEvidence(evidence);
     await writeReleaseNote(evidence);
@@ -343,18 +472,23 @@ async function executeReleasePlan(
 
   try {
     for (const step of plan) {
+      const record = evidence.steps.find((item) => item.name === step.name);
+      if (record?.status === 'passed') {
+        console.log(`[resume] skipping already-passed step: ${step.name}`);
+        if (persistsEvidence) await persistReleaseEvidenceAfterStep(evidence, step.name, false);
+        continue;
+      }
       await runReleaseStep(evidence, step);
-      if (persistsEvidence) await persistReleaseEvidenceAfterStep(evidence, step.name);
+      if (persistsEvidence) await persistReleaseEvidenceAfterStep(evidence, step.name, true);
     }
     evidence.status = 'completed';
     evidence.completedAt = new Date().toISOString();
     // The original evidence commit is intentionally created before tagging.
     // Persist completion in a follow-up commit after tag/npm/GitHub success so
-    // the repository's durable evidence cannot remain stuck at "running".
+    // the repository's durable evidence cannot remain stuck at "running". The
+    // finalize lands on the release branch (main), not the start branch.
     if (persistsEvidence) {
-      await commitFinalReleaseEvidence(evidence, expectedBranch);
-      await finalizeReleaseClosure(evidence, expectedBranch);
-      await syncGitHubReleaseNotes(evidence);
+      await finalizeReleaseOnReleaseBranch(evidence, plan, expectedBranch);
     }
   } catch (error) {
     evidence.status = 'failed';

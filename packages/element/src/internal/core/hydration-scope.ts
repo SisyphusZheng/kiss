@@ -34,6 +34,26 @@ import { createLogger } from './logger.ts';
 
 const scopeLog = createLogger('hydration');
 
+/**
+ * Elements whose shadow-root (or light-DOM) bindings are owned by the
+ * element's own HydrationScope — set by OpenElement after a successful DSD
+ * hydration or CSR render. client-runtime reads this to avoid stacking a
+ * second HydrationScope onto an element that already hydrated itself (which
+ * double-subscribed every signal marker and cleared signal-render targets a
+ * second time).
+ */
+const selfHydratedElements = new WeakSet<Element>();
+
+/** Record that an element manages its own bindings through its own scope. */
+export function markSelfHydrated(el: Element): void {
+  selfHydratedElements.add(el);
+}
+
+/** Whether an element manages its own bindings through its own scope. */
+export function hasSelfHydrated(el: Element): boolean {
+  return selfHydratedElements.has(el);
+}
+
 /** Options for creating a HydrationScope. */
 export interface HydrationScopeOptions {
   /** Signal registry used to resolve data-signal markers. */

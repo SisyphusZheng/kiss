@@ -203,7 +203,7 @@ Deno.test('createOpenPlugin() corePlugin.config returns rollupOptions with virtu
 
 // ─── createOpenPlugin() configResolved + generateEntry ───────────────────
 
-Deno.test('createOpenPlugin() corePlugin.configResolved sets honoEntryCode', () => {
+Deno.test('createOpenPlugin() corePlugin.configResolved builds the placeholder entry descriptor', () => {
   const plugins = createOpenPlugin();
   const corePlugin = plugins.find((p) => p.name === 'open:core')!;
   assertExists(corePlugin.configResolved);
@@ -411,10 +411,11 @@ Deno.test('createOpenPlugin() corePlugin.buildStart with packageIslands config',
 
 // ─── createOpenPlugin() configResolved + virtualEntry fallback ──────────
 
-Deno.test('createOpenPlugin() virtualEntryPlugin.load fallback when ctx.honoEntryCode is empty', () => {
+Deno.test('createOpenPlugin() virtualEntryPlugin.load falls back to regenerating from cached routes', () => {
   const plugins = createOpenPlugin();
   const virtualPlugin = plugins.find((p) => p.name === 'open:virtual-entry')!;
-  // First call configResolved to set honoEntryCode
+  // Prime the placeholder entry descriptor (empty routes), as configResolved
+  // does before buildStart.
   callPluginHook(plugins[0].configResolved, {});
   // load should return code
   const code = callPluginHook(virtualPlugin.load, '\0virtual:open-hono-entry');

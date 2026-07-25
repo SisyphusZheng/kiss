@@ -83,23 +83,18 @@ export {
   injectCspMeta,
   injectSpeculationRules,
   injectViewTransitionMeta,
-  insertAfterHead,
-  type IslandLayerMap,
-  type IslandManifestEntry,
-  type IslandStrategyMap,
-  type PageIslandManifest,
   writeIslandManifests,
 } from './internal/ssg/index.ts';
 
 // Protocol type re-exports
-export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';
+export type { SpeculationRulesOptions, SsgBehaviorOptions } from './internal/protocol/ssg.ts';
 
 // Head injection (public helpers)
-export { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from './head-injection.ts';
+export { buildHeadExtras } from './head-injection.ts';
 export type { HeadExtrasResult } from './head-injection.ts';
 
 // MDX integration
-export { mdxPlugin, openMdx } from './plugin-mdx.ts';
+export { mdxPlugin } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Content/build utilities owned by the adapter implementation.

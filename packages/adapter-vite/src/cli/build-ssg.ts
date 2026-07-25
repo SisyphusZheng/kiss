@@ -19,13 +19,15 @@ import { normalizePath } from 'vite';
 import process from 'node:process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type {
+  CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
   RouteEntry,
 } from '../internal/protocol/framework.ts';
 import type { OpenElementPackageManifest } from '../internal/protocol/manifest.ts';
+import type { EntryDescriptor, IslandDecl } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
-import { ssgRender } from '../internal/ssg/index.ts';
+import { buildEntryDescriptor, ssgRender } from '../internal/ssg/index.ts';
 import { SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
@@ -56,6 +58,8 @@ interface BuildSSGOptions {
   islandFiles?: string[];
   islandMeta?: Record<string, Partial<import('../internal/protocol/ssg.ts').IslandDecl>>;
   packageManifests?: OpenElementPackageManifest[];
+  /** CEM-derived compatibility classifications from Phase 1 auto-detection. */
+  cemClassifications?: CompatibilityClassification[];
   /** @security Injected as raw HTML without sanitization */
   headExtras?: string;
   allowHeadExtrasScripts?: boolean;
@@ -79,6 +83,70 @@ interface BuildSSGOptions {
    * Can be a boolean (true = auto-generate from routes) or explicit rules.
    */
   speculation?: boolean | import('../internal/protocol/ssg.ts').SpeculationRulesOptions;
+  /**
+   * Policy for dynamic-route render failures during SSG.
+   * See SsgRenderOptions.dynamicRouteFailure. Defaults to 'fail'.
+   */
+  dynamicRouteFailure?: 'fail' | 'warn';
+}
+
+/** Resolved inputs for the SSG entry descriptor (Phase 1 discoveries + Phase 3 options). */
+export interface SsgEntryDescriptorInputs {
+  routes: RouteEntry[];
+  routesDir: string;
+  islandsDir: string;
+  middleware?: FrameworkOptions['middleware'];
+  islandTagNames: string[];
+  islandFiles: string[];
+  islandMeta: Record<string, Partial<IslandDecl>>;
+  packageManifests: OpenElementPackageManifest[];
+  cemClassifications: CompatibilityClassification[];
+  /** @security Injected as raw HTML without sanitization */
+  headExtras?: string;
+  allowHeadExtrasScripts?: boolean;
+  html?: { lang?: string; title?: string };
+  upgradeStrategy: HydrationStrategy;
+  appShell?: FrameworkOptions['appShell'];
+  layouts?: FrameworkOptions['layouts'];
+}
+
+/**
+ * Build the SSG entry descriptor and sync its SSR admission plan into ctx.
+ *
+ * Single descriptor instantiation (alpha.17 B1): the admission plan and the
+ * emitted SSG entry code come from the same descriptor, and
+ * ctx.phase1.ssrAdmissionPlan is synced from it so the render evidence
+ * (createSsgRenderEvidence) reads the same plan the SSG entry was generated
+ * from.
+ *
+ * alpha.18 (R2-H2): inputs.cemClassifications must carry the Phase 1 CEM
+ * classifications. Without them the SSG admission plan falls back to the
+ * conservative package default (client-only) for CEM 'ssr-capable' islands,
+ * diverging from the dev/SSR entry and corrupting the synced plan + evidence.
+ */
+export function buildSsgEntryDescriptor(
+  inputs: SsgEntryDescriptorInputs,
+  ctx: OpenElementBuildContext,
+): EntryDescriptor {
+  const descriptor = buildEntryDescriptor(inputs.routes, {
+    routesDir: inputs.routesDir,
+    islandsDir: inputs.islandsDir,
+    middleware: inputs.middleware,
+    ssg: true,
+    islandTagNames: inputs.islandTagNames,
+    islandFiles: inputs.islandFiles,
+    islandMeta: inputs.islandMeta,
+    packageManifests: inputs.packageManifests,
+    cemClassifications: inputs.cemClassifications,
+    headExtras: inputs.headExtras,
+    allowHeadExtrasScripts: inputs.allowHeadExtrasScripts,
+    html: inputs.html,
+    upgradeStrategy: inputs.upgradeStrategy,
+    appShell: inputs.appShell,
+    layouts: inputs.layouts,
+  });
+  ctx.phase1.ssrAdmissionPlan = descriptor.ssrAdmissionPlan;
+  return descriptor;
 }
 
 async function buildSSG(
@@ -115,7 +183,7 @@ async function buildSSG(
   const { scanRoutes, scanIslands, scanIslandMeta, fileToTagName } = await import(
     '../internal/ssg/index.ts'
   );
-  const { buildEntryDescriptor, renderEntry } = await import('../internal/ssg/index.ts');
+  const { renderEntry } = await import('../internal/ssg/index.ts');
 
   const routes = options.routes ?? await scanRoutes(routesDir);
 
@@ -139,23 +207,25 @@ async function buildSSG(
   // the emitted SSG entry code come from the same descriptor. Previously the
   // plan was built without middleware/html/upgradeStrategy and diverged from
   // the descriptor used for rendering.
-  const ssgDescriptor = buildEntryDescriptor(routes, {
+  // alpha.18 (R2-H2): cemClassifications come from Phase 1 (plugin.ts
+  // buildStart auto-detection) so the SSG plan matches the dev/SSR plan.
+  const ssgDescriptor = buildSsgEntryDescriptor({
+    routes,
     routesDir,
     islandsDir,
     middleware: options.middleware,
-    ssg: true,
     islandTagNames: ssgIslandTagNames,
     islandFiles: ssgIslandFiles,
     islandMeta: ssgIslandMeta,
     packageManifests,
+    cemClassifications: options.cemClassifications || ctx.phase1.cemClassifications || [],
     headExtras: options.headExtras,
     allowHeadExtrasScripts: options.allowHeadExtrasScripts,
     html: options.html,
     upgradeStrategy: options.upgradeStrategy || 'idle',
     appShell,
     layouts,
-  });
-  ctx.phase1.ssrAdmissionPlan = ssgDescriptor.ssrAdmissionPlan;
+  }, ctx);
 
   const ssgEntryCode = generateSsrPolyfillBanner() + '\n' + renderEntry(ssgDescriptor);
   // Deno import map resolution handles bare specifiers (e.g. @openelement/ui/open-callout)
@@ -344,6 +414,7 @@ if (typeof globalThis.customElements === 'undefined') {
         islandTagNames: ssgIslandTagNames,
         viewTransition: options.viewTransition,
         speculation: options.speculation as boolean | Record<string, unknown> | undefined,
+        dynamicRouteFailure: options.dynamicRouteFailure,
       },
       createSsgRenderEvidence(ctx),
     );

@@ -139,6 +139,18 @@ export const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    name: 'actions:check-pins',
+    command: ['deno', 'task', 'actions:check-pins'],
+    tiers: ['ci', 'release'],
+    triggers: [/^\.github\/workflows\//, /^tools\/check-action-pins\.ts$/],
+  },
+  {
+    name: 'verify:configs',
+    command: ['deno', 'task', 'verify:configs'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\/[^/]+\/deno\.json$/, /^tools\/verify-package-configs\.ts$/],
+  },
+  {
     name: 'release:evidence:check',
     command: ['deno', 'task', 'release:evidence:check'],
     tiers: ['ci', 'release'],
@@ -271,6 +283,12 @@ export const GATES: readonly GateDefinition[] = [
       /^docs\/integrations\//,
       /^deno\.json$/,
     ],
+  },
+  {
+    name: 'examples:check',
+    command: ['deno', 'task', 'examples:check'],
+    tiers: ['ci', 'release'],
+    triggers: [/^examples\//, /^deno\.json$/],
   },
   {
     name: 'package-artifacts:check',

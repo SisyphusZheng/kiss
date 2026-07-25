@@ -26,7 +26,6 @@ export type {
   PageRevalidate,
   PageRouteContext,
   PageRouteIntent,
-  PageStreamingMode,
 } from './authoring.ts';
 
 // Re-export route data types from protocol for convenience

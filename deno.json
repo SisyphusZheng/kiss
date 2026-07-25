@@ -7,7 +7,8 @@
     "./packages/create",
     "./packages/app",
     "./www",
-    "./examples/deno-desktop-reader"
+    "./examples/deno-desktop-reader",
+    "./examples/deno-desktop-mastodon"
   ],
   "imports": {
     "@std/fs/walk": "jsr:@std/fs@^1.0.0/walk",
@@ -64,6 +65,7 @@
     "consumer:packaged": "deno task pack:dry-run && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
     "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
     "desktop-reader:smoke": "cd examples/deno-desktop-reader && deno test -A app/__tests__/",
+    "examples:check": "cd examples/deno-desktop-reader && deno task check && deno task smoke && cd ../deno-desktop-mastodon && deno task check && deno task smoke",
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",
     "dogfood:evidence": "deno run --allow-read --allow-write --allow-run tools/run-dogfood-evidence.ts",
     "package-artifacts:check": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env tools/check-package-artifacts.ts",
@@ -82,17 +84,18 @@
     "test:visual-baselines": "OPEN_VISUAL_REGRESSION=1 deno run -A npm:@playwright/test@1.59.1 test www/e2e/visual-baselines.spec.ts --config www/e2e/playwright.config.ts --project=chromium",
     "test:e2e:browsers": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts",
     "test:e2e:install": "deno run -A npm:playwright@1.59.1 install chromium",
-    "test:e2e:firefox-smoke": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --project=firefox --grep \"DSD Layers|Layout Island Shell|Island Script Loading|Theme Toggle\"",
+    "test:e2e:firefox-smoke": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --project=firefox --grep \"DSD Layers|Layout Island Shell|Island Script Loading|Theme Toggle|Theme initialization|data-signal bindings|SSR/hydration mismatch degradation|router guards on browser history traversal\"",
+    "test:e2e:webkit-smoke": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --project=webkit --grep \"DSD Layers|Layout Island Shell|Island Script Loading|Theme Toggle|Theme initialization|data-signal bindings|SSR/hydration mismatch degradation|router guards on browser history traversal\"",
     "test:e2e:browsers:install": "deno run -A npm:playwright@1.59.1 install chromium firefox webkit",
     "nitro:proof:node": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts node",
     "nitro:proof:workers": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts workers",
     "test:coverage:check": "deno run --allow-read --allow-run --allow-write --allow-env --allow-net --allow-ffi --allow-sys tools/check-coverage.ts --threshold 73 --branch-threshold 82 --function-threshold 77",
-    "test:critical-paths": "deno run --allow-read --allow-run tools/check-critical-path-tests.ts",
+    "test:critical-paths": "deno run --allow-read --allow-run --allow-env tools/check-critical-path-tests.ts",
     "consumer:element-smoke": "deno run -A tools/consumer-smoke.ts --local",
     "typecheck": "deno task generate:ui-manifest && deno run --allow-read --allow-run --allow-env tools/run-package-graph-task.ts typecheck",
     "lint": "deno lint",
-    "fmt": "deno fmt --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,packages/adapter-vite/__fixtures__/nitro-proof/.nitro/,.deno_cache/",
-    "fmt:check": "deno fmt --check --ignore=deliverables/,REVIEW-REPORT*.md,WC-FULLSTACK*.md,www/content/blog/,www/app/routes/,www/app/data/,www/design/mockups/,brand/,www/public/assets/,custom-dist/,dist-test-ssg-render/,dist-test-ssg-package-render/,packages/adapter-vite/__fixtures__/nitro-proof/.nitro/,.deno_cache/",
+    "fmt": "deno fmt",
+    "fmt:check": "deno fmt --check",
     "clean": "rm -rf packages/*/dist www/dist packages/*/*.tgz",
     "hooks:install": "git config core.hooksPath .githooks",
     "hooks:uninstall": "git config core.hooksPath",
@@ -106,8 +109,8 @@
     "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-prepare",
     "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts publish-existing",
     "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
-    "verify:configs": "deno run --allow-read tools/verify-package-configs.ts",
-    "verify:configs:fix": "deno run --allow-read --allow-write tools/verify-package-configs.ts --fix"
+    "verify:configs": "deno run --allow-read --allow-env tools/verify-package-configs.ts",
+    "verify:configs:fix": "deno run --allow-read --allow-write --allow-env tools/verify-package-configs.ts --fix"
   },
   "fmt": {
     "useTabs": false,
@@ -117,19 +120,13 @@
     "singleQuote": true,
     "proseWrap": "preserve",
     "exclude": [
-      "deliverables/",
-      "REVIEW-REPORT*.md",
-      "WC-FULLSTACK*.md",
       "www/content/blog/",
-      "www/app/routes/",
       "www/app/data/",
       "www/design/mockups/",
-      "brand/",
       "www/public/assets/",
       "custom-dist/",
       "dist-test-ssg-render/",
-      "**/.nitro/",
-      ".deno_cache/"
+      "**/.nitro/"
     ]
   },
   "lint": {
@@ -138,14 +135,11 @@
       "exclude": ["no-sloppy-imports"]
     },
     "exclude": [
-      "deliverables/",
       "www/content/blog/",
-      "www/app/routes/",
       "www/app/data/",
       "custom-dist/",
       "dist-test-ssg-render/",
-      "**/.nitro/",
-      ".deno_cache/"
+      "**/.nitro/"
     ]
   },
   "compilerOptions": {
@@ -166,7 +160,6 @@
     ".deno_cache",
     "custom-dist",
     "dist-test-ssg-render",
-    "deliverables",
     "vendor",
     "**/.nitro"
   ]

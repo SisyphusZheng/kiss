@@ -418,6 +418,49 @@ export function createRouter(options: RouterOptions): RouterInstance {
     return commitNavigation(path, { replace: true });
   }
 
+  /**
+   * Reconcile router state after the browser itself moved the history
+   * pointer (back/forward buttons, direct hash edits). The landed URL
+   * cannot be withheld the way commitNavigation withholds pushState, so
+   * a rejected guard pushes the previous entry back on top, and a guard
+   * redirect replaces the landed entry with the redirect target.
+   */
+  async function commitBrowserNavigation(): Promise<void> {
+    const landed = readPath();
+    const u = new URL(landed, 'http://x');
+    const matched = routeMatcher.match(u.pathname, u.search);
+    if (matched?.route.guard) {
+      const result = await matched.route.guard();
+      if (result === false) {
+        // Blocked: restore the entry the user came from. pushState does
+        // not fire popstate/hashchange, so restoring cannot re-enter here.
+        history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+        return;
+      }
+      if (typeof result === 'string') {
+        await commitNavigation(result, { replace: true, depth: 1 });
+        return;
+      }
+    }
+    rematch();
+    notifyChange();
+  }
+
+  // Serialize browser-driven navigations: guards are async, and rapid
+  // back/forward sequences must resolve in order against the latest URL.
+  let browserNavigationQueue: Promise<void> = Promise.resolve();
+
+  function onBrowserNavigation(): void {
+    browserNavigationQueue = browserNavigationQueue
+      .then(commitBrowserNavigation)
+      .catch((err) => {
+        console.error('[router] browser navigation failed:', err);
+        // Converge to the real URL instead of leaving stale state behind.
+        rematch();
+        notifyChange();
+      });
+  }
+
   function dispose(): void {
     for (const { type, handler } of listeners) {
       removeEventListener(type, handler);
@@ -428,15 +471,9 @@ export function createRouter(options: RouterOptions): RouterInstance {
   // ─── Initialization ───────────────────────────────────────────
 
   if (mode === 'history') {
-    addCleanupListener('popstate', () => {
-      rematch();
-      notifyChange();
-    });
+    addCleanupListener('popstate', onBrowserNavigation);
   } else {
-    addCleanupListener('hashchange', () => {
-      rematch();
-      notifyChange();
-    });
+    addCleanupListener('hashchange', onBrowserNavigation);
   }
 
   // Initial match
