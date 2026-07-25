@@ -1,8 +1,9 @@
 /**
  * Internal rendering helpers for OpenElement.
  *
- * Extracted from open-element.ts to keep the base class focused on its
- * public lifecycle API. Exposed as a package subpath so Deno can emit its
+ * Extracted from the OpenElement base class (open-element-implementation.ts)
+ * to keep the base class focused on its public lifecycle API. Exposed as a
+ * package subpath so Deno can emit its
  * types, but this is an internal implementation detail — consumers should
  * use OpenElement instead.
  *

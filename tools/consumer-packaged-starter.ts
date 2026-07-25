@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { formatJson } from './lib/format-json.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';
 
 const repoRoot = resolve(import.meta.dirname, '..');
@@ -66,7 +67,7 @@ try {
   }
 
   config.nodeModulesDir = 'manual';
-  await Deno.writeTextFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  await Deno.writeTextFile(configPath, formatJson(config));
   await Deno.symlink(join(tmp, 'node_modules'), join(starter, 'node_modules'), { type: 'dir' });
 
   const check = await run(Deno.execPath(), ['task', 'check'], starter);

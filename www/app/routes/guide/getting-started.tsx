@@ -31,7 +31,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     next: { href: '/guide/core-concepts', label: 'Core Concepts' },
     subtitleBefore: 'The current published package line is',
     subtitleAfter:
-      'The five-package convergence is published in alpha.10; external adopter pilot #390 remains the primary stability evidence still open.',
+      'The five-package convergence is published; external adopter pilot #390 remains the primary stability evidence still open.',
     cards: [
       {
         id: 'install',
@@ -63,7 +63,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     next: { href: '/guide/core-concepts', label: '核心概念' },
     subtitleBefore: '当前发布的包线为',
     subtitleAfter:
-      'five-package convergence 已在 alpha.10 发布；外部 adopter pilot #390 仍是尚未关闭的主要稳定性证据。',
+      'five-package convergence 已发布；外部 adopter pilot #390 仍是尚未关闭的主要稳定性证据。',
     cards: [
       {
         id: 'install',

@@ -4,16 +4,10 @@
  * Tests the two-step entry pipeline:
  *   1. buildEntryDescriptor - produces structured data
  *   2. renderEntry - renders data to code string
- *
- * Also integration-tests that generateHonoEntryCode still works.
  */
 
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
-import {
-  buildEntryDescriptor,
-  generateHonoEntryCode,
-  renderEntry,
-} from '../src/internal/ssg/index.ts';
+import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Test fixtures
@@ -233,13 +227,13 @@ Deno.test('renderEntry: document config renders correctly', () => {
   assertStringIncludes(code, 'cdn.example.com');
 });
 
-// Integration test: generateHonoEntryCode
+// Integration test: buildEntryDescriptor + renderEntry end-to-end
 
-Deno.test('generateHonoEntryCode: end-to-end produces runnable code', () => {
-  const code = generateHonoEntryCode(sampleRoutes, {
+Deno.test('buildEntryDescriptor + renderEntry: end-to-end produces runnable code', () => {
+  const code = renderEntry(buildEntryDescriptor(sampleRoutes, {
     routesDir: 'app/routes',
     islandsDir: 'app/islands',
-  });
+  }));
 
   assertStringIncludes(code, "import { Hono } from 'hono'");
   assertStringIncludes(code, 'export default app');

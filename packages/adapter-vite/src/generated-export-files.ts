@@ -34,8 +34,6 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
     'build-utils': 'src/build-utils.ts',
     'jsx-dev-runtime': 'src/jsx-dev-runtime.ts',
     'jsx-runtime': 'src/jsx-runtime.ts',
-    'open-element-hydration': 'src/open-element-hydration.ts',
-    'open-element-render': 'src/open-element-render.ts',
   },
   'ui': {
     '.': 'src/index.ts',

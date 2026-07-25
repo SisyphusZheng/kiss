@@ -61,13 +61,22 @@ const currentDocs = [
  * `(?![\d.])` keeps `0.41.0-alpha.1` from matching inside `0.41.0-alpha.17`.
  * Historical mentions without a currency claim (roadmap tables, release
  * notes) never match these patterns.
+ *
+ * Body-drift heuristics (issue #482): governance doc bodies contradicting
+ * their own headers once survived because only the header zone was gated. A
+ * "current published/verified line|baseline" phrase co-occurring with a
+ * superseded package line, or an "Alpha.N is the current ..." sentence naming
+ * an alpha other than the current one, now fails here.
  */
 export function staleCurrencyClaimPatterns(): RegExp[] {
   const stale = staleClaimsAlternation();
+  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
   return [
     new RegExp(`five-package convergence is published as\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
     new RegExp(`五包收敛已作为\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
     new RegExp(`completed\\s+implementation anchor\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
+    new RegExp(`current (?:published|verified)[^\\n]*(?:${stale})(?![\\d.])`, 'i'),
+    new RegExp(`Alpha\\.(?!${currentAlpha}\\b)\\d+ is the current`, 'i'),
   ];
 }
 

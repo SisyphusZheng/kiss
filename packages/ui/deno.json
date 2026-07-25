@@ -27,9 +27,6 @@
       "deno.json",
       "README.md",
       "LICENSE"
-    ],
-    "exclude": [
-      "!src/generated-manifest.json"
     ]
   },
   "include": [

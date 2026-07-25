@@ -3,6 +3,8 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import type { BuildArtifacts, BuildPlan } from './internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
+import { resolveIslandHydrate } from './internal/ssg/island-scanner.ts';
+import { formatJson } from '@openelement/element/build-utils';
 
 export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPlan {
   const root = ctx.phase3.root;
@@ -27,7 +29,10 @@ export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPl
           join(root, ctx.phase3.islandsDir, ctx.phase1.islandFiles[index] ?? ''),
           root,
         ),
-        hydrate: ctx.phase1.islandMeta[tagName]?.hydrate,
+        hydrate: resolveIslandHydrate(
+          ctx.phase1.islandMeta[tagName]?.hydrate,
+          ctx.options.island?.upgradeStrategy,
+        ),
         ssr: ctx.phase1.islandMeta[tagName]?.ssr,
         source: 'local' as const,
       })),
@@ -124,6 +129,6 @@ export function writeBuildEvidence(plan: BuildPlan, artifacts: BuildArtifacts): 
   };
   writeFileSync(
     join(root, '.openElement', 'build-artifacts.json'),
-    JSON.stringify(evidence, null, 2) + '\n',
+    formatJson(evidence),
   );
 }

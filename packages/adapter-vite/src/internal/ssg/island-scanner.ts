@@ -1,7 +1,8 @@
 /** Island and package-manifest discovery without executing local island modules. */
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import type { HydrationStrategy } from '../protocol/framework.ts';
-import { formatError, OpenElementError } from '@openelement/element';
+import type { IslandDecl } from '../protocol/ssg.ts';
+import { formatError, HYDRATION_STRATEGIES, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
 import { join } from 'node:path';
@@ -42,12 +43,46 @@ export function resolveIslandSsrDsd(meta: {
   };
 }
 
-/** Effective hydrate strategy: island metadata -> configured upgrade strategy -> 'idle'. */
+/** Effective island upgrade strategy: island metadata -> configured upgrade strategy -> 'idle'. */
 export function resolveIslandHydrate(
   hydrate: HydrationStrategy | undefined,
   upgradeStrategy?: HydrationStrategy,
 ): HydrationStrategy {
   return hydrate || upgradeStrategy || 'idle';
+}
+
+/**
+ * Build package island declarations from scanned package manifests.
+ *
+ * Shared implementation for plugin.ts (build-time scan) and
+ * entry-descriptor.ts (descriptor build) so both paths apply the same
+ * source:'package' tagging and hydrate/ssr/dsd resolution.
+ */
+export function buildPackageIslandDecls(
+  packageManifests: OpenElementPackageManifest[],
+  upgradeStrategy?: HydrationStrategy,
+): IslandDecl[] {
+  return packageManifests.flatMap((pkg) =>
+    pkg.declarations
+      .filter((d) => d.openElement?.module)
+      .map((d) => {
+        const openElement = d.openElement;
+        const modulePath = openElement?.module;
+        if (!modulePath) {
+          throw new Error(
+            `Package manifest declaration "${d.tagName}" is missing openElement.module`,
+          );
+        }
+        return {
+          tagName: d.tagName,
+          modulePath,
+          isPackage: true,
+          source: 'package' as const,
+          hydrate: resolveIslandHydrate(openElement?.hydrate, upgradeStrategy),
+          ...resolveIslandSsrDsd(openElement ?? {}),
+        };
+      })
+  );
 }
 
 function staticOpenElementError(message: string): OpenElementError {
@@ -117,7 +152,7 @@ export function readIslandConfig(source: string): {
     }
 
     const value = raw.slice(1, -1);
-    if (!['load', 'idle', 'visible', 'only'].includes(value)) {
+    if (!(HYDRATION_STRATEGIES as readonly string[]).includes(value)) {
       throw staticOpenElementError(`openElement.hydrate has unsupported value "${value}"`);
     }
     meta.hydrate = value as LocalIslandMeta['hydrate'];
@@ -203,7 +238,7 @@ export async function scanIslandMeta(
     if (!islandConfig) continue;
 
     const hydrate: LocalIslandMeta['hydrate'] = islandConfig.hydrate &&
-        ['load', 'idle', 'visible', 'only'].includes(islandConfig.hydrate)
+        (HYDRATION_STRATEGIES as readonly string[]).includes(islandConfig.hydrate)
       ? islandConfig.hydrate
       : undefined;
 

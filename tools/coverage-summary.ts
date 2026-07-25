@@ -112,7 +112,6 @@ export function isCoverageTreeExcluded(path: string): boolean {
   return path.includes('/__tests__/') ||
     path.includes('/__fixtures__/') ||
     path.includes('/fixtures/') ||
-    path.includes('/test-fixtures/') ||
     /\.(test|spec)\.tsx?$/u.test(path) ||
     /\.d\.ts$/u.test(path) ||
     /(^|\/)generated[-_.]/u.test(path);

@@ -1,11 +1,12 @@
 /**
  * @openelement/element - OpenElement base class.
  *
- * Zero-dependency Custom Element base class providing:
+ * Custom Element base class with zero framework dependency, providing:
  *   - Declarative Shadow DOM (DSD) detection at upgrade time
  *   - Client-Side Rendering (CSR) fallback when no DSD content exists
  *   - StyleSheet (SSR-safe CSSStyleSheet) via adoptedStyleSheets
- *   - Declarative event binding via html template @click / @keydown etc.
+ *   - Declarative event binding via JSX onClick / on-click props, matched to
+ *     SSR-emitted data-eid markers at hydration time
  *   - Signal-driven fine-grained DOM patching via data-signal markers
  *   - AbortController cleanup on disconnect
  *   - formAssociated + delegatesFocus support
@@ -101,7 +102,7 @@ const _Base = typeof HTMLElement !== 'undefined' ? HTMLElement : (class {
 } as unknown as typeof HTMLElement);
 
 /**
- * Zero-dependency Custom Element base class for DSD rendering.
+ * Custom Element base class for DSD rendering with zero framework dependency.
  *
  * Provides DSD detection, CSR fallback, event hydration, and style management
  * without any framework dependency (no Lit, no reactive-element).
@@ -296,7 +297,8 @@ export class OpenElement extends _Base {
    *
    * DSD detection: if `this.shadowRoot` already exists and has nodes,
    * the browser pre-populated it from a <template shadowrootmode> tag.
-   * In that case we mark `_dsdHydrated = true` and return the existing root.
+   * In that case we reuse the existing root; the DSD-vs-CSR decision itself
+   * happens later in _renderOrHydrate() via hasPopulatedShadowRoot().
    *
    * CSR fallback: if no shadow root exists, we call `attachShadow()`. If an
    * empty shadow root already exists, we reuse it and let connectedCallback()
@@ -344,12 +346,10 @@ export class OpenElement extends _Base {
   /**
    * Lifecycle: called when the element is connected to the DOM.
    *
-   * DSD path (_dsdHydrated = true):
-   *   - Calls _hydrateEvents() to bind declarative events on existing DOM.
-   *
-   * CSR path (_dsdHydrated = false):
-   *   - Calls createRenderRoot() if no shadow root exists.
-   *   - Renders this.render() through the VNode DOM renderer.
+   * Ensures the render root exists, then delegates to _renderOrHydrate(),
+   * which picks between DSD hydration (hasPopulatedShadowRoot() — bind events
+   * and signals onto the existing DOM) and CSR rendering (render() into the
+   * shadow root).
    *
    * If formAssociated is true, ElementInternals are attached.
    */
@@ -452,8 +452,8 @@ export class OpenElement extends _Base {
    *
    * Subclasses override this instead of relying on fragile
    * `super.connectedCallback()` call order. At this point the
-   * shadow DOM is populated from DSD and declarative events
-   * (@click, @keydown) are bound.
+   * shadow DOM is populated from DSD and declarative event props
+   * (onClick / on-click) are bound to their data-eid markers.
    *
    * No-op by default.
    */
@@ -525,9 +525,11 @@ export class OpenElement extends _Base {
   /**
    * Lifecycle: called when an observed attribute changes.
    *
-   * Base implementation is a no-op. Subclasses override this to react
-   * to attribute changes, typically by calling `this.render()` to update
-   * the shadow DOM.
+   * The base implementation forwards the change to
+   * handleStaticPropAttributeChange(), which parses the new attribute value
+   * into the matching static-prop signal (restoring the declared default on
+   * attribute removal). Subclasses that override this should call
+   * `super.attributeChangedCallback(...)` to keep static props in sync.
    *
    * @param name - Attribute name (lowercase).
    * @param oldValue - Previous value, or null if the attribute was not set.
@@ -545,7 +547,7 @@ export class OpenElement extends _Base {
       _oldValue,
       _newValue,
     );
-    // Subclass override point - base implementation is intentionally empty.
+    // Subclass override point — call super to keep static props in sync.
   }
 
   /**

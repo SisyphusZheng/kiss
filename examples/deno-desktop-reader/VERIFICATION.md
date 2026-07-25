@@ -6,33 +6,38 @@ router, UI, Open Props tokens, SPA mode, Deno Desktop host behavior, or Reader.
 
 ## Smoke matrix
 
-| Area                         | Evidence                                                              |
-| ---------------------------- | --------------------------------------------------------------------- |
-| Browser app boot             | Browser dev server smoke, `test:visual-smoke`                         |
-| Deno Desktop target          | Deno Desktop smoke, `desktop-reader:smoke`                            |
-| Local fixture source         | `desktop-reader:smoke` host-store tests                               |
-| Local folder source          | `desktop-reader:smoke` host-store tests                               |
-| GitHub PDF source            | `desktop-reader:smoke` host-store tests                               |
-| PDF/text reading             | Browser smoke, `test:visual-smoke`                                    |
-| Search                       | `desktop-reader:smoke` host-store tests                               |
-| Annotation and note jump     | Browser smoke, Reader route tests                                     |
-| Markdown export              | `desktop-reader:smoke` export tests                                   |
-| Reading settings             | Browser smoke, storage tests                                          |
-| OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests                                 |
-| Preact islands               | `desktop-reader:smoke` (island registration)                          |
-| Third-party WC compatibility | `desktop-reader:smoke` (`/wc-interop` VNode tag smoke), browser smoke |
-| Desktop/narrow screenshots   | `test:visual-smoke`                                                   |
+The root `deno task examples:check` gate runs unconditionally in the AutoFlow
+`ci` and `release` tiers and executes `deno task check` and `deno task smoke`
+inside this example; `smoke` below refers to that example-local task.
+
+| Area                         | Evidence                                                         |
+| ---------------------------- | ---------------------------------------------------------------- |
+| Browser app boot             | Browser dev server smoke, `test:visual-smoke`                    |
+| Deno Desktop target          | Deno Desktop smoke, example-local `deno task smoke`              |
+| Local fixture source         | `deno task smoke` host-store tests                               |
+| Local folder source          | `deno task smoke` host-store tests                               |
+| GitHub PDF source            | `deno task smoke` host-store tests                               |
+| PDF/text reading             | Browser smoke, `test:visual-smoke`                               |
+| Search                       | `deno task smoke` host-store tests                               |
+| Annotation and note jump     | Browser smoke, Reader route tests                                |
+| Markdown export              | `deno task smoke` export tests                                   |
+| Reading settings             | Browser smoke, storage tests                                     |
+| OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests                            |
+| Preact islands               | `deno task smoke` (island registration)                          |
+| Third-party WC compatibility | `deno task smoke` (`/wc-interop` VNode tag smoke), browser smoke |
+| Desktop/narrow screenshots   | `test:visual-smoke`                                              |
 
 ## Automated release checks
 
 ```sh
-deno task desktop-reader:smoke
+deno task --cwd examples/deno-desktop-reader smoke
 deno task test:visual-smoke
 ```
 
-`desktop-reader:smoke` runs the Reader unit and host-store tests. It fails when
-core Reader workflows regress. `test:visual-smoke` builds the docs site and
-Reader, then captures screenshot evidence for the docs shell and Reader shell.
+The example-local `deno task smoke` runs the Reader unit and host-store tests.
+It fails when core Reader workflows regress. `test:visual-smoke` builds the
+docs site and Reader, then captures screenshot evidence for the docs shell and
+Reader shell.
 
 ## Browser dev server smoke
 

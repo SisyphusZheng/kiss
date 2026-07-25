@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { formatJson } from './lib/format-json.ts';
 
 const started = performance.now();
 const build = new Deno.Command(Deno.execPath(), {
@@ -55,6 +56,6 @@ const report = {
 await Deno.mkdir('docs/evidence', { recursive: true });
 await Deno.writeTextFile(
   'docs/evidence/dogfood-performance.json',
-  JSON.stringify(report, null, 2) + '\n',
+  formatJson(report),
 );
 console.log(JSON.stringify(report, null, 2));

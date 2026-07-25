@@ -5,7 +5,14 @@
  * - all package deno.json files under packages/ are readable
  * - all package versions are on one release line
  * - internal npm:@openelement/* specifiers point at that release line
- * - source-level @openelement/* imports are declared in each package deno.json
+ * - source-level @openelement/* imports resolve. Resolution is a workspace
+ *   fallback: an import counts as declared when it matches ANY workspace
+ *   package's name or export keys, or the importing package's own deno.json.
+ *   It does NOT prove the importing package declares the dependency itself
+ *   (publish-npm.ts materializes npm dependencies from the same source scan,
+ *   so published artifacts still carry the dependency).
+ * - dependency direction stays inside the explicit layering rules below
+ *   (cycle detection alone cannot catch e.g. app -> ui or anything -> create)
  * - no circular package dependencies exist
  * - release publish order lists every package after its dependencies
  */
@@ -20,6 +27,23 @@ import {
   releasePublishOrder,
   topologicalSort,
 } from './lib/package-graph.ts';
+
+/**
+ * Explicit dependency-direction rules: each package may only depend on the
+ * listed workspace packages (element and create sit at the leaves/edge and
+ * depend on nothing). Any other @openelement/* cross-package edge is an error.
+ */
+export const ALLOWED_DEPENDENCY_DIRECTION: Readonly<Record<string, readonly string[]>> = {
+  '@openelement/element': [],
+  '@openelement/ui': ['@openelement/element'],
+  '@openelement/app': ['@openelement/element'],
+  '@openelement/adapter-vite': ['@openelement/element', '@openelement/app', '@openelement/ui'],
+  '@openelement/create': [],
+};
+
+export function isAllowedDependencyDirection(from: string, to: string): boolean {
+  return ALLOWED_DEPENDENCY_DIRECTION[from]?.includes(to) ?? false;
+}
 
 function normalizeDep(dep: string, self: string): string | null {
   const prefix = '@openelement/';
@@ -207,16 +231,30 @@ async function main(): Promise<void> {
       const source = await Deno.readTextFile(file);
       for (const specifier of extractOpenImports(source)) {
         if (!isDeclaredImport(specifier, pkg, workspaceSpecifiers)) {
-          const msg =
-            `${file} imports "${specifier}" but ${pkg.dir}/deno.json does not declare it.`;
+          const msg = `${file} imports "${specifier}" but no workspace package exports it ` +
+            `and ${pkg.dir}/deno.json does not declare it.`;
           console.error(`  FAIL: ${msg}`);
           failures.push(msg);
+        }
+        const base = normalizeDep(specifier, pkg.name);
+        if (base !== null && base.startsWith('@openelement/')) {
+          if (!isAllowedDependencyDirection(pkg.name, base)) {
+            const msg = `Dependency direction violation: ${pkg.name} must not depend on ${base} ` +
+              `(${file} imports "${specifier}"). Allowed: ${
+                ALLOWED_DEPENDENCY_DIRECTION[pkg.name]?.join(', ') || 'none'
+              }.`;
+            console.error(`  FAIL: ${msg}`);
+            failures.push(msg);
+          }
         }
       }
     }
   }
   if (failures.length === importFailuresBefore) {
-    console.log('  PASS: All source-level @openelement/* imports are declared.');
+    console.log(
+      '  PASS: All source-level @openelement/* imports resolve (workspace fallback) ' +
+        'and follow the dependency-direction rules.',
+    );
   }
 
   console.log('\n--- Root Import Map Validation ---');
@@ -300,4 +338,4 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+if (import.meta.main) await main();

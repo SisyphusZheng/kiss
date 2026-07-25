@@ -3,7 +3,13 @@
  *
  * Tests the SSG post-processing functions using temp directories.
  */
-import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import {
+  assert,
+  assertEquals,
+  assertExists,
+  assertFalse,
+  assertStringIncludes,
+} from 'jsr:@std/assert@^1.0.0';
 import {
   buildIslandChunkMap,
   buildSpeculationRulesJson,
@@ -69,8 +75,8 @@ Deno.test('buildIslandChunkMap scans manifest.json for island chunks', async () 
     mkdirSync(viteDir, { recursive: true });
 
     const manifest = {
-      'src/islands/counter.ts': { file: 'islands/island-counter-abc123.js' },
-      'src/islands/theme.ts': { file: 'islands/island-theme-def456.js' },
+      'src/islands/counter-island.ts': { file: 'islands/island-counter-island-abc123.js' },
+      'src/islands/open-theme-toggle.ts': { file: 'islands/island-open-theme-toggle-def456.js' },
       '.openElement-client-entry.ts': { file: 'islands/client.js' },
     };
     writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
@@ -83,8 +89,8 @@ Deno.test('buildIslandChunkMap scans manifest.json for island chunks', async () 
 
     assertExists(result['counter-island']);
     assertExists(result['open-theme-toggle']);
-    assertExists(result['counter-island'].includes('counter'));
-    assertExists(result['open-theme-toggle'].includes('theme'));
+    assertStringIncludes(result['counter-island'], 'counter');
+    assertStringIncludes(result['open-theme-toggle'], 'theme');
   } finally {
     cleanup(tmp);
   }
@@ -101,7 +107,7 @@ Deno.test('buildIslandChunkMap respects basePath option', async () => {
     writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
 
     const result = await buildIslandChunkMap(tmp, 'dist', ['counter-island'], '/my-app/');
-    assertExists(result['counter-island'].startsWith('/my-app/'));
+    assert(result['counter-island'].startsWith('/my-app/'));
   } finally {
     cleanup(tmp);
   }
@@ -160,8 +166,9 @@ Deno.test(
         result['my-counter'].includes('islands/islands/'),
         'Path must NOT have double islands/ prefix, got: ' + result['my-counter'],
       );
-      assertExists(
-        result['my-counter'].includes('client/islands/island-my-counter-abc123.js'),
+      assertStringIncludes(
+        result['my-counter'],
+        'client/islands/island-my-counter-abc123.js',
         'Path should be client/islands/island-my-counter-abc123.js, got: ' + result['my-counter'],
       );
     } finally {
@@ -312,8 +319,8 @@ Deno.test('injectClientScript adds script tag to HTML files', () => {
     injectClientScript(tmp, '/client/islands/client.js');
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('/client/islands/client.js'));
-    assertExists(content.includes('<script type="module"'));
+    assertStringIncludes(content, '/client/islands/client.js');
+    assertStringIncludes(content, '<script type="module"');
   } finally {
     cleanup(tmp);
   }
@@ -349,8 +356,8 @@ Deno.test('injectClientScript recurses into subdirectories', () => {
 
     injectClientScript(tmp, '/client.js');
 
-    assertExists(readFileSync(join(tmp, 'index.html'), 'utf-8').includes('/client.js'));
-    assertExists(readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8').includes('/client.js'));
+    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), '/client.js');
+    assertStringIncludes(readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8'), '/client.js');
   } finally {
     cleanup(tmp);
   }
@@ -367,8 +374,8 @@ Deno.test('injectCspMeta adds CSP meta tag to HTML files', () => {
     injectCspMeta(tmp, "default-src 'self'");
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('Content-Security-Policy'));
-    assertExists(content.includes("default-src 'self'"));
+    assertStringIncludes(content, 'Content-Security-Policy');
+    assertStringIncludes(content, "default-src 'self'");
   } finally {
     cleanup(tmp);
   }
@@ -383,23 +390,23 @@ Deno.test('injectCspMeta uses Report-Only header in report-only mode', () => {
     injectCspMeta(tmp, "default-src 'self'", true);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('Content-Security-Policy-Report-Only'));
+    assertStringIncludes(content, 'Content-Security-Policy-Report-Only');
     assertFalse(content.includes('"Content-Security-Policy"'));
   } finally {
     cleanup(tmp);
   }
 });
 
-Deno.test('injectCspMeta escapes quotes in policy', () => {
+Deno.test('injectCspMeta escapes double quotes in policy', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
     writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
 
-    injectCspMeta(tmp, "default-src 'self'; script-src 'unsafe-inline'");
+    injectCspMeta(tmp, `default-src 'self'; script-src "unsafe-inline"`);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('&quot;'));
+    assertStringIncludes(content, '&quot;');
   } finally {
     cleanup(tmp);
   }
@@ -431,7 +438,7 @@ Deno.test('injectClientScript handles HTML without </body> tag', () => {
     injectClientScript(tmp, '/client.js');
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('/client.js'));
+    assertStringIncludes(content, '/client.js');
   } finally {
     cleanup(tmp);
   }
@@ -446,7 +453,7 @@ Deno.test('injectCspMeta handles HTML without <head> tag', () => {
     injectCspMeta(tmp, "default-src 'self'");
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('Content-Security-Policy'));
+    assertStringIncludes(content, 'Content-Security-Policy');
   } finally {
     cleanup(tmp);
   }
@@ -461,7 +468,7 @@ Deno.test('injectCspMeta handles HTML starting with <!DOCTYPE>', () => {
     injectCspMeta(tmp, "default-src 'self'");
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('Content-Security-Policy'));
+    assertStringIncludes(content, 'Content-Security-Policy');
   } finally {
     cleanup(tmp);
   }
@@ -482,7 +489,7 @@ Deno.test('injectCspMeta warns when nonce=true', () => {
     injectCspMeta(tmp, "default-src 'self'", false, true);
 
     console.warn = origWarn;
-    assertExists(warnMsg.includes('nonce'), 'Should warn about nonce not supported');
+    assertStringIncludes(warnMsg, 'nonce', 'Should warn about nonce not supported');
   } finally {
     cleanup(tmp);
   }
@@ -533,8 +540,8 @@ Deno.test('injectViewTransitionMeta adds meta tag to HTML files', () => {
     injectViewTransitionMeta(tmp);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('view-transition'));
-    assertExists(content.includes('same-origin'));
+    assertStringIncludes(content, 'view-transition');
+    assertStringIncludes(content, 'same-origin');
   } finally {
     cleanup(tmp);
   }
@@ -570,9 +577,10 @@ Deno.test('injectViewTransitionMeta recurses into subdirectories', () => {
 
     injectViewTransitionMeta(tmp);
 
-    assertExists(readFileSync(join(tmp, 'index.html'), 'utf-8').includes('view-transition'));
-    assertExists(
-      readFileSync(join(tmp, 'guide', 'page.html'), 'utf-8').includes('view-transition'),
+    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), 'view-transition');
+    assertStringIncludes(
+      readFileSync(join(tmp, 'guide', 'page.html'), 'utf-8'),
+      'view-transition',
     );
   } finally {
     cleanup(tmp);
@@ -605,7 +613,7 @@ Deno.test('injectViewTransitionMeta handles HTML without <head> tag', () => {
     injectViewTransitionMeta(tmp);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('view-transition'));
+    assertStringIncludes(content, 'view-transition');
   } finally {
     cleanup(tmp);
   }
@@ -653,23 +661,24 @@ Deno.test('buildSpeculationRulesJson generates heuristic prerender rules from ro
   const parsed = JSON.parse(result);
   // Heuristic mode generates prerender rules (not prefetch)
   assertExists(parsed.prerender);
-  // Home page should be in prerender
-  assertExists(
-    parsed.prerender.some((r: { where: { href_matches?: string } }) =>
-      r.where && !r.where.href_matches
-    ),
-  );
-  // Top-level page with wildcard (document rule - has where.href_matches)
-  assertExists(
-    parsed.prerender.some((r: { where?: { href_matches: string } }) =>
-      r.where?.href_matches === '/about/*'
-    ),
-  );
-  // Home page should be a list rule (source + urls, no where)
-  assertExists(
+  // Home page is a list rule (source + urls, no where)
+  assert(
     parsed.prerender.some((r: { source?: string; urls?: string[] }) =>
       r.source === 'list' && r.urls?.includes('/')
     ),
+    'Home page should be a list rule with / in urls',
+  );
+  // Top-level page produces a document rule (where.href_matches)
+  assert(
+    parsed.prerender.some((r: { where?: { href_matches: string } }) =>
+      r.where?.href_matches === '/about'
+    ),
+    'Top-level page should produce an /about document rule',
+  );
+  // API routes are excluded from the document rules
+  assert(
+    parsed.prerender.some((r: { where?: { not?: unknown } }) => r.where?.not != null),
+    'API routes should be excluded via where.not',
   );
   // Dynamic routes (with :) should be excluded
   assertFalse(result.includes('/blog/:slug'));
@@ -763,8 +772,8 @@ Deno.test('injectSpeculationRules adds script tag to HTML files', () => {
     injectSpeculationRules(tmp, rulesJson);
 
     const content = readFileSync(htmlPath, 'utf-8');
-    assertExists(content.includes('speculationrules'));
-    assertExists(content.includes('/about/*'));
+    assertStringIncludes(content, 'speculationrules');
+    assertStringIncludes(content, '/about/*');
   } finally {
     cleanup(tmp);
   }
@@ -807,19 +816,20 @@ Deno.test('injectSpeculationRules recurses into subdirectories', () => {
   const tmp = makeTempDir();
   try {
     mkdirSync(join(tmp, 'blog'));
-    writeFileSync(join(tmp, 'index.html'), '<html><head></head><body></body></html>', 'utf-8');
+    writeFileSync(join(tmp, 'index.html'), '<html><body></body></html>', 'utf-8');
     writeFileSync(
       join(tmp, 'blog', 'post.html'),
-      '<html><head></head><body></body></html>',
+      '<html><body></body></html>',
       'utf-8',
     );
 
     const rulesJson = JSON.stringify({ prefetch: [{ where: { href_matches: '/*' } }] }, null, 2);
     injectSpeculationRules(tmp, rulesJson);
 
-    assertExists(readFileSync(join(tmp, 'index.html'), 'utf-8').includes('speculationrules'));
-    assertExists(
-      readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8').includes('speculationrules'),
+    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), 'speculationrules');
+    assertStringIncludes(
+      readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8'),
+      'speculationrules',
     );
   } finally {
     cleanup(tmp);

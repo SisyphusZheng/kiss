@@ -25,16 +25,14 @@
  *   - entry-render-ssg.ts      — SSG re-export & routeInfo/renderRoute/getStaticPaths
  *
  * v0.41.0-alpha.1: The intermediate EntryDescriptor data model was collapsed
- * into this file. `generateHonoEntryCode()` builds descriptor-shaped data and
- * passes it directly to `renderEntry()` without a separate public descriptor
- * builder or file.
+ * into this file. Consumers build a descriptor via `buildEntryDescriptor()`
+ * and pass it directly to `renderEntry()`.
  */
 
 import type { EntryDescriptor, IslandDecl } from '../protocol/ssg.ts';
-import type { FrameworkOptions, HydrationStrategy, RouteEntry } from '../protocol/framework.ts';
+import type { FrameworkOptions, HydrationStrategy } from '../protocol/framework.ts';
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
-import { buildEntryDescriptor } from './entry-descriptor.ts';
 import {
   renderActionRoute,
   renderApiRoute,
@@ -47,6 +45,7 @@ import {
 } from './entry-render-helpers.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
 // Re-export the canonical descriptor type for consumers that need it.
 export type { EntryDescriptor } from '../protocol/ssg.ts';
@@ -82,7 +81,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(
     `// Known islands (determined at build time by scanning islandsDir)`,
   );
-  lines.push(`const __islandMap = ${JSON.stringify(islandLookup, null, 2)}`);
+  lines.push(`const __islandMap = ${quoteGeneratedJavaScriptValue(islandLookup, 2)}`);
   lines.push('');
 
   // --- Document wrapper ---
@@ -100,7 +99,7 @@ export function renderEntry(desc: EntryDescriptor): string {
     `import { getDefaultLocale as __getDefaultLocale, locales as __locales } from '@openelement/generated/i18n';`,
   );
   for (const importPath of appShellImports) {
-    lines.push(`import ${JSON.stringify(importPath)};`);
+    lines.push(`import ${quoteGeneratedJavaScriptValue(importPath)};`);
   }
   lines.push(`const log = createLogger('core');`);
   lines.push('');
@@ -155,18 +154,20 @@ export function renderEntry(desc: EntryDescriptor): string {
   const ssrIslands = desc.islands.filter((island) => ssrRenderableTags.has(island.tagName));
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
-    lines.push(`import * as ${varName} from ${JSON.stringify(island.modulePath)}`);
+    lines.push(`import * as ${varName} from ${quoteGeneratedJavaScriptValue(island.modulePath)}`);
   }
   for (const island of ssrIslands) {
     const varName = `__island_${island.tagName.replace(/-/g, '_')}`;
     const componentVar = `__island_component_${island.tagName.replace(/-/g, '_')}`;
     lines.push(`const ${componentVar} = ${varName}?.default`);
     lines.push(
-      `if (${componentVar} && !customElements.get(${JSON.stringify(island.tagName)})) {`,
+      `if (${componentVar} && !customElements.get(${
+        quoteGeneratedJavaScriptValue(island.tagName)
+      })) {`,
     );
     lines.push(
       `  try { customElements.define(${
-        JSON.stringify(island.tagName)
+        quoteGeneratedJavaScriptValue(island.tagName)
       }, ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`,
     );
     lines.push(`}`);
@@ -175,12 +176,7 @@ export function renderEntry(desc: EntryDescriptor): string {
 
   lines.push('// v0.17.4: SSR admission plan');
   lines.push(
-    `(globalThis).__CLIENT_ONLY_TAGS__ = new Set(${
-      JSON.stringify(ssrAdmissionPlan.clientOnlyTags)
-    })`,
-  );
-  lines.push(
-    `export const ssrAdmissionPlan = ${JSON.stringify(ssrAdmissionPlan, null, 2)};`,
+    `export const ssrAdmissionPlan = ${quoteGeneratedJavaScriptValue(ssrAdmissionPlan, 2)};`,
   );
   lines.push('');
 
@@ -281,17 +277,4 @@ export interface HonoEntryOptions {
   upgradeStrategy?: HydrationStrategy;
   appShell?: FrameworkOptions['appShell'];
   layouts?: FrameworkOptions['layouts'];
-}
-
-/**
- * Generate the Hono entry module code from scanned routes.
- *
- * Internally builds a descriptor-shaped object and renders it directly.
- */
-export function generateHonoEntryCode(
-  routes: RouteEntry[],
-  options: HonoEntryOptions = {},
-): string {
-  const descriptor = buildEntryDescriptor(routes, options);
-  return renderEntry(descriptor);
 }

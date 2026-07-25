@@ -1,4 +1,4 @@
-/** Ensure browser-facing product packages do not use Deno APIs or node imports. */
+/** Ensure browser-facing product packages do not use Deno APIs, node imports, or npm specifiers. */
 
 import { walkSync } from '@std/fs/walk';
 import { extractDenoAccesses, extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
@@ -6,11 +6,17 @@ import { extractDenoAccesses, extractStaticModuleSpecifiers } from './lib/typesc
 const RESTRICTED_ROOTS = ['packages/element/src', 'packages/ui/src', 'packages/app/src'];
 const EXTENSIONS = new Set(['.ts', '.tsx']);
 
+// @preact/signals-core is element's chartered engine dependency (#322-era
+// decision); every other npm: specifier is barred from runtime-free packages.
+const ALLOWED_NPM_SPECIFIER = /^npm:@preact\/signals-core(?:@|\/|$)/;
+
 export function scanDenoApiSource(path: string, source: string): string[] {
   const violations: string[] = [];
   for (const specifier of extractStaticModuleSpecifiers(source, path)) {
     if (specifier.value.startsWith('node:')) {
       violations.push(`${path}:${specifier.line}: node import: ${specifier.value}`);
+    } else if (specifier.value.startsWith('npm:') && !ALLOWED_NPM_SPECIFIER.test(specifier.value)) {
+      violations.push(`${path}:${specifier.line}: npm import: ${specifier.value}`);
     }
   }
   for (const access of extractDenoAccesses(source, path)) {

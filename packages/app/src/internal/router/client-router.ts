@@ -377,7 +377,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
 
   async function commitNavigation(
     path: string,
-    navOptions: { replace: boolean; depth?: number },
+    navOptions: { replace: boolean; depth?: number; restoreOnBlock?: boolean },
   ): Promise<void> {
     const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
@@ -391,11 +391,20 @@ export function createRouter(options: RouterOptions): RouterInstance {
     const matched = routeMatcher.match(u.pathname, u.search);
     if (matched?.route.guard) {
       const result = await matched.route.guard();
-      if (result === false) return; // blocked
+      if (result === false) {
+        if (navOptions.restoreOnBlock) {
+          // Browser-driven navigation already landed on this URL (via a guard
+          // redirect); restore the entry the user came from, same as the
+          // direct block path in commitBrowserNavigation.
+          history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+        }
+        return; // blocked
+      }
       if (typeof result === 'string') {
         return commitNavigation(result, {
           replace: navOptions.replace,
           depth: depth + 1,
+          restoreOnBlock: navOptions.restoreOnBlock,
         });
       }
     }
@@ -425,25 +434,37 @@ export function createRouter(options: RouterOptions): RouterInstance {
    * a rejected guard pushes the previous entry back on top, and a guard
    * redirect replaces the landed entry with the redirect target.
    */
+  // Dedup consecutive browser events that land on the same URL (rapid
+  // popstate/hashchange bursts) so guards and onChange do not run twice
+  // for what is effectively a single navigation.
+  let lastLandedUrl: string | null = null;
+
   async function commitBrowserNavigation(): Promise<void> {
     const landed = readPath();
-    const u = new URL(landed, 'http://x');
-    const matched = routeMatcher.match(u.pathname, u.search);
-    if (matched?.route.guard) {
-      const result = await matched.route.guard();
-      if (result === false) {
-        // Blocked: restore the entry the user came from. pushState does
-        // not fire popstate/hashchange, so restoring cannot re-enter here.
-        history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
-        return;
+    if (landed === lastLandedUrl) return;
+    try {
+      const u = new URL(landed, 'http://x');
+      const matched = routeMatcher.match(u.pathname, u.search);
+      if (matched?.route.guard) {
+        const result = await matched.route.guard();
+        if (result === false) {
+          // Blocked: restore the entry the user came from. pushState does
+          // not fire popstate/hashchange, so restoring cannot re-enter here.
+          history.pushState(null, '', mode === 'hash' ? toHashUrl(currentPath) : currentPath);
+          return;
+        }
+        if (typeof result === 'string') {
+          await commitNavigation(result, { replace: true, depth: 1, restoreOnBlock: true });
+          return;
+        }
       }
-      if (typeof result === 'string') {
-        await commitNavigation(result, { replace: true, depth: 1 });
-        return;
-      }
+      rematch();
+      notifyChange();
+    } finally {
+      // Track the committed URL (restored on block, replaced on redirect) so
+      // only bursts landing on the same URL are deduped, not genuine retries.
+      lastLandedUrl = readPath();
     }
-    rematch();
-    notifyChange();
   }
 
   // Serialize browser-driven navigations: guards are async, and rapid
@@ -454,8 +475,10 @@ export function createRouter(options: RouterOptions): RouterInstance {
     browserNavigationQueue = browserNavigationQueue
       .then(commitBrowserNavigation)
       .catch((err) => {
+        // Intentional fail-open: a rejected guard or a router error must not
+        // wedge the queue or leave the UI inconsistent with the address bar,
+        // so we log and converge to the real URL instead of rethrowing.
         console.error('[router] browser navigation failed:', err);
-        // Converge to the real URL instead of leaving stale state behind.
         rematch();
         notifyChange();
       });

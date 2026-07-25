@@ -2,12 +2,10 @@
 
 The v0.41 alpha line exposes one supported component runtime:
 `@openelement/element`. Hydration internals are not application-authoring
-surface: the implementation modules remain importable as internal subpaths
-(`@openelement/element/open-element-render` and
-`@openelement/element/open-element-hydration`) for build tooling and Deno
-type generation, but they carry no compatibility promise and application code
-must not import them. Build-time helpers for adapters live behind
-`@openelement/element/build-utils`.
+surface: the `open-element-render` and `open-element-hydration` implementation
+modules are internal-only — their package subpath exports were removed in
+alpha.19 and application or tooling code must not import them. Build-time
+helpers for adapters live behind `@openelement/element/build-utils`.
 
 ## Supported imports
 
@@ -40,3 +38,12 @@ static, hydrate, or CSR implementation packages.
   `/@fs/` absolute-path specifier convention. That branch is covered by unit
   tests (`module-specifier.test.ts`) but has not been verified on a real
   Windows build; the regular root-relative path is exercised on every change.
+- `For` list tokens carry no per-item identity: objects without an `id`/`key`
+  field are replaced in place at the same position rather than matched and
+  moved. This is an accepted limitation of the current binding. (The token
+  wire signature itself has switched to a length-prefixed encoding; parsers
+  must not assume the old fixed-width format.)
+- `reflect` attribute mirroring normalizes values at the boundary: `NaN`
+  becomes `0`, `-0` becomes `0`, objects are mirrored as `String(value)`, a
+  failed `Number` parse falls back to `0`, and `removeAttribute` restores the
+  declared default, which is then re-mirrored to the attribute.

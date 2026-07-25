@@ -5,7 +5,6 @@
  * Minimal button component following Swiss International Style.
  * Pure B&W design with subtle hover states.
  *
- * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
  * Variants: default (outlined), primary (filled), ghost (no border), accent (gradient)

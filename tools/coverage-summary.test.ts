@@ -52,7 +52,6 @@ Deno.test('isCoverageTreeExcluded drops tests, fixtures, generated, and declarat
   assertEquals(isCoverageTreeExcluded('/repo/tools/lib/package-graph.test.ts'), true);
   assertEquals(isCoverageTreeExcluded('/repo/tools/lib/foo.spec.ts'), true);
   assertEquals(isCoverageTreeExcluded('/repo/packages/adapter-vite/__fixtures__/app.ts'), true);
-  assertEquals(isCoverageTreeExcluded('/repo/tools/test-fixtures/app.ts'), true);
   assertEquals(isCoverageTreeExcluded('/repo/packages/ui/src/generated-manifest.ts'), true);
   assertEquals(isCoverageTreeExcluded('/repo/packages/element/src/jsx-types.d.ts'), true);
 });

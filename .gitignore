@@ -3,8 +3,6 @@ node_modules/
 
 # Deno
 .deno/
-.deno-cache/
-.deno_cache/
 vendor/*
 # Keep vendored dependency attribution tracked for license compliance
 !vendor/jsr.io/
@@ -23,13 +21,10 @@ dist/
 custom-dist/
 dist-test-*/
 www/dist/
-npm/
 packages/adapter-vite/__fixtures__/nitro-proof/.output-*/
 packages/adapter-vite/__fixtures__/nitro-proof/.wrangler/
 packages/adapter-vite/__fixtures__/nitro-proof/.nitro/
 packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
-*.tsbuildinfo
-.tsbuildinfo
 www/app/data/_generated-blog-data.ts
 .openElement/
 www/.openElement/
@@ -73,7 +68,6 @@ test-results/
 .gstack/
 .qoder/
 .codebuddy/settings.local.json
-docs/autoflow/cells/*/state.json
 
 # Vite cache
 .vite/
@@ -82,27 +76,9 @@ docs/autoflow/cells/*/state.json
 # Generated www data modules and the UI manifest are intentionally tracked.
 # repo:hygiene fails if a tracked file also matches .gitignore.
 
-# Test / build / lint / coverage output files
-test-*.txt
-cov-*.txt
-ui-test*.txt
-lint-*.txt
-coverage-*.txt
-coverage-output.txt
-.git-commit-msg.txt
-docs/vite-build-*.txt
-
 # Root-level logo source files (design originals, keep local)
 /open-logo*.svg
 /open-favicon.svg
 
-debug.log
 hub-index/
 hub-submission.json
-lighthouse-result*.json
-
-# Root-level audit artifact
-/audit-ast.json
-
-# Vite virtual assets
-assets/_virtual_*

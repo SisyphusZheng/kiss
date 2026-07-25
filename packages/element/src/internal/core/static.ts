@@ -6,6 +6,8 @@
  * binding, effect, or hydration code.
  *
  * ADR-0109 Phase 1: split ./index.ts into static, hydrate, and csr.
+ * (csr.ts has since been removed; only the static and hydrate surfaces
+ * remain.)
  */
 
 // VNode / JSX runtime
@@ -16,13 +18,6 @@ export { For, Fragment, jsx, jsxDEV, jsxs, Show, trustedHtml } from './jsx-runti
 // Static rendering (IR + DSD)
 export { camelToKebab, renderDsdTree, serializeAttrs } from './render-ir.ts';
 export { renderDsd } from './render-dsd.ts';
-export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.ts';
-export type {
-  RenderDsdStreamChunk,
-  RenderDsdStreamComponent,
-  RenderDsdStreamMetrics,
-  RenderDsdStreamOptions,
-} from './render-dsd-stream.ts';
 export type { RenderDsdOptions } from './render-dsd.ts';
 
 // HTML escaping / document wrapping

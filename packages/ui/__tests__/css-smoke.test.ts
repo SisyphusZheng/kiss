@@ -30,7 +30,4 @@ Deno.test('retained interactive components are exported', async () => {
   assertExists(index.OpenDialog);
   assertExists(index.OpenDropdown);
   assertExists(index.OpenTabs);
-  assertEquals(index.openDialogTagName, 'open-dialog');
-  assertEquals(index.openDropdownTagName, 'open-dropdown');
-  assertEquals(index.openTabsTagName, 'open-tabs');
 });

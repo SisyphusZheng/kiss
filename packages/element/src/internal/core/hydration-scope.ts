@@ -1,5 +1,5 @@
 /**
- * ./hydrate.ts - HydrationScope value object.
+ * ./hydration-scope.ts - HydrationScope value object.
  *
  * Standalone container for the lifecycle state of a hydrated shadow root.
  * Owns effect disposers, event cleanups, and the cached VNode used for
@@ -7,7 +7,7 @@
  * OpenElement instance so third-party framework runtimes can hydrate the
  * same DSD shadow root later.
  *
- * @module ./hydrate.ts
+ * @module ./hydration-scope.ts
  */
 
 import type { Signal } from '../protocol/signal.ts';

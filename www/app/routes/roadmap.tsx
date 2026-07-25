@@ -5,6 +5,7 @@ export const tagName = 'page-roadmap';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
+import { OPENELEMENT_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/ui/open-card';
@@ -397,7 +398,7 @@ export class RoadmapPage extends OpenElement {
           </span>
           <open-artifact-panel slot='artifact' class='now'>
             <span slot='label'>current</span>
-            <span slot='meta'>alpha.10 published → alpha adoption proof</span>
+            <span slot='meta'>{OPENELEMENT_VERSION} published → alpha adoption proof</span>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
@@ -413,7 +414,8 @@ export class RoadmapPage extends OpenElement {
                   are stable.
                 </h2>
                 <p>
-                  alpha.10 is the published package line. beta.1–beta.3 remain withdrawn partial npm
+                  {OPENELEMENT_VERSION}{' '}
+                  is the published package line. beta.1–beta.3 remain withdrawn partial npm
                   artifacts. External adopter pilot #390 and continued browser and release evidence
                   guide the remaining alpha maturation work.
                 </p>

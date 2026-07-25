@@ -1,7 +1,6 @@
 # Branching Strategy
 
-> Part of openElement governance. Referenced by `docs/governance/PROJECT_WORKFLOW.md`
-> and `.workbuddy/skills/autoflow/SKILL.md`.
+> Part of openElement governance. Referenced by `docs/governance/PROJECT_WORKFLOW.md`.
 
 ## Branch Model: Trunk-Based + AutoFlow Cells
 
@@ -17,13 +16,12 @@ main ←── merge (CI 全绿) ── dev
 
 ## Branch Types
 
-| Prefix            | Purpose                  | From  | Merge To         | Created By        |
-| ----------------- | ------------------------ | ----- | ---------------- | ----------------- |
-| `dev`             | Development trunk        | —     | `main`           | human/agent       |
-| `main`            | Release trunk            | —     | —                | CI merge only     |
-| `autoflow/cell-*` | AutoFlow autonomous cell | `dev` | `dev` (on green) | `autoflow:evolve` |
-| `fix/*`           | Bug fix                  | `dev` | `dev` (PR)       | human/agent       |
-| `feat/*`          | Feature                  | `dev` | `dev` (PR)       | human/agent       |
+| Prefix   | Purpose           | From  | Merge To   | Created By    |
+| -------- | ----------------- | ----- | ---------- | ------------- |
+| `dev`    | Development trunk | —     | `main`     | human/agent   |
+| `main`   | Release trunk     | —     | —          | CI merge only |
+| `fix/*`  | Bug fix           | `dev` | `dev` (PR) | human/agent   |
+| `feat/*` | Feature           | `dev` | `dev` (PR) | human/agent   |
 
 ## Rules
 
@@ -33,14 +31,3 @@ main ←── merge (CI 全绿) ── dev
 4. **Push `dev` before merging to `main`.** Wait for CI on `dev` first.
 5. **Tag only on `main`** after CI passes.
 6. **Never force-push `main` or `dev`.**
-
-## AutoFlow Cell Branch Lifecycle
-
-```
-autoflow:evolve detects drift
-  → creates autoflow/cell-v0.x-001 from dev
-  → executes testgen → implement → review
-  → runs harness gates
-  → ✅ green → merge to dev → delete branch
-  → ❌ red  → delete branch → retry or escalate
-```

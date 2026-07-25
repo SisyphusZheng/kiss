@@ -7,6 +7,7 @@
  */
 
 import { dirname, join } from 'node:path';
+import { formatJson } from './lib/format-json.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';
 import { runWithOutput } from './lib/process.ts';
 
@@ -62,7 +63,7 @@ function tail(output: string): string {
 
 async function writeReport(path: string, report: QualificationReport): Promise<void> {
   await Deno.mkdir(dirname(path), { recursive: true });
-  await Deno.writeTextFile(path, `${JSON.stringify(report, null, 2)}\n`);
+  await Deno.writeTextFile(path, formatJson(report));
 }
 
 async function main(): Promise<void> {

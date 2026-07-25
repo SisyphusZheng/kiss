@@ -19,7 +19,6 @@ const scanRoots = [
 
 const ignoredPathParts = [
   '/__tests__/fixtures/',
-  '/test-fixtures/',
   'www/app/data/_generated-blog-data.ts',
   'www/content/blog/',
 ];

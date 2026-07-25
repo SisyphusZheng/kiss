@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Tag name validation utility.
+ * ./tag-utils.ts — Tag name validation utility.
  *
  * Validates custom element tag names per the HTML Custom Elements specification:
  * - Must contain at least one hyphen
