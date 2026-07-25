@@ -100,7 +100,7 @@ export function collectEventBindings(
     if (tag === FOR_TAG || tag === 'for') {
       const items = resolveSignalProp(props?.each) as unknown[];
       const renderFn = children[0] as RenderFn;
-      branches?.push(forBranchMarker(Array.isArray(items) ? items.length : -1));
+      branches?.push(forBranchMarker(items));
       if (Array.isArray(items) && typeof renderFn === 'function') {
         items.forEach((item, i) => visit(renderFn(item, i)));
       }

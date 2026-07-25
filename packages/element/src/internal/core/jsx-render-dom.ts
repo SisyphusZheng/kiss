@@ -6,6 +6,9 @@
  * - Special tags emit binding descriptors instead of creating effects directly.
  * - Binding descriptors are committed via commitBindings() after the DOM tree is
  *   created so anchors are already in the document before reactive effects run.
+ *   A root-level control-flow anchor (<Show>/<For>) is first parked in a
+ *   DocumentFragment: the caller attaches the returned root only after
+ *   renderToDom() returns, and anchor-less commits would drop branch content.
  * - Signal names are resolved through an optional signalRegistry and emitted as
  *   data-signal markers for DSD hydration consistency.
  *
@@ -22,6 +25,7 @@ import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { commitBindings } from './binding-activation.ts';
+import { camelToKebab } from './tag-utils.ts';
 import {
   bindAttr,
   bindConditional,
@@ -121,6 +125,20 @@ function signalNameFor(
 }
 
 /**
+ * Attribute name for a JSX prop, mirroring SSR serializeAttrs: className and
+ * htmlFor map to class/for; every other prop on a custom-element host is
+ * kebab-cased so CSR output matches the SSR/hydration attribute naming
+ * (camelToKebab is the single casing rule).
+ */
+function attrNameFor(el: Element, key: string): string {
+  const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
+  if (attrName === key && el.localName.includes('-')) {
+    return camelToKebab(attrName);
+  }
+  return attrName;
+}
+
+/**
  * Collect BindingDescriptor objects from a JSX props object.
  *
  * @param el - Target element the descriptors will apply to.
@@ -153,6 +171,10 @@ export function collectPropBindings(
       continue;
     }
 
+    // Non-event function props are skipped, matching SSR serializeAttrs:
+    // a stringified function in an attribute is never meaningful.
+    if (typeof value === 'function') continue;
+
     if (value == null) continue;
 
     // innerHTML maps to signal-html / static text injection.
@@ -174,7 +196,6 @@ export function collectPropBindings(
     if (isSignalLike(value)) {
       const sig = value as Signal<unknown>;
       const name = signalNameFor(sig, signalRegistry);
-      const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
 
       if (name) {
         el.setAttribute(DATA_SIGNAL, name);
@@ -182,7 +203,7 @@ export function collectPropBindings(
 
       // Use signal-attr for all signal-driven props; signal-class toggling
       // (single class) is reserved for explicit data-signal-class markers.
-      descriptors.push(bindAttr(el, [attrName], sig));
+      descriptors.push(bindAttr(el, [attrNameFor(el, key)], sig));
       continue;
     }
 
@@ -203,14 +224,12 @@ export function collectPropBindings(
       continue;
     }
 
-    const attrName = key === 'className' ? 'class' : key === 'htmlFor' ? 'for' : key;
-
     if (typeof resolved === 'boolean') {
-      descriptors.push(bindStaticBoolean(el, attrName, resolved));
+      descriptors.push(bindStaticBoolean(el, attrNameFor(el, key), resolved));
       continue;
     }
 
-    descriptors.push(bindStaticAttr(el, attrName, resolved));
+    descriptors.push(bindStaticAttr(el, attrNameFor(el, key), resolved));
   }
 
   return descriptors;
@@ -257,6 +276,20 @@ export function renderToDom(
 
   const descriptors: BindingDescriptor[] = [];
   const root = renderNode(node, fullLifecycle, signalRegistry, descriptors);
+  if (root.nodeType === 8) {
+    // Root-level <Show>/<For>: the returned root IS the control-flow anchor
+    // comment, and conditional/list activation inserts branch content through
+    // anchor.parentNode.insertBefore(). The caller attaches the returned node
+    // only after renderToDom() returns, so park the anchor in a
+    // DocumentFragment before committing — otherwise the commit-time insert
+    // has no parent and the branch content is silently dropped. Appending the
+    // fragment later hoists anchor + branch content into the real parent, and
+    // subsequent updates insert through that parent.
+    const mount = document.createDocumentFragment();
+    mount.appendChild(root);
+    commitBindings(descriptors, fullLifecycle, renderer);
+    return mount;
+  }
   commitBindings(descriptors, fullLifecycle, renderer);
   return root;
 }

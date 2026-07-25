@@ -10,7 +10,7 @@
 export * from './static.ts';
 
 // Hydration scope
-export { HydrationScope } from './hydration-scope.ts';
+export { hasSelfHydrated, HydrationScope, markSelfHydrated } from './hydration-scope.ts';
 export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.ts';
 
 // Binding layer

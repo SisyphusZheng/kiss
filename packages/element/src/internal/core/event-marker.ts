@@ -78,10 +78,54 @@ export function showBranchMarker(truthy: boolean): string {
 }
 
 /**
- * Branch-state token for a `<For>` vnode. `itemCount` is the resolved item
- * count at traversal time, or -1 when the `each` prop did not resolve to an
- * array (mirrors the SSR fallback that renders an empty fragment).
+ * Branch-state token for a `<For>` vnode. Content-sensitive: the token
+ * carries the item count plus a hash of per-item identities, so same-length
+ * content drift between SSR and hydration (replaced or reordered items)
+ * diverges the token sequence and triggers the degrade path instead of
+ * mis-binding data-eid handlers. A non-array `each` emits the -1 empty-branch
+ * token (mirrors the SSR fallback that renders an empty fragment).
  */
-export function forBranchMarker(itemCount: number): string {
-  return `${BRANCH_MARKER_PREFIX}for:${itemCount}`;
+export function forBranchMarker(items: unknown): string {
+  if (!Array.isArray(items)) return `${BRANCH_MARKER_PREFIX}for:-1`;
+  let signature = '';
+  for (let i = 0; i < items.length; i++) {
+    signature += `${forItemSignature(items[i], i)};`;
+  }
+  return `${BRANCH_MARKER_PREFIX}for:${items.length}:${hashBranchSignature(signature)}`;
+}
+
+/**
+ * Lightweight per-item identity for For branch markers. Primitives (and
+ * symbols/bigints) sign as their own string value; objects sign by a stable
+ * primitive `id`/`key` field when present, otherwise by type + index. The
+ * fallback cannot distinguish a same-shape object replacement at the same
+ * index — an accepted limitation that avoids JSON.stringify on arbitrary
+ * (potentially large or circular) objects.
+ */
+function forItemSignature(item: unknown, index: number): string {
+  if (item === null) return 'null';
+  const t = typeof item;
+  if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint' || t === 'symbol') {
+    return `${t}:${String(item)}`;
+  }
+  if (t === 'undefined') return 'undefined';
+  const record = item as Record<string, unknown>;
+  const id = record.id;
+  const key = record.key;
+  const stable = (typeof id === 'string' || typeof id === 'number')
+    ? id
+    : (typeof key === 'string' || typeof key === 'number')
+    ? key
+    : undefined;
+  if (stable !== undefined) return `key:${String(stable)}`;
+  return `${t}#${index}`;
+}
+
+/** djb2 string hash in base36 — cheap and deterministic across engines. */
+function hashBranchSignature(signature: string): string {
+  let hash = 5381;
+  for (let i = 0; i < signature.length; i++) {
+    hash = ((hash * 33) ^ signature.charCodeAt(i)) >>> 0;
+  }
+  return hash.toString(36);
 }

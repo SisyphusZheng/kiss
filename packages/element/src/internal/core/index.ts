@@ -30,7 +30,6 @@ export type {
   OpenElementBuildContextLike,
   OpenElementMiddleware,
   OpenElementMiddlewareContext,
-  OpenElementRenderer,
   RegistryIndex,
   RegistryIndexEntry,
   RouteEntry,
@@ -134,12 +133,7 @@ export type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.ts';
 export { createLogger } from './logger.ts';
 export { assertValidTagName, isValidTagName } from './tag-utils.ts';
-export {
-  normalizeBasePath,
-  normalizeRoutePath,
-  normalizeSeparators,
-  pathToTagName,
-} from './path-utils.ts';
+export { normalizeSeparators, pathToTagName } from './path-utils.ts';
 export {
   bindSsrProps,
   defineCustomElement,
@@ -215,14 +209,12 @@ export {
   hydrateEventMarkers,
   serializeEventMarkers,
 } from './event-hydration.ts';
-// static props runtime + Signal unwrap
+// static props runtime
 export {
   disposeStaticProps,
   handleStaticPropAttributeChange,
   initializeStaticProps,
-  registerStaticObservedAttributes,
   syncStaticPropsFromAttributes,
-  unwrap,
 } from './prop.ts';
 export type {
   NormalizedPropDecl,

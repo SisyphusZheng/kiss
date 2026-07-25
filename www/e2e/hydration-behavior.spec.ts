@@ -200,29 +200,26 @@ test.describe('SSR/hydration mismatch degradation', () => {
         return class BranchProbe extends base {
           clicks = 0;
           override render(): unknown {
-            // The Show vnode is wrapped in a host element, mirroring real
-            // components: a root-level conditional anchor has no parent at
-            // binding-commit time.
+            // Root-level <Show> on purpose: renderToDom now parks a root
+            // control-flow anchor in a DocumentFragment before committing
+            // bindings, so the degrade path renders the branch without a
+            // wrapper element. (The wrapper previously worked around the
+            // anchor having no parentNode at commit time, which silently
+            // dropped the branch content.)
             return {
-              tag: 'div',
-              props: {},
+              tag: 'show',
+              props: { when: true },
               children: [
                 {
-                  tag: 'show',
-                  props: { when: true },
-                  children: [
-                    {
-                      tag: 'button',
-                      props: {
-                        onClick: () => {
-                          this.clicks++;
-                        },
-                      },
-                      children: ['probe-live'],
+                  tag: 'button',
+                  props: {
+                    onClick: () => {
+                      this.clicks++;
                     },
-                    null,
-                  ],
+                  },
+                  children: ['probe-live'],
                 },
+                null,
               ],
             };
           }

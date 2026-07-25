@@ -48,29 +48,3 @@ export function pathToTagName(filePath: string): string {
   // Ensure at least one hyphen so it is a valid custom element candidate.
   return withPrefix.includes('-') ? withPrefix : `${withPrefix}-page`;
 }
-
-/**
- * Normalize a base path so it starts and ends with a single slash.
- *
- * Mirrors the normalization used by the SSG Vite asset driver.
- * Empty input and root are normalized to `"/"`.
- */
-export function normalizeBasePath(path: string): string {
-  const trimmed = path?.trim() ?? '';
-  if (!trimmed || trimmed === '/') return '/';
-  const withSlashes = `/${trimmed.replace(/^\/+|\/+$/g, '')}/`;
-  return withSlashes.replace(/\/+/g, '/');
-}
-
-/**
- * Normalize a route path so it starts with a leading slash and has no
- * trailing slash (except for the root path `"/"`).
- *
- * Mirrors the normalization used by the app route graph.
- */
-export function normalizeRoutePath(path: string): string {
-  const trimmed = path?.trim() ?? '';
-  if (!trimmed) return '/';
-  const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  return withSlash.length > 1 ? withSlash.replace(/\/+$/, '') : withSlash;
-}

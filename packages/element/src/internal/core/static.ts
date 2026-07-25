@@ -58,9 +58,7 @@ export {
   handleStaticPropAttributeChange,
   initializeStaticProps,
   normalizePropDecl,
-  registerStaticObservedAttributes,
   syncStaticPropsFromAttributes,
-  unwrap,
 } from './prop.ts';
 export type {
   NormalizedPropDecl,
@@ -83,12 +81,7 @@ export type { Context } from './signal-context.ts';
 
 // Misc static utilities
 export { assertValidTagName, isValidTagName } from './tag-utils.ts';
-export {
-  normalizeBasePath,
-  normalizeRoutePath,
-  normalizeSeparators,
-  pathToTagName,
-} from './path-utils.ts';
+export { normalizeSeparators, pathToTagName } from './path-utils.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
 

@@ -3,8 +3,6 @@
  * metadata contracts.
  */
 
-import type { VNode } from './vnode.ts';
-
 // --- API context --------------------------------------------------
 
 /** API route context passed to simple handlers */
@@ -247,13 +245,6 @@ export interface RegistryIndex {
 }
 
 // --- Routing & Middleware -----------------------------------------
-
-export interface OpenElementRenderer {
-  wrap(
-    node: VNode,
-    ctx: { req: { path: string }; [key: string]: unknown },
-  ): VNode | Promise<VNode>;
-}
 
 export interface OpenElementMiddlewareContext {
   req: {
