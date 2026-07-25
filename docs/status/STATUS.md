@@ -1,8 +1,8 @@
 # OpenElement Status
 
 > Updated: 2026-07-24\
-> Repository package line: `v0.41.0-alpha.17`\
-> npm registry line: `v0.41.0-alpha.17`\
+> Repository package line: `v0.41.0-alpha.18`\
+> npm registry line: `v0.41.0-alpha.18`\
 > Active release target: `v0.41.0-alpha.18`\
 > Next stability candidate: `v0.41.0`\
 > Product graph: five packages\

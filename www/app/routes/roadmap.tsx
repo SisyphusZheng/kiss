@@ -333,7 +333,7 @@ pageSheet.replaceSync(`
 
 const phases = [
   {
-    version: 'v0.41.0-alpha.17',
+    version: 'v0.41.0-alpha.18',
     title: 'Five-package alpha release',
     copy:
       'The published alpha line converges the consumer product around five packages and ships the unified product and website surface.',
@@ -434,7 +434,7 @@ export class RoadmapPage extends OpenElement {
               {phases.map((phase) => (
                 <open-card
                   class='phase-card'
-                  variant={phase.version === 'v0.41.0-alpha.17' ? 'elevated' : undefined}
+                  variant={phase.version === 'v0.41.0-alpha.18' ? 'elevated' : undefined}
                 >
                   <div class='phase-top'>
                     <span class='version'>{phase.version}</span>
