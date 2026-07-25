@@ -109,8 +109,8 @@
     "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-prepare",
     "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts publish-existing",
     "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
-    "verify:configs": "deno run --allow-read tools/verify-package-configs.ts",
-    "verify:configs:fix": "deno run --allow-read --allow-write tools/verify-package-configs.ts --fix"
+    "verify:configs": "deno run --allow-read --allow-env tools/verify-package-configs.ts",
+    "verify:configs:fix": "deno run --allow-read --allow-write --allow-env tools/verify-package-configs.ts --fix"
   },
   "fmt": {
     "useTabs": false,

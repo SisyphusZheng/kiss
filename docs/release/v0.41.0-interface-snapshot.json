@@ -78,7 +78,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "9143060e4b44f2c44df0656656a314772ced1321c00829339651e3f0710d0fd7",
+          "sha256": "95cc58ef49406811e4e9fd7a6897f03e237772b1657cb65d5b686c8b0536d067",
           "publicDeclarations": [
             "export type {",
             "export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/element';",
