@@ -90,7 +90,7 @@
     "nitro:proof:node": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts node",
     "nitro:proof:workers": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts workers",
     "test:coverage:check": "deno run --allow-read --allow-run --allow-write --allow-env --allow-net --allow-ffi --allow-sys tools/check-coverage.ts --threshold 73 --branch-threshold 82 --function-threshold 77",
-    "test:critical-paths": "deno run --allow-read --allow-run tools/check-critical-path-tests.ts",
+    "test:critical-paths": "deno run --allow-read --allow-run --allow-env tools/check-critical-path-tests.ts",
     "consumer:element-smoke": "deno run -A tools/consumer-smoke.ts --local",
     "typecheck": "deno task generate:ui-manifest && deno run --allow-read --allow-run --allow-env tools/run-package-graph-task.ts typecheck",
     "lint": "deno lint",
