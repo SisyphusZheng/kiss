@@ -209,7 +209,9 @@ export function createReleasePlan(
     },
     {
       name: 'commit release evidence',
-      command: ['git', 'commit', '-m', `docs(release): record ${tag} evidence`],
+      // Guarded like the bump commit: a resume whose earlier attempt already
+      // committed the evidence stages nothing, and an empty commit exits 1.
+      run: () => commitIfStaged(`docs(release): record ${tag} evidence`),
     },
   ];
   const publishSteps: ReleaseCommandStep[] = [
@@ -249,7 +251,7 @@ export function createReleasePlan(
   const tagSteps: ReleaseCommandStep[] = [
     {
       name: 'tag release',
-      run: async () => {
+      run: async (evidence) => {
         const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
         let existing: string | undefined;
         try {
@@ -257,14 +259,32 @@ export function createReleasePlan(
         } catch {
           // Tag does not exist yet.
         }
-        if (existing === head) {
+        // Only gather the resume signals when the tag actually conflicts.
+        let existingIsAncestor = false;
+        let existingEvidenceId: string | undefined;
+        if (existing !== undefined && existing !== head) {
+          existingIsAncestor = await isAncestorCommit(existing, head);
+          existingEvidenceId = await tagEvidenceId(tag, targetVersion);
+        }
+        const action = decideTagAction({
+          tag,
+          head,
+          existing,
+          publishPassed: publishEvidencePassed(evidence),
+          existingIsAncestor,
+          existingEvidenceId,
+          evidenceId: evidence.id,
+        });
+        if (action === 'skip-at-head') {
           console.log(`Tag ${tag} already exists at HEAD; skipping.`);
           return;
         }
-        if (existing) {
-          throw new Error(
-            `Refusing to overwrite existing tag ${tag} at ${existing}; HEAD is ${head}.`,
+        if (action === 'keep-existing') {
+          console.warn(
+            `[release] tag ${tag} already exists at ancestor ${existing} and the publish ` +
+              'steps passed; keeping the immutable tag and continuing without re-tagging.',
           );
+          return;
         }
         await runCaptured(['git', 'tag', tag]);
       },
@@ -345,7 +365,9 @@ export function createReleasePlan(
     },
     {
       name: 'commit release bump',
-      command: ['git', 'commit', '-m', commitMessage],
+      // Guarded: on a re-run the bump commit already exists and the stage is
+      // empty; an empty `git commit` exits 1 and would block the resume.
+      run: () => commitIfStaged(commitMessage),
     },
   ];
 
@@ -369,9 +391,10 @@ export function createReleasePlan(
   }
 
   // Local/manual release: bump on dev, fast-forward main from dev in a single
-  // transition, then keep dev in sync with main. This removes the redundant
-  // pull/push round-trips that previously bounced between dev and main and
-  // reduces the chance of a half-released state.
+  // transition, then publish, record evidence, and tag on main. The plan
+  // deliberately ends on main: the executor lands the final completed evidence
+  // and closure commits there (main CI validates the release closure), then
+  // returns to dev and fast-forwards it (see finalizeReleaseOnReleaseBranch).
   return [
     ...baseSteps,
     {
@@ -397,18 +420,6 @@ export function createReleasePlan(
       command: ['git', 'push', 'origin', 'main'],
     },
     ...tagSteps,
-    {
-      name: 'checkout dev',
-      command: ['git', 'checkout', 'dev'],
-    },
-    {
-      name: 'sync dev from main (fast-forward)',
-      command: ['git', 'merge', '--ff-only', 'main'],
-    },
-    {
-      name: 'push dev',
-      command: ['git', 'push', 'origin', 'dev'],
-    },
   ];
 }
 
@@ -612,18 +623,47 @@ export function buildVersionAnchorReplacements(
   // README.md wraps `**<pv>** (<pvTag>)` across a line break, so that anchor
   // carries an embedded newline. Anchors that no longer exist in a file (e.g.
   // the legacy "removed the legacy" line) are intentionally omitted so the
-  // bump never throws on documentation drift.
+  // bump never throws on documentation drift. Currency claims that are not
+  // head anchors (README/Roadmap "published as" lines, the workflow
+  // implementation anchor) are listed here too: the bump must maintain every
+  // line the version-anchor and strategic-docs gates enforce, or the gates
+  // fail on the release's own post-bump gate run.
   const raw: Array<[string, string, string]> = [
     ['README.md', '`$PV` (`$PVT`', '`$VER` (`$TAG`'],
+    [
+      'README.md',
+      'convergence is published as `$PV`',
+      'convergence is published as `$VER`',
+    ],
     [
       'README.zh.md',
       '已发布包线为 `$PV`（`$PVT`）',
       '已发布包线为 `$VER`（`$TAG`）',
     ],
     [
+      'README.zh.md',
+      '五包收敛已作为 `$PV` 发布',
+      '五包收敛已作为 `$VER` 发布',
+    ],
+    [
       'docs/governance/PROJECT_WORKFLOW.md',
       'package line `$PVT`',
       'package line `$TAG`',
+    ],
+    [
+      'docs/governance/PROJECT_WORKFLOW.md',
+      'implementation anchor `$PVT`',
+      'implementation anchor `$TAG`',
+    ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'Current source package line: `$PVT`',
+      'Current source package line: `$TAG`',
+    ],
+    [
+      'docs/current/VERSION_PLAN.md',
+      'Current npm registry line: `$PVT`',
+      'Current npm registry line: `$TAG`',
     ],
     [
       'www/app/data/version.ts',
@@ -634,6 +674,11 @@ export function buildVersionAnchorReplacements(
       'docs/roadmap/ROADMAP.md',
       'Published package line: `$PVT`',
       'Published package line: `$TAG`',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      '`$PV` is the published package line',
+      '`$VER` is the published package line',
     ],
     [
       'docs/status/STATUS.md',
@@ -666,17 +711,23 @@ export function buildVersionAnchorReplacements(
 }
 
 export async function updateCurrentVersionAnchors(version: string): Promise<void> {
-  const tag = releaseTag(version);
   const replacements = buildVersionAnchorReplacements(version);
 
   for (const [path, from, to] of replacements) {
     const text = await Deno.readTextFile(path);
     if (text.includes(from)) {
+      // Replace the first occurrence only: it is the head-zone declaration the
+      // gates enforce. Later occurrences are historical quotes (release notes,
+      // roadmap tables) that must keep the old version string.
       await Deno.writeTextFile(path, text.replace(from, to));
       continue;
     }
-    if (text.includes(to) || (text.includes(version) && text.includes(tag))) {
-      // Already at target (exact to-substring or version/tag present) - skip
+    if (text.includes(to)) {
+      // Already at target - skip. Note there is deliberately no looser
+      // "file mentions the version anywhere" skip: that heuristic let a head
+      // anchor stay stale whenever the new version appeared elsewhere in the
+      // file (e.g. a release-notes link), which is exactly the drift the
+      // stale-anchor gate now rejects.
       continue;
     }
     // Anchor drifted (doc no longer carries the expected from-string). Rather
@@ -776,4 +827,191 @@ export async function runCaptured(command: string[]): Promise<string> {
     throw new Error(`${command.join(' ')} failed with exit ${output.code}\n${stdout}${stderr}`);
   }
   return stdout;
+}
+
+export async function hasStagedChanges(): Promise<boolean> {
+  const status = await new Deno.Command('git', {
+    args: ['diff', '--cached', '--quiet'],
+  }).spawn().status;
+  if (status.code === 0) return false;
+  if (status.code === 1) return true;
+  throw new Error(`git diff --cached --quiet failed with exit ${status.code}`);
+}
+
+/**
+ * Commit only when the staged tree differs from HEAD. A re-run whose earlier
+ * attempt already created the commit stages nothing; an empty `git commit`
+ * exits 1 and would block the resume.
+ */
+export async function commitIfStaged(message: string): Promise<void> {
+  if (!(await hasStagedChanges())) {
+    console.log('Nothing staged; skipping commit (already committed or unchanged).');
+    return;
+  }
+  await runCaptured(['git', 'commit', '-m', message]);
+}
+
+export async function isAncestorCommit(ancestor: string, descendant: string): Promise<boolean> {
+  const result = await new Deno.Command('git', {
+    args: ['merge-base', '--is-ancestor', ancestor, descendant],
+    stdout: 'null',
+    stderr: 'null',
+  }).output();
+  return result.success;
+}
+
+/** Branch the worktree is on, with a sane fallback for detached CI checkouts. */
+export async function currentBranchName(fallback: string): Promise<string> {
+  const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
+  // A release plan checks out branches explicitly when it switches, so a
+  // detached HEAD means the plan never switched: the expected branch applies.
+  return branch === 'HEAD' ? fallback : branch;
+}
+
+function stepCheckoutTarget(step: ReleaseCommandStep): string | undefined {
+  const command = step.command;
+  if (command && command[0] === 'git' && command[1] === 'checkout') return command[2];
+  return undefined;
+}
+
+/** Branches a plan checks out, in plan order. */
+export function planCheckoutTargets(plan: ReleaseCommandStep[]): string[] {
+  const targets: string[] = [];
+  for (const step of plan) {
+    const target = stepCheckoutTarget(step);
+    if (target !== undefined) targets.push(target);
+  }
+  return targets;
+}
+
+/**
+ * Branch the finalize commits (final evidence + closure) must land on. The
+ * local plan switches to main for publish/tag and stays there; plans without
+ * checkout steps (CI, publish-existing) never leave the expected branch.
+ */
+export function planFinalizeBranch(plan: ReleaseCommandStep[], fallback: string): string {
+  const targets = planCheckoutTargets(plan);
+  return targets.length > 0 ? targets[targets.length - 1] : fallback;
+}
+
+/**
+ * Branches a run may start from. A fresh run must start on the expected
+ * branch. A resume reskips the contiguous passed prefix without re-executing
+ * it, so it must start on the branch that prefix left behind (the local plan
+ * fails mid-run on main, not dev). A fully passed plan only retries the
+ * finalize phase, which itself checks out the release branch, so either side
+ * of the branch switch is acceptable.
+ */
+export function planStartBranches(
+  plan: ReleaseCommandStep[],
+  priorSteps: ReleaseStepEvidence[] | undefined,
+  expectedBranch: string,
+): string[] {
+  if (priorSteps === undefined) return [expectedBranch];
+  let branch = expectedBranch;
+  let passed = 0;
+  for (const step of plan) {
+    const prior = priorSteps.find((item) => item.name === step.name);
+    if (prior?.status !== 'passed') break;
+    passed += 1;
+    const target = stepCheckoutTarget(step);
+    if (target !== undefined) branch = target;
+  }
+  if (passed === plan.length && branch !== expectedBranch) {
+    return [expectedBranch, branch];
+  }
+  return [branch];
+}
+
+/**
+ * Rebuild an evidence record for a re-run from the prior one on disk. The id,
+ * startedAt, currentVersion and releaseRunUrl are preserved (the release
+ * closure validator compares the tag-time and final evidence ids), passed
+ * steps keep their status and timestamps so the executor can skip them, and
+ * everything else is reset to pending. Step command/cwd come from the current
+ * plan so code changes between attempts are honoured.
+ */
+export function resumeEvidenceFromPrior(
+  prior: ReleaseEvidence,
+  plan: ReleaseCommandStep[],
+): ReleaseEvidence {
+  const steps = plan.map((step): ReleaseStepEvidence => {
+    const old = prior.steps.find((item) => item.name === step.name);
+    if (old?.status === 'passed') {
+      return {
+        name: step.name,
+        command: step.command,
+        cwd: step.cwd,
+        status: 'passed',
+        startedAt: old.startedAt,
+        completedAt: old.completedAt,
+        exitCode: old.exitCode,
+      };
+    }
+    return { name: step.name, command: step.command, cwd: step.cwd, status: 'pending' };
+  });
+  return { ...prior, steps, status: 'running', completedAt: undefined };
+}
+
+/** Publish-side step names whose passed status proves the publish succeeded. */
+const PUBLISH_EVIDENCE_STEP_NAMES = new Set([
+  'publish npm packages',
+  'verify npm versions and dist-tags',
+  'post-publish npm consumer smoke',
+  'post-publish third-party Web Component smoke',
+  'publish jsr packages',
+]);
+
+/**
+ * Whether the evidence shows a successful publish. A release without publish
+ * steps (no npm/JSR tokens) has no published artifact to protect, so the
+ * check is vacuously true there; the tag-ancestor rule still applies.
+ */
+export function publishEvidencePassed(evidence: ReleaseEvidence): boolean {
+  return evidence.steps
+    .filter((step) => PUBLISH_EVIDENCE_STEP_NAMES.has(step.name))
+    .every((step) => step.status === 'passed');
+}
+
+export type TagAction = 'create' | 'skip-at-head' | 'keep-existing';
+
+export interface TagDecisionInput {
+  tag: string;
+  head: string;
+  existing: string | undefined;
+  publishPassed: boolean;
+  existingIsAncestor: boolean;
+  existingEvidenceId: string | undefined;
+  evidenceId: string;
+}
+
+/**
+ * Decide what the tag step does. Tags are immutable release evidence, so an
+ * existing tag is never moved. A conflicting tag may only be kept (not
+ * re-created) on the resume path: the previous attempt tagged an ancestor of
+ * HEAD after the publish steps passed, and the tag's evidence snapshot belongs
+ * to the same release run. The closure validator accepts that because it only
+ * requires the tag to be an ancestor of the final evidence commit with a
+ * matching evidence id.
+ */
+export function decideTagAction(input: TagDecisionInput): TagAction {
+  if (input.existing === undefined) return 'create';
+  if (input.existing === input.head) return 'skip-at-head';
+  const resumable = input.publishPassed && input.existingIsAncestor &&
+    input.existingEvidenceId === input.evidenceId;
+  if (resumable) return 'keep-existing';
+  throw new Error(
+    `Refusing to overwrite existing tag ${input.tag} at ${input.existing}; HEAD is ${input.head}.`,
+  );
+}
+
+/** Evidence id recorded at a tag's commit, if the tag carries an evidence file. */
+export async function tagEvidenceId(tag: string, version: string): Promise<string | undefined> {
+  try {
+    const raw = await runCaptured(['git', 'show', `${tag}:${evidenceFile(version)}`]);
+    const parsed = JSON.parse(raw) as { id?: unknown };
+    return typeof parsed.id === 'string' ? parsed.id : undefined;
+  } catch {
+    return undefined;
+  }
 }

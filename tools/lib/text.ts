@@ -44,3 +44,8 @@ export function stripComments(source: string): string {
     .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
     .replace(/\/\/.*/g, '');
 }
+
+/** Escape a literal string so it can be embedded in a RegExp source. */
+export function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
