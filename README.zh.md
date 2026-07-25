@@ -6,7 +6,7 @@
 Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作者层；
 Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
 
-已发布包线为 `0.41.0-alpha.18`（`v0.41.0-alpha.18`）。项目继续使用 alpha
+已发布包线为 `0.41.0-alpha.19`（`v0.41.0-alpha.19`）。项目继续使用 alpha
 命名，直到五包产品与外部采用证据充分成熟；已放弃的 beta 命名不再是当前版本线。
 
 ## 当前产品
@@ -41,7 +41,7 @@ official build path = Vite + Nitro
 
 ## 当前发布状态
 
-五包收敛已作为 `0.41.0-alpha.18` 发布。npm beta.1 至 beta.3 仍是已撤回的
+五包收敛已作为 `0.41.0-alpha.19` 发布。npm beta.1 至 beta.3 仍是已撤回的
 不完整历史产物，不构成兼容基线。外部 adopter pilot #390 仍是作出稳定性承诺前
 最重要的仓库外条件。Alpha.18 已完成第二轮审计清扫（ADR-0117）。
 

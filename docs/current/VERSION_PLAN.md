@@ -1,7 +1,7 @@
 # v0.41.0-alpha.19 — third audit round cleanup sweep plan
 
-> Current source package line: `v0.41.0-alpha.18`\
-> Current npm registry line: `v0.41.0-alpha.18`\
+> Current source package line: `v0.41.0-alpha.19`\
+> Current npm registry line: `v0.41.0-alpha.19`\
 > Active release target: `v0.41.0-alpha.19`\
 > Next stability candidate: `v0.41.0`\
 > Current maturity stage: alpha
