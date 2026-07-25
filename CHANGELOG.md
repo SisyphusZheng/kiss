@@ -12,6 +12,26 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0-alpha.18
+
+- Fixes the `reflect: true` static-prop write loop and SSR attribute
+  overwrite; resolves the root-level `<Show>`/`<For>` CSR edge; unifies
+  prop attribute casing; makes `For` branch tokens content-sensitive;
+  fixes client-runtime double hydration; runs router guards on history
+  traversal; honors `prefers-color-scheme` in theme-init.
+- Shares one CEM admission plan across dev/SSR/SSG; dynamic-route render
+  failures now fail the build (opt-out `'warn'`); failed pages never ship
+  nor enter the ISR manifest; static non-200 outcomes are summarized.
+- Local releases land evidence and closure on main; anchor gates reject
+  stale version claims; the bump maintains every currency line; the
+  release executor resumes from failures.
+- Adds WebKit smoke to CI, gates examples checks, single-sources the
+  guide with real Chinese rendering, and covers the SPA action chain in a
+  real browser.
+- Removes dead exports, fields and scripts (breaking; see the release
+  note for migration), removes `renderIntent.streaming`, converges
+  fmt/lint exclusions, and retires stale files and config entries.
+
 ## 0.41.0-alpha.17
 
 - Covers hydration and binding behavior in a real browser: signal text
