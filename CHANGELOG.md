@@ -12,6 +12,30 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0-alpha.19
+
+- Third audit round cleanup sweep (ADR-0118, issues #481-#506); no new
+  product surface.
+- Fixes the reflect removal suppression (Boolean `default: true` desync),
+  the popstate redirect-then-block URL fork, and For drift-token separator
+  collisions; the reflect browser spec joins the Firefox/WebKit smoke gates.
+- Closes the export-star seams: the element root switches to explicit type
+  export lists, `SafeHtml`/`UnsafeHtml`/`StyleSheetRule` leave the root for
+  real, and the internal `open-element-render`/`open-element-hydration`
+  subpaths are pruned from element exports (breaking type-surface changes;
+  see the GitHub prerelease notes for migration).
+- Single-sources `HYDRATION_STRATEGIES` and the routeInfo contract, sinks
+  the release executor into `release.ts` with orchestration tests, and
+  preserves curated release-note sections so migration records stay in the
+  durable record.
+- Mechanizes the audit's edge findings: www truth catches bare version
+  mentions, anchor gates catch body drift, the assertion-style gate covers
+  every package test, graph direction rules are explicit, and the deno-api
+  check catches `globalThis.Deno`/destructuring/`npm:` patterns.
+- Deletes the third-round dead-code inventory (renderDsdStream,
+  bindHydrateEvents, generateHonoEntryCode, tools/test-fixtures, orphan
+  tasks, dead config entries) and rewrites the always-true test assertions.
+
 ## 0.41.0-alpha.18
 
 - Fixes the `reflect: true` static-prop write loop and SSR attribute

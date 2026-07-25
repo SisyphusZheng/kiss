@@ -33,17 +33,17 @@ and output path.
 | `@openelement/create`       | Current  | Installed starter and consumer entrypoint           |
 | `@openelement/ui`           | Optional | Proven primitives; stable scope decided at v0.46    |
 
-## Alpha.18 active gates
+## Alpha.19 active gates
 
-| Condition                                        | State                            |
-| ------------------------------------------------ | -------------------------------- |
-| ADR-0117, alpha.18 plan and drift cleanup        | Completed                        |
-| P0 correctness package (reflect, CEM, 500, etc.) | Completed                        |
-| Release tooling closure package                  | Completed                        |
-| Evidence honesty package                         | Completed                        |
-| Convergence and redundancy package               | Completed                        |
-| External adopter pilot #390                      | Launched; pending human evidence |
-| Alpha.18 npm, tag, prerelease and final evidence | Completed                        |
+| Condition                                                            | State                            |
+| -------------------------------------------------------------------- | -------------------------------- |
+| ADR-0118, alpha.19 plan and sweep issues #481-#506                   | Completed                        |
+| Runtime combination-path fixes (reflect, popstate, For token)        | Completed                        |
+| Export-star seam closure and surface pruning                         | Completed                        |
+| Gate mechanization (anchors, www truth, assertions, graph, deno-api) | Completed                        |
+| Dead-code and config hygiene batch                                   | Completed                        |
+| External adopter pilot #390                                          | Launched; pending human evidence |
+| Alpha.19 npm, tag, prerelease and final evidence                     | Completed                        |
 
 ## Current risks
 
