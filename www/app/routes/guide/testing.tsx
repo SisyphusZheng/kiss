@@ -1,9 +1,80 @@
-﻿export const meta = { section: 'Guide', label: 'Testing', order: 110 };
+export const meta = { section: 'Guide', label: 'Testing', order: 110 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
+
+type GuideContent = {
+  breadcrumb: string;
+  title: string;
+  lede: string;
+  outline: ReadonlyArray<{ id: string; label: string; level: 2 | 3 }>;
+  previous?: { href: string; label: string };
+  next?: { href: string; label: string };
+  cards: ReadonlyArray<{ id: string; title: string; body: string }>;
+};
+
+const content: Record<'en' | 'zh', GuideContent> = {
+  en: {
+    breadcrumb: 'Guide',
+    title: 'Testing',
+    lede:
+      'Use checks that match the changed surface: type checks for routes, build checks for generated output and visual checks for design changes.',
+    outline: [
+      { id: 'type-checks', label: 'Type checks', level: 3 },
+      { id: 'build-checks', label: 'Build checks', level: 3 },
+      { id: 'visual-checks', label: 'Visual checks', level: 3 },
+    ],
+    previous: { href: '/guide/deployment', label: 'Deployment' },
+    cards: [
+      {
+        id: 'type-checks',
+        title: 'Type checks',
+        body: 'Run Deno checks on changed route and component files.',
+      },
+      {
+        id: 'build-checks',
+        title: 'Build checks',
+        body: 'Use the site build to catch generation regressions.',
+      },
+      {
+        id: 'visual-checks',
+        title: 'Visual checks',
+        body: 'Capture desktop and mobile states for layout-sensitive work.',
+      },
+    ],
+  },
+  zh: {
+    breadcrumb: '指南',
+    title: '测试',
+    lede:
+      '使用与变更表面匹配的检查：routes 用 type checks，生成产物用 build checks，设计变更用 visual checks。',
+    outline: [
+      { id: 'type-checks', label: '类型检查', level: 3 },
+      { id: 'build-checks', label: '构建检查', level: 3 },
+      { id: 'visual-checks', label: '视觉检查', level: 3 },
+    ],
+    previous: { href: '/guide/deployment', label: '部署' },
+    cards: [
+      {
+        id: 'type-checks',
+        title: '类型检查',
+        body: '对变更的 route 与 component 文件运行 Deno checks。',
+      },
+      {
+        id: 'build-checks',
+        title: '构建检查',
+        body: '用站点构建捕获生成回归。',
+      },
+      {
+        id: 'visual-checks',
+        title: '视觉检查',
+        body: '对布局敏感的工作截取 desktop 与 mobile 状态。',
+      },
+    ],
+  },
+};
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -27,23 +98,29 @@ export class GuideGuidePage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     return (
-      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Testing","lede":"Use checks that match the changed surface: type checks for routes, build checks for generated output and visual checks for design changes."}' previous='/guide/deployment' previous-label='Deployment'><open-page-rail slot='rail' items='[{"id":"type-checks","label":"Type checks","level":3},{"id":"build-checks","label":"Build checks","level":3},{"id":"visual-checks","label":"Visual checks","level":3}]'></open-page-rail><div class='container'>
-        <div class='guide-grid'>
-          <open-card>
-            <h3 id='type-checks'>Type checks</h3>
-            <p>Run Deno checks on changed route and component files.</p>
-          </open-card>
-          <open-card>
-            <h3 id='build-checks'>Build checks</h3>
-            <p>Use the site build to catch generation regressions.</p>
-          </open-card>
-          <open-card>
-            <h3 id='visual-checks'>Visual checks</h3>
-            <p>Capture desktop and mobile states for layout-sensitive work.</p>
-          </open-card>
+      <open-reading-shell
+        rail
+        footer
+        metadata={JSON.stringify({ breadcrumb: t.breadcrumb, title: t.title, lede: t.lede })}
+        previous={t.previous?.href}
+        previous-label={t.previous?.label}
+        next={t.next?.href}
+        next-label={t.next?.label}
+      >
+        <open-page-rail slot='rail' items={JSON.stringify(t.outline)}></open-page-rail>
+        <div class='container'>
+          <div class='guide-grid'>
+            {t.cards.map((card) => (
+              <open-card>
+                <h3 id={card.id}>{card.title}</h3>
+                <p>{card.body}</p>
+              </open-card>
+            ))}
+          </div>
         </div>
-      </div></open-reading-shell>
+      </open-reading-shell>
     );
   }
 }

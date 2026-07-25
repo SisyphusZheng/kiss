@@ -1,12 +1,22 @@
 # Mastodon Desktop — Verification Checklist
 
-## Automated tests
+## Automated checks (CI-enforced)
 
-- [x] `deno task check` passes.
-- [x] `deno task smoke` passes (format, cache, api, server smoke).
-- [x] `deno run -A npm:vite build` succeeds and stays within budget.
+The root `deno task examples:check` gate runs in CI (AutoFlow `ci` and
+`release` tiers, triggered by `examples/` changes) and covers:
+
+- [x] `deno task check` — type check of `main.ts` and `mastodon.tsx`.
+- [x] `deno task smoke` — 23 unit tests (format, cache, api, server smoke).
+
+## Verified locally (not CI-gated)
+
+- [x] `deno run -A npm:vite build` succeeds and stays within the manifest
+      budget declared in `vite.config.ts` (`islandKB: 350`, `totalJsKB: 450`).
+      Last local run: 2026-07-24. This step is not part of CI.
 
 ## Manual smoke
+
+The items below were verified by hand; no automated gate exercises them.
 
 - [x] `deno task dev:api` starts without errors on port 8000.
 - [x] `GET /api/timeline` returns the fixture timeline JSON.

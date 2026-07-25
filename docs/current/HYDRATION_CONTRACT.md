@@ -33,3 +33,10 @@ static, hydrate, or CSR implementation packages.
   entries.
 - Third-party custom elements are hydrated only according to validated package
   or Custom Elements Manifest metadata.
+
+## Known limitations
+
+- Islands located outside the project root are emitted through the Vite
+  `/@fs/` absolute-path specifier convention. That branch is covered by unit
+  tests (`module-specifier.test.ts`) but has not been verified on a real
+  Windows build; the regular root-relative path is exercised on every change.

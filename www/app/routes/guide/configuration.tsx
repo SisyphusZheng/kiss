@@ -1,9 +1,80 @@
-﻿export const meta = { section: 'Guide', label: 'Configuration', order: 70 };
+export const meta = { section: 'Guide', label: 'Configuration', order: 70 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
+
+type GuideContent = {
+  breadcrumb: string;
+  title: string;
+  lede: string;
+  outline: ReadonlyArray<{ id: string; label: string; level: 2 | 3 }>;
+  previous?: { href: string; label: string };
+  next?: { href: string; label: string };
+  cards: ReadonlyArray<{ id: string; title: string; body: string }>;
+};
+
+const content: Record<'en' | 'zh', GuideContent> = {
+  en: {
+    breadcrumb: 'Guide',
+    title: 'Configuration',
+    lede: 'Configuration stays close to the route, build or package surface it affects.',
+    outline: [
+      { id: 'route-config', label: 'Route config', level: 3 },
+      { id: 'build-config', label: 'Build config', level: 3 },
+      { id: 'package-config', label: 'Package config', level: 3 },
+    ],
+    previous: { href: '/guide/api', label: 'API Routes' },
+    next: { href: '/guide/error-handling', label: 'Error Handling' },
+    cards: [
+      {
+        id: 'route-config',
+        title: 'Route config',
+        body: 'Declare route-facing behavior where the route can be audited.',
+      },
+      {
+        id: 'build-config',
+        title: 'Build config',
+        body: 'Keep Vite and SSG settings explicit in project tasks.',
+      },
+      {
+        id: 'package-config',
+        title: 'Package config',
+        body: 'Use package manifests for publish and dependency boundaries.',
+      },
+    ],
+  },
+  zh: {
+    breadcrumb: '指南',
+    title: '配置',
+    lede: '配置贴近它所影响的 route、build 或 package 表面。',
+    outline: [
+      { id: 'route-config', label: 'Route 配置', level: 3 },
+      { id: 'build-config', label: 'Build 配置', level: 3 },
+      { id: 'package-config', label: 'Package 配置', level: 3 },
+    ],
+    previous: { href: '/guide/api', label: 'API 路由' },
+    next: { href: '/guide/error-handling', label: '错误处理' },
+    cards: [
+      {
+        id: 'route-config',
+        title: 'Route 配置',
+        body: '在 route 可被审计的位置声明面向路由的行为。',
+      },
+      {
+        id: 'build-config',
+        title: 'Build 配置',
+        body: 'Vite 与 SSG 设置在项目 tasks 中保持显式。',
+      },
+      {
+        id: 'package-config',
+        title: 'Package 配置',
+        body: '用 package manifests 表达发布与依赖边界。',
+      },
+    ],
+  },
+};
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -27,23 +98,29 @@ export class GuideGuidePage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     return (
-      <open-reading-shell rail footer metadata='{"breadcrumb":"Guide","title":"Configuration","lede":"Configuration stays close to the route, build or package surface it affects."}' previous='/guide/api' previous-label='API Routes' next='/guide/error-handling' next-label='Error Handling'><open-page-rail slot='rail' items='[{"id":"route-config","label":"Route config","level":3},{"id":"build-config","label":"Build config","level":3},{"id":"package-config","label":"Package config","level":3}]'></open-page-rail><div class='container'>
-        <div class='guide-grid'>
-          <open-card>
-            <h3 id='route-config'>Route config</h3>
-            <p>Declare route-facing behavior where the route can be audited.</p>
-          </open-card>
-          <open-card>
-            <h3 id='build-config'>Build config</h3>
-            <p>Keep Vite and SSG settings explicit in project tasks.</p>
-          </open-card>
-          <open-card>
-            <h3 id='package-config'>Package config</h3>
-            <p>Use package manifests for publish and dependency boundaries.</p>
-          </open-card>
+      <open-reading-shell
+        rail
+        footer
+        metadata={JSON.stringify({ breadcrumb: t.breadcrumb, title: t.title, lede: t.lede })}
+        previous={t.previous?.href}
+        previous-label={t.previous?.label}
+        next={t.next?.href}
+        next-label={t.next?.label}
+      >
+        <open-page-rail slot='rail' items={JSON.stringify(t.outline)}></open-page-rail>
+        <div class='container'>
+          <div class='guide-grid'>
+            {t.cards.map((card) => (
+              <open-card>
+                <h3 id={card.id}>{card.title}</h3>
+                <p>{card.body}</p>
+              </open-card>
+            ))}
+          </div>
         </div>
-      </div></open-reading-shell>
+      </open-reading-shell>
     );
   }
 }

@@ -13,12 +13,10 @@
       },
       "declarations": {
         ".": {
-          "sha256": "805e7850e04b743205883bba909dda297677412c0e967cec5c9ca42b89ac9905",
+          "sha256": "35290be84ac939a8c58a47ce1f55dab5150a59ff33ff4a8934f5ec15a61cfa16",
           "publicDeclarations": [
-            "export type { OpenElementComponentConstructor } from './open-element.ts';",
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
-            "export type { OpenElementRenderer } from './internal/protocol/framework.ts';",
             "export type { VNode } from './internal/protocol/vnode.ts';",
             "export type * from './internal/protocol/framework.ts';",
             "export type * from './internal/protocol/manifest.ts';",
@@ -26,17 +24,14 @@
             "export type * from './internal/protocol/style-sheet.ts';",
             "export type * from './internal/protocol/vnode.ts';",
             "export type { Context } from './internal/core/index.ts';",
-            "export type { PropValidationError, RenderError } from './internal/core/index.ts';",
-            "export type { ErrorCode, ErrorPhase, ErrorSeverity } from './internal/protocol/errors.ts';",
-            "export type { SignalLike } from './internal/protocol/signal.ts';",
+            "export type { RenderError } from './internal/core/index.ts';",
             "export type { Signal } from './internal/protocol/signal.ts';",
-            "export type { SafeHtml, UnsafeHtml } from './internal/protocol/framework.ts';",
             "export type { IslandOptions } from './internal/protocol/island.ts';",
-            "export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';",
+            "export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';",
             "export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';",
             "export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';",
             "export type {",
-            "export type {",
+            "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
             "export type {"
           ]
         },
@@ -128,7 +123,7 @@
           ]
         },
         "./spa": {
-          "sha256": "d685b61816bdb46948fd5a28533191a49753f2e49afe3d75b1d34e1a210fe3ea",
+          "sha256": "79038615bb4d54805c3fac24440e620011b7ff3927302132cc1139484a965dfd",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -157,30 +152,29 @@
       },
       "declarations": {
         ".": {
-          "sha256": "a735a6ab7a856ba04dc13e83215b652780c5a2c3957e548744fc027b23c900fa",
+          "sha256": "9e3b2833c05034e7678307f7282fbef55490da1d1c9dc0b575f12fc4f86773cd",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
             "export type { FrameworkOptions };",
             "export type { ArtifactInfo, BuildManifest } from './build-manifest.ts';",
-            "export type { SpeculationRulesOptions } from './internal/protocol/ssg.ts';",
+            "export type { SpeculationRulesOptions, SsgBehaviorOptions } from './internal/protocol/ssg.ts';",
             "export type { HeadExtrasResult } from './head-injection.ts';",
             "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
           ]
         },
         "./app-vite": {
-          "sha256": "57646b30b6aef837c2929b4e0ac5cf19247cac2261ab2049fad306309f2ae64b",
+          "sha256": "fbc9bbfd9964bfab9465a1f572ee12ee430b99fa0c216aa2937a8e7a2cfc5ad2",
           "publicDeclarations": [
             "export interface OpenElementOptions extends FrameworkOptions {",
             "export function openElement(options: OpenElementOptions = {}): Plugin[] {"
           ]
         },
         "./build-context": {
-          "sha256": "e44780f20cb07559848863fd0217f8b0e1989a3bd5a083e2420c0d997e1fd9cc",
+          "sha256": "a77770942f8fd2e1ea5acf4b5e66545e9cf54373a2c312193f317dbe274c3bcf",
           "publicDeclarations": [
             "export type Phase = 1 | 2 | 3;",
             "export class Phase1Meta {",
-            "export class Phase2Meta {",
             "export class Phase3Meta {",
             "export class OpenElementBuildContext {"
           ]
@@ -194,8 +188,11 @@
           "publicDeclarations": []
         },
         "./cli/build-ssg": {
-          "sha256": "de3c257dc6d26fac3f4fbf235edb566524fb19722528e7fa52bc5f2f5271ef58",
-          "publicDeclarations": []
+          "sha256": "784788fc8e914583533c814a51d023fca062f9aa2ff5039a14748779065a98e6",
+          "publicDeclarations": [
+            "export interface SsgEntryDescriptorInputs {",
+            "export function buildSsgEntryDescriptor("
+          ]
         },
         "./generated-data-resolver": {
           "sha256": "d18395cfa3eca7cd72f2e5481b24a0e76d49284d717a9c08274c085adf80788c",
@@ -234,14 +231,14 @@
           ]
         },
         "./plugin": {
-          "sha256": "d6606aed4c4bea1c6929d7136ba0f7f454af058cef6b3d30248a5c2c99dcd214",
+          "sha256": "d4e9230cc30f41f3eeece30437abb4ff8e95057803c47f520c1cc36e2eda0f56",
           "publicDeclarations": [
             "export function optionalPackageStubsPlugin(): Plugin {",
             "export function createOpenPlugin("
           ]
         },
         "./plugin-mdx": {
-          "sha256": "5acc04ce17016f446a66384f859e24ef914743a71fa02c0cb10cdfa3adcc84eb",
+          "sha256": "d935ba8f764d12bb95cacbe38e1d88ddb3c647560af5d293f0cccb84ecd85601",
           "publicDeclarations": [
             "export interface OpenMdxPluginOptions {",
             "export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {"
@@ -282,7 +279,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "44a7cacc806416be1c35dbf0b0a4db120bae09489b321e1fd59b33e0fc40a2d3",
+          "sha256": "600c64d12cb8272d2689aca138d46167d7441cae1a5e1445cf11a16e89e2638e",
           "publicDeclarations": []
         },
         "./open-badge": {
@@ -293,7 +290,7 @@
           ]
         },
         "./open-button": {
-          "sha256": "57411b37ffc3d08f48c04f97df841a111ab32a2081d648fae1e1141dfe1cd360",
+          "sha256": "9a4694535c3527b29a81d981218fc26d919ef819556eb13529fff4131fae07ad",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
@@ -321,7 +318,7 @@
           ]
         },
         "./open-dialog": {
-          "sha256": "fd25902bfe740877bb87e125779afb5012e0327891b038a7b92ae49472cb21b5",
+          "sha256": "e0a4bf78c47d08c0281c539bb8e2193bcfc100e07f0fc65bd795eedf520c5ab0",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
