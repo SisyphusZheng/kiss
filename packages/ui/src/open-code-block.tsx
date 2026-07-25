@@ -4,7 +4,7 @@
  *
  * Code block with copy button AND syntax highlighting via Prism.
  *
- * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
+ * v0.20.0: Migrated to openElement (Ocean component).
  *   - Self-contained Prism highlighting injected into shadow root
  *   - Copy button uses ElementInternals :state(copied) for CSS feedback
  *   - DSD renders <slot> for SSR (no JS content fallback)

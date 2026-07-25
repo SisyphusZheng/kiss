@@ -433,12 +433,3 @@ function describeRenderValue(value: unknown): string {
   const keys = Object.keys(value).join(',');
   return `object keys=[${keys}]`;
 }
-
-// v0.21.0: Streaming types and functions moved to render-dsd-stream.ts.
-export { createRenderDsdStreamMetrics, renderDsdStream } from './render-dsd-stream.ts';
-export type {
-  RenderDsdStreamChunk,
-  RenderDsdStreamComponent,
-  RenderDsdStreamMetrics,
-  RenderDsdStreamOptions,
-} from './render-dsd-stream.ts';

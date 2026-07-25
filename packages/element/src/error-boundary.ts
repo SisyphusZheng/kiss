@@ -1,20 +1,21 @@
 /**
  * @openelement/element — ErrorBoundary (ADR-0053 Layer 2).
  *
- * Catches child component render() errors and displays a fallback
- * UI instead of a bare tag or broken DOM. Errors bubble up through
- * the parent tree if no boundary catches them.
+ * Holds render-error state and displays fallback UI instead of a bare tag
+ * or broken DOM. There is no automatic catch or bubbling: application code
+ * reports errors explicitly via catchError(), and render() swaps in the
+ * onError() fallback while error state is set.
  *
  * v0.36.0: Added retry mechanism and degraded rendering fallback.
  *
  * Usage:
- * ```ts
+ * ```tsx
  * class MyBoundary extends ErrorBoundary {
  *   onError(error: OpenElementError) {
- *     return html`<error-panel .message=${error.message}></error-panel>`;
+ *     return <error-panel message={error.message} />;
  *   }
  *   render() {
- *     return html`<slot></slot>`;
+ *     return <slot />;
  *   }
  * }
  * ```

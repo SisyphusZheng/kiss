@@ -38,6 +38,8 @@
   const theme = saved || (prefersDark ? 'dark' : 'light');
   try {
     document.documentElement.setAttribute('data-theme', theme);
+    // Synchronous marker proving theme-init ran before first paint.
+    document.documentElement.dataset.themeInit = '1';
   } catch {
     // Ignore errors
   }

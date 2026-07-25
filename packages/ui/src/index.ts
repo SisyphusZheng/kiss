@@ -2,7 +2,7 @@
  * @openelement/ui - openElement UI Component Library
  *
  * Swiss International Style: Pure B&W, minimal, typography-driven.
- * Zero Lit dependency - built on DsdElement (native HTMLElement).
+ * Zero Lit dependency - built on openElement (native HTMLElement).
  *
  * Components:
  * - open-button: Button with variants (default, primary, ghost, accent)
@@ -39,10 +39,10 @@ export { OpenInput } from './open-input.tsx';
 export { OpenCodeBlock } from './open-code-block.tsx';
 export { OpenBadge } from './open-badge.tsx';
 export { OpenThemeToggle } from './open-theme-toggle.tsx';
-export { OpenDialog, tagName as openDialogTagName } from './open-dialog.tsx';
+export { OpenDialog } from './open-dialog.tsx';
 export { OpenCallout } from './open-callout.tsx';
-export { OpenDropdown, tagName as openDropdownTagName } from './open-dropdown.tsx';
-export { OpenTabs, tagName as openTabsTagName } from './open-tabs.tsx';
+export { OpenDropdown } from './open-dropdown.tsx';
+export { OpenTabs } from './open-tabs.tsx';
 
 // Package manifest (WC Package Protocol)
 // Consumers (adapter-vite) read manifest.declarations to derive island metadata.

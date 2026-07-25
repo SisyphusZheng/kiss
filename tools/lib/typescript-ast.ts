@@ -49,25 +49,40 @@ export interface DenoAccess {
 export function extractDenoAccesses(source: string, path = 'source.ts'): DenoAccess[] {
   const file = parseTypeScript(source, path);
   const found: DenoAccess[] = [];
+  // Simple aliases (`const D = Deno`) so `D.readTextFile` is caught too.
+  const aliases = new Set<string>();
+  const isDenoExpression = (node: ts.Expression): boolean =>
+    (ts.isIdentifier(node) && (node.text === 'Deno' || aliases.has(node.text))) ||
+    (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) &&
+      node.expression.text === 'globalThis' && node.name.text === 'Deno');
+  const record = (member: string, node: ts.Node): void => {
+    found.push({
+      member,
+      line: file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1,
+    });
+  };
   const visit = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && node.initializer !== undefined) {
+      if (ts.isIdentifier(node.name) && isDenoExpression(node.initializer)) {
+        aliases.add(node.name.text);
+      } else if (ts.isObjectBindingPattern(node.name) && isDenoExpression(node.initializer)) {
+        // Simple destructuring: `const { readTextFile, mkdir: mk } = Deno`.
+        for (const element of node.name.elements) {
+          if (element.propertyName !== undefined && !ts.isIdentifier(element.propertyName)) {
+            continue;
+          }
+          if (!ts.isIdentifier(element.name)) continue;
+          record(element.propertyName?.text ?? element.name.text, element);
+        }
+      }
+    }
     let member: string | undefined;
-    if (
-      ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) &&
-      node.expression.text === 'Deno'
-    ) {
+    if (ts.isPropertyAccessExpression(node) && isDenoExpression(node.expression)) {
       member = node.name.text;
-    } else if (
-      ts.isElementAccessExpression(node) && ts.isIdentifier(node.expression) &&
-      node.expression.text === 'Deno'
-    ) {
+    } else if (ts.isElementAccessExpression(node) && isDenoExpression(node.expression)) {
       member = literalText(node.argumentExpression);
     }
-    if (member !== undefined) {
-      found.push({
-        member,
-        line: file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1,
-      });
-    }
+    if (member !== undefined) record(member, node);
     ts.forEachChild(node, visit);
   };
   visit(file);

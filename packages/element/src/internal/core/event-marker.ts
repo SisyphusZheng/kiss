@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Deterministic event marker generation for SSR output.
+ * ./event-marker.ts - Deterministic event marker generation for SSR output.
  *
  * Pure, side-effect-free helper used by the SSR renderer to emit `data-eid`
  * markers. This module intentionally does NOT depend on the DOM binding layer
@@ -96,17 +96,20 @@ export function forBranchMarker(items: unknown): string {
 
 /**
  * Lightweight per-item identity for For branch markers. Primitives (and
- * symbols/bigints) sign as their own string value; objects sign by a stable
- * primitive `id`/`key` field when present, otherwise by type + index. The
- * fallback cannot distinguish a same-shape object replacement at the same
- * index — an accepted limitation that avoids JSON.stringify on arbitrary
- * (potentially large or circular) objects.
+ * symbols/bigints) sign as a length-prefixed string value so separator
+ * characters inside a value cannot smuggle extra segments into the joined
+ * signature; objects sign by a stable primitive `id`/`key` field when
+ * present, otherwise by type + index. The fallback cannot distinguish a
+ * same-shape object replacement at the same index — an accepted limitation
+ * that avoids JSON.stringify on arbitrary (potentially large or circular)
+ * objects.
  */
 function forItemSignature(item: unknown, index: number): string {
   if (item === null) return 'null';
   const t = typeof item;
   if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint' || t === 'symbol') {
-    return `${t}:${String(item)}`;
+    const s = String(item);
+    return `${t}:${s.length}:${s}`;
   }
   if (t === 'undefined') return 'undefined';
   const record = item as Record<string, unknown>;

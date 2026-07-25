@@ -49,7 +49,7 @@ const packages: ApiPackage[] = [
     copy:
       'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
     importPath: '@openelement/element',
-    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime'],
+    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime', 'build-utils'],
     notes: [
       'Start here for standalone element authoring.',
       'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
@@ -60,7 +60,7 @@ const packages: ApiPackage[] = [
     title: '@openelement/app',
     copy: 'The application surface for pages, routes, islands and request/render semantics.',
     importPath: '@openelement/app',
-    exports: ['root', 'documented app modes'],
+    exports: ['root', 'hono', 'model', 'spa', 'preact'],
     notes: [
       'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
       'The router and request-driver implementation are internal product knowledge.',
@@ -71,7 +71,7 @@ const packages: ApiPackage[] = [
     title: '@openelement/adapter-vite',
     copy: 'The official Vite, content, static-build and Nitro output adapter.',
     importPath: '@openelement/adapter-vite',
-    exports: ['root', 'nitro-mount', 'cli/build'],
+    exports: ['root', 'nitro-mount', 'cli/build', 'sitemap'],
     notes: [
       'Use `buildApp()` or the generated build task.',
       'Plugin ordering, manifests and content scans are adapter implementation details.',

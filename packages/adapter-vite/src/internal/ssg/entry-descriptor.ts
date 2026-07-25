@@ -24,7 +24,11 @@ import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import type { SsrAdmissionDecision } from '../protocol/render.ts';
 import { normalizeSeparators } from '@openelement/element/build-utils';
 import { fileToTagName } from './route-scanner.ts';
-import { resolveIslandHydrate, resolveIslandSsrDsd } from './island-scanner.ts';
+import {
+  buildPackageIslandDecls,
+  resolveIslandHydrate,
+  resolveIslandSsrDsd,
+} from './island-scanner.ts';
 
 function normalizeAppShellImport(importPath: string): string {
   if (importPath.startsWith('./')) return `/${importPath.slice(2)}`;
@@ -238,26 +242,9 @@ export function buildEntryDescriptor(
     };
   });
 
-  const packageIslandDecls: IslandDecl[] = packageManifests.flatMap((pkg) =>
-    pkg.declarations
-      .filter((d) => d.openElement?.module)
-      .map((d) => {
-        const openElement = d.openElement;
-        const modulePath = openElement?.module;
-        if (!modulePath) {
-          throw new Error(
-            `Package manifest declaration "${d.tagName}" is missing openElement.module`,
-          );
-        }
-        return {
-          tagName: d.tagName,
-          modulePath,
-          isPackage: true,
-          source: 'package',
-          hydrate: resolveIslandHydrate(openElement?.hydrate, options.upgradeStrategy),
-          ...resolveIslandSsrDsd(openElement ?? {}),
-        };
-      })
+  const packageIslandDecls: IslandDecl[] = buildPackageIslandDecls(
+    packageManifests,
+    options.upgradeStrategy,
   );
 
   const islands: IslandDecl[] = [...localIslands, ...packageIslandDecls];

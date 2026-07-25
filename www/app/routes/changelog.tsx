@@ -5,6 +5,7 @@ export const meta = { section: '', label: 'Changelog', order: 20 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
+import { OPENELEMENT_VERSION } from '../data/version.ts';
 import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
@@ -66,7 +67,7 @@ export class ChangelogPage extends OpenElement {
           <div slot='meta'>
             <p class='section-label'>Current truth</p>
             <p class='subtitle'>
-              The currently published package line is <code>0.41.0-alpha.10</code>.
+              The currently published package line is <code>{OPENELEMENT_VERSION}</code>.
             </p>
           </div>
           <open-page-rail
@@ -81,10 +82,10 @@ export class ChangelogPage extends OpenElement {
           <section id='candidate'>
             <h2>Active alpha</h2>
             <p>
-              <code>0.41.0-alpha.11</code>{' '}
-              is the audit-remediation release candidate. Its source is not described as published
-              until main CI, npm, post-publish consumers, tag, and GitHub prerelease agree. External
-              adopter #390 remains a stable-release condition, not an alpha.11 blocker.
+              <code>{OPENELEMENT_VERSION}</code>{' '}
+              is the current alpha line. Its source is not described as published until main CI,
+              npm, post-publish consumers, tag, and GitHub prerelease agree. External adopter #390
+              remains a stable-release condition, not an alpha blocker.
             </p>
           </section>
           <section id='withdrawn'>

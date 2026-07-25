@@ -96,18 +96,6 @@ Deno.test('createOpenPlugin() accepts options without error', () => {
   assertOpenPluginArray(plugins);
 });
 
-Deno.test('createOpenPlugin() core plugin has config hook defined', () => {
-  const plugins = createOpenPlugin();
-  const corePlugin = plugins.find((p) => p.name === 'open:core')!;
-  assertExists(corePlugin.config, 'core plugin must define config hook');
-});
-
-Deno.test('createOpenPlugin() core plugin has buildStart hook defined', () => {
-  const plugins = createOpenPlugin();
-  const corePlugin = plugins.find((p) => p.name === 'open:core')!;
-  assertExists(corePlugin.buildStart, 'core plugin must define buildStart hook');
-});
-
 // ─── createOpenPlugin() inject / headExtras branches ─────────────────────
 
 Deno.test('createOpenPlugin() inject.stylesheets -> headExtras', () => {
@@ -188,17 +176,17 @@ Deno.test('createOpenPlugin() corePlugin.config captures resolve.alias', () => {
   assertExists(build.rollupOptions, 'should include rollupOptions');
   const rollupOptions = build.rollupOptions as Record<string, unknown>;
   const input = rollupOptions.input as string[];
-  assertExists(input.includes('virtual:open-hono-entry'), 'should include virtual entry in input');
+  assertArrayIncludes(input, ['virtual:open-build-trigger']);
 });
 
-Deno.test('createOpenPlugin() corePlugin.config returns rollupOptions with virtual entry', () => {
+Deno.test('createOpenPlugin() corePlugin.config returns rollupOptions with build trigger input', () => {
   const plugins = createOpenPlugin();
   const corePlugin = plugins.find((p) => p.name === 'open:core')!;
   const result = (corePlugin.config as Function)({} as never) as Record<string, unknown>;
   const build = result.build as Record<string, unknown>;
   const rollupOptions = build.rollupOptions as Record<string, unknown>;
   const input = rollupOptions.input as string[];
-  assertExists(input.includes('virtual:open-hono-entry'));
+  assertArrayIncludes(input, ['virtual:open-build-trigger']);
 });
 
 // ─── createOpenPlugin() configResolved + generateEntry ───────────────────
@@ -227,7 +215,7 @@ Deno.test('createOpenPlugin() virtualEntryPlugin.resolveId matches VIRTUAL_ENTRY
     undefined as never,
     {} as never,
   );
-  assertExists(result);
+  assertEquals(result, '\0virtual:open-hono-entry');
 });
 
 Deno.test('createOpenPlugin() virtualEntryPlugin.load returns code for resolved ID', () => {

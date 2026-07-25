@@ -30,12 +30,10 @@ export type {
 
 export { Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
 export type { VNode } from './internal/protocol/vnode.ts';
-// Additive type-only seam consumed by build adapters. Runtime code remains internal.
-export type * from './internal/protocol/framework.ts';
-export type * from './internal/protocol/manifest.ts';
-export type * from './internal/protocol/render.ts';
-export type * from './internal/protocol/style-sheet.ts';
-export type * from './internal/protocol/vnode.ts';
+// Explicit type-only surface for build adapters (#488): no star seams, so the
+// public type surface is exactly the names listed here. SafeHtml, UnsafeHtml
+// and StyleSheetRule stay internal (#487).
+export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';
 export { isVNode } from './internal/core/index.ts';
 export { assertValidTagName } from './internal/core/tag-utils.ts';
 
@@ -86,11 +84,26 @@ export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
 export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';
-export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';
 export type {
+  AppShellConfig,
   CompatibilityClassification,
   CompatibilityTier,
+  ComponentLayer,
+  FrameworkOptions,
+  HydrationStrategy,
+  IsrManifestEntry,
+  LocalePath,
+  OpenElementBlogOptions,
+  OpenElementBuildContextLike,
+  OpenElementHeaderNavLink,
+  OpenElementI18nContextOptions,
+  OpenElementNavSection,
+  RouteEntry,
+  SpecialFileType,
 } from './internal/protocol/framework.ts';
+// Runtime export: canonical hydration strategy list consumed by app and build
+// adapters (#496). The HydrationStrategy type derives from this const.
+export { HYDRATION_STRATEGIES } from './internal/protocol/framework.ts';
 export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';
 export type {
   OpenElementAttribute,

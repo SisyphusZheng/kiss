@@ -32,12 +32,11 @@ import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts'
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
-  resolveIslandHydrate,
-  resolveIslandSsrDsd,
   scanIslands,
   scanPackageManifests,
   scanRoutes,
 } from './internal/ssg/index.ts';
+import { buildPackageIslandDecls } from './internal/ssg/island-scanner.ts';
 import { mdxPlugin } from './plugin-mdx.ts';
 
 type LessAliasOptions = Record<string, string> | Alias[] | null | undefined;
@@ -260,22 +259,9 @@ export function createOpenPlugin(
           );
           if (ctx.phase1.packageManifests.length > 0) {
             // Extract island declarations from manifests
-            ctx.phase1.packageIslandDecls = ctx.phase1.packageManifests.flatMap((pkg) =>
-              pkg.declarations.flatMap((d) => {
-                const openElement = d.openElement;
-                const module = openElement?.module;
-                if (!module) return [];
-                return [{
-                  tagName: d.tagName,
-                  modulePath: module,
-                  isPackage: true,
-                  hydrate: resolveIslandHydrate(
-                    openElement.hydrate,
-                    resolvedOptions.island?.upgradeStrategy,
-                  ),
-                  ...resolveIslandSsrDsd(openElement),
-                }];
-              })
+            ctx.phase1.packageIslandDecls = buildPackageIslandDecls(
+              ctx.phase1.packageManifests,
+              resolvedOptions.island?.upgradeStrategy,
             );
             log.info(
               `Package islands: ${ctx.phase1.packageIslandDecls.map((i) => i.tagName).join(', ')}`,

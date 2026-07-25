@@ -75,15 +75,8 @@ export type {
 } from './isr-runtime.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
-export { bindHydrateEvents } from './dsd-hydration-events.ts';
-export { createRenderDsdStreamMetrics, renderDsd, renderDsdStream } from './render-dsd.ts';
+export { renderDsd } from './render-dsd.ts';
 export type { RenderDsdOptions } from './render-dsd.ts';
-export type {
-  RenderDsdStreamChunk,
-  RenderDsdStreamComponent,
-  RenderDsdStreamMetrics,
-  RenderDsdStreamOptions,
-} from './render-dsd-stream.ts';
 export { camelToKebab, serializeAttrs } from './render-ir.ts';
 export type {
   DomSimulationAttempt,

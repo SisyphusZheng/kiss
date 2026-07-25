@@ -2,8 +2,9 @@
 
 ## Automated checks (CI-enforced)
 
-The root `deno task examples:check` gate runs in CI (AutoFlow `ci` and
-`release` tiers, triggered by `examples/` changes) and covers:
+The root `deno task examples:check` gate runs unconditionally in CI (AutoFlow
+`ci` and `release` tiers run every triggered gate regardless of changed
+paths) and covers:
 
 - [x] `deno task check` — type check of `main.ts` and `mastodon.tsx`.
 - [x] `deno task smoke` — 23 unit tests (format, cache, api, server smoke).

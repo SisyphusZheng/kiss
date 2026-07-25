@@ -14,7 +14,10 @@ import {
   assertStringIncludes,
   assertThrows,
 } from 'jsr:@std/assert@^1.0.0';
+import { join } from 'node:path';
 import { createOpenPlugin } from '../src/plugin.ts';
+
+type PluginOptions = Parameters<typeof createOpenPlugin>[0];
 
 type HookRecord = {
   config?: unknown;
@@ -75,60 +78,102 @@ Deno.test('optional i18n fallback emits an explicit configuration warning', () =
 
 // ─── Option Defaults ──────────────────────────────────────────
 
-Deno.test('openPlugin: defaults routesDir to app/routes', () => {
-  const plugins = createOpenPlugin({});
-  // Default is applied internally - verify plugin creation succeeds
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
+/**
+ * Drive config -> configResolved -> buildStart -> virtual-entry load against a
+ * temp working directory and return the generated SSR entry code. This mirrors
+ * how Vite drives the plugin pipeline, so the emitted code reflects the
+ * resolved options (routesDir, islandsDir, upgradeStrategy, ...).
+ */
+async function renderVirtualEntry(
+  options: PluginOptions,
+  setup?: (tmp: string) => void,
+): Promise<string> {
+  const tmp = Deno.makeTempDirSync({ prefix: 'open-plugin-opts-' });
+  const origCwd = Deno.cwd();
+  try {
+    setup?.(tmp);
+    Deno.chdir(tmp);
+    const plugins = createOpenPlugin(options);
+    const corePlugin = plugins.find((p) => p.name === 'open:core')!;
+    const virtualPlugin = plugins.find((p) => p.name === 'open:virtual-entry')!;
+    callConfig(corePlugin);
+    const configResolved = (corePlugin as { configResolved?: unknown }).configResolved;
+    assertExists(configResolved, 'configResolved hook must exist');
+    (configResolved as (config: never) => void)({} as never);
+    const buildStart = (corePlugin as { buildStart?: unknown }).buildStart;
+    assertExists(buildStart, 'buildStart hook must exist');
+    await (buildStart as () => Promise<void>)();
+    const code = callLoad(virtualPlugin, '\0virtual:open-hono-entry');
+    assertExists(code, 'virtual entry load must return code');
+    return String(code);
+  } finally {
+    Deno.chdir(origCwd);
+    try {
+      Deno.removeSync(tmp, { recursive: true });
+    } catch { /* ignore */ }
+  }
+}
+
+function writeRouteIndex(dir: string): void {
+  Deno.mkdirSync(dir, { recursive: true });
+  Deno.writeTextFileSync(join(dir, 'index.ts'), 'export default () => "<h1>Hello</h1>"');
+}
+
+function writeIsland(dir: string): void {
+  Deno.mkdirSync(dir, { recursive: true });
+  Deno.writeTextFileSync(join(dir, 'my-counter.ts'), 'export const tagName = "my-counter"');
+}
+
+Deno.test('openPlugin: defaults routesDir to app/routes', async () => {
+  const code = await renderVirtualEntry({}, (tmp) => writeRouteIndex(join(tmp, 'app', 'routes')));
+  assertStringIncludes(code, '/app/routes/index.ts');
 });
 
-Deno.test('openPlugin: defaults islandsDir to app/islands', () => {
-  const plugins = createOpenPlugin({});
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
+Deno.test('openPlugin: defaults islandsDir to app/islands', async () => {
+  const code = await renderVirtualEntry({}, (tmp) => writeIsland(join(tmp, 'app', 'islands')));
+  assertStringIncludes(code, '/app/islands/my-counter.ts');
 });
 
-Deno.test('openPlugin: defaults componentsDir to app/components', () => {
-  const plugins = createOpenPlugin({});
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
+Deno.test('openPlugin: respects custom routesDir', async () => {
+  const code = await renderVirtualEntry(
+    { routesDir: 'src/pages' },
+    (tmp) => writeRouteIndex(join(tmp, 'src', 'pages')),
+  );
+  assertStringIncludes(code, '/src/pages/index.ts');
 });
 
-Deno.test('openPlugin: respects custom routesDir', () => {
-  const plugins = createOpenPlugin({ routesDir: 'src/pages' });
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
+Deno.test('openPlugin: respects custom islandsDir', async () => {
+  const code = await renderVirtualEntry(
+    { islandsDir: 'src/widgets' },
+    (tmp) => writeIsland(join(tmp, 'src', 'widgets')),
+  );
+  assertStringIncludes(code, '/src/widgets/my-counter.ts');
 });
 
-Deno.test('openPlugin: respects custom islandsDir', () => {
-  const plugins = createOpenPlugin({ islandsDir: 'src/widgets' });
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
+Deno.test('openPlugin: accepts default and custom componentsDir', () => {
+  // componentsDir is only consumed by the build closeBundle phase; here we can
+  // only assert both forms construct a valid pipeline.
+  assertEquals(createOpenPlugin({}).length, 8);
+  assertEquals(createOpenPlugin({ componentsDir: 'src/ui' }).length, 8);
 });
 
-Deno.test('openPlugin: respects custom componentsDir', () => {
-  const plugins = createOpenPlugin({ componentsDir: 'src/ui' });
-  assertExists(plugins);
-  assertEquals(plugins.length, 8);
-});
+// ─── Upgrade Strategy ─────────────────────────────────────────
 
-// ─── Upgrade Strategy Default ─────────────────────────────────
+Deno.test('openPlugin: island.upgradeStrategy flows into the SSR admission plan', async () => {
+  const setup = (tmp: string) => writeIsland(join(tmp, 'app', 'islands'));
 
-Deno.test('openPlugin: default upgradeStrategy is idle', () => {
-  const plugins = createOpenPlugin({});
-  // The default 'idle' is applied in generateEntry -> generateHonoEntryCode
-  // Verification: plugin construction succeeds with default
-  assertExists(plugins);
-});
+  // Default ('idle'): local islands are SSR-admitted and imported by the entry.
+  const defaultCode = await renderVirtualEntry({}, setup);
+  assertStringIncludes(defaultCode, 'import * as __island_my_counter');
 
-Deno.test('openPlugin: accepts upgradeStrategy=load', () => {
-  const plugins = createOpenPlugin({ island: { upgradeStrategy: 'load' } });
-  assertExists(plugins);
-});
+  // 'only': islands are excluded from SSR and marked client-only in the plan.
+  const onlyCode = await renderVirtualEntry({ island: { upgradeStrategy: 'only' } }, setup);
+  assertEquals(onlyCode.includes('import * as __island_my_counter'), false);
+  assertStringIncludes(onlyCode, 'client-only');
 
-Deno.test('openPlugin: accepts upgradeStrategy=visible', () => {
-  const plugins = createOpenPlugin({ island: { upgradeStrategy: 'visible' } });
-  assertExists(plugins);
+  // 'load' / 'visible' remain valid construction options.
+  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'load' } }).length, 8);
+  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'visible' } }).length, 8);
 });
 
 // ─── Invalid Options ──────────────────────────────────────────

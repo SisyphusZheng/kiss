@@ -8,7 +8,7 @@ is the default render mode; light DOM remains explicit opt-in.
 
 Also includes:
 
-- `ErrorBoundary` — catch child render errors with fallback UI
+- `ErrorBoundary` — hold render-error state reported via `catchError()` and swap in fallback UI
 - `defineElement` — functional component-style authoring for elements and layouts
 - Prop system: `PropDecl`, `PropsFrom`, `PropType`
 - Full re-export of JSX, VNode, context, signals, StyleSheet, and island utilities

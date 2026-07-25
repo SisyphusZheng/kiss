@@ -53,6 +53,34 @@ Deno.test('stale currency claims: the current line and history mentions pass', (
   }
 });
 
+Deno.test('stale currency claims: body-drift heuristics catch stale "current line" sentences', () => {
+  const patterns = staleCurrencyClaimPatterns();
+  const previousAlpha = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)![1];
+  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)![1];
+  const staleClaims = [
+    // The pre-fix STATUS.md:14 sentence shape (issue #482).
+    `Alpha.${previousAlpha} is the current published and verified line.`,
+    `The current verified baseline is \`${PREVIOUS_PACKAGE_VERSION}\`.`,
+  ];
+  for (const claim of staleClaims) {
+    assert(
+      patterns.some((pattern) => pattern.test(claim)),
+      `stale body claim must be forbidden: ${claim}`,
+    );
+  }
+  const allowed = [
+    // The corrected STATUS.md:14 sentence shape names the current alpha.
+    `Alpha.${currentAlpha} is the current published and verified line.`,
+    `Alpha.${previousAlpha} remains the previous verified baseline.`,
+  ];
+  for (const text of allowed) {
+    assert(
+      !patterns.some((pattern) => pattern.test(text)),
+      `corrected body text must pass: ${text}`,
+    );
+  }
+});
+
 Deno.test('stale currency claims: failures are reported through the check pipeline', () => {
   const check = strategicChecks().find((item) =>
     item.name === 'stale version and stale roadmap claims are absent'

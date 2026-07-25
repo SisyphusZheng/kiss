@@ -11,6 +11,7 @@ import {
   currentWorkflowRunUrl,
   decideTagAction,
   evidenceCurrentVersion,
+  finalizeReleaseOnReleaseBranch,
   githubReleaseUrl,
   mergeClosureSection,
   planFinalizeBranch,
@@ -24,7 +25,6 @@ import {
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
-import { finalizeReleaseOnReleaseBranch } from '../mod3.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,

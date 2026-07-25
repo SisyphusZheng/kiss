@@ -9,7 +9,7 @@ update within ten business days. Please include affected package and version,
 reproduction steps, impact, and any proposed mitigation. We coordinate a fix,
 credit reporters when requested, and publish an advisory when users need to act.
 
-Only the latest published `0.41.x` line is supported while alpha.7 is active.
+Only the latest published release on the current alpha line is supported.
 Pre-release packages may change before stable release; security fixes are made
 on the active release line whenever practical.
 

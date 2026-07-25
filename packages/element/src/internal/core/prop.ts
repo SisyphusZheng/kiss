@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Reactive property runtime.
+ * ./prop.ts — Reactive property runtime.
  *
  * ADR-0057: static props + Signal model.
  *
@@ -142,9 +142,10 @@ export function handleStaticPropAttributeChange(
     // Equality short-circuit: reflect subscribers mirror signal writes into
     // this same attribute. Re-writing an identical parsed value would
     // re-notify the subscriber and loop the write back into setAttribute.
-    if (!Object.is(sig.value, next)) {
-      sig.value = next;
-    }
+    // Removal (newValue === null) bypasses the short-circuit: the signal may
+    // already hold the default, yet the reflect subscriber must still fire so
+    // the mirrored attribute is restored to match the restored default.
+    if (newValue === null || !Object.is(sig.value, next)) sig.value = next;
     return;
   }
 }
@@ -171,7 +172,6 @@ export function syncStaticPropsFromAttributes(instance: _El): void {
     if (el.hasAttribute(attrName)) {
       const { type } = normalizePropDecl(decl);
       const raw = el.getAttribute(attrName);
-      if (raw === null) continue;
       if (type === Boolean) {
         sig.value = true;
       } else if (type === Number) {

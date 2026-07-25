@@ -10,6 +10,7 @@
  */
 
 import type { OpenElementDeclaration, OpenElementPackageManifest } from '../protocol/manifest.ts';
+import { HYDRATION_STRATEGIES } from '../protocol/framework.ts';
 import type {
   RegistryIndex,
   RegistryIndexEntry,
@@ -144,7 +145,7 @@ export function validate(manifest: OpenElementPackageManifest): ValidationResult
     // 4. Invalid hydrate strategy
     if (
       decl.openElement?.hydrate &&
-      !['load', 'idle', 'visible', 'only'].includes(decl.openElement.hydrate)
+      !HYDRATION_STRATEGIES.includes(decl.openElement.hydrate)
     ) {
       errors.push({
         code: 'INVALID_HYDRATE_STRATEGY',

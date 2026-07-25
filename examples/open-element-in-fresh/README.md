@@ -1,24 +1,22 @@
 # openElement in Fresh — alpha.4 Interop Proof
 
-A minimal [Fresh 2.3+](https://fresh.deno.dev) project that demonstrates
-openElement custom elements (`<open-button>`, `<open-card>`) running inside a
-Fresh app with Preact islands.
+A minimal [Fresh 2.3+](https://fresh.deno.dev) project that demonstrates openElement custom elements
+(`<open-button>`, `<open-card>`) running inside a Fresh app with Preact islands.
 
 ## What It Proves
 
-1. **openElement custom elements in Fresh** — `<open-button>` and `<open-card>`
-   are rendered as standard HTML custom element tags in the Fresh server-side
-   route. No special JSX, no wrapper components needed.
+1. **openElement custom elements in Fresh** — `<open-button>` and `<open-card>` are rendered as
+   standard HTML custom element tags in the Fresh server-side route. No special JSX, no wrapper
+   components needed.
 
-2. **Third-party framework boot** — The `OpenElements.tsx` island defines inline
-   custom element stubs (`<open-button>`, `<open-card>`) using the native
-   `customElements.define` API. This proves openElement-compatible registrations
-   can be shipped from within Preact islands.
+2. **Third-party framework boot** — The `OpenElements.tsx` island defines inline custom element
+   stubs (`<open-button>`, `<open-card>`) using the native `customElements.define` API. This proves
+   openElement-compatible registrations can be shipped from within Preact islands.
 
-3. **Bilateral interop** — The same page hosts both openElement custom elements
-   and a Preact counter island (`PreactCounter.tsx`). Each owns its lifecycle
-   independently. The Preact island uses `@preact/signals` for state; the
-   openElement elements use their own shadow DOM and event system. No conflict.
+3. **Bilateral interop** — The same page hosts both openElement custom elements and a Preact counter
+   island (`PreactCounter.tsx`). Each owns its lifecycle independently. The Preact island uses
+   `@preact/signals` for state; the openElement elements use their own shadow DOM and event system.
+   No conflict.
 
 ## Quick Start
 
@@ -48,22 +46,19 @@ examples/open-element-in-fresh/
 
 ## How It Works
 
-1. **SSR** — Fresh renders the route (`routes/index.tsx`) on the server. Custom
-   element tags like `<open-button>` and `<open-card>` are emitted as plain
-   HTML. The `<PreactCounter>` island is serialized as an interactive island
-   marker (Fresh handles this automatically).
+1. **SSR** — Fresh renders the route (`routes/index.tsx`) on the server. Custom element tags like
+   `<open-button>` and `<open-card>` are emitted as plain HTML. The `<PreactCounter>` island is
+   serialized as an interactive island marker (Fresh handles this automatically).
 
 2. **Client Hydration** — When the page loads in the browser:
-   - `OpenElements.tsx` island activates → defines inline custom element classes
-     via `customElements.define` → browser upgrades the `<open-button>` and
-     `<open-card>` tags already in the DOM.
-   - `PreactCounter.tsx` island activates → Preact mounts the counter component
-     independently.
+   - `OpenElements.tsx` island activates → defines inline custom element classes via
+     `customElements.define` → browser upgrades the `<open-button>` and `<open-card>` tags already
+     in the DOM.
+   - `PreactCounter.tsx` island activates → Preact mounts the counter component independently.
 
-3. **Interop Guarantee** — openElement custom elements are standard Web
-   Components. They use shadow DOM, `customElements.define`, and native DOM
-   APIs. Fresh/Preact islands are standard Preact components hydrated via
-   Fresh's island hydration. The two systems share the DOM but not state or
+3. **Interop Guarantee** — openElement custom elements are standard Web Components. They use shadow
+   DOM, `customElements.define`, and native DOM APIs. Fresh/Preact islands are standard Preact
+   components hydrated via Fresh's island hydration. The two systems share the DOM but not state or
    lifecycle.
 
 ## Migration Notes (Fresh 1.x → 2.x)
@@ -77,13 +72,11 @@ examples/open-element-in-fresh/
 
 ## Known Limitation
 
-The `OpenElements` island uses inline custom element stubs instead of
-`@openelement/ui`. Root cause: `deno pack` does not apply JSX transformation
-when publishing `packages/ui` to npm — the output `.js` files retain raw JSX
-which Vite cannot transpile.
+The `OpenElements` island uses inline custom element stubs instead of `@openelement/ui`. Root cause:
+`deno pack` does not apply JSX transformation when publishing `packages/ui` to npm — the output
+`.js` files retain raw JSX which Vite cannot transpile.
 
-**Fix (alpha.5):** The `compilerOptions.jsx` config is already in
-`packages/ui/deno.json`. The remaining blocker is the `deno pack` transpilation
-gap — when publishing to npm, JSX is not transformed to `jsx()` calls in the
-output `.js` files. Once the pack pipeline is fixed, replace stubs with
-`import "@openelement/ui"`.
+**Fix (alpha.5):** The `compilerOptions.jsx` config is already in `packages/ui/deno.json`. The
+remaining blocker is the `deno pack` transpilation gap — when publishing to npm, JSX is not
+transformed to `jsx()` calls in the output `.js` files. Once the pack pipeline is fixed, replace
+stubs with `import "@openelement/ui"`.

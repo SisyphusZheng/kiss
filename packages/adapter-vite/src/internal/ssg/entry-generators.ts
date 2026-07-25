@@ -8,7 +8,7 @@
 import type { HydrationStrategy } from '../protocol/framework.ts';
 import type { ClientIslandEntry } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
-import { isValidTagName } from '@openelement/element';
+import { HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
@@ -18,7 +18,7 @@ const SAFE_ROOT_SPECIFIER_RE = /^\/[A-Za-z0-9_./@-]+$/;
 const SAFE_FS_SPECIFIER_RE = /^\/@fs\/(?:[A-Za-z]:\/)?[A-Za-z0-9_./@-]+$/;
 const SAFE_BARE_SPECIFIER_RE =
   /^(?:@[a-z0-9_.-]+\/[a-z0-9_.-]+|[a-z0-9_.-]+)(?:\/[A-Za-z0-9_./@-]+)?$/;
-const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
+const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
 
 declare const admittedIslandModuleSpecifier: unique symbol;
 export type AdmittedIslandModuleSpecifier = string & {

@@ -7,29 +7,22 @@
         ".": "./src/index.ts",
         "./build-utils": "./src/build-utils.ts",
         "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
-        "./jsx-runtime": "./src/jsx-runtime.ts",
-        "./open-element-hydration": "./src/open-element-hydration.ts",
-        "./open-element-render": "./src/open-element-render.ts"
+        "./jsx-runtime": "./src/jsx-runtime.ts"
       },
       "declarations": {
         ".": {
-          "sha256": "35290be84ac939a8c58a47ce1f55dab5150a59ff33ff4a8934f5ec15a61cfa16",
+          "sha256": "57ecd6d850bbb9ed7f139e52f56dfbda3a07613a3570d149ffd3697473ddd273",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
             "export type { VNode } from './internal/protocol/vnode.ts';",
-            "export type * from './internal/protocol/framework.ts';",
-            "export type * from './internal/protocol/manifest.ts';",
-            "export type * from './internal/protocol/render.ts';",
-            "export type * from './internal/protocol/style-sheet.ts';",
-            "export type * from './internal/protocol/vnode.ts';",
+            "export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';",
             "export type { Context } from './internal/core/index.ts';",
             "export type { RenderError } from './internal/core/index.ts';",
             "export type { Signal } from './internal/protocol/signal.ts';",
             "export type { IslandOptions } from './internal/protocol/island.ts';",
             "export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';",
             "export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';",
-            "export type { HydrationStrategy, LocalePath } from './internal/protocol/framework.ts';",
             "export type {",
             "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
             "export type {"
@@ -48,21 +41,6 @@
         "./jsx-runtime": {
           "sha256": "d63e409708a4a1e5203c5e68ec91b0daf8a06679824c6f6054c6f8e9ad44e2ef",
           "publicDeclarations": []
-        },
-        "./open-element-hydration": {
-          "sha256": "8280f617f3dcb6fc7d03ade7ce22a15a74e3164b67a27d3670cbd97f42cc8dce",
-          "publicDeclarations": [
-            "export function hydrateExistingDom("
-          ]
-        },
-        "./open-element-render": {
-          "sha256": "ce4067ae7eb62fa958065b5d35f2c72409512228e7a5f412cfe7b5f5f3669d88",
-          "publicDeclarations": [
-            "export interface OpenElementLike {",
-            "export function renderIntoLightDom(",
-            "export function renderIntoShadowRoot(",
-            "export function renderErrorFallback("
-          ]
         }
       }
     },
@@ -184,11 +162,11 @@
           "publicDeclarations": []
         },
         "./cli/build-client": {
-          "sha256": "9d79685a263ebd1014826a40d0377631b26e6370b78aa9509aeb3966a4b30659",
+          "sha256": "e4ec975531f3d39eef603901e5a034b89e86436ae042f6a40b8d3a344583d175",
           "publicDeclarations": []
         },
         "./cli/build-ssg": {
-          "sha256": "784788fc8e914583533c814a51d023fca062f9aa2ff5039a14748779065a98e6",
+          "sha256": "10fdc527b3a19974af767a71516d5957475be84f551a57c635488cdbe16b937f",
           "publicDeclarations": [
             "export interface SsgEntryDescriptorInputs {",
             "export function buildSsgEntryDescriptor("
@@ -231,7 +209,7 @@
           ]
         },
         "./plugin": {
-          "sha256": "d4e9230cc30f41f3eeece30437abb4ff8e95057803c47f520c1cc36e2eda0f56",
+          "sha256": "ce53992a9feb7490df8cf62a22cb97d53ffcf2842176010f79a1a3b2092e907a",
           "publicDeclarations": [
             "export function optionalPackageStubsPlugin(): Plugin {",
             "export function createOpenPlugin("
@@ -279,7 +257,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "600c64d12cb8272d2689aca138d46167d7441cae1a5e1445cf11a16e89e2638e",
+          "sha256": "c7eb3865d060b6463d1228dfc227b1734037b3df2576e2258fc5f369153ca8df",
           "publicDeclarations": []
         },
         "./open-badge": {
@@ -290,7 +268,7 @@
           ]
         },
         "./open-button": {
-          "sha256": "9a4694535c3527b29a81d981218fc26d919ef819556eb13529fff4131fae07ad",
+          "sha256": "5e2ab4736e53b397c1336f0c069587d7edcc2ca6ea446b7bee518e3ed09761af",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
@@ -304,21 +282,21 @@
           ]
         },
         "./open-card": {
-          "sha256": "fdf1fd51c5526a65c828e6aeb77fe66b9b607d640806b82653d44d4a878a1619",
+          "sha256": "3a4a9fde6d98124eb9833bbd58d8495efd26cf873c72245e750ef35431a5268a",
           "publicDeclarations": [
             "export const tagName = 'open-card';",
             "export class OpenCard extends OpenElement {"
           ]
         },
         "./open-code-block": {
-          "sha256": "b997436c5c07fc83aa7d79e9b2908b42aa85af2a2f5b7287840cd4bc014360a2",
+          "sha256": "6f0bc31309727bcd5371beacdd4d312b246a9333cf1e8aa134920fdd27d5f0d6",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
           ]
         },
         "./open-dialog": {
-          "sha256": "e0a4bf78c47d08c0281c539bb8e2193bcfc100e07f0fc65bd795eedf520c5ab0",
+          "sha256": "6ac1ac4f6b3364c5da6d79c327cbc3868f99a6d3708b9293073873cc5c9aa372",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
@@ -332,7 +310,7 @@
           ]
         },
         "./open-input": {
-          "sha256": "c85f90dc0687b52a9aa4e4926a6fd7f34f7197301d308c0acfa8d4bd5422286f",
+          "sha256": "a85e5ffb970b7159e7c8a940f9c22e5ff2810d5bedec9de8d7f4ed8b6c5c7870",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -362,7 +340,7 @@
           ]
         },
         "./open-theme-toggle": {
-          "sha256": "0f3618577345a670e8eefff9927bc6757a5bd591a0a0f2ab0b7d019a74831a22",
+          "sha256": "555523aa7fbc72097b71fde61b823ba2dc967bdb837a826f440f7fd307822708",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"

@@ -14,7 +14,7 @@ declare namespace JSX {
    *
    * children must match VNode.children: (VNode | string)[] to satisfy
    * TypeScript's structural assignability check when a JSX expression
-   * is returned from DsdElement.render(): VNode | null.
+   * is returned from OpenElement.render(): VNode | null.
    */
   interface Element {
     tag:

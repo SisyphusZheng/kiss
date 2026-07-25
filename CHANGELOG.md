@@ -28,9 +28,9 @@ evidence.
 - Adds WebKit smoke to CI, gates examples checks, single-sources the
   guide with real Chinese rendering, and covers the SPA action chain in a
   real browser.
-- Removes dead exports, fields and scripts (breaking; see the release
-  note for migration), removes `renderIntent.streaming`, converges
-  fmt/lint exclusions, and retires stale files and config entries.
+- Removes dead exports, fields and scripts (breaking; see the GitHub
+  prerelease notes for migration), removes `renderIntent.streaming`,
+  converges fmt/lint exclusions, and retires stale files and config entries.
 
 ## 0.41.0-alpha.17
 

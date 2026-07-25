@@ -3,7 +3,7 @@
  *
  * SSR emits deterministic `data-eid` markers (plus `<!--oe-branch:...-->`
  * branch-state comments for `<Show>`/`<For>`). During DSD upgrade,
- * DsdElement renders the same VNode tree in memory, collects event handlers in
+ * OpenElement renders the same VNode tree in memory, collects event handlers in
  * the same traversal order, and binds them to matching DOM markers without
  * replacing the existing DSD DOM. HydrationScope validates the marker count
  * and branch-token sequence before binding; on any divergence it degrades the

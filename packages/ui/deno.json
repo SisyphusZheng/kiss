@@ -1,6 +1,6 @@
 {
   "name": "@openelement/ui",
-  "version": "0.41.0-alpha.18",
+  "version": "0.41.0-alpha.19",
   "exports": {
     ".": "./src/index.ts",
     "./open-button": "./src/open-button.tsx",
@@ -27,9 +27,6 @@
       "deno.json",
       "README.md",
       "LICENSE"
-    ],
-    "exclude": [
-      "!src/generated-manifest.json"
     ]
   },
   "include": [

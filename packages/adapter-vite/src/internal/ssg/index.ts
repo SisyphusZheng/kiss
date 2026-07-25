@@ -98,7 +98,7 @@ export { generateRouteTypes } from './route-type-generator.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 
-export { generateHonoEntryCode, renderEntry } from './entry-renderer.ts';
+export { renderEntry } from './entry-renderer.ts';
 export type { HonoEntryOptions } from './entry-renderer.ts';
 
 export {

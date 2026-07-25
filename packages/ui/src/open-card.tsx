@@ -5,7 +5,6 @@
  * Minimal card container with optional header and footer.
  * Swiss International Style: borders are whispers, not shouts.
  *
- * v0.20.0: Migrated from DsdLitElement to DsdElement (Ocean component).
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
  * @csspart container - The article wrapper

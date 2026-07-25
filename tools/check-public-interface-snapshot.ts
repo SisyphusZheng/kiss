@@ -1,5 +1,6 @@
 /** Generate/check the deterministic five-package public-interface baseline. */
 import { createHash } from 'node:crypto';
+import { formatJson } from './lib/format-json.ts';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const SNAPSHOT = 'docs/release/v0.41.0-interface-snapshot.json';
@@ -30,7 +31,7 @@ const snapshot = {
     };
   })),
 };
-const text = `${JSON.stringify(snapshot, null, 2)}\n`;
+const text = formatJson(snapshot);
 if (write) await Deno.writeTextFile(SNAPSHOT, text);
 else if (await Deno.readTextFile(SNAPSHOT) !== text) {
   throw new Error(`${SNAPSHOT} drifted; run deno task interface:snapshot:write`);
