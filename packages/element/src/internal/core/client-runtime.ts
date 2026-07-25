@@ -1,5 +1,5 @@
 /**
- * ./hydrate.ts - Client runtime for third-party frameworks.
+ * ./client-runtime.ts - Client runtime for third-party frameworks.
  *
  * Lightweight entry point that scans DSD templates, upgrades custom elements,
  * and hydrates signal markers without importing @openelement/element.

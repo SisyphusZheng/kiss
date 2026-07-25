@@ -10,9 +10,14 @@ const sourceRoots = [
 
 const [versionBase, prerelease = ''] = PACKAGE_VERSION.split('-');
 const prereleaseMatch = prerelease.match(/^(alpha|beta|rc)\.(\d+)$/u);
+// Retired prerelease claims are flagged with or without the `v` prefix and in
+// the short `alpha.N` form; only numbers below the current line match, so the
+// current version itself never trips the gate.
 const earlierPrereleasePattern = prereleaseMatch && Number(prereleaseMatch[2]) > 0
   ? new RegExp(
-    `v${versionBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}\\.(?:${
+    `(?:v?${versionBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}|\\b${
+      prereleaseMatch[1]
+    })\\.(?:${
       Array.from({ length: Number(prereleaseMatch[2]) }, (_, index) => index).join('|')
     })(?!\\d)`,
     'iu',
@@ -86,11 +91,18 @@ async function checkFile(file: string): Promise<void> {
   if (file.startsWith('www/app/routes/guide/') && !/<open-reading-shell[^>]+metadata=/.test(text)) {
     issues.push({ file, text: 'guide route lacks structured reading metadata' });
   }
-  if (file.startsWith('www/app/routes/guide/') && !text.includes("this._getLocale('en')")) {
-    issues.push({
-      file,
-      text: 'guide route does not select content by locale (zh must render zh)',
-    });
+  if (file.startsWith('www/app/routes/guide/')) {
+    // Strip comments before asserting the locale literal so a commented-out
+    // line cannot satisfy (or trip) the check.
+    const uncommented = text
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '');
+    if (!uncommented.includes("this._getLocale('en')")) {
+      issues.push({
+        file,
+        text: 'guide route does not select content by locale (zh must render zh)',
+      });
+    }
   }
   if (file.includes('www/app/routes/blog/[slug].tsx') && /open-page-rail[^>]+auto/.test(text)) {
     issues.push({ file, text: 'blog article relies on client-generated TOC' });
@@ -106,7 +118,7 @@ for (const root of sourceRoots) {
 await checkFile('www/vite.config.ts');
 
 if (Deno.args.includes('--artifacts')) {
-  for await (const file of walk('www/dist', { skip: ['blog', 'changelog'] })) {
+  for await (const file of walk('www/dist', { skip: ['blog'] })) {
     // The root-level history indexes are emitted as blog.html/changelog.html;
     // their historical copy is intentionally outside the current-surface rule.
     if (/(?:^|\/)(?:blog|changelog)\.html$/.test(file)) continue;

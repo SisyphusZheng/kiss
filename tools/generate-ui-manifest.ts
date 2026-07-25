@@ -17,6 +17,7 @@ import type {
   OpenElementSlot,
 } from '@openelement/element';
 import ts from 'typescript';
+import { formatJson } from './lib/format-json.ts';
 import { parseTypeScript } from './lib/typescript-ast.ts';
 
 const UI_SRC_DIR = new URL('../packages/ui/src/', import.meta.url);
@@ -35,7 +36,10 @@ interface ComponentMeta {
   slots: OpenElementSlot[];
   cssParts: OpenElementCssPart[];
   layer: 'dsd-static' | 'dsd-interactive';
-  hydrate: 'load' | 'idle' | 'visible';
+  // Hand-aligned with HYDRATION_STRATEGIES in
+  // packages/element/src/internal/protocol/framework.ts (source of truth);
+  // tools cannot import element runtime code.
+  hydrate: 'load' | 'idle' | 'visible' | 'only';
 }
 
 const COMPONENT_ORDER = [
@@ -46,15 +50,9 @@ const COMPONENT_ORDER = [
   'open-theme-toggle',
   'open-code-block',
   'open-badge',
-  'open-brand-mark',
-  'open-lab-panel',
-  'open-standards-visual',
-  'open-lab-stage',
   'open-dialog',
-  'open-layout',
   'open-dropdown',
   'open-tabs',
-  'open-hero-ping',
 ];
 
 function layerFromClass(className: string): ComponentMeta['layer'] {
@@ -63,10 +61,8 @@ function layerFromClass(className: string): ComponentMeta['layer'] {
     'OpenInput',
     'OpenThemeToggle',
     'OpenDialog',
-    'OpenLayout',
     'OpenDropdown',
     'OpenTabs',
-    'OpenHeroPing',
   ]);
   return interactive.has(className) ? 'dsd-interactive' : 'dsd-static';
 }
@@ -76,7 +72,6 @@ function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
     'OpenButton',
     'OpenInput',
     'OpenThemeToggle',
-    'OpenLayout',
     'OpenDropdown',
     'OpenTabs',
   ]);
@@ -307,6 +302,6 @@ function buildManifest(): OpenElementPackageManifest {
 
 if (import.meta.main) {
   const manifest = buildManifest();
-  Deno.writeTextFileSync(OUT_FILE, JSON.stringify(manifest, null, 2) + '\n');
+  Deno.writeTextFileSync(OUT_FILE, formatJson(manifest));
   console.log(`Wrote ${manifest.declarations.length} declarations to ${OUT_FILE.pathname}`);
 }

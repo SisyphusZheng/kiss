@@ -43,7 +43,7 @@ official build path = Vite + Nitro
 
 五包收敛已作为 `0.41.0-alpha.18` 发布。npm beta.1 至 beta.3 仍是已撤回的
 不完整历史产物，不构成兼容基线。外部 adopter pilot #390 仍是作出稳定性承诺前
-最重要的仓库外条件。Alpha.18 是当前第二轮审计清扫版本（ADR-0117）。
+最重要的仓库外条件。Alpha.18 已完成第二轮审计清扫（ADR-0117）。
 
 只有后续 alpha 不再需要架构、公开接口或采用工作时，才发布 stable `0.41.0`。
 request-time data、forms、sessions 与 cache 仍是后续产品工作；当前承诺是具有

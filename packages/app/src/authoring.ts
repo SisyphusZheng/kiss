@@ -13,7 +13,7 @@ import {
   OpenElement,
   type VNode,
 } from '@openelement/element';
-import { defineIsland as defineRuntimeIsland } from '@openelement/element';
+import { defineIsland as defineRuntimeIsland, HYDRATION_STRATEGIES } from '@openelement/element';
 import {
   popData,
   pushActionData,
@@ -189,7 +189,7 @@ const PAGE_DESCRIPTOR_FIELDS = new Set([
 ]);
 
 const ISLAND_CONFIG_FIELDS = new Set(['ssr', 'dsd', 'hydrate']);
-const HYDRATION_STRATEGIES = new Set(['load', 'idle', 'visible', 'only']);
+const HYDRATION_STRATEGY_SET: ReadonlySet<string> = new Set(HYDRATION_STRATEGIES);
 
 function assertCanonicalPageDefinition(input: unknown): asserts input is PageDefinition {
   if (typeof input === 'function') {
@@ -216,7 +216,7 @@ function assertCanonicalPageDefinition(input: unknown): asserts input is PageDef
 /**
  * Define a file-route page.
  *
- * The returned class is a DsdElement-compatible custom element constructor, so
+ * The returned class is an OpenElement-compatible custom element constructor, so
  * the existing renderer pipeline remains unchanged while app authors write JSX
  * functions instead of class components.
  */
@@ -293,7 +293,7 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
       );
     }
   }
-  if (config.hydrate !== undefined && !HYDRATION_STRATEGIES.has(config.hydrate)) {
+  if (config.hydrate !== undefined && !HYDRATION_STRATEGY_SET.has(config.hydrate)) {
     throw new Error(
       `${ERROR_PREFIX} Invalid island hydrate strategy "${String(config.hydrate)}". ` +
         'Use one of: load, idle, visible, only.',

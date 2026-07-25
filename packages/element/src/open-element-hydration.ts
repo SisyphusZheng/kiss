@@ -1,15 +1,16 @@
 /**
  * Internal hydration helpers for OpenElement.
  *
- * Extracted from open-element.ts to isolate DSD signal/event hydration logic
+ * Extracted from the OpenElement base class (open-element-implementation.ts)
+ * to isolate DSD signal/event hydration logic
  * from the base class lifecycle. Exposed as a package subpath so Deno can emit
  * its types, but this is an internal implementation detail — consumers should
  * use OpenElement instead.
  *
- * v0.41.0-alpha.2: The active hydration state now lives in a
- * the internal hydration scope. This module keeps a thin adapter
- * functions that forward to the scope so the OpenElement base class does not
- * need to reach into HydrationScope internals directly.
+ * v0.41.0-alpha.2: The active hydration state now lives in the internal
+ * hydration scope. This module keeps thin adapter functions that forward to
+ * the scope so the OpenElement base class does not need to reach into
+ * HydrationScope internals directly.
  *
  * @internal
  * @module @openelement/element/open-element-hydration

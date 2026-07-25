@@ -5,6 +5,8 @@
  * and DSD shadow-root hydration helpers. Used by DSD interactive islands.
  *
  * ADR-0109 Phase 1: split ./index.ts into static, hydrate, and csr.
+ * (csr.ts has since been removed; only the static and hydrate surfaces
+ * remain.)
  */
 
 export * from './static.ts';

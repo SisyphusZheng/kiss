@@ -33,6 +33,7 @@ import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
+import { quoteGeneratedJavaScriptValue } from '../internal/ssg/codegen-literals.ts';
 import { generateSsrPolyfillBanner } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
@@ -367,7 +368,7 @@ if (typeof globalThis.customElements === 'undefined') {
             // Client runtime imports the real module and upgrades the element.
             return [
               `import { defineIslandConfig } from '@openelement/app';`,
-              `export const tagName = ${JSON.stringify(tagName)};`,
+              `export const tagName = ${quoteGeneratedJavaScriptValue(tagName)};`,
               'export const openElement = defineIslandConfig({ ssr: false });',
               `export default class OpenClientOnlyStub extends HTMLElement {
   connectedCallback() {

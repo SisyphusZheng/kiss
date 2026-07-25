@@ -11,10 +11,11 @@
 ## Current position
 
 OpenElement is a Web Components-native, static-first application framework.
-Alpha.17 is the current published and verified line; it closed the first audit
-remediation (ADR-0116 packages B–D). Alpha.18 runs the second audit sweep
-(ADR-0117): sibling-path closures, evidence honesty and redundancy cleanup,
-before a separate decision about stable `0.41.0`.
+Alpha.18 is the current published and verified line; it completed the second
+audit sweep (ADR-0117): sibling-path closures, evidence honesty and
+redundancy cleanup. Alpha.17 remains the previous verified baseline; it
+closed the first audit remediation (ADR-0116 packages B–D). A stable `0.41.0`
+remains a separate decision.
 
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
@@ -56,8 +57,8 @@ and output path.
 
 | Version           | Focus                                            |
 | ----------------- | ------------------------------------------------ |
-| `0.41.0-alpha.17` | Current verified published baseline              |
-| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                    |
+| `0.41.0-alpha.17` | Previous verified baseline                       |
+| `0.41.0-alpha.18` | Current verified published baseline              |
 | `0.41.0`          | Separate stable decision after alpha.18 evidence |
 | `0.42.0`          | WC Application Loop                              |
 | `0.43.0`          | Universal WC SSR compatibility and diagnostics   |
@@ -70,4 +71,5 @@ and output path.
 - Second-sweep scope decision: [`ADR-0117`](../adr/ADR-0117-second-audit-round-alpha18-sweep.md)
 - Current package surface: [`PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
 - Alpha.17 immutable release record: [`v0.41.0-alpha.17.md`](../release/v0.41.0-alpha.17.md)
+- Alpha.18 immutable release record: [`v0.41.0-alpha.18.md`](../release/v0.41.0-alpha.18.md)
 - Complete forward roadmap: [`ROADMAP.md`](../roadmap/ROADMAP.md)

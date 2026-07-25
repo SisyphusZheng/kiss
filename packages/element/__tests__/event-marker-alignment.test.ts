@@ -206,3 +206,18 @@ Deno.test('For with a non-array each resolves to the empty-branch token on both 
   collectEventBindings(vnode, branches);
   assertEquals(branches, ['oe-branch:for:-1']);
 });
+
+Deno.test('For item signatures are length-prefixed so separators cannot smuggle segments', () => {
+  // Regression: the pre-length-prefix signature joined `${t}:${value};`
+  // segments, so a string containing ';string:' could impersonate segment
+  // boundaries and make different item lists collide.
+  assertEquals(
+    forBranchMarker(['a;string:b', 'c']) !== forBranchMarker(['a', 'b;string:c']),
+    true,
+  );
+  // Same-length same-content lists still produce identical tokens.
+  assertEquals(
+    forBranchMarker(['a;string:b', 'c']),
+    forBranchMarker(['a;string:b', 'c']),
+  );
+});

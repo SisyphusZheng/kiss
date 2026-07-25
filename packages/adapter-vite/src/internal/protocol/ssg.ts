@@ -249,23 +249,33 @@ export interface SsgPageOutput {
   renderTimeMs: number;
 }
 
+/**
+ * A single route metadata entry emitted as `routeInfo` by the generated SSG
+ * entry module (see entry-render-ssg.ts).
+ */
+export interface RouteInfoEntry {
+  path: string;
+  /** Emitted by the generated entry; not read by the render pipeline. */
+  filePath?: string;
+  tagName: string;
+  /** The route module namespace object (typed per-module at codegen time). */
+  module?: unknown;
+  isDynamic: boolean;
+  paramNames: string[];
+  /**
+   * ISR revalidate window in seconds, or `false` when the route declared no
+   * revalidate intent. The emitted entry code uses `?? false`, so the value
+   * is never a bare `undefined` at runtime.
+   */
+  revalidate?: number | false;
+  /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
+  rendering?: string;
+  params?: Record<string, string>;
+}
+
 export interface SsrBundle {
   default: unknown;
-  routeInfo?: Array<{
-    path: string;
-    tagName: string;
-    isDynamic: boolean;
-    paramNames: string[];
-    /**
-     * ISR revalidate window in seconds, or `false` when the route declared no
-     * revalidate intent. The emitted entry code uses `?? false`, so the value
-     * is never a bare `undefined` at runtime.
-     */
-    revalidate?: number | false;
-    /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
-    rendering?: string;
-    params?: Record<string, string>;
-  }>;
+  routeInfo?: RouteInfoEntry[];
   renderRoute?: (
     path: string,
     opts?: Record<string, unknown>,

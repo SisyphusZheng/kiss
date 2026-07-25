@@ -205,6 +205,11 @@ test.describe('Theme initialization', () => {
       return document.documentElement.getAttribute('data-theme');
     });
     expect(theme).toBe('light');
+    // theme-init.js must have run synchronously before first paint.
+    const themeInit = await page.evaluate(() => {
+      return document.documentElement.dataset.themeInit;
+    });
+    expect(themeInit).toBe('1');
   });
 
   test('initial theme is dark when prefers-color-scheme is dark and nothing is saved', async ({ page }) => {
@@ -214,5 +219,10 @@ test.describe('Theme initialization', () => {
       return document.documentElement.getAttribute('data-theme');
     });
     expect(theme).toBe('dark');
+    // theme-init.js must have run synchronously before first paint.
+    const themeInit = await page.evaluate(() => {
+      return document.documentElement.dataset.themeInit;
+    });
+    expect(themeInit).toBe('1');
   });
 });

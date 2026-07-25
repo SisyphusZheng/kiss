@@ -235,7 +235,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     // ADR-0057: JSX automatic runtime must be configured in the internal
     // viteBuild() call — configFile:false means user's vite.config.ts is
     // NOT read. Without this, esbuild defaults to classic React.createElement
-    // transform, producing {type, props, $$typeof} objects that DsdElement
+    // transform, producing {type, props, $$typeof} objects that OpenElement
     // does not recognize (causes [object Object] rendering).
     esbuild: {
       jsx: 'automatic',

@@ -265,13 +265,6 @@ function findByPart(root: unknown, part: string): VNode | undefined {
   return findNode(root, (n) => n.props?.part === part);
 }
 
-function _findByClass(root: unknown, className: string): VNode | undefined {
-  return findNode(root, (n) => {
-    const cls = n.props?.className ?? n.props?.class ?? '';
-    return typeof cls === 'string' && cls.split(/\s+/).includes(className);
-  });
-}
-
 function vnodeText(root: unknown): string {
   if (typeof root === 'string') return root;
   if (typeof root === 'number') return String(root);
@@ -340,15 +333,6 @@ function installQuerySelectorAll(
 ): void {
   (host as unknown as { querySelectorAll: (selector: string) => NodeListOf<Element> })
     .querySelectorAll = (selector: string) => resolver(selector) as unknown as NodeListOf<Element>;
-}
-
-function _installQuerySelector(
-  host: HTMLElement,
-  resolver: (selector: string) => MockElement | null,
-): void {
-  (host as unknown as { querySelector: (selector: string) => Element | null }).querySelector = (
-    selector: string,
-  ) => resolver(selector) as unknown as Element | null;
 }
 
 // ─── Fake event / navigator helpers ──────────────────────────────────────────

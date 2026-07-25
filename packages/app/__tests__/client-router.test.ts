@@ -374,6 +374,77 @@ Deno.test('popstate follows a multi-hop guard redirect chain', async () => {
   }
 });
 
+Deno.test('popstate restores the source entry when a guard redirect target is blocked', async () => {
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      { path: '/old', tagName: 'old-page', guard: () => Promise.resolve('/protected') },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          events.push('guard');
+          return Promise.resolve(false);
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('/old');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    // The redirect target's guard blocked, so the entry the user came from
+    // was restored and no change was notified.
+    assertEquals(events, ['guard']);
+    assertEquals(router.currentPath, '/public');
+    assertEquals(router.currentRoute?.tagName, 'public-page');
+    assertEquals(browser.path(), '/public');
+    assertEquals(browser.applied, ['/public']);
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
+Deno.test('popstate dedupes consecutive events landing on the same URL', async () => {
+  const browser = installFakeBrowser('/public');
+  const events: string[] = [];
+  const router = createRouter({
+    mode: 'history',
+    routes: [
+      { path: '/public', tagName: 'public-page' },
+      {
+        path: '/protected',
+        tagName: 'protected-page',
+        guard: () => {
+          events.push('guard');
+          return Promise.resolve(true);
+        },
+      },
+    ],
+    onChange: () => {
+      events.push('change');
+    },
+  });
+  try {
+    browser.jumpTo('/protected');
+    browser.fire('popstate');
+    browser.fire('popstate');
+    await flushBrowserNavigation();
+    assertEquals(events, ['guard', 'change']);
+    assertEquals(router.currentPath, '/protected');
+  } finally {
+    router.dispose();
+    browser.restore();
+  }
+});
+
 Deno.test('hashchange runs the guard and restores the previous hash entry when blocked', async () => {
   const browser = installFakeBrowser('#/public');
   const events: string[] = [];

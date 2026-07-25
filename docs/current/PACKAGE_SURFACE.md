@@ -23,6 +23,15 @@ authoring modes = Basic Element standalone + full application
 Application authors should normally learn `element`, `app`, `adapter-vite`,
 and `create`; `ui` is optional.
 
+## Vocabulary
+
+- **Hydration** — element-level: how and when a component's client JavaScript
+  is loaded (`load`, `idle`, `visible`, `only`; see `HYDRATION_CONTRACT.md`).
+- **Upgrade** — island-level: the moment a server-rendered custom element is
+  defined and its instance takes over the existing markup.
+- **Activation** — framework takeover: marker activation, event binding and
+  state restoration performed by the runtime after upgrade.
+
 The Element/App root surface exposes one functional element authoring helper:
 `defineElement`. The alpha-only `defineLayout` alias was removed in alpha.13;
 layouts use `defineElement` with the same definition object.
@@ -39,7 +48,7 @@ promise and are not application-authoring surface.
 {
   "@openelement/element": {
     "supported": [".", "jsx-runtime", "jsx-dev-runtime", "build-utils"],
-    "internal": ["open-element-render", "open-element-hydration"]
+    "internal": []
   },
   "@openelement/app": {
     "supported": [".", "hono", "model", "spa", "preact"],
@@ -66,10 +75,18 @@ promise and are not application-authoring surface.
   `createRuntimeAdapter` and the runtime handler types) for build adapters.
   They were removed from the element root export; application code must not
   import them.
-- `@openelement/element/open-element-render` and
-  `@openelement/element/open-element-hydration` are hydration implementation
-  modules (see `HYDRATION_CONTRACT.md`), kept importable for build tooling
-  and Deno type generation.
+- The `open-element-render` and `open-element-hydration` modules are
+  internal-only hydration implementation modules (see
+  `HYDRATION_CONTRACT.md`); their subpath exports were removed in alpha.19.
+  The module files remain inside the package for internal relative imports
+  only.
+- The branded types `SafeHtml` and `UnsafeHtml` and the internal
+  `StyleSheetRule` type are no longer exported from the element root
+  (alpha.18 release notes already claimed their removal; alpha.19 makes it
+  true). Their declarations stay in the internal protocol files.
+- The element root no longer carries `export type *` seams (alpha.19); the
+  public type surface is an explicit export list in
+  `packages/element/src/index.ts`.
 - `@openelement/app/i18n` is the optional locale-expansion integration point.
 - App's router implementation (`internal/router`) is not exported; the router
   types (`RouteConfig`, `RouterInstance`, `RouterMode`) were removed from the

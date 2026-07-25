@@ -24,7 +24,12 @@ export type UnsafeHtml = string & { readonly __unsafeHtml: unique symbol };
 // --- Component layer & hydration ----------------------------------
 
 export type ComponentLayer = 'dsd-static' | 'dsd-interactive' | 'pure-island' | 'light-dom';
-export type HydrationStrategy = 'load' | 'idle' | 'visible' | 'only';
+
+/** Runtime list of supported hydration strategies; the single source of truth
+ * for the `HydrationStrategy` union. Consumed by island/registry validation and
+ * re-exported from the element root for app and build adapters. */
+export const HYDRATION_STRATEGIES = ['load', 'idle', 'visible', 'only'] as const;
+export type HydrationStrategy = typeof HYDRATION_STRATEGIES[number];
 export type StrategySource = 'default' | 'manifest' | 'component' | 'route';
 
 // --- Blog / Content / i18n build types ----------------------------

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Unified binding activation (ADR-0109 Phase 1).
+ * ./binding-activation.ts - Unified binding activation (ADR-0109 Phase 1).
  *
  * Applies a declarative BindingDescriptor to a host element.
  *

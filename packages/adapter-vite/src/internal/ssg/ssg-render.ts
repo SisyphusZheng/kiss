@@ -17,6 +17,7 @@ import { join } from 'node:path';
 import { cwd } from 'node:process';
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type {
+  RouteInfoEntry,
   SsgPageOutput,
   SsgRenderEvidence,
   SsgRenderOptions,
@@ -52,13 +53,7 @@ export async function ssgRender(
   const outDir = options.outDir || 'dist';
 
   // ── Dynamic route expansion via bundle.getStaticPaths() ──────
-  const routeInfo = (module.routeInfo ?? []) as Array<{
-    path: string;
-    tagName: string;
-    isDynamic: boolean;
-    paramNames: string[];
-    revalidate?: number | false;
-  }>;
+  const routeInfo: RouteInfoEntry[] = module.routeInfo ?? [];
   if (!module.routeInfo || !Array.isArray(module.routeInfo)) {
     throw new Error(
       'SSR bundle does not export routeInfo; SSG cannot generate routes.',

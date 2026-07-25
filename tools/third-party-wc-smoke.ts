@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Page } from 'npm:playwright@1.59.1';
+import { formatJson } from './lib/format-json.ts';
 import { allPackageAliases } from './lib/package-graph.ts';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -63,7 +64,7 @@ async function patchDenoJson(appDir: string): Promise<void> {
     join(repoRoot, 'packages', 'adapter-vite', 'src', 'cli', 'build.ts')
   }`;
 
-  await Deno.writeTextFile(denoJsonPath, JSON.stringify(denoJson, null, 2) + '\n');
+  await Deno.writeTextFile(denoJsonPath, formatJson(denoJson));
 }
 
 async function patchViteConfig(appDir: string): Promise<void> {

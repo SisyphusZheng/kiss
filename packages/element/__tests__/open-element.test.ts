@@ -1991,6 +1991,72 @@ Deno.test('OpenElement reflect prop writes produce zero redundant attributeChang
   document.body.removeChild(el);
 });
 
+Deno.test('OpenElement Boolean reflect prop re-mirrors the attribute after removal restores the default', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reflect-bool-removal');
+  class ReflectBoolRemovalElement extends OpenElement {
+    static props = {
+      active: { type: Boolean, default: true, reflect: true },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ReflectBoolRemovalElement);
+
+  const el = document.createElement(tagName) as ReflectBoolRemovalElement;
+  document.body.appendChild(el);
+  const props = el as unknown as Record<string, { value: unknown }>;
+
+  // Sync the attribute in: signal stays at the default (true).
+  el.setAttribute('active', '');
+  assertEquals(props.active.value, true);
+
+  // Removal restores the declared default, which already equals the signal
+  // value. The removal branch bypasses the equality short-circuit, so the
+  // reflect subscriber still fires and re-mirrors the attribute.
+  el.removeAttribute('active');
+  assertEquals(props.active.value, true);
+  assertEquals(el.getAttribute('active'), '');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement reflect prop re-mirrors a non-Boolean default after attribute removal', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reflect-default-removal');
+  class ReflectDefaultRemovalElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 0, reflect: true },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ReflectDefaultRemovalElement);
+
+  const el = document.createElement(tagName) as ReflectDefaultRemovalElement;
+  document.body.appendChild(el);
+  const props = el as unknown as Record<string, { value: unknown }>;
+
+  // Attribute value matches the declared default, so the sync write is
+  // short-circuited and the signal already holds the default.
+  el.setAttribute('count', '0');
+  assertEquals(props.count.value, 0);
+
+  // Removal restores the default; the removal branch bypasses the equality
+  // short-circuit so the restored value is mirrored back into the attribute.
+  el.removeAttribute('count');
+  assertEquals(props.count.value, 0);
+  assertEquals(el.getAttribute('count'), '0');
+
+  document.body.removeChild(el);
+});
+
 Deno.test('OpenElement reflect props survive reconnect through the attribute mirror', () => {
   if (!hasDOM) return;
 

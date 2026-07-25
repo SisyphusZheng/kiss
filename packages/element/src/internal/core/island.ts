@@ -18,7 +18,7 @@ import { formatError } from './errors.ts';
  */
 
 import { createLogger } from './logger.ts';
-import type { HydrationStrategy } from '../protocol/framework.ts';
+import { HYDRATION_STRATEGIES, type HydrationStrategy } from '../protocol/framework.ts';
 import type { IslandMeta, IslandOptions } from '../protocol/island.ts';
 export type { IslandMeta, IslandOptions };
 
@@ -40,7 +40,7 @@ export function defineCustomElement(
   }
 }
 
-const VALID_STRATEGIES = new Set<HydrationStrategy>(['load', 'idle', 'visible', 'only']);
+const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
 
 // Module-level store of active visibility strategy timeout IDs.
 // Used for test cleanup - tests can call _clearAllVisibilityTimeouts()
@@ -98,7 +98,7 @@ export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
  *
  * v0.6.2: Framework-agnostic. No Lit-specific detection.
  * Props are set directly on the instance. DSD hydration and VNode event
- * markers are handled at the component level via DsdElement.
+ * markers are handled at the component level via OpenElement.
  *
  * v0.14.3: Prototype pollution fix - filters dangerous keys
  * (__proto__, constructor, prototype) from parsed SSR props.

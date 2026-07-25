@@ -5,7 +5,6 @@
  * Theme toggle Reactive DSD component for Dark/Light mode switching.
  * Swiss International Style: Pure B&W, minimal.
  *
- * v0.21.0: Uses DsdElement + html templates + Signals.
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
  * @csspart toggle -The button element

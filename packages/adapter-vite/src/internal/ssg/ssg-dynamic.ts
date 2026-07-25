@@ -14,21 +14,19 @@
 
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { SsgPageOutput, SsgRenderEvidence, SsgRenderOptions } from '../protocol/ssg.ts';
+import type {
+  RouteInfoEntry,
+  SsgPageOutput,
+  SsgRenderEvidence,
+  SsgRenderOptions,
+} from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
 import { resolveDynamicRoutePath } from './ssg-helpers.ts';
 
 const log = createLogger('ssg');
 
-interface RouteInfoItem {
-  path: string;
-  tagName: string;
-  isDynamic: boolean;
-  paramNames: string[];
-  revalidate?: number | false;
-  params?: Record<string, string>;
-}
+type RouteInfoItem = RouteInfoEntry;
 
 type RenderRouteFn =
   | ((path: string, opts?: Record<string, unknown>) => Promise<SsgPageOutput>)

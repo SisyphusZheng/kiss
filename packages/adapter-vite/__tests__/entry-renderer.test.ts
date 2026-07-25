@@ -15,11 +15,7 @@ import {
   assertFalse,
   assertStringIncludes,
 } from 'jsr:@std/assert@^1.0.0';
-import {
-  buildEntryDescriptor,
-  generateHonoEntryCode,
-  renderEntry,
-} from '../src/internal/ssg/index.ts';
+import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Fixtures
@@ -482,23 +478,23 @@ Deno.test('renderEntry: SSG mode includes no DOM shim (DSD renderer)', () => {
 
 // Section
 
-Deno.test('generateHonoEntryCode: CSP flows through full pipeline', () => {
-  const code = generateHonoEntryCode(basicRoutes, {
+Deno.test('renderEntry: CSP flows through full pipeline', () => {
+  const code = renderEntry(buildEntryDescriptor(basicRoutes, {
     middleware: {
       csp: {
         policy: "default-src 'self'; script-src 'self' 'unsafe-inline'",
         nonce: false,
       },
     },
-  });
+  }));
 
   assertStringIncludes(code, 'Content-Security-Policy');
   assertStringIncludes(code, "default-src 'self'");
   assertStringIncludes(code, 'export default app');
 });
 
-Deno.test('generateHonoEntryCode: complex scenario with all features', () => {
-  const code = generateHonoEntryCode(withSpecialRoutes, {
+Deno.test('renderEntry: complex scenario with all features', () => {
+  const code = renderEntry(buildEntryDescriptor(withSpecialRoutes, {
     routesDir: 'app/routes',
     islandsDir: 'app/islands',
     middleware: {
@@ -524,7 +520,7 @@ Deno.test('generateHonoEntryCode: complex scenario with all features', () => {
     html: { lang: 'zh-CN', title: 'openElement' },
     headExtras: '<link rel="stylesheet" href="/styles.css" />',
     upgradeStrategy: 'idle' as const,
-  });
+  }));
 
   // All features present
   assertStringIncludes(code, 'Content-Security-Policy');

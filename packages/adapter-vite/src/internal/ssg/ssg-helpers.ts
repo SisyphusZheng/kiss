@@ -6,6 +6,7 @@
  */
 
 import type { IsrManifestEntry } from '../protocol/framework.ts';
+import type { RouteInfoEntry } from '../protocol/ssg.ts';
 import { createIsrCacheKey } from '@openelement/element/build-utils';
 import { walkHtmlFileEntries } from '../html-files.ts';
 
@@ -78,12 +79,7 @@ export async function stableHash(str: string): Promise<string> {
 // ─── ISR manifest builder ──────────────────────────────────────
 
 export function buildIsrManifestEntries(
-  routeInfo: Array<{
-    path: string;
-    isDynamic: boolean;
-    revalidate?: number | false;
-    params?: Record<string, string>;
-  }>,
+  routeInfo: RouteInfoEntry[],
   staticPathParamsByRoute: Map<string, Array<Record<string, string>>>,
 ): IsrManifestEntry[] {
   const entries: IsrManifestEntry[] = [];
