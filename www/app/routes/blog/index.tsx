@@ -239,16 +239,25 @@ export class BlogIndexPage extends OpenElement {
     const featured = visiblePosts[0];
     const releasePosts = visiblePosts.filter((post) => hasTag(post, 'release')).slice(0, 4);
     const architecturePosts = visiblePosts
-      .filter((post) => hasTag(post, 'architecture') || post.frontmatter.title.toLowerCase().includes('architecture'))
+      .filter((post) =>
+        hasTag(post, 'architecture') ||
+        post.frontmatter.title.toLowerCase().includes('architecture')
+      )
       .slice(0, 4);
     const recentPosts = visiblePosts.slice(0, 8);
 
     return (
       <main class='blog-page'>
         <open-page-hero variant='editorial'>
-          <span slot='eyebrow'>Editorial lab journal</span><span slot='title'>Design notes, release truth, and architecture decisions.</span><span slot='lede'>The public audit trail: what changed, why the package graph moved, and which standards boundary matters next.</span>
+          <span slot='eyebrow'>Editorial lab journal</span>
+          <span slot='title'>Design notes, release truth, and architecture decisions.</span>
+          <span slot='lede'>
+            The public audit trail: what changed, why the package graph moved, and which standards
+            boundary matters next.
+          </span>
           <open-artifact-panel slot='artifact'>
-            <span slot='label'>featured dispatch</span><span slot='meta'>{featured?.frontmatter.date ?? 'journal'}</span>
+            <span slot='label'>featured dispatch</span>
+            <span slot='meta'>{featured?.frontmatter.date ?? 'journal'}</span>
             {featured && (
               <div class='featured'>
                 <a href={'/blog/' + featured.slug}>
@@ -257,7 +266,9 @@ export class BlogIndexPage extends OpenElement {
                 {featured.frontmatter.excerpt && <p>{featured.frontmatter.excerpt}</p>}
                 <div class='tag-row'>
                   <open-badge tone='brand'>latest</open-badge>
-                  {postTags(featured).slice(0, 3).map((tag) => <span class='post-tag'>{tag}</span>)}
+                  {postTags(featured).slice(0, 3).map((tag) => (
+                    <span class='post-tag' key={tag}>{tag}</span>
+                  ))}
                 </div>
               </div>
             )}
@@ -267,14 +278,20 @@ export class BlogIndexPage extends OpenElement {
         <section class='sections'>
           <open-lab-panel class='journal-note' label='journal map' meta='docs as product'>
             <p>
-              Release posts are product evidence. Architecture posts explain the
-              standards decisions behind DSD, routes, islands, and package boundaries.
+              Release posts are product evidence. Architecture posts explain the standards decisions
+              behind DSD, routes, islands, and package boundaries.
             </p>
           </open-lab-panel>
 
           <div class='post-stream'>
-            {this._renderPostSection('Release line', releasePosts.length ? releasePosts : recentPosts.slice(0, 4))}
-            {this._renderPostSection('Architecture notes', architecturePosts.length ? architecturePosts : recentPosts.slice(4, 8))}
+            {this._renderPostSection(
+              'Release line',
+              releasePosts.length ? releasePosts : recentPosts.slice(0, 4),
+            )}
+            {this._renderPostSection(
+              'Architecture notes',
+              architecturePosts.length ? architecturePosts : recentPosts.slice(4, 8),
+            )}
             {this._renderPostSection('Recent dispatches', recentPosts)}
           </div>
         </section>
@@ -297,7 +314,9 @@ export class BlogIndexPage extends OpenElement {
               <h3>{post.frontmatter.title}</h3>
               {post.frontmatter.excerpt && <p>{post.frontmatter.excerpt}</p>}
               <div class='tag-row'>
-                {postTags(post).slice(0, 3).map((tag) => <span class='post-tag'>{tag}</span>)}
+                {postTags(post).slice(0, 3).map((tag) => (
+                  <span class='post-tag' key={tag}>{tag}</span>
+                ))}
               </div>
             </a>
           ))}

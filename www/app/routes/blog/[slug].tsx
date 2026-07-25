@@ -1,19 +1,19 @@
-﻿/**
+/**
  * Blog Post Page - Dynamic Route
  *
  * Renders individual blog posts from @openelement/generated/blog-data.
  * The `slug` param is set by openElement dynamic routing: /blog/:slug
  * Data comes from generated site data rather than module-level runtime state.
  */
-import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/element";
-import "@openelement/ui/open-button";
-import { pageStyles } from "../../components/page-styles.js";
-import { getPostBySlug, posts } from "@openelement/generated/blog-data";
-import "@openelement/site-ui/open-reading-shell.tsx";
-import "@openelement/site-ui/open-page-rail.tsx";
+import { OpenElement } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
+import '@openelement/ui/open-button';
+import { pageStyles } from '../../components/page-styles.js';
+import { getPostBySlug, posts } from '@openelement/generated/blog-data';
+import '@openelement/site-ui/open-reading-shell.tsx';
+import '@openelement/site-ui/open-page-rail.tsx';
 
-export const tagName = "page-blog-slug";
+export const tagName = 'page-blog-slug';
 
 export function getStaticPaths(): Array<Record<string, string>> {
   return posts.map((post) => ({ slug: post.slug }));
@@ -24,16 +24,22 @@ type ArticleOutline = Readonly<{ id: string; label: string; level: 2 | 3 }>;
 function prepareArticle(html: string): { html: string; outline: ArticleOutline[] } {
   const outline: ArticleOutline[] = [];
   const seen = new Map<string, number>();
-  const withIds = html.replace(/<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi, (_match, depth, attrs, body) => {
-    const label = String(body).replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
-    const stem = label.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/(^-|-$)/g, '') || 'section';
-    const count = seen.get(stem) ?? 0;
-    seen.set(stem, count + 1);
-    const id = count ? `${stem}-${count + 1}` : stem;
-    outline.push({ id, label, level: Number(depth) as 2 | 3 });
-    const cleanAttrs = String(attrs).replace(/\s+id=(?:"[^"]*"|'[^']*')/i, '');
-    return `<h${depth}${cleanAttrs} id="${id}">${body}</h${depth}>`;
-  });
+  const withIds = html.replace(
+    /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
+    (_match, depth, attrs, body) => {
+      const label = String(body).replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      const stem = label.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '-').replace(
+        /(^-|-$)/g,
+        '',
+      ) || 'section';
+      const count = seen.get(stem) ?? 0;
+      seen.set(stem, count + 1);
+      const id = count ? `${stem}-${count + 1}` : stem;
+      outline.push({ id, label, level: Number(depth) as 2 | 3 });
+      const cleanAttrs = String(attrs).replace(/\s+id=(?:"[^"]*"|'[^']*')/i, '');
+      return `<h${depth}${cleanAttrs} id="${id}">${body}</h${depth}>`;
+    },
+  );
   return { html: withIds, outline };
 }
 
@@ -71,21 +77,21 @@ routeSheet.replaceSync(
 );
 
 export default class BlogPostPage extends OpenElement {
-  slug = "";
+  slug = '';
 
   static override styles = [routeSheet];
 
   override render() {
-    const locale = this._getLocale("zh") === "en" ? "en" : "zh";
+    const locale = this._getLocale('zh') === 'en' ? 'en' : 'zh';
     const blogHref = `/${locale}/blog`;
     const post = getPostBySlug(this.slug);
     if (!post) {
       return (
-        <div class="container">
-          <div class="not-found">
+        <div class='container'>
+          <div class='not-found'>
             <h1>404</h1>
-            <p>{locale === "en" ? "Post not found" : "未找到文章"}: {this.slug}</p>
-            <a href={blogHref}>← {locale === "en" ? "Back to Blog" : "返回博客"}</a>
+            <p>{locale === 'en' ? 'Post not found' : '未找到文章'}: {this.slug}</p>
+            <a href={blogHref}>← {locale === 'en' ? 'Back to Blog' : '返回博客'}</a>
           </div>
         </div>
       );
@@ -95,7 +101,10 @@ export default class BlogPostPage extends OpenElement {
     const index = posts.findIndex((candidate) => candidate.slug === post.slug);
     const previous = index >= 0 ? posts[index + 1] : undefined;
     const next = index > 0 ? posts[index - 1] : undefined;
-    const related = posts.filter((candidate) => candidate.slug !== post.slug && (candidate.frontmatter.tags ?? []).some((tag) => tags.includes(tag))).slice(0, 3);
+    const related = posts.filter((candidate) =>
+      candidate.slug !== post.slug &&
+      (candidate.frontmatter.tags ?? []).some((tag) => tags.includes(tag))
+    ).slice(0, 3);
     return (
       <open-reading-shell
         meta
@@ -106,24 +115,35 @@ export default class BlogPostPage extends OpenElement {
         next={next ? `${blogHref}/${next.slug}` : undefined}
         next-label={next?.frontmatter.title}
       >
-        <div slot="meta"><a href={blogHref} class="blog-back">← {locale === "en" ? "Blog" : "博客"}</a><h1>{post.frontmatter.title}</h1><p class="subtitle">{post.frontmatter.excerpt ?? ""}</p></div>
-        <open-page-rail slot="rail" items={JSON.stringify(article.outline)}></open-page-rail>
+        <div slot='meta'>
+          <a href={blogHref} class='blog-back'>← {locale === 'en' ? 'Blog' : '博客'}</a>
+          <h1>{post.frontmatter.title}</h1>
+          <p class='subtitle'>{post.frontmatter.excerpt ?? ''}</p>
+        </div>
+        <open-page-rail slot='rail' items={JSON.stringify(article.outline)}></open-page-rail>
         {tags.length > 0
           ? (
-            <div class="blog-tags">
-              {tags.map((tag: string) => (
-                <span key={tag} class="blog-tag">{tag}</span>
-              ))}
+            <div class='blog-tags'>
+              {tags.map((tag: string) => <span key={tag} class='blog-tag'>{tag}</span>)}
             </div>
           )
           : null}
-        <p class="blog-date">{post.frontmatter.date}</p>
-        <div class="blog-content" innerHTML={article.html} trustedHtml={true}>
+        <p class='blog-date'>{post.frontmatter.date}</p>
+        <div class='blog-content' innerHTML={article.html} trustedHtml>
         </div>
-        <div class="nav-row">
-          {related.length ? <nav class="related" aria-label="Related posts"><strong>{locale === "en" ? "Related" : "相关文章"}</strong>{related.map((item) => <a href={`${blogHref}/${item.slug}`}>{item.frontmatter.title}</a>)}</nav> : null}
-          <open-button variant="ghost" size="sm" href={blogHref}>
-            {locale === "en" ? "Back to Blog" : "返回博客"}
+        <div class='nav-row'>
+          {related.length
+            ? (
+              <nav class='related' aria-label='Related posts'>
+                <strong>{locale === 'en' ? 'Related' : '相关文章'}</strong>
+                {related.map((item) => (
+                  <a href={`${blogHref}/${item.slug}`}>{item.frontmatter.title}</a>
+                ))}
+              </nav>
+            )
+            : null}
+          <open-button variant='ghost' size='sm' href={blogHref}>
+            {locale === 'en' ? 'Back to Blog' : '返回博客'}
           </open-button>
         </div>
       </open-reading-shell>

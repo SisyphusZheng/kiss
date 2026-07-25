@@ -1,17 +1,17 @@
-﻿/**
+/**
  * Changelog Page - openElement Framework Version History.
  */
-export const meta = { section: "", label: "Changelog", order: 20 };
-import { OpenElement } from "@openelement/element";
-import { StyleSheet } from "@openelement/element";
-import "@openelement/ui/open-button";
-import { pageStyles } from "../components/page-styles.js";
-import { marked } from "marked";
+export const meta = { section: '', label: 'Changelog', order: 20 };
+import { OpenElement } from '@openelement/element';
+import { StyleSheet } from '@openelement/element';
+import '@openelement/ui/open-button';
+import { pageStyles } from '../components/page-styles.js';
+import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
-import sanitizeHtml from "npm:sanitize-html@^2.17.4";
-import "@openelement/site-ui/open-page-hero.tsx";
-import "@openelement/site-ui/open-reading-shell.tsx";
-import "@openelement/site-ui/open-page-rail.tsx";
+import sanitizeHtml from 'npm:sanitize-html@^2.17.4';
+import '@openelement/site-ui/open-page-hero.tsx';
+import '@openelement/site-ui/open-reading-shell.tsx';
+import '@openelement/site-ui/open-page-rail.tsx';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -31,19 +31,19 @@ export class ChangelogPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const changelogPath = new URL("../../../../CHANGELOG.md", import.meta.url);
+    const changelogPath = new URL('../../../../CHANGELOG.md', import.meta.url);
     let html: string;
     try {
       const md = Deno.readTextFileSync(changelogPath);
       const raw = marked.parse(md, { async: false }) as string;
       html = sanitizeHtml(raw, {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-          "h2",
-          "h3",
-          "h4",
-          "img",
+          'h2',
+          'h3',
+          'h4',
+          'img',
         ]),
-        allowedAttributes: { a: ["href", "target", "rel"] },
+        allowedAttributes: { a: ['href', 'target', 'rel'] },
       });
     } catch {
       html =
@@ -52,41 +52,67 @@ export class ChangelogPage extends OpenElement {
 
     return (
       <main>
-        <open-page-hero variant="timeline">
-          <span slot="eyebrow">Release evidence</span>
-          <span slot="title">Changelog</span>
-          <span slot="lede">Published, candidate, withdrawn and historical release evidence for OpenElement.</span>
-          <div slot="artifact"><open-button href="/roadmap">Read roadmap</open-button></div>
+        <open-page-hero variant='timeline'>
+          <span slot='eyebrow'>Release evidence</span>
+          <span slot='title'>Changelog</span>
+          <span slot='lede'>
+            Published, candidate, withdrawn and historical release evidence for OpenElement.
+          </span>
+          <div slot='artifact'>
+            <open-button href='/roadmap'>Read roadmap</open-button>
+          </div>
         </open-page-hero>
         <open-reading-shell meta rail footer>
-          <div slot="meta"><p class="section-label">Current truth</p><p class="subtitle">The currently published package line is <code>0.41.0-alpha.10</code>.</p></div>
-          <open-page-rail slot="rail" items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Candidate"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'></open-page-rail>
-        <p id="published">
-          The project follows Keep a Changelog and SemVer. Historical entries
-          preserve older names where they describe older releases; current docs
-          use the openElement contract.
-        </p>
-        <section id="candidate"><h2>Active alpha</h2><p><code>0.41.0-alpha.11</code> is the audit-remediation release candidate. Its source is not described as published until main CI, npm, post-publish consumers, tag, and GitHub prerelease agree. External adopter #390 remains a stable-release condition, not an alpha.11 blocker.</p></section>
-        <section id="withdrawn"><h2>Withdrawn partial artifacts</h2><p>The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.</p></section>
-        <div id="historical" class="changelog-content" innerHTML={html} trustedHtml={true} />
-        <div slot="footer" class="nav-row">
-          <open-button variant="ghost" size="sm" href="/roadmap">
-            Roadmap
-          </open-button>
-          <open-button
-            variant="ghost"
-            size="sm"
-            href="/guide/getting-started"
+          <div slot='meta'>
+            <p class='section-label'>Current truth</p>
+            <p class='subtitle'>
+              The currently published package line is <code>0.41.0-alpha.10</code>.
+            </p>
+          </div>
+          <open-page-rail
+            slot='rail'
+            items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Candidate"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'
           >
-            Getting Started
-          </open-button>
-        </div>
+          </open-page-rail>
+          <p id='published'>
+            The project follows Keep a Changelog and SemVer. Historical entries preserve older names
+            where they describe older releases; current docs use the openElement contract.
+          </p>
+          <section id='candidate'>
+            <h2>Active alpha</h2>
+            <p>
+              <code>0.41.0-alpha.11</code>{' '}
+              is the audit-remediation release candidate. Its source is not described as published
+              until main CI, npm, post-publish consumers, tag, and GitHub prerelease agree. External
+              adopter #390 remains a stable-release condition, not an alpha.11 blocker.
+            </p>
+          </section>
+          <section id='withdrawn'>
+            <h2>Withdrawn partial artifacts</h2>
+            <p>
+              The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product
+              lines or upgrade targets.
+            </p>
+          </section>
+          <div id='historical' class='changelog-content' innerHTML={html} trustedHtml />
+          <div slot='footer' class='nav-row'>
+            <open-button variant='ghost' size='sm' href='/roadmap'>
+              Roadmap
+            </open-button>
+            <open-button
+              variant='ghost'
+              size='sm'
+              href='/guide/getting-started'
+            >
+              Getting Started
+            </open-button>
+          </div>
         </open-reading-shell>
       </main>
     );
   }
 }
 
-customElements.define("page-changelog", ChangelogPage);
+customElements.define('page-changelog', ChangelogPage);
 export default ChangelogPage;
-export const tagName = "page-changelog";
+export const tagName = 'page-changelog';
