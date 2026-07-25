@@ -62,6 +62,35 @@ export interface SsgRenderOptions {
   speculation?: boolean | Record<string, unknown>;
   islandTagNames?: string[];
   routesDir?: string;
+  /**
+   * Policy for dynamic-route render failures (HTTP status >= 500, non-empty
+   * render errors, or a renderRoute throw) during SSG.
+   * - 'fail' (default): abort the build - a failed page must never ship as a
+   *   normal 200 page.
+   * - 'warn': log the failure and skip the page (the page is not written and
+   *   is not registered in the ISR manifest).
+   * @default 'fail'
+   */
+  dynamicRouteFailure?: 'fail' | 'warn';
+}
+
+/** User-facing SSG build behavior switches (OpenElementOptions['ssg']). */
+export interface SsgBehaviorOptions {
+  /**
+   * Policy for dynamic-route render failures during SSG.
+   * See {@link SsgRenderOptions.dynamicRouteFailure}.
+   */
+  dynamicRouteFailure?: 'fail' | 'warn';
+}
+
+/** Summary of an SSG render run, returned by ssgRender(). */
+export interface SsgRenderSummary {
+  /**
+   * Static routes whose handler returned a non-200 status. hono/ssg drops
+   * these responses (defaultPlugin), so they are not written to disk; they
+   * are listed here and in the build log instead of disappearing silently.
+   */
+  staticNon200: Array<{ path: string; status: number }>;
 }
 
 // ─── Entry generator types ───────────────────────────────────
@@ -205,6 +234,13 @@ export interface SsgPageOutput {
    * set for redirect (3xx), not-found (404) and render-failure (500) results.
    */
   status?: number;
+  /**
+   * Redirect outcome (3xx). When set, `html` holds an interim status page and
+   * the result must not be persisted as a normal 200 page.
+   */
+  redirect?: { location: string; status: number };
+  /** True when the route signalled not-found (404). */
+  notFound?: boolean;
   /** Render errors collected during rendering */
   errors: RenderError[];
   /** Number of DSD components rendered on this page */
@@ -220,7 +256,14 @@ export interface SsrBundle {
     tagName: string;
     isDynamic: boolean;
     paramNames: string[];
-    revalidate?: number;
+    /**
+     * ISR revalidate window in seconds, or `false` when the route declared no
+     * revalidate intent. The emitted entry code uses `?? false`, so the value
+     * is never a bare `undefined` at runtime.
+     */
+    revalidate?: number | false;
+    /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
+    rendering?: string;
     params?: Record<string, string>;
   }>;
   renderRoute?: (

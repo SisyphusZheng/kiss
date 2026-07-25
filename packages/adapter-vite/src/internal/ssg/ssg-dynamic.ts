@@ -3,6 +3,13 @@
  *
  * Handles dynamic route rendering using getStaticPaths() + renderRoute()
  * from the SSR bundle, and i18n locale expansion.
+ *
+ * alpha.18 (R2-H3): renderRoute() defined results are honored here -
+ * redirect/notFound pages are skipped (never persisted as 200 pages), and
+ * render failures (status >= 500, collected errors, or a renderRoute throw)
+ * either abort the build ('fail', default) or are logged and skipped
+ * ('warn'), per SsgRenderOptions.dynamicRouteFailure. The ISR manifest data
+ * only registers pages that were actually written.
  */
 
 import { join } from 'node:path';
@@ -19,7 +26,7 @@ interface RouteInfoItem {
   tagName: string;
   isDynamic: boolean;
   paramNames: string[];
-  revalidate?: number;
+  revalidate?: number | false;
   params?: Record<string, string>;
 }
 
@@ -31,8 +38,57 @@ type GetStaticPathsFn =
   | ((path: string) => Promise<Array<Record<string, string>>>)
   | undefined;
 
-function pageHtml(output: SsgPageOutput | string): string {
-  return typeof output === 'string' ? output : output.html;
+/** Classification of a renderRoute() result (alpha.18 R2-H3). */
+type PageOutcome =
+  | { kind: 'ok'; html: string }
+  | { kind: 'redirect'; status: number; location?: string }
+  | { kind: 'notFound' }
+  | { kind: 'failure'; status: number; messages: string[] };
+
+/**
+ * Classify a renderRoute() output into the action the pipeline must take.
+ * Only plain 2xx results with no collected errors are writable pages.
+ */
+function classifyPageOutput(output: SsgPageOutput | string): PageOutcome {
+  // Legacy string output has no diagnostics - treat as a successful page.
+  if (typeof output === 'string') return { kind: 'ok', html: output };
+
+  const status = output.status ?? 200;
+  if (output.redirect || (status >= 300 && status < 400)) {
+    return { kind: 'redirect', status, location: output.redirect?.location };
+  }
+  if (output.notFound || status === 404) {
+    return { kind: 'notFound' };
+  }
+  if (output.errors.length > 0 || status >= 400) {
+    return {
+      kind: 'failure',
+      status,
+      messages: output.errors.map((e) => e.message),
+    };
+  }
+  return { kind: 'ok', html: output.html };
+}
+
+function failurePolicy(options: SsgRenderOptions): 'fail' | 'warn' {
+  return options.dynamicRouteFailure ?? 'fail';
+}
+
+/**
+ * Handle a page render failure according to the configured policy.
+ * 'fail' aborts the build; 'warn' logs and skips the page.
+ */
+function handleRenderFailure(
+  policy: 'fail' | 'warn',
+  context: string,
+  error: unknown,
+): void {
+  if (policy === 'fail') {
+    throw new Error(
+      `[openElement] SSG failed: ${context}: ${formatError(error)}`,
+    );
+  }
+  log.warn(`${context} - skipped: ${formatError(error)}`);
 }
 
 async function writeRenderedPage(
@@ -44,7 +100,7 @@ async function writeRenderedPage(
   root: string,
   outDir: string,
   locale?: string,
-): Promise<void> {
+): Promise<'written' | 'skipped'> {
   const targetPath = locale ? '/' + locale + '/' + resolvedPath.replace(/^\//, '') : resolvedPath;
 
   const renderOpts: Record<string, unknown> = {
@@ -60,17 +116,41 @@ async function writeRenderedPage(
   }
 
   const output = await renderRoute(routePath, renderOpts);
-  const html = pageHtml(output);
+  const outcome = classifyPageOutput(output);
+
+  // Failures throw so the caller can apply the fail/warn policy uniformly
+  // with renderRoute() throws. A 500 page is never a build artifact.
+  if (outcome.kind === 'failure') {
+    throw new Error(
+      `render failed (status ${outcome.status})` +
+        (outcome.messages.length > 0 ? `: ${outcome.messages.join('; ')}` : ''),
+    );
+  }
+  // Redirect/not-found results are route outcomes, not pages: they must not
+  // be persisted as normal 200 output.
+  if (outcome.kind === 'redirect') {
+    log.warn(
+      `Dynamic route: ${targetPath} returned redirect ${outcome.status}` +
+        (outcome.location ? ` -> ${outcome.location}` : '') +
+        ' - skipped (not written)',
+    );
+    return 'skipped';
+  }
+  if (outcome.kind === 'notFound') {
+    log.warn(`Dynamic route: ${targetPath} returned 404 not-found - skipped (not written)`);
+    return 'skipped';
+  }
 
   const pageDir = join(root, outDir, targetPath);
   mkdirSync(pageDir, { recursive: true });
-  writeFileSync(join(pageDir, 'index.html'), html, 'utf-8');
+  writeFileSync(join(pageDir, 'index.html'), outcome.html, 'utf-8');
 
   log.info(
     locale
       ? `i18n: ${targetPath}/index.html`
       : `Dynamic route: ${resolvedPath} -> ${resolvedPath}/index.html`,
   );
+  return 'written';
 }
 
 /**
@@ -78,7 +158,8 @@ async function writeRenderedPage(
  * for each parameter set.
  *
  * Returns a map of static path params keyed by route path, which is
- * consumed later when building the ISR manifest.
+ * consumed later when building the ISR manifest. Only params whose page
+ * was actually written are registered (alpha.18 R2-H3).
  */
 export async function expandDynamicRoutes(
   dynamicRoutes: RouteInfoItem[],
@@ -89,6 +170,7 @@ export async function expandDynamicRoutes(
   outDir: string,
 ): Promise<Map<string, Array<Record<string, string>>>> {
   const staticPathParamsByRoute = new Map<string, Array<Record<string, string>>>();
+  const policy = failurePolicy(options);
 
   if (dynamicRoutes.length > 0 && renderRoute && getStaticPaths) {
     for (const route of dynamicRoutes) {
@@ -99,13 +181,13 @@ export async function expandDynamicRoutes(
         log.warn(`Failed to get static paths for ${route.path}: ${formatError(e)}`);
         continue;
       }
-      staticPathParamsByRoute.set(route.path, paramsList);
 
       if (paramsList.length === 0) {
         log.info(`Dynamic route ${route.path} has no static paths - skipping`);
         continue;
       }
 
+      const writtenParams: Array<Record<string, string>> = [];
       for (const params of paramsList) {
         let resolvedPath: string;
         try {
@@ -115,8 +197,9 @@ export async function expandDynamicRoutes(
           continue;
         }
 
+        let outcome: 'written' | 'skipped';
         try {
-          await writeRenderedPage(
+          outcome = await writeRenderedPage(
             route.path,
             resolvedPath,
             params,
@@ -126,8 +209,20 @@ export async function expandDynamicRoutes(
             outDir,
           );
         } catch (e) {
-          log.warn(`Failed to render dynamic route ${resolvedPath}: ${formatError(e)}`);
+          handleRenderFailure(
+            policy,
+            `dynamic route ${resolvedPath} could not be rendered`,
+            e,
+          );
+          continue;
         }
+        if (outcome === 'written') writtenParams.push(params);
+      }
+
+      // ISR manifest registration happens only after rendering, and only for
+      // pages that were actually written.
+      if (writtenParams.length > 0) {
+        staticPathParamsByRoute.set(route.path, writtenParams);
       }
     }
   }
@@ -155,6 +250,7 @@ export async function expandI18nLocales(
 
   const locales: string[] = i18nOpts.locales || [];
   if (locales.length <= 1) return;
+  const policy = failurePolicy(options);
 
   log.info(`i18n: expanding for locales: ${locales.join(', ')}`);
   for (const locale of locales) {
@@ -199,7 +295,11 @@ export async function expandI18nLocales(
             locale,
           );
         } catch (e) {
-          log.warn(`i18n: failed for locale ${locale} on ${resolvedPath}: ${formatError(e)}`);
+          handleRenderFailure(
+            policy,
+            `i18n locale ${locale} on ${resolvedPath} could not be rendered`,
+            e,
+          );
         }
       }
     }

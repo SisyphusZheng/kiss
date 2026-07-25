@@ -20,6 +20,7 @@ import type {
   SsgPageOutput,
   SsgRenderEvidence,
   SsgRenderOptions,
+  SsgRenderSummary,
   SsrBundle,
 } from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
@@ -29,13 +30,24 @@ import { formatJson } from '@openelement/element/build-utils';
 
 const log = createLogger('ssg');
 
+/**
+ * Minimal Hono app surface consumed by hono/ssg toSSG():
+ * routes for route discovery, fetch for the per-route info request, and
+ * request for the per-page content fetch.
+ */
+interface SsgHonoApp {
+  routes: Array<{ method: string; handler: unknown; path: string }>;
+  fetch: (request: Request, ...args: unknown[]) => Promise<Response>;
+  request: (input: string | URL | Request, ...args: unknown[]) => Promise<Response>;
+}
+
 // ─── Core render pipeline ──────────────────────────────────────
 
 export async function ssgRender(
   module: SsrBundle,
   options: SsgRenderOptions,
   evidence: SsgRenderEvidence = {},
-): Promise<void> {
+): Promise<SsgRenderSummary> {
   const root = options.root || cwd();
   const outDir = options.outDir || 'dist';
 
@@ -45,7 +57,7 @@ export async function ssgRender(
     tagName: string;
     isDynamic: boolean;
     paramNames: string[];
-    revalidate?: number;
+    revalidate?: number | false;
   }>;
   if (!module.routeInfo || !Array.isArray(module.routeInfo)) {
     throw new Error(
@@ -106,18 +118,43 @@ export async function ssgRender(
   };
 
   const outputDir = join(root, outDir);
-  const app = module.default as
-    | { fetch: (req: Request, ...args: unknown[]) => Promise<Response> }
-    | undefined;
+  const app = module.default as SsgHonoApp | undefined;
   if (!app) {
     throw new Error(
       'SSR bundle loaded but no Hono app found (no default export)',
     );
   }
 
-  const result = await toSSG(app as never, fsModule, { dir: outputDir });
+  // alpha.18 (R2-H3): hono/ssg's defaultPlugin silently drops every non-200
+  // response, so static-route 404/500/redirect pages used to vanish without a
+  // trace. Record them through a request wrapper (the afterResponseHook does
+  // not receive the request path) and surface them in the build summary.
+  const staticNon200: Array<{ path: string; status: number }> = [];
+  const recordingApp: SsgHonoApp = {
+    routes: app.routes,
+    fetch: (request, ...args) => app.fetch(request, ...args),
+    request: async (input, ...args) => {
+      const response = await app.request(input, ...args);
+      if (response.status !== 200) {
+        const url = input instanceof Request ? input.url : new URL(input, 'http://localhost').href;
+        staticNon200.push({ path: new URL(url).pathname, status: response.status });
+      }
+      return response;
+    },
+  };
+
+  const result = await toSSG(recordingApp as never, fsModule, { dir: outputDir });
 
   if (!result.success) throw result.error;
+
+  if (staticNon200.length > 0) {
+    log.warn(
+      `Static route non-200 results: ${staticNon200.length} page(s) dropped (not written):`,
+    );
+    for (const entry of staticNon200) {
+      log.warn(`  ${entry.path} -> ${entry.status}`);
+    }
+  }
 
   const isrRoutes = buildIsrManifestEntries(routeInfo, staticPathParamsByRoute);
   if (isrRoutes.length > 0) {
@@ -230,6 +267,8 @@ export async function ssgRender(
   } catch {
     log.debug('Sitemap generation skipped or failed');
   }
+
+  return { staticNon200 };
 }
 
 // Re-export resolveDynamicRoutePath for consumers who import from ssg-render.ts

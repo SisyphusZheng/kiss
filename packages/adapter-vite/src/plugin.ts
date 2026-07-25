@@ -9,6 +9,7 @@
 
 import type { Alias, Plugin } from 'vite';
 import type { FrameworkOptions, RouteEntry } from './internal/protocol/framework.ts';
+import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
 import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 
 import { join } from 'node:path';
@@ -101,7 +102,7 @@ export function optionalPackageStubsPlugin(): Plugin {
  * @internal
  */
 export function createOpenPlugin(
-  options: FrameworkOptions = {},
+  options: FrameworkOptions & { ssg?: SsgBehaviorOptions } = {},
   externalCtx?: OpenElementBuildContext,
 ): Plugin[] {
   // Build head extras (validated HTML fragments, stylesheets, scripts)
@@ -109,6 +110,7 @@ export function createOpenPlugin(
 
   const resolvedOptions: FrameworkOptions & {
     allowHeadExtrasScripts?: boolean;
+    ssg?: SsgBehaviorOptions;
   } = {
     ...options,
     routesDir: options.routesDir || 'app/routes',
@@ -223,7 +225,9 @@ export function createOpenPlugin(
       // v0.14.6: Generate placeholder entry code with empty routes in configResolved.
       // This is a Vite requirement - the virtual entry must exist before buildStart().
       // The real entry with actual routes is generated in buildStart() which runs later.
-      ctx.phase1.honoEntryCode = generateEntry(
+      // The returned code string is discarded: the call's job is to populate
+      // entryDescriptor, which virtualEntryPlugin.load() renders from.
+      generateEntry(
         [],
         ctx.phase1.islandTagNames,
         ctx.phase1.packageManifests,
@@ -319,8 +323,10 @@ export function createOpenPlugin(
         }
 
         // Single descriptor instantiation: the emitted entry code and the
-        // admission plan come from the same object.
-        ctx.phase1.honoEntryCode = generateEntry(
+        // admission plan come from the same object. The returned code string
+        // is discarded — the call populates entryDescriptor, which
+        // virtualEntryPlugin.load() renders from.
+        generateEntry(
           routes,
           ctx.phase1.islandTagNames,
           ctx.phase1.packageManifests,

@@ -81,7 +81,7 @@ export function buildIsrManifestEntries(
   routeInfo: Array<{
     path: string;
     isDynamic: boolean;
-    revalidate?: number;
+    revalidate?: number | false;
     params?: Record<string, string>;
   }>,
   staticPathParamsByRoute: Map<string, Array<Record<string, string>>>,

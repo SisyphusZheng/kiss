@@ -2,7 +2,7 @@
  * @openelement/adapter-vite - openElement Build Context
  *
  * Shared mutable state for all openElement Vite plugins.
- * Replaces the closure-captured variables (honoEntryCode, scannedIslandTagNames, etc.)
+ * Replaces the closure-captured variables (scannedIslandTagNames, etc.)
  * with a single object that's explicitly passed around.
  *
  * Also replaces the .openElement/ temp directory as IPC between build phases:
@@ -39,9 +39,6 @@ import type {
 export type Phase = 1 | 2 | 3;
 
 export class Phase1Meta {
-  /** The generated Hono entry module code (virtual module content) */
-  honoEntryCode: string = '';
-
   /** Cached routes from buildStart() for virtual entry regeneration */
   cachedRoutes: RouteEntry[] = [];
 
@@ -73,15 +70,7 @@ export class Phase1Meta {
   userResolveAlias: Record<string, string> | Alias[] | null = null;
 }
 
-export class Phase2Meta {
-  /** Generated client island entry code */
-  clientEntryCode: string = '';
-}
-
 export class Phase3Meta {
-  /** Generated SSG entry code (for viteBuild SSR input) */
-  ssgEntryCode: string = '';
-
   /** Project root directory */
   root: string = '';
 
@@ -147,9 +136,6 @@ export class OpenElementBuildContext {
   buildArtifacts: BuildArtifacts | null = null;
   /** Phase 1: Route scanning & build metadata */
   readonly phase1: Phase1Meta = new Phase1Meta();
-
-  /** Phase 2: Client island build state */
-  readonly phase2: Phase2Meta = new Phase2Meta();
 
   /** Phase 3: SSG rendering state */
   readonly phase3: Phase3Meta = new Phase3Meta();
@@ -249,7 +235,6 @@ export class OpenElementBuildContext {
     // build state. It's set in config()/configResolved() and must persist
     // through buildStart() for Phase 2 and 3 to use.
     Object.assign(this.phase1, new Phase1Meta(), { userResolveAlias });
-    Object.assign(this.phase2, new Phase2Meta());
     Object.assign(this.phase3, new Phase3Meta());
     Object.assign(this.plugins, {
       blogOptions: null,

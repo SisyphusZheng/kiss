@@ -69,7 +69,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
         (r.paramNames || []).map(jsStringLiteral).join(', ')
       }], revalidate: ${
         routeRevalidateExpr(r.varName)
-      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto"), streaming: (__pageDefinition(${r.varName}).renderIntent?.streaming || "auto") },`,
+      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto") },`,
     );
   }
   lines.push('];');
@@ -205,9 +205,6 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '      return { html, status: 404, notFound: true, errors: [], componentCount: 0, renderTimeMs: 0 };',
   );
   lines.push('    }');
-  lines.push(
-    "    console.error('[openElement] renderRoute failed for ' + routePath + ':', error);",
-  );
   lines.push('    const renderError = {');
   lines.push('      code: "OPEN_ELEMENT_RENDER_RENDER_FAILED",');
   lines.push('      severity: "error",');
@@ -220,6 +217,46 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   lines.push('    };');
   lines.push(
     '    const renderTimeMs = typeof performance !== "undefined" ? performance.now() - startTime : 0;',
+  );
+  // Error-boundary parity with the dev/server route handler
+  // (renderRouteHandler): a page declaring an error component renders it with
+  // __openElementError; the failure still surfaces as a 500 result carrying
+  // the caught RenderError.
+  lines.push('    if (typeof page.error === "function") {');
+  lines.push('      try {');
+  lines.push(
+    '        const errorNode = jsx(info.tagName, { ...params, __openElementParams: params, __openElementError: error, __openElementRequest: options.request, __openElementRoute: loadContext.route, __openElementMeta: routeMeta });',
+  );
+  lines.push(
+    '        const errorContent = await __renderAppShell(errorNode, routePath, { locale, routeMeta });',
+  );
+  lines.push(
+    '        const errorComponentCount = (errorContent.match(/<template shadowrootmode="open"/g) || []).length;',
+  );
+  lines.push('        const errorHtml = wrapInDocument(errorContent, {');
+  for (
+    const optionLine of documentWrapOptionsLines({
+      pageExpr: 'page',
+      titleExpr: `title || page.head?.title || ${jsStringLiteral(desc.document.title)}`,
+      langExpr: `lang || locale || ${jsStringLiteral(desc.document.lang)}`,
+      headExtrasExpr: 'headExtrasValue',
+      allowHeadExtrasScripts: desc.document.allowHeadExtrasScripts,
+    })
+  ) {
+    lines.push(`          ${optionLine}`);
+  }
+  lines.push('        });');
+  lines.push(
+    '        return { html: errorHtml, status: 500, errors: [renderError], componentCount: errorComponentCount, renderTimeMs };',
+  );
+  lines.push('      } catch (errorRenderFailure) {');
+  lines.push(
+    "        console.error('[openElement] Route error renderer failed for ' + routePath + ':', errorRenderFailure);",
+  );
+  lines.push('      }');
+  lines.push('    }');
+  lines.push(
+    "    console.error('[openElement] renderRoute failed for ' + routePath + ':', error);",
   );
   lines.push(
     '    const detail = import.meta.env.PROD ? "Internal Server Error" : String(error && error.stack ? error.stack : error);',
