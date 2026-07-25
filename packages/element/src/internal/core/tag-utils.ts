@@ -13,6 +13,18 @@
 
 import { ERROR_PREFIX } from './errors.ts';
 
+/**
+ * Convert a camelCase prop/attribute name to kebab-case.
+ *
+ * This is the single casing rule for custom-element attribute names: SSR
+ * serialization (serializeAttrs), CSR prop binding (collectPropBindings) and
+ * the static props runtime (observedAttributes, attribute sync, reflect) all
+ * normalize through it, so `<x-el itemCount={5}>` round-trips as `item-count`.
+ */
+export function camelToKebab(str: string): string {
+  return str.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
+
 /** Reserved custom element names per the HTML specification. */
 const RESERVED_CUSTOM_ELEMENT_NAMES = new Set([
   'annotation-xml',

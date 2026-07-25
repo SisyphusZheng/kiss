@@ -16,6 +16,7 @@ import type {
   PropsFrom,
   PropType,
 } from '../protocol/prop.ts';
+import { camelToKebab } from './tag-utils.ts';
 export type { PropDecl, PropDeclFull, PropDeclShorthand, PropsFrom, PropType };
 
 // ─── Internal types ─────────────────────────────────────────────
@@ -43,6 +44,9 @@ export function initializeStaticProps(instance: _El): void {
   for (const [name, decl] of Object.entries(propsDef)) {
     const { default: defVal, reflect } = normalizePropDecl(decl);
     const sig = createPropSignal(defVal);
+    // The mirrored attribute uses the same kebab-case name that SSR
+    // serialization and observedAttributes registration use.
+    const attrName = camelToKebab(name);
 
     sigMap.set(name, sig);
 
@@ -58,13 +62,33 @@ export function initializeStaticProps(instance: _El): void {
     });
 
     if (reflect) {
+      // createPropSignal.subscribe() fires once synchronously with the
+      // current (default) value. connectedCallback syncs attributes into the
+      // signal right after this initialization, so that first fire must not
+      // write back: it would clobber SSR-delivered reflect attributes before
+      // syncStaticPropsFromAttributes had a chance to read them.
+      let pendingInitialSync = true;
       const unsub = sig.subscribe(() => {
+        if (pendingInitialSync) {
+          pendingInitialSync = false;
+          return;
+        }
         const { type } = normalizePropDecl(decl);
         if (type === Boolean) {
-          if (sig.value) instance.setAttribute(name, '');
-          else instance.removeAttribute(name);
+          // Presence mirrors truthiness; skip when already in sync.
+          if (sig.value) {
+            if (!instance.hasAttribute(attrName)) instance.setAttribute(attrName, '');
+          } else if (instance.hasAttribute(attrName)) {
+            instance.removeAttribute(attrName);
+          }
         } else {
-          instance.setAttribute(name, String(sig.value));
+          // Equality short-circuit: the mirrored setAttribute re-enters
+          // handleStaticPropAttributeChange, which writes the same value back
+          // into the signal. Skipping the write when the attribute already
+          // holds it breaks that loop (browsers fire attributeChangedCallback
+          // even for an identical value).
+          const next = String(sig.value);
+          if (instance.getAttribute(attrName) !== next) instance.setAttribute(attrName, next);
         }
       });
       unsubs.push(unsub);
@@ -98,19 +122,28 @@ export function handleStaticPropAttributeChange(
   if (!propsDef) return;
 
   for (const [propName, decl] of Object.entries(propsDef)) {
-    if (propName.toLowerCase() !== name.toLowerCase()) continue;
+    // Attribute names arrive lowercase; prop keys normalize to kebab-case,
+    // matching observedAttributes registration and SSR serialization.
+    if (camelToKebab(propName) !== name.toLowerCase()) continue;
     const sig = sigMap.get(propName);
     if (!sig) continue;
     const { type, default: defaultValue } = normalizePropDecl(decl);
+    let next: unknown;
     if (newValue === null) {
-      sig.value = defaultValue;
+      next = defaultValue;
     } else if (type === Boolean) {
-      sig.value = true;
+      next = true;
     } else if (type === Number) {
       const n = Number(newValue);
-      sig.value = Number.isNaN(n) ? 0 : n;
+      next = Number.isNaN(n) ? 0 : n;
     } else {
-      sig.value = newValue;
+      next = newValue;
+    }
+    // Equality short-circuit: reflect subscribers mirror signal writes into
+    // this same attribute. Re-writing an identical parsed value would
+    // re-notify the subscriber and loop the write back into setAttribute.
+    if (!Object.is(sig.value, next)) {
+      sig.value = next;
     }
     return;
   }
@@ -132,9 +165,12 @@ export function syncStaticPropsFromAttributes(instance: _El): void {
   for (const [name, decl] of Object.entries(propsDef)) {
     const sig = sigMap.get(name);
     if (!sig) continue;
-    if (el.hasAttribute(name)) {
+    // Kebab-case attribute name, matching SSR serialization and
+    // observedAttributes registration (camelToKebab).
+    const attrName = camelToKebab(name);
+    if (el.hasAttribute(attrName)) {
       const { type } = normalizePropDecl(decl);
-      const raw = el.getAttribute(name);
+      const raw = el.getAttribute(attrName);
       if (raw === null) continue;
       if (type === Boolean) {
         sig.value = true;
@@ -146,16 +182,6 @@ export function syncStaticPropsFromAttributes(instance: _El): void {
       }
     }
   }
-}
-
-export function unwrap<T>(sig: { value: T } | T): T {
-  if (
-    sig !== null && typeof sig === 'object' && 'value' in (sig as object) &&
-    'subscribe' in (sig as object)
-  ) {
-    return (sig as { value: T }).value;
-  }
-  return sig as T;
 }
 
 // ─── Shared utilities ───────────────────────────────────────────
@@ -180,22 +206,6 @@ export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
     };
   }
   return { type: String, default: '', reflect: false };
-}
-
-/**
- * Merge static props attribute names into a constructor's observedAttributes.
- *
- * Copy-on-write: the input array is never mutated in place, so an array
- * inherited from a base class prototype is not polluted. Kept for backward
- * compatibility with the pre-accessor API; the primary merge path is the
- * OpenElement base-class `observedAttributes` accessor, which browsers read
- * once at customElements.define().
- */
-export function registerStaticObservedAttributes(
-  ctor: { props?: Record<string, unknown>; observedAttributes?: string[] },
-  propsDef: Record<string, unknown>,
-): void {
-  ctor.observedAttributes = mergePropsAttributeNames(ctor.observedAttributes, propsDef);
 }
 
 // ─── Define-time observedAttributes resolution (B2 fix) ─────────
@@ -251,14 +261,14 @@ export function resolveObservedAttributes(ctor: unknown): string[] {
   return merged;
 }
 
-/** Union lowercased static props attribute names into a fresh array. */
+/** Union kebab-cased static props attribute names into a fresh array. */
 function mergePropsAttributeNames(
   base: readonly string[] | undefined,
   propsDef: Record<string, unknown>,
 ): string[] {
   const merged = base ? [...base] : [];
   for (const name of Object.keys(propsDef)) {
-    const attrName = name.toLowerCase();
+    const attrName = camelToKebab(name);
     if (!merged.includes(attrName)) {
       merged.push(attrName);
     }
@@ -278,6 +288,9 @@ function createPropSignal(initial: unknown): PropSignal {
       _value = v;
       for (const fn of _subs) fn(v);
     },
+    // Fires fn once synchronously with the current value. The reflect
+    // subscriber in initializeStaticProps relies on (and skips) exactly this
+    // first fire; keep the contract synchronous.
     subscribe(fn: (v: unknown) => void): () => void {
       _subs.add(fn);
       fn(_value);

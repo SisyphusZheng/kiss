@@ -882,7 +882,8 @@ const { jsx } = await import('@openelement/element/jsx-runtime');
 const { signal } = await import('@openelement/element');
 const { StyleSheet } = await import('@openelement/element');
 const { renderDsdTree } = await import('@openelement/element');
-const { Show } = await import('../src/internal/core/jsx-runtime.ts');
+const { Show, For } = await import('../src/internal/core/jsx-runtime.ts');
+const { renderToDom } = await import('../src/internal/core/jsx-render-dom.ts');
 
 // Deliberately evaluate this after installing the Deno harness. Evaluating it
 // at module load used to make every DOM lifecycle test silently return early.
@@ -1444,6 +1445,222 @@ Deno.test('DSD hydration degrades to client render when data-eid marker count di
   document.body.removeChild(el);
 });
 
+Deno.test('DSD hydration degrades when For items change content at the same length', async () => {
+  if (!hasDOM) return;
+
+  const items = signal(['a', 'b']);
+  const fired: string[] = [];
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          children: (item: string) =>
+            jsx('button', { onClick: () => fired.push(item), children: item }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  // The branch token now carries a content hash alongside the item count.
+  assertStringIncludes(ssrHtml, '<!--oe-branch:for:2:');
+
+  // Same length, different content between SSR and hydration: the count-only
+  // token used to match here and mis-bound the 'c'/'d' handlers onto the
+  // stale 'a'/'b' DOM.
+  items.value = ['c', 'd'];
+
+  const tagName = uniqueTag('for-drift');
+  class ForDriftElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ForDriftElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  const buttons = root.querySelectorAll('button');
+  assertEquals(buttons.map((b) => b.textContent), ['c', 'd']);
+  buttons[0].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['c']);
+
+  document.body.removeChild(el);
+});
+
+// ─── 8c. Root-level <Show>/<For> CSR (carried-over edge) ─────────
+//
+// renderToDom() commits binding descriptors before the caller attaches the
+// returned root node. For a root-level Show/For the root node IS the
+// control-flow anchor comment, so pre-fix the anchor had no parentNode at
+// commit time and the branch content was silently dropped. The fix parks a
+// root anchor in a DocumentFragment before committing; the harness keeps
+// fragments as child nodes (real browsers hoist their children), so these
+// tests query through the fragment layer.
+
+/** Recursive element lookup that descends into DocumentFragment children. */
+function deepQuerySelector(root: TestShadowRoot, localName: string): TestElement | null {
+  const walk = (nodes: TestNode[]): TestElement | null => {
+    for (const node of nodes) {
+      if (node instanceof TestElement) {
+        if (node.localName === localName) return node;
+        const found = walk(node.childNodes);
+        if (found) return found;
+      } else if (node instanceof TestDocumentFragment || node instanceof TestShadowRoot) {
+        const found = walk(node.childNodes);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  return walk(root.childNodes);
+}
+
+Deno.test('OpenElement CSR renders a root-level Show branch and reacts to flips', async () => {
+  if (!hasDOM) return;
+
+  const when = signal(true);
+  const fired: string[] = [];
+  const tagName = uniqueTag('root-show');
+  class RootShowElement extends OpenElement {
+    override render(): VNode | null {
+      return Show({
+        when,
+        children: [
+          jsx('button', { onClick: () => fired.push('yes'), children: 'yes' }),
+          jsx('span', { onClick: () => fired.push('no'), children: 'no' }),
+        ],
+      });
+    }
+  }
+  customElements.define(tagName, RootShowElement);
+
+  const el = document.createElement(tagName) as RootShowElement;
+  document.body.appendChild(el);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // Pre-fix the truthy branch never reached the shadow root.
+  assertStringIncludes(root.innerHTML, 'yes');
+  const yesButton = deepQuerySelector(root, 'button');
+  assertExists(yesButton);
+  yesButton.dispatchEvent(new Event('click'));
+  assertEquals(fired, ['yes']);
+
+  // Branch flips keep working after the anchor gained a real parent.
+  when.value = false;
+  await flushEffects();
+  assertEquals(root.innerHTML.includes('yes'), false);
+  assertStringIncludes(root.innerHTML, 'no');
+  const noSpan = deepQuerySelector(root, 'span');
+  assertExists(noSpan);
+  noSpan.dispatchEvent(new Event('click'));
+  assertEquals(fired, ['yes', 'no']);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement CSR renders a root-level For list and reacts to item changes', async () => {
+  if (!hasDOM) return;
+
+  const items = signal<string[]>(['a', 'b']);
+  const tagName = uniqueTag('root-for');
+  class RootForElement extends OpenElement {
+    override render(): VNode | null {
+      return For({
+        each: items,
+        children: (item: string) => jsx('li', { children: item }),
+      });
+    }
+  }
+  customElements.define(tagName, RootForElement);
+
+  const el = document.createElement(tagName) as RootForElement;
+  document.body.appendChild(el);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // Pre-fix the list items never reached the shadow root.
+  assertStringIncludes(root.innerHTML, 'a');
+  assertStringIncludes(root.innerHTML, 'b');
+
+  items.value = ['c'];
+  await flushEffects();
+  assertEquals(root.innerHTML.includes('a'), false);
+  assertStringIncludes(root.innerHTML, 'c');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement DSD hydration degrade re-renders a root-level Show client-side', () => {
+  if (!hasDOM) return;
+
+  const fired: string[] = [];
+  const tagName = uniqueTag('root-show-degrade');
+  class RootShowDegradeElement extends OpenElement {
+    override render(): VNode | null {
+      return Show({
+        when: true,
+        children: [
+          jsx('button', { onClick: () => fired.push('live'), children: 'live' }),
+          null,
+        ],
+      });
+    }
+  }
+  customElements.define(tagName, RootShowDegradeElement);
+
+  // The SSR branch token says show:0 but the client VNode resolves show:1:
+  // the scope degrades to a client-side render whose root is the Show anchor
+  // itself — the path that silently dropped content pre-fix.
+  const el = createHydratedElement(
+    tagName,
+    '<!--oe-branch:show:0--><button data-eid="e0">stale</button>',
+  );
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  assertStringIncludes(root.innerHTML, 'live');
+  assertEquals(root.innerHTML.includes('stale'), false);
+  const button = deepQuerySelector(root, 'button');
+  assertExists(button);
+  button.dispatchEvent(new Event('click'));
+  assertEquals(fired, ['live']);
+
+  document.body.removeChild(el);
+});
+
+// ─── 8d. CSR attribute serialization parity (M2/L5) ──────────────
+//
+// SSR serializeAttrs kebab-cases props on custom-element hosts and skips
+// non-event function props; the CSR DOM renderer must produce the same
+// attribute shape or the hydration/degrade re-render diverges from SSR.
+
+Deno.test('renderToDom kebab-cases camelCase props on custom-element hosts', () => {
+  if (!hasDOM) return;
+
+  const host = renderToDom(
+    jsx('x-thing', { itemCount: 5, className: 'box' }),
+  ) as unknown as TestElement;
+  assertEquals(host.getAttribute('item-count'), '5');
+  assertEquals(host.getAttribute('itemCount'), null);
+  assertEquals(host.getAttribute('class'), 'box');
+
+  // Plain HTML elements keep prop names verbatim (serializeAttrs only kebabs
+  // custom-element tags).
+  const div = renderToDom(jsx('div', { itemCount: 5 })) as unknown as TestElement;
+  assertEquals(div.getAttribute('itemCount'), '5');
+});
+
+Deno.test('renderToDom skips non-event function props like SSR serializeAttrs', () => {
+  if (!hasDOM) return;
+
+  const el = renderToDom(
+    jsx('div', { title: 'kept', transform: () => 'ignored' }),
+  ) as unknown as TestElement;
+  // Pre-fix the function source string landed in the attribute.
+  assertEquals(el.getAttribute('transform'), null);
+  assertEquals(el.getAttribute('title'), 'kept');
+});
+
 // ─── 9. Props system (static props) ────────────────────────────────
 
 Deno.test('OpenElement static props initialize from attributes', () => {
@@ -1663,6 +1880,208 @@ Deno.test('OpenElement preserves hand-written class-field observedAttributes ver
   document.body.appendChild(el);
   el.setAttribute('tone', 'dark');
   assertEquals(changes, ['tone']);
+
+  document.body.removeChild(el);
+});
+
+// ─── 9c. reflect: true static props (R2-H1) ──────────────────────
+//
+// The reflect subscriber mirrors signal writes into the attribute, and
+// attributeChangedCallback writes attribute changes back into the signal.
+// Both directions short-circuit on equality so one logical write cannot
+// re-enter itself (setAttribute fires attributeChangedCallback even for an
+// identical value). The reflect subscription also skips its first
+// synchronous fire: connectedCallback runs syncStaticPropsFromAttributes
+// right after initializeStaticProps, so writing the default at subscribe
+// time would clobber SSR-delivered attributes before the sync reads them.
+
+Deno.test('OpenElement reflect props preserve SSR-delivered attributes on connect', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reflect-ssr');
+  class ReflectSsrElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 0, reflect: true },
+      label: { type: String, default: 'init', reflect: true },
+      active: { type: Boolean, default: false, reflect: true },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ReflectSsrElement);
+
+  const el = document.createElement(tagName) as ReflectSsrElement;
+  el.setAttribute('count', '5');
+  el.setAttribute('label', 'ssr');
+  el.setAttribute('active', '');
+  document.body.appendChild(el);
+
+  const props = el as unknown as Record<string, { value: unknown }>;
+  // Pre-fix the reflect subscription fired synchronously with the default
+  // value and overwrote every attribute before the sync ran (count="5"
+  // became count="0"), then looped until the stack blew.
+  assertEquals(el.getAttribute('count'), '5');
+  assertEquals(el.getAttribute('label'), 'ssr');
+  assertEquals(el.hasAttribute('active'), true);
+  assertEquals(props.count.value, 5);
+  assertEquals(props.label.value, 'ssr');
+  assertEquals(props.active.value, true);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement reflect prop writes produce zero redundant attributeChangedCallback runs', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reflect-loop');
+  const changes: Array<string | null> = [];
+  class ReflectLoopElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 0, reflect: true },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+
+    override attributeChangedCallback(
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ): void {
+      // Record on entry: the reflected mirror write re-enters this callback
+      // synchronously from inside super.attributeChangedCallback, so pushing
+      // after super() would list the nested write before its cause.
+      if (name === 'count') changes.push(newValue);
+      super.attributeChangedCallback(name, oldValue, newValue);
+    }
+  }
+  customElements.define(tagName, ReflectLoopElement);
+
+  const el = document.createElement(tagName) as ReflectLoopElement;
+  document.body.appendChild(el);
+  const props = el as unknown as Record<string, { value: unknown }>;
+
+  // No SSR attribute: connect must not write the default into the attribute.
+  assertEquals(changes, []);
+  assertEquals(el.getAttribute('count'), null);
+
+  // Signal -> attribute: exactly one reflected write, no re-entry.
+  props.count.value = 7;
+  assertEquals(changes, ['7']);
+  assertEquals(el.getAttribute('count'), '7');
+
+  // Attribute -> signal: the reflect subscriber sees the attribute already
+  // holds the value and must not write it back.
+  changes.length = 0;
+  el.setAttribute('count', '9');
+  assertEquals(changes, ['9']);
+  assertEquals(props.count.value, 9);
+
+  // Removal restores the declared default; reflect mirrors the restored
+  // default back (removal notification + one mirror write), then stops.
+  changes.length = 0;
+  el.removeAttribute('count');
+  assertEquals(props.count.value, 0);
+  assertEquals(changes, [null, '0']);
+  assertEquals(el.getAttribute('count'), '0');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement reflect props survive reconnect through the attribute mirror', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reflect-reconnect');
+  const changes: Array<string | null> = [];
+  class ReflectReconnectElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 0, reflect: true },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+
+    override attributeChangedCallback(
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ): void {
+      super.attributeChangedCallback(name, oldValue, newValue);
+      if (name === 'count') changes.push(newValue);
+    }
+  }
+  customElements.define(tagName, ReflectReconnectElement);
+
+  const el = document.createElement(tagName) as ReflectReconnectElement;
+  document.body.appendChild(el);
+  const props = el as unknown as Record<string, { value: unknown }>;
+
+  props.count.value = 33;
+  assertEquals(el.getAttribute('count'), '33');
+
+  // DOM move: disconnect disposes the reflect subscription; reconnect
+  // re-initializes signals and restores the value from the mirrored
+  // attribute.
+  document.body.removeChild(el);
+  document.body.appendChild(el);
+  assertEquals(props.count.value, 33);
+  assertEquals(el.getAttribute('count'), '33');
+
+  // The re-armed subscription is the only one live: one logical write still
+  // produces exactly one attribute change.
+  changes.length = 0;
+  props.count.value = 44;
+  assertEquals(changes, ['44']);
+  assertEquals(el.getAttribute('count'), '44');
+
+  document.body.removeChild(el);
+});
+
+// ─── 9d. camelCase static props kebab-case contract (M2) ─────────
+//
+// One casing rule (camelToKebab) covers SSR serialization, observedAttributes
+// registration, attribute sync, and reflect, so a multi-word prop like
+// itemCount round-trips as item-count through SSR -> hydration -> reflect.
+
+Deno.test('OpenElement camelCase static props observe kebab-case attributes', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('camel-props');
+  class CamelPropsElement extends OpenElement {
+    static props = {
+      itemCount: { type: Number, default: 0, reflect: true },
+      itemLabel: { type: String, default: 'init' },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  assertEquals(CamelPropsElement.observedAttributes, ['item-count', 'item-label']);
+  customElements.define(tagName, CamelPropsElement);
+
+  const el = document.createElement(tagName) as CamelPropsElement;
+  el.setAttribute('item-count', '5');
+  el.setAttribute('item-label', 'ssr');
+  document.body.appendChild(el);
+
+  const props = el as unknown as Record<string, { value: unknown }>;
+  // SSR serializes item-count; connect must read it into the signal.
+  assertEquals(props.itemCount.value, 5);
+  assertEquals(props.itemLabel.value, 'ssr');
+  // Reflect mirrors into the kebab-case name, never the lowercase join.
+  assertEquals(el.getAttribute('item-count'), '5');
+  assertEquals(el.getAttribute('itemcount'), null);
+  props.itemCount.value = 7;
+  assertEquals(el.getAttribute('item-count'), '7');
+  assertEquals(el.getAttribute('itemcount'), null);
+  // Attribute -> signal direction uses the same kebab-case name.
+  el.setAttribute('item-count', '9');
+  assertEquals(props.itemCount.value, 9);
 
   document.body.removeChild(el);
 });

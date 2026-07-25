@@ -3,6 +3,8 @@ node_modules/
 
 # Deno
 .deno/
+.deno-cache/
+.deno_cache/
 vendor/*
 # Keep vendored dependency attribution tracked for license compliance
 !vendor/jsr.io/
@@ -19,6 +21,8 @@ vendor/jsr.io/@std/*/*
 # Build output
 dist/
 custom-dist/
+dist-test-*/
+www/dist/
 npm/
 packages/adapter-vite/__fixtures__/nitro-proof/.output-*/
 packages/adapter-vite/__fixtures__/nitro-proof/.wrangler/
@@ -27,9 +31,15 @@ packages/adapter-vite/__fixtures__/nitro-proof/node_modules/
 *.tsbuildinfo
 .tsbuildinfo
 www/app/data/_generated-blog-data.ts
+.openElement/
+www/.openElement/
 
 # npm (Deno project - no npm lockfiles)
 package-lock.json
+
+# npm pack tarballs
+packages/*/*.tgz
+*.tgz
 
 # Environment
 .env
@@ -52,6 +62,7 @@ Thumbs.db
 # Testing
 coverage/
 .coverage/
+.coverage-*/
 .coverage-check/
 __test_fixtures__/
 playwright-report/
@@ -61,6 +72,7 @@ test-results/
 .workbuddy/
 .gstack/
 .qoder/
+.codebuddy/settings.local.json
 docs/autoflow/cells/*/state.json
 
 # Vite cache
@@ -79,43 +91,18 @@ coverage-*.txt
 coverage-output.txt
 .git-commit-msg.txt
 docs/vite-build-*.txt
-node_modules/
-
-# npm pack tarballs
-packages/*/*.tgz
-*.tgz
 
 # Root-level logo source files (design originals, keep local)
 /open-logo*.svg
 /open-favicon.svg
-/brand/exports/
 
-www/dist/
-dist/
-custom-dist/
-dist-test-ssg-render/
-dist-test-ssg-package-render/
-dist-test-*/
-coverage/
-playwright-report/
-test-results/
 debug.log
 hub-index/
 hub-submission.json
-
-deliverables/
 lighthouse-result*.json
-.deno-cache/
-.deno_cache/
-www/.openElement/
-.openElement/
-.codebuddy/settings.local.json
 
 # Root-level audit artifact
 /audit-ast.json
-
-# Coverage variants
-.coverage-*/
 
 # Vite virtual assets
 assets/_virtual_*

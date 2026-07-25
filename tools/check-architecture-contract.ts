@@ -147,7 +147,6 @@ export function isCurrentDocOrExample(path: string): boolean {
   if (path.startsWith('packages/') && path.endsWith('/README.md')) return true;
   if (path.startsWith('packages/') && path.includes('/src/')) return true;
   if (path.startsWith('www/app/routes/guide/')) return true;
-  if (path.startsWith('www/content/guide/')) return true;
   return false;
 }
 

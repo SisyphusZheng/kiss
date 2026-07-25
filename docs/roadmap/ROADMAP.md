@@ -4,11 +4,11 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.41.0-alpha.17`.\
-> Active execution target: `v0.41.0-alpha.17`.\
+> Published package line: `v0.41.0-alpha.18`.\
+> Active execution target: `v0.41.0-alpha.18`.\
 > Current implementation state: five-package convergence is published;
-> alpha.16 closed the P0 correctness reset and alpha.17 completes the
-> audit remediation (ADR-0116).\
+> alpha.17 closed the first audit remediation and alpha.18 runs the second
+> audit sweep (ADR-0117).\
 > Maturity stage: alpha; the abandoned beta naming is retired.
 
 ## Product direction
@@ -86,6 +86,7 @@ making the standard Custom Element contract span both layers. See the official
 | `0.41.0-alpha.15` | Adoption and interface proof | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                       |
 | `0.41.0-alpha.16` | Correctness reset            | ADR-0116 audit findings: hydration/props correctness, island chunk matching, npm `latest` policy, #460, drift clearance                 |
 | `0.41.0-alpha.17` | Remediation completion       | Real-browser test credibility, convergence hygiene, release-tooling evidence fixes, #390 pilot launch                                   |
+| `0.41.0-alpha.18` | Second audit sweep           | ADR-0117: sibling-path closures, evidence honesty, reflect-prop correctness, redundancy cleanup                                         |
 | `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
 | `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
 | `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
@@ -112,18 +113,17 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.41.0-alpha.16` is the published package line. npm beta.1 through beta.3 are
+`0.41.0-alpha.18` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.
 
-Alpha.16 applied the 2026-07-23 audit findings as a correctness reset
-(ADR-0116) and closed with the P0 fixes, drift clearance and release closure.
-Alpha.17 completes the remaining audit packages: real-browser test
-credibility, convergence and release-tooling hygiene, and the #390 external
-adopter pilot launch. Stable `0.41.0` requires a separate approved plan after
-those efforts uncover no further architecture, public-interface or adoption
-work.
+Alpha.17 completed the first audit remediation (test credibility, convergence,
+release tooling). Alpha.18 runs the second audit sweep (ADR-0117):
+sibling-path closures, evidence honesty, reflect-prop correctness and
+redundancy cleanup. Stable `0.41.0` requires a separate approved plan after
+those efforts and the #390 pilot uncover no further architecture,
+public-interface or adoption work.
 
 ## Historical record
 

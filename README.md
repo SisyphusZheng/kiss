@@ -7,7 +7,7 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Published package line: `0.41.0-alpha.17` (`v0.41.0-alpha.17`). This release
+Published package line: `0.41.0-alpha.18` (`v0.41.0-alpha.18`). This release
 keeps the project in alpha while the five-package product and external adoption
 evidence continue to mature; the abandoned beta naming is not an active line.
 
@@ -51,12 +51,12 @@ external adoption. It is not presented as an already-achieved market claim.
 
 ## Current release state
 
-The five-package convergence is published as `0.41.0-alpha.16`. npm beta.1
+The five-package convergence is published as `0.41.0-alpha.18`. npm beta.1
 through beta.3 remain withdrawn partial artifacts and are not compatibility
 baselines. External adopter pilot #390 remains the primary repository-external
-condition before the project can make a stability commitment. Alpha.17 is the
-active audit-remediation line (see
-[ADR-0116](./docs/adr/ADR-0116-audit-driven-alpha16-correctness-reset.md)).
+condition before the project can make a stability commitment. Alpha.18 is the
+active second audit sweep (see
+[ADR-0117](./docs/adr/ADR-0117-second-audit-round-alpha18-sweep.md)).
 
 Stable `0.41.0` is released only when alpha releases need no more architecture,
 public-interface or adoption work. Request-time data, forms, sessions and cache

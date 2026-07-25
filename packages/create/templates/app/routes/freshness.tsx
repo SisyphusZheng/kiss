@@ -30,7 +30,6 @@ export default definePage({
   },
   renderIntent: {
     mode: 'static',
-    streaming: 'auto',
     revalidate: 300,
   },
   render() {

@@ -1142,32 +1142,70 @@ Deno.test('open-dialog: close dispatches open-dialog-close event', async () => {
   assertEquals(fired, true);
 });
 
-Deno.test('open-dialog: restores each sibling inert state after close and DOM removal', async () => {
+Deno.test('open-dialog: modal open uses native showModal and never inerts siblings', async () => {
   const { OpenDialog } = await import('../src/open-dialog.tsx');
-  for (const disconnectDirectly of [false, true]) {
-    const instance = new OpenDialog();
-    const activeSibling = document.createElement('main');
-    const inertSibling = document.createElement('aside');
-    inertSibling.setAttribute('inert', '');
-    const parent = { children: [activeSibling, instance, inertSibling] };
-    Object.defineProperty(instance, 'parentNode', { configurable: true, value: parent });
+  const instance = new OpenDialog();
+  const calls: string[] = [];
+  const fakeDialog = {
+    open: false,
+    showModal() {
+      this.open = true;
+      calls.push('showModal');
+    },
+    show() {
+      this.open = true;
+      calls.push('show');
+    },
+    close() {
+      this.open = false;
+      calls.push('close');
+    },
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => selector === 'dialog' ? fakeDialog : null },
+  });
 
-    instance.setAttribute('open', '');
-    instance.attributeChangedCallback('open', null, '');
-    assertEquals(activeSibling.hasAttribute('inert'), true);
-    assertEquals(inertSibling.hasAttribute('inert'), true);
+  const sibling = document.createElement('aside');
+  const parent = { children: [sibling, instance] };
+  Object.defineProperty(instance, 'parentNode', { configurable: true, value: parent });
 
-    if (disconnectDirectly) {
-      Object.defineProperty(instance, 'parentNode', { configurable: true, value: null });
-      instance.disconnectedCallback();
-    } else {
-      instance.removeAttribute('open');
-      instance.attributeChangedCallback('open', '', null);
-    }
+  instance.setAttribute('open', '');
+  instance.attributeChangedCallback('open', null, '');
 
-    assertEquals(activeSibling.hasAttribute('inert'), false);
-    assertEquals(inertSibling.hasAttribute('inert'), true);
-  }
+  // Modal semantics come from the native top layer: showModal() puts all
+  // non-top-layer content inert at the platform level, so the component must
+  // not hand-roll inert onto siblings.
+  assertEquals(calls, ['showModal']);
+  assertEquals(sibling.hasAttribute('inert'), false);
+
+  instance.removeAttribute('open');
+  instance.attributeChangedCallback('open', '', null);
+  assertEquals(calls, ['showModal', 'close']);
+  assertEquals(sibling.hasAttribute('inert'), false);
+});
+
+Deno.test('open-dialog: non-modal mode uses show() and leaves the page interactive', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  instance.setAttribute('mode', 'non-modal');
+  const calls: string[] = [];
+  const fakeDialog = {
+    open: false,
+    showModal: () => calls.push('showModal'),
+    show: () => calls.push('show'),
+    close: () => calls.push('close'),
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => selector === 'dialog' ? fakeDialog : null },
+  });
+
+  instance.setAttribute('open', '');
+  instance.attributeChangedCallback('open', null, '');
+
+  // Non-modal dialogs intentionally do not block page interaction.
+  assertEquals(calls, ['show']);
 });
 
 Deno.test('open-callout: has correct tagName and type classes', async () => {

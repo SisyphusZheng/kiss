@@ -237,10 +237,25 @@ pageSheet.replaceSync(`
 `);
 
 const paths = [
-  ['01', 'Build an app', 'Project, routes, layouts, islands, content, i18n, and deployment.', '/guide/getting-started'],
+  [
+    '01',
+    'Build an app',
+    'Project, routes, layouts, islands, content, i18n, and deployment.',
+    '/guide/getting-started',
+  ],
   ['02', 'Read the API', 'Package exports, framework helpers, and public contracts.', '/apilist'],
-  ['03', 'Inspect architecture', 'Package boundaries, DSD, islands, adapters, and product doctrine.', '/architecture/architecture'],
-  ['04', 'Check roadmap truth', 'Shipped, current, planned, and intentionally out-of-scope work.', '/roadmap'],
+  [
+    '03',
+    'Inspect architecture',
+    'Package boundaries, DSD, islands, adapters, and product doctrine.',
+    '/architecture/architecture',
+  ],
+  [
+    '04',
+    'Check roadmap truth',
+    'Shipped, current, planned, and intentionally out-of-scope work.',
+    '/roadmap',
+  ],
 ];
 
 const workflow = [
@@ -265,9 +280,13 @@ export class DocsPage extends OpenElement {
         <open-page-hero variant='technical'>
           <span slot='eyebrow'>Documentation entry desk</span>
           <span slot='title'>Find the contract, then follow the route.</span>
-          <span slot='lede'>OpenElement docs put build paths, API surface, architecture decisions and release truth in one engineering workspace.</span>
+          <span slot='lede'>
+            OpenElement docs put build paths, API surface, architecture decisions and release truth
+            in one engineering workspace.
+          </span>
           <open-artifact-panel slot='artifact'>
-            <span slot='label'>command palette</span><span slot='meta'>docs nav</span>
+            <span slot='label'>command palette</span>
+            <span slot='meta'>docs nav</span>
             <div class='command'>
               <div class='command__header'>
                 <open-input value='Search routes, APIs, package graph' readonly></open-input>
@@ -288,7 +307,9 @@ export class DocsPage extends OpenElement {
         <open-section-frame>
           <span slot='index'>01 / routes</span>
           <span slot='title'>Choose the shortest path to evidence.</span>
-          <span slot='copy'>Build, inspect, decide, then contribute through the same five-package product map.</span>
+          <span slot='copy'>
+            Build, inspect, decide, then contribute through the same five-package product map.
+          </span>
           <nav class='paths' aria-label='Documentation paths'>
             {paths.map(([index, title, copy, href]) => (
               <a class='path-link' href={href}>
@@ -305,23 +326,30 @@ export class DocsPage extends OpenElement {
         <open-section-frame>
           <span slot='index'>02 / evidence</span>
           <span slot='title'>Documentation is a product surface.</span>
-          <span slot='copy'>Routes, generated search and current package truth are rebuilt together.</span>
+          <span slot='copy'>
+            Routes, generated search and current package truth are rebuilt together.
+          </span>
           <div class='reference'>
-          <open-artifact-panel class='route-panel'><span slot='label'>route graph</span><span slot='meta'>fast paths</span>
-            <open-standards-visual variant='routes' emphasis='high' motion='auto'></open-standards-visual>
-          </open-artifact-panel>
+            <open-artifact-panel class='route-panel'>
+              <span slot='label'>route graph</span>
+              <span slot='meta'>fast paths</span>
+              <open-standards-visual variant='routes' emphasis='high' motion='auto'>
+              </open-standards-visual>
+            </open-artifact-panel>
 
-          <open-artifact-panel class='workflow-panel'><span slot='label'>usage workflow</span><span slot='meta'>docs as product</span>
-            <h2>How to use this site</h2>
-            <div class='workflow-list'>
-              {workflow.map(([label, copy]) => (
-                <div class='workflow-item'>
-                  <strong>{label}</strong>
-                  <span>{copy}</span>
-                </div>
-              ))}
-            </div>
-          </open-artifact-panel>
+            <open-artifact-panel class='workflow-panel'>
+              <span slot='label'>usage workflow</span>
+              <span slot='meta'>docs as product</span>
+              <h2>How to use this site</h2>
+              <div class='workflow-list'>
+                {workflow.map(([label, copy]) => (
+                  <div class='workflow-item'>
+                    <strong>{label}</strong>
+                    <span>{copy}</span>
+                  </div>
+                ))}
+              </div>
+            </open-artifact-panel>
           </div>
         </open-section-frame>
       </main>

@@ -10,7 +10,6 @@
 // ─── Core exports ───────────────────────────────────────
 
 export { OpenElement } from './open-element.ts';
-export type { OpenElementComponentConstructor } from './open-element.ts';
 
 export { ErrorBoundary } from './error-boundary.ts';
 
@@ -26,20 +25,10 @@ export type {
   PropsFrom,
   PropType,
 } from './internal/protocol/prop.ts';
-export {
-  disposeStaticProps,
-  handleStaticPropAttributeChange,
-  initializeStaticProps,
-  normalizePropDecl,
-  registerStaticObservedAttributes,
-  syncStaticPropsFromAttributes,
-  unwrap,
-} from './internal/core/prop.ts';
 
 // ─── JSX runtime (re-export from core) ───────────────────
 
 export { Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
-export type { OpenElementRenderer } from './internal/protocol/framework.ts';
 export type { VNode } from './internal/protocol/vnode.ts';
 // Additive type-only seam consumed by build adapters. Runtime code remains internal.
 export type * from './internal/protocol/framework.ts';
@@ -52,7 +41,7 @@ export { assertValidTagName } from './internal/core/tag-utils.ts';
 
 // ─── Renderers (re-export from core) ─────────────────────
 
-export { renderDsd, renderDsdTree, renderToDom, wrapInDocument } from './internal/core/index.ts';
+export { renderDsd, renderDsdTree, wrapInDocument } from './internal/core/index.ts';
 
 // ─── Context (re-export from core) ───────────────────────
 
@@ -61,21 +50,17 @@ export type { Context } from './internal/core/index.ts';
 
 // ─── Error types (re-export from core) ───────────────────
 
-export type { PropValidationError, RenderError } from './internal/core/index.ts';
-export type { ErrorCode, ErrorPhase, ErrorSeverity } from './internal/protocol/errors.ts';
+export type { RenderError } from './internal/core/index.ts';
 export { ERROR_PREFIX } from './internal/protocol/errors.ts';
 
 // ─── Signals (re-export) ─────────────────────────────────
 
-export type { SignalLike } from './internal/protocol/signal.ts';
-export { isSignalLike } from './internal/core/index.ts';
 export { computed, effect, signal } from './internal/signal/index.ts';
 export type { Signal } from './internal/protocol/signal.ts';
 
 // ─── HTML utilities (re-export from core) ────────────────
 
-export { escapeAttr, escapeAttrValue, escapeHtml } from './internal/core/index.ts';
-export type { SafeHtml, UnsafeHtml } from './internal/protocol/framework.ts';
+export { escapeAttr, escapeHtml } from './internal/core/index.ts';
 
 // ─── Trusted HTML (re-export from core) ──────────────────────────
 
@@ -97,7 +82,7 @@ export { StyleSheet } from './internal/core/style-sheet.ts';
 export { createLogger } from './internal/core/logger.ts';
 export { formatError, OpenElementError } from './internal/core/errors.ts';
 export { isValidTagName } from './internal/core/tag-utils.ts';
-export type { StyleSheetLike, StyleSheetRule } from './internal/protocol/style-sheet.ts';
+export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
 export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';
@@ -106,15 +91,7 @@ export type {
   CompatibilityClassification,
   CompatibilityTier,
 } from './internal/protocol/framework.ts';
-export type {
-  CreateRouteGraphOptions,
-  OpenElementAssetManifest,
-  OpenElementAssetManifestEntry,
-  OpenElementRouteGraph,
-  OpenElementRouteGraphFactory,
-  OpenElementRouteKind,
-  OpenElementRouteNode,
-} from './internal/protocol/app-model.ts';
+export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';
 export type {
   OpenElementAttribute,
   OpenElementCssPart,

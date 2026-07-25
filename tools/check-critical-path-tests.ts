@@ -9,14 +9,24 @@
  * e2e branch fail, because every Playwright failure output contains
  * `[chromium] ›`. Infra absence is now established by dedicated probes with
  * explicit exit codes / fs error types, never by matching suite output.
+ *
+ * alpha.18: probes distinguish "infra genuinely absent" from "the probe
+ * itself failed". Only the Playwright probe's explicit exit 3 (browser
+ * executable missing) and a NotFound nitro package count as absence, and only
+ * a non-zero suite exit consults the probe at all. A broken probe (import
+ * error, npm fetch failure, unexpected fs state) is a failure, never a skip.
+ * Under CI (CI or GITHUB_ACTIONS env) every infra absence and runner spawn
+ * failure is a failure too: the workflow installs the browsers explicitly
+ * (autoflow-ci.yml), so a skip there would silently downgrade a broken
+ * toolchain.
  */
 
 export interface Suite {
   file: string;
   kind: 'deno-test' | 'nitro-proof' | 'e2e';
   expect: string[];
-  /** Returns a human-readable reason when required runtime infra is absent. */
-  probeInfra?: () => Promise<string | undefined>;
+  /** Classifies the required runtime infra; undefined means it is present. */
+  probeInfra?: () => Promise<ProbeResult | undefined>;
 }
 
 export interface SuiteRun {
@@ -26,23 +36,54 @@ export interface SuiteRun {
   spawnError?: string;
 }
 
+/**
+ * Probe classification. `missing` means the infra is genuinely absent (a skip
+ * is allowed outside CI); `error` means the probe itself failed and nothing
+ * can be concluded about the infra (a failure, always). `undefined` means the
+ * infra is present.
+ */
+export type ProbeResult =
+  | { status: 'missing'; reason: string }
+  | { status: 'error'; reason: string };
+
 export type SuiteOutcome =
   | { verdict: 'pass' }
   | { verdict: 'skip'; reason: string }
   | { verdict: 'fail'; reason: string };
 
-/** Probe result classification: infra absence is a spawn error or a failed probe. */
+/** CI-like environment: GitHub Actions sets both CI and GITHUB_ACTIONS. */
+export function isCiLikeEnv(env: (name: string) => string | undefined): boolean {
+  return env('CI') === 'true' || env('GITHUB_ACTIONS') === 'true';
+}
+
+/**
+ * Outcome classification. The infra probe only ever explains a non-zero suite
+ * exit; a passing suite is judged by its evidence alone (a probe error beside
+ * a passing suite is a probe false negative, not a broken suite).
+ * - spawn failure of the suite runner: skip locally, fail under CI.
+ * - probe error (the probe itself failed): always a failure, never a skip.
+ * - probe missing (infra genuinely absent): skip locally, fail under CI.
+ * - no probe finding: the suite's own exit code and evidence decide.
+ */
 export function evaluateSuiteOutcome(
   suite: Suite,
   run: SuiteRun,
-  infraMissing: string | undefined,
+  probe: ProbeResult | undefined,
+  ciEnv: boolean,
 ): SuiteOutcome {
   if (run.spawnError !== undefined) {
-    return { verdict: 'skip', reason: `suite runner unavailable: ${run.spawnError}` };
+    const reason = `suite runner unavailable: ${run.spawnError}`;
+    return ciEnv ? { verdict: 'fail', reason } : { verdict: 'skip', reason };
   }
   if (run.code !== 0) {
-    if (infraMissing !== undefined) {
-      return { verdict: 'skip', reason: infraMissing };
+    if (probe?.status === 'error') {
+      return { verdict: 'fail', reason: `infra probe failed: ${probe.reason}` };
+    }
+    if (probe?.status === 'missing') {
+      if (ciEnv) {
+        return { verdict: 'fail', reason: `required infra missing under CI: ${probe.reason}` };
+      }
+      return { verdict: 'skip', reason: probe.reason };
     }
     return { verdict: 'fail', reason: `suite failed (exit ${run.code})` };
   }
@@ -61,38 +102,78 @@ export function missingEvidence(out: string, expect: string[]): string[] {
 }
 
 /**
- * Playwright browser presence is probed by resolving the executable path and
- * stat-ing it. The probe's exit code is the classification signal: 0 means the
- * browser is installed, anything else means the e2e runtime infra is absent.
+ * Classify the browser probe's exit. Exit 0: the browser is installed. Exit 3
+ * is the probe script's explicit "executable missing" signal (its
+ * Deno.statSync failed). Any other non-zero exit means the probe itself
+ * failed — the playwright import, the npm fetch, or the eval crashed — which
+ * says nothing about browser presence.
  */
-export async function probePlaywrightBrowser(browser: string): Promise<string | undefined> {
-  const probe = await new Deno.Command(Deno.execPath(), {
-    args: [
-      'eval',
-      `import { ${browser} } from 'npm:playwright@1.59.1';` +
-      `try { Deno.statSync(${browser}.executablePath()); } catch { Deno.exit(3); }`,
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  if (probe.code === 0) return undefined;
-  const detail = new TextDecoder().decode(probe.stderr).trim().split('\n')[0] ?? '';
-  return `playwright ${browser} executable not installed (probe exit ${probe.code})${
-    detail ? `: ${detail}` : ''
-  }`;
+export function classifyPlaywrightProbe(
+  browser: string,
+  code: number,
+  stderr: string,
+): ProbeResult | undefined {
+  if (code === 0) return undefined;
+  const detail = stderr.trim().split('\n')[0] ?? '';
+  if (code === 3) {
+    return {
+      status: 'missing',
+      reason: `playwright ${browser} executable not installed (probe exit 3)${
+        detail ? `: ${detail}` : ''
+      }`,
+    };
+  }
+  return {
+    status: 'error',
+    reason: `playwright ${browser} probe failed (exit ${code})${detail ? `: ${detail}` : ''}`,
+  };
+}
+
+/**
+ * Playwright browser presence is probed by resolving the executable path and
+ * stat-ing it. The probe's exit code is the classification signal; see
+ * classifyPlaywrightProbe.
+ */
+export async function probePlaywrightBrowser(browser: string): Promise<ProbeResult | undefined> {
+  let probe: Deno.CommandOutput;
+  try {
+    probe = await new Deno.Command(Deno.execPath(), {
+      args: [
+        'eval',
+        `import { ${browser} } from 'npm:playwright@1.59.1';` +
+        `try { Deno.statSync(${browser}.executablePath()); } catch { Deno.exit(3); }`,
+      ],
+      stdout: 'piped',
+      stderr: 'piped',
+    }).output();
+  } catch (error) {
+    return {
+      status: 'error',
+      reason: `playwright ${browser} probe could not spawn: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+  return classifyPlaywrightProbe(browser, probe.code, new TextDecoder().decode(probe.stderr));
 }
 
 /** nitro-proof builds a fixture with the locally installed nitro package. */
-export async function probeNitroPackage(): Promise<string | undefined> {
+export async function probeNitroPackage(): Promise<ProbeResult | undefined> {
   try {
     const stat = await Deno.stat('node_modules/nitro');
     if (stat.isDirectory) return undefined;
-    return 'node_modules/nitro is not a directory';
+    return { status: 'error', reason: 'node_modules/nitro exists but is not a directory' };
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      return 'nitro package not installed (node_modules/nitro missing)';
+      return {
+        status: 'missing',
+        reason: 'nitro package not installed (node_modules/nitro missing)',
+      };
     }
-    throw error;
+    return {
+      status: 'error',
+      reason: `nitro probe failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
@@ -160,9 +241,10 @@ async function run(cmd: string[]): Promise<SuiteRun> {
 async function main(): Promise<void> {
   const failures: string[] = [];
   const skips: string[] = [];
+  const ciEnv = isCiLikeEnv((name) => Deno.env.get(name));
 
   for (const suite of suites) {
-    const infraMissing = suite.probeInfra ? await suite.probeInfra() : undefined;
+    const probe = suite.probeInfra ? await suite.probeInfra() : undefined;
 
     let suiteRun: SuiteRun;
     if (suite.kind === 'nitro-proof') {
@@ -201,7 +283,7 @@ async function main(): Promise<void> {
       suiteRun = await run(cmd);
     }
 
-    const outcome = evaluateSuiteOutcome(suite, suiteRun, infraMissing);
+    const outcome = evaluateSuiteOutcome(suite, suiteRun, probe, ciEnv);
     if (outcome.verdict === 'skip') {
       skips.push(`${suite.file}: skipped (${outcome.reason})`);
     } else if (outcome.verdict === 'fail') {

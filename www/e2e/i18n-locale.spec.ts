@@ -78,6 +78,11 @@ test.describe('Locale Routes', () => {
 
     const lang = await page.getAttribute('html', 'lang');
     expect(lang).toBe('zh');
+
+    // The guide tsx routes are the single source of truth for both locales;
+    // the zh render must contain real Chinese copy, not the English fallback.
+    await expect(page.locator('open-reading-shell').locator('h1')).toContainText('快速开始');
+    await expect(page.locator('guide-getting-started-page')).toContainText('安装');
   });
 });
 

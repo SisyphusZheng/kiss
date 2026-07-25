@@ -9,8 +9,11 @@ contract is the HTML `shadowrootmode` template attribute, not a framework
 polyfill.
 
 The supported behavior is verified in the Chromium, Firefox, and WebKit
-Playwright projects by `www/e2e/dsd-layers.spec.ts`. The default build emits no
-inline DSD fallback, so a strict CSP does not need `unsafe-inline` for DSD.
+Playwright projects by `www/e2e/dsd-layers.spec.ts`. CI runs the full E2E suite
+on Chromium and the DSD/island-hydration/theme smoke subset
+(`test:e2e:firefox-smoke`, `test:e2e:webkit-smoke`) on Firefox and WebKit. The
+default build emits no inline DSD fallback, so a strict CSP does not need
+`unsafe-inline` for DSD.
 
 Projects that intentionally support browsers outside this baseline may opt in
 to `legacyDsdPolyfill`. That fallback injects an inline script and therefore

@@ -1,6 +1,6 @@
-export const PACKAGE_VERSION = '0.41.0-alpha.17';
+export const PACKAGE_VERSION = '0.41.0-alpha.18';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
-export const ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.17';
+export const ACTIVE_EXECUTION_VERSION = 'v0.41.0-alpha.18';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',
@@ -49,5 +49,26 @@ export const NITRO_COMPATIBILITY_DATE = '2026-06-12';
 // single source of truth for the "from" side of version-anchor replacements
 // (see buildVersionAnchorReplacements in tools/autoflow/release.ts). It is
 // kept in sync automatically by updateProjectConstants() during a bump.
-export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.16';
+export const PREVIOUS_PACKAGE_VERSION = '0.41.0-alpha.17';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
+
+/**
+ * Version strings that must never reappear in the head anchor zone of the
+ * governed docs (check-version-anchors.ts) or in "published as"-style
+ * currency claims (check-strategic-docs.ts). Derived from
+ * PREVIOUS_PACKAGE_VERSION plus the enumerable pre-release line before it, so
+ * the set stays honest across bumps without a hand-maintained list. A stable
+ * (non-prerelease) previous line enumerates no earlier history: its
+ * predecessors are not mechanically derivable.
+ */
+export function stalePackageVersionClaims(): string[] {
+  const claims = [PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG];
+  const match = PREVIOUS_PACKAGE_VERSION.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
+  if (match) {
+    const [, base, preName, preNum] = match;
+    for (let n = Number(preNum) - 1; n >= 1; n--) {
+      claims.push(`${base}-${preName}.${n}`, `v${base}-${preName}.${n}`);
+    }
+  }
+  return claims;
+}

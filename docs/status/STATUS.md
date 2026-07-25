@@ -1,9 +1,9 @@
 # OpenElement Status
 
 > Updated: 2026-07-24\
-> Repository package line: `v0.41.0-alpha.17`\
-> npm registry line: `v0.41.0-alpha.17`\
-> Active release target: `v0.41.0-alpha.17`\
+> Repository package line: `v0.41.0-alpha.18`\
+> npm registry line: `v0.41.0-alpha.18`\
+> Active release target: `v0.41.0-alpha.18`\
 > Next stability candidate: `v0.41.0`\
 > Product graph: five packages\
 > Current maturity stage: alpha
@@ -11,10 +11,10 @@
 ## Current position
 
 OpenElement is a Web Components-native, static-first application framework.
-Alpha.16 is the current published and verified line; it closed the audit-driven
-P0 correctness fixes, drift clearance and release closure (ADR-0116). Alpha.17
-completes the remaining audit remediation — test credibility, convergence
-hygiene and strategic items — before a separate decision about stable `0.41.0`.
+Alpha.17 is the current published and verified line; it closed the first audit
+remediation (ADR-0116 packages B–D). Alpha.18 runs the second audit sweep
+(ADR-0117): sibling-path closures, evidence honesty and redundancy cleanup,
+before a separate decision about stable `0.41.0`.
 
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
@@ -29,43 +29,45 @@ and output path.
 | `@openelement/app`          | Current  | Pages, routes, islands and request/render semantics |
 | `@openelement/adapter-vite` | Current  | Vite, content, static builds and Nitro output       |
 | `@openelement/create`       | Current  | Installed starter and consumer entrypoint           |
-| `@openelement/ui`           | Optional | Proven primitives; stable scope decided in alpha.15 |
+| `@openelement/ui`           | Optional | Proven primitives; stable scope decided at v0.46    |
 
-## Alpha.17 active gates
+## Alpha.18 active gates
 
 | Condition                                        | State                            |
 | ------------------------------------------------ | -------------------------------- |
-| Alpha.17 plan and current-truth anchors          | Completed                        |
-| P1 test-credibility package                      | Completed                        |
-| P2 convergence and release-tooling package       | Completed                        |
+| ADR-0117, alpha.18 plan and drift cleanup        | In progress                      |
+| P0 correctness package (reflect, CEM, 500, etc.) | Pending                          |
+| Release tooling closure package                  | Pending                          |
+| Evidence honesty package                         | Pending                          |
+| Convergence and redundancy package               | Pending                          |
 | External adopter pilot #390                      | Launched; pending human evidence |
-| Alpha.17 npm, tag, prerelease and final evidence | Completed                        |
+| Alpha.18 npm, tag, prerelease and final evidence | Pending                          |
 
 ## Current risks
 
 1. External adoption remains the primary product risk.
-2. Current-document version drift needs stronger mechanical rejection;
-   alpha.17 package B schedules the missing doc-anchor gate.
+2. Current-document version drift keeps reappearing at gate edges; alpha.18
+   package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
 4. Request-time data, forms, sessions and cache are not stable interfaces.
-5. UI remains optional until alpha.17 records its stable scope.
+5. UI remains optional until v0.46 records its stable scope.
 
 ## Release direction
 
-| Version           | Focus                                                |
-| ----------------- | ---------------------------------------------------- |
-| `0.41.0-alpha.16` | Current verified published baseline                  |
-| `0.41.0-alpha.17` | Audit remediation completion (ADR-0116 packages B–D) |
-| `0.41.0`          | Separate stable decision after alpha.17 evidence     |
-| `0.42.0`          | WC Application Loop                                  |
-| `0.43.0`          | Universal WC SSR compatibility and diagnostics       |
-| `1.0.0`           | Stable five-package product                          |
+| Version           | Focus                                            |
+| ----------------- | ------------------------------------------------ |
+| `0.41.0-alpha.17` | Current verified published baseline              |
+| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                    |
+| `0.41.0`          | Separate stable decision after alpha.18 evidence |
+| `0.42.0`          | WC Application Loop                              |
+| `0.43.0`          | Universal WC SSR compatibility and diagnostics   |
+| `1.0.0`           | Stable five-package product                      |
 
 ## Evidence and workflow
 
 - Mandatory workflow: [`PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)
 - Active version contract: [`VERSION_PLAN.md`](../current/VERSION_PLAN.md)
-- Audit remediation scope decision: [`ADR-0116`](../adr/ADR-0116-audit-driven-alpha16-correctness-reset.md)
+- Second-sweep scope decision: [`ADR-0117`](../adr/ADR-0117-second-audit-round-alpha18-sweep.md)
 - Current package surface: [`PACKAGE_SURFACE.md`](../current/PACKAGE_SURFACE.md)
-- Alpha.16 immutable release record: [`v0.41.0-alpha.16.md`](../release/v0.41.0-alpha.16.md)
+- Alpha.17 immutable release record: [`v0.41.0-alpha.17.md`](../release/v0.41.0-alpha.17.md)
 - Complete forward roadmap: [`ROADMAP.md`](../roadmap/ROADMAP.md)

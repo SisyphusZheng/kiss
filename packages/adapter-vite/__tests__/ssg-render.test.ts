@@ -1,10 +1,19 @@
 /**
  * @openelement/adapter-vite - ssg-render.ts tests
  */
-import { assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { Hono } from 'hono';
 import { resolveDynamicRoutePath, ssgRender } from '../src/internal/ssg/index.ts';
 import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function createMockBundle(overrides: Partial<SsrBundle> = {}): SsrBundle {
   const app = new Hono();
@@ -155,4 +164,171 @@ Deno.test('ssgRender - handles options with viewTransition disabled', async () =
 Deno.test('ssgRender - handles options with speculation enabled', async () => {
   const bundle = createMockBundle();
   await ssgRender(bundle, { ...defaultOptions, speculation: true });
+});
+
+// ─── alpha.18 R2-H3: static-route non-200 outcomes ─────────────
+
+Deno.test('ssgRender - static non-200 routes surface in the build summary and are not written', async () => {
+  const outDir = './dist-test-ssg-render-non200';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const app = new Hono();
+  app.get('/', (c) => c.html('<html><body>ok</body></html>'));
+  app.get('/missing', (c) => c.html('<html><body>not found</body></html>', 404));
+  app.get('/boom', (c) => c.html('<html><body>error</body></html>', 500));
+  app.get('/moved', (c) => c.redirect('/'));
+  const bundle = createMockBundle({
+    default: app,
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      { path: '/missing', tagName: 'missing-page', isDynamic: false, paramNames: [] },
+      { path: '/boom', tagName: 'boom-page', isDynamic: false, paramNames: [] },
+      { path: '/moved', tagName: 'moved-page', isDynamic: false, paramNames: [] },
+    ],
+  });
+
+  const warnings: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args.map(String).join(' '));
+  };
+  let summary;
+  try {
+    summary = await ssgRender(bundle, { ...defaultOptions, outDir });
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  // The summary lists every non-200 static route with its status.
+  const non200 = new Map(summary.staticNon200.map((r) => [r.path, r.status]));
+  assertEquals(non200.get('/missing'), 404);
+  assertEquals(non200.get('/boom'), 500);
+  assertEquals(non200.get('/moved'), 302);
+  assertEquals(non200.has('/'), false);
+  assertEquals(summary.staticNon200.length, 3);
+
+  // The build log surfaces the same count + paths.
+  const summaryLine = warnings.find((w) => w.includes('non-200'));
+  assert(summaryLine !== undefined, 'expected a non-200 summary warning in the build log');
+  assert(summaryLine.includes('3'), 'summary must include the non-200 count');
+  for (const path of ['/missing', '/boom', '/moved']) {
+    assert(
+      warnings.some((w) => w.includes(path)),
+      `summary must list ${path}`,
+    );
+  }
+
+  // Non-200 pages are not persisted; the 200 page is.
+  assertEquals(await pathExists(`${outDir}/index.html`), true);
+  assertEquals(await pathExists(`${outDir}/missing.html`), false);
+  assertEquals(await pathExists(`${outDir}/missing/index.html`), false);
+  assertEquals(await pathExists(`${outDir}/boom.html`), false);
+  assertEquals(await pathExists(`${outDir}/boom/index.html`), false);
+  assertEquals(await pathExists(`${outDir}/moved.html`), false);
+  assertEquals(await pathExists(`${outDir}/moved/index.html`), false);
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - dynamic-route defined 500 output fails the pipeline and writes nothing', async () => {
+  const outDir = './dist-test-ssg-render-dyn500';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle({
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/blog/:slug',
+        tagName: 'blog-page',
+        isDynamic: true,
+        paramNames: ['slug'],
+        revalidate: 60,
+      },
+    ],
+    renderRoute: (() =>
+      Promise.resolve({
+        html: '<html><body>500 Internal Server Error</body></html>',
+        status: 500,
+        errors: [{
+          code: 'OPEN_ELEMENT_RENDER_RENDER_FAILED',
+          severity: 'error',
+          phase: 'render',
+          tagName: 'blog-page',
+          message: 'render exploded',
+          recoverable: false,
+        }],
+        componentCount: 0,
+        renderTimeMs: 0,
+      } as SsgPageOutput)) as SsrBundle['renderRoute'],
+    getStaticPaths: (() => Promise.resolve([{ slug: 'a' }])) as SsrBundle['getStaticPaths'],
+  });
+
+  await assertRejects(
+    () => ssgRender(bundle, { ...defaultOptions, outDir }),
+    Error,
+    '/blog/a',
+  );
+  assertEquals(await pathExists(`${outDir}/blog/a/index.html`), false);
+  // The ISR manifest must not register the failed page.
+  assertEquals(await pathExists(`${outDir}/isr-manifest.json`), false);
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the ISR entry', async () => {
+  const outDir = './dist-test-ssg-render-dynwarn';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle({
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/blog/:slug',
+        tagName: 'blog-page',
+        isDynamic: true,
+        paramNames: ['slug'],
+        revalidate: 60,
+      },
+    ],
+    renderRoute: ((_path: string, opts?: Record<string, unknown>) => {
+      const slug = (opts?.params as Record<string, string>).slug;
+      return Promise.resolve(
+        slug === 'a'
+          ? {
+            html: '<html><body>ok</body></html>',
+            errors: [],
+            componentCount: 0,
+            renderTimeMs: 0,
+          } as SsgPageOutput
+          : {
+            html: '<html><body>500 Internal Server Error</body></html>',
+            status: 500,
+            errors: [{
+              code: 'OPEN_ELEMENT_RENDER_RENDER_FAILED',
+              severity: 'error',
+              phase: 'render',
+              tagName: 'blog-page',
+              message: 'render exploded',
+              recoverable: false,
+            }],
+            componentCount: 0,
+            renderTimeMs: 0,
+          } as SsgPageOutput,
+      );
+    }) as SsrBundle['renderRoute'],
+    getStaticPaths: (() =>
+      Promise.resolve([{ slug: 'a' }, { slug: 'b' }])) as SsrBundle['getStaticPaths'],
+  });
+
+  await ssgRender(bundle, { ...defaultOptions, outDir, dynamicRouteFailure: 'warn' });
+  assertEquals(await pathExists(`${outDir}/blog/a/index.html`), true);
+  assertEquals(await pathExists(`${outDir}/blog/b/index.html`), false);
+  // The ISR manifest registers only the successfully rendered page.
+  const manifest = JSON.parse(await Deno.readTextFile(`${outDir}/isr-manifest.json`)) as Array<
+    { path: string; revalidate: number; cacheKey: string; params: Record<string, string> }
+  >;
+  assertEquals(manifest, [
+    {
+      path: '/blog/:slug',
+      revalidate: 60,
+      cacheKey: 'openelement:isr:/blog/%3Aslug?slug=a',
+      params: { slug: 'a' },
+    },
+  ]);
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });

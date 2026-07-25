@@ -33,59 +33,148 @@ routeSheet.replaceSync(`
   @media (max-width: 860px) { .section-head, .package-grid { grid-template-columns: 1fr; } }
 `);
 
-type ApiPackage = { id: string; title: string; copy: string; importPath: string; exports: string[]; notes: string[] };
+type ApiPackage = {
+  id: string;
+  title: string;
+  copy: string;
+  importPath: string;
+  exports: string[];
+  notes: string[];
+};
 
 const packages: ApiPackage[] = [
   {
-    id: 'element', title: '@openelement/element',
-    copy: 'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
-    importPath: '@openelement/element', exports: ['root', 'jsx-runtime', 'jsx-dev-runtime'],
-    notes: ['Start here for standalone element authoring.', 'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.'],
+    id: 'element',
+    title: '@openelement/element',
+    copy:
+      'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
+    importPath: '@openelement/element',
+    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime'],
+    notes: [
+      'Start here for standalone element authoring.',
+      'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
+    ],
   },
   {
-    id: 'app', title: '@openelement/app',
+    id: 'app',
+    title: '@openelement/app',
     copy: 'The application surface for pages, routes, islands and request/render semantics.',
-    importPath: '@openelement/app', exports: ['root', 'documented app modes'],
-    notes: ['Use `definePage`, `defineIsland` and `defineApp` for application authoring.', 'The router and request-driver implementation are internal product knowledge.'],
+    importPath: '@openelement/app',
+    exports: ['root', 'documented app modes'],
+    notes: [
+      'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
+      'The router and request-driver implementation are internal product knowledge.',
+    ],
   },
   {
-    id: 'adapter-vite', title: '@openelement/adapter-vite',
+    id: 'adapter-vite',
+    title: '@openelement/adapter-vite',
     copy: 'The official Vite, content, static-build and Nitro output adapter.',
-    importPath: '@openelement/adapter-vite', exports: ['root', 'nitro-mount', 'cli/build'],
-    notes: ['Use `buildApp()` or the generated build task.', 'Plugin ordering, manifests and content scans are adapter implementation details.'],
+    importPath: '@openelement/adapter-vite',
+    exports: ['root', 'nitro-mount', 'cli/build'],
+    notes: [
+      'Use `buildApp()` or the generated build task.',
+      'Plugin ordering, manifests and content scans are adapter implementation details.',
+    ],
   },
   {
-    id: 'create', title: '@openelement/create',
+    id: 'create',
+    title: '@openelement/create',
     copy: 'The installed starter and zero-context consumer entrypoint.',
-    importPath: 'npm:@openelement/create', exports: ['CLI binary'],
-    notes: ['Generated projects expose `dev`, `check`, `test`, `build` and `preview`.', 'The starter imports product packages only.'],
+    importPath: 'npm:@openelement/create',
+    exports: ['CLI binary'],
+    notes: [
+      'Generated projects expose `dev`, `check`, `test`, `build` and `preview`.',
+      'The starter imports product packages only.',
+    ],
   },
   {
-    id: 'ui', title: '@openelement/ui (optional)',
+    id: 'ui',
+    title: '@openelement/ui (optional)',
     copy: 'Optional primitives retained only when they have demonstrated reusable behavior.',
-    importPath: '@openelement/ui', exports: ['root', 'retained primitive subpaths'],
-    notes: ['UI is not required to use OpenElement.', 'Website-specific brand, hero, lab and layout artifacts are not UI package contracts.'],
+    importPath: '@openelement/ui',
+    exports: ['root', 'retained primitive subpaths'],
+    notes: [
+      'UI is not required to use OpenElement.',
+      'Website-specific brand, hero, lab and layout artifacts are not UI package contracts.',
+    ],
   },
 ];
 
 export class ApiCorePage extends OpenElement {
   static override styles = [routeSheet];
   override render() {
-    return <main>
-      <open-page-hero variant='technical'>
-        <span slot='eyebrow'>Public contract</span><span slot='title'>API Reference</span><span slot='lede'>The {OPENELEMENT_VERSION} published line documents only the five consumer packages. Retired alpha packages and internal subpaths are not authoring surfaces.</span>
-        <open-artifact-panel slot='artifact'><span slot='label'>five-package surface</span><span slot='meta'>{OPENELEMENT_VERSION}</span><p>Element, App and Build interfaces stay small so authors do not need renderer, protocol, router or build-phase internals.</p><open-button href='/guide/getting-started'>Start building</open-button></open-artifact-panel>
-      </open-page-hero>
-      <open-reading-shell rail>
-        <open-page-rail slot='rail' items={JSON.stringify(packages.map((pkg) => ({ id: pkg.id, label: pkg.title })))}></open-page-rail>
-        <div class='api-grid'>
-          <open-section-frame><span slot='index'>01 / interface rule</span><span slot='title'>Authoring starts at product packages.</span><span slot='copy'>Current documentation, starters and dogfood use the five supported interfaces. Future load, action, form and revalidation capabilities are roadmap work, not current stable claims.</span></open-section-frame>
-          <open-section-frame><span slot='index'>02 / supported surface</span><span slot='title'>Five products, one application path.</span><span slot='copy'>Each package owns a distinct consumer decision; absorbed implementation packages remain private.</span><div class='package-grid'>{packages.map((pkg) => <open-card class='package-card' id={pkg.id}><div class='card-top'><div><span class='surface'>Supported product</span><h3>{pkg.title}</h3></div><open-badge tone='brand'>{pkg.exports.length} entries</open-badge></div><p>{pkg.copy}</p><code class='sig'>{pkg.importPath}</code><ul><li>Supported entries: {pkg.exports.join(', ')}</li>{pkg.notes.map((note) => <li>{note}</li>)}</ul></open-card>)}</div></open-section-frame>
-        </div>
-      </open-reading-shell>
-    </main>;
+    return (
+      <main>
+        <open-page-hero variant='technical'>
+          <span slot='eyebrow'>Public contract</span>
+          <span slot='title'>API Reference</span>
+          <span slot='lede'>
+            The {OPENELEMENT_VERSION}{' '}
+            published line documents only the five consumer packages. Retired alpha packages and
+            internal subpaths are not authoring surfaces.
+          </span>
+          <open-artifact-panel slot='artifact'>
+            <span slot='label'>five-package surface</span>
+            <span slot='meta'>{OPENELEMENT_VERSION}</span>
+            <p>
+              Element, App and Build interfaces stay small so authors do not need renderer,
+              protocol, router or build-phase internals.
+            </p>
+            <open-button href='/guide/getting-started'>Start building</open-button>
+          </open-artifact-panel>
+        </open-page-hero>
+        <open-reading-shell rail>
+          <open-page-rail
+            slot='rail'
+            items={JSON.stringify(packages.map((pkg) => ({ id: pkg.id, label: pkg.title })))}
+          >
+          </open-page-rail>
+          <div class='api-grid'>
+            <open-section-frame>
+              <span slot='index'>01 / interface rule</span>
+              <span slot='title'>Authoring starts at product packages.</span>
+              <span slot='copy'>
+                Current documentation, starters and dogfood use the five supported interfaces.
+                Future load, action, form and revalidation capabilities are roadmap work, not
+                current stable claims.
+              </span>
+            </open-section-frame>
+            <open-section-frame>
+              <span slot='index'>02 / supported surface</span>
+              <span slot='title'>Five products, one application path.</span>
+              <span slot='copy'>
+                Each package owns a distinct consumer decision; absorbed implementation packages
+                remain private.
+              </span>
+              <div class='package-grid'>
+                {packages.map((pkg) => (
+                  <open-card class='package-card' id={pkg.id}>
+                    <div class='card-top'>
+                      <div>
+                        <span class='surface'>Supported product</span>
+                        <h3>{pkg.title}</h3>
+                      </div>
+                      <open-badge tone='brand'>{pkg.exports.length} entries</open-badge>
+                    </div>
+                    <p>{pkg.copy}</p>
+                    <code class='sig'>{pkg.importPath}</code>
+                    <ul>
+                      <li>Supported entries: {pkg.exports.join(', ')}</li>
+                      {pkg.notes.map((note) => <li key={note}>{note}</li>)}
+                    </ul>
+                  </open-card>
+                ))}
+              </div>
+            </open-section-frame>
+          </div>
+        </open-reading-shell>
+      </main>
+    );
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) customElements.define(tagName, ApiCorePage);
+if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
+  customElements.define(tagName, ApiCorePage);
+}
 export default ApiCorePage;

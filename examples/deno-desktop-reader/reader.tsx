@@ -46,6 +46,7 @@ declare global {
   interface Window {
     __OPEN_READER_DESKTOP_HOST__?: boolean;
   }
+  var __OPEN_READER_DESKTOP_HOST__: boolean | undefined;
 }
 
 function notifyDesktopClose(): void {

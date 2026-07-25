@@ -1,20 +1,21 @@
-# v0.41.0-alpha.17 — audit remediation completion plan
+# v0.41.0-alpha.18 — second audit sweep plan
 
-> Current source package line: `v0.41.0-alpha.16`\
-> Current npm registry line: `v0.41.0-alpha.16`\
-> Active release target: `v0.41.0-alpha.17`\
+> Current source package line: `v0.41.0-alpha.18`\
+> Current npm registry line: `v0.41.0-alpha.18`\
+> Active release target: `v0.41.0-alpha.18`\
 > Next stability candidate: `v0.41.0`\
 > Current maturity stage: alpha
 
 ## Objective
 
-Alpha.17 completes the audit-driven remediation started by
-[`ADR-0116`](../adr/ADR-0116-audit-driven-alpha16-correctness-reset.md).
-Alpha.16 closed with the P0 correctness fixes, current-truth drift clearance
-and release closure; the remaining audit packages — P1 test credibility, P2
-convergence hygiene and P3 strategic items — execute under alpha.17, along
-with the release-tooling defects surfaced by the alpha.16 release run. It
-adds no new product area.
+Alpha.18 executes the second audit sweep governed by
+[`ADR-0117`](../adr/ADR-0117-second-audit-round-alpha18-sweep.md). The
+2026-07-24 re-audit verified the alpha.16/17 remediation and found
+half-closed sibling paths, documentation claims without evidence, one broken
+public feature (`reflect: true` props), and a redundancy inventory. Alpha.18
+closes every listed item or explicitly defers it with evidence. It adds no
+new product area. Every package carries a "sibling paths enumerated"
+acceptance note.
 
 ```text
 OpenElement = Web Components-native fullstack application framework
@@ -25,166 +26,204 @@ official build path = Vite + Nitro
 
 The authoritative five-package contract remains
 [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md). Alpha naming remains governed by
-[`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md)
-until external evidence justifies a stability commitment.
+[`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).
 
 ## Entry truth
 
-- `v0.41.0-alpha.16` is the current source and published npm package line;
+- `v0.41.0-alpha.17` is the current source and published npm package line;
   its immutable tag and two-stage evidence must not be rewritten.
-- Alpha.16 closed with its packages A (P0 correctness), E (drift clearance)
-  and F (release closure), per that plan's rule that release-prepare runs
-  only after A and E pass. Its packages B, C and D are deferred to alpha.17
-  with unchanged scope; this plan supersedes the alpha.16 plan as the active
-  version contract.
-- The alpha.16 release run surfaced two `publish-existing` tooling defects,
-  recorded in package B below.
-- #460 is closed with released evidence; #390 and #37 remain open.
+- The external adopter pilot #390 and stable gate #37 remain open.
+- The root-level `<Show>`/`<For>` CSR edge and the `/@fs/` Windows
+  verification are carried over from the alpha.17 plan, which shipped with
+  them unmet; this plan either completes them or defers them with explicit
+  recorded evidence.
 
-## Alpha.17 execution packages
+## Alpha.18 execution packages
 
-### A. P1 test credibility (alpha.16 package B, deferred)
+### A. P0 correctness
 
-- Add a real-browser (Playwright) hydration suite for element's binding and
-  hydration layer alongside the DOM-shim unit tests; test-env fallback
-  branches in production code must either be covered or removed.
-- Add SSR error-path tests: a failing route render must produce defined 500
-  behavior, and the `errors`/`hydrationHints` diagnostics contract is either
-  wired to real collection or removed from the protocol.
-- Make the coverage denominator enumerate all source files, not only loaded
-  ones; re-baseline thresholds after the denominator fix.
-- Delete the skip-on-failure regex in `tools/check-critical-path-tests.ts` so
-  e2e suite failures cannot be reclassified as missing infrastructure.
-- Add a Firefox smoke project to CI so the DSD cross-browser claim has a
+- Fix the `reflect: true` static-prop write loop: equality short-circuit in
+  the reflect subscriber, no default-value attribute write before
+  `syncStaticPropsFromAttributes` runs, and a real-browser test proving
+  reflected SSR attributes survive connect. Sibling paths: attribute removal
+  restore, re-connect, multi-engine behavior.
+- Pass `cemClassifications` into the SSG descriptor so dev/server and static
+  output share one admission plan; add a build-level test asserting a
+  CEM-admitted package island renders identically in both paths. Sibling
+  paths: `build-ssg.ts` plan overwrite, evidence decisions source.
+- Wire the 500 contract to consumers: dynamic-route failures must not be
+  written as normal pages (fail the build or record the failure loudly), the
+  ISR manifest must not register failed pages, static-route non-200 outcomes
+  must surface in the build summary; redirect/notFound fields join
+  `SsgPageOutput`'s type contract. Sibling paths: `toSSG` filtering, handler
+  parity.
+- Fix `www/public/theme-init.js` honoring `prefers-color-scheme` (currently
+  always dark) and tighten the e2e assertion so both values are no longer
+  tolerated. Sibling paths: FOUC contract, theme-toggle propagation.
+- Run router guards on popstate/hashchange navigation, with a browser test
+  for guard-on-back. Sibling paths: redirect chains on popstate, hash mode.
+- Resolve the carried-over root-level `<Show>`/`<For>` CSR edge: attach
+  before commit or document the constraint, with a regression test, and
+  simplify the e2e probe that worked around it. Sibling paths: root `For`,
+  fallback re-render path.
+
+### B. Release tooling closure
+
+- Fix the local `patch-release` path so final evidence and the closure record
+  land on `main` (or the flow is re-sequenced so they cannot strand on
+  `dev`); a local release must leave main CI green. Sibling paths: CI
+  dispatch path, publish-existing path (both verified working in alpha.17).
+- Make version-anchor gates reject stale version claims, parameterized on
+  `PREVIOUS_PACKAGE_VERSION` instead of hardcoded versions; extend anchor
+  maintenance to the `VERSION_PLAN.md` header so it cannot expire again.
+  Sibling paths: README/ROADMAP/STATUS body lines outside the header.
+- Add failure recovery to the release executor: re-runs skip completed steps,
+  and a finalize failure after a successful publish must not flip the
+  evidence to `failed`. Sibling paths: tag-conflict resume, empty-commit
+  re-run.
+- Classify critical-path infra probe failures: in CI, a probe failure is a
+  gate failure, not a skip. Sibling paths: nitro probe, spawn failure.
+
+### C. Evidence honesty
+
+- WebKit: either add a WebKit smoke project to CI or reword
+  `BROWSER_BASELINE.md` and the acceptance text to "Chromium and Firefox in
+  CI, WebKit manually verified per release" with the manual run recorded in
+  release evidence. Sibling paths: `test:e2e:browsers` wiring.
+- Examples: fix the type errors in `deno-desktop-mastodon` and
+  `deno-desktop-reader`, add an examples check/test gate to CI, and correct
+  `VERIFICATION.md` to match what the gate actually proves. Sibling paths:
+  examples unit tests in automation.
+- Guide content: pick one source of truth for guide pages (render the
+  markdown or delete it), make the zh guide actually render Chinese, and add
+  a consistency check so tsx and md cannot drift again. Sibling paths: visual
+  baselines encoding the wrong state, bare version mentions.
+- STATUS/VERIFICATION honesty: completion states must enumerate unmet
+  sub-items; the `/@fs/` Windows branch is verified or its limitation is
+  recorded in the alpha.18 release note. Sibling paths: all gates-table rows.
+- SPA action chain: add a browser-level test for submit → action → loader →
+  actionData through shadow boundaries. Sibling paths: action failure
+  normalization.
+
+### D. Convergence and redundancy cleanup
+
+- Rendering consistency: align camelCase prop serialization with static-prop
+  observation (one casing rule); make the `For` drift token content-sensitive
+  or document the same-length limitation; fix the `client-runtime` double
+  hydration; skip non-event function props in the CSR path. Sibling paths:
+  SSR string path, hydration walk, CSR DOM path — add one cross-path
+  consistency test.
+- SSG/handler parity: give the SSG `renderRoute` the error-boundary layer or
+  document the divergence; remove or implement the dead `streaming`
+  contract; complete the routeInfo type declarations.
+- Delete confirmed dead code: `honoEntryCode`/`clientEntryCode`/
+  `ssgEntryCode` fields, `unwrap`, `registerStaticObservedAttributes` (if
+  still unused), `OpenElementRenderer`, the app-model speculative type
+  cluster, `normalizeBasePath`/`normalizeRoutePath`, the orphaned `csr.ts`
+  barrel, the `openMdx` alias, unused ui tagName re-exports,
+  `open-hero-ping.tsx`, `tools/check-dist-no-object-object.ts`,
+  `tools/smoke-deploy.ts`, `tools/deploy-pages.ts` (+test), and resolve
+  `tools/check-import-map.ts` (delete or re-gate).
+- Export surface tightening: move the listed internal-only element exports
+  behind internals (breaking, with migration note); deduplicate
+  `open-dialog`'s hand-rolled inert against native `showModal` semantics.
+- Config hygiene: converge `deno.json` fmt/lint excludes to the config
+  blocks, drop entries for non-existent paths, deduplicate `.gitignore`, and
+  retire `REVIEW-REPORT.md` per the archive policy (git history preserves
+  it). Remove `www/app/routes` from fmt/lint exclusions or record an ADR for
+  keeping them. Register or delete the orphan tasks `actions:check-pins` and
+  `verify:configs`.
+- Clean local build artifacts (`dist/`, `custom-dist/`, `playwright-report/`,
+  `.openElement/`, `packages/*/*.tgz`) and keep the root-hygiene gate as the
   standing guard.
 
-### B. P2 convergence and hygiene (alpha.16 package C, deferred, extended)
+### E. Alpha.18 release closure
 
-- Converge island declaration construction (`hydrate === 'only' ? false :
-  meta?.ssr`) into one function; instantiate the entry descriptor once per
-  build; merge the duplicated SPA/SSG phase-2 blocks; share logic between
-  `renderRoute` and `renderRouteHandler`.
-- Remove dead code: `external-resolver.ts` (ADR-0047 implementation never
-  wired), the unwired `clientOnlyTags` parameter chain, dead build-context
-  fields, and existence-only assertions in tests; fix the display-only twin
-  of the island chunk regex in `build-manifest.ts`.
-- Add a mechanical gate asserting current-document version anchors equal
-  `tools/project-constants.ts` (including keeping `ACTIVE_EXECUTION_VERSION`
-  maintained by the release bump), extend drift scanning to `docs/`, README
-  files and the ADR index, and align the exports surface with
-  `PACKAGE_SURFACE.md`.
-- Slim the export surfaces: move adapter build-time utilities out of
-  element's root exports and stop exporting internal router types from app's
-  root; update the interface snapshot accordingly.
-- Fix the `publish-existing` evidence defects found during the alpha.16
-  release: the recorded previous package line must be the previously
-  published line, not the target version; the GitHub release notes must be
-  rewritten from the completed evidence after the run finishes instead of
-  keeping the running snapshot; and the release flow must write the
-  `-closure.json` record and durable-closure note section itself — their
-  absence turned main CI red on the evidence-finalize commit.
-- Verify the #460 `/@fs/` island path branch in a real Windows build, or
-  record an explicit limitation in the release note.
-- Resolve the root-level `<Show>`/`<For>` CSR edge: `renderToDom` commits
-  bindings before the returned node is attached, so a root branch anchor has
-  no parent and its content is silently dropped — either attach before
-  commit or document the constraint, with a regression test.
-
-### C. P3 strategic items (alpha.16 package D, deferred)
-
-- Start the #390 external adopter pilot now that the P0 fixes are published;
-  the pilot kit from alpha.15 is reused unchanged.
-- Evaluate the governance toolchain (AutoFlow, evidence-driven release) as a
-  separable asset; record the outcome as a note, no new package.
-- Keep the v0.46 deadline for `@openelement/ui` requiring two non-site
-  consumers; no scope expansion.
-
-### D. Alpha.17 release closure
-
-- Run release-prepare only after A and B pass, synchronizing all five
-  manifests, Create CLI, starter mappings and current version anchors to
-  `0.41.0-alpha.17`.
+- Run release-prepare only after A–D pass, synchronizing all five manifests,
+  Create CLI, starter mappings and current version anchors to
+  `0.41.0-alpha.18`.
 - Pass AutoFlow, CodeQL, dependency review, Pages, all-browser E2E, Nitro,
   packaged consumers, artifacts and npm publish dry-run on `dev` and `main`.
 - Publish all five npm packages under the `alpha` and `latest` dist-tags,
   then verify fresh Deno, Node ESM, starter, Nitro Node/Workers, third-party
-  Web Component and CDN consumers.
-- Create an immutable `v0.41.0-alpha.17` tag, GitHub prerelease with curated
-  notes, and a completed two-stage evidence record; finish with `origin/main`
-  and `origin/dev` at the same SHA.
+  Web Component and CDN consumers through the supported `nitro-mount` seam.
+- Create an immutable `v0.41.0-alpha.18` tag, GitHub prerelease with curated
+  notes (including migration notes for removed exports), and a completed
+  two-stage evidence record; finish with `origin/main` and `origin/dev` at
+  the same SHA.
 
 ## Pull request order
 
-1. This plan and the current-truth anchor updates (alpha.16 published,
-   alpha.17 active).
-2. P1 test-credibility implementation PRs.
-3. P2 convergence and release-tooling PRs.
-4. #390 pilot launch and strategic notes.
-5. `dev -> main` release PR and post-publish evidence finalization.
+1. ADR-0117, this plan, and the current contradictions cleanup (README,
+   ROADMAP, STATUS, VERSION_PLAN header).
+2. P0 correctness fixes (package A).
+3. Release tooling closure (package B).
+4. Evidence honesty (package C).
+5. Convergence and redundancy cleanup (package D).
+6. `dev -> main` release PR and post-publish evidence finalization.
 
-Every implementation PR targets `dev`, identifies its plan package, and
-passes AutoFlow before merge. `dev` is merged to `main` only after the
-complete alpha.17 line is green.
+Every implementation PR targets `dev`, identifies its plan package, lists the
+sibling paths it enumerated, and passes AutoFlow before merge.
 
 ## Acceptance
 
-- Element hydration and binding behavior is covered in a real browser; no
-  production test-env fallback branch remains uncovered.
-- SSR render failures produce defined, tested 500 behavior; the diagnostics
-  contract is wired or removed.
-- The coverage gate counts every source file; the critical-path gate cannot
-  skip a failing e2e suite; a Firefox smoke runs in CI.
-- The duplicated island declaration, descriptor instantiation and phase-2
-  blocks are converged; the listed dead code is deleted.
-- A mechanical gate rejects current-document version-anchor drift, and the
-  exports surfaces match `PACKAGE_SURFACE.md`.
-- The `publish-existing` evidence records the true previous line and final
-  GitHub release notes; the #460 `/@fs/` branch is verified or its
-  limitation documented.
-- The external adopter pilot #390 is running with published, anonymized
-  intake; P0/P1 pilot findings become issues.
-- Chromium, Firefox and WebKit pass the functional matrix.
-- Nitro Node and Workers pass through the supported `nitro-mount` seam.
+- Reflected static props survive connect without write loops in Chromium,
+  Firefox and WebKit, proven by browser tests.
+- Dev, SSR and SSG outputs share one admission plan; CEM-admitted islands
+  render identically across paths.
+- Failed renders cannot ship silently: dynamic 500s fail or flag the build,
+  static non-200s surface in the summary, and the ISR manifest is accurate.
+- Local and CI release paths both leave main CI green with completed
+  evidence; anchor gates reject stale version claims in every governed
+  document.
+- Every documentation claim about browsers, verification and completion is
+  backed by automation or reworded to the evidence.
+- The redundancy inventory is deleted; `deno.json`/`.gitignore` exclusions
+  have one source of truth; no orphan tasks remain.
+- Chromium, Firefox and WebKit pass the functional matrix, or the documented
+  WebKit policy plus a recorded manual run takes its place in release
+  evidence.
+- The external adopter pilot #390 continues; new P0/P1 pilot findings become
+  issues.
 - npm, dist-tags, exact-version starter, tag, GitHub prerelease, docs and
-  final evidence all agree on `0.41.0-alpha.17`.
-- Alpha.16 evidence remains unchanged.
+  final evidence all agree on `0.41.0-alpha.18`.
+- Alpha.17 evidence remains unchanged.
 
 ## Non-goals
 
 - Do not add packages, publish JSR artifacts or claim broad fullstack parity.
 - Do not introduce speculative auth, database, session or cache products.
 - Do not restructure the `OpenElement` base class or introduce a diffing
-  renderer; those are architecture-level changes outside this remediation.
-- Do not promise stable `0.41.0` merely because alpha.17 publishes.
+  renderer.
+- Do not promise stable `0.41.0` merely because alpha.18 publishes.
 - Do not fabricate, simulate or replace external adopter evidence with
   internal CI runs.
 
 ## Test matrix
 
-- Every package A/B change lands with behavior tests; real-browser hydration
-  specs run in the chromium CI project and the new Firefox smoke.
+- Every package A fix lands with reproduction-first tests; reflect props and
+  popstate guards are proven in a real browser project.
+- Package B changes land with executor tests (resume, finalize failure) and
+  anchor-gate fixtures (stale rejection).
+- Package C adds the SPA action browser test and the examples CI gate.
 - `deno task test`, `arch:check`, `graph:check`, `package-surface:check`,
   `type-safety:check` and `deno-api:check` pass for every PR.
-- `deno task test:e2e` (Chromium) passes for every PR; the all-browser matrix
-  runs before release closure.
-- Packaged consumer smoke, third-party Web Component smoke and Nitro proofs
-  run before release closure.
+- `deno task test:e2e` (Chromium) and the Firefox smoke pass for every PR.
 
 ## Release evidence requirements
 
-- Two-stage evidence under `docs/release/` for `v0.41.0-alpha.17`, including
+- Two-stage evidence under `docs/release/` for `v0.41.0-alpha.18`, including
   npm version and dist-tag verification and post-publish consumer smoke.
-- The release note on GitHub is curated and matches the completed evidence,
-  exercising the package B tooling fix.
-- Any #390 pilot intake published during alpha.17 is anonymized and linked
-  from the release evidence.
+- The release note records the breaking export removals with migration
+  steps, the `/@fs/` verification outcome or limitation, and the WebKit
+  policy outcome.
+- Any new #390 pilot intake published during alpha.18 is anonymized and
+  linked from the release evidence.
 
-## Stable decision after alpha.17
+## Stable decision after alpha.18
 
-`0.41.0` may be prepared only when the alpha.16 correctness fixes are proven
-in the published artifact, the alpha.17 test-credibility and convergence
-packages are complete, the re-recorded interface snapshot needs no further
-breaking change, the adopter pilot finds no unresolved architecture-level
-break, and #37's applicable `0.41.0` gates are evidenced. Otherwise the
-evidence selects a narrowly scoped next alpha instead of weakening the
-stable contract.
+`0.41.0` may be prepared only when the audit findings are closed without
+half-fixed sibling paths, documentation claims match automation, the
+adopter pilot finds no unresolved architecture-level break, and #37's
+applicable `0.41.0` gates are evidenced. Otherwise the evidence selects a
+narrowly scoped next alpha instead of weakening the stable contract.

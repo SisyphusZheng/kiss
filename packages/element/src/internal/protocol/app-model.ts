@@ -11,30 +11,3 @@ export interface OpenElementRouteNode {
   children?: OpenElementRouteNode[];
   meta?: Record<string, unknown>;
 }
-
-export interface OpenElementRouteGraph {
-  routes: OpenElementRouteNode[];
-  basePath: string;
-}
-
-export interface CreateRouteGraphOptions {
-  routes: OpenElementRouteNode[];
-  basePath?: string;
-}
-
-export type OpenElementRouteGraphFactory = (
-  options: CreateRouteGraphOptions,
-) => OpenElementRouteGraph;
-
-export interface OpenElementAssetManifestEntry {
-  fileName: string;
-  href: string;
-  kind: 'script' | 'style' | 'asset';
-  sizeBytes?: number;
-  integrity?: string;
-}
-
-export interface OpenElementAssetManifest {
-  basePath: string;
-  entries: OpenElementAssetManifestEntry[];
-}

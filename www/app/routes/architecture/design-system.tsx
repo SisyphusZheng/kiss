@@ -199,13 +199,26 @@ const tokenRows = [
   ['Artifact', '--bg-code / --code-border', 'Code, devtools, route, and package diagrams.'],
   ['Text', '--text-primary / --text-secondary', 'Readable hierarchy in both themes.'],
   ['Action', '--brand / --on-brand', 'Primary command and link emphasis.'],
-  ['State', '--success / --warning / --info / --error', 'Roadmap, standards, reference, and failure states.'],
+  [
+    'State',
+    '--success / --warning / --info / --error',
+    'Roadmap, standards, reference, and failure states.',
+  ],
 ];
 
 const principles = [
-  ['Lead with the product object', 'Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.'],
-  ['Use components as the site system', 'The website dogfoods retained @openelement/ui primitives; UI remains optional for application authors.'],
-  ['Treat dark mode as parity', 'Every page and shadow component must resolve through the same semantic tokens.'],
+  [
+    'Lead with the product object',
+    'Show routes, package graphs, code, browser contracts, or docs structure in the first viewport.',
+  ],
+  [
+    'Use components as the site system',
+    'The website dogfoods retained @openelement/ui primitives; UI remains optional for application authors.',
+  ],
+  [
+    'Treat dark mode as parity',
+    'Every page and shadow component must resolve through the same semantic tokens.',
+  ],
 ];
 
 export class UIShowcase extends OpenElement {
@@ -215,12 +228,20 @@ export class UIShowcase extends OpenElement {
     return (
       <main class='system'>
         <open-page-hero variant='technical'>
-          <span slot='eyebrow'>Web Standards Lab</span><span slot='title'>Design System</span><span slot='lede'>The active www dogfood contract: audited Open Props tokens, retained UI primitives, product-art diagrams and full dark-mode parity. It is not a framework requirement.</span>
+          <span slot='eyebrow'>Web Standards Lab</span>
+          <span slot='title'>Design System</span>
+          <span slot='lede'>
+            The active www dogfood contract: audited Open Props tokens, retained UI primitives,
+            product-art diagrams and full dark-mode parity. It is not a framework requirement.
+          </span>
           <open-artifact-panel slot='artifact'>
-            <span slot='label'>rules</span><span slot='meta'>v3</span>
+            <span slot='label'>rules</span>
+            <span slot='meta'>v3</span>
             <ul class='rule-list'>
               <li>Strict Open Props and semantic tokens only.</li>
-              <li>Only reusable primitives live in `@openelement/ui`; site visuals stay in `www`.</li>
+              <li>
+                Only reusable primitives live in `@openelement/ui`; site visuals stay in `www`.
+              </li>
               <li>Kinetic motion respects reduced-motion preferences.</li>
               <li>No Linear clone, decorative blobs, or local color systems.</li>
               <li>Letter spacing remains `0`.</li>
@@ -231,12 +252,17 @@ export class UIShowcase extends OpenElement {
         <open-section-frame>
           <span slot='index'>01 / token contract</span>
           <span slot='title'>Semantic roles mapped to Open Props.</span>
-          <span slot='copy'>Raw Open Props values stop at the audited token boundary; pages and primitives consume semantic roles.</span>
+          <span slot='copy'>
+            Raw Open Props values stop at the audited token boundary; pages and primitives consume
+            semantic roles.
+          </span>
           <open-lab-panel label='token roles' meta='source: openPropsTokenSheet'>
             {tokenRows.map(([role, token, copy]) => (
               <div class='token-row'>
                 <strong class='token-name'>{role}</strong>
-                <span><code>{token}</code> - {copy}</span>
+                <span>
+                  <code>{token}</code> - {copy}
+                </span>
               </div>
             ))}
           </open-lab-panel>
@@ -245,8 +271,26 @@ export class UIShowcase extends OpenElement {
         <open-section-frame>
           <span slot='index'>02 / primitives</span>
           <span slot='title'>The site dogfoods optional UI primitives.</span>
-          <span slot='copy'>Button, input, badge and card behavior stays reusable; brand and cinematic objects remain private to the website.</span>
-          <open-artifact-panel><span slot='label'>token → recipe → primitive</span><span slot='meta'>ownership chain</span><div class='token-row'><strong class='token-name'>Token</strong><span>surface, text, brand, focus, motion and elevation roles</span></div><div class='token-row'><strong class='token-name'>Recipe</strong><span>interactive state, typography and material composition</span></div><div class='token-row'><strong class='token-name'>Primitive</strong><span>ten reusable Web Components with tested semantics</span></div></open-artifact-panel>
+          <span slot='copy'>
+            Button, input, badge and card behavior stays reusable; brand and cinematic objects
+            remain private to the website.
+          </span>
+          <open-artifact-panel>
+            <span slot='label'>token → recipe → primitive</span>
+            <span slot='meta'>ownership chain</span>
+            <div class='token-row'>
+              <strong class='token-name'>Token</strong>
+              <span>surface, text, brand, focus, motion and elevation roles</span>
+            </div>
+            <div class='token-row'>
+              <strong class='token-name'>Recipe</strong>
+              <span>interactive state, typography and material composition</span>
+            </div>
+            <div class='token-row'>
+              <strong class='token-name'>Primitive</strong>
+              <span>ten reusable Web Components with tested semantics</span>
+            </div>
+          </open-artifact-panel>
           <div class='component-grid'>
             <open-card class='component-card'>
               <h3>Buttons</h3>
@@ -277,11 +321,15 @@ export class UIShowcase extends OpenElement {
         <open-section-frame>
           <span slot='index'>03 / product art</span>
           <span slot='title'>Code and diagrams are the visual asset.</span>
-          <span slot='copy'>Real standards objects carry the visual identity without stock illustration or framework-shaped decoration.</span>
+          <span slot='copy'>
+            Real standards objects carry the visual identity without stock illustration or
+            framework-shaped decoration.
+          </span>
           <div class='visual-grid'>
             <open-lab-stage class='stage-demo' emphasis='normal' motion='auto'></open-lab-stage>
             <open-lab-panel label='token board' meta='Open Props'>
-              <open-standards-visual variant='tokens' emphasis='high' motion='auto'></open-standards-visual>
+              <open-standards-visual variant='tokens' emphasis='high' motion='auto'>
+              </open-standards-visual>
             </open-lab-panel>
           </div>
         </open-section-frame>
@@ -289,7 +337,10 @@ export class UIShowcase extends OpenElement {
         <open-section-frame>
           <span slot='index'>04 / composition</span>
           <span slot='title'>Composition principles</span>
-          <span slot='copy'>Each page begins with a product object, preserves dark/light parity and keeps motion subordinate to comprehension.</span>
+          <span slot='copy'>
+            Each page begins with a product object, preserves dark/light parity and keeps motion
+            subordinate to comprehension.
+          </span>
           <div class='principles'>
             {principles.map(([title, copy], index) => (
               <open-card class='principle'>

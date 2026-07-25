@@ -42,9 +42,13 @@ jobs:
       - name: AutoFlow3 CI gate
         run: deno task autoflow:ci
       # Cross-browser smoke: the main gate is chromium-only. Run the core
-      # DSD/island-hydration/theme specs on Firefox against the www/dist the
-      # gate's build step already produced.
+      # DSD/island-hydration/theme specs on Firefox and WebKit against the
+      # www/dist the gate's build step already produced.
       - name: Install Playwright Firefox
         run: ./node_modules/.bin/playwright install --with-deps firefox
       - name: Firefox smoke E2E
         run: deno task test:e2e:firefox-smoke
+      - name: Install Playwright WebKit
+        run: ./node_modules/.bin/playwright install --with-deps webkit
+      - name: WebKit smoke E2E
+        run: deno task test:e2e:webkit-smoke

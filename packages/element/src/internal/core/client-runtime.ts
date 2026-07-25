@@ -8,7 +8,7 @@
  */
 
 import type { Signal } from '../protocol/signal.ts';
-import { HydrationScope } from './hydration-scope.ts';
+import { hasSelfHydrated, HydrationScope } from './hydration-scope.ts';
 import { hasPopulatedShadowRoot } from './dsd-shadow-root.ts';
 
 const hostDisposers = new WeakMap<Element, () => void>();
@@ -161,6 +161,15 @@ export function hydrateOpenElement(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to upgrade <${tagName}>: ${message}`, { cause: error });
+    }
+
+    if (hasSelfHydrated(host)) {
+      // The upgraded element manages its own bindings: its connectedCallback
+      // already ran the OpenElement DSD-hydration or CSR render path during
+      // registry.upgrade(). Stacking a second HydrationScope here would
+      // double-subscribe every signal marker, clear signal-render targets a
+      // second time, and leave one of the two scopes undisposed.
+      continue;
     }
 
     const shadowRoot = createShadowRootFromTemplate(host, template);

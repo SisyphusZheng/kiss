@@ -23,7 +23,6 @@ import type { HydrationStrategy } from '@openelement/element';
 import type { PageHostElement } from './internal/page-host-data.ts';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
-export type PageStreamingMode = 'auto' | 'force' | false;
 export type PageRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
 export type PageMeta = Record<string, unknown>;
 
@@ -35,13 +34,11 @@ export interface PageRouteIntent {
 
 export interface PageRenderIntent {
   mode?: PageRenderingMode;
-  streaming?: PageStreamingMode;
   revalidate?: PageRevalidate;
 }
 
 export interface NormalizedPageRenderIntent {
   mode: PageRenderingMode;
-  streaming: PageStreamingMode;
   revalidate: PageRevalidate;
 }
 
@@ -236,7 +233,6 @@ export function definePage<
     ...definition,
     renderIntent: {
       mode: definition.renderIntent?.mode ?? 'auto',
-      streaming: definition.renderIntent?.streaming ?? 'auto',
       revalidate: definition.renderIntent?.revalidate ?? false,
     },
   } as OpenElementPageDescriptor<Data, Params>;

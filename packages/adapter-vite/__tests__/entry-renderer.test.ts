@@ -433,6 +433,28 @@ Deno.test('renderEntry: lifecycle control produces redirect and not-found respon
   assertStringIncludes(code, '__openElementError: err');
 });
 
+Deno.test('renderEntry: SSG renderRoute renders the page error component on failure', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  // Parity with the dev/server route handler: a page declaring an error
+  // component renders it with __openElementError inside the SSG renderRoute
+  // catch, and the failure still surfaces as a 500 result carrying the
+  // RenderError (no silent normal-page write).
+  assertStringIncludes(code, 'if (typeof page.error === "function") {');
+  assertStringIncludes(code, '__openElementError: error');
+  assertStringIncludes(code, '__renderAppShell(errorNode, routePath');
+  assertStringIncludes(
+    code,
+    'return { html: errorHtml, status: 500, errors: [renderError], componentCount: errorComponentCount, renderTimeMs };',
+  );
+  // A failing error renderer falls back to the plain 500 status page.
+  assertStringIncludes(code, "'[openElement] Route error renderer failed for ' + routePath + ':'");
+  assertStringIncludes(code, '__statusHtml("500 Internal Server Error", detail)');
+  // The routeInfo emission no longer carries the dead streaming contract.
+  assertFalse(code.includes('renderIntent?.streaming'));
+});
+
 Deno.test('renderEntry: uses descriptor SSR admission plan without recomputing it', () => {
   const desc = buildEntryDescriptor(basicRoutes, {
     ssg: true,

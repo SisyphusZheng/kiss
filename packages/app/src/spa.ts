@@ -131,11 +131,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
    * loader and action data, then re-renders the component.
    */
   async function handleFormSubmit(event: Event): Promise<void> {
-    // Shadow DOM retargeting: when a <button type="submit"> inside a custom
-    // element (e.g. <open-button type="submit">) triggers the form's submit
-    // event, by the time the event bubbles out to our root listener,
-    // event.target is retargeted to the host element (open-button), NOT the
-    // <form>. Use composedPath() to find the actual form in the shadow tree.
+    // A submit event originating inside a shadow tree is only visible here
+    // when it was dispatched as composed — the native submit behavior of a
+    // shadow <button> never crosses the boundary, which is why open-button
+    // explicitly re-dispatches a composed submit on the form (see
+    // open-button.tsx). By the time that event bubbles out to this root
+    // listener, event.target is retargeted to the shadow host (e.g.
+    // open-button), NOT the <form>. Use composedPath() to find the actual
+    // form in the shadow tree.
     let form: unknown = event.target;
     if (!isFormElement(form)) {
       const path = event.composedPath();

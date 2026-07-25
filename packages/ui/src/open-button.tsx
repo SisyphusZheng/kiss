@@ -240,10 +240,12 @@ export class OpenButton extends OpenElement {
     //
     // Critical: the native 'submit' event is NOT composed (it does not cross
     // shadow boundaries). open-button typically lives inside another custom
-    // element's shadow root (e.g. <reader-reading>), so a submit event
-    // dispatched on the form stays inside that shadow root and never reaches
-    // the SPA's root listener. We dispatch a composed submit event so the
-    // SPA's delegated handler (bound on #root) can intercept it.
+    // element's shadow root (e.g. <reader-reading>), so a natively submitted
+    // form would never reach the SPA's root listener. We re-dispatch a
+    // composed, cancelable submit event on the form so the SPA's delegated
+    // handler (bound on #root) can intercept it; at that listener
+    // event.target is retargeted to this host, so the handler locates the
+    // form through event.composedPath() (see spa.ts handleFormSubmit).
     const type = this.getAttribute('type') || 'button';
     // formAssociated internals.form is only available when attached to DOM.
     // Fall back to closest('form') for elements without _internals (test env).
