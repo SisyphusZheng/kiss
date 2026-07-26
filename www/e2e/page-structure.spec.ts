@@ -6,7 +6,6 @@ const readingRoutes = [
   '/architecture/dsd',
   '/architecture/islands-deep',
   '/architecture/package-compatibility',
-  '/contributing',
 ];
 
 const guideRoutes = [
@@ -62,19 +61,42 @@ test.describe('Unified page structure', () => {
 
   test('404 remains a compact recovery scene without WebGL', async ({ page }) => {
     await page.goto('/404');
-    await expect(page.locator('open-brand-mark').last()).toBeVisible();
     await expect(page.locator('open-cinematic-atmosphere')).toHaveCount(0);
-    await expect(page.locator('open-page-hero[variant="error"]')).toHaveCount(1);
+    const scene = page.locator('page-404');
+    await expect(scene.locator('h1')).toHaveText('404');
+    await expect(scene).toContainText('Lost in the shadow DOM.');
+    await expect(scene.locator('open-button[href="/"]')).toHaveCount(1);
+    await expect(scene.locator('open-button[href="/docs"]')).toHaveCount(1);
+  });
+
+  test('docs landing is a v4 manual index with four entrances', async ({ page }) => {
+    await page.goto('/docs');
+    await expect(page.locator('page-docs h1')).toContainText('MANUAL.');
+    const entrances = page.locator('page-docs .entrance');
+    await expect(entrances).toHaveCount(4);
+    await expect(entrances.first()).toHaveAttribute('href', '/guide/getting-started');
+  });
+
+  test('blog index is a v4 dispatch journal with a featured band', async ({ page }) => {
+    await page.goto('/blog');
+    await expect(page.locator('blog-index-page h1')).toHaveText('Dispatches.');
+    await expect(page.locator('blog-index-page .featured')).toHaveAttribute('href', /\/blog\/.+/);
+    expect(await page.locator('blog-index-page .row').count()).toBeGreaterThan(0);
+  });
+
+  test('contributing is a v4 lab page with terminal, checklist and help rows', async ({ page }) => {
+    await page.goto('/contributing');
+    await expect(page.locator('page-contributing h1')).toContainText('BUILD IT');
+    await expect(page.locator('page-contributing open-code-block')).toHaveCount(1);
+    expect(await page.locator('page-contributing .checklist li').count()).toBeGreaterThan(0);
+    expect(await page.locator('page-contributing .help-row').count()).toBe(3);
   });
 
   test('entry pages use the shared hero and inspectable artifact panel', async ({ page }) => {
     for (
       const route of [
-        '/docs',
         '/apilist',
         '/roadmap',
-        '/blog',
-        '/contributing',
         '/architecture/architecture',
         '/architecture/design-system',
       ]
@@ -88,7 +110,6 @@ test.describe('Unified page structure', () => {
   test('entry pages compose their body with shared section frames', async ({ page }) => {
     for (
       const route of [
-        '/docs',
         '/apilist',
         '/roadmap',
         '/architecture/architecture',

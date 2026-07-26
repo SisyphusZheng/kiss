@@ -1,7 +1,8 @@
 /** @jsxImportSource @openelement/element */
-/** The public WWW flagship: a real-DOM, progressively enhanced product film. */
+/** The public WWW flagship: view-source editorial, v4 language. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import '@openelement/ui/open-code-block';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
 
@@ -12,63 +13,159 @@ sheet.replaceSync(`
   :host { display:block; color:var(--text-primary); background:var(--bg-base); }
   * { box-sizing:border-box; }
   h1,h2,h3,p { margin:0; }
-  .home { overflow:clip; background:radial-gradient(circle at 50% 0%, color-mix(in srgb,var(--violet-4) 16%,transparent), transparent 34rem),var(--bg-base); }
-  .film-grid { background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 9%,transparent) 1px,transparent 1px); background-size:72px 72px; }
-  .film { position:relative; min-height:calc(100svh - var(--nav-height)); isolation:isolate; border-block-end:1px solid color-mix(in srgb,var(--violet-6) 35%,var(--border)); }
-  .hero { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr); align-items:center; gap:clamp(2rem,7vw,9rem); width:min(1440px,100%); min-height:calc(100svh - var(--nav-height)); margin:auto; padding:clamp(5rem,10vh,9rem) clamp(1.5rem,6vw,7rem) 4rem; }
-  .eyebrow,.scene-index,.tag { color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-  .eyebrow { display:flex; align-items:center; gap:.75rem; margin-block-end:1.5rem; }
-  .eyebrow::before { content:""; width:2.5rem; border-block-start:1px solid currentColor; }
-  h1 { max-width:760px; font-size:clamp(4.1rem,10vw,10.5rem); font-weight:900; line-height:.82; letter-spacing:-.075em; text-wrap:balance; }
-  .lede { max-width:620px; margin-block:2rem; color:var(--text-secondary); font-size:clamp(1.12rem,1.6vw,1.45rem); line-height:1.5; text-wrap:pretty; }
-  .actions { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; }
-  .action { display:inline-flex; align-items:center; justify-content:center; min-height:3.25rem; padding:0 1.2rem; border:1px solid color-mix(in srgb,var(--text-primary) 42%,transparent); border-radius:999px; color:var(--text-primary); background:color-mix(in srgb,var(--bg-base) 56%,transparent); font-weight:700; text-decoration:none; transition:transform .22s var(--ease-3),background .22s var(--ease-3),border-color .22s var(--ease-3); }
-  .action:hover,.action:focus-visible { transform:translateY(-3px); border-color:var(--violet-7); background:color-mix(in srgb,var(--violet-5) 22%,var(--bg-base)); outline:none; }
-  .action.primary { border-color:var(--violet-7); background:linear-gradient(120deg,var(--violet-6),var(--violet-4)); color:var(--vinyl-highlight); box-shadow:0 16px 45px color-mix(in srgb,var(--violet-6) 42%,transparent); }
-  .version { display:block; margin-block-start:1.1rem; color:var(--text-muted); font-family:var(--font-mono); font-size:var(--font-size-00); }
-  .aperture-stage { position:relative; aspect-ratio:1; width:min(100%,680px); margin-inline:auto; transform-style:preserve-3d; }
-  .aperture { position:absolute; inset:10%; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--violet-7) 66%,transparent); border-radius:50%; background:radial-gradient(circle at 31% 28%,color-mix(in srgb,var(--violet-5) 32%,transparent),transparent 31%),radial-gradient(circle at 68% 70%,color-mix(in srgb,var(--violet-9) 32%,transparent),transparent 45%); box-shadow:inset 0 0 90px color-mix(in srgb,var(--violet-7) 18%,transparent),0 0 120px color-mix(in srgb,var(--violet-7) 22%,transparent); }
-  .aperture::before,.aperture::after { content:""; position:absolute; border:1px solid color-mix(in srgb,var(--violet-6) 40%,transparent); border-radius:50%; }
-  .aperture::before { inset:8%; } .aperture::after { inset:22%; }
-  .mark { position:relative; z-index:1; color:var(--text-primary); font-family:var(--font-mono); font-size:clamp(3rem,7vw,6.8rem); font-weight:800; letter-spacing:-.09em; text-shadow:0 0 36px color-mix(in srgb,var(--violet-6) 55%,transparent); }
-  .mark b { color:var(--violet-8); }
-  .orbit { position:absolute; inset:0; border:1px dashed color-mix(in srgb,var(--violet-6) 24%,transparent); border-radius:50%; animation:reverse-orbit 20s linear infinite; }
-  .node { position:absolute; display:grid; place-items:center; width:3.2rem; aspect-ratio:1; border:1px solid color-mix(in srgb,var(--violet-6) 62%,transparent); border-radius:50%; background:color-mix(in srgb,var(--bg-base) 70%,transparent); color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); box-shadow:0 0 22px color-mix(in srgb,var(--violet-7) 24%,transparent); }
-  .node.one { inset:9% auto auto 13%; }.node.two { inset:auto 5% 17% auto; }.node.three { inset:44% auto auto -3%; }
-  .scroll-cue { position:absolute; inset:auto 0 1.5rem; z-index:1; display:flex; justify-content:center; gap:.7rem; color:var(--text-muted); font-family:var(--font-mono); font-size:var(--font-size-00); letter-spacing:.1em; text-transform:uppercase; }
-  .scroll-cue::after { content:"↓"; color:var(--violet-8); animation:bob 1.6s ease-in-out infinite; }
-  .scenes { position:relative; }
-  .scene { position:relative; display:grid; grid-template-columns:minmax(0,.45fr) minmax(0,.55fr); align-items:center; min-height:100svh; gap:clamp(2rem,8vw,10rem); padding:clamp(4.5rem,12vh,9rem) clamp(1.5rem,8vw,10rem); border-block-end:1px solid color-mix(in srgb,var(--violet-6) 25%,var(--border)); }
-  .scene-copy { max-width:540px; }.scene-index { margin-block-end:1.2rem; }.scene h2 { font-size:clamp(2.8rem,5.8vw,6.8rem); line-height:.9; letter-spacing:-.065em; text-wrap:balance; }.scene p:not(.scene-index) { margin-block-start:1.6rem; color:var(--text-secondary); font-size:clamp(1rem,1.4vw,1.22rem); line-height:1.55; }
-  .scene-art { position:relative; min-height:min(62vw,660px); display:grid; place-items:center; perspective:1000px; }
-  .component-stack { display:grid; width:min(100%,560px); transform:rotateX(8deg) rotateY(-12deg); transform-style:preserve-3d; }
-  .component { position:relative; display:grid; gap:.8rem; padding:1.4rem; border:1px solid color-mix(in srgb,var(--violet-6) 45%,var(--border)); background:linear-gradient(135deg,color-mix(in srgb,var(--violet-4) 18%,var(--bg-elevated)),color-mix(in srgb,var(--bg-base) 84%,transparent)); box-shadow:0 25px 65px color-mix(in srgb,var(--violet-11) 45%,transparent); font-family:var(--font-mono); transform:translateZ(var(--depth,0)); }
-  .component:nth-child(2) { margin:1.4rem 0 0 3rem; --depth:45px; }.component:nth-child(3) { margin:1.4rem 0 0 6rem; --depth:90px; }.component strong { color:var(--violet-8); }.component span { color:var(--text-secondary); font-size:var(--font-size-tiny); }
-  .pulse-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(100%,560px); }.island { display:grid; place-items:center; min-height:150px; border:1px solid color-mix(in srgb,var(--violet-6) 42%,var(--border)); border-radius:1.1rem; background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--violet-6) 25%,transparent),transparent 60%),var(--bg-elevated); color:var(--text-primary); font-family:var(--font-mono); animation:pulse 3s ease-in-out infinite; }.island:nth-child(2){animation-delay:-1s}.island:nth-child(3){animation-delay:-2s}.island small{color:var(--violet-8)}
-  .output { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(100%,620px); }.target { min-height:230px; display:grid; align-content:space-between; padding:1.25rem; border:1px solid color-mix(in srgb,var(--violet-6) 43%,var(--border)); background:linear-gradient(145deg,color-mix(in srgb,var(--violet-5) 18%,transparent),var(--bg-elevated)); box-shadow:0 18px 50px color-mix(in srgb,var(--violet-10) 38%,transparent); }.target svg{width:42px;color:var(--violet-8)}.target strong{font-size:var(--font-size-lede)}.target span{color:var(--text-secondary);font-family:var(--font-mono);font-size:var(--font-size-00)}
-  .final { grid-template-columns:1fr; text-align:center; min-height:82svh; }.final .scene-copy { max-width:800px; margin:auto; }.command { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:min(100%,680px); margin:2.5rem auto; padding:1rem 1.1rem 1rem 1.35rem; border:1px solid color-mix(in srgb,var(--violet-6) 52%,var(--border)); border-radius:999px; background:color-mix(in srgb,var(--bg-elevated) 72%,transparent); color:var(--violet-8); font-family:var(--font-mono); text-align:left; }.command code{overflow:auto;white-space:nowrap}.final-actions{justify-content:center}
-  .reference { width:min(1180px,calc(100% - 3rem)); margin:0 auto; padding:7rem 0; }.reference header{display:flex;justify-content:space-between;gap:2rem;align-items:end;margin-block-end:2rem}.reference h2{font-size:clamp(2.2rem,4vw,4.5rem);letter-spacing:-.06em;line-height:.92}.reference p{max-width:500px;color:var(--text-secondary);line-height:1.5}.links{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border)}.links a{display:grid;gap:.6rem;min-height:180px;padding:1.4rem;border-inline-end:1px solid var(--border);color:inherit;text-decoration:none;background:color-mix(in srgb,var(--bg-elevated) 55%,transparent);transition:background .2s ease,transform .2s ease}.links a:last-child{border:0}.links a:hover{background:color-mix(in srgb,var(--violet-5) 18%,var(--bg-elevated));transform:translateY(-4px)}.links span{color:var(--violet-8);font-family:var(--font-mono);font-size:var(--font-size-00)}.links strong{font-size:var(--font-size-2)}.links small{color:var(--text-secondary);line-height:1.4}
-  .cinematic-v2 { --film-progress:0; --scene-progress:0; --pointer-x:0; --pointer-y:0; position:relative; }
-  .cinematic-v2 .film { position:sticky; top:0; z-index:0; }
-  .cinematic-v2 .hero > div:first-child { opacity:clamp(0,calc(1 - var(--film-progress) * 3.2),1); transform:translateY(calc(var(--film-progress) * -4vh)); }
-  .hero-mark-wrap { position:relative; z-index:3; display:grid; place-items:center; width:clamp(15rem,34vw,31rem); aspect-ratio:1; filter:drop-shadow(0 0 70px color-mix(in srgb,var(--violet-6) 48%,transparent)); transform:translate3d(calc(min(calc(var(--film-progress) * 2.4),1) * -48vw + var(--pointer-x) * 8px),calc(min(calc(var(--film-progress) * 2.4),1) * -42vh + var(--pointer-y) * 8px),0) scale(calc(1 - min(calc(var(--film-progress) * 2.4),1) * .82)); transform-origin:center; will-change:transform; }
-  .vinyl { position:absolute; inset:0; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--vinyl-highlight) 18%,transparent); border-radius:50%; background:repeating-radial-gradient(circle at center,transparent 0 5px,color-mix(in srgb,var(--vinyl-highlight) 7%,transparent) 6px,transparent 7px 12px),radial-gradient(circle at 32% 24%,color-mix(in srgb,var(--violet-7) 24%,transparent),transparent 22%),radial-gradient(circle at center,var(--vinyl-ink-3) 0 15%,var(--vinyl-ink-2) 15.5% 62%,var(--vinyl-ink-0) 63% 100%); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vinyl-highlight) 8%,transparent),inset 0 0 80px var(--vinyl-shadow),0 32px 90px color-mix(in srgb,var(--vinyl-shadow) 72%,transparent); transform:rotate(calc(var(--film-progress) * 1080deg)); will-change:transform; }
-  .vinyl::before { content:""; position:absolute; inset:3%; border-radius:50%; background:conic-gradient(from 210deg,transparent 0 8%,color-mix(in srgb,var(--vinyl-highlight) 15%,transparent) 10%,transparent 14% 49%,color-mix(in srgb,var(--violet-5) 12%,transparent) 53%,transparent 58% 100%); mix-blend-mode:screen; }
-  .vinyl::after { content:""; position:absolute; width:2.2%; aspect-ratio:1; border-radius:50%; background:var(--vinyl-ink-1); border:1px solid color-mix(in srgb,var(--vinyl-highlight) 28%,transparent); box-shadow:0 0 0 4px color-mix(in srgb,var(--vinyl-shadow) 55%,transparent); }
-  .vinyl-label { position:relative; z-index:1; display:grid; place-items:center; width:31%; aspect-ratio:1; border:1px solid color-mix(in srgb,var(--violet-5) 42%,transparent); border-radius:50%; background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--violet-4) 88%,var(--vinyl-highlight)),var(--violet-9) 72%); box-shadow:0 0 0 3px var(--vinyl-ink-4),0 0 34px color-mix(in srgb,var(--violet-6) 40%,transparent); }
-  .vinyl-wordmark { display:inline-flex; align-items:center; color:var(--vinyl-highlight); font-family:var(--font-mono); font-size:clamp(1rem,2.6vw,2.3rem); font-weight:800; letter-spacing:-.09em; line-height:1; text-shadow:0 1px 10px color-mix(in srgb,var(--vinyl-shadow) 55%,transparent); white-space:nowrap; }
-  .vinyl-slash { color:color-mix(in srgb,var(--violet-2) 82%,var(--vinyl-highlight)); }
-  .cinematic-v2 .scenes { position:relative; z-index:2; margin-block-start:100vh; }
-  .cinematic-v2 .scene { background:linear-gradient(90deg,color-mix(in srgb,var(--bg-base) 96%,transparent),color-mix(in srgb,var(--bg-base) 72%,transparent)); backdrop-filter:blur(2px); }
-  .cinematic-v2 .component-stack { transform:rotateX(calc(18deg - var(--film-progress) * 12deg)) rotateY(calc(-24deg + var(--film-progress) * 18deg)) translateZ(calc(var(--film-progress) * 90px)); }
-  .cinematic-v2 .island { animation-timeline:view(block 15% 15%); animation-name:pulse; }
-  @supports (animation-timeline:view()) { .scene-copy,.scene-art { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 12% cover 44%; } }
-  @keyframes scene-in { from{opacity:.08;transform:translateY(12vh) scale(.94)} to{opacity:1;transform:none} }
-  @keyframes orbit{50%{transform:rotate(12deg) scale(1.035)}} @keyframes reverse-orbit{to{transform:rotate(-360deg)}} @keyframes bob{50%{transform:translateY(5px)}} @keyframes pulse{50%{border-color:var(--violet-8);box-shadow:0 0 38px color-mix(in srgb,var(--violet-6) 36%,transparent)}}
-  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}.film,.scene{min-height:auto}.hero{min-height:auto}.scene{padding-block:6rem}.component-stack{transform:none}}
-  @media (max-width:800px){.hero,.scene{grid-template-columns:1fr;min-height:auto;padding:6rem 1.4rem}.hero{padding-block-start:5rem}.aperture-stage{width:min(92vw,540px)}.scene-art{min-height:420px}.component:nth-child(2){margin-inline-start:1.5rem}.component:nth-child(3){margin-inline-start:3rem}.output{grid-template-columns:1fr 1fr}.target:last-child{grid-column:span 2}.links{grid-template-columns:1fr 1fr}.links a:nth-child(2){border-inline-end:0}.links a:nth-child(-n+2){border-block-end:1px solid var(--border)}}
-  @media (max-width:480px){h1{font-size:clamp(3.6rem,18vw,5.6rem)}.pulse-grid{gap:.65rem}.island{min-height:105px;font-size:var(--font-size-00)}.output{grid-template-columns:1fr}.target:last-child{grid-column:auto;min-height:150px}.command{border-radius:1.1rem;align-items:start;flex-direction:column}.links{grid-template-columns:1fr}.links a{border-inline-end:0;border-block-end:1px solid var(--border)}.links a:last-child{border-block-end:0}.reference header{display:grid}.scene h2{font-size:clamp(2.8rem,13vw,4.4rem)}}
+  .home { overflow:clip; background:var(--bg-base); }
+
+  /* ── hero: kinetic type, spec strip, standards marquee ── */
+  .hero { position:relative; min-height:calc(100svh - var(--nav-height)); display:grid; align-content:end; padding:clamp(3rem,8vh,6rem) clamp(1.5rem,5vw,4.5rem) 0; background:radial-gradient(circle at 62% 78%, color-mix(in srgb,var(--violet-5) 20%,transparent), transparent 55%), var(--bg-base); isolation:isolate; }
+  .hero::before { content:""; position:absolute; inset:0; z-index:-1; background-image:linear-gradient(color-mix(in srgb,var(--violet-6) 7%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--violet-6) 7%,transparent) 1px,transparent 1px); background-size:72px 72px; }
+  .hero-ghost { position:absolute; right:-0.12em; top:-0.25em; z-index:-1; font-family:var(--font-mono); font-size:clamp(14rem,29vw,26rem); font-weight:800; letter-spacing:-0.06em; color:transparent; -webkit-text-stroke:1.5px color-mix(in srgb,var(--violet-6) 22%,transparent); user-select:none; pointer-events:none; }
+  .eyebrow { display:flex; align-items:center; gap:.75rem; color:var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.29em; text-transform:uppercase; }
+  .eyebrow::before { content:""; width:2rem; height:2px; background:var(--brand); }
+  .hero-stamp { position:absolute; top:clamp(3rem,8vh,6rem); right:clamp(1.5rem,5vw,4.5rem); color:var(--text-muted); font-size:var(--font-size-caption); letter-spacing:.08em; }
+  h1 { margin:clamp(1.5rem,4vh,3rem) 0 0; font-weight:800; line-height:.92; letter-spacing:-.045em; }
+  h1 .mono-line { display:block; font-size:clamp(3.4rem,10.4vw,9.4rem); color:var(--text-primary); }
+  h1 .serif-line { display:block; margin-inline-start:clamp(2rem,24vw,22rem); font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(4.2rem,15vw,13.5rem); letter-spacing:-.02em; color:var(--violet-8); }
+  .lede { max-width:38rem; margin:clamp(1.5rem,3.5vh,2.5rem) 0 0; color:var(--text-secondary); font-size:clamp(1rem,1.2vw,1.1rem); line-height:1.75; }
+  .actions { display:flex; flex-wrap:wrap; gap:var(--size-3); margin:var(--size-6) 0 clamp(2rem,6vh,4rem); }
+  .action { display:inline-flex; align-items:center; padding:var(--size-2) var(--size-5); border:var(--border-size-1) solid var(--border-strong); border-radius:var(--btn-radius); color:var(--text-primary); font-weight:var(--font-weight-7); text-decoration:none; transition:border-color .15s ease,background .15s ease; }
+  .action:hover { border-color:var(--brand); }
+  .action.primary { background:var(--brand); border-color:var(--brand); color:var(--on-brand); }
+  .action.primary:hover { background:var(--brand-hover); }
+  .spec-strip { display:grid; grid-template-columns:repeat(5,1fr); border-block-start:1px solid var(--border); margin-inline:calc(clamp(1.5rem,5vw,4.5rem) * -1); }
+  .spec-cell { padding:var(--size-4) clamp(1rem,2.5vw,2rem); border-inline-start:1px solid var(--border); }
+  .spec-cell:first-child { border-inline-start:0; }
+  .spec-cell small { display:block; color:var(--text-muted); font-size:var(--font-size-micro); letter-spacing:.16em; text-transform:uppercase; }
+  .spec-cell strong { display:block; margin-block-start:var(--size-1); font-size:var(--font-size-1); font-weight:var(--font-weight-8); }
+  .spec-cell strong.accent { color:var(--violet-8); }
+  .marquee { overflow:hidden; white-space:nowrap; border-block:1px solid var(--border); background:var(--surface-1); margin-inline:calc(clamp(1.5rem,5vw,4.5rem) * -1); }
+  .marquee span { display:inline-block; padding:var(--size-3) 0; color:var(--brand); font-size:var(--font-size-0); font-weight:var(--font-weight-5); letter-spacing:.12em; animation:marquee 36s linear infinite; }
+  @keyframes marquee { to { transform:translateX(-50%); } }
+
+  /* ── scene framework: outlined index anchors ── */
+  .scene { position:relative; padding:clamp(4rem,10vh,8rem) clamp(1.5rem,5vw,4.5rem); }
+  .scene-index { color:var(--brand); font-size:var(--font-size-00); font-weight:var(--font-weight-8); letter-spacing:.24em; text-transform:uppercase; }
+  .scene h2 { font-size:clamp(2.2rem,3.6vw,3.2rem); font-weight:800; line-height:1; letter-spacing:-.03em; }
+  .scene h2 .accent { display:block; font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:calc(1em * 1.15); color:var(--violet-8); }
+  .scene-copy { max-width:34rem; color:var(--text-secondary); line-height:1.75; }
+  .scene-copy p + p { margin-block-start:var(--size-3); }
+  .scene-outlined { position:absolute; top:clamp(1rem,4vh,3rem); left:clamp(-.5rem,-.4vw,0rem); z-index:-1; font-family:var(--font-mono); font-size:clamp(9rem,18vw,16rem); font-weight:800; line-height:1; color:transparent; -webkit-text-stroke:1.5px color-mix(in srgb,var(--violet-5) 55%,transparent); user-select:none; pointer-events:none; }
+  .scene-split { display:grid; grid-template-columns:minmax(0,.9fr) minmax(320px,1.1fr); gap:clamp(2rem,6vw,6rem); align-items:center; }
+  .badges { display:flex; gap:var(--size-2); margin-block-start:var(--size-5); }
+  .badge { padding:2px var(--size-2); border:var(--border-size-1) solid var(--border-strong); border-radius:var(--badge-radius); color:var(--violet-8); font-size:var(--font-size-00); font-weight:var(--font-weight-7); letter-spacing:.06em; }
+
+  /* ── §2 DSD: violet flood ── */
+  .flood { background:linear-gradient(135deg,var(--violet-5),var(--violet-6)); color:var(--violet-0); }
+  .flood .scene-index { color:var(--violet-1); }
+  .flood h2 { color:var(--violet-0); }
+  .flood h2 .accent { color:var(--violet-11); }
+  .flood .scene-copy { color:var(--violet-1); }
+  .flood-panels { display:grid; grid-template-columns:1fr auto 1fr; gap:clamp(1rem,3vw,2.5rem); align-items:center; margin-block-start:clamp(2rem,5vh,3.5rem); }
+  .flood-panel { padding:var(--size-5); border:1.5px solid color-mix(in srgb,var(--violet-0) 70%,transparent); border-radius:var(--radius-2); background:color-mix(in srgb,var(--violet-0) 8%,transparent); }
+  .flood-panel.solid { background:var(--violet-0); color:var(--violet-11); border-color:var(--violet-0); }
+  .flood-panel small { display:block; margin-block-end:var(--size-3); font-size:var(--font-size-micro); font-weight:var(--font-weight-7); letter-spacing:.14em; text-transform:uppercase; opacity:.75; }
+  .flood-panel code { display:block; font-size:var(--font-size-00); line-height:1.8; white-space:pre; }
+  .flood-arrow { font-size:var(--font-size-5); color:var(--violet-0); }
+  .shadow-outline { display:inline-block; margin-block-end:var(--size-2); padding:var(--size-1) var(--size-3); border:1.5px dashed var(--violet-8); border-radius:var(--radius-1); color:var(--violet-8); font-size:var(--font-size-00); }
+
+  /* ── §3 islands: outlined strategy columns ── */
+  .strategies { display:grid; grid-template-columns:repeat(4,1fr); margin-block-start:clamp(2rem,5vh,3rem); border-block:1px solid var(--border); }
+  .strategy { padding:var(--size-5) var(--size-4); border-inline-start:1px solid var(--border); }
+  .strategy:first-child { border-inline-start:0; }
+  .strategy.default { background:color-mix(in srgb,var(--brand) 14%,transparent); }
+  .strategy .glyph { display:block; font-family:var(--font-mono); font-size:clamp(3.5rem,7vw,6.5rem); font-weight:800; line-height:1; color:transparent; -webkit-text-stroke:1.5px color-mix(in srgb,var(--violet-5) 65%,transparent); }
+  .strategy.default .glyph { -webkit-text-stroke-color:var(--violet-8); }
+  .strategy strong { display:block; margin-block-start:var(--size-3); font-size:var(--font-size-2); font-weight:var(--font-weight-8); }
+  .strategy .tag-default { display:inline-block; margin-inline-start:var(--size-2); padding:1px var(--size-2); border-radius:var(--badge-radius); background:var(--brand); color:var(--on-brand); font-size:var(--font-size-micro); font-weight:var(--font-weight-7); letter-spacing:.1em; vertical-align:middle; }
+  .strategy p { margin-block-start:var(--size-2); color:var(--text-secondary); font-size:var(--font-size-00); line-height:1.6; }
+  .strategy footer { margin-block-start:var(--size-3); color:var(--text-muted); font-size:var(--font-size-micro); }
+
+  /* ── §4 output: typographic rows ── */
+  .output-rows { margin-block-start:clamp(2rem,5vh,3rem); border-block-start:1px solid var(--border); }
+  .output-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:clamp(1rem,4vw,3rem); padding:var(--size-4) clamp(1rem,3vw,2.5rem); border-block-end:1px solid var(--border); }
+  .output-row.active { background:var(--brand); color:var(--on-brand); }
+  .output-row .name { font-size:clamp(2.2rem,4vw,3.5rem); font-weight:800; letter-spacing:-.02em; line-height:1; }
+  .output-row .desc { max-width:22rem; color:var(--text-secondary); font-size:var(--font-size-00); line-height:1.6; }
+  .output-row.active .desc { color:var(--violet-9); }
+  .output-row .arrow { font-size:var(--font-size-6); color:var(--violet-5); }
+  .output-row.active .arrow { color:var(--violet-0); }
+
+  /* ── §5 begin ── */
+  .begin { text-align:center; padding-block:clamp(5rem,12vh,9rem); }
+  .begin h2 { font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(4rem,8vw,7rem); color:var(--violet-8); }
+  .begin .command { display:inline-flex; align-items:center; gap:var(--size-4); margin-block-start:var(--size-6); padding:var(--size-3) var(--size-5); border:var(--border-size-1) solid var(--border); border-radius:var(--radius-2); background:var(--surface-code); color:var(--text-primary); font-size:var(--font-size-0); }
+  .begin .command code { color:var(--success); }
+  .begin .actions { justify-content:center; margin-block-end:0; }
+
+  /* ── reference links ── */
+  .reference { padding:clamp(3rem,8vh,6rem) clamp(1.5rem,5vw,4.5rem); border-block-start:1px solid var(--border); }
+  .reference header { display:flex; justify-content:space-between; gap:2rem; align-items:end; margin-block-end:var(--size-6); }
+  .reference h2 { font-size:clamp(2rem,4vw,4rem); letter-spacing:-.04em; line-height:1; }
+  .reference header p { max-width:30rem; color:var(--text-secondary); line-height:1.5; }
+  .links { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--border); }
+  .links a { display:grid; gap:var(--size-2); min-height:160px; padding:var(--size-5); border-inline-end:1px solid var(--border); color:inherit; text-decoration:none; background:color-mix(in srgb,var(--bg-elevated) 55%,transparent); transition:background .2s ease,transform .2s ease; }
+  .links a:last-child { border-inline-end:0; }
+  .links a:hover { background:color-mix(in srgb,var(--violet-5) 18%,var(--bg-elevated)); transform:translateY(-4px); }
+  .links span { color:transparent; -webkit-text-stroke:1px var(--violet-8); font-family:var(--font-mono); font-size:var(--font-size-4); font-weight:800; line-height:1; }
+  .links strong { font-size:var(--font-size-2); }
+  .links small { color:var(--text-secondary); line-height:1.4; }
+
+  @supports (animation-timeline:view()) {
+    .scene-copy,.scene-art,.strategy,.output-row { animation:scene-in linear both; animation-timeline:view(); animation-range:entry 8% cover 32%; }
+  }
+  @keyframes scene-in { from { opacity:.12; transform:translateY(8vh); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; scroll-behavior:auto!important; } }
+
+  @media (max-width:900px) {
+    .scene-split { grid-template-columns:1fr; }
+    .strategies { grid-template-columns:1fr 1fr; }
+    .strategy:nth-child(3) { border-inline-start:0; }
+    .spec-strip { grid-template-columns:1fr 1fr; }
+    .spec-cell:nth-child(odd) { border-inline-start:0; }
+    .flood-panels { grid-template-columns:1fr; }
+    .flood-arrow { transform:rotate(90deg); justify-self:center; }
+    .links { grid-template-columns:1fr 1fr; }
+    .links a:nth-child(2) { border-inline-end:0; }
+  }
+  @media (max-width:520px) {
+    h1 .serif-line { margin-inline-start:0; }
+    .hero-stamp { display:none; }
+    .output-row { grid-template-columns:1fr; gap:var(--size-2); }
+    .links { grid-template-columns:1fr; }
+    .links a { border-inline-end:0; border-block-end:1px solid var(--border); }
+    .links a:last-child { border-block-end:0; }
+  }
 `);
+
+const strategies = [
+  [
+    'L',
+    'load',
+    '',
+    'Critical interactivity, hydrated immediately after parse.',
+    'nav · search · theme',
+  ],
+  [
+    'I',
+    'idle',
+    'DEFAULT',
+    'Upgrades when the browser is idle — never blocks paint.',
+    'counters · forms',
+  ],
+  [
+    'V',
+    'visible',
+    '',
+    'IntersectionObserver gates hydration until scroll-in.',
+    'comments · charts',
+  ],
+  ['O', 'only', '', 'Client-only, for what the server cannot know.', 'webgl · media'],
+] as const;
+
+const outputs = [
+  ['BROWSER', 'Pure static HTML + DSD. CDN-ready, no runtime.', false],
+  ['NODE', 'Nitro server output with ISR manifests baked in.', true],
+  ['WORKERS', 'Edge deploys from the same page model. Proof gate per release.', false],
+] as const;
 
 const references = [
   [
@@ -87,191 +184,193 @@ const references = [
   ['04', 'Roadmap', '/roadmap', 'See current truth and the next product boundary.'],
 ] as const;
 
+const marqueeText =
+  'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ ';
+
 export class DocsHome extends OpenElement {
   static override styles = [sheet];
 
   override render() {
     return (
-      <main class='home cinematic-v2'>
+      <main class='home'>
         <open-cinematic-scroll></open-cinematic-scroll>
-        <section class='film film-grid'>
+        <section class='hero'>
           <open-cinematic-atmosphere></open-cinematic-atmosphere>
-          <div class='hero'>
-            <div>
-              <p class='eyebrow'>OpenElement / Web Standards Lab</p>
-              <h1>
-                The Web,<br />composed.
-              </h1>
-              <p class='lede'>
-                A Web Components-native application framework for beautiful, static-first
-                applications — composed from real browser primitives.
-              </p>
-              <div class='actions'>
-                <a class='action primary' href='/guide/getting-started'>Start building</a>
-                <a class='action' href='#element'>Watch it unfold</a>
-              </div>
-              <small class='version'>Published line: {OPENELEMENT_VERSION}</small>
+          <span class='hero-ghost' aria-hidden='true'>&lt;/&gt;</span>
+          <span class='hero-stamp'>EST. 2026 / SPEC-041</span>
+          <p class='eyebrow'>OpenElement — Web Standards Lab</p>
+          <h1>
+            <span class='mono-line'>THE WEB,</span>
+            <span class='serif-line'>composed.</span>
+          </h1>
+          <p class='lede'>
+            A Web Components-native application framework — beautiful, static-first applications
+            composed from real browser primitives.
+          </p>
+          <div class='actions'>
+            <a class='action primary' href='/guide/getting-started'>Start building</a>
+            <a class='action' href='#element'>Watch it unfold</a>
+          </div>
+          <div class='spec-strip'>
+            <div class='spec-cell'>
+              <small>Version</small>
+              <strong>{OPENELEMENT_VERSION} — stable</strong>
             </div>
-            <div class='aperture-stage' aria-label='OpenElement brand mark visual'>
-              <div class='orbit'></div>
-              <div class='aperture'>
-                <div class='hero-mark-wrap'>
-                  <div class='vinyl'>
-                    <div class='vinyl-label'>
-                      <span class='vinyl-wordmark' aria-hidden='true'>
-                        &lt;open<span class='vinyl-slash'>/</span>&gt;
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <span class='node one'>DSD</span>
-              <span class='node two'>APP</span>
-              <span class='node three'>WC</span>
+            <div class='spec-cell'>
+              <small>Graph</small>
+              <strong>five packages</strong>
+            </div>
+            <div class='spec-cell'>
+              <small>Engines</small>
+              <strong>3 in CI</strong>
+            </div>
+            <div class='spec-cell'>
+              <small>Framework deps</small>
+              <strong class='accent'>zero</strong>
+            </div>
+            <div class='spec-cell'>
+              <small>Server output</small>
+              <strong>DSD default</strong>
             </div>
           </div>
-          <div class='scroll-cue'>Scroll to compose</div>
+          <div class='marquee' aria-hidden='true'>
+            <span>{marqueeText + marqueeText}</span>
+          </div>
         </section>
 
-        <div class='scenes'>
-          <section class='scene' id='element'>
-            <div class='scene-copy'>
-              <p class='scene-index'>01 / Element</p>
-              <h2>Start with a native boundary.</h2>
-              <p>
-                A reusable element is not an abstraction to escape the web. It is the durable,
-                inspectable contract your application is built from.
-              </p>
+        <section class='scene scene-split' id='element'>
+          <span class='scene-outlined' aria-hidden='true'>01</span>
+          <div class='scene-copy'>
+            <p class='scene-index'>§1 — Element</p>
+            <h2>
+              One durable
+              <span class='accent'>contract.</span>
+            </h2>
+            <p>
+              Custom Elements are the application component contract — not a renderer integration,
+              not a leaf-widget format. Write the element once; it renders on the server and
+              upgrades in the browser.
+            </p>
+            <div class='badges'>
+              <span class='badge'>ZERO RUNTIME</span>
+              <span class='badge'>JSX + BASIC</span>
             </div>
-            <div class='scene-art'>
-              <div class='component-stack'>
-                <div class='component'>
-                  <strong>&lt;open-app&gt;</strong>
-                  <span>application shell / browser-native</span>
-                </div>
-                <div class='component'>
-                  <strong>&lt;open-page&gt;</strong>
-                  <span>route descriptor / static render</span>
-                </div>
-                <div class='component'>
-                  <strong>&lt;open-card&gt;</strong>
-                  <span>custom element / light from shadow</span>
-                </div>
+          </div>
+          <div class='scene-art'>
+            <open-code-block>
+              <pre><code>{`import { defineElement, signal } from '@openelement/element'
+
+export const Counter = defineElement(props => ({
+  count: { type: Number, default: 0, reflect: true },
+  render() {
+    return <button onClick={() => this.count++}>
+      {this.count}
+    </button>
+  }
+}))
+
+// SSR: <open-counter count="0"> + DSD shadow root.
+// No JavaScript required for first paint.`}</code></pre>
+            </open-code-block>
+          </div>
+        </section>
+
+        <section class='scene flood'>
+          <p class='scene-index'>§2 — Declarative Shadow DOM</p>
+          <h2>
+            The server writes HTML.
+            <span class='accent'>The browser upgrades it.</span>
+          </h2>
+          <div class='scene-copy'>
+            <p>
+              DSD is the default server output. No client re-render, no double payload — the markup
+              is the application.
+            </p>
+          </div>
+          <div class='flood-panels'>
+            <div class='flood-panel'>
+              <small>Server · text/html</small>
+              <code>
+                {`<open-counter count="0">
+  <template shadowrootmode="open">
+    <button>0</button>
+  </template>`}
+              </code>
+            </div>
+            <span class='flood-arrow' aria-hidden='true'>⟶</span>
+            <div class='flood-panel solid'>
+              <small>Browser · upgrades in place</small>
+              <span class='shadow-outline'>#shadow-root (open)</span>
+              <code>
+                {`└─ <button> → signal bound
+   first paint = interactive`}
+              </code>
+            </div>
+          </div>
+        </section>
+
+        <section class='scene'>
+          <p class='scene-index'>§3 — Islands</p>
+          <h2>
+            Upgrade
+            <span class='accent'>selectively.</span>
+          </h2>
+          <div class='scene-copy'>
+            <p>
+              Interactive regions hydrate on your schedule. The rest of the page never ships a byte
+              of JavaScript.
+            </p>
+          </div>
+          <div class='strategies'>
+            {strategies.map(([glyph, name, tag, copy, uses]) => (
+              <div class={`strategy${tag ? ' default' : ''}`}>
+                <span class='glyph' aria-hidden='true'>{glyph}</span>
+                <strong>
+                  {name}
+                  {tag && <span class='tag-default'>{tag}</span>}
+                </strong>
+                <p>{copy}</p>
+                <footer>{uses}</footer>
               </div>
-            </div>
-          </section>
-          <section class='scene'>
-            <div class='scene-copy'>
-              <p class='scene-index'>02 / DSD</p>
-              <h2>Give every component its own room.</h2>
-              <p>
-                Declarative Shadow DOM preserves real component boundaries in the document. What
-                ships is still HTML: visible, inspectable and ready before client JavaScript.
-              </p>
-            </div>
-            <div class='scene-art'>
-              <div class='component-stack'>
-                <div class='component'>
-                  <strong>&lt;template shadowrootmode="open"&gt;</strong>
-                  <span>shadow root attached by the browser</span>
-                </div>
-                <div class='component'>
-                  <strong>slot="content"</strong>
-                  <span>encapsulation without an invented runtime</span>
-                </div>
-                <div class='component'>
-                  <strong>&lt;/template&gt;</strong>
-                  <span>rendered once, understood everywhere</span>
-                </div>
+            ))}
+          </div>
+        </section>
+
+        <section class='scene'>
+          <p class='scene-index'>§4 — Output</p>
+          <h2>
+            Static first.
+            <span class='accent'>Deployable anywhere.</span>
+          </h2>
+          <div class='output-rows'>
+            {outputs.map(([name, desc, active]) => (
+              <div class={`output-row${active ? ' active' : ''}`}>
+                <span class='name'>{name}</span>
+                <span class='desc'>{desc}</span>
+                <span class='arrow' aria-hidden='true'>→</span>
               </div>
-            </div>
-          </section>
-          <section class='scene'>
-            <div class='scene-copy'>
-              <p class='scene-index'>03 / Islands</p>
-              <h2>Wake only what needs to move.</h2>
-              <p>
-                Static composition remains still. Small islands light up exactly where interaction
-                earns its cost, keeping the rest of the page close to the platform.
-              </p>
-            </div>
-            <div class='scene-art'>
-              <div class='pulse-grid'>
-                <div class='island'>
-                  <span>
-                    static<br />
-                    <small>0 JS</small>
-                  </span>
-                </div>
-                <div class='island'>
-                  <span>
-                    visible<br />
-                    <small>island</small>
-                  </span>
-                </div>
-                <div class='island'>
-                  <span>
-                    idle<br />
-                    <small>island</small>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section class='scene'>
-            <div class='scene-copy'>
-              <p class='scene-index'>04 / Output</p>
-              <h2>One composition. Portable output.</h2>
-              <p>
-                The same supported build interface produces static output proven for browser
-                delivery, Node and Workers. The deployment target changes; the component contract
-                does not.
-              </p>
-            </div>
-            <div class='scene-art'>
-              <div class='output'>
-                <article class='target'>
-                  <span>01</span>
-                  <strong>Browser</strong>
-                  <span>HTML · DSD · islands</span>
-                </article>
-                <article class='target'>
-                  <span>02</span>
-                  <strong>Node</strong>
-                  <span>SSR admission · output proof</span>
-                </article>
-                <article class='target'>
-                  <span>03</span>
-                  <strong>Workers</strong>
-                  <span>portable deployment · standards</span>
-                </article>
-              </div>
-            </div>
-          </section>
-          <section class='scene final'>
-            <div class='scene-copy'>
-              <p class='scene-index'>05 / Begin</p>
-              <h2>Compose your next application in the open.</h2>
-              <p>
-                Use the public starter, author the parts that matter, and let the browser keep the
-                rest honest.
-              </p>
-              <div class='command'>
-                <code>$ deno run -A npm:@openelement/create my-app</code>
-                <a class='action primary' href='/guide/getting-started'>Start building</a>
-              </div>
-              <div class='actions final-actions'>
-                <a class='action' href='/docs'>Explore docs</a>
-                <a class='action' href='/architecture/architecture'>See architecture</a>
-              </div>
-            </div>
-          </section>
-        </div>
+            ))}
+          </div>
+        </section>
+
+        <section class='scene begin'>
+          <p class='scene-index'>§5 — Begin</p>
+          <h2>Begin.</h2>
+          <div class='command'>
+            <code>$</code>
+            <span>deno run -A npm:@openelement/create my-app</span>
+          </div>
+          <div class='actions'>
+            <a class='action primary' href='/guide/getting-started'>Get started</a>
+            <a class='action' href='/docs'>Read the guide</a>
+          </div>
+        </section>
+
         <section class='reference'>
           <header>
             <div>
-              <p class='scene-index'>Continue the composition</p>
-              <h2>Facts behind the feeling.</h2>
+              <p class='scene-index'>Facts behind the feeling</p>
+              <h2>Continue the composition.</h2>
             </div>
             <p>
               Every scene is grounded in the public product surface, architecture and release truth
@@ -281,7 +380,7 @@ export class DocsHome extends OpenElement {
           <div class='links'>
             {references.map(([index, title, href, copy]) => (
               <a href={href}>
-                <span>{index}</span>
+                <span aria-hidden='true'>{index}</span>
                 <strong>{title}</strong>
                 <small>{copy}</small>
               </a>

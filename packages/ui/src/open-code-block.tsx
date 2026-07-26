@@ -39,7 +39,7 @@ sheet.replaceSync(`
     padding: var(--size-5);
     background: var(--bg-code);
     border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-3);
+    border-radius: var(--radius-2);
     overflow-x: auto;
     font-family: var(--font-mono);
     font-size: var(--font-size-0);
@@ -56,7 +56,7 @@ sheet.replaceSync(`
     padding: var(--size-5);
     background: var(--bg-code);
     border: var(--border-size-1) solid var(--code-border);
-    border-radius: var(--radius-3);
+    border-radius: var(--radius-2);
     overflow-x: auto;
     font-family: var(--font-mono);
     font-size: var(--font-size-0);

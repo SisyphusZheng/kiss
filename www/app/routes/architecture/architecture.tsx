@@ -4,7 +4,6 @@ export const tagName = 'engine-architecture';
 import { OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
-import '@openelement/ui/open-code-block';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '@openelement/site-ui/open-section-frame.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
@@ -22,9 +21,25 @@ pageSheet.replaceSync(`
   .lede { margin: 20px 0 0; font-size: var(--font-size-subhead); max-width: 650px; }
   .artifact, .layer-map { border:1px solid color-mix(in srgb,var(--color-border) 72%,var(--brand)); border-radius:var(--radius-2); overflow:hidden; background:color-mix(in srgb,var(--surface-1) 82%,transparent); box-shadow:inset 0 1px 0 var(--edge-highlight),0 28px 90px color-mix(in srgb,var(--violet-10) 24%,transparent); backdrop-filter:blur(18px); }
   .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-0); color: var(--text-muted); }
-  pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--code-bg); color: var(--code-text); font-size: var(--font-size-0); line-height: 1.65; }
   code { font-family: var(--font-mono); }
-  .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); align-items: start; }
+  /* package graph: SSR node-edge diagram, no client script */
+  .pkg-graph { display: grid; gap: var(--size-6); font-family: var(--font-mono); }
+  .graph-note { margin: 0; color: var(--text-muted); font-size: var(--font-size-micro); font-weight: var(--font-weight-7); letter-spacing: .14em; text-transform: uppercase; }
+  .graph-main { display: flex; align-items: center; gap: var(--size-2); }
+  .node { padding: var(--size-2) var(--size-3); border: var(--border-size-1) solid color-mix(in srgb,var(--violet-6) 65%,transparent); border-radius: var(--radius-1); background: color-mix(in srgb,var(--violet-2) 30%,var(--bg-elevated)); }
+  .node strong { display: block; color: var(--text-primary); font-size: var(--font-size-0); font-weight: var(--font-weight-8); letter-spacing: -.01em; }
+  .node small { display: block; margin-block-start: var(--size-1); color: var(--text-muted); font-size: var(--font-size-micro); line-height: 1.4; }
+  .node.core { border-color: var(--violet-8); background: color-mix(in srgb,var(--violet-6) 42%,var(--bg-elevated)); box-shadow: inset 0 1px 0 var(--edge-highlight), 0 12px 40px color-mix(in srgb,var(--violet-8) 28%,transparent); }
+  .node.optional { border-style: dashed; background: transparent; box-shadow: none; }
+  .edge { position: relative; flex: 1 1 var(--size-8); min-width: var(--size-7); height: var(--border-size-1); background: color-mix(in srgb,var(--violet-6) 80%,transparent); }
+  .edge i { position: absolute; inset-block-end: var(--size-2); left: 50%; transform: translateX(-50%); color: var(--violet-8); font-size: var(--font-size-micro); font-style: normal; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+  .graph-subs { display: flex; align-items: flex-end; gap: var(--size-6); }
+  .sub { display: flex; flex-direction: column; align-items: center; }
+  .v-edge { position: relative; width: 0; height: var(--size-6); border-inline-start: var(--border-size-1) dashed color-mix(in srgb,var(--violet-6) 80%,transparent); }
+  .v-edge i { position: absolute; inset-inline-start: var(--size-2); top: 50%; transform: translateY(-50%); color: var(--violet-8); font-size: var(--font-size-micro); font-style: normal; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+  .retired { margin: 0 0 0 auto; align-self: center; color: var(--text-muted); font-size: var(--font-size-micro); letter-spacing: .04em; }
+  .layer { display: grid; grid-template-columns: auto 150px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); align-items: start; }
+  .clause-num { font-family: var(--font-mono); font-size: clamp(1.8rem,3vw,3rem); font-weight: var(--font-weight-8); line-height: 1; color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb,var(--violet-5) 55%,transparent); user-select: none; }
   .layer:last-child { border-bottom: 0; }
   .layer strong { color: var(--text); font-size: var(--font-size-1); }
   .layer span, .layer p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-0); line-height: 1.55; }
@@ -35,15 +50,9 @@ pageSheet.replaceSync(`
   .gate span { color: var(--text-secondary); font-size: var(--font-size-0); line-height: 1.55; }
   .nav-row { display:flex; flex-wrap:wrap; gap:10px; width:min(1180px,calc(100% - 4rem)); margin:var(--size-8) auto 0; }
   @media (max-width: 900px) { .cards, .gate-grid { grid-template-columns: 1fr; } .layer { grid-template-columns: 1fr; gap: var(--size-2); } h1 { font-size: var(--font-size-display-lg); line-height: 1.06; } h2 { font-size: var(--font-size-display-sm); } }
+  @media (max-width: 640px) { .graph-main { flex-direction: column; align-items: stretch; } .edge { flex: none; align-self: center; width: 0; min-width: 0; height: var(--size-7); background: transparent; border-inline-start: var(--border-size-1) solid color-mix(in srgb,var(--violet-6) 80%,transparent); } .edge i { inset-block-end: auto; top: 50%; left: var(--size-2); transform: translateY(-50%); } .graph-subs { flex-direction: column; align-items: stretch; gap: var(--size-5); } .sub { align-items: center; } .retired { margin: 0; } }
   @media (max-width: 560px) { .nav-row{width:calc(100% - 2rem)} .gate { grid-template-columns: 1fr; display: grid; } }
 `);
-
-const PACKAGE_GRAPH = `consumer packages
-  @openelement/element       elements, JSX, DSD, hydration, signals
-  @openelement/app           pages, routes, islands, render semantics
-  @openelement/adapter-vite  Vite, content, static builds, Nitro output
-  @openelement/create        starter and installed entrypoint
-  @openelement/ui            optional proven primitives`;
 
 export class ArchitecturePage extends OpenElement {
   declare locale?: string;
@@ -54,7 +63,8 @@ export class ArchitecturePage extends OpenElement {
       <main>
         <open-page-hero variant='technical'>
           <span slot='eyebrow'>ADR-0113 / {OPENELEMENT_VERSION}</span>
-          <span slot='title'>Current Architecture</span>
+          <span slot='title'>Current</span>
+          <span slot='title-accent'>Architecture</span>
           <span slot='lede'>
             OpenElement is a Web Components-native, static-first application framework. Custom
             Elements are the durable component contract; JSX and Basic Element are authoring modes;
@@ -63,9 +73,54 @@ export class ArchitecturePage extends OpenElement {
           <open-artifact-panel slot='artifact'>
             <span slot='label'>package graph</span>
             <span slot='meta'>{OPENELEMENT_VERSION} published line</span>
-            <open-code-block>
-              <pre><code>{PACKAGE_GRAPH}</code></pre>
-            </open-code-block>
+            <div
+              class='pkg-graph'
+              role='img'
+              aria-label='Package graph: app uses element, adapter-vite builds on app, ui is optional, create ships the starter; core, signal, router, protocol, content and ssg are retired.'
+            >
+              <p class='graph-note' aria-hidden='true'>
+                Dependency direction — consumers point at what they use
+              </p>
+              <div class='graph-main' aria-hidden='true'>
+                <div class='node core'>
+                  <strong>element</strong>
+                  <small>runtime · zero framework deps</small>
+                </div>
+                <span class='edge'>
+                  <i>uses</i>
+                </span>
+                <div class='node'>
+                  <strong>app</strong>
+                  <small>pages · routing</small>
+                </div>
+                <span class='edge'>
+                  <i>builds on</i>
+                </span>
+                <div class='node'>
+                  <strong>adapter-vite</strong>
+                  <small>the only host side</small>
+                </div>
+              </div>
+              <div class='graph-subs' aria-hidden='true'>
+                <div class='sub'>
+                  <span class='v-edge'>
+                    <i>optional</i>
+                  </span>
+                  <div class='node optional'>
+                    <strong>ui</strong>
+                    <small>optional primitives</small>
+                  </div>
+                </div>
+                <div class='sub'>
+                  <span class='v-edge'></span>
+                  <div class='node'>
+                    <strong>create</strong>
+                    <small>starter · build time</small>
+                  </div>
+                </div>
+                <p class='retired'>retired: core · signal · router · protocol · content · ssg</p>
+              </div>
+            </div>
           </open-artifact-panel>
         </open-page-hero>
 
@@ -78,16 +133,19 @@ export class ArchitecturePage extends OpenElement {
           </span>
           <div class='layer-map'>
             <div class='layer'>
+              <span class='clause-num' aria-hidden='true'>§1</span>
               <strong>element</strong>
               <span>@openelement/element</span>
               <p>One authoring surface for Custom Elements, JSX, DSD, hydration and signals.</p>
             </div>
             <div class='layer'>
+              <span class='clause-num' aria-hidden='true'>§2</span>
               <strong>application</strong>
               <span>@openelement/app</span>
               <p>Pages, routes, islands and render semantics for complete applications.</p>
             </div>
             <div class='layer'>
+              <span class='clause-num' aria-hidden='true'>§3</span>
               <strong>build</strong>
               <span>@openelement/adapter-vite</span>
               <p>
@@ -96,6 +154,7 @@ export class ArchitecturePage extends OpenElement {
               </p>
             </div>
             <div class='layer'>
+              <span class='clause-num' aria-hidden='true'>§4</span>
               <strong>adoption</strong>
               <span>@openelement/create, optional ui</span>
               <p>

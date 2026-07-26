@@ -119,9 +119,10 @@ await checkFile('www/vite.config.ts');
 
 if (Deno.args.includes('--artifacts')) {
   for await (const file of walk('www/dist', { skip: ['blog'] })) {
-    // The root-level history indexes are emitted as blog.html/changelog.html;
-    // their historical copy is intentionally outside the current-surface rule.
-    if (/(?:^|\/)(?:blog|changelog)\.html$/.test(file)) continue;
+    // The root-level history indexes (blog.html, changelog.html or their
+    // /blog//changelog route index.html) hold historical copy that is
+    // intentionally outside the current-surface rule.
+    if (/(?:^|\/)(?:blog|changelog)(?:\.html|\/index\.html)$/.test(file)) continue;
     if (/\.html$/.test(file)) await checkFile(file);
   }
 }

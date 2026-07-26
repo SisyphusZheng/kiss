@@ -1,14 +1,11 @@
 /**
- * Blog Index Page - editorial release and architecture journal.
+ * Blog Index Page - v4 dispatch journal: serif masthead, featured band,
+ * and outlined-number article rows.
  */
 export const meta = { section: 'History', label: 'Blog', order: 10 };
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import '@openelement/ui/open-badge';
-import '@openelement/site-ui/open-lab-panel.tsx';
-import '@openelement/site-ui/open-page-hero.tsx';
-import '@openelement/site-ui/open-artifact-panel.tsx';
 import { posts } from '@openelement/generated/blog-data';
 
 const routeSheet = new StyleSheet();
@@ -16,6 +13,7 @@ routeSheet.replaceSync(`
   :host {
     display: block;
     color: var(--text-primary);
+    background: var(--bg-base);
   }
 
   * {
@@ -26,198 +24,198 @@ routeSheet.replaceSync(`
   h2,
   h3,
   p {
-    margin-block-start: 0;
+    margin: 0;
   }
 
-  .blog-page {
-    display: grid;
-    background: var(--bg-base);
+  /* ── masthead: one serif italic accent ── */
+  .masthead {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
   }
 
-  .kicker,
-  .section-kicker,
-  .post-date,
-  .post-tag {
-    color: var(--brand);
+  .masthead::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(180deg, black, transparent);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--violet-8);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
+    letter-spacing: 0.29em;
     text-transform: uppercase;
   }
 
-  .kicker {
-    margin-block-end: var(--size-4);
+  .eyebrow::before {
+    content: "";
+    width: 2rem;
+    height: 2px;
+    background: var(--brand);
   }
 
   h1 {
-    margin: 0;
-    max-width: 760px;
-    font-size: var(--font-size-7);
-    line-height: .9;
-    font-weight: var(--font-weight-9);
-    letter-spacing: 0;
+    margin-block-start: clamp(1.5rem, 4vh, 3rem);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(4.2rem, 13vw, 11rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: var(--violet-8);
   }
 
   .lede {
-    max-width: 720px;
-    margin-block: var(--size-5) 0;
+    max-width: 38rem;
+    margin-block-start: clamp(1.25rem, 3vh, 2rem);
     color: var(--text-secondary);
-    font-size: var(--font-size-2);
-    line-height: 1.28;
+    font-size: clamp(1rem, 1.2vw, 1.1rem);
+    line-height: 1.75;
   }
 
+  /* ── featured dispatch band ── */
   .featured {
-    display: grid;
-    gap: var(--size-5);
-    height: 100%;
-  }
-
-  .featured h2 {
-    margin: 0;
-    font-size: var(--font-size-4);
-    line-height: 1;
-    font-weight: var(--font-weight-9);
-    letter-spacing: 0;
-  }
-
-  .featured p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .featured a,
-  .post-card {
+    display: block;
+    padding: clamp(2.5rem, 6vh, 4.5rem) clamp(1.5rem, 5vw, 4.5rem);
+    border-block: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-elevated) 55%, var(--bg-base));
     color: inherit;
     text-decoration: none;
   }
 
-  .sections {
-    display: grid;
-    grid-template-columns: minmax(280px, .34fr) minmax(0, 1fr);
-    gap: var(--size-5);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    padding: var(--size-8) 0 var(--size-10);
-  }
-
-  .journal-note {
-    align-self: start;
-    position: sticky;
-    top: calc(var(--nav-height) + var(--size-5));
-  }
-
-  .journal-note p {
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .post-stream {
-    display: grid;
-    gap: var(--size-5);
-  }
-
-  .post-section {
-    display: grid;
-    gap: var(--size-4);
-  }
-
-  .post-section h2 {
-    margin: 0;
-    font-size: var(--font-size-5);
-    line-height: 1;
-    font-weight: var(--font-weight-9);
-    letter-spacing: 0;
-  }
-
-  .post-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    border-block-start: var(--border-size-1) solid var(--border);
-  }
-
-  .post-card {
-    display: grid;
-    gap: var(--size-4);
-    min-height: 0;
-    padding: var(--size-5) 0;
-    border-block-end: var(--border-size-1) solid var(--border);
-    border-radius: 0;
-    background: transparent;
-    transition: border-color var(--duration-2) var(--ease-2), background var(--duration-2) var(--ease-2);
-  }
-
-  .post-card:hover {
-    border-color: var(--brand);
-    background: linear-gradient(90deg, color-mix(in srgb,var(--brand) 8%,transparent),transparent);
-  }
-
-  .post-card h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--font-size-3);
-    line-height: 1.04;
-    font-weight: var(--font-weight-9);
-    letter-spacing: 0;
-  }
-
-  .post-card p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .post-meta,
-  .tag-row {
+  .featured-kicker {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--size-2);
-    align-items: center;
+    gap: var(--size-3);
+    align-items: baseline;
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-8);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
-  .post-date {
+  .featured-kicker .read-time {
+    margin-inline-start: auto;
     color: var(--text-muted);
+    font-weight: var(--font-weight-5);
+    letter-spacing: 0.08em;
   }
 
-  .post-tag {
-    padding: var(--size-1) var(--size-2);
-    border: var(--border-size-1) solid var(--border);
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
+  .featured h2 {
+    max-width: 20ch;
+    margin-block-start: var(--size-5);
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.4rem, 5.5vw, 4.6rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: color 0.15s ease;
+  }
+
+  .featured:hover h2 {
+    color: var(--violet-8);
+  }
+
+  .featured-excerpt {
+    max-width: 44rem;
+    margin-block-start: var(--size-4);
     color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    line-height: 1.75;
   }
 
-  @media (max-width: 1120px) {
-    .sections,
-    .post-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .sections {
-      width: min(100% - var(--size-8), 1120px);
-    }
-
-    .journal-note {
-      position: static;
-    }
+  .read-more {
+    display: inline-block;
+    margin-block-start: var(--size-5);
+    color: var(--violet-8);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    font-weight: var(--font-weight-7);
   }
 
-  @media (max-width: 640px) {
-    .sections {
-      padding: var(--size-5) var(--size-4);
+  /* ── numbered article rows ── */
+  .stream {
+    display: grid;
+    padding-block-end: clamp(3rem, 8vh, 6rem);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(4rem, 0.14fr) minmax(0, 1fr) auto;
+    gap: clamp(1rem, 4vw, 4rem);
+    align-items: center;
+    padding: clamp(1.5rem, 4vh, 2.75rem) clamp(1.5rem, 5vw, 4.5rem);
+    border-block-end: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .row:hover {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--brand) 8%, transparent), transparent);
+  }
+
+  .row-index {
+    font-family: var(--font-mono);
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--violet-5) 55%, transparent);
+  }
+
+  .row-title {
+    display: block;
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    line-height: 1.05;
+    color: var(--text-primary);
+    transition: color 0.15s ease;
+  }
+
+  .row:hover .row-title {
+    color: var(--violet-8);
+  }
+
+  .row-excerpt {
+    margin-block-start: var(--size-2);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: 1.6;
+  }
+
+  .row-date {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 720px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--size-2);
     }
 
-    h1 {
-      font-size: var(--font-size-6);
-      line-height: .94;
-    }
-
-    .lede {
-      font-size: var(--font-size-1);
+    .row-date {
+      justify-self: start;
     }
   }
 `);
@@ -228,8 +226,8 @@ function postTags(post: typeof posts[number]): string[] {
   return post.frontmatter.tags ?? [];
 }
 
-function hasTag(post: typeof posts[number], tag: string): boolean {
-  return postTags(post).some((value) => value.toLowerCase() === tag);
+function padIndex(index: number): string {
+  return String(index + 1).padStart(2, '0');
 }
 
 export class BlogIndexPage extends OpenElement {
@@ -237,91 +235,49 @@ export class BlogIndexPage extends OpenElement {
 
   override render() {
     const featured = visiblePosts[0];
-    const releasePosts = visiblePosts.filter((post) => hasTag(post, 'release')).slice(0, 4);
-    const architecturePosts = visiblePosts
-      .filter((post) =>
-        hasTag(post, 'architecture') ||
-        post.frontmatter.title.toLowerCase().includes('architecture')
-      )
-      .slice(0, 4);
-    const recentPosts = visiblePosts.slice(0, 8);
+    const rows = visiblePosts.slice(1, 5);
 
     return (
-      <main class='blog-page'>
-        <open-page-hero variant='editorial'>
-          <span slot='eyebrow'>Editorial lab journal</span>
-          <span slot='title'>Design notes, release truth, and architecture decisions.</span>
-          <span slot='lede'>
+      <main class='journal'>
+        <header class='masthead'>
+          <p class='eyebrow'>Blog — Dispatches from the lab</p>
+          <h1>Dispatches.</h1>
+          <p class='lede'>
             The public audit trail: what changed, why the package graph moved, and which standards
             boundary matters next.
-          </span>
-          <open-artifact-panel slot='artifact'>
-            <span slot='label'>featured dispatch</span>
-            <span slot='meta'>{featured?.frontmatter.date ?? 'journal'}</span>
-            {featured && (
-              <div class='featured'>
-                <a href={'/blog/' + featured.slug}>
-                  <h2>{featured.frontmatter.title}</h2>
-                </a>
-                {featured.frontmatter.excerpt && <p>{featured.frontmatter.excerpt}</p>}
-                <div class='tag-row'>
-                  <open-badge tone='brand'>latest</open-badge>
-                  {postTags(featured).slice(0, 3).map((tag) => (
-                    <span class='post-tag' key={tag}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </open-artifact-panel>
-        </open-page-hero>
+          </p>
+        </header>
 
-        <section class='sections'>
-          <open-lab-panel class='journal-note' label='journal map' meta='docs as product'>
-            <p>
-              Release posts are product evidence. Architecture posts explain the standards decisions
-              behind DSD, routes, islands, and package boundaries.
+        {featured && (
+          <a class='featured' href={'/blog/' + featured.slug}>
+            <p class='featured-kicker'>
+              <span>
+                Featured — {featured.frontmatter.date}
+                {postTags(featured)[0] ? ` · ${postTags(featured)[0]}` : ''}
+              </span>
+              <span class='read-time'>Latest dispatch</span>
             </p>
-          </open-lab-panel>
-
-          <div class='post-stream'>
-            {this._renderPostSection(
-              'Release line',
-              releasePosts.length ? releasePosts : recentPosts.slice(0, 4),
+            <h2>{featured.frontmatter.title}</h2>
+            {featured.frontmatter.excerpt && (
+              <p class='featured-excerpt'>{featured.frontmatter.excerpt}</p>
             )}
-            {this._renderPostSection(
-              'Architecture notes',
-              architecturePosts.length ? architecturePosts : recentPosts.slice(4, 8),
-            )}
-            {this._renderPostSection('Recent dispatches', recentPosts)}
-          </div>
-        </section>
-      </main>
-    );
-  }
+            <span class='read-more'>Read the dispatch →</span>
+          </a>
+        )}
 
-  private _renderPostSection(title: string, items: typeof posts): unknown {
-    return (
-      <section class='post-section'>
-        <span class='section-kicker'>openElement notes</span>
-        <h2>{title}</h2>
-        <div class='post-grid'>
-          {items.map((post, index) => (
-            <a href={'/blog/' + post.slug} class='post-card'>
-              <div class='post-meta'>
-                <span class='post-date'>{post.frontmatter.date}</span>
-                {index === 0 && <open-badge tone='brand'>lead</open-badge>}
+        <section class='stream' aria-label='Recent dispatches'>
+          {rows.map((post, index) => (
+            <a class='row' href={'/blog/' + post.slug}>
+              <span class='row-index' aria-hidden='true'>{padIndex(index)}</span>
+              <div>
+                <span class='row-title'>{post.frontmatter.title}</span>
+                {post.frontmatter.excerpt && <p class='row-excerpt'>{post.frontmatter.excerpt}</p>}
               </div>
-              <h3>{post.frontmatter.title}</h3>
-              {post.frontmatter.excerpt && <p>{post.frontmatter.excerpt}</p>}
-              <div class='tag-row'>
-                {postTags(post).slice(0, 3).map((tag) => (
-                  <span class='post-tag' key={tag}>{tag}</span>
-                ))}
-              </div>
+              <span class='row-date'>{post.frontmatter.date}</span>
             </a>
           ))}
-        </div>
-      </section>
+        </section>
+      </main>
     );
   }
 }
