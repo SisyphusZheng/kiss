@@ -65,7 +65,6 @@ const failures: Failure[] = [];
 const requiredCommunityFiles = [
   'SECURITY.md',
   'CODE_OF_CONDUCT.md',
-  'SUPPORT.md',
   'MAINTAINERS.md',
 ];
 

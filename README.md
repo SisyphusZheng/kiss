@@ -95,6 +95,14 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). Architecture decisions live in
 [docs/adr/](./docs/adr/); historical release and audit records remain available
 as evidence, not current product documentation.
 
+## Brand
+
+The canonical compact mark is the dark `<open/>` SVG in
+[`www/public/favicon.svg`](./www/public/favicon.svg)
+(`open-favicon-inverted.svg` is the maintained light-surface variant). Brand
+SVGs are distributed under the repository MIT license; forks may reuse them
+with attribution but should not imply endorsement.
+
 ## License
 
 MIT

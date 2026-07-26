@@ -80,6 +80,12 @@ deno task dev
 参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。架构决策在 [docs/adr/](./docs/adr/)；
 历史 release 与 audit 记录保留为证据，不再作为当前产品文档。
 
+## 品牌
+
+规范的紧凑标志是 [`www/public/favicon.svg`](./www/public/favicon.svg) 中的深色
+`<open/>` SVG（`open-favicon-inverted.svg` 是浅色背景的维护变体）。品牌 SVG
+以仓库 MIT 许可证分发；fork 可以署名使用，但不应暗示获得上游背书。
+
 ## 许可
 
 MIT
