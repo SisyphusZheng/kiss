@@ -1,5 +1,11 @@
 import { exists, walk } from './lib/fs.ts';
-import { PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
+  PREVIOUS_RELEASE_THEME,
+} from './project-constants.ts';
+import { roadmapEntryTheme } from './autoflow/release.ts';
 
 type Issue = { file: string; text: string };
 
@@ -132,6 +138,24 @@ for (const root of sourceRoots) {
   }
 }
 await checkFile('www/vite.config.ts');
+
+// Release line-prose gate: the mechanical version bump rewrites the roadmap
+// current-line entry's version string but cannot write the new release's
+// theme — that is human release prose. Fail while the entry still names the
+// superseded theme recorded at bump time (the 0.41.1 incident shipped
+// alpha.19's 'third audit cleanup sweep' under the v0.41.1 entry).
+{
+  const roadmapText = await Deno.readTextFile('www/app/routes/roadmap.tsx');
+  const currentTheme = roadmapEntryTheme(roadmapText, PACKAGE_VERSION_TAG);
+  if (currentTheme !== undefined && currentTheme === PREVIOUS_RELEASE_THEME) {
+    issues.push({
+      file: 'www/app/routes/roadmap.tsx',
+      text:
+        `current-line timeline entry still names the superseded theme '${PREVIOUS_RELEASE_THEME}'; ` +
+        'write the new release theme (and copy) before releasing',
+    });
+  }
+}
 
 if (Deno.args.includes('--artifacts')) {
   for await (const file of walk('www/dist', { skip: ['blog'] })) {

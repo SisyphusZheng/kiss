@@ -52,6 +52,16 @@ export const NITRO_COMPATIBILITY_DATE = '2026-06-12';
 export const PREVIOUS_PACKAGE_VERSION = '0.41.0';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 
+// The theme the www roadmap current-line timeline entry carried immediately
+// after the last mechanical version bump. The bump rewrites the entry's
+// version string but cannot invent the new release's theme — that is human
+// release prose. check-www-current-truth.ts fails while the entry still
+// names this superseded theme (the 0.41.1 bump left 'third audit cleanup
+// sweep' describing alpha.19 under the v0.41.1 entry). The bump side
+// re-records this constant from the pre-bump entry; bootstrap value
+// documents the incident.
+export const PREVIOUS_RELEASE_THEME = 'third audit cleanup sweep';
+
 /**
  * Version strings that must never reappear in the head anchor zone of the
  * governed docs (check-version-anchors.ts) or in "published as"-style

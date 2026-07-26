@@ -2,11 +2,14 @@ import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
 import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
 import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {
+  bumpPreviousReleaseThemeText,
   createReleasePlan,
   evidenceFile,
   githubReleaseCreateCommand,
   nextPatchVersion,
   releaseTag,
+  resolvePatchTargetVersion,
+  roadmapEntryTheme,
 } from '../release.ts';
 
 Deno.test('policy: patch docs fix can be automated', () => {
@@ -193,10 +196,53 @@ Deno.test('release: next patch version preserves pre-release line', () => {
   assertEquals(nextPatchVersion('0.41.0'), '0.41.1');
 });
 
+Deno.test('release: patch target resumes the in-flight release instead of skipping a patch', () => {
+  // The 0.41.1 → 0.41.2 incident: the first attempt bumped the package line
+  // to 0.41.1 and failed; the resume recomputed nextPatchVersion(0.41.1).
+  for (const status of ['failed', 'running'] as const) {
+    assertEquals(
+      resolvePatchTargetVersion('0.41.1', { kind: 'patch-release', status }),
+      { targetVersion: '0.41.1', resumed: true },
+    );
+  }
+});
+
+Deno.test('release: patch target advances when no resume is pending', () => {
+  assertEquals(resolvePatchTargetVersion('0.41.1', undefined), {
+    targetVersion: '0.41.2',
+    resumed: false,
+  });
+  assertEquals(
+    resolvePatchTargetVersion('0.41.1', { kind: 'patch-release', status: 'completed' }),
+    { targetVersion: '0.41.2', resumed: false },
+  );
+  // A failed publish-existing for the current line is not a patch bump to
+  // resume: the version line is already published, so a patch advances.
+  assertEquals(
+    resolvePatchTargetVersion('0.41.1', { kind: 'publish-existing', status: 'failed' }),
+    { targetVersion: '0.41.2', resumed: false },
+  );
+});
+
 Deno.test('release: GitHub prerelease flag follows semver prerelease tags', () => {
   assert(githubReleaseCreateCommand('v0.41.0-alpha.5', 'notes.md').includes('--prerelease'));
   assert(githubReleaseCreateCommand('0.41.0-rc.1', 'notes.md').includes('--prerelease'));
   assertFalse(githubReleaseCreateCommand('v0.41.0', 'notes.md').includes('--prerelease'));
+});
+
+Deno.test('release: roadmap entry theme parses the version-adjacent theme line', () => {
+  const text = "  {\n    version: 'v0.41.1',\n    theme: 'stable five-package line',\n";
+  assertEquals(roadmapEntryTheme(text, 'v0.41.1'), 'stable five-package line');
+  assertEquals(roadmapEntryTheme(text, 'v0.41.0'), undefined);
+});
+
+Deno.test('release: previous release theme bump records the superseded theme idempotently', () => {
+  const constants = "export const PREVIOUS_RELEASE_THEME = 'old theme';\n";
+  assertEquals(
+    bumpPreviousReleaseThemeText(constants, 'new theme'),
+    "export const PREVIOUS_RELEASE_THEME = 'new theme';\n",
+  );
+  assertEquals(bumpPreviousReleaseThemeText(constants, 'old theme'), undefined);
 });
 
 Deno.test('release: local plan includes publish, smoke, gates, and GitHub release when credentials are present', () => {

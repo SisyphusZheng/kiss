@@ -90,6 +90,54 @@ export function nextPatchVersion(version: string): string {
   return `${major}.${minor}.${patch + 1}`;
 }
 
+/**
+ * Re-derive the patch-release target from recorded evidence instead of the
+ * (possibly already-bumped) current package line. A failed patch attempt
+ * leaves its evidence at running/failed under the *target* version — which,
+ * once the bump step ran, equals PACKAGE_VERSION. Resuming must reuse that
+ * target; recomputing nextPatchVersion(PACKAGE_VERSION) skips a patch (the
+ * 0.41.1 → 0.41.2 incident, reverted in 10038c4d).
+ */
+export function resolvePatchTargetVersion(
+  currentVersion: string,
+  prior: Pick<ReleaseEvidence, 'kind' | 'status'> | undefined,
+): { targetVersion: string; resumed: boolean } {
+  if (
+    prior?.kind === 'patch-release' &&
+    (prior.status === 'running' || prior.status === 'failed')
+  ) {
+    return { targetVersion: currentVersion, resumed: true };
+  }
+  return { targetVersion: nextPatchVersion(currentVersion), resumed: false };
+}
+
+/**
+ * Read the evidence record for a version regardless of release kind, so the
+ * patch-release entrypoint can detect an in-flight release before deriving
+ * its target. Missing file means no prior attempt; a corrupt file is
+ * rejected loudly, matching readPriorReleaseEvidence's trust model.
+ */
+export async function readReleaseEvidenceForVersion(
+  version: string,
+): Promise<ReleaseEvidence | undefined> {
+  const path = evidenceFile(version);
+  let text: string;
+  try {
+    text = await Deno.readTextFile(path);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return undefined;
+    throw error;
+  }
+  try {
+    return JSON.parse(text) as ReleaseEvidence;
+  } catch (error) {
+    throw new Error(
+      `Release evidence ${path} is not readable JSON; repair or remove it before ` +
+        `re-running: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
 export function releaseTag(version: string): string {
   return `v${version}`;
 }
@@ -625,6 +673,31 @@ export async function updateProjectConstants(version: string): Promise<void> {
   await Deno.writeTextFile(path, updated);
 }
 
+/**
+ * Extract the theme of the www roadmap timeline entry for a version tag.
+ * The entry keeps `version` and `theme` on adjacent lines; anything else
+ * means the file shape changed and the release line-prose gate needs an
+ * update too, so no match is a loud undefined for the bump side to warn on.
+ */
+export function roadmapEntryTheme(text: string, versionTag: string): string | undefined {
+  const escaped = versionTag.replaceAll('.', '\\.');
+  return text.match(new RegExp(`version:\\s*'${escaped}',\\s*theme:\\s*'([^']+)'`, 'u'))?.[1];
+}
+
+/**
+ * Record the superseded current-line theme into the project-constants
+ * source text. Returns `undefined` when already recorded (idempotent).
+ */
+export function bumpPreviousReleaseThemeText(text: string, theme: string): string | undefined {
+  const m = text.match(/PREVIOUS_RELEASE_THEME = '([^']+)'/u);
+  if (!m) throw new Error('tools/project-constants.ts: PREVIOUS_RELEASE_THEME anchor missing.');
+  if (m[1] === theme) return undefined;
+  return text.replace(
+    /PREVIOUS_RELEASE_THEME = '[^']+'/u,
+    `PREVIOUS_RELEASE_THEME = '${theme}'`,
+  );
+}
+
 export function buildVersionAnchorReplacements(
   version: string,
 ): Array<[string, string, string]> {
@@ -735,6 +808,20 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
       // Replace the first occurrence only: it is the head-zone declaration the
       // gates enforce. Later occurrences are historical quotes (release notes,
       // roadmap tables) that must keep the old version string.
+      if (path === 'www/app/routes/roadmap.tsx' && from.startsWith('version: ')) {
+        // The bump rewrites the current-line entry's version but cannot
+        // invent the new release's theme. Record the superseded theme so
+        // check-www-current-truth fails until a human writes the new one
+        // (the 0.41.1 bump shipped alpha.19's theme under the v0.41.1 entry).
+        const oldTag = from.match(/version: '([^']+)'/u)?.[1];
+        const supersededTheme = oldTag ? roadmapEntryTheme(text, oldTag) : undefined;
+        if (supersededTheme) {
+          const constantsPath = 'tools/project-constants.ts';
+          const constants = await Deno.readTextFile(constantsPath);
+          const bumped = bumpPreviousReleaseThemeText(constants, supersededTheme);
+          if (bumped !== undefined) await Deno.writeTextFile(constantsPath, bumped);
+        }
+      }
       await Deno.writeTextFile(path, text.replace(from, to));
       continue;
     }

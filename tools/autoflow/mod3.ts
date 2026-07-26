@@ -12,8 +12,9 @@ import {
   createPreparePlan,
   createPublishExistingPlan,
   executeReleasePlan,
-  nextPatchVersion,
+  readReleaseEvidenceForVersion,
   releaseTag,
+  resolvePatchTargetVersion,
 } from './release.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
 import { PACKAGE_VERSION } from '../project-constants.ts';
@@ -197,7 +198,17 @@ async function runPublishExisting(
 }
 
 async function executePatchRelease(dryRun: boolean): Promise<void> {
-  const targetVersion = nextPatchVersion(PACKAGE_VERSION);
+  // Re-derive the target from recorded evidence first: a previous attempt
+  // that already bumped the package line must resume at the same target
+  // instead of skipping a patch (the 0.41.1 → 0.41.2 incident).
+  const prior = await readReleaseEvidenceForVersion(PACKAGE_VERSION);
+  const { targetVersion, resumed } = resolvePatchTargetVersion(PACKAGE_VERSION, prior);
+  if (resumed) {
+    console.log(
+      `Resuming in-flight patch release ${releaseTag(targetVersion)}; ` +
+        'the target is not re-derived from the already-bumped package line.',
+    );
+  }
   await executeReleasePlan('patch-release', targetVersion, undefined, dryRun);
 }
 

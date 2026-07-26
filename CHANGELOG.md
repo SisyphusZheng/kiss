@@ -12,6 +12,19 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.2
+
+- Patch release: release-tooling self-repair (TP-0 of the 0.42.0 plan) — no
+  public API, topology or runtime-default changes.
+- A resumed patch release no longer skips a version: the target is
+  re-derived from recorded evidence when a previous attempt already bumped
+  the package line (the 0.41.1 → 0.41.2 incident, reverted in `10038c4d`).
+- New release line-prose gate: the version-anchor bump records the www
+  roadmap current-line entry's superseded theme in
+  `tools/project-constants.ts`, and the www truth gate fails a release
+  until the new release theme is written (the 0.41.1 bump had shipped
+  alpha.19's theme under the `v0.41.1` timeline entry).
+
 ## 0.41.1
 
 - Patch release: tooling hardening and hygiene from the third-party audit's
