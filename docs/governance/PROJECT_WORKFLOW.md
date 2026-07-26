@@ -11,8 +11,8 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: published package line `v0.41.0-alpha.19`, completed
-implementation anchor `v0.41.0-alpha.19`, active sweep target
+Current execution anchor: published package line `v0.41.0`, completed
+implementation anchor `v0.41.0`, active sweep target
 `v0.41.0-alpha.18`, and alpha maturation under `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
