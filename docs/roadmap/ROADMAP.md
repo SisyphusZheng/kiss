@@ -7,9 +7,10 @@ Execution and release state follow the
 > Published package line: `v0.41.0`.\
 > Active execution target: `v0.41.0`.\
 > Current implementation state: five-package convergence is published;
-> alpha.17 closed the first audit remediation and alpha.18 completed the
-> second audit sweep (ADR-0117).\
-> Maturity stage: alpha; the abandoned beta naming is retired.
+> alpha.17 closed the first audit remediation, alpha.18 completed the
+> second audit sweep (ADR-0117), and alpha.19 completed the third (ADR-0118).\
+> Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
+> abandoned beta naming is retired.
 
 ## Product direction
 
