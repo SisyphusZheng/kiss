@@ -114,18 +114,8 @@
       "name": "@openelement/adapter-vite",
       "exports": {
         ".": "./src/index.ts",
-        "./app-vite": "./src/app-vite.ts",
-        "./build-context": "./src/build-context.ts",
         "./cli/build": "./src/cli/build.ts",
-        "./cli/build-client": "./src/cli/build-client.ts",
-        "./cli/build-ssg": "./src/cli/build-ssg.ts",
-        "./generated-data-resolver": "./src/generated-data-resolver.ts",
-        "./head-injection": "./src/head-injection.ts",
-        "./i18n-plugin": "./src/i18n-plugin.ts",
         "./nitro-mount": "./src/nitro-mount.ts",
-        "./plugin": "./src/plugin.ts",
-        "./plugin-mdx": "./src/plugin-mdx.ts",
-        "./route-manifest": "./src/route-manifest.ts",
         "./sitemap": "./src/sitemap.ts"
       },
       "declarations": {
@@ -141,63 +131,9 @@
             "export type { OpenMdxPluginOptions } from './plugin-mdx.ts';"
           ]
         },
-        "./app-vite": {
-          "sha256": "fbc9bbfd9964bfab9465a1f572ee12ee430b99fa0c216aa2937a8e7a2cfc5ad2",
-          "publicDeclarations": [
-            "export interface OpenElementOptions extends FrameworkOptions {",
-            "export function openElement(options: OpenElementOptions = {}): Plugin[] {"
-          ]
-        },
-        "./build-context": {
-          "sha256": "a77770942f8fd2e1ea5acf4b5e66545e9cf54373a2c312193f317dbe274c3bcf",
-          "publicDeclarations": [
-            "export type Phase = 1 | 2 | 3;",
-            "export class Phase1Meta {",
-            "export class Phase3Meta {",
-            "export class OpenElementBuildContext {"
-          ]
-        },
         "./cli/build": {
           "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
           "publicDeclarations": []
-        },
-        "./cli/build-client": {
-          "sha256": "e4ec975531f3d39eef603901e5a034b89e86436ae042f6a40b8d3a344583d175",
-          "publicDeclarations": []
-        },
-        "./cli/build-ssg": {
-          "sha256": "10fdc527b3a19974af767a71516d5957475be84f551a57c635488cdbe16b937f",
-          "publicDeclarations": [
-            "export interface SsgEntryDescriptorInputs {",
-            "export function buildSsgEntryDescriptor("
-          ]
-        },
-        "./generated-data-resolver": {
-          "sha256": "d18395cfa3eca7cd72f2e5481b24a0e76d49284d717a9c08274c085adf80788c",
-          "publicDeclarations": [
-            "export const GENERATED_NAV_ID = '@openelement/generated/nav';",
-            "export const GENERATED_BLOG_DATA_ID = '@openelement/generated/blog-data';",
-            "export const GENERATED_I18N_ID = '@openelement/generated/i18n';",
-            "export type GeneratedDataResolverOptions = {",
-            "export function generatedDataPath(",
-            "export function createGeneratedDataResolverPlugin("
-          ]
-        },
-        "./head-injection": {
-          "sha256": "28dab8f1b72b612847e1a158869ad8afc8fe89a242684ffffb44997c022a66e0",
-          "publicDeclarations": [
-            "export function assertNoScriptTags(html: string, context: string): void {",
-            "export function validateSafeUrl(url: string, context: string): string {",
-            "export interface HeadExtrasResult {",
-            "export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {"
-          ]
-        },
-        "./i18n-plugin": {
-          "sha256": "b24544efcdc71ff563a6a5ad4745bbfa3c3152a4694d42bdae2ec929a5f47cb3",
-          "publicDeclarations": [
-            "export function writeI18nDataModule(locales: string[], defaultLocale: string): string {",
-            "export function openI18n("
-          ]
         },
         "./nitro-mount": {
           "sha256": "33056a4b4e9c291ea90532ad68268aaa9ad7be1a7f4897986847bd4e54926c47",
@@ -206,28 +142,6 @@
             "export interface NitroLikeResponse {",
             "export interface OpenElementNitroMountOptions<",
             "export function createOpenElementNitroHandler<"
-          ]
-        },
-        "./plugin": {
-          "sha256": "ce53992a9feb7490df8cf62a22cb97d53ffcf2842176010f79a1a3b2092e907a",
-          "publicDeclarations": [
-            "export function optionalPackageStubsPlugin(): Plugin {",
-            "export function createOpenPlugin("
-          ]
-        },
-        "./plugin-mdx": {
-          "sha256": "d935ba8f764d12bb95cacbe38e1d88ddb3c647560af5d293f0cccb84ecd85601",
-          "publicDeclarations": [
-            "export interface OpenMdxPluginOptions {",
-            "export function mdxPlugin(options: OpenMdxPluginOptions = {}): Plugin {"
-          ]
-        },
-        "./route-manifest": {
-          "sha256": "383a1fdf94c5df10b62fbbdcc3e9d021dfbab222e7c232c3358718d8a866a8f8",
-          "publicDeclarations": [
-            "export interface GenerateRouteManifestOptions {",
-            "export const routeManifest = {} as const;",
-            "export const routeManifest = {"
           ]
         },
         "./sitemap": {

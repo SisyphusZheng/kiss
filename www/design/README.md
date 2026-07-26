@@ -10,14 +10,20 @@ prove that feeling with real browser primitives. `<open/>` is the primary mark;
 `OpenElement` is the formal wordmark.
 
 The first impression is high-end digital product design (70%) with precise,
-inspectable technical instruments (30%). JetBrains Mono is the only brand and
-reading font. The site never uses stock imagery,
+inspectable technical instruments (30%). The site speaks in two voices:
+JetBrains Mono for everything structural and Instrument Serif italic for one
+accent phrase per composition. The site never uses stock imagery,
 people, generic device renders, fake screenshots, video demos, Three.js, GSAP,
 or a full-screen canvas as its content layer.
 
 ## Product truth
 
-- Current product fact is the five-package surface and published alpha.8 line.
+- Current product fact is the five-package surface and the published 0.41 line.
+- Design language of record: v4 (mockups/v4/). The v2/v3 iterations and the
+  legacy generate.mjs indigo pipeline are retired (2026-07-26); do not revive them.
+- CJK rule: zh pages do not use the serif accent — Instrument Serif ships latin
+  glyphs only, so Chinese display headlines stay in Mono. Adopting a CJK display
+  serif (e.g. Noto Serif SC) is a separate, recorded decision if ever wanted.
 - Home scenes show actual Custom Elements, DSD, islands and portable output.
 - `@openelement/ui` is optional; site-only visuals remain in `www`.
 - Blog and changelog are History; their archive copy is not a current design or

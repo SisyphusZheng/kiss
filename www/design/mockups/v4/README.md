@@ -31,5 +31,12 @@ Geometry contract:
 - Diagram nodes (timeline, package graph): squares, not circles. The only
   circles left in the system are terminal traffic lights (OS convention).
 
-`v4-14-design-system` is the rules sheet of record. v3 in `../v3/` and v2
-in `../v2/` are kept for contrast; v4 supersedes both.
+`v4-14-design-system` is the rules sheet of record. The v2/v3 iterations and
+the legacy generate.mjs indigo pipeline were retired on 2026-07-26; v4 is the
+only maintained mockup set.
+
+CJK rule: zh pages render the serif accent only when the accent phrase itself is
+latin. Chinese display headlines stay in JetBrains Mono — Instrument Serif ships
+latin glyphs only, and falling back to a random system serif is worse than not
+using one. If a CJK display serif is ever wanted (e.g. Noto Serif SC), that is a
+separate recorded decision with its own token and licensing review.

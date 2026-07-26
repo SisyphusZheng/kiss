@@ -27,7 +27,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'package-config', label: 'Package config', level: 3 },
     ],
     previous: { href: '/guide/api', label: 'API Routes' },
-    next: { href: '/guide/error-handling', label: 'Error Handling' },
+    next: { href: '/guide/migration', label: 'Migration' },
     cards: [
       {
         id: 'route-config',
@@ -56,7 +56,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'package-config', label: 'Package 配置', level: 3 },
     ],
     previous: { href: '/guide/api', label: 'API 路由' },
-    next: { href: '/guide/error-handling', label: '错误处理' },
+    next: { href: '/guide/migration', label: '迁移' },
     cards: [
       {
         id: 'route-config',

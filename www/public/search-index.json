@@ -138,6 +138,12 @@
     "text": "Configuration Guide"
   },
   {
+    "path": "/guide/migration",
+    "title": "Migration",
+    "section": "Guide",
+    "text": "Migration Guide"
+  },
+  {
     "path": "/guide/error-handling",
     "title": "Error Handling",
     "section": "Guide",

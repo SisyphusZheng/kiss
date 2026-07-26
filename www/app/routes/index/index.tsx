@@ -187,10 +187,48 @@ const references = [
 const marqueeText =
   'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ ';
 
+const content = {
+  en: {
+    lede:
+      'A Web Components-native application framework — beautiful, static-first applications composed from real browser primitives.',
+    startBuilding: 'Start building',
+    watchUnfold: 'Watch it unfold',
+    getStarted: 'Get started',
+    readGuide: 'Read the guide',
+    specVersion: 'Version',
+    specGraph: 'Graph',
+    specEngines: 'Engines',
+    specDeps: 'Framework deps',
+    specOutput: 'Server output',
+    begin: 'Begin.',
+    facts: 'Facts behind the feeling',
+    continueComposition: 'Continue the composition.',
+    referenceCopy:
+      'Every scene is grounded in the public product surface, architecture and release truth — not a decorative fiction.',
+  },
+  zh: {
+    lede: 'Web Components 原生应用框架——用真实的浏览器原语，组合出美观的 static-first 应用。',
+    startBuilding: '开始构建',
+    watchUnfold: '看它展开',
+    getStarted: '快速开始',
+    readGuide: '阅读指南',
+    specVersion: '版本',
+    specGraph: '包图',
+    specEngines: '浏览器引擎',
+    specDeps: '框架依赖',
+    specOutput: '服务端输出',
+    begin: '开始。',
+    facts: '感觉背后的事实',
+    continueComposition: '继续这场组合。',
+    referenceCopy: '每一个场景都立足于公开产品面、架构与发布真相——不是装饰性的虚构。',
+  },
+} as const;
+
 export class DocsHome extends OpenElement {
   static override styles = [sheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     return (
       <main class='home'>
         <open-cinematic-scroll></open-cinematic-scroll>
@@ -204,32 +242,31 @@ export class DocsHome extends OpenElement {
             <span class='serif-line'>composed.</span>
           </h1>
           <p class='lede'>
-            A Web Components-native application framework — beautiful, static-first applications
-            composed from real browser primitives.
+            {t.lede}
           </p>
           <div class='actions'>
-            <a class='action primary' href='/guide/getting-started'>Start building</a>
-            <a class='action' href='#element'>Watch it unfold</a>
+            <a class='action primary' href='/guide/getting-started'>{t.startBuilding}</a>
+            <a class='action' href='#element'>{t.watchUnfold}</a>
           </div>
           <div class='spec-strip'>
             <div class='spec-cell'>
-              <small>Version</small>
+              <small>{t.specVersion}</small>
               <strong>{OPENELEMENT_VERSION} — stable</strong>
             </div>
             <div class='spec-cell'>
-              <small>Graph</small>
+              <small>{t.specGraph}</small>
               <strong>five packages</strong>
             </div>
             <div class='spec-cell'>
-              <small>Engines</small>
+              <small>{t.specEngines}</small>
               <strong>3 in CI</strong>
             </div>
             <div class='spec-cell'>
-              <small>Framework deps</small>
+              <small>{t.specDeps}</small>
               <strong class='accent'>zero</strong>
             </div>
             <div class='spec-cell'>
-              <small>Server output</small>
+              <small>{t.specOutput}</small>
               <strong>DSD default</strong>
             </div>
           </div>
@@ -355,27 +392,24 @@ export const Counter = defineElement(props => ({
 
         <section class='scene begin'>
           <p class='scene-index'>§5 — Begin</p>
-          <h2>Begin.</h2>
+          <h2>{t.begin}</h2>
           <div class='command'>
             <code>$</code>
             <span>deno run -A npm:@openelement/create my-app</span>
           </div>
           <div class='actions'>
-            <a class='action primary' href='/guide/getting-started'>Get started</a>
-            <a class='action' href='/docs'>Read the guide</a>
+            <a class='action primary' href='/guide/getting-started'>{t.getStarted}</a>
+            <a class='action' href='/docs'>{t.readGuide}</a>
           </div>
         </section>
 
         <section class='reference'>
           <header>
             <div>
-              <p class='scene-index'>Facts behind the feeling</p>
-              <h2>Continue the composition.</h2>
+              <p class='scene-index'>{t.facts}</p>
+              <h2>{t.continueComposition}</h2>
             </div>
-            <p>
-              Every scene is grounded in the public product surface, architecture and release truth
-              — not a decorative fiction.
-            </p>
+            <p>{t.referenceCopy}</p>
           </header>
           <div class='links'>
             {references.map(([index, title, href, copy]) => (

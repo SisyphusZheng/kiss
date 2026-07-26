@@ -26,7 +26,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'component-errors', label: 'Component errors', level: 3 },
       { id: 'build-errors', label: 'Build errors', level: 3 },
     ],
-    previous: { href: '/guide/configuration', label: 'Configuration' },
+    previous: { href: '/guide/migration', label: 'Migration' },
     next: { href: '/guide/islands-and-ssr', label: 'Islands and SSR' },
     cards: [
       {
@@ -55,7 +55,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'component-errors', label: '组件错误', level: 3 },
       { id: 'build-errors', label: '构建错误', level: 3 },
     ],
-    previous: { href: '/guide/configuration', label: '配置' },
+    previous: { href: '/guide/migration', label: '迁移' },
     next: { href: '/guide/islands-and-ssr', label: 'Islands 与 SSR' },
     cards: [
       {

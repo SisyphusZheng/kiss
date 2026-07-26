@@ -220,7 +220,11 @@ routeSheet.replaceSync(`
   }
 `);
 
-const visiblePosts = posts.filter((post) => post.frontmatter.type !== 'adr');
+// The dispatch index leads with the newest story: sort by frontmatter date
+// descending before picking featured and rows.
+const visiblePosts = posts
+  .filter((post) => post.frontmatter.type !== 'adr')
+  .sort((a, b) => b.frontmatter.date.localeCompare(a.frontmatter.date));
 
 function postTags(post: typeof posts[number]): string[] {
   return post.frontmatter.tags ?? [];

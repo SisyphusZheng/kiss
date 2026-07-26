@@ -171,6 +171,11 @@ export const navSections = [
         "order": 70
       },
       {
+        "path": "/guide/migration",
+        "label": "Migration",
+        "order": 75
+      },
+      {
         "path": "/guide/error-handling",
         "label": "Error Handling",
         "order": 80
