@@ -1,5 +1,6 @@
 import { walkSync } from '@std/fs/walk';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
+import { readJson } from './lib/fs.ts';
 
 type Failure = { file: string; message: string };
 
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
     }
   }
   for (const file of PROTECTED_PACKAGE_CONFIGS) {
-    const imports = (JSON.parse(await Deno.readTextFile(file)) as {
+    const imports = (await readJson(file) as {
       imports?: Record<string, string>;
     }).imports ?? {};
     for (const dep of FORBIDDEN_REQUIRED_DEPS) {

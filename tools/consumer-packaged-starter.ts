@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { formatJson } from './lib/format-json.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';
+import { readJson } from './lib/fs.ts';
 
 const repoRoot = resolve(import.meta.dirname, '..');
 const packageNames = ['element', 'app', 'adapter-vite', 'ui', 'create'];
@@ -48,7 +49,7 @@ try {
 
   const starter = join(tmp, 'starter');
   const configPath = join(starter, 'deno.json');
-  const config = JSON.parse(await Deno.readTextFile(configPath)) as {
+  const config = await readJson(configPath) as {
     imports: Record<string, string>;
     nodeModulesDir?: string;
   };

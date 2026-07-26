@@ -28,6 +28,7 @@ import { createLogger } from '@openelement/element';
 import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
 import { buildIsrManifestEntries, findHtmlFiles } from './ssg-helpers.ts';
 import { formatJson } from '@openelement/element/build-utils';
+import { DEFAULT_OUT_DIR } from './../paths.ts';
 
 const log = createLogger('ssg');
 
@@ -50,7 +51,7 @@ export async function ssgRender(
   evidence: SsgRenderEvidence = {},
 ): Promise<SsgRenderSummary> {
   const root = options.root || cwd();
-  const outDir = options.outDir || 'dist';
+  const outDir = options.outDir || DEFAULT_OUT_DIR;
 
   // ── Dynamic route expansion via bundle.getStaticPaths() ──────
   const routeInfo: RouteInfoEntry[] = module.routeInfo ?? [];

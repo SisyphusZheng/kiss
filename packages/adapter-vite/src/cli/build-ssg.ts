@@ -37,6 +37,7 @@ import { quoteGeneratedJavaScriptValue } from '../internal/ssg/codegen-literals.
 import { generateSsrPolyfillBanner } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
+import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from '../internal/paths.ts';
 
 /** Chunk size warning limit (kB) for the SSR bundle build. */
 const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
@@ -155,7 +156,7 @@ async function buildSSG(
   ctx: OpenElementBuildContext,
 ): Promise<void> {
   const root = options.root || ctx.phase3.root || process.cwd();
-  const outDir = options.outDir || ctx.phase3.outDir || 'dist';
+  const outDir = options.outDir || ctx.phase3.outDir || DEFAULT_OUT_DIR;
   const routesDir = options.routesDir || ctx.phase3.routesDir || 'app/routes';
   const islandsDir = options.islandsDir || ctx.phase3.islandsDir || 'app/islands';
   const appShell = options.appShell ?? ctx.phase3.appShell;
@@ -191,7 +192,7 @@ async function buildSSG(
   // v0.25.0: Generate type-safe route parameter declarations for `virtual:open-routes`
   const { generateRouteTypes } = await import('../internal/ssg/index.ts');
   const routeTypeDts = generateRouteTypes(routes);
-  const dotOpenElementDir = join(root, '.openElement');
+  const dotOpenElementDir = join(root, OPEN_ELEMENT_DIR);
   mkdirSync(dotOpenElementDir, { recursive: true });
   writeFileSync(join(dotOpenElementDir, 'routes.d.ts'), routeTypeDts, 'utf-8');
   log.info(`Route types generated -> .openElement/routes.d.ts`);

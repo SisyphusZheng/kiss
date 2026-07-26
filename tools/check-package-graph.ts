@@ -27,6 +27,7 @@ import {
   releasePublishOrder,
   topologicalSort,
 } from './lib/package-graph.ts';
+import { readJson } from './lib/fs.ts';
 
 /**
  * Explicit dependency-direction rules: each package may only depend on the
@@ -108,7 +109,7 @@ async function validateRootImportMap(
   packages: PackageInfo[],
   failures: string[],
 ): Promise<void> {
-  const rootConfig = JSON.parse(await Deno.readTextFile('deno.json')) as {
+  const rootConfig = await readJson('deno.json') as {
     imports?: Record<string, string>;
   };
   const imports = rootConfig.imports ?? {};

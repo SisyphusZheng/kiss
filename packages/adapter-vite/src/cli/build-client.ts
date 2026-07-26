@@ -28,6 +28,7 @@ import type { OpenElementBuildContext } from '../build-context.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
 import { formatError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
+import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 
 const log = createLogger('ssg');
 
@@ -145,7 +146,7 @@ function convertImportMapTarget(target: string, denoJsonDir: string): string | n
 
 async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
   const root = ctx.phase3.root || process.cwd();
-  const outDir = ctx.phase3.outDir || 'dist';
+  const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
   const islandsDir = ctx.phase3.islandsDir || 'app/islands';
   const localIslands = ctx.phase1.islandTagNames || [];
   const localIslandFiles = ctx.phase1.islandFiles || [];

@@ -54,6 +54,7 @@ console.log('Smoke test passed!');
 
 const nodeSource = `
 import { isVNode } from '@openelement/element';
+import { readJson } from './lib/fs.ts';
 
 const node = {
   tag: 'div',
@@ -207,7 +208,7 @@ async function exactVersionStarterSmoke(version: string): Promise<void> {
       tmpDir,
     );
     if (!create.success) throw new Error(`starter generation failed:\n${create.output}`);
-    const config = JSON.parse(await Deno.readTextFile(`${tmpDir}/starter/deno.json`)) as {
+    const config = await readJson(`${tmpDir}/starter/deno.json`) as {
       imports: Record<string, string>;
     };
     for (const pkg of ['app', 'adapter-vite', 'element']) {

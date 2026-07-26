@@ -2,6 +2,7 @@
 
 import { basename, dirname, join } from 'node:path';
 import { readPackages } from './lib/package-graph.ts';
+import { readJson } from './lib/fs.ts';
 
 const requiredPublishedFiles = ['deno.json', 'README.md', 'LICENSE'];
 const failures: string[] = [];
@@ -9,7 +10,7 @@ const packages = await readPackages();
 
 for (const pkg of packages) {
   const configPath = join(pkg.dir, 'deno.json');
-  const config = JSON.parse(await Deno.readTextFile(configPath)) as {
+  const config = await readJson(configPath) as {
     name?: unknown;
     version?: unknown;
     exports?: unknown;

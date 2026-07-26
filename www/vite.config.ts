@@ -130,7 +130,7 @@ export default defineConfig({
     jsxImportSource: '@openelement/element',
   },
   plugins: [
-    openElement({
+    ...openElement({
       routesDir: 'app/routes',
       islandsDir: 'app/islands',
       componentsDir: 'app/components',

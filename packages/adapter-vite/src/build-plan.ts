@@ -5,6 +5,7 @@ import type { OpenElementBuildContext } from './build-context.ts';
 import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
 import { resolveIslandHydrate } from './internal/ssg/island-scanner.ts';
 import { formatJson } from '@openelement/element/build-utils';
+import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from './internal/paths.ts';
 
 export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPlan {
   const root = ctx.phase3.root;
@@ -72,7 +73,7 @@ function files(root: string): string[] {
 
 export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
   const root = plan.output.root ?? (typeof Deno !== 'undefined' ? Deno.cwd() : process.cwd());
-  const outputDir = join(root, plan.output.outDir ?? 'dist');
+  const outputDir = join(root, plan.output.outDir ?? DEFAULT_OUT_DIR);
   try {
     const emitted = files(outputDir);
     const pages = emitted.filter((path) => path.endsWith('.html')).map((path) => ({
@@ -128,7 +129,7 @@ export function writeBuildEvidence(plan: BuildPlan, artifacts: BuildArtifacts): 
     errors: artifacts.errors,
   };
   writeFileSync(
-    join(root, '.openElement', 'build-artifacts.json'),
+    join(root, OPEN_ELEMENT_DIR, 'build-artifacts.json'),
     formatJson(evidence),
   );
 }

@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import type { Page } from 'npm:playwright@1.59.1';
 import { formatJson } from './lib/format-json.ts';
 import { allPackageAliases } from './lib/package-graph.ts';
+import { readJson } from './lib/fs.ts';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const PROJECT_NAME = 'third-party-wc-smoke-app';
@@ -51,7 +52,7 @@ async function run(
 
 async function patchDenoJson(appDir: string): Promise<void> {
   const denoJsonPath = join(appDir, 'deno.json');
-  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  const denoJson = await readJson(denoJsonPath);
   const imports = denoJson.imports as Record<string, string>;
 
   Object.assign(imports, THIRD_PARTY_IMPORTS);

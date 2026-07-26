@@ -35,6 +35,7 @@ import type {
   IslandDecl,
   SsrAdmissionPlan,
 } from './internal/protocol/ssg.ts';
+import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 
 export type Phase = 1 | 2 | 3;
 
@@ -201,7 +202,7 @@ export class OpenElementBuildContext {
     if (!base.endsWith('/')) base += '/';
 
     this.phase3.root = config.root;
-    this.phase3.outDir = options.build?.outDir || 'dist';
+    this.phase3.outDir = options.build?.outDir || DEFAULT_OUT_DIR;
     this.phase3.base = base;
     this.phase3.ssrNoExternal = ssrNoExternal;
     this.phase3.routesDir = options.routesDir || 'app/routes';

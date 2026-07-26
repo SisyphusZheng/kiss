@@ -1,3 +1,5 @@
+import { readJson } from './lib/fs.ts';
+
 /**
  * Generates packages/adapter-vite/src/generated-export-files.ts from the
  * "exports" maps declared in each package deno.json.
@@ -36,7 +38,7 @@ function stripLeadingSlash(value: string): string {
 
 async function readPackageExports(pkg: string): Promise<PackageExports> {
   const path = `${REPO_ROOT}packages/${pkg}/deno.json`;
-  const raw = JSON.parse(await Deno.readTextFile(path));
+  const raw = await readJson(path);
   const exportsField = raw.exports;
 
   const result: PackageExports = {};

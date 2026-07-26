@@ -14,6 +14,7 @@ import type { IslandDecl } from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
 import { buildIslandChunkMap, injectClientScript } from './postprocess.ts';
 import { generateIslandManifests, writeIslandManifests } from './island-manifest.ts';
+import { DEFAULT_OUT_DIR } from './../paths.ts';
 
 const log = createLogger('core');
 
@@ -41,7 +42,7 @@ export async function postProcessClientIslandBuild(
   scriptSrc: string,
 ): Promise<void> {
   const root = ctx.phase3.root || cwd();
-  const outDir = ctx.phase3.outDir || 'dist';
+  const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
   const base = ctx.phase3.base || '/';
   const outputDir = join(root, outDir);
 
@@ -87,7 +88,7 @@ export async function postProcessClientIslandBuild(
  */
 export async function cleanSsrArtifacts(ctx: BuildContextView): Promise<void> {
   const root = ctx.phase3.root || cwd();
-  const outDir = ctx.phase3.outDir || 'dist';
+  const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
 
   try {
     const assetsDir = join(root, outDir, 'assets');

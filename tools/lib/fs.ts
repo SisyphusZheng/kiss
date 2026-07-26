@@ -48,3 +48,13 @@ export async function exists(path: string): Promise<boolean> {
     return false;
   }
 }
+
+/** Read a UTF-8 text file. */
+export async function readText(path: string): Promise<string> {
+  return await Deno.readTextFile(path);
+}
+
+/** Read a UTF-8 text file and parse it as JSON. */
+export async function readJson<T = unknown>(path: string): Promise<T> {
+  return JSON.parse(await readText(path)) as T;
+}
