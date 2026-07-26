@@ -94,3 +94,26 @@ Deno.test('prereleaseTag accepts alpha beta and rc lines', () => {
   assertEquals(prereleaseTag('1.2.3-beta.4'), 'beta');
   assertEquals(prereleaseTag('1.2.3-rc.4'), 'rc');
 });
+
+Deno.test('prereleaseTag returns null for stable versions and rejects malformed ones', () => {
+  assertEquals(prereleaseTag('0.41.0'), null);
+  assertEquals(prereleaseTag('0.41.0-alpha.19'), 'alpha');
+});
+
+Deno.test('verifyNpmRelease verifies stable releases against latest only', async () => {
+  const calls: string[] = [];
+  await verifyNpmRelease({
+    version: '0.41.0',
+    packages: ['element'],
+    delaysMs: [0],
+    sleep: () => Promise.resolve(),
+    query: (specifier, field) => {
+      calls.push(`${specifier}:${field}`);
+      return Promise.resolve('0.41.0');
+    },
+  });
+  assertEquals(calls, [
+    '@openelement/element@0.41.0:version',
+    '@openelement/element:dist-tags.latest',
+  ]);
+});

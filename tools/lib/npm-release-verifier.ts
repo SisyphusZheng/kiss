@@ -18,12 +18,11 @@ export interface VerifyNpmReleaseOptions {
   log?: (message: string) => void;
 }
 
-export function prereleaseTag(version: string): 'alpha' | 'beta' | 'rc' {
+export function prereleaseTag(version: string): 'alpha' | 'beta' | 'rc' | null {
   const match = version.match(/^\d+\.\d+\.\d+-(alpha|beta|rc)\.\d+$/u);
-  if (!match) {
-    throw new Error('Expected prerelease version x.y.z-alpha|beta|rc.n');
-  }
-  return match[1] as 'alpha' | 'beta' | 'rc';
+  if (match) return match[1] as 'alpha' | 'beta' | 'rc';
+  if (/^\d+\.\d+\.\d+$/u.test(version)) return null;
+  throw new Error(`Expected version x.y.z or x.y.z-alpha|beta|rc.n, got: ${version}`);
 }
 
 async function verifyField(
@@ -79,16 +78,19 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
       options.version,
       runtime,
     );
-    await verifyField(
-      `${packageName} dist-tags.${tag}`,
-      packageName,
-      `dist-tags.${tag}`,
-      options.version,
-      runtime,
-    );
-    // latest dist-tag policy (alpha line): prerelease publishes also move
-    // `latest` (see tools/publish-npm.ts), so `latest` must equal the
-    // just-published version — it must never lag the active release line.
+    if (tag) {
+      await verifyField(
+        `${packageName} dist-tags.${tag}`,
+        packageName,
+        `dist-tags.${tag}`,
+        options.version,
+        runtime,
+      );
+    }
+    // latest dist-tag policy: prerelease publishes also move `latest` (see
+    // tools/publish-npm.ts); stable publishes keep the npm default of tagging
+    // `latest`. Either way `latest` must equal the just-published version —
+    // it must never lag the active release line.
     // Chosen invariant: dist-tags.latest === <published version> (exact match,
     // not semver >=), so a stale `latest` fails verification immediately.
     await verifyField(
@@ -98,6 +100,10 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
       options.version,
       runtime,
     );
-    options.log?.(`${packageName}@${options.version}: ${tag} and latest dist-tags verified`);
+    options.log?.(
+      tag
+        ? `${packageName}@${options.version}: ${tag} and latest dist-tags verified`
+        : `${packageName}@${options.version}: latest dist-tag verified (stable)`,
+    );
   }
 }
