@@ -1,5 +1,5 @@
 import { exists, walk } from './lib/fs.ts';
-import { PACKAGE_VERSION } from './project-constants.ts';
+import { PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
 
 type Issue = { file: string; text: string };
 
@@ -9,13 +9,19 @@ const sourceRoots = [
 ];
 
 const [versionBase, prerelease = ''] = PACKAGE_VERSION.split('-');
-const prereleaseMatch = prerelease.match(/^(alpha|beta|rc)\.(\d+)$/u);
+// After a stable bump the current version carries no prerelease suffix, but
+// the previous prerelease line is exactly what must stay retired: build the
+// pattern from PREVIOUS_PACKAGE_VERSION in that case.
+const [retiredBase, retiredLine = ''] = prerelease
+  ? [versionBase, prerelease]
+  : PREVIOUS_PACKAGE_VERSION.split('-');
+const prereleaseMatch = retiredLine.match(/^(alpha|beta|rc)\.(\d+)$/u);
 // Retired prerelease claims are flagged with or without the `v` prefix and in
 // the short `alpha.N` form; only numbers below the current line match, so the
 // current version itself never trips the gate.
 const earlierPrereleasePattern = prereleaseMatch && Number(prereleaseMatch[2]) > 0
   ? new RegExp(
-    `(?:v?${versionBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}|\\b${
+    `(?:v?${retiredBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}|\\b${
       prereleaseMatch[1]
     })\\.(?:${
       Array.from({ length: Number(prereleaseMatch[2]) }, (_, index) => index).join('|')
