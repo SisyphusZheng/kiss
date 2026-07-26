@@ -84,3 +84,10 @@ For release work, also run the release gates listed in
 Release work must follow `docs/governance/PROJECT_WORKFLOW.md`. Do not bump
 packages until implementation gates pass. Do not merge `dev` to `main` until
 `dev` CI is green. Do not tag until `main` CI is green.
+
+## Support
+
+Use [GitHub Discussions](https://github.com/open-element/openelement/discussions)
+for usage questions, design discussion, and help choosing an API. Use an issue
+only for a reproducible bug, a concrete documentation defect, or an agreed
+feature proposal.
