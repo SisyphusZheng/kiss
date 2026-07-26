@@ -1,7 +1,7 @@
 # v0.41.x — stable five-package release plan
 
-> Current source package line: `v0.41.2`\
-> Current npm registry line: `v0.41.2`\
+> Current source package line: `v0.41.1`\
+> Current npm registry line: `v0.41.1`\
 > Active release target: `v0.41.1`\
 > Next release line: `v0.42.0` (WC Application Loop)\
 > Current maturity stage: alpha (stable release in preparation)
