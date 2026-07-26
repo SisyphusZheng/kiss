@@ -146,7 +146,7 @@ export const OPEN_PROPS_TOKEN_CSS = `/**
      ═══════════════════════════════════════════════ */
   --btn-padding-x: var(--size-4);
   --btn-padding-y: var(--size-2);
-  --btn-radius: var(--radius-round);
+  --btn-radius: var(--radius-1);
   --btn-font-size: var(--font-size-0);
   --btn-font-weight: var(--font-weight-7);
   --btn-text-case: none;
@@ -154,7 +154,7 @@ export const OPEN_PROPS_TOKEN_CSS = `/**
   --card-radius: var(--radius-1);
   --badge-padding-x: var(--size-2);
   --badge-padding-y: 2px;
-  --badge-radius: var(--radius-round);
+  --badge-radius: var(--radius-1);
   --badge-font-size: var(--font-size-00);
   --alert-padding: var(--size-4);
   --alert-radius: var(--radius-2);
