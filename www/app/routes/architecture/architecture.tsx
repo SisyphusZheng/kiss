@@ -210,8 +210,8 @@ export class ArchitecturePage extends OpenElement {
               <span>Current consumer surface, starter and docs agree.</span>
             </div>
             <div class='gate'>
-              <strong>#390</strong>
-              <span>External adoption remains a stability condition.</span>
+              <strong>ADR-0119</strong>
+              <span>Stable freeze proceeds with the scoped interface contract.</span>
             </div>
             <div class='gate'>
               <strong>3 browsers</strong>
