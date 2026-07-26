@@ -113,6 +113,7 @@ semantics (0.42 WC Application Loop and 0.44 Production Runtime scope), the
 `@openelement/ui` stable scope (decided at v0.46), and everything marked
 internal in the map above. Post-freeze changes to the frozen surface require
 a major-version ADR.
+
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
   `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,
