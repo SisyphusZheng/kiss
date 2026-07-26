@@ -66,7 +66,11 @@ if (await exists('www/content/guide')) {
 
 async function checkFile(file: string): Promise<void> {
   const text = await Deno.readTextFile(file);
+  // Version-dense history surfaces (the migration guide, changelog) may name
+  // retired prereleases without it being a stale current claim.
+  const isHistorySurface = /(?:routes\/guide\/migration\.tsx|CHANGELOG\.md)$/.test(file);
   for (const { name, re } of forbidden) {
+    if (isHistorySurface && name === 'retired prerelease current claim') continue;
     if (re.test(text)) issues.push({ file, text: name });
   }
   if (
@@ -120,9 +124,16 @@ await checkFile('www/vite.config.ts');
 if (Deno.args.includes('--artifacts')) {
   for await (const file of walk('www/dist', { skip: ['blog'] })) {
     // The root-level history indexes (blog.html, changelog.html or their
-    // /blog//changelog route index.html) hold historical copy that is
-    // intentionally outside the current-surface rule.
-    if (/(?:^|\/)(?:blog|changelog)(?:\.html|\/index\.html)$/.test(file)) continue;
+    // /blog//changelog route index.html) and the version-dense migration
+    // guide hold historical copy that is intentionally outside the
+    // current-surface rule.
+    if (
+      /(?:^|\/)(?:(?:blog|changelog)(?:\.html|\/index\.html)|guide\/migration\/index\.html)$/.test(
+        file,
+      )
+    ) {
+      continue;
+    }
     if (/\.html$/.test(file)) await checkFile(file);
   }
 }

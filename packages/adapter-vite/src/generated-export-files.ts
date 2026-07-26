@@ -4,18 +4,8 @@
 export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = {
   'adapter-vite': {
     '.': 'src/index.ts',
-    'app-vite': 'src/app-vite.ts',
-    'build-context': 'src/build-context.ts',
     'cli/build': 'src/cli/build.ts',
-    'cli/build-client': 'src/cli/build-client.ts',
-    'cli/build-ssg': 'src/cli/build-ssg.ts',
-    'generated-data-resolver': 'src/generated-data-resolver.ts',
-    'head-injection': 'src/head-injection.ts',
-    'i18n-plugin': 'src/i18n-plugin.ts',
     'nitro-mount': 'src/nitro-mount.ts',
-    'plugin': 'src/plugin.ts',
-    'plugin-mdx': 'src/plugin-mdx.ts',
-    'route-manifest': 'src/route-manifest.ts',
     'sitemap': 'src/sitemap.ts',
   },
   'app': {

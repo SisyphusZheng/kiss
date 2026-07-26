@@ -56,7 +56,7 @@ promise and are not application-authoring surface.
   },
   "@openelement/adapter-vite": {
     "supported": [".", "nitro-mount", "cli/build", "sitemap"],
-    "internal": ["app-vite", "build-context", "head-injection", "i18n-plugin", "plugin", "generated-data-resolver", "plugin-mdx", "route-manifest", "cli/build-client", "cli/build-ssg"]
+    "internal": []
   },
   "@openelement/create": {
     "supported": ["."],
@@ -94,9 +94,25 @@ promise and are not application-authoring surface.
   `SpaAppInstance` / `SpaAppOptions`.
 - `@openelement/adapter-vite` internal subpaths (`app-vite`, `build-context`,
   `head-injection`, `i18n-plugin`, `plugin`, `generated-data-resolver`,
-  `plugin-mdx`, `route-manifest`, `cli/build-client`, `cli/build-ssg`) serve
-  the build pipeline and generated code; they may be pruned at the v0.41
-  freeze.
+  `plugin-mdx`, `route-manifest`, `cli/build-client`, `cli/build-ssg`) were
+  pruned at the 0.41.0 freeze (ADR-0119): they had zero consumer specifiers —
+  the build pipeline and generated code import only relatively or through the
+  supported root, `nitro-mount`, `cli/build` and `sitemap` subpaths. The module
+  files remain inside the package for internal relative imports only.
+
+## 0.41.0 interface freeze boundary (ADR-0119)
+
+Frozen at 0.41.0: `defineElement`, `definePage`, `buildApp`, the five-package
+graph, the supported subpaths above, and the static/SPA semantics of
+`defineApp` as shipped — file routes, `tagName` route elements, island
+configuration (`ssr`/`dsd`/`hydrate`), DSD output, and the SPA-mode
+loader/action chain.
+
+Explicitly not frozen: request-time data, forms, sessions and cache
+semantics (0.42 WC Application Loop and 0.44 Production Runtime scope), the
+`@openelement/ui` stable scope (decided at v0.46), and everything marked
+internal in the map above. Post-freeze changes to the frozen surface require
+a major-version ADR.
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
   `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,
