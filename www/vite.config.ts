@@ -114,6 +114,126 @@ body {
 const colorTokensStyle =
   `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-regular.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-italic.woff2') format('woff2')}${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
+const openElementPlugins = openElement({
+  routesDir: 'app/routes',
+  islandsDir: 'app/islands',
+  componentsDir: 'app/components',
+  html: {
+    title: 'openElement',
+  },
+  appShell: {
+    tagName: 'open-layout',
+    import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
+    props: {
+      footerText: 'Built with OpenElement — Web Components-native application framework',
+      githubUrl: 'https://github.com/open-element/openelement',
+    },
+  },
+  packageIslands: ['@openelement/ui'],
+  ssr: {
+    noExternal: ['@openelement/ui'],
+  },
+  viewTransition: true,
+  speculation: true,
+  inject: {
+    // H-05 fix: Use structured stylesheets with SRI for CDN CSS
+    stylesheets: [
+      {
+        href: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
+        integrity: 'sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2',
+      },
+    ],
+    // H-04 fix: All CDN scripts now have SRI integrity hashes
+    scripts: [
+      { src: '/theme-init.js' },
+      { src: '/logo-home.js', defer: true },
+      {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js',
+        defer: true,
+        integrity: 'sha384-06z5D//U/xpvxZHuUz92xBvq3DqBBFi7Up53HRrbV7Jlv7Yvh/MZ7oenfUe9iCEt',
+      },
+      {
+        src:
+          'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js',
+        defer: true,
+        integrity: 'sha384-D44bgYYKvaiDh4cOGlj1dbSDpSctn2FSUj118HZGmZEShZcO2v//Q5vvhNy206pp',
+      },
+      {
+        src:
+          'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js',
+        defer: true,
+        integrity: 'sha384-PeOqKNW/piETaCg8rqKFy+Pm6KEk7e36/5YZE5XO/OaFdO+/Aw3O8qZ9qDPKVUgx',
+      },
+      {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js',
+        defer: true,
+        integrity: 'sha384-RhrmFFMb0ZCHImjFMpR/UE3VEtIVTCtNrtKQqXCzqXZNJala02N3UbVhi+qzw3CY',
+      },
+      {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js',
+        defer: true,
+        integrity: 'sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15',
+      },
+      {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js',
+        defer: true,
+        integrity: 'sha384-0mV13Neu0xhJFylI+HV43C+XiR13bGSeL7D0/7e6hK7sJgvyvK6HVjeQwmvXTstY',
+      },
+      {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js',
+        defer: true,
+        integrity: 'sha384-HkMr0bZB9kBW4iVtXn6nd35kO/L/dQtkkUBkL9swzTEDMdIe5ExJChVDSnC79aNA',
+      },
+      { src: '/prism-init.js', defer: true },
+      {
+        src: 'https://gc.zgo.at/count.js',
+        async: true,
+        integrity: 'sha384-2UjvVpptg4JlEVgJI2PdscrjOjPcil/4F1ZvIMJ81CShQnEDSlPI+l4PfogvTLYi',
+        attrs: { 'data-goatcounter': 'https://openelement.goatcounter.com/count' },
+      },
+    ],
+    headFragments: [
+      '<meta property="og:site_name" content="OpenElement">',
+      '<meta property="og:type" content="website">',
+      '<meta property="og:title" content="OpenElement - The Web, composed.">',
+      '<meta property="og:description" content="A Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
+      '<meta property="og:url" content="https://openelement.org">',
+      '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
+      '<meta name="twitter:card" content="summary_large_image">',
+      '<meta name="description" content="OpenElement is a Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
+      '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
+      '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
+      '<link rel="apple-touch-icon" href="/assets/open-avatar.svg" />',
+      colorTokensStyle,
+    ],
+  },
+  content: {
+    blog: {
+      contentDir: 'content/blog',
+      basePath: '/blog',
+    },
+    nav: {
+      routesDir: 'app/routes',
+      // Minimal headerNav; open-layout auto-filters sidebar.
+      // v0.31 UI-shell debt: derive this from route meta scanning.
+      headerNav: [
+        { href: '/docs', label: 'Docs' },
+        { href: '/apilist', label: 'API' },
+        { href: '/roadmap', label: 'Roadmap' },
+        { href: '/blog', label: 'Blog' },
+        { href: 'https://github.com/open-element/openelement', label: 'GitHub' },
+      ],
+    },
+    sitemap: {
+      hostname: 'https://openelement.org',
+    },
+  },
+  i18n: {
+    locales: ['en', 'zh'],
+    defaultLocale: 'en',
+  },
+});
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -129,127 +249,6 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: '@openelement/element',
   },
-  plugins: [
-    ...openElement({
-      routesDir: 'app/routes',
-      islandsDir: 'app/islands',
-      componentsDir: 'app/components',
-      html: {
-        title: 'openElement',
-      },
-      appShell: {
-        tagName: 'open-layout',
-        import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
-        props: {
-          footerText: 'Built with OpenElement — Web Components-native application framework',
-          githubUrl: 'https://github.com/open-element/openelement',
-        },
-      },
-      packageIslands: ['@openelement/ui'],
-      ssr: {
-        noExternal: ['@openelement/ui'],
-      },
-      viewTransition: true,
-      speculation: true,
-      inject: {
-        // H-05 fix: Use structured stylesheets with SRI for CDN CSS
-        stylesheets: [
-          {
-            href: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
-            integrity: 'sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2',
-          },
-        ],
-        // H-04 fix: All CDN scripts now have SRI integrity hashes
-        scripts: [
-          { src: '/theme-init.js' },
-          { src: '/logo-home.js', defer: true },
-          {
-            src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js',
-            defer: true,
-            integrity: 'sha384-06z5D//U/xpvxZHuUz92xBvq3DqBBFi7Up53HRrbV7Jlv7Yvh/MZ7oenfUe9iCEt',
-          },
-          {
-            src:
-              'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js',
-            defer: true,
-            integrity: 'sha384-D44bgYYKvaiDh4cOGlj1dbSDpSctn2FSUj118HZGmZEShZcO2v//Q5vvhNy206pp',
-          },
-          {
-            src:
-              'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js',
-            defer: true,
-            integrity: 'sha384-PeOqKNW/piETaCg8rqKFy+Pm6KEk7e36/5YZE5XO/OaFdO+/Aw3O8qZ9qDPKVUgx',
-          },
-          {
-            src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js',
-            defer: true,
-            integrity: 'sha384-RhrmFFMb0ZCHImjFMpR/UE3VEtIVTCtNrtKQqXCzqXZNJala02N3UbVhi+qzw3CY',
-          },
-          {
-            src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js',
-            defer: true,
-            integrity: 'sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15',
-          },
-          {
-            src: 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js',
-            defer: true,
-            integrity: 'sha384-0mV13Neu0xhJFylI+HV43C+XiR13bGSeL7D0/7e6hK7sJgvyvK6HVjeQwmvXTstY',
-          },
-          {
-            src:
-              'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js',
-            defer: true,
-            integrity: 'sha384-HkMr0bZB9kBW4iVtXn6nd35kO/L/dQtkkUBkL9swzTEDMdIe5ExJChVDSnC79aNA',
-          },
-          { src: '/prism-init.js', defer: true },
-          {
-            src: 'https://gc.zgo.at/count.js',
-            async: true,
-            integrity: 'sha384-2UjvVpptg4JlEVgJI2PdscrjOjPcil/4F1ZvIMJ81CShQnEDSlPI+l4PfogvTLYi',
-            attrs: { 'data-goatcounter': 'https://openelement.goatcounter.com/count' },
-          },
-        ],
-        headFragments: [
-          '<meta property="og:site_name" content="OpenElement">',
-          '<meta property="og:type" content="website">',
-          '<meta property="og:title" content="OpenElement - The Web, composed.">',
-          '<meta property="og:description" content="A Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
-          '<meta property="og:url" content="https://openelement.org">',
-          '<meta property="og:image" content="https://openelement.org/assets/og-image.svg">',
-          '<meta name="twitter:card" content="summary_large_image">',
-          '<meta name="description" content="OpenElement is a Web Components-native, static-first application framework built on Custom Elements, Declarative Shadow DOM and selective islands.">',
-          '<style>html{visibility:visible!important;}body{background:var(--bg-base);color:var(--text-primary);}</style>',
-          '<link rel="icon" type="image/svg+xml" href="/assets/open-favicon.svg" />',
-          '<link rel="apple-touch-icon" href="/assets/open-avatar.svg" />',
-          colorTokensStyle,
-        ],
-      },
-      content: {
-        blog: {
-          contentDir: 'content/blog',
-          basePath: '/blog',
-        },
-        nav: {
-          routesDir: 'app/routes',
-          // Minimal headerNav; open-layout auto-filters sidebar.
-          // v0.31 UI-shell debt: derive this from route meta scanning.
-          headerNav: [
-            { href: '/docs', label: 'Docs' },
-            { href: '/apilist', label: 'API' },
-            { href: '/roadmap', label: 'Roadmap' },
-            { href: '/blog', label: 'Blog' },
-            { href: 'https://github.com/open-element/openelement', label: 'GitHub' },
-          ],
-        },
-        sitemap: {
-          hostname: 'https://openelement.org',
-        },
-      },
-      i18n: {
-        locales: ['en', 'zh'],
-        defaultLocale: 'en',
-      },
-    }),
-  ],
+  plugins: [...openElementPlugins],
 });
 registerOpenUi();
