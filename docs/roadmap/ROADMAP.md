@@ -9,6 +9,8 @@ Execution and release state follow the
 > Current implementation state: five-package convergence is published;
 > alpha.17 closed the first audit remediation, alpha.18 completed the
 > second audit sweep (ADR-0117), and alpha.19 completed the third (ADR-0118).\
+> Planned line: `0.42.0` (WC Application Loop) under ADR-0120 and the active
+> version plan in `docs/current/VERSION_PLAN.md`.\
 > Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
 > abandoned beta naming is retired.
 
@@ -79,23 +81,23 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Forward versions
 
-| Version           | Theme                        | Required evidence                                                                                                                       |
-| ----------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `0.41.0-alpha.10` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                         |
-| `0.41.0-alpha.11` | Audit remediation            | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                           |
-| `0.41.0-alpha.14` | Release recovery             | Exact-version starter, published consumers and honest two-stage evidence                                                                |
-| `0.41.0-alpha.15` | Adoption and interface proof | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                       |
-| `0.41.0-alpha.16` | Correctness reset            | ADR-0116 audit findings: hydration/props correctness, island chunk matching, npm `latest` policy, #460, drift clearance                 |
-| `0.41.0-alpha.17` | Remediation completion       | Real-browser test credibility, convergence hygiene, release-tooling evidence fixes, #390 pilot launch                                   |
-| `0.41.0-alpha.18` | Second audit sweep           | ADR-0117: sibling-path closures, evidence honesty, reflect-prop correctness, redundancy cleanup                                         |
-| `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change |
-| `0.42.0`          | WC Application Loop          | One route-to-interaction loop: load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript    |
-| `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics      |
-| `0.44.0`          | Production Runtime           | Node and Workers behavior, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof              |
-| `0.45.0`          | WC Ecosystem Platform        | Component and application starters, CEM/open-wc workflows, migration guides, compatibility registry and external adopters               |
-| `0.46.0`          | v1 Product Freeze            | Remove unused exports, decide the UI commitment, freeze errors, browser/runtime support and upgrade policy                              |
-| `1.0.0-rc.x`      | Stability only               | No new capability; compatibility, reliability and documentation fixes only                                                              |
-| `1.0.0`           | Stable five-package product  | External production users prove that the core interfaces are stable                                                                     |
+| Version           | Theme                        | Required evidence                                                                                                                                                                     |
+| ----------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0.41.0-alpha.10` | Five-package convergence     | Exact published CLI lifecycle; browser gates; npm, tag, GitHub Release, docs and evidence agree                                                                                       |
+| `0.41.0-alpha.11` | Audit remediation            | Runtime regressions, Workers, artifacts, protocol seam, coverage, and two-phase release truth                                                                                         |
+| `0.41.0-alpha.14` | Release recovery             | Exact-version starter, published consumers and honest two-stage evidence                                                                                                              |
+| `0.41.0-alpha.15` | Adoption and interface proof | #390, current CI runtime, cross-platform consumers and stable-interface rehearsal                                                                                                     |
+| `0.41.0-alpha.16` | Correctness reset            | ADR-0116 audit findings: hydration/props correctness, island chunk matching, npm `latest` policy, #460, drift clearance                                                               |
+| `0.41.0-alpha.17` | Remediation completion       | Real-browser test credibility, convergence hygiene, release-tooling evidence fixes, #390 pilot launch                                                                                 |
+| `0.41.0-alpha.18` | Second audit sweep           | ADR-0117: sibling-path closures, evidence honesty, reflect-prop correctness, redundancy cleanup                                                                                       |
+| `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change                                               |
+| `0.42.0`          | WC Application Loop          | Scoped by ADR-0120 and the active version plan: one route-to-interaction loop — load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript |
+| `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics                                                    |
+| `0.44.0`          | Production Runtime           | Node and Workers behavior, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof                                                            |
+| `0.45.0`          | WC Ecosystem Platform        | Component and application starters, CEM/open-wc workflows, migration guides, compatibility registry and external adopters                                                             |
+| `0.46.0`          | v1 Product Freeze            | Remove unused exports, decide the UI commitment, freeze errors, browser/runtime support and upgrade policy                                                                            |
+| `1.0.0-rc.x`      | Stability only               | No new capability; compatibility, reliability and documentation fixes only                                                                                                            |
+| `1.0.0`           | Stable five-package product  | External production users prove that the core interfaces are stable                                                                                                                   |
 
 ## Roadmap rules
 
@@ -124,7 +126,12 @@ release tooling). Alpha.18 completed the second audit sweep (ADR-0117):
 sibling-path closures, evidence honesty, reflect-prop correctness and
 redundancy cleanup. Alpha.19 completed the third audit cleanup sweep
 (ADR-0118). Stable `0.41.0` is published under ADR-0119 as a scoped interface
-freeze; the #390 pilot requirement was retired by maintainer decision.
+freeze; the #390 pilot requirement was retired by maintainer decision. The
+`0.42.0` WC Application Loop line is scoped by ADR-0120 — standard form POST
+wire format, the 303/422 status rule, the throw/return error dichotomy and
+the after-action revalidation invariant, evidence-backed by the archived
+six-framework study — with its task packages and entry/exit criteria in the
+active version plan.
 
 ## Historical record
 

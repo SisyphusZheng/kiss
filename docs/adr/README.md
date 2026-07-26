@@ -18,6 +18,8 @@ documents:
 | Alpha naming       | ADR-0114                                                         | Alpha line continues until external evidence justifies stable. |
 | Authoring helper   | ADR-0115                                                         | Single element authoring helper; `defineLayout` removed.       |
 | Alpha.16 scope     | ADR-0116                                                         | Audit-driven correctness reset before stable freeze.           |
+| Stable 0.41 freeze | ADR-0119                                                         | Scoped interface freeze for the 0.41.x line.                   |
+| 0.42 loop scope    | ADR-0120                                                         | WC Application Loop scope boundary and action protocol.        |
 | Cleanup governance | ADR-0105, ADR-0106                                               | Approved cleanup train and audit-driven quality work.          |
 | Active stack truth | `docs/current/STACK_CONTRACT.md`, `docs/current/VERSION_PLAN.md` | Operational version and stack contract for current work.       |
 
@@ -131,6 +133,9 @@ decision set above to decide which records are authoritative for new work.
 | 0115 | Single Element Authoring Helper                          | Accepted                                         |
 | 0116 | Audit-Driven Alpha.16 Correctness Reset                  | Accepted                                         |
 | 0117 | Second Audit Round and Alpha.18 Sweep                    | Accepted                                         |
+| 0118 | Third Audit Round Alpha.19 Cleanup Sweep                 | Accepted                                         |
+| 0119 | Stable 0.41.0 Scoped Interface Freeze                    | Accepted                                         |
+| 0120 | 0.42.0 WC Application Loop Scope and Action Protocol     | Accepted                                         |
 
 ## Superseded / Historical
 

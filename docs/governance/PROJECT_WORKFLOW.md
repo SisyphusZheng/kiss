@@ -12,8 +12,8 @@ complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
 Current execution anchor: published package line `v0.41.1`, completed
-implementation anchor `v0.41.1`, active sweep target
-`v0.41.0-alpha.18`, and alpha maturation under `docs/current/VERSION_PLAN.md`.
+implementation anchor `v0.41.1`, and `0.42.0` WC Application Loop planning
+under ADR-0120 and `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
 second product. The abandoned beta naming is retired; alpha releases

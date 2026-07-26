@@ -1,6 +1,6 @@
 # OpenElement Status
 
-> Updated: 2026-07-26\
+> Updated: 2026-07-27\
 > Repository package line: `v0.41.1`\
 > npm registry line: `v0.41.1`\
 > Active release target: `v0.41.1`\
@@ -54,6 +54,17 @@ and output path.
 3. WC SSR compatibility still needs broader adopter evidence.
 4. Request-time data, forms, sessions and cache are not stable interfaces.
 5. UI remains optional until v0.46 records its stable scope.
+
+## 0.42 direction
+
+The `0.42.0` WC Application Loop line is scoped by
+[`ADR-0120`](../adr/ADR-0120-0-42-0-wc-application-loop-scope.md) and planned
+in [`VERSION_PLAN.md`](../current/VERSION_PLAN.md) with task packages TP-0
+through TP-6 (entry/exit criteria each). The protocol layer is
+evidence-backed by the archived six-framework study
+([`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md)).
+TP-0 (release tooling self-repair, `0.41.2` patch) may start immediately;
+alpha.1 starts after it.
 
 ## Release direction
 
