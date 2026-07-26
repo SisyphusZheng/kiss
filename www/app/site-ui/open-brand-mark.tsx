@@ -42,7 +42,7 @@ sheet.replaceSync(`
   }
 
   .slash {
-    color: var(--violet-8, #8b5cf6);
+    color: var(--violet-8);
   }
 
   :host { view-transition-name: open-brand-mark; }

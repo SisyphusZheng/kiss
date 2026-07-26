@@ -261,7 +261,7 @@ sheet.replaceSync(`
     max-width: 100%;
     color: var(--text-primary);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--font-size-00);
     font-weight: 800;
     letter-spacing: -.09em;
     line-height: 1;
@@ -334,55 +334,6 @@ sheet.replaceSync(`
     margin-left: auto;
   }
 
-  /* CTA buttons */
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--size-2);
-    color: var(--text-primary);
-    text-decoration: none;
-    font-size: var(--font-size-button);
-    font-weight: var(--font-weight-semibold);
-    padding: var(--size-2) var(--size-4);
-    border: var(--border-size-1) solid color-mix(in srgb, var(--border) 72%, var(--brand));
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gray-0) 70%, transparent);
-    transition: all 0.15s ease;
-  }
-  .btn-secondary:hover {
-    color: var(--brand-deep);
-    border-color: var(--brand-light);
-    background: color-mix(in srgb, var(--brand-pale) 42%, var(--bg-elevated));
-  }
-  .btn-secondary svg { flex-shrink: 0; }
-
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--on-brand);
-    text-decoration: none;
-    font-size: var(--font-size-button);
-    font-weight: var(--font-weight-semibold);
-    padding: var(--size-2) var(--size-4);
-    border: var(--border-size-1) solid transparent;
-    border-radius: var(--radius-round);
-    background: linear-gradient(135deg, var(--brand), var(--brand-light));
-    box-shadow: 0 var(--size-2) var(--size-5) var(--brand-glow);
-    white-space: nowrap;
-    transition: all 0.15s ease;
-  }
-  .btn-primary:hover {
-    background: linear-gradient(135deg, var(--brand-hover), var(--brand-light));
-    transform: translateY(calc(var(--border-size-1) * -1));
-  }
-
-  .header-right .btn-secondary,
-  .header-right .btn-primary {
-    display: none;
-  }
-
   .lang-switch {
     display: inline-flex;
     align-items: center;
@@ -430,7 +381,7 @@ sheet.replaceSync(`
 
   .nav-section { margin-bottom: 1.5rem; }
   .nav-section summary {
-    font-size: 0.625rem;
+    font-size: var(--font-size-micro);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.22em;
@@ -452,7 +403,7 @@ sheet.replaceSync(`
     display: block;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: var(--font-size-tiny);
     margin: .12rem .7rem;
     padding: .5rem .8rem;
     border-left: 2px solid transparent;
@@ -539,8 +490,6 @@ sheet.replaceSync(`
     .header-nav {
       gap: var(--size-3);
     }
-
-    .btn-secondary .btn-text { display: none; }
   }
 
   @media (max-width: 1040px) {
@@ -551,7 +500,6 @@ sheet.replaceSync(`
     .mobile-menu-btn { display: flex; }
     .header-inner { padding: 0 var(--size-4); gap: var(--size-2); }
     .header-nav { display: none; }
-    .btn-secondary .btn-text { display: none; }
     .header-right { gap: 4px; }
 
     .docs-sidebar {
@@ -602,7 +550,7 @@ sheet.replaceSync(`
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 2px;
       color: var(--text-muted);
-      text-decoration: none; font-size: 10px; font-weight: 600;
+      text-decoration: none; font-size: var(--font-size-micro); font-weight: 600;
       transition: color 0.15s ease;
       -webkit-tap-highlight-color: transparent; padding: 4px 0;
     }
@@ -616,9 +564,6 @@ sheet.replaceSync(`
     .lang-switch { display: none; }
   }
   @media (max-width: 480px) {
-    .btn-primary { display: none; }
-    .btn-secondary { padding: 8px; border: none; }
-    .btn-secondary .btn-text { display: none; }
     .header-inner { padding: 0 var(--size-3); gap: var(--size-1); }
   }
 `);

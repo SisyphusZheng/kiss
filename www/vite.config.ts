@@ -53,8 +53,23 @@ html[data-theme="light"],
   --font-size-button: var(--font-size-0);
   --font-size-body-sm: var(--font-size-0);
   --font-size-caption: var(--font-size-00);
+  --font-size-micro: 0.625rem;
+  --font-size-tiny: 0.85rem;
+  --font-size-lede: 1.1rem;
+  --font-size-overline: 0.6875rem;
+  --font-size-article-title: 1.125rem;
+  --font-size-display-sm: 1.75rem;
+  --font-size-display-md: 2.125rem;
+  --font-size-display-lg: 2.625rem;
   --font-weight-medium: var(--font-weight-5);
   --font-weight-semibold: var(--font-weight-7);
+  --vinyl-ink-0: #030304;
+  --vinyl-ink-1: #050507;
+  --vinyl-ink-2: #09090c;
+  --vinyl-ink-3: #18151e;
+  --vinyl-ink-4: #08070b;
+  --vinyl-highlight: #ffffff;
+  --vinyl-shadow: #000000;
 }
 html[data-theme="dark"],
 :host([data-theme="dark"]),

@@ -48,6 +48,7 @@
     "docs:check-version-anchors": "deno run --allow-read tools/check-version-anchors.ts",
     "docs:truth": "deno task docs:check-public && deno task docs:check-current && deno task docs:check-strategy && deno task docs:check-version-anchors && deno task release:evidence:check && deno task www:check-current-truth",
     "www:check-current-truth": "deno run --allow-read tools/check-www-current-truth.ts",
+    "www:check-theme-tokens": "deno run --allow-read tools/check-www-theme-tokens.ts",
     "www:check-artifact-truth": "deno run --allow-read tools/check-www-current-truth.ts --artifacts",
     "package-surface:check": "deno run --allow-read --allow-env tools/check-package-surface.ts",
     "interface:snapshot": "deno run --allow-read --allow-env tools/check-public-interface-snapshot.ts",

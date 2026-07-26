@@ -52,7 +52,7 @@ routeSheet.replaceSync(
     .blog-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-bottom: var(--size-4); }
     .blog-tag { font-size: var(--font-size-00); font-weight: var(--font-weight-6); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); padding: 0.125rem 0.375rem; border-radius: 2px; background: var(--bg-surface); border: 0.5px solid var(--border); color: var(--text-secondary); }
     .blog-content { font-size: var(--font-size-3); line-height: var(--font-lineheight-4); color: var(--text-secondary); }
-    .blog-content h2 { margin-top: var(--size-10); color: var(--text-primary); font-size: 1.125rem; font-weight: var(--font-weight-6); }
+    .blog-content h2 { margin-top: var(--size-10); color: var(--text-primary); font-size: var(--font-size-article-title); font-weight: var(--font-weight-6); }
     .blog-content h3 { margin-top: var(--size-8); color: var(--text-primary); font-size: var(--font-size-4); font-weight: var(--font-weight-6); }
     .blog-content p { margin: var(--size-3) 0; }
     .blog-content ul, .blog-content ol { padding-left: var(--size-6); margin: var(--size-3) 0; }
@@ -63,7 +63,7 @@ routeSheet.replaceSync(
     .blog-content pre code { background: none; padding: 0; font-size: var(--font-size-0); line-height: 1.6; }
     .blog-content table { width: 100%; border-collapse: collapse; margin: var(--size-4) 0; font-size: var(--font-size-1); }
     .blog-content th, .blog-content td { padding: var(--size-2) var(--size-3); text-align: left; border-bottom: 0.5px solid var(--border); }
-    .blog-content th { background: var(--bg-surface); color: var(--text-secondary); font-weight: var(--font-weight-6); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); }
+    .blog-content th { background: var(--bg-surface); color: var(--text-secondary); font-weight: var(--font-weight-6); font-size: var(--font-size-overline); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); }
     .blog-content a { color: var(--brand); text-decoration: none; }
     .blog-content a:hover { text-decoration: underline; }
     .blog-content hr { border: none; border-top: 0.5px solid var(--border); margin: var(--size-8) 0; }
