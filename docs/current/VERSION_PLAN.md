@@ -123,7 +123,7 @@ does not claim fullstack parity.
   `package-surface:check`, `interface:snapshot`, `type-safety:check` and
   `deno-api:check` pass for every PR.
 - `deno task test:e2e` (Chromium full) and the Firefox/WebKit smoke pass
-  for every PR; the pre-release matrix covers all three engines.
+  for every PR; the pre-release matrix covers Chromium, Firefox and WebKit.
 - Post-publish consumer smoke (Deno, Node ESM, starter, Nitro Node and
   Workers, third-party Web Components, CDN) passes against the stable
   artifacts.
