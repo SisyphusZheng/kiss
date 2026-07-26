@@ -1,0 +1,187 @@
+{
+  "id": "patch-release-v0.41.1-2026-07-26T12-40-08-185Z",
+  "kind": "patch-release",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.41.0",
+  "targetVersion": "0.41.1",
+  "status": "failed",
+  "startedAt": "2026-07-26T12:40:08.185Z",
+  "steps": [
+    {
+      "name": "bump patch version",
+      "command": [
+        "deno",
+        "run",
+        "--allow-read",
+        "--allow-write",
+        "tools/bump-version.ts",
+        "--to",
+        "0.41.1"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.235Z",
+      "completedAt": "2026-07-26T12:40:08.253Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update project constants",
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.253Z",
+      "completedAt": "2026-07-26T12:40:08.254Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update current version anchors",
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.254Z",
+      "completedAt": "2026-07-26T12:40:08.258Z",
+      "exitCode": 0
+    },
+    {
+      "name": "regenerate versioned artifacts",
+      "command": [
+        "deno",
+        "task",
+        "generate:ui-manifest"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.259Z",
+      "completedAt": "2026-07-26T12:40:08.390Z",
+      "exitCode": 0
+    },
+    {
+      "name": "format release bump",
+      "command": [
+        "deno",
+        "task",
+        "fmt"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.391Z",
+      "completedAt": "2026-07-26T12:40:08.466Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release bump",
+      "command": [
+        "git",
+        "add",
+        "deno.json",
+        "packages/*/deno.json",
+        "packages/create/src/version.ts",
+        "packages/ui/src/generated-manifest.json",
+        "tools/project-constants.ts",
+        "README.md",
+        "README.zh.md",
+        "docs/current/VERSION_PLAN.md",
+        "docs/governance/PROJECT_WORKFLOW.md",
+        "docs/roadmap/ROADMAP.md",
+        "docs/status/STATUS.md",
+        "www/app/data/version.ts",
+        "www/app/routes/index/index.tsx",
+        "www/app/routes/guide/getting-started.tsx",
+        "www/app/routes/roadmap.tsx"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.466Z",
+      "completedAt": "2026-07-26T12:40:08.504Z",
+      "exitCode": 0
+    },
+    {
+      "name": "commit release bump",
+      "status": "passed",
+      "startedAt": "2026-07-26T12:40:08.504Z",
+      "completedAt": "2026-07-26T12:40:08.576Z",
+      "exitCode": 0
+    },
+    {
+      "name": "run release gates after bump",
+      "command": [
+        "deno",
+        "task",
+        "autoflow:ci"
+      ],
+      "status": "failed",
+      "startedAt": "2026-07-26T12:40:08.576Z",
+      "completedAt": "2026-07-26T12:48:30.879Z",
+      "exitCode": 1
+    },
+    {
+      "name": "push dev",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "dev"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "checkout main",
+      "command": [
+        "git",
+        "checkout",
+        "main"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "sync main from dev (fast-forward)",
+      "command": [
+        "git",
+        "merge",
+        "--ff-only",
+        "dev"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "package artifact gate",
+      "command": [
+        "deno",
+        "task",
+        "package-artifacts:check"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.41.1.json",
+        "docs/release/v0.41.1.md"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "commit release evidence",
+      "status": "pending"
+    },
+    {
+      "name": "push main (release + evidence)",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "main"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "tag release",
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.41.1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "completedAt": "2026-07-26T12:48:30.879Z"
+}
