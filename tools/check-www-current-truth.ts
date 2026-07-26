@@ -143,8 +143,10 @@ await checkFile('www/vite.config.ts');
 // current-line entry's version string but cannot write the new release's
 // theme — that is human release prose. Fail while the entry still names the
 // superseded theme recorded at bump time (the 0.41.1 incident shipped
-// alpha.19's 'third audit cleanup sweep' under the v0.41.1 entry).
-{
+// alpha.19's 'third audit cleanup sweep' under the v0.41.1 entry). The
+// exists guard keeps the fixture-driven tests (no roadmap fixture) on the
+// pattern-check path only.
+if (await exists('www/app/routes/roadmap.tsx')) {
   const roadmapText = await Deno.readTextFile('www/app/routes/roadmap.tsx');
   const currentTheme = roadmapEntryTheme(roadmapText, PACKAGE_VERSION_TAG);
   if (currentTheme !== undefined && currentTheme === PREVIOUS_RELEASE_THEME) {
