@@ -32,7 +32,13 @@ invariant.
 ## Entry truth
 
 - The `0.41.x` line is stable and frozen (ADR-0119); its plan is archived at
-  [`docs/release/v0.41.0-plan.md`](../release/v0.41.0-plan.md).
+  [`docs/release/v0.41.0-plan.md`](../release/v0.41.0-plan.md). The
+  five-package graph is unchanged by this plan, and alpha naming for the
+  0.42 line remains governed by
+  [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).
+- The external adopter pilot #390 stays retired by ADR-0119; 0.42 builds
+  adoption evidence through reproducible recipes and dogfooding instead of
+  a pilot program.
 - Request-time data, forms, sessions and cache are explicitly unfrozen;
   this plan covers data and forms only. Sessions and cache stay with
   `0.44.0`.
