@@ -9,6 +9,8 @@ import '@openelement/ui/open-card';
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+    h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
     .comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -40,7 +42,9 @@ export class DsdGuidePage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>Declarative Shadow DOM Rendering</h1>
+          <h1 id='start'>
+            Declarative Shadow DOM<span class='title-accent'>Rendering</span>
+          </h1>
           <p class='subtitle'>
             openElement treats Declarative Shadow DOM as the server-rendered boundary for Web
             Components, then upgrades only the behavior that must run in the browser.

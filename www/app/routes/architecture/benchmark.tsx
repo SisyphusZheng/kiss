@@ -14,6 +14,8 @@ import '@openelement/ui/open-code-block';
 const styles = new StyleSheet();
 styles.replaceSync(
   pageStyles + `
+  h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
   .metric { display:grid; grid-template-columns: 120px 1fr; gap:var(--size-2) var(--size-4); margin:var(--size-4) 0; }
   .metric .label { color:var(--text-muted); font-size:var(--font-size-0); }
   .metric .value { color:var(--text); font-weight:var(--font-weight-6); }
@@ -36,7 +38,9 @@ export default class Benchmark extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>Performance &amp; Benchmarks</h1>
+          <h1 id='start'>
+            Performance &amp;<span class='title-accent'>Benchmarks</span>
+          </h1>
           <p class='subtitle'>Zero-noise. What we actually measure.</p>
 
           <open-artifact-panel>

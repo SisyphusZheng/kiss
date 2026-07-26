@@ -8,6 +8,8 @@ import '@openelement/ui/open-card';
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+    h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
     .island-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -35,7 +37,9 @@ export class IslandsGuidePage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>Island Hydration</h1>
+          <h1 id='start'>
+            Island<span class='title-accent'>Hydration</span>
+          </h1>
           <p class='subtitle'>
             openElement keeps documents and Web Components server-rendered by default. Islands are
             reserved for client components that need runtime state or framework interop.

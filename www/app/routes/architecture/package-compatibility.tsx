@@ -8,6 +8,8 @@ import '@openelement/ui/open-card';
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+    h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
     .compat-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -35,7 +37,9 @@ export class PackageCompatibilityPage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>Package Compatibility</h1>
+          <h1 id='start'>
+            Package<span class='title-accent'>Compatibility</span>
+          </h1>
           <p class='subtitle'>
             OpenElement treats third-party Custom Elements as standards-based dependencies. Current
             builds use explicit package-island configuration and available Custom Elements Manifest

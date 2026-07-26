@@ -85,6 +85,7 @@ export const OPEN_PROPS_TOKEN_CSS = `/**
      ═══════════════════════════════════════════════ */
   --font-sans: 'JetBrains Mono', monospace;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Instrument Serif', serif;
   --font-size-00: 0.75rem;
   --font-size-0: 0.875rem;
   --font-size-1: 1rem;
@@ -186,7 +187,7 @@ export const OPEN_PROPS_TOKEN_CSS = `/**
   --ui-control-bg: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
   --ui-control-border: color-mix(in srgb, var(--border) 72%, var(--brand));
   --ui-control-border-hover: color-mix(in srgb, var(--brand-light) 74%, var(--border));
-  --ui-control-radius: var(--radius-round);
+  --ui-control-radius: var(--radius-1);
   --ui-control-highlight: inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
   --surface-glass: linear-gradient(145deg, color-mix(in srgb, var(--brand) 9%, var(--bg-card)), color-mix(in srgb, var(--bg-card) 90%, transparent));
   --surface-overlay: color-mix(in srgb, var(--bg-elevated) 92%, transparent);

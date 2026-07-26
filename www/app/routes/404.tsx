@@ -1,93 +1,141 @@
 /**
- * 404 Not Found Page - with search, helpful links, and old URL redirects
+ * 404 Not Found Page - v4 recovery scene: outlined giant code with one solid
+ * digit, serif accent line, square actions, and a standards marquee.
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
-import '@openelement/ui/open-input';
-import '@openelement/site-ui/open-brand-mark.tsx';
-import '@openelement/site-ui/open-page-hero.tsx';
 
-const POPULAR_LINKS = [
-  { href: '/guide/getting-started', label: 'Getting Started' },
-  { href: '/guide/core-concepts', label: 'Core Concepts' },
-  { href: '/architecture/dsd', label: 'DSD Rendering' },
-  { href: '/apilist', label: 'API Reference' },
-  { href: '/architecture/architecture', label: 'Architecture' },
-  { href: '/architecture/comparison', label: 'Framework Comparison' },
-  { href: '/roadmap', label: 'Roadmap' },
-];
+const marqueeText =
+  'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ 404 ✳ ';
 
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host {
     display: block;
     color: var(--text-primary);
+    background: var(--bg-base);
   }
-  .container {
+
+  * {
+    box-sizing: border-box;
+  }
+
+  h1,
+  p {
+    margin: 0;
+  }
+
+  .stage {
+    position: relative;
+    isolation: isolate;
     display: grid;
     justify-items: center;
-    max-width: none;
-    min-height: min(700px, calc(100svh - var(--nav-height)));
-    margin: 0 auto;
-    padding: var(--size-16) var(--size-6);
+    align-content: center;
+    gap: var(--size-5);
+    min-height: calc(100svh - var(--nav-height) - var(--size-12));
+    padding: clamp(3rem, 8vh, 6rem) var(--size-6);
     text-align: center;
     background:
-      radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--brand-pale) 46%, transparent), transparent 34%),
+      radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--violet-5) 18%, transparent), transparent 55%),
       var(--bg-base);
   }
-  .title {
-    font-size: calc(var(--font-size-8) * 1.35);
-    font-weight: var(--font-weight-9);
-    color: var(--text-primary);
-    letter-spacing: 0;
-    margin: 0;
-    line-height: 1;
+
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(circle at 50% 45%, black, transparent 75%);
   }
-  .mark { width:clamp(5rem,12vw,9rem); margin-bottom:var(--size-6); filter:drop-shadow(0 0 44px color-mix(in srgb,var(--brand) 42%,transparent)); }
-  .subtitle {
-    font-size: var(--font-size-4);
-    font-weight: var(--font-weight-8);
-    margin: var(--size-3) 0 0;
-    color: var(--text-primary);
+
+  .code {
+    display: flex;
+    font-family: var(--font-mono);
+    font-size: clamp(9rem, 26vw, 24rem);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--violet-5) 55%, transparent);
+    user-select: none;
   }
-  .description {
-    max-width: 520px;
-    font-size: var(--font-size-1);
+
+  .code .solid {
+    color: var(--text-primary);
+    -webkit-text-stroke: 0;
+  }
+
+  .serif-line {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 4rem);
+    letter-spacing: -0.01em;
+    color: var(--violet-8);
+  }
+
+  .lede {
+    max-width: 34rem;
     color: var(--text-secondary);
-    margin: var(--size-2) 0 var(--size-7);
-    line-height: var(--font-lineheight-3);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    line-height: 1.75;
   }
-  .search-wrapper {
-    max-width: 400px;
-    width: 100%;
-    margin: 0 auto var(--size-8);
-  }
-  .popular-label {
+
+  .requested {
+    color: var(--text-muted);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    text-transform: uppercase;
-    color: var(--brand);
-    margin-bottom: var(--size-3);
-    letter-spacing: 0;
   }
-  .links-grid {
+
+  .requested code {
+    padding: 0.125rem 0.375rem;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-1);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+  }
+
+  .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--size-2);
     justify-content: center;
-    margin-bottom: var(--size-8);
+    gap: var(--size-3);
+    margin-block-start: var(--size-3);
   }
-  @media (max-width: 600px) {
-    .container {
-      padding: 80px 20px 64px;
+
+  .marquee {
+    overflow: hidden;
+    white-space: nowrap;
+    border-block: 1px solid var(--border);
+    background: var(--surface-1);
+  }
+
+  .marquee span {
+    display: inline-block;
+    padding: var(--size-3) 0;
+    color: var(--brand);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    font-weight: var(--font-weight-5);
+    letter-spacing: 0.12em;
+    animation: marquee 36s linear infinite;
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
     }
-    .title {
-      font-size: var(--font-size-7);
-    }
-    .subtitle {
-      font-size: var(--font-size-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee span {
+      animation: none;
     }
   }
 `);
@@ -95,41 +143,38 @@ styles.replaceSync(`
 export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
-    const locale = this._getLocale('zh');
+    const locale = this._getLocale('en');
     const homeHref = locale === 'en' ? '/' : '/zh/';
+    const docsHref = locale === 'en' ? '/docs' : '/zh/docs';
     const requestedPath = typeof globalThis.location === 'undefined'
       ? '/404'
       : globalThis.location.pathname;
     return (
-      <main>
-        <open-page-hero variant='error'>
-          <span slot='eyebrow'>Recovery scene</span>
-          <span slot='title'>404</span>
-          <span slot='lede'>The requested route is not part of the current public map.</span>
-        </open-page-hero>
-        <div class='container'>
-          <open-brand-mark class='mark' size='xl'></open-brand-mark>
-          <p class='subtitle'>Page not found</p>
-          <p class='description'>
-            The page you are looking for doesn't exist or has been moved.
+      <main class='notfound'>
+        <section class='stage'>
+          <h1 class='code' aria-label='404'>
+            <span aria-hidden='true'>4</span>
+            <span class='solid' aria-hidden='true'>0</span>
+            <span aria-hidden='true'>4</span>
+          </h1>
+          <p class='serif-line'>Lost in the shadow DOM.</p>
+          <p class='lede'>
+            This route never mounted. The page you want is probably one declarative template away.
           </p>
-          <p class='description'>
+          <p class='requested'>
             Requested path: <code>{requestedPath}</code>
           </p>
-          <div class='search-wrapper'>
-            <open-input placeholder='Search docs and API'></open-input>
+          <div class='actions'>
+            <open-button variant='primary' href={homeHref}>
+              Back home
+            </open-button>
+            <open-button href={docsHref}>
+              Read the docs
+            </open-button>
           </div>
-          <p class='popular-label'>Popular pages</p>
-          <div class='links-grid'>
-            {POPULAR_LINKS.map((l) => (
-              <open-button size='sm' href={l.href}>
-                {l.label}
-              </open-button>
-            ))}
-          </div>
-          <open-button variant='primary' href={homeHref}>
-            Go home
-          </open-button>
+        </section>
+        <div class='marquee' aria-hidden='true'>
+          <span>{marqueeText + marqueeText}</span>
         </div>
       </main>
     );

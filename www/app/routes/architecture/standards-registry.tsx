@@ -8,6 +8,8 @@ import '@openelement/ui/open-card';
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+    h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
     .registry-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -35,7 +37,9 @@ export class StandardsRegistryPage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>WC Standards Contract</h1>
+          <h1 id='start'>
+            WC Standards<span class='title-accent'>Contract</span>
+          </h1>
           <p class='subtitle'>
             OpenElement relies on web-platform contracts rather than a proprietary registry product.
             Custom Elements, DSD, CEM, Request/Response and FormData define the direction of the

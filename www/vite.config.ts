@@ -63,13 +63,6 @@ html[data-theme="light"],
   --font-size-display-lg: 2.625rem;
   --font-weight-medium: var(--font-weight-5);
   --font-weight-semibold: var(--font-weight-7);
-  --vinyl-ink-0: #030304;
-  --vinyl-ink-1: #050507;
-  --vinyl-ink-2: #09090c;
-  --vinyl-ink-3: #18151e;
-  --vinyl-ink-4: #08070b;
-  --vinyl-highlight: #ffffff;
-  --vinyl-shadow: #000000;
 }
 html[data-theme="dark"],
 :host([data-theme="dark"]),
@@ -119,7 +112,7 @@ body {
   color: var(--text-primary);
 }`;
 const colorTokensStyle =
-  `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
+  `<style>@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-regular.woff2') format('woff2')}@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/instrument-serif-latin-italic.woff2') format('woff2')}${rootCSS}body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}${siteCSS}</style>`;
 
 export default defineConfig({
   resolve: {

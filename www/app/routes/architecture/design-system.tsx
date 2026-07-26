@@ -229,7 +229,8 @@ export class UIShowcase extends OpenElement {
       <main class='system'>
         <open-page-hero variant='technical'>
           <span slot='eyebrow'>Web Standards Lab</span>
-          <span slot='title'>Design System</span>
+          <span slot='title'>Design</span>
+          <span slot='title-accent'>System</span>
           <span slot='lede'>
             The active www dogfood contract: audited Open Props tokens, retained UI primitives,
             product-art diagrams and full dark-mode parity. It is not a framework requirement.

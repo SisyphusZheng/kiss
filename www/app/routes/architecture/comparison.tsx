@@ -18,6 +18,8 @@ export const meta = { section: 'Principles', label: 'Comparison', order: 20 };
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+    h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
     .comparison-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -88,7 +90,9 @@ export default class ComparisonPage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>openElement vs Alternatives</h1>
+          <h1 id='start'>
+            openElement<span class='title-accent'>vs Alternatives</span>
+          </h1>
           <p class='subtitle'>
             A conservative comparison of product direction. This page describes what each framework
             optimizes for; it does not invent benchmark claims. Use it to understand fit, not to

@@ -1,357 +1,263 @@
 /**
- * Docs landing page - Web Standards Lab reference desk.
+ * Docs landing page - v4 manual index: serif/mono masthead and four
+ * outlined-number entrance rows.
  */
 export const meta = { section: 'Quick Start', label: 'Docs', order: 0 };
 export const tagName = 'page-docs';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import '@openelement/ui/open-badge';
-import '@openelement/ui/open-card';
-import '@openelement/ui/open-input';
-import '@openelement/site-ui/open-standards-visual.tsx';
-import '@openelement/site-ui/open-page-hero.tsx';
-import '@openelement/site-ui/open-artifact-panel.tsx';
-import '@openelement/site-ui/open-section-frame.tsx';
+import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
   :host {
     display: block;
     color: var(--text-primary);
+    background: var(--bg-base);
   }
 
   * {
     box-sizing: border-box;
   }
 
-  .desk {
-    width: 100%;
-    margin-inline: auto;
-    padding-block: 0 var(--site-section-block);
+  h1,
+  p {
+    margin: 0;
   }
 
-  .kicker,
-  .index {
+  /* ── masthead: serif "Read the" + mono "MANUAL." ── */
+  .masthead {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
+  }
+
+  .masthead::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(180deg, black, transparent);
+  }
+
+  .masthead-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--size-4);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--violet-8);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
     font-weight: var(--font-weight-8);
-    letter-spacing: 0;
+    letter-spacing: 0.29em;
     text-transform: uppercase;
   }
 
-  .kicker,
-  .index {
-    color: var(--brand);
+  .eyebrow::before {
+    content: "";
+    width: 2rem;
+    height: 2px;
+    background: var(--brand);
   }
 
-  .kicker {
-    margin: 0 0 var(--size-4);
-  }
-
-  h1,
-  h2,
-  h3,
-  p {
-    margin-block-start: 0;
+  .stamp {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   h1 {
-    margin-block-end: 0;
-    font-size: var(--font-size-6);
-    line-height: .92;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
+    margin-block-start: clamp(1.5rem, 4vh, 3rem);
+    line-height: 0.92;
+  }
+
+  h1 .serif-line {
+    display: block;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(3.4rem, 9vw, 8rem);
+    letter-spacing: -0.02em;
+    color: var(--violet-8);
+  }
+
+  h1 .mono-line {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: clamp(3rem, 8vw, 7rem);
+    letter-spacing: -0.05em;
+    color: var(--text-primary);
   }
 
   .lede {
-    max-width: 720px;
-    margin-block: var(--size-6) 0;
+    margin-block-start: clamp(1.25rem, 3vh, 2rem);
     color: var(--text-secondary);
-    font-size: var(--font-size-2);
-    line-height: 1.24;
-    font-weight: var(--font-weight-5);
-  }
-
-  .spec-list,
-  .workflow-list,
-  .command-list {
-    display: grid;
-    gap: var(--size-3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .spec-list li,
-  .workflow-item,
-  .command-list li {
-    display: grid;
-    grid-template-columns: minmax(110px, .34fr) minmax(0, 1fr);
-    gap: var(--size-3);
-    padding-block: var(--size-3);
-    border-block-end: var(--border-size-1) solid var(--border);
-  }
-
-  .spec-list li:last-child,
-  .workflow-item:last-child,
-  .command-list li:last-child {
-    border-block-end: 0;
-  }
-
-  .spec-list strong,
-  .workflow-item strong,
-  .command-list strong {
-    color: var(--brand);
     font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-    font-weight: var(--font-weight-8);
-    letter-spacing: 0;
+    font-size: clamp(1rem, 1.2vw, 1.1rem);
+    line-height: 1.75;
+  }
+
+  .sidenote {
+    position: absolute;
+    inset-inline-end: clamp(0.5rem, 1.5vw, 1.5rem);
+    inset-block-start: 55%;
+    writing-mode: vertical-rl;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-micro);
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    user-select: none;
   }
 
-  .spec-list span,
-  .workflow-item span,
-  .command-list span {
-    color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-  }
-
-  .command {
+  /* ── entrance rows: outlined numbers, hairlines, hover ── */
+  .entrances {
     display: grid;
-    gap: var(--size-4);
+    border-block-start: 1px solid var(--border);
   }
 
-  .command__header {
+  .entrance {
     display: grid;
-    gap: var(--size-3);
-  }
-
-  .paths {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    margin-block-start: 0;
-    border-block-end: var(--border-size-1) solid var(--border);
-    gap: var(--size-4);
-    padding: var(--size-8) 0 var(--size-5);
-  }
-
-  .path-link {
+    grid-template-columns: minmax(5rem, 0.16fr) minmax(0, 1fr) auto;
+    gap: clamp(1rem, 4vw, 4rem);
+    align-items: center;
+    padding: clamp(1.25rem, 3.5vh, 2.5rem) clamp(1.5rem, 5vw, 4.5rem);
+    border-block-end: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
+    transition: background 0.15s ease;
   }
 
-  .path-link:focus-visible {
-    outline: var(--border-size-2) solid var(--brand);
-    outline-offset: var(--size-1);
-    border-radius: var(--radius-2);
+  .entrance:hover {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--brand) 8%, transparent), transparent);
   }
 
-  .path-card {
-    min-height: 230px;
-    background: color-mix(in srgb, var(--bg-card) 84%, transparent);
+  .entrance-index {
+    font-family: var(--font-mono);
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--violet-5) 55%, transparent);
+    transition: -webkit-text-stroke-color 0.15s ease;
   }
 
-  .path-card h2,
-  .panel-title {
-    margin-block: var(--size-5) var(--size-3);
-    color: var(--text-primary);
-    font-size: var(--font-size-3);
+  .entrance:hover .entrance-index {
+    -webkit-text-stroke-color: var(--violet-8);
+  }
+
+  .entrance-title {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(1.5rem, 2.8vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
     line-height: 1.05;
-    letter-spacing: 0;
+    color: var(--text-primary);
+    transition: color 0.15s ease;
   }
 
-  .path-card p,
-  .panel-copy {
+  .entrance:hover .entrance-title {
+    color: var(--violet-8);
+  }
+
+  .entrance-copy {
+    margin-block-start: var(--size-2);
     color: var(--text-secondary);
-    font-size: var(--font-size-0);
-    line-height: var(--font-lineheight-3);
-    margin-block-end: 0;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: 1.6;
   }
 
-  .reference {
-    display: grid;
-    grid-template-columns: minmax(0, .92fr) minmax(0, 1fr);
-    gap: var(--size-5);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    padding: var(--size-5) 0 var(--size-10);
-    margin-block-start: 0;
-    border-block-end: var(--border-size-1) solid var(--border);
+  .entrance-arrow {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-5);
+    color: var(--violet-5);
+    transition: transform 0.15s ease, color 0.15s ease;
   }
 
-  .route-panel {
-    --panel-min-height: 420px;
+  .entrance:hover .entrance-arrow {
+    color: var(--violet-8);
+    transform: translateX(var(--size-2));
   }
 
-  .workflow-panel h2 {
-    margin-block: 0 var(--size-4);
-    font-size: var(--font-size-3);
-    letter-spacing: 0;
-  }
-
-  @media (max-width: 1120px) {
-    .reference {
-      grid-template-columns: 1fr;
+  @media (max-width: 720px) {
+    .sidenote {
+      display: none;
     }
 
-    .paths {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      width: min(100% - var(--size-8), 1120px);
+    .entrance {
+      grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .reference {
-      width: min(100% - var(--size-8), 1120px);
-    }
-  }
-
-  @media (max-width: 640px) {
-    .desk {
-      padding-block-start: var(--size-5);
-    }
-
-    h1 {
-      font-size: var(--font-size-6);
-    }
-
-    .lede {
-      margin-block-start: var(--size-4);
-      font-size: var(--font-size-1);
-    }
-
-    .paths {
-      margin-block-start: var(--size-5);
-    }
-
-    .paths,
-    .spec-list li,
-    .workflow-item,
-    .command-list li {
-      grid-template-columns: 1fr;
+    .entrance-index {
+      display: none;
     }
   }
 `);
 
-const paths = [
+const entrances = [
   [
     '01',
-    'Build an app',
-    'Project, routes, layouts, islands, content, i18n, and deployment.',
+    'Get started',
+    'Zero to a running application in three commands.',
     '/guide/getting-started',
   ],
-  ['02', 'Read the API', 'Package exports, framework helpers, and public contracts.', '/apilist'],
+  ['02', 'API reference', 'The five-package surface, export by export.', '/apilist'],
   [
     '03',
-    'Inspect architecture',
-    'Package boundaries, DSD, islands, adapters, and product doctrine.',
+    'Architecture',
+    'Who owns what, and why the boundaries hold.',
     '/architecture/architecture',
   ],
-  [
-    '04',
-    'Check roadmap truth',
-    'Shipped, current, planned, and intentionally out-of-scope work.',
-    '/roadmap',
-  ],
-];
-
-const workflow = [
-  ['Build', 'Start with the guide when the question is how to ship a page.'],
-  ['Verify', 'Use API and architecture pages for contract-level precision.'],
-  ['Decide', 'Use roadmap and changelog pages to avoid stale assumptions.'],
-  ['Contribute', 'Read architecture before changing package boundaries.'],
-];
-
-const commands = [
-  ['route', '/guide/getting-started'],
-  ['api', '/apilist'],
-  ['graph', '/architecture/architecture'],
-];
+  ['04', 'Roadmap', 'Where the stable line goes next.', '/roadmap'],
+] as const;
 
 export class DocsPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
     return (
-      <main class='desk'>
-        <open-page-hero variant='technical'>
-          <span slot='eyebrow'>Documentation entry desk</span>
-          <span slot='title'>Find the contract, then follow the route.</span>
-          <span slot='lede'>
-            OpenElement docs put build paths, API surface, architecture decisions and release truth
-            in one engineering workspace.
-          </span>
-          <open-artifact-panel slot='artifact'>
-            <span slot='label'>command palette</span>
-            <span slot='meta'>docs nav</span>
-            <div class='command'>
-              <div class='command__header'>
-                <open-input value='Search routes, APIs, package graph' readonly></open-input>
-                <open-badge tone='brand'>reference desk</open-badge>
-              </div>
-              <ul class='command-list'>
-                {commands.map(([label, href]) => (
-                  <li>
-                    <strong>{label}</strong>
-                    <span>{href}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </open-artifact-panel>
-        </open-page-hero>
-
-        <open-section-frame>
-          <span slot='index'>01 / routes</span>
-          <span slot='title'>Choose the shortest path to evidence.</span>
-          <span slot='copy'>
-            Build, inspect, decide, then contribute through the same five-package product map.
-          </span>
-          <nav class='paths' aria-label='Documentation paths'>
-            {paths.map(([index, title, copy, href]) => (
-              <a class='path-link' href={href}>
-                <open-card class='path-card'>
-                  <span class='index'>{index}</span>
-                  <h2>{title}</h2>
-                  <p>{copy}</p>
-                </open-card>
-              </a>
-            ))}
-          </nav>
-        </open-section-frame>
-
-        <open-section-frame>
-          <span slot='index'>02 / evidence</span>
-          <span slot='title'>Documentation is a product surface.</span>
-          <span slot='copy'>
-            Routes, generated search and current package truth are rebuilt together.
-          </span>
-          <div class='reference'>
-            <open-artifact-panel class='route-panel'>
-              <span slot='label'>route graph</span>
-              <span slot='meta'>fast paths</span>
-              <open-standards-visual variant='routes' emphasis='high' motion='auto'>
-              </open-standards-visual>
-            </open-artifact-panel>
-
-            <open-artifact-panel class='workflow-panel'>
-              <span slot='label'>usage workflow</span>
-              <span slot='meta'>docs as product</span>
-              <h2>How to use this site</h2>
-              <div class='workflow-list'>
-                {workflow.map(([label, copy]) => (
-                  <div class='workflow-item'>
-                    <strong>{label}</strong>
-                    <span>{copy}</span>
-                  </div>
-                ))}
-              </div>
-            </open-artifact-panel>
+      <main class='manual'>
+        <header class='masthead'>
+          <span class='sidenote' aria-hidden='true'>Spec-041 · Docs index</span>
+          <div class='masthead-top'>
+            <p class='eyebrow'>Docs — The manual</p>
+            <span class='stamp'>{OPENELEMENT_VERSION}</span>
           </div>
-        </open-section-frame>
+          <h1>
+            <span class='serif-line'>Read the</span>
+            <span class='mono-line'>MANUAL.</span>
+          </h1>
+          <p class='lede'>Four entrances. Everything else is a footnote.</p>
+        </header>
+
+        <nav class='entrances' aria-label='Documentation entrances'>
+          {entrances.map(([index, title, copy, href]) => (
+            <a class='entrance' href={href}>
+              <span class='entrance-index' aria-hidden='true'>{index}</span>
+              <div>
+                <span class='entrance-title'>{title}</span>
+                <p class='entrance-copy'>{copy}</p>
+              </div>
+              <span class='entrance-arrow' aria-hidden='true'>→</span>
+            </a>
+          ))}
+        </nav>
       </main>
     );
   }

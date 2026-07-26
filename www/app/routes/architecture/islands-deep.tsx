@@ -10,6 +10,8 @@ import '@openelement/site-ui/open-artifact-panel.tsx';
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
+  h1 .title-accent { display: block; font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: calc(1em * 1.12); line-height: .95; letter-spacing: -.02em; color: var(--violet-8); }
+
   .layer-card { padding: 20px var(--size-6); margin: var(--size-4) 0; border-left: 2px solid var(--color-border); background: var(--surface-1); border-radius: 0 3px 3px 0; }
   .layer-card .layer-tag { font-size: var(--font-size-overline); font-weight: var(--font-weight-5); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.25rem; }
   .layer-card h3 { margin: 0 0 var(--size-2); }
@@ -33,7 +35,9 @@ export class IslandsDeepGuidePage extends OpenElement {
         >
         </open-page-rail>
         <div class='container'>
-          <h1 id='start'>Island Deep Dive</h1>
+          <h1 id='start'>
+            Island<span class='title-accent'>Deep Dive</span>
+          </h1>
           <p class='subtitle'>
             Islands are the only client JavaScript units in openElement. The public model is VNode
             output plus JSX event handlers; SSR props are restored separately.

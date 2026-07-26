@@ -1,5 +1,5 @@
 /**
- * Blog Post Page - Dynamic Route
+ * Blog Post Page - Dynamic Route, v4 editorial article.
  *
  * Renders individual blog posts from @openelement/generated/blog-data.
  * The `slug` param is set by openElement dynamic routing: /blog/:slug
@@ -7,7 +7,7 @@
  */
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import '@openelement/ui/open-button';
+import '@openelement/ui/open-code-block';
 import { pageStyles } from '../../components/page-styles.js';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 import '@openelement/site-ui/open-reading-shell.tsx';
@@ -40,39 +40,52 @@ function prepareArticle(html: string): { html: string; outline: ArticleOutline[]
       return `<h${depth}${cleanAttrs} id="${id}">${body}</h${depth}>`;
     },
   );
-  return { html: withIds, outline };
+  // Code display goes through open-code-block (copy button + highlighting).
+  const withCodeBlocks = withIds.replace(
+    /(<pre[\s\S]*?<\/pre>)/gi,
+    '<open-code-block>$1</open-code-block>',
+  );
+  return { html: withCodeBlocks, outline };
 }
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
   pageStyles + `
 
-    .blog-back { font-size: var(--font-size-0); color: var(--text-secondary); margin-bottom: var(--size-2); display: inline-block; }
-    .blog-date { font-size: var(--font-size-0); color: var(--text-secondary); margin-bottom: var(--size-8); }
-    .blog-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-bottom: var(--size-4); }
-    .blog-tag { font-size: var(--font-size-00); font-weight: var(--font-weight-6); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); padding: 0.125rem 0.375rem; border-radius: 2px; background: var(--bg-surface); border: 0.5px solid var(--border); color: var(--text-secondary); }
-    .blog-content { font-size: var(--font-size-3); line-height: var(--font-lineheight-4); color: var(--text-secondary); }
-    .blog-content h2 { margin-top: var(--size-10); color: var(--text-primary); font-size: var(--font-size-article-title); font-weight: var(--font-weight-6); }
-    .blog-content h3 { margin-top: var(--size-8); color: var(--text-primary); font-size: var(--font-size-4); font-weight: var(--font-weight-6); }
-    .blog-content p { margin: var(--size-3) 0; }
-    .blog-content ul, .blog-content ol { padding-left: var(--size-6); margin: var(--size-3) 0; }
+    .crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--size-2); margin: 0 0 var(--size-4); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); letter-spacing: 0.1em; text-transform: uppercase; }
+    .crumb a { color: var(--text-muted); text-decoration: none; }
+    .crumb a:hover { color: var(--brand); }
+    .crumb .crumb-sep { color: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+    .crumb .crumb-current { color: var(--violet-8); }
+    .post-title { margin: 0; color: var(--text-primary); font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: clamp(2.4rem, 5.5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.01em; overflow-wrap: break-word; }
+    .post-lede { max-width: 640px; margin: var(--size-4) 0 0; color: var(--text-secondary); font-size: clamp(var(--font-size-1), 1.4vw, var(--font-size-2)); line-height: 1.65; }
+    .post-meta { display: flex; flex-wrap: wrap; gap: var(--size-2); margin: var(--size-4) 0 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .blog-content { font-family: var(--font-mono); font-size: var(--font-size-0); line-height: 1.9; color: var(--text-secondary); }
+    .blog-content h2 { margin-top: var(--size-10); color: var(--text-primary); font-family: var(--font-mono); font-size: var(--font-size-4); font-weight: var(--font-weight-8); letter-spacing: -0.02em; }
+    .blog-content h3 { margin-top: var(--size-8); color: var(--text-primary); font-family: var(--font-mono); font-size: var(--font-size-2); font-weight: var(--font-weight-8); }
+    .blog-content p { margin: var(--size-4) 0; }
+    .blog-content ul, .blog-content ol { padding-left: var(--size-6); margin: var(--size-4) 0; }
     .blog-content li { margin: 0.375rem 0; }
     .blog-content strong { color: var(--text-primary); }
-    .blog-content code { background: var(--bg-surface); padding: 0.125rem 0.375rem; border-radius: 2px; font-size: var(--font-size-1); font-family: var(--font-mono); }
-    .blog-content pre { background: var(--bg-surface); border: 0.5px solid var(--border); border-radius: var(--radius-1); padding: var(--size-4); overflow-x: auto; margin: var(--size-4) 0; }
+    .blog-content code { background: var(--bg-surface); padding: 0.125rem 0.375rem; border-radius: var(--radius-1); font-size: var(--font-size-0); font-family: var(--font-mono); }
+    .blog-content pre { background: var(--surface-code); border: 0.5px solid var(--border); border-radius: var(--radius-2); padding: var(--size-4); overflow-x: auto; margin: var(--size-4) 0; }
     .blog-content pre code { background: none; padding: 0; font-size: var(--font-size-0); line-height: 1.6; }
+    .blog-content open-code-block { margin: var(--size-5) 0; }
     .blog-content table { width: 100%; border-collapse: collapse; margin: var(--size-4) 0; font-size: var(--font-size-1); }
     .blog-content th, .blog-content td { padding: var(--size-2) var(--size-3); text-align: left; border-bottom: 0.5px solid var(--border); }
     .blog-content th { background: var(--bg-surface); color: var(--text-secondary); font-weight: var(--font-weight-6); font-size: var(--font-size-overline); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); }
     .blog-content a { color: var(--brand); text-decoration: none; }
     .blog-content a:hover { text-decoration: underline; }
     .blog-content hr { border: none; border-top: 0.5px solid var(--border); margin: var(--size-8) 0; }
-    .blog-content blockquote { border-left: 2px solid var(--brand); padding-left: var(--size-4); margin: var(--size-4) 0; color: var(--text-secondary); }
+    .blog-content blockquote { margin: var(--size-8) 0; padding: var(--size-6) var(--size-4); border: 0; border-block: 1.5px solid color-mix(in srgb, var(--violet-5) 55%, transparent); color: var(--violet-8); font-family: var(--font-serif); font-style: italic; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.35; text-align: center; }
+    .blog-content blockquote p { margin: 0; }
+
+    .next-dispatch { display: grid; gap: var(--size-3); margin-top: var(--size-11); padding-top: var(--size-6); border-top: 1px solid var(--border); }
+    .next-label { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--font-size-00); font-weight: var(--font-weight-8); letter-spacing: 0.16em; text-transform: uppercase; }
+    .next-dispatch a { color: var(--text-primary); font-family: var(--font-serif); font-size: clamp(1.7rem, 3.2vw, 2.6rem); line-height: 1.05; text-decoration: none; }
+    .next-dispatch a:hover { color: var(--violet-8); }
     .not-found { text-align: center; padding: var(--size-12) var(--size-4); color: var(--text-secondary); }
-    .nav-row { margin-top: var(--size-11); }
-    .related { display:grid; gap:var(--size-2); margin-block-end:var(--size-5); }
-    .related a { color:var(--text-secondary); text-decoration:none; }
-    .related a:hover,.related a:focus-visible { color:var(--brand); }
   `,
 );
 
@@ -101,10 +114,6 @@ export default class BlogPostPage extends OpenElement {
     const index = posts.findIndex((candidate) => candidate.slug === post.slug);
     const previous = index >= 0 ? posts[index + 1] : undefined;
     const next = index > 0 ? posts[index - 1] : undefined;
-    const related = posts.filter((candidate) =>
-      candidate.slug !== post.slug &&
-      (candidate.frontmatter.tags ?? []).some((tag) => tags.includes(tag))
-    ).slice(0, 3);
     return (
       <open-reading-shell
         meta
@@ -116,36 +125,31 @@ export default class BlogPostPage extends OpenElement {
         next-label={next?.frontmatter.title}
       >
         <div slot='meta'>
-          <a href={blogHref} class='blog-back'>← {locale === 'en' ? 'Blog' : '博客'}</a>
-          <h1>{post.frontmatter.title}</h1>
-          <p class='subtitle'>{post.frontmatter.excerpt ?? ''}</p>
+          <p class='crumb'>
+            <a href={blogHref}>{locale === 'en' ? 'Blog' : '博客'}</a>
+            <span class='crumb-sep'>/</span>
+            <span class='crumb-current'>{tags[0] ?? (locale === 'en' ? 'Dispatch' : '随笔')}</span>
+          </p>
+          <h1 class='post-title'>{post.frontmatter.title}</h1>
+          {post.frontmatter.excerpt && <p class='post-lede'>{post.frontmatter.excerpt}</p>}
+          <p class='post-meta'>
+            <time>{post.frontmatter.date}</time>
+            {tags.map((tag: string) => <span key={tag}>· {tag}</span>)}
+          </p>
         </div>
         <open-page-rail slot='rail' items={JSON.stringify(article.outline)}></open-page-rail>
-        {tags.length > 0
-          ? (
-            <div class='blog-tags'>
-              {tags.map((tag: string) => <span key={tag} class='blog-tag'>{tag}</span>)}
-            </div>
-          )
-          : null}
-        <p class='blog-date'>{post.frontmatter.date}</p>
         <div class='blog-content' innerHTML={article.html} trustedHtml>
         </div>
-        <div class='nav-row'>
-          {related.length
-            ? (
-              <nav class='related' aria-label='Related posts'>
-                <strong>{locale === 'en' ? 'Related' : '相关文章'}</strong>
-                {related.map((item) => (
-                  <a href={`${blogHref}/${item.slug}`}>{item.frontmatter.title}</a>
-                ))}
-              </nav>
-            )
-            : null}
-          <open-button variant='ghost' size='sm' href={blogHref}>
-            {locale === 'en' ? 'Back to Blog' : '返回博客'}
-          </open-button>
-        </div>
+        <nav class='next-dispatch' aria-label='Next dispatch'>
+          <span class='next-label'>{locale === 'en' ? 'Next dispatch' : '下一篇'}</span>
+          {next
+            ? <a href={`${blogHref}/${next.slug}`}>{next.frontmatter.title} →</a>
+            : (
+              <a href={blogHref}>
+                {locale === 'en' ? 'Back to all dispatches →' : '返回全部文章 →'}
+              </a>
+            )}
+        </nav>
       </open-reading-shell>
     );
   }

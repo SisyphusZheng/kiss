@@ -8,7 +8,6 @@ import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
-import '@openelement/ui/open-card';
 import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
@@ -32,17 +31,23 @@ pageSheet.replaceSync(`
     margin-block-start: 0;
   }
 
-  .roadmap {
-    display: grid;
-    width: 100%;
-    background: var(--bg-base);
+  .title-serif {
+    display: block;
+    color: var(--violet-8);
+    font-family: var(--font-serif);
+    font-size: calc(1em * 1.12);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -.02em;
   }
 
-  .kicker,
-  .version,
-  .section-kicker,
+  .title-mono {
+    display: block;
+  }
+
   .metric-label,
-  .rule-label {
+  .rule-label,
+  .rule-title {
     color: var(--brand);
     font-family: var(--font-mono);
     font-size: var(--font-size-00);
@@ -51,149 +56,170 @@ pageSheet.replaceSync(`
     text-transform: uppercase;
   }
 
-  .kicker {
-    margin-block-end: var(--size-5);
-  }
-
-  h1 {
-    margin: 0;
-    max-width: 860px;
-    font-size: var(--font-size-8);
-    line-height: .88;
-    letter-spacing: 0;
-    font-weight: var(--font-weight-9);
-  }
-
-  .subtitle {
-    max-width: 760px;
-    margin-block: var(--size-6) 0;
-    color: var(--text-secondary);
-    font-size: var(--font-size-2);
-    line-height: 1.28;
-    font-weight: var(--font-weight-5);
-  }
-
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--size-3);
-    margin-block-start: var(--size-8);
-  }
-
-  .now {
-    --panel-min-height: 430px;
-  }
-
-  .now-layout {
-    position: relative;
-    display: grid;
-    align-content: space-between;
-    gap: var(--size-6);
-    min-height: 340px;
-  }
-
-  .aperture {
-    position: relative;
-    justify-self: center;
-    width: min(320px, 72vw);
-    aspect-ratio: 1;
-    border: var(--size-8) solid transparent;
-    border-radius: var(--radius-round);
-    background:
-      linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
-      conic-gradient(from 218deg, var(--brand-deep), var(--brand), var(--brand-light), var(--brand-deep)) border-box;
-    box-shadow:
-      inset 0 0 0 var(--border-size-1) color-mix(in srgb, var(--brand-light) 42%, transparent),
-      0 var(--size-8) var(--size-16) color-mix(in srgb, var(--brand) 12%, transparent);
-  }
-
-  .aperture::before {
-    content: "";
-    position: absolute;
-    inset: 20%;
-    border: var(--border-size-1) solid color-mix(in srgb, var(--brand-light) 58%, var(--bg-card));
-    border-radius: var(--radius-round);
-    transform: rotate(-16deg);
-  }
-
-  .aperture::after {
-    content: "";
-    position: absolute;
-    inset-inline: 18%;
-    inset-block-start: 47%;
-    height: var(--size-10);
-    border-block: var(--border-size-2) solid var(--brand-deep);
-    opacity: .72;
-  }
-
-  .notch {
-    position: absolute;
-    inset-inline-end: calc(var(--size-4) * -1);
-    inset-block-start: 18%;
-    width: var(--size-12);
-    height: var(--size-12);
-    border-radius: var(--radius-round) 0 0 var(--radius-round);
-    background: var(--bg-card);
+    margin-block-end: var(--size-6);
   }
 
   .now h2 {
-    margin-block: 0 var(--size-3);
+    margin-block: var(--size-3) var(--size-3);
     font-size: var(--font-size-3);
     line-height: 1.08;
     letter-spacing: 0;
   }
 
   .now p,
-  .phase-copy,
+  .tl-copy,
   .truth p,
   .truth li,
   .rule-copy,
+  .rule-text,
   .matrix-copy {
     color: var(--text-secondary);
     font-size: var(--font-size-0);
     line-height: var(--font-lineheight-3);
   }
 
-  .release-rail {
+  /* vertical timeline: square nodes, evidence-first versions */
+  .roadmap-grid {
     display: grid;
-    gap: var(--size-5);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    padding: var(--size-8) 0 var(--size-6);
-    border-block-end: var(--border-size-1) solid var(--border);
-    background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+    grid-template-columns: minmax(0, 1fr) minmax(280px, .38fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
   }
 
-  .phase-grid {
+  .timeline {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(5, minmax(210px, 1fr));
-    gap: var(--size-4);
-    overflow-x: auto;
-    padding-block-end: var(--size-2);
   }
 
-  .phase-card {
-    min-height: 280px;
-    background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+  .timeline::before {
+    content: "";
+    position: absolute;
+    inset-block: var(--size-2);
+    inset-inline-start: calc(var(--size-2) / 2);
+    width: var(--border-size-1);
+    background: var(--border);
   }
 
-  .phase-top {
+  .tl-row {
+    position: relative;
+    padding: var(--size-5) 0 var(--size-5) var(--size-8);
+  }
+
+  .tl-node {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: calc(var(--size-5) + var(--size-3));
+    width: var(--size-2);
+    height: var(--size-2);
+  }
+
+  .tl-stable .tl-node {
+    background: var(--brand);
+  }
+
+  .tl-next .tl-node {
+    border: var(--border-size-2) solid var(--violet-8);
+    background: var(--bg-base);
+  }
+
+  .tl-next .tl-node::after {
+    content: "";
+    position: absolute;
+    inset: var(--size-1);
+    background: var(--violet-8);
+  }
+
+  .tl-planned .tl-node {
+    border: var(--border-size-2) solid color-mix(in srgb, var(--violet-5) 55%, transparent);
+  }
+
+  .tl-head {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--size-3);
-    margin-block-end: var(--size-7);
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--size-3) var(--size-4);
   }
 
-  .phase-card h3 {
-    margin-block: 0 var(--size-3);
+  .tl-version {
     color: var(--text-primary);
-    font-size: var(--font-size-2);
-    line-height: 1.12;
-    letter-spacing: 0;
+    font-size: clamp(2rem, 4.2vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -.03em;
   }
 
-  .phase-copy {
+  .tl-next .tl-version {
+    color: var(--violet-8);
+  }
+
+  .tl-planned .tl-version {
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--violet-5) 55%, transparent);
+  }
+
+  .tl-theme {
+    color: var(--violet-8);
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 1.9vw, 1.7rem);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .tl-planned .tl-theme {
+    color: var(--violet-5);
+  }
+
+  .stamp {
+    padding: var(--size-1) var(--size-3);
+    border-radius: var(--radius-1);
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-7);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .stamp-current {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+
+  .stamp-next {
+    border: var(--border-size-1) solid var(--violet-8);
+    color: var(--violet-8);
+  }
+
+  .tl-status {
+    color: var(--text-muted);
+    font-size: var(--font-size-00);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .tl-copy {
+    max-width: 560px;
+    margin-block: var(--size-3) 0;
+  }
+
+  .rule-callout {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--size-6));
+    padding: var(--size-5);
+    border: var(--border-size-1) solid color-mix(in srgb, var(--violet-5) 45%, transparent);
+    border-radius: var(--radius-2);
+    background: var(--violet-0);
+    box-shadow: inset var(--size-1) 0 0 var(--brand);
+  }
+
+  .rule-title {
+    margin-block-end: var(--size-3);
+    color: var(--violet-8);
+  }
+
+  .rule-text {
     margin-block-end: 0;
   }
 
@@ -201,10 +227,6 @@ pageSheet.replaceSync(`
     display: grid;
     grid-template-columns: minmax(0, .95fr) minmax(0, .95fr) minmax(0, .72fr);
     gap: var(--size-5);
-    width: min(1120px, calc(100% - var(--size-10)));
-    margin-inline: auto;
-    padding: var(--size-8) 0;
-    border-block-end: var(--border-size-1) solid var(--border);
   }
 
   .truth h2 {
@@ -220,10 +242,6 @@ pageSheet.replaceSync(`
     gap: var(--size-2);
     margin: 0;
     padding-inline-start: var(--size-5);
-  }
-
-  .section-body {
-    padding: var(--size-8);
   }
 
   .matrix {
@@ -273,180 +291,161 @@ pageSheet.replaceSync(`
     display: flex;
     flex-wrap: wrap;
     gap: var(--size-3);
-    padding: var(--size-8);
-    background: var(--bg-base);
+    width: min(1180px, calc(100% - 3rem));
+    margin: clamp(4rem, 10vh, 8rem) auto 0;
+    padding-block-end: clamp(3rem, 8vh, 6rem);
   }
 
   @media (max-width: 1120px) {
+    .roadmap-grid,
     .truth-grid,
     .visual-grid {
       grid-template-columns: 1fr;
     }
 
-    .phase-grid {
-      grid-template-columns: repeat(5, minmax(240px, 1fr));
+    .rule-callout {
+      position: static;
     }
-
   }
 
   @media (max-width: 640px) {
-    .section-body,
-    .nav-row {
-      padding: var(--size-5) var(--size-4);
-    }
-
-    h1 {
-      font-size: var(--font-size-6);
-      line-height: .94;
-    }
-
-    .subtitle {
-      font-size: var(--font-size-1);
-      line-height: 1.34;
-    }
-
-    .release-rail,
-    .truth-grid {
-      width: min(100% - var(--size-8), 1120px);
-      padding-inline: 0;
-    }
-
-    .now {
-      --panel-min-height: auto;
-    }
-
-    .now-layout {
-      min-height: 280px;
-    }
-
-    .aperture {
-      width: min(260px, 78vw);
-      border-width: var(--size-6);
-    }
-
     .matrix-row,
     .rule-list li {
       grid-template-columns: 1fr;
       gap: var(--size-2);
     }
+
+    .tl-row {
+      padding-inline-start: var(--size-6);
+    }
   }
 `);
 
-const phases = [
+type TimelineEntry = {
+  version: string;
+  theme: string;
+  copy: string;
+  state: 'stable' | 'next' | 'planned';
+  stamp?: 'CURRENT' | 'NEXT';
+  status?: string;
+};
+
+const entries: TimelineEntry[] = [
   {
     version: 'v0.41.0-alpha.19',
-    title: 'Five-package alpha release',
+    theme: 'third audit cleanup sweep',
     copy:
-      'The published alpha line converges the consumer product around five packages and ships the unified product and website surface.',
-    status: 'done',
-    tone: 'success',
-  },
-  {
-    version: 'v0.41.0-alpha.x',
-    title: 'Adoption and interface proof',
-    copy:
-      'External adopter #390 and further real use can still drive breaking architecture and authoring corrections.',
-    status: 'active alpha',
-    tone: 'warning',
+      'The published alpha line closes three full-repository audit rounds and ships the unified product and website surface.',
+    state: 'stable',
+    stamp: 'CURRENT',
   },
   {
     version: 'v0.41.0',
-    title: 'Core interface freeze',
+    theme: 'core interface freeze',
     copy:
-      'Freeze the five-package graph and deep Element, App and Build interfaces only when alpha adoption exposes no further breaking work.',
-    status: 'after alpha proof',
-    tone: 'warning',
+      'Scoped freeze of the proven static-first contract and SPA chain; request-time semantics stay unfrozen (ADR-0119).',
+    state: 'next',
+    stamp: 'NEXT',
+    status: 'stable plan active',
   },
   {
     version: 'v0.42',
-    title: 'WC Application Loop',
+    theme: 'WC application loop',
     copy:
       'One route-to-interaction loop: load, DSD render, progressive form, action, error or redirect, and revalidation with a no-JavaScript path.',
+    state: 'planned',
     status: 'planned',
-    tone: 'warning',
   },
   {
     version: 'v0.43–0.46',
-    title: 'SSR, production runtime, ecosystem and v1 freeze',
+    theme: 'SSR, runtime, ecosystem',
     copy:
       'Earn WC fullstack leadership through compatibility diagnostics, portable runtime proof, external adoption and a stability-only release candidate.',
+    state: 'planned',
     status: 'direction',
-    tone: 'warning',
   },
   {
     version: 'v1.0.0',
-    title: 'Stable five-package product',
+    theme: 'stable five-package product',
     copy:
       'Release only after external production users prove that the Element, App and Build interfaces need no further architecture change.',
+    state: 'planned',
     status: 'direction',
-    tone: 'warning',
   },
-] as const;
+];
 
 export class RoadmapPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
     return (
-      <main class='roadmap'>
+      <main>
         <open-page-hero variant='timeline'>
-          <span slot='eyebrow'>Product truth / release line</span>
-          <span slot='title'>Roadmap</span>
+          <span slot='eyebrow'>Roadmap — where the stable line goes</span>
+          <span slot='title'>
+            <span class='title-serif'>Forward,</span>
+            <span class='title-mono'>VERSIONED.</span>
+          </span>
           <span slot='lede'>
             OpenElement roadmap labels describe the public product surface, tied to package truth,
             docs truth and CI evidence rather than a wish list.
           </span>
           <open-artifact-panel slot='artifact' class='now'>
             <span slot='label'>current</span>
-            <span slot='meta'>{OPENELEMENT_VERSION} published → alpha adoption proof</span>
+            <span slot='meta'>{OPENELEMENT_VERSION} published → stable plan active</span>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
             </div>
-            <div class='now-layout'>
-              <div class='aperture' aria-hidden='true'>
-                <span class='notch'></span>
-              </div>
-              <div>
-                <open-badge tone='warning'>alpha maturation</open-badge>
-                <h2>
-                  The five-package product is published; adoption now decides when its interfaces
-                  are stable.
-                </h2>
-                <p>
-                  {OPENELEMENT_VERSION}{' '}
-                  is the published package line. beta.1–beta.3 remain withdrawn partial npm
-                  artifacts. External adopter pilot #390 and continued browser and release evidence
-                  guide the remaining alpha maturation work.
-                </p>
-              </div>
-            </div>
+            <open-badge tone='warning'>ADR-0119 freeze plan</open-badge>
+            <h2>
+              The five-package product is published; the stable freeze is the next release, not a
+              wish.
+            </h2>
+            <p>
+              {OPENELEMENT_VERSION}{' '}
+              is the published package line. Stable 0.41.0 proceeds under ADR-0119 with a scoped
+              interface freeze — the #390 pilot requirement is retired by maintainer decision.
+            </p>
           </open-artifact-panel>
         </open-page-hero>
 
         <open-section-frame>
-          <span slot='index'>01 / release rail</span>
+          <span slot='index'>01 / release line</span>
           <span slot='title'>From shipped evidence to v1.0 freeze.</span>
           <span slot='copy'>
-            The rail is deliberately narrow: only claims that can survive docs, package exports and
+            The line is deliberately narrow: only claims that can survive docs, package exports and
             build validation stay visible.
           </span>
-          <div class='release-rail' aria-label='Roadmap release rail'>
-            <div class='phase-grid'>
-              {phases.map((phase) => (
-                <open-card
-                  class='phase-card'
-                  variant={phase.version === 'v0.41.0-alpha.19' ? 'elevated' : undefined}
-                >
-                  <div class='phase-top'>
-                    <span class='version'>{phase.version}</span>
-                    <open-badge tone={phase.tone}>{phase.status}</open-badge>
+          <div class='roadmap-grid'>
+            <div class='timeline' aria-label='Roadmap release line'>
+              {entries.map((phase) => {
+                // The current-line stamp follows the bump-maintained anchor so a
+                // release bump re-marks the timeline without manual edits.
+                const stamp = phase.version === 'v0.41.0-alpha.19' ? 'CURRENT' : phase.stamp;
+                return (
+                  <div class={`tl-row tl-${phase.state}`}>
+                    <span class='tl-node' aria-hidden='true'></span>
+                    <div class='tl-head'>
+                      <span class='tl-version'>{phase.version}</span>
+                      {stamp
+                        ? <span class={`stamp stamp-${stamp.toLowerCase()}`}>{stamp}</span>
+                        : null}
+                      <span class='tl-theme'>{phase.theme}</span>
+                    </div>
+                    <p class='tl-copy'>{phase.copy}</p>
+                    {phase.status ? <span class='tl-status'>{phase.status}</span> : null}
                   </div>
-                  <h3>{phase.title}</h3>
-                  <p class='phase-copy'>{phase.copy}</p>
-                </open-card>
-              ))}
+                );
+              })}
             </div>
+            <aside class='rule-callout'>
+              <p class='rule-title'>Design rule</p>
+              <p class='rule-text'>
+                No new package is created by default. Auth, ORM and storage remain recipes —
+                openElement owns the application contract, not service products.
+              </p>
+            </aside>
           </div>
         </open-section-frame>
 
@@ -498,27 +497,25 @@ export class RoadmapPage extends OpenElement {
           <span slot='copy'>
             Ship, prove and freeze are evidence states rather than marketing labels.
           </span>
-          <div class='section-body'>
-            <div class='matrix'>
-              <div class='matrix-row'>
-                <span class='metric-label'>Ship</span>
-                <span class='matrix-copy'>
-                  Only public contracts reflected in docs, generated pages, and package surfaces.
-                </span>
-              </div>
-              <div class='matrix-row'>
-                <span class='metric-label'>Prove</span>
-                <span class='matrix-copy'>
-                  Use CI, build checks, and docs scans as release evidence before expanding claims.
-                </span>
-              </div>
-              <div class='matrix-row'>
-                <span class='metric-label'>Freeze</span>
-                <span class='matrix-copy'>
-                  Move toward v1.0 after the WC fullstack framework and Basic Element line is
-                  stable, readable, and boring to verify.
-                </span>
-              </div>
+          <div class='matrix'>
+            <div class='matrix-row'>
+              <span class='metric-label'>Ship</span>
+              <span class='matrix-copy'>
+                Only public contracts reflected in docs, generated pages, and package surfaces.
+              </span>
+            </div>
+            <div class='matrix-row'>
+              <span class='metric-label'>Prove</span>
+              <span class='matrix-copy'>
+                Use CI, build checks, and docs scans as release evidence before expanding claims.
+              </span>
+            </div>
+            <div class='matrix-row'>
+              <span class='metric-label'>Freeze</span>
+              <span class='matrix-copy'>
+                Move toward v1.0 after the WC fullstack framework and Basic Element line is stable,
+                readable, and boring to verify.
+              </span>
             </div>
           </div>
         </open-section-frame>
@@ -530,7 +527,7 @@ export class RoadmapPage extends OpenElement {
             Published package ownership and the public architecture must remain mechanically
             identical.
           </span>
-          <div class='section-body visual-grid'>
+          <div class='visual-grid'>
             <open-artifact-panel>
               <span slot='label'>package matrix</span>
               <span slot='meta'>product boundary</span>

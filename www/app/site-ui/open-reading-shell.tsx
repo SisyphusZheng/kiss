@@ -2,10 +2,44 @@
 /** Private WWW long-form reading shell. */
 import { OpenElement, StyleSheet } from '@openelement/element';
 import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
+
+/** Optional v4 editorial accent rendered in Instrument Serif after the title. */
+type ReadingMetadataV4 = ReadingMetadata & { accent?: string };
+
 export const tagName = 'open-reading-shell';
 const sheet = new StyleSheet();
 sheet.replaceSync(`
-  :host{display:block}.shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(3rem,8vh,7rem) 0 clamp(5rem,12vh,10rem);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(2rem,7vw,7rem)}:host([rail]) .shell{grid-template-columns:minmax(0,1fr) 210px}.main{min-width:0;max-width:740px;line-height:1.7}:host(:not([rail])) .main{margin-inline:auto}.meta{display:none;margin-block-end:var(--size-8);padding-block-end:var(--size-5);border-block-end:1px solid var(--border)}:host([meta]) .meta,:host([metadata]) .meta{display:block}.breadcrumb{margin:0 0 var(--size-3);color:var(--brand);font-size:var(--font-size-00);font-weight:var(--font-weight-8);text-transform:uppercase}.meta h1{margin:0;line-height:1}.lede{color:var(--text-secondary)}.meta-row{display:flex;flex-wrap:wrap;gap:var(--size-2);color:var(--text-muted);font-size:var(--font-size-00)}.rail{display:none;position:sticky;top:calc(var(--nav-height) + var(--size-6));align-self:start;padding:var(--size-4);border:1px solid color-mix(in srgb,var(--border) 75%,var(--brand));border-radius:var(--radius-2);background:color-mix(in srgb,var(--bg-elevated) 72%,transparent);box-shadow:inset 0 1px 0 var(--edge-highlight)}:host([rail]) .rail{display:block}.rail-label{margin:0 0 var(--size-3);color:var(--brand);font-size:var(--font-size-00);font-weight:var(--font-weight-8);text-transform:uppercase}.footer{display:none;margin-block-start:var(--size-10);padding-block-start:var(--size-5);border-block-start:1px solid var(--border)}:host([footer]) .footer,:host([navigation]) .footer{display:block}.pager{display:flex;justify-content:space-between;gap:var(--size-4)}.pager a{color:var(--brand);font-size:var(--font-size-00);text-decoration:none}.pager a:last-child{text-align:end}@media(max-width:900px){.shell,:host([rail]) .shell{grid-template-columns:1fr;width:min(100% - 2rem,740px);padding-block:var(--size-9)}.main{max-width:none}.rail{position:static;order:-1;padding:0;border:0;background:transparent;box-shadow:none}.rail-label{display:none}}
+  :host{display:block}
+  .shell{width:min(1180px,calc(100% - 3rem));margin:auto;padding:clamp(2rem,5vh,4rem) 0 clamp(4rem,9vh,7rem);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(2rem,6vw,6rem)}
+  :host([rail]) .shell{grid-template-columns:minmax(0,1fr) 220px}
+  .main{min-width:0;max-width:760px;line-height:1.7}
+  :host(:not([rail])) .main{margin-inline:auto}
+  .meta{display:none;margin-block-end:var(--size-7);padding-block-end:var(--size-5);border-block-end:1px solid var(--border)}
+  :host([meta]) .meta,:host([metadata]) .meta{display:block}
+  .breadcrumb{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--size-2);margin:0 0 var(--size-4);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.1em;text-transform:uppercase}
+  .breadcrumb .crumb-sep{color:color-mix(in srgb,var(--text-muted) 55%,transparent)}
+  .breadcrumb .crumb-current{color:var(--violet-8)}
+  .title{margin:0;color:var(--text-primary);font-family:var(--font-mono);font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:var(--font-weight-8);letter-spacing:-.03em;line-height:1.05;overflow-wrap:break-word}
+  .title-accent{display:block;color:var(--violet-8);font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:calc(1em * 1.08);letter-spacing:-.01em}
+  .lede{max-width:640px;margin:var(--size-4) 0 0;color:var(--text-secondary);font-size:clamp(var(--font-size-1),1.4vw,var(--font-size-2));line-height:1.65}
+  .meta-row{display:flex;flex-wrap:wrap;gap:var(--size-2);margin:var(--size-4) 0 0;color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00)}
+  .meta-row span{padding:var(--size-1) var(--size-2);border:1px solid var(--border);border-radius:var(--radius-1)}
+  .rail{display:none;position:sticky;top:calc(var(--nav-height) + var(--size-6));align-self:start}
+  :host([rail]) .rail{display:block}
+  .rail-label{margin:0 0 var(--size-3);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.14em;text-transform:uppercase}
+  .footer{display:none;margin-block-start:var(--size-10);padding-block-start:var(--size-5);border-block-start:1px solid var(--border)}
+  :host([footer]) .footer,:host([navigation]) .footer{display:block}
+  .pager{display:flex;justify-content:space-between;gap:var(--size-4)}
+  .pager a{color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);letter-spacing:.04em;text-decoration:none}
+  .pager a:hover{color:var(--brand)}
+  .pager a:last-child{color:var(--brand);font-weight:var(--font-weight-8);text-align:end}
+  @media(max-width:900px){
+    .shell,:host([rail]) .shell{grid-template-columns:1fr;width:min(100% - 2rem,760px);padding-block:var(--size-8)}
+    .main{max-width:none}
+    .title{font-size:clamp(1.8rem,8vw,2.4rem)}
+    .rail{position:static;order:-1}
+    .rail-label{display:none}
+  }
 `);
 export default class OpenReadingShell extends OpenElement {
   static override styles = [sheet];
@@ -23,7 +57,7 @@ export default class OpenReadingShell extends OpenElement {
     }
   }
   override render() {
-    const metadata = this.#json<ReadingMetadata>('metadata');
+    const metadata = this.#json<ReadingMetadataV4>('metadata');
     const navigation = this.#json<ReadingNavigation>('navigation');
     const previous = navigation?.previous?.href ?? this.#value('previous');
     const next = navigation?.next?.href ?? this.#value('next');
@@ -39,8 +73,15 @@ export default class OpenReadingShell extends OpenElement {
               {metadata
                 ? (
                   <>
-                    <p class='breadcrumb'>{metadata.breadcrumb}</p>
-                    <h1>{metadata.title}</h1>
+                    <p class='breadcrumb'>
+                      <span>{metadata.breadcrumb}</span>
+                      <span class='crumb-sep'>/</span>
+                      <span class='crumb-current'>{metadata.title}</span>
+                    </p>
+                    <h1 class='title'>
+                      {metadata.title}
+                      {metadata.accent ? <span class='title-accent'>{metadata.accent}</span> : null}
+                    </h1>
                     {metadata.lede ? <p class='lede'>{metadata.lede}</p> : null}
                     {metadata.date || metadata.tags?.length
                       ? (

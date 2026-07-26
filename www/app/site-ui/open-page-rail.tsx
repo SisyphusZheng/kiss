@@ -6,7 +6,7 @@ import type { PageOutlineItem } from './page-contract.ts';
 export const tagName = 'open-page-rail';
 const sheet = new StyleSheet();
 sheet.replaceSync(`
-  :host{display:block}details{display:block}summary{display:none}.links{display:grid;gap:var(--size-1)}a{display:block;padding:var(--size-2) 0;color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);line-height:1.35;text-decoration:none;border-block-end:1px solid color-mix(in srgb,var(--border) 72%,transparent)}a[data-depth="3"]{padding-inline-start:var(--size-3);font-size:calc(var(--font-size-00) * .94)}a:hover,a:focus-visible,a[aria-current="location"]{color:var(--text-primary)}a[aria-current="location"]{padding-inline-start:var(--size-3);border-inline-start:2px solid var(--brand)}@media(max-width:900px){details{padding:var(--size-3);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface)}summary{display:block;cursor:pointer;color:var(--brand);font-size:var(--font-size-00);font-weight:var(--font-weight-8);text-transform:uppercase}details:not([open]) .links{display:none}.links{padding-block-start:var(--size-3)}}
+  :host{display:block}details{display:block}summary{display:none}.links{display:grid;gap:var(--size-1);counter-reset:rail-item}a{display:block;padding:var(--size-1) 0 var(--size-1) var(--size-3);color:var(--text-muted);font-family:var(--font-mono);font-size:var(--font-size-00);line-height:1.45;text-decoration:none;border-inline-start:var(--border-size-2) solid transparent}a::before{counter-increment:rail-item;content:"§" counter(rail-item) "  ";color:color-mix(in srgb,var(--text-muted) 70%,transparent)}a[data-depth="3"]{padding-inline-start:var(--size-5);font-size:calc(var(--font-size-00) * .94)}a:hover,a:focus-visible{color:var(--text-primary)}a[aria-current="location"]{color:var(--text-primary);font-weight:var(--font-weight-8);border-inline-start-color:var(--brand)}a[aria-current="location"]::before{color:var(--brand)}@media(max-width:900px){details{padding:var(--size-3);border:1px solid var(--border);border-radius:var(--radius-2);background:var(--bg-surface)}summary{display:block;cursor:pointer;color:var(--brand);font-family:var(--font-mono);font-size:var(--font-size-00);font-weight:var(--font-weight-8);letter-spacing:.12em;text-transform:uppercase}details:not([open]) .links{display:none}.links{padding-block-start:var(--size-3)}}
 `);
 export default class OpenPageRail extends OpenElement {
   #observer: IntersectionObserver | null = null;
@@ -76,7 +76,7 @@ export default class OpenPageRail extends OpenElement {
     // to the host. The property path therefore produces the complete DSD
     // outline, while the attribute path covers browser-side upgrades.
     let raw = typeof (this as { items?: unknown }).items === 'string'
-      ? (this as { items: string }).items
+      ? (this as unknown as { items: string }).items
       : this.getAttribute('items');
     if (!raw) {
       try {

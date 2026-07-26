@@ -3,6 +3,7 @@ export const meta = { section: 'Guide', label: 'Comparison', order: 25 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
+import { guideSectionStyles } from '@openelement/site-ui/guide-section-styles.ts';
 import '@openelement/ui/open-card';
 
 type GuideContent = {
@@ -118,7 +119,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
-  pageStyles + `
+  pageStyles + guideSectionStyles + `
     .guide-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -154,7 +155,7 @@ export class GuideComparisonPage extends OpenElement {
         next-label={t.next?.label}
       >
         <open-page-rail slot='rail' items={JSON.stringify(t.outline)}></open-page-rail>
-        <div class='container'>
+        <div class='container guide-sections'>
           <div class='guide-grid'>
             {t.cards.map((card) => (
               <open-card>

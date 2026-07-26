@@ -4,9 +4,9 @@ test.describe('Cinematic homepage', () => {
   test('keeps the product story and starter available without animation', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    await expect(page.getByText('The Web,', { exact: false })).toBeVisible();
+    await expect(page.getByText('THE WEB,', { exact: true })).toBeVisible();
     await expect(page.getByText('Start building', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Give every component its own room.')).toBeVisible();
+    await expect(page.getByText('The server writes HTML.')).toBeVisible();
     await expect(page.getByText('deno run -A npm:@openelement/create my-app')).toBeVisible();
   });
 
@@ -42,22 +42,22 @@ test.describe('Cinematic homepage', () => {
     expect(toggledColor).not.toBe(initialColor);
   });
 
-  test('drives the native film timeline without hijacking scroll', async ({ page }) => {
+  test('view-source hero and scroll scenes work without hijacking scroll', async ({ page }) => {
     await page.goto('/');
     const home = page.locator('open-home-page');
-    await page.evaluate(() => scrollTo({ top: innerHeight * 2, behavior: 'instant' }));
+    await expect(home.locator('.hero-ghost')).toHaveCount(1);
+    await expect(home.locator('.marquee span').first()).toBeVisible();
+    await expect(home.locator('.spec-strip .spec-cell')).toHaveCount(5);
+    const strategies = home.locator('.strategy');
+    await expect(strategies).toHaveCount(4);
+    await expect(strategies.nth(1).locator('.tag-default')).toHaveText('DEFAULT');
+    await strategies.nth(1).scrollIntoViewIfNeeded();
     await expect.poll(() =>
-      home.evaluate((element) =>
-        Number(
-          getComputedStyle(element.shadowRoot!.querySelector('.cinematic-v2')!).getPropertyValue(
-            '--film-progress',
-          ),
-        )
-      )
-    ).toBeGreaterThan(0);
-    const vinyl = home.locator('.vinyl');
-    await expect(home.locator('.vinyl-wordmark')).toBeVisible();
-    const rotated = await vinyl.evaluate((element) => getComputedStyle(element).transform);
-    expect(rotated).not.toBe('none');
+      strategies.nth(1).evaluate((element) => Number(getComputedStyle(element).opacity))
+    ).toBeGreaterThan(0.5);
+    const rows = home.locator('.output-row');
+    await expect(rows).toHaveCount(3);
+    await rows.nth(1).scrollIntoViewIfNeeded();
+    await expect(rows.nth(1)).toHaveClass(/active/);
   });
 });
