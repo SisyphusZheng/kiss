@@ -1,2 +1,2 @@
 // Current published package line. Release tooling owns the next bump.
-export const OPENELEMENT_VERSION = 'v0.41.1';
+export const OPENELEMENT_VERSION = 'v0.41.2';

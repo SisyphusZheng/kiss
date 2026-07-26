@@ -332,7 +332,7 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.41.1',
+    version: 'v0.41.2',
     theme: 'stable five-package line',
     copy:
       'The ADR-0119 scoped freeze shipped at 0.41.0; 0.41.1 is the first tooling-hardening patch on the stable line.',
@@ -420,7 +420,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.41.1' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.41.2' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
