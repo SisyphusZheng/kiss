@@ -35,6 +35,7 @@ import { type Context, createContext, provideContext } from '@openelement/elemen
 import { escapeAttr, escapeHtml } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
+import { normalizeLocalePath } from '@openelement/app/i18n';
 import '@openelement/ui/open-theme-toggle';
 
 export const tagName = 'open-layout';
@@ -61,27 +62,22 @@ function isSafeLayoutUrl(url: string): boolean {
   }
 }
 
-/* --- Locale/path helpers for the site shell --- */
+/* --- Locale/path helpers: thin wrappers over @openelement/app/i18n --- */
 
 const LOCALE_LABELS: Record<string, string> = { en: '中文', zh: 'English' };
 
-function parsePathWithoutLocale(pathname: string, locales: string[]): string {
-  const segs = pathname.split('/').filter(Boolean);
-  if (segs.length > 0 && locales.includes(segs[0])) {
-    return '/' + segs.slice(1).join('/') || '/';
-  }
-  return pathname || '/';
-}
-
-function detectLocale(pathname: string, locales: string[], defaultLocale: string): string {
-  const segs = pathname.split('/').filter(Boolean);
-  if (segs.length > 0 && locales.includes(segs[0])) return segs[0];
-  return defaultLocale;
-}
-
-function localizePath(path: string, locale: string, defaultLocale: string): string {
+function localizePath(
+  path: string,
+  locale: string,
+  locales: string[],
+  defaultLocale: string,
+): string {
   if (isSafeLayoutUrl(path) && /^https?:/i.test(path)) return path;
-  return locale === defaultLocale ? path : `/${locale}${path}`;
+  if (locale === defaultLocale) return path;
+  return normalizeLocalePath(`/${locale}${path === '/' ? '' : path}`, {
+    locales,
+    defaultLocale,
+  }).localizedPath;
 }
 
 function switchPath(
@@ -91,7 +87,8 @@ function switchPath(
   defaultLocale: string,
 ): string {
   const other = locales.find((l) => l !== currentLocale) || currentLocale;
-  return localizePath(currentPath, other, defaultLocale);
+  const bare = normalizeLocalePath(currentPath, { locales, defaultLocale }).path;
+  return localizePath(bare, other, locales, defaultLocale);
 }
 
 function switchLabel(currentLocale: string): string {
@@ -595,7 +592,10 @@ export class OpenLayout extends OpenElement {
   private get _currentLocale(): string {
     try {
       if (typeof globalThis.location !== 'undefined') {
-        return detectLocale(location.pathname, this._locales, this._defaultLocale);
+        return normalizeLocalePath(location.pathname, {
+          locales: this._locales,
+          defaultLocale: this._defaultLocale,
+        }).locale;
       }
       return this._defaultLocale;
     } catch {
@@ -606,7 +606,10 @@ export class OpenLayout extends OpenElement {
   private get _currentPathWithoutLocale(): string {
     try {
       if (typeof globalThis.location !== 'undefined') {
-        return parsePathWithoutLocale(location.pathname, this._locales);
+        return normalizeLocalePath(location.pathname, {
+          locales: this._locales,
+          defaultLocale: this._defaultLocale,
+        }).path;
       }
       return this.getAttribute('current-path') || '/';
     } catch {
@@ -649,7 +652,7 @@ export class OpenLayout extends OpenElement {
 
   // _currentPathWithoutLocale, _currentLocale, _locales, _switchPath(),
   // _switchLabel(), _updateSwitch(), _localizePath()
-  // Site-local helpers keep the shell independent from application internals.
+  // Locale path math goes through @openelement/app/i18n (normalizeLocalePath).
 
   private _currentPath(): string {
     // SSR-safe: prefer attribute/prop set by renderDsd over URL detection
@@ -660,7 +663,10 @@ export class OpenLayout extends OpenElement {
     if (attr && attr.length > 0) return attr;
     try {
       if (typeof globalThis.location !== 'undefined') {
-        return parsePathWithoutLocale(location.pathname, this._locales);
+        return normalizeLocalePath(location.pathname, {
+          locales: this._locales,
+          defaultLocale: this._defaultLocale,
+        }).path;
       }
       return this.getAttribute('current-path') || '/';
     } catch {
@@ -848,7 +854,7 @@ export class OpenLayout extends OpenElement {
     return {
       href: isExternal
         ? safeHref
-        : localizePath(safeHref, this._currentLocale, this._defaultLocale),
+        : localizePath(safeHref, this._currentLocale, this._locales, this._defaultLocale),
       isExternal,
     };
   }
@@ -867,7 +873,7 @@ export class OpenLayout extends OpenElement {
     const langHref = locales.length > 1
       ? switchPath(currentPath, currentLocale, locales, defaultLocale)
       : '';
-    const localePath = (path: string) => localizePath(path, currentLocale, defaultLocale);
+    const localePath = (path: string) => localizePath(path, currentLocale, locales, defaultLocale);
 
     return (
       <div className='app-layout' part='container' home={home || undefined}>
