@@ -80,6 +80,30 @@ const allowedTrackedIgnoredPaths = [
   /^vendor\/jsr\.io\/(@[^/]+\/)?[^/]+\/LICENSE$/,
 ];
 
+// Secret scanning: tracked credential files are always failures, and
+// credential-shaped content in active source files fails the gate. These
+// patterns intentionally stay narrow to keep false positives at zero.
+const forbiddenTrackedSecretFiles = [
+  /(?:^|\/)\.env(?:\.[^/]+)?$/,
+  /(?:^|\/)[^/]+\.pem$/,
+  /(?:^|\/)id_rsa(?:\.pub)?$/,
+];
+const SECRET_CONTENT_PATTERNS = [
+  /-----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY-----/,
+  /\bAKIA[0-9A-Z]{16}\b/,
+  /\bgh[pousr]_[A-Za-z0-9]{36,}\b/,
+  /\bxox[baprs]-[A-Za-z0-9-]{20,}\b/,
+];
+
+// Large tracked binaries: intentional design/e2e/fixture assets are listed;
+// anything else above 1 MiB should not enter the repository.
+const LARGE_BINARY_LIMIT_BYTES = 1024 * 1024;
+const allowedLargeBinaryDirs = [
+  /^www\/design\/mockups\//,
+  /^www\/e2e\/visual-baselines\.spec\.ts-snapshots\//,
+  /^examples\/[^/]+\/fixtures\//,
+];
+
 const failures: Failure[] = [];
 
 function isActiveScanFile(path: string): boolean {
@@ -133,6 +157,33 @@ for (const file of files.filter(isActiveScanFile)) {
         message: `active file references removed package ${packageName}`,
       });
     }
+  }
+  for (const pattern of SECRET_CONTENT_PATTERNS) {
+    if (pattern.test(text)) {
+      failures.push({ path: file, message: 'credential-shaped content detected' });
+      break;
+    }
+  }
+}
+
+for (const file of files) {
+  if (forbiddenTrackedSecretFiles.some((pattern) => pattern.test(file))) {
+    failures.push({ path: file, message: 'credential file is tracked' });
+  }
+  if (allowedLargeBinaryDirs.some((pattern) => pattern.test(file))) continue;
+  if (!/\.(?:png|jpe?g|gif|webp|pdf|zip|woff2?|mp4|mov|ico|icns)$/i.test(file)) continue;
+  try {
+    const stat = await Deno.stat(file);
+    if (stat.size > LARGE_BINARY_LIMIT_BYTES) {
+      failures.push({
+        path: file,
+        message: `tracked binary exceeds ${
+          LARGE_BINARY_LIMIT_BYTES / 1024
+        } KiB (${stat.size} bytes)`,
+      });
+    }
+  } catch {
+    continue;
   }
 }
 

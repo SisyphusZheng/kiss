@@ -16,6 +16,11 @@ const [retiredBase, retiredLine = ''] = prerelease
   ? [versionBase, prerelease]
   : PREVIOUS_PACKAGE_VERSION.split('-');
 const prereleaseMatch = retiredLine.match(/^(alpha|beta|rc)\.(\d+)$/u);
+// On a stable line where the previous version is also stable (e.g. 0.41.1
+// after 0.41.0), every prerelease of the same base version is retired.
+const stableLineAlphaPattern = !prereleaseMatch
+  ? new RegExp(`(?:v?${versionBase.replaceAll('.', '\\.')}-alpha|\\balpha)\\.\\d+(?!\\d)`, 'iu')
+  : null;
 // Retired prerelease claims are flagged with or without the `v` prefix and in
 // the short `alpha.N` form; only numbers below the current line match, so the
 // current version itself never trips the gate.
@@ -29,6 +34,7 @@ const earlierPrereleasePattern = prereleaseMatch && Number(prereleaseMatch[2]) >
     'iu',
   )
   : null;
+const activeRetiredPattern = earlierPrereleasePattern ?? stableLineAlphaPattern;
 
 const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'mojibake', re: /(?:鏂|鈫|鍗|杩|鏈)/ },
@@ -54,8 +60,8 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
     re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
   },
 ];
-if (earlierPrereleasePattern) {
-  forbidden.push({ name: 'retired prerelease current claim', re: earlierPrereleasePattern });
+if (activeRetiredPattern) {
+  forbidden.push({ name: 'retired prerelease current claim', re: activeRetiredPattern });
 }
 
 const issues: Issue[] = [];

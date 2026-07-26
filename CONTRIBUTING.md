@@ -78,6 +78,11 @@ For release work, also run the release gates listed in
 - Use `createLogger()` for logging where package code already has logger
   access.
 - Reference ADR numbers when comments explain architectural decisions.
+- `no-sloppy-imports` is disabled in the root `deno.json`: Deno's rule
+  requires explicit `.ts` extensions on relative imports, and this repository
+  deliberately uses extension-less relative imports (Bundler-style resolution,
+  matching the published npm artifacts). Keep new imports extension-less;
+  do not re-enable the rule without an ADR.
 
 ## Release Process
 

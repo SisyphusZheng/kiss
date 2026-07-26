@@ -24,6 +24,7 @@ import {
   createProductionBuildPlan,
   writeBuildEvidence,
 } from './build-plan.ts';
+import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 
 const log = createLogger('core');
 
@@ -199,7 +200,7 @@ export function buildPlugin(
       // into the already-rendered HTML pages.
       if (ctx.isComplete(2)) {
         try {
-          const outDir = ctx.phase3.outDir || 'dist';
+          const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
           const root = ctx.phase3.root || process.cwd();
           const clientManifestPath = join(root, outDir, 'client', '.vite', 'manifest.json');
           const { existsSync } = await import('node:fs');

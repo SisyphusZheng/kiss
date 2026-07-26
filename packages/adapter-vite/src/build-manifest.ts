@@ -18,6 +18,7 @@
 import { join, resolve } from 'node:path';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { createLogger } from '@openelement/element';
+import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 
 const log = createLogger('ssg');
 
@@ -169,7 +170,7 @@ export function printBuildManifest(options: {
   headExtras?: string;
   budget?: BuildManifestBudget;
 }): BuildManifest {
-  const { root, outDir = 'dist', phase, headExtras = '', budget = {} } = options;
+  const { root, outDir = DEFAULT_OUT_DIR, phase, headExtras = '', budget = {} } = options;
   const timestamp = new Date().toISOString();
 
   // Gather data

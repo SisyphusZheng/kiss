@@ -1,4 +1,5 @@
 import { evaluateStressReport, type StressReport, type StressThresholds } from './stress-gate.ts';
+import { readJson } from './lib/fs.ts';
 
 const root = new URL('../', import.meta.url);
 const example = new URL('examples/deno-desktop-mastodon/', root);
@@ -36,7 +37,7 @@ async function main(): Promise<void> {
     : defaultReport;
   if (reportOnlyIndex < 0) await runHarness();
 
-  const report = JSON.parse(await Deno.readTextFile(reportUrl)) as StressReport;
+  const report = await readJson(reportUrl) as StressReport;
   const thresholds: StressThresholds = {
     maxErrors: envNumber('STRESS_MAX_ERRORS', 0),
     maxRssGrowthMb: envNumber('STRESS_MAX_RSS_GROWTH_MB', 64),

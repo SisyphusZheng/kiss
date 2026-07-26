@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { formatJson } from './lib/format-json.ts';
+import { readJson } from './lib/fs.ts';
 
 const started = performance.now();
 const build = new Deno.Command(Deno.execPath(), {
@@ -11,7 +12,12 @@ const status = await build.spawn().status;
 if (!status.success) throw new Error(`build failed with code ${status.code}`);
 const buildTimeMs = Math.round(performance.now() - started);
 
-const artifacts = JSON.parse(await Deno.readTextFile('www/.openElement/build-artifacts.json'));
+type BuildArtifacts = {
+  clientAssets: Array<{ fileName: string; sizeBytes: number }>;
+  pages: Array<{ path: string; errors?: unknown[] }>;
+};
+
+const artifacts = await readJson<BuildArtifacts>('www/.openElement/build-artifacts.json');
 const stress = JSON.parse(
   await Deno.readTextFile('examples/deno-desktop-mastodon/stress-report.json'),
 );

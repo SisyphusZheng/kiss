@@ -4,6 +4,7 @@ import {
   type ReleaseEvidenceSnapshot,
   validateReleaseEvidenceClosure,
 } from './lib/release-evidence-consistency.ts';
+import { readJson } from './lib/fs.ts';
 
 async function git(args: string[]): Promise<string> {
   const result = await new Deno.Command('git', {
@@ -51,7 +52,7 @@ try {
   Deno.exit(0);
 }
 
-const record = JSON.parse(await Deno.readTextFile(closurePath)) as ReleaseClosureRecord;
+const record = await readJson(closurePath) as ReleaseClosureRecord;
 const actualTagCommit = await git(['rev-parse', tag]);
 if (actualTagCommit !== record.tagCommit) {
   throw new Error(`Release tag ${tag} moved: expected ${record.tagCommit}, got ${actualTagCommit}`);

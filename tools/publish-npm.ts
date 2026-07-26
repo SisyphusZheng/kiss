@@ -236,7 +236,7 @@ export async function publishPackage(
   io: PublishPackageIo = defaultPublishPackageIo,
 ): Promise<void> {
   const tar = tarballPath(pkg);
-  if (!dryRun && await io.versionExists(pkg.name, pkg.version)) {
+  if (await io.versionExists(pkg.name, pkg.version)) {
     io.log(`[npm] ${pkg.name}@${pkg.version} already published; skipping.`);
     return;
   }
