@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="930" viewBox="0 0 900 930">
+  <defs>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;700;800&amp;display=swap');
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .serif {
+      font-family: 'Instrument Serif', serif;
+    }
+    </style>
+    <radialGradient id="mGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8262db" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#0a0714" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="900" height="900" fill="#1c1030" />
+  <text x="330" y="50" class="mono" font-size="14" font-weight="700" fill="#b59cff"
+    letter-spacing="3">MOBILE — 390 × 844, COMPOSED SEPARATELY</text>
+
+  <!-- phone frame -->
+  <rect x="255" y="80" width="390" height="780" rx="36" fill="#0a0714" stroke="#ffffff"
+    stroke-opacity="0.15" />
+  <rect x="395" y="94" width="110" height="8" rx="4" fill="#ffffff" fill-opacity="0.12" />
+
+  <!-- screen content -->
+  <g>
+    <!-- mini nav -->
+    <text x="285" y="146" class="mono" font-size="15" font-weight="800"
+      fill="#f3eaff">&lt;open/&gt;</text>
+    <circle cx="556" cy="140" r="13" fill="none" stroke="#ffffff" stroke-opacity="0.16" />
+    <text x="551" y="144" class="mono" font-size="10" fill="#868e96">⌕</text>
+    <circle cx="592" cy="140" r="13" fill="none" stroke="#ffffff" stroke-opacity="0.16" />
+    <text x="587" y="144" class="mono" font-size="10" fill="#868e96">☾</text>
+    <rect x="616" y="128" width="1" height="0" fill="none" />
+    <line x1="271" y1="166" x2="629" y2="166" stroke="#ffffff" stroke-opacity="0.08" />
+
+    <!-- compact cross-section (fully visible above the fold) -->
+    <circle cx="450" cy="300" r="130" fill="url(#mGlow)" />
+    <circle cx="450" cy="300" r="96" fill="none" stroke="#58399e" stroke-dasharray="2 7"
+      stroke-linecap="round" />
+    <circle cx="450" cy="300" r="66" fill="#130a22" fill-opacity="0.55" stroke="#8262db"
+      stroke-width="1.5" />
+    <circle cx="450" cy="300" r="36" fill="#130a22" stroke="#b59cff" stroke-width="1.5" />
+    <text x="432" y="306" class="mono" font-size="13" font-weight="800"
+      fill="#f3eaff">&lt;open/&gt;</text>
+    <rect x="500" y="212" width="46" height="20" rx="9999" fill="#21143b" stroke="#58399e" />
+    <text x="510" y="226" class="mono" font-size="8.5" font-weight="700" fill="#b59cff">DSD</text>
+    <rect x="346" y="352" width="58" height="20" rx="9999" fill="#21143b" stroke="#58399e" />
+    <text x="354" y="366" class="mono" font-size="8.5" font-weight="700"
+      fill="#b59cff">ISLANDS</text>
+
+    <!-- headline -->
+    <text x="281" y="500" class="mono" font-size="11" font-weight="500" fill="#b59cff"
+      letter-spacing="2.5">OPENELEMENT — WEB STANDARDS LAB</text>
+    <text x="281" y="560" class="mono" font-size="44" font-weight="800" fill="#f3eaff"
+      letter-spacing="-2.5">The Web,</text>
+    <text x="281" y="622" class="serif" font-size="56" font-style="italic"
+      fill="#b59cff">composed.</text>
+
+    <!-- lede -->
+    <text x="285" y="678" class="mono" font-size="12.5"
+      fill="#adb5bd">A Web Components-native framework for</text>
+    <text x="285" y="702" class="mono" font-size="12.5"
+      fill="#adb5bd">beautiful, static-first applications.</text>
+
+    <!-- CTA column -->
+    <rect x="285" y="736" width="330" height="46" rx="9999" fill="#8262db" />
+    <text x="395" y="765" class="mono" font-size="13.5" font-weight="700"
+      fill="#fbf7ff">Start building</text>
+    <rect x="285" y="794" width="330" height="46" rx="9999" fill="none" stroke="#58399e"
+      stroke-width="1.5" />
+    <text x="386" y="823" class="mono" font-size="13.5" font-weight="500"
+      fill="#e9ecef">Watch it unfold</text>
+  </g>
+
+  <!-- annotation -->
+  <text x="262" y="886" class="mono" font-size="11"
+    fill="#868e96">Cross-section sized to fit the first viewport — no clipped vinyl arc;</text>
+  <text x="262" y="908" class="mono" font-size="11"
+    fill="#868e96">single CTA column; visual anchor precedes the headline.</text>
+</svg>

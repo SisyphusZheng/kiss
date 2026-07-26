@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1640" viewBox="0 0 1440 1640">
+  <defs>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;700;800&amp;display=swap');
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .serif {
+      font-family: 'Instrument Serif', serif;
+    }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1640" fill="#0a0714" />
+
+  <line x1="80" y1="96" x2="112" y2="96" stroke="#8262db" stroke-width="2" />
+  <text x="124" y="101" class="mono" font-size="12" font-weight="500" fill="#b59cff"
+    letter-spacing="3.5">OPENELEMENT — DESIGN LANGUAGE V2</text>
+  <text x="76" y="170" class="mono" font-size="44" font-weight="800" fill="#f3eaff"
+    letter-spacing="-2">One lab,</text>
+  <text x="320" y="170" class="serif" font-size="54" font-style="italic"
+    fill="#b59cff">two voices.</text>
+  <text x="80" y="214" class="mono" font-size="13.5"
+    fill="#adb5bd">JetBrains Mono carries the technical voice. Instrument Serif italic carries the editorial</text>
+  <text x="80" y="240" class="mono" font-size="13.5"
+    fill="#adb5bd">moment. Everything else stays out of the way.</text>
+
+  <!-- type scale -->
+  <text x="80" y="320" class="mono" font-size="12" font-weight="700" fill="#58399e"
+    letter-spacing="3">01 / TYPE PAIRING</text>
+  <line x1="80" y1="344" x2="1360" y2="344" stroke="#ffffff" stroke-opacity="0.07" />
+  <text x="80" y="424" class="mono" font-size="52" font-weight="800" fill="#f3eaff"
+    letter-spacing="-2.5">Mono 800 · display</text>
+  <text x="80" y="478" class="mono" font-size="11"
+    fill="#868e96">JETBRAINS MONO 800 · −0.05em · headlines, UI, code, everything structural</text>
+  <text x="80" y="560" class="serif" font-size="58" font-style="italic"
+    fill="#b59cff">Serif italic · the moment</text>
+  <text x="80" y="610" class="mono" font-size="11"
+    fill="#868e96">INSTRUMENT SERIF ITALIC · 0.9–1.15× THE MONO SIZE · ONE ACCENT PHRASE PER COMPOSITION, NEVER MORE</text>
+  <g>
+    <text x="80" y="688" class="mono" font-size="17"
+      fill="#adb5bd">Body — JetBrains Mono 400, 14–17px, line-height 1.75. Long-form stays mono:</text>
+    <text x="80" y="714" class="mono" font-size="17"
+      fill="#adb5bd">the constraint is the brand. Density comes from rhythm, not a third family.</text>
+  </g>
+  <g>
+    <rect x="900" y="380" width="460" height="330" rx="12" fill="#100a1c" stroke="#ffffff"
+      stroke-opacity="0.09" />
+    <line x1="900" y1="381" x2="1360" y2="381" stroke="#b59cff" stroke-opacity="0.55" />
+    <text x="928" y="416" class="mono" font-size="11" font-weight="700" fill="#868e96"
+      letter-spacing="1.5">DO / DON'T</text>
+    <text x="928" y="456" class="mono" font-size="12.5" fill="#4ade80">✓ The Web, composed.</text>
+    <text x="928" y="486" class="mono" font-size="12.5" fill="#4ade80">✓ Upgrade selectively.</text>
+    <text x="928" y="516" class="mono" font-size="12.5"
+      fill="#f87171">✗ Two serif accents in one headline</text>
+    <text x="928" y="546" class="mono" font-size="12.5"
+      fill="#f87171">✗ Serif for body or UI labels</text>
+    <text x="928" y="576" class="mono" font-size="12.5"
+      fill="#f87171">✗ A third typeface, ever</text>
+    <text x="928" y="630" class="mono" font-size="11.5"
+      fill="#adb5bd">Scale: 96/72/56 display · 42/32 section ·</text>
+    <text x="928" y="654" class="mono" font-size="11.5"
+      fill="#adb5bd">20 card title · 14–17 body · 11–13 meta</text>
+    <text x="928" y="678" class="mono" font-size="11.5"
+      fill="#adb5bd">(viewport-clamped on web, fixed in print)</text>
+  </g>
+
+  <!-- color -->
+  <text x="80" y="790" class="mono" font-size="12" font-weight="700" fill="#58399e"
+    letter-spacing="3">02 / COLOR — VIOLET ON INK</text>
+  <line x1="80" y1="814" x2="1360" y2="814" stroke="#ffffff" stroke-opacity="0.07" />
+  <g>
+    <rect x="80" y="844" width="90" height="64" rx="8" fill="#0a0714" stroke="#ffffff"
+      stroke-opacity="0.12" />
+    <rect x="180" y="844" width="90" height="64" rx="8" fill="#130a22" />
+    <rect x="280" y="844" width="90" height="64" rx="8" fill="#21143b" />
+    <rect x="380" y="844" width="90" height="64" rx="8" fill="#2f1c52" />
+    <rect x="480" y="844" width="90" height="64" rx="8" fill="#58399e" />
+    <rect x="580" y="844" width="90" height="64" rx="8" fill="#8262db" />
+    <rect x="680" y="844" width="90" height="64" rx="8" fill="#b59cff" />
+    <rect x="780" y="844" width="90" height="64" rx="8" fill="#e6d8ff" />
+    <text x="80" y="934" class="mono" font-size="10" fill="#868e96">canvas</text>
+    <text x="180" y="934" class="mono" font-size="10" fill="#868e96">surface</text>
+    <text x="280" y="934" class="mono" font-size="10" fill="#868e96">raised</text>
+    <text x="380" y="934" class="mono" font-size="10" fill="#868e96">edge</text>
+    <text x="480" y="934" class="mono" font-size="10" fill="#868e96">deep</text>
+    <text x="580" y="934" class="mono" font-size="10" fill="#868e96">brand</text>
+    <text x="680" y="934" class="mono" font-size="10" fill="#868e96">accent</text>
+    <text x="780" y="934" class="mono" font-size="10" fill="#868e96">tint</text>
+    <text x="900" y="862" class="mono" font-size="12.5"
+      fill="#adb5bd">Dark is the brand theme. Light mode is a</text>
+    <text x="900" y="886" class="mono" font-size="12.5"
+      fill="#adb5bd">supported reading theme, not the first</text>
+    <text x="900" y="910" class="mono" font-size="12.5"
+      fill="#adb5bd">impression — the atmosphere (glow, pixels,</text>
+    <text x="900" y="934" class="mono" font-size="12.5"
+      fill="#adb5bd">grid) only exists in ink.</text>
+  </g>
+  <g>
+    <text x="80" y="1000" class="mono" font-size="11" fill="#868e96">TEXT</text>
+    <rect x="80" y="1014" width="60" height="22" rx="4" fill="#f3eaff" />
+    <rect x="150" y="1014" width="60" height="22" rx="4" fill="#adb5bd" />
+    <rect x="220" y="1014" width="60" height="22" rx="4" fill="#868e96" />
+    <text x="300" y="1030" class="mono" font-size="11"
+      fill="#868e96">primary / secondary / muted</text>
+    <text x="700" y="1000" class="mono" font-size="11" fill="#868e96">SEMANTIC</text>
+    <rect x="700" y="1014" width="60" height="22" rx="4" fill="#4ade80" />
+    <rect x="770" y="1014" width="60" height="22" rx="4" fill="#fbbf24" />
+    <rect x="840" y="1014" width="60" height="22" rx="4" fill="#60a5fa" />
+    <rect x="910" y="1014" width="60" height="22" rx="4" fill="#f87171" />
+    <text x="990" y="1030" class="mono" font-size="11"
+      fill="#868e96">ok / warn / info / error</text>
+  </g>
+
+  <!-- components -->
+  <text x="80" y="1110" class="mono" font-size="12" font-weight="700" fill="#58399e"
+    letter-spacing="3">03 / COMPONENTS</text>
+  <line x1="80" y1="1134" x2="1360" y2="1134" stroke="#ffffff" stroke-opacity="0.07" />
+  <g>
+    <rect x="80" y="1164" width="176" height="50" rx="9999" fill="#8262db" />
+    <text x="114" y="1195" class="mono" font-size="14" font-weight="700"
+      fill="#fbf7ff">Primary pill</text>
+    <rect x="280" y="1164" width="190" height="50" rx="9999" fill="none" stroke="#58399e"
+      stroke-width="1.5" />
+    <text x="310" y="1195" class="mono" font-size="14" font-weight="500"
+      fill="#e9ecef">Ghost pill</text>
+    <rect x="500" y="1172" width="110" height="30" rx="9999" fill="#21143b" stroke="#58399e" />
+    <text x="518" y="1192" class="mono" font-size="11.5" font-weight="700"
+      fill="#b59cff">BADGE</text>
+    <rect x="640" y="1172" width="150" height="30" rx="9999" fill="#8262db" />
+    <text x="660" y="1192" class="mono" font-size="11.5" font-weight="700"
+      fill="#fbf7ff">EMPHASIS</text>
+    <text x="830" y="1192" class="mono" font-size="11"
+      fill="#868e96">pills are the only buttons — radius 9999, mono 700</text>
+  </g>
+  <g>
+    <rect x="80" y="1250" width="400" height="150" rx="12" fill="#100a1c" stroke="#ffffff"
+      stroke-opacity="0.09" />
+    <line x1="80" y1="1251" x2="480" y2="1251" stroke="#b59cff" stroke-opacity="0.55" />
+    <text x="104" y="1290" class="mono" font-size="13" font-weight="800" fill="#f3eaff">Card</text>
+    <text x="104" y="1322" class="mono" font-size="12"
+      fill="#adb5bd">12px radius, ink surface, 9% border,</text>
+    <text x="104" y="1346" class="mono" font-size="12"
+      fill="#adb5bd">and the signature top edge-highlight.</text>
+    <rect x="520" y="1250" width="400" height="150" rx="12" fill="#130a22" stroke="#58399e" />
+    <rect x="520" y="1250" width="4" height="150" fill="#8262db" />
+    <text x="548" y="1290" class="mono" font-size="12" font-weight="700"
+      fill="#b59cff">CALLOUT</text>
+    <text x="548" y="1322" class="mono" font-size="12"
+      fill="#adb5bd">Left-bar callout for truth that must not</text>
+    <text x="548" y="1346" class="mono" font-size="12" fill="#adb5bd">scroll past unnoticed.</text>
+    <rect x="960" y="1250" width="400" height="150" rx="12" fill="#100a1c" stroke="#ffffff"
+      stroke-opacity="0.09" />
+    <circle cx="988" cy="1278" r="5" fill="#ff5f57" />
+    <circle cx="1008" cy="1278" r="5" fill="#febc2e" />
+    <circle cx="1028" cy="1278" r="5" fill="#28c840" />
+    <text x="984" y="1330" class="mono" font-size="12.5" fill="#4ade80">$ deno task build</text>
+    <text x="984" y="1360" class="mono" font-size="11"
+      fill="#868e96">terminal card · traffic lights · mono 13</text>
+  </g>
+
+  <!-- signature elements -->
+  <text x="80" y="1470" class="mono" font-size="12" font-weight="700" fill="#58399e"
+    letter-spacing="3">04 / SIGNATURE</text>
+  <line x1="80" y1="1494" x2="1360" y2="1494" stroke="#ffffff" stroke-opacity="0.07" />
+  <g>
+    <circle cx="170" cy="1560" r="46" fill="none" stroke="#58399e" stroke-dasharray="2 6"
+      stroke-linecap="round" />
+    <circle cx="170" cy="1560" r="30" fill="#130a22" stroke="#8262db" />
+    <circle cx="170" cy="1560" r="15" fill="#130a22" stroke="#b59cff" />
+    <text x="236" y="1550" class="mono" font-size="12.5"
+      fill="#adb5bd">The element cross-section — host / shadow root / core —</text>
+    <text x="236" y="1574" class="mono" font-size="12.5"
+      fill="#adb5bd">is the only hero artifact. It tells the DSD story.</text>
+    <rect x="780" y="1524" width="10" height="10" fill="#b59cff" opacity="0.5" />
+    <rect x="800" y="1540" width="8" height="8" fill="#b59cff" opacity="0.3" />
+    <rect x="816" y="1518" width="12" height="12" fill="#b59cff" opacity="0.4" />
+    <text x="850" y="1550" class="mono" font-size="12.5"
+      fill="#adb5bd">Floating pixels — sparse, violet, ≤35% opacity.</text>
+    <text x="850" y="1574" class="mono" font-size="12.5"
+      fill="#adb5bd">Grid hairlines at 4% white, 72px pitch.</text>
+  </g>
+</svg>
