@@ -14,6 +14,7 @@
  */
 
 import { runWithOutput } from './lib/process.ts';
+import { readJson } from './lib/fs.ts';
 
 function getArg(flag: string): string | null {
   const idx = Deno.args.indexOf(flag);
@@ -54,7 +55,6 @@ console.log('Smoke test passed!');
 
 const nodeSource = `
 import { isVNode } from '@openelement/element';
-import { readJson } from './lib/fs.ts';
 
 const node = {
   tag: 'div',
