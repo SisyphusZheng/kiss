@@ -7,9 +7,9 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Published package line: `0.41.0` (`v0.41.0`). This release
-keeps the project in alpha while the five-package product and external adoption
-evidence continue to mature; the abandoned beta naming is not an active line.
+Published package line: `0.41.0` (`v0.41.0`) — the stable five-package
+release under ADR-0119's scoped interface freeze; the abandoned beta naming
+is not an active line.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)
@@ -51,15 +51,15 @@ external adoption. It is not presented as an already-achieved market claim.
 
 ## Current release state
 
-The five-package convergence is published as `0.41.0`. npm beta.1
+The five-package convergence is published as stable `0.41.0`. npm beta.1
 through beta.3 remain withdrawn partial artifacts and are not compatibility
-baselines. External adopter pilot #390 remains the primary repository-external
-condition before the project can make a stability commitment. Alpha.18
-completed the second audit sweep (see
-[ADR-0117](./docs/adr/ADR-0117-second-audit-round-alpha18-sweep.md)).
+baselines. The third audit sweep completed in alpha.19 (see
+[ADR-0118](./docs/adr/ADR-0118-third-audit-round-alpha19-cleanup-sweep.md)),
+and the #390 pilot was retired by maintainer decision after zero recruitment
+(see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
-Stable `0.41.0` is released only when alpha releases need no more architecture,
-public-interface or adoption work. Request-time data, forms, sessions and cache
+Request-time data, forms, sessions and cache stay explicitly unfrozen until
+0.42/0.44; Request-time data, forms, sessions and cache
 remain future product work, so the current promise is static-first applications
 with fullstack output paths—not broad fullstack parity.
 
