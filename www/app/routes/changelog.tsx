@@ -137,8 +137,8 @@ export class ChangelogPage extends OpenElement {
             <p>
               <code>{OPENELEMENT_VERSION}</code>{' '}
               is the current alpha line. Its source is not described as published until main CI,
-              npm, post-publish consumers, tag, and GitHub prerelease agree. External adopter #390
-              remains a stable-release condition, not an alpha blocker.
+              npm, post-publish consumers, tag, and GitHub prerelease agree. Stable 0.41.0 follows
+              under the ADR-0119 scoped interface freeze.
             </p>
           </section>
           <section id='withdrawn'>

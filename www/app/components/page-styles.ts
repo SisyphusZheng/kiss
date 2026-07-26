@@ -29,9 +29,9 @@ export const pageStyles = `
     position: relative;
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: clamp(4rem, 10vh, 8rem) var(--size-6) clamp(6rem, 14vh, 11rem);
+    padding: clamp(2rem, 5vh, 3.5rem) var(--size-6) clamp(6rem, 14vh, 11rem);
     overflow-wrap: break-word;
-    word-break: break-word;
+    word-break: normal;
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--violet-2) 20%, transparent), transparent) top / 100% 1px no-repeat;
   }
 
