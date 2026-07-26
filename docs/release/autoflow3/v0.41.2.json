@@ -1,0 +1,204 @@
+{
+  "id": "patch-release-v0.41.2-2026-07-26T18-08-29-818Z",
+  "kind": "patch-release",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.41.1",
+  "targetVersion": "0.41.2",
+  "status": "running",
+  "startedAt": "2026-07-26T18:08:29.818Z",
+  "steps": [
+    {
+      "name": "bump patch version",
+      "command": [
+        "deno",
+        "run",
+        "--allow-read",
+        "--allow-write",
+        "tools/bump-version.ts",
+        "--to",
+        "0.41.2"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:29.899Z",
+      "completedAt": "2026-07-26T18:08:29.927Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update project constants",
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:29.927Z",
+      "completedAt": "2026-07-26T18:08:29.928Z",
+      "exitCode": 0
+    },
+    {
+      "name": "update current version anchors",
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:29.929Z",
+      "completedAt": "2026-07-26T18:08:29.934Z",
+      "exitCode": 0
+    },
+    {
+      "name": "regenerate versioned artifacts",
+      "command": [
+        "deno",
+        "task",
+        "generate:ui-manifest"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:29.934Z",
+      "completedAt": "2026-07-26T18:08:30.113Z",
+      "exitCode": 0
+    },
+    {
+      "name": "format release bump",
+      "command": [
+        "deno",
+        "task",
+        "fmt"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:30.114Z",
+      "completedAt": "2026-07-26T18:08:30.190Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release bump",
+      "command": [
+        "git",
+        "add",
+        "deno.json",
+        "packages/*/deno.json",
+        "packages/create/src/version.ts",
+        "packages/ui/src/generated-manifest.json",
+        "tools/project-constants.ts",
+        "README.md",
+        "README.zh.md",
+        "docs/current/VERSION_PLAN.md",
+        "docs/governance/PROJECT_WORKFLOW.md",
+        "docs/roadmap/ROADMAP.md",
+        "docs/status/STATUS.md",
+        "www/app/data/version.ts",
+        "www/app/routes/index/index.tsx",
+        "www/app/routes/guide/getting-started.tsx",
+        "www/app/routes/roadmap.tsx"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:30.191Z",
+      "completedAt": "2026-07-26T18:08:30.226Z",
+      "exitCode": 0
+    },
+    {
+      "name": "commit release bump",
+      "status": "passed",
+      "startedAt": "2026-07-26T18:08:30.227Z",
+      "completedAt": "2026-07-26T18:08:30.304Z",
+      "exitCode": 0
+    },
+    {
+      "name": "run release gates after bump",
+      "command": [
+        "deno",
+        "task",
+        "autoflow:ci"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T18:47:43.996Z",
+      "completedAt": "2026-07-26T20:34:00.839Z",
+      "exitCode": 0
+    },
+    {
+      "name": "push dev",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "dev"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:00.841Z",
+      "completedAt": "2026-07-26T20:34:04.662Z",
+      "exitCode": 0
+    },
+    {
+      "name": "checkout main",
+      "command": [
+        "git",
+        "checkout",
+        "main"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:04.663Z",
+      "completedAt": "2026-07-26T20:34:04.730Z",
+      "exitCode": 0
+    },
+    {
+      "name": "sync main from dev (fast-forward)",
+      "command": [
+        "git",
+        "merge",
+        "--ff-only",
+        "dev"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:04.730Z",
+      "completedAt": "2026-07-26T20:34:04.780Z",
+      "exitCode": 0
+    },
+    {
+      "name": "package artifact gate",
+      "command": [
+        "deno",
+        "task",
+        "package-artifacts:check"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:04.780Z",
+      "completedAt": "2026-07-26T20:34:20.965Z",
+      "exitCode": 0
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.41.2.json",
+        "docs/release/v0.41.2.md"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:20.966Z",
+      "completedAt": "2026-07-26T20:34:20.998Z",
+      "exitCode": 0
+    },
+    {
+      "name": "commit release evidence",
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:21.018Z",
+      "completedAt": "2026-07-26T20:34:21.072Z",
+      "exitCode": 0
+    },
+    {
+      "name": "push main (release + evidence)",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "main"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "tag release",
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.41.2"
+      ],
+      "status": "pending"
+    }
+  ]
+}
