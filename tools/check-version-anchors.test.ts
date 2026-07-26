@@ -91,9 +91,15 @@ Deno.test('stale claims: a stale tag before the first head anchor is still in th
 });
 
 Deno.test('stale claims: the current line never matches its own stale prefix', () => {
-  // `0.41.0-alpha.1` (stale) is a prefix of the current `0.41.0-alpha.17`;
-  // the numeric boundary must keep the current line from failing.
-  assert(stalePackageVersionClaims().some((claim) => PACKAGE_VERSION.startsWith(claim)));
+  // `0.41.0-alpha.1` (stale) is a prefix of a current prerelease like
+  // `0.41.0-alpha.17`; the numeric boundary must keep the current line from
+  // failing. On a stable current line there is no such prefix — the current
+  // version simply never matches a stale claim either way.
+  if (PACKAGE_VERSION.includes('-')) {
+    assert(stalePackageVersionClaims().some((claim) => PACKAGE_VERSION.startsWith(claim)));
+  } else {
+    assert(!stalePackageVersionClaims().some((claim) => PACKAGE_VERSION.startsWith(claim)));
+  }
   assertEquals(findStaleAnchorFailures(readerFrom(goodFiles())), []);
 });
 

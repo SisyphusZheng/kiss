@@ -55,8 +55,8 @@ Deno.test('stale currency claims: the current line and history mentions pass', (
 
 Deno.test('stale currency claims: body-drift heuristics catch stale "current line" sentences', () => {
   const patterns = staleCurrencyClaimPatterns();
-  const previousAlpha = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)![1];
-  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)![1];
+  const previousAlpha = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
+  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
   const staleClaims = [
     // The pre-fix STATUS.md:14 sentence shape (issue #482).
     `Alpha.${previousAlpha} is the current published and verified line.`,
@@ -68,11 +68,17 @@ Deno.test('stale currency claims: body-drift heuristics catch stale "current lin
       `stale body claim must be forbidden: ${claim}`,
     );
   }
-  const allowed = [
-    // The corrected STATUS.md:14 sentence shape names the current alpha.
-    `Alpha.${currentAlpha} is the current published and verified line.`,
-    `Alpha.${previousAlpha} remains the previous verified baseline.`,
-  ];
+  const allowed = currentAlpha
+    ? [
+      // The corrected STATUS.md:14 sentence shape names the current alpha.
+      `Alpha.${currentAlpha} is the current published and verified line.`,
+      `Alpha.${previousAlpha} remains the previous verified baseline.`,
+    ]
+    : [
+      // On a stable line the current claim names the stable version itself.
+      `${PACKAGE_VERSION} is the current published and verified line.`,
+      `Alpha.${previousAlpha} remains the previous verified baseline.`,
+    ];
   for (const text of allowed) {
     assert(
       !patterns.some((pattern) => pattern.test(text)),
