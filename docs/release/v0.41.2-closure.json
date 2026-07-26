@@ -1,0 +1,6 @@
+{
+  "tagCommit": "b48f2ceedbdb83c4e325cd58b12e77007b623b19",
+  "finalEvidenceCommit": "fb01def983a9daa6d19e98c2b4dbaf07dcf22a7e",
+  "successfulReleaseRun": "local release without a recorded CI run (patch-release-v0.41.2-2026-07-26T18-08-29-818Z)",
+  "releaseUrl": "https://github.com/open-element/openelement/releases/tag/v0.41.2"
+}
