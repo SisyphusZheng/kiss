@@ -75,9 +75,8 @@ export default class OpenPageRail extends OpenElement {
     // During SSR OpenElement supplies JSX props before it attaches attributes
     // to the host. The property path therefore produces the complete DSD
     // outline, while the attribute path covers browser-side upgrades.
-    let raw = typeof (this as { items?: unknown }).items === 'string'
-      ? (this as unknown as { items: string }).items
-      : this.getAttribute('items');
+    const host = this as { items?: unknown };
+    let raw = typeof host.items === 'string' ? host.items : this.getAttribute('items');
     if (!raw) {
       try {
         const props = JSON.parse(this.getAttribute('data-ssr-props') ?? '{}') as {

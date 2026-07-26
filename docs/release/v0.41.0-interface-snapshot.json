@@ -289,7 +289,7 @@
           ]
         },
         "./open-code-block": {
-          "sha256": "6f0bc31309727bcd5371beacdd4d312b246a9333cf1e8aa134920fdd27d5f0d6",
+          "sha256": "61ab2fd8c49c15da94f11027319a3c7b91846970da75911676a963b1331e3c81",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
@@ -317,7 +317,7 @@
           ]
         },
         "./open-props-tokens": {
-          "sha256": "4115a636caa94b033491b6cb1e08827b6f7bd17201297223d37f38ae72e66e50",
+          "sha256": "6a638738bd02d951088b8e06ff3b57ec9861e5202fc614e946f6cb4a2356d0f1",
           "publicDeclarations": [
             "export const OPEN_PROPS_TOKEN_CSS = `/**",
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
@@ -325,7 +325,7 @@
           ]
         },
         "./open-props-tokens.js": {
-          "sha256": "4115a636caa94b033491b6cb1e08827b6f7bd17201297223d37f38ae72e66e50",
+          "sha256": "6a638738bd02d951088b8e06ff3b57ec9861e5202fc614e946f6cb4a2356d0f1",
           "publicDeclarations": [
             "export const OPEN_PROPS_TOKEN_CSS = `/**",
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
