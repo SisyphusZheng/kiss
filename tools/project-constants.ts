@@ -1,6 +1,6 @@
-export const PACKAGE_VERSION = '0.41.1';
+export const PACKAGE_VERSION = '0.41.2';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
-export const ACTIVE_EXECUTION_VERSION = 'v0.41.1';
+export const ACTIVE_EXECUTION_VERSION = 'v0.41.2';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',
@@ -49,7 +49,7 @@ export const NITRO_COMPATIBILITY_DATE = '2026-06-12';
 // single source of truth for the "from" side of version-anchor replacements
 // (see buildVersionAnchorReplacements in tools/autoflow/release.ts). It is
 // kept in sync automatically by updateProjectConstants() during a bump.
-export const PREVIOUS_PACKAGE_VERSION = '0.41.0';
+export const PREVIOUS_PACKAGE_VERSION = '0.41.1';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 
 /**
