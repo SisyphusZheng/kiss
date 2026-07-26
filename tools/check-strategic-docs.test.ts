@@ -55,7 +55,6 @@ Deno.test('stale currency claims: the current line and history mentions pass', (
 
 Deno.test('stale currency claims: body-drift heuristics catch stale "current line" sentences', () => {
   const patterns = staleCurrencyClaimPatterns();
-  const previousAlpha = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
   const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
   const staleClaims = [
     // The pre-fix STATUS.md:14 sentence shape (issue #482).

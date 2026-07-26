@@ -60,7 +60,7 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
     re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
   },
 ];
-if (earlierPrereleasePattern) {
+if (activeRetiredPattern) {
   forbidden.push({ name: 'retired prerelease current claim', re: activeRetiredPattern });
 }
 
