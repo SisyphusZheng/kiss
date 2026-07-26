@@ -122,8 +122,8 @@ Alpha.17 completed the first audit remediation (test credibility, convergence,
 release tooling). Alpha.18 completed the second audit sweep (ADR-0117):
 sibling-path closures, evidence honesty, reflect-prop correctness and
 redundancy cleanup. Alpha.19 completed the third audit cleanup sweep
-(ADR-0118). Stable `0.41.0` is planned under ADR-0119 as a scoped interface
-freeze with the #390 pilot requirement retired by maintainer decision.
+(ADR-0118). Stable `0.41.0` is published under ADR-0119 as a scoped interface
+freeze; the #390 pilot requirement was retired by maintainer decision.
 
 ## Historical record
 
