@@ -12,6 +12,29 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.0
+
+- Stable five-package release (ADR-0119): the interface freeze covers
+  `defineElement`, `definePage`, `buildApp`, the package graph, the supported
+  subpaths and the static/SPA semantics of `defineApp`; request-time data,
+  forms, sessions and cache stay explicitly unfrozen until 0.42/0.44.
+- Adapter-vite internal subpaths pruned at the freeze (`app-vite`,
+  `build-context`, `head-injection`, `i18n-plugin`, `plugin`,
+  `generated-data-resolver`, `plugin-mdx`, `route-manifest`,
+  `cli/build-client`, `cli/build-ssg`) — use the root, `nitro-mount`,
+  `cli/build` and `sitemap` instead (breaking; see the migration guide).
+- The #390 external adopter pilot is retired by maintainer decision after
+  zero recruitment (recorded exception, not replaced with internal evidence);
+  the seven-day P0 watch on the 0.41.x patch line starts at this release.
+- Aggregate migration guide from 0.40.x and every alpha line release:
+  `docs/release/v0.41.0-migration.md` and the site's `/guide/migration` page.
+- ui control geometry is squared (`--btn-radius`, `--badge-radius`,
+  `--ui-control-radius`: `--radius-round` → `--radius-1`, 6px) — visual
+  breaking change; update screenshots and custom control CSS.
+- The release verifier now supports stable `x.y.z` versions
+  (prerelease-only before), and the version guards stay honest on a stable
+  current line.
+
 ## 0.41.0-alpha.19
 
 - Third audit round cleanup sweep (ADR-0118, issues #481-#506); no new
