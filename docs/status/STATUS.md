@@ -3,7 +3,7 @@
 > Updated: 2026-07-24\
 > Repository package line: `v0.41.0`\
 > npm registry line: `v0.41.0`\
-> Active release target: `v0.41.0-alpha.19`\
+> Active release target: `v0.41.0`\
 > Next stability candidate: `v0.41.0`\
 > Product graph: five packages\
 > Current maturity stage: alpha
