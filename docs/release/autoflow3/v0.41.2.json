@@ -4,7 +4,7 @@
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.41.1",
   "targetVersion": "0.41.2",
-  "status": "running",
+  "status": "completed",
   "startedAt": "2026-07-26T18:08:29.818Z",
   "steps": [
     {
@@ -184,11 +184,17 @@
         "origin",
         "main"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:21.139Z",
+      "completedAt": "2026-07-26T20:34:25.566Z",
+      "exitCode": 0
     },
     {
       "name": "tag release",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:25.567Z",
+      "completedAt": "2026-07-26T20:34:25.635Z",
+      "exitCode": 0
     },
     {
       "name": "push tag",
@@ -198,7 +204,11 @@
         "origin",
         "v0.41.2"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T20:34:25.636Z",
+      "completedAt": "2026-07-26T20:34:29.771Z",
+      "exitCode": 0
     }
-  ]
+  ],
+  "completedAt": "2026-07-26T20:34:29.774Z"
 }
