@@ -780,6 +780,16 @@ export function buildVersionAnchorReplacements(
       'npm registry line: `$TAG`',
     ],
     [
+      'docs/status/STATUS.md',
+      'Active release target: `$PVT`',
+      'Active release target: `$TAG`',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      'Active execution target: `$PVT`.',
+      'Active execution target: `$TAG`.',
+    ],
+    [
       'www/app/routes/roadmap.tsx',
       "version: '$PVT'",
       "version: '$TAG'",

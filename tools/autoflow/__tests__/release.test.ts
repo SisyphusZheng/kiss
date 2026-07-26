@@ -40,7 +40,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // Anchors are kept in sync with the real anchor text in each file. Dead
   // anchors (doc drift) are intentionally omitted, so this count reflects the
   // files that currently carry the previous package line.
-  assertEquals(reps.length, 15);
+  assertEquals(reps.length, 17);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {

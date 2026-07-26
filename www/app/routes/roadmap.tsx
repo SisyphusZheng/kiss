@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.41.2',
-    theme: 'stable five-package line',
+    theme: 'release tooling self-repair',
     copy:
-      'The ADR-0119 scoped freeze shipped at 0.41.0; 0.41.1 is the first tooling-hardening patch on the stable line.',
+      'TP-0 of the 0.42.0 plan: patch-release resume re-derives its target from evidence, and a line-prose gate keeps release themes honest.',
     state: 'stable',
     stamp: 'CURRENT',
   },
