@@ -34,10 +34,11 @@ does not claim fullstack parity.
   its immutable tag and two-stage evidence must not be rewritten.
 - The four core authoring APIs are unchanged across the alpha.16 → alpha.19
   interface snapshots; the export-star seams were closed in alpha.19.
-- The #390 external adopter pilot recruited zero participants over three
+- The external adopter pilot #390 recruited zero participants over three
   release cycles. ADR-0119 records the maintainer decision to retire the
   pilot requirement and proceed on internal evidence; #390 is closed with a
-  reference to that ADR.
+  reference to that ADR. Alpha naming up to this plan remains governed by
+  [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).
 - Stable gate #37 remains open; its text drift (obsolete task names,
   RC-soak applicability) is refreshed in this plan.
 
