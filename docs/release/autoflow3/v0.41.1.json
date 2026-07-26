@@ -1,139 +1,25 @@
 {
-  "id": "patch-release-v0.41.1-2026-07-26T12-40-08-185Z",
-  "kind": "patch-release",
+  "id": "publish-existing-v0.41.1-2026-07-26T14-47-00-519Z",
+  "kind": "publish-existing",
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.41.0",
   "targetVersion": "0.41.1",
-  "status": "failed",
-  "startedAt": "2026-07-26T12:40:08.185Z",
+  "status": "running",
+  "startedAt": "2026-07-26T14:47:00.519Z",
   "steps": [
     {
-      "name": "bump patch version",
-      "command": [
-        "deno",
-        "run",
-        "--allow-read",
-        "--allow-write",
-        "tools/bump-version.ts",
-        "--to",
-        "0.41.1"
-      ],
+      "name": "verify published source version",
       "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.235Z",
-      "completedAt": "2026-07-26T12:40:08.253Z",
+      "startedAt": "2026-07-26T14:47:00.898Z",
+      "completedAt": "2026-07-26T14:47:00.909Z",
       "exitCode": 0
     },
     {
-      "name": "update project constants",
+      "name": "verify main CI success for HEAD",
       "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.253Z",
-      "completedAt": "2026-07-26T12:40:08.254Z",
+      "startedAt": "2026-07-26T14:47:00.909Z",
+      "completedAt": "2026-07-26T14:47:01.987Z",
       "exitCode": 0
-    },
-    {
-      "name": "update current version anchors",
-      "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.254Z",
-      "completedAt": "2026-07-26T12:40:08.258Z",
-      "exitCode": 0
-    },
-    {
-      "name": "regenerate versioned artifacts",
-      "command": [
-        "deno",
-        "task",
-        "generate:ui-manifest"
-      ],
-      "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.259Z",
-      "completedAt": "2026-07-26T12:40:08.390Z",
-      "exitCode": 0
-    },
-    {
-      "name": "format release bump",
-      "command": [
-        "deno",
-        "task",
-        "fmt"
-      ],
-      "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.391Z",
-      "completedAt": "2026-07-26T12:40:08.466Z",
-      "exitCode": 0
-    },
-    {
-      "name": "stage release bump",
-      "command": [
-        "git",
-        "add",
-        "deno.json",
-        "packages/*/deno.json",
-        "packages/create/src/version.ts",
-        "packages/ui/src/generated-manifest.json",
-        "tools/project-constants.ts",
-        "README.md",
-        "README.zh.md",
-        "docs/current/VERSION_PLAN.md",
-        "docs/governance/PROJECT_WORKFLOW.md",
-        "docs/roadmap/ROADMAP.md",
-        "docs/status/STATUS.md",
-        "www/app/data/version.ts",
-        "www/app/routes/index/index.tsx",
-        "www/app/routes/guide/getting-started.tsx",
-        "www/app/routes/roadmap.tsx"
-      ],
-      "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.466Z",
-      "completedAt": "2026-07-26T12:40:08.504Z",
-      "exitCode": 0
-    },
-    {
-      "name": "commit release bump",
-      "status": "passed",
-      "startedAt": "2026-07-26T12:40:08.504Z",
-      "completedAt": "2026-07-26T12:40:08.576Z",
-      "exitCode": 0
-    },
-    {
-      "name": "run release gates after bump",
-      "command": [
-        "deno",
-        "task",
-        "autoflow:ci"
-      ],
-      "status": "failed",
-      "startedAt": "2026-07-26T12:40:08.576Z",
-      "completedAt": "2026-07-26T12:48:30.879Z",
-      "exitCode": 1
-    },
-    {
-      "name": "push dev",
-      "command": [
-        "git",
-        "push",
-        "origin",
-        "dev"
-      ],
-      "status": "pending"
-    },
-    {
-      "name": "checkout main",
-      "command": [
-        "git",
-        "checkout",
-        "main"
-      ],
-      "status": "pending"
-    },
-    {
-      "name": "sync main from dev (fast-forward)",
-      "command": [
-        "git",
-        "merge",
-        "--ff-only",
-        "dev"
-      ],
-      "status": "pending"
     },
     {
       "name": "package artifact gate",
@@ -142,7 +28,63 @@
         "task",
         "package-artifacts:check"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T14:47:01.987Z",
+      "completedAt": "2026-07-26T14:47:41.980Z",
+      "exitCode": 0
+    },
+    {
+      "name": "publish npm packages",
+      "command": [
+        "deno",
+        "task",
+        "publish:npm"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T14:47:41.980Z",
+      "completedAt": "2026-07-26T14:48:06.622Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify npm versions and dist-tags",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/verify-npm-release.ts",
+        "0.41.1"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T14:48:06.623Z",
+      "completedAt": "2026-07-26T14:48:21.417Z",
+      "exitCode": 0
+    },
+    {
+      "name": "post-publish npm consumer smoke",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/consumer-smoke.ts",
+        "--version",
+        "0.41.1"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T14:48:21.418Z",
+      "completedAt": "2026-07-26T14:48:35.782Z",
+      "exitCode": 0
+    },
+    {
+      "name": "post-publish third-party Web Component smoke",
+      "command": [
+        "deno",
+        "task",
+        "third-party-wc:smoke"
+      ],
+      "status": "passed",
+      "startedAt": "2026-07-26T14:48:35.782Z",
+      "completedAt": "2026-07-26T14:48:40.789Z",
+      "exitCode": 0
     },
     {
       "name": "stage release evidence",
@@ -152,21 +94,17 @@
         "docs/release/autoflow3/v0.41.1.json",
         "docs/release/v0.41.1.md"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T14:48:40.790Z",
+      "completedAt": "2026-07-26T14:48:40.795Z",
+      "exitCode": 0
     },
     {
       "name": "commit release evidence",
-      "status": "pending"
-    },
-    {
-      "name": "push main (release + evidence)",
-      "command": [
-        "git",
-        "push",
-        "origin",
-        "main"
-      ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-07-26T14:48:40.800Z",
+      "completedAt": "2026-07-26T14:48:40.813Z",
+      "exitCode": 0
     },
     {
       "name": "tag release",
@@ -181,7 +119,11 @@
         "v0.41.1"
       ],
       "status": "pending"
+    },
+    {
+      "name": "create GitHub release",
+      "status": "pending"
     }
   ],
-  "completedAt": "2026-07-26T12:48:30.879Z"
+  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/30206478857"
 }
