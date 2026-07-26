@@ -12,6 +12,25 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.41.1
+
+- Patch release: tooling hardening and hygiene from the third-party audit's
+  fixable set — no public API, topology or runtime-default changes.
+- adapter-vite `dist`/`.openElement` magic strings converge on shared
+  `internal/paths.ts` constants; `tools/lib/fs.ts` gains shared
+  `readText`/`readJson` used across ten tooling files.
+- The repo-hygiene gate now scans credential files and credential-shaped
+  content and rejects tracked binaries over 1 MiB outside intentional
+  design/e2e/fixture locations.
+- vite 8.0.10 → 8.0.16 across root, examples and adapter-vite (the latter's
+  pin was the hidden cause of a tsc crash on dual-config typechecks).
+- Version guards learn the stable line: www-truth retires the same-base
+  alpha line instead of disabling itself on stable versions, publish dry-run
+  skips already-published versions, and stale-claim fixtures no longer
+  assume an alpha current line.
+- `CONTRIBUTING.md` records the `no-sloppy-imports` rationale; stale merged
+  branches were pruned.
+
 ## 0.41.0
 
 - Stable five-package release (ADR-0119): the interface freeze covers
