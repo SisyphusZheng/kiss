@@ -104,7 +104,7 @@ export class ChangelogPage extends OpenElement {
           </div>
           <open-page-rail
             slot='rail'
-            items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Candidate"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'
+            items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Stable line"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'
           >
           </open-page-rail>
           <p id='published'>
@@ -133,12 +133,12 @@ export class ChangelogPage extends OpenElement {
             </div>
           </div>
           <section id='candidate'>
-            <h2>Active alpha</h2>
+            <h2>Stable line</h2>
             <p>
               <code>{OPENELEMENT_VERSION}</code>{' '}
-              is the current alpha line. Its source is not described as published until main CI,
-              npm, post-publish consumers, tag, and GitHub prerelease agree. Stable 0.41.0 follows
-              under the ADR-0119 scoped interface freeze.
+              is the published stable line under the ADR-0119 scoped interface freeze. Patches on
+              the 0.41.x line carry tooling and hygiene fixes only; the frozen surface changes only
+              with a major-version ADR.
             </p>
           </section>
           <section id='withdrawn'>

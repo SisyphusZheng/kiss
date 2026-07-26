@@ -4,7 +4,7 @@
 > Current npm registry line: `v0.41.1`\
 > Active release target: `v0.41.1`\
 > Next release line: `v0.42.0` (WC Application Loop)\
-> Current maturity stage: alpha (stable release in preparation)
+> Current maturity stage: stable (0.41.x line)
 
 ## Objective
 
