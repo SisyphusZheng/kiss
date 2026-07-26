@@ -1,155 +1,139 @@
-# v0.41.0-alpha.19 — third audit round cleanup sweep plan
+# v0.41.0 — stable five-package release plan
 
 > Current source package line: `v0.41.0-alpha.19`\
 > Current npm registry line: `v0.41.0-alpha.19`\
-> Active release target: `v0.41.0-alpha.19`\
-> Next stability candidate: `v0.41.0`\
-> Current maturity stage: alpha
+> Active release target: `v0.41.0`\
+> Next stability candidate: `v0.41.0` (this plan)\
+> Current maturity stage: alpha (stable release in preparation)
 
 ## Objective
 
-Alpha.19 executes the third audit round cleanup sweep governed by
-[`ADR-0118`](../adr/ADR-0118-third-audit-round-alpha19-cleanup-sweep.md). The
-2026-07-25 full-repository audit (architecture, redundancy, cleanliness)
-produced 26 accepted issues (#481–#506) under milestone
-`v0.41.0-alpha.19`. Alpha.19 closes every listed issue or explicitly defers
-it with evidence. It adds no new product surface and no new packages. Every
-state-dependent fix carries an "input combinations enumerated" acceptance
-note, extending the sibling-path doctrine of ADR-0117.
+`0.41.0` is the stable five-package release governed by
+[`ADR-0119`](../adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md). After
+three closed audit rounds (ADR-0116/0117/0118) it freezes the proven
+interface — `defineElement`, `definePage`, `buildApp`, the static/SPA
+semantics of `defineApp`, the five-package graph and the supported subpaths
+of [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md) — and ships the stable line
+with the same release evidence discipline as the alpha line. It adds no new
+product surface.
 
 ```text
 OpenElement = Web Components-native fullstack application framework
-current proven scope = static-first applications with fullstack output paths
+frozen scope = static-first applications + the shipped SPA interaction chain
 component contract = standard Custom Elements
 official build path = Vite + Nitro
 ```
 
-The authoritative five-package contract remains
-[`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md). Alpha naming remains governed by
-[`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).
+The freeze is **scoped**: request-time data, forms, sessions and cache
+semantics remain explicitly unfrozen (0.42/0.44 scope), and stable `0.41.0`
+does not claim fullstack parity.
 
 ## Entry truth
 
-- At entry to this plan, `v0.41.0-alpha.18` is the current source and
-  published npm package line; its immutable tag and two-stage evidence must
-  not be rewritten.
-- The external adopter pilot #390 and stable gate #37 remain open.
+- `v0.41.0-alpha.19` is the current source and published npm package line;
+  its immutable tag and two-stage evidence must not be rewritten.
+- The four core authoring APIs are unchanged across the alpha.16 → alpha.19
+  interface snapshots; the export-star seams were closed in alpha.19.
+- The #390 external adopter pilot recruited zero participants over three
+  release cycles. ADR-0119 records the maintainer decision to retire the
+  pilot requirement and proceed on internal evidence; #390 is closed with a
+  reference to that ADR.
+- Stable gate #37 remains open; its text drift (obsolete task names,
+  RC-soak applicability) is refreshed in this plan.
 
 ## Scope
 
-- All 26 issues #481–#506, grouped below by theme; each issue records its own
-  zero-consumer or reproduction evidence.
-- Gate mechanization for every audit-discovered blind spot so the same drift
-  class cannot return silently.
-- The alpha.19 release closure: bump, gates, publish, tag, prerelease and
-  two-stage evidence.
+### A. Freeze scope precision
 
-## Tasks by issue group
+- Document the `defineApp` freeze boundary in `PACKAGE_SURFACE.md` prose:
+  static/SPA semantics (routes, islands, DSD output, SPA-mode loader/action
+  chain) are frozen; request-time data/forms/sessions/cache are explicitly
+  marked unfrozen with their target versions.
+- Execute the adapter-vite internal subpath prune-or-retain decision
+  (`app-vite`, `build-context`, `head-injection`, `i18n-plugin`, `plugin`,
+  `generated-data-resolver`, `plugin-mdx`, `route-manifest`,
+  `cli/build-client`, `cli/build-ssg`) and record the outcome in
+  `PACKAGE_SURFACE.md`.
+- Re-record `docs/release/v0.41.0-interface-snapshot.json` as the freeze
+  baseline and state in the snapshot gate documentation that post-freeze
+  changes to the frozen surface require a major-version ADR.
 
-### A. High-severity truth and assertion gaps
+### B. Stable gate refresh
 
-- #481: fix www pages claiming stale package lines; extend the www-truth gate
-  to bare version mentions.
-- #482: align governance doc bodies (STATUS/ROADMAP/README/SECURITY) with
-  their headers; extend the version-anchor/currency gates to body text.
-- #483: replace the 25 always-true `assertExists(boolean)` assertions with
-  behavior assertions; widen the assertion-style gate.
+- Update #37's text: current task names (no `test:e2e:all`), the
+  0.41.0-applicable gate subset, and the RC-soak replacement — a seven-day
+  P0 watch on the `0.41.x` patch line after the stable tag.
+- Verify every applicable #37 gate against the current repository and
+  record the evidence links in the stable release note.
+- Refresh the stable-readiness statements in STATUS/ROADMAP/README so the
+  maturity stage flips to stable only with the release commit.
 
-### B. Surface seams and declarations
+### C. Migration and consumer documentation
 
-- #486: correct package READMEs teaching internal or nonexistent subpaths;
-  add a package-README surface gate.
-- #487, #488: close the `export type *` star seams exposing internal protocol
-  types (SafeHtml/UnsafeHtml/StyleSheetRule and ~50 others); make the
-  interface snapshot seam-aware.
-- #490: single-source `routeInfo` declarations including the emitted
-  `filePath`/`module` fields.
-- #505: decide the test-only-consumed public exports batch.
+- Publish an aggregate alpha-line → `0.41.0` migration note (alpha.17
+  build-utils move and router-type removal, alpha.18 export deletions and
+  `renderIntent.streaming` removal, alpha.19 star-seam type removals and
+  internal subpath pruning) in the release note and www docs.
+- Confirm `BROWSER_BASELINE.md`, `HYDRATION_CONTRACT.md` known limitations
+  (including `/@fs/` Windows) and the stable support wording in
+  `SECURITY.md` match what the automation proves.
 
-### C. Correctness residuals and input combinations
+### D. Stable release closure
 
-- #491, #492: reflect-prop fixes proven in Firefox/WebKit smoke, not only
-  Chromium; enumerate removeAttribute × default-value combinations.
-- #493: keep URL and router state consistent on popstate redirect-then-block;
-  fix guard-reject fail-open asymmetry.
-- #494: make the `For` drift token collision-proof against separator
-  smuggling.
-- #495: strengthen the theme-init `prefers-color-scheme` e2e to the claimed
-  FOUC contract.
-- #496: single-source the `HydrationStrategy` literal list.
-- #500: converge island declaration construction and the build-plan hydrate
-  evidence.
-- #489: give `graph:check` real teeth with a dependency-direction gate.
-
-### D. Release tooling and evidence durability
-
-- #497: untangle the release executor core from `mod3.ts`; test resume
-  orchestration and the rebase-conflict resume path.
-- #484: declare the workflow inputs sent by `autoflow:release-dispatch`.
-- #485: record alpha.18 migration notes durably; protect curated notes from
-  tooling overwrite.
-- #499: extend the clean task to all eight artifact classes.
-
-### E. Hygiene and vocabulary
-
-- #498: fix the CONTRIBUTING structure map and the comment-honesty batch.
-- #501: execute the safe-deletion batch (11 zero-consumer items).
-- #502: config hygiene batch (workspace-orphan example, ui publish.exclude,
-  test-fixtures, orphan tasks, dead doc refs).
-- #503: consolidate hydration/upgrade/activate/mount vocabulary and field
-  names.
-- #504: gate hardening batch (deno-api AST blind spots, guide guard residue,
-  #37 text refresh, VERIFICATION wording).
-- #506: deduplicate the JSON codegen boundary, formatJson bypasses and
-  diverged preact test stubs.
-
-### F. Alpha.19 release closure
-
-- Run release-prepare only after A–E pass, synchronizing all five manifests,
-  Create CLI, starter mappings and current version anchors to
-  `0.41.0-alpha.19`.
-- Publish all five npm packages under the `alpha` and `latest` dist-tags,
-  create the immutable `v0.41.0-alpha.19` tag and GitHub prerelease, verify
-  fresh Deno, Node ESM, starter and Nitro consumers through the supported
-  `nitro-mount` seam, and complete the two-stage evidence record.
+- Run release-prepare to `0.41.0` only after A–C pass; the release tier
+  must be fully green (unit, coverage, e2e three engines, consumers,
+  third-party WC, package artifacts, docs and governance gates).
+- Publish all five packages with stable dist-tag semantics per the
+  workflow's dist-tag policy, verify fresh Deno, Node ESM, starter and
+  Nitro consumers through the supported `nitro-mount` seam, create the
+  immutable `v0.41.0` tag and the GitHub release with the aggregate
+  migration notes, and complete the two-stage evidence record with
+  post-publish consumer smoke.
+- Start the seven-day P0 watch on the `0.41.x` patch line (#37 RC-soak
+  replacement) and record its start date in the release evidence.
 
 ## Acceptance
 
-- Every issue #481–#506 is closed with its recorded evidence, or explicitly
-  deferred with a recorded reason.
-- Each state-dependent fix (C group) enumerates the input combinations it was
-  verified against.
-- The new and hardened gates (A, B, D, E groups) fail on the stale inputs
-  they were built for and pass on the corrected repo state.
-- npm, dist-tags, exact-version starter, tag, GitHub prerelease, docs and
-  final evidence all agree on `0.41.0-alpha.19`.
-- Alpha.18 evidence remains unchanged.
+- The freeze boundary for `defineApp` is documented, and no frozen
+  interface changes without a major-version ADR after the snapshot
+  re-record.
+- Every #37 0.41.0-applicable gate is evidenced in the stable release
+  note; the RC-soak replacement watch is scheduled and recorded.
+- The aggregate migration note covers every breaking change since
+  `0.40.x`; a consumer following it can upgrade from the last 0.40 line.
+- npm, dist-tags, exact-version starter, tag, GitHub release, docs and
+  final evidence all agree on `0.41.0`.
+- Alpha-line evidence remains unchanged.
 
 ## Non-goals
 
-- Do not add packages, product surface or new public APIs beyond what an
-  issue requires.
-- Do not restructure the `OpenElement` base class or introduce a diffing
-  renderer.
-- Do not promise stable `0.41.0` merely because alpha.19 publishes.
-- Do not fabricate, simulate or replace external adopter evidence with
-  internal CI runs.
+- Do not add packages, product surface, or 0.42 Application Loop features.
+- Do not freeze request-time data, forms, sessions or cache semantics.
+- Do not claim fullstack parity or broad production adoption.
+- Do not resurrect JSR as a release channel.
+- Do not fabricate external adoption evidence; the #390 retirement is
+  recorded as an explicit maintainer exception (ADR-0119), not as pilot
+  results.
 
 ## Test matrix
 
-- Every correctness fix lands reproduction-first; reflect and popstate fixes
-  are proven in the browser engines their acceptance claims name.
-- Gate changes land with fixtures proving both the stale rejection and the
-  corrected-state pass.
-- `deno task test`, `arch:check`, `graph:check`, `package-surface:check`,
-  `type-safety:check` and `deno-api:check` pass for every PR.
-- `deno task test:e2e` (Chromium) and the Firefox/WebKit smoke pass for every
-  PR; the pre-release matrix covers Chromium, Firefox and WebKit.
+- The freeze rehearsal: interface snapshot re-recorded and byte-identical
+  across two consecutive runs.
+- `deno task test`, `test:coverage:check`, `arch:check`, `graph:check`,
+  `package-surface:check`, `interface:snapshot`, `type-safety:check` and
+  `deno-api:check` pass for every PR.
+- `deno task test:e2e` (Chromium full) and the Firefox/WebKit smoke pass
+  for every PR; the pre-release matrix covers all three engines.
+- Post-publish consumer smoke (Deno, Node ESM, starter, Nitro Node and
+  Workers, third-party Web Components, CDN) passes against the stable
+  artifacts.
 
 ## Release evidence requirements
 
-- Two-stage evidence under `docs/release/` for `v0.41.0-alpha.19`, including
-  npm version and dist-tag verification and post-publish consumer smoke.
-- The release note records any breaking deletions with migration steps.
-- Any new #390 pilot intake published during alpha.19 is anonymized and
-  linked from the release evidence.
+- Two-stage evidence under `docs/release/` for `v0.41.0`, including npm
+  version and dist-tag verification and post-publish consumer smoke.
+- The release note carries the aggregate alpha-line → `0.41.0` migration
+  guide, the freeze-scope declaration, the #37 gate evidence links, and
+  the ADR-0119 pilot-exception reference.
+- The seven-day P0 watch start is recorded; its outcome closes the #37
+  stable gate.
