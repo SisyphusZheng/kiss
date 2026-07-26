@@ -4,6 +4,7 @@ export const tagName = 'engine-architecture';
 import { OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
+import '@openelement/ui/open-code-block';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import '@openelement/site-ui/open-section-frame.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
@@ -15,14 +16,14 @@ pageSheet.replaceSync(`
   * { box-sizing:border-box; }
   .eyebrow { display: flex; flex-wrap: wrap; gap: var(--size-2); margin-bottom: 20px; }
   h1 { margin:0; max-width:760px; color:var(--text); font-size:clamp(3.5rem,7vw,7rem); line-height:.88; letter-spacing:-.07em; }
-  h2 { margin: 0; color: var(--text); font-size: 34px; line-height: 1.12; letter-spacing: 0; }
+  h2 { margin: 0; color: var(--text); font-size: var(--font-size-display-md); line-height: 1.12; letter-spacing: 0; }
   h3 { margin: 0 0 var(--size-2); color: var(--text); }
   p { color: var(--text-secondary); line-height: var(--line-height-relaxed); }
   .lede { margin: 20px 0 0; font-size: var(--font-size-subhead); max-width: 650px; }
   .artifact, .layer-map { border:1px solid color-mix(in srgb,var(--color-border) 72%,var(--brand)); border-radius:var(--radius-2); overflow:hidden; background:color-mix(in srgb,var(--surface-1) 82%,transparent); box-shadow:inset 0 1px 0 var(--edge-highlight),0 28px 90px color-mix(in srgb,var(--violet-10) 24%,transparent); backdrop-filter:blur(18px); }
   .artifact-head { display: flex; justify-content: space-between; gap: var(--size-3); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); font-size: var(--font-size-0); color: var(--text-muted); }
   pre { margin: 0; padding: var(--size-4); overflow-x: auto; background: var(--code-bg); color: var(--code-text); font-size: var(--font-size-0); line-height: 1.65; }
-  code { font-family: "JetBrains Mono", monospace; }
+  code { font-family: var(--font-mono); }
   .layer { display: grid; grid-template-columns: 170px 1fr 180px; gap: var(--size-4); padding: 14px var(--size-4); border-bottom: 1px solid var(--color-border); align-items: start; }
   .layer:last-child { border-bottom: 0; }
   .layer strong { color: var(--text); font-size: var(--font-size-1); }
@@ -33,7 +34,7 @@ pageSheet.replaceSync(`
   .gate strong { color: var(--color-brand); font-size: var(--font-size-1); }
   .gate span { color: var(--text-secondary); font-size: var(--font-size-0); line-height: 1.55; }
   .nav-row { display:flex; flex-wrap:wrap; gap:10px; width:min(1180px,calc(100% - 4rem)); margin:var(--size-8) auto 0; }
-  @media (max-width: 900px) { .cards, .gate-grid { grid-template-columns: 1fr; } .layer { grid-template-columns: 1fr; gap: var(--size-2); } h1 { font-size: 42px; line-height: 1.06; } h2 { font-size: 28px; } }
+  @media (max-width: 900px) { .cards, .gate-grid { grid-template-columns: 1fr; } .layer { grid-template-columns: 1fr; gap: var(--size-2); } h1 { font-size: var(--font-size-display-lg); line-height: 1.06; } h2 { font-size: var(--font-size-display-sm); } }
   @media (max-width: 560px) { .nav-row{width:calc(100% - 2rem)} .gate { grid-template-columns: 1fr; display: grid; } }
 `);
 
@@ -62,7 +63,9 @@ export class ArchitecturePage extends OpenElement {
           <open-artifact-panel slot='artifact'>
             <span slot='label'>package graph</span>
             <span slot='meta'>{OPENELEMENT_VERSION} published line</span>
-            <pre><code>{PACKAGE_GRAPH}</code></pre>
+            <open-code-block>
+              <pre><code>{PACKAGE_GRAPH}</code></pre>
+            </open-code-block>
           </open-artifact-panel>
         </open-page-hero>
 

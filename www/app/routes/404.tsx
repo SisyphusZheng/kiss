@@ -84,10 +84,10 @@ styles.replaceSync(`
       padding: 80px 20px 64px;
     }
     .title {
-      font-size: 64px;
+      font-size: var(--font-size-7);
     }
     .subtitle {
-      font-size: 20px;
+      font-size: var(--font-size-2);
     }
   }
 `);

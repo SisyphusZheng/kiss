@@ -127,6 +127,12 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^docs\//, /^README/, /^www\/app\/routes\//],
   },
   {
+    name: 'www:check-theme-tokens',
+    command: ['deno', 'task', 'www:check-theme-tokens'],
+    tiers: ['dev', 'push', 'ci', 'release'],
+    triggers: [/^www\/app\//, /^www\/vite\.config\.ts$/, /^packages\/ui\/src\/open-props-tokens/],
+  },
+  {
     name: 'docs:check-version-anchors',
     command: ['deno', 'task', 'docs:check-version-anchors'],
     tiers: ['ci', 'release'],
