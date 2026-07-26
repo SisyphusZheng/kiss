@@ -16,7 +16,8 @@ stable at `0.41.0` under ADR-0119: the interface freeze covers `defineElement`,
 the static/SPA semantics of `defineApp`; request-time semantics stay unfrozen
 until 0.42/0.44. Alpha.19 completed the third audit cleanup sweep (ADR-0118)
 and the #390 pilot requirement was retired by maintainer decision after zero
-recruitment.
+recruitment. The `0.41.1` patch carries the third-party audit's fixable
+tooling and hygiene set with no frozen-surface change.
 
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
@@ -41,6 +42,7 @@ and output path.
 | #37 gate text refresh (0.41.0 subset, seven-day P0 watch)          | Completed           |
 | Aggregate alpha-line migration guide + ui geometry note            | Completed           |
 | 0.41.0 npm, tag, GitHub release and two-stage evidence             | Completed           |
+| 0.41.1 tooling-hardening patch (third-party audit fixable set)     | Completed           |
 | Seven-day P0 watch on the 0.41.x patch line                        | Started 2026-07-26  |
 | External adopter pilot #390                                        | Retired by ADR-0119 |
 

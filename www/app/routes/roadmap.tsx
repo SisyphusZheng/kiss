@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.41.1',
-    theme: 'third audit cleanup sweep',
+    theme: 'stable five-package line',
     copy:
-      'The published alpha line closes three full-repository audit rounds and ships the unified product and website surface.',
+      'The ADR-0119 scoped freeze shipped at 0.41.0; 0.41.1 is the first tooling-hardening patch on the stable line.',
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -344,9 +344,8 @@ const entries: TimelineEntry[] = [
     theme: 'core interface freeze',
     copy:
       'Scoped freeze of the proven static-first contract and SPA chain; request-time semantics stay unfrozen (ADR-0119).',
-    state: 'next',
-    stamp: 'NEXT',
-    status: 'stable plan active',
+    state: 'stable',
+    status: 'released 2026-07-26',
   },
   {
     version: 'v0.42',
@@ -392,20 +391,19 @@ export class RoadmapPage extends OpenElement {
           </span>
           <open-artifact-panel slot='artifact' class='now'>
             <span slot='label'>current</span>
-            <span slot='meta'>{OPENELEMENT_VERSION} published → stable plan active</span>
+            <span slot='meta'>{OPENELEMENT_VERSION} published → stable line</span>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
             </div>
-            <open-badge tone='warning'>ADR-0119 freeze plan</open-badge>
+            <open-badge tone='warning'>ADR-0119 freeze shipped</open-badge>
             <h2>
-              The five-package product is published; the stable freeze is the next release, not a
-              wish.
+              The five-package product is stable at 0.41.x; the freeze is shipped, not a wish.
             </h2>
             <p>
               {OPENELEMENT_VERSION}{' '}
-              is the published package line. Stable 0.41.0 proceeds under ADR-0119 with a scoped
-              interface freeze — the #390 pilot requirement is retired by maintainer decision.
+              is the published package line, stable under ADR-0119's scoped interface freeze — the
+              #390 pilot requirement was retired by maintainer decision.
             </p>
           </open-artifact-panel>
         </open-page-hero>
