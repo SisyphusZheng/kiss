@@ -121,9 +121,9 @@ that breaking architecture and interface changes are still allowed.
 Alpha.17 completed the first audit remediation (test credibility, convergence,
 release tooling). Alpha.18 completed the second audit sweep (ADR-0117):
 sibling-path closures, evidence honesty, reflect-prop correctness and
-redundancy cleanup. Stable `0.41.0` requires a separate approved plan after
-those efforts and the #390 pilot uncover no further architecture,
-public-interface or adoption work.
+redundancy cleanup. Alpha.19 completed the third audit cleanup sweep
+(ADR-0118). Stable `0.41.0` is planned under ADR-0119 as a scoped interface
+freeze with the #390 pilot requirement retired by maintainer decision.
 
 ## Historical record
 

@@ -11,12 +11,10 @@
 ## Current position
 
 OpenElement is a Web Components-native, static-first application framework.
-Alpha.19 runs the third audit cleanup sweep (ADR-0118): third-audit issue
-closure across documentation, tests, runtime edges and release tooling.
-Alpha.18 completed the second audit sweep (ADR-0117): sibling-path closures,
-evidence honesty and redundancy cleanup. Alpha.17 remains the previous
-verified baseline; it closed the first audit remediation (ADR-0116 packages
-B–D). A stable `0.41.0` remains a separate decision.
+Alpha.19 completed the third audit cleanup sweep (ADR-0118). The stable
+`0.41.0` release plan is active under ADR-0119: a scoped interface freeze
+over the proven static-first contract and SPA chain, with the #390 pilot
+requirement retired by maintainer decision after zero recruitment.
 
 Custom Elements are the application component contract; JSX and Basic Element
 are authoring modes; Declarative Shadow DOM is the default server output;
