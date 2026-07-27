@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.3',
-    theme: 'form/action loop',
+    theme: 'revalidation continuity',
     copy:
-      'Plain HTML forms work without JavaScript: fail() validation echoes at 422, successes answer 303 (PRG), named actions dispatch via formaction, and data-open-enhance forms use the same ActionResult protocol.',
+      'Enhanced forms morph the returned document: intact hydrated islands keep their state, data-open-preserve exempts subtrees, and the URL follows the PRG target.',
     state: 'stable',
     stamp: 'CURRENT',
   },
