@@ -4,8 +4,8 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.42.0-alpha.1`.\
-> Active execution target: `v0.42.0-alpha.1`.\
+> Published package line: `v0.42.0-alpha.2`.\
+> Active execution target: `v0.42.0-alpha.2`.\
 > Current implementation state: five-package convergence is published;
 > alpha.17 closed the first audit remediation, alpha.18 completed the
 > second audit sweep (ADR-0117), and alpha.19 completed the third (ADR-0118).\
@@ -116,7 +116,7 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.42.0-alpha.1` is the published package line. npm beta.1 through beta.3 are
+`0.42.0-alpha.2` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.
