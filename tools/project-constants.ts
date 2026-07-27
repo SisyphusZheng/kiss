@@ -60,7 +60,7 @@ export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 // sweep' describing alpha.19 under the v0.41.1 entry). The bump side
 // re-records this constant from the pre-bump entry; bootstrap value
 // documents the incident.
-export const PREVIOUS_RELEASE_THEME = 'release tooling self-repair';
+export const PREVIOUS_RELEASE_THEME = 'request-time rendering foundation';
 
 /**
  * Version strings that must never reappear in the head anchor zone of the
