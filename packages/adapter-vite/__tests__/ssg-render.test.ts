@@ -332,3 +332,90 @@ Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the
   ]);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
+
+// ─── 0.42.0-alpha.1 (ADR-0120): request-time route partition ──────────────
+
+Deno.test('ssgRender - request-time routes skip prerender and emit server artifacts', async () => {
+  const outDir = './dist-test-ssg-render-request-time';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const app = new Hono();
+  app.get('/', (c) => c.html('<html><body>static home</body></html>'));
+  app.get('/live', (c) => c.html('<html><body>request time</body></html>'));
+  const bundle = createMockBundle({
+    default: app,
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/live',
+        tagName: 'live-page',
+        isDynamic: false,
+        paramNames: [],
+        rendering: 'dynamic',
+        hasAction: true,
+      },
+    ],
+  });
+
+  await ssgRender(bundle, { ...defaultOptions, outDir });
+
+  // The static route is prerendered; the request-time route is not.
+  assert(await pathExists(`${outDir}/index.html`), 'static route should be prerendered');
+  assert(
+    !(await pathExists(`${outDir}/live/index.html`)) && !(await pathExists(`${outDir}/live.html`)),
+    'request-time route must not be prerendered',
+  );
+
+  // Server artifacts land next to the SSR bundle.
+  const manifest = JSON.parse(await Deno.readTextFile(`${outDir}/server/server-manifest.json`));
+  assertEquals(manifest, {
+    version: 1,
+    requestTimeRoutes: [{ path: '/live', paramNames: [], hasAction: true }],
+  });
+  const serverEntry = await Deno.readTextFile(`${outDir}/server/index.js`);
+  assert(serverEntry.includes('createOpenElementNitroHandler'));
+  assert(serverEntry.includes("from './entry.js'"));
+
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - pages with actions cannot be prerendered (hard rule)', async () => {
+  const outDir = './dist-test-ssg-render-action-rule';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle({
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/form',
+        tagName: 'form-page',
+        isDynamic: false,
+        paramNames: [],
+        hasAction: true,
+      },
+    ],
+  });
+
+  await assertRejects(
+    () => ssgRender(bundle, { ...defaultOptions, outDir }),
+    Error,
+    'Pages with actions cannot be prerendered',
+  );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - pure-static projects emit no server artifacts', async () => {
+  const outDir = './dist-test-ssg-render-pure-static';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle();
+
+  await ssgRender(bundle, { ...defaultOptions, outDir });
+
+  assert(
+    !(await pathExists(`${outDir}/server/server-manifest.json`)),
+    'pure-static build must not emit a server manifest',
+  );
+  assert(
+    !(await pathExists(`${outDir}/server/index.js`)),
+    'pure-static build must not emit a server entry',
+  );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});

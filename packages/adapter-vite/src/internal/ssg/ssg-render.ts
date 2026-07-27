@@ -26,7 +26,11 @@ import type {
 } from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
 import { expandDynamicRoutes, expandI18nLocales } from './ssg-dynamic.ts';
-import { buildIsrManifestEntries, findHtmlFiles } from './ssg-helpers.ts';
+import {
+  buildIsrManifestEntries,
+  findHtmlFiles,
+  renderRequestTimeServerModule,
+} from './ssg-helpers.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
@@ -73,7 +77,25 @@ export async function ssgRender(
     );
   }
 
-  const dynamicRoutes = routeInfo.filter((r) => r.isDynamic);
+  // ── Request-time route partition (0.42.0-alpha.1, ADR-0120) ──
+  // renderIntent.mode was inert metadata before this line: 'dynamic' routes
+  // are no longer prerendered — they are served at request time by the
+  // generated server entry and recorded in server-manifest.json.
+  const requestTimeRoutes = routeInfo.filter((r) => r.rendering === 'dynamic');
+  const prerenderViolations = routeInfo.filter((r) =>
+    r.hasAction === true && r.rendering !== 'dynamic'
+  );
+  if (prerenderViolations.length > 0) {
+    throw new Error(
+      '[openElement] Pages with actions cannot be prerendered (ADR-0120): ' +
+        prerenderViolations.map((r) => r.path).join(', ') +
+        `. Set renderIntent: { mode: 'dynamic' } on ${
+          prerenderViolations.length === 1 ? 'this route' : 'these routes'
+        }.`,
+    );
+  }
+
+  const dynamicRoutes = routeInfo.filter((r) => r.isDynamic && r.rendering !== 'dynamic');
   log.info(
     `Routes: ${routeInfo.length} total` +
       (dynamicRoutes.length > 0
@@ -139,9 +161,46 @@ export async function ssgRender(
     },
   };
 
-  const result = await toSSG(recordingApp as never, fsModule, { dir: outputDir });
+  // Request-time routes are excluded from prerendering: hono/ssg skips a
+  // route when the beforeRequestHook returns false.
+  const requestTimePaths = new Set(requestTimeRoutes.map((r) => r.path));
+  const result = await toSSG(recordingApp as never, fsModule, {
+    dir: outputDir,
+    beforeRequestHook: (request: Request) => {
+      const path = new URL(request.url).pathname;
+      return requestTimePaths.has(path) ? false : request;
+    },
+  });
 
   if (!result.success) throw result.error;
+
+  // Emit the request-time server artifacts only when such routes exist, so a
+  // pure-static project's output tree is unchanged (freeze regression rule).
+  if (requestTimeRoutes.length > 0) {
+    const serverDir = join(outputDir, 'server');
+    mkdirSync(serverDir, { recursive: true });
+    const serverManifest = {
+      version: 1,
+      requestTimeRoutes: requestTimeRoutes.map((r) => ({
+        path: r.path,
+        filePath: r.filePath,
+        paramNames: r.paramNames,
+        hasAction: r.hasAction === true,
+      })),
+    };
+    writeFileSync(
+      join(serverDir, 'server-manifest.json'),
+      formatJson(serverManifest),
+      'utf-8',
+    );
+    writeFileSync(join(serverDir, 'index.js'), renderRequestTimeServerModule(), 'utf-8');
+    log.info(
+      `Request-time server -> ${join(serverDir, 'index.js')} ` +
+        `(${requestTimeRoutes.length} route(s): ${
+          requestTimeRoutes.map((r) => r.path).join(', ')
+        })`,
+    );
+  }
 
   if (staticNon200.length > 0) {
     log.warn(
@@ -202,10 +261,12 @@ export async function ssgRender(
   log.info(`Static site generated -> ${outputDir}`);
 
   // ── i18n locale expansion (if ctx available) ────────────────
+  // Request-time routes render per request in every locale; they are not
+  // prerendered per locale either.
   await expandI18nLocales(
     evidence,
     renderRoute,
-    routeInfo,
+    routeInfo.filter((r) => r.rendering !== 'dynamic'),
     getStaticPaths,
     options,
     root,

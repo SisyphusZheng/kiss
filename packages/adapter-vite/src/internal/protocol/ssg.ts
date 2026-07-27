@@ -270,6 +270,8 @@ export interface RouteInfoEntry {
   revalidate?: number | false;
   /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
   rendering?: string;
+  /** True when the route module exports an action (request-time form POST). */
+  hasAction?: boolean;
   params?: Record<string, string>;
 }
 
