@@ -36,3 +36,18 @@ export type Loader<T = unknown> = (ctx: LoaderContext) => T | Promise<T>;
 
 /** Route action: handles form submissions for a page route. */
 export type Action<T = unknown> = (ctx: ActionContext) => T | Promise<T>;
+
+/**
+ * Wire shape returned to the JavaScript form-enhancement path (0.42.0-alpha.2,
+ * ADR-0120). The no-JS path never sees this: it gets the equivalent semantics
+ * as plain HTTP (303 on success, 422 with the re-rendered form on validation
+ * failure, redirect/error as status codes).
+ */
+export type ActionResult<Success = unknown, Failure = unknown> =
+  | { type: 'success'; status: number; data?: Success }
+  | { type: 'failure'; status: number; data?: Failure }
+  | { type: 'redirect'; status: number; location: string }
+  | { type: 'error'; status: number; error: { message: string } };
+
+/** Request header marking a fetch from the JS form-enhancement layer. */
+export const ACTION_FETCH_HEADER = 'x-openelement-action';

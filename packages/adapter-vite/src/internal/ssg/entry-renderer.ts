@@ -90,7 +90,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { createLogger } from '@openelement/element';`);
   lines.push(`import { createRuntimeAdapter } from '@openelement/element/build-utils';`);
   lines.push(
-    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';`,
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure } from '@openelement/app';`,
   );
   lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,

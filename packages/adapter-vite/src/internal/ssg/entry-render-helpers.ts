@@ -155,6 +155,11 @@ export function renderRouteHandler(
   lines.push(`  let __params = {}`);
   lines.push(`  let __routeMetaValue = ${routeMeta}`);
   lines.push(`  const __routeContext = ${routeContext}`);
+  if (isAction) {
+    // Declared outside try so the catch can branch on the fetch path without
+    // hitting a TDZ error when the action block never ran.
+    lines.push(`  let __isFetch = false;`);
+  }
   lines.push(`  try {`);
   lines.push(`    __params = c.req.param() || {}`);
   lines.push(`    const __loadContext = {`);
@@ -166,16 +171,69 @@ export function renderRouteHandler(
   );
   lines.push(`      route: __routeContext,`);
   lines.push(`    }`);
-  lines.push(
-    `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
-  );
+  if (!isAction) {
+    lines.push(
+      `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
+    );
+  }
 
   if (isAction) {
-    lines.push(`    const __formData = await c.req.parseBody()`);
-    lines.push(`    const __actionCtx = { ...__loadContext, formData: __formData }`);
+    // ADR-0120 action protocol (0.42.0-alpha.2):
+    // - named actions: ?/name selects module.actions[name] (SvelteKit shape);
+    // - the action runs BEFORE the loader so a mutation never renders stale
+    //   data (revalidation invariant);
+    // - fail() returns take the 422 re-render channel with the failure data
+    //   echoed; everything else succeeds;
+    // - a successful non-GET action never answers 200 with a rendered page:
+    //   303 back to the route (PRG), or an ActionResult for fetch callers.
+    lines.push(`    const __url = new URL(c.req.url);`);
     lines.push(
-      `    const __actionData = typeof ${route.varName}.action === "function" ? await ${route.varName}.action(__actionCtx) : undefined`,
+      `    const __actionName = (() => { for (const key of __url.searchParams.keys()) { if (key.startsWith('/')) return key.slice(1); } return undefined; })();`,
     );
+    lines.push(
+      `    const __namedActions = (typeof ${route.varName}.actions === 'object' && ${route.varName}.actions !== null) ? ${route.varName}.actions : {};`,
+    );
+    lines.push(
+      `    const __actionFn = __actionName !== undefined ? __namedActions[__actionName] : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
+    );
+    lines.push(`    __isFetch = c.req.header('x-openelement-action') === 'true';`);
+    lines.push(`    if (typeof __actionFn !== 'function') {`);
+    lines.push(
+      `      return c.html(wrapInDocument(__statusHtml('404 Not Found', 'This route does not accept submissions.'), { title: '404 Not Found', lang: ${
+        jsStringLiteral(docConfig.lang)
+      }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
+        JSON.stringify(docConfig.allowHeadExtrasScripts)
+      }, cspNonce: c.get('cspNonce') }), 404);`,
+    );
+    lines.push(`    }`);
+    lines.push(`    if (__actionName !== undefined && typeof __actionFn !== 'function') {`);
+    lines.push(
+      `      return c.json({ type: 'error', status: 404, error: { message: 'No action named "' + __actionName + '" on this route.' } }, 404);`,
+    );
+    lines.push(`    }`);
+    lines.push(`    const __formData = await c.req.raw.formData();`);
+    lines.push(
+      `    const __actionResult = typeof __actionFn === 'function' ? await __actionFn({ ...__loadContext, formData: __formData }) : undefined;`,
+    );
+    lines.push(`    if (__isFetch) {`);
+    lines.push(`      if (__isActionFailure(__actionResult)) {`);
+    lines.push(
+      `        return c.json({ type: 'failure', status: __actionResult.status, data: __actionResult.data }, __actionResult.status);`,
+    );
+    lines.push(`      }`);
+    lines.push(
+      `      return c.json({ type: 'redirect', status: 303, location: __url.pathname + __url.search });`,
+    );
+    lines.push(`    }`);
+    lines.push(`    if (!__isActionFailure(__actionResult)) {`);
+    lines.push(`      if (__actionResult instanceof Response) return __actionResult;`);
+    lines.push(`      return c.redirect(__url.pathname + __url.search, 303);`);
+    lines.push(`    }`);
+    lines.push(
+      `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined;`,
+    );
+    lines.push(`    const __actionData = __actionResult.data;`);
+    lines.push(`    const __actionStatus = __actionResult.status;`);
   }
   lines.push(
     `    let node = jsx(__tag, ${
@@ -213,10 +271,15 @@ export function renderRouteHandler(
   ) {
     lines.push(`      ${optionLine}`);
   }
-  lines.push(`    }))`);
+  lines.push(`    })${isAction ? ', __actionStatus' : ''})`);
 
   lines.push(`  } catch (err) {`);
   lines.push(`    if (__isOpenElementRedirect(err)) {`);
+  if (isAction) {
+    lines.push(
+      `      if (__isFetch) return c.json({ type: 'redirect', status: err.status, location: err.location });`,
+    );
+  }
   lines.push(`      return c.redirect(err.location, err.status)`);
   lines.push(`    }`);
   lines.push(`    if (__isOpenElementNotFound(err)) {`);
@@ -268,6 +331,13 @@ export function renderRouteHandler(
   lines.push(
     `    console.error('[openElement] ${failureLabel} for ' + ${pathLiteral} + ':', err)`,
   );
+  if (isAction) {
+    lines.push(`    if (__isFetch) {`);
+    lines.push(
+      `      return c.json({ type: 'error', status: 500, error: { message: String(err && err.message ? err.message : err) } }, 500);`,
+    );
+    lines.push(`    }`);
+  }
   lines.push(`    if (import.meta.env.PROD) {`);
   lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   lines.push(`    } else {`);

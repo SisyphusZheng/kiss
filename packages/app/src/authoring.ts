@@ -98,6 +98,44 @@ export function isOpenElementNotFound(error: unknown): error is OpenElementNotFo
     );
 }
 
+/**
+ * Expected-failure channel for actions (0.42.0-alpha.2, ADR-0120): validation
+ * failures RETURN `fail(status, data)` — never throw — so the server can
+ * answer 422 with the form re-rendered and the submitted values echoed back.
+ * Thrown values keep the exception channel (redirect/notFound/error page).
+ */
+export class OpenElementActionFailure<Data = unknown> {
+  readonly name = 'OpenElementActionFailure';
+  readonly status: number;
+  readonly data: Data;
+
+  constructor(status: number, data: Data) {
+    if (status < 400 || status > 499) {
+      throw new Error(
+        `${ERROR_PREFIX} fail() status must be a 4xx code (got ${status}); ` +
+          'validation failures are client errors, use 400/422.',
+      );
+    }
+    this.status = status;
+    this.data = data;
+  }
+}
+
+export function fail<Data>(status: number, data: Data): OpenElementActionFailure<Data> {
+  return new OpenElementActionFailure(status, data);
+}
+
+export function isActionFailure(error: unknown): error is OpenElementActionFailure {
+  return error instanceof OpenElementActionFailure ||
+    (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { name?: unknown }).name === 'OpenElementActionFailure' &&
+      typeof (error as { status?: unknown }).status === 'number' &&
+      'data' in (error as Record<string, unknown>)
+    );
+}
+
 export interface PageHead {
   title?: string;
   description?: string;
