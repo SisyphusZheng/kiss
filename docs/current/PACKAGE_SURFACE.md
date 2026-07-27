@@ -114,6 +114,18 @@ semantics (0.42 WC Application Loop and 0.44 Production Runtime scope), the
 internal in the map above. Post-freeze changes to the frozen surface require
 a major-version ADR.
 
+### 0.42 line additions (unfrozen until the 0.42.0 stable decision)
+
+- `definePage({ renderIntent: { mode } })`: `'auto'`/`'static'`/`'dynamic'`
+  rendering modes; `'dynamic'` routes render per request through the
+  generated `dist/server/index.js` (0.42.0-alpha.1).
+- Route-module `loader`/`action`/`actions` exports with the ADR-0120
+  protocol: `fail(status, data)` 422 re-render, 303 PRG, named actions via
+  `formaction='?/name'` (0.42.0-alpha.2).
+- `ActionResult` / `ACTION_FETCH_HEADER` wire types and the
+  `data-open-enhance` / `data-open-preserve` / `data-open-region`
+  enhancement attributes with morph-based continuity (0.42.0-alpha.3).
+
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
   `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,

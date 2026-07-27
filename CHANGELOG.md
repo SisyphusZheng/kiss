@@ -12,6 +12,28 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.4
+
+- Hardening and recipes (TP-5, ADR-0120): the 0.42 line closes with
+  integration proof instead of new semantics.
+- Validation recipes verified in CI: zod (`/register`) and valibot
+  (`/subscribe`) run inside fixture actions with 422/303 asserted in three
+  engines — `docs/integrations/validation.md`. better-auth and Drizzle
+  recipes are published as doc-level (honestly marked unverified):
+  `docs/integrations/better-auth.md`, `docs/integrations/drizzle.md`.
+- The `create` starter gains a request-time `/contact` route exercising
+  the full loop (`rendering: 'dynamic'` + action + `data-open-enhance`),
+  so starter consumers get the loop out of the box.
+- `PACKAGE_SURFACE.md` records the 0.42 line additions as unfrozen with
+  their freeze target.
+- Performance baseline for 0.44: request-time render on the fixture is
+  cold 28.6ms, warm p50 1.58ms / p95 2.97ms
+  (`docs/release/v0.42.0-alpha.4-performance.json`).
+- Fix (from alpha.3): the morph could replace an island whose light DOM
+  carried whitespace-only text around the DSD template, resetting its
+  state; the comparison now ignores whitespace-only text nodes, covered
+  by the survival matrix in three engines (42/42).
+
 ## 0.42.0-alpha.3
 
 - Revalidation continuity (ADR-0120): enhanced forms (`data-open-enhance`)

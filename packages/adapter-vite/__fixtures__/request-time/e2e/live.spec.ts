@@ -177,3 +177,31 @@ test.describe('revalidation continuity (0.42.0-alpha.3)', () => {
     await expect(page.locator('#home-marker')).toHaveText('request-time fixture home');
   });
 });
+
+test.describe('validation recipes (0.42.0-alpha.4)', () => {
+  test('zod recipe: 422 with the library message, then PRG success', async ({ request }) => {
+    const failure = await request.post('/register', { form: { email: 'not-an-email' } });
+    expect(failure.status()).toBe(422);
+    expect(await failure.text()).toContain('a valid email is required');
+
+    const success = await request.post('/register', {
+      form: { email: 'ada@example.com' },
+      maxRedirects: 0,
+    });
+    expect(success.status()).toBe(303);
+    expect(success.headers()['location']).toBe('/register?welcome=ada%40example.com');
+  });
+
+  test('valibot recipe: 422 with the library message, then PRG success', async ({ request }) => {
+    const failure = await request.post('/subscribe', { form: { email: 'nope' } });
+    expect(failure.status()).toBe(422);
+    expect(await failure.text()).toContain('a valid email is required');
+
+    const success = await request.post('/subscribe', {
+      form: { email: 'grace@example.com' },
+      maxRedirects: 0,
+    });
+    expect(success.status()).toBe(303);
+    expect(success.headers()['location']).toBe('/subscribe?welcome=grace%40example.com');
+  });
+});

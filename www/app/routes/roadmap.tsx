@@ -332,10 +332,10 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.42.0-alpha.3',
-    theme: 'revalidation continuity',
+    version: 'v0.42.0-alpha.4',
+    theme: 'hardening and recipes',
     copy:
-      'Enhanced forms morph the returned document: intact hydrated islands keep their state, data-open-preserve exempts subtrees, and the URL follows the PRG target.',
+      'Validation recipes verified in CI (zod, valibot), the starter ships a request-time contact page, and the 0.44 latency baseline is recorded.',
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -420,7 +420,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.3' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.4' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
