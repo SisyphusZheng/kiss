@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.4',
-    theme: 'revalidation continuity',
+    theme: 'hardening and recipes',
     copy:
-      'Enhanced forms morph the returned document: intact hydrated islands keep their state, data-open-preserve exempts subtrees, and the URL follows the PRG target.',
+      'Validation recipes verified in CI (zod, valibot), the starter ships a request-time contact page, and the 0.44 latency baseline is recorded.',
     state: 'stable',
     stamp: 'CURRENT',
   },
