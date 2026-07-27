@@ -12,6 +12,50 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.5
+
+- Audit round 1 remediation (TP-5.5, ADR-0121): the first implementation
+  audit of the 0.42 line (#539–#573) is closed — protocol hardening, a
+  morph client rewrite, security hygiene and an evidence-honesty sweep.
+- Headline root cause: the alpha.3 morph enhancement never fired — the
+  `submit` event is not composed and page content lives inside
+  page-element DSD shadow roots, so the document-level listener never saw
+  enhanced forms. The client is rewritten around shadow-root submit
+  interception and shadow-content morphing; the island-survival claims
+  are now mechanically true (errata appended to the alpha.3/alpha.4
+  notes).
+- Protocol (ADR-0121): the prerender hard rule covers named `actions`;
+  named-action dispatch is own-key gated; one `x-openelement-action`
+  header (`true` = ActionResult JSON, `enhance` = HTML morph) with
+  `Vary`; an action returning a `Response` is a contract violation; the
+  default PRG strips the `?/name` marker; every 3xx coerces to 303 on
+  POST and `redirect()` validates its status; fetch callers always
+  receive ActionResult JSON (404/500 included, production-scrubbed);
+  request-time responses carry `Cache-Control: no-store`; POST takes the
+  same error boundary as GET; action POSTs get a 10 MB body limit;
+  non-GET/POST methods answer 405.
+- Morph continuity: form-scoped `data-open-region` targeting with
+  navigation fallback, id-keyed + lookahead identity matching, popstate
+  reload, `open:action-failure` restored (cancelable), submitter
+  name/value preserved in the enhanced body, 500/cross-origin responses
+  navigate instead of morphing, double-submit guard, fragment
+  preservation, `<details>`/media state protection. The full survival
+  matrix is documented in `docs/current/MORPH_CONTRACT.md`.
+- Evidence: the request-time fixture suite (42 tests) runs on Chromium,
+  Firefox and WebKit in the ci and release gate tiers; a static-output
+  determinism gate ships (`check:static-output-freeze`); a dev(hono) vs
+  build(Nitro) parity contract test boots both real servers; the perf
+  baseline records its environment
+  (`docs/release/v0.42.0-alpha.5-performance.json`).
+- Also fixed along the way: dev SSR crashed on every route (missing
+  `customElements` polyfill — now shipped to the dev entry);
+  `[...path]` request-time routes; zero-island apps with enhanced forms
+  (the enhancement layer is emitted only when enhanced forms exist, so
+  island-only sites keep their lean bundle); the starter's `/contact`
+  route (it was never shipped in `TEMPLATE_FILES`) now builds and is
+  POST-smoked in consumer CI; SPA vs request-time loader/action types
+  and docs are honest; a CSRF threat-model page ships in the guide.
+
 ## 0.42.0-alpha.4
 
 - Hardening and recipes (TP-5, ADR-0120): the 0.42 line closes with
