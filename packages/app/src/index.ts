@@ -32,7 +32,13 @@ export type {
 } from './authoring.ts';
 
 // Re-export route data types from protocol for convenience
-export type { Action, ActionContext, ActionResult, Loader, LoaderContext } from '@openelement/element';
+export type {
+  Action,
+  ActionContext,
+  ActionResult,
+  Loader,
+  LoaderContext,
+} from '@openelement/element';
 export { ACTION_FETCH_HEADER } from '@openelement/element';
 
 // Re-export from @openelement/element for convenience
