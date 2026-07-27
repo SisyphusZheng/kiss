@@ -2,7 +2,6 @@ import { exists, walk } from './lib/fs.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
-  PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_RELEASE_THEME,
 } from './project-constants.ts';
 import { roadmapEntryTheme } from './autoflow/release.ts';
@@ -14,33 +13,21 @@ const sourceRoots = [
   'www/app/site-ui',
 ];
 
-const [versionBase, prerelease = ''] = PACKAGE_VERSION.split('-');
-// After a stable bump the current version carries no prerelease suffix, but
-// the previous prerelease line is exactly what must stay retired: build the
-// pattern from PREVIOUS_PACKAGE_VERSION in that case.
-const [retiredBase, retiredLine = ''] = prerelease
-  ? [versionBase, prerelease]
-  : PREVIOUS_PACKAGE_VERSION.split('-');
-const prereleaseMatch = retiredLine.match(/^(alpha|beta|rc)\.(\d+)$/u);
-// On a stable line where the previous version is also stable (e.g. 0.41.1
-// after 0.41.0), every prerelease of the same base version is retired.
-const stableLineAlphaPattern = !prereleaseMatch
-  ? new RegExp(`(?:v?${versionBase.replaceAll('.', '\\.')}-alpha|\\balpha)\\.\\d+(?!\\d)`, 'iu')
-  : null;
-// Retired prerelease claims are flagged with or without the `v` prefix and in
-// the short `alpha.N` form; only numbers below the current line match, so the
-// current version itself never trips the gate.
-const earlierPrereleasePattern = prereleaseMatch && Number(prereleaseMatch[2]) > 0
-  ? new RegExp(
-    `(?:v?${retiredBase.replaceAll('.', '\\.')}-${prereleaseMatch[1]}|\\b${
-      prereleaseMatch[1]
-    })\\.(?:${
-      Array.from({ length: Number(prereleaseMatch[2]) }, (_, index) => index).join('|')
-    })(?!\\d)`,
-    'iu',
-  )
-  : null;
-const activeRetiredPattern = earlierPrereleasePattern ?? stableLineAlphaPattern;
+// Retired prerelease forms: any full-form prerelease version that is not the
+// current one (covers same-base earlier alphas and, after a new-line bump
+// like 0.41.2 → 0.42.0-alpha.1, the entire retired previous alpha line),
+// plus the short `alpha.N` form for any N other than the current alpha
+// number. History surfaces (migration guide, CHANGELOG) are exempted by the
+// caller. Beta/rc full forms retire too; the abandoned beta naming must
+// never reappear as a current claim.
+const escapedCurrentVersion = PACKAGE_VERSION.replaceAll('.', '\\.');
+const currentAlphaNumber = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+const retiredFullForm =
+  `(?!v?${escapedCurrentVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:alpha|beta|rc)\\.\\d+(?!\\d)`;
+const retiredShortForm = currentAlphaNumber
+  ? `\\balpha\\.(?!${currentAlphaNumber}(?!\\d))\\d+(?!\\d)`
+  : `\\balpha\\.\\d+(?!\\d)`;
+const activeRetiredPattern = new RegExp(`(?:${retiredFullForm}|${retiredShortForm})`, 'iu');
 
 const forbidden: Array<{ name: string; re: RegExp }> = [
   { name: 'mojibake', re: /(?:鏂|鈫|鍗|杩|鏈)/ },

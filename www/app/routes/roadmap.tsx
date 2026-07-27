@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.1',
-    theme: 'release tooling self-repair',
+    theme: 'request-time rendering foundation',
     copy:
-      'TP-0 of the 0.42.0 plan: patch-release resume re-derives its target from evidence, and a line-prose gate keeps release themes honest.',
+      "renderIntent mode 'dynamic' skips prerendering; a generated nitro-mount server serves those routes per request with loaders, and the build rejects prerendered action pages (ADR-0120).",
     state: 'stable',
     stamp: 'CURRENT',
   },
