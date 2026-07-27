@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "90188ae78f73f1e279897853ea77fca20ccffbddfe630937997a8d5537ffa3e6",
+          "sha256": "689f3c79e06a5395f94c3fde24a8f27f42ec361dba3beebc2212b5c54bd2797b",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -56,7 +56,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "6c416f644599a98ae619395e656ff9b046da0dd89eff6cf4e7cf229bb30dd794",
+          "sha256": "965f67db0f499b61b9163dcb4a320a73184e114cccae7686518e3eea29c8156c",
           "publicDeclarations": [
             "export type {",
             "export type {",

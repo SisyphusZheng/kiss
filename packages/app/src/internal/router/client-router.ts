@@ -4,6 +4,12 @@
  * Supports history (pushState), hash, and auto-detection modes.
  * Route patterns use `:param` for named params and `:param?` for optional params.
  */
+// SPA loader/action contexts are deliberately narrower than the request-time
+// LoaderContext/ActionContext: the client-side chain supplies only params
+// (+ formData for actions) and signals failure by throwing (#570, ADR-0119
+// frozen semantics — types clarified, runtime unchanged).
+import type { SpaActionContext, SpaLoaderContext } from '@openelement/element';
+
 export type RouterMode = 'history' | 'hash' | 'auto';
 
 export interface RouteConfig {
@@ -11,10 +17,10 @@ export interface RouteConfig {
   /** Custom element tag to instantiate directly in SPA mode. */
   tagName: string;
   /** Client-side loader — runs before component render. Receives matched route params. */
-  loader?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
+  loader?: (ctx: SpaLoaderContext) => Promise<unknown>;
   /** Client-side action — runs on form submit. Receives matched route params and form data. */
   action?: (
-    ctx: { params: Record<string, string>; formData?: FormData },
+    ctx: SpaActionContext,
   ) => Promise<unknown>;
   guard?: () => Promise<boolean | string>;
 }

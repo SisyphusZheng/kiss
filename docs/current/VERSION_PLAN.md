@@ -45,9 +45,10 @@ invariant.
 - ADR-0120 records the scope boundary (self-built loop semantics and
   continuity mechanism; third-party server layer and Web-standard context)
   and the action protocol. Changes to either require an ADR-0120 amendment.
-- The line ships as four themed alphas plus the stable decision; the stable
-  freeze scope for request-time semantics is decided by a separate ADR at
-  the end of the line.
+- The line shipped as four themed alphas; a fifth remediation alpha
+  (TP-5.5) was inserted by the first implementation audit round before the
+  stable decision; the stable freeze scope for request-time semantics is
+  decided by a separate ADR at the end of the line.
 
 ## Task packages
 
@@ -182,12 +183,90 @@ Goal: prove someone else can use the loop.
   evidence; starter consumer smoke passes; release-tier gates green;
   alpha.4 published.
 
+### TP-5.5 — `0.42.0-alpha.5` audit round 1 remediation (protocol hardening + evidence sweep)
+
+Goal: close the 35 issues filed from the first implementation audit round
+(issues #539–#573, label `0.42.0-alpha.5`, milestone `v0.42.0-alpha.5`) —
+the protocol holes, morph-continuity gaps, security hygiene defects and
+evidence-honesty failures — without expanding the 0.42 scope. No new
+semantics beyond what the ADR-0120 amendment in step 1 records.
+
+- 准入: the audit round 1 report is filed as issues #539–#573 (done
+  2026-07-27); alpha.4 published (done).
+- 执行步骤:
+  1. **ADR-0120 amendment (one batch, before code moves).** Record every
+     protocol-visible decision in a single amendment: unified
+     request-header negotiation (#540), the Response-return policy for
+     actions (#541), redirect coercion for 301/307/308 plus `redirect()`
+     status validation (#547), default-PRG query stripping (#548),
+     fetch-channel 404/error JSON symmetry (#549), `data-open-region`
+     semantics (#553), morph identity semantics (#554), the popstate
+     policy (#545), and the CSRF threat-model decision (#559). ADR-0120
+     requires an amendment for protocol changes; batching keeps the
+     protocol document coherent.
+  2. **Protocol correctness fixes** (highest ROI first): #539 `hasAction`
+     covers named `actions` + a rejection test through real routeInfo
+     generation; #542 own-key check on named-action dispatch +
+     prototype-key e2e; #549 restructure the 404 block (fetch callers get
+     ActionResult JSON, HTML second, dead branch deleted); #544
+     `new FormData(form, submitter)` + a named-button fixture form +
+     two-path body-identity e2e; #548 strip `/`-prefixed query keys from
+     the default PRG target; #547 `redirect()` 3xx validation + POST
+     coercion of all 3xx to 303; #541 route user-returned Responses
+     through the same status algebra (or forbid them); #540 implement the
+     unified header + `Vary`, update the codegen string test and the
+     mislabeled e2e; #551 POST error-boundary parity with GET + guide
+     prose for the committed-mutation/loader-failure 500 window.
+  3. **Morph continuity fixes**: #552 status/content-type gate before
+     morphing (non-OK or non-HTML falls back to navigation); #545 popstate
+     handling per the amendment; #553 region semantics per the amendment
+     (form→region association, missing-region fallback); #554 identity
+     matching per the amendment (id-keyed, or honest ADR text); #555
+     cross-origin redirect detection → `location.assign`; #561 three-engine
+     DOMParser DSD verification + old-side template filter; #562
+     re-observe `client:visible` islands after morph; #563 script
+     src/content comparison, no executable insertion of parsed scripts;
+     #564 double-submit guard; #565 preserve the URL fragment on same-URL
+     morphs; #566 `CSS.escape` the region name; #567 state-mirroring
+     attribute policy (skip list or honest docs).
+  4. **Security hygiene**: #550 `no-store` on every request-time response
+     kind + `Vary` on the POST endpoint; #558 PROD guard on both JSON
+     error channels; #568 default body limit on action routes; #559 CSRF
+     threat-model doc + Fetch-Metadata/Origin recipe; #573 XSS payload
+     e2e for the 422 echo.
+  5. **Evidence and gates**: #543 wire `fixture:request-time:build` +
+     `fixture:request-time:e2e:browsers` into the AutoFlow3 gate tiers and
+     CI (three-engine browser installs), correct the alpha.3/alpha.4
+     counts as errata, reword `validation.md` to name the gate; #560
+     byte-identical static-output proof tool + release-tier gate; #557
+     survival-matrix cells + the hono-dev vs Nitro-build parity contract
+     test; #571 PACKAGE_SURFACE completion + section nesting + starter
+     `contact.tsx` in the check task and a serve-and-POST smoke + the
+     alpha.4 API-name erratum; #546 `open:action-failure` restored or
+     removed per the amendment; perf baseline gains machine/runtime
+     environment fields and is re-recorded after the no-cache change.
+  6. **Manifest consumer contract** (#556): ship a path-pattern matcher
+     for hosts (fixture server + documented Nitro recipe) or reject
+     `mode: 'dynamic'` on parameterized routes at build time; fix
+     `[...path]` handling.
+  7. **Surface polish**: #569 client entry emitted when enhanced forms
+     exist (or a build-time warning); #570 SPA vs server loader/action
+     type split + guide section; #572 405 + `Allow` for non-GET/POST and
+     runtime validation of `renderIntent.mode`.
+- 准出: every issue #539–#573 is closed with a code + test/gate proof
+  linked in the issue; the ADR-0120 amendment is accepted and every
+  protocol-visible change cites it; the request-time fixture suite runs in
+  CI on three engines and the release note's count is mechanically
+  reproducible from the tag; the byte-identical static-output gate is
+  green; release-tier gates green; alpha.5 published with two-stage
+  evidence.
+
 ### TP-6 — `0.42.0` stable decision
 
 Goal: decide and ship the request-time freeze scope.
 
-- 准入: alpha.4 evidence complete; the seven-day P0 watch on the last alpha
-  shows no P0.
+- 准入: TP-5.5 closed (alpha.5 published); the seven-day P0 watch on the
+  last alpha shows no P0.
 - 执行步骤:
   1. Stable-scope ADR: which request-time semantics freeze (expected: the
      loop contract and action protocol; expected unfrozen: streaming,

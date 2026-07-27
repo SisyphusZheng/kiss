@@ -27,6 +27,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'data-boundary', label: 'Data boundary', level: 3 },
       { id: 'rendering-modes', label: 'Rendering modes', level: 3 },
       { id: 'form-actions', label: 'Form actions', level: 3 },
+      { id: 'two-chains', label: 'Two loader/action chains', level: 3 },
     ],
     previous: { href: '/guide/comparison', label: 'Comparison' },
     next: { href: '/guide/mdx', label: 'MDX' },
@@ -58,6 +59,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         body:
           "A dynamic route may export an action ({ formData }) — plain HTML forms work without JavaScript: validation failures return fail(4xx, data) and re-render with the echo (HTTP 422), successes answer 303 (PRG). Named actions dispatch via formaction='?/name'. Forms marked data-open-enhance submit via fetch and morph the returned document into place: hydrated islands whose light DOM did not change keep their state, data-open-preserve exempts a subtree, and the URL follows the PRG target. An action must be safe to re-run after a failed validation (0.42 line, unfrozen).",
       },
+      {
+        id: 'two-chains',
+        title: 'Two loader/action chains',
+        body:
+          "Request-time ('dynamic') loaders/actions run on the server with the Web-standard context { request, params, env, platform, route } and the fail()/redirect() protocol. SPA-mode loaders/actions run client-side with only { params } (plus formData for actions) and signal failure by throwing — a throw is normalized into action data. The names are intentionally parallel, but the contexts differ: code written against one chain cannot assume the other's context (#570, ADR-0119 frozen SPA semantics).",
+      },
     ],
   },
   zh: {
@@ -70,6 +77,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'data-boundary', label: '数据边界', level: 3 },
       { id: 'rendering-modes', label: '渲染模式', level: 3 },
       { id: 'form-actions', label: '表单 action', level: 3 },
+      { id: 'two-chains', label: '两条 loader/action 链', level: 3 },
     ],
     previous: { href: '/guide/comparison', label: '对比' },
     next: { href: '/guide/mdx', label: 'MDX' },
@@ -100,6 +108,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: '表单 action',
         body:
           "dynamic 路由可导出 action({ formData })——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 fail(4xx, data),以 422 重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 formaction='?/name' 分派。标记 data-open-enhance 的表单经 fetch 提交并把返回的文档 morph 就位:light DOM 未变化的已水合 island 状态保留,data-open-preserve 豁免子树,URL 跟随 PRG 目标。action 在校验失败后必须可安全重跑(0.42 版本线,未冻结)。",
+      },
+      {
+        id: 'two-chains',
+        title: '两条 loader/action 链',
+        body:
+          "request-time('dynamic')loader/action 运行在服务端,上下文是 Web 标准的 { request, params, env, platform, route },并使用 fail()/redirect() 协议。SPA 模式的 loader/action 运行在客户端,上下文只有 { params }(action 另有 formData),通过抛出异常来表达失败——throw 会被规整为 action 数据。两者命名刻意保持一致,但上下文不同:针对其中一条链编写的代码不能假设另一条链的上下文(#570,ADR-0119 已冻结的 SPA 语义)。",
       },
     ],
   },

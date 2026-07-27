@@ -89,6 +89,10 @@ export type {
   ActionResult,
   Loader,
   LoaderContext,
+  SpaAction,
+  SpaActionContext,
+  SpaLoader,
+  SpaLoaderContext,
 } from './internal/protocol/data.ts';
 export { ACTION_FETCH_HEADER } from './internal/protocol/data.ts';
 export type {

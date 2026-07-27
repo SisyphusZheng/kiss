@@ -38,17 +38,15 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-deno-workspace
       - name: Install Playwright browsers
-        run: ./node_modules/.bin/playwright install --with-deps chromium
+        # All three engines up front: the gate's fixture:request-time:gate
+        # runs the request-time fixture suite on Chromium, Firefox and WebKit.
+        run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
       - name: AutoFlow3 CI gate
         run: deno task autoflow:ci
       # Cross-browser smoke: the main gate is chromium-only. Run the core
       # DSD/island-hydration/theme specs on Firefox and WebKit against the
       # www/dist the gate's build step already produced.
-      - name: Install Playwright Firefox
-        run: ./node_modules/.bin/playwright install --with-deps firefox
       - name: Firefox smoke E2E
         run: deno task test:e2e:firefox-smoke
-      - name: Install Playwright WebKit
-        run: ./node_modules/.bin/playwright install --with-deps webkit
       - name: WebKit smoke E2E
         run: deno task test:e2e:webkit-smoke

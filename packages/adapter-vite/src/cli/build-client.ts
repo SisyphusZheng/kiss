@@ -169,13 +169,22 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     return findB - findA;
   });
 
-  if (localIslands.length === 0 && packageIslandDecls.length === 0) {
+  // #569: an island-free app with data-open-enhance forms still needs the
+  // client entry — it carries the form-enhancement layer.
+  const enhancedForms = (ctx.phase1.cachedRoutes ?? []).some((route) =>
+    route.type === 'page' && route.hasEnhancedForms === true
+  );
+
+  if (localIslands.length === 0 && packageIslandDecls.length === 0 && !enhancedForms) {
     log.info('No islands found - zero client JS output');
     return;
   }
 
   const totalIslands = localIslands.length + packageIslandDecls.length;
-  log.info(`Building client bundle for ${totalIslands} island(s)...`);
+  log.info(
+    `Building client bundle for ${totalIslands} island(s)` +
+      (enhancedForms ? ' + data-open-enhance form enhancement' : '') + '...',
+  );
 
   // Generate client entry code
   const islandEntries: ClientIslandEntry[] = [
@@ -212,7 +221,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     ),
   ];
 
-  const clientEntryCode = generateClientEntry(islandEntries);
+  const clientEntryCode = generateClientEntry(islandEntries, { enhancedForms });
 
   // Restore RegExp from serialized noExternal patterns
   const noExternalPatterns = (ctx.phase3.ssrNoExternal || []).map((item) => {

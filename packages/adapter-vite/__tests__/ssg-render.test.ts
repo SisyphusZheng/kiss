@@ -493,3 +493,49 @@ export default app;
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }
 });
+
+Deno.test('request-time server entry matchRequestTimeRoute dispatches param routes (#556)', async () => {
+  const { renderRequestTimeServerModule } = await import(
+    '../src/internal/ssg/ssg-helpers.ts'
+  );
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  const dir = await Deno.makeTempDir();
+  try {
+    await Deno.writeTextFile(
+      join(dir, 'entry.js'),
+      `import { Hono } from 'hono';\nconst app = new Hono();\nexport default app;\n`,
+    );
+    await Deno.writeTextFile(
+      join(dir, 'index.js'),
+      renderRequestTimeServerModule([
+        { path: '/item/:id', paramNames: ['id'] },
+        { path: '/form', paramNames: [] },
+        { path: '/docs/:path{.+}', paramNames: ['path'] },
+      ]),
+    );
+    await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
+
+    const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?matcher') as {
+      matchRequestTimeRoute: (
+        pathname: string,
+      ) => { path: string; params: Record<string, string> } | null;
+    };
+    assertEquals(mod.matchRequestTimeRoute('/form'), { path: '/form', params: {} });
+    assertEquals(mod.matchRequestTimeRoute('/item/42'), {
+      path: '/item/:id',
+      params: { id: '42' },
+    });
+    // The exact route wins over any parameterized pattern.
+    assertEquals(mod.matchRequestTimeRoute('/item'), null);
+    // Catch-all matches across segments and keeps the param name.
+    assertEquals(mod.matchRequestTimeRoute('/docs/a/b/c'), {
+      path: '/docs/:path{.+}',
+      params: { path: 'a/b/c' },
+    });
+    assertEquals(mod.matchRequestTimeRoute('/nope'), null);
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});

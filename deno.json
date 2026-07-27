@@ -91,6 +91,7 @@
     "fixture:request-time:build": "cd packages/adapter-vite/__fixtures__/request-time && deno run --config ../../../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../src/cli/build.ts",
     "fixture:request-time:e2e": "deno run -A npm:@playwright/test@1.59.1 test --config packages/adapter-vite/__fixtures__/request-time/e2e/playwright.config.ts --project=chromium",
     "fixture:request-time:e2e:browsers": "deno run -A npm:@playwright/test@1.59.1 test --config packages/adapter-vite/__fixtures__/request-time/e2e/playwright.config.ts",
+    "fixture:request-time:gate": "deno task fixture:request-time:build && deno task fixture:request-time:e2e:browsers",
     "nitro:proof:node": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts node",
     "nitro:proof:workers": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/nitro-proof.ts workers",
     "test:coverage:check": "deno run --allow-read --allow-run --allow-write --allow-env --allow-net --allow-ffi --allow-sys tools/check-coverage.ts --threshold 73 --branch-threshold 82 --function-threshold 77",
@@ -112,6 +113,7 @@
     "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts release-prepare",
     "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/mod3.ts publish-existing",
     "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
+    "check:static-output-freeze": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-ffi --allow-sys tools/check-static-output-freeze.ts",
     "verify:configs": "deno run --allow-read --allow-env tools/verify-package-configs.ts",
     "verify:configs:fix": "deno run --allow-read --allow-write --allow-env tools/verify-package-configs.ts --fix"
   },

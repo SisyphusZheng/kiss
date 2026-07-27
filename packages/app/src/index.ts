@@ -38,6 +38,10 @@ export type {
   ActionResult,
   Loader,
   LoaderContext,
+  SpaAction,
+  SpaActionContext,
+  SpaLoader,
+  SpaLoaderContext,
 } from '@openelement/element';
 export { ACTION_FETCH_HEADER } from '@openelement/element';
 

@@ -234,6 +234,28 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },
   {
+    // Request-time fixture suite (#543): build the fixture, then run its
+    // live.spec.ts on Chromium, Firefox and WebKit. The job must have all
+    // three browsers installed (see .github/workflows/autoflow-ci.yml and
+    // autoflow-release.yml).
+    name: 'fixture:request-time:gate',
+    command: ['deno', 'task', 'fixture:request-time:gate'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\/adapter-vite\/(src|__fixtures__)\//, /^deno\.json$/],
+  },
+  {
+    // Static-output determinism (#560): the release-tier form of the
+    // byte-identical freeze proof. Builds www twice and requires
+    // byte-identical output (builtAt-normalized). The full baseline
+    // comparison (`deno task check:static-output-freeze --baseline <ref>`)
+    // stays a release-evidence tool: content drift between versions makes a
+    // fixed-ref byte comparison meaningless as a gate.
+    name: 'check:static-output-freeze',
+    command: ['deno', 'task', 'check:static-output-freeze', '--self-check'],
+    tiers: ['release'],
+    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
+  },
+  {
     name: 'nitro:proof:node',
     command: ['deno', 'task', 'nitro:proof:node'],
     tiers: ['release'],

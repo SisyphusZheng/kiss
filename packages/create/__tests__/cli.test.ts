@@ -113,6 +113,7 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
     const path of [
       'app/routes/index.tsx',
       'app/routes/freshness.tsx',
+      'app/routes/contact.tsx',
       'app/components/app-shell.tsx',
       'app/islands/my-counter.tsx',
     ]

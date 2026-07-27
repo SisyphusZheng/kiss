@@ -77,7 +77,7 @@ export {
 export { cleanSsrArtifacts, postProcessClientIslandBuild } from './build-postprocess.ts';
 export type { BuildContextView } from './build-postprocess.ts';
 
-export { generateSsrPolyfillBanner } from './ssr-polyfills.ts';
+export { generateCustomElementsPolyfill, generateSsrPolyfillBanner } from './ssr-polyfills.ts';
 
 export {
   detectAndClassifyCemPackages,

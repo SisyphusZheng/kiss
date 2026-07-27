@@ -173,6 +173,10 @@ export type {
   DataAdapter,
   Loader,
   LoaderContext,
+  SpaAction,
+  SpaActionContext,
+  SpaLoader,
+  SpaLoaderContext,
 } from '../protocol/data.ts';
 
 // WC Package Protocol (v0.17+)

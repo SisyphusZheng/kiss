@@ -90,6 +90,10 @@ export function parseRouteFilePath(
 
   if (options.paramSyntax === ':') {
     // v0.25: AST-verified — path utility, converts [param] to :param
+    // 0.42.0-alpha.5 (#556): a catch-all segment [...path] becomes the Hono
+    // named regex parameter :path{.+} (matches across '/'), not the literal
+    // single-segment ':...path' the naive replacement produced.
+    p = p.replace(/\[\.\.\.([^\]]+)\]/g, ':$1{.+}');
     p = p.replace(/\[([^\]]+)\]/g, ':$1');
   }
 
@@ -209,8 +213,12 @@ export async function scanRoutes(
         const routePath = parseRouteFilePath(relativePath, { paramSyntax: ':' });
         const routeType = getRouteType(relativePath);
         // v0.25: AST-verified — path utility, extracts [param] patterns
+        // 0.42.0-alpha.5 (#556): a catch-all [...path] contributes the bare
+        // param name 'path' (no '...' prefix) to match the ':path{.+}' pattern.
         const paramMatches = relativePath.match(/\[([^\]]+)\]/g);
-        const params = paramMatches ? paramMatches.map((m) => m.slice(1, -1)) : undefined;
+        const params = paramMatches
+          ? paramMatches.map((m) => m.slice(1, -1).replace(/^\.\.\./, ''))
+          : undefined;
         let tagName: string | undefined;
         let source: string | undefined;
         if (routeType === 'page') {
@@ -232,6 +240,11 @@ export async function scanRoutes(
           type: routeType,
           varName: pathToVarName(routePath),
           tagName,
+          // #569: page sources carrying data-open-enhance require the client
+          // enhancement layer even when the app has zero islands.
+          ...(source !== undefined && source.includes('data-open-enhance')
+            ? { hasEnhancedForms: true }
+            : {}),
           ...(options.includeSource && source !== undefined ? { source } : {}),
           params,
         });

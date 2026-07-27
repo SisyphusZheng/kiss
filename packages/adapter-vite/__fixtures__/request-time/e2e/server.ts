@@ -3,9 +3,11 @@
  *
  * Serves the built app:
  *   - static files from dist/ (exact file, /path -> /path/index.html, /path.html)
- *   - request-time routes (from dist/server/server-manifest.json) are delegated
- *     to the generated dist/server/index.js default export, which takes a
- *     nitro-like event ({ request }) and returns a Response.
+ *   - request-time routes are delegated to the generated dist/server/index.js:
+ *     the named matchRequestTimeRoute export (generated from the route table,
+ *     #556) decides whether a pathname hits a request-time route, and the
+ *     default export takes a nitro-like event ({ request }) and returns a
+ *     Response.
  *
  * Usage:
  *   deno run -A server.ts --port 4180 --dir ../dist
@@ -39,15 +41,15 @@ const CONTENT_TYPES: Record<string, string> = {
   '.woff2': 'font/woff2',
 };
 
-const manifest = JSON.parse(await Deno.readTextFile(join(ROOT, 'server/server-manifest.json')));
-const requestTimePaths = new Set<string>(
-  (manifest.requestTimeRoutes as Array<{ path: string }>).map((r) => r.path),
-);
-
 const serverEntry = await import(pathToFileURL(join(ROOT, 'server/index.js')).href);
 const handleRequestTime = serverEntry.default as (
   event: { request: Request },
 ) => Promise<Response>;
+// Generated dispatch (#556): matches concrete pathnames ('/item/42') against
+// the request-time route patterns ('/item/:id') baked into the server entry.
+const matchRequestTimeRoute = serverEntry.matchRequestTimeRoute as (
+  pathname: string,
+) => { path: string; params: Record<string, string> } | null;
 
 async function serveStatic(pathname: string): Promise<Response | null> {
   const candidates = [pathname];
@@ -75,7 +77,7 @@ async function serveStatic(pathname: string): Promise<Response | null> {
 
 Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
   const url = new URL(request.url);
-  if (requestTimePaths.has(url.pathname)) {
+  if (matchRequestTimeRoute(url.pathname) !== null) {
     return await handleRequestTime({ request });
   }
   const staticResponse = await serveStatic(url.pathname);

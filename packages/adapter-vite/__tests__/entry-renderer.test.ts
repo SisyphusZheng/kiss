@@ -803,7 +803,7 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   // success, named actions via ?/name, fetch-path ActionResult JSON.
   assertStringIncludes(code, 'await c.req.raw.formData()');
   assertStringIncludes(code, '__isActionFailure(__actionResult)');
-  assertStringIncludes(code, 'return c.redirect(__url.pathname + __url.search, 303)');
+  assertStringIncludes(code, 'return c.redirect(__prgTarget, 303)');
   assertStringIncludes(code, "key.startsWith('/')");
   assertStringIncludes(code, '__namedActions[__actionName]');
   assertStringIncludes(code, "c.req.header('x-openelement-action')");
@@ -816,13 +816,53 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   assertStringIncludes(code, 'This route does not accept submissions.');
 });
 
+// ─── 0.42.0-alpha.5 (ADR-0121): protocol hardening codegen ─────────────────
+
+Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {});
+  const code = renderEntry(desc);
+
+  // #542: named-action dispatch is own-key gated (prototype keys are 404).
+  assertStringIncludes(code, 'Object.prototype.hasOwnProperty.call(__namedActions, __actionName)');
+  // #541: a returned Response is a contract violation, never a response.
+  assertStringIncludes(code, 'Actions must not return a Response object');
+  // #548: the default PRG target strips the ?/name action marker.
+  assertStringIncludes(code, '__prgParams.delete(key)');
+  assertStringIncludes(code, "{ type: 'redirect', status: 303, location: __prgTarget }");
+  // #549: fetch callers receive an ActionResult JSON 404, not an HTML page.
+  assertStringIncludes(
+    code,
+    "{ type: 'error', status: 404, error: { message: __noActionMessage } }",
+  );
+  // #550: request-time responses are never cacheable; POST is negotiated.
+  assertStringIncludes(code, "c.header('Cache-Control', 'no-store');");
+  assertStringIncludes(code, "c.header('Vary', 'x-openelement-action');");
+  // #558: the JSON error channel scrubs internals in production.
+  assertStringIncludes(code, "import.meta.env.PROD ? 'Internal Server Error' : String(err");
+  // #568: action POSTs carry a default body limit.
+  assertStringIncludes(code, '__bodyLimit({ maxSize: 10 * 1024 * 1024');
+  // #572: non-GET/POST methods on page routes are a defined 405.
+  assertStringIncludes(code, "c.text('Method Not Allowed', 405, { Allow: 'GET, POST' })");
+});
+
+Deno.test('renderEntry: hasAction codegen covers named `actions` exports (#539)', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  // The routeInfo hasAction flag must be true for a route exporting ONLY a
+  // named `actions` map — otherwise the prerender hard rule is bypassable.
+  assertStringIncludes(code, 'hasAction: (typeof');
+  assertStringIncludes(code, '.actions === "object" &&');
+});
+
 Deno.test('renderEntry: action catch paths speak ActionResult to fetch callers', () => {
   const desc = buildEntryDescriptor(basicRoutes, {});
   const code = renderEntry(desc);
 
-  // Redirects out of a POST action are coerced to 303 (PRG), including the
-  // ActionResult redirect shape; GET handlers keep the author's status.
-  assertStringIncludes(code, 'err.status === 302 ? 303 : err.status');
+  // Redirects out of a POST action are coerced to 303 (PRG) — every 3xx,
+  // per ADR-0121 — including the ActionResult redirect shape; GET handlers
+  // keep the author's status.
+  assertStringIncludes(code, 'const __redirectStatus = 303;');
   assertStringIncludes(
     code,
     "{ type: 'redirect', status: __redirectStatus, location: err.location }",

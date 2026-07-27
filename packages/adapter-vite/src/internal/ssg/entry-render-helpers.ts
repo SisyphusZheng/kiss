@@ -149,12 +149,26 @@ export function renderRouteHandler(
   if (!isAction) {
     lines.push('// GET handler - renders the page with loader data');
   }
-  lines.push(`app.${method}(${pathLiteral}, async (c) => {`);
+  if (isAction) {
+    // ADR-0121 (#568): conservative default body limit on action POSTs;
+    // larger uploads belong on API routes with explicit limits.
+    lines.push(
+      `app.post(${pathLiteral}, __bodyLimit({ maxSize: 10 * 1024 * 1024, onError: (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', 'x-openelement-action'); return c.text('Payload Too Large', 413); } }), async (c) => {`,
+    );
+  } else {
+    lines.push(`app.get(${pathLiteral}, async (c) => {`);
+  }
   lines.push(`  let __tag = ${tagNameExpr}`);
   lines.push(`  let __page = ${pageDefExpr}`);
   lines.push(`  let __params = {}`);
   lines.push(`  let __routeMetaValue = ${routeMeta}`);
   lines.push(`  const __routeContext = ${routeContext}`);
+  // ADR-0121 section 6 (#550): request-time responses are never cacheable;
+  // the POST endpoint is negotiated by the framework action header.
+  lines.push(`  c.header('Cache-Control', 'no-store');`);
+  if (isAction) {
+    lines.push(`  c.header('Vary', 'x-openelement-action');`);
+  }
   if (isAction) {
     // Declared outside try so the catch can branch on the fetch path without
     // hitting a TDZ error when the action block never ran.
@@ -178,14 +192,17 @@ export function renderRouteHandler(
   }
 
   if (isAction) {
-    // ADR-0120 action protocol (0.42.0-alpha.2):
-    // - named actions: ?/name selects module.actions[name] (SvelteKit shape);
+    // ADR-0120 action protocol (0.42.0-alpha.2), hardened by ADR-0121:
+    // - named actions: ?/name selects module.actions[name] (SvelteKit shape),
+    //   with an own-key lookup so prototype members are never callable;
     // - the action runs BEFORE the loader so a mutation never renders stale
     //   data (revalidation invariant);
     // - fail() returns take the 422 re-render channel with the failure data
     //   echoed; everything else succeeds;
     // - a successful non-GET action never answers 200 with a rendered page:
-    //   303 back to the route (PRG), or an ActionResult for fetch callers.
+    //   303 back to the route (PRG, action marker stripped), or an
+    //   ActionResult for fetch callers; a returned Response is a contract
+    //   violation, not a response.
     lines.push(`    const __url = new URL(c.req.url);`);
     lines.push(
       `    const __actionName = (() => { for (const key of __url.searchParams.keys()) { if (key.startsWith('/')) return key.slice(1); } return undefined; })();`,
@@ -193,27 +210,57 @@ export function renderRouteHandler(
     lines.push(
       `    const __namedActions = (typeof ${route.varName}.actions === 'object' && ${route.varName}.actions !== null) ? ${route.varName}.actions : {};`,
     );
+    // ADR-0121 (#542): own-key lookup — ?/constructor and other prototype
+    // members are never callable as actions.
     lines.push(
-      `    const __actionFn = __actionName !== undefined ? __namedActions[__actionName] : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
+      `    const __actionFn = __actionName !== undefined ? (Object.prototype.hasOwnProperty.call(__namedActions, __actionName) ? __namedActions[__actionName] : undefined) : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
     );
-    lines.push(`    __isFetch = c.req.header('x-openelement-action') === 'true';`);
+    // ADR-0121 section 1 (#540): one header, two values — 'true' selects the
+    // ActionResult JSON channel; 'enhance' marks the built-in morph client
+    // (HTML responses identical to the no-JS path).
+    lines.push(`    const __actionHeader = c.req.header('x-openelement-action');`);
+    lines.push(`    __isFetch = __actionHeader === 'true';`);
     lines.push(`    if (typeof __actionFn !== 'function') {`);
     lines.push(
-      `      return c.html(wrapInDocument(__statusHtml('404 Not Found', 'This route does not accept submissions.'), { title: '404 Not Found', lang: ${
+      `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,
+    );
+    // ADR-0121 section 5 (#549): fetch callers always receive ActionResult
+    // JSON — the two channels never diverge in shape.
+    lines.push(`      if (__isFetch) {`);
+    lines.push(
+      `        return c.json({ type: 'error', status: 404, error: { message: __noActionMessage } }, 404);`,
+    );
+    lines.push(`      }`);
+    lines.push(
+      `      return c.html(wrapInDocument(__statusHtml('404 Not Found', __noActionMessage), { title: '404 Not Found', lang: ${
         jsStringLiteral(docConfig.lang)
       }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
         JSON.stringify(docConfig.allowHeadExtrasScripts)
       }, cspNonce: c.get('cspNonce') }), 404);`,
     );
     lines.push(`    }`);
-    lines.push(`    if (__actionName !== undefined && typeof __actionFn !== 'function') {`);
-    lines.push(
-      `      return c.json({ type: 'error', status: 404, error: { message: 'No action named "' + __actionName + '" on this route.' } }, 404);`,
-    );
-    lines.push(`    }`);
     lines.push(`    const __formData = await c.req.raw.formData();`);
     lines.push(
-      `    const __actionResult = typeof __actionFn === 'function' ? await __actionFn({ ...__loadContext, formData: __formData }) : undefined;`,
+      `    const __actionResult = await __actionFn({ ...__loadContext, formData: __formData });`,
+    );
+    // ADR-0121 section 2 (#541): actions must not return a Response — the
+    // return channel is data or fail(), the redirect channel is redirect().
+    // A returned Response used to bypass every status rule; it is now a
+    // contract violation on both channels.
+    lines.push(`    if (__actionResult instanceof Response) {`);
+    lines.push(
+      `      throw new Error('[openElement] Actions must not return a Response object; return data, fail(status, data), or throw redirect() (ADR-0121).');`,
+    );
+    lines.push(`    }`);
+    // ADR-0121 section 4 (#548): the default PRG target strips the ?/name
+    // action marker; all other query parameters are preserved.
+    lines.push(`    const __prgParams = new URLSearchParams(__url.search);`);
+    lines.push(
+      `    for (const key of [...__prgParams.keys()]) { if (key.startsWith('/')) __prgParams.delete(key); }`,
+    );
+    lines.push(`    const __prgSearch = __prgParams.toString();`);
+    lines.push(
+      `    const __prgTarget = __url.pathname + (__prgSearch ? '?' + __prgSearch : '');`,
     );
     lines.push(`    if (__isFetch) {`);
     lines.push(`      if (__isActionFailure(__actionResult)) {`);
@@ -221,13 +268,14 @@ export function renderRouteHandler(
       `        return c.json({ type: 'failure', status: __actionResult.status, data: __actionResult.data }, __actionResult.status);`,
     );
     lines.push(`      }`);
+    // ADR-0121 section 3: HTTP 200 carrying a data message, not an HTTP
+    // redirect (fetch would follow a 3xx and the JSON would be unreadable).
     lines.push(
-      `      return c.json({ type: 'redirect', status: 303, location: __url.pathname + __url.search });`,
+      `      return c.json({ type: 'redirect', status: 303, location: __prgTarget });`,
     );
     lines.push(`    }`);
     lines.push(`    if (!__isActionFailure(__actionResult)) {`);
-    lines.push(`      if (__actionResult instanceof Response) return __actionResult;`);
-    lines.push(`      return c.redirect(__url.pathname + __url.search, 303);`);
+    lines.push(`      return c.redirect(__prgTarget, 303);`);
     lines.push(`    }`);
     lines.push(
       `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined;`,
@@ -276,8 +324,11 @@ export function renderRouteHandler(
   lines.push(`  } catch (err) {`);
   lines.push(`    if (__isOpenElementRedirect(err)) {`);
   if (isAction) {
+    // ADR-0121 section 3 (#547): in the POST action context every 3xx is
+    // coerced to 303 (PRG must be method-safe and non-cacheable); GET
+    // handlers keep the author's status.
     lines.push(
-      `      const __redirectStatus = err.status === 302 ? 303 : err.status;`,
+      `      const __redirectStatus = 303;`,
     );
     lines.push(
       `      if (__isFetch) return c.json({ type: 'redirect', status: __redirectStatus, location: err.location });`,
@@ -301,7 +352,22 @@ export function renderRouteHandler(
   lines.push(`      }), 404)`);
   lines.push(`    }`);
 
-  if (!isAction) {
+  // ADR-0121 (#558): the JSON error channel scrubs internals in production,
+  // matching the HTML channel. Fetch callers get ActionResult JSON, never
+  // the boundary page.
+  if (isAction) {
+    lines.push(`    if (__isFetch) {`);
+    lines.push(
+      `      console.error('[openElement] Action POST failed for ' + ${pathLiteral} + ':', err)`,
+    );
+    lines.push(
+      `      return c.json({ type: 'error', status: 500, error: { message: import.meta.env.PROD ? 'Internal Server Error' : String(err && err.message ? err.message : err) } }, 500);`,
+    );
+    lines.push(`    }`);
+  }
+  // ADR-0121 section 7 (#551): POST takes the same nearest-error-boundary
+  // channel as GET — the page's error component renders with status 500.
+  {
     lines.push(`    if (typeof __page.error === "function") {`);
     lines.push(`      try {`);
     lines.push(
@@ -336,13 +402,6 @@ export function renderRouteHandler(
   lines.push(
     `    console.error('[openElement] ${failureLabel} for ' + ${pathLiteral} + ':', err)`,
   );
-  if (isAction) {
-    lines.push(`    if (__isFetch) {`);
-    lines.push(
-      `      return c.json({ type: 'error', status: 500, error: { message: String(err && err.message ? err.message : err) } }, 500);`,
-    );
-    lines.push(`    }`);
-  }
   lines.push(`    if (import.meta.env.PROD) {`);
   lines.push(`      return c.html('<h1>500 Internal Server Error</h1>', 500)`);
   lines.push(`    } else {`);
@@ -373,6 +432,16 @@ export function renderActionRoute(
   isSSG: boolean,
 ): void {
   renderRouteHandler(lines, { method: 'post', route, renderers, docConfig, isSSG });
+  // ADR-0121 (#572): only GET/POST are defined for page routes — other
+  // methods get a defined 405 instead of the server fallback 404. The
+  // method-specific handlers above are registered first and win for
+  // GET/POST/HEAD.
+  lines.push(
+    `app.all(${
+      jsStringLiteral(route.path)
+    }, (c) => c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }));`,
+  );
+  lines.push('');
 }
 
 /** Generate the route-to-module map for /_data endpoint. */
@@ -409,7 +478,9 @@ export function renderDataEndpoint(lines: string[]): void {
   lines.push(`    const data = await mod.loader(loadContext);`);
   lines.push(`    return c.json({ data });`);
   lines.push(`  } catch (err) {`);
-  lines.push(`    return c.json({ error: String(err) }, 500);`);
+  lines.push(
+    `    return c.json({ error: import.meta.env.PROD ? 'Internal Server Error' : String(err) }, 500);`,
+  );
   lines.push(`  }`);
   lines.push(`})`);
   lines.push('');

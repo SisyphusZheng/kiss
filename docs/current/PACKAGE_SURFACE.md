@@ -99,6 +99,12 @@ promise and are not application-authoring surface.
   the build pipeline and generated code import only relatively or through the
   supported root, `nitro-mount`, `cli/build` and `sitemap` subpaths. The module
   files remain inside the package for internal relative imports only.
+- `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
+  `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
+  `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,
+  `open-theme-toggle`.
+- `@openelement/ui/open-props-tokens.js` is a resolver-compatibility alias of
+  `open-props-tokens`.
 
 ## 0.41.0 interface freeze boundary (ADR-0119)
 
@@ -118,20 +124,17 @@ a major-version ADR.
 
 - `definePage({ renderIntent: { mode } })`: `'auto'`/`'static'`/`'dynamic'`
   rendering modes; `'dynamic'` routes render per request through the
-  generated `dist/server/index.js` (0.42.0-alpha.1).
+  generated `dist/server/index.js` (0.42.0-alpha.1). `renderIntent.revalidate`
+  declares the ISR revalidate window in seconds for static routes.
 - Route-module `loader`/`action`/`actions` exports with the ADR-0120
   protocol: `fail(status, data)` 422 re-render, 303 PRG, named actions via
   `formaction='?/name'` (0.42.0-alpha.2).
+- `isActionFailure(value)` type guard and the `OpenElementActionFailure<T>`
+  class (app root): the structured failure carrier constructed by `fail()`
+  and recognized on both the request-time and SPA action chains.
 - `ActionResult` / `ACTION_FETCH_HEADER` wire types and the
   `data-open-enhance` / `data-open-preserve` / `data-open-region`
   enhancement attributes with morph-based continuity (0.42.0-alpha.3).
-
-- `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
-  `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
-  `open-dropdown`, `open-input`, `open-props-tokens`, `open-tabs`,
-  `open-theme-toggle`.
-- `@openelement/ui/open-props-tokens.js` is a resolver-compatibility alias of
-  `open-props-tokens`.
 
 ## Removed from current graph
 

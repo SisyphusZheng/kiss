@@ -213,8 +213,13 @@ export function buildPlugin(
         throw error;
       }
 
-      // Phase 2: Client island bundle (only if islands exist)
-      if (totalIslands > 0) {
+      // Phase 2: Client island bundle (only if islands exist — or enhanced
+      // forms, #569: an island-free app with data-open-enhance forms still
+      // needs the client entry for the enhancement layer)
+      const hasEnhancedForms = (ctx.phase1.cachedRoutes ?? []).some((route) =>
+        route.type === 'page' && route.hasEnhancedForms === true
+      );
+      if (totalIslands > 0 || hasEnhancedForms) {
         await runClientIslandBuild(ctx);
       }
 

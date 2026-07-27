@@ -25,7 +25,11 @@ import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.t
 import { normalizeViteAliases } from './alias-utils.ts';
 import { buildPlugin } from './build.ts';
 import type { EntryDescriptor } from './internal/ssg/index.ts';
-import { buildEntryDescriptor, renderEntry } from './internal/ssg/index.ts';
+import {
+  buildEntryDescriptor,
+  generateCustomElementsPolyfill,
+  renderEntry,
+} from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
@@ -142,6 +146,12 @@ export function createOpenPlugin(
   const RESOLVED_ENTRY_ID = '\0' + VIRTUAL_ENTRY_ID;
   const VIRTUAL_BUILD_TRIGGER_ID = 'virtual:open-build-trigger';
   const RESOLVED_BUILD_TRIGGER_ID = '\0' + VIRTUAL_BUILD_TRIGGER_ID;
+  // Dev SSR polyfill (ADR-0044): route modules call customElements.define()
+  // at module top level, so the dev SSR entry imports the polyfill as its
+  // first module — ESM evaluates it before every other import. The build
+  // path ships the same stub as the Rollup banner (build-ssg.ts).
+  const VIRTUAL_POLYFILL_ID = 'virtual:open-ssr-polyfill';
+  const RESOLVED_POLYFILL_ID = '\0' + VIRTUAL_POLYFILL_ID;
 
   function buildDescriptor(
     routes: RouteEntry[],
@@ -349,9 +359,13 @@ export function createOpenPlugin(
     resolveId(id) {
       if (id === VIRTUAL_ENTRY_ID) return RESOLVED_ENTRY_ID;
       if (id === VIRTUAL_BUILD_TRIGGER_ID) return RESOLVED_BUILD_TRIGGER_ID;
+      if (id === VIRTUAL_POLYFILL_ID) return RESOLVED_POLYFILL_ID;
     },
 
     load(id) {
+      if (id === RESOLVED_POLYFILL_ID) {
+        return generateCustomElementsPolyfill();
+      }
       if (id === RESOLVED_BUILD_TRIGGER_ID) {
         return 'export default null;';
       }
@@ -360,13 +374,13 @@ export function createOpenPlugin(
         // and ctx.phase1.ssrAdmissionPlan must come from one instantiation.
         // The descriptor does not depend on late-settled plugin data, so
         // regeneration is only a fallback for the pre-buildStart placeholder.
-        if (entryDescriptor) return renderEntry(entryDescriptor);
-        return generateEntry(
+        const entryCode = entryDescriptor ? renderEntry(entryDescriptor) : generateEntry(
           ctx.phase1.cachedRoutes || [],
           ctx.phase1.islandTagNames,
           ctx.phase1.packageManifests,
           ctx.phase1.islandFiles,
         );
+        return `import '${VIRTUAL_POLYFILL_ID}';\n` + entryCode;
       }
     },
   };

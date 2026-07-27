@@ -20,6 +20,18 @@ Deno.test('empty -> zero JS', () => {
   assert(generateClientEntry([]).includes('zero client JS needed'));
 });
 
+Deno.test('zero islands + enhancedForms emits the enhancement layer (#569)', () => {
+  const code = generateClientEntry([], { enhancedForms: true });
+  assert(!code.includes('zero client JS needed'));
+  assert(code.includes('data-open-enhance'), 'enhancement submit handler is emitted');
+  assert(code.includes('__onSubmit'), 'submit interception is emitted');
+  assert(code.includes('__morphDocument'), 'document morph is emitted');
+});
+
+Deno.test('zero islands without enhancedForms keeps the stub (#569)', () => {
+  assert(generateClientEntry([], { enhancedForms: false }).includes('zero client JS needed'));
+});
+
 Deno.test('client:load island loads immediately', () => {
   const code = generateClientEntry([
     {
@@ -240,16 +252,41 @@ Deno.test('client entry rejects legacy eager/lazy strategy values', () => {
 });
 
 Deno.test('client entry includes the ADR-0120 form enhancement layer', () => {
-  const code = generateClientEntry([
-    { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
-  ]);
-  assert(code.includes("document.addEventListener('submit'"));
+  const code = generateClientEntry(
+    [{ tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' }],
+    { enhancedForms: true },
+  );
+  // ADR-0121: submit is not reliably composed across engines, so listeners
+  // attach per shadow root, not only on the document.
+  assert(code.includes('__attachSubmit'));
+  assert(code.includes('__scanSubmitRoots'));
   assert(code.includes('data-open-enhance'));
-  assert(code.includes("'x-openelement-enhance': 'true'"));
+  assert(code.includes("'x-openelement-action': 'enhance'"));
   // Morph continuity: preserve escape hatch, intact-island survival and the
   // no-re-execute rule for the client entry script.
   assert(code.includes('data-open-preserve'));
   assert(code.includes('__islandIntact'));
   assert(code.includes("oldEl.tagName === 'SCRIPT'"));
   assert(code.includes('history.pushState'));
+  // ADR-0121 hardening: shadow-content morph, region scoping, failure hook,
+  // submitter-preserving body, popstate reload, response gating.
+  assert(code.includes('__shadowTemplate'));
+  assert(code.includes('data-open-region-target'));
+  assert(code.includes('open:action-failure'));
+  assert(code.includes('new FormData(form, submitter)'));
+  assert(code.includes("window.addEventListener('popstate'"));
+  assert(code.includes('result.status === 200 || result.status === 422'));
+});
+
+Deno.test('islands without enhancedForms omit the enhancement layer (#569 complement)', () => {
+  // Static sites with islands but no data-open-enhance forms keep a lean
+  // client bundle (ADR-0120 zero-upgrade-cost consequence) and, critically,
+  // no popstate listener that could interfere with their own routing JS.
+  const code = generateClientEntry([
+    { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
+  ]);
+  assert(code.includes('live-counter') === false); // sanity: only x-counter
+  assert(!code.includes('__attachSubmit'));
+  assert(!code.includes("window.addEventListener('popstate'"));
+  assert(code.includes('the form enhancement layer is omitted'));
 });

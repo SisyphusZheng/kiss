@@ -156,6 +156,12 @@
     "text": "Islands and SSR Guide"
   },
   {
+    "path": "/guide/security",
+    "title": "Security",
+    "section": "Guide",
+    "text": "Security Guide"
+  },
+  {
     "path": "/guide/deployment",
     "title": "Deployment",
     "section": "Guide",
