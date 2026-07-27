@@ -136,3 +136,44 @@ test.describe('action protocol (ADR-0120, 0.42.0-alpha.2)', () => {
     await expect(page.locator('#echo')).toHaveText('echo=enhanced-path');
   });
 });
+
+test.describe('revalidation continuity (0.42.0-alpha.3)', () => {
+  test('422 morph keeps a hydrated island alive and shows the failure echo', async ({ page }) => {
+    await page.goto('/form');
+    const button = page.locator('live-counter #increment');
+    const count = page.locator('live-counter #count');
+    await button.click();
+    await button.click();
+    await button.click();
+    await expect(count).toHaveText('3');
+
+    await page.click('#submit');
+    await expect(page.locator('#error')).toHaveText('message is required');
+    // The island survived the morph: its shadow state was not reset.
+    await expect(count).toHaveText('3');
+  });
+
+  test('PRG morph preserves island state and updates the URL', async ({ page }) => {
+    await page.goto('/form');
+    const button = page.locator('live-counter #increment');
+    const count = page.locator('live-counter #count');
+    await button.click();
+    await button.click();
+    await expect(count).toHaveText('2');
+
+    await page.fill('#message', 'morph-keeps-islands');
+    await page.click('#submit');
+    await page.waitForURL('**/form?echoed=morph-keeps-islands');
+    await expect(page.locator('#echo')).toHaveText('echo=morph-keeps-islands');
+    await expect(count).toHaveText('2');
+  });
+
+  test('mixed static/request-time navigation keeps both modes working', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#home-marker')).toHaveText('request-time fixture home');
+    await page.goto('/live?x=mixed');
+    await expect(page.locator('#x-value')).toHaveText('x=mixed');
+    await page.goto('/');
+    await expect(page.locator('#home-marker')).toHaveText('request-time fixture home');
+  });
+});

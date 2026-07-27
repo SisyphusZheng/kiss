@@ -12,6 +12,25 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.3
+
+- Revalidation continuity (ADR-0120): enhanced forms (`data-open-enhance`)
+  now morph the returned document into place instead of reloading —
+  submission returns the same HTML the no-JS path renders (303/422), the
+  client morphs it, and `history.pushState` follows the PRG target.
+- Island survival: a hydrated island whose light-DOM surface is unchanged
+  in the incoming document keeps its shadow state (the DSD template child
+  is excluded from the comparison). Islands whose surface changed are
+  replaced; `data-open-preserve` exempts any subtree; the island client
+  script is never re-executed by a morph.
+- Named regions: a `data-open-region` container limits the morph to the
+  matching region when present.
+- The ActionResult JSON path remains for custom clients; the built-in
+  enhancement uses HTML morphing for continuity.
+- Fixture proof: counter island at 3 survives a 422 morph and a PRG
+  morph; static/request-time mixed navigation — Chromium, Firefox and
+  WebKit, 36/36.
+
 ## 0.42.0-alpha.2
 
 - The form/action loop (ADR-0120): plain HTML forms work without

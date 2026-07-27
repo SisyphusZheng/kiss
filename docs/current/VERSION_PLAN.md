@@ -1,7 +1,7 @@
 # v0.42.0 — WC Application Loop release plan
 
-> Current source package line: `v0.42.0-alpha.2`\
-> Current npm registry line: `v0.42.0-alpha.2`\
+> Current source package line: `v0.42.0-alpha.3`\
+> Current npm registry line: `v0.42.0-alpha.3`\
 > Active release target: `v0.41.1`\
 > Planning release target: `v0.42.0` (WC Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
@@ -152,10 +152,15 @@ coexistence.
   3. Static/request-time mixed sites: navigation and hydration between the
      two route kinds do not interfere; i18n canonical-route gates extended
      to request-time routes.
-  4. www dogfood: one real loop scenario (a site form) ships on the
-     request-time path.
+  4. Mixed-mode dogfood: the request-time fixture ships a page combining a
+     dynamic form route, a static route and a hydrated island. (Amended
+     2026-07-27 from "www dogfood": www deploys to Cloudflare Pages as a
+     pure-static site and doubles as the byte-identical regression vehicle;
+     adding a dynamic route there would destroy both. The i18n gate
+     extension of step 3 defers to the first site that combines i18n with
+     request-time routes — none exists yet.)
 - 准出: the island-survival matrix passes in three engines; the mixed-mode
-  site e2e is green; the www dogfood scenario is live and linked in the
+  site e2e is green; the dogfood fixture is green in CI and linked in the
   alpha.3 release note; alpha.3 published.
 
 ### TP-5 — `0.42.0-alpha.4` hardening, recipes and starter
