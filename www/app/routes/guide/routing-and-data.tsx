@@ -25,6 +25,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'file-routes', label: 'File routes', level: 3 },
       { id: 'metadata', label: 'Metadata', level: 3 },
       { id: 'data-boundary', label: 'Data boundary', level: 3 },
+      { id: 'rendering-modes', label: 'Rendering modes', level: 3 },
     ],
     previous: { href: '/guide/comparison', label: 'Comparison' },
     next: { href: '/guide/mdx', label: 'MDX' },
@@ -44,6 +45,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'Data boundary',
         body: 'Keep data loading separate from presentation markup.',
       },
+      {
+        id: 'rendering-modes',
+        title: 'Rendering modes',
+        body:
+          "renderIntent.mode selects where a page renders: 'auto' (default) and 'static' prerender at build; 'dynamic' skips prerendering and renders per request through the generated dist/server entry, running the route loader on every request. Pages that export an action must declare 'dynamic' — the build rejects prerendered action pages (0.42 line, unfrozen).",
+      },
     ],
   },
   zh: {
@@ -54,6 +61,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'file-routes', label: '文件路由', level: 3 },
       { id: 'metadata', label: '元数据', level: 3 },
       { id: 'data-boundary', label: '数据边界', level: 3 },
+      { id: 'rendering-modes', label: '渲染模式', level: 3 },
     ],
     previous: { href: '/guide/comparison', label: '对比' },
     next: { href: '/guide/mdx', label: 'MDX' },
@@ -72,6 +80,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'data-boundary',
         title: '数据边界',
         body: '数据加载与展示标记保持分离。',
+      },
+      {
+        id: 'rendering-modes',
+        title: '渲染模式',
+        body:
+          "renderIntent.mode 决定页面在哪里渲染:'auto'(默认)与 'static' 在构建时预渲染;'dynamic' 跳过预渲染,通过生成的 dist/server 入口按请求渲染,每次请求都会运行路由 loader。导出 action 的页面必须声明 'dynamic'——构建会拒绝预渲染的 action 页面(0.42 版本线,未冻结)。",
       },
     ],
   },
