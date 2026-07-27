@@ -181,7 +181,11 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push('');
 
   // --- SSG: headExtras via define injection ---
-  if (desc.isSSG && desc.document.headExtras) {
+  // Always emitted in SSG mode: renderRouteHandler references __headExtras
+  // unconditionally, so a project without headExtras would otherwise render
+  // every static page into a 500 (latent until the request-time fixture hit
+  // it in 0.42.0-alpha.1).
+  if (desc.isSSG) {
     lines.push(
       '// SSG: headExtras injected via Vite define (ADR 0008 Phase A)',
     );

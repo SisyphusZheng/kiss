@@ -194,6 +194,13 @@ export async function ssgRender(
       'utf-8',
     );
     writeFileSync(join(serverDir, 'index.js'), renderRequestTimeServerModule(), 'utf-8');
+    // Placeholder: Phase 2 overwrites this with the real island client entry
+    // URL when the project has islands (build.ts writeRequestTimeClientScript).
+    writeFileSync(
+      join(serverDir, 'client-script.js'),
+      `export const clientScriptSrc = '';\n`,
+      'utf-8',
+    );
     log.info(
       `Request-time server -> ${join(serverDir, 'index.js')} ` +
         `(${requestTimeRoutes.length} route(s): ${

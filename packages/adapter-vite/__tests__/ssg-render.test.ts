@@ -442,13 +442,53 @@ export default app;
 `,
     );
     await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
+    await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
 
     const mod = await import(pathToFileURL(join(dir, 'index.js')).href) as {
       default: (event: { request: Request }) => Promise<Response>;
     };
     const response = await mod.default({ request: new Request('http://localhost/live?x=42') });
     assertEquals(response.status, 200);
-    assert((await response.text()).includes('live 42'));
+    const html = await response.text();
+    assert(html.includes('live 42'));
+    assert(!html.includes('type="module"'), 'no client script when none was recorded');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('request-time server entry injects the island client script into HTML responses', async () => {
+  const { renderRequestTimeServerModule } = await import(
+    '../src/internal/ssg/ssg-helpers.ts'
+  );
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  const dir = await Deno.makeTempDir();
+  try {
+    await Deno.writeTextFile(
+      join(dir, 'entry.js'),
+      `import { Hono } from 'hono';
+const app = new Hono();
+app.get('/live', (c) => c.html('<html><body><h1>live</h1></body></html>'));
+export default app;
+`,
+    );
+    await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
+    await Deno.writeTextFile(
+      join(dir, 'client-script.js'),
+      `export const clientScriptSrc = '/client/entry-abc123.js';\n`,
+    );
+
+    const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?with-script') as {
+      default: (event: { request: Request }) => Promise<Response>;
+    };
+    const response = await mod.default({ request: new Request('http://localhost/live') });
+    const html = await response.text();
+    assert(
+      html.includes('<script type="module" src="/client/entry-abc123.js"></script>'),
+      'request-time HTML must carry the island client script like static pages',
+    );
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }

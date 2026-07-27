@@ -27,7 +27,13 @@ evidence.
   build: zero HTML/JS/CSS differences).
 - Request-time e2e fixture under
   `packages/adapter-vite/__fixtures__/request-time/` proves loader data
-  varies per request and islands hydrate identically to static pages.
+  varies per request and islands hydrate identically to static pages
+  (Chromium, Firefox and WebKit, 12/12).
+- Request-time HTML now receives the island client entry automatically —
+  the generated server entry injects the same script the static pipeline
+  injects post-build (found by the fixture; without it, islands on
+  request-time pages never hydrated). A latent `__headExtras is not
+  defined` codegen bug for projects without head extras is fixed too.
 - Loader/action contract types (`Loader`/`LoaderContext`/`Action`/
   `ActionContext`) are unchanged — they already shipped; this alpha wires
   the rendering-mode semantics around them.

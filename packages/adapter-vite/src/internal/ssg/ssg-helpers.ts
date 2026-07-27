@@ -122,15 +122,35 @@ export function renderRequestTimeServerModule(): string {
 // same SSR bundle used for prerendering. Do not edit; regenerated per build.
 import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-mount';
 import app from './entry.js';
+import { clientScriptSrc } from './client-script.js';
 
 const openElementHandler = createOpenElementNitroHandler({
   handler: (request, context) =>
     app.fetch(request, context?.env || {}, context?.platform),
 });
 
+// Island hydration parity with static pages: the static pipeline injects the
+// island client entry into prerendered HTML as a post-build step, which
+// request-time rendering bypasses. Inject the same script at serve time.
+function withClientScript(response) {
+  if (!clientScriptSrc) return response;
+  const type = response.headers.get('content-type') || '';
+  if (!type.includes('text/html')) return Promise.resolve(response);
+  return response.text().then((html) => {
+    if (html.includes(clientScriptSrc)) {
+      return new Response(html, { status: response.status, headers: response.headers });
+    }
+    const tag = '<script type="module" src="' + clientScriptSrc + '"></script>';
+    const out = html.includes('</body>')
+      ? html.replace('</body>', '  ' + tag + '\\n</body>')
+      : html + tag;
+    return new Response(out, { status: response.status, headers: response.headers });
+  });
+}
+
 export default async function openElementRequestTimeServer(event) {
   const result = await openElementHandler(event ?? {});
-  return result.response;
+  return withClientScript(result.response);
 }
 `;
 }
