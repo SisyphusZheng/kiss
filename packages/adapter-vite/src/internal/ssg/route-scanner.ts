@@ -241,8 +241,10 @@ export async function scanRoutes(
           varName: pathToVarName(routePath),
           tagName,
           // #569: page sources carrying data-open-enhance require the client
-          // enhancement layer even when the app has zero islands.
-          ...(source !== undefined && source.includes('data-open-enhance')
+          // enhancement layer even when the app has zero islands. The match
+          // requires attribute shape (= or >) so prose mentioning the
+          // attribute (e.g. guide pages) does not pull the layer in.
+          ...(source !== undefined && /data-open-enhance\s*(?:=|>)/.test(source)
             ? { hasEnhancedForms: true }
             : {}),
           ...(options.includeSource && source !== undefined ? { source } : {}),

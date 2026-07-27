@@ -500,6 +500,7 @@ function __scanSubmitRoots(root) {
 }
 
 var __submitSeq = 0;
+var __enhancedNav = false;
 function __onSubmit(event) {
   var form = event.target;
   if (!(form instanceof HTMLFormElement)) return;
@@ -563,7 +564,10 @@ function __onSubmit(event) {
         var samePage = target.pathname === window.location.pathname &&
           target.search === window.location.search;
         var finalUrl = target.href + (samePage && !target.hash ? window.location.hash : '');
-        if (finalUrl !== window.location.href) history.pushState({}, '', finalUrl);
+        if (finalUrl !== window.location.href) {
+          __enhancedNav = true;
+          history.pushState({}, '', finalUrl);
+        }
         return;
       }
     }
@@ -579,8 +583,10 @@ __onReady(function () { __scanSubmitRoots(document); });
 
 // ADR-0121 §10 (#545): enhanced navigation is pushState-based; back/forward
 // reloads the restored URL so content never disagrees with the address bar.
+// The guard keeps the listener inert on pages that never enhanced-navigated
+// (e.g. sites running their own client-side routing on the same bundle).
 window.addEventListener('popstate', function () {
-  window.location.reload();
+  if (__enhancedNav) window.location.reload();
 });
 `
       : '// No data-open-enhance forms: the form enhancement layer is omitted (#569 complement),\n// keeping the client bundle free of morph and popstate code.'
