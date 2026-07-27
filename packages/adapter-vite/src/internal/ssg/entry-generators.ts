@@ -274,11 +274,20 @@ function __islandIntact(oldEl, newEl) {
   for (var k = 0; k < newEl.childNodes.length; k++) {
     var n = newEl.childNodes[k];
     if (n.nodeType === 1 && n.tagName === 'TEMPLATE' && n.hasAttribute('shadowrootmode')) continue;
+    // Whitespace-only text nodes carry no meaning: hydration normalizes the
+    // live tree (merged text), the fresh parse keeps them split.
+    if (n.nodeType === 3 && n.data.trim() === '') continue;
     newKids.push(n);
   }
-  if (oldEl.childNodes.length !== newKids.length) return false;
+  var oldKids = [];
+  for (var k0 = 0; k0 < oldEl.childNodes.length; k0++) {
+    var o0 = oldEl.childNodes[k0];
+    if (o0.nodeType === 3 && o0.data.trim() === '') continue;
+    oldKids.push(o0);
+  }
+  if (oldKids.length !== newKids.length) return false;
   for (var m = 0; m < newKids.length; m++) {
-    var o = oldEl.childNodes[m];
+    var o = oldKids[m];
     var nn = newKids[m];
     if (o.nodeType !== nn.nodeType) return false;
     if (o.nodeType === 3 && o.data !== nn.data) return false;
