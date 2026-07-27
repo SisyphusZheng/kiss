@@ -7,6 +7,7 @@ export interface ReleaseClosureRecord {
 
 export interface ReleaseEvidenceSnapshot {
   id: string;
+  kind?: string;
   targetVersion: string;
   status: string;
   completedAt?: string;
@@ -25,7 +26,14 @@ export interface ReleaseEvidenceClosureInput {
 
 export function validateReleaseEvidenceClosure(input: ReleaseEvidenceClosureInput): string[] {
   const failures: string[] = [];
-  if (input.tagEvidence.id !== input.finalEvidence.id) {
+  // Same-run flow: the tag snapshot and the final record share one run id.
+  // Two-phase flow: a local patch-release tagged the version and the CI
+  // publish-existing closed it, so the tag snapshot carries the
+  // patch-release record while the final record is publish-existing (0.41.2).
+  const sameRun = input.tagEvidence.id === input.finalEvidence.id;
+  const twoPhase = input.tagEvidence.kind === 'patch-release' &&
+    input.finalEvidence.kind === 'publish-existing';
+  if (!sameRun && !twoPhase) {
     failures.push('tag and final evidence ids differ');
   }
   if (
