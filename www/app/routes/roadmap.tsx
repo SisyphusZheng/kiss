@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.2',
-    theme: 'request-time rendering foundation',
+    theme: 'form/action loop',
     copy:
-      "renderIntent mode 'dynamic' skips prerendering; a generated nitro-mount server serves those routes per request with loaders, and the build rejects prerendered action pages (ADR-0120).",
+      'Plain HTML forms work without JavaScript: fail() validation echoes at 422, successes answer 303 (PRG), named actions dispatch via formaction, and data-open-enhance forms use the same ActionResult protocol.',
     state: 'stable',
     stamp: 'CURRENT',
   },
