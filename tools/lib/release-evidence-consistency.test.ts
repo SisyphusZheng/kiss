@@ -102,3 +102,39 @@ Deno.test('release evidence closure requires durable final commit and workflow r
     'release note does not reference the GitHub release',
   ]);
 });
+
+Deno.test('release evidence closure accepts the two-phase patch-release tag flow', () => {
+  // 0.41.2: the local patch-release tagged the version (tag snapshot carries
+  // the patch-release record), the CI publish-existing closed the release
+  // with its own record. Different ids are valid across the two kinds.
+  const failures = validateReleaseEvidenceClosure({
+    version: '0.41.2',
+    record: {
+      tagCommit: 'tag-sha',
+      finalEvidenceCommit: 'final-sha',
+      successfulReleaseRun: 'https://github.com/example/actions/runs/2',
+      releaseUrl: 'https://github.com/example/releases/tag/v0.41.2',
+    },
+    tagIsAncestorOfFinal: true,
+    finalIsAncestorOfHead: true,
+    tagEvidence: {
+      id: 'patch-run-id',
+      kind: 'patch-release',
+      targetVersion: '0.41.2',
+      status: 'running',
+      steps: [{ name: 'tag release', status: 'passed' }],
+    },
+    finalEvidence: {
+      id: 'publish-run-id',
+      kind: 'publish-existing',
+      targetVersion: '0.41.2',
+      status: 'completed',
+      completedAt: '2026-07-27T01:45:00.000Z',
+      steps: [{ name: 'create GitHub release', status: 'passed' }],
+    },
+    releaseNote:
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/2\nRelease: https://github.com/example/releases/tag/v0.41.2',
+  });
+
+  assertEquals(failures, []);
+});
