@@ -56,7 +56,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'form-actions',
         title: 'Form actions',
         body:
-          "A dynamic route may export an action ({ formData }) — plain HTML forms work without JavaScript: validation failures return fail(4xx, data) and re-render with the echo (HTTP 422), successes answer 303 (PRG). Named actions dispatch via formaction='?/name'. Forms marked data-open-enhance use the same protocol through fetch (ActionResult JSON); an action must be safe to re-run after a failed validation (0.42 line, unfrozen).",
+          "A dynamic route may export an action ({ formData }) — plain HTML forms work without JavaScript: validation failures return fail(4xx, data) and re-render with the echo (HTTP 422), successes answer 303 (PRG). Named actions dispatch via formaction='?/name'. Forms marked data-open-enhance submit via fetch and morph the returned document into place: hydrated islands whose light DOM did not change keep their state, data-open-preserve exempts a subtree, and the URL follows the PRG target. An action must be safe to re-run after a failed validation (0.42 line, unfrozen).",
       },
     ],
   },
@@ -99,7 +99,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'form-actions',
         title: '表单 action',
         body:
-          "dynamic 路由可导出 action({ formData })——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 fail(4xx, data),以 422 重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 formaction='?/name' 分派。标记 data-open-enhance 的表单走同一协议的 fetch 路径(ActionResult JSON);action 在校验失败后必须可安全重跑(0.42 版本线,未冻结)。",
+          "dynamic 路由可导出 action({ formData })——纯 HTML 表单无需 JavaScript 即可工作:校验失败返回 fail(4xx, data),以 422 重渲染并回显;成功则以 303 应答(PRG)。命名 action 通过 formaction='?/name' 分派。标记 data-open-enhance 的表单经 fetch 提交并把返回的文档 morph 就位:light DOM 未变化的已水合 island 状态保留,data-open-preserve 豁免子树,URL 跟随 PRG 目标。action 在校验失败后必须可安全重跑(0.42 版本线,未冻结)。",
       },
     ],
   },

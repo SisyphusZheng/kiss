@@ -11,6 +11,7 @@ import {
   redirect,
   useActionData,
 } from '@openelement/app';
+import '../islands/live-counter.tsx';
 
 export const tagName = 'page-form';
 
@@ -55,6 +56,7 @@ const FormPage = definePage({
         </form>
         {actionData?.error ? <p id='error'>{actionData.error}</p> : null}
         <p id='echo'>echo={echoed ?? ''}</p>
+        <live-counter></live-counter>
       </main>
     );
   },

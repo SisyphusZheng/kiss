@@ -245,8 +245,11 @@ Deno.test('client entry includes the ADR-0120 form enhancement layer', () => {
   ]);
   assert(code.includes("document.addEventListener('submit'"));
   assert(code.includes('data-open-enhance'));
-  assert(code.includes("'x-openelement-action': 'true'"));
-  assert(code.includes("result.type === 'redirect'"));
-  assert(code.includes("result.type === 'failure'"));
-  assert(code.includes('open:action-failure'));
+  assert(code.includes("'x-openelement-enhance': 'true'"));
+  // Morph continuity: preserve escape hatch, intact-island survival and the
+  // no-re-execute rule for the client entry script.
+  assert(code.includes('data-open-preserve'));
+  assert(code.includes('__islandIntact'));
+  assert(code.includes("oldEl.tagName === 'SCRIPT'"));
+  assert(code.includes('history.pushState'));
 });

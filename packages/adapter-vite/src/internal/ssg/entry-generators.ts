@@ -239,11 +239,103 @@ __schedule(__deferred);`
       : '// No client:idle islands'
   }
 
-// Form enhancement (ADR-0120, 0.42.0-alpha.2): forms marked
-// data-open-enhance submit through the ActionResult protocol. Without
+// Form enhancement (ADR-0120, 0.42.0-alpha.2/alpha.3): forms marked
+// data-open-enhance submit via fetch and the returned document is morphed
+// into place — no full reload, and untouched subtrees (including hydrated
+// islands whose light DOM did not change) keep their state. Without
 // JavaScript the same form is a native POST (303/422 HTML), so behavior
-// degrades to the browser by construction. No DOM surgery happens here, so
-// islands that have not hydrated yet are never touched.
+// degrades to the browser by construction.
+function __syncAttrs(oldEl, newEl) {
+  for (var i = oldEl.attributes.length - 1; i >= 0; i--) {
+    var name = oldEl.attributes[i].name;
+    if (!newEl.hasAttribute(name)) oldEl.removeAttribute(name);
+  }
+  for (var j = 0; j < newEl.attributes.length; j++) {
+    var attr = newEl.attributes[j];
+    if (oldEl.getAttribute(attr.name) !== attr.value) {
+      oldEl.setAttribute(attr.name, attr.value);
+    }
+  }
+}
+
+function __islandIntact(oldEl, newEl) {
+  // A hydrated island (live shadow root) survives when its light-DOM
+  // surface serializes identically in the incoming document. The incoming
+  // <template shadowrootmode> child is skipped in the comparison: the
+  // browser already consumed it into the live shadow root. Replacing an
+  // intact island would reset its state.
+  if (!oldEl.shadowRoot) return false;
+  if (oldEl.attributes.length !== newEl.attributes.length) return false;
+  for (var i = 0; i < newEl.attributes.length; i++) {
+    var attr = newEl.attributes[i];
+    if (oldEl.getAttribute(attr.name) !== attr.value) return false;
+  }
+  var newKids = [];
+  for (var k = 0; k < newEl.childNodes.length; k++) {
+    var n = newEl.childNodes[k];
+    if (n.nodeType === 1 && n.tagName === 'TEMPLATE' && n.hasAttribute('shadowrootmode')) continue;
+    newKids.push(n);
+  }
+  if (oldEl.childNodes.length !== newKids.length) return false;
+  for (var m = 0; m < newKids.length; m++) {
+    var o = oldEl.childNodes[m];
+    var nn = newKids[m];
+    if (o.nodeType !== nn.nodeType) return false;
+    if (o.nodeType === 3 && o.data !== nn.data) return false;
+    if (o.nodeType === 1 && o.outerHTML !== nn.outerHTML) return false;
+  }
+  return true;
+}
+
+function __morphNode(oldEl, newEl) {
+  if (oldEl.nodeType !== newEl.nodeType || oldEl.tagName !== newEl.tagName) {
+    oldEl.replaceWith(newEl);
+    return;
+  }
+  if (oldEl.nodeType === 3) {
+    if (oldEl.data !== newEl.data) oldEl.data = newEl.data;
+    return;
+  }
+  if (oldEl.nodeType !== 1) return;
+  if (oldEl.tagName === 'SCRIPT') {
+    // Keep the live script node: replacing it would re-execute the island
+    // client entry and double every listener.
+    return;
+  }
+  if (oldEl.hasAttribute('data-open-preserve')) return;
+  if (__islandIntact(oldEl, newEl)) return;
+  if (oldEl.shadowRoot) {
+    // Hydrated island whose surface changed: replace (state resets by design).
+    oldEl.replaceWith(newEl);
+    return;
+  }
+  __syncAttrs(oldEl, newEl);
+  var oldChildren = Array.from(oldEl.childNodes);
+  var newChildren = Array.from(newEl.childNodes);
+  var shared = Math.max(oldChildren.length, newChildren.length);
+  for (var i = 0; i < shared; i++) {
+    var o = oldChildren[i];
+    var n = newChildren[i];
+    if (o && n) __morphNode(o, n);
+    else if (n) oldEl.appendChild(n);
+    else if (o) o.remove();
+  }
+}
+
+function __morphDocument(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  document.title = doc.title;
+  var region = document.querySelector('[data-open-region]');
+  if (region) {
+    var next = doc.querySelector('[data-open-region="' + region.getAttribute('data-open-region') + '"]');
+    if (next) {
+      __morphNode(region, next);
+      return;
+    }
+  }
+  __morphNode(document.body, doc.body);
+}
+
 document.addEventListener('submit', function (event) {
   var form = event.target;
   if (!(form instanceof HTMLFormElement)) return;
@@ -256,31 +348,16 @@ document.addEventListener('submit', function (event) {
   fetch(actionUrl, {
     method: method,
     body: new FormData(form),
-    headers: { 'x-openelement-action': 'true' },
+    headers: { 'x-openelement-enhance': 'true' },
   }).then(function (response) {
-    return response.json();
+    return response.text().then(function (html) {
+      return { html: html, url: response.url };
+    });
   }).then(function (result) {
-    if (result && result.type === 'redirect' && result.location) {
-      window.location.assign(result.location);
-      return;
+    __morphDocument(result.html);
+    if (result.url && result.url !== window.location.href) {
+      history.pushState({}, '', result.url);
     }
-    if (result && result.type === 'failure') {
-      // Page code (islands) may handle the failure inline; without a
-      // listener the native path takes over and the browser renders the
-      // 422 page with the echo. A failed action must be safe to re-run:
-      // validate first, mutate after validation passes.
-      var failureEvent = new CustomEvent('open:action-failure', {
-        cancelable: true,
-        detail: { status: result.status, data: result.data, form: form },
-      });
-      if (!form.dispatchEvent(failureEvent)) {
-        form.removeAttribute('data-open-enhance');
-        form.requestSubmit(submitter instanceof HTMLElement ? submitter : undefined);
-      }
-      return;
-    }
-    // Unexpected shape: fall back to a full reload of the current state.
-    window.location.reload();
   }).catch(function () {
     window.location.reload();
   });
