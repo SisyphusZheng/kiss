@@ -419,3 +419,37 @@ Deno.test('ssgRender - pure-static projects emit no server artifacts', async () 
   );
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
+
+// ─── 0.42.0-alpha.1 (ADR-0120): generated request-time server entry ───────
+
+Deno.test('request-time server entry serves the SSR bundle at request time', async () => {
+  const { renderRequestTimeServerModule } = await import(
+    '../src/internal/ssg/ssg-helpers.ts'
+  );
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  const dir = await Deno.makeTempDir();
+  try {
+    // A minimal stand-in for the built SSR bundle: one request-time route
+    // whose output depends on the live request (unlike a prerendered page).
+    await Deno.writeTextFile(
+      join(dir, 'entry.js'),
+      `import { Hono } from 'hono';
+const app = new Hono();
+app.get('/live', (c) => c.html('<h1>live ' + new URL(c.req.url).searchParams.get('x') + '</h1>'));
+export default app;
+`,
+    );
+    await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
+
+    const mod = await import(pathToFileURL(join(dir, 'index.js')).href) as {
+      default: (event: { request: Request }) => Promise<Response>;
+    };
+    const response = await mod.default({ request: new Request('http://localhost/live?x=42') });
+    assertEquals(response.status, 200);
+    assert((await response.text()).includes('live 42'));
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
