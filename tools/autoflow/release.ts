@@ -686,6 +686,24 @@ export function roadmapEntryTheme(text: string, versionTag: string): string | un
 }
 
 /**
+ * The theme a roadmap version-anchor bump supersedes, if any. Only a real
+ * version change (from tag ≠ to tag) supersedes a theme: an idempotent
+ * re-run after the bump finds from === to, and re-recording the
+ * already-written new theme would make the line-prose gate reject correct
+ * prose (the 0.42.0-alpha.1 resume loop).
+ */
+export function supersededThemeForBump(
+  text: string,
+  from: string,
+  to: string,
+): string | undefined {
+  const oldTag = from.match(/version: '([^']+)'/u)?.[1];
+  const newTag = to.match(/version: '([^']+)'/u)?.[1];
+  if (!oldTag || oldTag === newTag) return undefined;
+  return roadmapEntryTheme(text, oldTag);
+}
+
+/**
  * Record the superseded current-line theme into the project-constants
  * source text. Returns `undefined` when already recorded (idempotent).
  */
@@ -824,8 +842,7 @@ export async function updateCurrentVersionAnchors(version: string): Promise<void
         // invent the new release's theme. Record the superseded theme so
         // check-www-current-truth fails until a human writes the new one
         // (the 0.41.1 bump shipped alpha.19's theme under the v0.41.1 entry).
-        const oldTag = from.match(/version: '([^']+)'/u)?.[1];
-        const supersededTheme = oldTag ? roadmapEntryTheme(text, oldTag) : undefined;
+        const supersededTheme = supersededThemeForBump(text, from, to);
         if (supersededTheme) {
           const constantsPath = 'tools/project-constants.ts';
           const constants = await Deno.readTextFile(constantsPath);
