@@ -332,10 +332,10 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.42.0-alpha.1',
-    theme: 'request-time rendering foundation',
+    version: 'v0.42.0-alpha.2',
+    theme: 'form/action loop',
     copy:
-      "renderIntent mode 'dynamic' skips prerendering; a generated nitro-mount server serves those routes per request with loaders, and the build rejects prerendered action pages (ADR-0120).",
+      'Plain HTML forms work without JavaScript: fail() validation echoes at 422, successes answer 303 (PRG), named actions dispatch via formaction, and data-open-enhance forms use the same ActionResult protocol.',
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -420,7 +420,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.1' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.2' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

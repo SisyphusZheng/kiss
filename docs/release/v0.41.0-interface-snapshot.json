@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "57ecd6d850bbb9ed7f139e52f56dfbda3a07613a3570d149ffd3697473ddd273",
+          "sha256": "90188ae78f73f1e279897853ea77fca20ccffbddfe630937997a8d5537ffa3e6",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -22,7 +22,7 @@
             "export type { Signal } from './internal/protocol/signal.ts';",
             "export type { IslandOptions } from './internal/protocol/island.ts';",
             "export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';",
-            "export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';",
+            "export type {",
             "export type {",
             "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
             "export type {"
@@ -56,10 +56,10 @@
       },
       "declarations": {
         ".": {
-          "sha256": "95cc58ef49406811e4e9fd7a6897f03e237772b1657cb65d5b686c8b0536d067",
+          "sha256": "6c416f644599a98ae619395e656ff9b046da0dd89eff6cf4e7cf229bb30dd794",
           "publicDeclarations": [
             "export type {",
-            "export type { Action, ActionContext, Loader, LoaderContext } from '@openelement/element';",
+            "export type {",
             "export type { ElementDefinition } from '@openelement/element';",
             "export type { SpaAppInstance, SpaAppOptions } from './spa.ts';",
             "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';",

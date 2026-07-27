@@ -83,7 +83,14 @@ export { isValidTagName } from './internal/core/tag-utils.ts';
 export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 
 // App-owned contracts use these types without reopening the retired protocol package.
-export type { Action, ActionContext, Loader, LoaderContext } from './internal/protocol/data.ts';
+export type {
+  Action,
+  ActionContext,
+  ActionResult,
+  Loader,
+  LoaderContext,
+} from './internal/protocol/data.ts';
+export { ACTION_FETCH_HEADER } from './internal/protocol/data.ts';
 export type {
   AppShellConfig,
   CompatibilityClassification,

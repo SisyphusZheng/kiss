@@ -12,6 +12,28 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.2
+
+- The form/action loop (ADR-0120): plain HTML forms work without
+  JavaScript on `rendering: 'dynamic'` routes.
+- Protocol: actions run before loaders (revalidation invariant);
+  `fail(4xx, data)` returns take the 422 re-render channel with the echo;
+  successful mutations answer 303 (PRG) — never a 200 render; redirects
+  thrown from actions coerce to 303; POST without an action is a defined
+  404.
+- Named actions dispatch via `formaction='?/name'`
+  (`export const actions = { name(ctx) {...} }`); unknown names are a
+  defined 404.
+- Fetch callers (`x-openelement-action` header) receive the `ActionResult`
+  discriminated union (`failure`/`redirect`/`error`); the island client
+  entry enhances `data-open-enhance` forms with the same protocol and no
+  DOM surgery — unhydrated islands are untouched, failure falls back to
+  the native 422 render unless the page handles `open:action-failure`.
+- Contract: an action must be safe to re-run after a failed validation
+  (validate first, mutate after).
+- e2e: the full loop passes with `javaScriptEnabled: false` and on the JS
+  enhancement path — Chromium, Firefox and WebKit, 33/33.
+
 ## 0.42.0-alpha.1
 
 - First alpha of the 0.42 line (ADR-0120): request-time rendering gains

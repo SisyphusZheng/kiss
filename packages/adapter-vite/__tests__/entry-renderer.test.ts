@@ -393,7 +393,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'function __pageDefinition(module) {');
   assertStringIncludes(
     code,
-    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound } from '@openelement/app';",
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure } from '@openelement/app';",
   );
   assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
   assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
@@ -784,4 +784,48 @@ Deno.test('buildEntryDescriptor: ssr field is extracted from manifest declaratio
   assertEquals(ssrComp?.ssr, true);
   assertEquals(clientOnly?.ssr, false);
   assertEquals(defaultComp?.ssr, undefined); // no ssr field in manifest -> undefined
+});
+
+// ─── 0.42.0-alpha.2 (ADR-0120): action protocol codegen ───────────────────
+
+Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {});
+  const code = renderEntry(desc);
+
+  // The action runs before the loader (revalidation invariant): a mutation
+  // never renders stale loader data.
+  const actionIndex = code.indexOf('const __actionResult =');
+  const loaderIndex = code.indexOf('const __data =', actionIndex);
+  assertEquals(actionIndex > 0, true, 'action execution must be emitted');
+  assertEquals(loaderIndex > actionIndex, true, 'loader must run after the action on POST');
+
+  // Real FormData (not parseBody objects), fail() 422 channel, PRG 303 on
+  // success, named actions via ?/name, fetch-path ActionResult JSON.
+  assertStringIncludes(code, 'await c.req.raw.formData()');
+  assertStringIncludes(code, '__isActionFailure(__actionResult)');
+  assertStringIncludes(code, 'return c.redirect(__url.pathname + __url.search, 303)');
+  assertStringIncludes(code, "key.startsWith('/')");
+  assertStringIncludes(code, '__namedActions[__actionName]');
+  assertStringIncludes(code, "c.req.header('x-openelement-action')");
+  assertStringIncludes(
+    code,
+    "{ type: 'failure', status: __actionResult.status, data: __actionResult.data }",
+  );
+  assertStringIncludes(code, ', __actionStatus)');
+  // No action export on a route: POST is a defined 404, not a render.
+  assertStringIncludes(code, 'This route does not accept submissions.');
+});
+
+Deno.test('renderEntry: action catch paths speak ActionResult to fetch callers', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {});
+  const code = renderEntry(desc);
+
+  // Redirects out of a POST action are coerced to 303 (PRG), including the
+  // ActionResult redirect shape; GET handlers keep the author's status.
+  assertStringIncludes(code, 'err.status === 302 ? 303 : err.status');
+  assertStringIncludes(
+    code,
+    "{ type: 'redirect', status: __redirectStatus, location: err.location }",
+  );
+  assertStringIncludes(code, "{ type: 'error', status: 500, error: { message:");
 });

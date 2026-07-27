@@ -59,3 +59,80 @@ test.describe('request-time rendering', () => {
     expect(html).toContain('echo=hello-action');
   });
 });
+
+test.describe('action protocol (ADR-0120, 0.42.0-alpha.2)', () => {
+  test('validation failure returns 422 with the echo (no JS needed)', async ({ request }) => {
+    const response = await request.post('/form', { form: { message: '  ' } });
+    expect(response.status()).toBe(422);
+    const html = await response.text();
+    expect(html).toContain('message is required');
+  });
+
+  test('valid submission is a 303 PRG redirect, never a 200 render', async ({ request }) => {
+    const response = await request.post('/form', {
+      form: { message: 'hello-action' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    expect(response.headers()['location']).toBe('/form?echoed=hello-action');
+  });
+
+  test('named action via formaction dispatches to ?/shout', async ({ request }) => {
+    const response = await request.post('/form?/shout', {
+      form: { message: 'hi there' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    expect(response.headers()['location']).toBe('/live?x=HI%20THERE');
+  });
+
+  test('unknown named action is a defined 404', async ({ request }) => {
+    const response = await request.post('/form?/nope', { form: { message: 'x' } });
+    expect(response.status()).toBe(404);
+  });
+
+  test('fetch callers receive the ActionResult union', async ({ request }) => {
+    const failure = await request.post('/form', {
+      form: { message: '' },
+      headers: { 'x-openelement-action': 'true' },
+    });
+    expect(failure.status()).toBe(422);
+    expect(await failure.json()).toEqual({
+      type: 'failure',
+      status: 422,
+      data: { error: 'message is required', message: '' },
+    });
+
+    const success = await request.post('/form', {
+      form: { message: 'hello' },
+      headers: { 'x-openelement-action': 'true' },
+      maxRedirects: 0,
+    });
+    const body = await success.json();
+    expect(body.type).toBe('redirect');
+    expect(body.location).toBe('/form?echoed=hello');
+  });
+
+  test('full form loop works with JavaScript disabled', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/form');
+    await page.fill('#message', 'no-js-works');
+    await page.click('#submit');
+    await page.waitForURL('**/form?echoed=no-js-works');
+    await expect(page.locator('#echo')).toHaveText('echo=no-js-works');
+
+    await page.goto('/form');
+    await page.click('#submit');
+    await expect(page.locator('#error')).toHaveText('message is required');
+    await context.close();
+  });
+
+  test('enhanced submit follows the ActionResult redirect without a native POST', async ({ page }) => {
+    await page.goto('/form');
+    await page.fill('#message', 'enhanced-path');
+    await page.click('#submit');
+    await page.waitForURL('**/form?echoed=enhanced-path');
+    await expect(page.locator('#echo')).toHaveText('echo=enhanced-path');
+  });
+});

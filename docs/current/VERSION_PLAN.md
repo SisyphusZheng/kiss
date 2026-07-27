@@ -1,7 +1,7 @@
 # v0.42.0 — WC Application Loop release plan
 
-> Current source package line: `v0.42.0-alpha.1`\
-> Current npm registry line: `v0.42.0-alpha.1`\
+> Current source package line: `v0.42.0-alpha.2`\
+> Current npm registry line: `v0.42.0-alpha.2`\
 > Active release target: `v0.41.1`\
 > Planning release target: `v0.42.0` (WC Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\

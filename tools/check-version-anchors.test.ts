@@ -3,6 +3,7 @@ import {
   findStaleAnchorFailures,
   findVersionAnchorFailures,
   headAnchorZone,
+  staleClaimsAlternation,
   versionAnchors,
 } from './check-version-anchors.ts';
 import {
@@ -11,7 +12,6 @@ import {
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
-  stalePackageVersionClaims,
 } from './project-constants.ts';
 
 function readerFrom(files: Record<string, string>): (path: string) => string {
@@ -90,20 +90,15 @@ Deno.test('stale claims: a stale tag before the first head anchor is still in th
   assert(failures.some((f) => f.startsWith('docs/current/VERSION_PLAN.md:')));
 });
 
-Deno.test('stale claims: the current line never matches its own stale prefix', () => {
-  // `0.41.0-alpha.1` (stale) is a prefix of a current prerelease like
-  // `0.41.0-alpha.17`; the numeric boundary must keep the current line from
-  // failing. That prefix relation holds only for same-base bumps: a new-line
-  // prerelease whose previous line is a different-base stable (0.41.2 →
-  // 0.42.0-alpha.1) has no stale prefix at all, and a stable current line
-  // never has one either.
-  const hasStalePrefix = stalePackageVersionClaims().some((claim) =>
-    PACKAGE_VERSION.startsWith(claim)
-  );
-  const sameBasePrereleaseBump = PACKAGE_VERSION.includes('-') &&
-    PREVIOUS_PACKAGE_VERSION.includes('-') &&
-    PACKAGE_VERSION.split('-')[0] === PREVIOUS_PACKAGE_VERSION.split('-')[0];
-  assertEquals(hasStalePrefix, sameBasePrereleaseBump);
+Deno.test('stale claims: the stale regex never flags the current line', () => {
+  // A stale claim can be a string prefix of the current version
+  // (`0.41.0-alpha.1` inside `0.41.0-alpha.17`) — but only sometimes
+  // (alpha.1 inside alpha.2 is not one). The invariant that must hold for
+  // every version shape is the boundary: the stale regex with numeric
+  // boundaries must never match the current line, bare or v-tagged.
+  const pattern = new RegExp(`(?<![\\d.])(?:${staleClaimsAlternation()})(?![\\d.])`, 'u');
+  assert(!pattern.test(PACKAGE_VERSION), `stale regex matched ${PACKAGE_VERSION}`);
+  assert(!pattern.test(PACKAGE_VERSION_TAG), `stale regex matched ${PACKAGE_VERSION_TAG}`);
   assertEquals(findStaleAnchorFailures(readerFrom(goodFiles())), []);
 });
 
