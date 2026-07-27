@@ -277,10 +277,15 @@ export function renderRouteHandler(
   lines.push(`    if (__isOpenElementRedirect(err)) {`);
   if (isAction) {
     lines.push(
-      `      if (__isFetch) return c.json({ type: 'redirect', status: err.status, location: err.location });`,
+      `      const __redirectStatus = err.status === 302 ? 303 : err.status;`,
     );
+    lines.push(
+      `      if (__isFetch) return c.json({ type: 'redirect', status: __redirectStatus, location: err.location });`,
+    );
+    lines.push(`      return c.redirect(err.location, __redirectStatus)`);
+  } else {
+    lines.push(`      return c.redirect(err.location, err.status)`);
   }
-  lines.push(`      return c.redirect(err.location, err.status)`);
   lines.push(`    }`);
   lines.push(`    if (__isOpenElementNotFound(err)) {`);
   lines.push(

@@ -238,3 +238,15 @@ Deno.test('client entry rejects legacy eager/lazy strategy values', () => {
     'Invalid island strategy',
   );
 });
+
+Deno.test('client entry includes the ADR-0120 form enhancement layer', () => {
+  const code = generateClientEntry([
+    { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
+  ]);
+  assert(code.includes("document.addEventListener('submit'"));
+  assert(code.includes('data-open-enhance'));
+  assert(code.includes("'x-openelement-action': 'true'"));
+  assert(code.includes("result.type === 'redirect'"));
+  assert(code.includes("result.type === 'failure'"));
+  assert(code.includes('open:action-failure'));
+});

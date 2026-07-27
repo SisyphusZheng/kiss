@@ -238,5 +238,52 @@ var __schedule = window.requestIdleCallback || window.requestAnimationFrame || f
 __schedule(__deferred);`
       : '// No client:idle islands'
   }
+
+// Form enhancement (ADR-0120, 0.42.0-alpha.2): forms marked
+// data-open-enhance submit through the ActionResult protocol. Without
+// JavaScript the same form is a native POST (303/422 HTML), so behavior
+// degrades to the browser by construction. No DOM surgery happens here, so
+// islands that have not hydrated yet are never touched.
+document.addEventListener('submit', function (event) {
+  var form = event.target;
+  if (!(form instanceof HTMLFormElement)) return;
+  if (!form.hasAttribute('data-open-enhance')) return;
+  var method = (form.getAttribute('method') || 'get').toUpperCase();
+  if (method === 'GET') return;
+  event.preventDefault();
+  var submitter = event.submitter;
+  var actionUrl = (submitter && submitter.formAction) || form.action || window.location.href;
+  fetch(actionUrl, {
+    method: method,
+    body: new FormData(form),
+    headers: { 'x-openelement-action': 'true' },
+  }).then(function (response) {
+    return response.json();
+  }).then(function (result) {
+    if (result && result.type === 'redirect' && result.location) {
+      window.location.assign(result.location);
+      return;
+    }
+    if (result && result.type === 'failure') {
+      // Page code (islands) may handle the failure inline; without a
+      // listener the native path takes over and the browser renders the
+      // 422 page with the echo. A failed action must be safe to re-run:
+      // validate first, mutate after validation passes.
+      var failureEvent = new CustomEvent('open:action-failure', {
+        cancelable: true,
+        detail: { status: result.status, data: result.data, form: form },
+      });
+      if (!form.dispatchEvent(failureEvent)) {
+        form.removeAttribute('data-open-enhance');
+        form.requestSubmit(submitter instanceof HTMLElement ? submitter : undefined);
+      }
+      return;
+    }
+    // Unexpected shape: fall back to a full reload of the current state.
+    window.location.reload();
+  }).catch(function () {
+    window.location.reload();
+  });
+});
 `;
 }

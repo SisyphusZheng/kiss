@@ -820,6 +820,12 @@ Deno.test('renderEntry: action catch paths speak ActionResult to fetch callers',
   const desc = buildEntryDescriptor(basicRoutes, {});
   const code = renderEntry(desc);
 
-  assertStringIncludes(code, "{ type: 'redirect', status: err.status, location: err.location }");
+  // Redirects out of a POST action are coerced to 303 (PRG), including the
+  // ActionResult redirect shape; GET handlers keep the author's status.
+  assertStringIncludes(code, 'err.status === 302 ? 303 : err.status');
+  assertStringIncludes(
+    code,
+    "{ type: 'redirect', status: __redirectStatus, location: err.location }",
+  );
   assertStringIncludes(code, "{ type: 'error', status: 500, error: { message:");
 });
