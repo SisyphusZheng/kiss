@@ -437,6 +437,7 @@ Deno.test('decideTagAction: create, skip at HEAD, keep on proven resume, refuse 
     publishPassed: false,
     existingIsAncestor: false,
     existingEvidenceId: undefined,
+    existingEvidenceKind: undefined,
     evidenceId: 'run-1',
   };
   assertEquals(decideTagAction({ ...base, existing: undefined }), 'create');
@@ -453,6 +454,20 @@ Deno.test('decideTagAction: create, skip at HEAD, keep on proven resume, refuse 
     }),
     'keep-existing',
   );
+  // Two-phase flow: a local patch-release created the tag for the same
+  // version, the CI publish-existing run owns a different evidence id — the
+  // patch-release provenance still keeps the tag (the 0.41.2 refusal).
+  assertEquals(
+    decideTagAction({
+      ...base,
+      existing: 'aaa',
+      publishPassed: true,
+      existingIsAncestor: true,
+      existingEvidenceId: 'patch-run',
+      existingEvidenceKind: 'patch-release',
+    }),
+    'keep-existing',
+  );
   // Same shape but a different run owns the tag: refuse.
   assertThrows(
     () =>
@@ -465,6 +480,20 @@ Deno.test('decideTagAction: create, skip at HEAD, keep on proven resume, refuse 
       }),
     Error,
     'Refusing to overwrite existing tag v9.9.9',
+  );
+  // Publish not proven: refuse even with patch-release provenance.
+  assertThrows(
+    () =>
+      decideTagAction({
+        ...base,
+        existing: 'aaa',
+        publishPassed: false,
+        existingIsAncestor: true,
+        existingEvidenceId: 'patch-run',
+        existingEvidenceKind: 'patch-release',
+      }),
+    Error,
+    'Refusing to overwrite',
   );
   // Publish not proven: refuse.
   assertThrows(

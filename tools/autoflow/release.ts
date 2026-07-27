@@ -300,10 +300,10 @@ export function createReleasePlan(
         }
         // Only gather the resume signals when the tag actually conflicts.
         let existingIsAncestor = false;
-        let existingEvidenceId: string | undefined;
+        let existingEvidence: { id?: string; kind?: string } = {};
         if (existing !== undefined && existing !== head) {
           existingIsAncestor = await isAncestorCommit(existing, head);
-          existingEvidenceId = await tagEvidenceId(tag, targetVersion);
+          existingEvidence = await tagEvidenceProvenance(tag, targetVersion);
         }
         const action = decideTagAction({
           tag,
@@ -311,7 +311,8 @@ export function createReleasePlan(
           existing,
           publishPassed: publishEvidencePassed(evidence),
           existingIsAncestor,
-          existingEvidenceId,
+          existingEvidenceId: existingEvidence.id,
+          existingEvidenceKind: existingEvidence.kind,
           evidenceId: evidence.id,
         });
         if (action === 'skip-at-head') {
@@ -1129,6 +1130,7 @@ export interface TagDecisionInput {
   publishPassed: boolean;
   existingIsAncestor: boolean;
   existingEvidenceId: string | undefined;
+  existingEvidenceKind: string | undefined;
   evidenceId: string;
 }
 
@@ -1144,8 +1146,14 @@ export interface TagDecisionInput {
 export function decideTagAction(input: TagDecisionInput): TagAction {
   if (input.existing === undefined) return 'create';
   if (input.existing === input.head) return 'skip-at-head';
-  const resumable = input.publishPassed && input.existingIsAncestor &&
-    input.existingEvidenceId === input.evidenceId;
+  // A conflicting tag is kept only with proven provenance: either it carries
+  // this run's own evidence id (same-run resume), or it was created by a
+  // patch-release run for the same version — the two-phase flow where a
+  // local patch-release tags and the CI publish-existing publishes (the
+  // 0.41.2 publish run refused its own correct tag without this).
+  const proven = input.existingEvidenceId === input.evidenceId ||
+    input.existingEvidenceKind === 'patch-release';
+  const resumable = input.publishPassed && input.existingIsAncestor && proven;
   if (resumable) return 'keep-existing';
   throw new Error(
     `Refusing to overwrite existing tag ${input.tag} at ${input.existing}; HEAD is ${input.head}.`,
@@ -1154,12 +1162,23 @@ export function decideTagAction(input: TagDecisionInput): TagAction {
 
 /** Evidence id recorded at a tag's commit, if the tag carries an evidence file. */
 export async function tagEvidenceId(tag: string, version: string): Promise<string | undefined> {
+  return (await tagEvidenceProvenance(tag, version)).id;
+}
+
+/** Evidence id and release kind recorded at a tag's commit, if it carries one. */
+export async function tagEvidenceProvenance(
+  tag: string,
+  version: string,
+): Promise<{ id?: string; kind?: string }> {
   try {
     const raw = await runCaptured(['git', 'show', `${tag}:${evidenceFile(version)}`]);
-    const parsed = JSON.parse(raw) as { id?: unknown };
-    return typeof parsed.id === 'string' ? parsed.id : undefined;
+    const parsed = JSON.parse(raw) as { id?: unknown; kind?: unknown };
+    return {
+      id: typeof parsed.id === 'string' ? parsed.id : undefined,
+      kind: typeof parsed.kind === 'string' ? parsed.kind : undefined,
+    };
   } catch {
-    return undefined;
+    return {};
   }
 }
 
