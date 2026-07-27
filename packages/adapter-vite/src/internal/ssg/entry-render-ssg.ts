@@ -69,7 +69,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
         (r.paramNames || []).map(jsStringLiteral).join(', ')
       }], revalidate: ${
         routeRevalidateExpr(r.varName)
-      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto") },`,
+      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto"), hasAction: (typeof ${r.varName}.action === "function") },`,
     );
   }
   lines.push('];');

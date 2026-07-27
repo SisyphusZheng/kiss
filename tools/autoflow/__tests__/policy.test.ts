@@ -10,6 +10,7 @@ import {
   releaseTag,
   resolvePatchTargetVersion,
   roadmapEntryTheme,
+  supersededThemeForBump,
 } from '../release.ts';
 
 Deno.test('policy: patch docs fix can be automated', () => {
@@ -243,6 +244,26 @@ Deno.test('release: previous release theme bump records the superseded theme ide
     "export const PREVIOUS_RELEASE_THEME = 'new theme';\n",
   );
   assertEquals(bumpPreviousReleaseThemeText(constants, 'old theme'), undefined);
+});
+
+Deno.test('release: superseded theme is only recorded on a real version change', () => {
+  const text =
+    "  {\n    version: 'v0.42.0-alpha.1',\n    theme: 'request-time rendering foundation',\n";
+  // Real bump: v0.41.2 -> v0.42.0-alpha.1 records the old entry's theme.
+  const bumpedText = text.replace('v0.42.0-alpha.1', 'v0.41.2').replace(
+    'request-time rendering foundation',
+    'release tooling self-repair',
+  );
+  assertEquals(
+    supersededThemeForBump(bumpedText, "version: 'v0.41.2'", "version: 'v0.42.0-alpha.1'"),
+    'release tooling self-repair',
+  );
+  // Idempotent resume (from === to): nothing is superseded — recording the
+  // new theme here made the 0.42.0-alpha.1 gate reject correct prose.
+  assertEquals(
+    supersededThemeForBump(text, "version: 'v0.42.0-alpha.1'", "version: 'v0.42.0-alpha.1'"),
+    undefined,
+  );
 });
 
 Deno.test('release: local plan includes publish, smoke, gates, and GitHub release when credentials are present', () => {

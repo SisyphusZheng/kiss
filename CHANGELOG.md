@@ -12,6 +12,32 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.1
+
+- First alpha of the 0.42 line (ADR-0120): request-time rendering gains
+  semantics — `renderIntent.mode` was inert metadata before this release.
+- `rendering: 'dynamic'` routes skip prerendering, dynamic expansion and
+  i18n locale prerendering; they are served per request by the generated
+  `dist/server/index.js` (nitro-mount over the same SSR bundle), with
+  `dist/server/server-manifest.json` recording the partition.
+- Hard rule (ADR-0120): pages with actions cannot be prerendered — a route
+  module exporting an action without `mode: 'dynamic'` fails the build.
+- BuildPlan evidence records `requestTimeRoutes`; pure-static projects emit
+  no new artifacts (byte-identical public output proven against the 0.41.2
+  build: zero HTML/JS/CSS differences).
+- Request-time e2e fixture under
+  `packages/adapter-vite/__fixtures__/request-time/` proves loader data
+  varies per request and islands hydrate identically to static pages
+  (Chromium, Firefox and WebKit, 12/12).
+- Request-time HTML now receives the island client entry automatically —
+  the generated server entry injects the same script the static pipeline
+  injects post-build (found by the fixture; without it, islands on
+  request-time pages never hydrated). A latent `__headExtras is not
+  defined` codegen bug for projects without head extras is fixed too.
+- Loader/action contract types (`Loader`/`LoaderContext`/`Action`/
+  `ActionContext`) are unchanged — they already shipped; this alpha wires
+  the rendering-mode semantics around them.
+
 ## 0.41.2
 
 - Patch release: release-tooling self-repair (TP-0 of the 0.42.0 plan) — no

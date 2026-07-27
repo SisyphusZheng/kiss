@@ -332,10 +332,10 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.41.2',
-    theme: 'release tooling self-repair',
+    version: 'v0.42.0-alpha.1',
+    theme: 'request-time rendering foundation',
     copy:
-      'TP-0 of the 0.42.0 plan: patch-release resume re-derives its target from evidence, and a line-prose gate keeps release themes honest.',
+      "renderIntent mode 'dynamic' skips prerendering; a generated nitro-mount server serves those routes per request with loaders, and the build rejects prerendered action pages (ADR-0120).",
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -420,7 +420,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.41.2' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.1' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

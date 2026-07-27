@@ -55,6 +55,29 @@ export async function readClientEntryFromManifest(manifestPath: string): Promise
   throw new Error(`Client manifest exists but no open-client-entry was found: ${manifestPath}`);
 }
 
+/**
+ * Write the island client entry URL for the request-time server entry
+ * (0.42.0-alpha.1 / ADR-0120). dist/server/index.js imports this module to
+ * inject the same island client script into request-time HTML that the
+ * static pipeline injects post-build. No-op for pure-static builds (no
+ * request-time server entry was emitted).
+ */
+export async function writeRequestTimeClientScript(
+  ctx: OpenElementBuildContext,
+  scriptSrc: string,
+): Promise<void> {
+  const root = ctx.phase3.root || process.cwd();
+  const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
+  const serverIndex = join(root, outDir, 'server', 'index.js');
+  const { existsSync, writeFileSync } = await import('node:fs');
+  if (!existsSync(serverIndex)) return;
+  writeFileSync(
+    join(root, outDir, 'server', 'client-script.js'),
+    `export const clientScriptSrc = ${JSON.stringify(scriptSrc)};\n`,
+  );
+  log.info(`Request-time client script recorded: ${scriptSrc}`);
+}
+
 /** Vite plugin: writes build metadata to ctx, then runs Phase 2 + Phase 3 */
 export function buildPlugin(
   options: FrameworkOptions & { allowHeadExtrasScripts?: boolean; ssg?: SsgBehaviorOptions } = {},
@@ -209,6 +232,7 @@ export function buildPlugin(
             const base = ctx.phase3.base || '/';
             const scriptSrc = `${base}client/${clientEntry}`;
             await postProcessClientIslandBuild(ctx, scriptSrc);
+            await writeRequestTimeClientScript(ctx, scriptSrc);
             log.info(`Client script injected: ${scriptSrc}`);
           }
         } catch (error) {

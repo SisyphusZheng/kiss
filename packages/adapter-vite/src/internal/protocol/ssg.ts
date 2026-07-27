@@ -270,6 +270,8 @@ export interface RouteInfoEntry {
   revalidate?: number | false;
   /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
   rendering?: string;
+  /** True when the route module exports an action (request-time form POST). */
+  hasAction?: boolean;
   params?: Record<string, string>;
 }
 
@@ -425,6 +427,11 @@ export interface BuildPageArtifact {
 export interface BuildManifestArtifact {
   routes: Array<{ kind: 'page' | 'api'; path: string; tagName?: string; isDynamic: boolean }>;
   islands: BuildIslandInput[];
+  /**
+   * Paths served at request time (renderIntent mode 'dynamic', 0.42.0-alpha.1
+   * / ADR-0120). Absent for pure-static builds.
+   */
+  requestTimeRoutes?: string[];
 }
 
 /** A single client asset emitted by the build pipeline. */

@@ -93,13 +93,17 @@ Deno.test('stale claims: a stale tag before the first head anchor is still in th
 Deno.test('stale claims: the current line never matches its own stale prefix', () => {
   // `0.41.0-alpha.1` (stale) is a prefix of a current prerelease like
   // `0.41.0-alpha.17`; the numeric boundary must keep the current line from
-  // failing. On a stable current line there is no such prefix — the current
-  // version simply never matches a stale claim either way.
-  if (PACKAGE_VERSION.includes('-')) {
-    assert(stalePackageVersionClaims().some((claim) => PACKAGE_VERSION.startsWith(claim)));
-  } else {
-    assert(!stalePackageVersionClaims().some((claim) => PACKAGE_VERSION.startsWith(claim)));
-  }
+  // failing. That prefix relation holds only for same-base bumps: a new-line
+  // prerelease whose previous line is a different-base stable (0.41.2 →
+  // 0.42.0-alpha.1) has no stale prefix at all, and a stable current line
+  // never has one either.
+  const hasStalePrefix = stalePackageVersionClaims().some((claim) =>
+    PACKAGE_VERSION.startsWith(claim)
+  );
+  const sameBasePrereleaseBump = PACKAGE_VERSION.includes('-') &&
+    PREVIOUS_PACKAGE_VERSION.includes('-') &&
+    PACKAGE_VERSION.split('-')[0] === PREVIOUS_PACKAGE_VERSION.split('-')[0];
+  assertEquals(hasStalePrefix, sameBasePrereleaseBump);
   assertEquals(findStaleAnchorFailures(readerFrom(goodFiles())), []);
 });
 

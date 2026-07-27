@@ -71,6 +71,25 @@ function files(root: string): string[] {
   return result;
 }
 
+/**
+ * Request-time route evidence for the build manifest, derived from the
+ * emitted dist/server/server-manifest.json (0.42.0-alpha.1 / ADR-0120).
+ * Returns {} for pure-static builds so their evidence shape is unchanged.
+ */
+function readRequestTimeRouteEvidence(outputDir: string): { requestTimeRoutes?: string[] } {
+  try {
+    const manifest = JSON.parse(
+      readFileSync(join(outputDir, 'server', 'server-manifest.json'), 'utf8'),
+    ) as { requestTimeRoutes?: Array<{ path?: unknown }> };
+    const paths = (manifest.requestTimeRoutes ?? [])
+      .map((route) => route.path)
+      .filter((path): path is string => typeof path === 'string');
+    return paths.length > 0 ? { requestTimeRoutes: paths } : {};
+  } catch {
+    return {};
+  }
+}
+
 export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
   const root = plan.output.root ?? (typeof Deno !== 'undefined' ? Deno.cwd() : process.cwd());
   const outputDir = join(root, plan.output.outDir ?? DEFAULT_OUT_DIR);
@@ -97,6 +116,7 @@ export function collectBuildArtifacts(plan: BuildPlan): BuildArtifacts {
           isDynamic: (route.paramNames?.length ?? 0) > 0,
         })),
         islands: plan.islands,
+        ...readRequestTimeRouteEvidence(outputDir),
       },
       clientAssets,
       warnings: [],

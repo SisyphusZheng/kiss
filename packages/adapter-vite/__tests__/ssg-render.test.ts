@@ -332,3 +332,164 @@ Deno.test('ssgRender - dynamic-route failure in warn mode skips the page and the
   ]);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
+
+// ─── 0.42.0-alpha.1 (ADR-0120): request-time route partition ──────────────
+
+Deno.test('ssgRender - request-time routes skip prerender and emit server artifacts', async () => {
+  const outDir = './dist-test-ssg-render-request-time';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const app = new Hono();
+  app.get('/', (c) => c.html('<html><body>static home</body></html>'));
+  app.get('/live', (c) => c.html('<html><body>request time</body></html>'));
+  const bundle = createMockBundle({
+    default: app,
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/live',
+        tagName: 'live-page',
+        isDynamic: false,
+        paramNames: [],
+        rendering: 'dynamic',
+        hasAction: true,
+      },
+    ],
+  });
+
+  await ssgRender(bundle, { ...defaultOptions, outDir });
+
+  // The static route is prerendered; the request-time route is not.
+  assert(await pathExists(`${outDir}/index.html`), 'static route should be prerendered');
+  assert(
+    !(await pathExists(`${outDir}/live/index.html`)) && !(await pathExists(`${outDir}/live.html`)),
+    'request-time route must not be prerendered',
+  );
+
+  // Server artifacts land next to the SSR bundle.
+  const manifest = JSON.parse(await Deno.readTextFile(`${outDir}/server/server-manifest.json`));
+  assertEquals(manifest, {
+    version: 1,
+    requestTimeRoutes: [{ path: '/live', paramNames: [], hasAction: true }],
+  });
+  const serverEntry = await Deno.readTextFile(`${outDir}/server/index.js`);
+  assert(serverEntry.includes('createOpenElementNitroHandler'));
+  assert(serverEntry.includes("from './entry.js'"));
+
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - pages with actions cannot be prerendered (hard rule)', async () => {
+  const outDir = './dist-test-ssg-render-action-rule';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle({
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      {
+        path: '/form',
+        tagName: 'form-page',
+        isDynamic: false,
+        paramNames: [],
+        hasAction: true,
+      },
+    ],
+  });
+
+  await assertRejects(
+    () => ssgRender(bundle, { ...defaultOptions, outDir }),
+    Error,
+    'Pages with actions cannot be prerendered',
+  );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - pure-static projects emit no server artifacts', async () => {
+  const outDir = './dist-test-ssg-render-pure-static';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle();
+
+  await ssgRender(bundle, { ...defaultOptions, outDir });
+
+  assert(
+    !(await pathExists(`${outDir}/server/server-manifest.json`)),
+    'pure-static build must not emit a server manifest',
+  );
+  assert(
+    !(await pathExists(`${outDir}/server/index.js`)),
+    'pure-static build must not emit a server entry',
+  );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+// ─── 0.42.0-alpha.1 (ADR-0120): generated request-time server entry ───────
+
+Deno.test('request-time server entry serves the SSR bundle at request time', async () => {
+  const { renderRequestTimeServerModule } = await import(
+    '../src/internal/ssg/ssg-helpers.ts'
+  );
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  const dir = await Deno.makeTempDir();
+  try {
+    // A minimal stand-in for the built SSR bundle: one request-time route
+    // whose output depends on the live request (unlike a prerendered page).
+    await Deno.writeTextFile(
+      join(dir, 'entry.js'),
+      `import { Hono } from 'hono';
+const app = new Hono();
+app.get('/live', (c) => c.html('<h1>live ' + new URL(c.req.url).searchParams.get('x') + '</h1>'));
+export default app;
+`,
+    );
+    await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
+    await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
+
+    const mod = await import(pathToFileURL(join(dir, 'index.js')).href) as {
+      default: (event: { request: Request }) => Promise<Response>;
+    };
+    const response = await mod.default({ request: new Request('http://localhost/live?x=42') });
+    assertEquals(response.status, 200);
+    const html = await response.text();
+    assert(html.includes('live 42'));
+    assert(!html.includes('type="module"'), 'no client script when none was recorded');
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test('request-time server entry injects the island client script into HTML responses', async () => {
+  const { renderRequestTimeServerModule } = await import(
+    '../src/internal/ssg/ssg-helpers.ts'
+  );
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+
+  const dir = await Deno.makeTempDir();
+  try {
+    await Deno.writeTextFile(
+      join(dir, 'entry.js'),
+      `import { Hono } from 'hono';
+const app = new Hono();
+app.get('/live', (c) => c.html('<html><body><h1>live</h1></body></html>'));
+export default app;
+`,
+    );
+    await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
+    await Deno.writeTextFile(
+      join(dir, 'client-script.js'),
+      `export const clientScriptSrc = '/client/entry-abc123.js';\n`,
+    );
+
+    const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?with-script') as {
+      default: (event: { request: Request }) => Promise<Response>;
+    };
+    const response = await mod.default({ request: new Request('http://localhost/live') });
+    const html = await response.text();
+    assert(
+      html.includes('<script type="module" src="/client/entry-abc123.js"></script>'),
+      'request-time HTML must carry the island client script like static pages',
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true }).catch(() => {});
+  }
+});
