@@ -174,7 +174,11 @@ var __tags = [${tags}];
 
 function __load(tag) {
   if (__map[tag]) {
-    __map[tag]().catch(function(e) { log.warn(tag, e); });
+    __map[tag]().then(function () {
+      // #584: late-hydrating islands create their shadow roots after the
+      // ready-time scan; rescan so enhanced forms inside them are heard.
+      setTimeout(function () { __scanSubmitRoots(document); }, 0);
+    }).catch(function(e) { log.warn(tag, e); });
     __map[tag] = null;
   }
 }
@@ -330,15 +334,32 @@ function __islandIntact(oldEl, newEl) {
     }
     return out;
   }
+  function kidsEqual(o, nn) {
+    // #582: nested DSD compares normalized on both sides — the live subtree
+    // already consumed its template, the fresh parse still carries it, so a
+    // raw outerHTML comparison would always judge the island 'changed'.
+    if (o.nodeType !== nn.nodeType) return false;
+    if (o.nodeType === 3) return o.data === nn.data;
+    if (o.nodeType !== 1) return true;
+    if (o.tagName !== nn.tagName) return false;
+    if (o.attributes.length !== nn.attributes.length) return false;
+    for (var a = 0; a < nn.attributes.length; a++) {
+      var attr = nn.attributes[a];
+      if (o.getAttribute(attr.name) !== attr.value) return false;
+    }
+    var oks = significantKids(o, true);
+    var nks = significantKids(nn, true);
+    if (oks.length !== nks.length) return false;
+    for (var i = 0; i < oks.length; i++) {
+      if (!kidsEqual(oks[i], nks[i])) return false;
+    }
+    return true;
+  }
   var newKids = significantKids(newEl, true);
   var oldKids = significantKids(oldEl, true);
   if (oldKids.length !== newKids.length) return false;
   for (var m = 0; m < newKids.length; m++) {
-    var o = oldKids[m];
-    var nn = newKids[m];
-    if (o.nodeType !== nn.nodeType) return false;
-    if (o.nodeType === 3 && o.data !== nn.data) return false;
-    if (o.nodeType === 1 && o.outerHTML !== nn.outerHTML) return false;
+    if (!kidsEqual(oldKids[m], newKids[m])) return false;
   }
   return true;
 }
@@ -347,58 +368,80 @@ function __compatible(a, b) {
   return a.nodeType === b.nodeType && (a.nodeType !== 1 || a.tagName === b.tagName);
 }
 
+function __instantiateDsd(node) {
+  // #579: DSD is only instantiated by the HTML parser; a DOMParser-parsed
+  // node inserted into the live tree keeps an inert <template> child and the
+  // island would render client-initial content instead of the server's.
+  // Instantiate declarative shadow roots manually so upgrades hydrate the
+  // server-rendered content. Runs after insertion (upgrade reactions fire
+  // after this synchronous code, so the DSD path is taken).
+  if (node.nodeType !== 1) return;
+  var templates = node.querySelectorAll('template[shadowrootmode]');
+  for (var i = 0; i < templates.length; i++) {
+    var template = templates[i];
+    var host = template.parentNode;
+    if (!host || host.shadowRoot) continue;
+    var root = host.attachShadow({ mode: template.getAttribute('shadowrootmode') });
+    root.appendChild(template.content);
+    template.remove();
+  }
+}
+
 function __morphChildren(oldParent, newParent) {
-  // ADR-0121 §9 (#554): id-keyed matching first, then a structural walk with
-  // bounded lookahead — insertions and removals between compatible anchors
-  // are preserved instead of cascading into wholesale replacement.
+  // ADR-0121 §9 (#554, rewritten for #580): an ordered walk. Old children
+  // are indexed by id (id'd nodes are consumed ONLY by an id match); each
+  // new child in order matches by id else structurally ahead of the
+  // reference point; the match is morphed and MOVED into position (moves
+  // preserve shadow roots and state); unmatched new nodes are inserted in
+  // place (with DSD instantiation); only never-matched old nodes are
+  // removed — there is no lookahead window, so deletion is exact.
   var oldKids = Array.prototype.slice.call(oldParent.childNodes);
   var newKids = Array.prototype.slice.call(newParent.childNodes);
-  var byId = {};
-  for (var j = 0; j < newKids.length; j++) {
-    var cand = newKids[j];
-    if (cand.nodeType === 1 && cand.id && !byId[cand.id]) byId[cand.id] = cand;
-  }
-  var usedNew = [];
-  var pairs = [];
+  var oldById = {};
   for (var i = 0; i < oldKids.length; i++) {
-    var o = oldKids[i];
-    var match = null;
-    if (o.nodeType === 1 && o.id && byId[o.id] && usedNew.indexOf(byId[o.id]) === -1 &&
-        __compatible(o, byId[o.id])) {
-      match = byId[o.id];
-      usedNew.push(match);
-    }
-    pairs.push([o, match]);
+    var ok = oldKids[i];
+    if (ok.nodeType === 1 && ok.id && !oldById[ok.id]) oldById[ok.id] = ok;
   }
-  var remainingNew = [];
-  for (var r = 0; r < newKids.length; r++) {
-    if (usedNew.indexOf(newKids[r]) === -1) remainingNew.push(newKids[r]);
-  }
-  var ni = 0;
-  for (var p = 0; p < pairs.length; p++) {
-    var oldEl = pairs[p][0];
-    var paired = pairs[p][1];
-    if (paired) {
-      __morphNode(oldEl, paired);
-      continue;
-    }
-    var found = -1;
-    for (var w = ni; w < Math.min(ni + 4, remainingNew.length); w++) {
-      if (__compatible(oldEl, remainingNew[w])) { found = w; break; }
-    }
-    if (found !== -1) {
-      for (var ins = ni; ins < found; ins++) oldParent.insertBefore(remainingNew[ins], oldEl);
-      __morphNode(oldEl, remainingNew[found]);
-      ni = found + 1;
+  var usedOld = [];
+  var ref = oldParent.firstChild;
+  for (var j = 0; j < newKids.length; j++) {
+    var n = newKids[j];
+    var o = null;
+    if (n.nodeType === 1 && n.id && oldById[n.id] && usedOld.indexOf(oldById[n.id]) === -1 &&
+        __compatible(oldById[n.id], n)) {
+      o = oldById[n.id];
     } else {
-      oldEl.remove();
+      var c = ref;
+      while (c) {
+        if (usedOld.indexOf(c) === -1 && __compatible(c, n) &&
+            !(c.nodeType === 1 && c.id && oldById[c.id] === c)) {
+          o = c;
+          break;
+        }
+        c = c.nextSibling;
+      }
+    }
+    if (o) {
+      usedOld.push(o);
+      __morphNode(o, n);
+      if (o !== ref) oldParent.insertBefore(o, ref);
+      ref = o.nextSibling;
+    } else {
+      // Instantiate BEFORE insertion: upgrade reactions for a defined custom
+      // element fire synchronously with the DOM call, and the hydration path
+      // must already find the server-rendered shadow content (#579).
+      __instantiateDsd(n);
+      oldParent.insertBefore(n, ref);
     }
   }
-  for (var tail = ni; tail < remainingNew.length; tail++) oldParent.appendChild(remainingNew[tail]);
+  for (var k = 0; k < oldKids.length; k++) {
+    if (usedOld.indexOf(oldKids[k]) === -1) oldKids[k].remove();
+  }
 }
 
 function __morphNode(oldEl, newEl) {
   if (!__compatible(oldEl, newEl)) {
+    __instantiateDsd(newEl);
     oldEl.replaceWith(newEl);
     return;
   }
@@ -418,7 +461,10 @@ function __morphNode(oldEl, newEl) {
   if (isIsland) {
     if (__islandIntact(oldEl, newEl)) return;
     if (oldEl.shadowRoot) {
-      // Hydrated island whose surface changed: replace (state resets by design).
+      // Hydrated island whose surface changed: replace (state resets by
+      // design); the replacement is DSD-instantiated BEFORE the swap so the
+      // upgrade hydrates the server's render, not a client-initial one (#579).
+      __instantiateDsd(newEl);
       oldEl.replaceWith(newEl);
       return;
     }
@@ -472,6 +518,9 @@ function __morphDocument(html, form, regionName) {
         __morphNode(oldScope, newScope);
         return true;
       }
+      // #589: a scoped morph that cannot find its region is a navigation,
+      // and it should say so (silent navigations were the round-2 DX finding).
+      log.warn('data-open-region "' + name + '" missing on one side; navigating instead of morphing');
       return false;
     }
   }
@@ -488,7 +537,11 @@ function __attachSubmit(root) {
 function __scanSubmitRoots(root) {
   // The submit event is not reliably composed across engines, so enhanced
   // forms inside shadow roots are intercepted at the root. Idempotent; runs
-  // at ready time and after every morph (new hosts may appear).
+  // at ready time and after every morph (new hosts may appear). Roots
+  // detached by earlier morphs are pruned (#588).
+  __submitRoots = __submitRoots.filter(function (r) {
+    return r === document || r.isConnected !== false;
+  });
   var all = root.querySelectorAll('*');
   for (var i = 0; i < all.length; i++) {
     var el = all[i];
@@ -500,7 +553,22 @@ function __scanSubmitRoots(root) {
 }
 
 var __submitSeq = 0;
-var __enhancedNav = false;
+// #578: the marker lives in sessionStorage so it survives a page reload
+// (a memory variable resets, and Back after a reload would show stale
+// content for the restored URL — the exact thing §10 forbids).
+var __NAV_KEY = 'openelement:enhanced-nav';
+function __markEnhancedNav() {
+  try {
+    sessionStorage.setItem(__NAV_KEY, '1');
+  } catch (e) { /* privacy modes */ }
+}
+function __hasEnhancedNav() {
+  try {
+    return sessionStorage.getItem(__NAV_KEY) === '1';
+  } catch (e) {
+    return false;
+  }
+}
 function __onSubmit(event) {
   var form = event.target;
   if (!(form instanceof HTMLFormElement)) return;
@@ -514,7 +582,11 @@ function __onSubmit(event) {
   form.__openElementBusy = true;
   var seq = ++__submitSeq;
   var submitter = event.submitter;
-  var actionUrl = (submitter && submitter.formAction) || form.action || window.location.href;
+  // #576: the formAction IDL attribute returns the document URL when no
+  // formaction attribute is present, so it must only win when the attribute
+  // exists — otherwise form.action (the declared address) is ignored.
+  var actionUrl = (submitter && submitter.hasAttribute('formaction') && submitter.formAction) ||
+    form.action || window.location.href;
   // #544: the submitter's name/value is part of the body — the body never
   // differs between the two paths (ADR-0120 rule 2).
   var body = submitter ? new FormData(form, submitter) : new FormData(form);
@@ -565,16 +637,27 @@ function __onSubmit(event) {
           target.search === window.location.search;
         var finalUrl = target.href + (samePage && !target.hash ? window.location.hash : '');
         if (finalUrl !== window.location.href) {
-          __enhancedNav = true;
+          __markEnhancedNav();
           history.pushState({}, '', finalUrl);
         }
         return;
       }
     }
     window.location.assign(target.href);
-  }).catch(function () {
+  }).catch(function (err) {
     form.__openElementBusy = false;
-    window.location.reload();
+    // #585: give the app a hook before the reload fallback — a transient
+    // failure must not silently discard in-flight input elsewhere on the
+    // page. preventDefault() suppresses the reload.
+    var proceed = form.dispatchEvent(new CustomEvent('open:action-error', {
+      cancelable: true,
+      detail: { error: err, form: form },
+    }));
+    // #589: the fallback is invisible without a trace — say why.
+    if (proceed) {
+      log.warn('enhanced submit failed; reloading the page', err);
+      window.location.reload();
+    }
   });
 }
 
@@ -584,9 +667,16 @@ __onReady(function () { __scanSubmitRoots(document); });
 // ADR-0121 §10 (#545): enhanced navigation is pushState-based; back/forward
 // reloads the restored URL so content never disagrees with the address bar.
 // The guard keeps the listener inert on pages that never enhanced-navigated
-// (e.g. sites running their own client-side routing on the same bundle).
+// (e.g. sites running their own client-side routing on the same bundle);
+// the marker persists across reloads via sessionStorage (#578).
 window.addEventListener('popstate', function () {
-  if (__enhancedNav) window.location.reload();
+  if (__hasEnhancedNav()) window.location.reload();
+});
+// bfcache restores do not fire popstate (Firefox restores the morphed
+// document as-is); a persisted pageshow with the marker set is the same
+// situation and must also reload.
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted && __hasEnhancedNav()) window.location.reload();
 });
 `
       : '// No data-open-enhance forms: the form enhancement layer is omitted (#569 complement),\n// keeping the client bundle free of morph and popstate code.'

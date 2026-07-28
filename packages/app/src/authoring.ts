@@ -93,7 +93,11 @@ export function isOpenElementRedirect(error: unknown): error is OpenElementRedir
       error !== null &&
       (error as { name?: unknown }).name === 'OpenElementRedirect' &&
       typeof (error as { location?: unknown }).location === 'string' &&
-      typeof (error as { status?: unknown }).status === 'number'
+      typeof (error as { status?: unknown }).status === 'number' &&
+      // ADR-0121 (#583): the duck-typed branch honors the same whitelist —
+      // a shaped object must not smuggle an arbitrary status into the
+      // redirect channel.
+      REDIRECT_STATUSES.has((error as { status: number }).status)
     );
 }
 

@@ -239,7 +239,24 @@ export function renderRouteHandler(
       }, cspNonce: c.get('cspNonce') }), 404);`,
     );
     lines.push(`    }`);
-    lines.push(`    const __formData = await c.req.raw.formData();`);
+    lines.push(`    let __formData;`);
+    // ADR-0121 (#581): an unparseable body is a client error, not a 500.
+    lines.push(`    try {`);
+    lines.push(`      __formData = await c.req.raw.formData();`);
+    lines.push(`    } catch {`);
+    lines.push(`      if (__isFetch) {`);
+    lines.push(
+      `        return c.json({ type: 'error', status: 400, error: { message: 'Could not parse the form body.' } }, 400);`,
+    );
+    lines.push(`      }`);
+    lines.push(
+      `      return c.html(wrapInDocument(__statusHtml('400 Bad Request', 'Could not parse the form body.'), { title: '400 Bad Request', lang: ${
+        jsStringLiteral(docConfig.lang)
+      }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
+        JSON.stringify(docConfig.allowHeadExtrasScripts)
+      }, cspNonce: c.get('cspNonce') }), 400);`,
+    );
+    lines.push(`    }`);
     lines.push(
       `    const __actionResult = await __actionFn({ ...__loadContext, formData: __formData });`,
     );
@@ -435,11 +452,11 @@ export function renderActionRoute(
   // ADR-0121 (#572): only GET/POST are defined for page routes — other
   // methods get a defined 405 instead of the server fallback 404. The
   // method-specific handlers above are registered first and win for
-  // GET/POST/HEAD.
+  // GET/POST/HEAD. no-store/Vary apply to the 405 as well (#586).
   lines.push(
     `app.all(${
       jsStringLiteral(route.path)
-    }, (c) => c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }));`,
+    }, (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', 'x-openelement-action'); return c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }); });`,
   );
   lines.push('');
 }

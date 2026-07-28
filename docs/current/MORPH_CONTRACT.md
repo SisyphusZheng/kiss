@@ -31,10 +31,14 @@ carries a host's shadow content in its `<template shadowrootmode>` child).
    never `pushState`).
 4. A `422` dispatches a cancelable `open:action-failure` `CustomEvent` on
    the form (`detail: { status, form, response }`) before morphing;
-   `preventDefault()` skips the default morph.
-5. Success updates the URL with `history.pushState`; `popstate` reloads
-   the restored URL (no client-side state cache in 0.42). The local
-   fragment is preserved when the target is the same page.
+   `preventDefault()` skips the default morph. A network/fetch failure
+   dispatches a cancelable `open:action-error` (`detail: { error, form }`)
+   before the reload fallback; `preventDefault()` skips the reload.
+5. Success updates the URL with `history.pushState`; `popstate` (and
+   bfcache `pageshow` restores) reload the restored URL when the session
+   has enhanced-navigated (a `sessionStorage` marker — no client-side
+   state cache in 0.42). The local fragment is preserved when the target
+   is the same page.
 6. A second submit while one is in flight is ignored; cross-form
    responses are ordered by sequence.
 
@@ -52,15 +56,23 @@ never touched.
 
 ## Identity and survival rules
 
-- **Matching**: within a parent, children with an `id` match by `id`
-  (tag must match); the rest match structurally (node type + tag) with a
-  bounded lookahead, so insertions/removals between matched anchors are
-  preserved. Rows in dynamic lists should carry stable `id`s.
+- **Matching**: an ordered walk. Old children are indexed by `id` (id'd
+  nodes are consumed only by an id match); each new child in order matches
+  by id else structurally ahead of the reference point; the match is
+  morphed and MOVED into position (moves preserve shadow roots and state);
+  unmatched new nodes are inserted in place; only never-matched old nodes
+  are removed. Reorders therefore keep both order and state, and rows in
+  dynamic lists should carry stable `id`s.
+- **DSD instantiation**: nodes inserted by a morph (new subtrees,
+  replacements) have their `<template shadowrootmode>` instantiated
+  manually before insertion — the HTML parser is the only other place DSD
+  activates — so morphed-in islands show the server render, not a
+  client-initial one.
 - **Island survival**: a hydrated island (live shadow root) survives when
   its light-DOM surface serializes identically (`__islandIntact`):
-  attributes equal, and child nodes equal after skipping the DSD template
-  and whitespace-only text. Otherwise it is replaced and its state resets
-  by design.
+  attributes equal, and child nodes equal after recursively skipping DSD
+  templates and whitespace-only text on both sides. Otherwise it is
+  replaced and its state resets by design.
 - **`data-open-preserve`**: exempts the whole subtree, checked before
   island and attribute logic.
 - **Scripts**: live `<script>` nodes are kept as-is (never re-executed;

@@ -167,11 +167,81 @@ Deno.test({
         }
       });
 
-      await t.step('PUT /form → 405', async () => {
+      await t.step('PUT /form → 405 + no-store', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, { method: 'PUT', body: 'x=1' });
           assertEquals(response.status, 405, `${name}: PUT /form status`);
+          assertEquals(
+            response.headers.get('cache-control'),
+            'no-store',
+            `${name}: PUT /form cache-control`,
+          );
           await response.body?.cancel();
+        }
+      });
+
+      await t.step('fetch-header unknown action → ActionResult JSON 404', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/form?/nope`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/x-www-form-urlencoded',
+              'x-openelement-action': 'true',
+            },
+            body: 'message=x',
+          });
+          assertEquals(response.status, 404, `${name}: JSON 404 status`);
+          assertStringIncludes(
+            response.headers.get('content-type') ?? '',
+            'application/json',
+            `${name}: JSON 404 content-type`,
+          );
+          const body = await response.json() as { type?: string; status?: number };
+          assertEquals(body.type, 'error', `${name}: JSON 404 type`);
+        }
+      });
+
+      await t.step('action returning a Response → 500 contract violation', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/ping?/raw`, formBody({}));
+          assertEquals(response.status, 500, `${name}: /ping?/raw status`);
+          const body = await response.text();
+          assertEquals(body.includes('<h1>raw</h1>'), false, `${name}: raw HTML must not leak`);
+        }
+      });
+
+      await t.step('malformed body (JSON content-type) → 400, both channels', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/form`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{"x":1}',
+          });
+          assertEquals(response.status, 400, `${name}: JSON body status`);
+          const json = await fetch(`${base}/form`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-openelement-action': 'true' },
+            body: '{"x":1}',
+          });
+          assertEquals(json.status, 400, `${name}: JSON body (fetch channel) status`);
+          assertStringIncludes(
+            json.headers.get('content-type') ?? '',
+            'application/json',
+            `${name}: fetch channel speaks JSON`,
+          );
+        }
+      });
+
+      await t.step('303 PRG chain: POST → 303 → GET renders the target', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const post = await fetch(`${base}/form`, {
+            ...formBody({ message: 'chain' }),
+            redirect: 'manual',
+          });
+          assertEquals(post.status, 303, `${name}: PRG status`);
+          const get = await fetch(`${base}${post.headers.get('location')}`);
+          assertEquals(get.status, 200, `${name}: PRG target status`);
+          assertStringIncludes(await get.text(), 'echo=chain', `${name}: PRG target body`);
         }
       });
     } finally {
