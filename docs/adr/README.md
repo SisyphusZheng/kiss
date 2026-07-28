@@ -137,7 +137,7 @@ decision set above to decide which records are authoritative for new work.
 | 0118 | Third Audit Round Alpha.19 Cleanup Sweep                 | Accepted                                         |
 | 0119 | Stable 0.41.0 Scoped Interface Freeze                    | Accepted                                         |
 | 0120 | 0.42.0 WC Application Loop Scope and Action Protocol     | Accepted                                         |
-| 0121 | 0.42 Action Protocol Hardening Amendment (Audit Round 1) | Proposed                                         |
+| 0121 | 0.42 Action Protocol Hardening Amendment (Audit Round 1) | Accepted                                         |
 
 ## Superseded / Historical
 

@@ -1,9 +1,7 @@
 # ADR-0121: 0.42 Action Protocol Hardening Amendment (Audit Round 1)
 
-- Status: PROPOSED — implementation proceeds under this amendment in
-  `0.42.0-alpha.5`; maintainer acceptance to be recorded at the alpha.5
-  release
-- Date: 2026-07-27
+- Status: ACCEPTED
+- Date: 2026-07-27 (accepted 2026-07-28, with the 0.42.0-alpha.5 release)
 - Amends: ADR-0120 (action protocol rules 2, 3, 4, 6, 7)
 
 ## Context
