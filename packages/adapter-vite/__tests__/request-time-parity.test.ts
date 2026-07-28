@@ -86,13 +86,23 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async (t) => {
+    // The fixture dist is not committed, and the coverage/test gates run
+    // before any build gate — build it on demand (a no-op when it exists,
+    // which is the common local case).
+    let fixtureBuilt = true;
     try {
       await Deno.stat(serverEntryPath);
     } catch {
-      throw new Error(
-        'fixture not built: run `deno task fixture:request-time:build` first ' +
-          `(missing ${serverEntryPath})`,
-      );
+      fixtureBuilt = false;
+    }
+    if (!fixtureBuilt) {
+      const build = await new Deno.Command(Deno.execPath(), {
+        args: ['task', 'fixture:request-time:build'],
+        cwd: join(fixtureDir, '../../../..'),
+        stdout: 'inherit',
+        stderr: 'inherit',
+      }).output();
+      if (!build.success) throw new Error('fixture build failed');
     }
 
     const build = await bootBuildServer();
