@@ -84,13 +84,13 @@ ADR-0120 七规则 + ADR-0121 十二项加固构成的协议,规范化程度**�
 
 ### 高危(5 项)
 
-| #  | 位置                             | 问题                                                                                                                            | 类别         |
-| -- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| #  | 位置                             | 问题                                                                                                                                                                                                                                                                             | 类别         |
+| -- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
 | H1 | entry-generators.ts:517          | `(submitter && submitter.formAction) \|\| form.action`:`formAction` 属性在无 `formaction` 特性时返回文档 URL(恒真),永远压过 `form.action`。任何 `<form action="/other" data-open-enhance>` 增强提交 POST 到当前页而非声明地址;无 JS 路径正确 → 双通道不对称,违反 ADR-0120 规则 2 | 实现 bug     |
-| H2 | route-scanner.ts:247-249         | `hasEnhancedForms` 正则扫页面源码字面量;表单在共享组件(import 引入)时漏报 → 增强层静默省略,退化整页 POST 且无告警               | 框架设计问题 |
-| H3 | entry-generators.ts:503, 588-590 | popstate 守卫 `__enhancedNav` 是内存变量;增强导航→刷新(复位)→back/forward→守卫失效不 reload,URL 与内容不一致,违背 §10 自身承诺  | 实现 bug     |
-| H4 | entry-generators.ts:390, 397     | `insertBefore`/`appendChild` 插入含 `template[shadowrootmode]` 的新节点时 DSD 不实例化(DSD 只在解析期生效),morph 新增的岛是死的 | 实现 bug     |
-| H5 | entry-generators.ts:377-397      | id 键控节点从不重定位:配对节点原地 morph,新中间节点全部 `appendChild` 追加尾部(L397),列表重排序时 DOM 顺序错误                  | 实现 bug     |
+| H2 | route-scanner.ts:247-249         | `hasEnhancedForms` 正则扫页面源码字面量;表单在共享组件(import 引入)时漏报 → 增强层静默省略,退化整页 POST 且无告警                                                                                                                                                                | 框架设计问题 |
+| H3 | entry-generators.ts:503, 588-590 | popstate 守卫 `__enhancedNav` 是内存变量;增强导航→刷新(复位)→back/forward→守卫失效不 reload,URL 与内容不一致,违背 §10 自身承诺                                                                                                                                                   | 实现 bug     |
+| H4 | entry-generators.ts:390, 397     | `insertBefore`/`appendChild` 插入含 `template[shadowrootmode]` 的新节点时 DSD 不实例化(DSD 只在解析期生效),morph 新增的岛是死的                                                                                                                                                  | 实现 bug     |
+| H5 | entry-generators.ts:377-397      | id 键控节点从不重定位:配对节点原地 morph,新中间节点全部 `appendChild` 追加尾部(L397),列表重排序时 DOM 顺序错误                                                                                                                                                                   | 实现 bug     |
 
 ### 中危(8 项确证)
 
