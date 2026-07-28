@@ -332,10 +332,10 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.42.0-alpha.5',
-    theme: 'audit round 1 remediation',
+    version: 'v0.42.0-alpha.6',
+    theme: 'audit round 2 remediation',
     copy:
-      'The first implementation audit of the application loop closes 35 issues: ADR-0121 protocol hardening, a morph client rewrite (the earlier enhancement never fired), and an evidence-honesty sweep with the fixture suite now gated in CI.',
+      'The second independent review closes 18 issues: explicit form actions win on enhanced submits, morphed-in islands show the server render, morph matching is an ordered walk, and enhancement detection follows imports.',
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -420,7 +420,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.5' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.6' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
