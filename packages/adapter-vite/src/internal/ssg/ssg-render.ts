@@ -216,12 +216,15 @@ export async function ssgRender(
   }
 
   if (staticNon200.length > 0) {
-    log.warn(
-      `Static route non-200 results: ${staticNon200.length} page(s) dropped (not written):`,
+    // #600: fail-closed — silent missing pages are not a successful build.
+    const detail = staticNon200.map((e) => `${e.path} -> ${e.status}`).join(', ');
+    log.error(
+      `Static route non-200 results: ${staticNon200.length} page(s) dropped (not written): ${detail}`,
     );
-    for (const entry of staticNon200) {
-      log.warn(`  ${entry.path} -> ${entry.status}`);
-    }
+    throw new Error(
+      `SSG failed: ${staticNon200.length} static route(s) returned non-200 ` +
+        `(pages not written): ${detail}`,
+    );
   }
 
   const isrRoutes = buildIsrManifestEntries(routeInfo, staticPathParamsByRoute);

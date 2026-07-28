@@ -107,13 +107,15 @@ this at the architecture level.
     `preventDefault()` skips the default morph (the page handles the
     failure itself). Network and non-HTML failures keep the reload
     fallback.
-12. **CSRF threat model (new; records the standing assumption).** The
-    framework's form/action loop relies on the browser `SameSite=Lax`
-    default for cookie-based authentication (sessions are 0.44 scope).
-    Applications using ambient authentication (Basic, mTLS,
-    `SameSite=None` cookies) must add Origin/Fetch-Metadata validation;
-    a documented middleware recipe ships in the guide. A built-in check
-    is deferred to the 0.44 session work.
+12. **CSRF threat model (amended 0.42.0-alpha.7 / #611).** Generated
+    action POST handlers default to a fail-closed same-origin floor:
+    reject when `Sec-Fetch-Site: cross-site`, or when `Origin` is present
+    and does not match the request URL origin.     Clients that omit both
+    headers (typical non-browser tools) are allowed. Opt out by setting
+    `OPEN_ELEMENT_DISABLE_CSRF=1` on the request `env` binding
+    (`c.env` / Nitro runtime env). Session-aware CSRF tokens and cookie
+    session primitives remain 0.44; this floor is the light-fullstack
+    browser default, not a full auth stack.
 
 ## Consequences
 

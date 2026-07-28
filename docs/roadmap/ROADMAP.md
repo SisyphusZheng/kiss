@@ -5,11 +5,12 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Published package line: `v0.42.0-alpha.6`.\
-> Active execution target: `v0.42.0-alpha.6`.\
+> Active execution target: `v0.42.0-alpha.7` (TP-5.7 light-fullstack floor).\
 > Current implementation state: five-package convergence is published;
-> alpha.17 closed the first audit remediation, alpha.18 completed the
-> second audit sweep (ADR-0117), and alpha.19 completed the third (ADR-0118).\
-> Planned line: `0.42.0` (WC Application Loop) under ADR-0120 and the active
+> 0.42 alphas through alpha.6 shipped the loop; alpha.7 closes the
+> light-fullstack floor (morph residuals, start path, SSG fail-closed,
+> CSRF default, honest tags).\
+> Planned line: `0.42.0` (WC light fullstack) under ADR-0120 and the active
 > version plan in `docs/current/VERSION_PLAN.md`.\
 > Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
 > abandoned beta naming is retired.
@@ -91,9 +92,9 @@ making the standard Custom Element contract span both layers. See the official
 | `0.41.0-alpha.17` | Remediation completion       | Real-browser test credibility, convergence hygiene, release-tooling evidence fixes, #390 pilot launch                                                                                 |
 | `0.41.0-alpha.18` | Second audit sweep           | ADR-0117: sibling-path closures, evidence honesty, reflect-prop correctness, redundancy cleanup                                                                                       |
 | `0.41.0`          | Core interface freeze        | Five-package graph plus `defineElement`, `definePage`, `defineApp` and `buildApp` require no further architecture-level breaking change                                               |
-| `0.42.0`          | WC Application Loop          | Scoped by ADR-0120 and the active version plan: one route-to-interaction loop — load, DSD render, progressive form, action, error/redirect and revalidation; works without JavaScript |
+| `0.42.0`          | WC light fullstack           | ADR-0120 loop (load → DSD → form → action → revalidate, no-JS) + first-mile `start`, fail-closed SSG, default CSRF same-origin; login via recipes (better-auth), not framework session |
 | `0.43.0`          | Universal WC SSR             | CEM/admission information, DSD/light/client-only classification, native/Lit/FAST/Stencil corpus and hydration-mismatch diagnostics                                                    |
-| `0.44.0`          | Production Runtime           | Node and Workers behavior, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof                                                            |
+| `0.44.0`          | Production Runtime           | Framework session/flash floor, stream/abort/timeout, cache/ISR/SWR, deploy manifests, version-skew handling and recovery proof — not a prerequisite for recipe-based login on 0.42   |
 | `0.45.0`          | WC Ecosystem Platform        | Component and application starters, CEM/open-wc workflows, migration guides, compatibility registry and external adopters                                                             |
 | `0.46.0`          | v1 Product Freeze            | Remove unused exports, decide the UI commitment, freeze errors, browser/runtime support and upgrade policy                                                                            |
 | `1.0.0-rc.x`      | Stability only               | No new capability; compatibility, reliability and documentation fixes only                                                                                                            |
@@ -105,10 +106,12 @@ making the standard Custom Element contract span both layers. See the official
 - A public adapter seam requires two real adapters or an ADR backed by runtime
   isolation, dependency-cycle, artifact-size or independent-consumer evidence.
 - Auth, OAuth, ORM, databases and storage remain recipes. OpenElement owns the
-  application contract, not those service products.
-- Session and cache may become App behavior only when the Application Loop or
-  Production Runtime has a proven semantic need; they do not get speculative
-  packages.
+  application contract, not those service products. Signed-in apps on 0.42 use
+  recipes (e.g. better-auth on Web-standard `Request`); they do not wait for
+  framework session APIs.
+- Framework session and cache become App behavior in 0.44 when Production
+  Runtime has a proven semantic need; they do not get speculative packages and
+  must not be confused with “login is impossible before 0.44.”
 - `@openelement/ui` must have two non-site consumers by v0.46 or shrink to
   proven primitives outside the v1 compatibility promise.
 - A feature is complete only when starter, docs, packed artifacts, dogfood and

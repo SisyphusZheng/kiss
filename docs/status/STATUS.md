@@ -1,12 +1,12 @@
 # OpenElement Status
 
-> Updated: 2026-07-27\
+> Updated: 2026-07-28\
 > Repository package line: `v0.42.0-alpha.6`\
 > npm registry line: `v0.42.0-alpha.6`\
-> Active release target: `v0.42.0-alpha.6`\
-> Next release line: `v0.42.0`\
+> Active release target: `v0.42.0-alpha.7`\
+> Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
-> Current maturity stage: stable (0.41.x)
+> Current maturity stage: stable (0.41.x); 0.42 alpha in flight
 
 ## Current position
 
@@ -52,19 +52,25 @@ and output path.
 2. Current-document version drift keeps reappearing at gate edges; alpha.18
    package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
-4. Request-time data, forms, sessions and cache are not stable interfaces.
-5. UI remains optional until v0.46 records its stable scope.
+4. Request-time loop is implemented through alpha.6 but not yet a light-fullstack
+   floor (morph residuals, start path, SSG fail-closed, CSRF default, honest
+   dist-tags) — active train `0.42.0-alpha.7` / TP-5.7.
+5. Framework session and cache remain unfrozen until 0.44; login apps use
+   recipes (better-auth) and must not wait on framework session APIs.
+6. UI remains optional until v0.46 records its stable scope.
 
 ## 0.42 direction
 
-The `0.42.0` WC Application Loop line is scoped by
-[`ADR-0120`](../adr/ADR-0120-0-42-0-wc-application-loop-scope.md) and planned
-in [`VERSION_PLAN.md`](../current/VERSION_PLAN.md) with task packages TP-0
-through TP-6 (entry/exit criteria each). The protocol layer is
-evidence-backed by the archived six-framework study
-([`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md)).
-TP-0 (release tooling self-repair, `0.41.2` patch) may start immediately;
-alpha.1 starts after it.
+The `0.42.0` line is **WC light fullstack**: Application Loop (ADR-0120) plus
+first-mile ops and CSRF floor. Planned in
+[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; active **TP-5.7**
+alpha.7). Protocol evidence:
+[`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md).
+
+Product promise at `0.42.0`: dynamic loader/action, no-JS + enhanced forms,
+`build → start`, fail-closed static prerender, default same-origin CSRF,
+login via recipe on `Request`. **Not** in 0.42: framework session/flash,
+cache/ISR, auth packages (0.44 or recipes).
 
 ## Release direction
 
@@ -74,8 +80,10 @@ alpha.1 starts after it.
 | `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                    |
 | `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)             |
 | `0.41.0`          | Separate stable decision after alpha.19 evidence |
-| `0.42.0`          | WC Application Loop                              |
+| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)   |
+| `0.42.0`          | WC light fullstack (Application Loop freeze)     |
 | `0.43.0`          | Universal WC SSR compatibility and diagnostics   |
+| `0.44.0`          | Production runtime (session/cache/deploy recovery) |
 | `1.0.0`           | Stable five-package product                      |
 
 ## Evidence and workflow

@@ -168,7 +168,7 @@ Deno.test('ssgRender - handles options with speculation enabled', async () => {
 
 // ─── alpha.18 R2-H3: static-route non-200 outcomes ─────────────
 
-Deno.test('ssgRender - static non-200 routes surface in the build summary and are not written', async () => {
+Deno.test('ssgRender - static non-200 routes fail the build (#600)', async () => {
   const outDir = './dist-test-ssg-render-non200';
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
   const app = new Hono();
@@ -186,45 +186,23 @@ Deno.test('ssgRender - static non-200 routes surface in the build summary and ar
     ],
   });
 
-  const warnings: string[] = [];
-  const originalWarn = console.warn;
-  console.warn = (...args: unknown[]) => {
-    warnings.push(args.map(String).join(' '));
-  };
-  let summary;
+  let err: unknown;
   try {
-    summary = await ssgRender(bundle, { ...defaultOptions, outDir });
-  } finally {
-    console.warn = originalWarn;
+    await ssgRender(bundle, { ...defaultOptions, outDir });
+  } catch (e) {
+    err = e;
   }
+  assert(err instanceof Error, 'expected SSG to throw on static non-200');
+  assert(String(err).includes('non-200'), 'error must mention non-200');
+  assert(String(err).includes('/missing'), 'error must list failing paths');
+  assert(String(err).includes('/boom'));
+  assert(String(err).includes('/moved'));
 
-  // The summary lists every non-200 static route with its status.
-  const non200 = new Map(summary.staticNon200.map((r) => [r.path, r.status]));
-  assertEquals(non200.get('/missing'), 404);
-  assertEquals(non200.get('/boom'), 500);
-  assertEquals(non200.get('/moved'), 302);
-  assertEquals(non200.has('/'), false);
-  assertEquals(summary.staticNon200.length, 3);
-
-  // The build log surfaces the same count + paths.
-  const summaryLine = warnings.find((w) => w.includes('non-200'));
-  assert(summaryLine !== undefined, 'expected a non-200 summary warning in the build log');
-  assert(summaryLine.includes('3'), 'summary must include the non-200 count');
-  for (const path of ['/missing', '/boom', '/moved']) {
-    assert(
-      warnings.some((w) => w.includes(path)),
-      `summary must list ${path}`,
-    );
-  }
-
-  // Non-200 pages are not persisted; the 200 page is.
-  assertEquals(await pathExists(`${outDir}/index.html`), true);
+  // Non-200 pages are not persisted; the 200 page may already be written.
   assertEquals(await pathExists(`${outDir}/missing.html`), false);
   assertEquals(await pathExists(`${outDir}/missing/index.html`), false);
   assertEquals(await pathExists(`${outDir}/boom.html`), false);
   assertEquals(await pathExists(`${outDir}/boom/index.html`), false);
-  assertEquals(await pathExists(`${outDir}/moved.html`), false);
-  assertEquals(await pathExists(`${outDir}/moved/index.html`), false);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 

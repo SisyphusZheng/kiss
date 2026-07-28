@@ -30,6 +30,7 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
   assertEquals(Object.keys(denoJson.imports).sort(), [
     '@deno/vite-plugin',
     '@openelement/adapter-vite',
+    '@openelement/adapter-vite/nitro-mount',
     '@openelement/app',
     '@openelement/element',
     '@openelement/element/jsx-dev-runtime',
@@ -45,7 +46,20 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     denoJson.imports['@openelement/element/jsx-dev-runtime'],
     'npm:@openelement/element@${v.element}/jsx-dev-runtime',
   );
-  assertEquals(Object.keys(denoJson.tasks).sort(), ['build', 'check', 'dev', 'preview', 'test']);
+  assertEquals(
+    Object.keys(denoJson.tasks).sort(),
+    ['build', 'check', 'dev', 'preview', 'start', 'test'],
+  );
+  assert(
+    String(denoJson.imports['@openelement/adapter-vite/nitro-mount'] || '').includes(
+      'nitro-mount',
+    ),
+    'starter import map must include adapter-vite/nitro-mount (#601)',
+  );
+  assert(
+    String(denoJson.tasks.start || '').includes('cli/start'),
+    'starter must expose deno task start (#601)',
+  );
   assertEquals(denoJson.tasks.test, 'deno test --config deno.json --permit-no-files');
   assertEquals(denoJson.imports.hono, 'npm:hono@^4.12');
   assertEquals(denoJson.compilerOptions.jsxImportSource, '@openelement/element');
