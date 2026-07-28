@@ -1,9 +1,10 @@
 # Validation recipe (zod / valibot)
 
-> Status: **verified in CI** — both shapes are exercised end-to-end by the
-> request-time fixture (`packages/adapter-vite/__fixtures__/request-time/`:
-> `/register` with zod, `/subscribe` with valibot, 422/303 asserted in three
-> engines).
+> Status: **verified by the `fixture:request-time:e2e:browsers` gate in
+> AutoFlow3 CI (three engines)** — both shapes are exercised end-to-end by
+> the request-time fixture
+> (`packages/adapter-vite/__fixtures__/request-time/`: `/register` with
+> zod, `/subscribe` with valibot, 422/303 asserted in three engines).
 
 The framework is deliberately validation-agnostic: an action receives the
 standard `FormData`, and any schema library runs inside it. The contract is

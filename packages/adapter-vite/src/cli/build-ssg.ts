@@ -34,7 +34,10 @@ import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
 import { quoteGeneratedJavaScriptValue } from '../internal/ssg/codegen-literals.ts';
-import { generateSsrPolyfillBanner } from '../internal/ssg/index.ts';
+import {
+  generateCustomElementsPolyfill,
+  generateSsrPolyfillBanner,
+} from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
 import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from '../internal/paths.ts';
@@ -299,17 +302,7 @@ async function buildSSG(
             // Uses Map-backed define()/get(); renderDsdByName() looks up
             // components via customElements.get(tagName) during SSG rendering.
             // SOP-016: HTMLElement stub is self-contained in @openelement/element/dsd-element.ts.
-            banner: `\
-if (typeof globalThis.customElements === 'undefined') {
-  const __openCeRegistry = new Map();
-  globalThis.customElements = {
-    define(name, ctor, _opts) { __openCeRegistry.set(name, ctor); },
-    get(name) { return __openCeRegistry.get(name); },
-    whenDefined(name) { return Promise.resolve(__openCeRegistry.get(name)); },
-    upgrade(_root) {},
-  };
-}
-`,
+            banner: generateCustomElementsPolyfill(),
           },
         },
       },

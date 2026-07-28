@@ -106,6 +106,12 @@ export interface RouteEntry {
   tagName?: string;
   /** Source text captured during scanning when includeSource is enabled. */
   source?: string;
+  /**
+   * True when the page route source carries data-open-enhance (0.42.0-alpha.5,
+   * #569): the client entry must ship the form-enhancement layer even when the
+   * app has zero islands.
+   */
+  hasEnhancedForms?: boolean;
   special?: SpecialFileType;
   revalidate?: number;
   params?: string[];

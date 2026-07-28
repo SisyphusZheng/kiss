@@ -186,6 +186,11 @@ export const navSections = [
         "order": 90
       },
       {
+        "path": "/guide/security",
+        "label": "Security",
+        "order": 95
+      },
+      {
         "path": "/guide/deployment",
         "label": "Deployment",
         "order": 100

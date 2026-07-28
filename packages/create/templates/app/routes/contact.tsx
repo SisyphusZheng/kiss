@@ -53,5 +53,7 @@ const ContactPage = definePage({
   },
 });
 
-customElements.define(tagName, ContactPage);
+// The generated server registers route default exports itself
+// (entry-renderer.ts) — route modules never call customElements.define,
+// which also keeps the packed-consumer typecheck clean.
 export default ContactPage;

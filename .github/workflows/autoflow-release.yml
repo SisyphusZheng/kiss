@@ -38,7 +38,10 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
       - name: Install Playwright browsers
-        run: ./node_modules/.bin/playwright install --with-deps chromium
+        # All three engines: the release tier includes fixture:request-time:gate,
+        # which runs the request-time fixture suite on Chromium, Firefox and
+        # WebKit (release evidence requirement).
+        run: ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"

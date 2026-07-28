@@ -47,6 +47,7 @@ export const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
   ['app/components/app-shell.tsx', 'app/components/app-shell.tsx'],
   ['app/routes/index.tsx', 'app/routes/index.tsx'],
   ['app/routes/freshness.tsx', 'app/routes/freshness.tsx'],
+  ['app/routes/contact.tsx', 'app/routes/contact.tsx'],
   ['app/routes/api/health.ts', 'app/routes/api/health.ts'],
   ['app/islands/my-counter.tsx', 'app/islands/my-counter.tsx'],
 ];

@@ -227,8 +227,9 @@ const buildEvidence = JSON.parse(readFileSync(buildEvidencePath, 'utf-8')) as {
 const manifestRoutes = buildEvidence.manifest?.routes ?? [];
 const pageRoutes = manifestRoutes.filter((route) => route.kind === 'page');
 const apiRoutes = manifestRoutes.filter((route) => route.kind === 'api');
+// Pages: index, freshness (ISR intent), contact (0.42 request-time action).
 if (
-  buildEvidence.success !== true || pageRoutes.length !== 2 || apiRoutes.length !== 1 ||
+  buildEvidence.success !== true || pageRoutes.length !== 3 || apiRoutes.length !== 1 ||
   (buildEvidence.pages ?? []).some((page) => (page.errors?.length ?? 0) > 0)
 ) {
   console.error('Structured build manifest did not contain the expected page/API surface.');
@@ -360,7 +361,7 @@ writeFileSync(
   `import { createOpenElementNitroHandler } from '${
     pathToFileURL(join(repoRoot, 'packages', 'adapter-vite', 'src', 'nitro-mount.ts')).href
   }';
-import { eventHandler, getMethod, getRequestHeaders, getRequestURL } from 'h3';
+import { eventHandler, getMethod, getRequestHeaders, getRequestURL, readRawBody } from 'h3';
 import { openElementHandler } from '../../dist/server/entry.js';
 
 const handler = createOpenElementNitroHandler({
@@ -370,10 +371,13 @@ const handler = createOpenElementNitroHandler({
 
 export default eventHandler(async (event) => {
   const url = getRequestURL(event);
+  const method = getMethod(event);
   const result = await handler({
-    method: getMethod(event),
-    path: url.pathname,
+    method,
+    path: url.pathname + url.search,
     headers: getRequestHeaders(event),
+    // Form actions need the POST body forwarded (#571 starter smoke).
+    body: method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event),
     platform: {
       waitUntil() {},
       passThroughOnException() {},
@@ -528,6 +532,47 @@ try {
       console.error(
         JSON.stringify({ status: asset.status, body: assetBody.slice(0, 200) }, null, 2),
       );
+      nitroSmokeFailed = true;
+    }
+  }
+
+  // 0.42 request-time action route (#571): the starter's /contact page must
+  // render per request and answer the form protocol — empty submission is a
+  // 422 echo, a valid one a 303 PRG redirect.
+  if (!nitroSmokeFailed) {
+    const contact = await fetch(`${baseUrl}/contact`);
+    const contactHtml = await contact.text();
+    if (contact.status !== 200 || !contactHtml.includes('Stay in the loop')) {
+      console.error(
+        JSON.stringify({ status: contact.status, body: contactHtml.slice(-500) }, null, 2),
+      );
+      nitroSmokeFailed = true;
+    }
+  }
+
+  if (!nitroSmokeFailed) {
+    const invalid = await fetch(`${baseUrl}/contact`, {
+      method: 'POST',
+      body: new URLSearchParams({ email: '' }),
+    });
+    const invalidHtml = await invalid.text();
+    if (invalid.status !== 422 || !invalidHtml.includes('a valid email is required')) {
+      console.error(
+        JSON.stringify({ status: invalid.status, body: invalidHtml.slice(-500) }, null, 2),
+      );
+      nitroSmokeFailed = true;
+    }
+  }
+
+  if (!nitroSmokeFailed) {
+    const valid = await fetch(`${baseUrl}/contact`, {
+      method: 'POST',
+      body: new URLSearchParams({ email: 'ada@example.com' }),
+      redirect: 'manual',
+    });
+    const location = valid.headers.get('location');
+    if (valid.status !== 303 || location !== '/contact?subscribed=ada%40example.com') {
+      console.error(JSON.stringify({ status: valid.status, location }, null, 2));
       nitroSmokeFailed = true;
     }
   }

@@ -47,11 +47,21 @@ export interface PageRouteContext {
   filePath?: string;
 }
 
+const REDIRECT_STATUSES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
+
 export class OpenElementRedirect extends Error {
   readonly location: string;
   readonly status: number;
 
   constructor(location: string | URL, status = 302) {
+    // ADR-0121 §3: only real redirect statuses — a non-3xx "redirect" is a
+    // response the browser never follows, silently stranding the mutation.
+    if (!REDIRECT_STATUSES.has(status)) {
+      throw new Error(
+        `${ERROR_PREFIX} redirect() status must be one of 301/302/303/307/308 (got ${status}). ` +
+          'In the POST action context every 3xx is coerced to 303 (PRG).',
+      );
+    }
     super(`Redirect to ${String(location)}`);
     this.name = 'OpenElementRedirect';
     this.location = String(location);
@@ -266,11 +276,20 @@ export function definePage<
 ): PageConstructor<Data, Params> {
   assertCanonicalPageDefinition(input);
   const definition = input;
+  // ADR-0121 (#572): validate the mode at definition time — a typo like
+  // 'dynmaic' must not silently prerender a request-time page.
+  const renderMode = definition.renderIntent?.mode ?? 'auto';
+  if (renderMode !== 'auto' && renderMode !== 'static' && renderMode !== 'dynamic') {
+    throw new Error(
+      `${ERROR_PREFIX} renderIntent.mode must be 'auto', 'static' or 'dynamic' ` +
+        `(got "${String(definition.renderIntent?.mode)}").`,
+    );
+  }
   const pageDescriptor = {
     kind: 'page',
     ...definition,
     renderIntent: {
-      mode: definition.renderIntent?.mode ?? 'auto',
+      mode: renderMode,
       revalidate: definition.renderIntent?.revalidate ?? false,
     },
   } as OpenElementPageDescriptor<Data, Params>;

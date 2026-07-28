@@ -99,6 +99,8 @@ export function buildEntryDescriptor(
 
   // Always needed
   imports.push({ from: 'hono', names: ['Hono'] });
+  // ADR-0121 (#568): default body limit on action POST routes.
+  imports.push({ from: 'hono/body-limit', names: ['bodyLimit'], alias: '__bodyLimit' });
   imports.push({
     from: '@openelement/element',
     names: ['renderDsd', 'renderDsdTree', 'escapeHtml'],
