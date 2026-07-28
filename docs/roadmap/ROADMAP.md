@@ -4,8 +4,8 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.42.0-alpha.5`.\
-> Active execution target: `v0.42.0-alpha.5`.\
+> Published package line: `v0.42.0-alpha.6`.\
+> Active execution target: `v0.42.0-alpha.6`.\
 > Current implementation state: five-package convergence is published;
 > alpha.17 closed the first audit remediation, alpha.18 completed the
 > second audit sweep (ADR-0117), and alpha.19 completed the third (ADR-0118).\

@@ -52,7 +52,8 @@ const staleCurrentClaims: RegExp[] = [
   /Vue adapter proof/i,
   /Vue is .*heavy-framework island/i,
   /Vue 是.*heavy-framework island/i,
-  /npm registry (?:line|baseline).*alpha\.6/i,
+  // 0.41-era leftover guard; must not collide with a real 0.42.0-alpha.6.
+  /npm registry (?:line|baseline).*0\.41\.0-alpha\.6/i,
   /active release target.*alpha\.11/i,
   /alpha\.13 was\s+the prior recovery train/i,
   /five-package convergence is published as\s+`?0\.41\.0-alpha\.10/i,
