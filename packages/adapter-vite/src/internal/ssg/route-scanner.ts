@@ -51,8 +51,43 @@
 import type { RouteEntry, SpecialFileType } from '../protocol/framework.ts';
 import { createLogger } from '@openelement/element';
 import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
-import { join, posix, sep } from 'node:path';
+import { dirname, join, posix, sep } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
+
+/** data-open-enhance in attribute form (= or >), so prose never triggers (#569). */
+const ENHANCED_FORM_RE = /data-open-enhance\s*(?:=|>)/;
+const RELATIVE_IMPORT_RE = /^import\s[^'"]*from\s*['"](\.[^'"]+)['"]/gm;
+const IMPORT_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'];
+
+/**
+ * #577: a page's enhanced form may live in an imported component — scanning
+ * only the route source would silently drop the enhancement layer. Follow
+ * project-local relative imports (bounded depth, cycle-safe) and scan those
+ * sources too.
+ */
+async function sourceTreeHasEnhancedForms(
+  filePath: string,
+  source: string,
+  depth = 0,
+  seen: Set<string> = new Set(),
+): Promise<boolean> {
+  if (ENHANCED_FORM_RE.test(source)) return true;
+  if (depth >= 3 || seen.has(filePath)) return false;
+  seen.add(filePath);
+  const dir = dirname(filePath);
+  for (const match of source.matchAll(RELATIVE_IMPORT_RE)) {
+    const specifier = match[1];
+    const candidates = [specifier, ...IMPORT_EXTENSIONS.map((ext) => specifier + ext)];
+    for (const rel of candidates) {
+      const candidate = join(dir, rel);
+      const imported = await safeReadFile(candidate);
+      if (imported === undefined) continue;
+      if (await sourceTreeHasEnhancedForms(candidate, imported, depth + 1, seen)) return true;
+      break;
+    }
+  }
+  return false;
+}
 
 const log = createLogger('core');
 
@@ -243,8 +278,9 @@ export async function scanRoutes(
           // #569: page sources carrying data-open-enhance require the client
           // enhancement layer even when the app has zero islands. The match
           // requires attribute shape (= or >) so prose mentioning the
-          // attribute (e.g. guide pages) does not pull the layer in.
-          ...(source !== undefined && /data-open-enhance\s*(?:=|>)/.test(source)
+          // attribute (e.g. guide pages) does not pull the layer in. #577:
+          // follow relative imports so forms inside shared components count.
+          ...(source !== undefined && await sourceTreeHasEnhancedForms(fullPath, source)
             ? { hasEnhancedForms: true }
             : {}),
           ...(options.includeSource && source !== undefined ? { source } : {}),

@@ -57,6 +57,13 @@ const PingPage = definePage({
           </button>
           <button id='mv307' type='submit' formaction='?/mv307'>Move</button>
         </form>
+        {
+          /* #576: an explicit action attribute with an attribute-less
+            submitter — the enhanced POST must hit /form, not this page. */
+        }
+        <form method='post' action='/form' data-open-enhance>
+          <button id='to-form' type='submit'>Send to /form</button>
+        </form>
       </main>
     );
   },

@@ -181,6 +181,41 @@ Deno.test('redirect() and notFound() expose typed lifecycle control errors', () 
   assertEquals((notFoundError as { status: number }).status, 404);
 });
 
+Deno.test('redirect() validates the 3xx whitelist at construction (ADR-0121 §3)', () => {
+  // Valid statuses construct fine.
+  for (const status of [301, 302, 303, 307, 308]) {
+    let err: unknown;
+    try {
+      redirect('/target', status);
+    } catch (error) {
+      err = error;
+    }
+    assertEquals(isOpenElementRedirect(err), true, `status ${status} must be accepted`);
+  }
+  // A non-3xx "redirect" is a response the browser never follows — reject it.
+  for (const status of [200, 201, 204, 400, 404, 418, 500]) {
+    assertThrows(
+      () => redirect('/target', status as never),
+      Error,
+      'redirect() status must be one of 301/302/303/307/308',
+    );
+  }
+  // The duck-typed guard honors the same whitelist (#583): a shaped object
+  // with an arbitrary status must not take the redirect channel.
+  assertEquals(
+    isOpenElementRedirect({
+      name: 'OpenElementRedirect',
+      location: 'https://evil.example',
+      status: 200,
+    }),
+    false,
+  );
+  assertEquals(
+    isOpenElementRedirect({ name: 'OpenElementRedirect', location: '/ok', status: 303 }),
+    true,
+  );
+});
+
 Deno.test('defineElement() validates custom element tag names', () => {
   assertThrows(
     () => {

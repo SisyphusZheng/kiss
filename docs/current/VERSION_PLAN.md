@@ -261,11 +261,38 @@ semantics beyond what the ADR-0120 amendment in step 1 records.
   green; release-tier gates green; alpha.5 published with two-stage
   evidence.
 
+### TP-5.6 — `0.42.0-alpha.6` audit round 2 remediation (morph client correctness)
+
+Goal: close the second, independent review round (issues #576–#593,
+`docs/audit/2026-07-28-alpha5-round2-review.md`) — five high-severity
+morph/enhancement defects and the protocol/test/evidence tail — without
+expanding the 0.42 scope.
+
+- 准入: TP-5.5 closed (alpha.5 published); the round-2 review report is
+  archived and its claims verified (done 2026-07-28).
+- 执行步骤:
+  1. Morph client correctness: form-action URL resolution (#576),
+     sessionStorage popstate guard + bfcache pageshow (#578), manual DSD
+     instantiation before morph insertions (#579), ordered-walk
+     `__morphChildren` with exact deletion and relocation (#580),
+     recursive normalized island comparison (#582), late-hydration submit
+     rescan (#584), `open:action-error` hook (#585), diagnostics (#589),
+     submit-root pruning (#588).
+  2. Detection: import-following `hasEnhancedForms` scan (#577).
+  3. Protocol tail: 400 for malformed bodies (#581), redirect duck-type
+     whitelist + constructor tests (#583, #586), 405 no-store/Vary (#586).
+  4. Evidence: parity matrix extension (#587), local retries zeroed
+     (#590), alpha.2 enhancement-inert erratum (#591).
+- 准出: every issue #576–#593 is closed with a code + test/gate proof;
+  the fixture suite passes on three engines with the new round-2 specs
+  included; release-tier gates green; alpha.6 published with two-stage
+  evidence; #592/#593 stay open as the TP-6 agenda they record.
+
 ### TP-6 — `0.42.0` stable decision
 
 Goal: decide and ship the request-time freeze scope.
 
-- 准入: TP-5.5 closed (alpha.5 published); the seven-day P0 watch on the
+- 准入: TP-5.6 closed (alpha.6 published); the seven-day P0 watch on the
   last alpha shows no P0.
 - 执行步骤:
   1. Stable-scope ADR: which request-time semantics freeze (expected: the

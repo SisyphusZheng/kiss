@@ -12,6 +12,34 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.6
+
+- Audit round 2 remediation (TP-5.6): the second, independent review of
+  the application loop
+  ([`docs/audit/2026-07-28-alpha5-round2-review.md`](./docs/audit/2026-07-28-alpha5-round2-review.md),
+  issues #576–#593) is closed — five high-severity defects in the morph
+  client plus the protocol and evidence tail.
+- Morph client correctness: an explicit `<form action>` now wins over
+  the page URL on enhanced submits (#576); the popstate guard survives
+  reloads and bfcache restores (#578); morphed-in islands show the
+  server render (manual DSD instantiation before insertion, #579);
+  morph matching is an ordered walk with exact deletion and relocation —
+  reordered id-keyed lists keep order AND island state (#580); nested
+  DSD compares normalized on both sides (#582); forms inside
+  late-hydrating islands get the enhancement listener (#584); a
+  cancelable `open:action-error` hook precedes the network-failure
+  reload (#585); morph fallbacks log a reason in dev (#589).
+- Detection: `hasEnhancedForms` follows relative imports, so an enhanced
+  form inside a shared component no longer loses the enhancement layer
+  silently (#577).
+- Protocol tail: malformed form bodies answer 400 on both channels
+  (#581); the redirect duck type honors the 3xx whitelist (#583);
+  405 responses carry no-store/Vary (#586).
+- Evidence: parity contract extended to JSON 404 / contract-violation
+  500 / malformed-body 400 / 405 / the 303→GET chain (#587); local
+  playwright retries are zero (#590); the alpha.2 note gets the
+  enhancement-inert erratum (#591).
+
 ## 0.42.0-alpha.5
 
 - Audit round 1 remediation (TP-5.5, ADR-0121): the first implementation

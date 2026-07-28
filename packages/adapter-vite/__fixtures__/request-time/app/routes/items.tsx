@@ -18,6 +18,13 @@ export function action(ctx: { formData: FormData }): never {
   redirect(`/items?items=${encodeURIComponent('new,' + items)}`);
 }
 
+export const actions = {
+  reverse(ctx: { formData: FormData }): never {
+    const items = String(ctx.formData.get('items') ?? 'a,b').split(',');
+    redirect(`/items?items=${encodeURIComponent(items.reverse().join(','))}`);
+  },
+};
+
 const ItemsPage = definePage({
   renderIntent: { mode: 'dynamic' },
   head: { title: 'request-time fixture — items' },
@@ -27,6 +34,7 @@ const ItemsPage = definePage({
         <form method='post' data-open-enhance>
           <input type='hidden' name='items' value={data.items.join(',')} />
           <button id='prepend' type='submit'>Prepend</button>
+          <button id='reverse' type='submit' formaction='?/reverse'>Reverse</button>
         </form>
         <ul>
           {data.items.map((id) => (

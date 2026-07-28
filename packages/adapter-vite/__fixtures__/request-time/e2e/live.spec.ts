@@ -498,3 +498,97 @@ test.describe('param routes and the generated matcher (#556)', () => {
     expect(response.headers()['location']).toBe('/item/42?noted=hello-item');
   });
 });
+
+test.describe('round-2 morph client fixes (0.42.0-alpha.6)', () => {
+  test('an explicit form action wins over the page URL (#576)', async ({ page }) => {
+    await page.goto('/ping');
+    const post = page.waitForResponse((r) =>
+      r.request().method() === 'POST' && r.url().includes('/form')
+    );
+    await page.click('#to-form');
+    const response = await post;
+    expect(response.status()).toBe(422);
+    // The enhanced POST hit /form (its 422 page), not /ping.
+    await expect(page.locator('#error')).toHaveText('message is required');
+  });
+
+  test('back after a reload following an enhanced submit reloads again (#578)', async ({ page }) => {
+    await page.goto('/form');
+    await page.fill('#message', 'nav-guard');
+    await page.click('#submit');
+    await page.waitForURL('**/form?echoed=nav-guard');
+    await expect(page.locator('#echo')).toHaveText('echo=nav-guard');
+    await page.reload();
+    // History shape after a reload differs across engines (Firefox grows an
+    // extra entry); walk back until the pre-submit URL is reached.
+    for (let i = 0; i < 3 && !page.url().endsWith('/form'); i++) await page.goBack();
+    // The invariant §10 promises: displayed content always matches the URL.
+    // With a memory-only guard (pre-fix) a bfcache/persisted restore shows
+    // the morphed page at the pre-submit URL — stale.
+    if (page.url().endsWith('/form')) {
+      await expect(page.locator('#echo')).toHaveText('echo=');
+    } else {
+      await expect(page.locator('#echo')).toHaveText('echo=nav-guard');
+    }
+  });
+
+  test('a morphed-in island instance shows the server render and hydrates (#579)', async ({ page }) => {
+    await page.goto('/items');
+    await page.click('#prepend');
+    await page.waitForURL('**/items?items=new*');
+    const count = page.locator('li#row-new live-counter #count');
+    // DSD instantiated on insertion: the server's render ('0'), not a blank
+    // client-initial span.
+    await expect(count).toHaveText('0');
+    await page.locator('li#row-new live-counter #increment').click();
+    await expect(count).toHaveText('1');
+  });
+
+  test('id-keyed rows keep order and island state through a reverse (#580)', async ({ page }) => {
+    await page.goto('/items');
+    const count = page.locator('li#row-a live-counter #count');
+    await page.locator('li#row-a live-counter #increment').click();
+    await page.locator('li#row-a live-counter #increment').click();
+    await expect(count).toHaveText('2');
+
+    await page.click('#reverse');
+    await page.waitForURL('**/items?items=b*');
+    await expect(page.locator('ul > li').first()).toHaveId('row-b');
+    await expect(count).toHaveText('2');
+  });
+
+  test('a malformed form body is a defined 400 on both channels (#581)', async ({ request }) => {
+    const html = await request.post('/form', {
+      headers: { 'content-type': 'application/json' },
+      data: '{"x":1}',
+    });
+    expect(html.status()).toBe(400);
+    const json = await request.post('/form', {
+      headers: { 'content-type': 'application/json', 'x-openelement-action': 'true' },
+      data: '{"x":1}',
+    });
+    expect(json.status()).toBe(400);
+    expect((await json.json()).type).toBe('error');
+  });
+
+  test('405 carries no-store (#586)', async ({ request }) => {
+    const response = await request.put('/form', { data: 'x=1' });
+    expect(response.status()).toBe(405);
+    expect(response.headers()['cache-control']).toBe('no-store');
+  });
+
+  test('an enhanced form inside an imported component enhances (#577)', async ({ page }) => {
+    await page.goto('/shared');
+    await page.evaluate(() => {
+      (window as unknown as { __stillHere: number }).__stillHere = 1;
+    });
+    const post = page.waitForResponse((r) => r.request().method() === 'POST');
+    await page.click('#shared-submit');
+    await post;
+    // Enhancement intercepted (fetch + morph): the JS context survives; a
+    // native POST would have wiped it.
+    expect(await page.evaluate(() => (window as never as { __stillHere?: number }).__stillHere))
+      .toBe(1);
+    await expect(page.locator('#error')).toHaveText('message is required');
+  });
+});
