@@ -115,6 +115,8 @@
       "exports": {
         ".": "./src/index.ts",
         "./cli/build": "./src/cli/build.ts",
+        "./cli/preview": "./src/cli/preview.ts",
+        "./cli/start": "./src/cli/start.ts",
         "./nitro-mount": "./src/nitro-mount.ts",
         "./sitemap": "./src/sitemap.ts"
       },
@@ -133,6 +135,14 @@
         },
         "./cli/build": {
           "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
+          "publicDeclarations": []
+        },
+        "./cli/preview": {
+          "sha256": "207adce03deb976db737773bd957e65af6bf5675b460c1121e77203181c06f65",
+          "publicDeclarations": []
+        },
+        "./cli/start": {
+          "sha256": "968339216c37c775eb83672ca3b61eebd8e8ff974c6ed019ce50fccbf1f78957",
           "publicDeclarations": []
         },
         "./nitro-mount": {

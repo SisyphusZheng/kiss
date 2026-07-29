@@ -822,6 +822,13 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   const desc = buildEntryDescriptor(basicRoutes, {});
   const code = renderEntry(desc);
 
+  // #611: default same-origin CSRF floor on generated action POST
+  assertStringIncludes(code, 'sec-fetch-site');
+  assertStringIncludes(code, 'cross-site');
+  assertStringIncludes(code, 'OPEN_ELEMENT_DISABLE_CSRF');
+  assertStringIncludes(code, 'Cross-site form submission rejected');
+  assertStringIncludes(code, '__loadContext.env');
+
   // #542: named-action dispatch is own-key gated (prototype keys are 404).
   assertStringIncludes(code, 'Object.prototype.hasOwnProperty.call(__namedActions, __actionName)');
   // #541: a returned Response is a contract violation, never a response.

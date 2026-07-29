@@ -12,13 +12,13 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package                     | Responsibility                                       | Supported public interface                            |
-| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils` |
-| `@openelement/app`          | Pages, routing, islands and request/render semantics | root, `hono`, `model`, `spa`, `preact`                |
-| `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation    | root, `nitro-mount`, `cli/build`, `sitemap`           |
-| `@openelement/create`       | Installed starter and coherent version entry         | CLI binary (root)                                     |
-| `@openelement/ui`           | Optional, proven general-purpose primitives          | root and retained primitive subpaths                  |
+| Package                     | Responsibility                                       | Supported public interface                                              |
+| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`                   |
+| `@openelement/app`          | Pages, routing, islands and request/render semantics | root, `hono`, `model`, `spa`, `preact`                                  |
+| `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation    | root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview`, `sitemap` |
+| `@openelement/create`       | Installed starter and coherent version entry         | CLI binary (root)                                                       |
+| `@openelement/ui`           | Optional, proven general-purpose primitives          | root and retained primitive subpaths                                    |
 
 Application authors should normally learn `element`, `app`, `adapter-vite`,
 and `create`; `ui` is optional.
@@ -55,7 +55,7 @@ promise and are not application-authoring surface.
     "internal": ["i18n"]
   },
   "@openelement/adapter-vite": {
-    "supported": [".", "nitro-mount", "cli/build", "sitemap"],
+    "supported": [".", "nitro-mount", "cli/build", "cli/start", "cli/preview", "sitemap"],
     "internal": []
   },
   "@openelement/create": {
@@ -97,7 +97,8 @@ promise and are not application-authoring surface.
   `plugin-mdx`, `route-manifest`, `cli/build-client`, `cli/build-ssg`) were
   pruned at the 0.41.0 freeze (ADR-0119): they had zero consumer specifiers —
   the build pipeline and generated code import only relatively or through the
-  supported root, `nitro-mount`, `cli/build` and `sitemap` subpaths. The module
+  supported root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview` and
+  `sitemap` subpaths. The module
   files remain inside the package for internal relative imports only.
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,

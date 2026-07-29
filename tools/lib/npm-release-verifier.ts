@@ -79,6 +79,8 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
       runtime,
     );
     if (tag) {
+      // #607: prerelease only requires its line tag (alpha/beta/rc). Do not
+      // require latest === prerelease — latest must remain on stable.
       await verifyField(
         `${packageName} dist-tags.${tag}`,
         packageName,
@@ -86,24 +88,20 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
         options.version,
         runtime,
       );
+      options.log?.(
+        `${packageName}@${options.version}: ${tag} dist-tag verified (latest left on stable)`,
+      );
+    } else {
+      await verifyField(
+        `${packageName} dist-tags.latest`,
+        packageName,
+        'dist-tags.latest',
+        options.version,
+        runtime,
+      );
+      options.log?.(
+        `${packageName}@${options.version}: latest dist-tag verified (stable)`,
+      );
     }
-    // latest dist-tag policy: prerelease publishes also move `latest` (see
-    // tools/publish-npm.ts); stable publishes keep the npm default of tagging
-    // `latest`. Either way `latest` must equal the just-published version —
-    // it must never lag the active release line.
-    // Chosen invariant: dist-tags.latest === <published version> (exact match,
-    // not semver >=), so a stale `latest` fails verification immediately.
-    await verifyField(
-      `${packageName} dist-tags.latest`,
-      packageName,
-      'dist-tags.latest',
-      options.version,
-      runtime,
-    );
-    options.log?.(
-      tag
-        ? `${packageName}@${options.version}: ${tag} and latest dist-tags verified`
-        : `${packageName}@${options.version}: latest dist-tag verified (stable)`,
-    );
   }
 }

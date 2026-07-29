@@ -276,6 +276,12 @@ Deno.test('client entry includes the ADR-0120 form enhancement layer', () => {
   assert(code.includes('new FormData(form, submitter)'));
   assert(code.includes("window.addEventListener('popstate'"));
   assert(code.includes('result.status === 200 || result.status === 422'));
+  // #598: never use form.action IDL (name="action" trap)
+  assert(code.includes("form.getAttribute('action')"));
+  assert(!/form\.action\s*\|\|/.test(code));
+  // #599: per-form sequence, not global last-wins
+  assert(code.includes('form.__openElementSeq'));
+  assert(!code.includes('var __submitSeq'));
 });
 
 Deno.test('islands without enhancedForms omit the enhancement layer (#569 complement)', () => {
@@ -289,4 +295,20 @@ Deno.test('islands without enhancedForms omit the enhancement layer (#569 comple
   assert(!code.includes('__attachSubmit'));
   assert(!code.includes("window.addEventListener('popstate'"));
   assert(code.includes('the form enhancement layer is omitted'));
+  // #597: __load must not reference __scanSubmitRoots when the enhance
+  // layer is omitted — that symbol is only defined inside the enhance block.
+  assert(!code.includes('__scanSubmitRoots'));
+});
+
+Deno.test('#597/#584 late-hydrate rescan only when enhancedForms', () => {
+  const withEnhance = generateClientEntry(
+    [{ tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' }],
+    { enhancedForms: true },
+  );
+  assert(withEnhance.includes('__scanSubmitRoots(document)'));
+  const without = generateClientEntry(
+    [{ tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' }],
+    { enhancedForms: false },
+  );
+  assert(!without.includes('__scanSubmitRoots'));
 });

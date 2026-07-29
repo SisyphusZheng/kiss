@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { jsx } from '../src/jsx-runtime.ts';
-import { renderDsdTree } from '../src/internal/core/render-ir.ts';
+import { renderDsdTree, serializeAttrs } from '../src/internal/core/render-ir.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
 import { MAX_SSR_NESTING_DEPTH, renderDsd } from '../src/internal/core/render-dsd.ts';
 
@@ -54,6 +54,22 @@ Deno.test('event hydration safely ignores read-only component props', () => {
   }));
 
   assertEquals(bindings.size, 1);
+});
+
+Deno.test('#602 serializeAttrs rejects unsafe attribute names', () => {
+  const safe = serializeAttrs('div', { className: 'ok', 'data-x': '1', id: 'a' });
+  assertStringIncludes(safe, 'class="ok"');
+  assertStringIncludes(safe, 'data-x="1"');
+  assertStringIncludes(safe, 'id="a"');
+
+  const evil = serializeAttrs('div', {
+    'x" onclick="alert(1)" data-x': 'pwn',
+    'onmouseover': 'alert(1)',
+    'ok-name': 'yes',
+  });
+  assertEquals(evil.includes('onclick'), false);
+  assertEquals(evil.includes('onmouseover'), false);
+  assertStringIncludes(evil, 'ok-name="yes"');
 });
 
 Deno.test('SSR rejects rendering beyond the nesting-depth limit', async () => {

@@ -35,7 +35,7 @@ export default defineConfig({
     // `exec` prevents the shell Playwright launches from orphaning Deno when
     // the suite finishes or is interrupted.
     command:
-      `exec deno run --config ../../../../../deno.json -A server.ts --port ${PORT} --dir ../dist`,
+      `OPEN_ELEMENT_DISABLE_CSRF=1 exec deno run --config ../../../../../deno.json -A server.ts --port ${PORT} --dir ../dist`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 60_000,

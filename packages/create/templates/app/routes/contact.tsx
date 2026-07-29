@@ -24,7 +24,7 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Co
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return fail(422, { error: 'a valid email is required', email });
   }
-  redirect(`/contact?subscribed=${encodeURIComponent(email)}`);
+  throw redirect(`/contact?subscribed=${encodeURIComponent(email)}`);
 }
 
 const ContactPage = definePage({
