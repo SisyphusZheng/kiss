@@ -42,8 +42,9 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 const serverEntry = await import(pathToFileURL(join(ROOT, 'server/index.js')).href);
+type RequestTimeEvent = { request: Request; env?: Record<string, string> };
 const handleRequestTime = serverEntry.default as (
-  event: { request: Request },
+  event: RequestTimeEvent,
 ) => Promise<Response>;
 // Generated dispatch (#556): matches concrete pathnames ('/item/42') against
 // the request-time route patterns ('/item/:id') baked into the server entry.
@@ -78,7 +79,7 @@ async function serveStatic(pathname: string): Promise<Response | null> {
 Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
   const url = new URL(request.url);
   if (matchRequestTimeRoute(url.pathname) !== null) {
-    return await handleRequestTime({ request });
+    return await handleRequestTime({ request, env: Deno.env.toObject() });
   }
   const staticResponse = await serveStatic(url.pathname);
   if (staticResponse) return staticResponse;
