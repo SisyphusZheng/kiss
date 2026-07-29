@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "689f3c79e06a5395f94c3fde24a8f27f42ec361dba3beebc2212b5c54bd2797b",
+          "sha256": "1c3f3a859d0fc72fdbea9f04c479aa8f870e5a586eacb7ff8f9f14af9cd34dbf",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -142,7 +142,7 @@
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "968339216c37c775eb83672ca3b61eebd8e8ff974c6ed019ce50fccbf1f78957",
+          "sha256": "b9206bd4f6f39511442ca7cfdda6946ab83ccb99c99cdebcf722dd06bef91045",
           "publicDeclarations": []
         },
         "./nitro-mount": {

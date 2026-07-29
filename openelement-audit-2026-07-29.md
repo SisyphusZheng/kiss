@@ -10,17 +10,17 @@
 
 ## 一、总体成熟度评估
 
-| 维度 | 成熟度 | 分数(0-100) |
-|---|---|---|
-| 前端架构 | 较成熟 | 80 |
-| 后端架构 | 基本可用 | 65 |
-| 安全性 | 较成熟 | 72 |
-| 数据库与数据层 | 需改进 | 55 |
-| 性能与可扩展性 | 基本可用 | 68 |
-| 测试与质量保障 | 较成熟 | 72 |
-| CI/CD 流水线 | 成熟 | 88 |
-| 代码规范与维护性 | 较成熟 | 84 |
-| 错误处理（QA 子项） | 基本可用 | 66 |
+| 维度                | 成熟度   | 分数(0-100) |
+| ------------------- | -------- | ----------- |
+| 前端架构            | 较成熟   | 80          |
+| 后端架构            | 基本可用 | 65          |
+| 安全性              | 较成熟   | 72          |
+| 数据库与数据层      | 需改进   | 55          |
+| 性能与可扩展性      | 基本可用 | 68          |
+| 测试与质量保障      | 较成熟   | 72          |
+| CI/CD 流水线        | 成熟     | 88          |
+| 代码规范与维护性    | 较成熟   | 84          |
+| 错误处理（QA 子项） | 基本可用 | 66          |
 
 **整体成熟度：≈ 72 / 100 · 评级「较成熟（可投产，关键维度需补强）」**
 
@@ -31,84 +31,99 @@
 ## 二、分维度发现（含优先级与证据）
 
 ### 1. 前端架构 · 80 · 较成熟
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| SPA 导航 UI-shell 架构债：销毁重建整个 shadow DOM 再手动重绑事件，与 signal 不兼容 | **高** | `open-layout.tsx:1230` | 改用 signal 差异更新替代销毁重建 |
-| 示例与库主题 token 冲突，被迫 `!important` 兜底覆盖组件样式 | 中 | `examples/deno-desktop-reader/reader.tsx:78-179, 1008-1031` | 示例 token 对齐 Open Props，删除 `!important` |
-| 双套主题传播机制（Context `THEME_CTX` vs 全局事件 + 手动 `_propagateTheme` 递归）易失同步 | 中 | `open-layout.tsx:1185`、`open-theme-toggle.tsx`、`open-layout.tsx:1306` | 收敛到单一 Context |
-| 示例 `router.ts` 用模块级可变单例 `let _router` 做全局导航状态 | 中 | `examples/deno-desktop-reader/router.ts:9` | 改为显式注入/不可变状态 |
+
+| 问题                                                                                      | 优先级 | 证据                                                                    | 修复建议                                      |
+| ----------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------- | --------------------------------------------- |
+| SPA 导航 UI-shell 架构债：销毁重建整个 shadow DOM 再手动重绑事件，与 signal 不兼容        | **高** | `open-layout.tsx:1230`                                                  | 改用 signal 差异更新替代销毁重建              |
+| 示例与库主题 token 冲突，被迫 `!important` 兜底覆盖组件样式                               | 中     | `examples/deno-desktop-reader/reader.tsx:78-179, 1008-1031`             | 示例 token 对齐 Open Props，删除 `!important` |
+| 双套主题传播机制（Context `THEME_CTX` vs 全局事件 + 手动 `_propagateTheme` 递归）易失同步 | 中     | `open-layout.tsx:1185`、`open-theme-toggle.tsx`、`open-layout.tsx:1306` | 收敛到单一 Context                            |
+| 示例 `router.ts` 用模块级可变单例 `let _router` 做全局导航状态                            | 中     | `examples/deno-desktop-reader/router.ts:9`                              | 改为显式注入/不可变状态                       |
 
 ### 2. 后端架构 · 65 · 基本可用
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| 无业务服务层，"后端"仅到 request-driver 桥与 SSG/SSR 渲染为止 | 中 | `packages/adapter-vite/src/nitro-mount.ts`、`packages/app/src/model.ts:31` | 文档明确框架边界，提供业务分层 recipe |
-| 生产服务器靠 Nitro 适配器，非开箱即用 | 中 | `nitro-mount.ts:74-100` | 提供预置部署模板（Node/Workers/Deno Deploy） |
-| 双 loader 上下文（`LoaderContext` vs `SpaLoaderContext`）语义相近但不可互换，已知陷阱 | 中 | `packages/element/src/internal/protocol/data.ts:30-68`(#570) | 统一抽象或强类型区分，文档标注 |
-| `deno.json` 无后端服务类 task（仅 build/check/publish） | 低 | `deno.json` | 补充服务运行/健康检查 task（若纳入边界） |
+
+| 问题                                                                                  | 优先级 | 证据                                                                       | 修复建议                                     |
+| ------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------- | -------------------------------------------- |
+| 无业务服务层，"后端"仅到 request-driver 桥与 SSG/SSR 渲染为止                         | 中     | `packages/adapter-vite/src/nitro-mount.ts`、`packages/app/src/model.ts:31` | 文档明确框架边界，提供业务分层 recipe        |
+| 生产服务器靠 Nitro 适配器，非开箱即用                                                 | 中     | `nitro-mount.ts:74-100`                                                    | 提供预置部署模板（Node/Workers/Deno Deploy） |
+| 双 loader 上下文（`LoaderContext` vs `SpaLoaderContext`）语义相近但不可互换，已知陷阱 | 中     | `packages/element/src/internal/protocol/data.ts:30-68`(#570)               | 统一抽象或强类型区分，文档标注               |
+| `deno.json` 无后端服务类 task（仅 build/check/publish）                               | 低     | `deno.json`                                                                | 补充服务运行/健康检查 task（若纳入边界）     |
 
 ### 3. 安全性 · 72 · 较成熟
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| 鉴权完全委派开发者，框架无身份校验，易遗漏 | **高** | `packages/create/templates/app/routes/contact.tsx:22` | 提供 auth 中间件模板 + 文档强制标注 `action` 需自鉴权 |
-| 无速率限制/限流（全仓无 rate-limit 实现）→ DoS/暴力 | **中** | 全仓 grep 零命中 | 提供限流中间件或文档化接入 |
-| CSRF 仅浏览器携带 `Sec-Fetch-Site` 时生效，非浏览器客户端被放行 | 中 | `entry-render-helpers.ts:223-245`（line 224 注释） | 同站子域场景文档警示；建议 token 方案 |
-| CSRF 可通过 `OPEN_ELEMENT_DISABLE_CSRF==='1'` 整体关闭（footgun） | 中 | `entry-render-helpers.ts:229` | 默认关该开关，或仅 dev 允许 |
-| 无通用输入校验层，`action` 入参校验全由开发者 | 中 | `contact.tsx:24`（仅正则） | 提供 Zod/Valibot 校验样板 |
-| 信任边界 `dangerouslyHeadFragments` / `trustRenderHtml` 误用即 XSS | 低-中 | `html-escape.ts:152`、`security.ts:44` | 文档强化信任边界警示 |
+
+| 问题                                                               | 优先级 | 证据                                                  | 修复建议                                              |
+| ------------------------------------------------------------------ | ------ | ----------------------------------------------------- | ----------------------------------------------------- |
+| 鉴权完全委派开发者，框架无身份校验，易遗漏                         | **高** | `packages/create/templates/app/routes/contact.tsx:22` | 提供 auth 中间件模板 + 文档强制标注 `action` 需自鉴权 |
+| 无速率限制/限流（全仓无 rate-limit 实现）→ DoS/暴力                | **中** | 全仓 grep 零命中                                      | 提供限流中间件或文档化接入                            |
+| CSRF 仅浏览器携带 `Sec-Fetch-Site` 时生效，非浏览器客户端被放行    | 中     | `entry-render-helpers.ts:223-245`（line 224 注释）    | 同站子域场景文档警示；建议 token 方案                 |
+| CSRF 可通过 `OPEN_ELEMENT_DISABLE_CSRF==='1'` 整体关闭（footgun）  | 中     | `entry-render-helpers.ts:229`                         | 默认关该开关，或仅 dev 允许                           |
+| 无通用输入校验层，`action` 入参校验全由开发者                      | 中     | `contact.tsx:24`（仅正则）                            | 提供 Zod/Valibot 校验样板                             |
+| 信任边界 `dangerouslyHeadFragments` / `trustRenderHtml` 误用即 XSS | 低-中  | `html-escape.ts:152`、`security.ts:44`                | 文档强化信任边界警示                                  |
+
 > 亮点：XSS 防护扎实（`html-escape` 单遍转义、剥离 `<script>`/`on*`、原型污染防护、innerHTML 默认转义）；CORS 安全默认（`*+credentials` 抛错）；`secureHeaders()` 默认启用。
 
 ### 4. 数据库与数据层 · 55 · 需改进
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| ADR 承诺的 `MemoryDataAdapter` 基线**未实现**（grep 零命中），文档-代码漂移 | **高** | `data.ts:10`、`docs/adr/ADR-0095` | 实现 `MemoryDataAdapter` 基线并补测试 |
-| 数据/持久化 recipe（Drizzle/KV）未随框架发布，用户需自行实现 | **高** | ADR-0095/0038 | 发布官方 recipe 与示例 |
-| 示例 `state.json` read-modify-write 无锁、非原子，并发写有损 | 中 | `examples/deno-desktop-reader/app/host-store.ts:132-151` | 示例补锁/原子写，或文档警示 |
-| 示例 `searchLibrary` 用 `includes()` 数组扫描，无索引 | 中 | `host-store.ts:498-511` | 改为索引/外部搜索引擎 |
-| ADR-0038 ISR edge KV 仅文档意图，无 `Deno.openKv` 实现 | 中 | 代码 grep 零命中 | 实现可选 KV 适配器 |
-| 迁移按设计 non-goal（可接受，但需明确告知用户） | 低 | `ADR-0095:75` | 文档明确数据迁移责任归属用户 |
+
+| 问题                                                                        | 优先级 | 证据                                                     | 修复建议                              |
+| --------------------------------------------------------------------------- | ------ | -------------------------------------------------------- | ------------------------------------- |
+| ADR 承诺的 `MemoryDataAdapter` 基线**未实现**（grep 零命中），文档-代码漂移 | **高** | `data.ts:10`、`docs/adr/ADR-0095`                        | 实现 `MemoryDataAdapter` 基线并补测试 |
+| 数据/持久化 recipe（Drizzle/KV）未随框架发布，用户需自行实现                | **高** | ADR-0095/0038                                            | 发布官方 recipe 与示例                |
+| 示例 `state.json` read-modify-write 无锁、非原子，并发写有损                | 中     | `examples/deno-desktop-reader/app/host-store.ts:132-151` | 示例补锁/原子写，或文档警示           |
+| 示例 `searchLibrary` 用 `includes()` 数组扫描，无索引                       | 中     | `host-store.ts:498-511`                                  | 改为索引/外部搜索引擎                 |
+| ADR-0038 ISR edge KV 仅文档意图，无 `Deno.openKv` 实现                      | 中     | 代码 grep 零命中                                         | 实现可选 KV 适配器                    |
+| 迁移按设计 non-goal（可接受，但需明确告知用户）                             | 低     | `ADR-0095:75`                                            | 文档明确数据迁移责任归属用户          |
 
 ### 5. 性能与可扩展性 · 68 · 基本可用
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| 进程内 ISR 缓存单实例，外部 KV 适配器未默认实现 → 多副本/边缘扩展冷缓存击穿 | **中-高** | `isr.ts:5-12, 64-118` | 实现默认外部 KV 的 ISR 适配器 |
-| SSG 依赖重（shoelace/@material/web/flexsearch/mdx/nitro），构建产物体积大 | 中 | `deno.json`、`www/dist` | 按需分包/剔除未用 WC 依赖 |
-| 无运行时 DB 故无 N+1（优势） | — | 构建期 FS 读取 | 保持 |
+
+| 问题                                                                        | 优先级    | 证据                    | 修复建议                      |
+| --------------------------------------------------------------------------- | --------- | ----------------------- | ----------------------------- |
+| 进程内 ISR 缓存单实例，外部 KV 适配器未默认实现 → 多副本/边缘扩展冷缓存击穿 | **中-高** | `isr.ts:5-12, 64-118`   | 实现默认外部 KV 的 ISR 适配器 |
+| SSG 依赖重（shoelace/@material/web/flexsearch/mdx/nitro），构建产物体积大   | 中        | `deno.json`、`www/dist` | 按需分包/剔除未用 WC 依赖     |
+| 无运行时 DB 故无 N+1（优势）                                                | —         | 构建期 FS 读取          | 保持                          |
+
 > 亮点：`MemoryIsrCache` LRU(max 1000) + background 再生；`SpaRequestCache` 单 GET 复用；Hono 服务无状态易扩展。
 
 ### 6. 测试与质量保障 · 72 · 较成熟
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
+
+| 问题                                                          | 优先级 | 证据                             | 修复建议                              |
+| ------------------------------------------------------------- | ------ | -------------------------------- | ------------------------------------- |
 | 覆盖率门禁排除 `www/`（路由/SEO/SPA）与 `examples/`，存在盲区 | **高** | `tools/check-coverage.ts:84-101` | 将 `www` 关键路径纳入覆盖率或单设门禁 |
-| `test` 任务不跑 E2E，E2E 未并入合并门禁 | 中 | `deno.json:77,83,97` | chromium 全量 E2E 设为 PR 必需门禁 |
-| `packages/create` 仅 1 测试对应 3 源文件，脚手架测试薄弱 | 中 | 按包分布 | 增模板生成/产物校验/幂等性测试 |
-| 部分包覆盖偏薄（ui=4、create=1），文件比 ~0.36 | 低 | 采集分布 | 按失效影响补薄弱包关键模块 |
+| `test` 任务不跑 E2E，E2E 未并入合并门禁                       | 中     | `deno.json:77,83,97`             | chromium 全量 E2E 设为 PR 必需门禁    |
+| `packages/create` 仅 1 测试对应 3 源文件，脚手架测试薄弱      | 中     | 按包分布                         | 增模板生成/产物校验/幂等性测试        |
+| 部分包覆盖偏薄（ui=4、create=1），文件比 ~0.36                | 低     | 采集分布                         | 按失效影响补薄弱包关键模块            |
+
 > 亮点：100 测试文件、断言风格审计门禁（`assertion-style.test.ts`）、明确覆盖率阈值（行73/分支82/函数77）、Playwright 20 E2E。
 
 ### 7. CI/CD 流水线 · 88 · 成熟
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| 合并必需门禁以 chromium 单引擎为主，多引擎全量 E2E 非硬阻塞 | 中 | `autoflow-ci.yml`、`deno.json:88-89` | 将 chromium 全量 E2E 纳入 `autoflow:ci` |
-| FF/WebKit 仅 grep 子集烟雾，非全量多引擎回归 | 低 | `deno.json:88-89` | 评估对高风险路径扩展全量 |
-| 发布强合规串行证据校验，可能拖慢节奏（权衡） | 低 | `autoflow-release.yml`、`tools/autoflow/mod3.ts` | 无强依赖校验并行化 |
-| 夜间压测缺历史基线/趋势告警 | 低 | `nightly-stress.yml` | 增 RSS/错误率趋势基线对比与越界告警 |
+
+| 问题                                                        | 优先级 | 证据                                             | 修复建议                                |
+| ----------------------------------------------------------- | ------ | ------------------------------------------------ | --------------------------------------- |
+| 合并必需门禁以 chromium 单引擎为主，多引擎全量 E2E 非硬阻塞 | 中     | `autoflow-ci.yml`、`deno.json:88-89`             | 将 chromium 全量 E2E 纳入 `autoflow:ci` |
+| FF/WebKit 仅 grep 子集烟雾，非全量多引擎回归                | 低     | `deno.json:88-89`                                | 评估对高风险路径扩展全量                |
+| 发布强合规串行证据校验，可能拖慢节奏（权衡）                | 低     | `autoflow-release.yml`、`tools/autoflow/mod3.ts` | 无强依赖校验并行化                      |
+| 夜间压测缺历史基线/趋势告警                                 | 低     | `nightly-stress.yml`                             | 增 RSS/错误率趋势基线对比与越界告警     |
+
 > 亮点：多引擎 E2E、跨 OS(ubuntu/macos/windows) 消费验证、夜间压测、CodeQL、依赖审查、动作 pin 哈希、证据门禁齐备。
 
 ### 8. 代码规范与维护性 · 84 · 较成熟
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| `deno lint` 排除 `no-sloppy-imports`，相对导入省略扩展名不报错 | 中 | `deno.json:142` | 启用该规则统一导入风格 |
-| 根 `deno.json` 含仅用于夹具/示例的死依赖（valibot/zod/shoelace/@material/web/flexsearch）膨胀 lockfile | 中 | `deno.json`、`__fixtures__`、`tools/third-party-wc-smoke/` | 降级为 optional/示例依赖，缩小 lockfile |
-| `flexsearch` 源码疑似无静态 import，需核实是否死依赖 | 低 | grep 仅字符串出现 | 核实并清理或改为动态加载说明 |
+
+| 问题                                                                                                   | 优先级 | 证据                                                       | 修复建议                                |
+| ------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------- | --------------------------------------- |
+| `deno lint` 排除 `no-sloppy-imports`，相对导入省略扩展名不报错                                         | 中     | `deno.json:142`                                            | 启用该规则统一导入风格                  |
+| 根 `deno.json` 含仅用于夹具/示例的死依赖（valibot/zod/shoelace/@material/web/flexsearch）膨胀 lockfile | 中     | `deno.json`、`__fixtures__`、`tools/third-party-wc-smoke/` | 降级为 optional/示例依赖，缩小 lockfile |
+| `flexsearch` 源码疑似无静态 import，需核实是否死依赖                                                   | 低     | grep 仅字符串出现                                          | 核实并清理或改为动态加载说明            |
+
 > 亮点：`strict:true`、模块化优秀（5 包 + www + examples 边界清晰）、文档极完备（README/README.zh/docs/、www/design/、JSDoc + ADR 引用）、`tools/check-*` 套件强制完整性、TODO/FIXME 仅 9 处。
 
 ### 错误处理（QA 子项）· 66 · 基本可用
-| 问题 | 优先级 | 证据 | 修复建议 |
-|---|---|---|---|
-| 静默吞错规模大：93 空 `catch {}` + 111 未用 `e` 的 catch | **高** | 全仓统计；`route-scanner-fs.ts:16/25/34` | 空 catch 至少 `log.debug`/上报；lint 拦截空 catch |
-| 关键路径吞错致正确性问题：FS 错误被当"无路由"掩盖 | **高** | `route-scanner-fs.ts:13-37` | 区分"不存在"(正常)与"IO/权限错误"(上报)，避免漏扫路由 |
-| 日志/遥测双轨：195 `console.error` 仅 6 处 `reportError` | 中 | `errors.ts:154` | 收敛为结构化 `reportError`（含 code/severity/phase + 遥测） |
-| SSG sitemap 失败仅 `log.debug` 吞掉，SEO 静默退化 | 中 | `ssg-render.ts:343-347` | 失败进入 evidence/上报 |
-| 生成式代码内防御性空 catch 不可测且不可见 | 低 | `entry-render-helpers.ts:184/236/269` | 补充 E2E/单测覆盖生成产物行为 |
+
+| 问题                                                     | 优先级 | 证据                                     | 修复建议                                                    |
+| -------------------------------------------------------- | ------ | ---------------------------------------- | ----------------------------------------------------------- |
+| 静默吞错规模大：93 空 `catch {}` + 111 未用 `e` 的 catch | **高** | 全仓统计；`route-scanner-fs.ts:16/25/34` | 空 catch 至少 `log.debug`/上报；lint 拦截空 catch           |
+| 关键路径吞错致正确性问题：FS 错误被当"无路由"掩盖        | **高** | `route-scanner-fs.ts:13-37`              | 区分"不存在"(正常)与"IO/权限错误"(上报)，避免漏扫路由       |
+| 日志/遥测双轨：195 `console.error` 仅 6 处 `reportError` | 中     | `errors.ts:154`                          | 收敛为结构化 `reportError`（含 code/severity/phase + 遥测） |
+| SSG sitemap 失败仅 `log.debug` 吞掉，SEO 静默退化        | 中     | `ssg-render.ts:343-347`                  | 失败进入 evidence/上报                                      |
+| 生成式代码内防御性空 catch 不可测且不可见                | 低     | `entry-render-helpers.ts:184/236/269`    | 补充 E2E/单测覆盖生成产物行为                               |
+
 > 亮点：`OpenElementError` 类型化（code/severity/phase/recoverable/statusCode）、错误边界带重试(maxRetries=3)+降级 fallback、支持遥测 hook（ADR-0053）。
 
 ---
@@ -141,4 +156,4 @@ OpenElement 作为前端框架已具备**生产可信的工程底座**，但距"
 
 ---
 
-*本报告由软件开发团队（主理人齐活林 / 架构师高见远 / QA 严过关）协作产出，所有结论基于代码事实与抽样源码核对，未修改任何源文件。*
+_本报告由软件开发团队（主理人齐活林 / 架构师高见远 / QA 严过关）协作产出，所有结论基于代码事实与抽样源码核对，未修改任何源文件。_

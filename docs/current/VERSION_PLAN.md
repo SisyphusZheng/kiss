@@ -1,9 +1,9 @@
 # v0.42.0 — WC Application Loop (light fullstack) release plan
 
-> Current source package line: `v0.42.0-alpha.7`\
-> Current npm registry line: `v0.42.0-alpha.7`\
-> Next alpha train: `v0.42.0-alpha.7` (TP-5.7)\
-> Active release target: `v0.42.0-alpha.7`\
+> Current source package line: `v0.42.0-alpha.8`\
+> Current npm registry line: `v0.42.0-alpha.8`\
+> Next alpha train: `v0.42.0-alpha.8` (TP-5.7)\
+> Active release target: `v0.42.0-alpha.8`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Current maturity stage: stable (0.41.x line); 0.42.0 planned under ADR-0120
@@ -316,10 +316,10 @@ expanding the 0.42 scope.
   included; release-tier gates green; alpha.6 published with two-stage
   evidence; #592/#593 stay open as the TP-6 agenda they record.
 
-### TP-5.7 — `0.42.0-alpha.7` light-fullstack floor + audit round 3
+### TP-5.7 — `0.42.0-alpha.8` light-fullstack floor + audit round 3
 
 Goal: close the third review round (issues #597–#616, milestone
-`v0.42.0-alpha.7`, source `docs/audit/2026-07-28-alpha6-production-review.md`
+`v0.42.0-alpha.8`, source `docs/audit/2026-07-28-alpha6-production-review.md`
 plus the 2026-07-28 orchestrator review) **and** land the light-fullstack
 operational floor (runnable server, fail-closed SSG, CSRF default, honest
 tags/claims) without expanding into framework session/cache (0.44).

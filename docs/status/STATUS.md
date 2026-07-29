@@ -1,9 +1,9 @@
 # OpenElement Status
 
 > Updated: 2026-07-28\
-> Repository package line: `v0.42.0-alpha.7`\
-> npm registry line: `v0.42.0-alpha.7`\
-> Active release target: `v0.42.0-alpha.7`\
+> Repository package line: `v0.42.0-alpha.8`\
+> npm registry line: `v0.42.0-alpha.8`\
+> Active release target: `v0.42.0-alpha.8`\
 > Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.41.x); 0.42 alpha in flight
@@ -83,7 +83,7 @@ cache/ISR, auth packages (0.44 or recipes).
 | `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                        |
 | `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                                 |
 | `0.41.0`          | Separate stable decision after alpha.19 evidence                     |
-| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)                       |
+| `0.42.0-alpha.8`  | Light-fullstack floor + audit round 3 (TP-5.7)                       |
 | `0.42.0-alpha.8`  | Code hygiene: #619–#623 (scanner, DataAdapter, dedup, start, logger) |
 | `0.42.0`          | WC light fullstack (Application Loop freeze)                         |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                 |

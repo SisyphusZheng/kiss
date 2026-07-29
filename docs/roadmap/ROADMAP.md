@@ -4,8 +4,8 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.42.0-alpha.7`.\
-> Active execution target: `v0.42.0-alpha.7`.\
+> Published package line: `v0.42.0-alpha.8`.\
+> Active execution target: `v0.42.0-alpha.8`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.6 shipped the loop; alpha.7 closes the
 > light-fullstack floor (morph residuals, start path, SSG fail-closed,
@@ -119,7 +119,7 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.42.0-alpha.7` is the published package line. npm beta.1 through beta.3 are
+`0.42.0-alpha.8` is the published package line. npm beta.1 through beta.3 are
 immutable partial artifacts and remain withdrawn from the active release story.
 The planned beta name was cancelled so the version label honestly reflects
 that breaking architecture and interface changes are still allowed.

@@ -1,6 +1,6 @@
-export const PACKAGE_VERSION = '0.42.0-alpha.7';
+export const PACKAGE_VERSION = '0.42.0-alpha.8';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
-export const ACTIVE_EXECUTION_VERSION = 'v0.42.0-alpha.7';
+export const ACTIVE_EXECUTION_VERSION = 'v0.42.0-alpha.8';
 export const RETAINED_PACKAGE_NAMES = Object.freeze([
   '@openelement/adapter-vite',
   '@openelement/app',
@@ -49,7 +49,7 @@ export const NITRO_COMPATIBILITY_DATE = '2026-06-12';
 // single source of truth for the "from" side of version-anchor replacements
 // (see buildVersionAnchorReplacements in tools/autoflow/release.ts). It is
 // kept in sync automatically by updateProjectConstants() during a bump.
-export const PREVIOUS_PACKAGE_VERSION = '0.42.0-alpha.6';
+export const PREVIOUS_PACKAGE_VERSION = '0.42.0-alpha.7';
 export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 
 // The theme the www roadmap current-line timeline entry carried immediately
@@ -60,7 +60,7 @@ export const PREVIOUS_PACKAGE_VERSION_TAG = `v${PREVIOUS_PACKAGE_VERSION}`;
 // sweep' describing alpha.19 under the v0.41.1 entry). The bump side
 // re-records this constant from the pre-bump entry; bootstrap value
 // documents the incident.
-export const PREVIOUS_RELEASE_THEME = 'audit round 1 remediation';
+export const PREVIOUS_RELEASE_THEME = 'light-fullstack floor + audit round 3';
 
 /**
  * Version strings that must never reappear in the head anchor zone of the
