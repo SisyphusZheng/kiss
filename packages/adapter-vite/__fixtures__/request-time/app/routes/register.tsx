@@ -30,7 +30,7 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Re
       email: String(ctx.formData.get('email') ?? ''),
     });
   }
-  redirect(`/register?welcome=${encodeURIComponent(parsed.data.email)}`);
+  throw redirect(`/register?welcome=${encodeURIComponent(parsed.data.email)}`);
 }
 
 const RegisterPage = definePage({

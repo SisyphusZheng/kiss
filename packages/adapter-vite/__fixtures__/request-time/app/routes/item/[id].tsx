@@ -37,7 +37,7 @@ export function action(ctx: {
   if (!note) {
     return fail(422, { error: 'note is required', note } satisfies ItemActionData);
   }
-  redirect(`/item/${encodeURIComponent(ctx.params.id)}?noted=${encodeURIComponent(note)}`);
+  throw redirect(`/item/${encodeURIComponent(ctx.params.id)}?noted=${encodeURIComponent(note)}`);
 }
 
 const ItemPage = definePage<ItemData>({

@@ -220,6 +220,29 @@ export function renderRouteHandler(
     // (HTML responses identical to the no-JS path).
     lines.push(`    const __actionHeader = c.req.header('x-openelement-action');`);
     lines.push(`    __isFetch = __actionHeader === 'true';`);
+    // #611 / ADR-0121 §12 (amended): default same-origin CSRF floor for
+    // browser POSTs. Non-browser clients that omit Origin and Sec-Fetch-Site
+    // are allowed. Opt out via runtime env on the request context:
+    // c.env.OPEN_ELEMENT_DISABLE_CSRF === '1' (Workers/Node bindings).
+    lines.push(`    {`);
+    lines.push(
+      `      const __csrfOff = __loadContext.env && __loadContext.env.OPEN_ELEMENT_DISABLE_CSRF === '1';`,
+    );
+    lines.push(`      if (!__csrfOff) {`);
+    lines.push(`        const __origin = c.req.header('origin');`);
+    lines.push(`        const __sfs = (c.req.header('sec-fetch-site') || '').toLowerCase();`);
+    lines.push(`        let __cross = __sfs === 'cross-site';`);
+    lines.push(
+      `        if (!__cross && __origin) { try { __cross = new URL(__origin).origin !== new URL(c.req.url).origin; } catch { __cross = true; } }`,
+    );
+    lines.push(`        if (__cross) {`);
+    lines.push(
+      `          if (__isFetch) return c.json({ type: 'error', status: 403, error: { message: 'Cross-site form submission rejected' } }, 403);`,
+    );
+    lines.push(`          return c.text('Forbidden', 403);`);
+    lines.push(`        }`);
+    lines.push(`      }`);
+    lines.push(`    }`);
     lines.push(`    if (typeof __actionFn !== 'function') {`);
     lines.push(
       `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,

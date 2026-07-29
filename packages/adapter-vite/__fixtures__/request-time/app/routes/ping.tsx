@@ -31,7 +31,7 @@ export const actions = {
     // Success returns nothing: the default PRG target applies (ADR-0121 §4).
   },
   mv307(): never {
-    redirect('/ping?moved=1', 307);
+    throw redirect('/ping?moved=1', 307);
   },
   raw(): Response {
     return new Response('<h1>raw</h1>', {

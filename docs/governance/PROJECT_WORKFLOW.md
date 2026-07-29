@@ -11,8 +11,8 @@ complete because an issue, chat message, or SOP says it is complete. It is
 complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
-Current execution anchor: published package line `v0.42.0-alpha.6`, completed
-implementation anchor `v0.42.0-alpha.6`, and `0.42.0` WC Application Loop planning
+Current execution anchor: published package line `v0.42.0-alpha.6`, active
+train `v0.42.0-alpha.7` (TP-5.7), and `0.42.0` WC light fullstack planning
 under ADR-0120 and `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
@@ -116,11 +116,14 @@ smoke are release evidence, not telemetry. A version line is not closed until
 the status, roadmap, release checklist, release note, and public README files
 record the npm outcome truthfully.
 
-Dist-tag policy for the alpha line: every prerelease publish tags both its
-prerelease line (`alpha`/`beta`/`rc`) and `latest`, so `latest` never lags the
-active release line. `tools/verify-npm-release.ts` enforces this by asserting
-`dist-tags.latest` equals the just-published version; stable publishes keep the
-npm default of tagging `latest`.
+Dist-tag policy (#607): prerelease publishes tag only their line
+(`alpha`/`beta`/`rc`). **`latest` always tracks the last stable release** so
+`npm install @openelement/*` never lands on alpha by default. Consumers who
+want the alpha train use `@alpha` or an exact version. Stable publishes keep
+npm's default `latest` tag. `tools/verify-npm-release.ts` asserts
+`dist-tags.<prerelease>` for alphas and `dist-tags.latest` for stables.
+After alpha.6, run a one-time `npm dist-tag add @openelement/<pkg>@<last-stable> latest`
+if registry `latest` still points at an alpha.
 
 ## Automation Gates
 

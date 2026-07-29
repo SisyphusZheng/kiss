@@ -1,27 +1,44 @@
-# v0.42.0 — WC Application Loop release plan
+# v0.42.0 — WC Application Loop (light fullstack) release plan
 
 > Current source package line: `v0.42.0-alpha.6`\
 > Current npm registry line: `v0.42.0-alpha.6`\
-> Active release target: `v0.41.1`\
-> Planning release target: `v0.42.0` (WC Application Loop)\
+> Next alpha train: `v0.42.0-alpha.7` (TP-5.7)\
+> Active release target: `v0.42.0-alpha.7`\
+> Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Current maturity stage: stable (0.41.x line); 0.42.0 planned under ADR-0120
+> Plan amendment: 2026-07-28 — light-fullstack product promise, CSRF floor
+> in alpha.7 ship gate, login-via-recipe clarified (no 0.44 wait)
 
 ## Objective
 
-`0.42.0` ships the WC Application Loop governed by
-[`ADR-0120`](../adr/ADR-0120-0-42-0-wc-application-loop-scope.md): one
-route-to-interaction loop — load, DSD render, progressive form, action,
-error/redirect and revalidation — that works without JavaScript. It extends
-the frozen static-first model to request time without touching the ADR-0119
-freeze surface.
+`0.42.0` ships **WC light fullstack**: the Application Loop governed by
+[`ADR-0120`](../adr/ADR-0120-0-42-0-wc-application-loop-scope.md) — one
+route-to-interaction loop (load, DSD render, progressive form, action,
+error/redirect, revalidation) that works without JavaScript — plus the
+minimum operational floor so a stranger can `build → start` a dynamic
+route, trust static prerender failures, and post forms under a default
+same-origin CSRF check. It extends the frozen static-first model to
+request time without touching the ADR-0119 freeze surface.
 
 ```text
 OpenElement = Web Components-native fullstack application framework
-0.42 scope = the route-to-interaction loop at request time
+0.42 product promise = WC light fullstack
+0.42 scope = request-time application loop + first-mile + CSRF floor
+0.42 does NOT ship = framework session/flash, cache/ISR, auth packages
+login apps = supported via recipes (better-auth) on Web-standard Request
 component contract = standard Custom Elements (unchanged)
 official build path = Vite + Nitro (unchanged)
 ```
+
+**Light fullstack means (0.42 exit):** dynamic `loader`/`action` routes;
+no-JS and enhanced form loops; honest npm tags; runnable server artifact;
+fail-closed static prerender; default CSRF same-origin on generated POST;
+documented login via third-party session on `Request` headers.
+
+**Light fullstack does not mean:** framework-owned session store, flash
+across redirects, OAuth package, or production cache/ISR — those remain
+`0.44.0` (or stay recipes forever if a library already owns them).
 
 The protocol layer is evidence-backed by the six-framework study archived at
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md):
@@ -39,16 +56,27 @@ invariant.
 - The external adopter pilot #390 stays retired by ADR-0119; 0.42 builds
   adoption evidence through reproducible recipes and dogfooding instead of
   a pilot program.
-- Request-time data, forms, sessions and cache are explicitly unfrozen;
-  this plan covers data and forms only. Sessions and cache stay with
-  `0.44.0`.
+- Request-time **data and forms** are the 0.42 unfrozen surface this plan
+  freezes at TP-6. **Framework session and cache semantics** stay with
+  `0.44.0`. **Login is not blocked on 0.44**: apps attach better-auth (or
+  any cookie session library) via `loader`/`action` + `Request` headers per
+  `docs/integrations/better-auth.md`; the framework does not own the
+  session blob.
 - ADR-0120 records the scope boundary (self-built loop semantics and
   continuity mechanism; third-party server layer and Web-standard context)
   and the action protocol. Changes to either require an ADR-0120 amendment.
-- The line shipped as four themed alphas; a fifth remediation alpha
-  (TP-5.5) was inserted by the first implementation audit round before the
-  stable decision; the stable freeze scope for request-time semantics is
-  decided by a separate ADR at the end of the line.
+- CSRF: ADR-0121 accepted a documentation recipe. This plan **promotes a
+  default same-origin check on generated action POST** into the 0.42 light
+  fullstack floor (#611); the #611 PR lands the ADR-0121 amendment text
+  with the code (fail-closed default, documented opt-out for non-browser
+  clients). Full session-aware CSRF tokens remain 0.44-optional.
+- Surgical `@openelement/element` security fixes that do not change the
+  ADR-0119 authoring surface are allowed in remediation alphas (e.g. #602
+  attr-name allowlist). Broader element API work is still a stop-and-recheck
+  signal.
+- The line shipped themed alphas plus remediation alphas (TP-5.5–TP-5.7);
+  the stable freeze scope for request-time semantics is decided by a
+  separate ADR at TP-6.
 
 ## Task packages
 
@@ -288,22 +316,68 @@ expanding the 0.42 scope.
   included; release-tier gates green; alpha.6 published with two-stage
   evidence; #592/#593 stay open as the TP-6 agenda they record.
 
-### TP-6 — `0.42.0` stable decision
+### TP-5.7 — `0.42.0-alpha.7` light-fullstack floor + audit round 3
 
-Goal: decide and ship the request-time freeze scope.
+Goal: close the third review round (issues #597–#616, milestone
+`v0.42.0-alpha.7`, source `docs/audit/2026-07-28-alpha6-production-review.md`
+plus the 2026-07-28 orchestrator review) **and** land the light-fullstack
+operational floor (runnable server, fail-closed SSG, CSRF default, honest
+tags/claims) without expanding into framework session/cache (0.44).
 
-- 准入: TP-5.6 closed (alpha.6 published); the seven-day P0 watch on the
+- 准入: TP-5.6 closed (alpha.6 published); round-3 findings filed as
+  #597–#616 (done 2026-07-28); this plan amendment (light fullstack + CSRF
+  ship-gate promotion) accepted in-repo (2026-07-28).
+- 执行步骤:
+  1. **Ship gate (must)** — Meta checklist #616:
+     - Morph residual: #597 H1 `__scanSubmitRoots`, #598 H2 `form.action`
+       IDL / `name=action`, #599 H3 multi-form last-wins
+     - Build/ops floor: #600 H4 SSG non-200 fail-closed + freeze hard-fail;
+       #601 H5 request-time `start`/import-map/preview first mile
+     - Security floor: #602 M1 `serializeAttrs` attr-name allowlist;
+       **#611 CSRF same-origin default on generated action POST** (promoted
+       from capacity → must; lands ADR-0121 amendment with the PR)
+     - Honesty floor: #607 M6 npm `latest`→stable; #608 M7 zero-JS /
+       client.js / STATUS claim precision
+  2. **In-train if capacity** (not required to publish alpha.7): #603 M2
+     morph focus/scroll/controls, #604 M3 nested DSD, #605 M4 `open:ready`,
+     #606 M5 single island scheduler, #609 L1 PageRenderingMode collapse,
+     #610 L2 extract morph module.
+  3. **Login path (docs, not framework session):** keep better-auth recipe
+     accurate against the alpha.7 loop; README/STATUS one-liner: “login via
+     recipe on 0.42; framework session is 0.44”. Optional: one CI or
+     recorded dogfood that boots the recipe shape (not a new package).
+  4. **Explicit non-blockers:** framework session/auth primitives #612 →
+     0.44; loader head/SEO #613; sourcemaps #614; SPA/server loader typing
+     #615; freeze-gate shape #592 and freeze baseline policy #593 → TP-6.
+- 准出: every ship-gate issue closed with code + test/gate proof; fixture
+  suite three engines green including multi-form / island-only paths
+  touched by H1–H3; CSRF default covered by unit or e2e deny/allow;
+  `deno task start` (or documented equivalent) hits a dynamic route in CI
+  or release smoke; release-tier gates green; alpha.7 published with
+  two-stage evidence; `npm view` dist-tags honest (`latest` stable, `alpha`
+  current); deferred issues stay open with `deferred` label.
+
+### TP-6 — `0.42.0` stable decision (freeze light fullstack)
+
+Goal: freeze and ship the **WC light fullstack** request-time surface.
+
+- 准入: TP-5.7 closed (alpha.7 published); the seven-day P0 watch on the
   last alpha shows no P0.
 - 执行步骤:
-  1. Stable-scope ADR: which request-time semantics freeze (expected: the
-     loop contract and action protocol; expected unfrozen: streaming,
-     performance behavior) and which defer to 0.43/0.44.
-  2. Migration note: zero-cost upgrade proof for static-only users; prose
-     for SPA users.
-  3. Release through the full workflow; restart the seven-day P0 watch.
+  1. Stable-scope ADR: freeze the loop contract, action protocol, CSRF
+     default, and first-mile start semantics. Explicitly **unfrozen /
+     out of 0.42 claim**: framework session/flash, cache/ISR, streaming,
+     performance SLOs, third-party WC SSR corpus (0.43), production
+     runtime recovery (0.44). Record that login apps use recipes.
+  2. Product wording: README/www/STATUS say `0.42 = WC light fullstack`
+     with the non-goals above; no “full production runtime” claim.
+  3. Migration note: zero-cost upgrade proof for static-only `0.41.x`
+     users; prose for SPA users; note for apps adding better-auth.
+  4. Release through the full workflow; restart the seven-day P0 watch.
 - 准出: npm, dist-tags, tag, GitHub release, docs and evidence agree on
   `0.42.0`; the freeze ADR is accepted; #37-style stable gate for 0.42
-  opened fresh (not reused).
+  opened fresh (not reused); light-fullstack acceptance bullets below
+  are all green.
 
 ## Acceptance
 
@@ -312,19 +386,36 @@ Goal: decide and ship the request-time freeze scope.
 - A pure-static `0.41.x` project upgrades to `0.42.0` with zero changes and
   byte-identical output.
 - The no-JavaScript form loop is proven in three engines, not inferred.
+- Enhanced multi-form and island-only client paths do not throw or silently
+  drop successful actions (TP-5.7 ship gate).
+- A project with request-time routes can `build` then `start` (documented
+  one-command path) and complete a GET loader + POST action without tribal
+  knowledge.
+- Unexpected static non-200 prerenders fail the build; freeze/missing-page
+  assertion is a CI hard fail.
+- Generated action POST rejects cross-site browser requests by default;
+  opt-out is documented.
+- npm `latest` points at the last stable line; `alpha` at the active alpha.
+- Login-via-recipe is documented as supported on 0.42; framework session is
+  explicitly a 0.44 topic — not a prerequisite for signed-in apps.
 - The WC + DSD + static-first loop is documented as the product
-  differentiator in README/www after alpha.4.
+  differentiator in README/www.
 
 ## Non-goals
 
-- No session or cache semantics (0.44); request-time routes ship a
-  conservative no-cache default only.
-- No auth, OAuth, ORM, database or storage features — recipes only.
-- No new package; no change to `@openelement/element`; no change to the
-  ADR-0119 frozen surface or the SPA client-side chain.
+- **No framework session or cache semantics** (0.44). Request-time routes
+  keep a conservative no-cache default only. Cookie sessions owned by
+  better-auth (or equivalent) are in-bounds via recipes.
+- **No auth, OAuth, ORM, database or storage packages** — recipes only.
+  Signing users in on 0.42 is a recipe problem, not a “wait for 0.44” gate.
+- No new package; no change to the ADR-0119 frozen authoring surface or the
+  SPA client-side chain. Surgical element security fixes only (see Entry
+  truth).
 - No `shouldRevalidate`-style route opt-outs until a proven need exists.
 - No streaming SSR; per-request render is buffered in 0.42 (streaming is a
   0.43/0.44 candidate).
+- No pulling 0.43 third-party WC SSR corpus or 0.44 production-runtime
+  platform into this line.
 
 ## Test matrix
 
@@ -352,8 +443,13 @@ Goal: decide and ship the request-time freeze scope.
 ## Risks
 
 1. Island state preservation across morph is the least proven piece; TP-4
-   carries it deliberately, and a failing matrix holds the alpha.
+   carried it, TP-5.6–5.7 harden residuals; a failing matrix still holds
+   the alpha.
 2. Dev/build parity drift between hono and Nitro is contained by the TP-2
    contract test — the 0.41-era dev/SSR/SSG drift lesson.
-3. Scope pull toward sessions/cache is blocked by ADR-0120; any temptation
-   is an amendment, not an edit.
+3. Scope pull toward **framework** sessions/cache is blocked by ADR-0120;
+   any temptation is an amendment, not an edit. Recipe-based login is
+   encouraged and must not be misread as “framework session shipped.”
+4. Over-claiming “fullstack” without first-mile/CSRF/honest tags burns
+   trust faster than missing features — TP-5.7 ship gate exists to prevent
+   that.

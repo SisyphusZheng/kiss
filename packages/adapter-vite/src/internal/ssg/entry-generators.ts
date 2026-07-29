@@ -175,9 +175,14 @@ var __tags = [${tags}];
 function __load(tag) {
   if (__map[tag]) {
     __map[tag]().then(function () {
-      // #584: late-hydrating islands create their shadow roots after the
+${
+    options.enhancedForms === true
+      ? `      // #584: late-hydrating islands create their shadow roots after the
       // ready-time scan; rescan so enhanced forms inside them are heard.
-      setTimeout(function () { __scanSubmitRoots(document); }, 0);
+      // #597: only emit when the enhance layer defines __scanSubmitRoots.
+      setTimeout(function () { __scanSubmitRoots(document); }, 0);`
+      : '      // #597: no enhance layer — skip submit-root rescan'
+  }
     }).catch(function(e) { log.warn(tag, e); });
     __map[tag] = null;
   }
@@ -552,7 +557,6 @@ function __scanSubmitRoots(root) {
   }
 }
 
-var __submitSeq = 0;
 // #578: the marker lives in sessionStorage so it survives a page reload
 // (a memory variable resets, and Back after a reload would show stale
 // content for the restored URL — the exact thing §10 forbids).
@@ -576,17 +580,21 @@ function __onSubmit(event) {
   var method = (form.getAttribute('method') || 'get').toUpperCase();
   if (method === 'GET') return;
   event.preventDefault();
-  // #564: a second submit while one is in flight is ignored; cross-form
-  // responses are ordered by the sequence check below.
+  // #564: a second submit on the SAME form while one is in flight is ignored.
+  // #599: sequence is per-form so a concurrent submit on another form cannot
+  // silently drop this form's successful response (no global last-wins).
   if (form.__openElementBusy) return;
   form.__openElementBusy = true;
-  var seq = ++__submitSeq;
+  form.__openElementSeq = (form.__openElementSeq || 0) + 1;
+  var seq = form.__openElementSeq;
   var submitter = event.submitter;
-  // #576: the formAction IDL attribute returns the document URL when no
-  // formaction attribute is present, so it must only win when the attribute
-  // exists — otherwise form.action (the declared address) is ignored.
+  // #576: formAction IDL is the document URL when formaction is absent.
+  // #598: form.action IDL returns an <input name="action"> element when
+  // present — always resolve the action attribute (or current URL).
   var actionUrl = (submitter && submitter.hasAttribute('formaction') && submitter.formAction) ||
-    form.action || window.location.href;
+    (form.getAttribute('action')
+      ? new URL(form.getAttribute('action'), window.location.href).href
+      : window.location.href);
   // #544: the submitter's name/value is part of the body — the body never
   // differs between the two paths (ADR-0120 rule 2).
   var body = submitter ? new FormData(form, submitter) : new FormData(form);
@@ -607,7 +615,7 @@ function __onSubmit(event) {
     });
   }).then(function (result) {
     form.__openElementBusy = false;
-    if (seq !== __submitSeq) return;
+    if (seq !== form.__openElementSeq) return;
     var target = new URL(result.url, window.location.href);
     // #555: cross-origin targets are real navigations, never pushState.
     if (target.origin !== window.location.origin) {

@@ -106,6 +106,10 @@ const SKIP_ATTR_KEYS = new Set([
   'textContent',
 ]);
 
+// #602: attribute *names* are not escaped — reject anything that cannot be a
+// safe HTML attribute name (blocks quote/space/event-handler injection).
+const SAFE_ATTR_NAME = /^[a-zA-Z_:][\w:.-]*$/;
+
 export function serializeAttrs(tag: string, props: Record<string, unknown>): string {
   const isCustomElement = tag.includes('-');
   let result = '';
@@ -120,6 +124,9 @@ export function serializeAttrs(tag: string, props: Record<string, unknown>): str
     if (isCustomElement && attrName === key) {
       attrName = camelToKebab(attrName);
     }
+    if (!SAFE_ATTR_NAME.test(attrName)) continue;
+    // Never emit HTML event-handler attributes from SSR props.
+    if (/^on/i.test(attrName)) continue;
 
     const resolved = unwrapSignalLike(value);
 

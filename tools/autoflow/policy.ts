@@ -252,7 +252,9 @@ export const GATES: readonly GateDefinition[] = [
     // fixed-ref byte comparison meaningless as a gate.
     name: 'check:static-output-freeze',
     command: ['deno', 'task', 'check:static-output-freeze', '--self-check'],
-    tiers: ['release'],
+    // #600: missing-page / determinism assertion is a CI hard fail, not
+    // release-only theater.
+    tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },
   {

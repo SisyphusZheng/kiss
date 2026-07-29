@@ -260,15 +260,10 @@ export async function publishPackage(
     }
     throw error;
   }
-  // latest dist-tag policy (alpha line): every prerelease publish also points
-  // `latest` at the just-published version, so `latest` never lags the active
-  // prerelease line. tools/verify-npm-release.ts enforces the invariant by
-  // asserting dist-tags.latest === <published version>. Stable publishes need
-  // no explicit tag: npm defaults them to `latest`.
-  if (!dryRun && isPrerelease(pkg.version)) {
-    await io.publish(['dist-tag', 'add', `${pkg.name}@${pkg.version}`, 'latest']);
-    io.log(`[npm] ${pkg.name}@${pkg.version}: latest dist-tag updated.`);
-  }
+  // #607: prerelease publishes use --tag alpha|beta|rc only. Never move
+  // `latest` onto an alpha — `latest` stays on the last stable line so
+  // `npm install @openelement/*` does not land on prerelease by default.
+  // Stable publishes keep npm's default `latest` tag.
 }
 
 export function npmPublishTag(version: string): string {

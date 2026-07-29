@@ -25,13 +25,13 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Fo
   if (!message) {
     return fail(422, { error: 'message is required', message } satisfies FormActionData);
   }
-  redirect(`/form?echoed=${encodeURIComponent(message)}`);
+  throw redirect(`/form?echoed=${encodeURIComponent(message)}`);
 }
 
 export const actions = {
   shout(ctx: { formData: FormData }): never {
     const message = String(ctx.formData.get('message') ?? '').trim() || 'silence';
-    redirect(`/live?x=${encodeURIComponent(message.toUpperCase())}`);
+    throw redirect(`/live?x=${encodeURIComponent(message.toUpperCase())}`);
   },
 };
 

@@ -127,7 +127,7 @@ Deno.test('publishPackage skips an immutable version that already exists', async
   ]);
 });
 
-Deno.test('publishPackage moves the latest dist-tag after a prerelease publish', async () => {
+Deno.test('publishPackage does not move latest after a prerelease publish (#607)', async () => {
   const published: string[][] = [];
   const publishIo: PublishPackageIo = {
     versionExists: () => Promise.resolve(false),
@@ -140,18 +140,16 @@ Deno.test('publishPackage moves the latest dist-tag after a prerelease publish',
 
   await publishPackage(pkg('@openelement/element', '0.41.0-alpha.13'), false, publishIo);
 
-  assertEquals(published.length, 2);
+  assertEquals(published.length, 1);
   assertEquals(published[0].slice(0, 2), [
     'publish',
     'packages/element/openelement-element-0.41.0-alpha.13.tgz',
   ]);
   assertEquals(published[0].slice(-2), ['--tag', 'alpha']);
-  assertEquals(published[1], [
-    'dist-tag',
-    'add',
-    '@openelement/element@0.41.0-alpha.13',
-    'latest',
-  ]);
+  assertEquals(
+    published.some((args) => args.includes('latest')),
+    false,
+  );
 });
 
 Deno.test('publishPackage leaves latest to the npm default for stable versions', async () => {

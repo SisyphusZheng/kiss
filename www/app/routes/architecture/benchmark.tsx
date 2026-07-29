@@ -81,8 +81,9 @@ export default class Benchmark extends OpenElement {
 
           <h2 id='bundle-size'>Bundle Size</h2>
           <p>
-            openElement ships zero runtime JS for DSD components. Islands load on-demand by
-            strategy. No framework runtime in the critical path.
+            DSD components need no framework virtual DOM runtime. Client JS is emitted only when
+            islands or enhanced forms exist; pure-static pages stay script-free. Islands load
+            on-demand by strategy.
           </p>
         </div>
       </open-reading-shell>
