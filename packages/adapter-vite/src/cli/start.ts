@@ -10,7 +10,7 @@
  */
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import process from 'node:process';
 
@@ -123,7 +123,9 @@ async function main(): Promise<void> {
     return new Response('Not Found', { status: 404 });
   });
 
-  console.log(`[openElement start] http://${hostname === '0.0.0.0' ? 'localhost' : hostname}:${port}`);
+  console.log(
+    `[openElement start] http://${hostname === '0.0.0.0' ? 'localhost' : hostname}:${port}`,
+  );
 }
 
 if (import.meta.main) {

@@ -110,7 +110,7 @@ this at the architecture level.
 12. **CSRF threat model (amended 0.42.0-alpha.7 / #611).** Generated
     action POST handlers default to a fail-closed same-origin floor:
     reject when `Sec-Fetch-Site: cross-site`, or when `Origin` is present
-    and does not match the request URL origin.     Clients that omit both
+    and does not match the request URL origin. Clients that omit both
     headers (typical non-browser tools) are allowed. Opt out by setting
     `OPEN_ELEMENT_DISABLE_CSRF=1` on the request `env` binding
     (`c.env` / Nitro runtime env). Session-aware CSRF tokens and cookie

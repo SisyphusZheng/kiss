@@ -18,16 +18,19 @@
 **目标用户**：按 ROADMAP.md:49-53，是"想让 Web Components 定义整个应用架构的团队"。
 
 **不可替代性（正方）**——这个组合位确实空着，六份竞品调研互相印证（主审抽查 astro/enhance 两份，事实准确）:
+
 - WC + DSD 默认 + static-first + 应用层闭环：Enhance 是 WC 全栈但 light-DOM 主义、无构建期 SSG、绑 Architect/AWS;Fresh 是 request-time-first 且 Preact 绑定；Astro 的组件契约不是 CE;Lit SSR 不管应用层。
 - 内置 422/303 PRG 状态代数 + 无 JS 表单闭环：Astro 把 PRG 留作手写 recipe（与 Astro 官方文档一致）,openElement 做成内置是正当差异化——虽然语义本身搬运自 SvelteKit/React Router，无新颖性。
 - Vite+Nitro 可移植输出：相比 Enhance 的 AWS 绑定是真优势（`ssg-helpers.ts:164-178` nitro-mount seam)。
 
 **反方观点（更有分量）**:
+
 - 这个"空位"的用户群**数量未证实存在**。#390 试点零招募是最直接的反证；GitHub 实测 2 stars（代理 curl GitHub API),npm 五包月下载 2851-3681 且均匀得反常，与 CI consumer smoke 每次装包的形态吻合——organic 采用信号≈0。
 - 目标用户今天**有更好选择**：要 WC+SSR+表单闭环的生产应用，Enhance 有多年生产历史（session flash 错误闭环成熟）;openElement 的对应能力在 alpha.6，且其 morph 增强在 alpha.3/alpha.4 两个已发布 tag 上"从未真正工作过"(ADR-0121 自述）。要 WC+静态站，Lit/Stencil+Astro/11ty 生态大几个数量级。要 Deno 全栈，Fresh 2 是官方选项。
 - "standard CE 跨层复用"(README.md:42-46）是理念差异而非能力差异：Enhance/Lit 用户今天就拥有同等的标准 CE 复用，openElement 只是把 DSD 设为默认。
 
 **定位内在矛盾（证据）**:
+
 - **三个枚举值、两种行为**:`PageRenderingMode = 'auto'|'static'|'dynamic'`(packages/app/src/authoring.ts:25)，但全仓对 `'auto'/'static'` 的唯一消费是 authoring.ts:285-291 的合法性校验——`'static'` 是纯占位符，只有 `'dynamic'` 有行为（ssg-render.ts:84-98)。冗余 API 面，白送认知负担。
 - **defineApp 是 SPA 孤岛**:`SpaAppOptions.mode:'spa'` 字面量（spa.ts:26)，仓内仅两个桌面例子使用；然而 ADR-0119:30-33 声称冻结 "the static and SPA semantics of defineApp"——**defineApp 不存在 static 语义**，冻结 ADR 的措辞与其冻结的 API 对不上（文档失信，轻度）。
 - **"continuity" 承诺在数据层不成立**:SPA loader 只收 `{params}`(spa.ts:62)，请求时 loader 收 `{request,params,env,platform}`(protocol/data.ts:30-35)，代码注释自认 "intentionally parallel; not interchangeable (#570)"。同一页面无法在 SPA 与服务端模式间复用 loader——continuity 只覆盖渲染层。
@@ -39,41 +42,47 @@
 
 ## ② 生产级就绪度记分卡
 
-| 维度 | 评分 | 一句话理由 |
-|---|---|---|
-| 组件模型 | ★★★ | DSD SSR 主链路真实扎实，但 signals 不完备、JSX 类型全放行、visible 策略零浏览器覆盖 |
-| 应用闭环 | ★★☆ | 协议骨架是最硬的部件，但 session/flash/幂等/i18n/动态 meta 全缺，morph 层有实证活 bug |
-| 构建部署 | ★★☆ | 三阶段构建+parity 测试高于平均，但静态页失败构建仍绿、无 sourcemap、部署文档≈0、产物开箱不可运行 |
-| DX | ★★ | 作者侧错误消息教科书级，但指南 13/14 页零代码、旅程 9 个卡点（4 个高严重度必踩）、类型三处断链 |
+| 维度     | 评分 | 一句话理由                                                                                                            |
+| -------- | ---- | --------------------------------------------------------------------------------------------------------------------- |
+| 组件模型 | ★★★  | DSD SSR 主链路真实扎实，但 signals 不完备、JSX 类型全放行、visible 策略零浏览器覆盖                                   |
+| 应用闭环 | ★★☆  | 协议骨架是最硬的部件，但 session/flash/幂等/i18n/动态 meta 全缺，morph 层有实证活 bug                                 |
+| 构建部署 | ★★☆  | 三阶段构建+parity 测试高于平均，但静态页失败构建仍绿、无 sourcemap、部署文档≈0、产物开箱不可运行                      |
+| DX       | ★★   | 作者侧错误消息教科书级，但指南 13/14 页零代码、旅程 9 个卡点（4 个高严重度必踩）、类型三处断链                        |
 | 工程质量 | ★★★☆ | 断言质量 10/10 行为断言、硬层门禁可信、35 门禁+973 单测复现已验证；但快照弱（#592 自认）、证据自证、"147×3"口径有歧义 |
-| 安全 | ★★★ | 转义链/脱敏/供应链实测扎实；CSRF 零内置（已记录的设计决策）+ 属性名注入 XSS 原语（实测） |
-| 生态采用 | ★☆ | 10 组件、零迁移指南、JSX 编辑器零支持、社区≈0、npm latest 指 alpha |
+| 安全     | ★★★  | 转义链/脱敏/供应链实测扎实；CSRF 零内置（已记录的设计决策）+ 属性名注入 XSS 原语（实测）                              |
+| 生态采用 | ★☆   | 10 组件、零迁移指南、JSX 编辑器零支持、社区≈0、npm latest 指 alpha                                                    |
 
 **组件模型 ★★★**
+
 - 扎实面：DSD 嵌套 SSR（旅程实测首页 3 层 shadowrootmode)、event-marker SSR/水合对齐契约测试、delegatesFocus 有 e2e、SSR admission 白名单校验有真实覆盖（module-specifier.test.ts)。
 - 扣分面：signals 只有 signal/computed/effect 三件套，底层 `@preact/signals-core` 的 **batch/untracked/peek 均未透出**(framework.ts:18-26 对比 signals-core.d.ts:24,32);`subscribe` 用 Preact effect 实现导致**订阅即同步触发一次**(preact-engine.ts:27-44)，语义反直觉且注释未提；声称的 "shared SignalEngine conformance suite" 全仓不存在（文档失信）。JSX `IntrinsicElements: [elemName: string]: Record<string, unknown>`(jsx-runtime.ts:20-22)——标签拼错、属性乱写全部通过类型检查。packages/element 单测跑在**手搓迷你假 DOM** 上（open-element.test.ts:16-19 自述），真实浏览器覆盖全靠下游两层 e2e。`client:visible` 策略在 www 与 fixture **零使用零浏览器测试**(MORPH_CONTRACT.md:106-109 自认），而它是机制最复杂的一条。`island.ts` 与 `entry-generators.ts` 存在双套策略调度且已漂移（island.ts:153 的 querySelectorAll 找不到 shadow 内元素，靠 30s 超时兜底）。
 
 **应用闭环 ★★☆**
+
 - 扎实面（协议层是全线最硬）：双通道（fetch/HTML）对称、命名 action `?/name` + own-key 防原型污染、返回 Response=500 契约违规、405 兜底、redirect 状态码白名单、POST 强制 303 PRG(entry-render-helpers.ts:206-460);Vary、body-parse 400 均到位。fixture 三引擎 594 行 Playwright 覆盖是全仓最扎实的测试。
 - 缺件（每个均核实）:**session/auth 无基元**(packages/ 全 grep 零命中，0.44 排期）;flash/跨页状态没有（官方模板用 URL query 明文传态，contact.tsx:27);**幂等/防重没有**(no-JS 双击=两次真实 POST，无计划）;i18n 半成品且 0.43-0.46 无计划；**数据驱动 SEO meta 不可声明**(head 是静态对象，authoring.ts:153-158);loader 无响应通道（Cache-Control 强制 no-store 且无法设 ETag);error boundary 拿不到 loader data；请求时 404 是裸文本页不带应用布局；ISR manifest **仓库内无消费方**；死代码 `/_data` 端点 params 写死 `{}`。
 - morph 连续性（0.42 的核心故事）有**实证活 bug 群**，见 ④。
 
 **构建部署 ★★☆**
+
 - 扎实面：三阶段产物形态清晰（静态 HTML + client islands + 请求时 server)；单 entry descriptor 喂 dev/build 双端，parity 测试同时 boot dev server 与构建产物做 10 步双端对比（request-time-parity.test.ts:113-246)，设计高于平均；nitro-proof node 侧真起进程断言 12 类路由语义；构建快（模板站 1.7s〔主审旅程实测〕)。
 - 硬伤：**静态页渲染失败 → 构建退出码仍 0**(hono/ssg defaultPlugin 丢弃非 200,ssg-render.ts:146-149，只 log.warn;唯一的 static-output-freeze 门禁**未接入任何 CI workflow**);**sourcemap 全面缺失**（全包 grep 零命中，且 configFile:false 使用户配置无效）;workers 证明是 import+mock 的**形状级**而非真实 runtime（没上 workerd/miniflare);**Nitro 构建不是官方路径**——包内没有 nitro task，靠用户自己跑 `npm:nitro build`，集成停留 fixture 级；`matchRequestTimeRoute` 宿主契约**零 markdown 文档**；运行时零可观测（无日志/healthz/tracing)；无增量构建。
 - 旅程实测补刀〔主审实测〕：生成的 server 产物**开箱不可运行**——无 start task、无 serve CLI、`dist/server/index.js` 无 listener、生成的 import map 缺 `nitro-mount` 子路径；`deno task preview` 下动态路由 GET 静默回退首页、POST 404 无任何提示。
 
 **DX ★★**
+
 - 扎实面：作者侧校验错误消息是教科书级（合法值枚举+实际值回显+ADR 引用，authoring.ts:258-290;island.ts:267-290);CHANGELOG 逐条标 breaking 且有机器门禁（package-surface:check);0.41.0 迁移指南质量好；CSRF 配方是"文档即代码"的正确示范。
 - 硬伤：**14 个指南页中 13 页代码块为零**(grep -c '```' 全 0)，全是同一套卡片模板且卡片类型没有 href 字段（正文无法放链接）;Getting Started 页**没有安装命令**;Deployment/Testing 页写的是团队内部 SOP 而非用户指引；线性导航链断裂（Security 页成孤岛）。类型三处断链：loader→render 的 Data 零推导（官方模板靠 `as ContactActionData` 强转）、JSX 全放行、运行时注入的 `ctx.route` 不在 `LoaderContext` 类型里（指南还声称有，routing-and-data.tsx:66 vs data.ts:30-35——三方不一致）。SPA 链错误只进 console，页面静默停在旧状态。
 - 旅程实测〔主审实测〕:9 个卡点，4 个高严重度必踩——npm create 解析版本与 README 发布线脱节（见下）、server 产物跑不起来、preview 误导、预置 blog 配置点导航即 404；新增路由 dev 不热发现须重启（文档未提）。
 
 **工程质量 ★★★☆**
+
 - 扎实面：抽查 10 个关键路径测试文件，**10/10 全是行为断言**（无存在性/快照断言），另有 assertion-style.test.ts 专防 `assertExists(布尔)` 永真反模式；client-router.test.ts 的编译匹配器与线性匹配器**等价性对拍**、ssg-render.test.ts 路径穿越拒绝、entry-render-ssg.test.ts 把生成代码放 `data:` module 真实执行——质量高于预期。硬层门禁可信：package-surface 双向锚定、npm registry 外部验证（verify-npm-release.ts 真跑 `npm view`)、CI 全量执行无逃逸阀、tag 不可变性校验、critical-path 真执行（CI 下 infra 缺失即失败）。Actions 全 SHA 钉死。
 - 口径与缺口：**"147×3 引擎"口径有歧义〔已按补报修正〕**:147 是 fixture 套件三引擎**合计**（49×3，`fixture:request-time:gate` 实测 28 秒全过，三引擎真跑）——数字真实，但 "×3" 表述易被读成每引擎 147。www 主站套件每引擎 159 用例，CI 上 chromium 全量、firefox/webkit 只跑 26 用例 grep 子集（deno.json:88-89)——此事实 autoflow-ci.yml 注释与 BROWSER_BASELINE.md:12-14 均如实披露，无隐瞒，但"三引擎验证"对 www 站只能算有限成立。interface snapshot 只是 barrel 文件 sha256+行首 export regex，签名级改动照过（#592 自述 OPEN、deferred TP-6)——**0.41 "冻结"目前只有 subpath 面被机器守卫，API 形状面靠自觉**。证据 JSON 是 autoflow 自己写自己校；`successfulReleaseRun` 只查 release note 含 URL 字符串不调 API;critical-path 的证据是测试**标题**字符串，掏空断言保留同名照样过；覆盖率是聚合阈值无单文件地板；第三方 WC smoke **不在 CI**（手动 workflow_dispatch、单浏览器、钉版本）。**正向"已验证"声称无门禁**——防同型复发≈已根治，防新型失信仍靠自觉。
 - 复现闭环（见文末补报）:35 门禁真实执行（34/35 PASS，唯一 FAIL 为本地缺 tag 的环境性原因）、973 单测全绿、fixture 三引擎 28 秒全过——这套门禁体系不是表演。
 
 **安全 ★★★**
+
 - 扎实面〔主审复核了转义链关键路径〕：文本/属性值/data-ssr-props 内嵌 JSON 转义正确（`</script>` 注入被中和，代理 deno eval 实测）;action 分发 own-key 门控；生产 500 三通道全脱敏（裸文案，stack 仅 dev);bodyLimit 10MB 语义正确（有 Content-Length 直接 413 不读 body，无内存放大）;CORS 默认仅反射 localhost 且拒绝 `*`+credentials;DANGEROUS_KEYS 12 键过滤；deno.lock v5 全量 386 条 integrity；发布物白名单+provenance。
 - 攻击者视角 TOP-3:
   1. **Action 端点零内置 CSRF 防线**（框架设计问题，ADR-0121 §12 已记录的接受风险）：生成 POST 处理器无 Origin/Sec-Fetch-Site/token 检查（entry-render-helpers.ts:156-302)，纯 cookie 会话靠浏览器 SameSite=Lax 兜底；SameSite=None、Basic/mTLS、非浏览器客户端场景裸奔。只有文档配方（security.tsx:141-168,fail-closed 写法正确）。修复成本低-中（生成码默认挂 same-origin 检查，50-100 行，0.44 已排）。
@@ -81,6 +90,7 @@
   3. **`renderSsrError` 生产模式仍输出 error.message**(html-escape.ts:190-207，框架内部未调用但属导出 API 的脚雷）+ `/_data` 路由表无 own-key 检查（entry-render-helpers.ts:484，与 ADR-0121 纪律不一致）。修复各 <10 行。
 
 **生态采用 ★☆**
+
 - 硬门槛（按阻塞度）:session/auth 无基元 > **npm `latest` 全部指向 alpha.6〔主审实测：五包 dist-tags 均为 `latest: 0.42.0-alpha.6`,stable 0.41.x 无 tag 保护——`npm install @openelement/element` 默认踩 alpha，与"0.41 已 stable"叙事直接冲突；旅程代理更早还观察到 create 解析到 0.41.2，说明 dist-tag 在漂移，发布纪律本身不稳定〕** > JSX 编辑器零支持 > 迁移指南整体缺席（grep from next/remix/astro/sveltekit 零命中）> 调试=裸 Vite（无错误覆盖页/devtools/sourcemap 承诺）。
 - packages/ui 仅 10 个组件（2366 行），无 select/checkbox/radio/switch/toast/tooltip/table/表单布局，a11y 薄（无焦点陷阱/键盘导航体系）;ui 不依赖 shoelace/material（纯自研）,**第三方 WC 无桥接层**——shoelace 只在手工 smoke fixture 里客户端渲染（SSR 校验只查裸标签存在，升级前是无样式空壳）。examples 可跑（reader `deno task smoke` 44 passed，代理实测）但走 workspace 相对路径，不验证真实消费路径；mastodon 关键项 "verified by hand"。JSR 是僵尸（latest=0.40.6，落后 npm 两个月，无指向标记）。包目录残留旧 tarball(openelement-ui-0.42.0-alpha.5.tgz)。
 
@@ -90,18 +100,18 @@
 
 （对比基于仓库六份调研——主审抽查 astro/enhance 两份联网复核准确——及公开事实；SvelteKit 为自选主流参照）
 
-| 维度 | openElement (0.42a) | Fresh 2 (Deno) | Enhance | Astro | SvelteKit |
-|---|---|---|---|---|---|
-| 组件契约 | 标准 CE + DSD（唯一贯穿应用层） | Preact | 标准 CE(light DOM 主义） | .astro + 任意框架岛 | Svelte |
-| 默认渲染 | static-first，逐页 auto/static/dynamic | request-time-first + 静态岛 | SSR-first MPA | static-first（逐页 prerender) | 逐页 SSR/SSG/CSR |
-| "零 JS"声称 | **不成立**：每页强制 5.3KB〔主审实测 144/144〕 | 成立（无岛即 0) | 基本成立（无 JS 基线） | 成立（无岛即 0) | 不作此声称 |
-| 表单/action 闭环 | 内置 422/303 PRG，双通道对称，alpha | actions 有，成熟度中 | session flash 闭环，多年生产 | actions 稳定，PRG 手写 recipe | form actions，业界标杆 |
-| session/auth | **无基元**(0.44) | 中间件生态 | 内置 session | 有 sessions 能力 | hooks+成熟生态（auth.js 等） |
-| 客户端连续性 | 自研 morph（实证 bug 群） | 部分岛+整页 | 无（MPA 哲学） | View Transitions | 客户端路由，生产验证 |
-| 部署 | 静态一次点亮；Node/Workers 配方级（Nitro 非官方路径，零部署文档） | Deno Deploy 一等 | Architect/AWS 绑定 | 全宿主 adapter 生态 | adapter 生态最完整 |
-| 组件生态 | 10 件自研，无第三方桥接 | Preact 生态可用 | 任意 WC 直接复用 | 全框架组件生态 | Svelte 生态+任意 lib |
-| 生产验证 | 零外部采用（#390 零招募） | 官方+真实用户 | 多年生产历史（团队已并入 Sanity，活力下降） | 大规模生产 | 大规模生产 |
-| 文档/上手 | 指南 13/14 页零代码，旅程 9 卡点 | 官方文档完整 | 文档成熟 | 文档生态最佳之一 | 文档完整 |
+| 维度             | openElement (0.42a)                                               | Fresh 2 (Deno)              | Enhance                                     | Astro                         | SvelteKit                    |
+| ---------------- | ----------------------------------------------------------------- | --------------------------- | ------------------------------------------- | ----------------------------- | ---------------------------- |
+| 组件契约         | 标准 CE + DSD（唯一贯穿应用层）                                   | Preact                      | 标准 CE(light DOM 主义）                    | .astro + 任意框架岛           | Svelte                       |
+| 默认渲染         | static-first，逐页 auto/static/dynamic                            | request-time-first + 静态岛 | SSR-first MPA                               | static-first（逐页 prerender) | 逐页 SSR/SSG/CSR             |
+| "零 JS"声称      | **不成立**：每页强制 5.3KB〔主审实测 144/144〕                    | 成立（无岛即 0)             | 基本成立（无 JS 基线）                      | 成立（无岛即 0)               | 不作此声称                   |
+| 表单/action 闭环 | 内置 422/303 PRG，双通道对称，alpha                               | actions 有，成熟度中        | session flash 闭环，多年生产                | actions 稳定，PRG 手写 recipe | form actions，业界标杆       |
+| session/auth     | **无基元**(0.44)                                                  | 中间件生态                  | 内置 session                                | 有 sessions 能力              | hooks+成熟生态（auth.js 等） |
+| 客户端连续性     | 自研 morph（实证 bug 群）                                         | 部分岛+整页                 | 无（MPA 哲学）                              | View Transitions              | 客户端路由，生产验证         |
+| 部署             | 静态一次点亮；Node/Workers 配方级（Nitro 非官方路径，零部署文档） | Deno Deploy 一等            | Architect/AWS 绑定                          | 全宿主 adapter 生态           | adapter 生态最完整           |
+| 组件生态         | 10 件自研，无第三方桥接                                           | Preact 生态可用             | 任意 WC 直接复用                            | 全框架组件生态                | Svelte 生态+任意 lib         |
+| 生产验证         | 零外部采用（#390 零招募）                                         | 官方+真实用户               | 多年生产历史（团队已并入 Sanity，活力下降） | 大规模生产                    | 大规模生产                   |
+| 文档/上手        | 指南 13/14 页零代码，旅程 9 卡点                                  | 官方文档完整                | 文档成熟                                    | 文档生态最佳之一              | 文档完整                     |
 
 一句话：openElement 真正赢 Fresh 的点只有"DSD 默认+static-first";赢 Enhance 的点是"不绑 AWS+构建期 SSG+现代工具链";赢 Astro 的点是"标准 CE 契约+内置 PRG 闭环"。而这三个"赢点"今天分别被 alpha 成熟度、零生态、零部署文档抵消。
 
@@ -120,7 +130,7 @@
    - 焦点/滚动/表单控件 property 连续性完全无处理（全文无 activeElement;`__syncAttrs` 不碰 checked/value property，用户摸过的 checkbox 从此拒收服务端状态）;a11y 上每次 morph 丢焦点无 aria-live;
    - 嵌套 DSD 非递归实例化（:371-388)，岛中岛 morph 后留下惰性 template;
    - `open:ready` 对 load/only 策略从不派发（:194-208)。
-   〔路线图：无明确条目；成本：单点修复均 <100 行，系统性成熟（焦点/滚动/并发语义+三引擎多表单 fixture)2-4 周〕类型：实现缺陷+测试缺口
+     〔路线图：无明确条目；成本：单点修复均 <100 行，系统性成熟（焦点/滚动/并发语义+三引擎多表单 fixture)2-4 周〕类型：实现缺陷+测试缺口
 4. **server 产物开箱不可运行 + preview 误导**〔主审旅程实测〕：无 start task/serve CLI、import map 缺 nitro-mount 子路径、preview 下动态路由静默 fallback。动态路线用户必踩且零文档。〔路线图：无；成本：1-3 天〕类型：实现缺陷+文档失信
 5. **静态页渲染失败 → 构建退出码仍 0**(ssg-render.ts:146-149 机制确认；唯一兜底门禁未入 CI)。线上静默缺页，是"生产级"的直接反例。〔路线图：无；成本：1-2 天，把 static-output-freeze 接 CI+构建失败语义统一〕类型：实现缺陷+测试缺口
 
@@ -138,7 +148,7 @@
 
 **低（有损信任但不阻塞）**
 
-15. `'auto'/'static'` 冗余枚举（三值两行为）。〔无计划；小时级，0.43  deprecate〕框架设计问题
+15. `'auto'/'static'` 冗余枚举（三值两行为）。〔无计划；小时级，0.43 deprecate〕框架设计问题
 16. 文档失信集合：README.md:61-64 重复残句〔主审实测〕;README 把 alpha.6 与 stable 写进同一句；`legacyDsdPolyfill`/`injectDsdPolyfill` 幽灵 API〔主审实测：仅文档引用，src 零命中——基线外浏览器实际无支持路径〕;comparison 页 Fresh "zero build step" 过时（与自家调研 fresh.md 矛盾）;CHANGELOG 三处用错 API 名（`rendering:` vs 实际 `renderIntent:`);create README 称生成 www/ 目录（实际无）;packages/ui 残留旧 tarball。〔成本：小时级〕文档失信
 17. "147×3"口径歧义（fixture 三引擎合计 147 真跑；www 站 firefox/webkit 仅 26 用例子集，已有文档披露——详见补报修正）;interface snapshot 强度不足（#592/#593 OPEN)。〔TP-6〕测试缺口
 18. 模板细节：blog 预置配置 404、check task 硬编码 4 文件、新增路由不热发现。〔成本：1-2 天〕实现缺陷+文档缺口

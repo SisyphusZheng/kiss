@@ -74,17 +74,17 @@ cache/ISR, auth packages (0.44 or recipes).
 
 ## Release direction
 
-| Version           | Focus                                            |
-| ----------------- | ------------------------------------------------ |
-| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)      |
-| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                    |
-| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)             |
-| `0.41.0`          | Separate stable decision after alpha.19 evidence |
-| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)   |
-| `0.42.0`          | WC light fullstack (Application Loop freeze)     |
-| `0.43.0`          | Universal WC SSR compatibility and diagnostics   |
+| Version           | Focus                                              |
+| ----------------- | -------------------------------------------------- |
+| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)        |
+| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                      |
+| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)               |
+| `0.41.0`          | Separate stable decision after alpha.19 evidence   |
+| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)     |
+| `0.42.0`          | WC light fullstack (Application Loop freeze)       |
+| `0.43.0`          | Universal WC SSR compatibility and diagnostics     |
 | `0.44.0`          | Production runtime (session/cache/deploy recovery) |
-| `1.0.0`           | Stable five-package product                      |
+| `1.0.0`           | Stable five-package product                        |
 
 ## Evidence and workflow
 
