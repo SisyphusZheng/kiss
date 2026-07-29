@@ -340,7 +340,7 @@ const entries: TimelineEntry[] = [
     stamp: 'CURRENT',
   },
   {
-    version: 'v0.42.0-alpha.6',
+    version: 'audit round 2',
     theme: 'audit round 2 remediation',
     copy:
       'The second independent review closes 18 issues: explicit form actions win on enhanced submits, morphed-in islands show the server render, morph matching is an ordered walk, and enhancement detection follows imports.',
