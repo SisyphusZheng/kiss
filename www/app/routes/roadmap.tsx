@@ -332,7 +332,7 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.42.0-alpha.7',
+    version: 'v0.42.0-alpha.8',
     theme: 'light fullstack floor',
     copy:
       'The ADR-0121 action protocol hardens with throw redirect semantics, CSRF same-origin enforcement, per-form sequence tokens, and a GDS-inspired action contract. Fixes 22 items from the fullstack floor pledge.',
@@ -427,7 +427,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.7' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.8' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
