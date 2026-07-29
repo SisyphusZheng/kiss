@@ -133,6 +133,7 @@ const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 const productImports = [
   '@deno/vite-plugin',
   '@openelement/adapter-vite',
+  '@openelement/adapter-vite/nitro-mount',
   '@openelement/app',
   '@openelement/element',
   '@openelement/element/jsx-dev-runtime',
