@@ -142,7 +142,7 @@
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "2722d81b3f9f410e73a119028ce31b2732c755c5d80d9dd112e5af6479e76357",
+          "sha256": "968339216c37c775eb83672ca3b61eebd8e8ff974c6ed019ce50fccbf1f78957",
           "publicDeclarations": []
         },
         "./nitro-mount": {

@@ -5,7 +5,7 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Published package line: `v0.42.0-alpha.6`.\
-> Active execution target: `v0.42.0-alpha.7` (TP-5.7 light-fullstack floor).\
+> Active execution target: `v0.42.0-alpha.6`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.6 shipped the loop; alpha.7 closes the
 > light-fullstack floor (morph residuals, start path, SSG fail-closed,

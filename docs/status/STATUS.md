@@ -3,7 +3,7 @@
 > Updated: 2026-07-28\
 > Repository package line: `v0.42.0-alpha.6`\
 > npm registry line: `v0.42.0-alpha.6`\
-> Active release target: `v0.42.0-alpha.7`\
+> Active release target: `v0.42.0-alpha.6`\
 > Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.41.x); 0.42 alpha in flight
