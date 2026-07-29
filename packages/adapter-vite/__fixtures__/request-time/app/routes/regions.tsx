@@ -27,7 +27,7 @@ export function action(
   if (!message) {
     return fail(422, { error: 'message is required', message } satisfies RegionActionData);
   }
-  redirect(`/regions?echoed=${encodeURIComponent(message)}`);
+  throw redirect(`/regions?echoed=${encodeURIComponent(message)}`);
 }
 
 const RegionsPage = definePage({

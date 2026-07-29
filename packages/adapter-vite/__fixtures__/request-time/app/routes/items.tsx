@@ -15,13 +15,13 @@ export function loader(ctx: { request: Request }): { items: string[] } {
 
 export function action(ctx: { formData: FormData }): never {
   const items = String(ctx.formData.get('items') ?? 'a,b');
-  redirect(`/items?items=${encodeURIComponent('new,' + items)}`);
+  throw redirect(`/items?items=${encodeURIComponent('new,' + items)}`);
 }
 
 export const actions = {
   reverse(ctx: { formData: FormData }): never {
     const items = String(ctx.formData.get('items') ?? 'a,b').split(',');
-    redirect(`/items?items=${encodeURIComponent(items.reverse().join(','))}`);
+    throw redirect(`/items?items=${encodeURIComponent(items.reverse().join(','))}`);
   },
 };
 

@@ -31,7 +31,7 @@ export function action(ctx: { formData: FormData }): OpenElementActionFailure<Su
       email,
     });
   }
-  redirect(`/subscribe?welcome=${encodeURIComponent(parsed.output.email)}`);
+  throw redirect(`/subscribe?welcome=${encodeURIComponent(parsed.output.email)}`);
 }
 
 const SubscribePage = definePage({
