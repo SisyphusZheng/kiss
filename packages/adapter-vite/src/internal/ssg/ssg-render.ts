@@ -215,14 +215,19 @@ export async function ssgRender(
     );
   }
 
-  if (staticNon200.length > 0) {
-    // #600: fail-closed — silent missing pages are not a successful build.
-    const detail = staticNon200.map((e) => `${e.path} -> ${e.status}`).join(', ');
+  // #600: only non-200 for known page routes (in routeInfo) fail the build.
+  // API routes registered on the Hono app are not page routes — their non-200
+  // status does not mean missing content. The same routeInfo-filter avoids
+  // hard-coding path conventions like /api/ or /_data.
+  const pagePaths = new Set(routeInfo.map((r) => r.path));
+  const pageNon200 = staticNon200.filter((r) => pagePaths.has(r.path));
+  if (pageNon200.length > 0) {
+    const detail = pageNon200.map((e) => `${e.path} -> ${e.status}`).join(', ');
     log.error(
-      `Static route non-200 results: ${staticNon200.length} page(s) dropped (not written): ${detail}`,
+      `Static route non-200 results: ${pageNon200.length} page(s) dropped (not written): ${detail}`,
     );
     throw new Error(
-      `SSG failed: ${staticNon200.length} static route(s) returned non-200 ` +
+      `SSG failed: ${pageNon200.length} static route(s) returned non-200 ` +
         `(pages not written): ${detail}`,
     );
   }
