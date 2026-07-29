@@ -3,12 +3,15 @@
  *
  * #601: one-command path after `build` so dynamic routes are reachable
  * without tribal Nitro wiring.
+ * #622: cross-runtime — works in Node 18+, Deno, and Bun via node:http.
  *
  * Usage:
+ *   node packages/adapter-vite/src/cli/start.ts   (Node with --experimental-strip-types or tsx)
  *   deno run -A npm:@openelement/adapter-vite/cli/start
  *   OPEN_ELEMENT_PORT=4173 deno task start
  */
 
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -90,27 +93,81 @@ async function main(): Promise<void> {
     );
   }
 
-  Deno.serve({ port, hostname }, async (request) => {
-    const url = new URL(request.url);
+  const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    const request = toWebRequest(req, hostname, port);
+    const response = await handleRequest(request, serverMod);
+    writeResponse(response, res);
+  });
 
-    if (serverMod?.default) {
-      const match = serverMod.matchRequestTimeRoute?.(url.pathname);
-      const isMutating = request.method !== 'GET' && request.method !== 'HEAD';
-      if (match || isMutating) {
-        try {
-          const result = await serverMod.default({ request });
-          return result.response;
-        } catch (err) {
-          console.error('[openElement start] request-time handler error:', err);
-          return new Response('Internal Server Error', { status: 500 });
-        }
+  server.listen(port, hostname, () => {
+    console.log(
+      `[openElement start] http://${hostname === '0.0.0.0' ? 'localhost' : hostname}:${port}`,
+    );
+  });
+}
+
+// ─── Cross-runtime HTTP helpers (#622) ─────────────────────────────
+
+function toWebRequest(req: IncomingMessage, host: string, port: number): Request {
+  const protocol = 'http';
+  const url = new URL(
+    req.url || '/',
+    `${protocol}://${host === '0.0.0.0' ? 'localhost' : host}:${port}`,
+  );
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value) headers.set(key, Array.isArray(value) ? value.join(', ') : value);
+  }
+  const method = req.method || 'GET';
+  const hasBody = method !== 'GET' && method !== 'HEAD';
+  return new Request(url.href, {
+    method,
+    headers,
+    body: hasBody
+      ? new ReadableStream({
+        start(controller) {
+          req.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
+          req.on('end', () => controller.close());
+          req.on('error', (err) => controller.error(err));
+        },
+      })
+      : undefined,
+    // @ts-expect-error Node 18 requires this for non-GET body
+    duplex: hasBody ? 'half' : undefined,
+  });
+}
+
+function writeResponse(response: Response, res: ServerResponse): void {
+  res.statusCode = response.status;
+  response.headers.forEach((value, key) => res.setHeader(key, value));
+  if (!response.body) {
+    res.end();
+    return;
+  }
+  const reader = response.body.getReader();
+  const pump = async () => {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        res.end();
+        break;
       }
+      res.write(value);
     }
+  };
+  pump().catch(() => res.end());
+}
 
-    const staticResponse = tryStatic(url.pathname);
-    if (staticResponse) return staticResponse;
+async function handleRequest(
+  request: Request,
+  serverMod: ServerModule | null,
+): Promise<Response> {
+  const url = new URL(request.url);
 
-    if (serverMod?.default) {
+  if (serverMod?.default) {
+    const match = serverMod.matchRequestTimeRoute?.(url.pathname);
+    const isMutating = request.method !== 'GET' && request.method !== 'HEAD';
+    if (match || isMutating) {
       try {
         const result = await serverMod.default({ request });
         return result.response;
@@ -119,16 +176,31 @@ async function main(): Promise<void> {
         return new Response('Internal Server Error', { status: 500 });
       }
     }
+  }
 
-    return new Response('Not Found', { status: 404 });
-  });
+  const staticResponse = tryStatic(url.pathname);
+  if (staticResponse) return staticResponse;
 
-  console.log(
-    `[openElement start] http://${hostname === '0.0.0.0' ? 'localhost' : hostname}:${port}`,
-  );
+  if (serverMod?.default) {
+    try {
+      const result = await serverMod.default({ request });
+      return result.response;
+    } catch (err) {
+      console.error('[openElement start] request-time handler error:', err);
+      return new Response('Internal Server Error', { status: 500 });
+    }
+  }
+
+  return new Response('Not Found', { status: 404 });
 }
 
-if (import.meta.main) {
+// Cross-runtime entry detection (#622): Deno uses import.meta.main,
+// Node/Bun execute the module directly when invoked as CLI.
+const isMainModule = typeof (import.meta as { main?: boolean }).main === 'boolean'
+  ? (import.meta as { main?: boolean }).main === true
+  : process.argv[1]?.includes('start');
+
+if (isMainModule) {
   try {
     await main();
   } catch (error) {

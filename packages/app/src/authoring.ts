@@ -8,6 +8,7 @@ import { ERROR_PREFIX } from '@openelement/element';
  */
 
 import {
+  collectPublicProps,
   defineElement,
   type ElementDefinition,
   OpenElement,
@@ -222,15 +223,6 @@ type PageConstructor<
 > = typeof OpenElement & {
   openElementPage: OpenElementPageDescriptor<Data, Params>;
 };
-
-function collectPublicProps(host: object): Record<string, unknown> {
-  const props: Record<string, unknown> = {};
-  for (const key of Object.keys(host)) {
-    if (key.startsWith('__openElement')) continue;
-    props[key] = Reflect.get(host, key);
-  }
-  return props;
-}
 
 const PAGE_DESCRIPTOR_FIELDS = new Set([
   'route',

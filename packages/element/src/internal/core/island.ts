@@ -24,7 +24,7 @@ export type { IslandMeta, IslandOptions };
 
 /** WeakSet to track elements that have already had SSR props bound (idempotent). */
 const ssrPropsBoundSet = new WeakSet<HTMLElement>();
-const log = createLogger('core');
+const log = createLogger('island');
 
 /**
  * SSR-safe custom element registration helper.

@@ -89,7 +89,7 @@ async function sourceTreeHasEnhancedForms(
   return false;
 }
 
-const log = createLogger('core');
+const log = createLogger('scanner');
 
 /** Read a static route tagName export from source text. */
 export function readRouteTagName(source: string): string | undefined {

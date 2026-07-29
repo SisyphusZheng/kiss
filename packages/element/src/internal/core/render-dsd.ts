@@ -39,7 +39,7 @@ import {
 } from './render-ir.ts';
 import { injectPropsSafe } from './security.ts';
 
-const log = createLogger('core');
+const log = createLogger('render-dsd');
 export const MAX_SSR_NESTING_DEPTH = 50;
 
 // ─── Error Classification ──────────────────────────────────────

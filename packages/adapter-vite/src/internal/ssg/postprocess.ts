@@ -20,7 +20,7 @@ import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
 export { buildSpeculationRulesJson } from './speculation-rules.ts';
 
-const log = createLogger('core');
+const log = createLogger('postprocess');
 
 /** Hash suffix emitted by Rolldown/Vite content hashes: base64url — may contain `-`/`_`. */
 const ISLAND_CHUNK_SUFFIX_RE = /^[A-Za-z0-9_-]+\.js$/;

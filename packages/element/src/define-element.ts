@@ -4,18 +4,10 @@
  * Functional component-style authoring for OpenElement.
  */
 import { assertValidTagName } from './internal/core/index.ts';
+import { collectPublicProps } from './internal/core/props-utils.ts';
 import { OpenElement } from './open-element.ts';
 import type { ElementDefinition } from './types.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
-
-function collectPublicProps(host: Record<string, unknown>): Record<string, unknown> {
-  const props: Record<string, unknown> = {};
-  for (const key of Object.keys(host)) {
-    if (key.startsWith('__openElement')) continue;
-    props[key] = host[key];
-  }
-  return props;
-}
 
 function normalizeElementDefinition<Props extends Record<string, unknown>>(
   input: ((props: Props) => VNode | null) | ElementDefinition<Props>,

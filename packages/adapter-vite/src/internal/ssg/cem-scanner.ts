@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { classifyCemManifest, parseCem } from './cem-compat.ts';
 import { safeReadDir, safeReadFile } from './route-scanner-fs.ts';
 
-const log = createLogger('core');
+const log = createLogger('cem-scan');
 
 // ─── CEM Auto-Detection (v0.18.0) ─────────────────────────────────────────
 

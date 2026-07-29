@@ -26,7 +26,7 @@ import {
 } from './build-plan.ts';
 import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 
-const log = createLogger('core');
+const log = createLogger('build');
 
 /** Phase 2: client island bundle. Shared by the SPA and SSG closeBundle paths. */
 async function runClientIslandBuild(ctx: OpenElementBuildContext): Promise<void> {

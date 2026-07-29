@@ -8,7 +8,7 @@ import { normalizeSeparators, pathToTagName } from '@openelement/element/build-u
 import { join } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
-const log = createLogger('core');
+const log = createLogger('island-scan');
 
 /** Local island metadata indexed by tag name. */
 export interface LocalIslandMeta {

@@ -16,7 +16,7 @@ import { buildIslandChunkMap, injectClientScript } from './postprocess.ts';
 import { generateIslandManifests, writeIslandManifests } from './island-manifest.ts';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
-const log = createLogger('core');
+const log = createLogger('postprocess');
 
 /** Narrow view of OpenElementBuildContext used by the SSG post-processor. */
 export interface BuildContextView {

@@ -52,12 +52,15 @@ and output path.
 2. Current-document version drift keeps reappearing at gate edges; alpha.18
    package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
-4. Request-time loop is implemented through alpha.6 but not yet a light-fullstack
-   floor (morph residuals, start path, SSG fail-closed, CSRF default, honest
-   dist-tags) — active train `0.42.0-alpha.7` / TP-5.7.
+4. Request-time loop is implemented through alpha.7; alpha.8 (#619–#623)
+   carries code-hygiene remediation (route-scanner correctness, ADR-0095
+   DataAdapter drift, collectPublicProps dedup, start CLI runtime, logger
+   tags) before the 0.42.0 stable freeze.
 5. Framework session and cache remain unfrozen until 0.44; login apps use
    recipes (better-auth) and must not wait on framework session APIs.
 6. UI remains optional until v0.46 records its stable scope.
+7. Cross-runtime claim (Deno/Node/Bun) is partially unmet: `start` CLI is
+   Deno-only (#622/#628); full strategy targets 0.43.
 
 ## 0.42 direction
 
@@ -74,17 +77,18 @@ cache/ISR, auth packages (0.44 or recipes).
 
 ## Release direction
 
-| Version           | Focus                                              |
-| ----------------- | -------------------------------------------------- |
-| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)        |
-| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                      |
-| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)               |
-| `0.41.0`          | Separate stable decision after alpha.19 evidence   |
-| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)     |
-| `0.42.0`          | WC light fullstack (Application Loop freeze)       |
-| `0.43.0`          | Universal WC SSR compatibility and diagnostics     |
-| `0.44.0`          | Production runtime (session/cache/deploy recovery) |
-| `1.0.0`           | Stable five-package product                        |
+| Version           | Focus                                                                |
+| ----------------- | -------------------------------------------------------------------- |
+| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)                          |
+| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                        |
+| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                                 |
+| `0.41.0`          | Separate stable decision after alpha.19 evidence                     |
+| `0.42.0-alpha.7`  | Light-fullstack floor + audit round 3 (TP-5.7)                       |
+| `0.42.0-alpha.8`  | Code hygiene: #619–#623 (scanner, DataAdapter, dedup, start, logger) |
+| `0.42.0`          | WC light fullstack (Application Loop freeze)                         |
+| `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                 |
+| `0.44.0`          | Production runtime (session/cache/OTel/streaming)                    |
+| `1.0.0`           | Stable five-package product                                          |
 
 ## Evidence and workflow
 

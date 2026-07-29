@@ -15,6 +15,7 @@ export { ErrorBoundary } from './error-boundary.ts';
 
 export { defineElement } from './define-element.ts';
 export type { ElementDefinition } from './types.ts';
+export { collectPublicProps } from './internal/core/props-utils.ts';
 
 // ─── Prop types ──────────────────────────────────────────
 
@@ -87,6 +88,7 @@ export type {
   Action,
   ActionContext,
   ActionResult,
+  DataAdapter,
   Loader,
   LoaderContext,
   SpaAction,
@@ -95,6 +97,8 @@ export type {
   SpaLoaderContext,
 } from './internal/protocol/data.ts';
 export { ACTION_FETCH_HEADER } from './internal/protocol/data.ts';
+// ADR-0095: reference in-memory DataAdapter implementation
+export { MemoryDataAdapter } from './internal/core/data-adapter.ts';
 export type {
   AppShellConfig,
   CompatibilityClassification,

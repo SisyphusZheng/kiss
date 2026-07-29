@@ -178,6 +178,8 @@ export type {
   SpaLoader,
   SpaLoaderContext,
 } from '../protocol/data.ts';
+// ADR-0095: reference in-memory implementation
+export { MemoryDataAdapter } from './data-adapter.ts';
 
 // WC Package Protocol (v0.17+)
 export {

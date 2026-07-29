@@ -101,7 +101,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   for (const importPath of appShellImports) {
     lines.push(`import ${quoteGeneratedJavaScriptValue(importPath)};`);
   }
-  lines.push(`const log = createLogger('core');`);
+  lines.push(`const log = createLogger('server-entry');`);
   lines.push('');
 
   // --- Route module imports ---
