@@ -1240,6 +1240,44 @@ async function commitFinalReleaseEvidence(
 }
 
 /**
+ * Durably record a *failed* release run's evidence so it can be audited and so
+ * `release:evidence:check` can reject a release that lacks an npm-publish step.
+ * Without this, a publish-existing run that fails after publish/verify/smoke
+ * (but before the redundant re-tag, as in α9) wrote its evidence to local disk
+ * only — never committed — leaving the repository's durable record blind to what
+ * actually happened (#647). Push failures (no remote, permissions) downgrade to
+ * a warning so the original release error still propagates.
+ */
+async function persistFailedReleaseEvidence(
+  evidence: ReleaseEvidence,
+  branch: string,
+): Promise<void> {
+  try {
+    await runCaptured([
+      'git',
+      'add',
+      evidenceFile(evidence.targetVersion),
+      releaseNoteFile(evidence.targetVersion),
+    ]);
+    if (await hasStagedChanges()) {
+      await runCaptured([
+        'git',
+        'commit',
+        '-m',
+        `docs(release): record failed ${releaseTag(evidence.targetVersion)} evidence (${evidence.id})`,
+      ]);
+    }
+    await runCaptured(['git', 'push', 'origin', branch]);
+  } catch (err) {
+    console.warn(
+      `[release] could not persist failed-run evidence for ${releaseTag(evidence.targetVersion)} ` +
+        `(${err instanceof Error ? err.message.split('\n')[0] : String(err)}); ` +
+        'the local evidence file remains the durable record for this run.',
+    );
+  }
+}
+
+/**
  * Generate the durable closure record (docs/release/<tag>-closure.json) plus
  * the Durable closure section of the release note, and commit both. Without
  * this the release:evidence:check gate on main turns red after every release.
@@ -1530,6 +1568,12 @@ export async function executeReleasePlan(
     if (persistsEvidence) {
       await writeReleaseEvidence(evidence);
       await writeReleaseNote(evidence);
+      // Persist the failed evidence durably. A failed publish-existing run
+      // (e.g. α9's redundant re-tag failure) must leave an auditable snapshot
+      // that records the steps completed before failure; otherwise the evidence
+      // stays on local disk only and never reaches the repository, which is
+      // exactly how α8-style version holes evade release:evidence:check (#647).
+      await persistFailedReleaseEvidence(evidence, expectedBranch);
     }
     throw error;
   }
