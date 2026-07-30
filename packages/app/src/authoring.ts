@@ -27,6 +27,11 @@ import type { HydrationStrategy } from '@openelement/element';
 import type { PageHostElement } from './internal/page-host-data.ts';
 
 export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
+/**
+ * @experimental ISR is not active in 0.42 (see `docs/current/VERSION_PLAN.md`).
+ * `revalidate` is recorded on the route but does NOT enable caching in this
+ * release line; it is reserved for the 0.44 ISR work. Treat it as unstable.
+ */
 export type PageRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
 export type PageMeta = Record<string, unknown>;
 
@@ -38,11 +43,13 @@ export interface PageRouteIntent {
 
 export interface PageRenderIntent {
   mode?: PageRenderingMode;
+  /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
   revalidate?: PageRevalidate;
 }
 
 export interface NormalizedPageRenderIntent {
   mode: PageRenderingMode;
+  /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
   revalidate: PageRevalidate;
 }
 

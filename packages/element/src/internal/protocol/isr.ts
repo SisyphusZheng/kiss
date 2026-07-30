@@ -10,7 +10,11 @@ export interface CacheEntry<T = unknown> {
   tags?: readonly string[];
 }
 
-/** Minimal cache protocol for replacement-compatible runtime adapters. */
+/**
+ * @experimental Minimal cache protocol for replacement-compatible runtime
+ * adapters. ISR is not wired in 0.42 (targeting 0.44); `purgeTag` is currently
+ * unimplemented by the in-box adapter, so cross-instance invalidation is absent.
+ */
 export interface CacheAdapter<T = unknown> {
   name: string;
   get(key: string): Promise<CacheEntry<T> | undefined>;
@@ -34,6 +38,7 @@ export interface IsrCacheResult {
   error?: Error;
 }
 
+/** @experimental ISR route config — not active in 0.42 (targeting 0.44). */
 export interface IsrRouteConfig {
   revalidate: number;
 }

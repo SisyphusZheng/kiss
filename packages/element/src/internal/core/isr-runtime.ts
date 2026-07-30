@@ -50,6 +50,12 @@ export function findIsrManifestEntry(
   });
 }
 
+/**
+ * @experimental ISR runtime. Not wired into the 0.42 request-time server entry
+ * (`renderRequestTimeServerModule` calls `app.fetch` directly), so `revalidate`
+ * does not activate caching in this release line. Targeting 0.44 with a KV-backed
+ * cache adapter. Do not rely on this in production yet.
+ */
 export async function renderIsrResponse(
   path: string,
   params: Record<string, string>,

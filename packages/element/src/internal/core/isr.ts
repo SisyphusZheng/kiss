@@ -61,6 +61,11 @@ export interface MemoryIsrCacheOptions {
   maxEntries?: number;
 }
 
+/**
+ * @experimental In-process LRU ISR cache. Single-instance only — no cross-instance
+ * invalidation (`CacheAdapter.purgeTag` is unimplemented), so it is unsafe under
+ * multi-instance/edge deployment. Not wired into 0.42 request-time serving.
+ */
 export class MemoryIsrCache {
   readonly #entries = new Map<string, IsrCacheEntry>();
   readonly #maxEntries: number;

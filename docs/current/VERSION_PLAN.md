@@ -40,6 +40,16 @@ documented login via third-party session on `Request` headers.
 across redirects, OAuth package, or production cache/ISR — those remain
 `0.44.0` (or stay recipes forever if a library already owns them).
 
+> **ISR status (0.42):** `cache/ISR` is explicitly out of scope for the 0.42 line
+> (it is a 0.44 topic). The `revalidate` page option and the build-time
+> `isr-manifest.json` are emitted for forward-compatibility only; **no ISR
+> caching is wired into the 0.42 request-time server entry**, so `revalidate: N`
+> currently behaves like a plain dynamic route. The ISR runtime
+> (`renderIsrResponse` / `MemoryIsrCache`) is marked `@experimental` and targets
+> 0.44 with a KV-backed cache adapter. Do not rely on ISR in production on 0.42.
+> Multi-instance/edge ISR requires a self-built KV adapter (contract + Deno KV
+> reference): `docs/current/ISR_KV_ADAPTER.md`.
+
 The protocol layer is evidence-backed by the six-framework study archived at
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md):
 standard form POST wire format, one POST/two responses, the 303/422 status
@@ -317,6 +327,13 @@ expanding the 0.42 scope.
   evidence; #592/#593 stay open as the TP-6 agenda they record.
 
 ### TP-5.7 — `0.42.0-alpha.8` light-fullstack floor + audit round 3
+
+> **Version hole — `0.42.0-alpha.8` is skipped / npm-unpublished.** The alpha.8
+> cut failed at the npm publish step (git tag + GitHub release were created, but
+> the packages were never published to the registry). The TP-5.7 work actually
+> shipped as **`0.42.0-alpha.9`** (milestone #16, issues #632–#644). Treat
+> alpha.8 as a skipped prerelease — it is not a usable release. See
+> `docs/release/v0.42.0-alpha.8.md`.
 
 Goal: close the third review round (issues #597–#616, milestone
 `v0.42.0-alpha.8`, source `docs/audit/2026-07-28-alpha6-production-review.md`

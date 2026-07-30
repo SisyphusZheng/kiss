@@ -196,7 +196,11 @@ export interface FrameworkOptions {
 
 // --- ISR / Compatibility types ------------------------------------
 
-/** ISR route record written to isr-manifest.json at build time. */
+/**
+ * @experimental ISR route record written to isr-manifest.json at build time.
+ * Emitted for forward-compatibility only — ISR is not served in 0.42, so this
+ * manifest is currently inert (targeting 0.44).
+ */
 export interface IsrManifestEntry {
   path: string;
   revalidate: number;
