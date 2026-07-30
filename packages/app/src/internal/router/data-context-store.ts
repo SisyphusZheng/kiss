@@ -82,8 +82,9 @@ function _devMode(): boolean {
     if (deno && typeof deno.env?.get === 'function') {
       return deno.env.get('DENO_ENV') !== 'production';
     }
-  } catch {
-    /* ignore — non-Deno runtimes (Workers) stay silent */
+  } catch (e) {
+    /* anomaly only: Workers hit the `undefined Deno` branch above and never reach here */
+    console.warn('[data-context-store] Unexpected error reading DENO_ENV, defaulting to non-dev mode', e);
   }
   return false;
 }

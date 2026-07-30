@@ -260,8 +260,8 @@ export async function expandI18nLocales(
       } else if (getStaticPaths) {
         try {
           paramsList = await getStaticPaths(route.path);
-        } catch {
-          log.warn(`i18n: getStaticPaths failed for ${route.path}, skipping`);
+        } catch (e) {
+          log.warn(`i18n: getStaticPaths failed for ${route.path}, skipping`, e);
           continue;
         }
       } else {

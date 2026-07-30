@@ -51,7 +51,8 @@ const WORKSPACE_ROOT: string | null = (() => {
     const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/\\/g, '/');
     if (!existsSync(join(root, 'packages', 'element', 'deno.json'))) return null;
     return root;
-  } catch {
+  } catch (e) {
+    log.warn('[build-client] Unable to resolve workspace root, falling back to null', e);
     return null;
   }
 })();
@@ -106,7 +107,8 @@ function tryDenoJsonDir(
   let denoJson: Record<string, unknown>;
   try {
     denoJson = JSON.parse(json);
-  } catch {
+  } catch (e) {
+    log.warn('[build-client] Invalid deno.json JSON, skipping', e);
     return null; // Invalid JSON — skip this deno.json
   }
   const imports = denoJson.imports as Record<string, string> | undefined;
@@ -132,7 +134,8 @@ function convertImportMapTarget(target: string, denoJsonDir: string): string | n
   if (target.startsWith('file://')) {
     try {
       return fileURLToPath(target).replace(/\\/g, '/');
-    } catch {
+    } catch (e) {
+      log.warn('[build-client] Unable to convert file:// import-map target, skipping', e);
       return null;
     }
   }

@@ -101,8 +101,8 @@ export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedCli
   let modulePath: AdmittedIslandModuleSpecifier;
   try {
     modulePath = admitIslandModuleSpecifier(entry.modulePath);
-  } catch {
-    throw new Error(`Invalid island modulePath for ${entry.tagName}: ${entry.modulePath}`);
+  } catch (e) {
+    throw new Error(`Invalid island modulePath for ${entry.tagName}: ${entry.modulePath}`, { cause: e });
   }
   if (!VALID_STRATEGIES.has(entry.strategy)) {
     throw new Error(

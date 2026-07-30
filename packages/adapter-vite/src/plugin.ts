@@ -138,8 +138,8 @@ export function createOpenPlugin(
         } resolve alias(es) from workspace`,
       );
     }
-  } catch {
-    log.debug('Workspace not available - aliases stay null');
+  } catch (e) {
+    log.debug('Workspace not available - aliases stay null', e);
   }
 
   const VIRTUAL_ENTRY_ID = 'virtual:open-hono-entry';

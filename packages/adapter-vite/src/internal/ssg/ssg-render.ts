@@ -342,8 +342,8 @@ export async function ssgRender(
 
   try {
     await evidence.onGenerateSitemap?.(join(root, outDir));
-  } catch {
-    log.debug('Sitemap generation skipped or failed');
+  } catch (e) {
+    log.debug('Sitemap generation skipped or failed', e);
   }
 
   return { staticNon200 };
