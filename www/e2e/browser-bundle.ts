@@ -16,7 +16,9 @@ import { resolve } from 'node:path';
 // does not inherit the workspace alias that the real www build gets from
 // adapter-vite's Vite plugin. Mirror that alias here so Rolldown can resolve the
 // package from source. See www/vite.config.ts and packages/adapter-vite workspace-alias.
-const ELEMENT_ENTRY = fileURLToPath(new URL('../../packages/element/src/index.ts', import.meta.url));
+const ELEMENT_ENTRY = fileURLToPath(
+  new URL('../../packages/element/src/index.ts', import.meta.url),
+);
 const ELEMENT_DIR = fileURLToPath(new URL('../../packages/element/src', import.meta.url));
 
 const bundleCache = new Map<string, Promise<string>>();

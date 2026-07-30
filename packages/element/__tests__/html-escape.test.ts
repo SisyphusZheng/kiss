@@ -1,10 +1,14 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { escapeAttr, escapeHtml, escapeAttrValue } from '../src/internal/core/html-escape.ts';
+import { escapeAttr, escapeAttrValue, escapeHtml } from '../src/internal/core/html-escape.ts';
 
 Deno.test('escapeHtml and escapeAttr share one ESCAPE_MAP and identical output', () => {
   const samples = ['', 'a', '&<>"\'', '<script>alert(1)</script>', 'a&b<c>d"e\'f'];
   for (const s of samples) {
-    assertEquals(escapeAttr(s), escapeHtml(s), `escapeAttr must equal escapeHtml for ${JSON.stringify(s)}`);
+    assertEquals(
+      escapeAttr(s),
+      escapeHtml(s),
+      `escapeAttr must equal escapeHtml for ${JSON.stringify(s)}`,
+    );
   }
 });
 

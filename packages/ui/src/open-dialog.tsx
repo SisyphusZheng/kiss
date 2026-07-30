@@ -217,4 +217,3 @@ export class OpenDialog extends OpenElement {
 
   private _esc = escapeHtml;
 }
-

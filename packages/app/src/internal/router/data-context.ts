@@ -12,11 +12,7 @@
  *
  * v0.41.0: Replaced module-level currentState with render-scoped stack.
  */
-import {
-  currentActionData,
-  currentLoaderData,
-  __activeDataContext,
-} from './data-context-store.ts';
+import { __activeDataContext, currentActionData, currentLoaderData } from './data-context-store.ts';
 
 // ─── Public hooks ────────────────────────────────────────────────
 

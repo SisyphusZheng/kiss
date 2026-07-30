@@ -103,4 +103,3 @@ export class OpenCard extends OpenElement {
     );
   }
 }
-

@@ -87,9 +87,7 @@ function islandImportFactory(
   const nameLiteral = exportName ? quoteGeneratedJavaScriptStringLiteral(exportName) : 'undefined';
   return `() => import(${
     quoteGeneratedJavaScriptStringLiteral(modulePath)
-  }).then(function(mod) { var _name = ${
-    nameLiteral
-  }; var Ctor = _name ? mod[_name] : mod.default; if (Ctor && !customElements.get(${
+  }).then(function(mod) { var _name = ${nameLiteral}; var Ctor = _name ? mod[_name] : mod.default; if (Ctor && !customElements.get(${
     quoteGeneratedJavaScriptStringLiteral(tagName)
   })) customElements.define(${
     quoteGeneratedJavaScriptStringLiteral(tagName)

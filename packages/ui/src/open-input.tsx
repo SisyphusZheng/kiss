@@ -259,4 +259,3 @@ export class OpenInput extends OpenElement {
 
   private _esc = escapeHtml;
 }
-

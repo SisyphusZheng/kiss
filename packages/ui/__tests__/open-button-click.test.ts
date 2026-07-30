@@ -32,9 +32,10 @@ function installMinimalDom(): void {
     }
     dispatchEvent(event: Event): boolean {
       const type = event.type;
-      const store = (this as unknown as { __listeners?: Map<string, Set<EventListener>> }).__listeners;
+      const store =
+        (this as unknown as { __listeners?: Map<string, Set<EventListener>> }).__listeners;
       const ls = store?.get(type);
-      if (ls) for (const l of ls) l.call(this, event);
+      if (ls) { for (const l of ls) l.call(this, event); }
       return true;
     }
     addEventListener(type: string, listener: EventListener): void {

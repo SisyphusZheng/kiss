@@ -12,23 +12,24 @@
 
 ## 交叉审查结论总表
 
-| 条目 | 单审结论 | 团队结论（三方） | 偏差 / 校正 |
-|---|---|---|---|
-| **H-1** dataStack 并发 SSR | 主路径不成立，High→Medium；残余=async 阶段读空帧 | 架构师：主路径**不成立**（同步 try/finally 内无 await 间隙）；残余风险**重新定性为单请求作用域 bug**（嵌套非页面组件序列化期调用 `useLoaderData` 读空栈），**非并发竞态** | ✅ 方向一致，归因更精确：是作用域缺陷，不是并发 |
-| **H-2** escape 双实现 | 属实，成立 | 工程师：属实但**非安全问题**（结果正确，仅实现不一致）→ **Low** | ⚠️ **严重度应降**：原报告/issue #633 标 High，团队独立判定 Low（维护性） |
-| **M-1** 冗余间接层 | 属实 | 工程师：属实 Low | 一致 |
-| **M-2** task 不一致 | 表格属实；"测试不会执行"表述过重 | QA：表格属实；根 `deno test` 无路径→递归发现，CI 门 `test:coverage:check` 同样递归，**不漏跑**；真正盲区在 M-4/L-4 边界 | ✅ 一致；措辞应改为"仅影响单包本地 `deno task test`" |
-| **M-3** console.error | 属实 | 工程师：属实 Medium；补充"跨包不一致"（app 无自身 `createLogger`） | 一致 |
-| **M-4** _handleClick 职责重 | 属实 | QA：属实中，提交路径难孤立测试；工程师：属实 Medium + 4 个额外异味 | 一致，且发现增量问题（见下） |
-| **M-5** default export | 属实（原报 10 个组件） | 工程师：属实 Low，**实际 11 处** `export default`（`index.ts` 仅 named 导出，无消费者） | 数量校正：11 处 |
-| **L-1** locale cast | 属实 | 工程师：属实（弱）Low | 一致 |
-| **L-2** Fragment 冗余 | 补为 3 处 | 工程师：确认 **3 处**（`render-ir.ts:216` / `jsx-render-dom.ts:328` / `event-hydration.ts:86`） | 一致 |
-| **L-3** create 缺 test task | 属实 | QA：属实 Low（`cli.test.ts` 179 行存在，deno.json 无 test task） | 一致 |
-| **L-4** spa.ts tagName | 属实（"静默失败"） | 工程师：**描述需修正**——非法字符 `tagName` 会**抛 `SyntaxError`**（非静默）；未注册自定义元素才静默空渲染；QA：边界未被覆盖是盲区 | ⚠️ 描述精确化：区分"非法字符抛错"与"未注册静默" |
+| 条目                        | 单审结论                                         | 团队结论（三方）                                                                                                                                                          | 偏差 / 校正                                                              |
+| --------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **H-1** dataStack 并发 SSR  | 主路径不成立，High→Medium；残余=async 阶段读空帧 | 架构师：主路径**不成立**（同步 try/finally 内无 await 间隙）；残余风险**重新定性为单请求作用域 bug**（嵌套非页面组件序列化期调用 `useLoaderData` 读空栈），**非并发竞态** | ✅ 方向一致，归因更精确：是作用域缺陷，不是并发                          |
+| **H-2** escape 双实现       | 属实，成立                                       | 工程师：属实但**非安全问题**（结果正确，仅实现不一致）→ **Low**                                                                                                           | ⚠️ **严重度应降**：原报告/issue #633 标 High，团队独立判定 Low（维护性） |
+| **M-1** 冗余间接层          | 属实                                             | 工程师：属实 Low                                                                                                                                                          | 一致                                                                     |
+| **M-2** task 不一致         | 表格属实；"测试不会执行"表述过重                 | QA：表格属实；根 `deno test` 无路径→递归发现，CI 门 `test:coverage:check` 同样递归，**不漏跑**；真正盲区在 M-4/L-4 边界                                                   | ✅ 一致；措辞应改为"仅影响单包本地 `deno task test`"                     |
+| **M-3** console.error       | 属实                                             | 工程师：属实 Medium；补充"跨包不一致"（app 无自身 `createLogger`）                                                                                                        | 一致                                                                     |
+| **M-4** _handleClick 职责重 | 属实                                             | QA：属实中，提交路径难孤立测试；工程师：属实 Medium + 4 个额外异味                                                                                                        | 一致，且发现增量问题（见下）                                             |
+| **M-5** default export      | 属实（原报 10 个组件）                           | 工程师：属实 Low，**实际 11 处** `export default`（`index.ts` 仅 named 导出，无消费者）                                                                                   | 数量校正：11 处                                                          |
+| **L-1** locale cast         | 属实                                             | 工程师：属实（弱）Low                                                                                                                                                     | 一致                                                                     |
+| **L-2** Fragment 冗余       | 补为 3 处                                        | 工程师：确认 **3 处**（`render-ir.ts:216` / `jsx-render-dom.ts:328` / `event-hydration.ts:86`）                                                                           | 一致                                                                     |
+| **L-3** create 缺 test task | 属实                                             | QA：属实 Low（`cli.test.ts` 179 行存在，deno.json 无 test task）                                                                                                          | 一致                                                                     |
+| **L-4** spa.ts tagName      | 属实（"静默失败"）                               | 工程师：**描述需修正**——非法字符 `tagName` 会**抛 `SyntaxError`**（非静默）；未注册自定义元素才静默空渲染；QA：边界未被覆盖是盲区                                         | ⚠️ 描述精确化：区分"非法字符抛错"与"未注册静默"                          |
 
 ## 三方独立贡献 / 增量发现
 
 ### 架构师（高见远）—— 并发与进程级单例
+
 - **F1** `dataStack` 跨请求交错覆盖：**主路径不成立**。证据：`authoring.ts:298` push → `definition.render` → `popData:319` 全在同步 `try/finally` 内；`callComponent` 同步执行，`await` 在求值之后，单线程无间隙可插入。
 - **F2** 残余风险重定性：嵌套"非页面"组件在序列化期调用 `useLoaderData` → 读空栈，属**单请求作用域缺陷**，非并发竞态。
 - **F3** `logger.ts` `_warned` 进程级 `Set`：`warnOnce` 一旦触发即**永久抑制**该进程内其他请求/SSG 多页同名告警 → Low。
@@ -36,6 +37,7 @@
 - 架构健康度：**B+**——依赖方向 `adapter-vite → element/app`、`app → element`、`ui → element` 单向无环，`element` 零依赖纯净。
 
 ### 工程师（寇豆码）—— 实现质量与新增异味
+
 - H-2 / M-1 / M-3 / M-4 / M-5 / L-1 / L-2 / L-4 逐条核实见总表。
 - **M-4 关联 4 个额外代码异味**（均 `packages/ui/src/open-button.tsx` / `packages/app/src/spa.ts`）：
   1. `spa.ts:78` `if (!route.tagName) return;` **死代码守卫不可达**——`RouteConfig.tagName` 必填（`client-router.ts:17`），`:72` 强转 `{tagName?: string}` 掩盖事实。
@@ -44,6 +46,7 @@
   4. `escapeHtml` 对 non-string 返回 `''`（`:33`），而 `escapeAttrValue` 经 `String()` 转换（`:48-50`）——**同包两种空值约定**。
 
 ### QA（严过关）—— 测试覆盖与边界
+
 - 覆盖率门禁**真实存在**：阈值 lines 73 / branch 82 / func 77（`check-coverage.ts:73`、`deno.json:97`），scope = `packages/*/src` + `tools/lib`。
 - 根 `deno test` 与 CI 门均**无路径参数→递归发现**，`app/ui/create` 的 `__tests__/` 全部被跑入 → **M-2「测试不会被执行」不成立**。
 - 真正漏测盲区：**M-4 `_handleClick` 提交路径难孤立测试**、**L-4 `spa.ts` 无效 tagName / 空白页 / `applyPageHostData` 静默失败边界无覆盖**。建议保留门禁并补这两条路径单测，而非仅为包补 test task。
@@ -58,20 +61,20 @@
 
 ## 对 2026-07-29/30 已发 issue 的校正建议
 
-| Issue | 当前 | 建议校正 |
-|---|---|---|
-| #632 H-1 | Medium（已含同步窗口证据） | 补一句：残余风险是**单请求作用域缺陷**而非并发竞态（采纳 F2） |
-| #633 H-2 | **High / Gate 1 必须** | ⚠️ 降为 **Low**（团队独立判定非安全） |
-| #634 M-1 | Low | 数量无关，保持 |
-| #635 M-2 | Medium | 描述改为"单包本地 task 缺失，CI 不漏跑" |
-| #636 M-3 | Medium | 补"跨包不一致" |
-| #637 M-4 | Medium | 补 4 个关联异味（死代码守卫 / 多余箭头 / `<a>` submit 语义 / 空值约定） |
-| #638 M-5 | Low | 数量更正：11 处 `export default` |
-| #639 L-1 | Low | 保持 |
-| #640 L-2 | Low | 确认 3 处（补 `jsx-render-dom.ts:328`、`event-hydration.ts:86`） |
-| #641 L-3 | Low | 保持 |
-| #642 L-4 | Low | 描述精确化：非法字符抛 `SyntaxError` / 未注册静默空渲染 |
-| — | — | **建议新增** F3 `_warned` 进程级单例（Low）、F4 `_telemetryHook` 全局单例竞态（Low/High）—— 可并入 #632 或单独开 issue |
+| Issue    | 当前                       | 建议校正                                                                                                               |
+| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| #632 H-1 | Medium（已含同步窗口证据） | 补一句：残余风险是**单请求作用域缺陷**而非并发竞态（采纳 F2）                                                          |
+| #633 H-2 | **High / Gate 1 必须**     | ⚠️ 降为 **Low**（团队独立判定非安全）                                                                                  |
+| #634 M-1 | Low                        | 数量无关，保持                                                                                                         |
+| #635 M-2 | Medium                     | 描述改为"单包本地 task 缺失，CI 不漏跑"                                                                                |
+| #636 M-3 | Medium                     | 补"跨包不一致"                                                                                                         |
+| #637 M-4 | Medium                     | 补 4 个关联异味（死代码守卫 / 多余箭头 / `<a>` submit 语义 / 空值约定）                                                |
+| #638 M-5 | Low                        | 数量更正：11 处 `export default`                                                                                       |
+| #639 L-1 | Low                        | 保持                                                                                                                   |
+| #640 L-2 | Low                        | 确认 3 处（补 `jsx-render-dom.ts:328`、`event-hydration.ts:86`）                                                       |
+| #641 L-3 | Low                        | 保持                                                                                                                   |
+| #642 L-4 | Low                        | 描述精确化：非法字符抛 `SyntaxError` / 未注册静默空渲染                                                                |
+| —        | —                          | **建议新增** F3 `_warned` 进程级单例（Low）、F4 `_telemetryHook` 全局单例竞态（Low/High）—— 可并入 #632 或单独开 issue |
 
 ## 整改优先级重排（团队版）
 
@@ -80,4 +83,5 @@
 3. **后续（清洁）**：M-5 去 default export（11 处）；L-1 locale 类型；L-2 清 3 处 Fragment 冗余；L-3 create test task；M-2 补单包 task（非 CI 必需）。
 
 ---
-*本记录由团队主理人汇总，三方独立结论为 source of truth；未修改任何源码。*
+
+_本记录由团队主理人汇总，三方独立结论为 source of truth；未修改任何源码。_

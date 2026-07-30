@@ -1,4 +1,4 @@
-import { assertThrows, assertEquals } from 'jsr:@std/assert@1';
+import { assertEquals, assertThrows } from 'jsr:@std/assert@1';
 import {
   OpenElementError,
   reportError,

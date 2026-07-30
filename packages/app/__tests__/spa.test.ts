@@ -295,12 +295,24 @@ Deno.test('unregistered tagName warns and renders nothing instead of an inert ho
   });
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { protocol: 'https:', pathname: '/', search: '', hash: '', href: 'https://example.test/' },
+    value: {
+      protocol: 'https:',
+      pathname: '/',
+      search: '',
+      hash: '',
+      href: 'https://example.test/',
+    },
   });
-  Object.defineProperty(globalThis, 'history', { configurable: true, value: { pushState() {}, replaceState() {} } });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
   globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
   globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
-  Object.defineProperty(globalThis, 'customElements', { configurable: true, value: { get: () => undefined } });
+  Object.defineProperty(globalThis, 'customElements', {
+    configurable: true,
+    value: { get: () => undefined },
+  });
 
   const warnings: string[] = [];
   const originalWarn = console.warn;
@@ -324,7 +336,8 @@ Deno.test('unregistered tagName warns and renders nothing instead of an inert ho
     else delete (globalThis as Record<string, unknown>).location;
     if (originalHistory) Object.defineProperty(globalThis, 'history', originalHistory);
     else delete (globalThis as Record<string, unknown>).history;
-    if (originalCustomElements) Object.defineProperty(globalThis, 'customElements', originalCustomElements);
-    else delete (globalThis as Record<string, unknown>).customElements;
+    if (originalCustomElements) {
+      Object.defineProperty(globalThis, 'customElements', originalCustomElements);
+    } else delete (globalThis as Record<string, unknown>).customElements;
   }
 });

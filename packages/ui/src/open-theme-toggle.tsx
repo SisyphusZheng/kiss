@@ -238,4 +238,3 @@ export class OpenThemeToggle extends OpenElement {
     }
   }
 }
-

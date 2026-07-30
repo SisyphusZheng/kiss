@@ -87,4 +87,3 @@ export class OpenBadge extends OpenElement {
     return this.getAttribute(attr) || def;
   }
 }
-

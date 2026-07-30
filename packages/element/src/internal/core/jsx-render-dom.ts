@@ -18,7 +18,7 @@
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import type { Signal } from '../protocol/signal.ts';
-import { FOR_TAG, isFragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, HTML_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { eventTypeFromProp } from './event-marker.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';

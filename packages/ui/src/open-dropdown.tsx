@@ -80,4 +80,3 @@ export class OpenDropdown extends OpenElement {
     );
   }
 }
-

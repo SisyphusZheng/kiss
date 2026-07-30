@@ -14,7 +14,7 @@ import {
   serializeEventMarkers,
   showBranchMarker,
 } from './event-marker.ts';
-import { FOR_TAG, isFragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, HTML_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, resolveSignalProp, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';

@@ -229,7 +229,7 @@ export class OpenButton extends OpenElement {
     }
   }
 
-  private _handleClick(_e: Event): void {
+  private _handleClick = (_e: Event): void => {
     this.dispatchEvent(new CustomEvent('open-click', { bubbles: true, composed: true }));
 
     // An <a> (href) branch is a navigation control, not a form control — it must
@@ -251,7 +251,7 @@ export class OpenButton extends OpenElement {
     } else if (type === 'reset') {
       this._resetForm(form);
     }
-  }
+  };
 
   /**
    * Submit `form` on behalf of this element (v0.42.0-alpha.9, #637).
@@ -296,4 +296,3 @@ export class OpenButton extends OpenElement {
     form.reset();
   }
 }
-
