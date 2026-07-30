@@ -309,8 +309,11 @@ test.describe('open-button form piercing', () => {
       // Island chunks wrapped by the runtime expose a `.t` namespace; plain
       // ui-package chunks (like open-button) export the class directly.
       const ns = mod.t as { default?: CustomElementConstructor } | undefined;
-      const ButtonCtor = ns?.default ?? (mod.default as CustomElementConstructor | undefined);
-      if (!ButtonCtor) return { error: 'open-button chunk has no default export' };
+      // #638: package island chunks dropped `export default`; the constructor
+      // is exported under the CEM class name `OpenButton`.
+      const ButtonCtor = (mod as Record<string, CustomElementConstructor | undefined>).OpenButton ??
+        ns?.default ?? (mod.default as CustomElementConstructor | undefined);
+      if (!ButtonCtor) return { error: 'open-button chunk has no OpenButton export' };
       if (!customElements.get('open-button')) {
         customElements.define('open-button', ButtonCtor);
       }

@@ -1,10 +1,14 @@
 {
   "name": "@openelement/create",
-  "version": "0.42.0-alpha.8",
+  "version": "0.42.0-alpha.9",
   "exports": "./src/cli.ts",
   "imports": {},
   "tasks": {
-    "run": "deno run -A src/cli.ts"
+    "run": "deno run -A src/cli.ts",
+    "build": "deno check src/",
+    "test": "deno test -A",
+    "lint": "deno lint src/ __tests__/",
+    "typecheck": "deno check src/"
   },
   "publish": {
     "include": [

@@ -78,6 +78,9 @@ export function buildPackageIslandDecls(
           modulePath,
           isPackage: true,
           source: 'package' as const,
+          // #638: package island chunks dropped `export default`; the client
+          // island factory must read the named export (CEM class name) instead.
+          exportName: d.className,
           hydrate: resolveIslandHydrate(openElement?.hydrate, upgradeStrategy),
           ...resolveIslandSsrDsd(openElement ?? {}),
         };

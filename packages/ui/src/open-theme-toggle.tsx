@@ -238,5 +238,3 @@ export class OpenThemeToggle extends OpenElement {
     }
   }
 }
-
-export default OpenThemeToggle;

@@ -100,6 +100,13 @@ export interface ClientIslandEntry {
   tagName: string;
   modulePath: string;
   isPackage?: boolean;
+  /**
+   * Optional named export to register as the custom element constructor.
+   * When set (package islands whose chunk dropped `export default` per #638),
+   * the client island factory reads `mod[exportName]` instead of `mod.default`.
+   * When absent, the factory falls back to `mod.default` (local/route islands).
+   */
+  exportName?: string;
   strategy: HydrationStrategy;
   strategySource?: 'default' | 'manifest' | 'component' | 'route';
   ssr?: boolean;
@@ -156,6 +163,14 @@ export interface IslandDecl {
   tagName: string;
   modulePath: string;
   isPackage?: boolean;
+  /**
+   * Optional named export to register as the custom element constructor.
+   * Set for package islands from the manifest declaration's `className`
+   * (the CEM-derived export class name), so the client island factory can
+   * read `mod[exportName]` after #638 removed `export default` from UI
+   * component chunks. Absent for local/route islands (which use default).
+   */
+  exportName?: string;
   hydrate?: HydrationStrategy;
   ssr?: boolean;
   dsd?: boolean;

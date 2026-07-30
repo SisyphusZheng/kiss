@@ -162,6 +162,14 @@ export class OpenElement extends _Base {
   /** Rendering mode. Defaults to shadow/DSD; light DOM is explicit opt-in. */
   static renderMode?: 'shadow' | 'light';
 
+  /**
+   * Locale hint for the element, e.g. 'en' or 'zh-CN'.
+   * Set by SSR injectProps (camelCase JS property) or the `locale` HTML
+   * attribute; resolved by `_getLocale()`. Declared on the base class so the
+   * property is typed instead of cast through `Record<string, unknown>`.
+   */
+  locale?: string;
+
   /** v0.25.0: Page head metadata. SSG reads this to inject <title> and <meta> tags. */
   static head?: { title?: string; description?: string; ogImage?: string };
 
@@ -596,7 +604,7 @@ export class OpenElement extends _Base {
    * @param fallback - Default value when neither source has a value. Defaults to 'en'.
    */
   protected _getLocale(fallback = 'en'): string {
-    const prop = (this as Record<string, unknown>).locale;
+    const prop = this.locale;
     if (typeof prop === 'string' && prop) return prop;
     return this.getAttribute('locale') || fallback;
   }

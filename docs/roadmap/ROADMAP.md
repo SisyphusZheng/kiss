@@ -4,8 +4,8 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.42.0-alpha.8`.\
-> Active execution target: `v0.42.0-alpha.8`.\
+> Published package line: `v0.42.0-alpha.9`.\
+> Active execution target: `v0.42.0-alpha.9`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.6 shipped the loop; alpha.7 closes the
 > light-fullstack floor (morph residuals, start path, SSG fail-closed,

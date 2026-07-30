@@ -10,7 +10,7 @@
 
 // ─── L1: Safe/Unsafe HTML Contract ──────────────────────────────
 
-import { createLogger, warnOnce } from './logger.ts';
+import { createLogger, createWarnScope, warnOnce } from './logger.ts';
 
 const log = createLogger('core');
 
@@ -34,14 +34,19 @@ export function escapeHtml(str: string): string {
   return str.replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch] || ch);
 }
 
-/** Escape an HTML attribute value */
+/**
+ * Escape an HTML attribute value.
+ *
+ * Delegates to `escapeHtml` so both share the single `ESCAPE_MAP` and the
+ * same single-pass replacement (consolidated in v0.42.0-alpha.9, #633).
+ *
+ * Empty-value conventions remain intentionally distinct by design:
+ * - `escapeHtml` returns '' for non-string input.
+ * - `escapeAttrValue` (below) coerces via `String()` and is the boundary
+ *   meant for unknown/variable attribute values.
+ */
 export function escapeAttr(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return escapeHtml(value);
 }
 
 /** Escape a string for use as an attribute value (double-quoted) */
@@ -77,6 +82,10 @@ export function wrapInDocument(
     cspNonce?: string;
   } = {},
 ): string {
+  // Per-render warning scope: the same headExtras key can warn again on the
+  // next SSG page/request instead of being suppressed for the whole process
+  // (v0.42.0-alpha.9, #643).
+  const warnScope = createWarnScope();
   const {
     title = 'openElement',
     lang = 'en',
@@ -107,6 +116,7 @@ export function wrapInDocument(
         log,
         'headExtras contained <script> tags which were stripped for security. ' +
           'Use inject.scripts for safe script injection, or set allowHeadExtrasScripts: true.',
+        warnScope,
       );
     }
     // Strip on* event handler attributes (strong XSS indicator)

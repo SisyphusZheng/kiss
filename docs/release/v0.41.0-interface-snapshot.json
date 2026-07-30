@@ -101,8 +101,9 @@
           ]
         },
         "./spa": {
-          "sha256": "79038615bb4d54805c3fac24440e620011b7ff3927302132cc1139484a965dfd",
+          "sha256": "5f55fc52ca8a0d5a64884349693d560d2d0cf8a8a85ee9efc67b1c323e859611",
           "publicDeclarations": [
+            "export function assertValidTagName(tagName: string): void {",
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
             "export function defineApp(options: SpaAppOptions): SpaAppInstance {"
@@ -185,56 +186,56 @@
           "publicDeclarations": []
         },
         "./open-badge": {
-          "sha256": "557712982869455871b9b41474c698582c41769371d2e94f6347f51fc612f2d5",
+          "sha256": "91d157e29bea78e581acb46e7f287da5a6dfebd8f3fdbc6d68c24518de27b380",
           "publicDeclarations": [
             "export const tagName = 'open-badge';",
             "export class OpenBadge extends OpenElement {"
           ]
         },
         "./open-button": {
-          "sha256": "5e2ab4736e53b397c1336f0c069587d7edcc2ca6ea446b7bee518e3ed09761af",
+          "sha256": "63c629d06c7c666fcfc1fdd4024fe97895bb269fe57d75f8d919fc282ec111d7",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
           ]
         },
         "./open-callout": {
-          "sha256": "f667dabce2fbc4e719d43266a2ebd3c2d23add7c1088dfc9b8b49d4bb9812f6d",
+          "sha256": "77cd8141a1b888fa2b50f9d99088394312aa1db5996df0253dfd8b38931aea0b",
           "publicDeclarations": [
             "export const tagName = 'open-callout';",
             "export class OpenCallout extends OpenElement {"
           ]
         },
         "./open-card": {
-          "sha256": "3a4a9fde6d98124eb9833bbd58d8495efd26cf873c72245e750ef35431a5268a",
+          "sha256": "dbf9cc234da2a56eb177d039f084a5cd49b91131bc8646002b197e4c3d5225f1",
           "publicDeclarations": [
             "export const tagName = 'open-card';",
             "export class OpenCard extends OpenElement {"
           ]
         },
         "./open-code-block": {
-          "sha256": "61ab2fd8c49c15da94f11027319a3c7b91846970da75911676a963b1331e3c81",
+          "sha256": "28c16d6ebecfaff03e9b57870505eac66c60d8ba1863fc8cfdc081782e68f5c5",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
           ]
         },
         "./open-dialog": {
-          "sha256": "6ac1ac4f6b3364c5da6d79c327cbc3868f99a6d3708b9293073873cc5c9aa372",
+          "sha256": "d269b07cfe78e921df8c5225539912e1a2c06344087b1a94e7620c0b982556be",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
           ]
         },
         "./open-dropdown": {
-          "sha256": "f313090f945a6f1f27960825c25f1dbc3137a8a95a4effdf579c89efe0ea1272",
+          "sha256": "f7b77f2d9d721184a3962c21c33e0f098e0c827d2e23dfbdb65d8a9da9ec17f9",
           "publicDeclarations": [
             "export const tagName = 'open-dropdown';",
             "export class OpenDropdown extends OpenElement {"
           ]
         },
         "./open-input": {
-          "sha256": "a85e5ffb970b7159e7c8a940f9c22e5ff2810d5bedec9de8d7f4ed8b6c5c7870",
+          "sha256": "7f8bc2182640bf8bcea6c413ae9ed4c476c7f01985bd416b73d2f88d6378f443",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -257,14 +258,14 @@
           ]
         },
         "./open-tabs": {
-          "sha256": "85fe927ef3e33b7eb8993e1572410f00cb21bcd07caf98a7fee1a40fb0bd3d06",
+          "sha256": "81e95beb24d760a9e29d0e7c9c99920d78a43a30a16e005d6a76a682ca6d9b8f",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
           ]
         },
         "./open-theme-toggle": {
-          "sha256": "555523aa7fbc72097b71fde61b823ba2dc967bdb837a826f440f7fd307822708",
+          "sha256": "09711bf638a0f4fe33aab180c6d725c4d5ec2abae808488ba44fcb4611074014",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"

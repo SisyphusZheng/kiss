@@ -45,4 +45,3 @@ export class OpenTabs extends OpenElement {
     );
   }
 }
-export default OpenTabs;

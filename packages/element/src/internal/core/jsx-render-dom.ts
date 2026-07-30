@@ -18,7 +18,7 @@
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import type { Signal } from '../protocol/signal.ts';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, HTML_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { eventTypeFromProp } from './event-marker.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
@@ -324,9 +324,7 @@ function renderNode(
 
   const { tag, props, children } = node as VNode;
 
-  if (
-    tag === Fragment || (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.fragment)')
-  ) {
+  if (isFragment(tag)) {
     const frag = document.createDocumentFragment();
     for (const child of children) {
       frag.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));

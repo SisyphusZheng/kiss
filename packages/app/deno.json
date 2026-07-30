@@ -1,6 +1,6 @@
 {
   "name": "@openelement/app",
-  "version": "0.42.0-alpha.8",
+  "version": "0.42.0-alpha.9",
   "exports": {
     ".": "./src/index.ts",
     "./hono": "./src/hono.ts",
@@ -28,7 +28,10 @@
     "dist"
   ],
   "tasks": {
-    "build": "deno check src/"
+    "build": "deno check src/",
+    "test": "deno test -A",
+    "lint": "deno lint src/ __tests__/",
+    "typecheck": "deno check src/"
   },
   "peerDependencies": {
     "preact": "npm:preact@^10.28.0",

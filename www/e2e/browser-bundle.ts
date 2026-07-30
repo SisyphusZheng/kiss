@@ -9,6 +9,17 @@
 
 import { build } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+
+// The SPA/router sources import '@openelement/element' at runtime (`createLogger`,
+// and JSX via jsx-runtime). The e2e bare bundle runs with `configFile: false`, so it
+// does not inherit the workspace alias that the real www build gets from
+// adapter-vite's Vite plugin. Mirror that alias here so Rolldown can resolve the
+// package from source. See www/vite.config.ts and packages/adapter-vite workspace-alias.
+const ELEMENT_ENTRY = fileURLToPath(
+  new URL('../../packages/element/src/index.ts', import.meta.url),
+);
+const ELEMENT_DIR = fileURLToPath(new URL('../../packages/element/src', import.meta.url));
 
 const bundleCache = new Map<string, Promise<string>>();
 
@@ -21,6 +32,13 @@ export function bundleModuleForBrowser(entry: URL): Promise<string> {
       const result = await build({
         logLevel: 'silent',
         configFile: false,
+        resolve: {
+          alias: {
+            '@openelement/element': ELEMENT_ENTRY,
+            '@openelement/element/jsx-runtime': resolve(ELEMENT_DIR, 'jsx-runtime.ts'),
+          },
+        },
+        esbuild: { jsx: 'automatic', jsxImportSource: '@openelement/element' },
         build: {
           write: false,
           minify: false,

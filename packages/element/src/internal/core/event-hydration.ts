@@ -10,7 +10,7 @@
  * scope to a client-side re-render instead of mis-binding handlers.
  */
 
-import { FOR_TAG, Fragment, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
 import { isSignalLike, resolveSignalProp } from '../signal/index.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
@@ -81,10 +81,7 @@ export function collectEventBindings(
 
     const { tag, props, children } = value as VNode;
 
-    if (
-      tag === Fragment ||
-      (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.fragment)')
-    ) {
+    if (isFragment(tag)) {
       for (const child of children) visit(child);
       return;
     }

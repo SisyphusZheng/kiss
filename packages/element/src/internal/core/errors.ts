@@ -148,7 +148,25 @@ export type { ErrorTelemetryHook };
 let _telemetryHook: ErrorTelemetryHook | undefined;
 
 export function setErrorTelemetryHook(hook: ErrorTelemetryHook): void {
+  // v0.42.0-alpha.9 (#644): the telemetry hook is a startup-time, single
+  // configuration. Re-setting it would create last-writer-wins behavior across
+  // requests/tenants (a concurrency hazard on shared runtimes). Rather than a
+  // per-request hook (which would require threading a context through every
+  // reportError call site), we keep the module-level singleton but guard it so
+  // an accidental second set surfaces immediately instead of silently
+  // overwriting the previous hook.
+  if (_telemetryHook) {
+    throw new Error(
+      '[openElement] setErrorTelemetryHook() was already called. ' +
+        'Configure the error telemetry hook exactly once at application startup.',
+    );
+  }
   _telemetryHook = hook;
+}
+
+/** @internal Test isolation only. Not exported from the package public facade. */
+export function resetErrorTelemetryHookForTests(): void {
+  _telemetryHook = undefined;
 }
 
 export function reportError(error: OpenElementError): void {

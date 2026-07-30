@@ -175,7 +175,7 @@ export class OpenButton extends OpenElement {
         part='control'
         disabled={d}
         type={type}
-        onClick={(e: Event) => this._handleClick(e)}
+        onClick={this._handleClick}
       >
         <slot></slot>
       </button>
@@ -229,56 +229,70 @@ export class OpenButton extends OpenElement {
     }
   }
 
-  private _handleClick(_e: Event): void {
+  private _handleClick = (_e: Event): void => {
     this.dispatchEvent(new CustomEvent('open-click', { bubbles: true, composed: true }));
+
+    // An <a> (href) branch is a navigation control, not a form control — it must
+    // never submit/reset a form (异味③, #637). Only the <button> branch may
+    // trigger form submission below.
+    if (this.hasAttribute('href')) return;
 
     // Form submission: when type="submit" or type="reset" and this element is
     // associated with a <form> (via formAssociated), the inner <button> lives
     // inside the shadow DOM and its native submit/reset behavior does NOT
     // reach the outer form. We must explicitly trigger it here.
-    //
-    // Critical: the native 'submit' event is NOT composed (it does not cross
-    // shadow boundaries). open-button typically lives inside another custom
-    // element's shadow root (e.g. <reader-reading>), so a natively submitted
-    // form would never reach the SPA's root listener. We re-dispatch a
-    // composed, cancelable submit event on the form so the SPA's delegated
-    // handler (bound on #root) can intercept it; at that listener
-    // event.target is retargeted to this host, so the handler locates the
-    // form through event.composedPath() (see spa.ts handleFormSubmit).
     const type = this.getAttribute('type') || 'button';
     // formAssociated internals.form is only available when attached to DOM.
     // Fall back to closest('form') for elements without _internals (test env).
     const form = this._internals?.form ?? closestForm(this);
     if (!form) return;
     if (type === 'submit') {
-      // SubmitEvent may be unavailable in older runtimes; fall back to Event.
-      const SubmitEventCtor = (globalThis as { SubmitEvent?: typeof SubmitEvent })
-        .SubmitEvent;
-      const submitEvent: Event = SubmitEventCtor
-        ? new SubmitEventCtor('submit', {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-        })
-        : new Event('submit', { bubbles: true, cancelable: true, composed: true });
-      form.dispatchEvent(submitEvent);
-      // If the SPA prevented default, the action was handled — do NOT call
-      // requestSubmit() (which would cause native form GET navigation).
-      if (!submitEvent.defaultPrevented) {
-        const formEl = form as HTMLFormElement & {
-          requestSubmit?: () => void;
-          submit: () => void;
-        };
-        if (typeof formEl.requestSubmit === 'function') {
-          formEl.requestSubmit();
-        } else {
-          formEl.submit();
-        }
-      }
+      this._submitForm(form);
     } else if (type === 'reset') {
-      (form as HTMLFormElement).reset();
+      this._resetForm(form);
+    }
+  };
+
+  /**
+   * Submit `form` on behalf of this element (v0.42.0-alpha.9, #637).
+   *
+   * Critical: the native 'submit' event is NOT composed (it does not cross
+   * shadow boundaries). open-button typically lives inside another custom
+   * element's shadow root (e.g. <reader-reading>), so a natively submitted
+   * form would never reach the SPA's root listener. We re-dispatch a
+   * composed, cancelable submit event on the form so the SPA's delegated
+   * handler (bound on #root) can intercept it; at that listener
+   * event.target is retargeted to this host, so the handler locates the
+   * form through event.composedPath() (see spa.ts handleFormSubmit).
+   */
+  private _submitForm(form: HTMLFormElement): void {
+    // SubmitEvent may be unavailable in older runtimes; fall back to Event.
+    const SubmitEventCtor = (globalThis as { SubmitEvent?: typeof SubmitEvent }).SubmitEvent;
+    const submitEvent: Event = SubmitEventCtor
+      ? new SubmitEventCtor('submit', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      })
+      : new Event('submit', { bubbles: true, cancelable: true, composed: true });
+    form.dispatchEvent(submitEvent);
+    // If the SPA prevented default, the action was handled — do NOT call
+    // requestSubmit() (which would cause native form GET navigation).
+    if (!submitEvent.defaultPrevented) {
+      const formEl = form as HTMLFormElement & {
+        requestSubmit?: () => void;
+        submit: () => void;
+      };
+      if (typeof formEl.requestSubmit === 'function') {
+        formEl.requestSubmit();
+      } else {
+        formEl.submit();
+      }
     }
   }
-}
 
-export default OpenButton;
+  /** Reset `form` on behalf of this element (v0.42.0-alpha.9, #637). */
+  private _resetForm(form: HTMLFormElement): void {
+    form.reset();
+  }
+}

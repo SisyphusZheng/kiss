@@ -275,5 +275,3 @@ export class OpenCodeBlock extends OpenElement {
     else btn.textContent = 'Copy';
   }
 }
-
-export default OpenCodeBlock;

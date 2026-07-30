@@ -16,10 +16,13 @@ import {
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland, HYDRATION_STRATEGIES } from '@openelement/element';
 import {
+  __enterDataContext,
+  __exitDataContext,
+  createRenderDataContext,
   popData,
   pushActionData,
   pushLoaderData,
-} from './internal/router/internal/data-context.ts';
+} from './internal/router/data-context-store.ts';
 import type { HydrationStrategy } from '@openelement/element';
 import type { PageHostElement } from './internal/page-host-data.ts';
 
@@ -294,9 +297,15 @@ export function definePage<
     static openElementPage = pageDescriptor;
 
     override render(): VNode | null {
-      // Provide loader/action data to hooks (useLoaderData / useActionData)
-      pushLoaderData(this.data);
-      pushActionData(this.__openElementActionData);
+      // Provide loader/action data to hooks (useLoaderData / useActionData).
+      // The stack is request-scoped: a fresh RenderDataContext is created for
+      // this render and made active for the duration of the synchronous render
+      // so nested components read the current page's data, never a leaked or
+      // empty global stack (#632).
+      const dataCtx = createRenderDataContext();
+      __enterDataContext(dataCtx);
+      pushLoaderData(dataCtx, this.data);
+      pushActionData(dataCtx, this.__openElementActionData);
 
       try {
         const params = (this.__openElementParams ?? this.params ?? {}) as Params;
@@ -316,7 +325,8 @@ export function definePage<
 
         return definition.render(context);
       } finally {
-        popData();
+        popData(dataCtx);
+        __exitDataContext();
       }
     }
   }

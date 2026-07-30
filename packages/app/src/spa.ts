@@ -13,6 +13,23 @@ import {
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 import { normalizeActionFailure } from './internal/action-error.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
+import { createLogger } from '@openelement/element';
+
+const log = createLogger('spa');
+
+/**
+ * Validate a custom element tagName. Tag names must be non-empty and contain
+ * only lowercase letters, digits, and hyphens (per the HTML custom element
+ * spec). Throws a `SyntaxError` with a helpful message on violation (#642).
+ */
+export function assertValidTagName(tagName: string): void {
+  if (typeof tagName !== 'string' || !/^[a-z0-9-]+$/.test(tagName)) {
+    throw new SyntaxError(
+      `[spa] Invalid tagName "${tagName}": tag names must contain only ` +
+        'lowercase letters, digits, and hyphens.',
+    );
+  }
+}
 
 interface ImportMetaWithEnvironment extends ImportMeta {
   env?: { DEV?: boolean };
@@ -61,7 +78,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     try {
       return await route.loader({ params: router.params });
     } catch (err) {
-      console.error('[spa] loader failed:', err);
+      log.error('loader failed:', err);
       return undefined;
     }
   }
@@ -69,13 +86,23 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   /** Render the current custom-element route into rootEl. */
   function renderComponent(): void {
     if (!router || !rootEl) return;
-    const route = router.currentRoute as (RouteConfig & { tagName?: string });
+    const route = router.currentRoute as RouteConfig;
     rootEl.innerHTML = '';
 
     if (!route) return;
 
-    // OpenElement route: create custom element from tagName, set loader data as properties
-    if (!route.tagName) return;
+    // tagName is required by RouteConfig. Validate before touching the DOM so a
+    // malformed value fails loudly (SyntaxError) instead of silently rendering
+    // nothing (#642).
+    assertValidTagName(route.tagName);
+
+    // Unregistered custom elements would render as inert, empty hosts. Warn and
+    // skip rendering rather than injecting an unknown element (#642).
+    if (typeof customElements !== 'undefined' && !customElements.get(route.tagName)) {
+      log.warn(`unregistered tagName: ${route.tagName}`);
+      return;
+    }
+
     const el = document.createElement(route.tagName) as PageHostElement;
     const request = typeof location === 'undefined' ? undefined : requestCache.get(
       new URL(router.currentPath || '/', location.href ?? 'http://localhost/').href,
@@ -201,14 +228,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     /** Intercept form submissions for action support. */
     submitHandler = (e: Event) => {
       void handleFormSubmit(e).catch((err) => {
-        console.error('[spa] form submit failed:', err);
+        log.error('form submit failed:', err);
       });
     };
     rootEl.addEventListener('submit', submitHandler);
 
     // Initial render for the current URL
     void renderRoute().catch((err) => {
-      console.error('[spa] initial render failed:', err);
+      log.error('initial render failed:', err);
     });
   }
 

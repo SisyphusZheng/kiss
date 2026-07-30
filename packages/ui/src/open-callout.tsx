@@ -90,5 +90,3 @@ export class OpenCallout extends OpenElement {
   }
   private _esc = escapeHtml;
 }
-
-export default OpenCallout;
