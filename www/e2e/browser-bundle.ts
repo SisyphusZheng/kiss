@@ -33,10 +33,18 @@ export function bundleModuleForBrowser(entry: URL): Promise<string> {
         logLevel: 'silent',
         configFile: false,
         resolve: {
-          alias: {
-            '@openelement/element': ELEMENT_ENTRY,
-            '@openelement/element/jsx-runtime': resolve(ELEMENT_DIR, 'jsx-runtime.ts'),
-          },
+          // Array form with an exact-match regex for the bare specifier:
+          // the object form prefix-matches, so '@openelement/element' would
+          // hijack '@openelement/element/jsx-runtime' and rewrite it to
+          // '.../index.ts/jsx-runtime' (UNLOADABLE_DEPENDENCY, seen when
+          // bundling JSX sources like open-button.tsx for #650).
+          alias: [
+            {
+              find: '@openelement/element/jsx-runtime',
+              replacement: resolve(ELEMENT_DIR, 'jsx-runtime.ts'),
+            },
+            { find: /^@openelement\/element$/, replacement: ELEMENT_ENTRY },
+          ],
         },
         esbuild: { jsx: 'automatic', jsxImportSource: '@openelement/element' },
         build: {
