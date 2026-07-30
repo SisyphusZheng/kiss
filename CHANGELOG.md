@@ -12,6 +12,24 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.9
+
+- Cleanup train (TP-5.7, milestone #16): 13 findings from the 2026-07-30 team
+  cross-review (issues #632–#644) landed as a quality/hygiene drop. No new
+  product surface; ADR-0119 freeze surface and 0.42 Application Loop scope
+  (ADR-0120) are untouched.
+- Correctness: `<open-button>` now binds `_handleClick` as an arrow-field so the
+  framework's raw `addEventListener` wires `this` to the component instance —
+  shadow-DOM submit events now reach the outer form (#637). Request-scoped
+  context is passed explicitly through render/hydrate entry points (#632/#644);
+  logger `_warned` moved to render scope (#643); `app` reuses
+  `@openelement/element`'s `createLogger` (#636).
+- Hygiene: removed the redundant `app` re-export layer (#634); dropped a dead
+  router data-context module; trimmed unused exports across `packages/*`
+  (#633/#635/#642/#643/#644).
+- Release evidence: closure recorded at the tagged merge commit; tag
+  `v0.42.0-alpha.9` is unpublished-to-npm (source train only).
+
 ## 0.42.0-alpha.6
 
 - Audit round 2 remediation (TP-5.6): the second, independent review of
