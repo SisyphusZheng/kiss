@@ -104,4 +104,3 @@ export class OpenCard extends OpenElement {
   }
 }
 
-export default OpenCard;

@@ -276,4 +276,3 @@ export class OpenCodeBlock extends OpenElement {
   }
 }
 
-export default OpenCodeBlock;

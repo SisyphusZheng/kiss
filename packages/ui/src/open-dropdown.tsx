@@ -81,4 +81,3 @@ export class OpenDropdown extends OpenElement {
   }
 }
 
-export default OpenDropdown;

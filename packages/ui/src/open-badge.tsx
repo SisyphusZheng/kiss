@@ -88,4 +88,3 @@ export class OpenBadge extends OpenElement {
   }
 }
 
-export default OpenBadge;
