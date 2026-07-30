@@ -14,7 +14,7 @@ import {
   serializeEventMarkers,
   showBranchMarker,
 } from './event-marker.ts';
-import { FOR_TAG, Fragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
+import { FOR_TAG, isFragment, HTML_TAG, SHOW_TAG } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, resolveSignalProp, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
@@ -212,9 +212,7 @@ export async function renderToNode(
   const { tag, props, children } = node;
 
   // Fragment
-  if (
-    tag === Fragment || (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.fragment)')
-  ) {
+  if (isFragment(tag)) {
     const parts: RenderNode[] = [];
     for (const child of children) parts.push(await renderToNode(child, eventContext, nestingDepth));
     return fragmentNode(parts);

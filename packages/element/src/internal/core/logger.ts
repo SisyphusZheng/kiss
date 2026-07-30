@@ -23,16 +23,37 @@ export function createLogger(tag: string): Logger {
   };
 }
 
-// warn-once via Set, two callers, shared helper if >3 callers
-const _warned = new Set<string>();
-export function warnOnce(key: string, logger: Logger, msg: string): void {
-  if (!_warned.has(key)) {
-    _warned.add(key);
+/**
+ * A render-scoped warning tracker.
+ *
+ * Pass a fresh `WarnScope` (via `createWarnScope()`) into `warnOnce` at a
+ * render entry (e.g. once per SSR document in `wrapInDocument`). This keeps a
+ * given key from being suppressed for the entire process: the next page/request
+ * gets a new scope and the warning can fire again. This fixes the previous
+ * behavior where `warnOnce` permanently muted a key across all requests/SSG
+ * pages (v0.42.0-alpha.9, #643).
+ */
+export interface WarnScope {
+  warned: Set<string>;
+}
+
+/** Create a fresh, empty warning scope for one render. */
+export function createWarnScope(): WarnScope {
+  return { warned: new Set() };
+}
+
+// Module-level fallback for call sites that don't pass an explicit render scope.
+const _globalWarned = new Set<string>();
+
+export function warnOnce(key: string, logger: Logger, msg: string, scope?: WarnScope): void {
+  const set = scope ? scope.warned : _globalWarned;
+  if (!set.has(key)) {
+    set.add(key);
     logger.warn(msg);
   }
 }
 
 /** @internal Test isolation only. Not exported from the package public facade. */
 export function resetWarnOnceForTests(): void {
-  _warned.clear();
+  _globalWarned.clear();
 }

@@ -21,6 +21,20 @@ import type { ComponentCtor, ComponentFn, VNode } from '../protocol/vnode.ts';
  */
 export const Fragment: unique symbol = Symbol.for('openelement.fragment');
 
+/**
+ * Type guard for a VNode `tag` that represents a Fragment (grouping without a
+ * wrapping element). Centralized in v0.42.0-alpha.9 (#640) so the three render
+ * paths (render-ir, jsx-render-dom, event-hydration) share one check instead
+ * of each repeating the `tag === Fragment || symbol-description` branch.
+ *
+ * The symbol-description branch guards against a stray symbol that happens to
+ * carry the same `toString()` while not being the canonical `Fragment`.
+ */
+export function isFragment(tag: unknown): boolean {
+  return tag === Fragment ||
+    (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.fragment)');
+}
+
 /** @internal Symbol for <Show> tag matching in renderToDom */
 export const SHOW_TAG: unique symbol = Symbol.for('openelement.show');
 /** @internal Symbol for <For> tag matching in renderToDom */
