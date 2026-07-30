@@ -214,6 +214,9 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
         tagName: island.tagName,
         modulePath: island.modulePath,
         isPackage: true,
+        // #638: forward the named export so the client factory reads
+        // mod[exportName] (UI package chunks dropped `export default`).
+        exportName: island.exportName,
         strategy: resolveIslandHydrate(island.hydrate, ctx.phase3.upgradeStrategy),
         ...resolveIslandSsrDsd(island),
         reason: island.reason,
