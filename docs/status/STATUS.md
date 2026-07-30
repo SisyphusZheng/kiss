@@ -90,6 +90,13 @@ cache/ISR, auth packages (0.44 or recipes).
 | `0.44.0`          | Production runtime (session/cache/OTel/streaming)                    |
 | `1.0.0`           | Stable five-package product                                          |
 
+> **Version hole — `0.42.0-alpha.8` is skipped / npm-unpublished.** Its git tag
+> (`0ec10568`) and GitHub release exist, but the npm publish never completed, so
+> `@openelement/*@0.42.0-alpha.8` is **absent from the registry**. It was
+> immediately superseded by `0.42.0-alpha.9`, the first fully npm-published
+> `0.42.0` prerelease. Treat alpha.8 as a skipped prerelease, not a real
+> release. Post-mortem: `docs/release/v0.42.0-alpha.8.md`.
+
 ## Evidence and workflow
 
 - Mandatory workflow: [`PROJECT_WORKFLOW.md`](../governance/PROJECT_WORKFLOW.md)

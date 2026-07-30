@@ -27,8 +27,32 @@ evidence.
 - Hygiene: removed the redundant `app` re-export layer (#634); dropped a dead
   router data-context module; trimmed unused exports across `packages/*`
   (#633/#635/#642/#643/#644).
-- Release evidence: closure recorded at the tagged merge commit; tag
-  `v0.42.0-alpha.9` is unpublished-to-npm (source train only).
+- Release evidence: closure recorded at the tagged merge commit; all five packages
+  (`@openelement/element`, `app`, `adapter-vite`, `ui`, `create`) are published to npm
+  with `dist-tag alpha=0.42.0-alpha.9`.
+
+## 0.42.0-alpha.8
+
+- **Incomplete release (npm-unpublished).** `v0.42.0-alpha.8` was cut as a
+  mechanical version bump with a git tag and GitHub release, but the npm publish
+  step failed and the packages were never published. It is a **version hole**:
+  `git tag v0.42.0-alpha.8` and the GitHub release exist, but
+  `@openelement/*@0.42.0-alpha.8` is absent from the registry and no AutoFlow3
+  closure was written.
+- Immediately superseded by `0.42.0-alpha.9`, the first fully npm-published
+  `0.42.0` prerelease. Retained as-is per `docs/release/v0.42.0-alpha.8.md`
+  (no closure by design). See that note for the post-mortem.
+
+## 0.42.0-alpha.7
+
+- Patch release (publish-existing): `0.42.0-alpha.6` → `0.42.0-alpha.7`,
+  status `completed`. All five packages published to npm with `dist-tag alpha`;
+  a full AutoFlow3 evidence chain was recorded (verify source version → main CI
+  → artifact gate → publish npm → verify npm versions/dist-tags → consumer
+  smoke → third-party Web Component smoke → stage/commit evidence → tag → push
+  → GitHub release).
+- Tag commit `e0e46281`; publish run `30431305870`. `/@fs/` Windows verification
+  status tracked in `docs/current/HYDRATION_CONTRACT.md` (Known limitations).
 
 ## 0.42.0-alpha.6
 
