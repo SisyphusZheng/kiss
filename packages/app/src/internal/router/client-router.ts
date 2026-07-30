@@ -9,6 +9,9 @@
 // (+ formData for actions) and signals failure by throwing (#570, ADR-0119
 // frozen semantics — types clarified, runtime unchanged).
 import type { SpaActionContext, SpaLoaderContext } from '@openelement/element';
+import { createLogger } from '@openelement/element';
+
+const log = createLogger('router');
 
 export type RouterMode = 'history' | 'hash' | 'auto';
 
@@ -374,10 +377,10 @@ export function createRouter(options: RouterOptions): RouterInstance {
     // during argument evaluation would crash the router.
     try {
       void Promise.resolve(options.onChange?.()).catch((err) => {
-        console.error('[router] onChange failed:', err);
+        log.error('onChange failed:', err);
       });
     } catch (err) {
-      console.error('[router] onChange failed:', err);
+      log.error('onChange failed:', err);
     }
   }
 
@@ -484,7 +487,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
         // Intentional fail-open: a rejected guard or a router error must not
         // wedge the queue or leave the UI inconsistent with the address bar,
         // so we log and converge to the real URL instead of rethrowing.
-        console.error('[router] browser navigation failed:', err);
+        log.error('browser navigation failed:', err);
         rematch();
         notifyChange();
       });

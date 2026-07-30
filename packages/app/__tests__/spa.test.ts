@@ -1,5 +1,6 @@
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { defineApp, definePage } from '../src/index.ts';
+import { assertValidTagName } from '../src/spa.ts';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
 
@@ -265,5 +266,65 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
       if (descriptor) Object.defineProperty(globalThis, key, descriptor);
       else delete (globalThis as Record<string, unknown>)[key];
     }
+  }
+});
+
+Deno.test('assertValidTagName accepts valid tag names and rejects invalid ones (#642)', () => {
+  assertValidTagName('app-home');
+  assertValidTagName('x');
+  assertValidTagName('a1-b2');
+  assertThrows(() => assertValidTagName('Invalid'), SyntaxError);
+  assertThrows(() => assertValidTagName('UPPER'), SyntaxError);
+  assertThrows(() => assertValidTagName('bad_name'), SyntaxError);
+  assertThrows(() => assertValidTagName(''), SyntaxError);
+  assertThrows(() => assertValidTagName('with space'), SyntaxError);
+});
+
+Deno.test('unregistered tagName warns and renders nothing instead of an inert host (#642)', async () => {
+  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  const originalLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
+  const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  const originalCustomElements = Object.getOwnPropertyDescriptor(globalThis, 'customElements');
+
+  const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { querySelector: () => root, createElement: () => ({}) },
+  });
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: { protocol: 'https:', pathname: '/', search: '', hash: '', href: 'https://example.test/' },
+  });
+  Object.defineProperty(globalThis, 'history', { configurable: true, value: { pushState() {}, replaceState() {} } });
+  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  Object.defineProperty(globalThis, 'customElements', { configurable: true, value: { get: () => undefined } });
+
+  const warnings: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => warnings.push(args.join(' '));
+
+  const app = defineApp({ mode: 'spa', routes: [{ path: '/', tagName: 'home-page' }] });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertStringIncludes(warnings.join('\n'), 'unregistered tagName: home-page');
+    // Empty render: root was cleared and nothing appended.
+    assertEquals(root.innerHTML, '');
+  } finally {
+    app.dispose();
+    console.warn = originalWarn;
+    globalThis.addEventListener = originalAdd;
+    globalThis.removeEventListener = originalRemove;
+    if (originalDocument) Object.defineProperty(globalThis, 'document', originalDocument);
+    else delete (globalThis as Record<string, unknown>).document;
+    if (originalLocation) Object.defineProperty(globalThis, 'location', originalLocation);
+    else delete (globalThis as Record<string, unknown>).location;
+    if (originalHistory) Object.defineProperty(globalThis, 'history', originalHistory);
+    else delete (globalThis as Record<string, unknown>).history;
+    if (originalCustomElements) Object.defineProperty(globalThis, 'customElements', originalCustomElements);
+    else delete (globalThis as Record<string, unknown>).customElements;
   }
 });

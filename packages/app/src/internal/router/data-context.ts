@@ -12,7 +12,11 @@
  *
  * v0.41.0: Replaced module-level currentState with render-scoped stack.
  */
-import { currentActionData, currentLoaderData } from './data-context-store.ts';
+import {
+  currentActionData,
+  currentLoaderData,
+  __activeDataContext,
+} from './data-context-store.ts';
 
 // ─── Public hooks ────────────────────────────────────────────────
 
@@ -26,7 +30,7 @@ import { currentActionData, currentLoaderData } from './data-context-store.ts';
  * ```
  */
 export function useLoaderData<T = unknown>(): T {
-  return currentLoaderData() as T;
+  return currentLoaderData(__activeDataContext()) as T;
 }
 
 /**
@@ -40,5 +44,5 @@ export function useLoaderData<T = unknown>(): T {
  * ```
  */
 export function useActionData<T = unknown>(): T | undefined {
-  return currentActionData() as T | undefined;
+  return currentActionData(__activeDataContext()) as T | undefined;
 }
