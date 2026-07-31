@@ -67,7 +67,7 @@ export function validateReleaseEvidenceClosure(input: ReleaseEvidenceClosureInpu
   const kind = input.finalEvidence.kind;
   const isReleasePath = kind === 'release' || kind === 'approved-release';
   const recordsNpmPublish = input.finalEvidence.steps.some((step) =>
-    /publish npm|verify npm|npm (consumer|third-party)|npm versions|dist-tag/i.test(step.name),
+    /publish npm|verify npm|npm (consumer|third-party)|npm versions|dist-tag/i.test(step.name)
   );
   if (isPrerelease && isReleasePath && !recordsNpmPublish) {
     failures.push(

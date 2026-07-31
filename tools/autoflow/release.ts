@@ -1264,7 +1264,9 @@ async function persistFailedReleaseEvidence(
         'git',
         'commit',
         '-m',
-        `docs(release): record failed ${releaseTag(evidence.targetVersion)} evidence (${evidence.id})`,
+        `docs(release): record failed ${
+          releaseTag(evidence.targetVersion)
+        } evidence (${evidence.id})`,
       ]);
     }
     await runCaptured(['git', 'push', 'origin', branch]);

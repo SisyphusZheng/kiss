@@ -332,10 +332,10 @@ type TimelineEntry = {
 
 const entries: TimelineEntry[] = [
   {
-    version: 'v0.42.0-alpha.9',
-    theme: 'audit-to-plan execution',
+    version: 'v0.42.0-alpha.10',
+    theme: 'release-chain integrity sweep',
     copy:
-      'The independent audit converts into an executable remediation plan: 13 tracked issues (#632–#644) close across the action protocol, islands hydration, and the version-truth CI gate that keeps docs, packages and build output in lockstep.',
+      'The stabilization train closes eight audit findings (#646–#653): the autoflow3 evidence chain gains a version-hole guard and failed-evidence persistence, ISR is honestly demoted to @experimental with a documented KV adapter path, silent empty catches gain dev logging, and the changelog backfills a skipped prerelease version hole.',
     state: 'stable',
     stamp: 'CURRENT',
   },
@@ -427,7 +427,7 @@ export class RoadmapPage extends OpenElement {
               {entries.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.9' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.10' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

@@ -131,8 +131,7 @@ async function runNestedOpenButtonProbe(page: Page): Promise<NestedSubmitOutcome
         __openElementActionData?: unknown;
         connectedCallback(): void {
           const root = this.attachShadow({ mode: 'open' });
-          root.innerHTML =
-            '<output id="loader-data"></output><output id="action-data"></output>' +
+          root.innerHTML = '<output id="loader-data"></output><output id="action-data"></output>' +
             '<probe-card></probe-card>';
           const loaderOut = root.querySelector('#loader-data');
           const actionOut = root.querySelector('#action-data');

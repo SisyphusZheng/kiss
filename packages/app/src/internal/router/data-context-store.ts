@@ -84,7 +84,10 @@ function _devMode(): boolean {
     }
   } catch (e) {
     /* anomaly only: Workers hit the `undefined Deno` branch above and never reach here */
-    console.warn('[data-context-store] Unexpected error reading DENO_ENV, defaulting to non-dev mode', e);
+    console.warn(
+      '[data-context-store] Unexpected error reading DENO_ENV, defaulting to non-dev mode',
+      e,
+    );
   }
   return false;
 }

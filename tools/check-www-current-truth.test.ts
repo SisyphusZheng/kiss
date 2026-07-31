@@ -52,7 +52,7 @@ Deno.test('www-truth: v-prefixed retired version is flagged', async () => {
 });
 
 Deno.test('www-truth: short alpha.N retired form is flagged', async () => {
-  await withFixture('export const x = "published in alpha.10";\n', ({ code, stderr }) => {
+  await withFixture('export const x = "published in alpha.9";\n', ({ code, stderr }) => {
     assertEquals(code, 1);
     assert(stderr.includes('retired prerelease current claim'));
   });
