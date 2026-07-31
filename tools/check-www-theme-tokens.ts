@@ -21,7 +21,7 @@ const SCAN_ROOTS = ['www/app'];
 const SOURCE = /\.(ts|tsx)$/;
 const HEX_LONG = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/;
 const HEX_SHORT = /#(?:[0-9a-fA-F]{3,4})\b/;
-const CSS_KEYWORD = /color|background|border|shadow|fill|stroke|gradient|outline/i;
+const CSS_KEYWORD = /\b(?:color|background|border|shadow|fill|stroke|gradient|outline)\b/i;
 const FONT_FAMILY = /font-family\s*:\s*([^;]+);/;
 const FONT_SIZE_LITERAL = /font-size\s*:\s*[0-9.]+(?:px|rem|em)\b/;
 

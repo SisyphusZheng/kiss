@@ -25,6 +25,7 @@ Deno.test('theme-token gate catches short hex only in CSS contexts', () => {
   const prose = findThemeTokenFailures('x.tsx', [
     'External adopter #390 and continued browser evidence.',
     '<strong>#390</strong>',
+    'Closes eight audit findings (#646–#653) and the changelog backfills a skipped hole.',
   ]);
   assertEquals(prose.length, 0);
 });
