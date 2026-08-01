@@ -79,6 +79,11 @@ export class OpenBadge extends OpenElement {
     );
   }
 
+  override attributeChangedCallback(_name: string, old: string | null, val: string | null): void {
+    if (old === val) return;
+    this.update();
+  }
+
   private _getStr(attr: string, def: string): string {
     return this.getAttribute(attr) || def;
   }

@@ -155,6 +155,18 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
   assert(readTemplate('gitignore.tmpl').includes('dist/'));
 });
 
+Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#804)', () => {
+  const viteConfig = readTemplate('vite.config.ts');
+  const brand = viteConfig.match(/--brand:(#[0-9a-fA-F]{3,8})/)?.[1];
+  const uiTokens = readFileSync(
+    join(packageDir, '..', 'ui', 'src', 'open-props-tokens.css'),
+    'utf-8',
+  );
+  const violet6 = uiTokens.match(/--violet-6:\s*(#[0-9a-fA-F]{3,8})/)?.[1];
+  assert(brand, 'starter vite.config.ts must define a --brand token');
+  assertEquals(brand, violet6);
+});
+
 Deno.test('source CLI generates a complete, token-free starter', async () => {
   const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-source-' });
   try {

@@ -94,14 +94,9 @@ export function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
 }
 
 function inferAttributeType(name: string): string {
-  if (
-    name === 'disabled' || name === 'compact' || name === 'open' || name === 'home' ||
-    name === 'required'
-  ) {
+  if (name === 'disabled' || name === 'open' || name === 'required') {
     return 'boolean';
   }
-  if (name === 'step') return 'number';
-  if (name === 'nav-items' || name === 'header-nav' || name === 'locales') return 'array';
   return 'string';
 }
 
@@ -236,8 +231,16 @@ function parseDescription(text: string): string {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (line.startsWith('* @openelement/ui')) {
-      const next = lines[i + 1]?.replace(/^\s*\*\s?/, '').trim();
-      if (next && !next.startsWith('*') && !next.startsWith('@')) return next;
+      // The header line is followed by a blank comment line before the prose
+      // description — skip blank lines instead of giving up on the first one.
+      for (let j = i + 1; j < lines.length; j++) {
+        const next = lines[j].replace(/^\s*\*\s?/, '').trim();
+        if (!next) continue;
+        // Stop at the tag block (@csspart/@slot/...) or the comment end
+        // without finding prose.
+        if (next.startsWith('@') || next.startsWith('/')) return '';
+        return next;
+      }
     }
   }
   return '';
@@ -310,11 +313,9 @@ function buildDeclaration(meta: ComponentMeta): OpenElementDeclaration {
 function buildManifest(): OpenElementPackageManifest {
   const metas = readComponentSources();
   const declarations = metas.map(buildDeclaration);
-  const modules = metas.map((meta) => ({
-    path: `./${meta.file.replace(/\.tsx$/, '.js')}`,
-    exports: [{ name: meta.className, path: `./${meta.file.replace(/\.tsx$/, '.js')}` }],
-    declarations: [meta.tagName],
-  }));
+  // No `modules` block (#797): it emitted CEM-style paths like
+  // `./open-card.js` that do not exist in the published package (`src/**`),
+  // and the only manifest consumer (island-scanner) reads `declarations`.
 
   return {
     schemaVersion: '1.0.0',
@@ -326,7 +327,6 @@ function buildManifest(): OpenElementPackageManifest {
     homepage: 'https://openelement.org',
     repository: 'https://github.com/open-element/openelement',
     declarations,
-    modules,
   };
 }
 

@@ -12,7 +12,7 @@
       "tagName": "open-card",
       "className": "OpenCard",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Minimal card container with optional header and footer.",
       "attributes": [
         {
           "name": "variant",
@@ -57,7 +57,7 @@
       "tagName": "open-callout",
       "className": "OpenCallout",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Callout/notice box for inline documentation alerts.",
       "attributes": [
         {
           "name": "type",
@@ -103,7 +103,7 @@
       "tagName": "open-button",
       "className": "OpenButton",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Minimal button component following Swiss International Style.",
       "attributes": [
         {
           "name": "variant",
@@ -169,7 +169,7 @@
       "tagName": "open-input",
       "className": "OpenInput",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Minimal input field following Swiss International Style.",
       "attributes": [
         {
           "name": "type",
@@ -267,7 +267,7 @@
       "tagName": "open-theme-toggle",
       "className": "OpenThemeToggle",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Theme toggle Reactive DSD component for Dark/Light mode switching.",
       "attributes": [
         {
           "name": "theme",
@@ -309,7 +309,7 @@
       "tagName": "open-code-block",
       "className": "OpenCodeBlock",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Code block with copy button AND syntax highlighting via Prism.",
       "slots": [
         {
           "name": "",
@@ -335,7 +335,7 @@
       "tagName": "open-badge",
       "className": "OpenBadge",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Compact status badge backed by Open Props semantic tokens.",
       "attributes": [
         {
           "name": "tone",
@@ -373,7 +373,7 @@
       "tagName": "open-dialog",
       "className": "OpenDialog",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "Dialog component using native <dialog> element + popover API.",
       "attributes": [
         {
           "name": "open",
@@ -472,7 +472,7 @@
       "tagName": "open-tabs",
       "className": "OpenTabs",
       "superclassName": "OpenElement",
-      "description": "",
+      "description": "WAI-ARIA tabs pattern. The slotted [slot=\"tab\"] and [slot=\"panel\"] elements",
       "slots": [
         {
           "name": "tab",
@@ -491,128 +491,6 @@
         "module": "@openelement/ui/open-tabs",
         "export": "OpenTabs"
       }
-    }
-  ],
-  "modules": [
-    {
-      "path": "./open-card.js",
-      "exports": [
-        {
-          "name": "OpenCard",
-          "path": "./open-card.js"
-        }
-      ],
-      "declarations": [
-        "open-card"
-      ]
-    },
-    {
-      "path": "./open-callout.js",
-      "exports": [
-        {
-          "name": "OpenCallout",
-          "path": "./open-callout.js"
-        }
-      ],
-      "declarations": [
-        "open-callout"
-      ]
-    },
-    {
-      "path": "./open-button.js",
-      "exports": [
-        {
-          "name": "OpenButton",
-          "path": "./open-button.js"
-        }
-      ],
-      "declarations": [
-        "open-button"
-      ]
-    },
-    {
-      "path": "./open-input.js",
-      "exports": [
-        {
-          "name": "OpenInput",
-          "path": "./open-input.js"
-        }
-      ],
-      "declarations": [
-        "open-input"
-      ]
-    },
-    {
-      "path": "./open-theme-toggle.js",
-      "exports": [
-        {
-          "name": "OpenThemeToggle",
-          "path": "./open-theme-toggle.js"
-        }
-      ],
-      "declarations": [
-        "open-theme-toggle"
-      ]
-    },
-    {
-      "path": "./open-code-block.js",
-      "exports": [
-        {
-          "name": "OpenCodeBlock",
-          "path": "./open-code-block.js"
-        }
-      ],
-      "declarations": [
-        "open-code-block"
-      ]
-    },
-    {
-      "path": "./open-badge.js",
-      "exports": [
-        {
-          "name": "OpenBadge",
-          "path": "./open-badge.js"
-        }
-      ],
-      "declarations": [
-        "open-badge"
-      ]
-    },
-    {
-      "path": "./open-dialog.js",
-      "exports": [
-        {
-          "name": "OpenDialog",
-          "path": "./open-dialog.js"
-        }
-      ],
-      "declarations": [
-        "open-dialog"
-      ]
-    },
-    {
-      "path": "./open-dropdown.js",
-      "exports": [
-        {
-          "name": "OpenDropdown",
-          "path": "./open-dropdown.js"
-        }
-      ],
-      "declarations": [
-        "open-dropdown"
-      ]
-    },
-    {
-      "path": "./open-tabs.js",
-      "exports": [
-        {
-          "name": "OpenTabs",
-          "path": "./open-tabs.js"
-        }
-      ],
-      "declarations": [
-        "open-tabs"
-      ]
     }
   ]
 }

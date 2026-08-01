@@ -54,8 +54,10 @@ Existing per-component imports remain stable across this layering change.
 
 ## Package Manifest
 
-`@openelement/ui` exports a CEM-compatible `manifest` so openElement can include these
-components in package manifest scanning:
+`@openelement/ui` exports a generated `manifest` of component declarations
+(attributes, events, slots, CSS parts, plus openElement SSR/DSD/hydration
+metadata) so openElement can include these components in package manifest
+scanning:
 
 ```ts
 import { openElement } from '@openelement/adapter-vite';

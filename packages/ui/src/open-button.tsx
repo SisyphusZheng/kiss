@@ -203,8 +203,18 @@ export class OpenButton extends OpenElement {
     if (el instanceof HTMLButtonElement) {
       el.disabled = this.hasAttribute('disabled');
     }
-    if (el instanceof HTMLAnchorElement && this.hasAttribute('disabled')) {
-      el.setAttribute('aria-disabled', 'true');
+    if (el instanceof HTMLAnchorElement) {
+      // Anchor branch: keep href/aria-disabled in sync in BOTH directions
+      // (#757). A disabled anchor loses its href (CSS pointer-events:none
+      // alone still allows keyboard Enter / programmatic click navigation);
+      // re-enabling must restore the href and drop aria-disabled.
+      if (this.hasAttribute('disabled')) {
+        el.setAttribute('href', '');
+        el.setAttribute('aria-disabled', 'true');
+      } else {
+        el.setAttribute('href', this.getAttribute('href') || '');
+        el.removeAttribute('aria-disabled');
+      }
     }
   }
 
@@ -222,6 +232,11 @@ export class OpenButton extends OpenElement {
   }
 
   private _handleClick = (_e: Event): void => {
+    // Disabled guard (#757): native <button disabled> blocks clicks by itself,
+    // but the anchor branch (and programmatic click()) can still reach this
+    // handler — a disabled open-button must not fire open-click nor submit.
+    if (this.hasAttribute('disabled')) return;
+
     this.dispatchEvent(new CustomEvent('open-click', { bubbles: true, composed: true }));
 
     // An <a> (href) branch is a navigation control, not a form control — it must

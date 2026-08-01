@@ -178,16 +178,26 @@ export class OpenInput extends OpenElement {
 
   override attributeChangedCallback(name: string, old: string | null, val: string | null): void {
     if (old === val) return;
-    if (name === 'disabled' || name === 'error') {
-      this._syncDOM();
-      this._updateStates();
-    } else if (name === 'value') {
+    if (name === 'value') {
+      // Sync in place instead of re-rendering: _handleInput writes `value`
+      // back on every keystroke, and a re-render would replace the focused
+      // <input> mid-typing.
       this._syncDOM();
       if (this._internals) {
         this._internals.setFormValue(val || '');
       }
-    } else {
+      return;
+    }
+    if (name === 'disabled' || name === 'error') {
+      this._updateStates();
+    }
+    if (name === 'disabled') {
+      // Sync in place so toggling disabled does not drop focus.
       this._syncDOM();
+    } else {
+      // label/error/type/placeholder/name/required change the rendered tree
+      // (label and error elements appear or disappear), so re-render (#770).
+      this.update();
     }
   }
 

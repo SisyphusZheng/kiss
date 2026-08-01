@@ -22,7 +22,6 @@ deno task dev
 - `deno.json` - starter authoring imports and build tasks
 - `vite.config.ts` - Vite build configuration with the openElement plugin
 - `app/` - application directory with starter pages and islands
-- `dist/` - static site output produced by `deno task build`
 
 The generated import map intentionally keeps protocol and build internals out of
 the starter surface. Advanced contracts remain available through the published

@@ -817,6 +817,73 @@ Deno.test('open-input: ids are instance-unique and aria wiring stays consistent'
   assertEquals(firstInput.props['aria-errormessage'], firstError.props.id);
 });
 
+Deno.test('open-input: error attribute add/remove re-renders the message (#770)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  const states = new Set<string>();
+  (instance as unknown as { _internals: unknown })._internals = {
+    states,
+    setFormValue: () => {},
+  };
+  let updates = 0;
+  (instance as unknown as { update: () => void }).update = () => {
+    updates++;
+  };
+
+  // setAttribute('error', …) must render the message, not just the border.
+  instance.setAttribute('error', 'Required');
+  instance.attributeChangedCallback('error', null, 'Required');
+  assertEquals(updates, 1);
+  assertEquals(states.has('invalid'), true);
+  let vnode = instance.render() as VNode;
+  assertExists(findByPart(vnode, 'error'));
+  assertStringIncludes(vnodeText(vnode), 'Required');
+
+  // removeAttribute('error') must drop the message together with the state.
+  instance.removeAttribute('error');
+  instance.attributeChangedCallback('error', 'Required', null);
+  assertEquals(updates, 2);
+  assertEquals(states.has('invalid'), false);
+  vnode = instance.render() as VNode;
+  assertEquals(findByPart(vnode, 'error'), undefined);
+});
+
+Deno.test('open-input: label attribute change re-renders (#770)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  let updates = 0;
+  (instance as unknown as { update: () => void }).update = () => {
+    updates++;
+  };
+
+  instance.setAttribute('label', 'Email');
+  instance.attributeChangedCallback('label', null, 'Email');
+  assertEquals(updates, 1);
+  const vnode = instance.render() as VNode;
+  assertExists(findByPart(vnode, 'label'));
+  assertStringIncludes(vnodeText(vnode), 'Email');
+});
+
+Deno.test('open-input: value change still syncs in place without re-render (#770)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  const formValues: string[] = [];
+  (instance as unknown as { _internals: unknown })._internals = {
+    setFormValue: (v: string) => formValues.push(v),
+  };
+  let updates = 0;
+  (instance as unknown as { update: () => void }).update = () => {
+    updates++;
+  };
+
+  // `value` is written back on every keystroke — re-rendering here would
+  // replace the focused <input> mid-typing, so it must sync in place.
+  instance.setAttribute('value', 'typed');
+  instance.attributeChangedCallback('value', null, 'typed');
+  assertEquals(updates, 0);
+  assertEquals(formValues, ['typed']);
+});
+
 Deno.test('open-code-block: has correct tagName and copy button', async () => {
   const module = asComponentModule(await import('../src/open-code-block.tsx'));
   assertEquals(module.tagName, 'open-code-block');
@@ -932,7 +999,7 @@ Deno.test('open-theme-toggle: click toggles theme', async () => {
   assertEquals(signalValue<string>(after.props['data-theme']), 'dark');
 });
 
-Deno.test('open-theme-toggle: attribute and click share document and storage propagation', async () => {
+Deno.test('open-theme-toggle: attribute applies without persisting; explicit toggle persists (#804)', async () => {
   const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
   const originalDocumentElement = document.documentElement;
   const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
@@ -956,11 +1023,45 @@ Deno.test('open-theme-toggle: attribute and click share document and storage pro
     const instance = new OpenThemeToggle();
     instance.attributeChangedCallback('theme', null, 'light');
     assertEquals(rootAttributes.get('data-theme'), 'light');
-    assertEquals(stored.get('open-theme'), 'light');
+    // #804: the attribute/init path applies and propagates but must NOT lock
+    // the theme into localStorage.
+    assertEquals(stored.has('open-theme'), false);
 
     clickVNode(instance.render() as VNode);
     assertEquals(rootAttributes.get('data-theme'), 'dark');
     assertEquals(stored.get('open-theme'), 'dark');
+  } finally {
+    Object.defineProperty(document, 'documentElement', {
+      configurable: true,
+      value: originalDocumentElement,
+    });
+    if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+    else delete (globalThis as Record<string, unknown>).localStorage;
+  }
+});
+
+Deno.test('open-theme-toggle: first-visit init does not write localStorage (#804)', async () => {
+  const { OpenThemeToggle } = await import('../src/open-theme-toggle.tsx');
+  const originalDocumentElement = document.documentElement;
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const writes: string[] = [];
+  Object.defineProperty(document, 'documentElement', {
+    configurable: true,
+    value: { dataset: {}, style: { colorScheme: '' }, setAttribute() {} },
+  });
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: () => null,
+      setItem: (key: string, value: string) => writes.push(`${key}=${value}`),
+    },
+  });
+  try {
+    const instance = new OpenThemeToggle();
+    (instance as unknown as { _initTheme(): void })._initTheme();
+    // Persisting here would lock the resolved theme and override future
+    // OS-level prefers-color-scheme switches.
+    assertEquals(writes, []);
   } finally {
     Object.defineProperty(document, 'documentElement', {
       configurable: true,
@@ -1307,6 +1408,30 @@ Deno.test('open-callout: default type is info', async () => {
   const instance = new OpenCallout();
   const vnode = instance.render() as VNode;
   assertStringIncludes(String(vnode.props.className), 'callout--info');
+});
+
+Deno.test('open-badge: tone/size attribute changes trigger re-render (#769)', async () => {
+  const { OpenBadge } = await import('../src/open-badge.tsx');
+  const instance = new OpenBadge();
+  let updates = 0;
+  (instance as unknown as { update: () => void }).update = () => {
+    updates++;
+  };
+
+  // setAttribute('tone', …) after connect must take effect, not no-op.
+  instance.setAttribute('tone', 'success');
+  instance.attributeChangedCallback('tone', null, 'success');
+  assertEquals(updates, 1);
+  assertStringIncludes(String((instance.render() as VNode).props.className), 'badge--success');
+
+  instance.setAttribute('size', 'sm');
+  instance.attributeChangedCallback('size', null, 'sm');
+  assertEquals(updates, 2);
+  assertStringIncludes(String((instance.render() as VNode).props.className), 'badge--sm');
+
+  // No-op change (same value) must not re-render.
+  instance.attributeChangedCallback('tone', 'success', 'success');
+  assertEquals(updates, 2);
 });
 
 Deno.test('open-dropdown: has correct tagName and toggle structure', async () => {

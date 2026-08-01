@@ -226,9 +226,9 @@ export class OpenDialog extends OpenElement {
   }
 
   private _handleClose(): void {
+    // removeAttribute('open') fires attributeChangedCallback, which already
+    // runs _updateStates() + _syncDialogElement() — no duplicate sync here.
     this.removeAttribute('open');
-    this._updateStates();
-    this._syncDialogElement();
     this.dispatchEvent(new CustomEvent('open-dialog-close', { bubbles: true, composed: true }));
   }
 

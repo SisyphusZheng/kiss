@@ -151,10 +151,12 @@ export class OpenThemeToggle extends OpenElement {
       console.debug('[open-theme-toggle] root theme propagation unavailable:', e);
     }
 
+    // Apply + dispatch only. Persistence to localStorage happens exclusively
+    // in _handleToggle (#804): writing on the init path would lock the
+    // resolved theme on first visit and override future OS-level switches.
     if (changed) {
       this._lastPropagatedTheme = theme;
       this._dispatchThemeChange(theme);
-      this._persistTheme(theme);
     }
   }
 
@@ -221,6 +223,8 @@ export class OpenThemeToggle extends OpenElement {
   private _handleToggle(): void {
     const theme = this._theme.value === 'light' ? 'dark' : 'light';
     this._applyTheme(theme);
+    // Only an explicit user toggle persists the choice (#804).
+    this._persistTheme(theme);
   }
 
   private _dispatchThemeChange(theme: 'dark' | 'light'): void {
