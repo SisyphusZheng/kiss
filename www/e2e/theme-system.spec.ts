@@ -10,23 +10,12 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
+import { deepQuery } from './helpers.js';
 
 async function clickThemeToggle(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('open-theme-toggle');
-      if (direct) return direct;
-      const all = root.querySelectorAll?.('*') ?? [];
-      for (const el of Array.from(all)) {
-        if (el.shadowRoot) {
-          const found = visit(el.shadowRoot);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    const toggle = visit(document);
-    const btn = toggle?.shadowRoot?.querySelector('button') as HTMLButtonElement | null;
+  const toggle = await deepQuery(page, 'open-theme-toggle');
+  await toggle?.evaluate((el) => {
+    const btn = el.shadowRoot?.querySelector('button') as HTMLButtonElement | null;
     btn?.click();
   });
 }
@@ -47,21 +36,10 @@ async function waitForThemeChange(page: Page, before: string | null): Promise<vo
  * so we must query through the shadow root to find it.
  */
 async function waitForToggleReady(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('open-theme-toggle');
-      if (direct) return direct;
-      const all = root.querySelectorAll?.('*') ?? [];
-      for (const el of Array.from(all)) {
-        if (el.shadowRoot) {
-          const found = visit(el.shadowRoot);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    return visit(document)?.hasAttribute('data-theme') === true;
-  }, { timeout: 10000 });
+  await expect.poll(async () => {
+    const toggle = await deepQuery(page, 'open-theme-toggle');
+    return (await toggle?.evaluate((el) => el.hasAttribute('data-theme'))) === true;
+  }, { timeout: 10000 }).toBe(true);
 }
 
 test.describe('Theme Toggle', () => {
@@ -72,40 +50,12 @@ test.describe('Theme Toggle', () => {
   });
 
   test('theme toggle element exists', async ({ page }) => {
-    const exists = await page.evaluate(() => {
-      const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('open-theme-toggle');
-        if (direct) return direct;
-        const all = root.querySelectorAll?.('*') ?? [];
-        for (const el of Array.from(all)) {
-          if (el.shadowRoot) {
-            const found = visit(el.shadowRoot);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      return visit(document) !== null;
-    });
-    expect(exists).toBe(true);
+    expect(await deepQuery(page, 'open-theme-toggle')).not.toBeNull();
   });
 
   test('theme toggle has shadow root', async ({ page }) => {
-    const hasShadowRoot = await page.evaluate(() => {
-      const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('open-theme-toggle');
-        if (direct) return direct;
-        const all = root.querySelectorAll?.('*') ?? [];
-        for (const el of Array.from(all)) {
-          if (el.shadowRoot) {
-            const found = visit(el.shadowRoot);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      return visit(document)?.shadowRoot !== null;
-    });
+    const toggle = await deepQuery(page, 'open-theme-toggle');
+    const hasShadowRoot = await toggle?.evaluate((el) => el.shadowRoot !== null);
     expect(hasShadowRoot).toBe(true);
   });
 

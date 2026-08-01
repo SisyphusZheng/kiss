@@ -21,6 +21,8 @@ const guideRoutes = [
   '/guide/islands-and-ssr',
   '/guide/deployment',
   '/guide/testing',
+  '/guide/migration',
+  '/guide/security',
 ];
 
 const architectureRoutes = [
@@ -119,6 +121,24 @@ test.describe('Unified page structure', () => {
       await page.goto(route);
       expect(await page.locator('open-section-frame').count()).toBeGreaterThan(0);
     }
+  });
+
+  test('design-system lab components render non-empty shadow roots', async ({ page }) => {
+    await page.goto('/architecture/design-system');
+    for (const tag of ['open-lab-stage', 'open-lab-panel', 'open-standards-visual']) {
+      const rendered = await page.locator(tag).evaluateAll(
+        (els) => els.filter((el) => (el.shadowRoot?.childElementCount ?? 0) > 0).length,
+      );
+      expect(rendered).toBeGreaterThan(0);
+    }
+  });
+
+  test('roadmap standards visual renders a non-empty shadow root', async ({ page }) => {
+    await page.goto('/roadmap');
+    const rendered = await page.locator('open-standards-visual').evaluateAll(
+      (els) => els.filter((el) => (el.shadowRoot?.childElementCount ?? 0) > 0).length,
+    );
+    expect(rendered).toBeGreaterThan(0);
   });
 
   test('blog articles SSR their outline and deterministic navigation without mojibake', async ({ page }) => {

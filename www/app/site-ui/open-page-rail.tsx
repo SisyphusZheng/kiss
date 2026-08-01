@@ -43,10 +43,11 @@ export default class OpenPageRail extends OpenElement {
         return;
       }
       for (const link of this.#links) {
-        link.toggleAttribute(
-          'aria-current',
-          link.hash === `#${visible.target.id}`,
-        );
+        if (link.hash === `#${visible.target.id}`) {
+          link.setAttribute('aria-current', 'location');
+        } else {
+          link.removeAttribute('aria-current');
+        }
       }
     }, { rootMargin: '-18% 0px -70% 0px', threshold: 0 });
     for (const target of targets) this.#observer.observe(target);

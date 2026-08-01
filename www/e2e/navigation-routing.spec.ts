@@ -19,22 +19,23 @@ test.describe('Direct URL Access', () => {
     { path: '/', titleContains: 'openElement' },
     { path: '/guide/getting-started', titleContains: 'openElement' },
     { path: '/guide/architecture', titleContains: 'openElement' },
-    { path: '/guide/islands', titleContains: 'openElement' },
-    { path: '/guide/dsd', titleContains: 'openElement' },
-    { path: '/guide/routing', titleContains: 'openElement' },
+    { path: '/guide/islands-and-ssr', titleContains: 'openElement' },
+    { path: '/architecture/dsd', titleContains: 'openElement' },
+    { path: '/guide/routing-and-data', titleContains: 'openElement' },
     { path: '/changelog', titleContains: 'openElement' },
     { path: '/roadmap', titleContains: 'openElement' },
-    { path: '/community', titleContains: 'openElement' },
+    { path: '/docs', titleContains: 'openElement' },
     { path: '/contributing', titleContains: 'openElement' },
-    { path: '/ui', titleContains: 'openElement' },
+    { path: '/apilist', titleContains: 'openElement' },
     { path: '/blog', titleContains: 'openElement' },
   ];
 
   for (const route of routes) {
     test(`"${route.path}" loads successfully with correct title`, async ({ page }) => {
-      await page.goto(route.path);
+      const response = await page.goto(route.path);
       await page.waitForLoadState('networkidle');
 
+      expect(response?.status()).toBeLessThan(400);
       const title = await page.title();
       expect(title).toContain(route.titleContains);
     });
@@ -100,13 +101,13 @@ test.describe('Link Navigation', () => {
       return links;
     });
 
-    if (guideLinks.length > 0) {
-      await page.goto(guideLinks[0]);
-      await page.waitForLoadState('networkidle');
+    expect(guideLinks.length).toBeGreaterThan(0);
 
-      const url = page.url();
-      expect(url).toContain('/guide/');
-    }
+    await page.goto(guideLinks[0]);
+    await page.waitForLoadState('networkidle');
+
+    const url = page.url();
+    expect(url).toContain('/guide/');
   });
 
   test('SPA navigation from home to guide swaps app shell and keeps sidebar', async ({ page }) => {

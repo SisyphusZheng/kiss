@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { deepQuery } from './helpers.js';
 
 test.describe('Docs Layout Structure', () => {
   test('getting started uses framework docs grid styles on desktop', async ({ page }) => {
@@ -6,22 +7,8 @@ test.describe('Docs Layout Structure', () => {
     await page.goto('/guide/getting-started');
     await page.waitForLoadState('networkidle');
 
-    const display = await page.evaluate(() => {
-      const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('.guide-grid');
-        if (direct) return direct;
-        const all = root.querySelectorAll?.('*') ?? [];
-        for (const el of Array.from(all)) {
-          if (el.shadowRoot) {
-            const found = visit(el.shadowRoot);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      const grid = visit(document);
-      return grid ? getComputedStyle(grid).display : null;
-    });
+    const grid = await deepQuery(page, '.guide-grid');
+    const display = await grid?.evaluate((el) => getComputedStyle(el).display);
 
     expect(display).toBe('grid');
   });

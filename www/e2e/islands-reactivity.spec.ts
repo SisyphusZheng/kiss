@@ -69,6 +69,14 @@ test.describe('Island Script Loading', () => {
       );
       return scripts.some((s) => s.src?.includes('client') || s.src?.includes('island'));
     });
+
+    const loaded = await page.evaluate(() => {
+      const scripts = Array.from(
+        document.querySelectorAll<HTMLScriptElement>('script[type="module"]'),
+      );
+      return scripts.some((s) => s.src?.includes('client') || s.src?.includes('island'));
+    });
+    expect(loaded).toBe(true);
   });
 
   test('component shadow roots remain available after island load', async ({ page }) => {

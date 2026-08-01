@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /**
- * @openelement/ui - open-layout
+ * www/site-ui - open-layout
  *
  * App layout component with header, sidebar, and footer.
  * Web Standards Lab: dark-first, cinematic at the brand surface and calm in
@@ -32,14 +32,17 @@
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { type Context, createContext, provideContext } from '@openelement/element';
-import { escapeAttr, escapeHtml } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
 import { normalizeLocalePath } from '@openelement/app/i18n';
+import { getStr } from './get-str.ts';
 import '@openelement/ui/open-theme-toggle';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
+// Locale path prefix. www/public/logo-home.js mirrors this pattern — public
+// scripts are static assets and cannot import app modules.
+const LOCALE_PREFIX_RE = /^\/(en|zh)(?:\/|$)/;
 const log = createLogger('ui');
 
 function isSafeLayoutUrl(url: string): boolean {
@@ -633,8 +636,6 @@ export class OpenLayout extends OpenElement {
     'nav-items',
     'header-nav',
     'logo-sub',
-    'github-url',
-    'edit-url',
     'locale',
     'locales',
   ];
@@ -646,13 +647,6 @@ export class OpenLayout extends OpenElement {
     return this._renderLayout();
   }
 
-  private _getStr(attr: string, def: string): string {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel];
-    if (prop !== undefined && prop !== null) return String(prop);
-    return this.getAttribute(attr) || def;
-  }
-
   private _getBool(attr: string): boolean {
     const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
     const prop = (this as Record<string, unknown>)[camel];
@@ -660,9 +654,9 @@ export class OpenLayout extends OpenElement {
     return this.hasAttribute(attr);
   }
 
-  // _currentPathWithoutLocale, _currentLocale, _locales, _switchPath(),
-  // _switchLabel(), _updateSwitch(), _localizePath()
-  // Locale path math goes through @openelement/app/i18n (normalizeLocalePath).
+  // Locale path math goes through @openelement/app/i18n (normalizeLocalePath);
+  // the module-level helpers above are localizePath, switchPath, switchLabel,
+  // and switchScopeNote.
 
   private _currentPath(): string {
     // SSR-safe: prefer attribute/prop set by renderDsd over URL detection
@@ -686,24 +680,12 @@ export class OpenLayout extends OpenElement {
 
   private _homeHref(): string {
     try {
-      const pathname = globalThis.location?.pathname || this._getStr('current-path', '/');
-      const locale = pathname.match(/^\/(en|zh)(?:\/|$)/)?.[1];
+      const pathname = globalThis.location?.pathname || getStr(this, 'current-path', '/');
+      const locale = pathname.match(LOCALE_PREFIX_RE)?.[1];
       return locale ? `/${locale}/` : '/';
     } catch {
       return '/';
     }
-  }
-
-  /** Compute GitHub edit URL from current path. */
-  private _computeEditUrl(): string {
-    const path = this._currentPath();
-    if (!path || path === '/') return '';
-    const EDIT_BASE = 'https://github.com/open-element/openelement/edit/main/www/app/routes';
-    const clean = path.replace(/\/$/, '').split('/').filter(Boolean);
-    // Remove locale prefix if present (en/, zh/)
-    if (['en', 'zh'].includes(clean[0])) clean.shift();
-    const filePath = clean.length === 0 ? 'index/index' : clean.join('/');
-    return `${EDIT_BASE}/${filePath}.tsx`;
   }
 
   private _navItems(): NavSection[] {
@@ -874,7 +856,7 @@ export class OpenLayout extends OpenElement {
   private _renderLayout() {
     const home = this._getBool('full-width') || this._getBool('home');
     const noSearch = this.hasAttribute('no-search');
-    const logoSub = this._getStr('logo-sub', '');
+    const logoSub = getStr(this, 'logo-sub', '');
     const locales = this._locales;
     const defaultLocale = this._defaultLocale;
     const currentLocale = this._currentLocale;
@@ -1242,7 +1224,7 @@ export class OpenLayout extends OpenElement {
   // v0.31 UI-shell debt: replace _replaceShadowRootFromLayout with signal-driven SPA nav.
   // Currently SPA navigation destroys the entire shadow DOM and rebuilds it from
   // fetched HTML, then manually re-attaches events in _setupDetailsToggle. This is
-  // incompatible with the signal architecture ?? we should make currentPath/navItems
+  // incompatible with the signal architecture — we should make currentPath/navItems
   // signals and let data-signal markers handle DOM updates reactively. Then the
   // _setupDetailsToggle hack (and this entire method) can be deleted.
   private _menuBtnHandler: ((e: Event) => void) | null = null;
@@ -1309,8 +1291,6 @@ export class OpenLayout extends OpenElement {
 
   private _closeMenu(): void {
     this.removeAttribute('menu-open');
-    const details = this.shadowRoot?.querySelector('details.mobile-menu');
-    if (details) details.removeAttribute('open');
     this._syncInert(false);
   }
 
@@ -1348,11 +1328,6 @@ export class OpenLayout extends OpenElement {
       else a.removeAttribute('aria-current');
     });
   }
-
-  // --- Utilities ---
-
-  private _esc = escapeHtml;
-  private _escAttr = escapeAttr;
 }
 
 export default OpenLayout;

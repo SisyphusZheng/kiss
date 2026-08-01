@@ -2,7 +2,7 @@
  * E2E: Internationalization (i18n)
  *
  * Verifies that the i18n system works correctly:
- *   - Default locale (zh) pages are accessible at root
+ *   - Default locale (en) pages are accessible at root
  *   - The default English locale uses canonical unprefixed routes
  *   - Chinese locale pages are accessible at /zh/
  *   - Locale switcher works
@@ -10,31 +10,25 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
+import { deepQuery } from './helpers.js';
 
 async function readDeepLayoutState(page: Page) {
-  return await page.evaluate(() => {
-    const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('open-layout');
-      if (direct) return direct;
-      const all = root.querySelectorAll?.('*') ?? [];
-      for (const el of Array.from(all)) {
-        if (el.shadowRoot) {
-          const found = visit(el.shadowRoot);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    const layout = visit(document);
-    const switchLink = layout?.shadowRoot?.querySelector('.lang-switch');
+  const layout = await deepQuery(page, 'open-layout');
+  const layoutState = await layout?.evaluate((el) => {
+    const switchLink = el.shadowRoot?.querySelector('.lang-switch');
     return {
-      htmlLang: document.documentElement.lang,
-      layoutLocale: layout?.getAttribute('locale'),
+      layoutLocale: el.getAttribute('locale'),
       switchHref: switchLink?.getAttribute('href'),
       switchText: switchLink?.textContent?.trim(),
-      title: document.title,
     };
   });
+  return {
+    htmlLang: await page.evaluate(() => document.documentElement.lang),
+    layoutLocale: layoutState?.layoutLocale,
+    switchHref: layoutState?.switchHref,
+    switchText: layoutState?.switchText,
+    title: await page.title(),
+  };
 }
 
 test.describe('Locale Routes', () => {
@@ -123,41 +117,18 @@ test.describe('Locale Switcher', () => {
     await page.waitForLoadState('networkidle');
     const before = await readDeepLayoutState(page);
 
-    await page.evaluate(() => {
-      const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('open-layout');
-        if (direct) return direct;
-        const all = root.querySelectorAll?.('*') ?? [];
-        for (const el of Array.from(all)) {
-          if (el.shadowRoot) {
-            const found = visit(el.shadowRoot);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      const layout = visit(document);
-      const link = layout?.shadowRoot?.querySelector('.lang-switch') as HTMLAnchorElement | null;
+    const layout = await deepQuery(page, 'open-layout');
+    await layout?.evaluate((el) => {
+      const link = el.shadowRoot?.querySelector('.lang-switch') as HTMLAnchorElement | null;
       link?.click();
     });
     await page.waitForURL(/\/zh\/?$/);
-    await page.waitForFunction(() => {
-      const visit = (root: Document | ShadowRoot | Element): Element | null => {
-        const direct = root.querySelector?.('open-layout');
-        if (direct) return direct;
-        const all = root.querySelectorAll?.('*') ?? [];
-        for (const el of Array.from(all)) {
-          if (el.shadowRoot) {
-            const found = visit(el.shadowRoot);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      const layout = visit(document);
-      return document.documentElement.lang === 'zh' &&
-        layout?.getAttribute('locale') === 'zh';
-    });
+    await expect.poll(async () => {
+      const lang = await page.evaluate(() => document.documentElement.lang);
+      const current = await deepQuery(page, 'open-layout');
+      const locale = await current?.evaluate((el) => el.getAttribute('locale'));
+      return lang === 'zh' && locale === 'zh';
+    }).toBe(true);
     const after = await readDeepLayoutState(page);
 
     expect(after.htmlLang).toBe('zh');
@@ -176,6 +147,30 @@ test.describe('i18n SSG Output', () => {
     // Check English blog
     const enRes = await page.goto('/blog');
     expect(enRes?.ok()).toBe(true);
+  });
+
+  test('English blog post pages contain no /zh/ links', async ({ page }) => {
+    const res = await page.goto('/blog/0001-keep-hono-vite-dev-server');
+    expect(res?.status()).toBeLessThan(400);
+    await page.waitForLoadState('networkidle');
+
+    const zhHrefs = await page.evaluate(() => {
+      const hrefs: string[] = [];
+      const visit = (root: Document | ShadowRoot) => {
+        root.querySelectorAll('a[href]').forEach((a) => {
+          const href = a.getAttribute('href');
+          if (href) hrefs.push(href);
+        });
+        root.querySelectorAll('*').forEach((el) => {
+          if (el.shadowRoot) visit(el.shadowRoot);
+        });
+      };
+      visit(document);
+      // The header language switcher legitimately links to the zh locale;
+      // the regression was post content/navigation linking into /zh/blog.
+      return hrefs.filter((href) => href.startsWith('/zh/blog'));
+    });
+    expect(zhHrefs).toEqual([]);
   });
 
   test('both locale versions of changelog exist', async ({ page }) => {

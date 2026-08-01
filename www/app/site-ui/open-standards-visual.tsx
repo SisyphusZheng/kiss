@@ -1,12 +1,13 @@
 /** @jsxImportSource @openelement/element */
 /**
- * @openelement/ui - open-standards-visual
+ * www/site-ui - open-standards-visual
  *
  * Product-art diagrams for the openElement standards lab website.
  */
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { getStr } from './get-str.ts';
 
 export const tagName = 'open-standards-visual';
 
@@ -262,7 +263,7 @@ export class OpenStandardsVisual extends OpenElement {
   static override observedAttributes = ['variant', 'motion', 'emphasis'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const variant = this._getStr('variant', 'hero');
+    const variant = getStr(this, 'variant', 'hero');
     const visualClass = this._visualClass();
     if (variant === 'routes') return this._routes(visualClass);
     if (variant === 'packages') return this._packages(visualClass);
@@ -270,17 +271,9 @@ export class OpenStandardsVisual extends OpenElement {
     return this._hero(visualClass);
   }
 
-  private _getStr(attr: string, def: string): string {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel] ??
-      (this as Record<string, unknown>)[attr];
-    if (prop !== undefined && prop !== null) return String(prop);
-    return this.getAttribute(attr) || def;
-  }
-
   private _visualClass(): string {
-    const motion = this._getStr('motion', 'auto') === 'off' ? 'still' : 'motion';
-    const emphasis = this._getStr('emphasis', 'normal') === 'high' ? 'high' : 'normal';
+    const motion = getStr(this, 'motion', 'auto') === 'off' ? 'still' : 'motion';
+    const emphasis = getStr(this, 'emphasis', 'normal') === 'high' ? 'high' : 'normal';
     return `visual visual--${emphasis} visual--${motion}`;
   }
 
@@ -436,3 +429,5 @@ export class OpenStandardsVisual extends OpenElement {
 }
 
 export default OpenStandardsVisual;
+
+defineCustomElement(tagName, OpenStandardsVisual);

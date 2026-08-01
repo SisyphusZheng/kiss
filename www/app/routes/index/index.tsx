@@ -296,16 +296,13 @@ export class DocsHome extends OpenElement {
           </div>
           <div class='scene-art'>
             <open-code-block>
-              <pre><code>{`import { defineElement, signal } from '@openelement/element'
+              <pre><code>{`import { defineElement } from '@openelement/element'
 
-export const Counter = defineElement(props => ({
-  count: { type: Number, default: 0, reflect: true },
-  render() {
-    return <button onClick={() => this.count++}>
-      {this.count}
-    </button>
-  }
-}))
+export const Counter = defineElement('open-counter', {
+  render: (props) => (
+    <button type="button">Count: {props.count ?? 0}</button>
+  ),
+})
 
 // SSR: <open-counter count="0"> + DSD shadow root.
 // No JavaScript required for first paint.`}</code></pre>

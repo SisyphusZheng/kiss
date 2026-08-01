@@ -22,6 +22,9 @@ export default class CinematicAtmosphere extends OpenElement {
   static override styles = [sheet];
   #frame = 0;
   #contextLost = false;
+  #observer: ResizeObserver | null = null;
+  #canvas: HTMLCanvasElement | null = null;
+  #onContextLost: ((event: Event) => void) | null = null;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -31,6 +34,13 @@ export default class CinematicAtmosphere extends OpenElement {
 
   override disconnectedCallback(): void {
     cancelAnimationFrame(this.#frame);
+    this.#observer?.disconnect();
+    this.#observer = null;
+    if (this.#canvas && this.#onContextLost) {
+      this.#canvas.removeEventListener('webglcontextlost', this.#onContextLost);
+    }
+    this.#canvas = null;
+    this.#onContextLost = null;
     super.disconnectedCallback();
   }
 
@@ -94,12 +104,15 @@ export default class CinematicAtmosphere extends OpenElement {
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
-    canvas.addEventListener('webglcontextlost', (event) => {
+    this.#observer = observer;
+    this.#canvas = canvas;
+    this.#onContextLost = (event: Event) => {
       event.preventDefault();
       this.#contextLost = true;
       cancelAnimationFrame(this.#frame);
       observer.disconnect();
-    }, { once: true });
+    };
+    canvas.addEventListener('webglcontextlost', this.#onContextLost, { once: true });
 
     const started = performance.now();
     const render = (now: number) => {

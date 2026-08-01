@@ -126,7 +126,6 @@ const openElementPlugins = openElement({
     import: new URL('./app/site-ui/open-layout.tsx', import.meta.url).pathname,
     props: {
       footerText: 'Built with OpenElement — Web Components-native application framework',
-      githubUrl: 'https://github.com/open-element/openelement',
     },
   },
   packageIslands: ['@openelement/ui'],

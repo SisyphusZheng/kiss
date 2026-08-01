@@ -1,13 +1,14 @@
 /** @jsxImportSource @openelement/element */
 /**
- * @openelement/ui - open-lab-panel
+ * www/site-ui - open-lab-panel
  *
  * Standards-lab panel for specs, artifact frames, and reference desks.
  */
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { escapeHtml } from '@openelement/element';
+import { getStr } from './get-str.ts';
 
 export const tagName = 'open-lab-panel';
 
@@ -120,9 +121,9 @@ export class OpenLabPanel extends OpenElement {
   static override observedAttributes = ['variant', 'label', 'meta', 'compact'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const variant = this._getStr('variant', 'surface');
-    const label = this._getStr('label', '');
-    const meta = this._getStr('meta', '');
+    const variant = getStr(this, 'variant', 'surface');
+    const label = getStr(this, 'label', '');
+    const meta = getStr(this, 'meta', '');
 
     return (
       <section className={`panel panel--${variant}`} part='container'>
@@ -143,14 +144,8 @@ export class OpenLabPanel extends OpenElement {
   }
 
   private _esc = escapeHtml;
-
-  private _getStr(attr: string, def: string): string {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel] ??
-      (this as Record<string, unknown>)[attr];
-    if (prop !== undefined && prop !== null) return String(prop);
-    return this.getAttribute(attr) || def;
-  }
 }
 
 export default OpenLabPanel;
+
+defineCustomElement(tagName, OpenLabPanel);

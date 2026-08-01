@@ -87,20 +87,6 @@ styles.replaceSync(`
     line-height: 1.75;
   }
 
-  .requested {
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-00);
-  }
-
-  .requested code {
-    padding: 0.125rem 0.375rem;
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-1);
-    background: var(--bg-surface);
-    color: var(--text-secondary);
-  }
-
   .actions {
     display: flex;
     flex-wrap: wrap;
@@ -146,9 +132,6 @@ export default class Page404 extends OpenElement {
     const locale = this._getLocale('en');
     const homeHref = locale === 'en' ? '/' : '/zh/';
     const docsHref = locale === 'en' ? '/docs' : '/zh/docs';
-    const requestedPath = typeof globalThis.location === 'undefined'
-      ? '/404'
-      : globalThis.location.pathname;
     return (
       <main class='notfound'>
         <section class='stage'>
@@ -160,9 +143,6 @@ export default class Page404 extends OpenElement {
           <p class='serif-line'>Lost in the shadow DOM.</p>
           <p class='lede'>
             This route never mounted. The page you want is probably one declarative template away.
-          </p>
-          <p class='requested'>
-            Requested path: <code>{requestedPath}</code>
           </p>
           <div class='actions'>
             <open-button variant='primary' href={homeHref}>

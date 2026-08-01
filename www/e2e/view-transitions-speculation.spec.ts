@@ -74,7 +74,6 @@ test.describe('Speculation Rules (v0.9.2)', () => {
     }).not.toThrow();
 
     // Should have at least one of: prefetch or prerender
-    expect(parsed!).toBeDefined();
     const hasPrefetch = 'prefetch' in parsed! && Array.isArray(parsed!.prefetch);
     const hasPrerender = 'prerender' in parsed! && Array.isArray(parsed!.prerender);
     expect(hasPrefetch || hasPrerender).toBe(true);

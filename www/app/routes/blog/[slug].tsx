@@ -95,8 +95,9 @@ export default class BlogPostPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const locale = this._getLocale('zh') === 'en' ? 'en' : 'zh';
-    const blogHref = `/${locale}/blog`;
+    const locale = this._getLocale('en') === 'en' ? 'en' : 'zh';
+    // English is the default locale: canonical routes stay unprefixed.
+    const blogHref = locale === 'en' ? '/blog' : '/zh/blog';
     const post = getPostBySlug(this.slug);
     if (!post) {
       return (

@@ -1,66 +1,41 @@
 /**
  * E2E test helpers for openElement docs site.
  *
- * Provides utilities for verifying DSD structure,
- * custom element rendering, and island script loading.
+ * Provides utilities for verifying custom element rendering, plus the shared
+ * shadow-DOM walker used by specs that must pierce open shadow roots.
  */
 
-import type { Page } from '@playwright/test';
-
-/**
- * Check if an element has a DSD template with the expected shadowrootmode.
- */
-export function hasDsdTemplate(
-  page: Page,
-  selector: string,
-  mode: 'open' | 'closed' = 'open',
-): Promise<boolean> {
-  const template = page.locator(`${selector} > template[shadowrootmode="${mode}"]`);
-  return template.count().then((n) => n > 0);
-}
+import type { ElementHandle, Page } from '@playwright/test';
 
 /**
- * Get the shadow root content of a custom element via DSD.
- * Uses evaluate to read the template content from the DOM.
+ * Deep-query through open shadow roots; returns the first element matching
+ * `selector`, or null when nothing matches.
  */
-export function getDsdContent(
+export async function deepQuery(
   page: Page,
   selector: string,
-): Promise<string | null> {
-  return page.evaluate((sel) => {
-    const el = document.querySelector(sel);
-    if (!el) return null;
-    const template = el.querySelector('template[shadowrootmode]');
-    return template?.innerHTML ?? null;
+): Promise<ElementHandle<Element> | null> {
+  const handle = await page.evaluateHandle((sel) => {
+    const visit = (root: Document | ShadowRoot | Element): Element | null => {
+      const direct = root.querySelector?.(sel);
+      if (direct) return direct;
+      const all = root.querySelectorAll?.('*') ?? [];
+      for (const el of Array.from(all)) {
+        if (el.shadowRoot) {
+          const found = visit(el.shadowRoot);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return visit(document);
   }, selector);
-}
-
-/**
- * Wait for a custom element to be defined and upgraded.
- */
-export async function waitForCustomElement(
-  page: Page,
-  tagName: string,
-  timeout = 10_000,
-): Promise<void> {
-  await page.waitForFunction(
-    (tag) => customElements.get(tag) !== undefined,
-    tagName,
-    { timeout },
-  );
-}
-
-/**
- * Check if an island script was loaded (by looking for its module script tag).
- */
-export function isIslandScriptLoaded(
-  page: Page,
-  tagName: string,
-): Promise<boolean> {
-  return page.evaluate((tag) => {
-    // Check if the custom element is defined (meaning its island module loaded)
-    return customElements.get(tag) !== undefined;
-  }, tagName);
+  const element = handle.asElement();
+  if (!element) {
+    await handle.dispose();
+    return null;
+  }
+  return element as ElementHandle<Element>;
 }
 
 /**
@@ -76,70 +51,6 @@ export function getCustomElementTags(page: Page): Promise<string[]> {
       }
     }
     return [...tags];
-  });
-}
-
-/**
- * Get the resolved theme ('light' | 'dark' | null) from document.documentElement.
- */
-export function getDocumentTheme(page: Page): Promise<string | null> {
-  return page.evaluate(() => {
-    return document.documentElement.getAttribute('data-theme');
-  });
-}
-
-/**
- * Deep-query through open shadow roots.
- */
-export function deepQuery<T extends Element = Element>(
-  page: Page,
-  selector: string,
-): Promise<T | null> {
-  return page.evaluateHandle((sel) => {
-    const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.(sel);
-      if (direct) return direct;
-      const all = root.querySelectorAll?.('*') ?? [];
-      for (const el of Array.from(all)) {
-        if (el.shadowRoot) {
-          const found = visit(el.shadowRoot);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    return visit(document);
-  }, selector).then((handle) => handle.asElement() as T | null);
-}
-
-/**
- * Get all meta tag content by name or property.
- */
-export function getMetaContent(
-  page: Page,
-  attr: 'name' | 'property',
-  value: string,
-): Promise<string | null> {
-  return page.evaluate(
-    ({ attr, value }) => {
-      const meta = document.querySelector(`meta[${attr}="${value}"]`);
-      return meta?.getAttribute('content') ?? null;
-    },
-    { attr, value },
-  );
-}
-
-/**
- * Count shadow roots in the page (all custom elements with shadow DOM).
- */
-export function countShadowRoots(page: Page): Promise<number> {
-  return page.evaluate(() => {
-    let count = 0;
-    const all = document.querySelectorAll('*');
-    for (const el of all) {
-      if (el.shadowRoot) count++;
-    }
-    return count;
   });
 }
 

@@ -1,12 +1,14 @@
 /** @jsxImportSource @openelement/element */
 /**
- * @openelement/ui - open-lab-stage
+ * www/site-ui - open-lab-stage
  *
  * Kinetic standards-lab hero primitive for product-art landing pages.
  */
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import { OPENELEMENT_VERSION } from '../data/version.ts';
+import { getStr } from './get-str.ts';
 
 export const tagName = 'open-lab-stage';
 
@@ -509,8 +511,8 @@ export class OpenLabStage extends OpenElement {
   static override observedAttributes = ['motion', 'emphasis'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const motion = this._getStr('motion', 'auto') === 'off' ? 'still' : 'motion';
-    const emphasis = this._getStr('emphasis', 'high') === 'normal' ? 'normal' : 'high';
+    const motion = getStr(this, 'motion', 'auto') === 'off' ? 'still' : 'motion';
+    const emphasis = getStr(this, 'emphasis', 'high') === 'normal' ? 'normal' : 'high';
 
     return (
       <section className={`stage stage--${emphasis} stage--${motion}`} part='stage'>
@@ -580,7 +582,7 @@ export class OpenLabStage extends OpenElement {
           <aside className='stage__side' aria-label='Specification sheet'>
             <div className='stage__panel-head'>
               <strong>Spec sheet</strong>
-              <span>v0.40.8</span>
+              <span>{OPENELEMENT_VERSION}</span>
             </div>
             <pre className='stage__code'><code>
               <span className='stage__code-line'>export default app({'{'}</span>
@@ -613,14 +615,8 @@ export class OpenLabStage extends OpenElement {
       </section>
     );
   }
-
-  private _getStr(attr: string, def: string): string {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel] ??
-      (this as Record<string, unknown>)[attr];
-    if (prop !== undefined && prop !== null) return String(prop);
-    return this.getAttribute(attr) || def;
-  }
 }
 
 export default OpenLabStage;
+
+defineCustomElement(tagName, OpenLabStage);
