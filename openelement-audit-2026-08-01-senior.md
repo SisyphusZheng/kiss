@@ -4,7 +4,9 @@
 - 审计立场：openElement 是「Web Component 全栈框架」（五包收敛：element / ui / app / adapter-vite / create），不是通用工具库或文档站
 - 方法论：直接读源码 + ripgrep 交叉验证（子代理在本沙箱不稳定，改为本人逐条核验）。所有结论给出 文件:行号 证据。
 - 基线已读：`…-2026-07-29.md`（整体 ≈72/100）、`…-2026-08-01-positioning.md`（6 🔴）、`…-2026-08-01-verification.md`（6 🔴 全部核实成立）、`…-a10-close-report-2026-07-30.md`（alpha.10 里程碑 8 issue 关闭）。
+
 <!-- audit-citations-baseline-sha: 048985703ccc3f68f9e33d33355be17331d7b11a -->
+
 - 引用时效护栏：本报告所有 `file:line` 引用已由 `tools/check-audit-citations.ts` 复核（working tree @ HEAD `0489857`，含同日未提交修复冲刺）。重构后运行 `deno run -A tools/check-audit-citations.ts` 复核漂移；`--sha=<commit>` 可针对历史提交复核。
 
 ---
@@ -13,33 +15,34 @@
 
 **同日 positioning 报告识别的 6 条 🔴 硬伤，至本次复核时点已全部被修复或缓解。** 仓库在 2026-08-01 当天经历了一次修复冲刺，且 element 包被重组（公共 API 留 `src/` 顶层、内部实现下沉 `src/internal/core/`）。因此本报告不重复列举那 6 条，而是给出**当前态核实结果** + **遗留的真实问题** + **新发现的元问题**。
 
-| 原 🔴 | 当前状态 | 证据 |
-|---|---|---|
-| 🔴-1 element「零依赖」口径不实 | **已修复** | `packages/element/src/internal/core/index.ts:7` 已改为 "Single chartered engine dependency: @preact/signals-core"；docs 全仓 grep "zero-dep" 仅命中 ADR 历史文件，无误导运行时声明 |
-| 🔴-2 默认 appShell 指向不存在模块首启必炸 | **已修复** | `packages/adapter-vite/src/internal/ssg/entry-descriptor.ts:39-46` 对 `undefined`/`'default'` 返回 `false`；`packages/ui/src` grep `open-layout` 零命中（默认不再指向它） |
-| 🔴-3 MDX Phase 3 断线 | **已修复** | `packages/adapter-vite/src/cli/build-ssg.ts:335` 插件表已加 `mdxPlugin()`，附注释说明必须镜像 `packages/adapter-vite/src/plugin.ts:396` |
-| 🔴-4 app request 层未接线 | **已缓解（残留 🟡）** | 生产 `nitro-mount.ts` 仍不消费 `app/model`，但新增契约测试 `packages/adapter-vite/__tests__/nitro-mount.test.ts:100-135` 强制两形状对齐 |
-| 🔴-5 文档谎称 alpha.10 已发布 | **已修复** | `docs/status/STATUS.md:5`、`docs/current/VERSION_PLAN.md:4`、`README.md:10-13` 均诚实写 "alpha.10 是 in-flight source line / unpublished；registry=alpha.9" |
-| 🔴-6 ROADMAP 自相矛盾 | **已修复** | `docs/roadmap/ROADMAP.md:124` 改写为 "alpha.9 is the published package line…The in-flight source line is alpha.10" |
+| 原 🔴                                     | 当前状态              | 证据                                                                                                                                                                               |
+| ----------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴-1 element「零依赖」口径不实            | **已修复**            | `packages/element/src/internal/core/index.ts:7` 已改为 "Single chartered engine dependency: @preact/signals-core"；docs 全仓 grep "zero-dep" 仅命中 ADR 历史文件，无误导运行时声明 |
+| 🔴-2 默认 appShell 指向不存在模块首启必炸 | **已修复**            | `packages/adapter-vite/src/internal/ssg/entry-descriptor.ts:39-46` 对 `undefined`/`'default'` 返回 `false`；`packages/ui/src` grep `open-layout` 零命中（默认不再指向它）          |
+| 🔴-3 MDX Phase 3 断线                     | **已修复**            | `packages/adapter-vite/src/cli/build-ssg.ts:335` 插件表已加 `mdxPlugin()`，附注释说明必须镜像 `packages/adapter-vite/src/plugin.ts:396`                                            |
+| 🔴-4 app request 层未接线                 | **已缓解（残留 🟡）** | 生产 `nitro-mount.ts` 仍不消费 `app/model`，但新增契约测试 `packages/adapter-vite/__tests__/nitro-mount.test.ts:100-135` 强制两形状对齐                                            |
+| 🔴-5 文档谎称 alpha.10 已发布             | **已修复**            | `docs/status/STATUS.md:5`、`docs/current/VERSION_PLAN.md:4`、`README.md:10-13` 均诚实写 "alpha.10 是 in-flight source line / unpublished；registry=alpha.9"                        |
+| 🔴-6 ROADMAP 自相矛盾                     | **已修复**            | `docs/roadmap/ROADMAP.md:124` 改写为 "alpha.9 is the published package line…The in-flight source line is alpha.10"                                                                 |
 
 ---
 
 ## 一、分级结论清单（🔴→🟢）
 
 ### 🔴 硬伤：当前 0 条
+
 经逐条复核，仓库当前无定位冲突 / 数据一致性 / 正确性类的硬伤。原 6 条 🔴 已在同日修复冲刺中关闭。**若必须挑一条"最靠近硬伤"的，是下方 🟡-A（sitemap 失败静默降级），但它属可观测性/SEO 退化而非正确性损失。**
 
 ### 🟡 可改进（均经本人 spot-verify）
 
-| # | 位置 | 证据（文件:行号） | 一句话修法 |
-|---|---|---|---|
-| **A** | `packages/adapter-vite/src/internal/ssg/ssg-render.ts:345-355` | `catch (e) { log.debug('Sitemap generation skipped or failed', e); }` —— sitemap 真实生成失败被降级为 debug 日志，无 evidence/遥测，SEO 静默退化 | build 模式抛错或至少 `log.warn` + 进 release evidence；dev 才降级 |
-| **B** | `packages/adapter-vite/src/index.ts:33,40-52` | `openPipeline()` 声明 `i18n?: {locales;defaultLocale}`，但 `grep config.i18n` 零命中——选项声明后从不读取（文档/代码双轨空操作） | 删除该字段，或真正转交 `openI18n()` |
-| **C** | `packages/adapter-vite/src/internal/core/registry.ts`（及 `internal/core/index.ts:186-191` 转发） | `registerManifest/getAllManifests/validateManifest/generateIndex/clearRegistry` 全仓（除 barrel 转发自身）零消费方——旧 "WC Package Protocol" 愿景残留 | 删整模块 + barrel 转发；删前跑 `deno task check` 确认无漏 |
-| **D** | `packages/element/src/internal/core/errors.ts:125-141` | `PropValidationError` 零消费方（连测试都无） | 删除；如需未来用，先有测试用例再留 |
-| **E** | `packages/adapter-vite/README.md:84` | 文档化 `injectDsdPolyfill`，但 `grep injectDsdPolyfill packages/adapter-vite/src` 零实现——仅文档声称，源码无此函数 | README 删除该段落，或补实现 |
-| **F** | `packages/adapter-vite/src/nitro-mount.ts`（`packages/app/src/hono.ts` 已删除, #720） | `createHonoRequestContext` 全仓零生产消费方（仅测试）；nitro 主链路自己实现 request context，与 `app/model` 形状平行 → 双份契约 | 已修复(#720)：删除 `createHonoRequestContext` 及其测试与 `./hono` 导出；nitro-mount 内联实现因 Nitro 生成物不能含裸包导入而保留，类型对齐 `app/model` |
-| **G** | `packages/element/src/internal/core/jsx-render-dom.ts:24` 等 | `applyProps` 在上次审计引用位置已随文件迁至 `internal/core/`，需重核是否仍零导入（旧路径文件已不存在） | 在新路径 grep 确认后决定是否删 |
+| #     | 位置                                                                                              | 证据（文件:行号）                                                                                                                                     | 一句话修法                                                                                                                                            |
+| ----- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | `packages/adapter-vite/src/internal/ssg/ssg-render.ts:345-355`                                    | `catch (e) { log.debug('Sitemap generation skipped or failed', e); }` —— sitemap 真实生成失败被降级为 debug 日志，无 evidence/遥测，SEO 静默退化      | build 模式抛错或至少 `log.warn` + 进 release evidence；dev 才降级                                                                                     |
+| **B** | `packages/adapter-vite/src/index.ts:33,40-52`                                                     | `openPipeline()` 声明 `i18n?: {locales;defaultLocale}`，但 `grep config.i18n` 零命中——选项声明后从不读取（文档/代码双轨空操作）                       | 删除该字段，或真正转交 `openI18n()`                                                                                                                   |
+| **C** | `packages/adapter-vite/src/internal/core/registry.ts`（及 `internal/core/index.ts:186-191` 转发） | `registerManifest/getAllManifests/validateManifest/generateIndex/clearRegistry` 全仓（除 barrel 转发自身）零消费方——旧 "WC Package Protocol" 愿景残留 | 删整模块 + barrel 转发；删前跑 `deno task check` 确认无漏                                                                                             |
+| **D** | `packages/element/src/internal/core/errors.ts:125-141`                                            | `PropValidationError` 零消费方（连测试都无）                                                                                                          | 删除；如需未来用，先有测试用例再留                                                                                                                    |
+| **E** | `packages/adapter-vite/README.md:84`                                                              | 文档化 `injectDsdPolyfill`，但 `grep injectDsdPolyfill packages/adapter-vite/src` 零实现——仅文档声称，源码无此函数                                    | README 删除该段落，或补实现                                                                                                                           |
+| **F** | `packages/adapter-vite/src/nitro-mount.ts`（`packages/app/src/hono.ts` 已删除, #720）             | `createHonoRequestContext` 全仓零生产消费方（仅测试）；nitro 主链路自己实现 request context，与 `app/model` 形状平行 → 双份契约                       | 已修复(#720)：删除 `createHonoRequestContext` 及其测试与 `./hono` 导出；nitro-mount 内联实现因 Nitro 生成物不能含裸包导入而保留，类型对齐 `app/model` |
+| **G** | `packages/element/src/internal/core/jsx-render-dom.ts:24` 等                                      | `applyProps` 在上次审计引用位置已随文件迁至 `internal/core/`，需重核是否仍零导入（旧路径文件已不存在）                                                | 在新路径 grep 确认后决定是否删                                                                                                                        |
 
 ### 🟢 可接受但记债
 
@@ -64,15 +67,15 @@
 
 **结论：当前版本锚点完全一致，无漏网硬编码。** 单一事实源 `tools/project-constants.ts:1` = `0.42.0-alpha.10`，所有引用点同步：
 
-| 引用点 | 当前值 | 状态 |
-|---|---|---|
-| `tools/project-constants.ts` | `0.42.0-alpha.10` | 事实源 |
-| `packages/{element,ui,app,adapter-vite,create}/deno.json:3` | 全部 `0.42.0-alpha.10` | ✅ |
-| `packages/create/src/version.ts:2` | `0.42.0-alpha.10` | ✅ |
-| `www/app/data/version.ts:4` | `v0.42.0-alpha.10` | ✅ |
-| `www/app/routes/roadmap.tsx:335` 当前节点 | `v0.42.0-alpha.10`（描述准确） | ✅ |
-| `docs/status/STATUS.md:5` / `docs/current/VERSION_PLAN.md:4` / `README.md:10` / `docs/roadmap/ROADMAP.md:7` | 均诚实区分 source line=alpha.10 / registry=alpha.9 | ✅ |
-| `docs/release/` | 无 `v0.42.0-alpha.10*` 记录（仅 `v0.41.0-alpha.10.md`，0.41 线）——与"alpha.10 未发布"一致 | ✅ |
+| 引用点                                                                                                      | 当前值                                                                                    | 状态   |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------ |
+| `tools/project-constants.ts`                                                                                | `0.42.0-alpha.10`                                                                         | 事实源 |
+| `packages/{element,ui,app,adapter-vite,create}/deno.json:3`                                                 | 全部 `0.42.0-alpha.10`                                                                    | ✅     |
+| `packages/create/src/version.ts:2`                                                                          | `0.42.0-alpha.10`                                                                         | ✅     |
+| `www/app/data/version.ts:4`                                                                                 | `v0.42.0-alpha.10`                                                                        | ✅     |
+| `www/app/routes/roadmap.tsx:335` 当前节点                                                                   | `v0.42.0-alpha.10`（描述准确）                                                            | ✅     |
+| `docs/status/STATUS.md:5` / `docs/current/VERSION_PLAN.md:4` / `README.md:10` / `docs/roadmap/ROADMAP.md:7` | 均诚实区分 source line=alpha.10 / registry=alpha.9                                        | ✅     |
+| `docs/release/`                                                                                             | 无 `v0.42.0-alpha.10*` 记录（仅 `v0.41.0-alpha.10.md`，0.41 线）——与"alpha.10 未发布"一致 | ✅     |
 
 > 注：这是相对同日 positioning 报告 🔴-5 的**反转**——当时文档谎称 alpha.10 已发布，现已纠正，且代码侧锚点也全程同步。版本治理（check-version-anchors）当前有效。
 
@@ -92,15 +95,15 @@
 
 ## 五、重复实现清单（核心项，文件已随重构迁移路径）
 
-| 重复 | 位置（当前路径） | 说明 |
-|---|---|---|
+| 重复                   | 位置（当前路径）                                                                                      | 说明                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | tag 校验 ×3 规则不一致 | `element/internal/core/island.ts` vs `element/internal/core/tag-utils.ts:41-49` vs `app/spa.ts:25-32` | defineIsland 拒绝点/下划线、tag-utils 允许、SPA 放行 SSR 拒绝 → 统一调 `tag-utils.assertValidTagName` |
-| 公共 props 过滤 ×2 | `element/internal/core/render-dsd.ts` vs `element/internal/core/props-utils.ts:17-24` | 同意图两份，合并 |
-| JSONC 剥离 ×2 | `adapter-vite/workspace-alias.ts` vs `cli/build-client.ts` | 逐字符 vs 正则，行为不一致（行中 `//`） |
-| 路由路径转换 ×3 | `internal/ssg/route-scanner.ts` vs `route-type-generator.ts` vs `route-manifest.ts` | 各自处理 index/分隔符 |
-| request context ×2 | `app/model.ts`+`app/hono.ts` vs `adapter-vite/nitro-mount.ts` | 平行形状 + 一个无消费方 API（🟡-F） |
-| i18n 转发 ×3 | `app/i18n.ts` → `i18n-runtime.ts` → `internal/router/i18n.ts` | 三跳 re-export，runtime 不在 exports |
-| 事件符号转发层 | `element/internal/core/event-hydration.ts:34-42` | re-export event-marker.ts 6 符号，纯噪音 |
+| 公共 props 过滤 ×2     | `element/internal/core/render-dsd.ts` vs `element/internal/core/props-utils.ts:17-24`                 | 同意图两份，合并                                                                                      |
+| JSONC 剥离 ×2          | `adapter-vite/workspace-alias.ts` vs `cli/build-client.ts`                                            | 逐字符 vs 正则，行为不一致（行中 `//`）                                                               |
+| 路由路径转换 ×3        | `internal/ssg/route-scanner.ts` vs `route-type-generator.ts` vs `route-manifest.ts`                   | 各自处理 index/分隔符                                                                                 |
+| request context ×2     | `app/model.ts`+`app/hono.ts` vs `adapter-vite/nitro-mount.ts`                                         | 平行形状 + 一个无消费方 API（🟡-F）                                                                   |
+| i18n 转发 ×3           | `app/i18n.ts` → `i18n-runtime.ts` → `internal/router/i18n.ts`                                         | 三跳 re-export，runtime 不在 exports                                                                  |
+| 事件符号转发层         | `element/internal/core/event-hydration.ts:34-42`                                                      | re-export event-marker.ts 6 符号，纯噪音                                                              |
 
 ---
 

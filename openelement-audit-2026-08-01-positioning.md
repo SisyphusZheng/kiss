@@ -12,77 +12,83 @@
 ### 🔴 硬伤（6 条）
 
 **🔴-1 element「零依赖运行时」声明不属实**
+
 - 位置：`packages/element/src/internal/signal/preact-engine.ts:10-13`；`packages/element/src/internal/core/index.ts:7`
 - 证据：`preact-engine.ts` 从 `@preact/signals-core` 导入 signal/computed/effect；`framework.ts:16` 模块加载时即实例化引擎 → `import '@openelement/element'` 必拉入 preact。而 `internal/core/index.ts:7` 注释宣称 "Zero npm: specifiers - works in Deno, Node, Bun, Edge"；`docs/audit/2026-07-30-packages-code-review.md:13` 亦写 "zero-dep runtime core"。`tools/check-deno-api-free.ts:9-11` 证明依赖本身是有意的 charter 决策，纯为口径失真。
 - 修法：二选一——改口径为「唯一引擎依赖 @preact/signals-core」并更正 3 处注释/文档；或按 `framework.ts` 既有 `SignalEngine` 接口内联 mini signals 实现。
 
 **🔴-2 adapter-vite 默认 appShell 指向不存在的模块，首启必炸**
+
 - 位置：`packages/adapter-vite/src/internal/ssg/entry-descriptor.ts:42-46`
 - 证据：未配置时默认 `importPath: '@openelement/ui/open-layout'`；`packages/ui/deno.json` exports 与 `src/` 全树无 open-layout（grep 零命中）。`entry-renderer.ts:101-103` 无条件 import 该路径。www 能构建仅因 `www/vite.config.ts:124` 自定义了 shell。
 - 修法：默认改 `appShell: false`（或 ui 补 open-layout），并加「未配置 shell 的构建」测试。
 
 **🔴-3 MDX 声称支持但 SSG Phase 3 断线**
+
 - 位置：`packages/adapter-vite/src/plugin.ts:396`；`packages/adapter-vite/src/cli/build-ssg.ts:331-377`
 - 证据：外层插件列表注册 `mdxPlugin()`（dev/Phase 1 生效），Phase 3 的 `viteBuild()` 插件表无 mdx（grep 零命中）；`internal/ssg/entry-renderer.ts:108-110` 对 `.mdx` 路由生成裸 import，Phase 3 为 `configFile:false` 新构建 → 必被 esbuild 当 JS 解析失败。
 - 修法：build-ssg 插件数组加 `mdxPlugin()` + 补 `.mdx` 路由 Phase 3 集成测试（现有 `plugin-mdx.test.ts` 只测 transform 层）。
 
 **🔴-4 app 的 request 层整套未接线，adapter-vite 绕开它本地重写**
+
 - 位置：`packages/app/src/model.ts:29`；`packages/app/src/hono.ts:36`；`packages/adapter-vite/src/nitro-mount.ts:56-58`
 - 证据：`createRequestContext` 唯一调用方是 `hono.ts:53`；`createHonoRequestContext` 仓内零消费方（仅测试）。nitro-mount 注释明说绕开 app/model（避免生成产物里未解析裸包引用）自己实现；SSR 主链路 `entry-render-helpers.ts:414` 内联注入。`app/src/index.ts:58-63` 却包装为 "Official default request driver bridge"。
 - 修法：nitro-mount 改为消费 `createRequestContext`，或撤下该定位声明。
 
 **🔴-5 文档版本行集体说谎：四处称 registry line = alpha.10，registry 实为 alpha.9**
+
 - 位置：`docs/status/STATUS.md:5`、`docs/roadmap/ROADMAP.md:7`、`docs/current/VERSION_PLAN.md:4`、`README.md:10`
 - 证据：`npm view @openelement/element dist-tags` → `{latest: '0.41.2', alpha: '0.42.0-alpha.9'}`；alpha.10 仅存在于机械 bump commit，无 release 记录。正是 STATUS.md:93-98 自己警告的 version-hole 模式重演。
 - 修法：四处 header 改 "source line"，发布 alpha.10 后再改回 registry 说法。
 
 **🔴-6 ROADMAP 内部自相矛盾：alpha.8 同时是「已发布线」又「npm 未发布」**
+
 - 位置：`docs/roadmap/ROADMAP.md:122`（vs :7、vs STATUS.md:93-98、vs registry 实况 alpha.9）
 - 证据：CHANGELOG.md:22-30 明写 alpha.8 "npm publish failed / absent from the registry"，ROADMAP:122 却称 "0.42.0-alpha.8 is the published package line"。`check-strategic-docs.ts:75` 的 stale 正则要求 "current (?:published|verified)" 前缀，`is the published package line` 句式两个 gate 都放过。
 - 修法：重写 ROADMAP.md:120-125 段；`check-strategic-docs.ts` stale 模式补该句式。
 
 ### 🟡 可改进（代码类）
 
-| # | 位置 | 证据与修法 |
-|---|---|---|
-| Y-1 | `element/jsx-render-dom.ts:121-123` | `signalNameFor` 每帧对 signalRegistry 线性扫描 O(绑定×signal) → 注册时维护反向 Map |
-| Y-2 | `element/hydration-scope.ts:267-271` | 每个 hydrate 组件各排 rAF 强制回流（Chromium DSD workaround）→ 单次 rAF 批处理 |
-| Y-3 | `element/jsx-render-dom.ts:379-395` | CSR 渲染抛错吞成空文本节点（仅 console.error），SSR 同路径 `render-ir.ts:256-262` rethrow → 同语义应同策略 |
-| Y-4 | `element/island.ts:277-306` | 手写 tag 校验（拒绝点/下划线、漏 xml 前缀）vs `tag-utils.ts:41-49` `assertValidTagName` 两套规则 → 直接调用后者 |
-| Y-5 | `element/open-element-implementation.ts:627-634` | `OpenElementComponentConstructor` 从公共入口 `open-element.ts:4` 导出，零消费方 → 删或标 @internal |
-| Y-6 | `element/render-dsd.ts:168-175` | `filterPublicDsdProps` 与 `props-utils.ts:17-24` `collectPublicProps` 同意图两份 → 合并 |
-| Y-7 | `ui/src/open-tabs.tsx:29-39` | README 称 "Accessible" 但无键盘导航/aria-controls；:37,42 用 textContent 拷贝渲染，面板内元素被拍平 → 实现 ARIA 或降级措辞 |
-| Y-8 | `ui/src/open-dialog.tsx:121-153` | render 不读 `open` 属性，SSR 带 open 的宿主渲染出关闭 dialog；DSD 升级期可能对未连接 dialog 调 showModal() → render 内同步 |
-| Y-9 | `ui/src/open-theme-toggle.tsx:168-170` | 注释称 onCsrRendered 初始化，实际空 override（真实初始化在 connectedCallback:86-89）→ 删空 override 修注释 |
-| Y-10 | `ui/README.md:23-33` | 组件表漏 OpenBadge；:10 版本锚停 v0.40.8；:48 声称 OpenLayout 属 ui 契约但组件在 `www/app/site-ui/open-layout.tsx` → 三处同步 |
-| Y-11 | `adapter-vite/index.ts:41-50` | `openPipeline()` 声明 `i18n?` 选项从不读取（grep config.i18n 零命中），静默空操作 → 删字段或转交 openI18n |
-| Y-12 | `adapter-vite/i18n-plugin.ts:88-92`（同类 `internal/content/blog/plugin.ts:51-55`、`nav/plugin.ts:57-61`） | 生成数据写盘失败仅 warn，`generated-data-resolver.ts:71` 回退空桩 → build 模式应 throw，dev 才 warn |
-| Y-13 | `adapter-vite/ssg-dynamic.ts:176-181` | `getStaticPaths()` 抛错无条件 warn+continue，绕过 `dynamicRouteFailure: 'fail'` 政策 → 走 `handleRenderFailure` 同通道 |
-| Y-14 | `adapter-vite/content/blog/blog-data.ts:81-83` | `getBlogOptions()` 硬编码 `{contentDir:"content/blog"}` 无视实参 → 序列化真实 options |
-| Y-15 | `adapter-vite/ssg-render.ts:121-128` | `mkdir(...).catch(() => {})` 吞真实 I/O 错误 → 删 catch |
-| Y-16 | `adapter-vite/README.md:22,37,84` | 文档化 `plugin`/`app-vite` 子路径不在 deno.json exports（`deno.json:4-11`）；`injectDsdPolyfill` 代码零命中 → 按 `docs/current/PACKAGE_SURFACE.md:57-60` 重写 |
-| Y-17 | `app/spa.ts:78-83` | loader 失败静默降级空数据（action 路径 :195-197 有错误形状）→ 对齐 |
-| Y-18 | `app/README.md:15` | 声称 `definePage({..., load, ...})`，`load` 字段不存在（`authoring.ts:200-209`）→ README 对齐 |
-| Y-19 | `create/consumer-packaged-starter.ts:107-109` | 打包产物只跑 `deno task check` 不跑 build；真打包 build 仅手动 dispatch `published-consumers.yml` → 加 build 一步或 release 流自动调度 |
-| Y-20 | `create/templates/deno.json.tmpl:17` | check 清单漏 `app/components/app-shell.tsx`（不被 import 永不 typecheck）→ 补入 |
-| Y-21 | `create/templates/deno.json.tmpl:3` | `@deno/vite-plugin` 浮空取最新 → 锁版本 |
-| Y-22 | `create/templates/deno.json.tmpl:11` | 锁 vite@8.0.10 vs adapter-vite 用 8.0.16，单进程两份 vite → 统一 |
-| Y-23 | `create/README.md:25` | 声称生成 `www/` 目录，实际输出 `dist/` → 改文案 |
-| Y-24 | `tools/consumer-local.ts:156-161` | 注入 lit/parse5/entities 三 import（全仓零依赖）+ 三个 delete 空操作 → 删除 |
+| #    | 位置                                                                                                       | 证据与修法                                                                                                                                                    |
+| ---- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Y-1  | `element/jsx-render-dom.ts:121-123`                                                                        | `signalNameFor` 每帧对 signalRegistry 线性扫描 O(绑定×signal) → 注册时维护反向 Map                                                                            |
+| Y-2  | `element/hydration-scope.ts:267-271`                                                                       | 每个 hydrate 组件各排 rAF 强制回流（Chromium DSD workaround）→ 单次 rAF 批处理                                                                                |
+| Y-3  | `element/jsx-render-dom.ts:379-395`                                                                        | CSR 渲染抛错吞成空文本节点（仅 console.error），SSR 同路径 `render-ir.ts:256-262` rethrow → 同语义应同策略                                                    |
+| Y-4  | `element/island.ts:277-306`                                                                                | 手写 tag 校验（拒绝点/下划线、漏 xml 前缀）vs `tag-utils.ts:41-49` `assertValidTagName` 两套规则 → 直接调用后者                                               |
+| Y-5  | `element/open-element-implementation.ts:627-634`                                                           | `OpenElementComponentConstructor` 从公共入口 `open-element.ts:4` 导出，零消费方 → 删或标 @internal                                                            |
+| Y-6  | `element/render-dsd.ts:168-175`                                                                            | `filterPublicDsdProps` 与 `props-utils.ts:17-24` `collectPublicProps` 同意图两份 → 合并                                                                       |
+| Y-7  | `ui/src/open-tabs.tsx:29-39`                                                                               | README 称 "Accessible" 但无键盘导航/aria-controls；:37,42 用 textContent 拷贝渲染，面板内元素被拍平 → 实现 ARIA 或降级措辞                                    |
+| Y-8  | `ui/src/open-dialog.tsx:121-153`                                                                           | render 不读 `open` 属性，SSR 带 open 的宿主渲染出关闭 dialog；DSD 升级期可能对未连接 dialog 调 showModal() → render 内同步                                    |
+| Y-9  | `ui/src/open-theme-toggle.tsx:168-170`                                                                     | 注释称 onCsrRendered 初始化，实际空 override（真实初始化在 connectedCallback:86-89）→ 删空 override 修注释                                                    |
+| Y-10 | `ui/README.md:23-33`                                                                                       | 组件表漏 OpenBadge；:10 版本锚停 v0.40.8；:48 声称 OpenLayout 属 ui 契约但组件在 `www/app/site-ui/open-layout.tsx` → 三处同步                                 |
+| Y-11 | `adapter-vite/index.ts:41-50`                                                                              | `openPipeline()` 声明 `i18n?` 选项从不读取（grep config.i18n 零命中），静默空操作 → 删字段或转交 openI18n                                                     |
+| Y-12 | `adapter-vite/i18n-plugin.ts:88-92`（同类 `internal/content/blog/plugin.ts:51-55`、`nav/plugin.ts:57-61`） | 生成数据写盘失败仅 warn，`generated-data-resolver.ts:71` 回退空桩 → build 模式应 throw，dev 才 warn                                                           |
+| Y-13 | `adapter-vite/ssg-dynamic.ts:176-181`                                                                      | `getStaticPaths()` 抛错无条件 warn+continue，绕过 `dynamicRouteFailure: 'fail'` 政策 → 走 `handleRenderFailure` 同通道                                        |
+| Y-14 | `adapter-vite/content/blog/blog-data.ts:81-83`                                                             | `getBlogOptions()` 硬编码 `{contentDir:"content/blog"}` 无视实参 → 序列化真实 options                                                                         |
+| Y-15 | `adapter-vite/ssg-render.ts:121-128`                                                                       | `mkdir(...).catch(() => {})` 吞真实 I/O 错误 → 删 catch                                                                                                       |
+| Y-16 | `adapter-vite/README.md:22,37,84`                                                                          | 文档化 `plugin`/`app-vite` 子路径不在 deno.json exports（`deno.json:4-11`）；`injectDsdPolyfill` 代码零命中 → 按 `docs/current/PACKAGE_SURFACE.md:57-60` 重写 |
+| Y-17 | `app/spa.ts:78-83`                                                                                         | loader 失败静默降级空数据（action 路径 :195-197 有错误形状）→ 对齐                                                                                            |
+| Y-18 | `app/README.md:15`                                                                                         | 声称 `definePage({..., load, ...})`，`load` 字段不存在（`authoring.ts:200-209`）→ README 对齐                                                                 |
+| Y-19 | `create/consumer-packaged-starter.ts:107-109`                                                              | 打包产物只跑 `deno task check` 不跑 build；真打包 build 仅手动 dispatch `published-consumers.yml` → 加 build 一步或 release 流自动调度                        |
+| Y-20 | `create/templates/deno.json.tmpl:17`                                                                       | check 清单漏 `app/components/app-shell.tsx`（不被 import 永不 typecheck）→ 补入                                                                               |
+| Y-21 | `create/templates/deno.json.tmpl:3`                                                                        | `@deno/vite-plugin` 浮空取最新 → 锁版本                                                                                                                       |
+| Y-22 | `create/templates/deno.json.tmpl:11`                                                                       | 锁 vite@8.0.10 vs adapter-vite 用 8.0.16，单进程两份 vite → 统一                                                                                              |
+| Y-23 | `create/README.md:25`                                                                                      | 声称生成 `www/` 目录，实际输出 `dist/` → 改文案                                                                                                               |
+| Y-24 | `tools/consumer-local.ts:156-161`                                                                          | 注入 lit/parse5/entities 三 import（全仓零依赖）+ 三个 delete 空操作 → 删除                                                                                   |
 
 ### 🟡 可改进（工作流 / 文档类）
 
-| # | 位置 | 证据与修法 |
-|---|---|---|
-| Y-25 | `.github/workflows/autoflow-release.yml:44-57` | 发布 workflow 零 gate，直接 dispatch 可绕过全部 release-tier gate → publish 前校验 prepare 记录或补跑 autoflow:ci |
-| Y-26 | `tools/autoflow/policy.ts` GATES | firefox/webkit smoke（`autoflow-ci.yml:37-46`）CI 在跑但未建模进 GATES → 补两 gate |
-| Y-27 | `tools/check-www-current-truth.ts` | 源码版扫描不是 gate（仅非 gate 的 docs:truth 手动跑）→ 加进 GATES |
-| Y-28 | `tools/bump-version.ts:229-332` | 单独跑只 bump 一半（不碰 www/data/version.ts、project-constants、docs 锚点）→ 报头注明须经 autoflow release 流 |
-| Y-29 | `CHANGELOG.md:15` | 头部停 alpha.9，bump 不写、gate 不查 → 显式标记历史归档 |
-| Y-30 | `docs/status/STATUS.md:62-63` | 声称 "start CLI is Deno-only"，代码 `adapter-vite/src/cli/start.ts:4-7` 已跨运行时 → 更新 risk #7 |
-| Y-31 | `docs/status/STATUS.md:86-87`（及 :55-58） | 发布表 alpha.8 列两次、漏 alpha.9/alpha.10；#619-623 hygiene 记错到 alpha.8（实际 alpha.9）→ 补行改述 |
-| Y-32 | `docs/roadmap/ROADMAP.md:85-101` | Forward 表混入已发布行且漏 alpha.19/0.41.1/0.41.2 → 已发布行标 shipped |
-| Y-33 | `www/app/routes/guide/getting-started.tsx:35,66` | "0.41.0 freeze plan is active" 过期文案（冻结已落地）→ 改 shipped |
+| #    | 位置                                             | 证据与修法                                                                                                        |
+| ---- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Y-25 | `.github/workflows/autoflow-release.yml:44-57`   | 发布 workflow 零 gate，直接 dispatch 可绕过全部 release-tier gate → publish 前校验 prepare 记录或补跑 autoflow:ci |
+| Y-26 | `tools/autoflow/policy.ts` GATES                 | firefox/webkit smoke（`autoflow-ci.yml:37-46`）CI 在跑但未建模进 GATES → 补两 gate                                |
+| Y-27 | `tools/check-www-current-truth.ts`               | 源码版扫描不是 gate（仅非 gate 的 docs:truth 手动跑）→ 加进 GATES                                                 |
+| Y-28 | `tools/bump-version.ts:229-332`                  | 单独跑只 bump 一半（不碰 www/data/version.ts、project-constants、docs 锚点）→ 报头注明须经 autoflow release 流    |
+| Y-29 | `CHANGELOG.md:15`                                | 头部停 alpha.9，bump 不写、gate 不查 → 显式标记历史归档                                                           |
+| Y-30 | `docs/status/STATUS.md:62-63`                    | 声称 "start CLI is Deno-only"，代码 `adapter-vite/src/cli/start.ts:4-7` 已跨运行时 → 更新 risk #7                 |
+| Y-31 | `docs/status/STATUS.md:86-87`（及 :55-58）       | 发布表 alpha.8 列两次、漏 alpha.9/alpha.10；#619-623 hygiene 记错到 alpha.8（实际 alpha.9）→ 补行改述             |
+| Y-32 | `docs/roadmap/ROADMAP.md:85-101`                 | Forward 表混入已发布行且漏 alpha.19/0.41.1/0.41.2 → 已发布行标 shipped                                            |
+| Y-33 | `www/app/routes/guide/getting-started.tsx:35,66` | "0.41.0 freeze plan is active" 过期文案（冻结已落地）→ 改 shipped                                                 |
 
 ### 🟢 可接受记债
 
@@ -127,18 +133,18 @@
 
 ## 四、重复实现清单
 
-| 重复 | 位置 | 说明 |
-|---|---|---|
-| tag 校验 ×3 且规则不一致 | `element/island.ts:277-306` vs `tag-utils.ts:41-49` vs `app/spa.ts:25-32` | defineIsland 拒绝点/下划线，tag-utils 允许；SPA 放行 SSR 拒绝 |
-| 公共 props 过滤 ×2 | `element/render-dsd.ts:168-175` vs `props-utils.ts:17-24` | 同意图两份实现 |
-| JSONC 剥离 ×2 | `adapter-vite/workspace-alias.ts:17-67` vs `cli/build-client.ts:96-125` | 逐字符 vs 正则，行为不一致（行中 `//`） |
-| alias 特异性排序 ×2 | `adapter-vite/alias-utils.ts:22-26` vs `cli/build-client.ts:169-173` | 相同 comparator |
-| 递归目录/HTML walker ×5 | `build-plan.ts:64-72`、`build-manifest.ts:66-95`、`postprocess.ts:51-68`、`internal/html-files.ts:10-27`、`island-manifest.ts:125-162` | 同 readdir 递归，细节分歧 |
-| 路由路径转换 ×3 | `route-scanner.ts:116-147` vs `route-type-generator.ts:22-33` vs `route-manifest.ts:115-151` | 各自处理 index/分隔符 |
-| request context ×2 | `app/model.ts:29`+`hono.ts:36` vs `adapter-vite/nitro-mount.ts:56-58` | 两个平行形状 + 一个无消费方 API |
-| i18n 转发 ×3 | `app/i18n.ts:18-19` → `i18n-runtime.ts:84-85` → `internal/router/i18n.ts` | 三跳 re-export，i18n-runtime.ts 不在 exports |
-| 版本源 ×2 无交叉校验 | `create/version.ts:2` vs `tools/project-constants.ts:1` | 机械同步兜底但无 CI 断言 |
-| 事件符号转发层 | `element/event-hydration.ts:34-42` | re-export event-marker.ts 6 符号 |
+| 重复                     | 位置                                                                                                                                   | 说明                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| tag 校验 ×3 且规则不一致 | `element/island.ts:277-306` vs `tag-utils.ts:41-49` vs `app/spa.ts:25-32`                                                              | defineIsland 拒绝点/下划线，tag-utils 允许；SPA 放行 SSR 拒绝 |
+| 公共 props 过滤 ×2       | `element/render-dsd.ts:168-175` vs `props-utils.ts:17-24`                                                                              | 同意图两份实现                                                |
+| JSONC 剥离 ×2            | `adapter-vite/workspace-alias.ts:17-67` vs `cli/build-client.ts:96-125`                                                                | 逐字符 vs 正则，行为不一致（行中 `//`）                       |
+| alias 特异性排序 ×2      | `adapter-vite/alias-utils.ts:22-26` vs `cli/build-client.ts:169-173`                                                                   | 相同 comparator                                               |
+| 递归目录/HTML walker ×5  | `build-plan.ts:64-72`、`build-manifest.ts:66-95`、`postprocess.ts:51-68`、`internal/html-files.ts:10-27`、`island-manifest.ts:125-162` | 同 readdir 递归，细节分歧                                     |
+| 路由路径转换 ×3          | `route-scanner.ts:116-147` vs `route-type-generator.ts:22-33` vs `route-manifest.ts:115-151`                                           | 各自处理 index/分隔符                                         |
+| request context ×2       | `app/model.ts:29`+`hono.ts:36` vs `adapter-vite/nitro-mount.ts:56-58`                                                                  | 两个平行形状 + 一个无消费方 API                               |
+| i18n 转发 ×3             | `app/i18n.ts:18-19` → `i18n-runtime.ts:84-85` → `internal/router/i18n.ts`                                                              | 三跳 re-export，i18n-runtime.ts 不在 exports                  |
+| 版本源 ×2 无交叉校验     | `create/version.ts:2` vs `tools/project-constants.ts:1`                                                                                | 机械同步兜底但无 CI 断言                                      |
+| 事件符号转发层           | `element/event-hydration.ts:34-42`                                                                                                     | re-export event-marker.ts 6 符号                              |
 
 ---
 
