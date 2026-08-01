@@ -67,6 +67,25 @@ try {
     }
   }
 
+  // The starter's external npm:/jsr: deps (vite, @deno/vite-plugin, hono and
+  // its @jsr/* sub-dependencies) are NOT inside the local @openelement/*
+  // tarballs, and plain `npm install` cannot fetch them because @jsr/* packages
+  // are absent from the npm registry. Reuse the fully-resolved dependency tree
+  // already present in the repo's node_modules (populated by setup-deno-workspace
+  // and consistent with consumer-local.ts), linking any top-level entry that the
+  // freshly-installed tarballs did not already provide. Symlinks keep the nested
+  // .deno structure intact so @deno/vite-plugin can resolve @deno/loader.
+  const repoNodeModules = join(repoRoot, 'node_modules');
+  if (existsSync(repoNodeModules)) {
+    for (const entry of Deno.readDirSync(repoNodeModules)) {
+      const dest = join(tmp, 'node_modules', entry.name);
+      if (existsSync(dest)) continue; // local tarballs win
+      const src = join(repoNodeModules, entry.name);
+      await Deno.symlink(src, dest, { type: entry.isDirectory ? 'dir' : 'file' })
+        .catch(() => undefined);
+    }
+  }
+
   config.nodeModulesDir = 'manual';
   await Deno.writeTextFile(configPath, formatJson(config));
   await Deno.symlink(join(tmp, 'node_modules'), join(starter, 'node_modules'), { type: 'dir' });
