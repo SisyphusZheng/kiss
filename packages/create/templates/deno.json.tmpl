@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@deno/vite-plugin": "npm:@deno/vite-plugin",
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@2.0.3",
     "@openelement/app": "npm:@openelement/app@${v.app}",
     "@openelement/adapter-vite": "npm:@openelement/adapter-vite@${v.adapterVite}",
     "@openelement/adapter-vite/nitro-mount": "npm:@openelement/adapter-vite@${v.adapterVite}/nitro-mount",
@@ -8,13 +8,13 @@
     "@openelement/element/jsx-dev-runtime": "npm:@openelement/element@${v.element}/jsx-dev-runtime",
     "@openelement/element/jsx-runtime": "npm:@openelement/element@${v.element}/jsx-runtime",
     "hono": "npm:hono@^4.12",
-    "vite": "npm:vite@8.0.10"
+    "vite": "npm:vite@8.0.16"
   },
   "nodeModulesDir": "auto",
   "minimumDependencyAge": 0,
   "tasks": {
     "dev": "deno run --config deno.json -A npm:vite",
-    "check": "deno check --config deno.json app/routes/index.tsx app/routes/freshness.tsx app/routes/contact.tsx app/islands/my-counter.tsx",
+    "check": "deno check --config deno.json app/routes/index.tsx app/routes/freshness.tsx app/routes/contact.tsx app/islands/my-counter.tsx app/components/app-shell.tsx",
     "test": "deno test --config deno.json --permit-no-files",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/build",
     "start": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/start",
