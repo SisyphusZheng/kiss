@@ -537,6 +537,64 @@ Deno.test('defineApp navigates when the SPA loader throws redirect() (#731)', as
   }
 });
 
+Deno.test('defineApp keeps current page data when a guard vetoes the loader redirect (#802)', async () => {
+  const hosts: PageHostElement[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: PageHostElement) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      {
+        path: '/',
+        tagName: 'home-page',
+        loader: () => Promise.resolve({ page: 'home' }),
+      },
+      {
+        path: '/away',
+        tagName: 'away-page',
+        loader: () => {
+          redirect('/login');
+        },
+      },
+      {
+        path: '/login',
+        tagName: 'login-page',
+        guard: () => Promise.resolve(false),
+        loader: () => Promise.resolve({ page: 'login' }),
+      },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].data, { page: 'home' });
+
+    await app.router?.navigate('/away');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The guard vetoed the redirect target, so the navigation never
+    // committed: no re-render with `data: undefined` — the current page
+    // keeps its loader data (same as the action redirect path).
+    assertEquals(env.pushed, ['/away']);
+    assertEquals(app.router?.currentPath, '/away');
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].data, { page: 'home' });
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
 Deno.test('defineApp navigates when the SPA action throws redirect() (#731)', async () => {
   let submit: ((event: Event) => void) | undefined;
   const hosts: PageHostElement[] = [];

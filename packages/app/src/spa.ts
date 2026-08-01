@@ -60,12 +60,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
    * rather than silently receiving an empty data shape.
    *
    * redirect()/notFound() are control flow, not failures (#731): a redirect
-   * navigates the router (the navigation bumps renderId, so the in-flight
-   * render cycle aborts before committing), and a notFound rides the same
-   * page error channel with the original error so the error definition can
-   * read its 404 status/message — mirroring the server chain.
+   * navigates the router (a committed navigation bumps renderId, so the
+   * in-flight render cycle aborts before committing; a guard-vetoed redirect
+   * is flagged via `redirected` so the caller keeps the current page data
+   * instead of clearing it — #802), and a notFound rides the same page error
+   * channel with the original error so the error definition can read its 404
+   * status/message — mirroring the server chain.
    */
-  async function runLoader(): Promise<{ data: unknown; error?: unknown }> {
+  async function runLoader(): Promise<{ data: unknown; error?: unknown; redirected?: boolean }> {
     if (!router) return { data: undefined };
     const route = router.currentRoute;
     if (!route?.loader) return { data: undefined };
@@ -75,7 +77,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       if (isOpenElementRedirect(err)) {
         // Skip navigation if the app was disposed while the loader awaited.
         if (router) await router.navigate(err.location);
-        return { data: undefined };
+        return { data: undefined, redirected: true };
       }
       if (isOpenElementNotFound(err)) {
         return { data: undefined, error: err };
@@ -87,7 +89,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   /** Render the current custom-element route into rootEl. */
   function renderComponent(): void {
     if (!router || !rootEl) return;
-    const route = router.currentRoute as RouteConfig;
+    const route = router.currentRoute;
     rootEl.innerHTML = '';
 
     if (!route) return;
@@ -106,7 +108,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     const el = document.createElement(route.tagName) as PageHostElement;
     const request = typeof location === 'undefined' ? undefined : requestCache.get(
-      new URL(router.currentPath || '/', location.href ?? 'http://localhost/').href,
+      new URL(router.currentPath || '/', location.href).href,
     );
     applyPageHostData(el, {
       data: currentLoaderData,
@@ -128,8 +130,12 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const currentRender = ++renderId;
 
     // Load before committing so stale navigations cannot overwrite the current route.
-    const { data: loaderData, error: loaderError } = await runLoader();
+    const { data: loaderData, error: loaderError, redirected } = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
+    // A guard vetoed the loader's redirect: the navigation never committed, so
+    // keep the current page's loader data rather than re-rendering with
+    // `data: undefined` — mirroring the action redirect path (#802).
+    if (redirected) return;
     currentLoaderData = loaderData;
     currentLoaderError = loaderError;
     currentActionData = undefined;

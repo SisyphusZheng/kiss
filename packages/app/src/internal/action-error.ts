@@ -1,19 +1,48 @@
 /** Compatible with console.error and the tagged Logger from createLogger(). */
 export type ActionErrorLogger = (msg: string, ...args: unknown[]) => void;
 
+/** The failure channel a normalized error rides: action data or page error. */
+type FailureChannel = 'action' | 'loader';
+
+/**
+ * Convert an exception into stable render data and environment-safe
+ * diagnostics for the given channel. Callers pass their own tagged logger
+ * (e.g. the spa logger) so the messages carry the caller's tag instead of a
+ * hardcoded prefix.
+ */
+function normalizeFailure(
+  channel: 'action',
+  error: unknown,
+  development: boolean,
+  log: ActionErrorLogger,
+): { error: 'Action failed' };
+function normalizeFailure(
+  channel: 'loader',
+  error: unknown,
+  development: boolean,
+  log: ActionErrorLogger,
+): { error: 'Loader failed' };
+function normalizeFailure(
+  channel: FailureChannel,
+  error: unknown,
+  development: boolean,
+  log: ActionErrorLogger,
+): { error: 'Action failed' } | { error: 'Loader failed' } {
+  if (development) log(`${channel} failed:`, error);
+  else log(`${channel} failed`);
+  return channel === 'action' ? { error: 'Action failed' } : { error: 'Loader failed' };
+}
+
 /**
  * Convert an action exception into stable render data and environment-safe
- * diagnostics. Callers pass their own tagged logger (e.g. the spa logger) so
- * the messages carry the caller's tag instead of a hardcoded prefix.
+ * diagnostics. The shape rides the action data channel.
  */
 export function normalizeActionFailure(
   error: unknown,
   development: boolean,
   log: ActionErrorLogger = console.error,
 ): { error: 'Action failed' } {
-  if (development) log('action failed:', error);
-  else log('action failed');
-  return { error: 'Action failed' };
+  return normalizeFailure('action', error, development, log);
 }
 
 /**
@@ -26,7 +55,5 @@ export function normalizeLoaderFailure(
   development: boolean,
   log: ActionErrorLogger = console.error,
 ): { error: 'Loader failed' } {
-  if (development) log('loader failed:', error);
-  else log('loader failed');
-  return { error: 'Loader failed' };
+  return normalizeFailure('loader', error, development, log);
 }

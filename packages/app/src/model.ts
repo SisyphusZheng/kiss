@@ -1,5 +1,4 @@
 /** Host-agnostic request context shared by App request adapters. */
-import type { OpenElementRouteNode } from '@openelement/element';
 
 export interface OpenElementRequestContext<
   Env extends Record<string, unknown> = Record<string, unknown>,
@@ -12,7 +11,6 @@ export interface OpenElementRequestContext<
   searchParams: URLSearchParams;
   env?: Env;
   platform?: unknown;
-  route?: OpenElementRouteNode;
 }
 
 export interface CreateRequestContextOptions<
@@ -22,7 +20,6 @@ export interface CreateRequestContextOptions<
   params?: Record<string, string>;
   env?: Env;
   platform?: unknown;
-  route?: OpenElementRouteNode;
 }
 
 export function createRequestContext<
@@ -38,18 +35,5 @@ export function createRequestContext<
     searchParams: url.searchParams,
     env: options.env,
     platform: options.platform,
-    route: options.route ? normalizeRouteNode(options.route) : undefined,
-  };
-}
-
-function normalizeRouteNode(route: OpenElementRouteNode): OpenElementRouteNode {
-  const path = route.path.trim();
-  const withSlash = path.startsWith('/') ? path : `/${path}`;
-  return {
-    ...route,
-    path: withSlash.length > 1 ? withSlash.replace(/\/+$/, '') : withSlash,
-    paramNames: route.paramNames ? [...route.paramNames] : undefined,
-    children: route.children?.map(normalizeRouteNode),
-    meta: route.meta ? { ...route.meta } : undefined,
   };
 }

@@ -54,3 +54,11 @@ Deno.test('useLoaderData reads the active per-render context, not a process glob
   assertEquals(useActionData(), undefined);
   assertEquals(__activeDataContext().stack.length, 0);
 });
+
+Deno.test('useLoaderData types undefined into the return instead of erasing it (#763)', () => {
+  // Type-level: loader-less routes / outside render scope legitimately yield
+  // undefined, so the hook's return type must include it (aligned with
+  // useActionData) — dereferencing requires a narrowing check.
+  const data: { message: string } | undefined = useLoaderData<{ message: string }>();
+  assertEquals(data, undefined);
+});

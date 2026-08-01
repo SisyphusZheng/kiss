@@ -15,7 +15,6 @@ import { assertValidTagName, getSsrProps } from '@openelement/element';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import { renderToString } from 'preact-render-to-string';
-import type { IslandConfig } from './authoring.ts';
 
 export type PreactIslandProps = Record<string, unknown>;
 
@@ -25,7 +24,14 @@ export type PreactIslandComponent<
   props: Props,
 ) => ComponentChild;
 
-export interface PreactIslandOptions extends IslandConfig {
+export interface PreactIslandOptions {
+  /**
+   * Server-render the island into DSD (default). Set `false` for a CSR-only
+   * island rendered from scratch in clientActivate(). Note: `hydrate`/`dsd`
+   * strategies from defineIslandConfig() are not supported here — the island
+   * activates immediately.
+   */
+  ssr?: boolean;
   props?: PreactIslandProps;
 }
 

@@ -7,7 +7,6 @@ Deno.test('request context normalizes Web Request details', () => {
     params: { id: '42' },
     env: { stage: 'test' },
     platform: { runtime: 'node' },
-    route: { kind: 'page', path: 'notes/:id/', paramNames: ['id'] },
   });
 
   assertEquals(context.path, '/notes/42');
@@ -16,11 +15,9 @@ Deno.test('request context normalizes Web Request details', () => {
   assertEquals(context.searchParams.get('tab'), 'reader');
   assertEquals(context.env, { stage: 'test' });
   assertEquals(context.platform, { runtime: 'node' });
-  assertEquals(context.route?.path, '/notes/:id');
-  assertEquals(context.route?.paramNames, ['id']);
 });
 
-Deno.test('request context defaults optional route and params', () => {
+Deno.test('request context defaults optional params', () => {
   const context = createRequestContext({
     request: new Request('https://example.test/freeform'),
   });
@@ -28,6 +25,5 @@ Deno.test('request context defaults optional route and params', () => {
   assertEquals(context.path, '/freeform');
   assertEquals(context.method, 'GET');
   assertEquals(context.params, {});
-  assertEquals(context.route, undefined);
   assertEquals(context.platform, undefined);
 });

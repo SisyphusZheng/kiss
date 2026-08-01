@@ -21,7 +21,7 @@ import {
 import { OpenElement } from '@openelement/element';
 import { signal } from '@openelement/element';
 import { h } from 'preact';
-import { definePreactIsland } from '../src/preact.ts';
+import { definePreactIsland, type PreactIslandOptions } from '../src/preact.ts';
 import { installDomStubs, StubNode, suppressDocument } from './dom-stubs.ts';
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -280,24 +280,6 @@ Deno.test('Preact island smoke: render() returns null on client path', () => {
   }
 });
 
-Deno.test('Preact island smoke: clientActivate exists on island instance', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'client');
-    const ctor = definePreactIsland('test-client-hook', Component as never);
-    const instance = new ctor() as OpenElement;
-
-    // Verify clientActivate is inherited from OpenElement and overridden by definePreactIsland
-    assertEquals(
-      typeof (instance as unknown as { clientActivate?: () => void })
-        .clientActivate,
-      'function',
-    );
-  } finally {
-    restore();
-  }
-});
-
 Deno.test('Preact island smoke: clientActivate creates shadow root', () => {
   const restore = installDomStubs();
   try {
@@ -354,41 +336,6 @@ Deno.test('Preact island smoke: clientActivate with ssr=false uses render path',
 
 // ── 5. Dismount / cleanup ──
 
-Deno.test('Preact island smoke: disconnectedCallback exists', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'content');
-    const ctor = definePreactIsland('test-disconnect', Component as never);
-    const instance = new ctor() as OpenElement;
-
-    // disconnectedCallback is inherited from OpenElement
-    assertEquals(
-      typeof (instance as { disconnectedCallback?: unknown })
-        .disconnectedCallback,
-      'function',
-    );
-  } finally {
-    restore();
-  }
-});
-
-Deno.test('Preact island smoke: connectedCallback exists', () => {
-  const restore = installDomStubs();
-  try {
-    const Component = () => h('div', null, 'content');
-    const ctor = definePreactIsland('test-connect', Component as never);
-    const instance = new ctor() as OpenElement;
-
-    // connectedCallback is inherited from OpenElement
-    assertEquals(
-      typeof (instance as { connectedCallback?: unknown }).connectedCallback,
-      'function',
-    );
-  } finally {
-    restore();
-  }
-});
-
 Deno.test('Preact island smoke: dismount does not throw', () => {
   const restore = installDomStubs();
   try {
@@ -431,10 +378,7 @@ Deno.test('Preact island smoke: definePreactIsland registers custom element', ()
       string,
       CustomElementConstructor
     >;
-    assertEquals(
-      registry.get(tagName) ?? globalThis.customElements.get(tagName),
-      ctor,
-    );
+    assertEquals(registry.get(tagName), ctor);
   } finally {
     restore();
   }
@@ -454,4 +398,16 @@ Deno.test('Preact island smoke: rejects invalid custom element tag names', () =>
   } finally {
     restore();
   }
+});
+
+Deno.test('Preact island smoke: options are fail-closed — hydrate/dsd fields are type errors (#767)', () => {
+  // PreactIslandOptions is narrowed to { ssr?, props? }: definePreactIsland
+  // never reads hydrate/dsd, so passing them must fail at type level instead
+  // of silently behaving differently from defineIsland.
+  const options: PreactIslandOptions = {
+    ssr: false,
+    // @ts-expect-error hydrate is a defineIslandConfig-only field
+    hydrate: 'visible',
+  };
+  assertEquals(options.ssr, false);
 });

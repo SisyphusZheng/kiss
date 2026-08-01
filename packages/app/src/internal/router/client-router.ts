@@ -1,5 +1,5 @@
 /**
- * @openelement/router/client-router - URL-based client-side router.
+ * @openelement/app/internal/router/client-router - URL-based client-side router.
  *
  * Supports history (pushState), hash, and auto-detection modes.
  * Route patterns use `:param` for named params and `:param?` for optional params.

@@ -1,5 +1,5 @@
 /**
- * @openelement/router - Data context for route loader/action data.
+ * @openelement/app/internal/router - Data context for route loader/action data.
  *
  * Provides render-scoped state for loader and action data, consumed by
  * useLoaderData / useActionData hooks inside route page renders.
@@ -18,15 +18,17 @@ import { __activeDataContext, currentActionData, currentLoaderData } from './dat
 
 /**
  * Read loader data within a route page render.
- * Returns the data returned by the route's `loader` export.
+ * Returns the data returned by the route's `loader` export, or `undefined`
+ * when the route has no loader, the loader returned `undefined`, or the hook
+ * is called outside a page render scope.
  *
  * @example
  * ```ts
  * const data = useLoaderData<{ message: string }>();
  * ```
  */
-export function useLoaderData<T = unknown>(): T {
-  return currentLoaderData(__activeDataContext()) as T;
+export function useLoaderData<T = unknown>(): T | undefined {
+  return currentLoaderData(__activeDataContext()) as T | undefined;
 }
 
 /**
