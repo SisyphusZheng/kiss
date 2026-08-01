@@ -15,7 +15,7 @@ authoring modes = Basic Element standalone + full application
 | Package                     | Responsibility                                       | Supported public interface                                              |
 | --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
 | `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`                   |
-| `@openelement/app`          | Pages, routing, islands and request/render semantics | root, `hono`, `model`, `spa`, `preact`                                  |
+| `@openelement/app`          | Pages, routing, islands and request/render semantics | root, `model`, `spa`, `preact`                                          |
 | `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation    | root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview`, `sitemap` |
 | `@openelement/create`       | Installed starter and coherent version entry         | CLI binary (root)                                                       |
 | `@openelement/ui`           | Optional, proven general-purpose primitives          | root and retained primitive subpaths                                    |
@@ -51,7 +51,7 @@ promise and are not application-authoring surface.
     "internal": []
   },
   "@openelement/app": {
-    "supported": [".", "hono", "model", "spa", "preact"],
+    "supported": [".", "model", "spa", "preact"],
     "internal": ["i18n"]
   },
   "@openelement/adapter-vite": {

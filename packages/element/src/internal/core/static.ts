@@ -21,12 +21,7 @@ export { renderDsd } from './render-dsd.ts';
 export type { RenderDsdOptions } from './render-dsd.ts';
 
 // HTML escaping / document wrapping
-export {
-  escapeAttr,
-  escapeAttrValue,
-  escapeHtml,
-  wrapInDocument,
-} from './html-escape.ts';
+export { escapeAttr, escapeAttrValue, escapeHtml, wrapInDocument } from './html-escape.ts';
 export type { SafeHtml, UnsafeHtml } from '../protocol/framework.ts';
 
 // Security / errors / logging

@@ -128,12 +128,7 @@ export { consumeContext, type Context, createContext, provideContext } from './s
 export { createLogger } from './logger.ts';
 export { assertValidTagName, isValidTagName } from './tag-utils.ts';
 export { normalizeSeparators, pathToTagName } from './path-utils.ts';
-export {
-  bindSsrProps,
-  defineCustomElement,
-  defineIsland,
-  getSsrProps,
-} from './island.ts';
+export { bindSsrProps, defineCustomElement, defineIsland, getSsrProps } from './island.ts';
 export type { IslandMeta, IslandOptions } from '../protocol/island.ts';
 export { transformIslandSource } from './island-transform.ts';
 export type { IslandTransformOptions, IslandTransformResult } from '../protocol/island.ts';

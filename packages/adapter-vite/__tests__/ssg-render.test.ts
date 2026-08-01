@@ -1,7 +1,13 @@
 /**
  * @openelement/adapter-vite - ssg-render.ts tests
  */
-import { assert, assertEquals, assertRejects, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import {
+  assert,
+  assertEquals,
+  assertRejects,
+  assertStringIncludes,
+  assertThrows,
+} from 'jsr:@std/assert@^1.0.0';
 import { Hono } from 'hono';
 import { resolveDynamicRoutePath, ssgRender } from '../src/internal/ssg/index.ts';
 import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
@@ -436,7 +442,11 @@ Deno.test('ssgRender - sitemap failure is surfaced as a warning when sitemapFail
       // 🟡-A fix: explicit 'warn' downgrades the failure to a recorded warning
       sitemapFailure: 'warn',
     },
-    { onGenerateSitemap: () => { throw new Error('boom'); } },
+    {
+      onGenerateSitemap: () => {
+        throw new Error('boom');
+      },
+    },
   );
 
   assertEquals(summary.warnings.length, 1);
@@ -455,7 +465,11 @@ Deno.test('ssgRender - sitemap failure aborts the build by default (sitemapFailu
       ssgRender(
         bundle,
         { ...defaultOptions, outDir },
-        { onGenerateSitemap: () => { throw new Error('boom'); } },
+        {
+          onGenerateSitemap: () => {
+            throw new Error('boom');
+          },
+        },
       ),
     Error,
     'Sitemap generation failed',

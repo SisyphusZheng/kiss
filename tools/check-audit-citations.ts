@@ -46,7 +46,8 @@ interface ResolvedLine {
 type ResolveResult = { path: string } | { ambiguous: string[] } | { missing: true };
 
 const SOURCE_ROOTS = ['packages', 'www', 'tools', 'examples', 'docs'];
-const SKIP_RE = /[/\\](node_modules|dist|vendor|\.nitro|www\/public|www\/content\/blog|playwright-report|test-results)[/\\]/;
+const SKIP_RE =
+  /[/\\](node_modules|dist|vendor|\.nitro|www\/public|www\/content\/blog|playwright-report|test-results)[/\\]/;
 
 async function exists(path: string): Promise<boolean> {
   try {
@@ -104,7 +105,11 @@ async function readFileAt(path: string, sha?: string): Promise<string | null> {
   if (cached !== undefined) return cached;
   let content: string | null;
   if (sha) {
-    const cmd = new Deno.Command('git', { args: ['show', `${sha}:${path}`], stdout: 'piped', stderr: 'null' });
+    const cmd = new Deno.Command('git', {
+      args: ['show', `${sha}:${path}`],
+      stdout: 'piped',
+      stderr: 'null',
+    });
     const { success, stdout } = await cmd.output();
     content = success ? new TextDecoder().decode(stdout) : null;
   } else {
@@ -158,11 +163,19 @@ async function checkReport(path: string, sha?: string): Promise<Report> {
   for (const c of citations) {
     const result = await resolveFile(c.file);
     if ('missing' in result) {
-      drifts.push({ citation: c, reason: 'file not found (moved, deleted, or abbreviated path unresolved)' });
+      drifts.push({
+        citation: c,
+        reason: 'file not found (moved, deleted, or abbreviated path unresolved)',
+      });
       continue;
     }
     if ('ambiguous' in result) {
-      drifts.push({ citation: c, reason: `ambiguous path (${result.ambiguous.length} candidates: ${result.ambiguous.join(', ')})` });
+      drifts.push({
+        citation: c,
+        reason: `ambiguous path (${result.ambiguous.length} candidates: ${
+          result.ambiguous.join(', ')
+        })`,
+      });
       continue;
     }
     const content = await readFileAt(result.path, sha);
@@ -173,7 +186,10 @@ async function checkReport(path: string, sha?: string): Promise<Report> {
     const lines = content.split('\n');
     const lastLine = c.end ?? c.start;
     if (c.start < 1 || lastLine > lines.length) {
-      drifts.push({ citation: c, reason: `line out of range (file now has ${lines.length} lines)` });
+      drifts.push({
+        citation: c,
+        reason: `line out of range (file now has ${lines.length} lines)`,
+      });
       continue;
     }
     const cited = lines.slice(c.start - 1, lastLine).join(' ').trim();
@@ -191,7 +207,11 @@ function proseContext(md: string, at: number): string {
 
 function renderAppendix(report: Report, sha?: string): string {
   const lines: string[] = ['', '---', '', '## 引用时效复核（自动生成）', ''];
-  lines.push(`> 本附录由 \`tools/check-audit-citations.ts\` 生成。基线：${sha ? `commit ${sha}` : '当前工作树'}。`);
+  lines.push(
+    `> 本附录由 \`tools/check-audit-citations.ts\` 生成。基线：${
+      sha ? `commit ${sha}` : '当前工作树'
+    }。`,
+  );
   lines.push(`> 引用总数：${report.citations.length}；漂移：${report.drifts.length}。`);
   lines.push('');
   if (report.drifts.length > 0) {
@@ -221,7 +241,9 @@ async function main() {
   } else {
     const found: string[] = [];
     for await (const entry of Deno.readDir('.')) {
-      if (entry.isFile && entry.name.startsWith('openelement-audit-') && entry.name.endsWith('.md')) {
+      if (
+        entry.isFile && entry.name.startsWith('openelement-audit-') && entry.name.endsWith('.md')
+      ) {
         found.push(entry.name);
       }
     }

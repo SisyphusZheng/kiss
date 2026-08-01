@@ -12,7 +12,6 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   },
   'app': {
     '.': 'src/index.ts',
-    'hono': 'src/hono.ts',
     'i18n': 'src/i18n.ts',
     'model': 'src/model.ts',
     'preact': 'src/preact.ts',

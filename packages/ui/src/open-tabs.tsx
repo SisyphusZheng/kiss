@@ -24,9 +24,15 @@ export class OpenTabs extends OpenElement {
   #onKeydown(e: KeyboardEvent, count: number): void {
     if (count === 0) return;
     const key = e.key;
-    const next = key === 'Home' ? 0 : key === 'End' ? count - 1 : key === 'ArrowLeft'
-      ? (this.#active.value - 1 + count) % count : key === 'ArrowRight'
-      ? (this.#active.value + 1) % count : undefined;
+    const next = key === 'Home'
+      ? 0
+      : key === 'End'
+      ? count - 1
+      : key === 'ArrowLeft'
+      ? (this.#active.value - 1 + count) % count
+      : key === 'ArrowRight'
+      ? (this.#active.value + 1) % count
+      : undefined;
     if (next === undefined) return;
     e.preventDefault();
     this.#select(next);
@@ -37,7 +43,11 @@ export class OpenTabs extends OpenElement {
     const count = Math.min(tabs.length, panels.length);
     return (
       <div>
-        <div class='tabs' role='tablist' onKeydown={(e: KeyboardEvent) => this.#onKeydown(e, count)}>
+        <div
+          class='tabs'
+          role='tablist'
+          onKeydown={(e: KeyboardEvent) => this.#onKeydown(e, count)}
+        >
           {tabs.map((tab, i) => (
             <button
               type='button'

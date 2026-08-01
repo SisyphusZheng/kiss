@@ -13,7 +13,7 @@ import {
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 import { normalizeActionFailure } from './internal/action-error.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
-import { createLogger, assertValidTagName } from '@openelement/element';
+import { assertValidTagName, createLogger } from '@openelement/element';
 
 const log = createLogger('spa');
 

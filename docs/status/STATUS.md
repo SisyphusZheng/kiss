@@ -77,19 +77,19 @@ cache/ISR, auth packages (0.44 or recipes).
 
 ## Release direction
 
-| Version           | Focus                                                                |
-| ----------------- | -------------------------------------------------------------------- |
-| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)                          |
-| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                        |
-| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                                 |
-| `0.41.0`          | Separate stable decision after alpha.19 evidence                     |
-| `0.42.0-alpha.8`  | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9  |
-| `0.42.0-alpha.9`  | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623  |
-| `0.42.0-alpha.10` | In-flight source line (bump committed, unpublished)                 |
-| `0.42.0`          | WC light fullstack (Application Loop freeze)                         |
-| `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                 |
-| `0.44.0`          | Production runtime (session/cache/OTel/streaming)                    |
-| `1.0.0`           | Stable five-package product                                          |
+| Version           | Focus                                                             |
+| ----------------- | ----------------------------------------------------------------- |
+| `0.41.0-alpha.17` | First audit remediation baseline (ADR-0116)                       |
+| `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                     |
+| `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                              |
+| `0.41.0`          | Separate stable decision after alpha.19 evidence                  |
+| `0.42.0-alpha.8`  | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9 |
+| `0.42.0-alpha.9`  | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623 |
+| `0.42.0-alpha.10` | In-flight source line (bump committed, unpublished)               |
+| `0.42.0`          | WC light fullstack (Application Loop freeze)                      |
+| `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)              |
+| `0.44.0`          | Production runtime (session/cache/OTel/streaming)                 |
+| `1.0.0`           | Stable five-package product                                       |
 
 > **Version hole — `0.42.0-alpha.8` is skipped / npm-unpublished.** Its git tag
 > (`0ec10568`) and GitHub release exist, but the npm publish never completed, so
