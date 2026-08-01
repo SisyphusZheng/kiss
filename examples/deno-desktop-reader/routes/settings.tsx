@@ -2,6 +2,7 @@
 import { OpenElement } from '@openelement/element';
 import { addSource, listSources, syncSource } from '../app/api.ts';
 import { loadSettings, saveSettings } from '../app/storage.ts';
+import { pdfMaxWidth } from '../app/pdf-measure.ts';
 import type { ReaderSettings, ReaderSource } from '../app/types.ts';
 
 function applyTheme(theme: string): void {
@@ -24,7 +25,7 @@ function applyMeasure(chars: number): void {
   document.documentElement.style.setProperty('--reader-measure', `${chars}ch`);
   document.documentElement.style.setProperty(
     '--reader-pdf-max-width',
-    `${Math.max(720, chars * 14)}px`,
+    `${pdfMaxWidth(chars)}px`,
   );
 }
 
@@ -36,26 +37,33 @@ export async function loader(): Promise<SettingsData> {
   return { ...loadSettings(), sources: await listSources() };
 }
 
+async function addAndSyncSource(
+  formData: FormData,
+): Promise<{ source: ReaderSource; synced: number }> {
+  const kind = String(formData.get('kind') ?? 'local');
+  const label = String(formData.get('label') ?? '').trim();
+  const root = String(formData.get('root') ?? '').trim();
+  const repo = String(formData.get('repo') ?? '').trim();
+  const branch = String(formData.get('branch') ?? 'main').trim();
+  const path = String(formData.get('path') ?? '').trim();
+  const source = await addSource({
+    kind: kind === 'github' ? 'github' : 'local',
+    label,
+    root: root || undefined,
+    repo: repo || undefined,
+    branch: branch || undefined,
+    path: path || undefined,
+  });
+  const result = await syncSource(source.id);
+  return { source, synced: result.books.length };
+}
+
 export async function action(
   ctx: { formData?: FormData },
 ): Promise<{ added?: string; synced?: number; error?: string }> {
-  const kind = String(ctx.formData?.get('kind') ?? 'local');
-  const label = String(ctx.formData?.get('label') ?? '').trim();
-  const root = String(ctx.formData?.get('root') ?? '').trim();
-  const repo = String(ctx.formData?.get('repo') ?? '').trim();
-  const branch = String(ctx.formData?.get('branch') ?? 'main').trim();
-  const path = String(ctx.formData?.get('path') ?? '').trim();
   try {
-    const source = await addSource({
-      kind: kind === 'github' ? 'github' : 'local',
-      label,
-      root: root || undefined,
-      repo: repo || undefined,
-      branch: branch || undefined,
-      path: path || undefined,
-    });
-    const result = await syncSource(source.id);
-    return { added: source.id, synced: result.books.length };
+    const { source, synced } = await addAndSyncSource(ctx.formData ?? new FormData());
+    return { added: source.id, synced };
   } catch (err) {
     return { error: err instanceof Error ? err.message : String(err) };
   }
@@ -70,25 +78,10 @@ export default class SettingsPage extends OpenElement {
   async #submitSourceForm(event: Event): Promise<void> {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
-    const formData = new FormData(form);
-    const kind = String(formData.get('kind') ?? 'local');
-    const label = String(formData.get('label') ?? '').trim();
-    const root = String(formData.get('root') ?? '').trim();
-    const repo = String(formData.get('repo') ?? '').trim();
-    const branch = String(formData.get('branch') ?? 'main').trim();
-    const path = String(formData.get('path') ?? '').trim();
     try {
-      const source = await addSource({
-        kind: kind === 'github' ? 'github' : 'local',
-        label,
-        root: root || undefined,
-        repo: repo || undefined,
-        branch: branch || undefined,
-        path: path || undefined,
-      });
-      const result = await syncSource(source.id);
+      const { source, synced } = await addAndSyncSource(new FormData(form));
       (this as unknown as SettingsPage & SettingsData).sources = await listSources();
-      this.#sourceFeedback = { added: source.id, synced: result.books.length };
+      this.#sourceFeedback = { added: source.id, synced };
       form.reset();
       const branchInput = this.shadowRoot?.querySelector<HTMLInputElement>('input[name="branch"]');
       if (branchInput) branchInput.value = 'main';

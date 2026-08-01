@@ -5,7 +5,8 @@
   "tasks": {
     "dev": "vite",
     "build": "vite build",
-    "start": "deno serve -A _fresh/server.js"
+    "start": "deno serve -A _fresh/server.js",
+    "check": "deno install && deno check main.ts client.ts custom-elements.d.ts routes/index.tsx islands/OpenElements.tsx islands/PreactCounter.tsx"
   },
   "lint": {
     "rules": {

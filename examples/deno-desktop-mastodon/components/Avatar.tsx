@@ -21,6 +21,9 @@ export default function Avatar({ account, size = 40, onClick }: AvatarProps) {
       loading='lazy'
       onError={(e: Event) => {
         const img = e.currentTarget as HTMLImageElement;
+        // Already showing the fallback: stop here instead of retrying forever
+        // (e.g. offline, where the fallback host is unreachable too).
+        if (img.src === fallback) return;
         img.src = fallback;
       }}
       onClick={onClick}

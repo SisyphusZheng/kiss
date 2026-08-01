@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { definePreactIsland } from '@openelement/app/preact';
+import { pdfMaxWidth } from '../app/pdf-measure.ts';
 
 interface PdfReaderProps {
   'book-id'?: string;
@@ -82,7 +83,7 @@ function loadReaderSettings(): ReaderPreferenceSettings {
       fontSize: Number(parsed.fontSize) || defaults.fontSize,
       lineHeight: Number(parsed.lineHeight) || defaults.lineHeight,
       measure,
-      pdfMaxWidth: Math.max(720, measure * 14),
+      pdfMaxWidth: pdfMaxWidth(measure),
     };
   } catch {
     return defaults;
@@ -145,10 +146,6 @@ function PdfReaderIsland(props: PdfReaderProps) {
       detail: { bookId, page, zoom },
     });
     globalThis.dispatchEvent(event);
-    localStorage.setItem(
-      `reader:progress:${bookId}`,
-      JSON.stringify({ page, zoom }),
-    );
     void fetch(`/api/books/${encodeURIComponent(bookId)}/progress`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -319,7 +316,6 @@ function PdfReaderIsland(props: PdfReaderProps) {
         .selection-toolbar{align-items:center;background:var(--bg-card,#fff);border:1px solid var(--border,#ddd);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.13);display:flex;gap:8px;left:50%;padding:10px 14px;position:sticky;top:46%;transform:translateX(-50%);width:max-content;z-index:3}
         .selection-toolbar button{align-items:center;background:transparent;border:0;border-radius:8px;color:var(--text-secondary,#444);cursor:pointer;display:inline-flex;font:600 14px/1 var(--font-sans,system-ui);height:34px;justify-content:center;min-width:34px;padding:0 9px}
         .selection-toolbar button:hover{background:var(--bg-hover,#f0f0ed);color:var(--text-primary,#111)}
-        .selection-color{background:var(--brand,#2f6f45)!important;border-radius:999px!important;height:18px!important;min-width:18px!important;width:18px!important}
         .pdf-loading{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--text-muted,#888);font-size:14px}
         .pdf-error{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--error-fg,#c8392a);font-size:14px;text-align:center;padding:20px}
       `,
@@ -382,24 +378,16 @@ function PdfReaderIsland(props: PdfReaderProps) {
         ]),
         selectedText &&
         h('div', { class: 'selection-toolbar' }, [
-          h('button', { class: 'selection-color', type: 'button', title: 'Highlight' }, ''),
           h('button', {
             type: 'button',
             title: '批注',
             onClick: () => requestNote(selectedText),
           }, '✎'),
-          h('button', { type: 'button', title: '字体' }, 'A'),
-          h('button', {
-            type: 'button',
-            title: '笔记',
-            onClick: () => requestNote(selectedText),
-          }, '▢'),
           h('button', {
             type: 'button',
             title: '复制',
             onClick: () => navigator.clipboard?.writeText(selectedText),
           }, '⧉'),
-          h('button', { type: 'button', title: '更多' }, '•••'),
         ]),
       ]),
   ]);

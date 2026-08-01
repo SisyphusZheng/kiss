@@ -38,6 +38,12 @@ capabilities.
 
 ```sh
 deno task dev          # Vite HMR at http://localhost:5173
+
+# Or run the API and web dev servers in separate terminals (recommended:
+# `deno task dev` backgrounds the API with `&`, so Ctrl-C only stops Vite
+# and leaves the API holding port 8000)
+deno task dev:api      # API server on http://localhost:8000
+deno task dev:web      # Vite HMR at http://localhost:5173
 ```
 
 ## Build Desktop
@@ -56,8 +62,8 @@ open deno-desktop-reader.app
 - `islands/` — Preact islands for the PDF surface, search input, note hint, and
   sync state
 - `components/` — Shared components (BookCard)
-- `app/` — API client, Deno host store, browser storage, repo helpers, search,
-  export
+- `app/` — API client, Deno host store (including Markdown note export),
+  browser storage, repo helpers, search
 - `vite.config.ts` — openElement({ mode: 'spa' })
 
 ## Reader API

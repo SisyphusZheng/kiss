@@ -20,7 +20,7 @@ inside this example; `smoke` below refers to that example-local task.
 | PDF/text reading             | Browser smoke, `test:visual-smoke`                               |
 | Search                       | `deno task smoke` host-store tests                               |
 | Annotation and note jump     | Browser smoke, Reader route tests                                |
-| Markdown export              | `deno task smoke` export tests                                   |
+| Markdown export              | `deno task smoke` host-store tests                               |
 | Reading settings             | Browser smoke, storage tests                                     |
 | OpenElement UI/Open Props    | `test:visual-smoke`, UI package tests                            |
 | Preact islands               | `deno task smoke` (island registration)                          |

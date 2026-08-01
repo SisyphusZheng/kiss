@@ -2,6 +2,7 @@
 import { defineApp } from '@openelement/app/spa';
 import { OpenElement } from '@openelement/element';
 import { setRouter } from './router.ts';
+import { pdfMaxWidth } from './app/pdf-measure.ts';
 
 // Register all @openelement/ui custom elements + design tokens
 import '@openelement/ui';
@@ -32,7 +33,7 @@ try {
       document.documentElement.style.setProperty('--reader-measure', `${parsed.measure}ch`);
       document.documentElement.style.setProperty(
         '--reader-pdf-max-width',
-        `${Math.max(720, Number(parsed.measure) * 14)}px`,
+        `${pdfMaxWidth(Number(parsed.measure))}px`,
       );
     }
   }

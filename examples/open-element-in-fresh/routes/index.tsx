@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>openElement in Fresh — alpha.4 Interop Proof</title>
+        <title>openElement in Fresh — 0.42.0-alpha.10 Interop Proof</title>
         <meta
           name='description'
           content='Demonstrates openElement custom elements running inside a Fresh app with Preact islands.'
@@ -20,7 +20,7 @@ export default function Home() {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        <h1>openElement + Fresh alpha.4</h1>
+        <h1>openElement + Fresh 0.42.0-alpha.10</h1>
         <p>
           This page renders <code>&lt;open-button&gt;</code> and <code>&lt;open-card&gt;</code>{' '}
           as standard HTML custom elements, registered inline by the <code>OpenElements</code>{' '}

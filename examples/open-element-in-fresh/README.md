@@ -26,7 +26,7 @@ the current framework source line (`0.42.0-alpha.10`).
 deno task dev
 ```
 
-Then open http://localhost:8000.
+Then open http://localhost:5173 (the Vite dev server default).
 
 ## Structure
 

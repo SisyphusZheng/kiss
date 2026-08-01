@@ -52,7 +52,8 @@ vite.config.ts   openElement SPA adapter config
 # Run the API server and Vite dev server together
 deno task dev
 
-# Or run them separately
+# Or run them separately (recommended: `deno task dev` backgrounds the API
+# with `&`, so Ctrl-C only stops Vite and leaves the API holding port 8000)
 deno task dev:api   # Deno serve on http://localhost:8000
 deno task dev:web   # Vite on http://localhost:5173
 ```
