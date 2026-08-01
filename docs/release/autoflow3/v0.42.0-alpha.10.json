@@ -1,0 +1,114 @@
+{
+  "id": "publish-existing-v0.42.0-alpha.10-2026-08-01T16-54-35-401Z",
+  "kind": "publish-existing",
+  "policyVersion": "autoflow3-v0",
+  "currentVersion": "0.42.0-alpha.9",
+  "targetVersion": "0.42.0-alpha.10",
+  "status": "failed",
+  "startedAt": "2026-08-01T16:54:35.401Z",
+  "steps": [
+    {
+      "name": "verify published source version",
+      "status": "passed",
+      "startedAt": "2026-08-01T16:54:35.413Z",
+      "completedAt": "2026-08-01T16:54:35.421Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify main CI success for HEAD",
+      "status": "passed",
+      "startedAt": "2026-08-01T16:54:35.422Z",
+      "completedAt": "2026-08-01T16:54:36.271Z",
+      "exitCode": 0
+    },
+    {
+      "name": "verify prepare record",
+      "status": "pending",
+      "startedAt": "2026-08-01T16:54:36.272Z"
+    },
+    {
+      "name": "package artifact gate",
+      "command": [
+        "deno",
+        "task",
+        "package-artifacts:check"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "publish npm packages",
+      "command": [
+        "deno",
+        "task",
+        "publish:npm"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "verify npm versions and dist-tags",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/verify-npm-release.ts",
+        "0.42.0-alpha.10"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "post-publish npm consumer smoke",
+      "command": [
+        "deno",
+        "run",
+        "-A",
+        "tools/consumer-smoke.ts",
+        "--version",
+        "0.42.0-alpha.10"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "post-publish third-party Web Component smoke",
+      "command": [
+        "deno",
+        "task",
+        "third-party-wc:smoke"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "stage release evidence",
+      "command": [
+        "git",
+        "add",
+        "docs/release/autoflow3/v0.42.0-alpha.10.json",
+        "docs/release/v0.42.0-alpha.10.md"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "commit release evidence",
+      "status": "pending"
+    },
+    {
+      "name": "tag release",
+      "status": "pending"
+    },
+    {
+      "name": "push tag",
+      "command": [
+        "git",
+        "push",
+        "origin",
+        "v0.42.0-alpha.10"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "create GitHub release",
+      "status": "pending"
+    }
+  ],
+  "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/30707203009",
+  "completedAt": "2026-08-01T16:54:36.273Z"
+}
