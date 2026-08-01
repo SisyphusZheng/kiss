@@ -18,5 +18,5 @@ This directory collects design and evidence documents for **dogfood applications
 
 ## Product Boundary Reminder
 
-> openElement = Web Components Fullstack Framework + Basic Element\
+> openElement = Web Components Fullstack Framework; Basic Element is an authoring mode\
 > Dogfood apps validate the framework; they do not define new product lines.

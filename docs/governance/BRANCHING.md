@@ -16,12 +16,13 @@ main ←── merge (CI 全绿) ── dev
 
 ## Branch Types
 
-| Prefix   | Purpose           | From  | Merge To   | Created By    |
-| -------- | ----------------- | ----- | ---------- | ------------- |
-| `dev`    | Development trunk | —     | `main`     | human/agent   |
-| `main`   | Release trunk     | —     | —          | CI merge only |
-| `fix/*`  | Bug fix           | `dev` | `dev` (PR) | human/agent   |
-| `feat/*` | Feature           | `dev` | `dev` (PR) | human/agent   |
+| Prefix            | Purpose                 | From  | Merge To   | Created By    |
+| ----------------- | ----------------------- | ----- | ---------- | ------------- |
+| `dev`             | Development trunk       | —     | `main`     | human/agent   |
+| `main`            | Release trunk           | —     | —          | CI merge only |
+| `fix/*`           | Bug fix                 | `dev` | `dev` (PR) | human/agent   |
+| `feat/*`          | Feature                 | `dev` | `dev` (PR) | human/agent   |
+| `autoflow/cell-*` | AutoFlow cell execution | `dev` | `dev` (PR) | autoflow      |
 
 ## Rules
 

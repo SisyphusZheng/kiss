@@ -159,8 +159,8 @@ Consequences of the stub:
   runtime is not published as a standalone package entry; client behavior
   comes entirely from the registered custom element classes.
 
-Once the pack pipeline ships pre-compiled JS, replace the stubs with
-`import '@openelement/ui'` in the island.
+The pack gap is fixed (see above); replacing the stubs with
+`import '@openelement/ui'` in the island is an open follow-up.
 
 ## Limitations
 
@@ -178,4 +178,5 @@ Once the pack pipeline ships pre-compiled JS, replace the stubs with
 - Example project: `examples/open-element-in-fresh/`
 - Example README (structure, Fresh 1.x → 2.x migration notes):
   `examples/open-element-in-fresh/README.md`
-- Component library (once the pack gap is fixed): `@openelement/ui`
+- Component library (stub replacement pending, see Known Limitation):
+  `@openelement/ui`

@@ -123,8 +123,6 @@ Dist-tag policy (#607): prerelease publishes tag only their line
 want the alpha train use `@alpha` or an exact version. Stable publishes keep
 npm's default `latest` tag. `tools/verify-npm-release.ts` asserts
 `dist-tags.<prerelease>` for alphas and `dist-tags.latest` for stables.
-After alpha.6, run a one-time `npm dist-tag add @openelement/<pkg>@<last-stable> latest`
-if registry `latest` still points at an alpha.
 
 ## Automation Gates
 

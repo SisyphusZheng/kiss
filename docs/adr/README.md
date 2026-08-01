@@ -129,6 +129,10 @@ their headers and are listed here with filenames.
 | 0084 | Product Closure Version Line                                                                                                         | Accepted; sequencing superseded by 0086          |
 | 0085 | App Lifecycle Contract                                                                                                               | Accepted                                         |
 | 0086 | AI-Readable Architecture and AutoFlow2 Roadmap                                                                                       | Accepted; v0.37-v1 sequencing superseded by 0091 |
+| 0087 | TDD + AI Cross-Review as Cell Execution Subphases                                                                                    | Proposed                                         |
+| 0088 | AutoFlow-First Strategy — v0.35-0.37 Precede Product Features                                                                        | Proposed                                         |
+| 0089 | Agent Code Generator — File-System Protocol for L2 Cell Execution                                                                    | Proposed                                         |
+| 0090 | SSG Package Extraction — @openelement/ssg                                                                                            | Proposed                                         |
 | 0091 | Four-Product Platform Roadmap                                                                                                        | Accepted                                         |
 | 0092 | DsdElement Render Mode Contract                                                                                                      | Accepted                                         |
 | 0093 | SSR / ISR Runtime Contract                                                                                                           | Accepted                                         |
@@ -170,7 +174,7 @@ them.
 
 ## New ADRs
 
-Write new ADRs as `NNNN-kebab-case-title.md` in this directory.
+Write new ADRs as `ADR-NNNN-kebab-case-title.md` in this directory.
 
 Next ADR candidates:
 

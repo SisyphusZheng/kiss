@@ -36,15 +36,15 @@ and output path.
 
 ## 0.41.0 stable gates
 
-| Condition                                                          | State               |
-| ------------------------------------------------------------------ | ------------------- |
-| ADR-0119 freeze scope (defineApp boundary + adapter subpath prune) | Completed           |
-| #37 gate text refresh (0.41.0 subset, seven-day P0 watch)          | Completed           |
-| Aggregate alpha-line migration guide + ui geometry note            | Completed           |
-| 0.41.0 npm, tag, GitHub release and two-stage evidence             | Completed           |
-| 0.41.1 tooling-hardening patch (third-party audit fixable set)     | Completed           |
-| Seven-day P0 watch on the 0.41.x patch line                        | Started 2026-07-26  |
-| External adopter pilot #390                                        | Retired by ADR-0119 |
+| Condition                                                          | State                |
+| ------------------------------------------------------------------ | -------------------- |
+| ADR-0119 freeze scope (defineApp boundary + adapter subpath prune) | Completed            |
+| #37 gate text refresh (0.41.0 subset, seven-day P0 watch)          | Completed            |
+| Aggregate alpha-line migration guide + ui geometry note            | Completed            |
+| 0.41.0 npm, tag, GitHub release and two-stage evidence             | Completed            |
+| 0.41.1 tooling-hardening patch (third-party audit fixable set)     | Completed            |
+| Seven-day P0 watch on the 0.41.x patch line                        | Completed 2026-08-01 |
+| External adopter pilot #390                                        | Retired by ADR-0119  |
 
 ## Current risks
 
