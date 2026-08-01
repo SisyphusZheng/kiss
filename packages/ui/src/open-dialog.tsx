@@ -124,6 +124,7 @@ export class OpenDialog extends OpenElement {
       <>
         <slot name='trigger' onClick={() => this._handleTrigger()}></slot>
         <dialog
+          open={this.hasAttribute('open') ? true : undefined}
           aria-label={this.getAttribute('label') || ''}
           part='overlay'
           onCancel={(e: Event) => this._handleCancel(e)}

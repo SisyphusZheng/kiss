@@ -90,7 +90,7 @@ export class OpenThemeToggle extends OpenElement {
 
   /**
    * v0.23.0: Theme initialization lives in _initTheme(), called from
-   * both onDsdHydrated() and onCsrRendered() so that the priority
+   * connectedCallback (rAF) and onDsdHydrated() so that the priority
    * chain works regardless of hydration path.
    *
    * Priority: theme attribute > document.documentElement.dataset.theme
@@ -163,10 +163,6 @@ export class OpenThemeToggle extends OpenElement {
   protected override onDsdHydrated(): void {
     super.onDsdHydrated();
     this._requestAnimationFrame(() => this._initTheme());
-  }
-
-  protected override onCsrRendered(): void {
-    super.onCsrRendered();
   }
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {

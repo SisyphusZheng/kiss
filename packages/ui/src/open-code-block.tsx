@@ -147,10 +147,6 @@ export class OpenCodeBlock extends OpenElement {
     );
   }
 
-  override connectedCallback(): void {
-    super.connectedCallback();
-  }
-
   override onDsdHydrated(): void {
     super.onDsdHydrated();
     this._tryHighlight();

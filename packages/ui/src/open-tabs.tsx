@@ -20,26 +20,48 @@ export class OpenTabs extends OpenElement {
     this.#active.value = idx;
     this.update();
   }
+  /** WAI-ARIA tabs keyboard pattern: ArrowLeft/ArrowRight/Home/End. */
+  #onKeydown(e: KeyboardEvent, count: number): void {
+    if (count === 0) return;
+    const key = e.key;
+    const next = key === 'Home' ? 0 : key === 'End' ? count - 1 : key === 'ArrowLeft'
+      ? (this.#active.value - 1 + count) % count : key === 'ArrowRight'
+      ? (this.#active.value + 1) % count : undefined;
+    if (next === undefined) return;
+    e.preventDefault();
+    this.#select(next);
+  }
   override render(): VNode {
     const tabs = [...this.querySelectorAll<HTMLElement>('[slot="tab"]')];
     const panels = [...this.querySelectorAll<HTMLElement>('[slot="panel"]')];
+    const count = Math.min(tabs.length, panels.length);
     return (
       <div>
-        <div class='tabs' role='tablist'>
+        <div class='tabs' role='tablist' onKeydown={(e: KeyboardEvent) => this.#onKeydown(e, count)}>
           {tabs.map((tab, i) => (
             <button
               type='button'
               role='tab'
+              id={`${tagName}-tab-${i}`}
               aria-selected={i === this.#active.value ? 'true' : 'false'}
+              aria-controls={`${tagName}-panel-${i}`}
+              aria-disabled={i >= count}
               class={`control tab ${i === this.#active.value ? 'tab-active' : ''}`}
-              onClick={() => this.#select(i)}
+              onClick={() => i < count && this.#select(i)}
             >
               {tab.textContent}
             </button>
           ))}
         </div>
         {panels.map((panel, i) => (
-          <div role='tabpanel' hidden={i !== this.#active.value}>{panel.textContent}</div>
+          <div
+            role='tabpanel'
+            id={`${tagName}-panel-${i}`}
+            aria-labelledby={`${tagName}-tab-${i}`}
+            hidden={i !== this.#active.value}
+          >
+            {panel.textContent}
+          </div>
         ))}
       </div>
     );
