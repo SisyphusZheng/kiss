@@ -1,3 +1,5 @@
+import { MOJIBAKE_CHARS } from './lib/text.ts';
+
 type Issue = {
   file: string;
   message: string;
@@ -24,8 +26,7 @@ const ignoredPathParts = [
 ];
 
 const textExtensions = /\.(ts|tsx|md|json|yml|yaml)$/;
-const mojibake =
-  /[\u9225\u9239\u93cb\u951b\u9286\u9428\u4e7a\u4fa4\u6c98\u5866\u573d\u4fd9\u95b3\uFFFD]/;
+const mojibake = new RegExp(`[${MOJIBAKE_CHARS.join('')}]`);
 
 const currentTruthForbidden = [
   {

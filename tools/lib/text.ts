@@ -47,3 +47,34 @@ export function stripComments(source: string): string {
 export function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+/**
+ * Mojibake/replacement characters forbidden in current source and docs.
+ * Union of the architecture-contract and text-integrity gate lists (#805) —
+ * the two gates used to carry drifted private copies.
+ */
+export const MOJIBAKE_CHARS: readonly string[] = [
+  '\ufffd',
+  '\u951f',
+  '\u9239',
+  '\u9225',
+  '\u9242',
+  '\u9241',
+  '\u9283',
+  '\u923f',
+  '\u9983',
+  '\u9514',
+  '\u72c5',
+  '\u7b0d',
+  '\u93cb',
+  '\u951b',
+  '\u9286',
+  '\u9428',
+  '\u4e7a',
+  '\u4fa4',
+  '\u6c98',
+  '\u5866',
+  '\u573d',
+  '\u4fd9',
+  '\u95b3',
+];

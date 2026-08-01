@@ -15,6 +15,7 @@ import { runCommand } from './lib/process.ts';
 import { assertCleanWorktree } from './lib/git-cleanliness.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
+import { npmTarballName, tarballPath } from './lib/npm-tarball.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -38,14 +39,6 @@ const CREATE_BIN = {
   'openelement-create': './src/cli.js',
   'create-openelement': './src/cli.js',
 };
-
-function npmTarballName(pkg: PackageInfo): string {
-  return `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
-}
-
-function tarballPath(pkg: PackageInfo): string {
-  return `${pkg.dir}/${npmTarballName(pkg)}`;
-}
 
 function cleanStaleTarballs(packages: PackageInfo[]): void {
   for (const pkg of packages) {
@@ -177,7 +170,6 @@ function applyPackageJsonOverrides(pkg: PackageInfo, pkgJson: Record<string, unk
 async function packPackage(
   pkg: PackageInfo,
   dependencies: Record<string, string>,
-  _dryRun: boolean,
 ): Promise<string> {
   const filename = npmTarballName(pkg);
   const out = tarballPath(pkg);
@@ -270,7 +262,9 @@ export function npmPublishTag(version: string): string {
   if (version.includes('-alpha')) return 'alpha';
   if (version.includes('-beta')) return 'beta';
   if (version.includes('-rc')) return 'rc';
-  return 'next';
+  // Only called for prereleases (see publishPackage), and the release line
+  // produces alpha/beta/rc only — anything else is a tooling bug, not 'next'.
+  throw new Error(`No npm publish tag for version: ${version}`);
 }
 
 function assertVersionConsistency(packages: PackageInfo[]): void {
@@ -323,7 +317,7 @@ async function main(): Promise<void> {
 
   const tarballs: string[] = [];
   for (const pkg of packages) {
-    const tar = await packPackage(pkg, dependencyMap.get(pkg.name) ?? {}, dryRun);
+    const tar = await packPackage(pkg, dependencyMap.get(pkg.name) ?? {});
     tarballs.push(tar);
   }
 

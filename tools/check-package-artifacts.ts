@@ -9,6 +9,7 @@ import { dirname } from 'node:path';
 import { stripComments } from './lib/text.ts';
 import { runCommand } from './lib/process.ts';
 import { type PackageInfo, readPackages, releasePublishOrder } from './lib/package-graph.ts';
+import { tarballPath } from './lib/npm-tarball.ts';
 
 const PUBLINT_VERSION = '0.3.21';
 const ATTW_VERSION = '0.18.4';
@@ -46,14 +47,6 @@ export interface ArtifactViolation {
 export interface PackageScanResult {
   packageName: string;
   violations: ArtifactViolation[];
-}
-
-function tarballName(pkg: PackageInfo): string {
-  return `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
-}
-
-function tarballPath(pkg: PackageInfo): string {
-  return `${pkg.dir}/${tarballName(pkg)}`;
 }
 
 function extension(path: string): string {

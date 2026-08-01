@@ -22,6 +22,7 @@ import {
   buildDependencyGraph,
   detectCycles,
   extractOpenImports,
+  normalizeDep,
   type PackageInfo,
   readPackages,
   releasePublishOrder,
@@ -44,16 +45,6 @@ export const ALLOWED_DEPENDENCY_DIRECTION: Readonly<Record<string, readonly stri
 
 export function isAllowedDependencyDirection(from: string, to: string): boolean {
   return ALLOWED_DEPENDENCY_DIRECTION[from]?.includes(to) ?? false;
-}
-
-function normalizeDep(dep: string, self: string): string | null {
-  const prefix = '@openelement/';
-  if (!dep.startsWith(prefix)) return dep;
-
-  const rest = dep.slice(prefix.length);
-  const slashIdx = rest.indexOf('/');
-  const base = slashIdx === -1 ? dep : prefix + rest.slice(0, slashIdx);
-  return base === self ? null : base;
 }
 
 async function collectTsFiles(dir: string): Promise<string[]> {

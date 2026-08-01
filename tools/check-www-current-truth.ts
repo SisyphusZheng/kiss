@@ -1,4 +1,5 @@
 import { exists, walk } from './lib/fs.ts';
+import { stripComments } from './lib/text.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
@@ -63,9 +64,7 @@ const forbidden: Array<{ name: string; re: RegExp }> = [
     re: /@openelement\/ui\/(?:daisy-classes|open-modal|open-step-card)|<open-(?:modal|step-card)\b/,
   },
 ];
-if (activeRetiredPattern) {
-  forbidden.push({ name: 'retired prerelease current claim', re: activeRetiredPattern });
-}
+forbidden.push({ name: 'retired prerelease current claim', re: activeRetiredPattern });
 
 const issues: Issue[] = [];
 
@@ -120,10 +119,7 @@ async function checkFile(file: string): Promise<void> {
     }
     // Strip comments before asserting the locale literal so a commented-out
     // line cannot satisfy (or trip) the check.
-    const uncommented = text
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/\/\/[^\n]*/g, '');
-    if (!uncommented.includes("this._getLocale('en')")) {
+    if (!stripComments(text).includes("this._getLocale('en')")) {
       issues.push({
         file,
         text: 'guide shell does not select content by locale (zh must render zh)',

@@ -3,7 +3,7 @@
  */
 
 export interface RunCommandOptions {
-  cwd?: string;
+  cwd?: string | URL;
   env?: Record<string, string>;
   stdin?: 'inherit' | 'piped' | 'null';
   stdout?: 'inherit' | 'piped' | 'null';
@@ -40,7 +40,7 @@ export async function runCommand(
 }
 
 export interface RunWithOutputOptions {
-  cwd?: string;
+  cwd?: string | URL;
   env?: Record<string, string>;
 }
 

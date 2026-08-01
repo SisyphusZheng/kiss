@@ -47,8 +47,10 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
 
   // Anchors are kept in sync with the real anchor text in each file. Dead
   // anchors (doc drift) are intentionally omitted, so this count reflects the
-  // files that currently carry the previous package line.
-  assertEquals(reps.length, 18);
+  // files that currently carry the previous package line. Registry-line
+  // anchors appear twice: once for the current-tag form and once for the
+  // lag-state previous-tag form (#754).
+  assertEquals(reps.length, 29);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -74,15 +76,55 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   assert(seen.has('www/app/data/version.ts'));
 });
 
-Deno.test('buildVersionAnchorReplacements: from side derives from the loaded source version', () => {
+Deno.test('buildVersionAnchorReplacements: from side derives from the loaded source or previous line', () => {
   const reps = buildVersionAnchorReplacements('1.2.3');
   for (const [, from] of reps) {
     assert(
-      from.includes(PACKAGE_VERSION) || from.includes(PACKAGE_VERSION_TAG),
-      `from must derive from PACKAGE_VERSION: ${from}`,
+      from.includes(PACKAGE_VERSION) || from.includes(PACKAGE_VERSION_TAG) ||
+        from.includes(PREVIOUS_PACKAGE_VERSION) || from.includes(PREVIOUS_PACKAGE_VERSION_TAG),
+      `from must derive from PACKAGE_VERSION or PREVIOUS_PACKAGE_VERSION: ${from}`,
     );
   }
   assertEquals(PREVIOUS_PACKAGE_VERSION_TAG, `v${PREVIOUS_PACKAGE_VERSION}`);
+});
+
+Deno.test('buildVersionAnchorReplacements: registry anchors cover current and lag forms (#754)', () => {
+  const version = '9.9.9';
+  const tag = `v${version}`;
+  const reps = buildVersionAnchorReplacements(version);
+
+  // Every registry-line anchor the version-anchor gate enforces is bumped,
+  // in both accepted states (current source tag and lagging previous tag).
+  const registryPairs: Array<[string, string]> = [
+    ['README.md', 'npm registry line: `'],
+    ['README.zh.md', 'npm registry 行为 `'],
+    ['docs/roadmap/ROADMAP.md', 'npm registry line: `'],
+    ['docs/governance/PROJECT_WORKFLOW.md', 'npm registry line `'],
+    ['docs/current/VERSION_PLAN.md', 'Current npm registry line: `'],
+    ['docs/status/STATUS.md', 'npm registry line: `'],
+  ];
+  for (const [path, prefix] of registryPairs) {
+    for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+      const from = `${prefix}${fromTag}\``;
+      const to = `${prefix}${tag}\``;
+      assert(
+        reps.some(([p, f, t]) => p === path && f === from && t === to),
+        `missing registry replacement ${path}: ${from} -> ${to}`,
+      );
+    }
+  }
+
+  // PUBLISHED_PACKAGE_VERSION joins the bump in both states too.
+  for (const fromTag of [PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION_TAG]) {
+    assert(
+      reps.some(([p, f, t]) =>
+        p === 'www/app/data/version.ts' &&
+        f === `export const PUBLISHED_PACKAGE_VERSION = '${fromTag}';` &&
+        t === `export const PUBLISHED_PACKAGE_VERSION = '${tag}';`
+      ),
+      `missing PUBLISHED_PACKAGE_VERSION replacement from ${fromTag}`,
+    );
+  }
 });
 
 Deno.test('buildVersionAnchorReplacements: every target carries the previous or current line', () => {
@@ -100,10 +142,11 @@ Deno.test('buildVersionAnchorReplacements: every target carries the previous or 
       `${path} is a replacement target but carries neither the previous nor current line`,
     );
   }
-  // README carries one head package-line anchor plus the currency claim the
-  // strategic-docs gate enforces ("convergence is published as").
+  // README carries one head package-line anchor, the currency claim the
+  // strategic-docs gate enforces ("convergence is published as"), and the
+  // registry line in both accepted states (#754).
   const readmeReps = reps.filter(([p]) => p === 'README.md');
-  assertEquals(readmeReps.length, 2);
+  assertEquals(readmeReps.length, 4);
 });
 
 Deno.test('createReleasePlan: rejects shell metacharacters in approval ids', () => {
@@ -420,7 +463,8 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
   const version = '9.9.9';
   const reps = buildVersionAnchorReplacements(version)
     .filter(([path]) => path === 'docs/current/VERSION_PLAN.md');
-  assertEquals(reps.length, 2);
+  // Source line + registry line in both accepted states (#754).
+  assertEquals(reps.length, 3);
 
   // Simulate the bump against the plan's real head shape: the two header
   // lines move to the target while the active release target is untouched.

@@ -1,8 +1,11 @@
-import { assert, assertEquals, assertThrows } from '@std/assert';
+import { assert, assertEquals, assertRejects, assertThrows } from '@std/assert';
 import {
   detectCycles,
   extractOpenImports,
+  normalizeDep,
+  normalizeInternalDep,
   type PackageInfo,
+  readPackage,
   releasePublishOrder,
   topologicalSort,
 } from './package-graph.ts';
@@ -110,4 +113,44 @@ Deno.test('releasePublishOrder respects dependency and priority constraints', ()
   assert(pos('@openelement/app') < pos('@openelement/adapter-vite'));
   assert(pos('@openelement/adapter-vite') < pos('@openelement/ui'));
   assertEquals(order.length, packages.length);
+});
+
+Deno.test('normalizeInternalDep rejects non-internal specifiers', () => {
+  assertEquals(
+    normalizeInternalDep('@openelement/ui/theme', '@openelement/app'),
+    '@openelement/ui',
+  );
+  assertEquals(normalizeInternalDep('@openelement/app', '@openelement/app'), null);
+  assertEquals(normalizeInternalDep('npm:react', '@openelement/app'), null);
+  assertEquals(normalizeInternalDep('react', '@openelement/app'), null);
+});
+
+Deno.test('normalizeDep passes non-internal specifiers through unchanged', () => {
+  assertEquals(normalizeDep('@openelement/ui/theme', '@openelement/app'), '@openelement/ui');
+  assertEquals(normalizeDep('@openelement/app', '@openelement/app'), null);
+  assertEquals(normalizeDep('npm:react', '@openelement/app'), 'npm:react');
+  assertEquals(normalizeDep('react', '@openelement/app'), 'react');
+});
+
+Deno.test('readPackage returns null when deno.json does not exist', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'package-graph-missing-' });
+  try {
+    assertEquals(await readPackage(dir), null);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test('readPackage fails loud on unparseable deno.json (#753)', async () => {
+  const dir = await Deno.makeTempDir({ prefix: 'package-graph-corrupt-' });
+  try {
+    await Deno.writeTextFile(`${dir}/deno.json`, '{ "name": "@openelement/x", // jsonc\n}');
+    const error = await assertRejects(() => readPackage(dir), Error);
+    assert(
+      error.message.includes(`${dir}/deno.json`),
+      `error must name the corrupt file: ${error.message}`,
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });

@@ -383,39 +383,12 @@ export const GATES: readonly GateDefinition[] = [
 ];
 
 export function selectGates(tier: AutoFlowTier, changedPaths: string[]): GateDefinition[] {
-  const selected = GATES.filter((gate) => {
+  return GATES.filter((gate) => {
     if (!gate.tiers.includes(tier)) return false;
     if (!gate.triggers || gate.triggers.length === 0) return true;
     if (tier === 'ci' || tier === 'release') return true;
     return changedPaths.some((path) => gate.triggers!.some((pattern) => pattern.test(path)));
   });
-
-  // OPEN_ELEMENT_E2E_OFFLINE=1 is a dev-only escape hatch. CI and release tiers
-  // never skip E2E; the override requires explicit opt-in per invocation and logs
-  // a warning that the gate is being skipped.
-  if (
-    Deno.env.get('OPEN_ELEMENT_E2E_OFFLINE') === '1'
-  ) {
-    if (tier === 'ci' || tier === 'release') {
-      console.warn(
-        '[autoflow] OPEN_ELEMENT_E2E_OFFLINE is not honoured in CI/release tiers; E2E will run.',
-      );
-    } else {
-      return selected.map((gate) => {
-        if (gate.name !== 'test:e2e') return gate;
-        return {
-          ...gate,
-          command: [
-            'deno',
-            'eval',
-            "console.warn('[test:e2e] OPEN_ELEMENT_E2E_OFFLINE=1; skipping E2E (dev-only escape)'); Deno.exit(77)",
-          ],
-        };
-      });
-    }
-  }
-
-  return selected;
 }
 
 export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDecision {

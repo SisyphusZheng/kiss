@@ -3,6 +3,7 @@ import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
+  PREVIOUS_PACKAGE_VERSION_TAG,
 } from '../project-constants.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
 import { formatJson } from '@openelement/element/build-utils';
@@ -96,15 +97,11 @@ export function resolvePatchTargetVersion(
 }
 
 /**
- * Read the evidence record for a version regardless of release kind, so the
- * patch-release entrypoint can detect an in-flight release before deriving
- * its target. Missing file means no prior attempt; a corrupt file is
- * rejected loudly, matching readPriorReleaseEvidence's trust model.
+ * Read a JSON evidence file. A missing file means no prior attempt (returns
+ * undefined); a corrupt file is rejected loudly — silently discarding it
+ * would let a stale or hand-edited record be overwritten without notice.
  */
-export async function readReleaseEvidenceForVersion(
-  version: string,
-): Promise<ReleaseEvidence | undefined> {
-  const path = evidenceFile(version);
+async function readJsonOrUndefined<T>(path: string, label: string): Promise<T | undefined> {
   let text: string;
   try {
     text = await Deno.readTextFile(path);
@@ -113,13 +110,25 @@ export async function readReleaseEvidenceForVersion(
     throw error;
   }
   try {
-    return JSON.parse(text) as ReleaseEvidence;
+    return JSON.parse(text) as T;
   } catch (error) {
     throw new Error(
-      `Release evidence ${path} is not readable JSON; repair or remove it before ` +
+      `${label} ${path} is not readable JSON; repair or remove it before ` +
         `re-running: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
+
+/**
+ * Read the evidence record for a version regardless of release kind, so the
+ * patch-release entrypoint can detect an in-flight release before deriving
+ * its target. Missing file means no prior attempt; a corrupt file is
+ * rejected loudly, matching readPriorReleaseEvidence's trust model.
+ */
+export async function readReleaseEvidenceForVersion(
+  version: string,
+): Promise<ReleaseEvidence | undefined> {
+  return await readJsonOrUndefined(evidenceFile(version), 'Release evidence');
 }
 
 export function releaseTag(version: string): string {
@@ -533,22 +542,7 @@ export async function writePrepareRecord(evidence: ReleaseEvidence): Promise<voi
 export async function readPrepareRecord(
   version: string,
 ): Promise<ReleaseEvidence | undefined> {
-  const path = prepareRecordFile(version);
-  let text: string;
-  try {
-    text = await Deno.readTextFile(path);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return undefined;
-    throw error;
-  }
-  try {
-    return JSON.parse(text) as ReleaseEvidence;
-  } catch (error) {
-    throw new Error(
-      `Prepare record ${path} is not readable JSON; repair or remove it before ` +
-        `re-running: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  return await readJsonOrUndefined(prepareRecordFile(version), 'Prepare record');
 }
 
 /**
@@ -852,6 +846,21 @@ export function buildVersionAnchorReplacements(
       'convergence is published as `$PV`',
       'convergence is published as `$VER`',
     ],
+    // Registry-line anchors (#754): the registry line may name the current
+    // source tag ($PVT) or, during the post-bump lag, the previous tag
+    // ($PREV_PVT) — check-version-anchors accepts both. Cover both from-forms
+    // so the bump advances the registry line mechanically in either state;
+    // updateCurrentVersionAnchors skips the from-form that is absent.
+    [
+      'README.md',
+      'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
+    ],
+    [
+      'README.md',
+      'npm registry line: `$PREV_PVT`',
+      'npm registry line: `$TAG`',
+    ],
     [
       'README.zh.md',
       '源码包行为 `$PV`（`$PVT`）',
@@ -864,6 +873,11 @@ export function buildVersionAnchorReplacements(
     ],
     [
       'README.zh.md',
+      'npm registry 行为 `$PREV_PVT`',
+      'npm registry 行为 `$TAG`',
+    ],
+    [
+      'README.zh.md',
       '五包收敛已作为 `$PV` 发布',
       '五包收敛已作为 `$VER` 发布',
     ],
@@ -871,6 +885,16 @@ export function buildVersionAnchorReplacements(
       'docs/governance/PROJECT_WORKFLOW.md',
       'package line `$PVT`',
       'package line `$TAG`',
+    ],
+    [
+      'docs/governance/PROJECT_WORKFLOW.md',
+      'npm registry line `$PVT`',
+      'npm registry line `$TAG`',
+    ],
+    [
+      'docs/governance/PROJECT_WORKFLOW.md',
+      'npm registry line `$PREV_PVT`',
+      'npm registry line `$TAG`',
     ],
     [
       'docs/governance/PROJECT_WORKFLOW.md',
@@ -888,14 +912,39 @@ export function buildVersionAnchorReplacements(
       'Current npm registry line: `$TAG`',
     ],
     [
+      'docs/current/VERSION_PLAN.md',
+      'Current npm registry line: `$PREV_PVT`',
+      'Current npm registry line: `$TAG`',
+    ],
+    [
       'www/app/data/version.ts',
       "export const OPENELEMENT_VERSION = '$PVT';",
       "export const OPENELEMENT_VERSION = '$TAG';",
     ],
     [
+      'www/app/data/version.ts',
+      "export const PUBLISHED_PACKAGE_VERSION = '$PVT';",
+      "export const PUBLISHED_PACKAGE_VERSION = '$TAG';",
+    ],
+    [
+      'www/app/data/version.ts',
+      "export const PUBLISHED_PACKAGE_VERSION = '$PREV_PVT';",
+      "export const PUBLISHED_PACKAGE_VERSION = '$TAG';",
+    ],
+    [
       'docs/roadmap/ROADMAP.md',
       'Source package line: `$PVT`',
       'Source package line: `$TAG`',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
+    ],
+    [
+      'docs/roadmap/ROADMAP.md',
+      'npm registry line: `$PREV_PVT`',
+      'npm registry line: `$TAG`',
     ],
     [
       'docs/roadmap/ROADMAP.md',
@@ -910,6 +959,11 @@ export function buildVersionAnchorReplacements(
     [
       'docs/status/STATUS.md',
       'npm registry line: `$PVT`',
+      'npm registry line: `$TAG`',
+    ],
+    [
+      'docs/status/STATUS.md',
+      'npm registry line: `$PREV_PVT`',
       'npm registry line: `$TAG`',
     ],
     [
@@ -935,6 +989,7 @@ export function buildVersionAnchorReplacements(
   ];
   const resolve = (s: string): string =>
     s
+      .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)
       .replaceAll('$PVT', pvTag)
       .replaceAll('$PV', pv)
       .replaceAll('$TAG', tag)
@@ -1568,24 +1623,14 @@ export async function readPriorReleaseEvidence(
   kind: ReleaseEvidence['kind'],
   targetVersion: string,
 ): Promise<ReleaseEvidence | undefined> {
-  const path = evidenceFile(targetVersion);
-  let text: string;
-  try {
-    text = await Deno.readTextFile(path);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return undefined;
-    throw error;
-  }
-  let prior: ReleaseEvidence;
-  try {
-    prior = JSON.parse(text) as ReleaseEvidence;
-  } catch (error) {
-    throw new Error(
-      `Prior release evidence ${path} is not readable JSON; repair or remove it before ` +
-        `re-running: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-  if (prior.kind !== kind || prior.targetVersion !== targetVersion || !Array.isArray(prior.steps)) {
+  const prior = await readJsonOrUndefined<ReleaseEvidence>(
+    evidenceFile(targetVersion),
+    'Prior release evidence',
+  );
+  if (
+    prior === undefined || prior.kind !== kind || prior.targetVersion !== targetVersion ||
+    !Array.isArray(prior.steps)
+  ) {
     return undefined;
   }
   return prior;

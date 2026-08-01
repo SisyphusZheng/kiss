@@ -2,71 +2,10 @@
 import { chromium, type Page } from 'npm:playwright@1.59.1';
 import { join } from 'node:path';
 import { ensureDir } from 'jsr:@std/fs@^1.0.0/ensure-dir';
-
-interface StaticServer {
-  origin: string;
-  close(): Promise<void>;
-}
+import { serveStatic } from './lib/static-server.ts';
 
 const repoRoot = Deno.cwd();
 const outputDir = join(repoRoot, 'test-results', 'visual-smoke');
-
-const contentTypes: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
-};
-
-function contentType(path: string): string {
-  const dot = path.lastIndexOf('.');
-  const ext = dot === -1 ? '' : path.slice(dot).toLowerCase();
-  return contentTypes[ext] ?? 'application/octet-stream';
-}
-
-async function readCandidate(root: string, pathname: string): Promise<Response | null> {
-  const safePath = decodeURIComponent(pathname);
-  if (safePath.includes('..') || safePath.includes('\0')) {
-    return new Response('Forbidden', { status: 403 });
-  }
-
-  const relativePath = safePath.replace(/^\/+/, '');
-  const base = relativePath === '' ? '' : relativePath;
-  const candidates = safePath.endsWith('/') ? [join(root, relativePath, 'index.html')] : [
-    join(root, relativePath),
-    join(root, `${base}.html`),
-    join(root, relativePath, 'index.html'),
-    join(root, 'index.html'),
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      const body = await Deno.readFile(candidate);
-      return new Response(body, { headers: { 'content-type': contentType(candidate) } });
-    } catch {
-      // Try the next candidate.
-    }
-  }
-  return null;
-}
-
-function serveStatic(root: string): StaticServer {
-  const server = Deno.serve({ port: 0, hostname: '127.0.0.1' }, async (request) => {
-    const response = await readCandidate(root, new URL(request.url).pathname);
-    return response ?? new Response('Not found', { status: 404 });
-  });
-  const addr = server.addr as Deno.NetAddr;
-  return {
-    origin: `http://127.0.0.1:${addr.port}`,
-    close: () => server.shutdown(),
-  };
-}
 
 async function assertRenderable(page: Page, label: string): Promise<void> {
   await page.waitForLoadState('networkidle');
@@ -116,7 +55,7 @@ async function assertRenderable(page: Page, label: string): Promise<void> {
 async function assertBrandMark(page: Page, label: string, expectedText: string): Promise<void> {
   const mark = await page.evaluate(() => {
     const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('[data-open-brand], open-brand-mark');
+      const direct = root.querySelector?.('[data-open-brand]');
       if (direct) return direct;
       const all = root.querySelectorAll?.('*') ?? [];
       for (const el of Array.from(all)) {
@@ -139,7 +78,7 @@ async function assertBrandMark(page: Page, label: string, expectedText: string):
     };
   });
 
-  if (!mark) throw new Error(`${label} has no [data-open-brand] or <open-brand-mark>`);
+  if (!mark) throw new Error(`${label} has no [data-open-brand]`);
   if (mark.width < 40 || mark.height < 20) {
     throw new Error(`${label} brand mark rendered too small: ${mark.width}x${mark.height}`);
   }

@@ -12,6 +12,8 @@ import type { Page } from 'npm:playwright@1.59.1';
 import { formatJson } from '@openelement/element/build-utils';
 import { allPackageAliases } from './lib/package-graph.ts';
 import { readJson } from './lib/fs.ts';
+import { normalizeSlashes } from './lib/path.ts';
+import { serveStatic } from './lib/static-server.ts';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const PROJECT_NAME = 'third-party-wc-smoke-app';
@@ -23,10 +25,6 @@ const THIRD_PARTY_IMPORTS = {
   '@material/web': 'npm:@material/web@2.4.1',
   '@material/web/': 'npm:@material/web@2.4.1/',
 };
-
-function vitePath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
 
 async function run(
   args: string[],
@@ -73,7 +71,9 @@ async function patchViteConfig(appDir: string): Promise<void> {
   let text = await Deno.readTextFile(viteConfigPath);
 
   const aliasText = [...allPackageAliases(repoRoot)]
-    .map(([find, url]) => `{ find: '${find}', replacement: '${vitePath(fileURLToPath(url))}' }`)
+    .map(([find, url]) =>
+      `{ find: '${find}', replacement: '${normalizeSlashes(fileURLToPath(url))}' }`
+    )
     .join(',\n        ');
 
   text = text.replace(
@@ -85,34 +85,6 @@ async function patchViteConfig(appDir: string): Promise<void> {
     "packageIslands: ['@openelement/ui'],\n    island: { upgradeStrategy: 'load' },",
   );
   await Deno.writeTextFile(viteConfigPath, text);
-}
-
-function contentType(path: string): string {
-  if (path.endsWith('.html')) return 'text/html; charset=utf-8';
-  if (path.endsWith('.js')) return 'text/javascript; charset=utf-8';
-  if (path.endsWith('.css')) return 'text/css; charset=utf-8';
-  if (path.endsWith('.svg')) return 'image/svg+xml';
-  return 'application/octet-stream';
-}
-
-function serveDist(distDir: string): Deno.HttpServer {
-  return Deno.serve({ port: 0 }, async (request) => {
-    const url = new URL(request.url);
-    const pathname = decodeURIComponent(url.pathname);
-    const candidates = pathname.endsWith('/')
-      ? [join(distDir, pathname, 'index.html')]
-      : [join(distDir, pathname), join(distDir, pathname, 'index.html')];
-
-    for (const candidate of candidates) {
-      try {
-        const body = await Deno.readFile(candidate);
-        return new Response(body, { headers: { 'content-type': contentType(candidate) } });
-      } catch {
-        // Try next candidate.
-      }
-    }
-    return new Response('Not found', { status: 404 });
-  });
 }
 
 async function readEventCount(page: Page): Promise<number> {
@@ -167,12 +139,11 @@ async function interactAndVerifyEventCount(page: Page, startCount: number): Prom
 
 async function verifyBrowser(distDir: string): Promise<void> {
   const { chromium } = await import('npm:playwright@1.59.1');
-  const server = serveDist(distDir);
+  const server = serveStatic(distDir);
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    const addr = server.addr as Deno.NetAddr;
-    await page.goto(`http://127.0.0.1:${addr.port}/third-party-wc/`);
+    await page.goto(`${server.origin}/third-party-wc/`);
 
     await page.waitForFunction(() =>
       customElements.get('alpha3-lit-counter') &&
@@ -244,7 +215,7 @@ async function verifyBrowser(distDir: string): Promise<void> {
     await interactAndVerifyEventCount(page, summary.eventCount);
   } finally {
     await browser.close();
-    await server.shutdown();
+    await server.close();
   }
 }
 

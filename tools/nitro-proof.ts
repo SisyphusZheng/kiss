@@ -1,5 +1,7 @@
 import { walkSync } from '@std/fs/walk';
 import { assertCompatibilityDate } from './lib/compatibility-date.ts';
+import { exists, readJson } from './lib/fs.ts';
+import { runWithOutput } from './lib/process.ts';
 import { NITRO_COMPATIBILITY_DATE } from './project-constants.ts';
 
 const preset = Deno.args[0];
@@ -15,15 +17,6 @@ const outputName = preset === 'workers' ? '.output-workers' : '.output-node';
 const output = new URL(`${outputName}/`, fixture);
 const nitroPreset = preset === 'workers' ? 'cloudflare_module' : 'node-server';
 
-async function exists(url: URL): Promise<boolean> {
-  try {
-    await Deno.stat(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function removeIfExists(url: URL): Promise<void> {
   if (await exists(url)) {
     await Deno.remove(url, { recursive: true });
@@ -31,26 +24,13 @@ async function removeIfExists(url: URL): Promise<void> {
 }
 
 async function run(command: string[], env: Record<string, string> = {}): Promise<string> {
-  const child = new Deno.Command(command[0], {
-    args: command.slice(1),
-    cwd: fixture,
-    env,
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const result = await child.output();
-  const stdout = new TextDecoder().decode(result.stdout);
-  const stderr = new TextDecoder().decode(result.stderr);
-  if (result.code !== 0) {
-    console.error(stdout);
-    console.error(stderr);
+  const result = await runWithOutput(command[0], command.slice(1), { cwd: fixture, env });
+  if (!result.success) {
+    console.error(result.stdout);
+    console.error(result.stderr);
     Deno.exit(result.code);
   }
-  return `${stdout}\n${stderr}`;
-}
-
-async function readJson<T>(url: URL): Promise<T> {
-  return JSON.parse(await Deno.readTextFile(url)) as T;
+  return `${result.stdout}\n${result.stderr}`;
 }
 
 async function assertFile(url: URL, label: string): Promise<void> {

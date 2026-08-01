@@ -7,7 +7,8 @@
  */
 
 import { extname } from 'node:path';
-import { stripCommentsLine } from './lib/text.ts';
+import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
+import { gitTrackedFiles } from './lib/git.ts';
 
 export interface Issue {
   check: string;
@@ -113,25 +114,6 @@ function addIssue(
   line?: number,
 ): void {
   issues.push({ check, file, line, message });
-}
-
-export function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function gitFiles(): Promise<string[]> {
-  const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', '-z'],
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(new TextDecoder().decode(output.stderr).trim() || 'git ls-files failed');
-  }
-  return new TextDecoder()
-    .decode(output.stdout)
-    .split('\0')
-    .filter(Boolean)
-    .map(normalizePath);
 }
 
 export function isTextPath(path: string): boolean {
@@ -290,22 +272,8 @@ export function assertTypeEscapeAllowlistFiles(paths: Set<string>, issues: Issue
 }
 
 export function assertMojibake(files: TextFile[], issues: Issue[]): void {
-  const badChars = [
-    '\uFFFD',
-    '\u951f',
-    '\u9239',
-    '\u9225',
-    '\u9242',
-    '\u9241',
-    '\u9283',
-    '\u923f',
-    '\u9983',
-    '\u9514',
-    '\u72c5',
-    '\u7b0d',
-  ];
   for (const file of files) {
-    for (const bad of badChars) {
+    for (const bad of MOJIBAKE_CHARS) {
       const idx = file.text.indexOf(bad);
       if (idx !== -1) {
         addIssue(
@@ -321,7 +289,7 @@ export function assertMojibake(files: TextFile[], issues: Issue[]): void {
 }
 
 async function main(): Promise<void> {
-  const files = await gitFiles();
+  const files = await gitTrackedFiles();
   let totalBytes = 0;
   let readFailures = 0;
   const textFiles: TextFile[] = [];

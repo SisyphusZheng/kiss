@@ -40,7 +40,7 @@ export async function* walk(
 }
 
 /** Return true if the path exists (file or directory). */
-export async function exists(path: string): Promise<boolean> {
+export async function exists(path: string | URL): Promise<boolean> {
   try {
     await Deno.stat(path);
     return true;
@@ -50,11 +50,11 @@ export async function exists(path: string): Promise<boolean> {
 }
 
 /** Read a UTF-8 text file. */
-async function readText(path: string): Promise<string> {
+async function readText(path: string | URL): Promise<string> {
   return await Deno.readTextFile(path);
 }
 
 /** Read a UTF-8 text file and parse it as JSON. */
-export async function readJson<T = unknown>(path: string): Promise<T> {
+export async function readJson<T = unknown>(path: string | URL): Promise<T> {
   return JSON.parse(await readText(path)) as T;
 }

@@ -9,9 +9,9 @@ import {
   isProductionSource,
   type Issue,
   isTextPath,
-  normalizePath,
   type TextFile,
 } from './check-architecture-contract.ts';
+import { normalizeSlashes } from './lib/path.ts';
 
 const REPLACEMENT_CHAR = String.fromCharCode(0xFFFD);
 
@@ -161,8 +161,8 @@ Deno.test('arch: isCurrentDocOrExample classifies correctly', () => {
   assert(!isCurrentDocOrExample('packages/core/__tests__/x.test.ts'));
 });
 
-Deno.test('arch: normalizePath converts backslashes to forward slashes', () => {
-  assertEquals(normalizePath('a\\b\\c.ts'), 'a/b/c.ts');
+Deno.test('arch: normalizeSlashes converts backslashes to forward slashes', () => {
+  assertEquals(normalizeSlashes('a\\b\\c.ts'), 'a/b/c.ts');
 });
 
 Deno.test('arch: isTextPath recognizes text extensions only', () => {

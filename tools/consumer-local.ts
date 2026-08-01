@@ -16,6 +16,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { allPackageAliases } from './lib/package-graph.ts';
 import { assertCompatibilityDate } from './lib/compatibility-date.ts';
+import { normalizeSlashes } from './lib/path.ts';
+import { runWithOutput } from './lib/process.ts';
+import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { NITRO_COMPATIBILITY_DATE } from './project-constants.ts';
 
 function findMissingGeneratedImports(
@@ -28,21 +31,9 @@ function findMissingGeneratedImports(
 
 function extractBareImportSpecifiers(source: string): Set<string> {
   const specifiers = new Set<string>();
-  const patterns = [
-    /\bimport\s+(?:[^'"]+\s+from\s+)?["']([^"']+)["']/g,
-    /\bexport\s+[^'"]+\s+from\s+["']([^"']+)["']/g,
-    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
-      const specifier = match[1];
-      if (specifier && !specifier.includes('${') && isBareSpecifier(specifier)) {
-        specifiers.add(specifier);
-      }
-    }
+  for (const { value } of extractStaticModuleSpecifiers(source)) {
+    if (isBareSpecifier(value)) specifiers.add(value);
   }
-
   return specifiers;
 }
 
@@ -69,10 +60,6 @@ function isMappedSpecifier(
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');
 
-function vitePath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
 const tmpRoot = Deno.makeTempDirSync({ prefix: 'openelement-consumer-local-' });
 const projectName = 'consumer-test-app';
 const keepTemp = Deno.env.get('OPEN_ELEMENT_KEEP_CONSUMER_LOCAL') === '1';
@@ -87,34 +74,15 @@ function cleanup(): void {
   rmSync(tmpRoot, { recursive: true, force: true });
 }
 
-async function runCommand(
-  args: string[],
-  cwd: string,
-  env: Record<string, string> = {},
-): Promise<{ code: number; stdout: string; stderr: string }> {
-  const result = await new Deno.Command(Deno.execPath(), {
-    args,
-    cwd,
-    env,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  return {
-    code: result.code,
-    stdout: new TextDecoder().decode(result.stdout),
-    stderr: new TextDecoder().decode(result.stderr),
-  };
-}
-
 console.log(`Generating test project from local workspace...`);
 
 // Step 1: Generate project using local create package
-const createResult = await runCommand([
+const createResult = await runWithOutput(Deno.execPath(), [
   'run',
   '-A',
   join(repoRoot, 'packages', 'create', 'src', 'cli.ts'),
   projectName,
-], tmpRoot);
+], { cwd: tmpRoot });
 
 if (createResult.code !== 0) {
   console.error('Failed to generate consumer project:');
@@ -153,7 +121,7 @@ for (const [specifier, url] of allPackageAliases(repoRoot)) {
   denoJson.imports[specifier] = url;
 }
 
-denoJson.imports['vite'] = 'npm:vite@8.0.10';
+denoJson.imports['vite'] = 'npm:vite@8.0.16';
 denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
 denoJson.imports['hono'] = 'npm:hono@4.12.23';
 denoJson.imports['@hono/vite-dev-server'] = 'npm:@hono/vite-dev-server@^0.25.3';
@@ -171,7 +139,7 @@ const aliases = [...allPackageAliases(repoRoot)]
   .filter(([find]) => find !== '@openelement/ui/')
   .map(([find, url]) => ({
     find,
-    replacement: vitePath(fileURLToPath(url)),
+    replacement: normalizeSlashes(fileURLToPath(url)),
   }));
 
 const viteConfigPath = join(appDir, 'vite.config.ts');
@@ -194,7 +162,7 @@ try {
 
 // Step 5: Build the project
 console.log('Building consumer project...');
-const buildResult = await runCommand(['task', 'build'], appDir);
+const buildResult = await runWithOutput(Deno.execPath(), ['task', 'build'], { cwd: appDir });
 
 const stdout = buildResult.stdout;
 const stderr = buildResult.stderr;
@@ -382,13 +350,13 @@ export default eventHandler(async (event) => {
 `,
 );
 
-const nitroResult = await runCommand([
+const nitroResult = await runWithOutput(Deno.execPath(), [
   'run',
   '--node-modules-dir=auto',
   '-A',
   'npm:nitro@3.0.0',
   'build',
-], appDir);
+], { cwd: appDir });
 
 if (nitroResult.code !== 0) {
   console.error('Generated app Nitro build FAILED:');

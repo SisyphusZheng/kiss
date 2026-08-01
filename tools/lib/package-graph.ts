@@ -20,7 +20,11 @@ export interface PackageInfo {
   importValues: Record<string, string>;
 }
 
-function normalizeDep(specifier: string, self: string): string | null {
+/**
+ * Normalize an @openelement/* specifier to its package base, or null when the
+ * specifier is not internal (or points at the package itself).
+ */
+export function normalizeInternalDep(specifier: string, self: string): string | null {
   const prefix = '@openelement/';
   if (!specifier.startsWith(prefix)) return null;
   const rest = specifier.slice(prefix.length);
@@ -29,67 +33,16 @@ function normalizeDep(specifier: string, self: string): string | null {
   return base === self ? null : base;
 }
 
-export function collectImportStatements(source: string): string[] {
-  const statements: string[] = [];
-  let current = '';
-  let inBlockComment = false;
-  let inTemplate = false;
-
-  for (const rawLine of source.split('\n')) {
-    let line = '';
-
-    for (let i = 0; i < rawLine.length; i++) {
-      const char = rawLine[i];
-      const next = rawLine[i + 1];
-
-      if (inBlockComment) {
-        if (char === '*' && next === '/') {
-          inBlockComment = false;
-          i++;
-        }
-        continue;
-      }
-
-      if (inTemplate) {
-        if (char === '`' && rawLine[i - 1] !== '\\') inTemplate = false;
-        continue;
-      }
-
-      if (char === '/' && next === '*') {
-        inBlockComment = true;
-        i++;
-        continue;
-      }
-
-      if (char === '/' && next === '/') break;
-      if (char === '`') {
-        inTemplate = true;
-        continue;
-      }
-
-      line += char;
-    }
-
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    const startsImportExport = /^(import|export)\b/.test(trimmed);
-    const dynamicImportIndex = trimmed.search(/\bimport\s*\(/);
-    const firstQuoteIndex = trimmed.search(/['"`]/);
-    const hasDynamicImport = dynamicImportIndex !== -1 &&
-      (firstQuoteIndex === -1 || firstQuoteIndex > dynamicImportIndex);
-
-    if (!current && !startsImportExport && !hasDynamicImport) continue;
-
-    current += `${trimmed}\n`;
-    if (trimmed.endsWith(';') || (hasDynamicImport && /\)\s*(?:as\b.*)?;?$/.test(trimmed))) {
-      statements.push(current);
-      current = '';
-    }
-  }
-
-  if (current) statements.push(current);
-  return statements;
+/**
+ * Normalize a dependency specifier to its @openelement/* package base.
+ * Non-internal specifiers pass through unchanged; only self-references
+ * normalize to null. Deliberately NOT the same contract as
+ * normalizeInternalDep: check-package-graph scans arbitrary specifiers and
+ * needs the pass-through form.
+ */
+export function normalizeDep(dep: string, self: string): string | null {
+  if (!dep.startsWith('@openelement/')) return dep;
+  return normalizeInternalDep(dep, self);
 }
 
 export function extractOpenImports(source: string): string[] {
@@ -111,7 +64,7 @@ function collectInternalDeps(dir: string, exports: unknown): string[] {
     try {
       const text = Deno.readTextFileSync(`${dir}/${cleanPath}`);
       for (const specifier of extractOpenImports(text)) {
-        const base = normalizeDep(specifier, '');
+        const base = normalizeInternalDep(specifier, '');
         if (base) deps.add(base);
       }
     } catch {
@@ -130,7 +83,7 @@ function collectInternalDeps(dir: string, exports: unknown): string[] {
       if (!entry.name.endsWith('.ts') && !entry.name.endsWith('.tsx')) continue;
       const text = Deno.readTextFileSync(entry.path);
       for (const specifier of extractOpenImports(text)) {
-        const base = normalizeDep(specifier, '');
+        const base = normalizeInternalDep(specifier, '');
         if (base) deps.add(base);
       }
     }
@@ -152,28 +105,48 @@ function collectInternalDeps(dir: string, exports: unknown): string[] {
 
 export async function readPackage(dir: string): Promise<PackageInfo | null> {
   const path = `${dir}/deno.json`;
+  let raw: string;
   try {
-    const raw = await Deno.readTextFile(path);
-    const json = JSON.parse(raw);
-    if (!json.name) return null;
-    const imports: Record<string, string> = json.imports ?? {};
-    const declaredDeps = Object.keys(imports)
-      .map((specifier) => normalizeDep(specifier, json.name))
-      .filter((specifier): specifier is string => specifier !== null);
-    const sourceDeps = collectInternalDeps(dir, json.exports);
-    const deps = [...new Set([...declaredDeps, ...sourceDeps])];
-    return {
-      name: json.name,
-      version: json.version ?? '',
-      dir,
-      deps,
-      exports: json.exports,
-      importKeys: new Set(Object.keys(imports)),
-      importValues: imports,
-    };
-  } catch {
-    return null;
+    raw = await Deno.readTextFile(path);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return null;
+    throw error;
   }
+  let json: {
+    name?: string;
+    version?: string;
+    imports?: Record<string, string>;
+    exports?: unknown;
+  };
+  try {
+    json = JSON.parse(raw);
+  } catch (error) {
+    // Fail loud (#753): a silently skipped package vanishes from every gate
+    // that derives from readPackages() (interface snapshot, graph:check,
+    // publish order) while those gates stay green.
+    throw new Error(
+      `${path} is not valid JSON; refusing to silently drop the package: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+  const name = json.name;
+  if (!name) return null;
+  const imports: Record<string, string> = json.imports ?? {};
+  const declaredDeps = Object.keys(imports)
+    .map((specifier) => normalizeInternalDep(specifier, name))
+    .filter((specifier): specifier is string => specifier !== null);
+  const sourceDeps = collectInternalDeps(dir, json.exports);
+  const deps = [...new Set([...declaredDeps, ...sourceDeps])];
+  return {
+    name,
+    version: json.version ?? '',
+    dir,
+    deps,
+    exports: json.exports,
+    importKeys: new Set(Object.keys(imports)),
+    importValues: imports,
+  };
 }
 
 export async function readPackages(): Promise<PackageInfo[]> {
@@ -190,7 +163,7 @@ export function buildDependencyGraph(packages: PackageInfo[]): Map<string, strin
   const graph = new Map<string, string[]>();
   for (const pkg of packages) {
     const normalized = pkg.deps
-      .map((dep) => normalizeDep(dep, pkg.name))
+      .map((dep) => normalizeInternalDep(dep, pkg.name))
       .filter((dep): dep is string => dep !== null);
     graph.set(pkg.name, [...new Set(normalized)]);
   }
@@ -303,7 +276,7 @@ export function releasePublishOrder(packages: PackageInfo[]): PackageInfo[] {
 
   for (const pkg of ordered) {
     for (const dep of pkg.deps) {
-      const base = normalizeDep(dep, pkg.name);
+      const base = normalizeInternalDep(dep, pkg.name);
       if (!base) continue;
       const depIndex = position.get(base);
       if (depIndex === undefined) continue;
