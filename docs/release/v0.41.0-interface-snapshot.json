@@ -90,7 +90,7 @@
           ]
         },
         "./spa": {
-          "sha256": "aafcf246d7a9682a170d7e73f47d3974705da5a2391f73c5c46c3eed21a90f4e",
+          "sha256": "16b5ea04946689a7caa620a0ded784199aa78c76c957e6e261ee36fb1ec9ef3d",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -246,7 +246,7 @@
           ]
         },
         "./open-tabs": {
-          "sha256": "80e2d618c1be85f3f53e7f3d15c73a7ac33bd9fd67dc05be0a3d43d4ba8fc9ef",
+          "sha256": "959187b607f683bb75a5f44b1b66a0f85c9460cc8c3a9f61c6ba8d61ca1f58cd",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
