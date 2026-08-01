@@ -30,7 +30,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeHtml } from '@openelement/element';
 import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-input';
@@ -136,7 +135,7 @@ export class OpenInput extends OpenElement {
       <div className='input-wrapper' part='wrapper'>
         {label && (
           <label htmlFor='input' part='label'>
-            {this._esc(label)}
+            {label}
             {r ? ' *' : ''}
           </label>
         )}
@@ -160,7 +159,7 @@ export class OpenInput extends OpenElement {
         />
         {error && (
           <small id='input-error' role='alert' className='error-message' part='error'>
-            {this._esc(error)}
+            {error}
           </small>
         )}
       </div>
@@ -256,6 +255,4 @@ export class OpenInput extends OpenElement {
       this.removeAttribute('disabled');
     }
   }
-
-  private _esc = escapeHtml;
 }

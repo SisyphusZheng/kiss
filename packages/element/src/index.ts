@@ -120,6 +120,14 @@ export type {
 // adapters (#496). The HydrationStrategy type derives from this const.
 export { HYDRATION_STRATEGIES } from './internal/protocol/framework.ts';
 export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';
+/**
+ * @experimental ISR cache contracts for self-build KV adapters
+ * (docs/current/ISR_KV_ADAPTER.md). ISR is not wired into the 0.42
+ * request-time server entry (targeting 0.44), and no in-box adapter implements
+ * cross-instance invalidation. `tags` lives on `CacheEntry`, not on
+ * `IsrCacheEntry`; KV adapters persist it alongside the entry.
+ */
+export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';
 export type {
   OpenElementAttribute,
   OpenElementCssPart,

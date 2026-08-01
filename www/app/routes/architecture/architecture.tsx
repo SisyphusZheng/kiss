@@ -4,7 +4,7 @@ export const tagName = 'engine-architecture';
 import { OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
-import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import { OPENELEMENT_VERSION, PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
 import '@openelement/site-ui/open-section-frame.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
@@ -72,7 +72,7 @@ export class ArchitecturePage extends OpenElement {
           </span>
           <open-artifact-panel slot='artifact'>
             <span slot='label'>package graph</span>
-            <span slot='meta'>{OPENELEMENT_VERSION} published line</span>
+            <span slot='meta'>{PUBLISHED_PACKAGE_VERSION} published line</span>
             <div
               class='pkg-graph'
               role='img'

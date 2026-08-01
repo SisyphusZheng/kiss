@@ -1,7 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** The public WWW flagship: view-source editorial, v4 language. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import { OPENELEMENT_VERSION, PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
 import '@openelement/ui/open-code-block';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
@@ -251,7 +251,8 @@ export class DocsHome extends OpenElement {
           <div class='spec-strip'>
             <div class='spec-cell'>
               <small>{t.specVersion}</small>
-              <strong>{OPENELEMENT_VERSION} — stable</strong>
+              <strong>{PUBLISHED_PACKAGE_VERSION} — stable</strong>
+              <small>{OPENELEMENT_VERSION} source</small>
             </div>
             <div class='spec-cell'>
               <small>{t.specGraph}</small>

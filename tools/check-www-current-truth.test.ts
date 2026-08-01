@@ -1,5 +1,9 @@
 import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
-import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
+} from './project-constants.ts';
 
 // Drives tools/check-www-current-truth.ts as a subprocess against a minimal
 // fixture tree so the gate's pass/fail behavior is tested in isolation.
@@ -52,9 +56,22 @@ Deno.test('www-truth: v-prefixed retired version is flagged', async () => {
 });
 
 Deno.test('www-truth: short alpha.N retired form is flagged', async () => {
-  await withFixture('export const x = "published in alpha.9";\n', ({ code, stderr }) => {
+  // alpha.7 is neither the current line nor the npm registry line.
+  await withFixture('export const x = "published in alpha.7";\n', ({ code, stderr }) => {
     assertEquals(code, 1);
     assert(stderr.includes('retired prerelease current claim'));
+  });
+});
+
+Deno.test('www-truth: npm registry line forms are not flagged (#730)', async () => {
+  // While the registry lags the source line by one alpha,
+  // PREVIOUS_PACKAGE_VERSION is the npm-published line and pages honestly
+  // present it as "published" — it must not trip the retired-form rule.
+  const bare = PREVIOUS_PACKAGE_VERSION; // e.g. 0.42.0-alpha.9
+  const tagged = `v${PREVIOUS_PACKAGE_VERSION}`;
+  const short = PREVIOUS_PACKAGE_VERSION.replace(/^\d+\.\d+\.\d+-/u, ''); // e.g. alpha.9
+  await withFixture(`export const x = "${bare} ${tagged} ${short} — published";\n`, ({ code }) => {
+    assertEquals(code, 0);
   });
 });
 

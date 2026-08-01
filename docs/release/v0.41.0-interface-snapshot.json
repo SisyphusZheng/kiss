@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "1c3f3a859d0fc72fdbea9f04c479aa8f870e5a586eacb7ff8f9f14af9cd34dbf",
+          "sha256": "38b3e1ef4a56469d6f1f77361e45b708bdbb141e368ffa41b18046fa50aa34dc",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -25,6 +25,7 @@
             "export type {",
             "export type {",
             "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
+            "export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';",
             "export type {"
           ]
         },
@@ -90,7 +91,7 @@
           ]
         },
         "./spa": {
-          "sha256": "16b5ea04946689a7caa620a0ded784199aa78c76c957e6e261ee36fb1ec9ef3d",
+          "sha256": "0d96bcaecbe1793564f28c9917cda3c074072b56575d97cae4bb67df245c49a5",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -188,7 +189,7 @@
           ]
         },
         "./open-callout": {
-          "sha256": "77cd8141a1b888fa2b50f9d99088394312aa1db5996df0253dfd8b38931aea0b",
+          "sha256": "4680c7824b68cececd7f3ebbf7c5da5039ae581a2016c004a39ee16d329078dc",
           "publicDeclarations": [
             "export const tagName = 'open-callout';",
             "export class OpenCallout extends OpenElement {"
@@ -209,7 +210,7 @@
           ]
         },
         "./open-dialog": {
-          "sha256": "9952101522bc7a2246c18199fbdf3878b0f3693bdc0539ece5f35c31074421ce",
+          "sha256": "5e586aac5076afc428b1cbfe93338d3cfea72f87185985bbd5cbb3dca9ed78db",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
@@ -223,7 +224,7 @@
           ]
         },
         "./open-input": {
-          "sha256": "7f8bc2182640bf8bcea6c413ae9ed4c476c7f01985bd416b73d2f88d6378f443",
+          "sha256": "9ff7e351ba34c7a431e3f1a2f6328500e98f67658b1602d4379db0fe9af1c625",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -246,7 +247,7 @@
           ]
         },
         "./open-tabs": {
-          "sha256": "959187b607f683bb75a5f44b1b66a0f85c9460cc8c3a9f61c6ba8d61ca1f58cd",
+          "sha256": "9b41d4346cdb573d8abbf8df75bf5ee38726d848b222cb8b981192e018f5ba7a",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"

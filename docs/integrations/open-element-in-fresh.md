@@ -2,25 +2,49 @@
 
 A guide to consuming [openElement](https://github.com/open-element/openelement) custom elements inside a [Deno Fresh](https://fresh.deno.dev) application.
 
-## Quick Start
-
-See the working example at `examples/open-element-in-fresh/`.
+The working example lives at `examples/open-element-in-fresh/` — a Fresh 2.3.3
+project that renders `<open-button>` and `<open-card>` as standard HTML custom
+element tags alongside a Preact counter island. Everything below is taken from
+that example and can be reproduced with `deno task dev` inside it.
 
 ## Setup `deno.json`
 
-Add openElement packages as npm imports alongside Preact:
+Fresh 2.x is imported from JSR; Preact comes from npm:
 
 ```json
 {
   "imports": {
-    "$fresh/": "https://deno.land/x/fresh@1.7.3/",
-    "preact": "https://esm.sh/preact@10.22.0",
-    "preact/": "https://esm.sh/preact@10.22.0/",
-    "@openelement/ui": "npm:@openelement/ui@^0.41.0",
-    "@openelement/core/hydrate": "npm:@openelement/core@^0.41.0/hydrate"
+    "@/": "./",
+    "fresh": "jsr:@fresh/core@^2.3.3",
+    "fresh/runtime": "jsr:@fresh/core@^2.3.3/runtime",
+    "preact": "npm:preact@^10.29.1",
+    "@preact/signals": "npm:@preact/signals@^2.9.0",
+    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.1.2",
+    "vite": "npm:vite@^8.0.10"
+  },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "preact"
   }
 }
 ```
+
+Fresh 2.x also expects a Vite entry (`vite.config.ts`), a client entry
+(`client.ts`), and a server entry using the `App` API (`main.ts`):
+
+```ts
+// main.ts
+import { App, staticFiles } from 'fresh';
+
+export const app = new App();
+
+app.use(staticFiles());
+app.fsRoutes();
+```
+
+The example's tasks are the Fresh 2.x defaults: `deno task dev` (Vite dev
+server), `deno task build` (`vite build`), and `deno task start`
+(`deno serve -A _fresh/server.js`).
 
 ## Rendering openElement Tags in Routes
 
@@ -28,6 +52,8 @@ Use custom element tags directly in your Fresh route JSX. No wrapper components 
 
 ```tsx
 // routes/index.tsx
+import OpenElements from '../islands/OpenElements.tsx';
+
 export default function Home() {
   return (
     <main>
@@ -35,13 +61,20 @@ export default function Home() {
       <open-card>
         <h3 slot='header'>Title</h3>
         <p>Card content</p>
+        <p slot='footer'>Footer</p>
       </open-card>
+      <OpenElements />
     </main>
   );
 }
 ```
 
-Augment Preact's JSX types so TypeScript accepts the tags:
+Fresh renders these tags as plain HTML during SSR; the browser upgrades them
+once their classes are registered on the client. One caveat: the example runs
+through Vite, which strips types without checking them. A strict `deno check`
+reports TS2339/TS2786 for the custom tags because Preact's
+`JSX.IntrinsicElements` does not know them. If you want the route to
+type-check, augment Preact's JSX types:
 
 ```tsx
 declare module 'preact' {
@@ -51,9 +84,7 @@ declare module 'preact' {
         variant?: string;
         size?: string;
       };
-      'open-card': preact.JSX.HTMLAttributes<HTMLElement> & {
-        variant?: string;
-      };
+      'open-card': preact.JSX.HTMLAttributes<HTMLElement>;
     }
   }
 }
@@ -61,54 +92,89 @@ declare module 'preact' {
 
 ## The Boot Island
 
-Create a Fresh island that registers openElement components and hydrates them:
+Registration must happen on the client, not during SSR. The example ships a
+Fresh island that defines the custom element classes when it activates:
 
 ```tsx
 // islands/OpenElements.tsx
-import { useEffect } from 'preact/hooks';
+function defineOpenButton() {
+  if (customElements.get('open-button')) return;
+  class OpenButton extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+    }
+    connectedCallback() {
+      if (this.shadowRoot!.childElementCount > 0) return;
+      this.shadowRoot!.innerHTML = `
+        <button part="control">
+          <slot></slot>
+        </button>
+      `;
+    }
+  }
+  customElements.define('open-button', OpenButton);
+}
 
 export default function OpenElementsIsland() {
-  useEffect(() => {
-    let dispose: (() => void) | undefined;
-    let unmounted = false;
-
-    Promise.all([
-      import('@openelement/ui'),
-      import('@openelement/core/hydrate'),
-    ]).then(([_, { hydrateOpenElement }]) => {
-      if (unmounted) return;
-      dispose = hydrateOpenElement(document.body);
-    });
-
-    return () => {
-      unmounted = true;
-      dispose?.();
-    };
-  }, []);
-
+  if (typeof window !== 'undefined') {
+    defineOpenButton();
+  }
   return null;
 }
 ```
 
-## How `hydrateOpenElement` Works
+The island guards with `customElements.get` so re-activation never double-registers,
+and the `connectedCallback` guard keeps disconnect/reconnect cycles from
+re-rendering. The example's full island registers both `open-button` and
+`open-card` the same way.
 
-`hydrateOpenElement` scans the DOM for declarative shadow DOM (DSD) templates created by openElement SSR. For each matching custom element:
+## How the Interop Works
 
-1. It looks up the constructor in `customElements.registry`.
-2. It attaches the existing DSD shadow root content.
-3. It hydrates `data-signal-*` markers using the element's `HydrationScope`.
-4. It binds event markers (`data-eid`) to the element's event handlers.
-5. It returns a dispose function that cleans up all subscriptions.
+1. **SSR** — Fresh renders the route on the server. Custom element tags are
+   emitted as plain HTML; Preact islands are serialized as island markers.
+2. **Client activation** — The `OpenElements` island activates, calls
+   `customElements.define`, and the browser upgrades the tags already in the
+   DOM. Preact islands (the example's `PreactCounter`, backed by
+   `@preact/signals`) mount independently.
+3. **Isolation** — openElement custom elements are standard Web Components
+   (shadow DOM, `customElements.define`, native DOM APIs). They share the DOM
+   with Preact islands but not state or lifecycle, so the two systems do not
+   conflict.
+
+## Known Limitation
+
+The example's island registers **inline custom element stubs** instead of
+importing `@openelement/ui`. Root cause: `deno pack` does not apply JSX
+transformation when publishing `packages/ui` to npm — the output `.js` files
+retain raw JSX that Vite cannot transpile. The `compilerOptions.jsx` config is
+already in `packages/ui/deno.json`; the remaining blocker is the pack pipeline.
+
+Consequences of the stub:
+
+- The stub ignores `variant`, `size`, and `disabled` attributes — it renders a
+  plain button regardless, while the real `open-button` styles per variant.
+- There is no openElement hydration runtime in this integration. There is no
+  published `@openelement/core/hydrate` entry; client behavior comes entirely
+  from the registered custom element classes.
+
+Once the pack pipeline ships pre-compiled JS, replace the stubs with
+`import '@openelement/ui'` in the island.
 
 ## Limitations
 
-- **JSX transform**: openElement JSX transform must be configured at build time for the component package. At consumption time in Fresh, you use Preact's JSX transform and pass-through custom element tags as standard HTML.
-- **Registration timing**: `customElements.define` must happen on the client, not during SSR. The boot island pattern above handles this correctly via dynamic `import()` inside `useEffect`.
-- **Router disposal**: When navigating away, Fresh unmounts islands but does not call `hydrateOpenElement`'s dispose automatically. The boot island stores the returned dispose function and calls it from the effect cleanup; SPAs with custom client-side routing should follow the same pattern.
-- **Signal interop**: openElement signals (`@openelement/signal`) and Preact signals (`@preact/signals`) are separate systems. Each manages its own reactivity independently.
+- **JSX transform**: openElement's JSX transform applies when building an
+  openElement component package. At consumption time in Fresh you use Preact's
+  JSX transform and pass custom element tags through as standard HTML.
+- **Registration timing**: `customElements.define` must run on the client, not
+  during SSR. The boot island pattern above handles this by defining classes at
+  island activation time.
+- **Signal interop**: openElement signals and Preact signals (`@preact/signals`)
+  are separate systems. Each manages its own reactivity independently.
 
 ## Reference
 
 - Example project: `examples/open-element-in-fresh/`
-- Client runtime: `@openelement/core/hydrate`
-- Component library: `@openelement/ui`
+- Example README (structure, Fresh 1.x → 2.x migration notes):
+  `examples/open-element-in-fresh/README.md`
+- Component library (once the pack gap is fixed): `@openelement/ui`

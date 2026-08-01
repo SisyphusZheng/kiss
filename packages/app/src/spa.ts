@@ -11,7 +11,7 @@ import {
   type RouterMode,
 } from './internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
-import { normalizeActionFailure } from './internal/action-error.ts';
+import { normalizeActionFailure, normalizeLoaderFailure } from './internal/action-error.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { assertValidTagName, createLogger } from '@openelement/element';
 
@@ -50,23 +50,25 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   let submitHandler: ((e: Event) => void) | null = null;
   let renderId = 0;
   let currentLoaderData: unknown;
+  let currentLoaderError: unknown;
   let currentActionData: unknown;
   const requestCache = new SpaRequestCache();
 
   /**
-   * Run loader for current route (if any) and push its result.
-   * Returns the loader data.
+   * Run loader for current route (if any). On failure returns a normalized
+   * page error (#676) instead of fake loader data — the error rides the page
+   * error channel (`__openElementError`), mirroring the action failure
+   * channel (normalizeActionFailure), so pages render their error definition
+   * rather than silently receiving an empty data shape.
    */
-  async function runLoader(): Promise<unknown> {
-    if (!router) return undefined;
+  async function runLoader(): Promise<{ data: unknown; error?: unknown }> {
+    if (!router) return { data: undefined };
     const route = router.currentRoute;
-    if (!route?.loader) return undefined;
+    if (!route?.loader) return { data: undefined };
     try {
-      return await route.loader({ params: router.params });
+      return { data: await route.loader({ params: router.params }) };
     } catch (err) {
-      if (development) log.error('loader failed:', err);
-      else log.error('loader failed');
-      return { error: 'Loader failed' };
+      return { data: undefined, error: normalizeLoaderFailure(err, development) };
     }
   }
 
@@ -101,6 +103,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       request,
       route: { path: route.path },
       meta: {},
+      error: currentLoaderError,
     });
     rootEl.appendChild(el);
   }
@@ -113,9 +116,10 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     const currentRender = ++renderId;
 
     // Load before committing so stale navigations cannot overwrite the current route.
-    const loaderData = await runLoader();
+    const { data: loaderData, error: loaderError } = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
     currentLoaderData = loaderData;
+    currentLoaderError = loaderError;
     currentActionData = undefined;
 
     renderComponent();
@@ -184,10 +188,11 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     }
 
     // Re-run loader for fresh data
-    const loaderData = await runLoader();
+    const { data: loaderData, error: loaderError } = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
 
     currentLoaderData = loaderData;
+    currentLoaderError = loaderError;
     currentActionData = actionData;
 
     renderComponent();
@@ -244,6 +249,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     }
 
     currentLoaderData = undefined;
+    currentLoaderError = undefined;
     currentActionData = undefined;
     requestCache.clear();
   }

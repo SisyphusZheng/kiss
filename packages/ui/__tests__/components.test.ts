@@ -44,6 +44,10 @@ interface MockElement {
   setAttribute(name: string, value: string): void;
   hasAttribute(name: string): boolean;
   removeAttribute(name: string): void;
+  addEventListener(type: string, listener: EventListener): void;
+  dispatchEvent(event: Event): boolean;
+  focus(): void;
+  focused: boolean;
   textContent: string;
   innerHTML: string;
   classList: {
@@ -285,12 +289,6 @@ function clickVNode(node: VNode | undefined, init?: EventInit, host?: EventTarge
   }
 }
 
-function classNameOf(node: VNode | undefined): string {
-  if (!node) return '';
-  const cls = node.props.className ?? node.props.class ?? '';
-  return String(cls);
-}
-
 // ─── Mock element helpers ────────────────────────────────────────────────────
 
 function createMockElement(
@@ -299,6 +297,7 @@ function createMockElement(
   text = '',
 ): MockElement {
   const attributes = new Map<string, string>(Object.entries(attrs));
+  const listeners = new Map<string, Set<EventListener>>();
   return {
     tagName: tag.toUpperCase(),
     getAttribute: (name: string) => attributes.get(name) ?? null,
@@ -308,6 +307,22 @@ function createMockElement(
     hasAttribute: (name: string) => attributes.has(name),
     removeAttribute: (name: string) => {
       attributes.delete(name);
+    },
+    addEventListener: (type: string, listener: EventListener) => {
+      let typed = listeners.get(type);
+      if (!typed) {
+        typed = new Set();
+        listeners.set(type, typed);
+      }
+      typed.add(listener);
+    },
+    dispatchEvent: (event: Event) => {
+      for (const listener of listeners.get(event.type) ?? []) listener(event);
+      return true;
+    },
+    focused: false,
+    focus() {
+      this.focused = true;
     },
     textContent: text,
     innerHTML: text,
@@ -1224,69 +1239,251 @@ Deno.test('open-dropdown: has correct tagName and toggle structure', async () =>
   assertExists(findByPart(vnode, 'content'));
 });
 
-Deno.test('open-tabs: has correct tagName and renders tabs from slotted children', async () => {
+// ─── #726: no double-escaping of attribute text ─────────────────────────────
+// Components must pass label/error text to the JSX pipeline RAW. The CSR
+// renderer inserts strings via createTextNode and SSR escapes text nodes in
+// render-ir, so pre-escaping here would surface literal `&amp;` (CSR) or
+// `&amp;amp;` (SSR).
+
+Deno.test('open-input: label and error text are passed raw (no pre-escaping)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  instance.setAttribute('label', 'Tom & "Jerry" <3');
+  instance.setAttribute('error', '5 > 3 & 2 < 4');
+
+  const vnode = instance.render() as VNode;
+  const label = findByPart(vnode, 'label') as VNode;
+  assertExists(label);
+  assertEquals(label.children[0], 'Tom & "Jerry" <3');
+
+  const error = findByPart(vnode, 'error') as VNode;
+  assertExists(error);
+  assertEquals(error.children[0], '5 > 3 & 2 < 4');
+  assertFalse(vnodeText(vnode).includes('&amp;'));
+});
+
+Deno.test('open-dialog: label text is passed raw (no pre-escaping)', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  instance.setAttribute('label', 'Delete "a&b" <file>?');
+
+  const vnode = instance.render() as VNode;
+  const title = findNode(vnode, (n) => n.props?.className === 'dialog-title') as VNode;
+  assertExists(title);
+  assertEquals(title.children[0], 'Delete "a&b" <file>?');
+});
+
+Deno.test('open-callout: label text is passed raw (no pre-escaping)', async () => {
+  const { OpenCallout } = await import('../src/open-callout.tsx');
+  const instance = new OpenCallout();
+  instance.setAttribute('label', 'Fish & "Chips" <today>');
+
+  const vnode = instance.render() as VNode;
+  const title = findNode(vnode, (n) => n.props?.className === 'callout-title') as VNode;
+  assertExists(title);
+  assertEquals(title.children[0], 'Fish & "Chips" <today>');
+});
+
+// ─── #667: initial `open` state is synced by the render path ────────────────
+// attributeChangedCallback fires at upgrade time — before the shadow root and
+// ElementInternals exist — so SSR markup like `<open-dialog open>` must be
+// reconciled once the initial render/hydration completes.
+
+Deno.test('open-dialog: render reflects the open attribute on the inner dialog', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  instance.setAttribute('open', '');
+
+  const vnode = instance.render() as VNode;
+  const dialog = findByTag(vnode, 'dialog') as VNode;
+  assertEquals(dialog.props.open, true);
+});
+
+Deno.test('open-dialog: initial open state syncs after the first render', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  const states = new Set<string>();
+  (instance as unknown as { _internals: { states: Set<string> } })._internals = { states };
+  const calls: string[] = [];
+  const fakeDialog = {
+    open: false,
+    showModal() {
+      this.open = true;
+      calls.push('showModal');
+    },
+    show() {
+      this.open = true;
+      calls.push('show');
+    },
+    close() {
+      this.open = false;
+      calls.push('close');
+    },
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => selector === 'dialog' ? fakeDialog : null },
+  });
+
+  // SSR markup arrives with `open` already set; no attribute change follows.
+  instance.setAttribute('open', '');
+  instance.render();
+  (instance as unknown as { onCsrRendered(): void }).onCsrRendered();
+
+  assertEquals(calls, ['showModal']);
+  assertEquals(states.has('open'), true);
+  assertEquals(states.has('closed'), false);
+});
+
+Deno.test('open-dialog: DSD hydration does not re-open an already open dialog', async () => {
+  const { OpenDialog } = await import('../src/open-dialog.tsx');
+  const instance = new OpenDialog();
+  const calls: string[] = [];
+  const fakeDialog = {
+    open: true, // DSD shadow DOM already carries the open attribute
+    showModal: () => calls.push('showModal'),
+    show: () => calls.push('show'),
+    close: () => calls.push('close'),
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => selector === 'dialog' ? fakeDialog : null },
+  });
+
+  instance.setAttribute('open', '');
+  (instance as unknown as { onDsdHydrated(): void }).onDsdHydrated();
+
+  assertEquals(calls, []);
+});
+
+function setupTabs(instance: HTMLElement): { tabs: MockElement[]; panels: MockElement[] } {
+  const tabs = [
+    createMockElement('span', { slot: 'tab' }, '<strong>Tab</strong> 1'),
+    createMockElement('span', { slot: 'tab' }, 'Tab 2'),
+    createMockElement('span', { slot: 'tab' }, 'Tab 3'),
+  ];
+  const panels = [
+    createMockElement('div', { slot: 'panel' }, '<p>Panel 1</p>'),
+    createMockElement('div', { slot: 'panel' }, '<p>Panel 2</p>'),
+    createMockElement('div', { slot: 'panel' }, '<p>Panel 3</p>'),
+  ];
+  appendMockChildren(instance, [...tabs, ...panels]);
+  installQuerySelectorAll(instance, (selector) => {
+    if (selector === '[slot="tab"]') return tabs;
+    if (selector === '[slot="panel"]') return panels;
+    return [];
+  });
+  return { tabs, panels };
+}
+
+function keydownEvent(key: string): KeyboardEvent {
+  return Object.assign(new Event('keydown'), { key }) as KeyboardEvent;
+}
+
+Deno.test('open-tabs: renders tablist with slots instead of copying tab content', async () => {
   const module = asComponentModule(await import('../src/open-tabs.tsx'));
   assertEquals(module.tagName, 'open-tabs');
 
   const Component = exportedConstructor(module);
   const instance = new Component();
-  const tabs = [
-    createMockElement('span', { slot: 'tab' }, 'Tab 1'),
-    createMockElement('span', { slot: 'tab' }, 'Tab 2'),
-  ];
-  const panels = [
-    createMockElement('div', { slot: 'panel' }, '<p>Panel 1</p>'),
-    createMockElement('div', { slot: 'panel' }, '<p>Panel 2</p>'),
-  ];
-  appendMockChildren(instance, [...tabs, ...panels]);
-  installQuerySelectorAll(instance, (selector) => {
-    if (selector === '[slot="tab"]') return tabs;
-    if (selector === '[slot="panel"]') return panels;
-    return [];
-  });
+  const { tabs } = setupTabs(instance);
 
   const vnode = instance.render() as VNode;
-  const buttons = vnode.children
-    .flatMap((c) => isVNodeObject(c) ? c.children : [])
-    .filter((c): c is VNode => isVNodeObject(c) && c.tag === 'button');
-  assertEquals(buttons.length, 2);
-  assertStringIncludes(vnodeText(buttons[0]), 'Tab 1');
-  assertStringIncludes(vnodeText(buttons[1]), 'Tab 2');
+  const tablist = findNode(vnode, (n) => n.props?.role === 'tablist') as VNode;
+  assertExists(tablist);
+  const tabSlot = findNode(tablist, (n) => n.tag === 'slot' && n.props.name === 'tab');
+  assertExists(tabSlot);
+  assertExists(findNode(vnode, (n) => n.tag === 'slot' && n.props.name === 'panel'));
+
+  // Slotted children keep their own structure: nothing is flattened into the
+  // shadow tree, so the source element's markup never appears in the VNode.
+  assertFalse(vnodeText(vnode).includes('Tab'));
+  assertEquals(tabs[0].innerHTML, '<strong>Tab</strong> 1');
 });
 
-Deno.test('open-tabs: selecting tab updates active panel', async () => {
+Deno.test('open-tabs: decorates light tabs/panels with WAI-ARIA wiring', async () => {
   const { OpenTabs } = await import('../src/open-tabs.tsx');
   const instance = new OpenTabs();
-  const tabs = [
-    createMockElement('span', { slot: 'tab' }, 'Tab 1'),
-    createMockElement('span', { slot: 'tab' }, 'Tab 2'),
-  ];
-  const panels = [
-    createMockElement('div', { slot: 'panel' }, '<p>Panel 1</p>'),
-    createMockElement('div', { slot: 'panel' }, '<p>Panel 2</p>'),
-  ];
-  appendMockChildren(instance, [...tabs, ...panels]);
+  const { tabs, panels } = setupTabs(instance);
+
+  instance.render();
+
+  assertEquals(tabs[0].getAttribute('role'), 'tab');
+  assertEquals(tabs[0].getAttribute('aria-selected'), 'true');
+  assertEquals(tabs[0].getAttribute('tabindex'), '0');
+  assertEquals(tabs[1].getAttribute('aria-selected'), 'false');
+  assertEquals(tabs[1].getAttribute('tabindex'), '-1');
+
+  // aria-controls / aria-labelledby cross-reference each other.
+  assertEquals(tabs[1].getAttribute('aria-controls'), panels[1].getAttribute('id'));
+  assertEquals(panels[1].getAttribute('aria-labelledby'), tabs[1].getAttribute('id'));
+
+  assertEquals(panels[0].getAttribute('role'), 'tabpanel');
+  assertEquals(panels[0].hasAttribute('hidden'), false);
+  assertEquals(panels[1].hasAttribute('hidden'), true);
+});
+
+Deno.test('open-tabs: clicking a tab selects it and unhides its panel', async () => {
+  const { OpenTabs } = await import('../src/open-tabs.tsx');
+  const instance = new OpenTabs();
+  const { tabs, panels } = setupTabs(instance);
+
+  instance.render();
+  tabs[1].dispatchEvent(new Event('click'));
+  instance.render();
+
+  assertEquals(tabs[1].getAttribute('aria-selected'), 'true');
+  assertEquals(tabs[0].getAttribute('aria-selected'), 'false');
+  assertEquals(panels[1].hasAttribute('hidden'), false);
+  assertEquals(panels[0].hasAttribute('hidden'), true);
+});
+
+Deno.test('open-tabs: ArrowLeft/ArrowRight/Home/End move selection and focus', async () => {
+  const { OpenTabs } = await import('../src/open-tabs.tsx');
+  const instance = new OpenTabs();
+  const { tabs } = setupTabs(instance);
+
+  const tablist = () => findNode(instance.render(), (n) => n.props?.role === 'tablist') as VNode;
+  const press = (key: string) => {
+    (tablist().props.onKeydown as (e: KeyboardEvent) => void)(keydownEvent(key));
+    instance.render();
+  };
+
+  press('ArrowRight');
+  assertEquals(tabs[1].getAttribute('aria-selected'), 'true');
+  assertEquals(tabs[1].focused, true);
+
+  press('ArrowRight');
+  press('ArrowRight'); // wraps around to the first tab
+  assertEquals(tabs[0].getAttribute('aria-selected'), 'true');
+  assertEquals(tabs[0].focused, true);
+
+  press('ArrowLeft'); // wraps backwards to the last tab
+  assertEquals(tabs[2].getAttribute('aria-selected'), 'true');
+
+  press('Home');
+  assertEquals(tabs[0].getAttribute('aria-selected'), 'true');
+
+  press('End');
+  assertEquals(tabs[2].getAttribute('aria-selected'), 'true');
+});
+
+Deno.test('open-tabs: tab without a matching panel is aria-disabled and not selectable', async () => {
+  const { OpenTabs } = await import('../src/open-tabs.tsx');
+  const instance = new OpenTabs();
+  const { tabs } = setupTabs(instance);
   installQuerySelectorAll(instance, (selector) => {
     if (selector === '[slot="tab"]') return tabs;
-    if (selector === '[slot="panel"]') return panels;
+    if (selector === '[slot="panel"]') return []; // no panels at all
     return [];
   });
 
-  const vnode1 = instance.render() as VNode;
-  const buttons1 = vnode1.children
-    .flatMap((c) => isVNodeObject(c) ? c.children : [])
-    .filter((c): c is VNode => isVNodeObject(c) && c.tag === 'button');
-  assertStringIncludes(classNameOf(buttons1[0]), 'tab-active');
-  assertFalse(classNameOf(buttons1[1]).includes('tab-active'));
+  instance.render();
+  assertEquals(tabs[0].getAttribute('aria-disabled'), 'true');
 
-  clickVNode(buttons1[1], undefined, instance);
-
-  const vnode2 = instance.render() as VNode;
-  const buttons2 = vnode2.children
-    .flatMap((c) => isVNodeObject(c) ? c.children : [])
-    .filter((c): c is VNode => isVNodeObject(c) && c.tag === 'button');
-  assertStringIncludes(classNameOf(buttons2[1]), 'tab-active');
-  assertFalse(classNameOf(buttons2[0]).includes('tab-active'));
+  tabs[0].dispatchEvent(new Event('click'));
+  instance.render();
+  assertEquals(tabs[0].getAttribute('aria-selected'), 'false');
 });
 
 Deno.test('manifest: declares metadata for manifest-registered components', async () => {

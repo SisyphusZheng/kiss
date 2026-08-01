@@ -447,6 +447,20 @@
       "className": "OpenTabs",
       "superclassName": "OpenElement",
       "description": "",
+      "slots": [
+        {
+          "name": "",
+          "description": "Default slot"
+        },
+        {
+          "name": "tab",
+          "description": "Tab label element (one per panel)"
+        },
+        {
+          "name": "panel",
+          "description": "Panel shown while its tab is active"
+        }
+      ],
       "openElement": {
         "ssr": true,
         "dsd": true,

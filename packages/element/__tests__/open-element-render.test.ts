@@ -8,7 +8,7 @@
  * fake scope/element stand-ins (matching the OpenElementLike structural type).
  */
 
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import {
   type OpenElementLike,
   renderErrorFallback,
@@ -109,6 +109,39 @@ Deno.test('renderIntoLightDom clears itself and resets scope when render is null
   assertEquals(scope.cached, null);
   assertEquals(el.firstChild, null, 'light DOM cleared');
   assertEquals(el.appendCount, 0, 'no DOM mounted when null');
+});
+
+class ThrowingElement extends FakeElement {
+  override render(): VNode | null {
+    throw new Error('render boom');
+  }
+}
+
+// The CSR helpers must propagate render errors to their caller — never
+// swallow them into an empty text node (#662). The OpenElement render paths
+// (_renderOrHydrate / update()) own the catch and route to onRenderError,
+// mirroring the SSR render-ir.ts log-and-rethrow contract.
+Deno.test('renderIntoShadowRoot rethrows render errors to the caller', () => {
+  const scope = new FakeScope();
+  const el = new ThrowingElement();
+  el.shadowRoot = new FakeShadowRoot() as unknown as ShadowRoot;
+
+  assertThrows(
+    () => renderIntoShadowRoot(el as unknown as OpenElementLike, scope as unknown as never),
+    Error,
+    'render boom',
+  );
+});
+
+Deno.test('renderIntoLightDom rethrows render errors to the caller', () => {
+  const scope = new FakeScope();
+  const el = new ThrowingElement();
+
+  assertThrows(
+    () => renderIntoLightDom(el as unknown as OpenElementLike, scope as unknown as never),
+    Error,
+    'render boom',
+  );
 });
 
 Deno.test('renderErrorFallback creates a render root when absent and not light', () => {

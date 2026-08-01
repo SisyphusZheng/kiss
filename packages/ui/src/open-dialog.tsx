@@ -24,7 +24,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeHtml } from '@openelement/element';
 import { overlayRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-dialog';
@@ -119,7 +118,12 @@ export class OpenDialog extends OpenElement {
   static override observedAttributes = ['open', 'label', 'mode'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
-    const label = this._esc(this.getAttribute('label') || '');
+    // Keep the custom state in sync on every render. When the `open`
+    // attribute arrives via SSR markup, attributeChangedCallback fires at
+    // upgrade time — before ElementInternals and the shadow DOM exist — so
+    // the initial state would otherwise never be applied.
+    this._updateStates();
+    const label = this.getAttribute('label') || '';
     return (
       <>
         <slot name='trigger' onClick={() => this._handleTrigger()}></slot>
@@ -159,6 +163,25 @@ export class OpenDialog extends OpenElement {
       this._updateStates();
       this._syncDialogElement();
     }
+  }
+
+  protected override onCsrRendered(): void {
+    this._syncOpenState();
+  }
+
+  protected override onDsdHydrated(): void {
+    this._syncOpenState();
+  }
+
+  /**
+   * Apply the initial `open` state once the shadow DOM exists. SSR markup
+   * like `<open-dialog open>` fires attributeChangedCallback at upgrade time,
+   * before the shadow root is populated — without this hook the inner
+   * <dialog> would stay closed/non-modal until the attribute changes again.
+   */
+  private _syncOpenState(): void {
+    this._updateStates();
+    this._syncDialogElement();
   }
 
   private _updateStates(): void {
@@ -215,6 +238,4 @@ export class OpenDialog extends OpenElement {
   private _handleTrigger(): void {
     this.toggle();
   }
-
-  private _esc = escapeHtml;
 }

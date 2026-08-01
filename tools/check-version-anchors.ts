@@ -1,11 +1,14 @@
 /** Mechanical gate for documentation version anchors.
  *
- * The published/registry package line in the entry docs must equal
- * PACKAGE_VERSION(_TAG) and the active execution target must equal
- * ACTIVE_EXECUTION_VERSION, both from tools/project-constants.ts. The
- * constants are maintained by the release bump (updateProjectConstants), so
- * any drift here means a doc was edited by hand without a bump — or a bump
- * ran without its anchor updates.
+ * The source package line in the entry docs must equal PACKAGE_VERSION(_TAG)
+ * and the active execution target must equal ACTIVE_EXECUTION_VERSION, both
+ * from tools/project-constants.ts. Published/registry claims use the STATUS
+ * dual-line form: a source line anchor plus an npm registry line anchor that
+ * may name PACKAGE_VERSION_TAG or, during the post-bump lag,
+ * PREVIOUS_PACKAGE_VERSION_TAG (the registry publishes at release time, not
+ * at bump time). The constants are maintained by the release bump
+ * (updateProjectConstants), so any drift here means a doc was edited by hand
+ * without a bump — or a bump ran without its anchor updates.
  *
  * The gate has two directions:
  * 1. findVersionAnchorFailures asserts the current anchors are present.
@@ -58,7 +61,13 @@ export function versionAnchors(): VersionAnchor[] {
     },
     {
       path: 'README.md',
-      snippet: `Published package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`)`,
+      snippet: `Source package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`)`,
+    },
+    {
+      path: 'README.md',
+      snippet: `npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
     {
       path: 'README.zh.md',
@@ -66,7 +75,13 @@ export function versionAnchors(): VersionAnchor[] {
     },
     {
       path: 'docs/roadmap/ROADMAP.md',
-      snippet: `Published package line: \`${PACKAGE_VERSION_TAG}\`.`,
+      snippet: `Source package line: \`${PACKAGE_VERSION_TAG}\`.`,
+    },
+    {
+      path: 'docs/roadmap/ROADMAP.md',
+      snippet: `npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
     {
       path: 'docs/roadmap/ROADMAP.md',
@@ -75,6 +90,12 @@ export function versionAnchors(): VersionAnchor[] {
     {
       path: 'docs/governance/PROJECT_WORKFLOW.md',
       snippet: `package line \`${PACKAGE_VERSION_TAG}\``,
+    },
+    {
+      path: 'docs/governance/PROJECT_WORKFLOW.md',
+      snippet: `npm registry line \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`npm registry line \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
     {
       path: 'docs/current/VERSION_PLAN.md',

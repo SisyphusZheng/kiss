@@ -7,10 +7,11 @@ Elements are the durable application contract; JSX and Basic Element are the
 authoring layer; Declarative Shadow DOM is the default server representation;
 interactive regions upgrade selectively.
 
-Published package line: `0.42.0-alpha.10` (`v0.42.0-alpha.10`) — the stable five-package
-release under ADR-0119's scoped interface freeze; the abandoned beta naming
-is not an active line. The npm registry line is allowed to lag the source
-line by one alpha (registry currently carries `0.42.0-alpha.9`).
+Source package line: `0.42.0-alpha.10` (`v0.42.0-alpha.10`) — the in-flight
+five-package source line under ADR-0119's scoped interface freeze; the
+abandoned beta naming is not an active line.
+npm registry line: `v0.42.0-alpha.9` — the published five-package release.
+The registry line is allowed to lag the source line by one alpha.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Deno](https://img.shields.io/badge/Deno-2.8%2B-000000)](https://deno.com/)

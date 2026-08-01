@@ -1,4 +1,14 @@
-import { PACKAGE_VERSION, PACKAGE_VERSION_TAG } from './project-constants.ts';
+import {
+  PACKAGE_VERSION,
+  PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
+} from './project-constants.ts';
+
+// Prerelease tag of the superseded line (e.g. "alpha.9"). The
+// "active release target" stale guard below is bound to this tag instead of a
+// hardcoded number, so the required current anchor (PACKAGE_VERSION) can never
+// collide with the guard on the next version bump (#727).
+const previousPrereleaseTag = PREVIOUS_PACKAGE_VERSION.match(/-([a-zA-Z]+\.\d+)$/u)?.[1];
 
 type Failure = {
   file: string;
@@ -54,7 +64,11 @@ const staleCurrentClaims: RegExp[] = [
   /Vue 是.*heavy-framework island/i,
   // 0.41-era leftover guard; must not collide with a real 0.42.0-alpha.6.
   /npm registry (?:line|baseline).*0\.41\.0-alpha\.6/i,
-  /active release target.*alpha\.11/i,
+  // Bound to the superseded line's prerelease tag (see top of file) so a
+  // future current anchor never trips this guard (#727).
+  ...(previousPrereleaseTag
+    ? [new RegExp(`active release target.*${previousPrereleaseTag.replace(/\./g, '\\.')}`, 'i')]
+    : []),
   /alpha\.13 was\s+the prior recovery train/i,
   /five-package convergence is published as\s+`?0\.41\.0-alpha\.10/i,
   /五包收敛已作为\s+`0\.41\.0-alpha\.10/i,

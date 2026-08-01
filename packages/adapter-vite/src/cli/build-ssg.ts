@@ -31,7 +31,12 @@ import { buildEntryDescriptor, ssgRender } from '../internal/ssg/index.ts';
 import { SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
-import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
+import {
+  createGeneratedDataResolverPlugin,
+  GENERATED_BLOG_DATA_ID,
+  GENERATED_I18N_ID,
+  GENERATED_NAV_ID,
+} from '../generated-data-resolver.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
 import { mdxPlugin } from '../plugin-mdx.ts';
 import { quoteGeneratedJavaScriptValue } from '../internal/ssg/codegen-literals.ts';
@@ -158,6 +163,25 @@ export function buildSsgEntryDescriptor(
   });
   ctx.phase1.ssrAdmissionPlan = descriptor.ssrAdmissionPlan;
   return descriptor;
+}
+
+/**
+ * Generated data ids that must exist on disk during the build (#671).
+ *
+ * Detection uses ctx.plugins registrations: the blog/i18n plugins always
+ * register a non-null options object, and the nav plugin registers its
+ * sections/links, when their buildStart() ran. Ids whose plugins never ran
+ * (apps without that content feature) are not required, so their builds keep
+ * the dev fallback stubs.
+ */
+function requiredGeneratedDataIds(ctx: OpenElementBuildContext): string[] {
+  const required: string[] = [];
+  if (ctx.plugins.blogOptions) required.push(GENERATED_BLOG_DATA_ID);
+  if (ctx.plugins.i18nOptions) required.push(GENERATED_I18N_ID);
+  if (ctx.plugins.navSections.length > 0 || ctx.plugins.headerNav.length > 0) {
+    required.push(GENERATED_NAV_ID);
+  }
+  return required;
 }
 
 async function buildSSG(
@@ -354,9 +378,16 @@ async function buildSSG(
         // This plugin resolves them to empty stubs when missing, so the
         // viteBuild() succeeds regardless of which packages are available.
         optionalPackageStubsPlugin(),
+        // #671: Fail-closed generated data for build. The nav/blog/i18n
+        // plugins write these modules during the build and register their data
+        // in ctx.plugins; a registered id whose file is missing means the
+        // write failed, and the build must not silently ship the empty dev
+        // fallback stubs. Ids whose plugins never ran keep the fallback so
+        // apps without those content plugins still build.
         createGeneratedDataResolverPlugin({
           root,
           name: 'open:ssg-generated-data',
+          required: requiredGeneratedDataIds(ctx),
         }),
         createNpmSpecifierPlugin(),
         {

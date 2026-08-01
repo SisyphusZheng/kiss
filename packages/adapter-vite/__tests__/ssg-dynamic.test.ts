@@ -225,3 +225,84 @@ Deno.test('expandDynamicRoutes - renderRoute throw in warn mode skips the page',
     await Deno.remove(root, { recursive: true });
   }
 });
+
+// ─── #672: getStaticPaths failures follow the dynamicRouteFailure policy ───
+
+Deno.test('expandDynamicRoutes - getStaticPaths throw fails the build by default', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await assertRejects(
+      () =>
+        expandDynamicRoutes(
+          [blogRoute],
+          () => Promise.resolve(okOutput()),
+          () => Promise.reject(new Error('paths exploded')),
+          { root, outDir: 'dist' },
+          root,
+          'dist',
+        ),
+      Error,
+      'getStaticPaths',
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('expandDynamicRoutes - getStaticPaths throw in warn mode skips the route', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const map = await expandDynamicRoutes(
+      [blogRoute],
+      () => Promise.resolve(okOutput()),
+      () => Promise.reject(new Error('paths exploded')),
+      { root, outDir: 'dist', dynamicRouteFailure: 'warn' },
+      root,
+      'dist',
+    );
+    assertEquals(map.get('/blog/:slug') ?? [], []);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('expandI18nLocales - getStaticPaths throw fails the build by default', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await assertRejects(
+      () =>
+        expandI18nLocales(
+          { i18nOptions: { locales: ['en', 'zh'], defaultLocale: 'en' } },
+          () => Promise.resolve(okOutput()),
+          [blogRoute],
+          () => Promise.reject(new Error('paths exploded')),
+          { root, outDir: 'dist' },
+          root,
+          'dist',
+        ),
+      Error,
+      'getStaticPaths',
+    );
+    assertEquals(await exists(join(root, 'dist', 'zh', 'blog', 'a', 'index.html')), false);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('expandI18nLocales - getStaticPaths throw in warn mode skips the route', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await expandI18nLocales(
+      { i18nOptions: { locales: ['en', 'zh'], defaultLocale: 'en' } },
+      () => Promise.resolve(okOutput()),
+      [blogRoute],
+      () => Promise.reject(new Error('paths exploded')),
+      { root, outDir: 'dist', dynamicRouteFailure: 'warn' },
+      root,
+      'dist',
+    );
+    assertEquals(await exists(join(root, 'dist', 'zh', 'blog', 'a', 'index.html')), false);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

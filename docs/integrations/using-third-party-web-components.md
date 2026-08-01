@@ -10,7 +10,7 @@ Components, and browser-only custom element modules exercised by
 Use the component's standard tag directly in JSX:
 
 ```tsx
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 
 export function SettingsControls() {
   return (
@@ -47,7 +47,7 @@ shadow rendering. Otherwise, light-DOM/client-upgrade fallback is expected.
 Use this pattern when a library is safe to evaluate in Deno during SSG:
 
 ```tsx
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 import '@safe-wc/library/register.js';
 
 export default function AccountCard() {
@@ -68,7 +68,7 @@ true, keep the tag markup in the route and move registration to the client.
 Use this pattern for packages that require browser globals while importing:
 
 ```tsx
-/** @jsxImportSource @openelement/core */
+/** @jsxImportSource @openelement/element */
 
 export default function SettingsRoute() {
   return (

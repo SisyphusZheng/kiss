@@ -26,11 +26,13 @@ function goodFiles(): Record<string, string> {
   return {
     'docs/status/STATUS.md':
       `Repository package line: \`${PACKAGE_VERSION_TAG}\`\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\``,
-    'README.md': `Published package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`).`,
+    'README.md':
+      `Source package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`).\nnpm registry line: \`${PACKAGE_VERSION_TAG}\``,
     'README.zh.md': `已发布包线为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）。`,
     'docs/roadmap/ROADMAP.md':
-      `Published package line: \`${PACKAGE_VERSION_TAG}\`.\nActive execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
-    'docs/governance/PROJECT_WORKFLOW.md': `package line \`${PACKAGE_VERSION_TAG}\`, done`,
+      `Source package line: \`${PACKAGE_VERSION_TAG}\`.\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
+    'docs/governance/PROJECT_WORKFLOW.md':
+      `package line \`${PACKAGE_VERSION_TAG}\`, npm registry line \`${PACKAGE_VERSION_TAG}\`, done`,
     'docs/current/VERSION_PLAN.md':
       `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\``,
   };
@@ -42,7 +44,8 @@ Deno.test('version anchors: in-sync docs pass', () => {
 
 Deno.test('version anchors: drifted package line is reported per file', () => {
   const files = goodFiles();
-  files['README.md'] = 'Published package line: `0.0.0` (`v0.0.0`).';
+  files['README.md'] =
+    `Source package line: \`0.0.0\` (\`v0.0.0\`).\nnpm registry line: \`${PACKAGE_VERSION_TAG}\``;
   files['docs/roadmap/ROADMAP.md'] = files['docs/roadmap/ROADMAP.md'].replace(
     `Active execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
     'Active execution target: `v9.9.9`.',

@@ -5,7 +5,7 @@ export const tagName = 'page-roadmap';
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
-import { OPENELEMENT_VERSION } from '../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-standards-visual.tsx';
@@ -398,7 +398,7 @@ export class RoadmapPage extends OpenElement {
           </span>
           <open-artifact-panel slot='artifact' class='now'>
             <span slot='label'>current</span>
-            <span slot='meta'>{OPENELEMENT_VERSION} published → stable line</span>
+            <span slot='meta'>{PUBLISHED_PACKAGE_VERSION} published → stable line</span>
             <div class='hero-actions'>
               <open-button variant='primary' href='/changelog'>Read changelog</open-button>
               <open-button href='/architecture/architecture'>Architecture</open-button>
@@ -408,7 +408,7 @@ export class RoadmapPage extends OpenElement {
               The five-package product is stable at 0.41.x; the freeze is shipped, not a wish.
             </h2>
             <p>
-              {OPENELEMENT_VERSION}{' '}
+              {PUBLISHED_PACKAGE_VERSION}{' '}
               is the published package line, stable under ADR-0119's scoped interface freeze — the
               #390 pilot requirement was retired by maintainer decision.
             </p>

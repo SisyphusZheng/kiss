@@ -16,7 +16,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { escapeHtml } from '@openelement/element';
 
 export const tagName = 'open-callout';
 
@@ -70,7 +69,7 @@ export class OpenCallout extends OpenElement {
         {label && (
           <div className='callout-header'>
             <span className='callout-icon' part='icon'>{config.icon}</span>
-            <span className='callout-title'>{this._esc(label)}</span>
+            <span className='callout-title'>{label}</span>
           </div>
         )}
         <div className='callout-body' part='content'>
@@ -88,5 +87,4 @@ export class OpenCallout extends OpenElement {
   private _syncDOM(): void {
     this.update();
   }
-  private _esc = escapeHtml;
 }

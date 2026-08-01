@@ -154,6 +154,16 @@ export function evidenceFile(version: string): string {
   return `docs/release/autoflow3/${releaseTag(version)}.json`;
 }
 
+/**
+ * Durable record left by the release-prepare phase (#684). Kept apart from
+ * evidenceFile: publish-existing overwrites <tag>.json with its own evidence
+ * on every attempt, so the prepare proof must live in a file the publish phase
+ * never writes, or a resume could no longer re-verify it.
+ */
+export function prepareRecordFile(version: string): string {
+  return `docs/release/autoflow3/${releaseTag(version)}-prepare.json`;
+}
+
 export function releaseNoteFile(version: string): string {
   return `docs/release/${releaseTag(version)}.md`;
 }
@@ -490,7 +500,121 @@ export function createPreparePlan(
       command: ['deno', 'task', 'autoflow:ci'],
     });
   }
+  // Durable prepare record (#684): proof that the bump commit came out of a
+  // gated prepare run. Written only after the release gates passed, and
+  // committed as its own commit so the publish-existing phase (which checks
+  // out main after the prepare PR merges) can verify it.
+  steps.push(
+    {
+      name: 'record prepare evidence',
+      run: (evidence) => writePrepareRecord(evidence),
+    },
+    {
+      name: 'stage prepare record',
+      command: ['git', 'add', prepareRecordFile(targetVersion)],
+    },
+    {
+      name: 'commit prepare record',
+      // Guarded like the bump commit: an idempotent re-run whose record is
+      // unchanged stages nothing, and an empty commit exits 1.
+      run: () =>
+        commitIfStaged(`docs(release): record ${releaseTag(targetVersion)} prepare evidence`),
+    },
+  );
   return steps;
+}
+
+/**
+ * Snapshot the in-memory prepare evidence as the durable prepare record. Every
+ * step is recorded as passed: the record asserts the completed, gated prepare
+ * flow and only becomes durable once the following stage/commit steps land it
+ * in the release commit (#684).
+ */
+export async function writePrepareRecord(evidence: ReleaseEvidence): Promise<void> {
+  const record: ReleaseEvidence = {
+    ...evidence,
+    status: 'completed',
+    completedAt: new Date().toISOString(),
+    steps: evidence.steps.map((step) => ({ ...step, status: 'passed' })),
+  };
+  await Deno.mkdir('docs/release/autoflow3', { recursive: true });
+  await Deno.writeTextFile(prepareRecordFile(record.targetVersion), formatJson(record));
+}
+
+/**
+ * Read the prepare record for a version. Missing file means no prepare ran
+ * (the caller refuses); a corrupt file is rejected loudly, matching
+ * readPriorReleaseEvidence's trust model.
+ */
+export async function readPrepareRecord(
+  version: string,
+): Promise<ReleaseEvidence | undefined> {
+  const path = prepareRecordFile(version);
+  let text: string;
+  try {
+    text = await Deno.readTextFile(path);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return undefined;
+    throw error;
+  }
+  try {
+    return JSON.parse(text) as ReleaseEvidence;
+  } catch (error) {
+    throw new Error(
+      `Prepare record ${path} is not readable JSON; repair or remove it before ` +
+        `re-running: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
+ * Prove the bump commit publish-existing is about to publish came out of a
+ * gated release-prepare run for the same source transition (#684). The
+ * recorded prepare evidence must match the current source version: either the
+ * line the bump replaced (a prepare run before the bump, the normal flow) or
+ * the bumped line itself (a prepare re-run against an already-bumped source,
+ * which is how a missing record is backfilled). Anything else means the bump
+ * on main was not produced by the recorded prepare.
+ */
+export async function verifyPrepareRecord(targetVersion: string): Promise<void> {
+  const path = prepareRecordFile(targetVersion);
+  const record = await readPrepareRecord(targetVersion);
+  if (record === undefined) {
+    throw new Error(
+      `Refusing publish-existing for ${targetVersion}: no prepare record at ${path}. ` +
+        `Run \`deno task autoflow:release-prepare --to ${targetVersion}\`, merge the ` +
+        'resulting commit, then re-run the release.',
+    );
+  }
+  if (
+    record.kind !== 'release-prepare' ||
+    record.status !== 'completed' ||
+    record.targetVersion !== targetVersion
+  ) {
+    throw new Error(
+      `Refusing publish-existing for ${targetVersion}: ${path} is not a completed ` +
+        `release-prepare record for ${targetVersion}.`,
+    );
+  }
+  if (
+    record.currentVersion !== PREVIOUS_PACKAGE_VERSION &&
+    record.currentVersion !== PACKAGE_VERSION
+  ) {
+    throw new Error(
+      `Refusing publish-existing for ${targetVersion}: prepare record ${path} started ` +
+        `from ${record.currentVersion}, but the current source records ` +
+        `${PREVIOUS_PACKAGE_VERSION} as its previous line; the bump was not produced ` +
+        'by the recorded prepare.',
+    );
+  }
+  const gates = record.steps.find((step) => step.name === 'run release gates after bump');
+  if (gates?.status !== 'passed') {
+    throw new Error(
+      `Refusing publish-existing for ${targetVersion}: prepare record ${path} does not ` +
+        'record a passed run of the release gates after the bump.',
+    );
+  }
+  console.log(`Verified prepare record for ${releaseTag(targetVersion)}: ${record.id}`);
 }
 
 async function verifyPublishedSourceVersion(targetVersion: string): Promise<void> {
@@ -563,6 +687,13 @@ export function createPublishExistingPlan(targetVersion: string): ReleaseCommand
         // successfulReleaseRun on the local publish-existing path.
         evidence.releaseRunUrl = await verifyMainCiSuccessForHead();
       },
+    },
+    {
+      // The bump commit on main must trace back to a gated release-prepare run
+      // for the same source transition; without this the release workflow
+      // publishes a bump with zero proof the prepare gates ever ran (#684).
+      name: 'verify prepare record',
+      run: () => verifyPrepareRecord(targetVersion),
     },
     ...releaseSteps,
   ];
@@ -780,8 +911,8 @@ export function buildVersionAnchorReplacements(
     ],
     [
       'docs/roadmap/ROADMAP.md',
-      'Published package line: `$PVT`',
-      'Published package line: `$TAG`',
+      'Source package line: `$PVT`',
+      'Source package line: `$TAG`',
     ],
     [
       'docs/roadmap/ROADMAP.md',

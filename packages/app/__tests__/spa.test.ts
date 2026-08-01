@@ -269,6 +269,89 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
   }
 });
 
+Deno.test('defineApp routes loader failures to the page error channel, not the data channel (#676)', async () => {
+  const descriptors = {
+    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+  };
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  let rendered: unknown;
+  let errored: unknown;
+  const Page = definePage<{ title: string }, { slug: string }>({
+    render(context) {
+      rendered = context;
+      return null;
+    },
+    error(context) {
+      errored = context;
+      return null;
+    },
+  });
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: InstanceType<typeof Page>) {
+      host.render();
+      return host;
+    },
+  };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      querySelector: () => root,
+      createElement: () => Object.create(Page.prototype),
+    },
+  });
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      protocol: 'https:',
+      pathname: '/articles/hello',
+      search: '',
+      hash: '',
+      href: 'https://example.test/articles/hello',
+    },
+  });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: { pushState() {}, replaceState() {} },
+  });
+  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/articles/:slug',
+      tagName: 'article-page',
+      loader: () => Promise.reject(new Error('fetch failed')),
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The error definition renders with the stable failure shape...
+    const context = errored as { data: unknown; error: unknown; params: unknown };
+    assertEquals(context.error, { error: 'Loader failed' });
+    // ...and the data channel stays empty instead of carrying a fake shape.
+    assertEquals(context.data, undefined);
+    assertEquals(context.params, { slug: 'hello' });
+    assertEquals(rendered, undefined);
+  } finally {
+    app.dispose();
+    globalThis.addEventListener = originalAdd;
+    globalThis.removeEventListener = originalRemove;
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete (globalThis as Record<string, unknown>)[key];
+    }
+  }
+});
+
 Deno.test('assertValidTagName accepts valid tag names and rejects invalid ones (#642)', () => {
   assertValidTagName('app-home');
   assertValidTagName('a1-b2');

@@ -2,6 +2,7 @@ import { exists, walk } from './lib/fs.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_RELEASE_THEME,
 } from './project-constants.ts';
 import { roadmapEntryTheme } from './autoflow/release.ts';
@@ -20,12 +21,21 @@ const sourceRoots = [
 // number. History surfaces (migration guide, CHANGELOG) are exempted by the
 // caller. Beta/rc full forms retire too; the abandoned beta naming must
 // never reappear as a current claim.
+//
+// The npm registry line is exempt (#730): while the registry lags the source
+// line by one alpha, PREVIOUS_PACKAGE_VERSION is exactly the npm-published
+// line, and pages honestly present it as "published" (see
+// PUBLISHED_PACKAGE_VERSION in www/app/data/version.ts). Currency claims for
+// the registry line stay governed by the version-anchor gates.
 const escapedCurrentVersion = PACKAGE_VERSION.replaceAll('.', '\\.');
+const escapedRegistryVersion = PREVIOUS_PACKAGE_VERSION.replaceAll('.', '\\.');
 const currentAlphaNumber = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+const registryAlphaNumber = PREVIOUS_PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+const allowedAlphaNumbers = [currentAlphaNumber, registryAlphaNumber].filter(Boolean).join('|');
 const retiredFullForm =
-  `(?!v?${escapedCurrentVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:alpha|beta|rc)\\.\\d+(?!\\d)`;
-const retiredShortForm = currentAlphaNumber
-  ? `\\balpha\\.(?!${currentAlphaNumber}(?!\\d))\\d+(?!\\d)`
+  `(?!v?${escapedCurrentVersion}(?!\\d))(?!v?${escapedRegistryVersion}(?!\\d))v?\\d+\\.\\d+\\.\\d+-(?:alpha|beta|rc)\\.\\d+(?!\\d)`;
+const retiredShortForm = allowedAlphaNumbers
+  ? `\\balpha\\.(?!(?:${allowedAlphaNumbers})(?!\\d))\\d+(?!\\d)`
   : `\\balpha\\.\\d+(?!\\d)`;
 const activeRetiredPattern = new RegExp(`(?:${retiredFullForm}|${retiredShortForm})`, 'iu');
 

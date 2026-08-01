@@ -28,7 +28,20 @@ export type GeneratedDataResolverOptions = {
   root: string;
   dataDir?: string;
   name?: string;
+  /**
+   * When true (default), a missing generated data module resolves to an empty
+   * fallback stub so `deno task dev` keeps working before the first generation.
+   */
   allowFallback?: boolean;
+  /**
+   * Generated data ids that must exist on disk (#671, fail-closed, SOP-001).
+   * Build mode lists the ids whose nav/blog/i18n plugins ran during the build:
+   * a missing file then means the plugin's generated-data write failed, and
+   * the build must fail instead of silently shipping empty fallback data.
+   * Ids not listed here keep the allowFallback behavior (apps that do not use
+   * a given content plugin must still build).
+   */
+  required?: string[];
 };
 
 export function generatedDataPath(
@@ -66,6 +79,14 @@ export function createGeneratedDataResolverPlugin(
       const path = generatedDataPath(options.root, sourceId, dataDir);
       if (path && existsSync(path)) return readFileSync(path, 'utf-8');
 
+      if (options.required?.includes(sourceId)) {
+        throw new Error(
+          `[openElement] Generated data module not found: ${path ?? sourceId}. ` +
+            'Its content plugin registered data during this build, so the file must ' +
+            'exist. A missing file means the generated-data write failed; build mode ' +
+            'is fail-closed (SOP-001) and will not ship empty fallback data.',
+        );
+      }
       if (allowFallback) return GENERATED_DATA_FALLBACKS[sourceId] ?? null;
       return null;
     },

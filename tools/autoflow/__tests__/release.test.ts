@@ -1,4 +1,10 @@
-import { assert, assertEquals, assertFalse, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+  assertRejects,
+  assertThrows,
+} from 'jsr:@std/assert@^1.0.0';
 import { existsSync } from 'node:fs';
 import {
   buildVersionAnchorReplacements,
@@ -16,12 +22,14 @@ import {
   mergeClosureSection,
   planFinalizeBranch,
   planStartBranches,
+  prepareRecordFile,
   publishEvidencePassed,
   type ReleaseCommandStep,
   type ReleaseEvidence,
   renderClosureSection,
   renderReleaseNote,
   resumeEvidenceFromPrior,
+  verifyPrepareRecord,
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
@@ -180,6 +188,150 @@ Deno.test('two-phase release: publish-existing never bumps and verifies main CI 
     if (originalGitHubToken === undefined) Deno.env.delete('GITHUB_TOKEN');
     else Deno.env.set('GITHUB_TOKEN', originalGitHubToken);
   }
+});
+
+Deno.test('two-phase release: prepare leaves a durable gated prepare record (#684)', () => {
+  const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
+  const names = steps.map((step) => step.name);
+  const gates = names.indexOf('run release gates after bump');
+  // The record is written only after the release gates passed, then staged and
+  // committed so publish-existing can verify it from a main checkout.
+  assert(gates !== -1);
+  assert(names.indexOf('record prepare evidence') > gates);
+  assert(names.indexOf('stage prepare record') > names.indexOf('record prepare evidence'));
+  assert(names.indexOf('commit prepare record') > names.indexOf('stage prepare record'));
+  const stage = steps.find((step) => step.name === 'stage prepare record');
+  assertEquals(stage?.command, ['git', 'add', prepareRecordFile('0.41.0-alpha.11')]);
+});
+
+Deno.test('two-phase release: publish-existing verifies the prepare record before publishing (#684)', () => {
+  const steps = createPublishExistingPlan('0.41.0-alpha.11');
+  const names = steps.map((step) => step.name);
+  assertEquals(names[0], 'verify published source version');
+  assertEquals(names[1], 'verify main CI success for HEAD');
+  assertEquals(names[2], 'verify prepare record');
+  // The proof is checked before any publish-side step runs.
+  assert(names.indexOf('verify prepare record') < names.indexOf('package artifact gate'));
+});
+
+function completedPrepareRecord(overrides: Partial<ReleaseEvidence> = {}): ReleaseEvidence {
+  return {
+    id: `release-prepare-v${PACKAGE_VERSION}-test-run`,
+    kind: 'release-prepare',
+    policyVersion: 'autoflow3-v0',
+    currentVersion: PREVIOUS_PACKAGE_VERSION,
+    targetVersion: PACKAGE_VERSION,
+    status: 'completed',
+    startedAt: '2026-01-01T00:00:00.000Z',
+    completedAt: '2026-01-01T00:10:00.000Z',
+    steps: [
+      { name: 'bump patch version', status: 'passed' },
+      { name: 'run release gates after bump', status: 'passed' },
+      { name: 'record prepare evidence', status: 'passed' },
+    ],
+    ...overrides,
+  };
+}
+
+async function withPrepareRecordDir(
+  body: string | undefined,
+  fn: () => Promise<unknown>,
+): Promise<void> {
+  const root = await Deno.makeTempDir({ prefix: 'prepare-record-verify-' });
+  const previousCwd = Deno.cwd();
+  try {
+    Deno.chdir(root);
+    if (body !== undefined) {
+      await Deno.mkdir('docs/release/autoflow3', { recursive: true });
+      await Deno.writeTextFile(prepareRecordFile(PACKAGE_VERSION), body);
+    }
+    await fn();
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+}
+
+Deno.test('verifyPrepareRecord: a valid completed record passes, including the backfill shape', async () => {
+  // Normal flow: the prepare ran before the bump, so it started from the line
+  // the current source records as its previous line.
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord()),
+    () => verifyPrepareRecord(PACKAGE_VERSION),
+  );
+  // Backfill flow: a prepare re-run against an already-bumped source records
+  // the bumped line as its starting point (how a missing record is repaired).
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord({ currentVersion: PACKAGE_VERSION })),
+    () => verifyPrepareRecord(PACKAGE_VERSION),
+  );
+});
+
+Deno.test('verifyPrepareRecord: a missing record refuses with the remedy', async () => {
+  await withPrepareRecordDir(undefined, async () => {
+    const error = await assertRejects(
+      () => verifyPrepareRecord(PACKAGE_VERSION),
+      Error,
+      'no prepare record',
+    );
+    assert(error.message.includes('autoflow:release-prepare'));
+  });
+});
+
+Deno.test('verifyPrepareRecord: a corrupt record is rejected loudly', async () => {
+  await withPrepareRecordDir('{ not json', async () => {
+    const error = await assertRejects(
+      () => verifyPrepareRecord(PACKAGE_VERSION),
+      Error,
+      'is not readable JSON',
+    );
+    assert(error.message.includes(prepareRecordFile(PACKAGE_VERSION)));
+  });
+});
+
+Deno.test('verifyPrepareRecord: kind, status, and target must match the release', async () => {
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord({ kind: 'patch-release' })),
+    () => assertRejects(() => verifyPrepareRecord(PACKAGE_VERSION), Error, 'not a completed'),
+  );
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord({ status: 'running' })),
+    () => assertRejects(() => verifyPrepareRecord(PACKAGE_VERSION), Error, 'not a completed'),
+  );
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord({ targetVersion: '9.9.9' })),
+    () => assertRejects(() => verifyPrepareRecord(PACKAGE_VERSION), Error, 'not a completed'),
+  );
+});
+
+Deno.test('verifyPrepareRecord: the recorded source line must match the current source', async () => {
+  // A record that started from a line the current source never knew proves the
+  // bump on main was not produced by the recorded prepare.
+  await withPrepareRecordDir(
+    JSON.stringify(completedPrepareRecord({ currentVersion: '9.9.9' })),
+    () =>
+      assertRejects(
+        () => verifyPrepareRecord(PACKAGE_VERSION),
+        Error,
+        'not produced by the recorded prepare',
+      ),
+  );
+});
+
+Deno.test('verifyPrepareRecord: the record must prove the release gates ran', async () => {
+  await withPrepareRecordDir(
+    JSON.stringify(
+      completedPrepareRecord({
+        steps: [{ name: 'run release gates after bump', status: 'failed' }],
+      }),
+    ),
+    () =>
+      assertRejects(
+        () => verifyPrepareRecord(PACKAGE_VERSION),
+        Error,
+        'does not record a passed run of the release gates',
+      ),
+  );
 });
 
 Deno.test('evidenceCurrentVersion: publish-existing records the true previous line', () => {

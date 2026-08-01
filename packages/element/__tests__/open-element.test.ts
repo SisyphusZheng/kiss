@@ -2177,6 +2177,75 @@ Deno.test('OpenElement onRenderError renders fallback on render failure', () => 
   document.body.removeChild(el);
 });
 
+Deno.test('OpenElement update() routes re-render errors to onRenderError fallback', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('update-error');
+  let broken = false;
+  let errorSeen: unknown = null;
+  class UpdateErrorElement extends OpenElement {
+    override render(): VNode | null {
+      if (broken) throw new Error('update boom');
+      return jsx('div', { children: 'ok' });
+    }
+
+    protected override onRenderError(error: unknown): VNode | null {
+      errorSeen = error;
+      return jsx('div', { children: 'update fallback' });
+    }
+  }
+  customElements.define(tagName, UpdateErrorElement);
+
+  const el = document.createElement(tagName) as UpdateErrorElement;
+  document.body.appendChild(el);
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'ok');
+
+  broken = true;
+  // Must not throw — update() errors follow the same onRenderError contract
+  // as the initial render (#662).
+  el.update();
+
+  assertInstanceOf(errorSeen, Error);
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'update fallback');
+
+  // The element recovers on the next successful render.
+  broken = false;
+  el.update();
+  assertStringIncludes((el.shadowRoot as unknown as TestShadowRoot).innerHTML, 'ok');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement update() routes light-DOM re-render errors to onRenderError', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('update-error-light');
+  let broken = false;
+  class LightUpdateErrorElement extends OpenElement {
+    static override renderMode = 'light' as const;
+
+    override render(): VNode | null {
+      if (broken) throw new Error('light update boom');
+      return jsx('em', { children: 'light ok' });
+    }
+
+    protected override onRenderError(_error: unknown): VNode | null {
+      return jsx('em', { children: 'light fallback' });
+    }
+  }
+  customElements.define(tagName, LightUpdateErrorElement);
+
+  const el = document.createElement(tagName) as LightUpdateErrorElement;
+  document.body.appendChild(el);
+  assertEquals(el.innerHTML, '<em>light ok</em>');
+
+  broken = true;
+  el.update();
+  assertEquals(el.innerHTML, '<em>light fallback</em>');
+
+  document.body.removeChild(el);
+});
+
 Deno.test('ErrorBoundary catches and displays fallback UI', () => {
   class Boundary extends ErrorBoundary {
     override render(): VNode | null {

@@ -97,6 +97,14 @@ Deno.test('nitro mount: exposes params through runtime and request contexts', as
   }]);
 });
 
+// Shape-parity contract (#657): nitro-mount.ts intentionally does NOT reuse
+// createRequestContext as a value import. Generated Nitro server output bundles
+// nitro-mount.ts directly (see createNitroRequestContext's comment), and the
+// bundling hosts resolve bare imports Node-style — the nitro-proof fixture has
+// no node_modules entry for @openelement/app, so a value import would fail at
+// bundle time. The type-only import there pins the shape; this test is the
+// behavioral backstop. If it fails, one side of the contract drifted — fix the
+// drift, do not relax this test.
 Deno.test('nitro mount: request context shape matches app/model createRequestContext contract', async () => {
   let nitroContext: ReturnType<typeof createRequestContext> | undefined;
 

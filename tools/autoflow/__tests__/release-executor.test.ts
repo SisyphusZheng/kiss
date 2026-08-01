@@ -1,11 +1,15 @@
 import { assert, assertEquals, assertRejects } from 'jsr:@std/assert@^1.0.0';
 import {
+  commitIfStaged,
   createReleaseEvidence,
   executeReleasePlan,
   extractManualNoteSections,
+  prepareRecordFile,
+  readPrepareRecord,
   readPriorReleaseEvidence,
   type ReleaseCommandStep,
   type ReleaseEvidence,
+  writePrepareRecord,
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
@@ -166,6 +170,53 @@ Deno.test('executeReleasePlan: a failed finalize checkout does not flip a comple
     ) as ReleaseEvidence;
     assertEquals(persisted.status, 'completed');
     assertEquals(await git(work, ['rev-parse', '--abbrev-ref', 'HEAD']), 'dev');
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('executeReleasePlan: release-prepare lands a durable gated prepare record (#684)', async () => {
+  const { root, work } = await initWorkRepo();
+  const previousCwd = Deno.cwd();
+  try {
+    Deno.chdir(work);
+    // The record tail of createPreparePlan, wired the same way: gates first,
+    // then record, stage, commit. release-prepare persists no executor
+    // evidence, so the record commit is the only durable output.
+    const plan: ReleaseCommandStep[] = [
+      { name: 'bump patch version', run: () => Promise.resolve() },
+      { name: 'run release gates after bump', run: () => Promise.resolve() },
+      { name: 'record prepare evidence', run: (evidence) => writePrepareRecord(evidence) },
+      { name: 'stage prepare record', command: ['git', 'add', prepareRecordFile('9.9.9')] },
+      {
+        name: 'commit prepare record',
+        run: () => commitIfStaged('docs(release): record v9.9.9 prepare evidence'),
+      },
+    ];
+
+    await executeReleasePlan('release-prepare', '9.9.9', undefined, false, plan, 'dev');
+
+    const record = await readPrepareRecord('9.9.9');
+    assert(record !== undefined);
+    assertEquals(record.kind, 'release-prepare');
+    assertEquals(record.status, 'completed');
+    assertEquals(record.targetVersion, '9.9.9');
+    assert(record.completedAt !== undefined);
+    // The record asserts the gated prepare flow: every step passed, including
+    // the release-gates step verifyPrepareRecord requires.
+    assert(record.steps.every((step) => step.status === 'passed'));
+    assert(
+      record.steps.some((step) =>
+        step.name === 'run release gates after bump' && step.status === 'passed'
+      ),
+    );
+    // The record is committed and the worktree is clean behind it.
+    assertEquals(
+      await git(work, ['log', '-1', '--format=%s']),
+      'docs(release): record v9.9.9 prepare evidence',
+    );
+    assertEquals(await git(work, ['status', '--porcelain']), '');
   } finally {
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });

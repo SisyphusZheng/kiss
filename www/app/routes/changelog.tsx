@@ -5,7 +5,7 @@ export const meta = { section: '', label: 'Changelog', order: 20 };
 import { OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
-import { OPENELEMENT_VERSION } from '../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
 import { pageStyles } from '../components/page-styles.js';
 import { marked } from 'marked';
 // @deno-types="npm:@types/sanitize-html@^2"
@@ -99,7 +99,7 @@ export class ChangelogPage extends OpenElement {
           <div slot='meta'>
             <p class='section-label'>Current truth</p>
             <p class='subtitle'>
-              The currently published package line is <code>{OPENELEMENT_VERSION}</code>.
+              The currently published package line is <code>{PUBLISHED_PACKAGE_VERSION}</code>.
             </p>
           </div>
           <open-page-rail
@@ -114,7 +114,7 @@ export class ChangelogPage extends OpenElement {
           <div class='register' aria-label='Release register'>
             <div class='reg-row reg-current'>
               <div class='reg-head'>
-                <span class='reg-version'>{OPENELEMENT_VERSION}</span>
+                <span class='reg-version'>{PUBLISHED_PACKAGE_VERSION}</span>
                 <span class='reg-stamp'>Current</span>
               </div>
               <p class='reg-summary'>
@@ -135,7 +135,7 @@ export class ChangelogPage extends OpenElement {
           <section id='candidate'>
             <h2>Stable line</h2>
             <p>
-              <code>{OPENELEMENT_VERSION}</code>{' '}
+              <code>{PUBLISHED_PACKAGE_VERSION}</code>{' '}
               is the published stable line under the ADR-0119 scoped interface freeze. Patches on
               the 0.41.x line carry tooling and hygiene fixes only; the frozen surface changes only
               with a major-version ADR.

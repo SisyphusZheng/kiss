@@ -564,14 +564,23 @@ export class OpenElement extends _Base {
    * OpenElement intentionally does not include a reactive scheduler. Components
    * with local state can call this method after state changes instead of
    * duplicating renderToDom() and event hydration.
+   *
+   * Render errors take the same `onRenderError()` fallback contract as the
+   * initial render (_renderOrHydrate) — rethrowing here would leave callers
+   * (e.g. ErrorBoundary.retry()) with an uncaught throw and the element stuck
+   * on stale/partial DOM with no recovery path (#662).
    */
   update(): void {
     const ctor = this.constructor as typeof OpenElement;
-    if (ctor.renderMode === 'light') {
-      this._renderIntoLightDom();
-      return;
+    try {
+      if (ctor.renderMode === 'light') {
+        this._renderIntoLightDom();
+        return;
+      }
+      this._renderIntoShadowRoot();
+    } catch (err) {
+      this._renderErrorFallback(err);
     }
-    this._renderIntoShadowRoot();
   }
 
   /**

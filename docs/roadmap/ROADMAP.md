@@ -4,8 +4,8 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Published package line: `v0.42.0-alpha.10`.\
-> The npm registry line may lag the source line by one alpha (see Current release state).\
+> Source package line: `v0.42.0-alpha.10`.\
+> npm registry line: `v0.42.0-alpha.9` (published; may lag the source line by one alpha — see Current release state).\
 > Active execution target: `v0.42.0-alpha.10`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.7 closed the light-fullstack floor (morph

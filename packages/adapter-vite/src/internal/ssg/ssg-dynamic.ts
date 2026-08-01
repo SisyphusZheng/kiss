@@ -10,6 +10,9 @@
  * either abort the build ('fail', default) or are logged and skipped
  * ('warn'), per SsgRenderOptions.dynamicRouteFailure. The ISR manifest data
  * only registers pages that were actually written.
+ *
+ * #672: getStaticPaths() throws follow the same dynamicRouteFailure policy in
+ * both expansion paths (dynamic routes and i18n locale expansion).
  */
 
 import { join } from 'node:path';
@@ -265,7 +268,13 @@ export async function expandI18nLocales(
         try {
           paramsList = await getStaticPaths(route.path);
         } catch (e) {
-          log.warn(`i18n: getStaticPaths failed for ${route.path}, skipping`, e);
+          // #672: getStaticPaths failures follow the same dynamicRouteFailure
+          // policy as render failures (see expandDynamicRoutes).
+          handleRenderFailure(
+            policy,
+            `i18n: getStaticPaths for ${route.path} failed`,
+            e,
+          );
           continue;
         }
       } else {
