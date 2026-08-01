@@ -12,7 +12,7 @@ complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
 Current execution anchor: source package line `v0.42.0-alpha.10`,
-npm registry line `v0.42.0-alpha.9` (published), active train
+npm registry line `v0.42.0-alpha.10` (published), active train
 `v0.42.0-alpha.10` (TP-5.7), and `0.42.0` WC light fullstack planning
 under ADR-0120 and `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
