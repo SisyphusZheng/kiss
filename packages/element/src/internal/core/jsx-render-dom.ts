@@ -113,15 +113,26 @@ function createElementForTag(tag: string): Element {
 }
 
 /** Resolve a signal object to its registered name, if any. */
+// ponytail: index is a lazy reverse map per registry — signal registries are
+// filled in component constructors and never mutated after, so the cache is
+// stable for the element's lifetime. Reverse per-registry map if signals can
+// be registered post-construction.
+const signalNameIndex = new WeakMap<Map<string, Signal<unknown>>, Map<Signal<unknown>, string>>();
+
 function signalNameFor(
   value: unknown,
   signalRegistry?: Map<string, Signal<unknown>>,
 ): string | undefined {
   if (!signalRegistry || !isSignalLike(value)) return undefined;
-  for (const [name, sig] of signalRegistry.entries()) {
-    if (sig === value) return name;
+  let index = signalNameIndex.get(signalRegistry);
+  if (!index) {
+    index = new Map();
+    for (const [name, sig] of signalRegistry.entries()) {
+      if (!index.has(sig)) index.set(sig, name);
+    }
+    signalNameIndex.set(signalRegistry, index);
   }
-  return undefined;
+  return index.get(value as Signal<unknown>);
 }
 
 /**
@@ -233,20 +244,6 @@ export function collectPropBindings(
   }
 
   return descriptors;
-}
-
-/**
- * Apply a props object to a real DOM element.
- */
-export function applyProps(
-  el: Element,
-  props: Record<string, unknown>,
-  lifecycle?: BindingLifecycle,
-  signalRegistry?: Map<string, Signal<unknown>>,
-  renderer?: BindingRenderer,
-): void {
-  const descriptors = collectPropBindings(el, props, signalRegistry);
-  commitBindings(descriptors, lifecycle ?? {}, renderer);
 }
 
 /**
@@ -377,10 +374,14 @@ function renderNode(
       const result = instance.render();
       return renderNode(result, lifecycle, signalRegistry, descriptors);
     } catch (err) {
+      // Re-throw so the unified render path (open-element-implementation.ts
+      // _renderOrHydrate) can route to onRenderError, mirroring the SSR
+      // render-ir.ts contract — swallowing here would hide the failure as an
+      // empty text node with no fallback.
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
       );
-      return document.createTextNode('');
+      throw err;
     }
   }
   if (isComponentFn(tag)) {
@@ -391,7 +392,7 @@ function renderNode(
       createLogger('dom-render').error(
         `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
       );
-      return document.createTextNode('');
+      throw err;
     }
   }
 

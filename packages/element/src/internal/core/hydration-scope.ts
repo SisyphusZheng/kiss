@@ -263,11 +263,15 @@ export class HydrationScope {
     shadowRoot.appendChild(this.#renderer.render(vnode, lifecycle));
   }
 
-  /** Chromium DSD layout fix: force reflow without DOM rebuild. */
+  /**
+   * Chromium DSD layout fix: force reflow without DOM rebuild.
+   *
+   * Batched module-wide: every hydrated host queues into one set, and a
+   * single requestAnimationFrame forces reflow for all of them, instead of
+   * scheduling one rAF per hydrated component.
+   */
   #scheduleLayoutFix(shadowRoot: ShadowRoot): void {
-    globalThis.requestAnimationFrame?.(() => {
-      void (shadowRoot.host as HTMLElement | undefined)?.offsetHeight;
-    });
+    queueLayoutFixHost(shadowRoot.host);
   }
 
   /** Dispose all effects and event listeners tracked by this scope. */
@@ -328,4 +332,26 @@ export class HydrationScope {
     }
     return undefined;
   }
+}
+
+// ─── Module-wide batched Chromium DSD layout fix ──────────────
+// ponytail: single rAF for all queued hosts; per-frame window if a page ever
+// hydrates thousands of hosts in one frame (measure, then split batches).
+const layoutFixHosts = new Set<Element>();
+let layoutFixScheduled = false;
+
+function flushLayoutFixHosts(): void {
+  layoutFixScheduled = false;
+  for (const host of layoutFixHosts) {
+    void (host as HTMLElement).offsetHeight;
+  }
+  layoutFixHosts.clear();
+}
+
+function queueLayoutFixHost(host: Element | undefined): void {
+  if (!host) return;
+  layoutFixHosts.add(host);
+  if (layoutFixScheduled) return;
+  layoutFixScheduled = true;
+  globalThis.requestAnimationFrame?.(flushLayoutFixHosts);
 }

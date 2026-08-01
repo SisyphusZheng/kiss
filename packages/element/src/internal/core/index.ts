@@ -4,8 +4,10 @@
  * openElement is a static-first framework with a pure runtime core:
  * - Zero node:* imports - no filesystem, no process, no path
  * - Zero Vite dependency - no Plugin, no build orchestration
- * - Zero npm: specifiers - works in Deno, Node, Bun, Edge
- * - Pure Web Standard: URL, fetch, import.meta.url, console
+ * - Single chartered engine dependency: @preact/signals-core (the
+ *   SignalEngine backing signal/computed/effect, see internal/signal/).
+ *   Everything else resolves to Web Standards: URL, fetch, import.meta.url,
+ *   console - so the runtime works in Deno, Node, Bun and Edge.
  *
  * Rendering: DSD (Declarative Shadow DOM) string concatenation
  * Islands: Custom Element registration + prop deserialization
@@ -47,7 +49,6 @@ export {
   ERROR_PREFIX,
   ErrorCode,
   OpenElementError,
-  PropValidationError,
   RenderError,
   reportError,
   setErrorTelemetryHook,
@@ -55,7 +56,7 @@ export {
 } from './errors.ts';
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '../protocol/errors.ts';
 export { createSsrContext, extractParams, parseQuery } from './context.ts';
-export { renderSsrError, wrapInDocument } from './html-escape.ts';
+export { wrapInDocument } from './html-escape.ts';
 export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.ts';
 export type {
   CacheAdapter,
@@ -131,7 +132,6 @@ export {
   bindSsrProps,
   defineCustomElement,
   defineIsland,
-  getIslandMeta,
   getSsrProps,
 } from './island.ts';
 export type { IslandMeta, IslandOptions } from '../protocol/island.ts';
@@ -181,15 +181,6 @@ export type {
 // ADR-0095: reference in-memory implementation
 export { MemoryDataAdapter } from './data-adapter.ts';
 
-// WC Package Protocol (v0.17+)
-export {
-  clear as clearRegistry,
-  generateIndex,
-  getAll as getAllManifests,
-  getByTagName,
-  register as registerManifest,
-  validate as validateManifest,
-} from './registry.ts';
 // v0.24.1 (ADR-0057): JSX + Signal component model
 // VNode & jsx-runtime
 export type { VNode } from '../protocol/vnode.ts';

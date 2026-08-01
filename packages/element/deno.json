@@ -7,7 +7,9 @@
     "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
     "./build-utils": "./src/build-utils.ts"
   },
-  "imports": {},
+  "imports": {
+    "@preact/signals-core": "npm:@preact/signals-core@^1.12.1"
+  },
   "publish": {
     "include": [
       "src/**",

@@ -622,13 +622,3 @@ export class OpenElement extends _Base {
     return null;
   }
 }
-
-/** OpenElement constructor with framework-convention static properties. */
-export interface OpenElementComponentConstructor extends CustomElementConstructor {
-  styles?:
-    | StyleSheetLike
-    | StyleSheetLike[];
-  tagName?: string;
-  renderMode?: 'shadow' | 'light';
-  observedAttributes?: string[];
-}

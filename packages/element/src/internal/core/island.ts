@@ -18,6 +18,7 @@ import { formatError } from './errors.ts';
  */
 
 import { createLogger } from './logger.ts';
+import { assertValidTagName } from './tag-utils.ts';
 import { HYDRATION_STRATEGIES, type HydrationStrategy } from '../protocol/framework.ts';
 import type { IslandMeta, IslandOptions } from '../protocol/island.ts';
 export type { IslandMeta, IslandOptions };
@@ -48,10 +49,6 @@ const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
 const _visibilityTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
 const _islandMeta = new WeakMap<CustomElementConstructor, IslandMeta>();
-
-export function getIslandMeta(ctor: CustomElementConstructor): IslandMeta | undefined {
-  return _islandMeta.get(ctor);
-}
 
 /** Clear all active visibility strategy timeouts (for test cleanup). */
 export function _clearAllVisibilityTimeouts(): void {
@@ -274,36 +271,8 @@ export function defineIsland<T extends CustomElementConstructor>(
 
   // Validate tag name per WHATWG Custom Element name rules
   // https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
-  if (!tagName || !tagName.includes('-')) {
-    throw new Error(
-      `${ERROR_PREFIX} defineIsland() requires a hyphenated tag name, got "${tagName}". ` +
-        'Custom Element names must contain a hyphen per the HTML spec.',
-    );
-  }
-  // WHATWG: must start with lowercase letter, only lowercase/digits/hyphens,
-  // must not start with a reserved prefix, no uppercase
-  if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(tagName)) {
-    throw new Error(
-      `${ERROR_PREFIX} defineIsland() tag name "${tagName}" is not a valid custom element name. ` +
-        'Must start with a lowercase ASCII letter, contain only lowercase ASCII ' +
-        'letters, digits, and hyphens, and not use reserved names.',
-    );
-  }
-  // Reserved names per WHATWG (partial list)
-  const reservedPrefixes = [
-    'annotation-',
-    'color-profile',
-    'font-face',
-    'font-face-',
-    'missing-glyph',
-  ];
-  for (const prefix of reservedPrefixes) {
-    if (tagName.startsWith(prefix)) {
-      throw new Error(
-        `${ERROR_PREFIX} defineIsland() tag name "${tagName}" uses a reserved prefix "${prefix}".`,
-      );
-    }
-  }
+  // Single rule source shared with defineElement() (tag-utils.ts).
+  assertValidTagName(tagName);
 
   _islandMeta.set(componentClass, {
     isIsland: true,

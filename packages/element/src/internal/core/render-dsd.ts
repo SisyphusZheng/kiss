@@ -38,6 +38,7 @@ import {
   trustedHtmlNode,
 } from './render-ir.ts';
 import { injectPropsSafe } from './security.ts';
+import { collectPublicProps } from './props-utils.ts';
 
 const log = createLogger('render-dsd');
 export const MAX_SSR_NESTING_DEPTH = 50;
@@ -77,13 +78,7 @@ function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCod
   return ERROR_CODES[phase] ?? 'OPEN_ELEMENT_RENDER_RENDER_FAILED';
 }
 
-function instantiationErrorHtml(
-  tagName: string,
-  _errMsg: string,
-  _sourceStr: string,
-  _route?: string,
-  _source?: string,
-): string {
+function instantiationErrorHtml(tagName: string): string {
   return `<${tagName}></${tagName}>`;
 }
 
@@ -166,12 +161,8 @@ function wrapDsdOutput(params: {
 }
 
 function filterPublicDsdProps(props: Record<string, unknown>): Record<string, unknown> {
-  const publicProps: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (key.startsWith('__openElement')) continue;
-    publicProps[key] = value;
-  }
-  return publicProps;
+  // Single public-prop filter shared with defineElement/definePage (#621).
+  return collectPublicProps(props);
 }
 
 // ─── DSD Rendering ─────────────────────────────────────────────
@@ -285,13 +276,7 @@ export async function renderDsd(
     hasError = true;
     hooks?.onError?.(err);
 
-    const html = instantiationErrorHtml(
-      tagName,
-      errMsg,
-      sourceStr,
-      sourceInfo?.route,
-      sourceInfo?.source,
-    );
+    const html = instantiationErrorHtml(tagName);
 
     const result: RenderOutput = {
       html,

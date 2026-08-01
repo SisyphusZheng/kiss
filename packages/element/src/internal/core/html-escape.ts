@@ -183,39 +183,5 @@ export function wrapInDocument(
 
 // ─── Error page rendering ────────────────────────────────────────
 
-import type { RouteEntry } from '../protocol/framework.ts';
 
-/**
- * Render an error page to HTML string.
- * In dev mode, shows detailed error information for debugging.
- * In production, shows a generic safe error page.
- */
-export function renderSsrError(
-  error: Error,
-  statusOrRoute: number | RouteEntry,
-  isDev: boolean = false,
-): string {
-  const status = typeof statusOrRoute === 'number' ? statusOrRoute : 500;
-  const title = isDev ? 'SSR Render Error' : `Error ${status}`;
-  const message = escapeHtml(error.message);
-  const stack = isDev && error.stack ? escapeHtml(error.stack) : '';
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  ${
-    isDev
-      ? '<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem}pre{background:#f5f5f5;padding:1rem;overflow:auto;border-radius:4px}</style>'
-      : ''
-  }
-</head>
-<body>
-  <h1>${title}</h1>
-  <p>${isDev ? `<strong>${message}</strong>` : message}</p>
-  ${stack ? `<pre>${stack}</pre>` : ''}
-</body>
-</html>`;
-}

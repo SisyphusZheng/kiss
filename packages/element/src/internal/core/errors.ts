@@ -122,24 +122,6 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
   }
 }
 
-export class PropValidationError extends OpenElementError {
-  public readonly propertyName: string;
-  public readonly receivedValue: unknown;
-
-  constructor(propertyName: string, receivedValue: unknown, cause?: Error) {
-    super(`@prop validation failed for "${propertyName}"`, {
-      code: 'PROP_VALIDATION_ERROR',
-      severity: 'warning',
-      phase: 'validation',
-      recoverable: true,
-      cause,
-    });
-    this.name = 'PropValidationError';
-    this.propertyName = propertyName;
-    this.receivedValue = receivedValue;
-  }
-}
-
 // ─── Error Telemetry ────────────────────────────────────────────────
 
 import type { ErrorTelemetryHook } from '../protocol/errors.ts';

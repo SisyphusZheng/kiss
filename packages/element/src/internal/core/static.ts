@@ -25,7 +25,6 @@ export {
   escapeAttr,
   escapeAttrValue,
   escapeHtml,
-  renderSsrError,
   wrapInDocument,
 } from './html-escape.ts';
 export type { SafeHtml, UnsafeHtml } from '../protocol/framework.ts';
@@ -38,7 +37,6 @@ export {
   ErrorCode,
   formatError,
   OpenElementError,
-  PropValidationError,
   RenderError,
   reportError,
   setErrorTelemetryHook,
