@@ -44,7 +44,7 @@ export default defineConfig({
 import { defineElement, defineIsland, definePage } from '@openelement/app';
 ```
 
-- `definePage({ route, head, renderIntent, load, render, error })` creates a file-route page from a canonical object descriptor.
+- `definePage({ route, head, renderIntent, render, error })` creates a file-route page from a canonical object descriptor.
 - `defineIslandConfig({ ssr, dsd, hydrate })` defines static island metadata for adapter scanning.
 - `defineIsland(tagName, render, { hydrate, dsd, ssr })` creates a browser-upgraded island.
 - `defineElement(tagName, render)` creates a DSD component, including layout elements.

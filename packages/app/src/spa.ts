@@ -13,23 +13,9 @@ import {
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 import { normalizeActionFailure } from './internal/action-error.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
-import { createLogger } from '@openelement/element';
+import { createLogger, assertValidTagName } from '@openelement/element';
 
 const log = createLogger('spa');
-
-/**
- * Validate a custom element tagName. Tag names must be non-empty and contain
- * only lowercase letters, digits, and hyphens (per the HTML custom element
- * spec). Throws a `SyntaxError` with a helpful message on violation (#642).
- */
-export function assertValidTagName(tagName: string): void {
-  if (typeof tagName !== 'string' || !/^[a-z0-9-]+$/.test(tagName)) {
-    throw new SyntaxError(
-      `[spa] Invalid tagName "${tagName}": tag names must contain only ` +
-        'lowercase letters, digits, and hyphens.',
-    );
-  }
-}
 
 interface ImportMetaWithEnvironment extends ImportMeta {
   env?: { DEV?: boolean };
@@ -78,8 +64,9 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     try {
       return await route.loader({ params: router.params });
     } catch (err) {
-      log.error('loader failed:', err);
-      return undefined;
+      if (development) log.error('loader failed:', err);
+      else log.error('loader failed');
+      return { error: 'Loader failed' };
     }
   }
 

@@ -25,7 +25,7 @@ export interface OpenElementI18nOptions {
  * Pure function: load i18n configuration.
  * No module-level state. No side effects.
  *
- * This replaces the stateful initI18nData() + getI18nOptions() pattern.
+ * This replaces the stateful initI18nData() pattern.
  * For virtual module consumers, use @openelement/generated/i18n instead.
  */
 export function loadI18nData(options: OpenElementI18nOptions): OpenElementI18nOptions {

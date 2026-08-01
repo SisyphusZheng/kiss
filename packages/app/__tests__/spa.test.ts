@@ -1,6 +1,6 @@
 import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { defineApp, definePage } from '../src/index.ts';
-import { assertValidTagName } from '../src/spa.ts';
+import { assertValidTagName } from '@openelement/element';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
 
@@ -271,13 +271,13 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
 
 Deno.test('assertValidTagName accepts valid tag names and rejects invalid ones (#642)', () => {
   assertValidTagName('app-home');
-  assertValidTagName('x');
   assertValidTagName('a1-b2');
-  assertThrows(() => assertValidTagName('Invalid'), SyntaxError);
-  assertThrows(() => assertValidTagName('UPPER'), SyntaxError);
-  assertThrows(() => assertValidTagName('bad_name'), SyntaxError);
-  assertThrows(() => assertValidTagName(''), SyntaxError);
-  assertThrows(() => assertValidTagName('with space'), SyntaxError);
+  assertThrows(() => assertValidTagName('x'), Error);
+  assertThrows(() => assertValidTagName('Invalid'), Error);
+  assertThrows(() => assertValidTagName('UPPER'), Error);
+  assertThrows(() => assertValidTagName('bad_name'), Error);
+  assertThrows(() => assertValidTagName(''), Error);
+  assertThrows(() => assertValidTagName('with space'), Error);
 });
 
 Deno.test('unregistered tagName warns and renders nothing instead of an inert host (#642)', async () => {

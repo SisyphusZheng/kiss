@@ -54,10 +54,15 @@ export { defineApp } from './spa.ts';
 export type { SpaAppInstance, SpaAppOptions } from './spa.ts';
 export { useActionData, useLoaderData } from './internal/router/data-context.ts';
 
-// OpenElement-owned application model
+// OpenElement-owned request context contract and convenience constructor.
+// This is the single canonical RequestContext authority. Adapters build it
+// from their own request event:
+//   - adapter-vite's Nitro integration (nitro-mount.ts) re-implements the
+//     shape inline (createNitroRequestContext) because generated Nitro server
+//     output must stay free of unresolved bare package imports; the type-only
+//     import in nitro-mount pins it to this contract.
+// The historical Hono driver bridge (createHonoRequestContext) was removed:
+// it had zero production consumers and left the "official default request
+// driver bridge" API as an empty shell (🟡-F).
 export { createRequestContext } from './model.ts';
 export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';
-
-// Official default request driver bridge
-export { createHonoRequestContext } from './hono.ts';
-export type { CreateHonoRequestContextOptions, HonoContextLike, HonoRequestLike } from './hono.ts';

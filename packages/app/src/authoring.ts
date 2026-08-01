@@ -349,8 +349,6 @@ export interface IslandConfig {
 
 export type AppIslandOptions = IslandConfig;
 
-export type IslandConfigType = IslandConfig;
-
 export function defineIslandConfig(config: IslandConfig): IslandConfig {
   if (typeof config !== 'object' || config === null || Array.isArray(config)) {
     throw new Error(`${ERROR_PREFIX} defineIslandConfig() requires an object descriptor.`);
