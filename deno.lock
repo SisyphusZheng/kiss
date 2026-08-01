@@ -2519,6 +2519,11 @@
         "dependencies": [
           "npm:preact-render-to-string@^6.5.0"
         ]
+      },
+      "packages/element": {
+        "dependencies": [
+          "npm:@preact/signals-core@^1.12.1"
+        ]
       }
     }
   }
