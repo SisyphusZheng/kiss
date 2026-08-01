@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "76c4c6ac67a2b852ca88d66cf3a8d059903b6a1d5f26285a190c101e25c5974c",
+          "sha256": "a395523b0e83bda9d4acc728f6f032999cc69c05fcb2b93de024bb750fc5a777",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -19,6 +19,7 @@
             "export type { RenderOutput, SsrAdmissionDecision } from './internal/protocol/render.ts';",
             "export type { Context } from './internal/core/index.ts';",
             "export type { RenderError } from './internal/core/index.ts';",
+            "export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';",
             "export type { Signal } from './internal/protocol/signal.ts';",
             "export type { IslandOptions } from './internal/protocol/island.ts';",
             "export type { StyleSheetLike } from './internal/protocol/style-sheet.ts';",
@@ -37,11 +38,11 @@
           ]
         },
         "./jsx-dev-runtime": {
-          "sha256": "fcc6608876f75923e43bcc5f8f309a7d098019c608577b5b0ec78efd3c662e39",
+          "sha256": "6d779eab2e125157ead5450932dea7424d8b7667524468218e6895dbe138f3dd",
           "publicDeclarations": []
         },
         "./jsx-runtime": {
-          "sha256": "d63e409708a4a1e5203c5e68ec91b0daf8a06679824c6f6054c6f8e9ad44e2ef",
+          "sha256": "5ee78ec6010afefb6dd05e88076e6d9bf2edec382aca5a23bdfb89b24abb4094",
           "publicDeclarations": []
         }
       }
@@ -74,7 +75,7 @@
           ]
         },
         "./model": {
-          "sha256": "f67f1235dadc16e1e6b8ed6e3dd330ce85a4287cebd5f9970a267850b59efa52",
+          "sha256": "408ca342efab526b9b4f544047a690985c018cfcd1ae9e7f08f8319de4e9aba6",
           "publicDeclarations": [
             "export interface OpenElementRequestContext<",
             "export interface CreateRequestContextOptions<",
@@ -82,16 +83,16 @@
           ]
         },
         "./preact": {
-          "sha256": "f4580d5f92553d4d9f52c97790ce2a150180076010952141ef9e8c9086a91aef",
+          "sha256": "0fc12f6e583836b24d5017dbd30f11f5f5f6df75068252191670d228aa050682",
           "publicDeclarations": [
             "export type PreactIslandProps = Record<string, unknown>;",
             "export type PreactIslandComponent<",
-            "export interface PreactIslandOptions extends IslandConfig {",
+            "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
           ]
         },
         "./spa": {
-          "sha256": "4759fc22bf0856a57cdd6eeeb2ef60408475d3900c787d693d767f43b77a8eb8",
+          "sha256": "077cc09e36b6ee082730153c34deda67e39021b957fb2358c886b29f29bce1de",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -112,7 +113,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "846da739b64669f18ed995a416fdad5177586f0b2f69523aae370104c987dab9",
+          "sha256": "986cb14c3b22282e7c620e2405c7af6c61da1b5e75f4e4a56e5f81cf73cbebc3",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
@@ -128,11 +129,11 @@
           "publicDeclarations": []
         },
         "./cli/preview": {
-          "sha256": "207adce03deb976db737773bd957e65af6bf5675b460c1121e77203181c06f65",
+          "sha256": "df30b110860f95ea1918e8f45576f5e1eea9744d3737d81c6d95c2f0f6f8a081",
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "74577b051a2aa778ace458be8f9f2271c799ffbf9ffc7a936ebe8d9cfb504cc5",
+          "sha256": "3ca366c4eff0295db8354bbf5d68c7f64090610fca7fde9b719e7813fb7d973f",
           "publicDeclarations": []
         },
         "./nitro-mount": {
@@ -175,14 +176,14 @@
           "publicDeclarations": []
         },
         "./open-badge": {
-          "sha256": "20bf751a6d933cf6026c89d84fc044309635878482763852b548a3da9a153219",
+          "sha256": "e13a99335679c6f3f821a672771ca4d744b03ed9889875a8af7d58596a30b0d6",
           "publicDeclarations": [
             "export const tagName = 'open-badge';",
             "export class OpenBadge extends OpenElement {"
           ]
         },
         "./open-button": {
-          "sha256": "3fc8c717183accfd47a9583b5a8ffb10384e107308239cb8dc5a3dfce2648f2d",
+          "sha256": "6d74fca9b2de81ca9f2d8b9233396708ab31398a13abf0a988541740e130e123",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
@@ -210,7 +211,7 @@
           ]
         },
         "./open-dialog": {
-          "sha256": "71fda87d8de08a6c8ae3779f4edac8cb386ada86eb77f045b43b155074062b39",
+          "sha256": "aab29aa16493c70686df106b23e04f7329a379c2dfe46a102d9404275eb82e9f",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
@@ -224,7 +225,7 @@
           ]
         },
         "./open-input": {
-          "sha256": "0c8fd2f6b76f7600d29babd8a4c8eb4e7b07666478c12167e618be262a53ef64",
+          "sha256": "94cfe3eea463696cb02eaacd573c3e79d45ada45ace4283ac891c296739ea891",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -252,7 +253,7 @@
           ]
         },
         "./open-theme-toggle": {
-          "sha256": "46251e2e1084426899a469466ad620e69b91638d51f4e2886e945fe8539c4dcd",
+          "sha256": "d7569746ee0db8f3577a129c6bd00d63904769cd7b8caf167793768d6c370a70",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"
