@@ -85,3 +85,9 @@ tokens, but rate limits apply.
 ```bash
 deno task smoke
 ```
+
+## 依赖与版本说明
+
+本示例通过 `deno.json` 的 `imports` 以**本地相对路径**（`../../packages/*/src/index.ts`）直接引用 monorepo 内的 `@openelement/*` 包——这是**有意 dogfood 当前源码**的约定，确保示例始终跑在仓库最新代码上，而非钉死某个已发布版本。**请勿据此误读为版本滞后**。
+
+`deno.json` 顶部的 `version` 字段（如 `0.41.0-alpha.6`）是本示例应用**自身的版本号**，与所引用的 OpenElement 框架版本无关。
