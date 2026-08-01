@@ -16,6 +16,50 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
+## 0.42.0-alpha.10
+
+- Cleanup and hardening train (milestone #17, 97/97 issues closed): the
+  evidence-chain batch (#646–#653), the P1 correctness batch, the P2 batch and
+  the P3/P4 hygiene sweep land together. No new product surface; the ADR-0119
+  freeze surface and the ADR-0120 Application Loop scope are untouched.
+- Release tooling: two-stage publish now requires a durable, gated prepare
+  record — publish-existing refuses to run without one (#684, closes the
+  alpha.8 version-hole class); the docs stale guard is parameterized off
+  `PREVIOUS_PACKAGE_VERSION` so the next bump cannot self-collide (#727);
+  `bump-version.ts` documents its half-bump role (#687); the dead JSR publish
+  channel is removed (#746).
+- Runtime correctness: element `update()` routes re-render errors to
+  `onRenderError` (#662); SPA loader failures take the `__openElementError`
+  channel (#676) and SPA loader/action honor `redirect()`/`notFound()` with
+  real navigation (#731); ui double-escaping removed (#726), open-tabs
+  accessibility rewrite (#666) and instance-unique ARIA ids (#745), open-dialog
+  SSR `open` sync (#667); generated-data writes fail closed in build mode
+  (#671); `getStaticPaths` errors honor `dynamicRouteFailure: 'fail'` (#672);
+  the start CLI static server is shared with the CI fixture and its
+  request-time response unwrap is fixed (#732); `adapter-vite` declares its
+  `typescript` dependency so published consumers resolve (#725).
+- Hygiene: element's three internal barrels collapse to one (#739); the dead
+  `internal/content/mdx/` directory, protocol seam shells, codegen dead
+  re-exports and the JSR machinery are deleted (#694/#697/#741/#746);
+  zero-consumer exports dropped across app/element/ui (#740/#743/#747);
+  www guide pages share one shell and dead islands/icons/blog content are
+  removed (#749/#748); audit reports archive under `docs/audit/` with the
+  citation guard rescanning them (#751).
+- Breaking (unfrozen alpha surface, per PACKAGE_SURFACE.md): `@openelement/app`
+  drops `i18nStaticPaths`/`switchLocale`/`AppIslandOptions` and the
+  `OpenElementRouteNode` re-export from `./model` (#743);
+  `@openelement/ui/open-props-tokens` no longer exports `OPEN_PROPS_TOKEN_CSS`
+  (#747); the generated ui manifest corrects open-tabs slots to
+  `['tab','panel']` (#744). `@openelement/element` gains `@experimental`
+  exports: ISR cache types (#729) and the third-party client runtime
+  `hydrateOpenElement`/`disposeOpenElement` (#740).
+- Docs truth: the npm registry line and the source line are now stated as two
+  lines everywhere (README/ROADMAP/WORKFLOW/www), and the version-anchor and
+  www-truth gates enforce the dual-line form (#730); `docs/integrations/` is
+  covered by a package-surface truth gate (#737); the Fresh guide is rewritten
+  against the real example (#728); the ISR KV adapter contract samples compile
+  (#729).
+
 ## 0.42.0-alpha.9
 
 - Cleanup train (TP-5.7, milestone #16): 13 findings from the 2026-07-30 team
