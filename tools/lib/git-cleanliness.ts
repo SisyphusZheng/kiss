@@ -5,7 +5,6 @@ export const RELEASE_EVIDENCE_PATHS = Object.freeze({
   exact: [
     'www/public/search-index.json',
     'deno.lock',
-    'examples/deno-desktop-mastodon/deno.lock',
   ],
 });
 

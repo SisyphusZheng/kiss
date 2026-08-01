@@ -22,7 +22,10 @@ function getNumberArg(flag: string, fallback: number): number {
 
 async function runCoverage(): Promise<string> {
   const coverageDir = '.coverage-check';
-  const preservedFiles = ['examples/deno-desktop-mastodon/deno.lock'];
+  // Snapshot-and-restore guards against `deno test` rewriting tracked files
+  // during the coverage run; entries must point at files that exist (#738
+  // removed the workspace-member locks this list used to preserve).
+  const preservedFiles: string[] = [];
   const snapshots = new Map(
     await Promise.all(
       preservedFiles.map(async (path) => [path, await Deno.readFile(path)] as const),

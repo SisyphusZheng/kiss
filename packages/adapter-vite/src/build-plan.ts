@@ -1,5 +1,5 @@
 import { join, relative } from 'node:path';
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import type { BuildArtifacts, BuildPlan } from './internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from './build-context.ts';
 import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
@@ -149,8 +149,17 @@ export function writeBuildEvidence(plan: BuildPlan, artifacts: BuildArtifacts): 
     warnings: artifacts.warnings,
     errors: artifacts.errors,
   };
-  writeFileSync(
-    join(root, OPEN_ELEMENT_DIR, 'build-artifacts.json'),
-    formatJson(evidence),
-  );
+  // The evidence dir may not exist on a clean checkout (nothing else creates
+  // it since the route-types generation step was removed in #741). Write
+  // first; only on ENOENT create the dir and retry once. The lazy path keeps
+  // writeFileSync the single fs call on the common path and avoids node:fs
+  // mkdirSync in Deno-free shims (build-plan tests hide globalThis.Deno).
+  const evidencePath = join(root, OPEN_ELEMENT_DIR, 'build-artifacts.json');
+  try {
+    writeFileSync(evidencePath, formatJson(evidence));
+  } catch (error) {
+    if ((error as { code?: unknown })?.code !== 'ENOENT') throw error;
+    mkdirSync(join(root, OPEN_ELEMENT_DIR), { recursive: true });
+    writeFileSync(evidencePath, formatJson(evidence));
+  }
 }

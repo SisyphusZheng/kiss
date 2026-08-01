@@ -13,7 +13,6 @@ Deno.test('git cleanliness uses one normalized evidence allowlist', () => {
       ' M www/app/data/_generated-release.ts',
       ' M www/public/search-index.json',
       ' M deno.lock',
-      ' M examples/deno-desktop-mastodon/deno.lock',
       ' M tools/real-change.ts',
     ].join('\n')),
     [' M tools/real-change.ts'],

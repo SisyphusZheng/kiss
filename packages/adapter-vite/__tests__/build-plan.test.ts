@@ -83,6 +83,36 @@ Deno.test('writeBuildEvidence writes the build artifacts manifest', async () => 
   }
 });
 
+Deno.test('writeBuildEvidence creates the evidence dir on a clean tree (#741)', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'oe-build-plan-evidence-clean-' });
+  try {
+    const ctx = new OpenElementBuildContext({ mode: 'ssg' });
+    ctx.phase3.root = root;
+    ctx.phase3.outDir = 'dist';
+    ctx.phase1.cachedRoutes = [{
+      path: '/',
+      filePath: 'app/routes/index.tsx',
+      type: 'page',
+      varName: 'Page0',
+      tagName: 'home-page',
+    }];
+    const plan = createProductionBuildPlan(ctx);
+    await Deno.mkdir(join(root, 'dist'), { recursive: true });
+    await Deno.writeTextFile(join(root, 'dist', 'index.html'), '<html>ok</html>');
+
+    const result = collectBuildArtifacts(plan);
+    assertEquals(result.success, true);
+    // Deliberately no .openElement mkdir: CI clean checkouts hit this path.
+    writeBuildEvidence(plan, result);
+    const evidence = JSON.parse(
+      await Deno.readTextFile(join(root, '.openElement', 'build-artifacts.json')),
+    );
+    assertEquals(evidence.success, true);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test('build-plan uses process.cwd when Deno is unavailable', async () => {
   const deno = Deno;
   const originalCwd = deno.cwd();
