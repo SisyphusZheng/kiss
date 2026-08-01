@@ -392,12 +392,6 @@ export interface BuildI18nOptions {
   defaultLocale?: string;
 }
 
-/** Content/blog configuration for the build pipeline. */
-export interface BuildContentOptions {
-  contentDir?: string;
-  basePath?: string;
-}
-
 /** Package island configuration for the build pipeline. */
 export interface BuildPackageIslandOptions {
   /** Package names that may expose island declarations. */
@@ -416,8 +410,6 @@ export interface BuildPlan {
   output: BuildOutputOptions;
   /** i18n expansion options. */
   i18n?: BuildI18nOptions;
-  /** Content expansion options. */
-  content?: BuildContentOptions;
   /** Package island discovery options. */
   packageIslands?: BuildPackageIslandOptions;
   /** Extra evidence passed to the render pipeline. */

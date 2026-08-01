@@ -1,9 +1,8 @@
 /**
  * adapter-vite internal SSG render pipeline (ADR 0022).
  *
- * Shared SSG rendering logic used by both:
- *   - build-ssg.ts (Vite inline mode, called from closeBundle)
- *   - ssg.ts (standalone CLI, loads SSR bundle via importmap)
+ * Shared SSG rendering logic used by cli/build-ssg.ts (Vite inline mode,
+ * called from closeBundle).
  *
  * This module has zero Vite dependency - it only needs the SSR bundle module.
  *
@@ -333,7 +332,7 @@ export async function ssgRender(
     log.info('CSP meta tag injected');
   }
 
-  // ── Sitemap (via ctx) ──────────────────────────────────────
+  // ── Build manifest (via ctx) ───────────────────────────────
   await evidence.onPrintBuildManifest?.({
     root,
     outDir,
@@ -341,6 +340,7 @@ export async function ssgRender(
     headExtras: options.headExtras,
   });
 
+  // ── Sitemap (via ctx) ──────────────────────────────────────
   try {
     await evidence.onGenerateSitemap?.(join(root, outDir));
   } catch (e) {

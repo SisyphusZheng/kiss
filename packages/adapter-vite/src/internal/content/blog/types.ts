@@ -34,14 +34,4 @@ export interface OpenElementBlogOptions {
   basePath?: string;
   /** Custom markdown renderer override */
   markdown?: (content: string) => string | Promise<string>;
-  /**
-   * Layout component tag name for wrapping blog pages.
-   * Default: 'open-layout' (from @openelement/ui)
-   */
-  layoutTag?: string;
-  /**
-   * CSS class for the content container.
-   * Default: 'container' (matches page-styles.ts)
-   */
-  containerClass?: string;
 }

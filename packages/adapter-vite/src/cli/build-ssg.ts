@@ -50,7 +50,6 @@ import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 /** Chunk size warning limit (kB) for the SSR bundle build. */
 const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
 
-/** Rollup/Vite output paths mapping for known externals. */
 const log = createLogger('ssg');
 
 const VIRTUAL_SSG_ENTRY_ID = 'virtual:open-ssg-entry';
@@ -61,7 +60,6 @@ interface BuildSSGOptions {
   routesDir?: string;
   islandsDir?: string;
   middleware?: FrameworkOptions['middleware'];
-  ssr?: FrameworkOptions['ssr'];
   islandTagNames?: string[];
   /** Phase 1 discoveries reused by the production BuildPlan path. */
   routes?: RouteEntry[];

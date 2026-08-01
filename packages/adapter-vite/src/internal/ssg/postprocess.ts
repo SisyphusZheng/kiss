@@ -244,24 +244,6 @@ export function injectViewTransitionMeta(dir: string): void {
 // ─── Speculation Rules API ────────────────────────────────────────────
 
 /**
- * Build Speculation Rules JSON from configuration and known routes.
- *
- * If user-provided rules exist, they are used directly.
- * Otherwise, heuristics are applied based on the route list:
- * - Home page (/) -> prerender (moderate)
- * - Top-level static pages (1 level deep) -> prerender (conservative)
- * - Nested static pages -> prefetch
- * - Dynamic routes (containing :) -> excluded (content depends on params)
- * - API routes -> excluded
- *
- * This two-tier strategy balances instant navigation for high-probability
- * targets (prerender) with bandwidth-conscious loading for deeper pages (prefetch).
- *
- * @param options - User-provided speculation rules configuration
- * @param routes - Known route entries from route scanner (for heuristic rules)
- * @returns Speculation Rules JSON string, or empty string if no rules apply
- */
-/**
  * Inject Speculation Rules into all HTML files.
  *
  * The Speculation Rules API (Chrome 121+) enables the browser to

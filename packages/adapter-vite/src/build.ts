@@ -133,7 +133,7 @@ export function buildPlugin(
       // SPA mode: skip Phase 3 SSG, generate SPA shell + route manifest
       if (ctx.options.mode === 'spa') {
         const root = ctx.phase3.root || process.cwd();
-        const outDirName = ctx.phase3.outDir || 'dist';
+        const outDirName = ctx.phase3.outDir || DEFAULT_OUT_DIR;
         const absOutDir = join(root, outDirName);
         const htmlLang = escapeAttr(ctx.phase3.html?.lang ?? 'en');
         const htmlTitle = escapeHtml(ctx.phase3.html?.title ?? 'openElement App');

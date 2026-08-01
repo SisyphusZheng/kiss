@@ -149,11 +149,13 @@ export function assertNoScriptTags(html: string, context: string): void {
  * Returns the normalized URL string.
  */
 export function validateSafeUrl(url: string, context: string): string {
-  // Normalise: decode URL encoding, strip whitespace, lowercase
-  const normalised = url.trim();
+  // Normalise: strip tab/LF/CR anywhere (WHATWG URL parsing removes them,
+  // so "da\tta:…" would otherwise bypass the protocol blocklist), strip
+  // surrounding whitespace; protocol checks run on the decoded value.
+  const normalised = url.replace(/[\t\n\r]/g, '').trim();
   try {
     const decoded = decodeURIComponent(normalised); // catch malformed %XX
-    const lower = decoded.toLowerCase().trim();
+    const lower = decoded.toLowerCase().replace(/[\t\n\r]/g, '').trim();
     const blockedProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
     for (const proto of blockedProtocols) {
       if (lower.startsWith(proto)) {
@@ -233,8 +235,7 @@ export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {
   for (const entry of options.inject.stylesheets || []) {
     const isObj = typeof entry === 'object';
     const href = isObj ? entry.href : entry;
-    validateSafeUrl(href, 'inject.stylesheets');
-    const safeHref = escapeHtmlAttr(href);
+    const safeHref = escapeHtmlAttr(validateSafeUrl(href, 'inject.stylesheets'));
     const linkAttrs: string[] = [`rel="stylesheet"`, `href="${safeHref}"`];
     if (isObj) {
       if (entry.integrity) linkAttrs.push(`integrity="${escapeHtmlAttr(entry.integrity)}"`);
@@ -259,8 +260,7 @@ export function buildHeadExtras(options: FrameworkOptions): HeadExtrasResult {
   // Scripts last - depend on headFragments being in DOM
   for (const script of options.inject.scripts || []) {
     const isObjectScript = typeof script === 'object';
-    const src = isObjectScript ? script.src : script;
-    validateSafeUrl(src, 'inject.scripts');
+    const src = validateSafeUrl(isObjectScript ? script.src : script, 'inject.scripts');
     const attrs: Record<string, string | number | boolean> = {
       ...(!isObjectScript || script.type ? { type: isObjectScript ? script.type! : 'module' } : {}),
       ...(isObjectScript && script.defer ? { defer: true } : {}),

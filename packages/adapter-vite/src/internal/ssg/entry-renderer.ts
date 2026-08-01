@@ -13,10 +13,10 @@
  *   (imported at runtime - single source of truth, no duplicate HTML logic)
  * - DSD output must remain plain HTML, without Lit SSR marker comments.
  *
- * H-16 KNOWN ISSUE: Circular dependency between adapter-vite <-> content
- *   adapter-vite generates code that imports its public sitemap utility
- *   content package imports @openelement/adapter-vite/build-context
- * Shared contracts now live in @openelement/element and adapter internals.
+ * H-16 KNOWN ISSUE: Circular dependency between adapter-vite and the content
+ * package: adapter-vite generates code that imports content utilities, while
+ * the content package imports @openelement/adapter-vite/build-context.
+ * Shared contracts now live in @openelement/element and adapter internals,
  * so consumer import maps can be checked.
  *
  * Thin orchestrator: delegates code generation to focused sub-modules:
@@ -29,12 +29,7 @@
  * and pass it directly to `renderEntry()`.
  */
 
-import type { EntryDescriptor, IslandDecl } from '../protocol/ssg.ts';
-import type {
-  FrameworkOptions,
-  HydrationStrategy,
-  OpenElementPackageManifest,
-} from '../protocol/framework.ts';
+import type { EntryDescriptor } from '../protocol/ssg.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
 import {
   renderActionRoute,
@@ -263,25 +258,4 @@ export function renderEntry(desc: EntryDescriptor): string {
   }
 
   return lines.join('\n');
-}
-
-/** Options for the Hono entry code generator */
-export interface HonoEntryOptions {
-  routesDir?: string;
-  islandsDir?: string;
-  componentsDir?: string;
-  middleware?: FrameworkOptions['middleware'];
-  ssg?: boolean;
-  islandTagNames?: string[];
-  /** Relative file paths for local islands (preserves subdirectory structure) */
-  islandFiles?: string[];
-  islandMeta?: Record<string, Partial<IslandDecl>>;
-  packageManifests?: OpenElementPackageManifest[];
-  /** @security Injected as raw HTML without sanitization */
-  headExtras?: string;
-  allowHeadExtrasScripts?: boolean;
-  html?: { lang?: string; title?: string };
-  upgradeStrategy?: HydrationStrategy;
-  appShell?: FrameworkOptions['appShell'];
-  layouts?: FrameworkOptions['layouts'];
 }

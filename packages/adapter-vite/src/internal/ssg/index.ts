@@ -1,16 +1,12 @@
 /**
- * ./index.ts - Adapter-agnostic SSG engine.
+ * ./index.ts - Adapter-agnostic SSG engine (adapter-vite internal).
  *
- * Provides parallel SSG rendering, entry code generation, route scanning,
+ * Provides SSG rendering, entry code generation, route scanning,
  * island manifest generation, and HTML post-processing.
  *
- * This engine depends on protocol, core, router, and content — never on
- * Vite or adapter-vite. Build adapters (e.g. adapter-vite) delegate SSG
- * orchestration to this package.
- *
- * Architecture:
- *   - Sequential rendering (baseline): render pages one at a time
- *   - Parallel rendering (pool-based): render pages with concurrency limit
+ * This engine depends only on protocol types and @openelement/element —
+ * never on Vite. The Vite-specific build orchestration (plugin.ts,
+ * cli/build-ssg.ts) delegates SSG work to these modules.
  *
  * @module ./index.ts
  */
@@ -21,7 +17,6 @@ export type {
   AppShellPlan,
   BuildArtifacts,
   BuildClientAsset,
-  BuildContentOptions,
   BuildI18nOptions,
   BuildIslandInput,
   BuildManifestArtifact,
@@ -86,7 +81,6 @@ export { classifyCemManifest, parseCem } from './cem-compat.ts';
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 
 export { renderEntry } from './entry-renderer.ts';
-export type { HonoEntryOptions } from './entry-renderer.ts';
 
 export {
   extractCustomElementTags,

@@ -18,7 +18,8 @@
  *   plugin.ts              - Internal plugin factory (used by openPipeline)
  *   generated-data-resolver.ts - Generated app data namespace resolver
  *
- * This file is now a pure re-export hub (~60 lines).
+ * This file is now a re-export hub with the openPipeline()/buildApp() entry
+ * points (~100 lines).
  */
 
 // Primary public API
@@ -97,7 +98,7 @@ export { mdxPlugin } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Content/build utilities owned by the adapter implementation.
-export { generateSitemap } from './internal/content/index.ts';
+export { generateSitemap } from './internal/content/core.ts';
 
 // Default export
 export { openPipeline as default };

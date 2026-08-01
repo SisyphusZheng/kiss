@@ -38,7 +38,9 @@ export function buildSpeculationRulesJson(
   const prerenderPaths = staticPaths.filter((path) => path.split('/').filter(Boolean).length <= 1);
   const prefetchPaths = staticPaths
     .filter((path) => path.split('/').filter(Boolean).length > 1)
-    .map((path) => `${path}/*`);
+    // Match the page itself AND its sub-paths (#798): '/blog/post/*' alone
+    // never matches '/blog/post', so the nested-page prefetch was inert.
+    .flatMap((path) => [path, `${path}/*`]);
   const rules: Record<string, unknown[]> = {};
   if (prerenderPaths.length) {
     rules.prerender = prerenderPaths.map((pattern) =>

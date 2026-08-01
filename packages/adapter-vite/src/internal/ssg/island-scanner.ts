@@ -131,6 +131,18 @@ export function readIslandConfig(source: string): {
   const body = callMatch[1].slice(1, -1);
   const meta: { ssr?: boolean; dsd?: boolean; hydrate?: LocalIslandMeta['hydrate'] } = {};
 
+  // Fail closed (#771): a known key with a non-literal value (e.g.
+  // `ssr: isProd`) must be rejected, not silently skipped and guessed.
+  const looseRe = /\b(ssr|dsd|hydrate)\s*:\s*("[^"]*"|'[^']*'|[^,}]+)/g;
+  let loose: RegExpExecArray | null;
+  while ((loose = looseRe.exec(body)) !== null) {
+    if (!/^(?:true|false|"[^"]*"|'[^']*')\s*$/.test(loose[2])) {
+      throw staticOpenElementError(
+        `openElement.${loose[1]} must be a static literal, got dynamic value "${loose[2].trim()}"`,
+      );
+    }
+  }
+
   // Match key: value pairs, skipping nested braces/strings.
   const propRe = /\b(ssr|dsd|hydrate|[^\s:,{}]+)\s*:\s*(true|false|["']([^"']*)["'])/g;
   let m: RegExpExecArray | null;
@@ -239,10 +251,8 @@ export async function scanIslandMeta(
     const islandConfig = readIslandConfig(source);
     if (!islandConfig) continue;
 
-    const hydrate: LocalIslandMeta['hydrate'] = islandConfig.hydrate &&
-        (HYDRATION_STRATEGIES as readonly string[]).includes(islandConfig.hydrate)
-      ? islandConfig.hydrate
-      : undefined;
+    // readIslandConfig() already rejects unsupported hydrate values.
+    const hydrate = islandConfig.hydrate;
 
     const { ssr, dsd } = resolveIslandSsrDsd({
       ssr: islandConfig.ssr,

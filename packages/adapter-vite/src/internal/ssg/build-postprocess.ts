@@ -14,6 +14,7 @@ import type { IslandDecl } from '../protocol/ssg.ts';
 import { createLogger } from '@openelement/element';
 import { buildIslandChunkMap, injectClientScript } from './postprocess.ts';
 import { generateIslandManifests, writeIslandManifests } from './island-manifest.ts';
+import { resolveIslandHydrate } from './island-scanner.ts';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
 
 const log = createLogger('postprocess');
@@ -55,27 +56,28 @@ export async function postProcessClientIslandBuild(
 
   const chunkMap = await buildIslandChunkMap(root, outDir, islandTagNames, base);
 
-  const strategyMap = Object.fromEntries([
-    ...Object.entries(ctx.phase1.islandMeta || {}).map(([tag, meta]) => [
-      tag,
-      meta.hydrate || ctx.phase3.upgradeStrategy || 'idle',
-    ]),
-    ...(ctx.phase1.packageIslandDecls || []).map((island) => [
-      island.tagName,
-      island.hydrate || ctx.phase3.upgradeStrategy || 'idle',
-    ]),
-  ]) as Record<string, HydrationStrategy>;
+  // Local and package islands share the same strategy/layer derivation; the
+  // only difference is where the tag->meta pairs come from.
+  const islandMetas: Array<[string, Partial<IslandDecl>]> = [
+    ...Object.entries(ctx.phase1.islandMeta || {}),
+    ...(ctx.phase1.packageIslandDecls || []).map((island) =>
+      [island.tagName, island] as [string, Partial<IslandDecl>]
+    ),
+  ];
 
-  const layerMap = Object.fromEntries([
-    ...Object.entries(ctx.phase1.islandMeta || {}).map(([tag, meta]) => [
+  const strategyMap = Object.fromEntries(
+    islandMetas.map(([tag, meta]) => [
+      tag,
+      resolveIslandHydrate(meta.hydrate, ctx.phase3.upgradeStrategy),
+    ]),
+  ) as Record<string, HydrationStrategy>;
+
+  const layerMap = Object.fromEntries(
+    islandMetas.map(([tag, meta]) => [
       tag,
       meta.hydrate === 'only' || meta.ssr === false ? 'pure-island' : 'dsd-interactive',
     ]),
-    ...(ctx.phase1.packageIslandDecls || []).map((island) => [
-      island.tagName,
-      island.hydrate === 'only' || island.ssr === false ? 'pure-island' : 'dsd-interactive',
-    ]),
-  ]) as Record<string, ComponentLayer>;
+  ) as Record<string, ComponentLayer>;
 
   const pageManifests = generateIslandManifests(outputDir, chunkMap, strategyMap, layerMap);
   await writeIslandManifests(outputDir, pageManifests);

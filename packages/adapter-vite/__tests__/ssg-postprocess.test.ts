@@ -756,6 +756,23 @@ Deno.test('buildSpeculationRulesJson returns empty string when no static pages',
   assertEquals(result, '');
 });
 
+// #798: a nested page must prefetch both the page itself and its sub-paths —
+// '/blog/post/*' alone never matches '/blog/post'.
+Deno.test('buildSpeculationRulesJson nested pages prefetch the page itself and sub-paths (#798)', () => {
+  const result = buildSpeculationRulesJson({}, [
+    { path: '/', type: 'page' },
+    { path: '/blog/post', type: 'page' },
+  ]);
+
+  const parsed = JSON.parse(result);
+  assertExists(parsed.prefetch);
+  const matches = parsed.prefetch.map(
+    (r: { where?: { href_matches: string } }) => r.where?.href_matches,
+  );
+  assert(matches.includes('/blog/post'), 'prefetch should match the page itself');
+  assert(matches.includes('/blog/post/*'), 'prefetch should match sub-paths');
+});
+
 // ─── injectSpeculationRules ───────────────────────────────────
 
 Deno.test('injectSpeculationRules adds script tag to HTML files', () => {

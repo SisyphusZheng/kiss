@@ -152,6 +152,55 @@ Deno.test('validateSafeUrl: trims whitespace', () => {
   );
 });
 
+// #761: WHATWG URL parsing strips tab/LF/CR anywhere, so they must not
+// bypass the protocol blocklist, and the emitted URL must be normalized.
+Deno.test('validateSafeUrl: rejects protocols split by tab/newline', () => {
+  assertThrows(
+    () => validateSafeUrl('java\tscript:alert(1)', 'scripts'),
+    Error,
+    'javascript: protocol is not allowed',
+  );
+  assertThrows(
+    () => validateSafeUrl('da\nta:text/html,<script>alert(1)</script>', 'scripts'),
+    Error,
+    'data: protocol is not allowed',
+  );
+  assertThrows(
+    () => validateSafeUrl('java\rscript:alert(1)', 'scripts'),
+    Error,
+    'javascript: protocol is not allowed',
+  );
+});
+
+Deno.test('validateSafeUrl: strips embedded tab/newline from safe URLs', () => {
+  assertEquals(
+    validateSafeUrl('https://example.com/a\tpp\n.js', 'scripts'),
+    'https://example.com/app.js',
+  );
+});
+
+Deno.test('buildHeadExtras: emits normalized script src (tab/newline stripped)', () => {
+  const result = buildHeadExtras(
+    {
+      inject: { scripts: ['https://cdn.example.com/a\tpp\n.js'] },
+    } as Parameters<typeof buildHeadExtras>[0],
+  );
+  assertStringIncludes(result.headExtras!, 'src="https://cdn.example.com/app.js"');
+});
+
+Deno.test('buildHeadExtras: rejects tab-split javascript: script src', () => {
+  assertThrows(
+    () =>
+      buildHeadExtras(
+        {
+          inject: { scripts: ['java\tscript:alert(1)'] },
+        } as Parameters<typeof buildHeadExtras>[0],
+      ),
+    Error,
+    'javascript: protocol is not allowed',
+  );
+});
+
 // ─── buildHeadExtras ──────────────────────────────────────────
 
 Deno.test('buildHeadExtras: returns headExtras directly when provided', () => {

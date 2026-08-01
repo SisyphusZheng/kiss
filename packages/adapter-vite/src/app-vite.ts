@@ -8,7 +8,7 @@
 import type { Plugin } from 'vite';
 import type { FrameworkOptions } from './internal/protocol/framework.ts';
 import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
-import type { OpenElementContentOptions } from './internal/content/index.ts';
+import type { OpenElementContentOptions } from './internal/content/core.ts';
 import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 
 import { OpenElementBuildContext } from './build-context.ts';

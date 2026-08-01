@@ -94,7 +94,7 @@ function collectFiles(
  */
 export function scanClientBuild(
   root: string,
-  outDir: string = 'dist',
+  outDir: string = DEFAULT_OUT_DIR,
 ): { islands: ArtifactInfo[]; clientEntry: ArtifactInfo | null; totalJsBytes: number } {
   const clientDir = resolve(root, outDir, 'client');
   const islands: ArtifactInfo[] = [];
@@ -146,7 +146,7 @@ export function scanClientBuild(
  */
 export function scanSSGOutput(
   root: string,
-  outDir: string = 'dist',
+  outDir: string = DEFAULT_OUT_DIR,
 ): ArtifactInfo[] {
   const distDir = resolve(root, outDir);
   return collectFiles(distDir, '.html');

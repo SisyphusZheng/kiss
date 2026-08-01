@@ -13,8 +13,9 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import process from 'node:process';
+import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 import {
   importRequestTimeServer,
   type RequestTimeServerModule,
@@ -22,7 +23,7 @@ import {
 } from '../internal/static-serve.ts';
 
 const root = process.cwd();
-const distDir = join(root, 'dist');
+const distDir = join(root, DEFAULT_OUT_DIR);
 const serverEntry = join(distDir, 'server', 'index.js');
 const port = Number(process.env.OPEN_ELEMENT_PORT || process.env.PORT || 4173);
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
@@ -153,10 +154,11 @@ async function handleRequest(
 }
 
 // Cross-runtime entry detection (#622): Deno uses import.meta.main,
-// Node/Bun execute the module directly when invoked as CLI.
+// Node/Bun execute the module directly when invoked as CLI — match the
+// real entry filename instead of a substring heuristic.
 const isMainModule = typeof (import.meta as { main?: boolean }).main === 'boolean'
   ? (import.meta as { main?: boolean }).main === true
-  : process.argv[1]?.includes('start');
+  : ['start.ts', 'start.js', 'start.mjs', 'start.cjs'].includes(basename(process.argv[1] ?? ''));
 
 if (isMainModule) {
   try {
