@@ -187,6 +187,9 @@ async function runPublishExisting(
   dryRun: boolean,
 ): Promise<void> {
   if (!targetVersion) throw new Error('publish-existing requires --to');
+  // Same gate tier as every other release path: the CI workflow that invokes
+  // publish-existing must not publish from an unvalidated main HEAD.
+  await runTier('release', dryRun);
   await executeReleasePlan(
     'publish-existing',
     targetVersion,

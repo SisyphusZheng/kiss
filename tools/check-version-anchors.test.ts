@@ -59,11 +59,24 @@ Deno.test('version anchors: unreadable file is a failure, not a crash', () => {
   assert(failures.every((f) => f.includes('cannot read file')));
 });
 
-Deno.test('stale claims: previous line in a head anchor zone is rejected', () => {
+Deno.test('stale claims: a previous registry line in the head zone is the legal lag', () => {
   const files = goodFiles();
+  // The registry publishes at release time, one alpha after the source bump,
+  // so the registry anchor may legitimately name the previous version.
   files['docs/status/STATUS.md'] = files['docs/status/STATUS.md'].replace(
     `npm registry line: \`${PACKAGE_VERSION_TAG}\``,
     `npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``,
+  );
+  assertEquals(findStaleAnchorFailures(readerFrom(files)), []);
+});
+
+Deno.test('stale claims: previous line in a head anchor zone is rejected', () => {
+  const files = goodFiles();
+  // The lag allowance covers the registry anchor only; a previous line
+  // anywhere else in the head zone (e.g. a stale repo-line claim) fails.
+  files['docs/status/STATUS.md'] = files['docs/status/STATUS.md'].replace(
+    `Repository package line: \`${PACKAGE_VERSION_TAG}\``,
+    `Repository package line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``,
   );
   const failures = findStaleAnchorFailures(readerFrom(files));
   assertEquals(failures.length, 1);

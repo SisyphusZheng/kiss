@@ -62,6 +62,7 @@
     "type-safety:check": "deno run --allow-read tools/check-type-safety.ts",
     "deno-api:check": "deno run --allow-read --allow-env tools/check-deno-api-free.ts",
     "text-integrity:check": "deno run --allow-read --allow-run=git tools/check-text-integrity.ts",
+    "audit:citations:check": "deno run -A tools/check-audit-citations.ts",
     "graph:check": "deno run --allow-read --allow-env tools/check-package-graph.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
     "consumer:packaged": "deno task pack:dry-run && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",

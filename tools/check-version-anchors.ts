@@ -20,6 +20,7 @@ import {
   ACTIVE_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION_TAG,
   stalePackageVersionClaims,
 } from './project-constants.ts';
 import { escapeRegExp } from './lib/text.ts';
@@ -27,6 +28,15 @@ import { escapeRegExp } from './lib/text.ts';
 export interface VersionAnchor {
   path: string;
   snippet: string;
+  /**
+   * Alternative accepted values for this anchor (e.g. the npm registry line
+   * may legitimately name PREVIOUS_PACKAGE_VERSION_TAG while the source line
+   * has already bumped — the registry publishes at release time, not at bump
+   * time). When alternatives are present, findStaleAnchorFailures exempts
+   * the named value from the stale-claim check: it is a factual statement
+   * about the registry, not a stale claim about the source line.
+   */
+  alternatives?: string[];
 }
 
 /** Head-of-file anchors kept in sync with each file's real anchor text. */
@@ -39,6 +49,8 @@ export function versionAnchors(): VersionAnchor[] {
     {
       path: 'docs/status/STATUS.md',
       snippet: `npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
     {
       path: 'docs/status/STATUS.md',
@@ -71,6 +83,8 @@ export function versionAnchors(): VersionAnchor[] {
     {
       path: 'docs/current/VERSION_PLAN.md',
       snippet: `Current npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`Current npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
   ];
 }
@@ -90,8 +104,12 @@ export function findVersionAnchorFailures(read: (path: string) => string): strin
       );
       continue;
     }
-    if (!text.includes(anchor.snippet)) {
-      failures.push(`${anchor.path}: missing version anchor: ${anchor.snippet}`);
+    const accepted = [anchor.snippet, ...(anchor.alternatives ?? [])];
+    if (!accepted.some((snippet) => text.includes(snippet))) {
+      failures.push(
+        `${anchor.path}: missing version anchor: ${anchor.snippet}` +
+          (anchor.alternatives?.length ? ` (or its lagged form)` : ''),
+      );
     }
   }
   return failures;
@@ -148,8 +166,21 @@ export function findStaleAnchorFailures(read: (path: string) => string): string[
       continue;
     }
     const zone = headAnchorZone(text, snippets);
+    // Exempt accepted registry-lag anchors: the version they name is a
+    // factual statement about the published line, not a stale source claim.
+    const exempted = new Set<string>();
+    for (const anchor of versionAnchors()) {
+      if (anchor.path !== path) continue;
+      for (const accepted of [anchor.snippet, ...(anchor.alternatives ?? [])]) {
+        const index = zone.indexOf(accepted);
+        if (index === -1) continue;
+        for (const claim of accepted.matchAll(pattern)) exempted.add(claim[0]);
+      }
+    }
     const stale = new Set<string>();
-    for (const match of zone.matchAll(pattern)) stale.add(match[0]);
+    for (const match of zone.matchAll(pattern)) {
+      if (!exempted.has(match[0])) stale.add(match[0]);
+    }
     for (const claim of [...stale].sort()) {
       failures.push(`${path}: stale version claim in head anchor zone: ${claim}`);
     }

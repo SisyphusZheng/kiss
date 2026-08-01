@@ -74,6 +74,11 @@ try {
   const check = await run(Deno.execPath(), ['task', 'check'], starter);
   if (!check.success) throw new Error(`Packed starter typecheck failed:\n${check.output}`);
   console.log(`Packed starter typecheck passed for ${PACKAGE_VERSION}.`);
+
+  // Full-stack main path: packed adapter must run the real SSG build.
+  const build = await run(Deno.execPath(), ['task', 'build'], starter);
+  if (!build.success) throw new Error(`Packed starter SSG build failed:\n${build.output}`);
+  console.log(`Packed starter SSG build passed for ${PACKAGE_VERSION}.`);
 } finally {
   await Deno.remove(tmp, { recursive: true }).catch(() => undefined);
 }

@@ -76,6 +76,7 @@ export function staleCurrencyClaimPatterns(): RegExp[] {
     new RegExp(`五包收敛已作为\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
     new RegExp(`completed\\s+implementation anchor\\s+\`?(?:${stale})(?![\\d.])`, 'i'),
     new RegExp(`current (?:published|verified)[^\\n]*(?:${stale})(?![\\d.])`, 'i'),
+    new RegExp(`(?:${stale})(?![\\d.]) is the (?:published|current)[^\\n]*line`, 'i'),
     new RegExp(`Alpha\\.(?!${currentAlpha}\\b)\\d+ is the current`, 'i'),
   ];
 }
