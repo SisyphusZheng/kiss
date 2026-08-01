@@ -33,6 +33,7 @@ import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
 import { createGeneratedDataResolverPlugin } from '../generated-data-resolver.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
+import { mdxPlugin } from '../plugin-mdx.ts';
 import { quoteGeneratedJavaScriptValue } from '../internal/ssg/codegen-literals.ts';
 import {
   generateCustomElementsPolyfill,
@@ -93,6 +94,11 @@ interface BuildSSGOptions {
    * See SsgRenderOptions.dynamicRouteFailure. Defaults to 'fail'.
    */
   dynamicRouteFailure?: 'fail' | 'warn';
+  /**
+   * Policy for sitemap generation failures during SSG.
+   * See SsgRenderOptions.sitemapFailure. Defaults to 'fail'.
+   */
+  sitemapFailure?: 'fail' | 'warn';
 }
 
 /** Resolved inputs for the SSG entry descriptor (Phase 1 discoveries + Phase 3 options). */
@@ -329,6 +335,9 @@ async function buildSSG(
         },
       },
       plugins: [
+        // MDX route support must mirror the outer plugin list (plugin.ts:396),
+        // otherwise .mdx routes fail Phase 3 parse (esbuild treats them as JS).
+        mdxPlugin(),
         // ADR 0010: Virtual SSG entry module
         // Replaces .openElement/.openElement-ssg-entry.ts file write
         {
@@ -410,6 +419,7 @@ async function buildSSG(
         viewTransition: options.viewTransition,
         speculation: options.speculation as boolean | Record<string, unknown> | undefined,
         dynamicRouteFailure: options.dynamicRouteFailure,
+        sitemapFailure: options.sitemapFailure,
       },
       createSsgRenderEvidence(ctx),
     );

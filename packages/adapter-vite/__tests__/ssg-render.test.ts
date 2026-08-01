@@ -1,7 +1,7 @@
 /**
  * @openelement/adapter-vite - ssg-render.ts tests
  */
-import { assert, assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertRejects, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
 import { Hono } from 'hono';
 import { resolveDynamicRoutePath, ssgRender } from '../src/internal/ssg/index.ts';
 import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
@@ -118,7 +118,7 @@ Deno.test('ssgRender - handles dynamic routes with no getStaticPaths', async () 
   await ssgRender(bundle, defaultOptions);
 });
 
-Deno.test('ssgRender - handles getStaticPaths failure gracefully', async () => {
+Deno.test('ssgRender - getStaticPaths failure aborts build under fail policy (default)', async () => {
   const bundle = createMockBundle({
     routeInfo: [
       { path: '/blog/:slug', tagName: 'blog-page', isDynamic: true, paramNames: ['slug'] },
@@ -134,7 +134,30 @@ Deno.test('ssgRender - handles getStaticPaths failure gracefully', async () => {
       )) as SsrBundle['renderRoute'],
     getStaticPaths: (() => Promise.reject(new Error('fail'))) as SsrBundle['getStaticPaths'],
   });
-  await ssgRender(bundle, defaultOptions);
+  await assertRejects(
+    () => ssgRender(bundle, defaultOptions),
+    Error,
+    'getStaticPaths for /blog/:slug failed',
+  );
+});
+
+Deno.test('ssgRender - getStaticPaths failure logs and continues under warn policy', async () => {
+  const bundle = createMockBundle({
+    routeInfo: [
+      { path: '/blog/:slug', tagName: 'blog-page', isDynamic: true, paramNames: ['slug'] },
+    ],
+    renderRoute: (() =>
+      Promise.resolve(
+        {
+          html: '<html><body>test</body></html>',
+          errors: [],
+          componentCount: 0,
+          renderTimeMs: 0,
+        } as SsgPageOutput,
+      )) as SsrBundle['renderRoute'],
+    getStaticPaths: (() => Promise.reject(new Error('fail'))) as SsrBundle['getStaticPaths'],
+  });
+  await ssgRender(bundle, { ...defaultOptions, dynamicRouteFailure: 'warn' });
 });
 
 Deno.test('ssgRender - handles empty getStaticPaths gracefully', async () => {
@@ -395,6 +418,63 @@ Deno.test('ssgRender - pure-static projects emit no server artifacts', async () 
     !(await pathExists(`${outDir}/server/index.js`)),
     'pure-static build must not emit a server entry',
   );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+// ─── 🟡-A: sitemap generation failure observability ────────────
+
+Deno.test('ssgRender - sitemap failure is surfaced as a warning when sitemapFailure: warn (no throw)', async () => {
+  const outDir = './dist-test-ssg-render-sitemap-warn';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle();
+
+  const summary = await ssgRender(
+    bundle,
+    {
+      ...defaultOptions,
+      outDir,
+      // 🟡-A fix: explicit 'warn' downgrades the failure to a recorded warning
+      sitemapFailure: 'warn',
+    },
+    { onGenerateSitemap: () => { throw new Error('boom'); } },
+  );
+
+  assertEquals(summary.warnings.length, 1);
+  assertStringIncludes(summary.warnings[0], 'Sitemap generation failed');
+  assertStringIncludes(summary.warnings[0], 'boom');
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - sitemap failure aborts the build by default (sitemapFailure defaults to fail)', async () => {
+  const outDir = './dist-test-ssg-render-sitemap-fail';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle();
+
+  await assertRejects(
+    () =>
+      ssgRender(
+        bundle,
+        { ...defaultOptions, outDir },
+        { onGenerateSitemap: () => { throw new Error('boom'); } },
+      ),
+    Error,
+    'Sitemap generation failed',
+  );
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - successful sitemap run records no warnings', async () => {
+  const outDir = './dist-test-ssg-render-sitemap-ok';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const bundle = createMockBundle();
+
+  const summary = await ssgRender(
+    bundle,
+    { ...defaultOptions, outDir },
+    { onGenerateSitemap: () => {} },
+  );
+
+  assertEquals(summary.warnings, []);
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 

@@ -17,7 +17,6 @@
 import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from './internal/protocol/framework.ts';
 import { createLogger } from '@openelement/element';
-import { formatError } from '@openelement/element';
 import process from 'node:process';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -46,7 +45,6 @@ export function writeI18nDataModule(locales: string[], defaultLocale: string): s
     `export const defaultLocale = "${defaultLocale}";`,
     '',
     'export function getDefaultLocale(): string { return defaultLocale; }',
-    'export function getI18nOptions() { return { locales, defaultLocale }; }',
   ].join('\n') + '\n';
 }
 
@@ -78,18 +76,13 @@ export function openI18n(
         });
       }
 
-      // SOP-001: Write generated i18n data module to disk
-      try {
-        const dataDir = join(process.cwd(), 'app', 'data');
-        mkdirSync(dataDir, { recursive: true });
-        const i18nModule = writeI18nDataModule(i18nData.locales, i18nData.defaultLocale);
-        writeFileSync(join(dataDir, '_generated-i18n-data.ts'), i18nModule, 'utf-8');
-        log.info(`I18n: wrote _generated-i18n-data.ts (${i18nData.locales.join(', ')})`);
-      } catch (err) {
-        log.warn(
-          `Failed to write _generated-i18n-data.ts: ${formatError(err)}`,
-        );
-      }
+      // SOP-001: Write generated i18n data module to disk.
+      // Failing to write must fail the build: consumers import these files.
+      const dataDir = join(process.cwd(), 'app', 'data');
+      mkdirSync(dataDir, { recursive: true });
+      const i18nModule = writeI18nDataModule(i18nData.locales, i18nData.defaultLocale);
+      writeFileSync(join(dataDir, '_generated-i18n-data.ts'), i18nModule, 'utf-8');
+      log.info(`I18n: wrote _generated-i18n-data.ts (${i18nData.locales.join(', ')})`);
 
       log.info(`${options.locales.join(', ')} (default: ${options.defaultLocale})`);
     },

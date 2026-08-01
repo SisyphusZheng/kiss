@@ -305,7 +305,10 @@ Deno.test('renderEntry: imports Hono and DSD renderer', () => {
 });
 
 Deno.test('renderEntry: app shell is built from VNode tree, not HTML replace', () => {
-  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const desc = buildEntryDescriptor(basicRoutes, {
+    ssg: true,
+    appShell: { tagName: 'open-layout', import: '@openelement/ui/open-layout', props: {} },
+  });
   const code = renderEntry(desc);
 
   assertStringIncludes(code, 'async function __renderAppShell(routeNode, routePath');
@@ -313,6 +316,15 @@ Deno.test('renderEntry: app shell is built from VNode tree, not HTML replace', (
   assertStringIncludes(code, 'import "@openelement/ui/open-layout";');
   assertStringIncludes(code, 'renderDsd(shell.tagName, { props: layoutProps })');
   assertStringIncludes(code, 'layoutResult.html.slice(0, index) + pageHtml');
+});
+
+Deno.test('renderEntry: unconfigured appShell defaults to false (no import)', () => {
+  const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
+  const code = renderEntry(desc);
+
+  assertFalse(code.includes('import "@openelement/ui/open-layout";'));
+  assertStringIncludes(code, '"default": false');
+  assertStringIncludes(code, 'if (!shell) return pageHtml;');
 });
 
 Deno.test('renderEntry: appShell false renders route content without default layout import', () => {

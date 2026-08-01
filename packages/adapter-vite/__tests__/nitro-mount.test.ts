@@ -1,4 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { createRequestContext } from '@openelement/app/model';
 import { createOpenElementNitroHandler } from '../src/nitro-mount.ts';
 
 Deno.test('nitro mount: converts Nitro-like event to Web Request and returns Web Response data', async () => {
@@ -94,4 +95,44 @@ Deno.test('nitro mount: exposes params through runtime and request contexts', as
     envName: 'nitro-env',
     platform: 'workers',
   }]);
+});
+
+Deno.test('nitro mount: request context shape matches app/model createRequestContext contract', async () => {
+  let nitroContext: ReturnType<typeof createRequestContext> | undefined;
+
+  const handler = createOpenElementNitroHandler({
+    baseUrl: 'https://shape.test',
+    onBeforeRequestContext: (context) => {
+      nitroContext = context;
+    },
+    handler: () => new Response('ok'),
+  });
+
+  await handler({
+    method: 'GET',
+    path: '/a/b?x=1&y=2',
+    params: { b: 'b-value' },
+    env: { name: 'env' },
+    platform: 'node',
+  });
+
+  const appContext = createRequestContext({
+    request: new Request('https://shape.test/a/b?x=1&y=2'),
+    params: { b: 'b-value' },
+    env: { name: 'env' },
+    platform: 'node',
+  });
+
+  const pick = (ctx: ReturnType<typeof createRequestContext>) => ({
+    request: ctx.request.url,
+    url: ctx.url.href,
+    path: ctx.path,
+    method: ctx.method,
+    params: ctx.params,
+    searchParams: [...ctx.searchParams.entries()],
+    env: ctx.env,
+    platform: ctx.platform,
+  });
+
+  assertEquals(pick(nitroContext!), pick(appContext));
 });

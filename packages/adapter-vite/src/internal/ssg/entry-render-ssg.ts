@@ -42,11 +42,11 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     'export { renderDsd, renderDsdTree, wrapInDocument } from "@openelement/element"',
   );
   lines.push(
-    'export { posts, getPostBySlug, getBlogOptions } from "@openelement/generated/blog-data"',
+    'export { posts, getPostBySlug } from "@openelement/generated/blog-data"',
   );
   lines.push('export { generateSitemap } from "@openelement/adapter-vite/sitemap"');
   lines.push(
-    'export { locales, getDefaultLocale, getI18nOptions } from "@openelement/generated/i18n"',
+    'export { locales, getDefaultLocale } from "@openelement/generated/i18n"',
   );
   lines.push('');
   lines.push(

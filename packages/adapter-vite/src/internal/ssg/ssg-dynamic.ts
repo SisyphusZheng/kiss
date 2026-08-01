@@ -176,7 +176,11 @@ export async function expandDynamicRoutes(
       try {
         paramsList = await getStaticPaths(route.path);
       } catch (e) {
-        log.warn(`Failed to get static paths for ${route.path}: ${formatError(e)}`);
+        handleRenderFailure(
+          policy,
+          `getStaticPaths for ${route.path} failed`,
+          e,
+        );
         continue;
       }
 

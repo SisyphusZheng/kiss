@@ -13,7 +13,6 @@ import { nodeFsAdapter } from '../fs-adapter.ts';
 import { scanNavData } from './scanner.ts';
 import { writeNavModule, writeSearchIndex } from './writer.ts';
 import { createLogger } from '@openelement/element';
-import { formatError } from '@openelement/element';
 import { join } from 'node:path';
 
 const log = createLogger('content:nav');
@@ -38,27 +37,22 @@ export function createNavPlugin(
         ctx.registerPlugin('headerNav', headerNav);
       }
 
-      // SOP-001: Write generated nav data module to disk
-      try {
-        const dataDir = join(fs.cwd(), 'app', 'data');
-        fs.mkdirSync(dataDir, { recursive: true });
-        const navModule = writeNavModule({ headerNav, navSections });
-        fs.writeFileSync(join(dataDir, '_generated-nav.ts'), navModule, 'utf-8');
-        log.info(`Nav: wrote _generated-nav.ts (${navSections.length} section(s))`);
+      // SOP-001: Write generated nav data module to disk.
+      // Failing to write must fail the build: consumers import these files.
+      const dataDir = join(fs.cwd(), 'app', 'data');
+      fs.mkdirSync(dataDir, { recursive: true });
+      const navModule = writeNavModule({ headerNav, navSections });
+      fs.writeFileSync(join(dataDir, '_generated-nav.ts'), navModule, 'utf-8');
+      log.info(`Nav: wrote _generated-nav.ts (${navSections.length} section(s))`);
 
-        const publicDir = join(fs.cwd(), 'public');
-        fs.mkdirSync(publicDir, { recursive: true });
-        fs.writeFileSync(
-          join(publicDir, 'search-index.json'),
-          writeSearchIndex(navSections, headerNav),
-          'utf-8',
-        );
-        log.info('Search: wrote search-index.json from route metadata');
-      } catch (err) {
-        log.warn(
-          `Failed to write _generated-nav.ts: ${formatError(err)}`,
-        );
-      }
+      const publicDir = join(fs.cwd(), 'public');
+      fs.mkdirSync(publicDir, { recursive: true });
+      fs.writeFileSync(
+        join(publicDir, 'search-index.json'),
+        writeSearchIndex(navSections, headerNav),
+        'utf-8',
+      );
+      log.info('Search: wrote search-index.json from route metadata');
 
       log.info(`Nav: ${navSections.length} section(s) configured`);
     },

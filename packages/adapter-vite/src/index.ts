@@ -30,7 +30,6 @@ export interface OpenPipelineConfig {
   /** Build/dev mode. 'ssg' (default) enables SSR dev server + static generation. 'spa' produces a client-only app (no SSR). */
   mode?: 'ssg' | 'spa';
   routes?: { dir?: string };
-  i18n?: { locales: string[]; defaultLocale?: string };
   output?: { outDir?: string };
   island?: { dir?: string; upgradeStrategy?: string };
   viewTransition?: boolean;

@@ -17,12 +17,10 @@ const GENERATED_DATA_FALLBACKS: Record<string, string> = {
   [GENERATED_BLOG_DATA_ID]: [
     'export const posts = [];',
     'export function getPostBySlug() { return undefined; }',
-    'export function getBlogOptions() { return {}; }',
   ].join('\n'),
   [GENERATED_I18N_ID]: [
     'export const locales = [];',
     'export function getDefaultLocale() { return "en"; }',
-    'export function getI18nOptions() { return null; }',
   ].join('\n'),
 };
 

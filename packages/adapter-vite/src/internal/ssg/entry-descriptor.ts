@@ -21,7 +21,7 @@ import type {
   RouteEntry,
 } from '../protocol/framework.ts';
 import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
-import type { SsrAdmissionDecision } from '../protocol/render.ts';
+import type { SsrAdmissionDecision } from '@openelement/element';
 import { normalizeSeparators } from '@openelement/element/build-utils';
 import { fileToTagName } from './route-scanner.ts';
 import {
@@ -37,14 +37,7 @@ function normalizeAppShellImport(importPath: string): string {
 }
 
 function normalizeAppShell(config: AppShellConfig | undefined): ResolvedAppShell {
-  if (config === false) return false;
-  if (config === undefined || config === 'default') {
-    return {
-      tagName: 'open-layout',
-      importPath: '@openelement/ui/open-layout',
-      props: {},
-    };
-  }
+  if (config === false || config === undefined || config === 'default') return false;
   return {
     tagName: config.tagName,
     importPath: normalizeAppShellImport(config.import),

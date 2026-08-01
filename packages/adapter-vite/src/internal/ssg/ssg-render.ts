@@ -120,11 +120,11 @@ export async function ssgRender(
   const fsModule = {
     writeFile: async (path: string, data: string | Uint8Array) => {
       const dir = nodePath.dirname(path);
-      await nodeFs.mkdir(dir, { recursive: true }).catch(() => {});
+      await nodeFs.mkdir(dir, { recursive: true });
       await nodeFs.writeFile(path, data);
     },
     mkdir: async (path: string) => {
-      await nodeFs.mkdir(path, { recursive: true }).catch(() => {});
+      await nodeFs.mkdir(path, { recursive: true });
     },
     isDirectory: async (path: string) => {
       try {
@@ -148,6 +148,7 @@ export async function ssgRender(
   // trace. Record them through a request wrapper (the afterResponseHook does
   // not receive the request path) and surface them in the build summary.
   const staticNon200: Array<{ path: string; status: number }> = [];
+  const warnings: string[] = [];
   const recordingApp: SsgHonoApp = {
     routes: app.routes,
     fetch: (request, ...args) => app.fetch(request, ...args),
@@ -343,10 +344,19 @@ export async function ssgRender(
   try {
     await evidence.onGenerateSitemap?.(join(root, outDir));
   } catch (e) {
-    log.debug('Sitemap generation skipped or failed', e);
+    // 🟡-A: sitemap failures were previously swallowed into a debug log,
+    // letting SEO regressions ship unnoticed. A failed sitemap must never ship
+    // silently, so production builds fail by default. Non-production / experimental
+    // builds can downgrade to 'warn' via options.sitemapFailure = 'warn'.
+    const message = `Sitemap generation failed: ${e instanceof Error ? e.message : String(e)}`;
+    if ((options.sitemapFailure ?? 'fail') === 'fail') {
+      throw new Error('[openElement] ' + message);
+    }
+    log.warn(message);
+    warnings.push(message);
   }
 
-  return { staticNon200 };
+  return { staticNon200, warnings };
 }
 
 // Re-export resolveDynamicRoutePath for consumers who import from ssg-render.ts

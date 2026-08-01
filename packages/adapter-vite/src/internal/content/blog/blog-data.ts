@@ -33,8 +33,8 @@ export async function loadBlogData(options?: OpenElementBlogOptions): Promise<{
 
 /**
  * Generate TypeScript module source code for blog data.
- * The output is a self-contained .ts file that exports posts,
- * getPostBySlug(), and getBlogOptions().
+ * The output is a self-contained .ts file that exports posts and
+ * getPostBySlug().
  *
  * SOP-001: Virtual Modules Removal — replaces @openelement/generated/blog-data.
  *
@@ -76,10 +76,6 @@ export function writeBlogDataModule(posts: BlogPost[]): string {
     '',
     'export function getPostBySlug(slug: string): GeneratedBlogPost | undefined {',
     '  return posts.find((p) => p.slug === slug);',
-    '}',
-    '',
-    'export function getBlogOptions() {',
-    '  return { contentDir: "content/blog", basePath: "/blog" };',
     '}',
   ].join('\n') + '\n';
 }

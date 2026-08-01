@@ -81,7 +81,6 @@ import {
   generateIslandManifests,
   injectClientScript,
   injectCspMeta,
-  injectDsdPolyfill,
   scanClientBuild,
   scanSSGOutput,
   writeIslandManifests,

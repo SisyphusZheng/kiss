@@ -72,6 +72,19 @@ export interface SsgRenderOptions {
    * @default 'fail'
    */
   dynamicRouteFailure?: 'fail' | 'warn';
+  /**
+   * Policy for sitemap generation failures during SSG post-processing
+   * (onGenerateSitemap throw). Historically these were swallowed into a debug
+   * log, letting SEO regressions ship unnoticed. A failed sitemap must never
+   * ship silently, so production builds fail by default.
+   * - 'fail' (default): abort the build - a failed sitemap must never ship
+   *   silently.
+   * - 'warn': log the failure loudly and record it in SsgRenderSummary.warnings
+   *   so the build summary / release evidence carries it, but do not abort the
+   *   build. Use only for non-production / experimental builds.
+   * @default 'fail'
+   */
+  sitemapFailure?: 'fail' | 'warn';
 }
 
 /** User-facing SSG build behavior switches (OpenElementOptions['ssg']). */
@@ -81,6 +94,11 @@ export interface SsgBehaviorOptions {
    * See {@link SsgRenderOptions.dynamicRouteFailure}.
    */
   dynamicRouteFailure?: 'fail' | 'warn';
+  /**
+   * Policy for sitemap generation failures during SSG.
+   * See {@link SsgRenderOptions.sitemapFailure}. Defaults to 'fail'.
+   */
+  sitemapFailure?: 'fail' | 'warn';
 }
 
 /** Summary of an SSG render run, returned by ssgRender(). */
@@ -91,6 +109,12 @@ export interface SsgRenderSummary {
    * are listed here and in the build log instead of disappearing silently.
    */
   staticNon200: Array<{ path: string; status: number }>;
+  /**
+   * Non-fatal warnings collected during the SSG run (sitemap generation
+   * failures, etc.). Surfaced here so the build summary / release evidence
+   * carries them instead of letting them disappear silently.
+   */
+  warnings: string[];
 }
 
 // ─── Entry generator types ───────────────────────────────────

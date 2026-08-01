@@ -205,6 +205,7 @@ export function buildPlugin(
           packageManifests: ctx.phase1.packageManifests,
           cemClassifications: ctx.phase1.cemClassifications,
           dynamicRouteFailure: options.ssg?.dynamicRouteFailure,
+          sitemapFailure: options.ssg?.sitemapFailure,
         }, ctx);
         ctx.markComplete(3);
         log.info('[3/3] Static site generation - complete');

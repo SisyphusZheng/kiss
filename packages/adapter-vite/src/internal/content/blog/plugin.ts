@@ -12,7 +12,6 @@ import type { FileSystemAdapter } from '../fs-adapter.ts';
 import { nodeFsAdapter } from '../fs-adapter.ts';
 import { loadBlogData, writeBlogDataModule } from './blog-data.ts';
 import { createLogger } from '@openelement/element';
-import { formatError } from '@openelement/element';
 import { join, relative, resolve } from 'node:path';
 
 const log = createLogger('content:blog');
@@ -41,18 +40,13 @@ export function createBlogPlugin(
         ctx.registerPlugin('blogOptions', { contentDir, basePath });
       }
 
-      // SOP-001: Write generated blog data module to disk
-      try {
-        const dataDir = join(fs.cwd(), 'app', 'data');
-        fs.mkdirSync(dataDir, { recursive: true });
-        const blogModule = writeBlogDataModule(result.posts);
-        fs.writeFileSync(join(dataDir, '_generated-blog-data.ts'), blogModule, 'utf-8');
-        log.info(`Blog: wrote _generated-blog-data.ts (${result.posts.length} post(s))`);
-      } catch (err) {
-        log.warn(
-          `Failed to write _generated-blog-data.ts: ${formatError(err)}`,
-        );
-      }
+      // SOP-001: Write generated blog data module to disk.
+      // Failing to write must fail the build: consumers import these files.
+      const dataDir = join(fs.cwd(), 'app', 'data');
+      fs.mkdirSync(dataDir, { recursive: true });
+      const blogModule = writeBlogDataModule(result.posts);
+      fs.writeFileSync(join(dataDir, '_generated-blog-data.ts'), blogModule, 'utf-8');
+      log.info(`Blog: wrote _generated-blog-data.ts (${result.posts.length} post(s))`);
     },
 
     config() {
