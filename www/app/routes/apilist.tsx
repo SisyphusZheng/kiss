@@ -169,7 +169,7 @@ export class ApiCorePage extends OpenElement {
           <span slot='title-accent'>surface.</span>
           <span slot='lede'>
             The {OPENELEMENT_VERSION}{' '}
-            published line documents only the five consumer packages. Retired alpha packages and
+            current line documents only the five consumer packages. Retired alpha packages and
             internal subpaths are not authoring surfaces.
           </span>
           <open-artifact-panel slot='artifact'>

@@ -7,7 +7,8 @@ Elements 是可长期保存的应用组件模型；JSX 与 Basic Element 是作�
 Declarative Shadow DOM 是默认服务端表示；交互区域按需升级。
 
 已发布包线为 `0.42.0-alpha.10`（`v0.42.0-alpha.10`）——ADR-0119 范围化接口冻结下的
-stable 五包版本；已放弃的 beta 命名不再是当前版本线。
+stable 五包版本；已放弃的 beta 命名不再是当前版本线。npm registry 行允许比
+源码行滞后一个 alpha（registry 当前为 `0.42.0-alpha.9`）。
 
 ## 当前产品
 

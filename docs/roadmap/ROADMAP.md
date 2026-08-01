@@ -5,11 +5,13 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Published package line: `v0.42.0-alpha.10`.\
+> The npm registry line may lag the source line by one alpha (see Current release state).\
 > Active execution target: `v0.42.0-alpha.10`.\
 > Current implementation state: five-package convergence is published;
-> 0.42 alphas through alpha.6 shipped the loop; alpha.7 closes the
-> light-fullstack floor (morph residuals, start path, SSG fail-closed,
-> CSRF default, honest tags).\
+> 0.42 alphas through alpha.7 closed the light-fullstack floor (morph
+> residuals, start path, SSG fail-closed, CSRF default, honest tags);
+> alpha.9 shipped the cleanup train and the first fully completed AutoFlow3
+> five-package publish; alpha.10 is the in-flight source line.\
 > Planned line: `0.42.0` (WC light fullstack) under ADR-0120 and the active
 > version plan in `docs/current/VERSION_PLAN.md`.\
 > Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
@@ -119,10 +121,14 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.42.0-alpha.8` is the published package line. npm beta.1 through beta.3 are
-immutable partial artifacts and remain withdrawn from the active release story.
-The planned beta name was cancelled so the version label honestly reflects
-that breaking architecture and interface changes are still allowed.
+`0.42.0-alpha.9` is the published package line. Alpha.8 was a release attempt
+whose npm publish failed (see CHANGELOG.md) and whose source changes were
+carried forward into alpha.9; the npm registry's `alpha` dist-tag therefore
+jumped straight to alpha.9. The in-flight source line is alpha.10.
+npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
+from the active release story. The planned beta name was cancelled so the
+version label honestly reflects that breaking architecture and interface
+changes are still allowed.
 
 Alpha.17 completed the first audit remediation (test credibility, convergence,
 release tooling). Alpha.18 completed the second audit sweep (ADR-0117):

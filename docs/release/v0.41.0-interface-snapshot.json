@@ -48,7 +48,6 @@
       "name": "@openelement/app",
       "exports": {
         ".": "./src/index.ts",
-        "./hono": "./src/hono.ts",
         "./i18n": "./src/i18n.ts",
         "./model": "./src/model.ts",
         "./preact": "./src/preact.ts",
@@ -56,23 +55,13 @@
       },
       "declarations": {
         ".": {
-          "sha256": "965f67db0f499b61b9163dcb4a320a73184e114cccae7686518e3eea29c8156c",
+          "sha256": "72dea5105db138003894bca26cc904b1743afd70e9ea0c6b8845d9f15fc63bc0",
           "publicDeclarations": [
             "export type {",
             "export type {",
             "export type { ElementDefinition } from '@openelement/element';",
             "export type { SpaAppInstance, SpaAppOptions } from './spa.ts';",
-            "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';",
-            "export type { CreateHonoRequestContextOptions, HonoContextLike, HonoRequestLike } from './hono.ts';"
-          ]
-        },
-        "./hono": {
-          "sha256": "0b8ce3c0d3f53670c2376c4880077162d6acd47835856cda21cdeedff3fcbc30",
-          "publicDeclarations": [
-            "export interface HonoRequestLike {",
-            "export interface HonoContextLike<Env extends Record<string, unknown> = Record<string, unknown>> {",
-            "export interface CreateHonoRequestContextOptions<",
-            "export function createHonoRequestContext<"
+            "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';"
           ]
         },
         "./i18n": {
@@ -101,9 +90,8 @@
           ]
         },
         "./spa": {
-          "sha256": "5f55fc52ca8a0d5a64884349693d560d2d0cf8a8a85ee9efc67b1c323e859611",
+          "sha256": "aafcf246d7a9682a170d7e73f47d3974705da5a2391f73c5c46c3eed21a90f4e",
           "publicDeclarations": [
-            "export function assertValidTagName(tagName: string): void {",
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
             "export function defineApp(options: SpaAppOptions): SpaAppInstance {"
@@ -123,7 +111,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "9e3b2833c05034e7678307f7282fbef55490da1d1c9dc0b575f12fc4f86773cd",
+          "sha256": "846da739b64669f18ed995a416fdad5177586f0b2f69523aae370104c987dab9",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
@@ -214,14 +202,14 @@
           ]
         },
         "./open-code-block": {
-          "sha256": "28c16d6ebecfaff03e9b57870505eac66c60d8ba1863fc8cfdc081782e68f5c5",
+          "sha256": "295210a054236a572fea401c0ff81ae00a95c4b92676b1d6bc51d18308d4e1ba",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
           ]
         },
         "./open-dialog": {
-          "sha256": "d269b07cfe78e921df8c5225539912e1a2c06344087b1a94e7620c0b982556be",
+          "sha256": "9952101522bc7a2246c18199fbdf3878b0f3693bdc0539ece5f35c31074421ce",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
@@ -258,14 +246,14 @@
           ]
         },
         "./open-tabs": {
-          "sha256": "81e95beb24d760a9e29d0e7c9c99920d78a43a30a16e005d6a76a682ca6d9b8f",
+          "sha256": "80e2d618c1be85f3f53e7f3d15c73a7ac33bd9fd67dc05be0a3d43d4ba8fc9ef",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
           ]
         },
         "./open-theme-toggle": {
-          "sha256": "09711bf638a0f4fe33aab180c6d725c4d5ec2abae808488ba44fcb4611074014",
+          "sha256": "123ea977002cb06a1b15a067822642396e065306f59acfe402b2f98ae6ea3da6",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"

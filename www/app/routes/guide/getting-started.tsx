@@ -30,7 +30,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'build', label: 'Build', level: 3 },
     ],
     next: { href: '/guide/core-concepts', label: 'Core Concepts' },
-    subtitleBefore: 'The current published package line is',
+    subtitleBefore: 'The current source line is',
     subtitleAfter:
       'The five-package convergence is published; the stable 0.41.0 freeze plan is active under ADR-0119.',
     cards: [

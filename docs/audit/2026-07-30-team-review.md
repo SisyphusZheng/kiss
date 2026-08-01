@@ -34,7 +34,7 @@
 - **F2** 残余风险重定性：嵌套"非页面"组件在序列化期调用 `useLoaderData` → 读空栈，属**单请求作用域缺陷**，非并发竞态。
 - **F3** `logger.ts` `_warned` 进程级 `Set`：`warnOnce` 一旦触发即**永久抑制**该进程内其他请求/SSG 多页同名告警 → Low。
 - **F4** `errors.ts` `_telemetryHook` 全局单例：若每请求 `setErrorTelemetryHook` 则 **last-writer-wins 竞态 + 跨租户泄漏** → Low（启动一次性）/ High（每请求 set）。建议改为请求级上下文。
-- 架构健康度：**B+**——依赖方向 `adapter-vite → element/app`、`app → element`、`ui → element` 单向无环，`element` 零依赖纯净。
+- 架构健康度：**B+**——依赖方向 `adapter-vite → element/app`、`app → element`、`ui → element` 单向无环，`element` 唯一运行时依赖为受 ADR-0104 管制的 `@preact/signals-core`（信号引擎，固定私有实现）。
 
 ### 工程师（寇豆码）—— 实现质量与新增异味
 

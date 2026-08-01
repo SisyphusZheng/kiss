@@ -3,4 +3,3 @@ export const locales = ["en","zh"];
 export const defaultLocale = "en";
 
 export function getDefaultLocale(): string { return defaultLocale; }
-export function getI18nOptions() { return { locales, defaultLocale }; }

@@ -10,7 +10,8 @@
 ## Overall verdict
 
 **Quality grade: B+ (good).** Clear layering across the five packages:
-`element` = zero-dep runtime core, `app` = authoring API, `adapter-vite` =
+`element` = runtime core with a single chartered engine dependency
+(@preact/signals-core), `app` = authoring API, `adapter-vite` =
 build orchestration, `create` = scaffolding, `ui` = component library.
 Verified: no `as any` and no TODO/FIXME anywhere in `packages/*/src`;
 strong security posture (prototype-pollution guards, CSP nonce validation,

@@ -2,7 +2,7 @@
 
 > Updated: 2026-07-28\
 > Repository package line: `v0.42.0-alpha.10`\
-> npm registry line: `v0.42.0-alpha.10`\
+> npm registry line: `v0.42.0-alpha.9` (alpha.10 is the in-flight source line, unpublished)\
 > Active release target: `v0.42.0-alpha.10`\
 > Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
@@ -52,10 +52,10 @@ and output path.
 2. Current-document version drift keeps reappearing at gate edges; alpha.18
    package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
-4. Request-time loop is implemented through alpha.7; alpha.8 (#619–#623)
-   carries code-hygiene remediation (route-scanner correctness, ADR-0095
-   DataAdapter drift, collectPublicProps dedup, start CLI runtime, logger
-   tags) before the 0.42.0 stable freeze.
+4. Request-time loop is implemented through alpha.9; the alpha.9 line
+   (#619–#623) carried code-hygiene remediation (route-scanner correctness,
+   ADR-0095 DataAdapter drift, collectPublicProps dedup, start CLI runtime,
+   logger tags) before the 0.42.0 stable freeze.
 5. Framework session and cache remain unfrozen until 0.44; login apps use
    recipes (better-auth) and must not wait on framework session APIs.
 6. UI remains optional until v0.46 records its stable scope.
@@ -83,8 +83,9 @@ cache/ISR, auth packages (0.44 or recipes).
 | `0.41.0-alpha.18` | Second audit sweep (ADR-0117)                                        |
 | `0.41.0-alpha.19` | Third audit cleanup sweep (ADR-0118)                                 |
 | `0.41.0`          | Separate stable decision after alpha.19 evidence                     |
-| `0.42.0-alpha.8`  | Light-fullstack floor + audit round 3 (TP-5.7)                       |
-| `0.42.0-alpha.8`  | Code hygiene: #619–#623 (scanner, DataAdapter, dedup, start, logger) |
+| `0.42.0-alpha.8`  | Version hole: TP-5.7 cut failed npm publish; carried into alpha.9  |
+| `0.42.0-alpha.9`  | TP-5.7: light-fullstack floor + audit round 3 + hygiene #619–#623  |
+| `0.42.0-alpha.10` | In-flight source line (bump committed, unpublished)                 |
 | `0.42.0`          | WC light fullstack (Application Loop freeze)                         |
 | `0.43.0`          | Universal WC SSR + diagnostics + recipes (#624–#631)                 |
 | `0.44.0`          | Production runtime (session/cache/OTel/streaming)                    |

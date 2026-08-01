@@ -1,5 +1,9 @@
 # openElement 项目全栈架构审计报告
 
+> **状态：历史快照（已过期）**。本报告基于 v0.40.6 清理前基线，所描述的
+> `@openelement/protocol` 等包已被五包收敛（v0.41+，ADR-0114/0119）取代。
+> 当前现状以 `docs/status/STATUS.md` 与 `docs/current/PACKAGE_SURFACE.md` 为准。
+
 **审计日期**：2026-06-15\
 **审计对象**：openElement (`c:\Users\Administrator\WorkBuddy\Claw\src-tmp`)\
 **当前版本**：v0.40.6（清理前基线）\
