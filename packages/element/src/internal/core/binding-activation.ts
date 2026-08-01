@@ -191,8 +191,8 @@ function wrapBindingEffect(kind: string, run: () => void): () => void {
 /**
  * Render a VNode (or VNode[]) through the renderer and return the resulting DOM
  * nodes as a flat ChildNode[] - extracting children out of a DocumentFragment
- * result. Shared by signal-render and conditional bindings so the
- * fragment-unpacking logic is defined in one place (see #301).
+ * result. Shared by signal-render, conditional and list bindings so the
+ * fragment-unpacking logic is defined in one place (see #301, #789).
  */
 function renderToChildren(
   node: unknown,
@@ -210,6 +210,51 @@ function renderToChildren(
     return children;
   }
   return [result as ChildNode];
+}
+
+/**
+ * Shared teardown for bindings that replace rendered content (signal-render,
+ * conditional, list): dispose nested effects, then remove the current
+ * children. `fullDispose` wraps the reactive effect dispose so both run on
+ * lifecycle teardown (#789).
+ */
+function createRenderCleanup(kind: string): {
+  nestedDisposers: Set<() => void>;
+  clearRender: () => void;
+  setChildren: (next: ChildNode[]) => void;
+  fullDispose: (dispose: BindingDispose) => BindingDispose;
+} {
+  let currentChildren: ChildNode[] = [];
+  const nestedDisposers = new Set<() => void>();
+
+  const clearRender = () => {
+    for (const dispose of nestedDisposers) {
+      try {
+        dispose();
+      } catch (err) {
+        bindingLog.error(`${kind} nested dispose failed: ${formatError(err)}`);
+      }
+    }
+    nestedDisposers.clear();
+    for (const child of currentChildren) {
+      child.remove();
+    }
+    currentChildren = [];
+  };
+
+  return {
+    nestedDisposers,
+    clearRender,
+    setChildren(next: ChildNode[]) {
+      currentChildren = next;
+    },
+    fullDispose(dispose: BindingDispose): BindingDispose {
+      return () => {
+        clearRender();
+        dispose();
+      };
+    },
+  };
 }
 
 function applySignalText(
@@ -298,27 +343,10 @@ function applySignalRender(
 ): BindingDispose {
   const { el, signal } = desc;
   const descLifecycle = desc.lifecycle ?? {};
-
-  let currentChildren: ChildNode[] = [];
-  const currentNestedDisposers = new Set<() => void>();
-
-  const clearRender = () => {
-    for (const dispose of currentNestedDisposers) {
-      try {
-        dispose();
-      } catch (err) {
-        bindingLog.error(`signal-render nested dispose failed: ${formatError(err)}`);
-      }
-    }
-    currentNestedDisposers.clear();
-    for (const child of currentChildren) {
-      child.remove();
-    }
-    currentChildren = [];
-  };
+  const cleanup = createRenderCleanup('signal-render');
 
   const render = () => {
-    clearRender();
+    cleanup.clearRender();
     const raw = unwrapSignalLike(signal.value);
     if (raw == null) return;
     if (!renderer) {
@@ -328,7 +356,7 @@ function applySignalRender(
     // Render into a fresh child lifecycle so nested signal effects can be
     // disposed per render without leaking into previous renders.
     const renderLifecycle: BindingLifecycle = {
-      disposers: currentNestedDisposers,
+      disposers: cleanup.nestedDisposers,
     };
     if (descLifecycle.signal ?? lifecycle.signal) {
       renderLifecycle.signal = descLifecycle.signal ?? lifecycle.signal;
@@ -337,15 +365,12 @@ function applySignalRender(
     const node = Array.isArray(raw) ? { tag: Fragment, props: {}, children: raw } : raw;
     const children = renderToChildren(node, renderer, renderLifecycle);
     for (const child of children) el.appendChild(child);
-    currentChildren = children;
+    cleanup.setChildren(children);
   };
 
   const dispose = wrapBindingEffect('signal-render', render);
 
-  const fullDispose: BindingDispose = () => {
-    clearRender();
-    dispose();
-  };
+  const fullDispose = cleanup.fullDispose(dispose);
   registerDispose(fullDispose, lifecycle);
   return fullDispose;
 }
@@ -356,27 +381,10 @@ function applyConditional(
   renderer?: BindingRenderer,
 ): BindingDispose {
   const { anchor, condition, renderTruthy, renderFalsy } = desc;
-
-  let currentChildren: ChildNode[] = [];
-  const currentNestedDisposers = new Set<() => void>();
-
-  const clearRender = () => {
-    for (const dispose of currentNestedDisposers) {
-      try {
-        dispose();
-      } catch (err) {
-        bindingLog.error(`conditional nested dispose failed: ${formatError(err)}`);
-      }
-    }
-    currentNestedDisposers.clear();
-    for (const child of currentChildren) {
-      child.remove();
-    }
-    currentChildren = [];
-  };
+  const cleanup = createRenderCleanup('conditional');
 
   const render = () => {
-    clearRender();
+    cleanup.clearRender();
     const show = Boolean(unwrapSignalLike(condition));
     const target = show ? renderTruthy() : renderFalsy?.();
     if (target == null) return;
@@ -385,7 +393,7 @@ function applyConditional(
     }
 
     const renderLifecycle: BindingLifecycle = {
-      disposers: currentNestedDisposers,
+      disposers: cleanup.nestedDisposers,
     };
     if (lifecycle.signal) {
       renderLifecycle.signal = lifecycle.signal;
@@ -395,15 +403,12 @@ function applyConditional(
     const children = renderToChildren(node, renderer, renderLifecycle);
     const ref = anchor.nextSibling;
     for (const child of children) anchor.parentNode?.insertBefore(child, ref);
-    currentChildren = children;
+    cleanup.setChildren(children);
   };
 
   const dispose = wrapBindingEffect('conditional', render);
 
-  const fullDispose: BindingDispose = () => {
-    clearRender();
-    dispose();
-  };
+  const fullDispose = cleanup.fullDispose(dispose);
   registerDispose(fullDispose, lifecycle);
   return fullDispose;
 }
@@ -414,27 +419,10 @@ function applyList(
   renderer?: BindingRenderer,
 ): BindingDispose {
   const { anchor, items, renderItem } = desc;
-
-  let anchors: ChildNode[] = [];
-  const currentNestedDisposers = new Set<() => void>();
-
-  const clearRender = () => {
-    for (const dispose of currentNestedDisposers) {
-      try {
-        dispose();
-      } catch (err) {
-        bindingLog.error(`list nested dispose failed: ${formatError(err)}`);
-      }
-    }
-    currentNestedDisposers.clear();
-    for (const a of anchors) {
-      a.remove();
-    }
-    anchors = [];
-  };
+  const cleanup = createRenderCleanup('list');
 
   const render = () => {
-    clearRender();
+    cleanup.clearRender();
     const list = unwrapSignalLike(items);
     if (!Array.isArray(list)) return;
     if (!renderer) {
@@ -446,7 +434,7 @@ function applyList(
 
     for (let i = 0; i < list.length; i++) {
       const renderLifecycle: BindingLifecycle = {
-        disposers: currentNestedDisposers,
+        disposers: cleanup.nestedDisposers,
       };
       if (lifecycle.signal) {
         renderLifecycle.signal = lifecycle.signal;
@@ -454,35 +442,19 @@ function applyList(
 
       const vn = renderItem(list[i], i);
       const node = Array.isArray(vn) ? { tag: Fragment, props: {}, children: vn } : vn;
-      const dom = renderer.render(node, renderLifecycle);
-
-      if (dom.nodeType === 11) {
-        const fragChildren: ChildNode[] = [];
-        while (dom.firstChild) {
-          const child = dom.firstChild as ChildNode;
-          fragChildren.push(child);
-          dom.removeChild(child);
-        }
-        for (let j = 0; j < fragChildren.length; j++) {
-          anchor.parentNode?.insertBefore(fragChildren[j], ref);
-        }
-        rendered.push(...fragChildren);
-      } else {
-        const child = dom as ChildNode;
+      const children = renderToChildren(node, renderer, renderLifecycle);
+      for (const child of children) {
         anchor.parentNode?.insertBefore(child, ref);
-        rendered.push(child);
       }
+      rendered.push(...children);
     }
 
-    anchors = rendered;
+    cleanup.setChildren(rendered);
   };
 
   const dispose = wrapBindingEffect('list', render);
 
-  const fullDispose: BindingDispose = () => {
-    clearRender();
-    dispose();
-  };
+  const fullDispose = cleanup.fullDispose(dispose);
   registerDispose(fullDispose, lifecycle);
   return fullDispose;
 }

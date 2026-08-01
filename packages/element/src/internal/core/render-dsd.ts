@@ -26,7 +26,7 @@ import {
 import { type DsdComponentConstructor } from '../protocol/render.ts';
 import type { ComponentLayer } from '../protocol/framework.ts';
 import { createLogger } from './logger.ts';
-import { formatError } from './errors.ts';
+import { formatError, RenderError as RenderErrorClass, reportError } from './errors.ts';
 import { escapeAttrValue } from './html-escape.ts';
 import { isVNode } from './vnode.ts';
 import { renderDsdTree } from './render-ir.ts';
@@ -80,6 +80,22 @@ function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCod
 
 function instantiationErrorHtml(tagName: string): string {
   return `<${tagName}></${tagName}>`;
+}
+
+/**
+ * Route a classified render error to the onError hook (guarded like
+ * beforeRender/afterRender) and to the error telemetry chain (#780), so
+ * SSR render failures reach a configured setErrorTelemetryHook handler.
+ */
+function dispatchRenderError(err: RenderError, hooks?: RenderHooks): void {
+  if (hooks?.onError) {
+    try {
+      hooks.onError(err);
+    } catch (e) {
+      log.debug(`onError hook threw: ${formatError(e)}`);
+    }
+  }
+  reportError(new RenderErrorClass(err.tagName, err.message, err.code, err.tagName));
 }
 
 // ─── Component Instantiation ───────────────────────────────────
@@ -269,7 +285,7 @@ export async function renderDsd(
     const err = classifyError('instantiate', tagName, errMsg, false);
     collectedErrors.push(err);
     hasError = true;
-    hooks?.onError?.(err);
+    dispatchRenderError(err, hooks);
 
     const html = instantiationErrorHtml(tagName);
 
@@ -305,14 +321,14 @@ export async function renderDsd(
       const err = classifyError('render', tagName, errDetail, false);
       collectedErrors.push(err);
       hasError = true;
-      hooks?.onError?.(err);
+      dispatchRenderError(err, hooks);
       content = '';
     }
   } catch (err) {
     const classifiedErr = classifyError('render', tagName, err, true);
     collectedErrors.push(classifiedErr);
     hasError = true;
-    hooks?.onError?.(classifiedErr);
+    dispatchRenderError(classifiedErr, hooks);
 
     const attrs = serializeAttrs(tagName, props);
     const renderEndFallback = safeNow();

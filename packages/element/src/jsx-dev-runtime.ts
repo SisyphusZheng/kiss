@@ -1,29 +1,10 @@
-/** Supported development JSX transform entrypoint for Element authors. */
-export { Fragment, jsxDEV } from './internal/core/jsx-runtime.ts';
+/// <reference path="./internal/core/jsx-types.d.ts" />
 
-/** JSX type interface consumed by TypeScript's automatic development transform. */
-export declare namespace JSX {
-  interface Element {
-    tag:
-      | string
-      | import('./internal/protocol/vnode.ts').ComponentFn
-      | import('./internal/protocol/vnode.ts').ComponentCtor
-      | symbol;
-    props: Record<string, unknown>;
-    children: (string | import('./internal/protocol/vnode.ts').VNode)[];
-    key?: string | number;
-    ref?: (element: globalThis.Element) => void;
-  }
-  interface ElementClass {
-    render(): unknown;
-  }
-  interface IntrinsicElements {
-    [elemName: string]: Record<string, unknown>;
-  }
-  interface ElementAttributesProperty {
-    props: Record<string, unknown>;
-  }
-  interface ElementChildrenAttribute {
-    children: unknown;
-  }
-}
+/**
+ * Supported development JSX transform entrypoint for Element authors.
+ *
+ * The JSX namespace consumed by TypeScript's automatic development transform
+ * is declared once in internal/core/jsx-types.d.ts (shared with
+ * jsx-runtime.ts and the internal runtime) — do not re-declare it here.
+ */
+export { Fragment, jsxDEV } from './internal/core/jsx-runtime.ts';

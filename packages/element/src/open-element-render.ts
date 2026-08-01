@@ -2,13 +2,12 @@
  * Internal rendering helpers for OpenElement.
  *
  * Extracted from the OpenElement base class (open-element-implementation.ts)
- * to keep the base class focused on its public lifecycle API. Exposed as a
- * package subpath so Deno can emit its
- * types, but this is an internal implementation detail — consumers should
- * use OpenElement instead.
+ * to keep the base class focused on its public lifecycle API. Not part of the
+ * package exports map — internal implementation detail; consumers should use
+ * OpenElement instead.
  *
  * @internal
- * @module @openelement/element/open-element-render
+ * @module ./open-element-render.ts
  */
 
 import type { VNode } from './internal/protocol/vnode.ts';
@@ -65,7 +64,6 @@ export function renderIntoLightDom(
       renderToDom(
         result,
         scope.createLifecycle(),
-        undefined,
         instance.signalRegistry,
       ),
     );
@@ -98,7 +96,6 @@ export function renderIntoShadowRoot(
       renderToDom(
         result,
         scope.createLifecycle(),
-        undefined,
         instance.signalRegistry,
       ),
     );
@@ -147,7 +144,6 @@ export function renderErrorFallback(
       renderToDom(
         fallback,
         scope.createLifecycle(),
-        undefined,
         instance.signalRegistry,
       ),
     );

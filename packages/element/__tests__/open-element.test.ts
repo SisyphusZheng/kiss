@@ -1683,7 +1683,6 @@ Deno.test('renderToDom resolves registered signals to their data-signal names', 
   const first = renderToDom(
     jsx('span', { title: count }),
     undefined,
-    undefined,
     registry,
   ) as unknown as TestElement;
   assertEquals(first.getAttribute('data-signal'), 'count');
@@ -1692,7 +1691,6 @@ Deno.test('renderToDom resolves registered signals to their data-signal names', 
   // must still resolve a different signal to its own name.
   const second = renderToDom(
     jsx('span', { title: label }),
-    undefined,
     undefined,
     registry,
   ) as unknown as TestElement;
@@ -1706,10 +1704,27 @@ Deno.test('renderToDom emits no data-signal marker for signals outside the regis
   const el = renderToDom(
     jsx('span', { title: signal(9) }),
     undefined,
-    undefined,
     registry,
   ) as unknown as TestElement;
   assertEquals(el.getAttribute('data-signal'), null);
+});
+
+Deno.test('renderToDom consumes vnode.ref callbacks from JSX (#756)', () => {
+  if (!hasDOM) return;
+
+  let received: Element | null = null;
+  const el = renderToDom(
+    jsx('div', {
+      ref: (target: Element) => {
+        received = target;
+      },
+      children: 'x',
+    }),
+  ) as unknown as TestElement;
+
+  // createVNode strips ref from props onto vnode.ref; the ref must fire with
+  // the created element once the tree is committed.
+  assertEquals(received === (el as unknown as Element), true);
 });
 
 // ─── 9. Props system (static props) ────────────────────────────────
@@ -2141,8 +2156,7 @@ Deno.test('OpenElement reflect props survive reconnect through the attribute mir
   assertEquals(el.getAttribute('count'), '33');
 
   // DOM move: disconnect disposes the reflect subscription; reconnect
-  // re-initializes signals and restores the value from the mirrored
-  // attribute.
+  // preserves the signal (#772) and re-arms the reflect subscription.
   document.body.removeChild(el);
   document.body.appendChild(el);
   assertEquals(props.count.value, 33);
@@ -2154,6 +2168,69 @@ Deno.test('OpenElement reflect props survive reconnect through the attribute mir
   props.count.value = 44;
   assertEquals(changes, ['44']);
   assertEquals(el.getAttribute('count'), '44');
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement Array/Object static props JSON.parse attribute values (#764)', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('json-props');
+  class JsonPropsElement extends OpenElement {
+    static props = {
+      items: Array,
+      config: Object,
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, JsonPropsElement);
+
+  const el = document.createElement(tagName) as JsonPropsElement;
+  el.setAttribute('items', '[1,2]');
+  el.setAttribute('config', '{"a":1}');
+  document.body.appendChild(el);
+
+  const props = el as unknown as Record<string, { value: unknown }>;
+  assertEquals(props.items.value, [1, 2]);
+  assertEquals(props.config.value, { a: 1 });
+
+  // A non-JSON attribute falls back to the declared default instead of
+  // leaking the raw string into a prop typed as unknown[].
+  el.setAttribute('items', 'not json');
+  assertEquals(props.items.value, []);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('OpenElement preserves property-set static prop state across disconnect→reconnect (#772)', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('reconnect-props');
+  class ReconnectPropsElement extends OpenElement {
+    static props = {
+      count: { type: Number, default: 0 },
+    } as const;
+
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ReconnectPropsElement);
+
+  const el = document.createElement(tagName) as ReconnectPropsElement;
+  document.body.appendChild(el);
+  const props = el as unknown as Record<string, { value: unknown }>;
+
+  props.count.value = 5;
+
+  // DOM move: connectedCallback fires again, but the already-initialized
+  // signals must be preserved rather than rebuilt from defaults.
+  document.body.removeChild(el);
+  document.body.appendChild(el);
+  assertEquals(props.count.value, 5);
 
   document.body.removeChild(el);
 });
@@ -2649,6 +2726,40 @@ Deno.test('disconnected instances stop receiving theme broadcasts', () => {
   assertEquals(el.getAttribute('data-theme'), 'light');
 
   delete docEl.dataset.theme;
+});
+
+Deno.test('theme broadcasts skip hosts that declare their own data-theme (#773)', () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('theme-self');
+  class ThemeSelfElement extends OpenElement {
+    override render(): VNode | null {
+      return jsx('span', { children: 'ok' });
+    }
+  }
+  customElements.define(tagName, ThemeSelfElement);
+
+  const docEl = document.documentElement as unknown as TestElement;
+  docEl.dataset.theme = 'light';
+
+  const el = document.createElement(tagName) as ThemeSelfElement;
+  el.setAttribute('data-theme', 'brand');
+  document.body.appendChild(el);
+
+  // Host-owned theme is not overwritten by the document theme at connect...
+  assertEquals(el.getAttribute('data-theme'), 'brand');
+
+  // ...nor by broadcasts.
+  docEl.dataset.theme = 'dark';
+  docEl.setAttribute('data-theme', 'dark');
+  assertEquals(el.getAttribute('data-theme'), 'brand');
+
+  // ...nor cleared when the document theme is removed.
+  delete docEl.dataset.theme;
+  docEl.removeAttribute('data-theme');
+  assertEquals(el.getAttribute('data-theme'), 'brand');
+
+  document.body.removeChild(el);
 });
 
 Deno.test('multiple connected instances all receive theme broadcasts', () => {

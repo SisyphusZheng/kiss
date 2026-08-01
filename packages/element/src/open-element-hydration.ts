@@ -3,9 +3,8 @@
  *
  * Extracted from the OpenElement base class (open-element-implementation.ts)
  * to isolate DSD signal/event hydration logic
- * from the base class lifecycle. Exposed as a package subpath so Deno can emit
- * its types, but this is an internal implementation detail — consumers should
- * use OpenElement instead.
+ * from the base class lifecycle. Not part of the package exports map —
+ * internal implementation detail; consumers should use OpenElement instead.
  *
  * v0.41.0-alpha.2: The active hydration state now lives in the internal
  * hydration scope. This module keeps thin adapter functions that forward to
@@ -13,7 +12,7 @@
  * HydrationScope internals directly.
  *
  * @internal
- * @module @openelement/element/open-element-hydration
+ * @module ./open-element-hydration.ts
  */
 
 import type { HydrationScope } from './internal/core/index.ts';

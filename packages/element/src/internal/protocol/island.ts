@@ -21,9 +21,6 @@ export interface IslandOptions {
    */
   strategy?: HydrationStrategy;
 
-  /** Optional tag name override. If provided, used instead of the first argument. */
-  tagName?: string;
-
   /**
    * Whether to use DSD for SSR rendering of this island.
    * @default true

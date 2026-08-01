@@ -7,11 +7,19 @@
  */
 
 import type { RenderError as ProtocolRenderError } from '../protocol/render.ts';
+import {
+  ERROR_PREFIX,
+  ErrorCode,
+  type ErrorPhase,
+  type ErrorSeverity,
+  type ErrorTelemetryHook,
+  type OpenElementError as ProtocolOpenElementError,
+} from '../protocol/errors.ts';
 
 // ─── Well-known error codes / prefix (authoritative source in protocol) ───────
 
-import { ERROR_PREFIX, ErrorCode } from '../protocol/errors.ts';
 export { ERROR_PREFIX, ErrorCode };
+export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook };
 
 // ─── Error formatting helper ────────────────────────────────────────
 
@@ -29,11 +37,6 @@ export function formatError(e: unknown): string {
   return parts.join(': ');
 }
 
-// ─── Types ──────────────────────────────────────────────────────────
-
-import type { ErrorPhase, ErrorSeverity } from '../protocol/errors.ts';
-export type { ErrorPhase, ErrorSeverity };
-
 // ─── Base Error ─────────────────────────────────────────────────────
 
 export interface OpenElementErrorOptions {
@@ -45,7 +48,7 @@ export interface OpenElementErrorOptions {
   recoverable?: boolean;
 }
 
-export class OpenElementError extends Error {
+export class OpenElementError extends Error implements ProtocolOpenElementError {
   public readonly code: string;
   public readonly severity: ErrorSeverity;
   public readonly phase: ErrorPhase;
@@ -84,7 +87,7 @@ export class SsrRenderError extends OpenElementError {
 
   constructor(componentPath: string, sourceError: Error) {
     super(`SSR render failed: ${componentPath}`, {
-      code: 'SSR_RENDER_ERROR',
+      code: ErrorCode.SSR_RENDER_ERROR,
       severity: 'error',
       phase: 'ssr',
       recoverable: false,
@@ -123,9 +126,6 @@ export class RenderError extends OpenElementError implements ProtocolRenderError
 }
 
 // ─── Error Telemetry ────────────────────────────────────────────────
-
-import type { ErrorTelemetryHook } from '../protocol/errors.ts';
-export type { ErrorTelemetryHook };
 
 let _telemetryHook: ErrorTelemetryHook | undefined;
 

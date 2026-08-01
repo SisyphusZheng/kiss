@@ -24,8 +24,6 @@ import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { camelToKebab } from './tag-utils.ts';
 
-export { camelToKebab };
-
 export type RenderNode =
   | { kind: 'text'; value: string }
   | { kind: 'trusted-html'; value: string }
@@ -202,7 +200,7 @@ export async function renderToNode(
   eventContext: EventMarkerContext = createEventMarkerContext(),
   nestingDepth = 0,
 ): Promise<RenderNode> {
-  if (node == null || node === false || typeof node === 'boolean') return fragmentNode([]);
+  if (node == null || typeof node === 'boolean') return fragmentNode([]);
   if (typeof node === 'string' || typeof node === 'number') return textNode(node);
   if (isSignalLike(node)) {
     return await renderToNode((node as { value: unknown }).value, eventContext, nestingDepth);

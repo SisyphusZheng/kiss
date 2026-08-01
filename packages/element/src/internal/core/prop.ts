@@ -6,10 +6,8 @@
  * v0.29.5: WeakMap replaces Symbol.for() for type-safe signal storage.
  */
 
-// Minimal element interface for core WeakMap identity
-interface _El extends HTMLElement {}
-
 import type {
+  NormalizedPropDecl,
   PropDecl,
   PropDeclFull,
   PropDeclShorthand,
@@ -17,7 +15,7 @@ import type {
   PropType,
 } from '../protocol/prop.ts';
 import { camelToKebab } from './tag-utils.ts';
-export type { PropDecl, PropDeclFull, PropDeclShorthand, PropsFrom, PropType };
+export type { NormalizedPropDecl, PropDecl, PropDeclFull, PropDeclShorthand, PropsFrom, PropType };
 
 // ─── Internal types ─────────────────────────────────────────────
 
@@ -25,29 +23,33 @@ type PropSignal = { value: unknown; subscribe(fn: (v: unknown) => void): () => v
 
 // ─── WeakMap storage (v0.29.5: replaces Symbol.for()) ───────────
 
-const _staticPropSignals = new WeakMap<_El, Map<string, PropSignal>>();
-const _staticPropUnsubs = new WeakMap<_El, Array<() => void>>();
+const _staticPropSignals = new WeakMap<HTMLElement, Map<string, PropSignal>>();
+const _staticPropUnsubs = new WeakMap<HTMLElement, Array<() => void>>();
 
 // ─── Static props runtime ───────────────────────────────────────
 
-export function initializeStaticProps(instance: _El): void {
+export function initializeStaticProps(instance: HTMLElement): void {
   const ctor = instance.constructor as { props?: Record<string, unknown> };
   const propsDef = ctor.props as Record<string, unknown> | undefined;
   if (!propsDef || typeof propsDef !== 'object') return;
 
+  // disconnect→reconnect (#772): connectedCallback fires on every DOM move.
+  // Signals and accessors survive disposal, so property-set state is
+  // preserved; only the reflect subscriptions torn down by
+  // disposeStaticProps() are re-armed.
+  const existing = _staticPropSignals.get(instance);
+  if (existing) {
+    subscribeReflectProps(instance, existing, propsDef);
+    return;
+  }
+
   const sigMap = new Map<string, PropSignal>();
   _staticPropSignals.set(instance, sigMap);
-
-  const unsubs: Array<() => void> = [];
-  _staticPropUnsubs.set(instance, unsubs);
+  _staticPropUnsubs.set(instance, []);
 
   for (const [name, decl] of Object.entries(propsDef)) {
-    const { default: defVal, reflect } = normalizePropDecl(decl);
+    const { default: defVal } = normalizePropDecl(decl);
     const sig = createPropSignal(defVal);
-    // The mirrored attribute uses the same kebab-case name that SSR
-    // serialization and observedAttributes registration use.
-    const attrName = camelToKebab(name);
-
     sigMap.set(name, sig);
 
     Object.defineProperty(instance, name, {
@@ -60,40 +62,9 @@ export function initializeStaticProps(instance: _El): void {
       enumerable: true,
       configurable: true,
     });
-
-    if (reflect) {
-      // createPropSignal.subscribe() fires once synchronously with the
-      // current (default) value. connectedCallback syncs attributes into the
-      // signal right after this initialization, so that first fire must not
-      // write back: it would clobber SSR-delivered reflect attributes before
-      // syncStaticPropsFromAttributes had a chance to read them.
-      let pendingInitialSync = true;
-      const unsub = sig.subscribe(() => {
-        if (pendingInitialSync) {
-          pendingInitialSync = false;
-          return;
-        }
-        const { type } = normalizePropDecl(decl);
-        if (type === Boolean) {
-          // Presence mirrors truthiness; skip when already in sync.
-          if (sig.value) {
-            if (!instance.hasAttribute(attrName)) instance.setAttribute(attrName, '');
-          } else if (instance.hasAttribute(attrName)) {
-            instance.removeAttribute(attrName);
-          }
-        } else {
-          // Equality short-circuit: the mirrored setAttribute re-enters
-          // handleStaticPropAttributeChange, which writes the same value back
-          // into the signal. Skipping the write when the attribute already
-          // holds it breaks that loop (browsers fire attributeChangedCallback
-          // even for an identical value).
-          const next = String(sig.value);
-          if (instance.getAttribute(attrName) !== next) instance.setAttribute(attrName, next);
-        }
-      });
-      unsubs.push(unsub);
-    }
   }
+
+  subscribeReflectProps(instance, sigMap, propsDef);
 
   // NOTE: observedAttributes merging intentionally does NOT happen here.
   // Browsers snapshot observedAttributes once at customElements.define(), so
@@ -101,7 +72,65 @@ export function initializeStaticProps(instance: _El): void {
   // OpenElement base-class accessor instead (see resolveObservedAttributes).
 }
 
-export function disposeStaticProps(instance: _El): void {
+/**
+ * Arm reflect subscriptions mirroring signal writes back to attributes.
+ * Runs on first initialization and again on reconnect (disconnectedCallback
+ * disposes them via disposeStaticProps).
+ */
+function subscribeReflectProps(
+  instance: HTMLElement,
+  sigMap: Map<string, PropSignal>,
+  propsDef: Record<string, unknown>,
+): void {
+  const unsubs = _staticPropUnsubs.get(instance);
+  if (!unsubs) return;
+
+  for (const [name, decl] of Object.entries(propsDef)) {
+    const { reflect } = normalizePropDecl(decl);
+    if (!reflect) continue;
+    const sig = sigMap.get(name);
+    if (!sig) continue;
+    // The mirrored attribute uses the same kebab-case name that SSR
+    // serialization and observedAttributes registration use.
+    const attrName = camelToKebab(name);
+
+    // createPropSignal.subscribe() fires once synchronously with the
+    // current (default) value. connectedCallback syncs attributes into the
+    // signal right after this initialization, so that first fire must not
+    // write back: it would clobber SSR-delivered reflect attributes before
+    // syncStaticPropsFromAttributes had a chance to read them.
+    let pendingInitialSync = true;
+    const unsub = sig.subscribe(() => {
+      if (pendingInitialSync) {
+        pendingInitialSync = false;
+        return;
+      }
+      const { type } = normalizePropDecl(decl);
+      if (type === Boolean) {
+        // Presence mirrors truthiness; skip when already in sync.
+        if (sig.value) {
+          if (!instance.hasAttribute(attrName)) instance.setAttribute(attrName, '');
+        } else if (instance.hasAttribute(attrName)) {
+          instance.removeAttribute(attrName);
+        }
+      } else {
+        // Equality short-circuit: the mirrored setAttribute re-enters
+        // handleStaticPropAttributeChange, which writes the same value back
+        // into the signal. Skipping the write when the attribute already
+        // holds it breaks that loop (browsers fire attributeChangedCallback
+        // even for an identical value).
+        // Array/Object mirror as JSON, matching SSR serialization (#764).
+        const next = type === Array || type === Object
+          ? JSON.stringify(sig.value)
+          : String(sig.value);
+        if (instance.getAttribute(attrName) !== next) instance.setAttribute(attrName, next);
+      }
+    });
+    unsubs.push(unsub);
+  }
+}
+
+export function disposeStaticProps(instance: HTMLElement): void {
   const unsubs = _staticPropUnsubs.get(instance);
   if (unsubs) {
     for (const fn of unsubs.splice(0)) fn();
@@ -109,7 +138,7 @@ export function disposeStaticProps(instance: _El): void {
 }
 
 export function handleStaticPropAttributeChange(
-  instance: _El,
+  instance: HTMLElement,
   name: string,
   _oldValue: string | null,
   newValue: string | null,
@@ -136,6 +165,8 @@ export function handleStaticPropAttributeChange(
     } else if (type === Number) {
       const n = Number(newValue);
       next = Number.isNaN(n) ? 0 : n;
+    } else if (type === Array || type === Object) {
+      next = parseJsonAttribute(newValue, defaultValue);
     } else {
       next = newValue;
     }
@@ -150,7 +181,7 @@ export function handleStaticPropAttributeChange(
   }
 }
 
-export function syncStaticPropsFromAttributes(instance: _El): void {
+export function syncStaticPropsFromAttributes(instance: HTMLElement): void {
   const ctor = instance.constructor as { props?: Record<string, unknown> };
   const propsDef = ctor.props as Record<string, unknown> | undefined;
   if (!propsDef) return;
@@ -170,13 +201,15 @@ export function syncStaticPropsFromAttributes(instance: _El): void {
     // observedAttributes registration (camelToKebab).
     const attrName = camelToKebab(name);
     if (el.hasAttribute(attrName)) {
-      const { type } = normalizePropDecl(decl);
+      const { type, default: defaultValue } = normalizePropDecl(decl);
       const raw = el.getAttribute(attrName);
       if (type === Boolean) {
         sig.value = true;
       } else if (type === Number) {
         const n = Number(raw);
         sig.value = Number.isNaN(n) ? 0 : n;
+      } else if (type === Array || type === Object) {
+        sig.value = parseJsonAttribute(raw ?? '', defaultValue);
       } else {
         sig.value = raw;
       }
@@ -186,14 +219,24 @@ export function syncStaticPropsFromAttributes(instance: _El): void {
 
 // ─── Shared utilities ───────────────────────────────────────────
 
-import type { NormalizedPropDecl } from '../protocol/prop.ts';
-export type { NormalizedPropDecl };
+/**
+ * Array/Object props arrive through attributes as JSON strings (#764). Parse
+ * failures fall back to the declared default so the signal always holds the
+ * declared type.
+ */
+function parseJsonAttribute(raw: string, defaultValue: unknown): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return defaultValue;
+  }
+}
 
 export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
   if (typeof decl === 'function') {
     return {
       type: decl as NormalizedPropDecl['type'],
-      default: decl === Boolean ? false : decl === Number ? 0 : '',
+      default: defaultForType(decl),
       reflect: false,
     };
   }
@@ -201,11 +244,20 @@ export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
     const d = decl as { type?: unknown; default?: unknown; reflect?: unknown };
     return {
       type: (d.type ?? String) as NormalizedPropDecl['type'],
-      default: d.default ?? (d.type === Boolean ? false : d.type === Number ? 0 : ''),
+      default: d.default ?? defaultForType(d.type),
       reflect: d.reflect === true,
     };
   }
   return { type: String, default: '', reflect: false };
+}
+
+/** Declared-type default matching the PropsFrom inference for that type. */
+function defaultForType(type: unknown): unknown {
+  if (type === Boolean) return false;
+  if (type === Number) return 0;
+  if (type === Array) return [];
+  if (type === Object) return {};
+  return '';
 }
 
 // ─── Define-time observedAttributes resolution (B2 fix) ─────────

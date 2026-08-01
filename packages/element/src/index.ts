@@ -51,6 +51,8 @@ export type { Context } from './internal/core/index.ts';
 
 export type { RenderError } from './internal/core/index.ts';
 export { ERROR_PREFIX } from './internal/protocol/errors.ts';
+export { reportError, setErrorTelemetryHook } from './internal/core/errors.ts';
+export type { ErrorTelemetryHook } from './internal/protocol/errors.ts';
 
 // ─── Signals (re-export) ─────────────────────────────────
 
@@ -149,6 +151,14 @@ export type {
  * hydrated this way. Marked experimental (aligned with the ISR contracts
  * above): the API is stable enough for Fresh/third-party integration work
  * but may still change before 0.42 stable.
+ *
+ * Precondition: the scan only finds templates that a native DSD parser did
+ * not consume. Per the HTML standard the parser replaces each DSD template
+ * with the host's ShadowRoot, so on a normally parsed page in a native-DSD
+ * browser (Chromium) `hydrateOpenElement` finds nothing and is a no-op —
+ * OpenElement hosts self-hydrate via connectedCallback there. The runtime is
+ * meant for non-DSD browsers and for markup inserted without DSD processing
+ * (e.g. innerHTML).
  */
 export { disposeOpenElement, hydrateOpenElement } from './internal/core/client-runtime.ts';
 export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';

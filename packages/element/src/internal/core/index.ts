@@ -68,6 +68,7 @@ export type {
 } from '../protocol/isr.ts';
 export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.ts';
 export type {
+  IsrRuntimeCache,
   IsrRuntimeOptions,
   IsrRuntimeRenderContext,
   IsrRuntimeRenderResult,
@@ -78,7 +79,8 @@ export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
 export { renderDsd } from './render-dsd.ts';
 export type { RenderDsdOptions } from './render-dsd.ts';
-export { camelToKebab, serializeAttrs } from './render-ir.ts';
+export { serializeAttrs } from './render-ir.ts';
+export { camelToKebab } from './tag-utils.ts';
 export type {
   DomSimulationAttempt,
   DomSimulationReport,
@@ -106,9 +108,7 @@ export type {
   OpenElementCssPart,
   OpenElementDeclaration,
   OpenElementEvent,
-  OpenElementExport,
   OpenElementExtensions,
-  OpenElementModule,
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '../protocol/manifest.ts';

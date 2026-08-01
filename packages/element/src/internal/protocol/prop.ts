@@ -37,7 +37,12 @@ export type PropsFrom<P extends Record<string, PropDecl>> = {
 };
 
 export interface NormalizedPropDecl {
-  type: StringConstructor | NumberConstructor | BooleanConstructor;
+  type:
+    | StringConstructor
+    | NumberConstructor
+    | BooleanConstructor
+    | ArrayConstructor
+    | ObjectConstructor;
   default: unknown;
   reflect: boolean;
 }

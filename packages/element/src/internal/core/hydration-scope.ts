@@ -148,7 +148,7 @@ export class HydrationScope {
   constructor(options: HydrationScopeOptions = {}) {
     this.#signalRegistry = options.signalRegistry ?? new Map();
     this.#renderer = options.renderer ?? {
-      render: (node, lifecycle) => renderToDom(node, lifecycle, undefined, this.#signalRegistry),
+      render: (node, lifecycle) => renderToDom(node, lifecycle, this.#signalRegistry),
     };
     this.#render = options.render;
   }

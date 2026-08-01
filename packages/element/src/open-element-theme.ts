@@ -4,6 +4,14 @@ import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 export class OpenElementThemeManager {
   #styles: StyleSheetLike[] = [];
   #connected = new Set<HTMLElement>();
+  /** Hosts that declared their own data-theme at connect time (#773). */
+  #selfThemed = new Set<HTMLElement>();
+  /**
+   * Hosts whose current data-theme was applied by this manager (WeakSet so
+   * discarded hosts can be GC'd). Without this, a manager-applied attribute
+   * surviving a disconnect would be misread as host-owned on reconnect.
+   */
+  #broadcastApplied = new WeakSet<HTMLElement>();
   #observerInstalled = false;
 
   registerStyles(sheets: unknown | unknown[]): void {
@@ -37,15 +45,27 @@ export class OpenElementThemeManager {
 
   connect(host: HTMLElement): void {
     this.#connected.add(host);
-    const theme = typeof document === 'undefined'
-      ? undefined
-      : document.documentElement?.dataset?.theme;
-    if (theme && !host.hasAttribute('data-theme')) host.setAttribute('data-theme', theme);
+    if (host.hasAttribute('data-theme')) {
+      // The host owns its data-theme: broadcasts must not overwrite or remove
+      // it (#773). Recorded here so the MutationObserver path can apply the
+      // same guard as the connect path. An attribute we applied ourselves on
+      // a previous connect is not host-owned.
+      if (!this.#broadcastApplied.has(host)) this.#selfThemed.add(host);
+    } else {
+      const theme = typeof document === 'undefined'
+        ? undefined
+        : document.documentElement?.dataset?.theme;
+      if (theme) {
+        host.setAttribute('data-theme', theme);
+        this.#broadcastApplied.add(host);
+      }
+    }
     this.#installObserver();
   }
 
   disconnect(host: HTMLElement): void {
     this.#connected.delete(host);
+    this.#selfThemed.delete(host);
   }
 
   #installObserver(): void {
@@ -61,8 +81,14 @@ export class OpenElementThemeManager {
       const theme = document.documentElement?.dataset?.theme;
       for (const host of this.#connected) {
         if (!host.isConnected) continue;
-        if (theme) host.setAttribute('data-theme', theme);
-        else host.removeAttribute('data-theme');
+        if (this.#selfThemed.has(host)) continue;
+        if (theme) {
+          host.setAttribute('data-theme', theme);
+          this.#broadcastApplied.add(host);
+        } else {
+          host.removeAttribute('data-theme');
+          this.#broadcastApplied.delete(host);
+        }
       }
     });
     observer.observe(document.documentElement, {

@@ -56,12 +56,6 @@ export interface OpenElementExtensions {
   contract?: WebComponentContract;
 }
 
-export interface OpenElementExport {
-  name: string;
-  path?: string;
-  description?: string;
-}
-
 export interface OpenElementDeclaration {
   tagName: string;
   className?: string;
@@ -75,13 +69,7 @@ export interface OpenElementDeclaration {
   description?: string;
 }
 
-export interface OpenElementModule {
-  path: string;
-  exports?: OpenElementExport[];
-  declarations?: string[];
-}
-
-/** CEM-compatible package manifest */
+/** Package manifest of component declarations (not CEM-compatible; see packages/ui README). */
 export interface OpenElementPackageManifest {
   schemaVersion: string;
   packageName: string;
@@ -92,7 +80,6 @@ export interface OpenElementPackageManifest {
   homepage?: string;
   repository?: string;
   declarations: OpenElementDeclaration[];
-  modules?: OpenElementModule[];
 }
 
 // --- Compatibility ------------------------------------------------

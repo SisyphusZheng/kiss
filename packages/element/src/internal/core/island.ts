@@ -18,6 +18,7 @@ import { formatError } from './errors.ts';
  */
 
 import { createLogger } from './logger.ts';
+import { injectPropsSafe } from './security.ts';
 import { assertValidTagName } from './tag-utils.ts';
 import { HYDRATION_STRATEGIES, type HydrationStrategy } from '../protocol/framework.ts';
 import type { IslandMeta, IslandOptions } from '../protocol/island.ts';
@@ -42,12 +43,6 @@ export function defineCustomElement(
 }
 
 const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
-
-// Module-level store of active visibility strategy timeout IDs, so the 30s
-// timeout guard can be cancelled once the island registers.
-const _visibilityTimeouts = new Set<ReturnType<typeof setTimeout>>();
-
-const _islandMeta = new WeakMap<CustomElementConstructor, IslandMeta>();
 
 /**
  * Get the value of the data-ssr-props attribute from a host element.
@@ -98,8 +93,6 @@ export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
  * v0.14.7: Extended to cover all Object.prototype methods that could be
  * exploited via arbitrary property assignment (C-03 fix).
  */
-import { injectPropsSafe } from './security.ts';
-
 export function bindSsrProps(el: HTMLElement): void {
   const props = getSsrProps(el);
   if (!props) return;
@@ -126,7 +119,6 @@ function createVisibleStrategy(
           if (!registered) {
             registered = true;
             clearTimeout(timeoutId);
-            _visibilityTimeouts.delete(timeoutId);
             registerFn();
           }
           return;
@@ -156,7 +148,6 @@ function createVisibleStrategy(
         mutObs.disconnect();
         observer.disconnect();
         clearTimeout(timeoutId);
-        _visibilityTimeouts.delete(timeoutId);
       }
     }
   });
@@ -166,14 +157,12 @@ function createVisibleStrategy(
   // both observers after 30 seconds to prevent memory/perf leaks.
   const VISIBILITY_TIMEOUT = 30_000; // 30s
   const timeoutId = setTimeout(() => {
-    _visibilityTimeouts.delete(timeoutId);
     if (!registered) {
       mo.disconnect();
       observer.disconnect();
       log.debug(`Visibility strategy for <${tagName}> timed out after ${VISIBILITY_TIMEOUT}ms`);
     }
   }, VISIBILITY_TIMEOUT);
-  _visibilityTimeouts.add(timeoutId);
 
   // Start observing after DOM content loaded
   if (document.readyState === 'loading') {
@@ -257,21 +246,14 @@ export function defineIsland<T extends CustomElementConstructor>(
         'Use one of: load, idle, visible, only.',
     );
   }
-  const useDsd = strategy === 'only' ? false : options.dsd !== false; // default true
-  const useSsr = strategy === 'only' ? false : options.ssr !== false; // default true
+  // `options.dsd` / `options.ssr` have no runtime effect in defineIsland():
+  // SSR/DSD admission is decided by the build-side island scan, which reads
+  // `export const openElement = defineIslandConfig({ ... })` instead.
 
   // Validate tag name per WHATWG Custom Element name rules
   // https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
   // Single rule source shared with defineElement() (tag-utils.ts).
   assertValidTagName(tagName);
-
-  _islandMeta.set(componentClass, {
-    isIsland: true,
-    tagName,
-    layer: useDsd ? 'dsd-interactive' : 'pure-island',
-    ssr: useSsr,
-    dsd: useDsd,
-  });
 
   // v0.6': Mixin pattern for connectedCallback - replaces monkey-patch.
   // Instead of modifying the prototype directly, we create a wrapper

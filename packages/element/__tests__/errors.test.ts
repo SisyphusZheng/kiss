@@ -5,6 +5,7 @@ import {
   resetErrorTelemetryHookForTests,
   setErrorTelemetryHook,
 } from '../src/internal/core/errors.ts';
+import { renderDsd } from '../src/internal/core/render-dsd.ts';
 
 Deno.test('setErrorTelemetryHook throws when called more than once (#644)', () => {
   resetErrorTelemetryHookForTests();
@@ -39,6 +40,30 @@ Deno.test('reportError falls back to console.error when no hook is set (#644)', 
     assertEquals(messages[0].includes('fallback'), true);
   } finally {
     console.error = original;
+    resetErrorTelemetryHookForTests();
+  }
+});
+
+Deno.test('renderDsd routes classified render errors through the telemetry hook (#780)', async () => {
+  resetErrorTelemetryHookForTests();
+  try {
+    const received: string[] = [];
+    setErrorTelemetryHook((e) => {
+      received.push(e.message);
+    });
+
+    class BrokenComponent {
+      static tagName = 'x-broken';
+      render(): unknown {
+        throw new Error('boom');
+      }
+    }
+
+    const output = await renderDsd(BrokenComponent as unknown as CustomElementConstructor);
+    assertEquals(output.metrics.hasError, true);
+    assertEquals(received.length, 1);
+    assertEquals(received[0].includes('boom'), true);
+  } finally {
     resetErrorTelemetryHookForTests();
   }
 });

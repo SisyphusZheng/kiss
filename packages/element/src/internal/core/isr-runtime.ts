@@ -1,6 +1,5 @@
 import type { IsrCacheEntry, IsrCacheResult } from '../protocol/isr.ts';
 import type { IsrManifestEntry } from '../protocol/framework.ts';
-import type { MemoryIsrCache } from './isr.ts';
 
 export type IsrRuntimeState = IsrCacheResult['state'] | 'not-found';
 
@@ -14,9 +13,19 @@ export interface IsrRuntimeRenderContext {
   request?: Request;
 }
 
+/**
+ * Cache contract consumed by {@link renderIsrResponse}. `MemoryIsrCache` is
+ * the reference in-memory implementation; KV-backed adapters (targeting 0.44)
+ * implement the same shape. Both sync and async implementations are accepted.
+ */
+export interface IsrRuntimeCache {
+  get(key: string, now?: number): IsrCacheResult | Promise<IsrCacheResult>;
+  set(key: string, entry: IsrCacheEntry): void | Promise<void>;
+}
+
 export interface IsrRuntimeOptions {
   manifest: IsrManifestEntry[];
-  cache: MemoryIsrCache;
+  cache: IsrRuntimeCache;
   render: (
     path: string,
     context: IsrRuntimeRenderContext,
@@ -53,8 +62,9 @@ export function findIsrManifestEntry(
 /**
  * @experimental ISR runtime. Not wired into the 0.42 request-time server entry
  * (`renderRequestTimeServerModule` calls `app.fetch` directly), so `revalidate`
- * does not activate caching in this release line. Targeting 0.44 with a KV-backed
- * cache adapter. Do not rely on this in production yet.
+ * does not activate caching in this release line. `options.cache` accepts any
+ * {@link IsrRuntimeCache} implementation — `MemoryIsrCache` in-box, KV-backed
+ * adapters targeting 0.44. Do not rely on this in production yet.
  */
 export async function renderIsrResponse(
   path: string,
@@ -102,14 +112,6 @@ export async function renderIsrResponse(
       response: refreshed.entry
         ? responseFromCacheEntry(refreshed.entry, 'stale')
         : responseFromCacheEntry(cached.entry, 'stale'),
-    };
-  }
-
-  if (cached.state === 'error') {
-    return {
-      state: 'error',
-      entry,
-      response: new Response('ISR cache error', { status: 500 }),
     };
   }
 

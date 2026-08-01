@@ -29,8 +29,16 @@ export interface ClientRuntimeOptions {
 
 /**
  * Walk a subtree collecting all <template shadowrootmode="open"> elements.
- * In Chromium, DSD templates are parsed and their content moved into the
- * host's shadowRoot automatically, leaving an empty template element behind.
+ *
+ * Precondition: this finds templates only when the markup was NOT parsed by a
+ * native DSD parser. Per the HTML standard, a DSD-capable parser replaces the
+ * template with the host's ShadowRoot — no template element (empty or
+ * otherwise) remains in the DOM. Templates therefore survive only in browsers
+ * without DSD support, or when markup was inserted without DSD processing
+ * (e.g. innerHTML, which never applies declarative shadow roots). On a
+ * normally parsed page in a native-DSD browser (Chromium) this scan finds
+ * zero templates and hydrateOpenElement() is a no-op; OpenElement hosts there
+ * self-hydrate via connectedCallback (see hasSelfHydrated).
  */
 function collectDsdTemplates(root: ParentNode): HTMLTemplateElement[] {
   const results: HTMLTemplateElement[] = [];

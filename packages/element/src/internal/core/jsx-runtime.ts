@@ -27,8 +27,9 @@ export const Fragment: unique symbol = Symbol.for('openelement.fragment');
  * paths (render-ir, jsx-render-dom, event-hydration) share one check instead
  * of each repeating the `tag === Fragment || symbol-description` branch.
  *
- * The symbol-description branch guards against a stray symbol that happens to
- * carry the same `toString()` while not being the canonical `Fragment`.
+ * The symbol-description branch also matches a non-canonical symbol that
+ * carries the same description (e.g. a duplicate copy of this runtime in
+ * another bundle), so cross-bundle VNodes still count as Fragments.
  */
 export function isFragment(tag: unknown): boolean {
   return tag === Fragment ||
@@ -167,6 +168,3 @@ export function jsxDEV(
   }
   return vnode;
 }
-
-// augmentations in published packages. The ambient declarations in
-// jsx-types.d.ts provide the same TypeScript JSX type-checking.

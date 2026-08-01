@@ -251,24 +251,18 @@ export function collectPropBindings(
  *
  * @param node - VNode, string, number, or null/undefined
  * @param lifecycle - Optional BindingLifecycle for automatic cleanup
- * @param disposers - Optional Set to collect effect dispose fns (backward compat)
  * @param signalRegistry - Optional registry used to resolve signal names for markers
  * @returns DOM Node (Element, Text, or DocumentFragment)
  */
 export function renderToDom(
   node: unknown,
   lifecycle?: BindingLifecycle,
-  disposers?: Set<() => void>,
   signalRegistry?: Map<string, Signal<unknown>>,
 ): Node {
-  const fullLifecycle: BindingLifecycle = lifecycle ?? (disposers ? { disposers } : {});
-  if (disposers && !lifecycle?.disposers) {
-    fullLifecycle.disposers = disposers;
-  }
+  const fullLifecycle: BindingLifecycle = lifecycle ?? {};
 
   const renderer: BindingRenderer = {
-    render: (child, childLifecycle) =>
-      renderToDom(child, childLifecycle, undefined, signalRegistry),
+    render: (child, childLifecycle) => renderToDom(child, childLifecycle, signalRegistry),
   };
 
   const descriptors: BindingDescriptor[] = [];
@@ -399,6 +393,13 @@ function renderNode(
   const el = createElementForTag(tag as string);
   const propDescriptors = collectPropBindings(el, props, signalRegistry);
   descriptors.push(...propDescriptors);
+  // vnode.ref is stripped from props by createVNode (jsx-runtime.ts), so the
+  // props.ref branch in collectPropBindings never sees JSX refs — consume it
+  // here. The ref binding fires at commitBindings() time, after the whole
+  // tree (children included) has been created (#756).
+  if (typeof (node as VNode).ref === 'function') {
+    descriptors.push(bindRef(el, (node as VNode).ref as (el: Element) => void));
+  }
   for (const child of children) {
     el.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
   }
