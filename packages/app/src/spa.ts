@@ -12,6 +12,7 @@ import {
 } from './internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from './internal/page-host-data.ts';
 import { normalizeActionFailure, normalizeLoaderFailure } from './internal/action-error.ts';
+import { isOpenElementNotFound, isOpenElementRedirect } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { assertValidTagName, createLogger } from '@openelement/element';
 
@@ -60,6 +61,12 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
    * error channel (`__openElementError`), mirroring the action failure
    * channel (normalizeActionFailure), so pages render their error definition
    * rather than silently receiving an empty data shape.
+   *
+   * redirect()/notFound() are control flow, not failures (#731): a redirect
+   * navigates the router (the navigation bumps renderId, so the in-flight
+   * render cycle aborts before committing), and a notFound rides the same
+   * page error channel with the original error so the error definition can
+   * read its 404 status/message — mirroring the server chain.
    */
   async function runLoader(): Promise<{ data: unknown; error?: unknown }> {
     if (!router) return { data: undefined };
@@ -68,6 +75,14 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     try {
       return { data: await route.loader({ params: router.params }) };
     } catch (err) {
+      if (isOpenElementRedirect(err)) {
+        // Skip navigation if the app was disposed while the loader awaited.
+        if (router) await router.navigate(err.location);
+        return { data: undefined };
+      }
+      if (isOpenElementNotFound(err)) {
+        return { data: undefined, error: err };
+      }
       return { data: undefined, error: normalizeLoaderFailure(err, development) };
     }
   }
@@ -184,6 +199,23 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
         formData: createFormData(form),
       });
     } catch (err) {
+      // #731: redirect()/notFound() are control flow, not action failures —
+      // they must not be normalized into `{ error: 'Action failed' }` data.
+      if (isOpenElementRedirect(err)) {
+        // PRG: navigate to the redirect target; its own render cycle renders
+        // the destination. Skip if the app was disposed while awaiting.
+        if (router) await router.navigate(err.location);
+        return;
+      }
+      if (isOpenElementNotFound(err)) {
+        // Mirror the server chain: render the page error channel with the
+        // original 404 error instead of re-running the loader.
+        if (currentRender !== renderId || !router || !rootEl) return;
+        currentLoaderError = err;
+        currentActionData = undefined;
+        renderComponent();
+        return;
+      }
       actionData = normalizeActionFailure(err, development);
     }
 

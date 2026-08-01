@@ -26,36 +26,43 @@ Deno.test('build output: no Hono virtual entry in public assets', () => {
   );
 });
 
-Deno.test('build output: client island JS stays within core and showcase budgets', () => {
+Deno.test('build output: client island JS stays within core budget and ships no showcase chunks', () => {
   assert(existsSync(DIST), `Build output is missing: ${DIST}`);
   const clientDir = join(DIST, 'client');
   assert(existsSync(clientDir), `Client output directory is missing: ${clientDir}`);
 
-  const showcaseChunks = [
+  // Showcase islands were removed from the site; the production build must not
+  // emit any of these chunks. Keep the historical prefixes as a regression
+  // guard so a re-introduced showcase island fails loudly.
+  const removedShowcaseChunks = [
     'island-media-chrome-showcase',
     'island-react-showcase',
+    'island-shoelace-showcase',
+    'island-reactive-showcase',
+    'island-scroll-reveal',
   ];
   const files = readdirSync(clientDir, { recursive: true }) as string[];
   let coreBytes = 0;
-  let showcaseBytes = 0;
+  const emittedShowcase: string[] = [];
   for (const f of files) {
     if (f.endsWith('.js')) {
-      const stat = statSync(join(clientDir, f));
-      if (showcaseChunks.some((prefix) => f.includes(prefix))) {
-        showcaseBytes += stat.size;
+      if (removedShowcaseChunks.some((prefix) => f.includes(prefix))) {
+        emittedShowcase.push(f);
       } else {
-        coreBytes += stat.size;
+        coreBytes += statSync(join(clientDir, f)).size;
       }
     }
   }
   const coreKB = coreBytes / 1024;
-  const showcaseKB = showcaseBytes / 1024;
+  assertEquals(
+    emittedShowcase,
+    [],
+    `Removed showcase islands must not be emitted by the production build: ${
+      emittedShowcase.join(', ')
+    }`,
+  );
   assert(
     coreKB < 700,
     `Core client island JS total ${coreKB.toFixed(1)}KB exceeds 700KB limit`,
-  );
-  assert(
-    showcaseKB < 320,
-    `Showcase island JS total ${showcaseKB.toFixed(1)}KB exceeds 320KB limit`,
   );
 });

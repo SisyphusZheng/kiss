@@ -28,7 +28,8 @@ function goodFiles(): Record<string, string> {
       `Repository package line: \`${PACKAGE_VERSION_TAG}\`\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive release target: \`${ACTIVE_EXECUTION_VERSION}\``,
     'README.md':
       `Source package line: \`${PACKAGE_VERSION}\` (\`${PACKAGE_VERSION_TAG}\`).\nnpm registry line: \`${PACKAGE_VERSION_TAG}\``,
-    'README.zh.md': `已发布包线为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）。`,
+    'README.zh.md':
+      `源码包行为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）。\nnpm registry 行为 \`${PACKAGE_VERSION_TAG}\``,
     'docs/roadmap/ROADMAP.md':
       `Source package line: \`${PACKAGE_VERSION_TAG}\`.\nnpm registry line: \`${PACKAGE_VERSION_TAG}\`\nActive execution target: \`${ACTIVE_EXECUTION_VERSION}\`.`,
     'docs/governance/PROJECT_WORKFLOW.md':

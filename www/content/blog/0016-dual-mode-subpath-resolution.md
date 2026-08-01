@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0016: 双模式子路径解析 — resolve.alias 本地 + resolveId/load 虚拟模块远程'
 date: '2026-05-11'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

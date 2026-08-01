@@ -26,6 +26,7 @@ import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
+import { parseJsonc } from '../internal/jsonc.ts';
 import { formatError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
@@ -96,19 +97,11 @@ function tryDenoJsonDir(
   const denoJsonPath = join(dir, 'deno.json');
   if (!existsSync(denoJsonPath)) return null;
   const raw = readFileSync(denoJsonPath, 'utf-8');
-  // Strip JSONC comments:
-  // - Line comments: // at start of line (after optional whitespace)
-  // - Block comments: /* ... */
-  // - Trailing commas (Deno JSONC allows them, JSON.parse does not)
-  const json = raw
-    .replace(/^\s*\/\/.*$/gm, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/,\s*([}\]])/g, '$1');
-  let denoJson: Record<string, unknown>;
-  try {
-    denoJson = JSON.parse(json);
-  } catch (e) {
-    log.warn('[build-client] Invalid deno.json JSON, skipping', e);
+  // #708: shared JSONC parser (single implementation with workspace-alias.ts).
+  // Handles mid-line // comments, /* */ blocks, string literals, and trailing commas.
+  const denoJson = parseJsonc(raw);
+  if (!denoJson) {
+    log.warn('[build-client] Invalid deno.json JSON, skipping');
     return null; // Invalid JSON — skip this deno.json
   }
   const imports = denoJson.imports as Record<string, string> | undefined;

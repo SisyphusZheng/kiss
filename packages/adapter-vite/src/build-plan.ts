@@ -6,6 +6,7 @@ import { fsPathToModuleSpecifier } from './internal/ssg/module-specifier.ts';
 import { resolveIslandHydrate } from './internal/ssg/island-scanner.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from './internal/paths.ts';
+import { walkFileEntries } from './internal/html-files.ts';
 
 export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPlan {
   const root = ctx.phase3.root;
@@ -61,14 +62,14 @@ export function createProductionBuildPlan(ctx: OpenElementBuildContext): BuildPl
   };
 }
 
+// #710: single shared walker — deterministic order, dotfiles skipped.
 function files(root: string): string[] {
-  const result: string[] = [];
-  for (const entry of readdirSync(root, { withFileTypes: true })) {
-    const path = join(root, entry.name);
-    if (entry.isDirectory()) result.push(...files(path));
-    else result.push(path);
-  }
-  return result;
+  // Missing output dirs must surface as typed build-failure evidence (see
+  // collectBuildArtifacts), not as an empty artifact set: the shared walker
+  // tolerates missing dirs, so probe with a plain readdirSync first to throw
+  // the native ENOENT.
+  readdirSync(root);
+  return walkFileEntries(root).map((entry) => entry.absolutePath);
 }
 
 /**

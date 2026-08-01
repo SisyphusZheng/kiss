@@ -35,7 +35,8 @@ independent adapters demonstrate a real replacement seam.
 - Third-party Web Components use explicit manifest/CEM admission; unknown SSR
   capability becomes client-only or rejected rather than a partial render.
 - Browser candidates must pass Chromium, Firefox and WebKit with native DSD.
-- External adopter pilot #390 remains a stable-release condition. It does not
-  retroactively make an alpha prerelease claim external validation occurred.
+- External adopter pilot #390 is retired by ADR-0119 and is no longer a
+  release condition; adoption evidence builds through reproducible recipes
+  and dogfooding instead of a pilot program.
 
 See [PACKAGE_SURFACE.md](./PACKAGE_SURFACE.md) for the exact export inventory.

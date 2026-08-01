@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0010: 消除所有 .less/ 临时文件，统一单进程构建'
 date: '2026-05-11'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

@@ -55,22 +55,6 @@ export interface ReleaseCommandStep {
   run?: (evidence: ReleaseEvidence) => Promise<void>;
 }
 
-interface Semver {
-  major: number;
-  minor: number;
-  patch: number;
-}
-
-export function parseSemver(version: string): Semver {
-  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-.+)?$/);
-  if (!match) throw new Error(`Invalid semver version: ${version}`);
-  return {
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-  };
-}
-
 export function nextPatchVersion(version: string): string {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$/);
   if (!match) throw new Error(`Invalid semver version: ${version}`);
@@ -715,12 +699,6 @@ function canPublishNpm(): boolean {
   return isTruthyEnv('NPM_TOKEN') || isTruthyEnv('NODE_AUTH_TOKEN');
 }
 
-// JSR is no longer a release channel (see #322). The hook is kept exported but
-// disabled so no release plan wires a JSR step back in by accident.
-export function canPublishJsr(): boolean {
-  return false;
-}
-
 /**
  * CI evidence step: rebase the release commits onto the latest main. If the
  * pull stops mid-rebase the run cannot self-heal (a re-run fails with
@@ -876,8 +854,13 @@ export function buildVersionAnchorReplacements(
     ],
     [
       'README.zh.md',
-      '已发布包线为 `$PV`（`$PVT`）',
-      '已发布包线为 `$VER`（`$TAG`）',
+      '源码包行为 `$PV`（`$PVT`）',
+      '源码包行为 `$VER`（`$TAG`）',
+    ],
+    [
+      'README.zh.md',
+      'npm registry 行为 `$PVT`',
+      'npm registry 行为 `$TAG`',
     ],
     [
       'README.zh.md',

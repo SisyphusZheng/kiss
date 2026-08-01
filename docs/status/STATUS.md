@@ -52,22 +52,24 @@ and output path.
 2. Current-document version drift keeps reappearing at gate edges; alpha.18
    package B makes the anchor gates reject stale claims.
 3. WC SSR compatibility still needs broader adopter evidence.
-4. Request-time loop is implemented through alpha.9; the alpha.9 line
-   (#619–#623) carried code-hygiene remediation (route-scanner correctness,
-   ADR-0095 DataAdapter drift, collectPublicProps dedup, start CLI runtime,
-   logger tags) before the 0.42.0 stable freeze.
+4. Request-time loop is implemented through alpha.9; two hygiene trains
+   landed before the 0.42.0 stable freeze: TP-5.8 (#619–#623 — route-scanner
+   correctness, ADR-0095 DataAdapter drift, collectPublicProps dedup, start
+   CLI runtime, logger tags) and the alpha.9 cleanup train (#632–#644).
 5. Framework session and cache remain unfrozen until 0.44; login apps use
    recipes (better-auth) and must not wait on framework session APIs.
 6. UI remains optional until v0.46 records its stable scope.
-7. Cross-runtime claim (Deno/Node/Bun) is partially unmet: `start` CLI is
-   Deno-only (#622/#628); full strategy targets 0.43.
+7. Cross-runtime claim (Deno/Node/Bun) is partially unmet: the `start` CLI
+   is cross-runtime since #622 (Node 18+/Deno/Bun via `node:http`), but the
+   Node/Bun paths have no CI smoke yet; full strategy targets 0.43.
 
 ## 0.42 direction
 
 The `0.42.0` line is **WC light fullstack**: Application Loop (ADR-0120) plus
 first-mile ops and CSRF floor. Planned in
-[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; active **TP-5.7**
-alpha.7). Protocol evidence:
+[`VERSION_PLAN.md`](../current/VERSION_PLAN.md) (TP-0…TP-6; **TP-5.7** closed
+with alpha.9; the active line is alpha.10, post-TP-5.7 remediation toward
+**TP-6**). Protocol evidence:
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md).
 
 Product promise at `0.42.0`: dynamic loader/action, no-JS + enhanced forms,

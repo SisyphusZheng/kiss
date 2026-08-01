@@ -1,10 +1,10 @@
 // Register a minimal open-element custom element inline to prove
-// Fresh ↔ custom-element interop without bundling @openelement/ui
-// (which ships .js with JSX that Vite can't transpile yet).
+// Fresh ↔ custom-element interop without bundling @openelement/ui.
 //
-// ponytail: once @openelement/ui ships pre-compiled JS (compilerOptions.jsx
-// already in packages/ui/deno.json; remaining blocker is deno pack transpilation), replace with
-// `import "@openelement/ui"`.
+// ponytail: the deno pack JSX transpilation gap is fixed (packed
+// @openelement/ui .js output contains jsx() calls), so these stubs can be
+// replaced with `import "@openelement/ui"`; they remain to keep the example
+// dependency-light.
 //
 // ponytail: stub ignores variant/size/disabled attributes. The real
 // open-button renders different styles per variant; the stub renders

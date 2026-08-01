@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'WithDsdHydration Mixin + 自建 SSR 决策'
 date: '2026-05-07'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status: ✅ **ADOPTED** — v0.6.2 架构决策

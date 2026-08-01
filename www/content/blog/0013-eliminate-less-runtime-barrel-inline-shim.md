@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0013: 消除 less-runtime barrel、删除 virtual:less-runtime、移除 .less/ 残留'
 date: '2026-05-10'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

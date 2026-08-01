@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
-import { defineApp, definePage } from '../src/index.ts';
+import { defineApp, definePage, notFound, redirect } from '../src/index.ts';
 import { assertValidTagName } from '@openelement/element';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
 import { applyPageHostData, type PageHostElement } from '../src/internal/page-host-data.ts';
@@ -422,5 +422,305 @@ Deno.test('unregistered tagName warns and renders nothing instead of an inert ho
     if (originalCustomElements) {
       Object.defineProperty(globalThis, 'customElements', originalCustomElements);
     } else delete (globalThis as Record<string, unknown>).customElements;
+  }
+});
+
+// ─── #731: redirect()/notFound() in the SPA chain ──────────────
+
+/**
+ * Stub the browser environment for SPA navigation tests. Unlike the no-op
+ * history stubs above, this one applies pushState/replaceState URLs to the
+ * fake location so the router actually lands on redirect targets.
+ */
+function stubNavigableEnvironment(root: unknown, initialPath: string) {
+  const descriptors = {
+    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
+    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
+    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
+  };
+  const originalAdd = globalThis.addEventListener;
+  const originalRemove = globalThis.removeEventListener;
+  const initial = new URL(initialPath, 'https://example.test');
+  const fakeLocation = {
+    protocol: 'https:',
+    pathname: initial.pathname,
+    search: initial.search,
+    hash: '',
+    href: initial.href,
+  };
+  const pushed: string[] = [];
+  const applyUrl = (url: string | URL | null | undefined) => {
+    if (url == null) return;
+    const next = new URL(String(url), fakeLocation.href);
+    fakeLocation.pathname = next.pathname;
+    fakeLocation.search = next.search;
+    fakeLocation.hash = next.hash;
+    fakeLocation.href = next.href;
+  };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { querySelector: () => root, createElement: () => ({}) },
+  });
+  Object.defineProperty(globalThis, 'location', { configurable: true, value: fakeLocation });
+  Object.defineProperty(globalThis, 'history', {
+    configurable: true,
+    value: {
+      pushState(_state: unknown, _unused: unknown, url?: string | URL | null) {
+        pushed.push(String(url));
+        applyUrl(url);
+      },
+      replaceState(_state: unknown, _unused: unknown, url?: string | URL | null) {
+        applyUrl(url);
+      },
+    },
+  });
+  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
+  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  return {
+    location: fakeLocation,
+    pushed,
+    restore() {
+      globalThis.addEventListener = originalAdd;
+      globalThis.removeEventListener = originalRemove;
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete (globalThis as Record<string, unknown>)[key];
+      }
+    },
+  };
+}
+
+Deno.test('defineApp navigates when the SPA loader throws redirect() (#731)', async () => {
+  const hosts: PageHostElement[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: PageHostElement) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      {
+        path: '/',
+        tagName: 'home-page',
+        loader: () => {
+          redirect('/login');
+        },
+      },
+      {
+        path: '/login',
+        tagName: 'login-page',
+        loader: () => Promise.resolve({ page: 'login' }),
+      },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The redirect navigated instead of becoming page data...
+    assertEquals(env.pushed, ['/login']);
+    assertEquals(app.router?.currentPath, '/login');
+    // ...and the destination route rendered with its own loader data.
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].data, { page: 'login' });
+    assertEquals(hosts[0].__openElementError, undefined);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp navigates when the SPA action throws redirect() (#731)', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  const hosts: PageHostElement[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild(host: PageHostElement) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      {
+        path: '/',
+        tagName: 'home-page',
+        loader: () => Promise.resolve({ page: 'home' }),
+        action: () => {
+          redirect('/done');
+        },
+      },
+      {
+        path: '/done',
+        tagName: 'done-page',
+        loader: () => Promise.resolve({ page: 'done' }),
+      },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    submit?.({
+      target: { tagName: 'FORM' },
+      composedPath: () => [],
+      preventDefault() {},
+    } as unknown as Event);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // PRG: the redirect navigated to the destination route...
+    assertEquals(env.pushed, ['/done']);
+    assertEquals(app.router?.currentPath, '/done');
+    // ...and no host ever received a normalized action failure.
+    assertEquals(hosts.map((host) => host.data), [{ page: 'home' }, { page: 'done' }]);
+    assertEquals(hosts.every((host) => host.__openElementActionData === undefined), true);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp routes loader notFound() to the page error channel (#731)', async () => {
+  let rendered: unknown;
+  let errored: unknown;
+  const Page = definePage<{ title: string }, { slug: string }>({
+    render(context) {
+      rendered = context;
+      return null;
+    },
+    error(context) {
+      errored = context;
+      return null;
+    },
+  });
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(host: InstanceType<typeof Page>) {
+      host.render();
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/articles/hello');
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      querySelector: () => root,
+      createElement: () => Object.create(Page.prototype),
+    },
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/articles/:slug',
+      tagName: 'article-page',
+      loader: () => {
+        notFound('no such article');
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The original 404 error rides the error channel (never normalized, never
+    // a navigation) so the error definition can read its status/message.
+    const context = errored as { data: unknown; error: unknown; params: unknown };
+    assertEquals((context.error as Error).name, 'OpenElementNotFound');
+    assertEquals((context.error as Error).message, 'no such article');
+    assertEquals((context.error as { status: number }).status, 404);
+    assertEquals(context.data, undefined);
+    assertEquals(context.params, { slug: 'hello' });
+    assertEquals(rendered, undefined);
+    assertEquals(env.pushed, []);
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp routes action notFound() to the page error channel (#731)', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  let rendered: unknown;
+  let errored: unknown;
+  const Page = definePage<{ page: string }>({
+    render(context) {
+      rendered = context;
+      return null;
+    },
+    error(context) {
+      errored = context;
+      return null;
+    },
+  });
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild(host: InstanceType<typeof Page>) {
+      host.render();
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      querySelector: () => root,
+      createElement: () => Object.create(Page.prototype),
+    },
+  });
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [{
+      path: '/',
+      tagName: 'home-page',
+      loader: () => Promise.resolve({ page: 'home' }),
+      action: () => {
+        notFound('cannot save');
+      },
+    }],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Initial render used the data channel, not the error channel.
+    assertEquals((rendered as { data: unknown }).data, { page: 'home' });
+    assertEquals(errored, undefined);
+    submit?.({
+      target: { tagName: 'FORM' },
+      composedPath: () => [],
+      preventDefault() {},
+    } as unknown as Event);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The action's notFound renders the error channel in place — no
+    // navigation, no normalized action failure, loader data preserved.
+    const context = errored as { data: unknown; error: unknown };
+    assertEquals((context.error as Error).name, 'OpenElementNotFound');
+    assertEquals((context.error as Error).message, 'cannot save');
+    assertEquals((context.error as { status: number }).status, 404);
+    assertEquals(context.data, { page: 'home' });
+    assertEquals(env.pushed, []);
+    assertEquals(app.router?.currentPath, '/');
+  } finally {
+    app.dispose();
+    env.restore();
   }
 });

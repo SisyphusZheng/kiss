@@ -55,27 +55,42 @@ const COMPONENT_ORDER = [
   'open-tabs',
 ];
 
-function layerFromClass(className: string): ComponentMeta['layer'] {
-  const interactive = new Set([
-    'OpenButton',
-    'OpenInput',
-    'OpenThemeToggle',
-    'OpenDialog',
-    'OpenDropdown',
-    'OpenTabs',
-  ]);
-  return interactive.has(className) ? 'dsd-interactive' : 'dsd-static';
+// Fail-loud registry: every @openelement/ui component class must have an
+// explicit layer/hydrate policy here. An unlisted class means a new component
+// shipped without a layering decision — throw instead of silently defaulting.
+// Hand-aligned with HYDRATION_STRATEGIES in
+// packages/element/src/internal/protocol/framework.ts (source of truth);
+// tools cannot import element runtime code.
+const POLICY_BY_CLASS: Record<string, Pick<ComponentMeta, 'layer' | 'hydrate'>> = {
+  OpenCard: { layer: 'dsd-static', hydrate: 'idle' },
+  OpenCallout: { layer: 'dsd-static', hydrate: 'idle' },
+  OpenButton: { layer: 'dsd-interactive', hydrate: 'load' },
+  OpenInput: { layer: 'dsd-interactive', hydrate: 'load' },
+  OpenThemeToggle: { layer: 'dsd-interactive', hydrate: 'load' },
+  OpenCodeBlock: { layer: 'dsd-static', hydrate: 'idle' },
+  OpenBadge: { layer: 'dsd-static', hydrate: 'idle' },
+  OpenDialog: { layer: 'dsd-interactive', hydrate: 'idle' },
+  OpenDropdown: { layer: 'dsd-interactive', hydrate: 'load' },
+  OpenTabs: { layer: 'dsd-interactive', hydrate: 'load' },
+};
+
+function policyForClass(className: string): Pick<ComponentMeta, 'layer' | 'hydrate'> {
+  const policy = POLICY_BY_CLASS[className];
+  if (!policy) {
+    throw new Error(
+      `No layer/hydrate policy for component class '${className}': ` +
+        'add it to POLICY_BY_CLASS in tools/generate-ui-manifest.ts',
+    );
+  }
+  return policy;
 }
 
-function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
-  const load = new Set([
-    'OpenButton',
-    'OpenInput',
-    'OpenThemeToggle',
-    'OpenDropdown',
-    'OpenTabs',
-  ]);
-  return load.has(className) ? 'load' : 'idle';
+export function layerFromClass(className: string): ComponentMeta['layer'] {
+  return policyForClass(className).layer;
+}
+
+export function hydrateFromClass(className: string): ComponentMeta['hydrate'] {
+  return policyForClass(className).hydrate;
 }
 
 function inferAttributeType(name: string): string {
@@ -112,32 +127,47 @@ function parseClassName(text: string, file: string): string {
   return match[1];
 }
 
-function parseCssParts(text: string): OpenElementCssPart[] {
+export function parseCssParts(text: string): OpenElementCssPart[] {
   const parts: OpenElementCssPart[] = [];
   const seen = new Set<string>();
+  const add = (name: string, description: string): void => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    parts.push({ name, description });
+  };
   for (const m of text.matchAll(/\*\s*@csspart\s+(\S+)\s*-+(.*)/g)) {
-    const name = m[1].trim();
-    const description = m[2].trim();
-    if (!seen.has(name)) {
-      seen.add(name);
-      parts.push({ name, description });
+    add(m[1].trim(), m[2].trim());
+  }
+  // Also scan JSX `part='...'` literals so parts without @csspart doc
+  // comments (e.g. open-badge, open-callout) are not silently dropped.
+  for (const m of text.matchAll(/\bpart=['"]([^'"]+)['"]/g)) {
+    for (const name of m[1].trim().split(/\s+/)) {
+      if (name) add(name, `The '${name}' part`);
     }
   }
   return parts;
 }
 
-function parseSlots(text: string): OpenElementSlot[] {
+export function parseSlots(text: string): OpenElementSlot[] {
   const slots: OpenElementSlot[] = [];
   const seen = new Set<string>();
+  const add = (name: string, description: string): void => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    slots.push({ name, description });
+  };
   for (const m of text.matchAll(/\*\s*@slot\s+(\S*)\s*-+(.*)/g)) {
-    const name = m[1].trim();
-    const description = m[2].trim();
-    if (!seen.has(name)) {
-      seen.add(name);
-      slots.push({ name, description });
-    }
+    add(m[1].trim(), m[2].trim());
   }
-  if (text.includes('<slot></slot>') || text.includes('<slot ')) {
+  // Also scan JSX `<slot name='...'>` literals so named slots without @slot
+  // doc comments (e.g. open-card header/footer, open-dialog trigger/footer)
+  // are not silently dropped.
+  for (const m of text.matchAll(/<slot\s+name=['"]([^'"]+)['"]/g)) {
+    add(m[1].trim(), `The '${m[1].trim()}' slot`);
+  }
+  // Default slot: a <slot> tag without a name attribute. (A named slot such
+  // as `<slot name='tab'>` must not imply a default slot.)
+  if (/<slot(?![^>]*\bname\s*=)[^>]*>/.test(text)) {
     if (!seen.has('')) {
       slots.unshift({ name: '', description: 'Default slot' });
     }

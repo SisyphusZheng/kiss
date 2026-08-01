@@ -34,6 +34,13 @@ import { controlRecipe } from './component-recipes.ts';
 
 export const tagName = 'open-input';
 
+// Instance-unique id suffix for the input/error elements so multiple
+// <open-input> instances on one page never collide on id/htmlFor/
+// aria-describedby. The module-level counter is SSR-safe: SSR instantiates
+// components in document order and DSD hydration upgrades them in the same
+// document order, so both sides assign identical ids to the same instance.
+let inputInstanceCount = 0;
+
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host {
@@ -120,6 +127,8 @@ export class OpenInput extends OpenElement {
     'error',
   ];
 
+  private _uid = inputInstanceCount++;
+
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     const type = this.getAttribute('type') || 'text';
     const placeholder = this.getAttribute('placeholder') || '';
@@ -130,17 +139,19 @@ export class OpenInput extends OpenElement {
     const r = this.hasAttribute('required');
     const error = this.getAttribute('error') || '';
     const errorClass = error ? ' input--error' : '';
+    const inputId = `input-${this._uid}`;
+    const errorId = `${inputId}-error`;
 
     return (
       <div className='input-wrapper' part='wrapper'>
         {label && (
-          <label htmlFor='input' part='label'>
+          <label htmlFor={inputId} part='label'>
             {label}
             {r ? ' *' : ''}
           </label>
         )}
         <input
-          id='input'
+          id={inputId}
           className={`control input${errorClass}`}
           part='control'
           type={type}
@@ -150,15 +161,15 @@ export class OpenInput extends OpenElement {
           disabled={d}
           required={r}
           aria-invalid={error ? 'true' : undefined}
-          aria-describedby={error ? 'input-error' : undefined}
-          aria-errormessage={error ? 'input-error' : undefined}
+          aria-describedby={error ? errorId : undefined}
+          aria-errormessage={error ? errorId : undefined}
           onInput={(e: Event) => this._handleInput(e)}
           onChange={(e: Event) => this._handleChange(e)}
           onFocus={() => this._handleFocus()}
           onBlur={() => this._handleBlur()}
         />
         {error && (
-          <small id='input-error' role='alert' className='error-message' part='error'>
+          <small id={errorId} role='alert' className='error-message' part='error'>
             {error}
           </small>
         )}

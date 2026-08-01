@@ -14,10 +14,11 @@
  */
 
 import { join, resolve } from 'node:path';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createLogger } from '@openelement/element';
 import { formatError } from '@openelement/element';
+import { visitHtmlFiles } from '../html-files.ts';
 export { buildSpeculationRulesJson } from './speculation-rules.ts';
 
 const log = createLogger('postprocess');
@@ -41,31 +42,10 @@ function matchIslandChunkFile(file: string, tagName: string): boolean {
   return false;
 }
 
-// Shared directory walker
-
-/**
- * Walk a directory tree and apply a visitor to each HTML file.
- * If the visitor returns a string, the file is overwritten with that content.
- * If it returns null, the file is left unchanged.
- */
-function walkHtmlFiles(
-  dir: string,
-  visitor: (content: string, fullPath: string) => string | null,
-): void {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      walkHtmlFiles(fullPath, visitor);
-    } else if (entry.name.endsWith('.html')) {
-      const content = readFileSync(fullPath, 'utf-8');
-      const result = visitor(content, fullPath);
-      if (result !== null) {
-        writeFileSync(fullPath, result, 'utf-8');
-      }
-    }
-  }
-}
+// Shared directory walker: visitHtmlFiles from ../html-files.ts (#710) —
+// walks the tree and applies a visitor to each HTML file. If the visitor
+// returns a string, the file is overwritten with that content; if it returns
+// null, the file is left unchanged.
 
 // ─── HTML Insertion Helpers ────────────────────────────────────────────
 
@@ -197,7 +177,7 @@ export async function buildIslandChunkMap(
  */
 export function injectClientScript(dir: string, scriptSrc: string): void {
   const scriptTag = `  <script type="module" src="${scriptSrc}"></script>`;
-  walkHtmlFiles(dir, (content) => {
+  visitHtmlFiles(dir, (content) => {
     if (content.includes(scriptSrc)) return null;
     return insertBeforeBodyClose(content, scriptTag);
   });
@@ -228,7 +208,7 @@ export function injectCspMeta(
   const escapedPolicy = cspPolicy.replace(/"/g, '&quot;');
   const metaTag = `  <meta http-equiv="${headerName}" content="${escapedPolicy}">`;
 
-  walkHtmlFiles(dir, (content) => {
+  visitHtmlFiles(dir, (content) => {
     if (content.includes(`http-equiv="${headerName}"`)) return null;
     return insertAfterHead(content, metaTag);
   });
@@ -255,7 +235,7 @@ export function injectCspMeta(
 export function injectViewTransitionMeta(dir: string): void {
   const metaTag = '  <meta name="view-transition" content="same-origin">';
 
-  walkHtmlFiles(dir, (content) => {
+  visitHtmlFiles(dir, (content) => {
     if (content.includes('<meta name="view-transition"')) return null;
     return insertAfterHead(content, metaTag);
   });
@@ -302,7 +282,7 @@ export function injectSpeculationRules(dir: string, rulesJson: string): void {
 
   const scriptTag = `  <script type="speculationrules">\n  ${rulesJson}\n  </script>`;
 
-  walkHtmlFiles(dir, (content) => {
+  visitHtmlFiles(dir, (content) => {
     if (content.includes('<script type="speculationrules"')) return null;
     return insertAfterHead(content, scriptTag);
   });

@@ -1661,6 +1661,57 @@ Deno.test('renderToDom skips non-event function props like SSR serializeAttrs', 
   assertEquals(el.getAttribute('title'), 'kept');
 });
 
+// ─── 8e. CSR signal-name resolution (#660) ─────────────────────────
+//
+// signalNameFor resolves a registered signal to its name through a cached
+// per-registry reverse index instead of a per-lookup linear scan. These
+// tests pin the observable contract: each signal resolves to its own
+// registered name, repeated renders against the same registry (which reuse
+// the cached index) keep resolving correctly, and unregistered signals emit
+// no marker.
+
+Deno.test('renderToDom resolves registered signals to their data-signal names', () => {
+  if (!hasDOM) return;
+
+  const count = signal(0);
+  const label = signal('a');
+  const registry = new Map<string, Signal<unknown>>([
+    ['count', count],
+    ['label', label],
+  ]);
+
+  const first = renderToDom(
+    jsx('span', { title: count }),
+    undefined,
+    undefined,
+    registry,
+  ) as unknown as TestElement;
+  assertEquals(first.getAttribute('data-signal'), 'count');
+
+  // Second render reuses the cached reverse index for the same registry and
+  // must still resolve a different signal to its own name.
+  const second = renderToDom(
+    jsx('span', { title: label }),
+    undefined,
+    undefined,
+    registry,
+  ) as unknown as TestElement;
+  assertEquals(second.getAttribute('data-signal'), 'label');
+});
+
+Deno.test('renderToDom emits no data-signal marker for signals outside the registry', () => {
+  if (!hasDOM) return;
+
+  const registry = new Map([['count', signal(0)]]);
+  const el = renderToDom(
+    jsx('span', { title: signal(9) }),
+    undefined,
+    undefined,
+    registry,
+  ) as unknown as TestElement;
+  assertEquals(el.getAttribute('data-signal'), null);
+});
+
 // ─── 9. Props system (static props) ────────────────────────────────
 
 Deno.test('OpenElement static props initialize from attributes', () => {

@@ -6,65 +6,16 @@
  * can run in synchronous plugin hooks (config, configResolved).
  */
 
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readJsonc } from './internal/jsonc.ts';
 
 export interface AliasEntry {
   find: string;
   replacement: string;
 }
 
-function tryReadJson(path: string): Record<string, unknown> | null {
-  try {
-    // H-12 fix: Use platform-appropriate file reading API
-    // Deno.readTextFileSync in Deno environments, node:fs in Node.js (Vite)
-    const content = typeof Deno !== 'undefined'
-      ? Deno.readTextFileSync(path)
-      : readFileSync(path, 'utf-8');
-    // deno.json files may contain comments - strip them before JSON.parse.
-    // Naive regex breaks URLs (https:// -> https:), so we walk character by character,
-    // tracking whether we're inside a string literal.
-    let result = '';
-    let inString = false;
-    let escape = false;
-    for (let i = 0; i < content.length; i++) {
-      const ch = content[i];
-      if (escape) {
-        result += ch;
-        escape = false;
-        continue;
-      }
-      if (ch === '\\') {
-        result += ch;
-        escape = true;
-        continue;
-      }
-      if (ch === '"') {
-        inString = !inString;
-        result += ch;
-        continue;
-      }
-      if (!inString && ch === '/' && content[i + 1] === '/') {
-        // Skip until end of line
-        while (i < content.length && content[i] !== '\n') i++;
-        result += '\n';
-        continue;
-      }
-      if (!inString && ch === '/' && content[i + 1] === '*') {
-        // Skip until */
-        i += 2;
-        while (i < content.length && !(content[i] === '*' && content[i + 1] === '/')) i++;
-        i++; // skip past */
-        result += ' ';
-        continue;
-      }
-      result += ch;
-    }
-    return JSON.parse(result);
-  } catch {
-    return null;
-  }
-}
+// #708: shared JSONC reader (single implementation with cli/build-client.ts).
+const tryReadJson = readJsonc;
 
 /**
  * Walk up from startDir to find a deno.json with a "workspace" field.

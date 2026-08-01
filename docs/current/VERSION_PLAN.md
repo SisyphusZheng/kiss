@@ -2,7 +2,7 @@
 
 > Current source package line: `v0.42.0-alpha.10`\
 > Current npm registry line: `v0.42.0-alpha.9` (alpha.10 is the in-flight source line, unpublished)\
-> Next alpha train: `v0.42.0-alpha.10` (TP-5.7)\
+> Next alpha train: `v0.42.0-alpha.10` (post-TP-5.7 remediation)\
 > Active release target: `v0.42.0-alpha.10`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
@@ -373,6 +373,29 @@ tags/claims) without expanding into framework session/cache (0.44).
   or release smoke; release-tier gates green; alpha.7 published with
   two-stage evidence; `npm view` dist-tags honest (`latest` stable, `alpha`
   current); deferred issues stay open with `deferred` label.
+
+### TP-5.8 — `0.42.0-alpha.8` code hygiene train (#619–#623)
+
+Goal: land the code-hygiene remediation filed alongside the alpha.8 cut —
+route-scanner correctness, ADR-0095 DataAdapter drift, `collectPublicProps`
+dedup, the `start` CLI runtime and logger tags — without expanding the 0.42
+scope. Landed 2026-07-30 as commit `1041431f`
+(`fix(0.42): alpha.8 code hygiene (TP-5.8)`), which closes #619–#623.
+
+- 准入: TP-5.7 in flight; hygiene issues #619–#623 filed from the alpha.8
+  audit trail (done).
+- 执行步骤:
+  1. `route-scanner-fs` distinguishes ENOENT from I/O errors (#619).
+  2. `MemoryDataAdapter` implemented per ADR-0095 (#620).
+  3. `collectPublicProps` unified to a single `Reflect.get` implementation
+     (#621).
+  4. `start` CLI serves via `node:http` for cross-runtime Node 18+/Deno/Bun
+     (#622).
+  5. Logger tags differentiated across eight modules (#623).
+- 准出: every issue #619–#623 closed with code + test proof in `1041431f`
+  (done 2026-07-30); no frozen-surface change. Note the numbering split:
+  #619–#623 is this TP-5.8 train; #632–#644 is the separate alpha.9 cleanup
+  train shipped under TP-5.7's version-hole replacement release.
 
 ### TP-6 — `0.42.0` stable decision (freeze light fullstack)
 

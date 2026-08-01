@@ -82,11 +82,10 @@ The desktop host exposes a small JSON/PDF API:
 This app validates:
 
 - `@openelement/app/spa` — SPA mode bootstrap
-- `@openelement/router` — route matching, navigation, params, loaders/actions
-- `@openelement/router/data-context` — `useLoaderData()` and `useActionData()`
+- `@openelement/app` — routes, navigation, params, loaders/actions
+- `@openelement/app/preact` — `definePreactIsland` for local interaction only
 - `@openelement/ui` — Custom element components
-- `@openelement/core` — JSX runtime
-- Preact islands — `definePreactIsland` for local interaction only
+- `@openelement/element` — `OpenElement` base class and JSX runtime
 
 The intended boundary is deliberate: OpenElement owns the app shell, pages,
 loaders, actions, and form submission; Deno owns trusted local/GitHub/PDF host

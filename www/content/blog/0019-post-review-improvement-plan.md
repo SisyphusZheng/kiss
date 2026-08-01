@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0019: Post-Review Comprehensive Improvement Plan'
 date: '2026-05-12'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

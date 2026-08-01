@@ -15,10 +15,11 @@
  *   - cli/build-ssg.ts    (after Phase 3: HTML + post-process complete)
  */
 
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { createLogger } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from './internal/paths.ts';
+import { walkFileEntries } from './internal/html-files.ts';
 
 const log = createLogger('ssg');
 
@@ -62,33 +63,27 @@ function formatSize(bytes: number): string {
 
 /**
  * Recursively collect all matching files with their sizes.
+ * #710: composed on the single shared walker (internal/html-files.ts).
  */
 function collectFiles(
   dir: string,
   extension: string,
-  basePath = '',
 ): ArtifactInfo[] {
   const results: ArtifactInfo[] = [];
   if (!existsSync(dir)) return results;
 
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-    const relPath = basePath ? `${basePath}/${entry.name}` : entry.name;
-    if (entry.isDirectory()) {
-      results.push(...collectFiles(fullPath, extension, relPath));
-    } else if (entry.name.endsWith(extension)) {
-      try {
-        const stat = statSync(fullPath);
-        results.push({
-          name: entry.name,
-          path: relPath,
-          sizeBytes: stat.size,
-          sizeKB: formatSize(stat.size),
-        });
-      } catch (e) {
-        log.warn(`Cannot stat ${relPath}: ${(e as Error).message}`);
-      }
+  for (const entry of walkFileEntries(dir, extension)) {
+    const relPath = entry.relativePath.replaceAll('\\', '/');
+    try {
+      const stat = statSync(entry.absolutePath);
+      results.push({
+        name: basename(entry.absolutePath),
+        path: relPath,
+        sizeBytes: stat.size,
+        sizeKB: formatSize(stat.size),
+      });
+    } catch (e) {
+      log.warn(`Cannot stat ${relPath}: ${(e as Error).message}`);
     }
   }
   return results;

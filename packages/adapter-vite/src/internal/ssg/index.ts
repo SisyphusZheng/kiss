@@ -39,22 +39,11 @@ export type {
   IslandDecl,
   MiddlewareDecl,
   MiddlewareScopeDecl,
-  OpenElementBuild,
-  OpenElementExportMap,
-  OpenElementPackageExports,
-  OpenElementPackageResolver,
-  PackageResolverInput,
-  PackageResolverResult,
   PageRouteDecl,
-  ParallelRenderOptions,
-  ParallelRenderPageOutput,
-  ParallelRenderResult,
   RendererDecl,
   ResolvedAppShell,
-  ResolvedSpecifier,
   SpeculationRulesOptions,
   SsgBehaviorOptions,
-  SsgPageInput,
   SsgPageOutput,
   SsgRenderEvidence,
   SsgRenderOptions,
@@ -93,8 +82,6 @@ export {
 } from './route-scanner.ts';
 
 export { classifyCemManifest, parseCem } from './cem-compat.ts';
-
-export { generateRouteTypes } from './route-type-generator.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
 

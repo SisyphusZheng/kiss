@@ -60,9 +60,9 @@ Reader shell.
       PDF text page reflects the new preferences.
     - Add a local source path (or use the "选择文件夹" picker on macOS) and
       sync → new books appear on the shelf.
-12. Run unit tests:
+12. Run the smoke suite (Reader unit + host-store tests):
     ```sh
-    deno task --cwd examples/deno-desktop-reader test
+    deno task --cwd examples/deno-desktop-reader smoke
     ```
 13. Open `/wc-interop` and verify the third-party Web Component interop route
     renders.
@@ -73,11 +73,12 @@ Reader shell.
    ```sh
    deno task --cwd examples/deno-desktop-reader build
    ```
-2. Start the desktop server:
+2. Launch the compiled desktop app:
    ```sh
-   deno task --cwd examples/deno-desktop-reader start
+   open deno-desktop-reader.app
    ```
-3. Open the printed local URL in a browser (or load it in the webview shell).
+3. The app serves its UI on a local port; open it in a browser (or use the
+   webview shell window).
 4. Verify the desktop bridge injection:
    - `window.__OPEN_READER_DESKTOP_HOST__` is `true`.
 5. Repeat steps 3–11 from the browser smoke workflow.

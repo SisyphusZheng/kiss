@@ -5,12 +5,13 @@
  * Each manifest lists the islands found on a page with their chunk URLs and strategies.
  */
 
-import { join, posix } from 'node:path';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ComponentLayer, HydrationStrategy } from '../protocol/framework.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { isValidTagName } from '@openelement/element';
 import { stableHash } from './ssg-helpers.ts';
+import { walkHtmlFileEntries } from '../html-files.ts';
 
 /** Island manifest entry for a single custom element */
 export interface IslandManifestEntry {
@@ -122,43 +123,30 @@ export function generateIslandManifests(
 
   if (!existsSync(htmlDir)) return manifests;
 
-  const entries = readdirSync(htmlDir, { withFileTypes: true });
+  // #710: single shared walker — deterministic order, dotfiles skipped.
+  for (const entry of walkHtmlFileEntries(htmlDir)) {
+    const html = readFileSync(entry.absolutePath, 'utf-8');
+    const tags = extractCustomElementTags(html);
 
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      const subManifests = generateIslandManifests(
-        join(htmlDir, entry.name),
-        islandChunkMap,
-        strategyMap,
-        layerMap,
-      );
-      for (const m of subManifests) {
-        m.route = m.route === '/'
-          ? posix.join('/', entry.name)
-          : posix.join('/', entry.name, m.route);
-      }
-      manifests.push(...subManifests);
-    } else if (entry.name.endsWith('.html')) {
-      const html = readFileSync(join(htmlDir, entry.name), 'utf-8');
-      const tags = extractCustomElementTags(html);
+    const islands: IslandManifestEntry[] = tags
+      .filter((tag) => tag in islandChunkMap)
+      .map((tag) => ({
+        tagName: tag,
+        chunkUrl: islandChunkMap[tag],
+        strategy: strategyMap[tag] || 'idle',
+        layer: layerMap[tag] || 'dsd-static',
+      }));
 
-      const islands: IslandManifestEntry[] = tags
-        .filter((tag) => tag in islandChunkMap)
-        .map((tag) => ({
-          tagName: tag,
-          chunkUrl: islandChunkMap[tag],
-          strategy: strategyMap[tag] || 'idle',
-          layer: layerMap[tag] || 'dsd-static',
-        }));
+    // Route from the output-relative path: 'index.html' -> '/',
+    // 'about/index.html' -> '/about', 'about.html' -> '/about'.
+    const rel = entry.relativePath.replaceAll('\\', '/').replace(/\.html$/, '');
+    const route = rel === 'index' ? '/' : `/${rel.replace(/\/index$/, '')}`;
 
-      const route = entry.name === 'index.html' ? '/' : `/${entry.name.replace(/\.html$/, '')}`;
-
-      manifests.push({
-        route,
-        islands,
-        builtAt: new Date().toISOString(),
-      });
-    }
+    manifests.push({
+      route,
+      islands,
+      builtAt: new Date().toISOString(),
+    });
   }
 
   return manifests;

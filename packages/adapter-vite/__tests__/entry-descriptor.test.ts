@@ -31,17 +31,15 @@ Deno.test('buildEntryDescriptor: default options produce correct structure', () 
   assertEquals(desc.apiRoutes.length, 1);
   assertEquals(desc.pageRoutes.length, 2);
   assertEquals(desc.middleware.length, 4); // requestId, logger, cors, securityHeaders
-  assertEquals(desc.debugRoutes?.length, 3); // all 3 non-special routes
   assertEquals(desc.document.lang, 'en');
   assertEquals(desc.document.title, 'openElement');
   assertEquals(desc.document.headExtras, '');
 });
 
-Deno.test('buildEntryDescriptor: SSG mode sets isSSG and omits debugRoutes', () => {
+Deno.test('buildEntryDescriptor: SSG mode sets isSSG', () => {
   const desc = buildEntryDescriptor(sampleRoutes, { ssg: true });
 
   assertEquals(desc.isSSG, true);
-  assertEquals(desc.debugRoutes, undefined);
 });
 
 Deno.test('buildEntryDescriptor: middleware can be disabled', () => {
@@ -150,15 +148,12 @@ Deno.test('renderEntry: SSG mode omits /__kiss debug endpoint', () => {
   assertEquals(code.includes('/__kiss'), false);
 });
 
-Deno.test('renderEntry: dev mode includes debug route data', () => {
+Deno.test('renderEntry: dev mode omits the /__kiss debug endpoint', () => {
   const desc = buildEntryDescriptor(sampleRoutes);
   const code = renderEntry(desc);
 
   // Debug endpoint was removed in Phase 4A audit (security: leaked route info).
-  // Instead, debugRoutes are available in the descriptor for tooling consumption.
-  assertEquals(desc.debugRoutes !== undefined, true);
-  assertEquals(desc.debugRoutes!.length, 3); // 3 non-special routes
-  // Generated code should NOT contain /__kiss (removed for security)
+  // Generated code must NOT contain /__kiss.
   assertEquals(code.includes('/__kiss'), false);
 });
 

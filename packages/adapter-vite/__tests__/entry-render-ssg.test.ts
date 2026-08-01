@@ -33,9 +33,8 @@ interface RenderedPage {
 
 /**
  * Execute the generated SSG section with mocked entry-level dependencies.
- * The generated re-export lines (bare specifiers) are stripped; everything
- * else runs verbatim, except import.meta.env.PROD which is replaced the same
- * way Vite's define would at bundle time.
+ * The generated code runs verbatim, except import.meta.env.PROD which is
+ * replaced the same way Vite's define would at bundle time.
  */
 async function loadGeneratedRenderRoute(options: {
   renderAppShellBody: string;
@@ -44,9 +43,6 @@ async function loadGeneratedRenderRoute(options: {
 }): Promise<(path: string, opts?: Record<string, unknown>) => Promise<RenderedPage>> {
   const desc = buildEntryDescriptor(routes, { ssg: true });
   const section = renderSsgSection(desc)
-    .split('\n')
-    .filter((line) => !line.startsWith('export {'))
-    .join('\n')
     .replaceAll('import.meta.env.PROD', options.prod ? 'true' : 'false');
 
   const harness = `

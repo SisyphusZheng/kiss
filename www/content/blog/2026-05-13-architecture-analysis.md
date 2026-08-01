@@ -1,4 +1,12 @@
-﻿# LessJS 架构分析报告
+---
+title: 'LessJS 架构分析报告'
+date: '2026-05-13'
+type: 'post'
+tags: ['architecture', 'analysis']
+draft: false
+---
+
+# LessJS 架构分析报告
 
 > 日期：2026-05-13
 > 目标：E S M 原生 + DSD 驱动 + Vite 可选的 SSG 框架可行性分析

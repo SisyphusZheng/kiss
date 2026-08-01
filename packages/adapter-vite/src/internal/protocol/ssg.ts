@@ -9,42 +9,6 @@ import type { CompatibilityClassification, HydrationStrategy } from './framework
 import type { RenderError, SsrAdmissionDecision } from './render.ts';
 import type { OpenElementPackageManifest } from './manifest.ts';
 
-// ─── Concurrency types ───────────────────────────────────────
-
-/** A single page to be rendered during SSG. */
-export interface SsgPageInput {
-  /** Route path (e.g. '/about', '/blog/hello') */
-  path: string;
-  /** Route params (e.g. { slug: 'hello' }) */
-  params?: Record<string, string>;
-}
-
-/** Result of rendering a single page through the concurrency helper. */
-export interface ParallelRenderPageOutput {
-  path: string;
-  html: string;
-  durationMs: number;
-  error?: string;
-}
-
-/** Options for parallel SSG rendering. */
-export interface ParallelRenderOptions {
-  /** Pages to render. */
-  pages: SsgPageInput[];
-  /** Render function called for each page. */
-  renderPage: (page: SsgPageInput) => Promise<string>;
-  /** Number of concurrent workers. Defaults to hardware concurrency or 4. */
-  concurrency?: number;
-}
-
-/** Summary of a parallel render run. */
-export interface ParallelRenderResult {
-  pages: ParallelRenderPageOutput[];
-  totalDurationMs: number;
-  successCount: number;
-  errorCount: number;
-}
-
 // ─── SSG render pipeline options ─────────────────────────────
 
 /** Options passed to the shared SSG render pipeline. */
@@ -259,7 +223,6 @@ export interface EntryDescriptor {
   document: DocumentConfig;
   appShell: AppShellPlan;
   upgradeStrategy?: HydrationStrategy;
-  debugRoutes?: Array<{ path: string; type: string }>;
 }
 
 // ─── SSG render pipeline types (from ssg-render.ts) ──────────────
@@ -294,7 +257,11 @@ export interface SsgPageOutput {
  */
 export interface RouteInfoEntry {
   path: string;
-  /** Emitted by the generated entry; not read by the render pipeline. */
+  /**
+   * Route module file path. Read by the render pipeline: ssg-render.ts copies
+   * it into server-manifest.json for request-time (renderIntent 'dynamic')
+   * routes.
+   */
   filePath?: string;
   tagName: string;
   /** The route module namespace object (typed per-module at codegen time). */
@@ -322,7 +289,6 @@ export interface SsrBundle {
     opts?: Record<string, unknown>,
   ) => Promise<SsgPageOutput>;
   getStaticPaths?: (path: string) => Promise<Array<Record<string, string>>>;
-  posts?: unknown[];
   [key: string]: unknown;
 }
 
@@ -495,64 +461,3 @@ export interface BuildArtifacts {
   /** Whether the build succeeded. */
   success: boolean;
 }
-
-// ─── Build pipeline function contract (implementation lives in @openelement/ssg) ─
-
-/** Build function contract implemented by adapter-agnostic SSG engines. */
-export type OpenElementBuild = (
-  plan: BuildPlan,
-) => Promise<BuildArtifacts>;
-
-// ─── Resolver contracts (alpha.5 T4) ─────────────────────────────
-
-/** A resolved specifier target. */
-export interface ResolvedSpecifier {
-  /** Final specifier to use in generated code or import map. */
-  specifier: string;
-  /** True if the specifier points to a remote (https://) source. */
-  isRemote: boolean;
-  /** Optional local file system path when resolved to disk. */
-  filePath?: string;
-}
-
-/** Input to the OpenElement package resolver. */
-export interface PackageResolverInput {
-  /** The import specifier to resolve, e.g. '@openelement/element'. */
-  id: string;
-  /** The module requesting the resolution, if any. */
-  importer?: string;
-  /** Workspace root directory, when running inside a Deno workspace. */
-  workspaceRoot?: string | null;
-  /** Local monorepo root for source fallback. */
-  localPackageRoot?: string | null;
-  /** Package version to use for remote registry resolution. */
-  version?: string;
-  /** Registry mode. 'npm' uses node_modules; 'jsr' fetches remote source. */
-  registry?: 'npm' | 'jsr';
-  /** User-provided aliases that should take precedence. */
-  userAliases?: Record<string, string> | Array<{ find: string; replacement: string }> | null;
-}
-
-/** Result of resolving an OpenElement package specifier. */
-export interface PackageResolverResult {
-  /** Resolved target, or null if the resolver declined. */
-  resolution: ResolvedSpecifier | null;
-  /** Errors if the specifier is known to be invalid. */
-  errors: string[];
-  /** Warnings, e.g. deprecated subpaths. */
-  warnings: string[];
-}
-
-/** Contract for an OpenElement package/subpath resolver. */
-export type OpenElementPackageResolver = (
-  input: PackageResolverInput,
-) => PackageResolverResult | Promise<PackageResolverResult>;
-
-/** Known OpenElement package name and its exported subpaths. */
-export interface OpenElementPackageExports {
-  packageName: string;
-  exports: Record<string, string>;
-}
-
-/** Registry from package name to exported subpaths. */
-export type OpenElementExportMap = Record<string, OpenElementPackageExports>;

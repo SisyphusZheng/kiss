@@ -2,8 +2,8 @@
  * ./index.ts - SSG entry code generation
  *
  * Generates the SSG-specific sections of the virtual Hono entry module,
- * including SSG utility re-exports, routeInfo, renderRoute, getStaticPaths,
- * and supporting helper functions.
+ * including routeInfo, renderRoute, getStaticPaths, and supporting helper
+ * functions.
  */
 
 import type { EntryDescriptor } from '../protocol/ssg.ts';
@@ -19,8 +19,8 @@ import {
 /**
  * Render the SSG-specific section of the entry code.
  *
- * This includes SSG utility re-exports, route metadata, renderRoute,
- * getStaticPaths, and supporting helper functions.
+ * This includes route metadata, renderRoute, getStaticPaths, and supporting
+ * helper functions.
  *
  * Returns an empty string when SSG mode is disabled.
  */
@@ -29,25 +29,6 @@ export function renderSsgSection(desc: EntryDescriptor): string {
 
   const lines: string[] = [];
 
-  lines.push('');
-  lines.push(
-    '// - SSG Utility Re-exports (ADR 0008 Phase C) -',
-  );
-  lines.push('// Used by build-ssg.ts after importing the SSR bundle.');
-  lines.push(
-    '// Shared module scope ensures adapter/data state is consistent.',
-  );
-  lines.push('');
-  lines.push(
-    'export { renderDsd, renderDsdTree, wrapInDocument } from "@openelement/element"',
-  );
-  lines.push(
-    'export { posts, getPostBySlug } from "@openelement/generated/blog-data"',
-  );
-  lines.push('export { generateSitemap } from "@openelement/adapter-vite/sitemap"');
-  lines.push(
-    'export { locales, getDefaultLocale } from "@openelement/generated/i18n"',
-  );
   lines.push('');
   lines.push(
     '// - ADR 0014: DSD-first rendering API -',

@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0017: 框架运行时与构建编排解耦 — 拆分 @openelement/adapter-vite'
 date: '2026-05-11'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

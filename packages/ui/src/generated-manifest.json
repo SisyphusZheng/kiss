@@ -24,6 +24,14 @@
         {
           "name": "",
           "description": "Default slot"
+        },
+        {
+          "name": "header",
+          "description": "The 'header' slot"
+        },
+        {
+          "name": "footer",
+          "description": "The 'footer' slot"
         }
       ],
       "cssParts": [
@@ -66,6 +74,20 @@
         {
           "name": "",
           "description": "Default slot"
+        }
+      ],
+      "cssParts": [
+        {
+          "name": "container",
+          "description": "The 'container' part"
+        },
+        {
+          "name": "icon",
+          "description": "The 'icon' part"
+        },
+        {
+          "name": "content",
+          "description": "The 'content' part"
         }
       ],
       "openElement": {
@@ -332,6 +354,12 @@
           "description": "Default slot"
         }
       ],
+      "cssParts": [
+        {
+          "name": "badge",
+          "description": "The 'badge' part"
+        }
+      ],
       "openElement": {
         "ssr": true,
         "dsd": true,
@@ -375,6 +403,14 @@
         {
           "name": "",
           "description": "Default slot"
+        },
+        {
+          "name": "trigger",
+          "description": "The 'trigger' slot"
+        },
+        {
+          "name": "footer",
+          "description": "The 'footer' slot"
         }
       ],
       "cssParts": [
@@ -448,10 +484,6 @@
       "superclassName": "OpenElement",
       "description": "",
       "slots": [
-        {
-          "name": "",
-          "description": "Default slot"
-        },
         {
           "name": "tab",
           "description": "Tab label element (one per panel)"

@@ -49,14 +49,6 @@ export function createBlogPlugin(
       log.info(`Blog: wrote _generated-blog-data.ts (${result.posts.length} post(s))`);
     },
 
-    config() {
-      return {
-        define: {
-          __BLOG_BASE_PATH__: JSON.stringify(basePath),
-        },
-      };
-    },
-
     configureServer(server: ViteDevServer) {
       const absoluteContentDir = resolve(server.config.root, contentDir);
 

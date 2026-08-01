@@ -20,8 +20,6 @@ const REQUIRED_LOCAL_ISLANDS = {
   'cinematic-atmosphere': { hydrate: 'idle', ssr: true, dsd: true },
   'cinematic-scroll': { hydrate: 'load', ssr: true, dsd: true },
   'open-search': { hydrate: 'load', ssr: true, dsd: true },
-  'reactive-showcase': { hydrate: 'idle', ssr: true, dsd: true },
-  'scroll-reveal': { hydrate: 'idle', ssr: true, dsd: true },
 } as const;
 
 async function scanWwwIslandMetadata() {

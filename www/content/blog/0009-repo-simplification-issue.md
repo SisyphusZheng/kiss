@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'Repo-wide Simplification Roadmap: ADR 0008 + ADR 0009'
 date: '2026-05-11'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Overview

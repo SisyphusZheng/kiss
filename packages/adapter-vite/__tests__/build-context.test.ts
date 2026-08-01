@@ -81,13 +81,6 @@ Deno.test('OpenElementBuildContext populatePhase3 sets phase3 invariants', () =>
   assertEquals(ctx.phase3.ssrNoExternal.length, 2);
 });
 
-Deno.test('OpenElementBuildContext getPhase3Meta returns read-only phase3', () => {
-  const ctx = new OpenElementBuildContext({});
-  ctx.populatePhase3({}, { root: '/root', base: '/', command: 'build' } as never, []);
-  const meta = ctx.getPhase3Meta();
-  assertEquals(meta.root, '/root');
-});
-
 Deno.test('OpenElementBuildContext phase ordering is enforced', () => {
   const ctx = new OpenElementBuildContext({});
 

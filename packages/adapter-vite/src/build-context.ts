@@ -116,9 +116,6 @@ export class Phase3Meta {
    * rather than passing RegExp instances directly. */
   ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[] = [];
 
-  /** SSR deps to keep as external (resolved by Deno import() at runtime per ADR-0043) */
-  ssrExternal: string[] = [];
-
   /** Routes directory */
   routesDir: string = 'app/routes';
 
@@ -218,11 +215,6 @@ export class OpenElementBuildContext {
     this.phase3.allowHeadExtrasScripts = options.allowHeadExtrasScripts || false;
     this.phase3.appShell = options.appShell;
     this.phase3.layouts = options.layouts;
-  }
-
-  /** Return a read-only view of Phase 3 metadata. */
-  getPhase3Meta(): Readonly<Phase3Meta> {
-    return this.phase3;
   }
 
   /** Reset all mutable state (for watch mode / testing) */

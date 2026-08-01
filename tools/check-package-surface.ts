@@ -195,6 +195,54 @@ if (!surfaceMap) {
   }
 }
 
+// ─── www apilist surface literals ─────────────────────────
+// The supported-subpath chips on www/app/routes/apilist.tsx must match each
+// package's exports map ('root' stands for the '.' export). Entries with
+// placeholder chips ('CLI only', 'retained primitive subpaths') are skipped;
+// element, app and adapter-vite must always be checked so the gate cannot
+// silently no-op.
+
+const APILIST_REQUIRED_PACKAGES = [
+  '@openelement/element',
+  '@openelement/app',
+  '@openelement/adapter-vite',
+];
+
+const apilist = await Deno.readTextFile('www/app/routes/apilist.tsx');
+const apilistChecked: string[] = [];
+for (
+  const match of apilist.matchAll(
+    /importPath: '([^']+)'[\s\S]*?exports: \[([^\]]*)\]/g,
+  )
+) {
+  const [, importPath, exportsLiteral] = match;
+  const pkg = packages.find((candidate) => candidate.name === importPath);
+  if (!pkg) continue; // e.g. npm:@openelement/create is not a workspace package
+  const chips = [...exportsLiteral.matchAll(/'([^']+)'/g)].map((chip) => chip[1]);
+  if (chips.some((chip) => !/^[a-z0-9./-]+$/.test(chip))) continue; // placeholder chips
+  const documented = chips
+    .map((chip) => (chip === 'root' ? '.' : chip))
+    .sort((left, right) => left.localeCompare(right));
+  const actual = Object.keys(normalizeExports(pkg.exports)).sort((left, right) =>
+    left.localeCompare(right)
+  );
+  if (JSON.stringify(documented) !== JSON.stringify(actual)) {
+    failures.push(
+      `www/app/routes/apilist.tsx ${pkg.name} exports drift. expected=${
+        JSON.stringify(actual)
+      } actual=${JSON.stringify(documented)}`,
+    );
+  }
+  apilistChecked.push(pkg.name);
+}
+for (const required of APILIST_REQUIRED_PACKAGES) {
+  if (!apilistChecked.includes(required)) {
+    failures.push(
+      `www/app/routes/apilist.tsx does not document ${required} exports as concrete subpaths.`,
+    );
+  }
+}
+
 if (failures.length > 0) {
   console.error('Package surface check failed:');
   for (const failure of failures) console.error(`- ${failure}`);

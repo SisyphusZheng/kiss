@@ -71,7 +71,13 @@ export function versionAnchors(): VersionAnchor[] {
     },
     {
       path: 'README.zh.md',
-      snippet: `已发布包线为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）`,
+      snippet: `源码包行为 \`${PACKAGE_VERSION}\`（\`${PACKAGE_VERSION_TAG}\`）`,
+    },
+    {
+      path: 'README.zh.md',
+      snippet: `npm registry 行为 \`${PACKAGE_VERSION_TAG}\``,
+      // The registry publishes at release time, one alpha after the source bump.
+      alternatives: [`npm registry 行为 \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
     },
     {
       path: 'docs/roadmap/ROADMAP.md',

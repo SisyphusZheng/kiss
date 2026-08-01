@@ -10,7 +10,7 @@ import {
 // collide with the guard on the next version bump (#727).
 const previousPrereleaseTag = PREVIOUS_PACKAGE_VERSION.match(/-([a-zA-Z]+\.\d+)$/u)?.[1];
 
-type Failure = {
+export type Failure = {
   file: string;
   message: string;
 };
@@ -29,6 +29,9 @@ const currentContractDocs = [
   'docs/current/HYDRATION_CONTRACT.md',
   'docs/current/STACK_CONTRACT.md',
 ];
+
+const packageSurfaceDoc = 'docs/current/PACKAGE_SURFACE.md';
+const integrationsDocsDir = 'docs/integrations';
 
 const readmeDocs = ['README.md', 'README.zh.md'];
 const productDoctrinePatterns = [
@@ -76,14 +79,91 @@ const staleCurrentClaims: RegExp[] = [
   /v0\.41 beta/i,
 ];
 
-const failures: Failure[] = [];
 const requiredCommunityFiles = [
   'SECURITY.md',
   'CODE_OF_CONDUCT.md',
   'MAINTAINERS.md',
 ];
 
-async function read(file: string): Promise<string> {
+/**
+ * Importable @openelement specifiers declared by the current package surface
+ * (#737). Parsed from the machine-readable package-surface-map block of
+ * docs/current/PACKAGE_SURFACE.md — the same map package-surface:check keeps
+ * in sync with each package's exports field. Both supported and internal
+ * subpaths are importable (internal subpaths stay reachable for optional
+ * integrations); anything else — retired packages such as @openelement/core,
+ * @openelement/signal, @openelement/router, @openelement/protocol,
+ * @openelement/content or @openelement/ssg, and unknown subpaths — is not in
+ * the current package surface and must not be referenced by integration docs.
+ */
+export function packageSurfaceSpecifiers(surfaceText: string): Set<string> {
+  const match = surfaceText.match(/<!-- package-surface-map\s*([\s\S]*?)\s*-->/u);
+  if (!match) {
+    throw new Error(`${packageSurfaceDoc}: package-surface-map block missing`);
+  }
+  const map = JSON.parse(match[1]) as Record<string, { supported?: string[]; internal?: string[] }>;
+  const specifiers = new Set<string>();
+  for (const [name, entry] of Object.entries(map)) {
+    for (const subpath of [...(entry.supported ?? []), ...(entry.internal ?? [])]) {
+      specifiers.add(subpath === '.' ? name : `${name}/${subpath}`);
+    }
+  }
+  return specifiers;
+}
+
+/**
+ * Check docs/integrations/*.md against the current package surface (#737):
+ * every @openelement/* package or subpath an integration doc tells a reader
+ * to use must be importable per PACKAGE_SURFACE.md. Retired package names and
+ * drifted subpaths are reported instead of silently guiding users to imports
+ * that no longer exist.
+ */
+export function findIntegrationSpecifierFailures(
+  read: (path: string) => string,
+  integrationDocs: string[],
+): Failure[] {
+  const failures: Failure[] = [];
+  let specifiers: Set<string>;
+  try {
+    specifiers = packageSurfaceSpecifiers(read(packageSurfaceDoc));
+  } catch (error) {
+    return [{
+      file: packageSurfaceDoc,
+      message: `cannot read package surface: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    }];
+  }
+  for (const file of integrationDocs) {
+    let text: string;
+    try {
+      text = read(file);
+    } catch (error) {
+      failures.push({
+        file,
+        message: `cannot read file: ${error instanceof Error ? error.message : String(error)}`,
+      });
+      continue;
+    }
+    const mentioned = new Set<string>();
+    for (
+      const m of text.matchAll(/@openelement\/[a-z0-9][a-z0-9-]*(?:\/[a-z0-9][a-z0-9./-]*)?/gu)
+    ) {
+      mentioned.add(m[0]);
+    }
+    for (const specifier of [...mentioned].sort()) {
+      if (!specifiers.has(specifier)) {
+        failures.push({
+          file,
+          message: `package specifier not in the current package surface: ${specifier}`,
+        });
+      }
+    }
+  }
+  return failures;
+}
+
+async function read(file: string, failures: Failure[]): Promise<string> {
   try {
     return await Deno.readTextFile(file);
   } catch (error) {
@@ -95,76 +175,94 @@ async function read(file: string): Promise<string> {
   }
 }
 
-for (const file of currentPublicDocs) {
-  const text = await read(file);
-  if (!text) continue;
+async function main(): Promise<void> {
+  const failures: Failure[] = [];
 
-  if (!text.includes(PACKAGE_VERSION_TAG)) {
-    failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
-  }
+  for (const file of currentPublicDocs) {
+    const text = await read(file, failures);
+    if (!text) continue;
 
-  if (!text.includes(PACKAGE_VERSION)) {
-    failures.push({ file, message: `missing package version ${PACKAGE_VERSION}` });
-  }
-
-  for (const pattern of staleCurrentClaims) {
-    const match = text.match(pattern);
-    if (match) {
-      failures.push({ file, message: `stale current-line claim: ${match[0]}` });
+    if (!text.includes(PACKAGE_VERSION_TAG)) {
+      failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
     }
-  }
-}
 
-for (const file of currentContractDocs) {
-  const text = await read(file);
-  if (!text) continue;
-  const staleMaturity = text.match(/v0\.41 beta/i);
-  if (staleMaturity) {
-    failures.push({ file, message: `stale current maturity claim: ${staleMaturity[0]}` });
-  }
-}
+    if (!text.includes(PACKAGE_VERSION)) {
+      failures.push({ file, message: `missing package version ${PACKAGE_VERSION}` });
+    }
 
-for (const file of readmeDocs) {
-  const text = await read(file);
-  if (!text) continue;
-
-  for (const doctrine of productDoctrinePatterns) {
-    if (!text.includes(doctrine)) {
-      failures.push({ file, message: `missing product doctrine formula: ${doctrine}` });
+    for (const pattern of staleCurrentClaims) {
+      const match = text.match(pattern);
+      if (match) {
+        failures.push({ file, message: `stale current-line claim: ${match[0]}` });
+      }
     }
   }
 
-  for (const pattern of mojibakePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      failures.push({ file, message: `mojibake/replacement text matched: ${match[0]}` });
+  for (const file of currentContractDocs) {
+    const text = await read(file, failures);
+    if (!text) continue;
+    const staleMaturity = text.match(/v0\.41 beta/i);
+    if (staleMaturity) {
+      failures.push({ file, message: `stale current maturity claim: ${staleMaturity[0]}` });
     }
   }
-}
 
-for (const file of requiredCommunityFiles) {
-  const text = await read(file);
-  if (!text) continue;
-  if (text.trim().length < 80) {
-    failures.push({ file, message: 'public entry point is unexpectedly empty' });
+  for (const file of readmeDocs) {
+    const text = await read(file, failures);
+    if (!text) continue;
+
+    for (const doctrine of productDoctrinePatterns) {
+      if (!text.includes(doctrine)) {
+        failures.push({ file, message: `missing product doctrine formula: ${doctrine}` });
+      }
+    }
+
+    for (const pattern of mojibakePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        failures.push({ file, message: `mojibake/replacement text matched: ${match[0]}` });
+      }
+    }
   }
-}
 
-const contributing = await read('CONTRIBUTING.md');
-for (const file of requiredCommunityFiles) {
-  if (!contributing.includes(file)) {
-    failures.push({ file: 'CONTRIBUTING.md', message: `missing link to ${file}` });
+  for (const file of requiredCommunityFiles) {
+    const text = await read(file, failures);
+    if (!text) continue;
+    if (text.trim().length < 80) {
+      failures.push({ file, message: 'public entry point is unexpectedly empty' });
+    }
   }
-}
 
-if (failures.length > 0) {
-  console.error('Public docs integrity check failed:');
-  for (const failure of failures) {
-    console.error(`- ${failure.file}: ${failure.message}`);
+  const contributing = await read('CONTRIBUTING.md', failures);
+  for (const file of requiredCommunityFiles) {
+    if (!contributing.includes(file)) {
+      failures.push({ file: 'CONTRIBUTING.md', message: `missing link to ${file}` });
+    }
   }
-  Deno.exit(1);
+
+  const integrationDocs: string[] = [];
+  for await (const entry of Deno.readDir(integrationsDocsDir)) {
+    if (entry.isFile && entry.name.endsWith('.md')) {
+      integrationDocs.push(`${integrationsDocsDir}/${entry.name}`);
+    }
+  }
+  failures.push(
+    ...findIntegrationSpecifierFailures((path) => Deno.readTextFileSync(path), integrationDocs),
+  );
+
+  if (failures.length > 0) {
+    console.error('Public docs integrity check failed:');
+    for (const failure of failures) {
+      console.error(`- ${failure.file}: ${failure.message}`);
+    }
+    Deno.exit(1);
+  }
+
+  console.log(
+    `Public docs integrity check passed (${currentPublicDocs.length} docs, ` +
+      `${integrationDocs.length} integration docs, package ${PACKAGE_VERSION_TAG}, ` +
+      'alpha maturity).',
+  );
 }
 
-console.log(
-  `Public docs integrity check passed (${currentPublicDocs.length} docs, package ${PACKAGE_VERSION_TAG}, alpha maturity).`,
-);
+if (import.meta.main) await main();

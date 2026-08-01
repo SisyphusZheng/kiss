@@ -122,6 +122,22 @@ Deno.test('generated starter pins every OpenElement import to the exact release'
   );
 });
 
+Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks app-shell', () => {
+  const denoJson = JSON.parse(readTemplate('deno.json.tmpl'));
+  // #680: @deno/vite-plugin must be pinned to an exact version, not a range.
+  const vitePlugin = String(denoJson.imports['@deno/vite-plugin'] || '');
+  assert(/^npm:@deno\/vite-plugin@\d+\.\d+\.\d+$/.test(vitePlugin), vitePlugin);
+  // #681: starter vite version must stay aligned with packages/adapter-vite.
+  const adapterViteImports = JSON.parse(
+    readFileSync(join(packageDir, '..', 'adapter-vite', 'deno.json'), 'utf-8'),
+  ).imports;
+  assertEquals(denoJson.imports.vite, adapterViteImports.vite);
+  assert(/^npm:vite@\d+\.\d+\.\d+$/.test(String(denoJson.imports.vite)), denoJson.imports.vite);
+  // #679: the check task must cover the app-shell component template.
+  const checkTask = String(denoJson.tasks.check || '');
+  assert(checkTask.includes('app/components/app-shell.tsx'), checkTask);
+});
+
 Deno.test('starter templates use the supported Element JSX entrypoint', () => {
   for (
     const path of [

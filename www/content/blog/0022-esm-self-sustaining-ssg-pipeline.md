@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0022: ESM-Native LessJS — Pure ESM Imports Across Browser/Deno/Bun/CF Workers'
 date: '2026-05-13'
 type: 'adr'
 tags: ['architecture', 'esm', 'ssg', 'core', 'build', 'standards', 'portability']
 draft: false
-hidden: true
 ---
 
 # ADR 0022: ESM-Native LessJS — Pure ESM Imports Across Browser/Deno/Bun/CF Workers

@@ -195,6 +195,27 @@ Deno.test('ssgRender - handles options with speculation enabled', async () => {
   await ssgRender(bundle, { ...defaultOptions, speculation: true });
 });
 
+// ─── #674: output mkdir failures must propagate, not be swallowed ───
+
+Deno.test('ssgRender - output mkdir failure aborts the build with the fs error (#674)', async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    // A regular file sits where the output directory must be created, so the
+    // recursive mkdir fails (ENOTDIR). Previously this was swallowed and the
+    // build misreported the root cause downstream.
+    await Deno.writeTextFile(`${root}/dist`, 'blocker');
+    const bundle = createMockBundle();
+
+    const error = await assertRejects(
+      () => ssgRender(bundle, { root, outDir: './dist' }),
+      Error,
+    );
+    assertStringIncludes(String(error), 'dist');
+  } finally {
+    await Deno.remove(root, { recursive: true }).catch(() => {});
+  }
+});
+
 // ─── alpha.18 R2-H3: static-route non-200 outcomes ─────────────
 
 Deno.test('ssgRender - static non-200 routes fail the build (#600)', async () => {

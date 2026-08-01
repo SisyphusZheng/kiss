@@ -145,18 +145,19 @@ re-rendering. The example's full island registers both `open-button` and
 ## Known Limitation
 
 The example's island registers **inline custom element stubs** instead of
-importing `@openelement/ui`. Root cause: `deno pack` does not apply JSX
-transformation when publishing `packages/ui` to npm — the output `.js` files
-retain raw JSX that Vite cannot transpile. The `compilerOptions.jsx` config is
-already in `packages/ui/deno.json`; the remaining blocker is the pack pipeline.
+importing `@openelement/ui` — a deliberate choice to keep the example lean,
+not a hard blocker. The former root cause is fixed: `deno pack` does apply
+JSX transformation when publishing `packages/ui` to npm (verified 2026-08-01:
+the packed `.js` output contains `jsx()` calls, no raw JSX), so replacing the
+stubs with `import "@openelement/ui"` is an unblocked follow-up.
 
 Consequences of the stub:
 
 - The stub ignores `variant`, `size`, and `disabled` attributes — it renders a
   plain button regardless, while the real `open-button` styles per variant.
-- There is no openElement hydration runtime in this integration. There is no
-  published `@openelement/core/hydrate` entry; client behavior comes entirely
-  from the registered custom element classes.
+- There is no openElement hydration runtime in this integration. The hydration
+  runtime is not published as a standalone package entry; client behavior
+  comes entirely from the registered custom element classes.
 
 Once the pack pipeline ships pre-compiled JS, replace the stubs with
 `import '@openelement/ui'` in the island.

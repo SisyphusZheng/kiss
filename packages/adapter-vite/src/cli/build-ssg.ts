@@ -17,7 +17,6 @@
 import { join, resolve } from 'node:path';
 import { normalizePath } from 'vite';
 import process from 'node:process';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import type {
   CompatibilityClassification,
   FrameworkOptions,
@@ -46,7 +45,7 @@ import {
 } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
-import { DEFAULT_OUT_DIR, OPEN_ELEMENT_DIR } from '../internal/paths.ts';
+import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 
 /** Chunk size warning limit (kB) for the SSR bundle build. */
 const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
@@ -221,14 +220,6 @@ async function buildSSG(
   const { renderEntry } = await import('../internal/ssg/index.ts');
 
   const routes = options.routes ?? await scanRoutes(routesDir);
-
-  // v0.25.0: Generate type-safe route parameter declarations for `virtual:open-routes`
-  const { generateRouteTypes } = await import('../internal/ssg/index.ts');
-  const routeTypeDts = generateRouteTypes(routes);
-  const dotOpenElementDir = join(root, OPEN_ELEMENT_DIR);
-  mkdirSync(dotOpenElementDir, { recursive: true });
-  writeFileSync(join(dotOpenElementDir, 'routes.d.ts'), routeTypeDts, 'utf-8');
-  log.info(`Route types generated -> .openElement/routes.d.ts`);
 
   const islandsRoot = join(root, islandsDir);
   const ssgIslandFiles = options.islandFiles ?? await scanIslands(islandsRoot);

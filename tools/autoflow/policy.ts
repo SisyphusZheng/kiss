@@ -160,7 +160,12 @@ export const GATES: readonly GateDefinition[] = [
     name: 'verify:configs',
     command: ['deno', 'task', 'verify:configs'],
     tiers: ['ci', 'release'],
-    triggers: [/^packages\/[^/]+\/deno\.json$/, /^tools\/verify-package-configs\.ts$/],
+    triggers: [
+      /^packages\/[^/]+\/deno\.json$/,
+      /^packages\/create\/src\/version\.ts$/,
+      /^tools\/project-constants\.ts$/,
+      /^tools\/verify-package-configs\.ts$/,
+    ],
   },
   {
     name: 'release:evidence:check',

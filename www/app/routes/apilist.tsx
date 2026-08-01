@@ -113,7 +113,7 @@ const packages: ApiPackage[] = [
     name: 'app',
     copy: 'The application surface for pages, routes, islands and request/render semantics.',
     importPath: '@openelement/app',
-    exports: ['root', 'hono', 'model', 'spa', 'preact'],
+    exports: ['root', 'model', 'spa', 'i18n', 'preact'],
     notes: [
       'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
       'The router and request-driver implementation are internal product knowledge.',
@@ -125,7 +125,7 @@ const packages: ApiPackage[] = [
     name: 'adapter-vite',
     copy: 'The official Vite, content, static-build and Nitro output adapter.',
     importPath: '@openelement/adapter-vite',
-    exports: ['root', 'nitro-mount', 'cli/build', 'sitemap'],
+    exports: ['root', 'nitro-mount', 'cli/build', 'cli/start', 'cli/preview', 'sitemap'],
     notes: [
       'Use `buildApp()` or the generated build task.',
       'Plugin ordering, manifests and content scans are adapter implementation details.',

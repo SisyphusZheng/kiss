@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0020: DSD 渲染引擎与 Islands 策略增强 — 核心护城河建设'
 date: '2026-05-12'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

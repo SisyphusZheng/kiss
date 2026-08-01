@@ -1,10 +1,9 @@
-﻿---
+---
 title: 'ADR 0021: A+ 架构冲刺 — API 表面收敛 + 管道化 + 参数校验'
 date: '2026-05-12'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## 状态

@@ -17,6 +17,13 @@ import { OpenElement, StyleSheet, type StyleSheetLike, type VNode } from '@opene
 import { signal } from '@openelement/element';
 
 export const tagName = 'open-tabs';
+
+// Instance-unique id prefix for the tab/panel aria wiring. The module-level
+// counter is SSR-safe: SSR instantiates components in document order and DSD
+// hydration upgrades them in the same document order, so both sides assign
+// identical ids to the same instance.
+let tabsInstanceCount = 0;
+
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(`
   :host{display:block}.tabs{display:flex;gap:var(--size-1);padding:var(--size-1);border-bottom:1px solid var(--surface-border)}
@@ -29,6 +36,7 @@ export class OpenTabs extends OpenElement {
   static override styles = [sheet];
   #active = signal(0);
   #wiredTabs = new WeakSet<HTMLElement>();
+  #uid = tabsInstanceCount++;
 
   #tabs(): HTMLElement[] {
     return [...this.querySelectorAll<HTMLElement>('[slot="tab"]')];
@@ -72,12 +80,13 @@ export class OpenTabs extends OpenElement {
    */
   #decorate(tabs: HTMLElement[], panels: HTMLElement[], count: number): void {
     const active = this.#active.value;
+    const prefix = `${tagName}-${this.#uid}`;
     tabs.forEach((tab, i) => {
       const enabled = i < count;
       tab.setAttribute('role', 'tab');
-      tab.setAttribute('id', `${tagName}-tab-${i}`);
+      tab.setAttribute('id', `${prefix}-tab-${i}`);
       tab.setAttribute('aria-selected', i === active && enabled ? 'true' : 'false');
-      tab.setAttribute('aria-controls', `${tagName}-panel-${i}`);
+      tab.setAttribute('aria-controls', `${prefix}-panel-${i}`);
       tab.setAttribute('tabindex', i === active ? '0' : '-1');
       tab.classList.toggle('tab-active', i === active);
       if (enabled) tab.removeAttribute('aria-disabled');
@@ -92,8 +101,8 @@ export class OpenTabs extends OpenElement {
     });
     panels.forEach((panel, i) => {
       panel.setAttribute('role', 'tabpanel');
-      panel.setAttribute('id', `${tagName}-panel-${i}`);
-      panel.setAttribute('aria-labelledby', `${tagName}-tab-${i}`);
+      panel.setAttribute('id', `${prefix}-panel-${i}`);
+      panel.setAttribute('aria-labelledby', `${prefix}-tab-${i}`);
       if (i === active) panel.removeAttribute('hidden');
       else panel.setAttribute('hidden', '');
     });

@@ -1,10 +1,9 @@
-﻿---
+---
 title: '@openelement/blog - Standalone Blog Package'
 date: '2026-05-01'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

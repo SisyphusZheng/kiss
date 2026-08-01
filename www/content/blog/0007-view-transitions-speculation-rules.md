@@ -4,7 +4,6 @@ date: '2026-05-09'
 type: 'adr'
 tags: ['architecture', 'decision']
 draft: false
-hidden: true
 ---
 
 ## Status

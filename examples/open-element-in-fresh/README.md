@@ -1,7 +1,8 @@
-# openElement in Fresh — alpha.4 Interop Proof
+# openElement in Fresh — Interop Proof
 
 A minimal [Fresh 2.3+](https://fresh.deno.dev) project that demonstrates openElement custom elements
-(`<open-button>`, `<open-card>`) running inside a Fresh app with Preact islands.
+(`<open-button>`, `<open-card>`) running inside a Fresh app with Preact islands. Maintained against
+the current framework source line (`0.42.0-alpha.10`).
 
 ## What It Proves
 
@@ -72,11 +73,12 @@ examples/open-element-in-fresh/
 
 ## Known Limitation
 
-The `OpenElements` island uses inline custom element stubs instead of `@openelement/ui`. Root cause:
-`deno pack` does not apply JSX transformation when publishing `packages/ui` to npm — the output
-`.js` files retain raw JSX which Vite cannot transpile.
+The `OpenElements` island uses inline custom element stubs instead of `@openelement/ui`. The
+original blocker — `deno pack` not applying JSX transformation when publishing `packages/ui` to
+npm, leaving raw JSX in the output `.js` files that Vite cannot transpile — is **resolved**: with
+the repo-pinned Deno toolchain the packed `.js` output contains transpiled `jsx()` calls (verified
+by packing `packages/ui` locally), and `compilerOptions.jsx` is already set in
+`packages/ui/deno.json`.
 
-**Fix (alpha.5):** The `compilerOptions.jsx` config is already in `packages/ui/deno.json`. The
-remaining blocker is the `deno pack` transpilation gap — when publishing to npm, JSX is not
-transformed to `jsx()` calls in the output `.js` files. Once the pack pipeline is fixed, replace
-stubs with `import "@openelement/ui"`.
+The stubs remain only to keep this example dependency-light. Replacing them with
+`import "@openelement/ui"` is now unblocked follow-up work, not a blocked one.

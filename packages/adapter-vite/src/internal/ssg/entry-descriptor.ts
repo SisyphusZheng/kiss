@@ -258,11 +258,6 @@ export function buildEntryDescriptor(
     layouts: options.layouts,
   });
 
-  // --- Debug routes (dev only) ---
-  const debugRoutes = isSSG ? undefined : routes
-    .filter((r) => !r.special)
-    .map((r) => ({ path: r.path, type: r.type }));
-
   return {
     isSSG,
     imports,
@@ -277,7 +272,6 @@ export function buildEntryDescriptor(
     document,
     appShell,
     upgradeStrategy: options.upgradeStrategy || 'idle',
-    debugRoutes,
   };
 }
 

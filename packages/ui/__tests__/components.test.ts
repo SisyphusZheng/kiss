@@ -784,6 +784,32 @@ Deno.test('open-input: change and focus events dispatch', async () => {
   assertEquals(blurEvents.length, 1);
 });
 
+Deno.test('open-input: ids are instance-unique and aria wiring stays consistent', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const renderWithError = () => {
+    const instance = new OpenInput();
+    instance.setAttribute('label', 'Email');
+    instance.setAttribute('error', 'Invalid email');
+    return instance.render() as VNode;
+  };
+  const first = renderWithError();
+  const second = renderWithError();
+
+  const firstInput = findByPart(first, 'control') as VNode;
+  const secondInput = findByPart(second, 'control') as VNode;
+  const firstError = findByPart(first, 'error') as VNode;
+  const firstLabel = findByPart(first, 'label') as VNode;
+
+  // Instance-unique: two instances never share an input id.
+  assertStringIncludes(String(firstInput.props.id), 'input-');
+  assertEquals(firstInput.props.id === secondInput.props.id, false);
+
+  // aria/label wiring references this instance's ids, not fixed strings.
+  assertEquals(firstLabel.props.htmlFor, firstInput.props.id);
+  assertEquals(firstInput.props['aria-describedby'], firstError.props.id);
+  assertEquals(firstInput.props['aria-errormessage'], firstError.props.id);
+});
+
 Deno.test('open-code-block: has correct tagName and copy button', async () => {
   const module = asComponentModule(await import('../src/open-code-block.tsx'));
   assertEquals(module.tagName, 'open-code-block');
@@ -1484,6 +1510,38 @@ Deno.test('open-tabs: tab without a matching panel is aria-disabled and not sele
   tabs[0].dispatchEvent(new Event('click'));
   instance.render();
   assertEquals(tabs[0].getAttribute('aria-selected'), 'false');
+});
+
+Deno.test('open-tabs: ids are instance-unique across multiple tab sets', async () => {
+  const { OpenTabs } = await import('../src/open-tabs.tsx');
+  const first = new OpenTabs();
+  const second = new OpenTabs();
+  const firstSetup = setupTabs(first);
+  const secondSetup = setupTabs(second);
+
+  first.render();
+  second.render();
+
+  const firstTabId = firstSetup.tabs[0].getAttribute('id') as string;
+  const secondTabId = secondSetup.tabs[0].getAttribute('id') as string;
+
+  // Instance-unique: two <open-tabs> on one page never share tab/panel ids.
+  assertStringIncludes(firstTabId, 'open-tabs-');
+  assertEquals(firstTabId === secondTabId, false);
+  assertEquals(
+    firstSetup.panels[0].getAttribute('id') === secondSetup.panels[0].getAttribute('id'),
+    false,
+  );
+
+  // aria cross-references stay inside the owning instance.
+  assertEquals(
+    firstSetup.tabs[1].getAttribute('aria-controls'),
+    firstSetup.panels[1].getAttribute('id'),
+  );
+  assertEquals(
+    secondSetup.panels[1].getAttribute('aria-labelledby'),
+    secondSetup.tabs[1].getAttribute('id'),
+  );
 });
 
 Deno.test('manifest: declares metadata for manifest-registered components', async () => {

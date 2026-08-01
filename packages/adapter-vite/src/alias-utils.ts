@@ -5,8 +5,9 @@
  * shape with absolute, root-relative replacements.
  */
 
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { type Alias } from 'vite';
+import { OPENELEMENT_EXPORT_FILES } from './generated-export-files.ts';
 
 function normalizeAliasReplacement(root: string, replacement: string): string {
   return replacement.startsWith('/') || /^[A-Za-z]:/.test(replacement) ||
@@ -30,28 +31,28 @@ interface OpenElementSourceSubpaths {
   files: Record<string, string>;
 }
 
-const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = {
-  '@openelement/app': {
-    rootFile: 'index.ts',
-    files: {
-      hono: 'hono.ts',
-      spa: 'spa.ts',
-      model: 'model.ts',
-      i18n: 'i18n.ts',
-      preact: 'preact.ts',
-    },
-  },
-  '@openelement/element': {
-    rootFile: 'index.ts',
-    files: {
-      'jsx-runtime': 'jsx-runtime.ts',
-      'jsx-dev-runtime': 'jsx-dev-runtime.ts',
-      'build-utils': 'build-utils.ts',
-      'open-element-render': 'open-element-render.ts',
-      'open-element-hydration': 'open-element-hydration.ts',
-    },
-  },
-};
+/**
+ * Derived from OPENELEMENT_EXPORT_FILES (generated from each package's
+ * deno.json "exports") so this table cannot drift from the real export maps
+ * again (#733: the hand-written table still listed app's deleted hono entry
+ * and element's removed open-element-render/open-element-hydration subpaths).
+ *
+ * Keys are the full package names ('@openelement/element'); `files` maps each
+ * public subpath to its source file relative to the package's src/ directory,
+ * resolved against the aliased src/ directory at expansion time.
+ */
+const OPENELEMENT_SOURCE_SUBPATHS: Record<string, OpenElementSourceSubpaths> = Object.fromEntries(
+  Object.entries(OPENELEMENT_EXPORT_FILES).flatMap(([pkg, exports]) => {
+    const rootEntry = exports['.'];
+    if (!rootEntry) return [];
+    const files: Record<string, string> = {};
+    for (const [subpath, file] of Object.entries(exports)) {
+      if (subpath === '.') continue;
+      files[subpath] = file.replace(/^src\//, '');
+    }
+    return [[`@openelement/${pkg}`, { rootFile: basename(rootEntry), files }]];
+  }),
+);
 
 function expandOpenElementSourceAliases(aliases: Alias[]): Alias[] {
   const out = [...aliases];

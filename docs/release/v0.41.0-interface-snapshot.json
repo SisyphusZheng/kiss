@@ -91,7 +91,7 @@
           ]
         },
         "./spa": {
-          "sha256": "0d96bcaecbe1793564f28c9917cda3c074072b56575d97cae4bb67df245c49a5",
+          "sha256": "d5cf0986ea3ad0f25a46babb0b836ce7b5c8f1e7df30c794dd46780d5ecb80ea",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -132,7 +132,7 @@
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "b9206bd4f6f39511442ca7cfdda6946ab83ccb99c99cdebcf722dd06bef91045",
+          "sha256": "74577b051a2aa778ace458be8f9f2271c799ffbf9ffc7a936ebe8d9cfb504cc5",
           "publicDeclarations": []
         },
         "./nitro-mount": {
@@ -224,7 +224,7 @@
           ]
         },
         "./open-input": {
-          "sha256": "9ff7e351ba34c7a431e3f1a2f6328500e98f67658b1602d4379db0fe9af1c625",
+          "sha256": "add2be7f57ba7fb4a6c7e5b53ea35de3efddaf40fb09ec7cdc2d86d5daaae95d",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
@@ -247,7 +247,7 @@
           ]
         },
         "./open-tabs": {
-          "sha256": "9b41d4346cdb573d8abbf8df75bf5ee38726d848b222cb8b981192e018f5ba7a",
+          "sha256": "509e3c0d1278c8bff5e30584c8dd2a3b74be0a43ca962172232f04b4d856b079",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
