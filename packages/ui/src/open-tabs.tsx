@@ -13,8 +13,9 @@
  * @slot tab - Tab label element (one per panel)
  * @slot panel - Panel shown while its tab is active
  */
-import { OpenElement, StyleSheet, type StyleSheetLike, type VNode } from '@openelement/element';
+import { OpenElement, type StyleSheetLike, type VNode } from '@openelement/element';
 import { signal } from '@openelement/element';
+import { recipe } from './component-recipes.ts';
 
 export const tagName = 'open-tabs';
 
@@ -24,8 +25,7 @@ export const tagName = 'open-tabs';
 // identical ids to the same instance.
 let tabsInstanceCount = 0;
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host{display:block}.tabs{display:flex;gap:var(--size-1);padding:var(--size-1);border-bottom:1px solid var(--surface-border)}
   ::slotted([slot="tab"]){padding:var(--size-2) var(--size-4);border-color:transparent;background:transparent;color:var(--text-secondary);cursor:pointer}
   ::slotted([slot="tab"]:hover){color:var(--text-primary)}::slotted(.tab-active){color:var(--text-primary);background:var(--brand-subtle);border-color:var(--surface-border-strong)}

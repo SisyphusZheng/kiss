@@ -380,16 +380,6 @@
           "type": "boolean",
           "description": "open attribute",
           "default": "false"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "description": "label attribute"
-        },
-        {
-          "name": "mode",
-          "type": "string",
-          "description": "mode attribute"
         }
       ],
       "events": [

@@ -24,12 +24,11 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { surfaceRecipe } from './component-recipes.ts';
+import type { StyleSheetLike } from '@openelement/element';
+import { recipe, surfaceRecipe } from './component-recipes.ts';
 export const tagName = 'open-card';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: block;
     background:

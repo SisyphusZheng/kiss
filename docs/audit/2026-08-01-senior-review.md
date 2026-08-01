@@ -1,9 +1,9 @@
 # openElement 全栈定位代码审计（Senior Developer 复盘）
 
-- 审计日期：2026-08-01（晚于同日的两份报告 `openelement-audit-2026-08-01-positioning.md` 与 `…-verification.md`）
+- 审计日期：2026-08-01（晚于同日的两份报告 `2026-08-01-positioning-audit.md` 与 `2026-08-01-positioning-verification.md`）
 - 审计立场：openElement 是「Web Component 全栈框架」（五包收敛：element / ui / app / adapter-vite / create），不是通用工具库或文档站
 - 方法论：直接读源码 + ripgrep 交叉验证（子代理在本沙箱不稳定，改为本人逐条核验）。所有结论给出 文件:行号 证据。
-- 基线已读：`…-2026-07-29.md`（整体 ≈72/100）、`…-2026-08-01-positioning.md`（6 🔴）、`…-2026-08-01-verification.md`（6 🔴 全部核实成立）、`…-a10-close-report-2026-07-30.md`（alpha.10 里程碑 8 issue 关闭）。
+- 基线已读：`2026-07-29-architecture-quality-audit.md`（整体 ≈72/100）、`2026-08-01-positioning-audit.md`（6 🔴）、`2026-08-01-positioning-verification.md`（6 🔴 全部核实成立）、`2026-07-30-a10-close-report.md`（alpha.10 里程碑 8 issue 关闭）。
 
 <!-- audit-citations-baseline-sha: 048985703ccc3f68f9e33d33355be17331d7b11a -->
 

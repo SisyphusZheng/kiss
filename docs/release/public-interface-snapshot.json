@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "38b3e1ef4a56469d6f1f77361e45b708bdbb141e368ffa41b18046fa50aa34dc",
+          "sha256": "76c4c6ac67a2b852ca88d66cf3a8d059903b6a1d5f26285a190c101e25c5974c",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -26,7 +26,8 @@
             "export type {",
             "export type { OpenElementRouteKind, OpenElementRouteNode } from './internal/protocol/app-model.ts';",
             "export type { CacheEntry, IsrCacheEntry, IsrCacheResult } from './internal/protocol/isr.ts';",
-            "export type {"
+            "export type {",
+            "export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';"
           ]
         },
         "./build-utils": {
@@ -56,7 +57,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "72dea5105db138003894bca26cc904b1743afd70e9ea0c6b8845d9f15fc63bc0",
+          "sha256": "ee22c66426af88ae64af6ca434beda5cc2a251a9dd9620a542811ef00242a02a",
           "publicDeclarations": [
             "export type {",
             "export type {",
@@ -66,16 +67,15 @@
           ]
         },
         "./i18n": {
-          "sha256": "56dd01445bd8ada8b9ca5489eb8d0cb83a911f105c1226cd093ded19fdf8b505",
+          "sha256": "c1f7c2c9c891b25e93e1775eecd5dadefecca84cb1dc55e82d892fa3664cd5ce",
           "publicDeclarations": [
             "export type { OpenElementI18nOptions } from './i18n-runtime.ts';",
             "export type { LocalePath } from './internal/router/i18n.ts';"
           ]
         },
         "./model": {
-          "sha256": "198b7cd3201a0d10deaf3f2920f74507929b98b3e1d355f5eeddd7d41b14bf36",
+          "sha256": "f67f1235dadc16e1e6b8ed6e3dd330ce85a4287cebd5f9970a267850b59efa52",
           "publicDeclarations": [
-            "export type { OpenElementRouteNode } from '@openelement/element';",
             "export interface OpenElementRequestContext<",
             "export interface CreateRequestContextOptions<",
             "export function createRequestContext<"
@@ -91,7 +91,7 @@
           ]
         },
         "./spa": {
-          "sha256": "d5cf0986ea3ad0f25a46babb0b836ce7b5c8f1e7df30c794dd46780d5ecb80ea",
+          "sha256": "4759fc22bf0856a57cdd6eeeb2ef60408475d3900c787d693d767f43b77a8eb8",
           "publicDeclarations": [
             "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
@@ -171,90 +171,88 @@
       },
       "declarations": {
         ".": {
-          "sha256": "c7eb3865d060b6463d1228dfc227b1734037b3df2576e2258fc5f369153ca8df",
+          "sha256": "e17ed6e0d54f8f79645cfc61e072a16f4d69c7f937d13f75be9c3578de6d988f",
           "publicDeclarations": []
         },
         "./open-badge": {
-          "sha256": "91d157e29bea78e581acb46e7f287da5a6dfebd8f3fdbc6d68c24518de27b380",
+          "sha256": "20bf751a6d933cf6026c89d84fc044309635878482763852b548a3da9a153219",
           "publicDeclarations": [
             "export const tagName = 'open-badge';",
             "export class OpenBadge extends OpenElement {"
           ]
         },
         "./open-button": {
-          "sha256": "63c629d06c7c666fcfc1fdd4024fe97895bb269fe57d75f8d919fc282ec111d7",
+          "sha256": "3fc8c717183accfd47a9583b5a8ffb10384e107308239cb8dc5a3dfce2648f2d",
           "publicDeclarations": [
             "export const tagName = 'open-button';",
             "export class OpenButton extends OpenElement {"
           ]
         },
         "./open-callout": {
-          "sha256": "4680c7824b68cececd7f3ebbf7c5da5039ae581a2016c004a39ee16d329078dc",
+          "sha256": "329b3153ecda9b0af7dc0cbea6330cbdc672988635276d7b39bbd4ca2f7d0c07",
           "publicDeclarations": [
             "export const tagName = 'open-callout';",
             "export class OpenCallout extends OpenElement {"
           ]
         },
         "./open-card": {
-          "sha256": "dbf9cc234da2a56eb177d039f084a5cd49b91131bc8646002b197e4c3d5225f1",
+          "sha256": "b5d98f55e2aa0ed8c7c1f549d2b3ba87c3e6c3bafb7a5152557c1b432bc52eb8",
           "publicDeclarations": [
             "export const tagName = 'open-card';",
             "export class OpenCard extends OpenElement {"
           ]
         },
         "./open-code-block": {
-          "sha256": "295210a054236a572fea401c0ff81ae00a95c4b92676b1d6bc51d18308d4e1ba",
+          "sha256": "f599534bc02cd479d0ba3462383f5c1114f4b5dd7abb17bbd6a37f4125a63887",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"
           ]
         },
         "./open-dialog": {
-          "sha256": "5e586aac5076afc428b1cbfe93338d3cfea72f87185985bbd5cbb3dca9ed78db",
+          "sha256": "71fda87d8de08a6c8ae3779f4edac8cb386ada86eb77f045b43b155074062b39",
           "publicDeclarations": [
             "export const tagName = 'open-dialog';",
             "export class OpenDialog extends OpenElement {"
           ]
         },
         "./open-dropdown": {
-          "sha256": "f7b77f2d9d721184a3962c21c33e0f098e0c827d2e23dfbdb65d8a9da9ec17f9",
+          "sha256": "52c9f7312f9dc6673bcb323f12c12988a7761fe9c5b8a63aff777c9efbc1a97f",
           "publicDeclarations": [
             "export const tagName = 'open-dropdown';",
             "export class OpenDropdown extends OpenElement {"
           ]
         },
         "./open-input": {
-          "sha256": "add2be7f57ba7fb4a6c7e5b53ea35de3efddaf40fb09ec7cdc2d86d5daaae95d",
+          "sha256": "0c8fd2f6b76f7600d29babd8a4c8eb4e7b07666478c12167e618be262a53ef64",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"
           ]
         },
         "./open-props-tokens": {
-          "sha256": "6a638738bd02d951088b8e06ff3b57ec9861e5202fc614e946f6cb4a2356d0f1",
+          "sha256": "bb2abd06172669a5ee24af61bf1bc52ae2265453abf247306080407f90fdd58a",
           "publicDeclarations": [
-            "export const OPEN_PROPS_TOKEN_CSS = `/**",
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
           ]
         },
         "./open-props-tokens.js": {
-          "sha256": "6a638738bd02d951088b8e06ff3b57ec9861e5202fc614e946f6cb4a2356d0f1",
+          "sha256": "bb2abd06172669a5ee24af61bf1bc52ae2265453abf247306080407f90fdd58a",
           "publicDeclarations": [
-            "export const OPEN_PROPS_TOKEN_CSS = `/**",
             "export const openPropsTokenSheet: StyleSheetLike = sheet;",
             "export const openPropsRootSheet: StyleSheetLike = new StyleSheet();"
           ]
         },
         "./open-tabs": {
-          "sha256": "509e3c0d1278c8bff5e30584c8dd2a3b74be0a43ca962172232f04b4d856b079",
+          "sha256": "1847721a6f2e7ca63d7a095ebc3222d567c2fe0b287da829e0220a098db5d9e1",
           "publicDeclarations": [
             "export const tagName = 'open-tabs';",
             "export class OpenTabs extends OpenElement {"
           ]
         },
         "./open-theme-toggle": {
-          "sha256": "123ea977002cb06a1b15a067822642396e065306f59acfe402b2f98ae6ea3da6",
+          "sha256": "46251e2e1084426899a469466ad620e69b91638d51f4e2886e945fe8539c4dcd",
           "publicDeclarations": [
             "export const tagName = 'open-theme-toggle';",
             "export class OpenThemeToggle extends OpenElement {"

@@ -2,16 +2,14 @@
  * Shared text/comment stripping helpers for openElement tooling.
  */
 
-export interface StripLineResult {
-  line: string;
-  inBlock: boolean;
-}
-
 /**
  * Strip comments from a single source line while tracking block-comment state.
  * Suitable for line-by-line scanning where line numbers must be preserved.
  */
-export function stripCommentsLine(line: string, inBlock: boolean): StripLineResult {
+export function stripCommentsLine(
+  line: string,
+  inBlock: boolean,
+): { line: string; inBlock: boolean } {
   let text = line;
 
   if (inBlock) {

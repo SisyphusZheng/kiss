@@ -43,20 +43,11 @@ export function defineCustomElement(
 
 const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
 
-// Module-level store of active visibility strategy timeout IDs.
-// Used for test cleanup - tests can call _clearAllVisibilityTimeouts()
-// to prevent timer leaks.
+// Module-level store of active visibility strategy timeout IDs, so the 30s
+// timeout guard can be cancelled once the island registers.
 const _visibilityTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
 const _islandMeta = new WeakMap<CustomElementConstructor, IslandMeta>();
-
-/** Clear all active visibility strategy timeouts (for test cleanup). */
-export function _clearAllVisibilityTimeouts(): void {
-  for (const id of _visibilityTimeouts) {
-    clearTimeout(id);
-  }
-  _visibilityTimeouts.clear();
-}
 
 /**
  * Get the value of the data-ssr-props attribute from a host element.

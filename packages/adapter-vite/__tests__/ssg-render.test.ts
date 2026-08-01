@@ -9,7 +9,8 @@ import {
   assertThrows,
 } from 'jsr:@std/assert@^1.0.0';
 import { Hono } from 'hono';
-import { resolveDynamicRoutePath, ssgRender } from '../src/internal/ssg/index.ts';
+import { ssgRender } from '../src/internal/ssg/index.ts';
+import { resolveDynamicRoutePath } from '../src/internal/ssg/ssg-helpers.ts';
 import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
 
 async function pathExists(path: string): Promise<boolean> {

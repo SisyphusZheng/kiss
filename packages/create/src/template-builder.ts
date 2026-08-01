@@ -12,13 +12,14 @@ export interface ProductVersions {
  * The published starter relies on the five-package same-version release
  * invariant. Package-graph and release-prepare gates verify that invariant;
  * Create deliberately has no runtime registry fallback or mixed-version mode.
+ * Caller-supplied versions are validated by `buildTemplates` below.
  */
 export function resolveVersions(): ProductVersions {
-  return assertUnifiedProductVersions({
+  return {
     app: CREATE_VERSION,
     adapterVite: CREATE_VERSION,
     element: CREATE_VERSION,
-  });
+  };
 }
 
 export function assertUnifiedProductVersions(versions: ProductVersions): ProductVersions {

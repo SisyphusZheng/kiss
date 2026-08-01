@@ -17,7 +17,7 @@ import type {
   OpenElementSlot,
 } from '@openelement/element';
 import ts from 'typescript';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { parseTypeScript } from './lib/typescript-ast.ts';
 
 const UI_SRC_DIR = new URL('../packages/ui/src/', import.meta.url);

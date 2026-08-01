@@ -14,15 +14,12 @@ import { applyPageHostData, type PageHostElement } from './internal/page-host-da
 import { normalizeActionFailure, normalizeLoaderFailure } from './internal/action-error.ts';
 import { isOpenElementNotFound, isOpenElementRedirect } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
+import { isDevMode } from './internal/dev-mode.ts';
 import { assertValidTagName, createLogger } from '@openelement/element';
 
 const log = createLogger('spa');
 
-interface ImportMetaWithEnvironment extends ImportMeta {
-  env?: { DEV?: boolean };
-}
-
-const development = (import.meta as ImportMetaWithEnvironment).env?.DEV === true;
+const development = isDevMode();
 
 // ─── Public types ──────────────────────────────────────────────
 
@@ -83,7 +80,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
       if (isOpenElementNotFound(err)) {
         return { data: undefined, error: err };
       }
-      return { data: undefined, error: normalizeLoaderFailure(err, development) };
+      return { data: undefined, error: normalizeLoaderFailure(err, development, log.error) };
     }
   }
 
@@ -153,7 +150,8 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
   function createFormData(form: HTMLFormElement): FormData | undefined {
     try {
       return new FormData(form);
-    } catch {
+    } catch (err) {
+      log.warn('FormData construction failed; action runs without form data:', err);
       return undefined;
     }
   }
@@ -216,7 +214,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
         renderComponent();
         return;
       }
-      actionData = normalizeActionFailure(err, development);
+      actionData = normalizeActionFailure(err, development, log.error);
     }
 
     // Re-run loader for fresh data

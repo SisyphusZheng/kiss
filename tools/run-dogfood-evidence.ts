@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { readJson } from './lib/fs.ts';
 
 const started = performance.now();

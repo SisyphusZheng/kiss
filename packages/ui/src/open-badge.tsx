@@ -6,12 +6,12 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import type { StyleSheetLike } from '@openelement/element';
+import { recipe } from './component-recipes.ts';
 
 export const tagName = 'open-badge';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-flex;
     vertical-align: middle;
@@ -80,10 +80,6 @@ export class OpenBadge extends OpenElement {
   }
 
   private _getStr(attr: string, def: string): string {
-    const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    const prop = (this as Record<string, unknown>)[camel] ??
-      (this as Record<string, unknown>)[attr];
-    if (prop !== undefined && prop !== null) return String(prop);
     return this.getAttribute(attr) || def;
   }
 }

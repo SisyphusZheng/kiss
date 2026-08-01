@@ -1,6 +1,5 @@
 /** Island and package-manifest discovery without executing local island modules. */
-import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
-import type { HydrationStrategy } from '../protocol/framework.ts';
+import type { HydrationStrategy, OpenElementPackageManifest } from '../protocol/framework.ts';
 import type { IslandDecl } from '../protocol/ssg.ts';
 import { formatError, HYDRATION_STRATEGIES, OpenElementError } from '@openelement/element';
 import { createLogger } from '@openelement/element';

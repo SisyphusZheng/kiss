@@ -1,37 +1,14 @@
 /**
- * Compatibility wrapper for the SSG render pipeline.
+ * SSG render evidence wiring for the adapter-vite build.
  *
- * The implementation is internal to adapter-vite in v0.40.x.
- * adapter-vite keeps this module so existing imports continue to work while
- * build orchestration uses the local SSG helpers.
+ * build-ssg.ts delegates page rendering to the adapter-agnostic
+ * internal/ssg pipeline and supplies the adapter-specific evidence
+ * (build-manifest printing, sitemap generation) through this hook.
  */
 
-import { resolveDynamicRoutePath, ssgRender as ssgRenderCore } from '../internal/ssg/index.ts';
-import type {
-  SsgRenderEvidence,
-  SsgRenderOptions,
-  SsgRenderSummary,
-  SsrBundle,
-} from '../internal/protocol/ssg.ts';
+import type { SsgRenderEvidence } from '../internal/protocol/ssg.ts';
 import { printBuildManifest } from '../build-manifest.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
-
-export { resolveDynamicRoutePath };
-export type {
-  SsgPageOutput,
-  SsgRenderEvidence,
-  SsgRenderOptions,
-  SsgRenderSummary,
-  SsrBundle,
-} from '../internal/protocol/ssg.ts';
-
-export async function ssgRender(
-  module: SsrBundle,
-  options: SsgRenderOptions,
-  ctx?: OpenElementBuildContext,
-): Promise<SsgRenderSummary> {
-  return await ssgRenderCore(module, options, createSsgRenderEvidence(ctx));
-}
 
 export function createSsgRenderEvidence(
   ctx?: OpenElementBuildContext,

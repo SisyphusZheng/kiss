@@ -9,6 +9,10 @@
 | **Supersedes** | ADR-0071 § public export surface         |
 | **Version**    | v0.28.0                                  |
 
+> Numbering collision: shares ADR-0072 with
+> [ADR-0072-mdx-in-lessjs.md](./ADR-0072-mdx-in-lessjs.md) — they are different
+> decisions, both retained; cite by filename.
+
 ---
 
 ## Context

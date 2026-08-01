@@ -3,7 +3,7 @@
  * @openelement/ui - open-theme-toggle
  *
  * Theme toggle Reactive DSD component for Dark/Light mode switching.
- * Swiss International Style: Pure B&W, minimal.
+ * Swiss International Style: minimal, violet brand accent.
  *
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
@@ -18,12 +18,12 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import type { StyleSheetLike } from '@openelement/element';
 import { signal } from '@openelement/element';
+import { recipe } from './component-recipes.ts';
 export const tagName = 'open-theme-toggle';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-block;
   }
@@ -121,7 +121,9 @@ export class OpenThemeToggle extends OpenElement {
             this._theme.value = 'dark';
             resolved = true;
           }
-        } catch { /* localStorage blocked */ }
+        } catch (e) {
+          console.debug('[open-theme-toggle] localStorage read unavailable:', e);
+        }
         if (!resolved && globalThis.matchMedia) {
           this._theme.value = globalThis.matchMedia('(prefers-color-scheme: light)').matches
             ? 'light'
@@ -145,7 +147,9 @@ export class OpenThemeToggle extends OpenElement {
       if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot && root.host) {
         root.host.setAttribute('data-theme', theme);
       }
-    } catch { /* getRootNode unavailable */ }
+    } catch (e) {
+      console.debug('[open-theme-toggle] root theme propagation unavailable:', e);
+    }
 
     if (changed) {
       this._lastPropagatedTheme = theme;
@@ -157,7 +161,9 @@ export class OpenThemeToggle extends OpenElement {
   private _persistTheme(theme: 'dark' | 'light'): void {
     try {
       localStorage.setItem('open-theme', theme);
-    } catch { /* blocked */ }
+    } catch (e) {
+      console.debug('[open-theme-toggle] theme persistence unavailable:', e);
+    }
   }
 
   protected override onDsdHydrated(): void {

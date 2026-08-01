@@ -5,6 +5,8 @@
 > **作者**: LessJS 架构团队\
 > **关联**: ADR-0057 (JSX+Signal 组件模型), ADR-0039 (DsdElement Signals Reactive)\
 > **前置讨论**: [signal-reactivity-loop-discussion.md](../../conversation/v0.26.1/signal-reactivity-loop-discussion.md)
+>
+> **编号碰撞**: 与 [ADR-0058 (BuildPipeline 声明式 API)](./ADR-0058-build-pipeline-declarative.md)、[ADR-0058 (移除 TemplateResult 渲染路径)](./ADR-0058-remove-templateresult-render-path.md) 共用编号 0058——三者系不同决策，均予保留，引用请带文件名区分。
 
 ---
 

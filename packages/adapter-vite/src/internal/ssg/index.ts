@@ -51,7 +51,7 @@ export type {
   SsrAdmissionPlan,
   SsrBundle,
 } from '../protocol/ssg.ts';
-export { resolveDynamicRoutePath, ssgRender } from './ssg-render.ts';
+export { ssgRender } from './ssg-render.ts';
 
 export {
   buildIslandChunkMap,

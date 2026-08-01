@@ -762,6 +762,8 @@ Deno.test('open-input: input event updates value and dispatches open-input', asy
   assertEquals(instance.getAttribute('value'), 'typed');
   assertEquals(events.length, 1);
   assertEquals((events[0] as CustomEvent).detail.value, 'typed');
+  // composed: true so listeners outside a wrapping shadow root can observe it.
+  assertEquals(events[0].composed, true);
 });
 
 Deno.test('open-input: change and focus events dispatch', async () => {
@@ -782,6 +784,11 @@ Deno.test('open-input: change and focus events dispatch', async () => {
   assertEquals(changeEvents.length, 1);
   assertEquals(focusEvents.length, 1);
   assertEquals(blurEvents.length, 1);
+  // All four open-input events are composed so they cross shadow boundaries
+  // (aligned with open-button/open-dialog).
+  assertEquals(changeEvents[0].composed, true);
+  assertEquals(focusEvents[0].composed, true);
+  assertEquals(blurEvents[0].composed, true);
 });
 
 Deno.test('open-input: ids are instance-unique and aria wiring stays consistent', async () => {
@@ -840,6 +847,54 @@ Deno.test('open-code-block: copy button writes text to clipboard', async () => {
     assertEquals(copied, 'const answer = 42;');
   } finally {
     restoreClipboard();
+  }
+});
+
+Deno.test('open-code-block: highlighted shadow code uses the parsed language class', async () => {
+  const { OpenCodeBlock } = await import('../src/open-code-block.tsx');
+  const instance = new OpenCodeBlock();
+
+  const codeEl = {
+    classList: ['language-python'],
+    textContent: 'print(1)',
+  };
+  const pre = {
+    tagName: 'PRE',
+    querySelector: (selector: string) => (selector === 'code' ? codeEl : null),
+  };
+  instance.appendChild(pre as unknown as Node);
+
+  const injectedChildren: Array<{ className?: string }> = [];
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: {
+      querySelector: (selector: string) =>
+        selector === 'slot'
+          ? {
+            replaceWith: (el: { children: Array<{ className?: string }> }) => {
+              injectedChildren.push(...el.children);
+            },
+          }
+          : null,
+    },
+  });
+
+  const originalPrism = Object.getOwnPropertyDescriptor(globalThis, 'Prism');
+  Object.defineProperty(globalThis, 'Prism', {
+    configurable: true,
+    writable: true,
+    value: {
+      languages: { python: {} },
+      highlight: () => '<span>print(1)</span>',
+    },
+  });
+  try {
+    (instance as unknown as { _tryHighlight(): void })._tryHighlight();
+    assertEquals(injectedChildren.length, 1);
+    assertEquals(injectedChildren[0]?.className, 'language-python');
+  } finally {
+    if (originalPrism) Object.defineProperty(globalThis, 'Prism', originalPrism);
+    else delete (globalThis as { Prism?: unknown }).Prism;
   }
 });
 

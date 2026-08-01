@@ -1,5 +1,5 @@
 import { assertEquals } from '@std/assert';
-import { normalizeViteAliases } from '../src/alias-utils.ts';
+import { normalizeViteAliases, sortAliasEntries } from '../src/alias-utils.ts';
 
 Deno.test('normalizeViteAliases expands retained Element public subpaths', () => {
   const aliases = normalizeViteAliases({
@@ -76,4 +76,19 @@ Deno.test('normalizeViteAliases preserves nested export subpaths', () => {
     aliases.find((alias) => alias.find === '@openelement/adapter-vite/cli/start')?.replacement,
     '/repo/packages/adapter-vite/src/cli/start.ts',
   );
+});
+
+// #709: the client build previously carried a second inline copy of this
+// specificity sort; pin the shared implementation directly.
+Deno.test('sortAliasEntries orders longer string finds first without mutating input', () => {
+  const input = [
+    { find: '@open', replacement: '/a' },
+    { find: /^@open\//, replacement: '/b' },
+    { find: '@openelement/element/jsx-runtime', replacement: '/c' },
+    { find: '@openelement/element', replacement: '/d' },
+  ];
+  const sorted = sortAliasEntries(input);
+
+  assertEquals(sorted.map((alias) => alias.replacement), ['/c', '/d', '/a', '/b']);
+  assertEquals(input[0].find, '@open');
 });

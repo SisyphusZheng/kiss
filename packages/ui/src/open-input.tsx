@@ -29,8 +29,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { controlRecipe } from './component-recipes.ts';
+import type { StyleSheetLike } from '@openelement/element';
+import { controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
 
 export const tagName = 'open-input';
 
@@ -41,8 +41,7 @@ export const tagName = 'open-input';
 // document order, so both sides assign identical ids to the same instance.
 let inputInstanceCount = 0;
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: block;
   }
@@ -206,13 +205,7 @@ export class OpenInput extends OpenElement {
 
   private _updateStates(): void {
     if (!this._internals?.states) return;
-    if (this.hasAttribute('disabled')) {
-      this._internals.states.add('disabled');
-      this._internals.states.delete('enabled');
-    } else {
-      this._internals.states.delete('disabled');
-      this._internals.states.add('enabled');
-    }
+    syncDisabledState(this._internals, this.hasAttribute('disabled'));
     if (this.getAttribute('error')) {
       this._internals.states.add('invalid');
     } else {
@@ -228,7 +221,7 @@ export class OpenInput extends OpenElement {
       new CustomEvent('open-input', {
         detail: { value: input.value },
         bubbles: true,
-        composed: false,
+        composed: true,
       }),
     );
   }
@@ -239,17 +232,17 @@ export class OpenInput extends OpenElement {
       new CustomEvent('open-change', {
         detail: { value: input.value },
         bubbles: true,
-        composed: false,
+        composed: true,
       }),
     );
   }
 
   private _handleFocus(): void {
-    this.dispatchEvent(new CustomEvent('open-focus', { bubbles: true, composed: false }));
+    this.dispatchEvent(new CustomEvent('open-focus', { bubbles: true, composed: true }));
   }
 
   private _handleBlur(): void {
-    this.dispatchEvent(new CustomEvent('open-blur', { bubbles: true, composed: false }));
+    this.dispatchEvent(new CustomEvent('open-blur', { bubbles: true, composed: true }));
   }
 
   formResetCallback(): void {

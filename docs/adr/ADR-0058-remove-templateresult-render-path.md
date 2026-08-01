@@ -4,6 +4,8 @@
 > **日期**: 2026-05-29\
 > **作者**: LessJS 架构团队\
 > **关联**: ADR-0057 (JSX + Signal), SOP-002 (type dedup), SOP-003 (cleanup)\
+>
+> **编号碰撞**: 与 [ADR-0058 (Signal→DOM 直接绑定)](./0058-real-dom-signal-binding.md)、[ADR-0058 (BuildPipeline 声明式 API)](./ADR-0058-build-pipeline-declarative.md) 共用编号 0058——三者系不同决策，均予保留，引用请带文件名区分。
 
 ---
 

@@ -347,8 +347,6 @@ export interface IslandConfig {
   hydrate?: HydrationStrategy;
 }
 
-export type AppIslandOptions = IslandConfig;
-
 export function defineIslandConfig(config: IslandConfig): IslandConfig {
   if (typeof config !== 'object' || config === null || Array.isArray(config)) {
     throw new Error(`${ERROR_PREFIX} defineIslandConfig() requires an object descriptor.`);
@@ -373,7 +371,7 @@ export function defineIslandConfig(config: IslandConfig): IslandConfig {
 export function defineIsland<Props extends Record<string, unknown> = Record<string, unknown>>(
   tagName: string,
   input: ((props: Props) => VNode | null) | ElementDefinition<Props> | CustomElementConstructor,
-  options: AppIslandOptions = {},
+  options: IslandConfig = {},
 ): CustomElementConstructor {
   const componentClass = typeof input === 'function' && input.prototype?.render
     ? input as CustomElementConstructor

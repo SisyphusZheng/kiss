@@ -139,7 +139,7 @@ function wrapDsdOutput(params: {
   hostEventAttrs?: string;
 }): string {
   const { tagName, props, content, styleCss, layer, sourceStr, dsdOptions, lightDom } = params;
-  const publicProps = filterPublicDsdProps(props);
+  const publicProps = collectPublicProps(props);
   const ssrPropsAttr = Object.keys(publicProps).length > 0
     ? ` data-ssr-props="${escapeAttrValue(JSON.stringify(publicProps))}"`
     : '';
@@ -158,11 +158,6 @@ function wrapDsdOutput(params: {
       layer,
     }),
   );
-}
-
-function filterPublicDsdProps(props: Record<string, unknown>): Record<string, unknown> {
-  // Single public-prop filter shared with defineElement/definePage (#621).
-  return collectPublicProps(props);
 }
 
 // ─── DSD Rendering ─────────────────────────────────────────────

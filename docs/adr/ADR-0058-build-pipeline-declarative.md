@@ -4,6 +4,8 @@
 > Date: 2026-05-29\
 > Target: v0.25.0\
 > Replaces: build.ts → build-client.ts → build-ssg.ts 三阶段硬编码
+>
+> **编号碰撞**: 与 [ADR-0058 (Signal→DOM 直接绑定)](./0058-real-dom-signal-binding.md)、[ADR-0058 (移除 TemplateResult 渲染路径)](./ADR-0058-remove-templateresult-render-path.md) 共用编号 0058——三者系不同决策，均予保留，引用请带文件名区分。
 
 ## Context
 

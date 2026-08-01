@@ -1,5 +1,11 @@
 # OpenElement 架构审计报告
 
+> **历史快照（2026-07-30）**：本报告反映审计当时（v0.31 附近）的代码状态，归档于
+> `docs/audit/` 仅供查证，不代表当前实现。其中「ADR-0095 承诺的 `MemoryDataAdapter`
+> 未实现」的结论**已过时**：`MemoryDataAdapter` 已实现并发布，见
+> `packages/element/src/internal/core/data-adapter.ts:28`。其余结论（SPA 导航、主题传播、
+> ISR 缓存等）请对照当前源码与 `docs/current/` 重新核实后再引用。
+
 **审计人**：高见远（Gao，架构师） ｜ **性质**：仅分析、不写代码 ｜ **方式**：基于勘察代理 6 维度证据 + 关键文件抽样核实
 
 > 核实清单（已读源码确认）：`open-layout.tsx:1230` 的 v0.31 UI-shell 债务注释逐字命中；`isr.ts:64` `MemoryIsrCache` `maxEntries` 默认 1000，`isr.ts:5-12` 明确将 KV 适配器列为「v0.22 scope」；`nitro-mount.ts:74` `createOpenElementNitroHandler` 桥接确认；`examples/deno-desktop-reader/router.ts:9` 模块级可变单例 `let _router` + `console.warn` 回退确认。证据整体可信。

@@ -1,10 +1,33 @@
 /** Shared visual recipes for the public UI primitives. */
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 
-function recipe(css: string): StyleSheetLike {
+/**
+ * Build a StyleSheetLike from a CSS string. Shared by the component-local
+ * sheets so components do not repeat new StyleSheet()+replaceSync boilerplate.
+ */
+export function recipe(css: string): StyleSheetLike {
   const sheet = new StyleSheet();
   sheet.replaceSync(css);
   return sheet;
+}
+
+/**
+ * Reflect the `disabled` attribute into ElementInternals custom states
+ * (:state(disabled)/:state(enabled)). Shared by the form-associated
+ * primitives (open-button, open-input).
+ */
+export function syncDisabledState(
+  internals: ElementInternals | undefined,
+  disabled: boolean,
+): void {
+  if (!internals?.states) return;
+  if (disabled) {
+    internals.states.delete('enabled');
+    internals.states.add('disabled');
+  } else {
+    internals.states.delete('disabled');
+    internals.states.add('enabled');
+  }
 }
 
 export const controlRecipe: StyleSheetLike = recipe(`

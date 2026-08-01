@@ -2,6 +2,8 @@
 
 import { parse } from 'yaml';
 
+import { walk } from './lib/fs.ts';
+
 const WORKFLOW_ROOTS = ['.github/workflows', '.github/actions'];
 const SHA_PATTERN = /@[0-9a-f]{40}$/i;
 
@@ -74,21 +76,11 @@ export function inspectWorkflowSource(file: string, source: string): WorkflowIns
   };
 }
 
-async function walk(directory: string): Promise<string[]> {
-  const files: string[] = [];
-  for await (const entry of Deno.readDir(directory)) {
-    const path = `${directory}/${entry.name}`;
-    if (entry.isDirectory) files.push(...await walk(path));
-    else if (entry.isFile && /\.ya?ml$/.test(entry.name)) files.push(path);
-  }
-  return files;
-}
-
 async function main(): Promise<void> {
   const failures: string[] = [];
   let hasDependencyReview = false;
   for (const root of WORKFLOW_ROOTS) {
-    for (const file of await walk(root)) {
+    for await (const file of walk(root, { extensions: /\.ya?ml$/ })) {
       const result = inspectWorkflowSource(file, await Deno.readTextFile(file));
       failures.push(...result.failures);
       if (file === '.github/workflows/autoflow-ci.yml') {

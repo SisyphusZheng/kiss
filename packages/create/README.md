@@ -4,7 +4,7 @@ Project scaffolding CLI for openElement applications.
 
 > v0.39 surface: Framework product entry. This package is part of the
 > first-run Framework story alongside `@openelement/app` and
-> `@openelement/app/vite`.
+> `@openelement/adapter-vite`.
 
 `@openelement/create` generates a new openElement project with the recommended
 directory structure, Deno configuration, Vite setup, and starter pages.

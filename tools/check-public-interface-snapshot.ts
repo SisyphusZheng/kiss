@@ -1,9 +1,9 @@
 /** Generate/check the deterministic five-package public-interface baseline. */
 import { createHash } from 'node:crypto';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
-const SNAPSHOT = 'docs/release/v0.41.0-interface-snapshot.json';
+const SNAPSHOT = 'docs/release/public-interface-snapshot.json';
 const write = Deno.args.includes('--write');
 const packages = releasePublishOrder(await readPackages());
 const snapshot = {

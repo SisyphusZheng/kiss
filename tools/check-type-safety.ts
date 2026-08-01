@@ -6,6 +6,8 @@
  * Forbidden: \x60as any\x60, \x60: any\x60, \x60any[]\x60 in active code.
  */
 
+import { walk } from './lib/fs.ts';
+import { normalizeSlashes } from './lib/path.ts';
 import { stripCommentsLine } from './lib/text.ts';
 
 export interface Issue {
@@ -37,23 +39,7 @@ const EXCLUDED_FILES = new Set([
 
 const EXTENSIONS = /\.(ts|tsx)$/;
 
-function normalize(path: string): string {
-  return path.replace(/\\/g, '/');
-}
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  for await (const entry of Deno.readDir(dir)) {
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'vendor') {
-      continue;
-    }
-    const path = `${dir}/${entry.name}`;
-    if (entry.isDirectory) {
-      yield* walk(path);
-    } else if (entry.isFile) {
-      yield path;
-    }
-  }
-}
+const WALK_SKIP = ['node_modules', 'dist', 'vendor'];
 
 export function isCodeLine(line: string): boolean {
   const trimmed = line.trim();
@@ -98,9 +84,8 @@ export async function collectActiveSourceFiles(): Promise<SourceFile[]> {
   const files: SourceFile[] = [];
   for (const root of ACTIVE_ROOTS) {
     try {
-      for await (const path of walk(root)) {
-        if (!EXTENSIONS.test(path)) continue;
-        const normalized = normalize(path);
+      for await (const path of walk(root, { skip: WALK_SKIP, extensions: EXTENSIONS })) {
+        const normalized = normalizeSlashes(path);
         if (EXCLUDED_FILES.has(normalized)) continue;
         files.push({ path: normalized, text: await Deno.readTextFile(normalized) });
       }

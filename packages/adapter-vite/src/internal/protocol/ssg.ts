@@ -5,9 +5,13 @@
  * These types keep the SSG engine adapter-agnostic.
  */
 
-import type { CompatibilityClassification, HydrationStrategy } from './framework.ts';
-import type { RenderError, SsrAdmissionDecision } from './render.ts';
-import type { OpenElementPackageManifest } from './manifest.ts';
+import type {
+  CompatibilityClassification,
+  HydrationStrategy,
+  OpenElementPackageManifest,
+  RenderError,
+  SsrAdmissionDecision,
+} from './framework.ts';
 
 // ─── SSG render pipeline options ─────────────────────────────
 

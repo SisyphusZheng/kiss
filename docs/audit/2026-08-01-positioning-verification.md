@@ -1,7 +1,7 @@
-# openelement-audit-2026-08-01-positioning.md 核实报告
+# 2026-08-01-positioning-audit.md 核实报告
 
 - 核实日期：2026-08-01
-- 被核实文件：`openelement-audit-2026-08-01-positioning.md`
+- 被核实文件：`2026-08-01-positioning-audit.md`
 - 核实方式：逐条读取被引用的 文件:行号 并比对代码；版本事实以仓库内 `docs/release/` 发布记录 + 文档声明交叉验证（npm 网络查询因沙箱 fish 无 `timeout` 子命令未能直接执行，见下方说明）。
 
 ---

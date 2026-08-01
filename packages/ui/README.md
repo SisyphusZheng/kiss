@@ -82,6 +82,7 @@ DSD behavior, and hydration strategy metadata.
 @openelement/ui/open-badge
 @openelement/ui/open-theme-toggle
 @openelement/ui/open-dialog
+@openelement/ui/open-callout
 @openelement/ui/open-dropdown
 @openelement/ui/open-tabs
 @openelement/ui/open-props-tokens

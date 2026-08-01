@@ -1,13 +1,18 @@
-export type ActionErrorLogger = (...args: unknown[]) => void;
+/** Compatible with console.error and the tagged Logger from createLogger(). */
+export type ActionErrorLogger = (msg: string, ...args: unknown[]) => void;
 
-/** Convert an action exception into stable render data and environment-safe diagnostics. */
+/**
+ * Convert an action exception into stable render data and environment-safe
+ * diagnostics. Callers pass their own tagged logger (e.g. the spa logger) so
+ * the messages carry the caller's tag instead of a hardcoded prefix.
+ */
 export function normalizeActionFailure(
   error: unknown,
   development: boolean,
   log: ActionErrorLogger = console.error,
 ): { error: 'Action failed' } {
-  if (development) log('[spa] action failed:', error);
-  else log('[spa] action failed');
+  if (development) log('action failed:', error);
+  else log('action failed');
   return { error: 'Action failed' };
 }
 
@@ -21,7 +26,7 @@ export function normalizeLoaderFailure(
   development: boolean,
   log: ActionErrorLogger = console.error,
 ): { error: 'Loader failed' } {
-  if (development) log('[spa] loader failed:', error);
-  else log('[spa] loader failed');
+  if (development) log('loader failed:', error);
+  else log('loader failed');
   return { error: 'Loader failed' };
 }

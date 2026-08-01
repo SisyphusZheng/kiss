@@ -20,7 +20,14 @@ export interface PageHostElement extends HTMLElement {
   __openElementError?: unknown;
 }
 
-/** The single adapter for writing definePage render context onto a page host. */
+/**
+ * The adapter for writing definePage render context onto a page host.
+ *
+ * "Single" here means single *runtime* writer: the SPA client (spa.ts) is the
+ * only caller of this function. SSR/SSG generated server entries are a second
+ * write path — they set the same `__openElement*` fields directly via jsx
+ * props (see entry-render-helpers.ts / entry-render-ssg.ts in adapter-vite).
+ */
 export function applyPageHostData(host: PageHostElement, value: PageHostData): void {
   host.data = value.data;
   host.__openElementActionData = value.actionData;

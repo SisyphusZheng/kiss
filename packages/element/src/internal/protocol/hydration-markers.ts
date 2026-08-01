@@ -34,14 +34,6 @@ export const DATA_EID = 'data-eid';
  */
 export const BRANCH_MARKER_PREFIX = 'oe-branch:';
 
-/** All hydration marker attribute names. */
-export type HydrationMarkerAttr =
-  | typeof DATA_SIGNAL
-  | typeof DATA_SIGNAL_ATTR
-  | typeof DATA_SIGNAL_CLASS
-  | typeof DATA_SIGNAL_RENDER
-  | typeof DATA_EID;
-
 /** Parsed value of a `data-signal-attr` attribute: a list of attribute names. */
 export type SignalAttrSpec = string[];
 

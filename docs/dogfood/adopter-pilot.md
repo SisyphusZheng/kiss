@@ -1,5 +1,10 @@
 # External Adopter Pilot Kit (#390)
 
+> **Retired by [ADR-0119](../adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md).**
+> The #390 external adopter pilot requirement was retired by maintainer decision
+> after zero recruitment across three release cycles. This kit is preserved as
+> historical evidence only; it is no longer an active recruitment path.
+
 This kit is the single entry point for non-maintainer participants of the
 external adopter pilot tracked in issue #390. It is intentionally self-contained:
 no private maintainer instructions are required or allowed.

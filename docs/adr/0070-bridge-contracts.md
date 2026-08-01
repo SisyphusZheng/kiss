@@ -1,37 +1,45 @@
-# ADR-0070: 涓夊眰妗ユ帴鍙俊鍖?鈥?浠庡瓧绗︿覆鎷兼帴鍒?AST 濂戠害
+# ADR-0070: 三层桥接可信化 — 从字符串拼接到 AST 契约
 
-- **鐘舵€?*锛氭彁妗?- **鏃ユ湡**锛?026-05-31
-- **鏇夸唬**锛氭棤锛堟柊鏋舵瀯鑳藉姏锛?
+- **状态**：提案
+- **日期**：2026-05-31
+- **替代**：无（新架构能力）
 
----
-
-## 鍔ㄦ満
-
-LessJS 鐨勪笁灞傛灦鏋勶紙缁勪欢妯″瀷+淇″彿銆丏SD 娓叉煋绠＄嚎銆丅uilder 绠＄嚎锛夊湪鐞嗚涓婄畝娲佷紭缇庛€備絾涓夊眰涔嬮棿鐨勪袱涓ˉ鎺ョ偣鍏ㄩ儴渚濊禆杩愯鏃跺瓧绗︿覆鎿嶄綔鍜?try/catch锛屽鑷存ˉ姊佽剢寮便€侀敊璇笉鍙銆佷慨澶嶄笉鍙潬銆?
-
-### 褰撳墠妗ユ帴闂娓呭崟
-
-| 妗?                       | 褰撳墠瀹炵幇                                               | 闂                                                   |
-| ------------------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
-| Builder 鈫?Render         | `lines.push('return \`<open-layout>${c}</open-layout>\`')` | 瀛楃涓叉嫾鎺ョ敓鎴?JS 浠ｇ爜锛岀己澶?await 涓嶆姤閿?  |
-| Component 鈫?Render       | `renderDsd()` call `render()` 鈫?try/catch 鍏滃簳          | 娴忚鍣?API 璋冪敤鍦?SSR 鐐镐簡琚潤榛樺悶鎺?          |
-| Render 鈫?Render (鍐呴儴) | `visitedKey = "${tagName}@${depth}"`                       | 5 涓?`<open-code-block>` 娣卞害=1锛屽悗4涓璇垽寰幆 |
+> **编号碰撞说明**：本文件（桥接契约，2026-05-31，LessJS 时代）与
+> [ADR-0070: Generated Data Namespace and App Shell Boundary](./ADR-0070-generated-data-app-shell-boundary.md)
+> 共用编号 0070——两者是不同决策，均予保留；引用时请带文件名区分。
+> **编码修复说明**：本文件曾在 openelement 改名提交（f5e58b3b）中被错误转码为
+> GBK 乱码，2026-08 依据改名前干净版本（04ffdde0）加同名替换恢复为 UTF-8。
 
 ---
 
-## 鍐崇瓥
+## 动机
 
-鐢ㄤ笁涓嫭绔嬩絾浜掕ˉ鐨勬満鍒讹紝鎶婃ˉ鎺ヤ粠杩愯鏃惰瘯鎺㈠崌绾т负闈欐€佸彲楠岃瘉鐨勫绾︼細
+LessJS 的三层架构（组件模型+信号、DSD 渲染管线、Builder 管线）在理论上简洁优美。但三层之间的两个桥接点全部依赖运行时字符串操作和 try/catch，导致桥梁脆弱、错误不可见、修复不可靠。
 
-### 妗?锛欱uilder 鈫?Render 鈥?鐢熸垚浠ｇ爜 鈫?鐪熷疄鍑芥暟
+### 当前桥接问题清单
 
-*_涓嶇敓鎴愪唬鐮併€傚鍏ョ湡瀹炲嚱鏁般€?_
+| 桥                     | 当前实现                                                   | 问题                                             |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
+| Builder → Render       | `lines.push('return \`<open-layout>${c}</open-layout>\`')` | 字符串拼接生成 JS 代码，缺失 await 不报错        |
+| Component → Render     | `renderDsd()` call `render()` → try/catch 兜底             | 浏览器 API 调用在 SSR 炸了被静默吞掉             |
+| Render → Render (内部) | `visitedKey = "${tagName}@${depth}"`                       | 5 个 `<open-code-block>` 深度=1，后4个被误判循环 |
+
+---
+
+## 决策
+
+用三个独立但互补的机制，把桥接从运行时试探升级为静态可验证的契约：
+
+### 桥1：Builder → Render — 生成代码 → 真实函数
+
+**不生成代码。导入真实函数。**
 
 ```
-涔嬪墠锛歟ntry-renderer.ts 鐢熸垚瀛楃涓?鈫?鎷兼垚 .js 鈫?杩愯鏃舵墽琛?涔嬪悗锛歟ntry-renderer.ts 鐢熸垚 import 璇彞 鈫?瀵煎叆 packages/core/src/entry-bridge.ts
+之前：entry-renderer.ts 生成字符串 → 拼成 .js → 运行时执行
+之后：entry-renderer.ts 生成 import 语句 → 导入 packages/core/src/entry-bridge.ts
 ```
 
-`entry-bridge.ts` 鏄竴涓?*琚?TypeScript 绫诲瀷妫€鏌ヨ鐩栫殑鏅€氬嚱鏁?*锛?
+`entry-bridge.ts` 是一个**被 TypeScript 类型检查覆盖的普通函数**：
 
 ```ts
 // packages/core/src/entry-bridge.ts
@@ -45,15 +53,16 @@ export async function wrapAppShell(
     defaultLocale: string;
   },
 ): Promise<string> {
-  // 鍑芥暟浣撳唴鎵€鏈夐€昏緫鍙?TypeScript 妫€鏌?  // await 缂哄け 鈫?缂栬瘧閿欒锛屼笉鏄繍琛屾椂 [object Promise]
+  // 函数体内所有逻辑受 TypeScript 检查
+  // await 缺失 → 编译错误，不是运行时 [object Promise]
 }
 ```
 
-**entry-renderer.ts 鐨勮鑹插彉鍖?*锛氫粠"浠ｇ爜鐢熸垚鍣?闄嶇骇涓?import + 鍙傛暟鎷兼帴鍣?銆?
+**entry-renderer.ts 的角色变化**：从"代码生成器"降级为"import + 参数拼接器"。
 
-### 妗?锛欳omponent 鈫?Render 鈥?try/catch 鈫?SSR Context
+### 桥2：Component → Render — try/catch → SSR Context
 
-*_涓嶇粰缁勪欢 try/catch 褰撳畨鍏ㄧ綉銆傜粰缁勪欢 SSR Context銆?_
+**不给组件 try/catch 当安全网。给组件 SSR Context。**
 
 ```ts
 // dsd-element.ts
@@ -64,35 +73,41 @@ export interface SsrContext {
 }
 
 export class DsdElement extends _HTMLElement {
-  // renderDsd() 鍦ㄨ皟鐢?render() 鍓嶈缃鍊?  #ssrContext: SsrContext | null = null;
+  // renderDsd() 在调用 render() 前设置此值
+  #ssrContext: SsrContext | null = null;
 
-  // 缁勪欢闇€瑕佽矾寰勬椂浣跨敤姝ゆ柟娉曪紝鑰屼笉鏄?Router
+  // 组件需要路径时使用此方法，而不是 Router
   protected get currentPath(): string {
     return this.#ssrContext?.path ?? this.routing?.path ?? '/';
   }
 }
 ```
 
-**鍏抽敭鍙樺寲**锛?
+**关键变化**：
 
-- `renderDsd()` 鍦?injectProps 涔嬪悗銆乺ender() 涔嬪墠娉ㄥ叆 `#ssrContext`
-- Router 涓嶅啀琚?render() 璋冪敤锛坮ender 璧?ssrContext锛?- Router 鍙湪 connectedCallback 涔嬪悗浣跨敤锛圕SR 瀹夊叏锛?- 涓嶅啀闇€瑕?try/catch 鍏滃簳鈥斺€旀病璺緞淇℃伅灏变紭闆呴檷绾у埌 `/`锛屼笉浼氭姏寮傚父
+- `renderDsd()` 在 injectProps 之后、render() 之前注入 `#ssrContext`
+- Router 不再被 render() 调用（render 走 ssrContext）
+- Router 只在 connectedCallback 之后使用（CSR 安全）
+- 不再需要 try/catch 兜底——没路径信息就优雅降级到 `/`，不会抛异常
 
-### 妗?锛歊ender 鍐呴儴 鈥?tagName@depth 鈫?node identity
+### 桥3：Render 内部 — tagName@depth → node identity
 
-*_涓嶇敤 tag+depth 鍒ゆ柇寰幆銆傜敤 parse5 node 鐨勮韩浠姐€?_
+**不用 tag+depth 判断循环。用 parse5 node 的身份。**
 
-````ts
+```ts
 // render-nested.ts
-// 涔嬪墠锛?const visitedKey = `${tagName}@${depth}`; // 5 涓?less-code-block 鍏变韩鍚屼竴涓?key
+// 之前：
+const visitedKey = `${tagName}@${depth}`; // 5 个 less-code-block 共享同一个 key
 
-// 涔嬪悗锛?let occurrenceIndex = 0;
+// 之后：
+let occurrenceIndex = 0;
 const visitedNodes = new WeakMap<P5Element, number>();
-// 鐢?parse5 鑺傜偣寮曠敤浣滀负韬唤锛屼笉闈?tagName+depth 鐚?```
+// 用 parse5 节点引用作为身份，不靠 tagName+depth 猜
+```
 
-浣?parse5 鑺傜偣姣忔 `parseFragment()` 閮藉垱寤烘柊瀵硅薄锛屾棤娉曠敤瀵硅薄寮曠敤杩借釜璺ㄨ皟鐢ㄥ惊鐜€傜湡姝ｇ殑鏂规鏄細
+但 parse5 节点每次 `parseFragment()` 都创建新对象，无法用对象引用追踪跨调用循环。真正的方案是：
 
-**涓嶉潬 key 鍘婚噸銆傞潬 parent-child 鍏崇郴鍒ゅ畾鐪熸寰幆銆?*
+**不靠 key 去重。靠 parent-child 关系判定真正循环。**
 
 ```ts
 function isAncestor(child: P5Element, ancestor: P5Element): boolean {
@@ -104,79 +119,101 @@ function isAncestor(child: P5Element, ancestor: P5Element): boolean {
   return false;
 }
 
-// 鍦ㄦ覆鏌撻摼璺腑锛?// 鍙烦杩?render() 杈撳嚭涓寘鍚嚜宸?tag 鐨勭粍浠?锛堢湡姝ｇ殑寰幆锛?// 涓嶈烦杩?鍏勫紵鑺傜偣涓悓绫诲瀷鐨勭粍浠?锛坒alse positive锛?```
+// 在渲染链路中：
+// 只跳过"render() 输出中包含自己 tag 的组件"（真正的循环）
+// 不跳过"兄弟节点中同类型的组件"（false positive）
+```
 
-**瑙勫垯鍙樻洿**锛?
-- 鏃э細`visited.has("less-code-block@1")` 鈫?skip锛堝厔寮熶篃璺宠繃锛?- 鏂帮細妫€鏌?render() 杈撳嚭鐨?AST 涓槸鍚﹀寘鍚浉鍚?tag 鍦ㄦ洿娣辩殑灞傜骇 鈫?鍙烦杩囪嚜寮曠敤寰幆
+**规则变更**：
+
+- 旧：`visited.has("less-code-block@1")` → skip（兄弟也跳过）
+- 新：检查 render() 输出的 AST 中是否包含相同 tag 在更深的层级 → 只跳过自引用循环
 
 ---
 
-## 瀹炵幇璺嚎
+## 实现路线
 
-### Phase 1锛氬缓妗?锛堟渶灏忔敼鍔紝鏈€澶ф敹鐩婏級
+### Phase 1：建桥3（最小改动，最大收益）
 
-**鏀?`render-nested.ts` 鐨?cycle detection**锛?
-- 鍒犻櫎 `${tagName}@${depth}` visited Set
-- 鍦?`renderDsd()` 杈撳嚭瑙ｆ瀽鍚庯紝妫€鏌?render() 杈撳嚭涓槸鍚﹀寘鍚悓鍚?tag 鈫?鍙湪鐪熷惊鐜椂璺宠繃
-- 棰勪及锛殈30 琛屾敼鍔?
-### Phase 2锛氬缓妗?锛堝姞鍥?bridge1 鐨勫墠鎻愶級
+**改 `render-nested.ts` 的 cycle detection**：
 
-**缁?DsdElement 鍔?`#ssrContext`**锛?
-- 鏂板 `SsrContext` 鎺ュ彛
-- `renderDsd()` 娉ㄥ叆 ssrContext
-- `LessLayout._currentPath()` 鏀逛负璇?ssrContext
-- 鍒犻櫎 Router 鐩稿叧鐨?try/catch 浠ｇ爜
-- 棰勪及锛殈50 琛屾敼鍔紝褰卞搷 3 涓枃浠?
-### Phase 3锛氬缓妗?锛堥暱鏈熶俊浠伙級
+- 删除 `${tagName}@${depth}` visited Set
+- 在 `renderDsd()` 输出解析后，检查 render() 输出中是否包含同名 tag → 只在真循环时跳过
+- 预估：~30 行改动
 
-**鎻愬彇 `entry-bridge.ts`**锛?
-- 鏂板缓 `packages/core/src/entry-bridge.ts`
-- `wrapAppShell()` 浠?lines.push 瀛楃涓?鈫?鐪熷疄鍑芥暟
-- `entry-renderer.ts` 绠€鍖栦负 import + 鍙傛暟鎷兼帴
-- `renderNestedCustomElements` 鍦ㄥ嚱鏁板唴璋冪敤锛岀被鍨嬪畨鍏?- 棰勪及锛殈80 琛屾柊澧?+ ~30 琛屽垹闄?
+### Phase 2：建桥2（加固 bridge1 的前提）
+
+**给 DsdElement 加 `#ssrContext`**：
+
+- 新增 `SsrContext` 接口
+- `renderDsd()` 注入 ssrContext
+- `LessLayout._currentPath()` 改为读 ssrContext
+- 删除 Router 相关的 try/catch 代码
+- 预估：~50 行改动，影响 3 个文件
+
+### Phase 3：建桥1（长期信任）
+
+**提取 `entry-bridge.ts`**：
+
+- 新建 `packages/core/src/entry-bridge.ts`
+- `wrapAppShell()` 从 lines.push 字符串 → 真实函数
+- `entry-renderer.ts` 简化为 import + 参数拼接
+- `renderNestedCustomElements` 在函数内调用，类型安全
+- 预估：~80 行新增 + ~30 行删除
+
 ---
 
-## 褰卞搷鐨勫寘
+## 影响的包
 
-| 鍖?                       | 鍙樻洿                                                    |
+| 包                        | 变更                                                    |
 | ------------------------- | ------------------------------------------------------- |
-| @openelement/core         | 鏂板 entry-bridge.ts, SsrContext, 淇敼 render-nested.ts |
-| @openelement/ui           | LessLayout._currentPath() 涓嶅啀渚濊禆 Router               |
-| @openelement/adapter-vite | entry-renderer.ts 绠€鍖?                                 |
-| @openelement/router       | 涓嶅彈褰卞搷锛堜粎 CSR 浣跨敤锛?                                |
+| @openelement/core         | 新增 entry-bridge.ts, SsrContext, 修改 render-nested.ts |
+| @openelement/ui           | LessLayout._currentPath() 不再依赖 Router               |
+| @openelement/adapter-vite | entry-renderer.ts 简化                                  |
+| @openelement/router       | 不受影响（仅 CSR 使用）                                 |
 
 ---
 
-## 椋庨櫓涓庡彇鑸?
-| 椋庨櫓                                             | 缂撹В                                                     |
+## 风险与取舍
+
+| 风险                                             | 缓解                                                     |
 | ------------------------------------------------ | -------------------------------------------------------- |
-| entry-bridge.ts 鍦?core 涓鍔?deno.json imports | core 宸叉湁 render-nested 渚濊禆 parse5锛宐ridge 涓嶅鍔犳柊渚濊禆 |
-| SsrContext 鏆撮湶鍐呴儴鎺ュ彛                          | 鏍囪涓?`@internal`锛屼笉瀵煎嚭鍒?public API                  |
-| AST 寰幆妫€娴嬫€ц兘                                 | parse5 鏍戦亶鍘嗘槸 O(depth)锛屼竴椤垫渶澶氬嚑鐧捐妭鐐癸紝闆跺奖鍝?      |
+| entry-bridge.ts 在 core 中增加 deno.json imports | core 已有 render-nested 依赖 parse5，bridge 不增加新依赖 |
+| SsrContext 暴露内部接口                          | 标记为 `@internal`，不导出到 public API                  |
+| AST 循环检测性能                                 | parse5 树遍历是 O(depth)，一页最多几百节点，零影响       |
 
 ---
 
-## 涓嶅仛浠€涔?
-1. 涓嶅紩鍏?Babel/SWC 缂栬瘧姝ラ锛堜繚鎸侀浂缂栬瘧锛?2. 涓嶆妸 Router 鏀规垚 SSR 鎰熺煡锛圧outer 鏄函 CSR 缁勪欢锛?3. 涓嶆敼鍙?render() 绛惧悕锛堜繚鎸?`render(): string | VNode`锛?
+## 不做什么
+
+1. 不引入 Babel/SWC 编译步骤（保持零编译）
+2. 不把 Router 改成 SSR 感知（Router 是纯 CSR 组件）
+3. 不改变 render() 签名（保持 `render(): string | VNode`）
+
 ---
 
-## 闄勫綍锛氫慨澶嶅悗鐨勬暟鎹祦
-````
-
-Builder (entry-renderer)
-鈹?涓嶅啀 lines.push 鐢熸垚浠ｇ爜
-鈹?鏀逛负: import { wrapAppShell } from '@openelement/core/entry-bridge'
-鈹?鐒跺悗: content = await wrapAppShell(content, routePath, {...})
-鈹? 鈹? 鈫?绫诲瀷瀹夊叏鐨勫嚱鏁拌皟鐢? 鈹?缁勪欢妯″瀷 (DsdElement)
-鈹?renderDsd() 娉ㄥ叆 #ssrContext.path
-鈹?render() 閫氳繃 this.currentPath 鑾峰彇璺緞
-鈹?涓嶈皟鐢?Router銆佷笉璁块棶 location
-鈹? 鈹? 鈫?涓嶆姏寮傚父銆佷笉 try/catch
-鈹?DSD 娓叉煋 (renderNested)
-鈹?寰幆妫€娴嬶細妫€鏌?output AST 涓悓鍚?tag 鐨勭鍏堥摼
-鈹?鍏勫紵鑺傜偣姝ｇ‘娓叉煋
-鈹? 鈹? 鈫?闆惰鏉€
-鈹?鏈€缁?HTML锛堝畬鏁淬€佹纭級
+## 附录：修复后的数据流
 
 ```
+Builder (entry-renderer)
+    │ 不再 lines.push 生成代码
+    │ 改为: import { wrapAppShell } from '@openelement/core/entry-bridge'
+    │ 然后: content = await wrapAppShell(content, routePath, {...})
+    │
+    │                       ↓ 类型安全的函数调用
+    │
+组件模型 (DsdElement)
+    │ renderDsd() 注入 #ssrContext.path
+    │ render() 通过 this.currentPath 获取路径
+    │ 不调用 Router、不访问 location
+    │
+    │                       ↓ 不抛异常、不 try/catch
+    │
+DSD 渲染 (renderNested)
+    │ 循环检测：检查 output AST 中同名 tag 的祖先链
+    │ 兄弟节点正确渲染
+    │
+    │                       ↓ 零误杀
+    │
+最终 HTML（完整、正确）
 ```

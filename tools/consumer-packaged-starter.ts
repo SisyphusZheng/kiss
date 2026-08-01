@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { PACKAGE_VERSION } from './project-constants.ts';
 import { readJson } from './lib/fs.ts';
 

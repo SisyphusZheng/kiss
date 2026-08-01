@@ -4,6 +4,14 @@
  *
  * Updates version across all workspace packages and root deno.json imports.
  *
+ * WARNING (#687): this tool intentionally performs only HALF of a version
+ * bump. It does NOT touch www/app/data/version.ts, roadmap.tsx,
+ * tools/project-constants.ts, docs anchors, or the ui generated manifest —
+ * those are completed by tools/autoflow/release.ts (updateProjectConstants +
+ * updateCurrentVersionAnchors + generate:ui-manifest). Running it standalone
+ * produces a misleading half-bumped tree; always run it through the autoflow
+ * release flow (`deno task autoflow:release-prepare`), never by hand.
+ *
  * Usage:
  *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.41.0-alpha.7
  *   deno run --allow-read --allow-write tools/bump-version.ts --from 0.41.0-alpha.6 --to 0.41.0-beta.1

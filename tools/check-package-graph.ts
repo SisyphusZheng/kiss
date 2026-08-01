@@ -27,7 +27,7 @@ import {
   releasePublishOrder,
   topologicalSort,
 } from './lib/package-graph.ts';
-import { readJson } from './lib/fs.ts';
+import { readJson, walk } from './lib/fs.ts';
 
 /**
  * Explicit dependency-direction rules: each package may only depend on the
@@ -59,20 +59,10 @@ function normalizeDep(dep: string, self: string): string | null {
 async function collectTsFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
 
-  async function walk(current: string): Promise<void> {
-    for await (const entry of Deno.readDir(current)) {
-      const path = `${current}/${entry.name}`;
-      if (entry.isDirectory) {
-        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
-        await walk(path);
-      } else if (entry.isFile && path.endsWith('.ts')) {
-        files.push(path);
-      }
-    }
-  }
-
   try {
-    await walk(dir);
+    for await (const path of walk(dir, { skip: ['node_modules', 'dist'], extensions: /\.ts$/ })) {
+      files.push(path);
+    }
   } catch {
     // Packages without src are allowed.
   }

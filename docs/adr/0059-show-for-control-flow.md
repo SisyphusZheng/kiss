@@ -5,6 +5,8 @@
 > **作者**: LessJS 架构团队\
 > **关联**: ADR-0058 (Real DOM Signal Binding)\
 > **前置讨论**: [children-signal-binding-discussion.md](../../conversation/v0.26.1/children-signal-binding-discussion.md)
+>
+> **编号碰撞**: 与 [ADR-0059 (Route Params Reactive + `static head`/`static client`/`data-keep-alive`)](./ADR-0059-static-head-client-route-params-keep-alive.md) 共用编号 0059——两者系不同决策，均予保留，引用请带文件名区分。
 
 ---
 

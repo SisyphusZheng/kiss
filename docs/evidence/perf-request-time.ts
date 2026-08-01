@@ -1,4 +1,9 @@
 /**
+ * ARCHIVED (#742): one-shot baseline script, kept as historical evidence of
+ * how the 0.42.0-alpha.5 request-time latency numbers were measured. It is not
+ * an active tool — the baseline it produced lives at
+ * docs/release/v0.42.0-alpha.5-performance.json.
+ *
  * Request-time render latency baseline (0.42.0-alpha.5, TP-5.5).
  *
  * Boots the request-time fixture server and measures /live latency: the
@@ -7,7 +12,8 @@
  * docs/release/v0.42.0-alpha.5-performance.json as the 0.44 stream/abort/
  * timeout baseline, including the environment it was measured on.
  *
- * Usage: deno run -A tools/perf-request-time.ts [--out <path>]
+ * Usage: deno run -A docs/evidence/perf-request-time.ts [--out <path>]
+ * (run from the repository root)
  */
 
 import { join } from 'node:path';

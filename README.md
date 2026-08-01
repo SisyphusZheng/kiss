@@ -60,10 +60,9 @@ baselines. The third audit sweep completed in alpha.19 (see
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
-Request-time data, forms, sessions and cache stay explicitly unfrozen until
-0.42/0.44; Request-time data, forms, sessions and cache
-remain future product work, so the current promise is static-first applications
-with fullstack output paths—not broad fullstack parity.
+Request-time data, forms, sessions and cache remain future product work
+(explicitly unfrozen until 0.42/0.44), so the current promise is static-first
+applications with fullstack output paths—not broad fullstack parity.
 
 The `1.0.0` path is a stable five-package product after the application loop, WC SSR,
 production runtime and external-adoption evidence are complete.

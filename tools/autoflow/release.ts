@@ -5,7 +5,7 @@ import {
   PREVIOUS_PACKAGE_VERSION,
 } from '../project-constants.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
-import { formatJson } from '../lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
 
 export type { ReleaseClosureRecord };
@@ -1314,7 +1314,7 @@ export async function tagEvidenceProvenance(
 }
 
 // ─── Release executor ────────────────────────────────────────────────────────
-// The executor core lives here next to the plan/evidence primitives; mod3.ts
+// The executor core lives here next to the plan/evidence primitives; cli.ts
 // is only the CLI parser and dispatcher.
 
 async function writeAndStageReleaseEvidence(evidence: ReleaseEvidence): Promise<void> {

@@ -20,7 +20,12 @@ function aliasSpecificity(find: unknown): number {
   return typeof find === 'string' ? find.length : 0;
 }
 
-function sortAliasEntries<T extends Alias>(aliases: T[]): T[] {
+/**
+ * Sort alias entries by specificity (longer string `find` first) so more
+ * specific aliases match before generic ones. Shared by normalizeViteAliases
+ * and the client build's serialized-alias pass (#709).
+ */
+export function sortAliasEntries<T extends Alias>(aliases: T[]): T[] {
   return [...aliases].sort((a, b) => {
     return aliasSpecificity(b.find) - aliasSpecificity(a.find);
   });

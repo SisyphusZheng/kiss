@@ -1,7 +1,7 @@
 /**
  * @openelement/ui - openElement UI Component Library
  *
- * Swiss International Style: Pure B&W, minimal, typography-driven.
+ * Swiss International Style: minimal, typography-driven, violet brand accent.
  * Zero Lit dependency - built on openElement (native HTMLElement).
  *
  * Components:

@@ -3,7 +3,7 @@
  * @openelement/ui - open-button
  *
  * Minimal button component following Swiss International Style.
- * Pure B&W design with subtle hover states.
+ * Violet brand accents with subtle hover states.
  *
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
@@ -21,13 +21,12 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { controlRecipe } from './component-recipes.ts';
+import type { StyleSheetLike } from '@openelement/element';
+import { controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
 
 export const tagName = 'open-button';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-block;
   }
@@ -219,14 +218,7 @@ export class OpenButton extends OpenElement {
   }
 
   private _updateState(): void {
-    if (!this._internals?.states) return;
-    if (this.hasAttribute('disabled')) {
-      this._internals.states.delete('enabled');
-      this._internals.states.add('disabled');
-    } else {
-      this._internals.states.delete('disabled');
-      this._internals.states.add('enabled');
-    }
+    syncDisabledState(this._internals, this.hasAttribute('disabled'));
   }
 
   private _handleClick = (_e: Event): void => {

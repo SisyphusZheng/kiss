@@ -18,7 +18,7 @@
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import type { Signal } from '../protocol/signal.ts';
-import { FOR_TAG, HTML_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
+import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { eventTypeFromProp } from './event-marker.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
@@ -341,7 +341,7 @@ function renderNode(
     return frag;
   }
 
-  if (tag === SHOW_TAG || tag === 'show') {
+  if (isShowTag(tag)) {
     const whenSig = props?.when;
     const ch = children as VNode[];
     const truthy: unknown = ch[0];
@@ -356,7 +356,7 @@ function renderNode(
     return marker;
   }
 
-  if (tag === FOR_TAG || tag === 'for') {
+  if (isForTag(tag)) {
     const eachSig = props?.each;
     const renderFn = (children[0] as RenderFn) ?? EMPTY_RENDER;
 

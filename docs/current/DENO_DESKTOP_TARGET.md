@@ -1,6 +1,6 @@
 # Deno Desktop Target Contract
 
-Introduced in v0.41 alpha.6 and retained as alpha.7 dogfood evidence, Deno
+Introduced in `0.41.0-alpha.6` and retained as alpha.7 dogfood evidence, Deno
 Desktop is a first-party OpenElement app target for local-first applications.
 It is not a localhost browser preview and it does not make Reader or Mastodon
 Desktop a separate product line.

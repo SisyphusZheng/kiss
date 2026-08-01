@@ -6,6 +6,10 @@
 > Related: ADR-0069, SOP-008, SOP-009, SOP-010
 > Supersedes: the ADR-0069 P0 assumption that `@openelement/ui` should import
 > app-generated content data directly.
+>
+> Numbering collision: shares ADR-0070 with
+> [0070-bridge-contracts.md](./0070-bridge-contracts.md) (三层桥接可信化, LessJS era) —
+> they are different decisions, both retained; cite by filename.
 
 ## Context
 

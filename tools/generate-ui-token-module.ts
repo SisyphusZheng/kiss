@@ -40,12 +40,11 @@ import { StyleSheet, type StyleSheetLike } from '@openelement/element';
 
 function toRootCss(hostCss: string): string {
   return hostCss
-    .replace(/:host-context\\(\\[data-theme='dark'\\]\\),\\s*\\n\\s*/g, '')
     .replace(/:host\\(\\[data-theme='dark'\\]\\)/g, ":root[data-theme='dark']")
     .replace(/:host/g, ':root');
 }
 
-export const OPEN_PROPS_TOKEN_CSS = \`${cssTemplate}\`;
+const OPEN_PROPS_TOKEN_CSS = \`${cssTemplate}\`;
 
 const sheet: StyleSheetLike = new StyleSheet();
 sheet.replaceSync(OPEN_PROPS_TOKEN_CSS);

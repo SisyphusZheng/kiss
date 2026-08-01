@@ -136,3 +136,19 @@ export type {
   OpenElementPackageManifest,
   OpenElementSlot,
 } from './internal/protocol/manifest.ts';
+
+// ─── Client runtime (@experimental) ─────────────────────
+
+/**
+ * @experimental Lightweight client runtime for third-party frameworks
+ * (Fresh, Preact, ...) that hydrates openElement DSD output without the
+ * OpenElement base class. `hydrateOpenElement` scans a subtree for
+ * `<template shadowrootmode="open">` declarative shadow roots, upgrades
+ * registered custom elements, binds `data-signal` markers, and returns a
+ * dispose function; `disposeOpenElement(root)` tears down a subtree that was
+ * hydrated this way. Marked experimental (aligned with the ISR contracts
+ * above): the API is stable enough for Fresh/third-party integration work
+ * but may still change before 0.42 stable.
+ */
+export { disposeOpenElement, hydrateOpenElement } from './internal/core/client-runtime.ts';
+export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';

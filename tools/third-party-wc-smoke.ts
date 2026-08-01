@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Page } from 'npm:playwright@1.59.1';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { allPackageAliases } from './lib/package-graph.ts';
 import { readJson } from './lib/fs.ts';
 

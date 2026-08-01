@@ -101,16 +101,23 @@ async function checkFile(file: string): Promise<void> {
   ) {
     issues.push({ file, text: 'legacy per-page structural CSS' });
   }
-  if (file.startsWith('www/app/routes/guide/') && !/open-page-rail[^>]+items=/.test(text)) {
-    issues.push({ file, text: 'guide route lacks a declared SSR outline' });
+  if (file.startsWith('www/app/routes/guide/') && !/extends GuidePage\b/.test(text)) {
+    issues.push({ file, text: 'guide route does not build on the shared guide page shell' });
   }
-  if (file.startsWith('www/app/routes/guide/') && !/<open-reading-shell\s+rail/.test(text)) {
-    issues.push({ file, text: 'guide route lacks the shared reading shell' });
-  }
-  if (file.startsWith('www/app/routes/guide/') && !/<open-reading-shell[^>]+metadata=/.test(text)) {
-    issues.push({ file, text: 'guide route lacks structured reading metadata' });
-  }
-  if (file.startsWith('www/app/routes/guide/')) {
+  // The guide routes share one shell (www/app/site-ui/guide-page.tsx, #749);
+  // the structural contract that used to be asserted per route now lives
+  // there: reading shell, declared SSR outline, structured metadata, and
+  // locale-selected content (zh must render zh).
+  if (file === 'www/app/site-ui/guide-page.tsx') {
+    if (!/open-page-rail[^>]+items=/.test(text)) {
+      issues.push({ file, text: 'guide shell lacks a declared SSR outline' });
+    }
+    if (!/<open-reading-shell\s+rail/.test(text)) {
+      issues.push({ file, text: 'guide shell lacks the shared reading shell' });
+    }
+    if (!/<open-reading-shell[^>]+metadata=/.test(text)) {
+      issues.push({ file, text: 'guide shell lacks structured reading metadata' });
+    }
     // Strip comments before asserting the locale literal so a commented-out
     // line cannot satisfy (or trip) the check.
     const uncommented = text
@@ -119,7 +126,7 @@ async function checkFile(file: string): Promise<void> {
     if (!uncommented.includes("this._getLocale('en')")) {
       issues.push({
         file,
-        text: 'guide route does not select content by locale (zh must render zh)',
+        text: 'guide shell does not select content by locale (zh must render zh)',
       });
     }
   }

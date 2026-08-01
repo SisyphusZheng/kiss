@@ -1,6 +1,5 @@
 /** Host-agnostic request context shared by App request adapters. */
 import type { OpenElementRouteNode } from '@openelement/element';
-export type { OpenElementRouteNode } from '@openelement/element';
 
 export interface OpenElementRequestContext<
   Env extends Record<string, unknown> = Record<string, unknown>,

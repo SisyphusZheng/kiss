@@ -134,11 +134,7 @@ export { transformIslandSource } from './island-transform.ts';
 export type { IslandTransformOptions, IslandTransformResult } from '../protocol/island.ts';
 
 // Unified binding layer (ADR-0109 Phase 1)
-export {
-  applyBindingDescriptor,
-  commitBindings,
-  registerBindingKind,
-} from './binding-activation.ts';
+export { applyBindingDescriptor, commitBindings } from './binding-activation.ts';
 export {
   bindAttr,
   bindClass,
@@ -185,15 +181,19 @@ export { Fragment, trustedHtml } from './jsx-runtime.ts';
 export { renderToDom } from './jsx-render-dom.ts';
 export { renderDsdTree } from './render-ir.ts';
 export {
-  collectEventBindings,
   createEventMarkerContext,
-  type EventBindingRecord,
   type EventMarkerContext,
   eventMarkerId,
   eventTypeFromProp,
-  hydrateEventMarkers,
   serializeEventMarkers,
+} from './event-marker.ts';
+export {
+  collectEventBindings,
+  type EventBindingRecord,
+  hydrateEventMarkers,
 } from './event-hydration.ts';
+export { hasSelfHydrated, HydrationScope, markSelfHydrated } from './hydration-scope.ts';
+export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.ts';
 // static props runtime
 export {
   disposeStaticProps,

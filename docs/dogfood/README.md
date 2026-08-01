@@ -4,10 +4,10 @@ This directory collects design and evidence documents for **dogfood applications
 
 ## Active Dogfood Projects
 
-| Project              | Location                                     | Framework surface under test                                                                         | Status                                                               |
-| -------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Reader**           | [`./reader/`](./reader/)                     | SPA mode, Deno Desktop, local-first documents, Preact islands, UI components                         | Released with alpha.6                                                |
-| **Mastodon Desktop** | [`./mastodon-desktop/`](./mastodon-desktop/) | SPA mode, Deno Desktop, networked public APIs, third-party WC interop, local state, error boundaries | Active next for alpha.7 ([plan](../release/v0.41.0-alpha.7-plan.md)) |
+| Project              | Location                                     | Framework surface under test                                                                         | Status                                                                                                                         |
+| -------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Reader**           | [`./reader/`](./reader/)                     | SPA mode, Deno Desktop, local-first documents, Preact islands, UI components                         | Released with alpha.6                                                                                                          |
+| **Mastodon Desktop** | [`./mastodon-desktop/`](./mastodon-desktop/) | SPA mode, Deno Desktop, networked public APIs, third-party WC interop, local state, error boundaries | Completed; 30-min stress evidence (2026-07-11) in [`docs/evidence/DOGFOOD_PERFORMANCE.md`](../evidence/DOGFOOD_PERFORMANCE.md) |
 
 ## Design Principle
 

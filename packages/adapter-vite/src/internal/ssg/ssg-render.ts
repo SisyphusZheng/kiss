@@ -358,6 +358,3 @@ export async function ssgRender(
 
   return { staticNon200, warnings };
 }
-
-// Re-export resolveDynamicRoutePath for consumers who import from ssg-render.ts
-export { resolveDynamicRoutePath } from './ssg-helpers.ts';

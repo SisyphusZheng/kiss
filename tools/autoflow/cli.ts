@@ -349,7 +349,7 @@ export async function main(args: string[]): Promise<void> {
       break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/mod3.ts <dev|push|ci|patch-release|release|release-dispatch|release-prepare|publish-existing> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
+        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-dispatch|release-prepare|publish-existing> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
       );
       Deno.exit(1);
   }

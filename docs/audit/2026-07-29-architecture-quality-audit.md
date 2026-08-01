@@ -10,7 +10,7 @@
 
 > ⚠️ **历史快照 · 非维护文档（2026-07-29 定点审计）**。本文所有 `file:line` 引用**冻结于审计当日仓库状态**，反映当时代码，不随后续重构更新。请勿将引用行号 / 路径漂移解读为"当前缺陷"——漂移仅代表代码已演进。
 > 自本审计后 `element` 包被重组（实现下沉 `src/internal/core/`、协议 `src/internal/protocol/`），故 `data.ts` / `isr.ts` / `errors.ts` 等裸基名引用现在会解析到多个候选文件，属**预期**，不代表原结论失效。
-> 查当前态请见 `openelement-audit-2026-08-01-senior.md` 及后续报告。如需按当日基线复核引用，运行 `deno run -A tools/check-audit-citations.ts --sha=<审计当日 commit>`。
+> 查当前态请见 `2026-08-01-senior-review.md` 及后续报告。如需按当日基线复核引用，运行 `deno run -A tools/check-audit-citations.ts --sha=<审计当日 commit>`。
 
 ---
 

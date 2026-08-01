@@ -7,7 +7,7 @@
  */
 
 import { dirname, join } from 'node:path';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { PACKAGE_VERSION } from './project-constants.ts';
 import { runWithOutput } from './lib/process.ts';
 

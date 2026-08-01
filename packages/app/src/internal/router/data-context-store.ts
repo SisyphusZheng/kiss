@@ -17,6 +17,8 @@
  * Deno Deploy, Cloudflare Workers and Node (locked decision for #632).
  */
 
+import { isDevMode } from '../dev-mode.ts';
+
 export interface RenderDataContext {
   stack: { loaderData: unknown; actionData: unknown }[];
 }
@@ -76,26 +78,10 @@ export function __exitDataContext(): void {
   _active = null;
 }
 
-function _devMode(): boolean {
-  try {
-    const deno = (globalThis as { Deno?: { env?: { get(k: string): string | undefined } } }).Deno;
-    if (deno && typeof deno.env?.get === 'function') {
-      return deno.env.get('DENO_ENV') !== 'production';
-    }
-  } catch (e) {
-    /* anomaly only: Workers hit the `undefined Deno` branch above and never reach here */
-    console.warn(
-      '[data-context-store] Unexpected error reading DENO_ENV, defaulting to non-dev mode',
-      e,
-    );
-  }
-  return false;
-}
-
 /** @internal Resolve the currently active render-scoped data context. */
 export function __activeDataContext(): RenderDataContext {
   if (_active) return _active;
-  if (_devMode() && !_warnedOutsideRender) {
+  if (isDevMode() && !_warnedOutsideRender) {
     _warnedOutsideRender = true;
     console.warn(
       '[app] useLoaderData/useActionData called outside of a page render scope; returning undefined. ' +

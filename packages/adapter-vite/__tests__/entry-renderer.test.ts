@@ -405,7 +405,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'function __pageDefinition(module) {');
   assertStringIncludes(
     code,
-    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure } from '@openelement/app';",
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader } from '@openelement/app';",
   );
   assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
   assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
@@ -818,7 +818,10 @@ Deno.test('renderEntry: action POST follows the ADR-0120 protocol', () => {
   assertStringIncludes(code, 'return c.redirect(__prgTarget, 303)');
   assertStringIncludes(code, "key.startsWith('/')");
   assertStringIncludes(code, '__namedActions[__actionName]');
-  assertStringIncludes(code, "c.req.header('x-openelement-action')");
+  // #743: generated code references the shared ACTION_FETCH_HEADER constant
+  // (single source of truth in @openelement/element) instead of a literal.
+  assertStringIncludes(code, 'ACTION_FETCH_HEADER as __actionFetchHeader');
+  assertStringIncludes(code, 'c.req.header(__actionFetchHeader)');
   assertStringIncludes(
     code,
     "{ type: 'failure', status: __actionResult.status, data: __actionResult.data }",
@@ -855,7 +858,7 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   );
   // #550: request-time responses are never cacheable; POST is negotiated.
   assertStringIncludes(code, "c.header('Cache-Control', 'no-store');");
-  assertStringIncludes(code, "c.header('Vary', 'x-openelement-action');");
+  assertStringIncludes(code, "c.header('Vary', __actionFetchHeader);");
   // #558: the JSON error channel scrubs internals in production.
   assertStringIncludes(code, "import.meta.env.PROD ? 'Internal Server Error' : String(err");
   // #568: action POSTs carry a default body limit.

@@ -15,9 +15,9 @@ import { createSsgRenderEvidence } from '../src/cli/ssg-render.ts';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type {
   CompatibilityClassification,
+  OpenElementPackageManifest,
   RouteEntry,
 } from '../src/internal/protocol/framework.ts';
-import type { OpenElementPackageManifest } from '../src/internal/protocol/manifest.ts';
 
 const routes: RouteEntry[] = [
   {

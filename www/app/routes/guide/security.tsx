@@ -1,23 +1,7 @@
 export const meta = { section: 'Guide', label: 'Security', order: 95 };
 
-import { OpenElement } from '@openelement/element';
-import { StyleSheet } from '@openelement/element';
-import { pageStyles } from '../../components/page-styles.js';
-import { guideSectionStyles } from '@openelement/site-ui/guide-section-styles.ts';
-import '@openelement/ui/open-card';
+import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 import '@openelement/ui/open-code-block';
-
-type GuideContent = {
-  breadcrumb: string;
-  title: string;
-  lede: string;
-  outline: ReadonlyArray<{ id: string; label: string; level: 2 | 3 }>;
-  previous?: { href: string; label: string };
-  next?: { href: string; label: string };
-  cards: ReadonlyArray<{ id: string; title: string; body: string }>;
-  recipeTitle: string;
-  recipeNote: string;
-};
 
 const content: Record<'en' | 'zh', GuideContent> = {
   en: {
@@ -93,53 +77,16 @@ const content: Record<'en' | 'zh', GuideContent> = {
   },
 };
 
-const routeSheet = new StyleSheet();
-routeSheet.replaceSync(
-  pageStyles + guideSectionStyles + `
-    .guide-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--size-4);
-      margin: var(--size-8) 0;
-    }
+export class GuideSecurityPage extends GuidePage {
+  static override styles = [guideStyles()];
+  static override guide = { content };
 
-    @media (max-width: 860px) {
-      .guide-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  `,
-);
-
-export class GuideSecurityPage extends OpenElement {
-  static override styles = [routeSheet];
-
-  override render() {
-    const locale = this._getLocale('en');
-    const t = content[locale === 'zh' ? 'zh' : 'en'];
+  protected override renderAfterCards(t: GuideContent): unknown {
     return (
-      <open-reading-shell
-        rail
-        footer
-        metadata={JSON.stringify({ breadcrumb: t.breadcrumb, title: t.title, lede: t.lede })}
-        previous={t.previous?.href}
-        previous-label={t.previous?.label}
-        next={t.next?.href}
-        next-label={t.next?.label}
-      >
-        <open-page-rail slot='rail' items={JSON.stringify(t.outline)}></open-page-rail>
-        <div class='container guide-sections'>
-          <div class='guide-grid'>
-            {t.cards.map((card) => (
-              <open-card>
-                <h3 id={card.id}>{card.title}</h3>
-                <p>{card.body}</p>
-              </open-card>
-            ))}
-          </div>
-          <h3>{t.recipeTitle}</h3>
-          <open-code-block>
-            <pre><code>{`import type { Context, Next } from 'hono';
+      <>
+        <h3>{t.recipeTitle}</h3>
+        <open-code-block>
+          <pre><code>{`import type { Context, Next } from 'hono';
 
 // CSRF guard (ADR-0121 §12): the framework's form/action loop assumes
 // SameSite=Lax cookies. Apps using ambient authentication (Basic, mTLS,
@@ -165,10 +112,9 @@ export default async function csrfGuard(c: Context, next: Next) {
   }
   return c.text('Forbidden', 403);
 }`}</code></pre>
-          </open-code-block>
-          <p>{t.recipeNote}</p>
-        </div>
-      </open-reading-shell>
+        </open-code-block>
+        <p>{t.recipeNote}</p>
+      </>
     );
   }
 }

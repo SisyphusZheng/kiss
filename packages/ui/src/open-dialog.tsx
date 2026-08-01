@@ -23,13 +23,12 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { overlayRecipe } from './component-recipes.ts';
+import type { StyleSheetLike } from '@openelement/element';
+import { overlayRecipe, recipe } from './component-recipes.ts';
 
 export const tagName = 'open-dialog';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-block;
   }
@@ -115,7 +114,10 @@ sheet.replaceSync(`
 export class OpenDialog extends OpenElement {
   static override styles = [overlayRecipe, sheet];
   static override delegatesFocus = true;
-  static override observedAttributes = ['open', 'label', 'mode'];
+  // Only `open` is observed: attributeChangedCallback reacts to it alone.
+  // `label` is read at render time and `mode` at open time — observing them
+  // was a dead listener (nothing synced on change).
+  static override observedAttributes = ['open'];
 
   override render(): ReturnType<typeof OpenElement.prototype.render> {
     // Keep the custom state in sync on every render. When the `open`

@@ -14,7 +14,7 @@ import {
   serializeEventMarkers,
   showBranchMarker,
 } from './event-marker.ts';
-import { FOR_TAG, HTML_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
+import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, resolveSignalProp, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
@@ -224,7 +224,7 @@ export async function renderToNode(
   }
 
   // Show
-  if (tag === SHOW_TAG || tag === 'show') {
+  if (isShowTag(tag)) {
     const whenVal = resolveSignalProp(props?.when);
     const target = whenVal ? children[0] : children[1];
     // Record the branch taken so hydration can detect signal drift between SSR
@@ -235,7 +235,7 @@ export async function renderToNode(
   }
 
   // For
-  if (tag === FOR_TAG || tag === 'for') {
+  if (isForTag(tag)) {
     const items = resolveSignalProp(props?.each) as unknown[];
     const renderFn = children[0] as RenderFn;
     const branch = branchCommentNode(forBranchMarker(items));

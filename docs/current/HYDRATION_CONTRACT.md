@@ -1,6 +1,6 @@
 # Hydration Surface Contract
 
-The v0.41 alpha line exposes one supported component runtime:
+The current line (0.41.x stable and later) exposes one supported component runtime:
 `@openelement/element`. Hydration internals are not application-authoring
 surface: the `open-element-render` and `open-element-hydration` implementation
 modules are internal-only — their package subpath exports were removed in

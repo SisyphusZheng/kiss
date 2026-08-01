@@ -62,7 +62,7 @@ import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { signal } from './internal/signal/index.ts';
 import { createLogger } from './internal/core/logger.ts';
-import { HydrationScope, markSelfHydrated } from './internal/core/hydrate.ts';
+import { HydrationScope, markSelfHydrated } from './internal/core/index.ts';
 import {
   renderErrorFallback,
   renderIntoLightDom,

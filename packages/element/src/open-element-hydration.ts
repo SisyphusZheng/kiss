@@ -16,7 +16,7 @@
  * @module @openelement/element/open-element-hydration
  */
 
-import type { HydrationScope } from './internal/core/hydrate.ts';
+import type { HydrationScope } from './internal/core/index.ts';
 import type { OpenElementLike } from './open-element-render.ts';
 
 /**

@@ -30,8 +30,11 @@
  */
 
 import type { EntryDescriptor, IslandDecl } from '../protocol/ssg.ts';
-import type { FrameworkOptions, HydrationStrategy } from '../protocol/framework.ts';
-import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
+import type {
+  FrameworkOptions,
+  HydrationStrategy,
+  OpenElementPackageManifest,
+} from '../protocol/framework.ts';
 import { validateIslandModuleSpecifier } from './entry-generators.ts';
 import {
   renderActionRoute,
@@ -90,7 +93,7 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { createLogger } from '@openelement/element';`);
   lines.push(`import { createRuntimeAdapter } from '@openelement/element/build-utils';`);
   lines.push(
-    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure } from '@openelement/app';`,
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader } from '@openelement/app';`,
   );
   lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,

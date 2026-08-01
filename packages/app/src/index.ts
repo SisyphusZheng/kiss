@@ -13,7 +13,6 @@ export {
   redirect,
 } from './authoring.ts';
 export type {
-  AppIslandOptions,
   IslandConfig,
   NormalizedPageRenderIntent,
   OpenElementPageDescriptor,

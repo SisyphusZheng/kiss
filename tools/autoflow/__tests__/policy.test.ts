@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
-import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../mod3.ts';
+import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../cli.ts';
 import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {
   bumpPreviousReleaseThemeText,
@@ -86,7 +86,7 @@ Deno.test('policy: release tier includes pack dry-run and nitro proofs', () => {
   assert(gates.includes('third-party-wc:smoke'));
 });
 
-Deno.test('mod3: parse approved plan for release command', () => {
+Deno.test('cli: parse approved plan for release command', () => {
   assertEquals(parseArgs(['release', '--approved-plan', 'ADR-0101/v0.40', '--dry-run']), {
     command: 'release',
     dryRun: true,
@@ -96,7 +96,7 @@ Deno.test('mod3: parse approved plan for release command', () => {
   });
 });
 
-Deno.test('mod3: parse dispatch flag for release command', () => {
+Deno.test('cli: parse dispatch flag for release command', () => {
   assertEquals(
     parseArgs(['release-dispatch', '--approved-plan', 'ADR-0101/v0.40', '--to', '0.41.0-alpha.1']),
     {
@@ -109,7 +109,7 @@ Deno.test('mod3: parse dispatch flag for release command', () => {
   );
 });
 
-Deno.test('mod3: normalizes compact prerelease version input', () => {
+Deno.test('cli: normalizes compact prerelease version input', () => {
   assertEquals(normalizeReleaseVersion('0.41.0-alpha5'), '0.41.0-alpha.5');
   assertEquals(normalizeReleaseVersion('0.41.0-beta12'), '0.41.0-beta.12');
   assertEquals(normalizeReleaseVersion('0.41.0-rc1'), '0.41.0-rc.1');
@@ -120,7 +120,7 @@ Deno.test('mod3: normalizes compact prerelease version input', () => {
   );
 });
 
-Deno.test('mod3: addPaths deduplicates multi-source diff output', () => {
+Deno.test('cli: addPaths deduplicates multi-source diff output', () => {
   const paths = new Set<string>();
   addPaths(paths, 'README.md\npackages/core/src/index.ts\n');
   addPaths(paths, 'README.md\r\ndocs/current/VERSION_PLAN.md\r\n');
@@ -131,7 +131,7 @@ Deno.test('mod3: addPaths deduplicates multi-source diff output', () => {
   ]);
 });
 
-Deno.test('mod3: ci changed paths fall back to diff-tree in a shallow clone', async () => {
+Deno.test('cli: ci changed paths fall back to diff-tree in a shallow clone', async () => {
   const calls: string[][] = [];
   const paths = await gitChangedPaths('ci', (args) => {
     calls.push(args);
@@ -145,7 +145,7 @@ Deno.test('mod3: ci changed paths fall back to diff-tree in a shallow clone', as
   ]);
 });
 
-Deno.test('mod3: changed-path discovery fails when every git strategy fails', async () => {
+Deno.test('cli: changed-path discovery fails when every git strategy fails', async () => {
   let message = '';
   try {
     await gitChangedPaths('ci', () => Promise.resolve(undefined));
@@ -155,7 +155,7 @@ Deno.test('mod3: changed-path discovery fails when every git strategy fails', as
   assert(message.includes('Unable to determine changed paths'));
 });
 
-Deno.test('mod3: parses two-phase release commands', () => {
+Deno.test('cli: parses two-phase release commands', () => {
   assertEquals(
     parseArgs([
       'release-prepare',

@@ -89,6 +89,6 @@ export function openI18n(
   };
 }
 
-// Use @openelement/app/i18n for runtime helpers: i18nStaticPaths, loadI18nData, switchLocale, normalizeLocalePath
+// Use @openelement/app/i18n for runtime helpers: loadI18nData, normalizeLocalePath
 
 export default openI18n;

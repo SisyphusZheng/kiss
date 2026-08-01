@@ -16,12 +16,17 @@
  *   deno run -A tools/check-audit-citations.ts [files...] [--sha=<commit>]
  *   deno run -A tools/check-audit-citations.ts --write   # append a verification appendix
  *
+ * With no file arguments the tool scans docs/audit/ for reports archived under
+ * the YYYY-MM-DD-* naming convention.
+ *
  * Exit code is non-zero when any citation has drifted (so it can gate CI).
  * The --write flag instead appends a "Citation verification" appendix to each
  * report and always exits 0.
  */
 
 import { walk } from '@std/fs/walk';
+
+import { exists } from './lib/fs.ts';
 
 interface Citation {
   file: string;
@@ -48,15 +53,6 @@ type ResolveResult = { path: string } | { ambiguous: string[] } | { missing: tru
 const SOURCE_ROOTS = ['packages', 'www', 'tools', 'examples', 'docs'];
 const SKIP_RE =
   /[/\\](node_modules|dist|vendor|\.nitro|www\/public|www\/content\/blog|playwright-report|test-results)[/\\]/;
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await Deno.stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 const resolveCache = new Map<string, ResolveResult>();
 const readCache = new Map<string, string | null>();
@@ -239,12 +235,11 @@ async function main() {
   if (files.length > 0) {
     targets = files;
   } else {
+    // Audit reports are archived under docs/audit/ with a YYYY-MM-DD-* name.
     const found: string[] = [];
-    for await (const entry of Deno.readDir('.')) {
-      if (
-        entry.isFile && entry.name.startsWith('openelement-audit-') && entry.name.endsWith('.md')
-      ) {
-        found.push(entry.name);
+    for await (const entry of Deno.readDir('docs/audit')) {
+      if (entry.isFile && /^\d{4}-\d{2}-\d{2}-.+\.md$/.test(entry.name)) {
+        found.push(`docs/audit/${entry.name}`);
       }
     }
     targets = found.sort();

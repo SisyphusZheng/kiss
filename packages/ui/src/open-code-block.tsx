@@ -21,14 +21,14 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import type { StyleSheetLike } from '@openelement/element';
 import { createLogger } from '@openelement/element';
+import { recipe } from './component-recipes.ts';
 export const tagName = 'open-code-block';
 
 const log = createLogger('ui');
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host {
     display: block;
     position: relative;
@@ -205,10 +205,10 @@ export class OpenCodeBlock extends OpenElement {
         grammar,
         lang,
       );
-    this._injectHighlighted(highlightedHtml);
+    this._injectHighlighted(highlightedHtml, lang);
   }
 
-  private _injectHighlighted(html: string): void {
+  private _injectHighlighted(html: string, lang: string): void {
     if (!this.shadowRoot || this._highlightedInShadow) return;
     this._highlightedInShadow = true;
 
@@ -217,7 +217,7 @@ export class OpenCodeBlock extends OpenElement {
 
     const highlightedPre = document.createElement('pre');
     const highlightedCode = document.createElement('code');
-    highlightedCode.className = 'language-typescript';
+    highlightedCode.className = `language-${lang}`;
     highlightedCode.innerHTML = html;
     highlightedPre.appendChild(highlightedCode);
     slot.replaceWith(highlightedPre);

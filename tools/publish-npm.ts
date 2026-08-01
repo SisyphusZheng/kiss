@@ -13,7 +13,7 @@ import {
 } from './lib/package-graph.ts';
 import { runCommand } from './lib/process.ts';
 import { assertCleanWorktree } from './lib/git-cleanliness.ts';
-import { formatJson } from './lib/format-json.ts';
+import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);

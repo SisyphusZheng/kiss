@@ -21,9 +21,9 @@ import type {
   CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
+  OpenElementPackageManifest,
   RouteEntry,
 } from '../internal/protocol/framework.ts';
-import type { OpenElementPackageManifest } from '../internal/protocol/manifest.ts';
 import type { EntryDescriptor, IslandDecl } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { buildEntryDescriptor, ssgRender } from '../internal/ssg/index.ts';

@@ -1,6 +1,10 @@
 # Changelog
 
-The maintained release record lives in [`docs/release/`](./docs/release/).
+> **Historical archive.** The maintained, per-release record lives in
+> [`docs/release/`](./docs/release/) and is the authoritative source. This file
+> is an aggregated history only: it is **not re-synchronized release by
+> release** and there is no mechanism keeping it in lockstep with
+> `docs/release/`. When the two disagree, `docs/release/` wins.
 
 Current truth lives in:
 

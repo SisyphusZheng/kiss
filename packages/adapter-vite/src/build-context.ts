@@ -26,9 +26,9 @@ import type {
   OpenElementHeaderNavLink,
   OpenElementI18nContextOptions,
   OpenElementNavSection,
+  OpenElementPackageManifest,
   RouteEntry,
 } from './internal/protocol/framework.ts';
-import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 import type {
   BuildArtifacts,
   BuildPlan,

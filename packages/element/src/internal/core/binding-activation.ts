@@ -39,14 +39,6 @@ type ApplyFn = (
 
 const registry = new Map<string, ApplyFn>();
 
-/** Register a custom binding kind in the activation registry. */
-export function registerBindingKind(kind: string, applyFn: ApplyFn): void {
-  if (registry.has(kind)) {
-    bindingLog.warn(`Overwriting registered binding kind: ${kind}`);
-  }
-  registry.set(kind, applyFn);
-}
-
 /** Apply a single binding descriptor and return a dispose function. */
 export function applyBindingDescriptor(
   desc: BindingDescriptor,

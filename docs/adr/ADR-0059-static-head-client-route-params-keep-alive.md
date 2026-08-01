@@ -4,6 +4,10 @@
 > Date: 2026-05-29\
 > Target: v0.25.0 (static head, static client) + v0.26.0 (route params, keep-alive)\
 > Depends on: ADR-0058 (BuildPipeline for static head injection)
+>
+> Numbering collision: shares ADR-0059 with
+> [0059-show-for-control-flow.md](./0059-show-for-control-flow.md) (VNode 层控制流组件
+> `<Show>`/`<For>`) — they are different decisions, both retained; cite by filename.
 
 ## Context
 

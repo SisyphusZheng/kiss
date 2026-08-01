@@ -153,22 +153,15 @@ for (const [specifier, url] of allPackageAliases(repoRoot)) {
   denoJson.imports[specifier] = url;
 }
 
-denoJson.imports['lit'] = 'npm:lit@^3.2.0';
 denoJson.imports['vite'] = 'npm:vite@8.0.10';
 denoJson.imports['@deno/vite-plugin'] = 'npm:@deno/vite-plugin';
 denoJson.imports['hono'] = 'npm:hono@4.12.23';
 denoJson.imports['@hono/vite-dev-server'] = 'npm:@hono/vite-dev-server@^0.25.3';
-denoJson.imports['parse5'] = 'npm:parse5@7.0.0';
-denoJson.imports['entities'] = 'npm:entities@^4';
-denoJson.imports['entities/'] = 'npm:entities@^4/';
 
 // Override build task to use local source
 denoJson.tasks.build = `deno run -A ${
   join(repoRoot, 'packages', 'adapter-vite', 'src', 'cli', 'build.ts')
 }`;
-delete denoJson.tasks['build:ssr'];
-delete denoJson.tasks['build:client'];
-delete denoJson.tasks['build:ssg'];
 
 writeFileSync(denoJsonPath, JSON.stringify(denoJson, null, 2));
 

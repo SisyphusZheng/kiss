@@ -4,6 +4,10 @@ Status: Implemented
 Date: 2026-06-02
 Target: v0.28.3
 
+> Numbering collision: shares ADR-0072 with
+> [ADR-0072-unified-render-api-surface.md](./ADR-0072-unified-render-api-surface.md) —
+> they are different decisions, both retained; cite by filename.
+
 ## Context
 
 LessJS already has one server rendering path: component output becomes a VNode

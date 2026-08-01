@@ -43,6 +43,25 @@ export const FOR_TAG: unique symbol = Symbol.for('openelement.for');
 export const HTML_TAG: unique symbol = Symbol.for('openelement.html');
 
 /**
+ * Type guard for a VNode `tag` that represents a `<Show>` control-flow
+ * directive. Centralized like `isFragment` (#740) so the three render paths
+ * (render-ir, jsx-render-dom, event-hydration) share one check. The string
+ * branch matches compiled JSX that emits the literal `show` tag instead of
+ * the `Show()` factory symbol.
+ */
+export function isShowTag(tag: unknown): boolean {
+  return tag === SHOW_TAG || tag === 'show';
+}
+
+/**
+ * Type guard for a VNode `tag` that represents a `<For>` control-flow
+ * directive. See `isShowTag` for why both the symbol and string forms match.
+ */
+export function isForTag(tag: unknown): boolean {
+  return tag === FOR_TAG || tag === 'for';
+}
+
+/**
  * Create a VNode that renders as raw trusted HTML.
  *
  * During SSR the HTML string is emitted verbatim; on the client it is parsed

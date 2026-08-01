@@ -95,6 +95,16 @@ function switchLabel(currentLocale: string): string {
   return LOCALE_LABELS[currentLocale] || currentLocale;
 }
 
+/**
+ * zh coverage is scoped to the guide layer (#749): the switcher states that
+ * scope instead of silently implying a fully translated site.
+ */
+function switchScopeNote(currentLocale: string): string {
+  return currentLocale === 'zh'
+    ? 'Switch to English'
+    : '中文翻译目前覆盖 Guide 层；其他层的页面仍为英文。';
+}
+
 /** SignalContext key: theme state shared across all components */
 export const THEME_CTX: Context<'dark' | 'light'> = createContext<'dark' | 'light'>(
   Symbol('theme'),
@@ -923,6 +933,8 @@ export class OpenLayout extends OpenElement {
                   className='lang-switch'
                   href={langHref}
                   data-nav={langHref}
+                  title={switchScopeNote(currentLocale)}
+                  aria-label={switchScopeNote(currentLocale)}
                 >
                   {langLabel}
                 </a>

@@ -10,7 +10,7 @@
 import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
 import { buildSsrAdmissionPlan } from '../src/internal/ssg/index.ts';
 import type { IslandDecl } from '../src/internal/ssg/index.ts';
-import type { CompatibilityClassification } from '../src/internal/protocol/manifest.ts';
+import type { CompatibilityClassification } from '../src/internal/protocol/framework.ts';
 
 // Section
 

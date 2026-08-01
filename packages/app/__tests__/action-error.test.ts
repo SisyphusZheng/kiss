@@ -10,7 +10,7 @@ Deno.test('action failures expose a stable page error and hide production detail
   );
 
   assertEquals(result, { error: 'Action failed' });
-  assertEquals(messages, [['[spa] action failed']]);
+  assertEquals(messages, [['action failed']]);
 });
 
 Deno.test('action failures retain the original error only in development logs', () => {
@@ -19,7 +19,7 @@ Deno.test('action failures retain the original error only in development logs', 
   const result = normalizeActionFailure(error, true, (...args) => messages.push(args));
 
   assertEquals(result, { error: 'Action failed' });
-  assertEquals(messages, [['[spa] action failed:', error]]);
+  assertEquals(messages, [['action failed:', error]]);
 });
 
 Deno.test('loader failures expose a stable page error and hide production details (#676)', () => {
@@ -31,7 +31,7 @@ Deno.test('loader failures expose a stable page error and hide production detail
   );
 
   assertEquals(result, { error: 'Loader failed' });
-  assertEquals(messages, [['[spa] loader failed']]);
+  assertEquals(messages, [['loader failed']]);
 });
 
 Deno.test('loader failures retain the original error only in development logs (#676)', () => {
@@ -40,5 +40,5 @@ Deno.test('loader failures retain the original error only in development logs (#
   const result = normalizeLoaderFailure(error, true, (...args) => messages.push(args));
 
   assertEquals(result, { error: 'Loader failed' });
-  assertEquals(messages, [['[spa] loader failed:', error]]);
+  assertEquals(messages, [['loader failed:', error]]);
 });

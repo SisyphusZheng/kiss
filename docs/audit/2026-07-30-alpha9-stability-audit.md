@@ -11,7 +11,7 @@
 
 > ⚠️ **历史快照 · 非维护文档（2026-07-30 定点审计）**。本文所有 `file:line` 引用**冻结于审计当日仓库状态**（基线 commit `2872999b`），反映当时代码，不随后续重构更新。请勿将引用行号 / 路径漂移解读为"当前缺陷"——漂移仅代表代码已演进。
 > 自本审计后 `element` 包被重组（实现下沉 `src/internal/core/`、协议 `src/internal/protocol/`），故 `isr.ts` / `errors.ts` / `ssg-render.ts` / `plugin.ts` 等裸基名引用现在会解析到多个候选文件，属**预期**，不代表原结论失效。
-> 按当日基线复核引用：`deno run -A tools/check-audit-citations.ts openelement-audit-2026-07-30-alpha9.md --sha=2872999b`。查当前态请见 `openelement-audit-2026-08-01-senior.md` 及后续报告。
+> 按当日基线复核引用：`deno run -A tools/check-audit-citations.ts docs/audit/2026-07-30-alpha9-stability-audit.md --sha=2872999b`。查当前态请见 `2026-08-01-senior-review.md` 及后续报告。
 
 ---
 

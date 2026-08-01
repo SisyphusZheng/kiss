@@ -10,7 +10,7 @@
  * scope to a client-side re-render instead of mis-binding handlers.
  */
 
-import { FOR_TAG, isFragment, SHOW_TAG } from './jsx-runtime.ts';
+import { isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, resolveSignalProp } from '../signal/index.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
@@ -29,17 +29,6 @@ import { formatError } from './errors.ts';
 import { injectPropsSafe } from './security.ts';
 
 const hydrationLog = createLogger('hydration');
-
-// Re-export pure marker helpers so existing consumers keep working.
-export {
-  createEventMarkerContext,
-  eventMarkerId,
-  eventTypeFromProp,
-  forBranchMarker,
-  serializeEventMarkers,
-  showBranchMarker,
-} from './event-marker.ts';
-export type { EventMarkerContext } from './event-marker.ts';
 
 export interface EventBindingRecord {
   id: string;
@@ -86,7 +75,7 @@ export function collectEventBindings(
       return;
     }
 
-    if (tag === SHOW_TAG || tag === 'show') {
+    if (isShowTag(tag)) {
       const whenVal = resolveSignalProp(props?.when);
       branches?.push(showBranchMarker(Boolean(whenVal)));
       const target = whenVal ? children[0] : children[1];
@@ -94,7 +83,7 @@ export function collectEventBindings(
       return;
     }
 
-    if (tag === FOR_TAG || tag === 'for') {
+    if (isForTag(tag)) {
       const items = resolveSignalProp(props?.each) as unknown[];
       const renderFn = children[0] as RenderFn;
       branches?.push(forBranchMarker(items));

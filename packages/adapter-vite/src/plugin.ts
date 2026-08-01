@@ -8,9 +8,12 @@
  */
 
 import type { Alias, Plugin } from 'vite';
-import type { FrameworkOptions, RouteEntry } from './internal/protocol/framework.ts';
+import type {
+  FrameworkOptions,
+  OpenElementPackageManifest,
+  RouteEntry,
+} from './internal/protocol/framework.ts';
 import type { SsgBehaviorOptions } from './internal/protocol/ssg.ts';
-import type { OpenElementPackageManifest } from './internal/protocol/manifest.ts';
 
 import { join } from 'node:path';
 import process from 'node:process';

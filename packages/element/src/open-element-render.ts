@@ -16,7 +16,7 @@ import type { Signal } from './internal/protocol/signal.ts';
 import { renderToDom } from './internal/core/index.ts';
 import { formatError } from './internal/core/errors.ts';
 import { createLogger } from './internal/core/logger.ts';
-import type { HydrationScope } from './internal/core/hydrate.ts';
+import type { HydrationScope } from './internal/core/index.ts';
 
 /**
  * Minimal structural stand-in for OpenElement instances.

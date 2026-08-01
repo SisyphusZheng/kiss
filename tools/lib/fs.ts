@@ -50,7 +50,7 @@ export async function exists(path: string): Promise<boolean> {
 }
 
 /** Read a UTF-8 text file. */
-export async function readText(path: string): Promise<string> {
+async function readText(path: string): Promise<string> {
   return await Deno.readTextFile(path);
 }
 

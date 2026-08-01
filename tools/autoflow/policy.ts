@@ -64,7 +64,7 @@ export const GATES: readonly GateDefinition[] = [
     tiers: ['ci', 'release'],
     triggers: [
       /^packages\//,
-      /^docs\/release\/v0\.41\.0-interface-snapshot\.json$/,
+      /^docs\/release\/public-interface-snapshot\.json$/,
       /^tools\/check-public-interface-snapshot\.ts$/,
       /^deno\.json$/,
     ],
@@ -241,6 +241,21 @@ export const GATES: readonly GateDefinition[] = [
   {
     name: 'test:e2e',
     command: ['deno', 'task', 'test:e2e'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
+  },
+  {
+    // Cross-browser smoke (#685): the main E2E gate is Chromium-only; these
+    // run the core DSD/island-hydration/theme specs on Firefox and WebKit.
+    // They need www/dist, which the earlier build gate produces.
+    name: 'test:e2e:firefox-smoke',
+    command: ['deno', 'task', 'test:e2e:firefox-smoke'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\//, /^www\//, /^deno\.json$/],
+  },
+  {
+    name: 'test:e2e:webkit-smoke',
+    command: ['deno', 'task', 'test:e2e:webkit-smoke'],
     tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },

@@ -3,6 +3,7 @@ import {
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
 } from './project-constants.ts';
+import { staleCurrencyClaimPatterns } from './check-strategic-docs.ts';
 
 // Prerelease tag of the superseded line (e.g. "alpha.9"). The
 // "active release target" stale guard below is bound to this tag instead of a
@@ -57,7 +58,6 @@ const staleCurrentClaims: RegExp[] = [
   /活动执行目标是\s+v0\.38\.0/i,
   /JSR publish .*best-effort/i,
   /JSR publish .*telemetry/i,
-  /dual npm\/JSR publishing/i,
   /to JSR as a secondary channel/i,
   /not (?:a )?(?:version-)?exit gate/i,
   /do not block version\s+exit/i,
@@ -73,9 +73,11 @@ const staleCurrentClaims: RegExp[] = [
     ? [new RegExp(`active release target.*${previousPrereleaseTag.replace(/\./g, '\\.')}`, 'i')]
     : []),
   /alpha\.13 was\s+the prior recovery train/i,
-  /five-package convergence is published as\s+`?0\.41\.0-alpha\.10/i,
-  /五包收敛已作为\s+`0\.41\.0-alpha\.10/i,
-  /completed\s+implementation anchor\s+`?v0\.41\.0-alpha\.7/i,
+  // Currency claims ("published as X", "completed implementation anchor X")
+  // are parameterized from the superseded package line instead of naming a
+  // hardcoded alpha — the same generated set check-strategic-docs.ts enforces,
+  // so the two gates no longer drift apart (#742).
+  ...staleCurrencyClaimPatterns(),
   /v0\.41 beta/i,
 ];
 

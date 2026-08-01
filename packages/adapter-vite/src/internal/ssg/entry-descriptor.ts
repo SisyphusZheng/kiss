@@ -18,9 +18,9 @@ import type {
   CompatibilityClassification,
   FrameworkOptions,
   HydrationStrategy,
+  OpenElementPackageManifest,
   RouteEntry,
 } from '../protocol/framework.ts';
-import type { OpenElementPackageManifest } from '../protocol/manifest.ts';
 import type { SsrAdmissionDecision } from '@openelement/element';
 import { normalizeSeparators } from '@openelement/element/build-utils';
 import { fileToTagName } from './route-scanner.ts';

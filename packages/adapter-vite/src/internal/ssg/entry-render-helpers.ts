@@ -153,7 +153,7 @@ export function renderRouteHandler(
     // ADR-0121 (#568): conservative default body limit on action POSTs;
     // larger uploads belong on API routes with explicit limits.
     lines.push(
-      `app.post(${pathLiteral}, __bodyLimit({ maxSize: 10 * 1024 * 1024, onError: (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', 'x-openelement-action'); return c.text('Payload Too Large', 413); } }), async (c) => {`,
+      `app.post(${pathLiteral}, __bodyLimit({ maxSize: 10 * 1024 * 1024, onError: (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Payload Too Large', 413); } }), async (c) => {`,
     );
   } else {
     lines.push(`app.get(${pathLiteral}, async (c) => {`);
@@ -167,7 +167,7 @@ export function renderRouteHandler(
   // the POST endpoint is negotiated by the framework action header.
   lines.push(`  c.header('Cache-Control', 'no-store');`);
   if (isAction) {
-    lines.push(`  c.header('Vary', 'x-openelement-action');`);
+    lines.push(`  c.header('Vary', __actionFetchHeader);`);
   }
   if (isAction) {
     // Declared outside try so the catch can branch on the fetch path without
@@ -218,7 +218,7 @@ export function renderRouteHandler(
     // ADR-0121 section 1 (#540): one header, two values — 'true' selects the
     // ActionResult JSON channel; 'enhance' marks the built-in morph client
     // (HTML responses identical to the no-JS path).
-    lines.push(`    const __actionHeader = c.req.header('x-openelement-action');`);
+    lines.push(`    const __actionHeader = c.req.header(__actionFetchHeader);`);
     lines.push(`    __isFetch = __actionHeader === 'true';`);
     // #611 / ADR-0121 §12 (amended): default same-origin CSRF floor for
     // browser POSTs. Non-browser clients that omit Origin and Sec-Fetch-Site
@@ -479,7 +479,7 @@ export function renderActionRoute(
   lines.push(
     `app.all(${
       jsStringLiteral(route.path)
-    }, (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', 'x-openelement-action'); return c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }); });`,
+    }, (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }); });`,
   );
   lines.push('');
 }

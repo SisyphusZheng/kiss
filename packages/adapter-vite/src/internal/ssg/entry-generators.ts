@@ -8,7 +8,7 @@
 import type { HydrationStrategy } from '../protocol/framework.ts';
 import type { ClientIslandEntry } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
-import { HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
+import { ACTION_FETCH_HEADER, HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
@@ -607,7 +607,7 @@ function __onSubmit(event) {
   fetch(actionUrl, {
     method: method,
     body: body,
-    headers: { 'x-openelement-action': 'enhance' },
+    headers: { '${ACTION_FETCH_HEADER}': 'enhance' },
   }).then(function (response) {
     return response.text().then(function (html) {
       return {

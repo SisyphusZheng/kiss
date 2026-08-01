@@ -8,13 +8,12 @@
  * @csspart trigger - Trigger wrapper
  * @csspart content - Popover content
  */
-import { OpenElement, StyleSheet, type StyleSheetLike, type VNode } from '@openelement/element';
-import { overlayRecipe } from './component-recipes.ts';
+import { OpenElement, type StyleSheetLike, type VNode } from '@openelement/element';
+import { overlayRecipe, recipe } from './component-recipes.ts';
 
 export const tagName = 'open-dropdown';
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host { display:inline-block; position:relative; }
   .trigger { display:contents; }
   .content {

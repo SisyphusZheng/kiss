@@ -15,7 +15,8 @@
  */
 
 import { OpenElement } from '@openelement/element';
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+import type { StyleSheetLike } from '@openelement/element';
+import { recipe } from './component-recipes.ts';
 
 export const tagName = 'open-callout';
 
@@ -26,8 +27,7 @@ const TYPE_CONFIG: Record<string, { icon: string; cls: string }> = {
   tip: { icon: '\u2713', cls: 'callout--tip' },
 };
 
-const sheet: StyleSheetLike = new StyleSheet();
-sheet.replaceSync(`
+const sheet: StyleSheetLike = recipe(`
   :host { display: block; }
   .callout {
     padding: var(--size-3) var(--size-4);
