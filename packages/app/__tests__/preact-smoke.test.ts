@@ -12,12 +12,7 @@
  * This test is the alpha.4 Preact Island Proof gate.
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertInstanceOf,
-  assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertInstanceOf, assertStringIncludes } from '@std/assert';
 import { OpenElement } from '@openelement/element';
 import { signal } from '@openelement/element';
 import { h } from 'preact';

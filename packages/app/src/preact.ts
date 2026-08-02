@@ -11,7 +11,7 @@
  */
 
 import { OpenElement, trustedHtml, type VNode } from '@openelement/element';
-import { assertValidTagName, getSsrProps } from '@openelement/element';
+import { assertValidTagName, DATA_SSR_PROPS, getSsrProps } from '@openelement/element';
 import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import { renderToString } from 'preact-render-to-string';
@@ -40,7 +40,7 @@ function collectAttributes(host: HTMLElement): PreactIslandProps {
   const attrs = host.attributes;
   if (!attrs) return props;
   for (const attr of Array.from(attrs)) {
-    if (attr.name === 'data-ssr-props') continue;
+    if (attr.name === DATA_SSR_PROPS) continue;
     props[attr.name] = attr.value;
   }
   return props;

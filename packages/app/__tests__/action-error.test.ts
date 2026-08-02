@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert@1';
+import { assertEquals } from '@std/assert';
 import { normalizeActionFailure, normalizeLoaderFailure } from '../src/internal/action-error.ts';
 
 Deno.test('action failures expose a stable page error and hide production details', () => {

@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { defineApp, definePage, notFound, redirect } from '../src/index.ts';
 import { assertValidTagName } from '@openelement/element';
 import type { RouteConfig } from '../src/internal/router/client-router.ts';
@@ -48,13 +48,6 @@ Deno.test('SPA page-host adapter supplies the canonical definePage context', () 
 });
 
 Deno.test('defineApp mounts loader data and route context into a real definePage host', async () => {
-  const descriptors = {
-    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
-    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
-    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
-  };
-  const originalAdd = globalThis.addEventListener;
-  const originalRemove = globalThis.removeEventListener;
   let received: unknown;
   const Page = definePage<{ title: string }, { slug: string }>({
     render(context) {
@@ -71,6 +64,7 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
       return host;
     },
   };
+  const env = stubNavigableEnvironment(root, '/articles/hello?preview=yes');
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
     value: {
@@ -78,22 +72,6 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
       createElement: () => Object.create(Page.prototype),
     },
   });
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      protocol: 'https:',
-      pathname: '/articles/hello',
-      search: '?preview=yes',
-      hash: '',
-      href: 'https://example.test/articles/hello?preview=yes',
-    },
-  });
-  Object.defineProperty(globalThis, 'history', {
-    configurable: true,
-    value: { pushState() {}, replaceState() {} },
-  });
-  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
-  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
 
   const app = defineApp({
     mode: 'spa',
@@ -119,43 +97,18 @@ Deno.test('defineApp mounts loader data and route context into a real definePage
     assertEquals(context.route, { path: '/articles/:slug' });
   } finally {
     app.dispose();
-    globalThis.addEventListener = originalAdd;
-    globalThis.removeEventListener = originalRemove;
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
-      else delete (globalThis as Record<string, unknown>)[key];
-    }
+    env.restore();
   }
 });
 
 Deno.test('defineApp rejects missing targets and safely remounts and redisposes', () => {
-  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
-  const originalLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
-  const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
-  const originalAdd = globalThis.addEventListener;
-  const originalRemove = globalThis.removeEventListener;
   const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
   let found = false;
+  const env = stubNavigableEnvironment(root, '/');
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
     value: { querySelector: () => found ? root : null, createElement: () => ({}) },
   });
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      protocol: 'https:',
-      pathname: '/',
-      search: '',
-      hash: '',
-      href: 'https://example.test/',
-    },
-  });
-  Object.defineProperty(globalThis, 'history', {
-    configurable: true,
-    value: { pushState() {}, replaceState() {} },
-  });
-  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
-  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
   const app = defineApp({ mode: 'spa', routes: [] });
   try {
     let message = '';
@@ -173,25 +126,11 @@ Deno.test('defineApp rejects missing targets and safely remounts and redisposes'
     assertEquals(app.router, null);
   } finally {
     app.dispose();
-    if (originalDocument) Object.defineProperty(globalThis, 'document', originalDocument);
-    else delete (globalThis as Record<string, unknown>).document;
-    if (originalLocation) Object.defineProperty(globalThis, 'location', originalLocation);
-    else delete (globalThis as Record<string, unknown>).location;
-    if (originalHistory) Object.defineProperty(globalThis, 'history', originalHistory);
-    else delete (globalThis as Record<string, unknown>).history;
-    globalThis.addEventListener = originalAdd;
-    globalThis.removeEventListener = originalRemove;
+    env.restore();
   }
 });
 
 Deno.test('defineApp action delegation handles shadow paths and action failures without crashing', async () => {
-  const descriptors = {
-    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
-    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
-    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
-  };
-  const originalAdd = globalThis.addEventListener;
-  const originalRemove = globalThis.removeEventListener;
   let submit: ((event: Event) => void) | undefined;
   let renders = 0;
   const requests: Request[] = [];
@@ -208,26 +147,7 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
       actionResults.push(host.__openElementActionData);
     },
   };
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { querySelector: () => root, createElement: () => ({}) },
-  });
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      protocol: 'https:',
-      pathname: '/',
-      search: '',
-      hash: '',
-      href: 'https://example.test/',
-    },
-  });
-  Object.defineProperty(globalThis, 'history', {
-    configurable: true,
-    value: { pushState() {}, replaceState() {} },
-  });
-  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
-  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  const env = stubNavigableEnvironment(root, '/');
   const app = defineApp({
     mode: 'spa',
     routerMode: 'history',
@@ -260,23 +180,11 @@ Deno.test('defineApp action delegation handles shadow paths and action failures 
     submit?.({ target: {}, composedPath: () => [], preventDefault() {} } as unknown as Event);
   } finally {
     app.dispose();
-    globalThis.addEventListener = originalAdd;
-    globalThis.removeEventListener = originalRemove;
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
-      else delete (globalThis as Record<string, unknown>)[key];
-    }
+    env.restore();
   }
 });
 
 Deno.test('defineApp routes loader failures to the page error channel, not the data channel (#676)', async () => {
-  const descriptors = {
-    document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
-    location: Object.getOwnPropertyDescriptor(globalThis, 'location'),
-    history: Object.getOwnPropertyDescriptor(globalThis, 'history'),
-  };
-  const originalAdd = globalThis.addEventListener;
-  const originalRemove = globalThis.removeEventListener;
   let rendered: unknown;
   let errored: unknown;
   const Page = definePage<{ title: string }, { slug: string }>({
@@ -298,6 +206,7 @@ Deno.test('defineApp routes loader failures to the page error channel, not the d
       return host;
     },
   };
+  const env = stubNavigableEnvironment(root, '/articles/hello');
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
     value: {
@@ -305,22 +214,6 @@ Deno.test('defineApp routes loader failures to the page error channel, not the d
       createElement: () => Object.create(Page.prototype),
     },
   });
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      protocol: 'https:',
-      pathname: '/articles/hello',
-      search: '',
-      hash: '',
-      href: 'https://example.test/articles/hello',
-    },
-  });
-  Object.defineProperty(globalThis, 'history', {
-    configurable: true,
-    value: { pushState() {}, replaceState() {} },
-  });
-  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
-  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
 
   const app = defineApp({
     mode: 'spa',
@@ -343,12 +236,7 @@ Deno.test('defineApp routes loader failures to the page error channel, not the d
     assertEquals(rendered, undefined);
   } finally {
     app.dispose();
-    globalThis.addEventListener = originalAdd;
-    globalThis.removeEventListener = originalRemove;
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
-      else delete (globalThis as Record<string, unknown>)[key];
-    }
+    env.restore();
   }
 });
 
@@ -364,34 +252,10 @@ Deno.test('assertValidTagName accepts valid tag names and rejects invalid ones (
 });
 
 Deno.test('unregistered tagName warns and renders nothing instead of an inert host (#642)', async () => {
-  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
-  const originalLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
-  const originalHistory = Object.getOwnPropertyDescriptor(globalThis, 'history');
-  const originalAdd = globalThis.addEventListener;
-  const originalRemove = globalThis.removeEventListener;
   const originalCustomElements = Object.getOwnPropertyDescriptor(globalThis, 'customElements');
 
   const root = { innerHTML: '', addEventListener() {}, removeEventListener() {}, appendChild() {} };
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { querySelector: () => root, createElement: () => ({}) },
-  });
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      protocol: 'https:',
-      pathname: '/',
-      search: '',
-      hash: '',
-      href: 'https://example.test/',
-    },
-  });
-  Object.defineProperty(globalThis, 'history', {
-    configurable: true,
-    value: { pushState() {}, replaceState() {} },
-  });
-  globalThis.addEventListener = (() => {}) as typeof globalThis.addEventListener;
-  globalThis.removeEventListener = (() => {}) as typeof globalThis.removeEventListener;
+  const env = stubNavigableEnvironment(root, '/');
   Object.defineProperty(globalThis, 'customElements', {
     configurable: true,
     value: { get: () => undefined },
@@ -411,14 +275,7 @@ Deno.test('unregistered tagName warns and renders nothing instead of an inert ho
   } finally {
     app.dispose();
     console.warn = originalWarn;
-    globalThis.addEventListener = originalAdd;
-    globalThis.removeEventListener = originalRemove;
-    if (originalDocument) Object.defineProperty(globalThis, 'document', originalDocument);
-    else delete (globalThis as Record<string, unknown>).document;
-    if (originalLocation) Object.defineProperty(globalThis, 'location', originalLocation);
-    else delete (globalThis as Record<string, unknown>).location;
-    if (originalHistory) Object.defineProperty(globalThis, 'history', originalHistory);
-    else delete (globalThis as Record<string, unknown>).history;
+    env.restore();
     if (originalCustomElements) {
       Object.defineProperty(globalThis, 'customElements', originalCustomElements);
     } else delete (globalThis as Record<string, unknown>).customElements;
@@ -428,9 +285,8 @@ Deno.test('unregistered tagName warns and renders nothing instead of an inert ho
 // ─── #731: redirect()/notFound() in the SPA chain ──────────────
 
 /**
- * Stub the browser environment for SPA navigation tests. Unlike the no-op
- * history stubs above, this one applies pushState/replaceState URLs to the
- * fake location so the router actually lands on redirect targets.
+ * Stub the browser environment for SPA tests. pushState/replaceState URLs are
+ * applied to the fake location so the router actually lands on redirect targets.
  */
 function stubNavigableEnvironment(root: unknown, initialPath: string) {
   const descriptors = {
@@ -587,6 +443,72 @@ Deno.test('defineApp keeps current page data when a guard vetoes the loader redi
     // keeps its loader data (same as the action redirect path).
     assertEquals(env.pushed, ['/away']);
     assertEquals(app.router?.currentPath, '/away');
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].data, { page: 'home' });
+  } finally {
+    app.dispose();
+    env.restore();
+  }
+});
+
+Deno.test('defineApp keeps current page data when a guard vetoes the post-action loader redirect (#810)', async () => {
+  let submit: ((event: Event) => void) | undefined;
+  const hosts: PageHostElement[] = [];
+  const root = {
+    innerHTML: '',
+    addEventListener(type: string, listener: (event: Event) => void) {
+      if (type === 'submit') submit = listener;
+    },
+    removeEventListener() {},
+    appendChild(host: PageHostElement) {
+      hosts.push(host);
+      return host;
+    },
+  };
+  const env = stubNavigableEnvironment(root, '/');
+  let loaderCalls = 0;
+  const app = defineApp({
+    mode: 'spa',
+    routerMode: 'history',
+    routes: [
+      {
+        path: '/',
+        tagName: 'home-page',
+        loader: () => {
+          loaderCalls++;
+          // The loader re-run after the action redirects (e.g. the session the
+          // action consumed is gone); the initial load still succeeds.
+          if (loaderCalls > 1) redirect('/login');
+          return Promise.resolve({ page: 'home' });
+        },
+        action: () => Promise.resolve({ saved: true }),
+      },
+      {
+        path: '/login',
+        tagName: 'login-page',
+        guard: () => Promise.resolve(false),
+        loader: () => Promise.resolve({ page: 'login' }),
+      },
+    ],
+  });
+  try {
+    app.mount('#app');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(hosts.length, 1);
+    assertEquals(hosts[0].data, { page: 'home' });
+
+    submit?.({
+      target: { tagName: 'FORM' },
+      composedPath: () => [],
+      preventDefault() {},
+    } as unknown as Event);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The guard vetoed the loader's redirect, so no navigation committed and
+    // no re-render happened: the current page keeps its data instead of being
+    // cleared to `undefined` — the same guarantee renderRoute has (#802).
+    assertEquals(env.pushed, []);
+    assertEquals(app.router?.currentPath, '/');
     assertEquals(hosts.length, 1);
     assertEquals(hosts[0].data, { page: 'home' });
   } finally {

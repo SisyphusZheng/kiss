@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { createRequestContext } from '../src/model.ts';
 
 Deno.test('request context normalizes Web Request details', () => {

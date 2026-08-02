@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertThrows } from '@std/assert';
 import { renderDsd } from '@openelement/element';
 import {
   defineApp,
@@ -238,13 +238,12 @@ Deno.test('application page types reject unknown host members', () => {
   const host = Object.create(Page.prototype) as InstanceType<typeof Page> & { data?: unknown };
   // @ts-expect-error arbitrary members are not part of the application host contract
   host.notARealApplicationMember = true;
-  assertEquals('notARealApplicationMember' in host, true);
 });
 
 Deno.test('public App surface does not expose data-context mutation hooks', () => {
-  assertEquals('__internal_pushLoaderData' in appSurface, false);
-  assertEquals('__internal_pushActionData' in appSurface, false);
-  assertEquals('__internal_popData' in appSurface, false);
+  assertEquals('__enterDataContext' in appSurface, false);
+  assertEquals('__exitDataContext' in appSurface, false);
+  assertEquals('__activeDataContext' in appSurface, false);
 });
 
 Deno.test('page rendering pops data context when the renderer throws', () => {

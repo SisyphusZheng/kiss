@@ -2,7 +2,7 @@
  * @openelement/app/i18n - Unit Tests
  * ADR 0018: Tests updated for pure function pattern (loadI18nData)
  */
-import { assertEquals, assertStrictEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStrictEquals } from '@std/assert';
 import { loadI18nData, normalizeLocalePath } from '../src/i18n.ts';
 
 // ─── loadI18nData ─────────────────────────────────────────────────

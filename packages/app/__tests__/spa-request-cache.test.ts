@@ -1,4 +1,4 @@
-import { assertEquals, assertNotEquals } from 'jsr:@std/assert@1';
+import { assertEquals, assertNotEquals } from '@std/assert';
 import { SpaRequestCache } from '../src/internal/spa-request-cache.ts';
 
 Deno.test('SPA request cache reuses the GET request for an identical URL and rebuilds on URL change', () => {

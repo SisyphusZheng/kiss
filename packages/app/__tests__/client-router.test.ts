@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertRejects } from '@std/assert';
 import {
   compileRouteMatcher,
   createRouter,
@@ -85,6 +85,24 @@ Deno.test('compiled matcher preserves declaration priority across dynamic and wi
 
   assertEquals(matchRoute('/docs/new', '', dynamicFirst)?.route.tagName, 'dynamic-page');
   assertEquals(matchRoute('/assets/logo.svg', '', wildcardFirst)?.route.tagName, 'wildcard-page');
+});
+
+Deno.test('client router matches Hono-style `:param{.+}` catch-all patterns (#812)', () => {
+  const catchAll: RouteConfig[] = [{ path: '/products/:slug{.+}', tagName: 'product-page' }];
+
+  // Multi-segment paths match and capture the remainder under the plain param name...
+  const match = matchRoute('/products/a/b', '', catchAll);
+  assertEquals(match?.route.tagName, 'product-page');
+  assertEquals(match?.params.slug, 'a/b');
+  // ...single segments too, without leaking the `{.+}` suffix into the name.
+  assertEquals(matchRoute('/products/a', '', catchAll)?.params.slug, 'a');
+  // `{.+}` requires at least one segment.
+  assertEquals(matchRoute('/products', '', catchAll), null);
+  // The declaration-order oracle agrees with the compiled matcher.
+  assertEquals(
+    compileRouteMatcher(catchAll).match('/products/a/b', ''),
+    matchRouteLinearForTests('/products/a/b', '', catchAll),
+  );
 });
 
 Deno.test('client router dispose removes event listeners and double dispose is safe', () => {

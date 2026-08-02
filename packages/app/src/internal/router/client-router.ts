@@ -2,14 +2,16 @@
  * @openelement/app/internal/router/client-router - URL-based client-side router.
  *
  * Supports history (pushState), hash, and auto-detection modes.
- * Route patterns use `:param` for named params and `:param?` for optional params.
+ * Route patterns use `:param` for named params, `:param?` for optional params,
+ * and `:param{.+}` for a multi-segment catch-all (Hono-style, as emitted by the
+ * SSG route scanner — #812).
  */
 // SPA loader/action contexts are deliberately narrower than the request-time
 // LoaderContext/ActionContext: the client-side chain supplies only params
 // (+ formData for actions) and signals failure by throwing (#570, ADR-0119
 // frozen semantics — types clarified, runtime unchanged).
 import type { SpaActionContext, SpaLoaderContext } from '@openelement/element';
-import { createLogger } from '@openelement/element';
+import { createLogger, ERROR_PREFIX } from '@openelement/element';
 
 const log = createLogger('router');
 
@@ -91,6 +93,15 @@ function matchPattern(
     }
     if (part.startsWith(':') && part.endsWith('*')) {
       const name = part.slice(1, -1);
+      setParam(params, name, decodePathComponent(pathParts.slice(pi).join('/')));
+      pi = pathParts.length;
+      break;
+    }
+    if (part.startsWith(':') && part.endsWith('{.+}')) {
+      // Hono-style catch-all emitted by the SSG route scanner (#812): captures
+      // one or more remaining segments into the named param.
+      if (pi >= pathParts.length) return null; // `{.+}` requires at least one segment
+      const name = part.slice(1, -'{.+}'.length);
       setParam(params, name, decodePathComponent(pathParts.slice(pi).join('/')));
       pi = pathParts.length;
       break;
@@ -193,7 +204,7 @@ function createParamsRecord(...sources: ParamMap[]): Record<string, string> {
   }) as Record<string, string>;
 }
 
-/** Exported for testing / standalone matching without creating a router. */
+/** Exported for tests that match routes without creating a router. */
 export function matchRoute(
   pathname: string,
   search: string,
@@ -246,7 +257,7 @@ function addRouteToTrie(
     addRouteToTrie(node, parts, partIndex + 1, routeIndex);
   }
 
-  if (part === '*' || (part.startsWith(':') && part.endsWith('*'))) {
+  if (part === '*' || (part.startsWith(':') && (part.endsWith('*') || part.endsWith('{.+}')))) {
     node.wildcardChild ??= createTrieNode();
     addRouteToTrie(node.wildcardChild, parts, parts.length, routeIndex);
     return;
@@ -391,7 +402,7 @@ export function createRouter(options: RouterOptions): RouterInstance {
     const depth = navOptions.depth ?? 0;
     if (depth > MAX_GUARD_REDIRECTS) {
       throw new Error(
-        `[router] Guard redirect limit exceeded while navigating to "${path}"`,
+        `${ERROR_PREFIX} Guard redirect limit exceeded while navigating to "${path}"`,
       );
     }
 

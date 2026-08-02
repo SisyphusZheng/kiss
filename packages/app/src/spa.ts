@@ -15,7 +15,7 @@ import { normalizeActionFailure, normalizeLoaderFailure } from './internal/actio
 import { isOpenElementNotFound, isOpenElementRedirect } from './authoring.ts';
 import { SpaRequestCache } from './internal/spa-request-cache.ts';
 import { isDevMode } from './internal/dev-mode.ts';
-import { assertValidTagName, createLogger } from '@openelement/element';
+import { assertValidTagName, createLogger, ERROR_PREFIX } from '@openelement/element';
 
 const log = createLogger('spa');
 
@@ -224,8 +224,12 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
     }
 
     // Re-run loader for fresh data
-    const { data: loaderData, error: loaderError } = await runLoader();
+    const { data: loaderData, error: loaderError, redirected } = await runLoader();
     if (currentRender !== renderId || !router || !rootEl) return;
+    // A guard vetoed the loader's redirect: the navigation never committed, so
+    // keep the current page's data rather than re-rendering with
+    // `data: undefined` — same guard as renderRoute (#802, #810).
+    if (redirected) return;
 
     currentLoaderData = loaderData;
     currentLoaderError = loaderError;
@@ -243,7 +247,7 @@ export function defineApp(options: SpaAppOptions): SpaAppInstance {
 
     const el = document.querySelector(selector);
     if (!el) {
-      throw new Error(`[spa] Mount target not found: "${selector}"`);
+      throw new Error(`${ERROR_PREFIX} Mount target not found: "${selector}"`);
     }
     rootEl = el;
 
