@@ -1,5 +1,5 @@
 /**
- * ./data.ts - Platform-neutral data adapter protocol.
+ * data.ts - Platform-neutral data adapter protocol.
  *
  * Data adapters are contract surfaces for route data and ISR regeneration.
  * Concrete databases, filesystems, network clients, and auth layers stay in

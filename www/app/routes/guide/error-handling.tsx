@@ -147,6 +147,6 @@ export default PostPage;`}</code></pre>
   }
 }
 
-defineCustomElement('guide-error-handling-page', GuideErrorHandlingPage);
-export default GuideErrorHandlingPage;
 export const tagName = 'guide-error-handling-page';
+defineCustomElement(tagName, GuideErrorHandlingPage);
+export default GuideErrorHandlingPage;

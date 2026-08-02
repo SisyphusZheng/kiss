@@ -70,6 +70,6 @@ export class GuideMdxPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-mdx-page', GuideMdxPage);
-export default GuideMdxPage;
 export const tagName = 'guide-mdx-page';
+defineCustomElement(tagName, GuideMdxPage);
+export default GuideMdxPage;

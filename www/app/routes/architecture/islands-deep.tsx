@@ -123,7 +123,8 @@ export class IslandsDeepGuidePage extends OpenElement {
         </open-page-rail>
         <div class='container'>
           <h1 id='start'>
-            {t.titleMain}<span class='title-accent'>{t.titleAccent}</span>
+            {t.titleMain}
+            <span class='title-accent'>{t.titleAccent}</span>
           </h1>
           <p class='subtitle'>
             {t.subtitle}
@@ -191,13 +192,14 @@ export class IslandsDeepGuidePage extends OpenElement {
 
           <h2 id='ssr-props'>{t.ssrProps}</h2>
           <p>
-            <span class='inline-code'>bindSsrProps()</span>{' '}
-            {t.ssrPropsBody}
+            <span class='inline-code'>bindSsrProps()</span> {t.ssrPropsBody}
           </p>
 
           <h2 id='dynamic-content'>{t.dynamicContent}</h2>
           <p>
-            {t.dynamicPre}<span class='inline-code'>trustedHtml</span>{t.dynamicPost}
+            {t.dynamicPre}
+            <span class='inline-code'>trustedHtml</span>
+            {t.dynamicPost}
           </p>
 
           <div class='nav-row'>

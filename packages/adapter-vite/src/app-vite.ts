@@ -52,7 +52,7 @@ export function openElement(options: OpenElementOptions = {}): Plugin[] {
 
   if (contentOpts) {
     plugins.push(...openContent({ ...contentOpts, ctx }));
-    log.info('Content plugin loaded');
+    log.info('content plugin loaded');
   }
 
   return plugins;

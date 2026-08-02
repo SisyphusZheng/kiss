@@ -1,7 +1,7 @@
 import { ERROR_PREFIX } from '../protocol/errors.ts';
 import { formatError } from './errors.ts';
 /**
- * ./island.ts - defineIsland() wrapper
+ * island.ts - defineIsland() wrapper
  *
  * v0.6.2: defineIsland() wraps any Custom Element class to provide:
  *   - Automatic registration via customElements.define()

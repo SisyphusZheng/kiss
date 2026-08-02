@@ -1,5 +1,5 @@
 /**
- * ./manifest.ts - CEM manifest and compatibility contract types.
+ * manifest.ts - CEM manifest and compatibility contract types.
  */
 
 import type { ComponentLayer, HydrationStrategy } from './framework.ts';

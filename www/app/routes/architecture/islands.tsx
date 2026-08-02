@@ -26,8 +26,10 @@ routeSheet.replaceSync(
 );
 
 const railItems = {
-  en: '[{"id":"static-surface","label":"Static surface","level":3},{"id":"hydration-boundary","label":"Hydration boundary","level":3},{"id":"progressive-behavior","label":"Progressive behavior","level":3}]',
-  zh: '[{"id":"static-surface","label":"静态表面","level":3},{"id":"hydration-boundary","label":"Hydration 边界","level":3},{"id":"progressive-behavior","label":"渐进式行为","level":3}]',
+  en:
+    '[{"id":"static-surface","label":"Static surface","level":3},{"id":"hydration-boundary","label":"Hydration boundary","level":3},{"id":"progressive-behavior","label":"Progressive behavior","level":3}]',
+  zh:
+    '[{"id":"static-surface","label":"静态表面","level":3},{"id":"hydration-boundary","label":"Hydration 边界","level":3},{"id":"progressive-behavior","label":"渐进式行为","level":3}]',
 } as const;
 
 const content = {
@@ -109,6 +111,6 @@ export class IslandsPage extends OpenElement {
   }
 }
 
-defineCustomElement('islands-guide-page', IslandsPage);
-export default IslandsPage;
 export const tagName = 'islands-guide-page';
+defineCustomElement(tagName, IslandsPage);
+export default IslandsPage;

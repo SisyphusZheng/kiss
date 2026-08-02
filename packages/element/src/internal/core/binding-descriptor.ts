@@ -1,5 +1,5 @@
 /**
- * ./binding-descriptor.ts - Unified binding descriptor types (ADR-0109 Phase 1).
+ * binding-descriptor.ts - Unified binding descriptor types (ADR-0109 Phase 1).
  *
  * Declarative DOM binding contracts used by the runtime and hydration layers.
  * Each descriptor captures one side effect to apply to a host element.

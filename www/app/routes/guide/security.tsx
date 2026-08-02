@@ -39,7 +39,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     ],
     recipeTitle: 'app/routes/_middleware.ts',
     recipeNote:
-      'middleware.corsOrigin (createOpenPlugin option) governs cross-origin resource sharing only — it is not a CSRF check. The two compose: CORS for reads, this guard for writes.',
+      'middleware.corsOrigin (openElement() option) governs cross-origin resource sharing only — it is not a CSRF check. The two compose: CORS for reads, this guard for writes.',
   },
   zh: {
     breadcrumb: '指南',
@@ -74,7 +74,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     ],
     recipeTitle: 'app/routes/_middleware.ts',
     recipeNote:
-      'middleware.corsOrigin（createOpenPlugin 选项）只管跨域资源共享，不是 CSRF 校验。两者组合使用：CORS 管读取，这个守卫管写入。',
+      'middleware.corsOrigin（openElement() 选项）只管跨域资源共享，不是 CSRF 校验。两者组合使用：CORS 管读取，这个守卫管写入。',
   },
 };
 
@@ -121,6 +121,6 @@ export default async function csrfGuard(c: Context, next: Next) {
   }
 }
 
-defineCustomElement('guide-security-page', GuideSecurityPage);
-export default GuideSecurityPage;
 export const tagName = 'guide-security-page';
+defineCustomElement(tagName, GuideSecurityPage);
+export default GuideSecurityPage;

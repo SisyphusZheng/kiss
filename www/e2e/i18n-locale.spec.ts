@@ -10,7 +10,7 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
-import { deepQuery } from './helpers.js';
+import { deepQuery, deepQueryAll } from './helpers.js';
 
 async function readDeepLayoutState(page: Page) {
   const layout = await deepQuery(page, 'open-layout');
@@ -154,22 +154,11 @@ test.describe('i18n SSG Output', () => {
     expect(res?.status()).toBeLessThan(400);
     await page.waitForLoadState('networkidle');
 
-    const zhHrefs = await page.evaluate(() => {
-      const hrefs: string[] = [];
-      const visit = (root: Document | ShadowRoot) => {
-        root.querySelectorAll('a[href]').forEach((a) => {
-          const href = a.getAttribute('href');
-          if (href) hrefs.push(href);
-        });
-        root.querySelectorAll('*').forEach((el) => {
-          if (el.shadowRoot) visit(el.shadowRoot);
-        });
-      };
-      visit(document);
-      // The header language switcher legitimately links to the zh locale;
-      // the regression was post content/navigation linking into /zh/blog.
-      return hrefs.filter((href) => href.startsWith('/zh/blog'));
-    });
+    const links = await deepQueryAll(page, 'a[href]');
+    const hrefs = await Promise.all(links.map((link) => link.getAttribute('href')));
+    // The header language switcher legitimately links to the zh locale;
+    // the regression was post content/navigation linking into /zh/blog.
+    const zhHrefs = hrefs.filter((href) => href?.startsWith('/zh/blog'));
     expect(zhHrefs).toEqual([]);
   });
 

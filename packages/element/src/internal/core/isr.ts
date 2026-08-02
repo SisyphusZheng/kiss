@@ -1,5 +1,5 @@
 /**
- * ./isr.ts - route-level ISR cache primitives.
+ * isr.ts - route-level ISR cache primitives.
  *
  * v0.44: Platform adapters (CF Workers KV, Deno KV).
  *

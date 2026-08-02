@@ -114,6 +114,6 @@ export class GuideDeploymentPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-deployment-page', GuideDeploymentPage);
-export default GuideDeploymentPage;
 export const tagName = 'guide-deployment-page';
+defineCustomElement(tagName, GuideDeploymentPage);
+export default GuideDeploymentPage;

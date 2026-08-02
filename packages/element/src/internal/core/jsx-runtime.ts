@@ -1,5 +1,5 @@
 /**
- * ./jsx-runtime.ts - JSX Runtime.
+ * jsx-runtime.ts - JSX Runtime.
  *
  * Implements the React-compatible jsx/jsxs/jsxDEV/Fragment interface.
  * Consumed by TypeScript/esbuild JSX transform when `jsxImportSource: "./index.ts"`.

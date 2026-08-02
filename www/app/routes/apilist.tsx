@@ -104,7 +104,8 @@ const packages: ApiPackage[] = [
     id: 'element',
     name: 'element',
     copy: {
-      en: 'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
+      en:
+        'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
       zh: '受支持的 Custom Element 创作面，覆盖 JSX、DSD、hydration、signals 与样式。',
     },
     importPath: '@openelement/element',

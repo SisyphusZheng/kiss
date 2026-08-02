@@ -11,6 +11,7 @@
 
 import { expect, test } from '@playwright/test';
 import process from 'node:process';
+import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 
 // CI runners are fast and deterministic; local Windows dev boxes can be
 // much slower, so relax the load-time ceiling outside of CI.
@@ -34,22 +35,13 @@ test.describe('Accessibility', () => {
     await page.waitForLoadState('networkidle');
 
     // Check that buttons in shadow DOMs have labels
-    const unlabeledButtons = await page.evaluate(() => {
-      let count = 0;
-      const all = document.querySelectorAll('*');
-      for (const el of all) {
-        if (el.shadowRoot) {
-          const buttons = el.shadowRoot.querySelectorAll('button');
-          for (const btn of buttons) {
-            const hasLabel = btn.getAttribute('aria-label') ||
-              btn.getAttribute('title') ||
-              btn.textContent?.trim();
-            if (!hasLabel) count++;
-          }
-        }
-      }
-      return count;
-    });
+    const unlabeledButtons: number = await page.evaluate(
+      `(${deepQueryAllInPage.toString()})(document, '*')` +
+        `.flatMap((el) => el.shadowRoot ? Array.from(el.shadowRoot.querySelectorAll('button')) : [])` +
+        '.filter((btn) =>' +
+        " !(btn.getAttribute('aria-label') || btn.getAttribute('title') || btn.textContent?.trim())" +
+        ').length',
+    );
     // Allow some tolerance - not all buttons may need labels
     expect(unlabeledButtons).toBeLessThanOrEqual(2);
   });

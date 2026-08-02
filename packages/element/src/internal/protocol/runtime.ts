@@ -1,5 +1,5 @@
 /**
- * ./runtime.ts - Runtime adapter protocol.
+ * runtime.ts - Runtime adapter protocol.
  *
  * Replacement boundary for Nitro, Workers, Node, Deno, or future
  * fetch-compatible runtimes. Preserves openElement semantics while leaving

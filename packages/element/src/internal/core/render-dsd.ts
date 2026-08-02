@@ -1,5 +1,5 @@
 /**
- * ./render-dsd.ts - DSD Renderer.
+ * render-dsd.ts - DSD Renderer.
  *
  * Declarative Shadow DOM SSR renderer.
  * Framework-agnostic: no Lit dependency and no TemplateResult knowledge.

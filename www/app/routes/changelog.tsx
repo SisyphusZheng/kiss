@@ -163,7 +163,8 @@ export class ChangelogPage extends OpenElement {
           <div slot='meta'>
             <p class='section-label'>{t.metaLabel}</p>
             <p class='subtitle'>
-              {t.metaPrefix} <code>{PUBLISHED_PACKAGE_VERSION}</code>{t.metaSuffix}
+              {t.metaPrefix} <code>{PUBLISHED_PACKAGE_VERSION}</code>
+              {t.metaSuffix}
             </p>
           </div>
           <open-page-rail
@@ -228,6 +229,6 @@ export class ChangelogPage extends OpenElement {
   }
 }
 
-defineCustomElement('page-changelog', ChangelogPage);
-export default ChangelogPage;
 export const tagName = 'page-changelog';
+defineCustomElement(tagName, ChangelogPage);
+export default ChangelogPage;

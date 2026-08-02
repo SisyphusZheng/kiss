@@ -74,12 +74,14 @@ const content = {
       {
         id: 'request-semantics',
         title: 'Request 语义',
-        body: 'Request、Response 与 FormData 是 0.42 loader/action 面的基础——应用交互无需私有传输层。',
+        body:
+          'Request、Response 与 FormData 是 0.42 loader/action 面的基础——应用交互无需私有传输层。',
       },
       {
         id: 'five-package-ownership',
         title: '五包归属',
-        body: 'Element、App、Adapter Vite、Create 与可选的 UI 是当前的对外消费界面；内部契约保持内部。',
+        body:
+          'Element、App、Adapter Vite、Create 与可选的 UI 是当前的对外消费界面；内部契约保持内部。',
       },
     ],
   },
@@ -99,7 +101,8 @@ export class StandardsRegistryPage extends OpenElement {
         </open-page-rail>
         <div class='container'>
           <h1 id='start'>
-            {t.titleLead}<span class='title-accent'>{t.titleAccent}</span>
+            {t.titleLead}
+            <span class='title-accent'>{t.titleAccent}</span>
           </h1>
           <p class='subtitle'>
             {t.subtitle}
@@ -110,21 +113,23 @@ export class StandardsRegistryPage extends OpenElement {
             <span slot='meta'>{t.panelMeta}</span>
             <div class='registry-grid'>
               {t.cards.map((card, i) => (
-                i === 0 ? (
-                  <open-card variant='artifact'>
-                    <h3 id={card.id}>{card.title}</h3>
-                    <p>
-                      {card.body}
-                    </p>
-                  </open-card>
-                ) : (
-                  <open-card>
-                    <h3 id={card.id}>{card.title}</h3>
-                    <p>
-                      {card.body}
-                    </p>
-                  </open-card>
-                )
+                i === 0
+                  ? (
+                    <open-card variant='artifact'>
+                      <h3 id={card.id}>{card.title}</h3>
+                      <p>
+                        {card.body}
+                      </p>
+                    </open-card>
+                  )
+                  : (
+                    <open-card>
+                      <h3 id={card.id}>{card.title}</h3>
+                      <p>
+                        {card.body}
+                      </p>
+                    </open-card>
+                  )
               ))}
             </div>
           </open-artifact-panel>
@@ -134,6 +139,6 @@ export class StandardsRegistryPage extends OpenElement {
   }
 }
 
-defineCustomElement('standards-registry-page', StandardsRegistryPage);
-export default StandardsRegistryPage;
 export const tagName = 'standards-registry-page';
+defineCustomElement(tagName, StandardsRegistryPage);
+export default StandardsRegistryPage;

@@ -1,5 +1,5 @@
 /**
- * ./props-utils.ts - Shared prop collection utility (#621).
+ * props-utils.ts - Shared prop collection utility (#621).
  *
  * Single implementation of public-prop extraction used by both
  * defineElement (element package) and definePage (app package).

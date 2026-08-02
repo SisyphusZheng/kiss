@@ -88,6 +88,6 @@ export class GuideArchitecturePage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-architecture-page', GuideArchitecturePage);
-export default GuideArchitecturePage;
 export const tagName = 'guide-architecture-page';
+defineCustomElement(tagName, GuideArchitecturePage);
+export default GuideArchitecturePage;

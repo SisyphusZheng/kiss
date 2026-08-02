@@ -86,6 +86,6 @@ export class GuideGettingStartedPage extends GuidePage {
   }
 }
 
-defineCustomElement('guide-getting-started-page', GuideGettingStartedPage);
-export default GuideGettingStartedPage;
 export const tagName = 'guide-getting-started-page';
+defineCustomElement(tagName, GuideGettingStartedPage);
+export default GuideGettingStartedPage;

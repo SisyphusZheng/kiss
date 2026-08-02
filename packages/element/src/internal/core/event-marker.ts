@@ -1,5 +1,5 @@
 /**
- * ./event-marker.ts - Deterministic event marker generation for SSR output.
+ * event-marker.ts - Deterministic event marker generation for SSR output.
  *
  * Pure, side-effect-free helper used by the SSR renderer to emit `data-eid`
  * markers. This module intentionally does NOT depend on the DOM binding layer

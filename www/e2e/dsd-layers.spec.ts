@@ -14,6 +14,7 @@
 
 import { expect, test } from '@playwright/test';
 import { getCustomElementTags } from './helpers.js';
+import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 
 test.describe('DSD Layers', () => {
   test.beforeEach(async ({ page }) => {
@@ -52,16 +53,12 @@ test.describe('DSD Layers', () => {
 
   test('shadow root content includes style elements', async ({ page }) => {
     // Shadow roots should contain <style> elements (openElement component styles)
-    const hasStyles = await page.evaluate(() => {
-      const allElements = document.querySelectorAll('*');
-      for (const el of allElements) {
-        if (el.shadowRoot) {
-          const style = el.shadowRoot.querySelector('style');
-          if (style && style.textContent?.trim()) return true;
-        }
-      }
-      return false;
-    });
+    const hasStyles: boolean = await page.evaluate(
+      `(${deepQueryAllInPage.toString()})(document, '*').some((el) => {
+        const style = el.shadowRoot?.querySelector('style');
+        return !!style?.textContent?.trim();
+      })`,
+    );
     expect(hasStyles).toBe(true);
   });
 

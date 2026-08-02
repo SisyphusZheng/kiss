@@ -105,6 +105,6 @@ export default function hello(ctx: {
   }
 }
 
-defineCustomElement('guide-api-page', GuideApiPage);
-export default GuideApiPage;
 export const tagName = 'guide-api-page';
+defineCustomElement(tagName, GuideApiPage);
+export default GuideApiPage;

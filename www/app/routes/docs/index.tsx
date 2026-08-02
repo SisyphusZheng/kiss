@@ -8,6 +8,7 @@ export const tagName = 'page-docs';
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import { mastheadStyles } from '../../components/page-styles.js';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -27,23 +28,7 @@ pageSheet.replaceSync(`
   }
 
   /* ── masthead: serif "Read the" + mono "MANUAL." ── */
-  .masthead {
-    position: relative;
-    isolation: isolate;
-    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
-  }
-
-  .masthead::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: linear-gradient(180deg, black, transparent);
-  }
+  ${mastheadStyles}
 
   .masthead-top {
     display: flex;
@@ -214,7 +199,10 @@ const entrances = [
   [
     '01',
     { en: 'Get started', zh: '快速开始' },
-    { en: 'Zero to a running application in three commands.', zh: '三条命令，从零到可运行的应用。' },
+    {
+      en: 'Zero to a running application in three commands.',
+      zh: '三条命令，从零到可运行的应用。',
+    },
     '/guide/getting-started',
   ],
   [

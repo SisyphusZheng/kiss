@@ -22,7 +22,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'pipeline-config',
         title: 'openPipeline()',
         body:
-          "The lean Vite plugin entry, configured in vite.config.ts: openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras }). Defaults: routes app/routes, islands app/islands, components app/components, viewTransition on. headExtras is injected into the document head as-is — controlled content only (0.42 line, unfrozen).",
+          'The lean Vite plugin entry, configured in vite.config.ts: openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras }). Defaults: routes app/routes, islands app/islands, components app/components, viewTransition on. headExtras is injected into the document head as-is — controlled content only (0.42 line, unfrozen).',
       },
       {
         id: 'full-entry',
@@ -140,7 +140,7 @@ app.mount('#app');`}</code></pre>
         </open-code-block>
         <p>
           {zh
-            ? "SPA 链上 redirect()/notFound() 仍然有效：redirect 交给 client router 导航，notFound 走页面 error 定义；其余 throw 会被规整为 action 数据。"
+            ? 'SPA 链上 redirect()/notFound() 仍然有效：redirect 交给 client router 导航，notFound 走页面 error 定义；其余 throw 会被规整为 action 数据。'
             : 'redirect()/notFound() still work on the SPA chain: a redirect navigates the client router, a notFound rides the page error definition; any other throw is normalized into action data.'}
         </p>
       </>
@@ -148,6 +148,6 @@ app.mount('#app');`}</code></pre>
   }
 }
 
-defineCustomElement('guide-configuration-page', GuideConfigurationPage);
-export default GuideConfigurationPage;
 export const tagName = 'guide-configuration-page';
+defineCustomElement(tagName, GuideConfigurationPage);
+export default GuideConfigurationPage;

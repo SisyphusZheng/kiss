@@ -1,5 +1,5 @@
 /**
- * ./framework.ts - Framework Layer
+ * framework.ts - Framework Layer
  *
  * Developer-friendly API wrapping the engine.
  * signal(), computed(), effect() - the primary API surface.

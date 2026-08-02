@@ -219,7 +219,8 @@ export default GuestbookPage;`}</code></pre>
               <>
                 <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/better-auth.md'>
                   better-auth
-                </a>——在 loader 中读会话、把 auth 端点挂为 API 路由、在 action 中授权（文档级配方）。
+                </a>——在 loader 中读会话、把 auth 端点挂为 API 路由、在 action
+                中授权（文档级配方）。
               </>
             )
             : (
@@ -257,7 +258,8 @@ export default GuestbookPage;`}</code></pre>
               <>
                 <a href='https://github.com/open-element/openelement/blob/main/docs/integrations/validation.md'>
                   Validation（zod / valibot）
-                </a>——在 action 内做 schema 解析，失败 fail(422) 回显；由 request-time fixture 的 e2e 门禁验证。
+                </a>——在 action 内做 schema 解析，失败 fail(422) 回显；由 request-time fixture 的
+                e2e 门禁验证。
               </>
             )
             : (
@@ -275,6 +277,6 @@ export default GuestbookPage;`}</code></pre>
   }
 }
 
-defineCustomElement('guide-routing-and-data-page', GuideRoutingAndDataPage);
-export default GuideRoutingAndDataPage;
 export const tagName = 'guide-routing-and-data-page';
+defineCustomElement(tagName, GuideRoutingAndDataPage);
+export default GuideRoutingAndDataPage;

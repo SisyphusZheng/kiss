@@ -1,5 +1,5 @@
 /**
- * ./logger.ts - Tagged console logger.
+ * logger.ts - Tagged console logger.
  *
  * Lightweight scoped logger. Returns plain functions so it is tree-shakable
  * and has zero class overhead.

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Pure runtime.
+ * index.ts - Pure runtime.
  *
  * openElement is a static-first framework with a pure runtime core:
  * - Zero node:* imports - no filesystem, no process, no path

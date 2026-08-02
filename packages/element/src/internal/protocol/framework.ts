@@ -1,5 +1,5 @@
 /**
- * ./framework.ts - Framework, build, app-shell, routing, and plugin
+ * framework.ts - Framework, build, app-shell, routing, and plugin
  * metadata contracts.
  */
 

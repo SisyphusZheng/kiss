@@ -1,5 +1,5 @@
 /**
- * ./write-json.ts - JSON formatting helper
+ * write-json.ts - JSON formatting helper
  *
  * Shared helper for code generation and file writes that need
  * pretty-printed JSON with a trailing newline.

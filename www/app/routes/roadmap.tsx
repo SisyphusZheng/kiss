@@ -423,8 +423,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
     {
       version: 'v1.0.0',
       theme: '稳定的五包产品',
-      copy:
-        '只有当外部生产用户证明 Element、App 与 Build 接口不再需要架构变更时，才发布。',
+      copy: '只有当外部生产用户证明 Element、App 与 Build 接口不再需要架构变更时，才发布。',
       state: 'planned',
       status: '方向',
     },
@@ -490,8 +489,7 @@ const content = {
     shipLabel: 'Ship',
     shipCopy: 'Only public contracts reflected in docs, generated pages, and package surfaces.',
     proveLabel: 'Prove',
-    proveCopy:
-      'Use CI, build checks, and docs scans as release evidence before expanding claims.',
+    proveCopy: 'Use CI, build checks, and docs scans as release evidence before expanding claims.',
     freezeLabel: 'Freeze',
     freezeCopy:
       'Move toward v1.0 after the WC fullstack framework and Basic Element line is stable, readable, and boring to verify.',
@@ -530,8 +528,7 @@ const content = {
       `${version} 是 0.42 轨道上已发布的 alpha 线——包含请求时能力面，尚未冻结。0.42.0 stable 等待 TP-6，ADR-0122 冻结提案已提交；#390 试点要求已由维护者决定撤销。`,
     releaseLineIndex: '01 / 发布线',
     releaseLineTitle: '从已交付证据，到 v1.0 冻结。',
-    releaseLineCopy:
-      '这条线刻意收窄：只有经得起文档、包导出与构建验证检验的表述，才会留在这里。',
+    releaseLineCopy: '这条线刻意收窄：只有经得起文档、包导出与构建验证检验的表述，才会留在这里。',
     timelineAria: 'Roadmap 发布线',
     stamps: { CURRENT: '当前', NEXT: '下一个' } as Record<'CURRENT' | 'NEXT', string>,
     designRuleTitle: '设计规则',
@@ -573,8 +570,7 @@ const content = {
     proveLabel: 'Prove',
     proveCopy: '在扩大宣称之前，以 CI、构建检查与文档扫描作为发布证据。',
     freezeLabel: 'Freeze',
-    freezeCopy:
-      '当 WC 全栈框架与 Basic Element 线稳定、可读、验证起来平淡无奇之后，再迈向 v1.0。',
+    freezeCopy: '当 WC 全栈框架与 Basic Element 线稳定、可读、验证起来平淡无奇之后，再迈向 v1.0。',
     visualIndex: '04 / 系统图示',
     visualTitle: '包图是发布产物的一部分。',
     visualCopy: '已发布的包归属与公开架构必须保持机械一致。',

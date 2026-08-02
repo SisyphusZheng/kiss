@@ -12,8 +12,7 @@ const marqueeText =
 const content = {
   en: {
     serifLine: 'Lost in the shadow DOM.',
-    lede:
-      'This route never mounted. The page you want is probably one declarative template away.',
+    lede: 'This route never mounted. The page you want is probably one declarative template away.',
     backHome: 'Back home',
     readDocs: 'Read the docs',
   },
@@ -178,5 +177,5 @@ export default class Page404 extends OpenElement {
   }
 }
 
-defineCustomElement('page-404', Page404);
 export const tagName = 'page-404';
+defineCustomElement(tagName, Page404);

@@ -24,6 +24,9 @@ const contentTypes: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 export function contentType(path: string): string {
@@ -58,11 +61,36 @@ async function readCandidate(root: string, pathname: string): Promise<Response |
   return null;
 }
 
-export function serveStatic(root: string): StaticServer {
-  const server = Deno.serve({ port: 0, hostname: '127.0.0.1' }, async (request) => {
-    const response = await readCandidate(root, new URL(request.url).pathname);
-    return response ?? new Response('Not found', { status: 404 });
-  });
+export interface ServeStaticOptions {
+  /** Preferred port; defaults to 0 (OS-assigned). */
+  port?: number;
+}
+
+/**
+ * Try to find an available loopback port starting from `preferred`.
+ * Returns `preferred` when every candidate is occupied.
+ */
+export function findPort(preferred: number, maxAttempts = 20): number {
+  for (let port = preferred; port < preferred + maxAttempts; port++) {
+    try {
+      const listener = Deno.listen({ port, hostname: '127.0.0.1' });
+      listener.close();
+      return port;
+    } catch {
+      // Port in use; try the next one.
+    }
+  }
+  return preferred;
+}
+
+export function serveStatic(root: string, options: ServeStaticOptions = {}): StaticServer {
+  const server = Deno.serve(
+    { port: options.port ?? 0, hostname: '127.0.0.1' },
+    async (request) => {
+      const response = await readCandidate(root, new URL(request.url).pathname);
+      return response ?? new Response('Not found', { status: 404 });
+    },
+  );
   const addr = server.addr as Deno.NetAddr;
   return {
     origin: `http://127.0.0.1:${addr.port}`,

@@ -1,5 +1,5 @@
 /**
- * ./hydration-markers.ts - DSD hydration marker contract.
+ * hydration-markers.ts - DSD hydration marker contract.
  *
  * These constants and helpers define the canonical shape of the markers used
  * to re-connect signals and events between SSR output and client-side hydration.

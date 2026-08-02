@@ -127,6 +127,6 @@ export class GuideMigrationPage extends GuidePage {
   }
 }
 
-defineCustomElement('guide-migration-page', GuideMigrationPage);
-export default GuideMigrationPage;
 export const tagName = 'guide-migration-page';
+defineCustomElement(tagName, GuideMigrationPage);
+export default GuideMigrationPage;

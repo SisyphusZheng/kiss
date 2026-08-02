@@ -95,13 +95,11 @@ const content = {
         rows: [
           {
             k: 'Architecture',
-            v:
-              'Custom Elements + Declarative Shadow DOM are first-class; standard Custom Elements remain the application contract; App owns routes and rendering; Vite and Nitro are the official build path.',
+            v: 'Custom Elements + Declarative Shadow DOM are first-class; standard Custom Elements remain the application contract; App owns routes and rendering; Vite and Nitro are the official build path.',
           },
           {
             k: 'Rendering',
-            v:
-              'SSG by default, DSD/shadow default, selective element upgrades, and static output with no framework JavaScript when interaction is unnecessary.',
+            v: 'SSG by default, DSD/shadow default, selective element upgrades, and static output with no framework JavaScript when interaction is unnecessary.',
           },
           {
             k: 'DX',
@@ -109,8 +107,7 @@ const content = {
           },
           {
             k: 'Fit',
-            v:
-              'Choose it when Custom Elements must span component libraries and application runtime; current scope is static-first, not general fullstack parity.',
+            v: 'Choose it when Custom Elements must span component libraries and application runtime; current scope is static-first, not general fullstack parity.',
           },
         ],
       },
@@ -161,8 +158,7 @@ const content = {
           { k: 'DX', v: 'Svelte compiler, concise syntax, small runtime.' },
           {
             k: 'Lock-in',
-            v:
-              'Svelte compiler/runtime; deploy adapters are swappable (lower lock-in than Next.js).',
+            v: 'Svelte compiler/runtime; deploy adapters are swappable (lower lock-in than Next.js).',
           },
         ],
       },
@@ -213,8 +209,7 @@ const content = {
         rows: [
           {
             k: 'Architecture',
-            v:
-              'Base class for Custom Elements with reactive properties; application routing is deliberately outside its component model.',
+            v: 'Base class for Custom Elements with reactive properties; application routing is deliberately outside its component model.',
           },
           {
             k: 'Rendering',
@@ -258,8 +253,7 @@ const content = {
           },
           {
             k: 'Rendering',
-            v:
-              'Client Web Components with prerendering, lazy loading, internal virtual DOM.',
+            v: 'Client Web Components with prerendering, lazy loading, internal virtual DOM.',
           },
           { k: 'DX', v: 'TSX, decorators, design-system oriented tooling.' },
           {
@@ -275,13 +269,11 @@ const content = {
         rows: [
           {
             k: 'Architecture',
-            v:
-              'FAST provides Web Component authoring foundations; Web Awesome distributes a component library and design assets.',
+            v: 'FAST provides Web Component authoring foundations; Web Awesome distributes a component library and design assets.',
           },
           {
             k: 'Fit',
-            v:
-              'Choose either when your primary need is a component system. OpenElement does not replace an established design system and should be evaluated as an app framework around components.',
+            v: 'Choose either when your primary need is a component system. OpenElement does not replace an established design system and should be evaluated as an app framework around components.',
           },
         ],
       },
@@ -300,8 +292,7 @@ const content = {
         { term: 'DX', body: ' — language, tooling, and learning curve.' },
         {
           term: 'Lock-in',
-          body:
-            ' — how tied you are to a proprietary runtime or platform versus open standards.',
+          body: ' — how tied you are to a proprietary runtime or platform versus open standards.',
         },
       ],
     },
@@ -376,13 +367,11 @@ const content = {
         rows: [
           {
             k: '架构',
-            v:
-              'Custom Elements + Declarative Shadow DOM 是一等公民；标准 Custom Elements 即应用契约；App 掌管路由与渲染；Vite 和 Nitro 是官方构建路径。',
+            v: 'Custom Elements + Declarative Shadow DOM 是一等公民；标准 Custom Elements 即应用契约；App 掌管路由与渲染；Vite 和 Nitro 是官方构建路径。',
           },
           {
             k: '渲染',
-            v:
-              '默认 SSG、默认 DSD/shadow、按需升级元素；无需交互时输出不含任何框架 JavaScript 的纯静态内容。',
+            v: '默认 SSG、默认 DSD/shadow、按需升级元素；无需交互时输出不含任何框架 JavaScript 的纯静态内容。',
           },
           {
             k: 'DX',
@@ -390,8 +379,7 @@ const content = {
           },
           {
             k: '适用',
-            v:
-              '当 Custom Elements 需要同时覆盖组件库与应用运行时的时候选它；当前范围是 static-first，而非通用全栈对齐。',
+            v: '当 Custom Elements 需要同时覆盖组件库与应用运行时的时候选它；当前范围是 static-first，而非通用全栈对齐。',
           },
         ],
       },
@@ -493,8 +481,7 @@ const content = {
         rows: [
           {
             k: '架构',
-            v:
-              '带响应式属性的 Custom Elements 基类；应用路由被刻意留在组件模型之外。',
+            v: '带响应式属性的 Custom Elements 基类；应用路由被刻意留在组件模型之外。',
           },
           {
             k: '渲染',
@@ -554,13 +541,11 @@ const content = {
         rows: [
           {
             k: '架构',
-            v:
-              'FAST 提供 Web Component 编写基础设施；Web Awesome 分发组件库与设计资产。',
+            v: 'FAST 提供 Web Component 编写基础设施；Web Awesome 分发组件库与设计资产。',
           },
           {
             k: '适用',
-            v:
-              '当你的首要需求是组件体系时任选其一。openElement 并不替代成熟的设计系统，应作为围绕组件的应用框架来评估。',
+            v: '当你的首要需求是组件体系时任选其一。openElement 并不替代成熟的设计系统，应作为围绕组件的应用框架来评估。',
           },
         ],
       },
@@ -583,8 +568,7 @@ const content = {
         {
           lead: '选择',
           name: 'openElement',
-          body:
-            '当 Web Components 是对外集成面，且 SSR 输出需要保留浏览器原生的组件边界时。',
+          body: '当 Web Components 是对外集成面，且 SSR 输出需要保留浏览器原生的组件边界时。',
         },
         {
           lead: '选择',
@@ -611,8 +595,7 @@ const content = {
     },
     sources: {
       title: '来源与评审范围',
-      body:
-        '2026-07-11 依据各项目一手文档评审。这是一份决策指南，不是基准测试，也不是兼容性认证。',
+      body: '2026-07-11 依据各项目一手文档评审。这是一份决策指南，不是基准测试，也不是兼容性认证。',
       links: [
         { href: 'https://lit.dev/docs/', text: 'Lit 文档' },
         { href: 'https://stenciljs.com/docs/introduction', text: 'Stencil 文档' },

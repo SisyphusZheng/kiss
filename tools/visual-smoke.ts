@@ -3,6 +3,7 @@ import { chromium, type Page } from 'npm:playwright@1.59.1';
 import { join } from 'node:path';
 import { ensureDir } from 'jsr:@std/fs@^1.0.0/ensure-dir';
 import { serveStatic } from './lib/static-server.ts';
+import { deepQueryFirstInPage } from './lib/shadow-walker.ts';
 
 const repoRoot = Deno.cwd();
 const outputDir = join(repoRoot, 'test-results', 'visual-smoke');
@@ -53,30 +54,25 @@ async function assertRenderable(page: Page, label: string): Promise<void> {
 }
 
 async function assertBrandMark(page: Page, label: string, expectedText: string): Promise<void> {
-  const mark = await page.evaluate(() => {
-    const visit = (root: Document | ShadowRoot | Element): Element | null => {
-      const direct = root.querySelector?.('[data-open-brand]');
-      if (direct) return direct;
-      const all = root.querySelectorAll?.('*') ?? [];
-      for (const el of Array.from(all)) {
-        if (el.shadowRoot) {
-          const found = visit(el.shadowRoot);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    const element = visit(document);
-    if (!element) return null;
-    const box = element.getBoundingClientRect();
-    const text = (element.shadowRoot?.textContent ?? element.textContent ?? '').trim();
-    return {
-      width: box.width,
-      height: box.height,
-      text,
-      accessibleName: element.getAttribute('aria-label') ?? '',
-    };
-  });
+  const mark: {
+    width: number;
+    height: number;
+    text: string;
+    accessibleName: string;
+  } | null = await page.evaluate(
+    `(() => {
+      const element = (${deepQueryFirstInPage.toString()})(document, '[data-open-brand]');
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      const text = (element.shadowRoot?.textContent ?? element.textContent ?? '').trim();
+      return {
+        width: box.width,
+        height: box.height,
+        text,
+        accessibleName: element.getAttribute('aria-label') ?? '',
+      };
+    })()`,
+  );
 
   if (!mark) throw new Error(`${label} has no [data-open-brand]`);
   if (mark.width < 40 || mark.height < 20) {

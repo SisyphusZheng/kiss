@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Adapter-agnostic SSG engine (adapter-vite internal).
+ * index.ts - Adapter-agnostic SSG engine (adapter-vite internal).
  *
  * Provides SSG rendering, entry code generation, route scanning,
  * island manifest generation, and HTML post-processing.

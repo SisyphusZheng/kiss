@@ -1,5 +1,5 @@
 /**
- * ./vnode.ts - VNode interface definition.
+ * vnode.ts - VNode interface definition.
  *
  * VNode is the intermediate representation of a component's declarative output.
  * It is a pure JS object — zero DOM dependency, zero runtime binding.

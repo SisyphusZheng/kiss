@@ -69,6 +69,6 @@ export class GuideTestingPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-testing-page', GuideTestingPage);
-export default GuideTestingPage;
 export const tagName = 'guide-testing-page';
+defineCustomElement(tagName, GuideTestingPage);
+export default GuideTestingPage;

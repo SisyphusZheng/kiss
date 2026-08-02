@@ -1,5 +1,5 @@
 /**
- * ./data-adapter.ts - MemoryDataAdapter reference implementation (ADR-0095).
+ * data-adapter.ts - MemoryDataAdapter reference implementation (ADR-0095).
  *
  * Zero-I/O, Map-backed DataAdapter for development, testing, and as the
  * reference implementation for future adapters (FileDataAdapter, Drizzle,

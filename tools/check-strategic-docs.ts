@@ -108,7 +108,9 @@ export function strategicChecks(): Check[] {
       required: [PACKAGE_VERSION_TAG],
       accept: (text: string, file: string) =>
         text.includes(PACKAGE_VERSION_TAG) ||
-        (file.endsWith('.tsx') && text.includes('OPENELEMENT_VERSION')),
+        (file.endsWith('.tsx') &&
+          (text.includes('OPENELEMENT_VERSION') ||
+            text.includes('PUBLISHED_PACKAGE_VERSION'))),
     },
     {
       name: `${ACTIVE_EXECUTION_VERSION} is the active execution version`,

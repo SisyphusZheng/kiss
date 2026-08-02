@@ -70,6 +70,6 @@ export class GuideIslandsAndSsrPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-islands-and-ssr-page', GuideIslandsAndSsrPage);
-export default GuideIslandsAndSsrPage;
 export const tagName = 'guide-islands-and-ssr-page';
+defineCustomElement(tagName, GuideIslandsAndSsrPage);
+export default GuideIslandsAndSsrPage;

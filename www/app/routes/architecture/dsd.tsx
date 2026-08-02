@@ -144,6 +144,6 @@ export class DsdGuidePage extends OpenElement {
   }
 }
 
-defineCustomElement('dsd-guide-page', DsdGuidePage);
-export default DsdGuidePage;
 export const tagName = 'dsd-guide-page';
+defineCustomElement(tagName, DsdGuidePage);
+export default DsdGuidePage;

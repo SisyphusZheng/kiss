@@ -1,5 +1,5 @@
 /**
- * ./context.ts - Request context contracts.
+ * context.ts - Request context contracts.
  *
  * Per-request context object that flows through SSR rendering
  * and is accessible to islands and layout components.

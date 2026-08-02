@@ -150,5 +150,5 @@ export default class Benchmark extends OpenElement {
     );
   }
 }
-defineCustomElement('benchmark-page', Benchmark);
 export const tagName = 'benchmark-page';
+defineCustomElement(tagName, Benchmark);

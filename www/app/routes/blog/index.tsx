@@ -7,6 +7,7 @@ export const meta = { section: 'History', label: 'Blog', order: 10 };
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { posts } from '@openelement/generated/blog-data';
+import { mastheadStyles } from '../../components/page-styles.js';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
@@ -28,23 +29,7 @@ routeSheet.replaceSync(`
   }
 
   /* ── masthead: one serif italic accent ── */
-  .masthead {
-    position: relative;
-    isolation: isolate;
-    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
-  }
-
-  .masthead::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: linear-gradient(180deg, black, transparent);
-  }
+  ${mastheadStyles}
 
   .eyebrow {
     display: flex;
@@ -286,7 +271,7 @@ export class BlogIndexPage extends OpenElement {
   }
 }
 
-defineCustomElement('blog-index-page', BlogIndexPage);
+export const tagName = 'blog-index-page';
+defineCustomElement(tagName, BlogIndexPage);
 
 export default BlogIndexPage;
-export const tagName = 'blog-index-page';

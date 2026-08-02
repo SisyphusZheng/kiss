@@ -60,7 +60,7 @@ import {
   DEFAULT_ROUTES_DIR,
 } from '../internal/paths.ts';
 
-const log = createLogger('ssg');
+const log = createLogger('build-ssg');
 
 const VIRTUAL_SSG_ENTRY_ID = 'virtual:open-ssg-entry';
 const RESOLVED_SSG_ENTRY_ID = '\0' + VIRTUAL_SSG_ENTRY_ID;

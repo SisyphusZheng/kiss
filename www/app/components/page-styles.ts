@@ -9,6 +9,31 @@ import '@openelement/site-ui/open-page-rail.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '../islands/open-page-rail.tsx';
 
+/**
+ * Shared masthead block: clamp padding + violet-6 grid backdrop. Used by the
+ * blog index, contributing, and docs landing routes, which interpolate it
+ * into their own route sheets.
+ */
+export const mastheadStyles = `
+  .masthead {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
+  }
+
+  .masthead::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(180deg, black, transparent);
+  }
+`;
+
 export const pageStyles = `
   :host {
     display: block;

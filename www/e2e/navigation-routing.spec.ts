@@ -13,6 +13,8 @@
  */
 
 import { expect, test } from '@playwright/test';
+import { deepQuery, deepQueryAll } from './helpers.js';
+import { deepQueryAllInPage } from '../../tools/lib/shadow-walker.ts';
 
 test.describe('Direct URL Access', () => {
   const routes = [
@@ -47,33 +49,16 @@ test.describe('Link Navigation', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Links are inside Shadow DOM - use piercing evaluate to find them
-    const internalLinks = await page.evaluate(() => {
-      const allLinks: HTMLAnchorElement[] = [];
-
-      // Walk light DOM
-      document.querySelectorAll('a[href]').forEach((a) => allLinks.push(a as HTMLAnchorElement));
-
-      // Walk shadow roots (open-layout, home page, etc.)
-      document.querySelectorAll('*').forEach((el) => {
-        if (el.shadowRoot) {
-          el.shadowRoot.querySelectorAll('a[href]').forEach((a) =>
-            allLinks.push(a as HTMLAnchorElement)
-          );
-        }
-      });
-
-      return allLinks
-        .map((a) => a.getAttribute('href')!)
-        .filter(
-          (href) =>
-            href &&
-            !href.startsWith('http') &&
-            !href.startsWith('mailto') &&
-            !href.startsWith('#') &&
-            !href.startsWith('//'),
-        );
-    });
+    // Links are inside Shadow DOM - use the shared deep query to find them
+    const links = await deepQueryAll(page, 'a[href]');
+    const hrefs = await Promise.all(links.map((a) => a.getAttribute('href')));
+    const internalLinks = hrefs.filter((href): href is string =>
+      !!href &&
+      !href.startsWith('http') &&
+      !href.startsWith('mailto') &&
+      !href.startsWith('#') &&
+      !href.startsWith('//')
+    );
 
     expect(internalLinks.length).toBeGreaterThan(0);
   });
@@ -83,23 +68,9 @@ test.describe('Link Navigation', () => {
     await page.waitForLoadState('networkidle');
 
     // Find guide links in shadow DOM
-    const guideLinks = await page.evaluate(() => {
-      const links: string[] = [];
-      document.querySelectorAll('*').forEach((el) => {
-        if (el.shadowRoot) {
-          el.shadowRoot.querySelectorAll('a[href*="/guide/"]').forEach((a) => {
-            const href = a.getAttribute('href');
-            if (href) links.push(href);
-          });
-        }
-      });
-      // Also check light DOM
-      document.querySelectorAll('a[href*="/guide/"]').forEach((a) => {
-        const href = a.getAttribute('href');
-        if (href) links.push(href);
-      });
-      return links;
-    });
+    const guideAnchors = await deepQueryAll(page, 'a[href*="/guide/"]');
+    const guideLinks = (await Promise.all(guideAnchors.map((a) => a.getAttribute('href'))))
+      .filter((href): href is string => href !== null);
 
     expect(guideLinks.length).toBeGreaterThan(0);
 
@@ -175,17 +146,11 @@ test.describe('404 Page', () => {
     await page.goto('/404.html');
     await page.waitForLoadState('networkidle');
 
-    // Should show the 404 page content
-    const bodyText = await page.evaluate(() => {
-      // Collect text from both light and shadow DOM
-      let text = document.body?.textContent ?? '';
-      document.querySelectorAll('*').forEach((el) => {
-        if (el.shadowRoot) {
-          text += ' ' + (el.shadowRoot.textContent ?? '');
-        }
-      });
-      return text;
-    });
+    // Should show the 404 page content — light DOM plus every shadow root
+    const bodyText: string = await page.evaluate(
+      `(document.body?.textContent ?? '') + ' ' + (${deepQueryAllInPage.toString()})(document, '*')` +
+        ".filter((el) => el.shadowRoot).map((el) => el.shadowRoot.textContent ?? '').join(' ')",
+    );
     const has404 = bodyText.includes('404') ||
       bodyText.includes('not found') ||
       bodyText.includes('does not exist') ||
@@ -257,24 +222,8 @@ test.describe('Blog Pages', () => {
     await page.waitForLoadState('networkidle');
 
     // Get first blog post link (pierce shadow DOM)
-    const firstPostLink = await page.evaluate(() => {
-      const checkRoot = (root: Document | ShadowRoot): string | null => {
-        const link = root.querySelector('a[href*="/blog/v"]');
-        return link?.getAttribute('href') ?? null;
-      };
-
-      const result = checkRoot(document);
-      if (result) return result;
-
-      const all = document.querySelectorAll('*');
-      for (const el of all) {
-        if (el.shadowRoot) {
-          const found = checkRoot(el.shadowRoot!);
-          if (found) return found;
-        }
-      }
-      return null;
-    });
+    const firstPost = await deepQuery(page, 'a[href*="/blog/v"]');
+    const firstPostLink = firstPost ? await firstPost.getAttribute('href') : null;
 
     if (firstPostLink) {
       await page.goto(firstPostLink);

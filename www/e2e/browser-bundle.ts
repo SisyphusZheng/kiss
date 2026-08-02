@@ -23,6 +23,25 @@ const ELEMENT_DIR = fileURLToPath(new URL('../../packages/element/src', import.m
 
 const bundleCache = new Map<string, Promise<string>>();
 
+/**
+ * The defineApp surface used by the browser probes in spa-action.spec.ts and
+ * nested-open-button-submit.spec.ts. Shared so the two specs cannot drift.
+ */
+export interface SpaModule {
+  defineApp(options: {
+    mode: 'spa';
+    routerMode: 'history';
+    routes: Array<{
+      path: string;
+      tagName: string;
+      loader?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
+      action?: (
+        ctx: { params: Record<string, string>; formData?: FormData },
+      ) => Promise<unknown>;
+    }>;
+  }): { mount(selector: string): void; dispose(): void };
+}
+
 /** Bundle `entry` (a file: URL) as an unminified ES module, cached per run. */
 export function bundleModuleForBrowser(entry: URL): Promise<string> {
   const key = entry.href;

@@ -1,5 +1,5 @@
 /**
- * ./island.ts - Island contracts.
+ * island.ts - Island contracts.
  */
 
 import type { HydrationStrategy } from './framework.ts';

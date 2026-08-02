@@ -88,6 +88,6 @@ export class GuideComparisonPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-comparison-page', GuideComparisonPage);
-export default GuideComparisonPage;
 export const tagName = 'guide-comparison-page';
+defineCustomElement(tagName, GuideComparisonPage);
+export default GuideComparisonPage;

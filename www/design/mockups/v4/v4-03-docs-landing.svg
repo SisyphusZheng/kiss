@@ -44,7 +44,7 @@
 
   <!-- vertical sidenote -->
   <text x="1396" y="600" class="mono" font-size="11" fill="#868e96" transform="rotate(90 1396 600)"
-    letter-spacing="2">SPEC-041 · DOCS INDEX</text>
+    letter-spacing="2">SPEC-042 · DOCS INDEX</text>
 
   <!-- index rows -->
   <g class="mono">

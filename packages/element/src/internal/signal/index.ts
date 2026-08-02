@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Reactive signals powered by @preact/signals-core.
+ * index.ts - Reactive signals powered by @preact/signals-core.
  *
  * @preact/signals-core is the only supported engine.
  *

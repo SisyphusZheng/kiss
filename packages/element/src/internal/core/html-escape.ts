@@ -1,5 +1,5 @@
 /**
- * ./html-escape.ts - Safe/Unsafe HTML Contract
+ * html-escape.ts - Safe/Unsafe HTML Contract
  *
  * Branded types for HTML escaping semantics:
  * - SafeHtml:  A string that has been HTML-escaped (safe for text content)

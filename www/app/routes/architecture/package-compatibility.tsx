@@ -26,8 +26,10 @@ routeSheet.replaceSync(
 );
 
 const railItems = {
-  en: '[{"id":"current-contract","label":"Current contract","level":3},{"id":"explicit-admission","label":"Explicit admission","level":3},{"id":"roadmap-diagnostics","label":"Roadmap diagnostics","level":3}]',
-  zh: '[{"id":"current-contract","label":"当前契约","level":3},{"id":"explicit-admission","label":"显式准入","level":3},{"id":"roadmap-diagnostics","label":"路线图诊断","level":3}]',
+  en:
+    '[{"id":"current-contract","label":"Current contract","level":3},{"id":"explicit-admission","label":"Explicit admission","level":3},{"id":"roadmap-diagnostics","label":"Roadmap diagnostics","level":3}]',
+  zh:
+    '[{"id":"current-contract","label":"当前契约","level":3},{"id":"explicit-admission","label":"显式准入","level":3},{"id":"roadmap-diagnostics","label":"路线图诊断","level":3}]',
 } as const;
 
 const content = {
@@ -82,7 +84,8 @@ export class PackageCompatibilityPage extends OpenElement {
         </open-page-rail>
         <div class='container'>
           <h1 id='start'>
-            {t.titleBase}<span class='title-accent'>{t.titleAccent}</span>
+            {t.titleBase}
+            <span class='title-accent'>{t.titleAccent}</span>
           </h1>
           <p class='subtitle'>
             {t.subtitle}
@@ -118,6 +121,6 @@ export class PackageCompatibilityPage extends OpenElement {
   }
 }
 
-defineCustomElement('package-compatibility-page', PackageCompatibilityPage);
-export default PackageCompatibilityPage;
 export const tagName = 'package-compatibility-page';
+defineCustomElement(tagName, PackageCompatibilityPage);
+export default PackageCompatibilityPage;

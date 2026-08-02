@@ -71,6 +71,6 @@ export class GuideCoreConceptsPage extends GuidePage {
   static override guide = { content };
 }
 
-defineCustomElement('guide-core-concepts-page', GuideCoreConceptsPage);
-export default GuideCoreConceptsPage;
 export const tagName = 'guide-core-concepts-page';
+defineCustomElement(tagName, GuideCoreConceptsPage);
+export default GuideCoreConceptsPage;

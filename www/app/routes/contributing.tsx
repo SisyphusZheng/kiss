@@ -7,6 +7,7 @@ import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 import '@openelement/ui/open-button';
+import { mastheadStyles } from '../components/page-styles.js';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(`
@@ -29,23 +30,7 @@ routeSheet.replaceSync(`
   }
 
   /* ── masthead: mono "BUILD IT" + serif "with us." ── */
-  .masthead {
-    position: relative;
-    isolation: isolate;
-    padding: clamp(4rem, 11vh, 8rem) clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 6vh, 4.5rem);
-  }
-
-  .masthead::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--violet-6) 7%, transparent) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: linear-gradient(180deg, black, transparent);
-  }
+  ${mastheadStyles}
 
   .eyebrow {
     display: flex;
@@ -444,6 +429,6 @@ deno task dev`}</code></pre>
   }
 }
 
-defineCustomElement('page-contributing', ContributingPage);
-export default ContributingPage;
 export const tagName = 'page-contributing';
+defineCustomElement(tagName, ContributingPage);
+export default ContributingPage;

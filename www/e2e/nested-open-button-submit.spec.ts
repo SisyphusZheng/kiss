@@ -31,28 +31,13 @@
  */
 
 import { expect, type Page, test } from '@playwright/test';
-import { bundleModuleForBrowser } from './browser-bundle.ts';
+import { bundleModuleForBrowser, type SpaModule } from './browser-bundle.ts';
 
 const SPA_ENTRY = new URL('../../packages/app/src/spa.ts', import.meta.url);
 const OPEN_BUTTON_ENTRY = new URL(
   '../../packages/ui/src/open-button.tsx',
   import.meta.url,
 );
-
-interface SpaModule {
-  defineApp(options: {
-    mode: 'spa';
-    routerMode: 'history';
-    routes: Array<{
-      path: string;
-      tagName: string;
-      loader?: (ctx: { params: Record<string, string> }) => Promise<unknown>;
-      action?: (
-        ctx: { params: Record<string, string>; formData?: FormData },
-      ) => Promise<unknown>;
-    }>;
-  }): { mount(selector: string): void; dispose(): void };
-}
 
 interface OpenButtonModule {
   OpenButton: CustomElementConstructor;

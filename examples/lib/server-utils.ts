@@ -71,3 +71,49 @@ export function closeApp(server: Deno.HttpServer): Response {
   }, 25);
   return json({ closing: true });
 }
+
+export interface DesktopDispatch {
+  req: Request;
+  url: URL;
+  pathname: string;
+  /** Basename extension when the path looks like a file ('' otherwise). */
+  ext: string;
+}
+
+/**
+ * Loopback-only HTTP server skeleton shared by the desktop examples: PORT
+ * env (default 8000), the /api/app/close endpoint, a try/catch around the
+ * app-specific dispatch so the webview stays alive, and the startup log.
+ */
+export function serveDesktopApp(
+  label: string,
+  dispatch: (ctx: DesktopDispatch) => Promise<Response> | Response,
+): Deno.HttpServer {
+  const port = Number(Deno.env.get('PORT') ?? 8000);
+  // Loopback only: this is a desktop app, it must not be reachable from the LAN.
+  const server: Deno.HttpServer = Deno.serve(
+    { hostname: '127.0.0.1', port },
+    async (req: Request) => {
+      try {
+        const url = new URL(req.url);
+        const pathname = url.pathname;
+        const dotIndex = pathname.lastIndexOf('.');
+        const ext = dotIndex > pathname.lastIndexOf('/') ? pathname.slice(dotIndex) : '';
+
+        if (pathname === '/api/app/close') {
+          if (req.method !== 'POST') return methodNotAllowed();
+          return closeApp(server);
+        }
+
+        return await dispatch({ req, url, pathname, ext });
+      } catch (err) {
+        console.error(`[${label}] Handler error:`, err);
+        return serverError();
+      }
+    },
+  );
+
+  const addr = server.addr as Deno.NetAddr;
+  console.log(`[${label}] Listening on http://${addr.hostname}:${addr.port}/`);
+  return server;
+}

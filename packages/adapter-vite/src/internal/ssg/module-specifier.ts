@@ -1,5 +1,5 @@
 /**
- * ./module-specifier.ts - Filesystem path to Vite module specifier conversion.
+ * module-specifier.ts - Filesystem path to Vite module specifier conversion.
  *
  * Island and route scanning produces absolute filesystem paths via node:path.
  * On Windows those paths contain backslashes and a drive letter
