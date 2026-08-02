@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.12',
-    theme: 'round-5 audit remediation',
+    theme: 'round-6 audit remediation',
     copy:
-      'The fifth full-spectrum audit closes 56 issues (#753–#808): JSX ref callbacks are honored, Array/Object props JSON-sync across SSR and CSR, island config scanning goes fail-closed, head-injection URL validation strips tab/newline bypasses, desktop examples bind loopback, and the site-ui lab components actually render.',
+      'The sixth full-spectrum audit closes 43 issues (#810–#852): a guard-vetoed post-action redirect no longer wipes page data, the CSRF same-origin floor gains real deny/allow e2e proof, malformed URLs are a defined 400, ISR and CSRF claims match shipped behavior, tautological gates are replaced with real ones, and 23 dead icons plus the dead token palette are gone.',
     state: 'stable',
     stamp: 'CURRENT',
   },

@@ -159,11 +159,32 @@ Deno.test('in-flight claims: published line bound to in-flight wording fails (#8
   ];
   for (const prose of cases) {
     const files = goodFiles();
+    // Completed publish evidence makes the current line count as published.
+    files[`docs/release/autoflow3/${PACKAGE_VERSION_TAG}.json`] = '{"status": "completed"}';
     files['docs/roadmap/ROADMAP.md'] += `\n${prose}\n`;
     const failures = findInflightVersionClaimFailures(readerFrom(files));
     assert(failures.length >= 1, `expected a failure for: ${prose}`);
     assert(failures.every((f) => f.startsWith('docs/roadmap/ROADMAP.md:')));
   }
+});
+
+Deno.test('in-flight claims: superseded line bound to in-flight wording always fails', () => {
+  const files = goodFiles();
+  files['docs/roadmap/ROADMAP.md'] +=
+    `\n${PREVIOUS_PACKAGE_VERSION} is the in-flight source line.\n`;
+  const failures = findInflightVersionClaimFailures(readerFrom(files));
+  assertEquals(failures.length, 1);
+});
+
+Deno.test('in-flight claims: prepare window — current line without publish evidence is exempt', () => {
+  // After the version bump but before CI publishes, the current line IS the
+  // in-flight train; flagging it would block the release flow itself.
+  const files = goodFiles();
+  files['docs/current/VERSION_PLAN.md'] +=
+    `\nNext alpha train: \`${PACKAGE_VERSION_TAG}\` (round-6 audit remediation — in flight; next is TP-6)`;
+  files['docs/governance/PROJECT_WORKFLOW.md'] +=
+    `\nnext train \`${PACKAGE_VERSION_TAG}\` (round-6 audit remediation)`;
+  assertEquals(findInflightVersionClaimFailures(readerFrom(files)), []);
 });
 
 Deno.test('in-flight claims: naming the NEXT train beside the published line is legal', () => {

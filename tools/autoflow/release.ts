@@ -396,6 +396,7 @@ export function createReleasePlan(
         'tools/project-constants.ts',
         'README.md',
         'README.zh.md',
+        'examples/open-element-in-fresh/README.md',
         'docs/current/VERSION_PLAN.md',
         'docs/governance/PROJECT_WORKFLOW.md',
         'docs/roadmap/ROADMAP.md',

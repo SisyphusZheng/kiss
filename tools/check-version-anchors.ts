@@ -231,17 +231,31 @@ export function findStaleAnchorFailures(read: (path: string) => string): string[
 }
 
 /**
- * Half-update guard (#813): the published package line must not be described
+ * Half-update guard (#813): a published package line must not be described
  * as in-flight or as the active/next train. The binding must be tight — the
- * current version as the subject or object of the in-flight/train phrase, or
+ * version as the subject or object of the in-flight/train phrase, or
  * immediately trailed by a parenthetical carrying in-flight wording — so a
  * paragraph that marks the current line published while naming the NEXT
  * train stays legal. Runs over the governed docs (the versionAnchors paths).
+ *
+ * Which lines count as "published": a superseded line (PREVIOUS_PACKAGE_VERSION)
+ * always does. The CURRENT line only counts once its release evidence records
+ * a completed publish — before that (the release-prepare window, where the
+ * bump has landed but CI has not published yet) the current line legitimately
+ * IS the in-flight train, and flagging it would block the release flow itself.
  */
 export function findInflightVersionClaimFailures(read: (path: string) => string): string[] {
-  const version = escapeRegExp(PACKAGE_VERSION);
-  const alpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
-  const ver = alpha ? `(?:v?${version}|\\balpha\\.${alpha}\\b)` : `v?${version}`;
+  const publishedVersions = [PREVIOUS_PACKAGE_VERSION];
+  if (hasCompletedReleaseEvidence(read, PACKAGE_VERSION_TAG)) {
+    publishedVersions.push(PACKAGE_VERSION);
+  }
+  const parts: string[] = [];
+  for (const version of publishedVersions) {
+    const alpha = version.match(/-alpha\.(\d+)$/u)?.[1];
+    parts.push(`v?${escapeRegExp(version)}`);
+    if (alpha) parts.push(`\\balpha\\.${alpha}\\b`);
+  }
+  const ver = `(?:${parts.join('|')})`;
   const bindings = [
     new RegExp(`${ver}[^.\\n]{0,30}?is the in[- ]flight`, 'i'),
     new RegExp(`in[- ]flight[^.\\n]{0,30}?line is ${ver}`, 'i'),
@@ -267,6 +281,19 @@ export function findInflightVersionClaimFailures(read: (path: string) => string)
     }
   }
   return failures;
+}
+
+/**
+ * Offline proxy for "this line is already on the registry": the autoflow3
+ * evidence record for the tag exists and reached `completed`. A missing or
+ * incomplete record means the version is still in the prepare window.
+ */
+function hasCompletedReleaseEvidence(read: (path: string) => string, tag: string): boolean {
+  try {
+    return read(`docs/release/autoflow3/${tag}.json`).includes('"status": "completed"');
+  } catch {
+    return false;
+  }
 }
 
 function main(): void {
