@@ -12,13 +12,16 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package                     | Responsibility                                       | Supported public interface                                              |
-| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
-| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`                   |
-| `@openelement/app`          | Pages, routing, islands and request/render semantics | root, `model`, `spa`, `preact`                                          |
-| `@openelement/adapter-vite` | Vite, content, SSG and Nitro build implementation    | root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview`, `sitemap` |
-| `@openelement/create`       | Installed starter and coherent version entry         | CLI binary (root)                                                       |
-| `@openelement/ui`           | Optional, proven general-purpose primitives          | root and retained primitive subpaths                                    |
+| Package                     | Responsibility                                                                 | Supported public interface                                              |
+| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`                   |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                                          |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview`, `sitemap` |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                                       |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                                    |
+
+Responsibility wording follows [`STACK_CONTRACT.md`](./STACK_CONTRACT.md),
+the source of truth for the five-package responsibility table.
 
 Application authors should normally learn `element`, `app`, `adapter-vite`,
 and `create`; `ui` is optional.
@@ -126,7 +129,11 @@ a major-version ADR.
 - `definePage({ renderIntent: { mode } })`: `'auto'`/`'static'`/`'dynamic'`
   rendering modes; `'dynamic'` routes render per request through the
   generated `dist/server/index.js` (0.42.0-alpha.1). `renderIntent.revalidate`
-  declares the ISR revalidate window in seconds for static routes.
+  declares the ISR revalidate window in seconds for static routes — on the
+  0.42 line the value is **recorded in the build manifest but inert** (no ISR
+  caching is wired into the request-time server entry, so the route behaves
+  like a plain dynamic/static route); it takes effect with the 0.44 ISR
+  wiring.
 - Route-module `loader`/`action`/`actions` exports with the ADR-0120
   protocol: `fail(status, data)` 422 re-render, 303 PRG, named actions via
   `formaction='?/name'` (0.42.0-alpha.2).

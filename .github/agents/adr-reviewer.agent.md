@@ -21,8 +21,8 @@ Read these files before reviewing:
 
 ## Blocking Architecture Rules
 
-- `@openelement/core` stays runtime-only and does not depend on Vite, Hono,
-  website code, or UI framework adapters.
+- `@openelement/element` stays runtime-only and does not depend on Vite,
+  Hono, website code, or UI framework adapters.
 - Application authoring starts from `@openelement/app`, not from runtime class
   inheritance.
 - The renderer pipeline remains JSX -> VNode -> RenderNode -> DSD or DOM.

@@ -5,6 +5,17 @@
 > document is the forward-compatibility contract for teams that want to run ISR
 > at the edge once it is enabled (targeting **0.44**). The in-box
 > `MemoryIsrCache` is intentionally single-instance only.
+>
+> **Not importable on 0.42:** the ISR runtime named below
+> (`renderIsrResponse`, `findIsrManifestEntry`, `IsrRuntimeCache`,
+> `MemoryIsrCache`, `isIsrRouteConfig`) lives in
+> `packages/element/src/internal/` and is **not** forwarded by any public
+> export entry of `@openelement/element` on the 0.42 line, so application
+> code cannot import it. Only the `IsrCacheEntry` / `IsrCacheResult` /
+> `CacheEntry` **types** are public (`@experimental`). The runtime is
+> scheduled to be wired and exposed with the 0.44 ISR work; treat the
+> `renderIsrResponse` wiring instructions below as the 0.44 contract, not a
+> 0.42 how-to.
 
 ## Why a KV adapter is required
 
@@ -113,8 +124,9 @@ export class DenoKvIsrCache {
 ```
 
 Wire it by passing an instance as the `cache` option to `renderIsrResponse`
-once ISR is enabled in the request-time entry. Two responsibilities stay with
-the host, not the runtime:
+once ISR is enabled in the request-time entry and the runtime is exposed
+through the public export surface (0.44 target — see the status note above).
+Two responsibilities stay with the host, not the runtime:
 
 - **Persisting tags.** `IsrCacheEntry` has no `tags` field; store your route's
   cache tags alongside the entry (the `KvIsrEntry` intersection above) so the

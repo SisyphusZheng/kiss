@@ -51,18 +51,22 @@ This catalog preserves historical status labels from each ADR. Use the current
 decision set above to decide which records are authoritative for new work.
 Numbers 0058, 0059, 0070 and 0072 each collide across two or three distinct
 LessJS-era decisions; the collided records carry mutual-reference notes in
-their headers and are listed here with filenames.
+their headers and are listed here with filenames. Number 0066 was never
+assigned — the gap in the sequence is intentional, not a missing file.
+Entries marked _(file removed)_ survive as catalog rows only: their ADR files
+were deleted in the v0.40 documentation cleanup and remain available through
+git history.
 
 | ADR  | Title                                                                                                                                | Status                                           |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| 0006 | Version Roadmap                                                                                                                      | Accepted                                         |
-| 0007 | npm Publishing Strategy                                                                                                              | Accepted                                         |
-| 0010 | Eliminate .less/ temp files                                                                                                          | Accepted, Implemented                            |
-| 0011 | Eliminate globalThis bridge                                                                                                          | Accepted, Implemented                            |
-| 0016 | Dual-mode subpath resolution                                                                                                         | Accepted, Implemented                            |
-| 0017 | Runtime/Build separation                                                                                                             | Accepted, Implemented                            |
-| 0018 | Virtual Data Modules                                                                                                                 | Accepted, Implemented                            |
-| 0024 | Standards-first WC Renderer Roadmap                                                                                                  | Accepted                                         |
+| 0006 | Version Roadmap                                                                                                                      | Accepted _(file removed)_                        |
+| 0007 | npm Publishing Strategy                                                                                                              | Accepted _(file removed)_                        |
+| 0010 | Eliminate .less/ temp files                                                                                                          | Accepted, Implemented _(file removed)_           |
+| 0011 | Eliminate globalThis bridge                                                                                                          | Accepted, Implemented _(file removed)_           |
+| 0016 | Dual-mode subpath resolution                                                                                                         | Accepted, Implemented _(file removed)_           |
+| 0017 | Runtime/Build separation                                                                                                             | Accepted, Implemented _(file removed)_           |
+| 0018 | Virtual Data Modules                                                                                                                 | Accepted, Implemented _(file removed)_           |
+| 0024 | Standards-first WC Renderer Roadmap                                                                                                  | Accepted _(file removed)_                        |
 | 0025 | Renderer Protocol                                                                                                                    | Accepted (v0.15 partial, v0.16 deferred)         |
 | 0026 | Structured Render Pipeline (v0.16)                                                                                                   | Proposed                                         |
 | 0027 | Roadmap Reorder: Engine Before Hub                                                                                                   | Accepted                                         |

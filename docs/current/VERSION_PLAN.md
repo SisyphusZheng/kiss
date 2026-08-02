@@ -2,7 +2,7 @@
 
 > Current source package line: `v0.42.0-alpha.11`\
 > Current npm registry line: `v0.42.0-alpha.11` (published 2026-08-01, dist-tag `alpha`)\
-> Next alpha train: `v0.42.0-alpha.11` (round-5 audit remediation — in flight; next is TP-6)\
+> Next alpha train: `v0.42.0-alpha.12` (round-6 audit remediation — in flight; next is TP-6)\
 > Active release target: `v0.42.0-alpha.11`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
@@ -475,8 +475,15 @@ Goal: freeze and ship the **WC light fullstack** request-time surface.
   full unit/coverage, three-engine e2e, consumers, third-party WC smoke,
   package artifacts, docs and governance gates, publish dry-run, two-stage
   evidence, post-publish npm consumer smoke.
-- The byte-identical static-output regression proof (TP-2) is repeated at
-  every subsequent alpha and at `0.42.0`.
+- Static-output determinism is a continuous gate, not a per-alpha baseline
+  ritual: CI runs the `check:static-output-freeze --self-check` determinism
+  assertion on every relevant change (missing-page/determinism failures are
+  CI hard fails, #600), which keeps the frozen static surface
+  behavior-equivalent build over build. The full byte-identical baseline
+  comparison (`check:static-output-freeze --baseline <ref>`, TP-2) was run
+  once as alpha.1 release evidence and stays a release-evidence tool —
+  content drift between versions makes a fixed-ref byte comparison
+  meaningless as a recurring gate.
 - `1.0.0` remains the stable product target; 0.42.0 evidence joins the v1
   readiness record.
 

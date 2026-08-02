@@ -10,6 +10,10 @@ Active truth is limited to:
 - `docs/roadmap/`
 - `docs/status/STATUS.md`
 - `docs/release/`
+- `docs/governance/`
+- `docs/integrations/`
+- `docs/evidence/`
+- `docs/dogfood/`
 - `docs/archive/README.md`
 
 v0.40 removed legacy docs from the active repo surface instead of moving

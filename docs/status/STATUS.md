@@ -26,13 +26,17 @@ and output path.
 
 ## Product surface
 
-| Package                     | Status   | Supported role                                      |
-| --------------------------- | -------- | --------------------------------------------------- |
-| `@openelement/element`      | Current  | Custom Elements, JSX, DSD, hydration and signals    |
-| `@openelement/app`          | Current  | Pages, routes, islands and request/render semantics |
-| `@openelement/adapter-vite` | Current  | Vite, content, static builds and Nitro output       |
-| `@openelement/create`       | Current  | Installed starter and consumer entrypoint           |
-| `@openelement/ui`           | Optional | Proven primitives; stable scope decided at v0.46    |
+| Package                     | Status   | Supported role                                                                 |
+| --------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `@openelement/element`      | Current  | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  |
+| `@openelement/app`          | Current  | Pages, routes, loaders, actions, islands and normalized request semantics      |
+| `@openelement/adapter-vite` | Current  | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation |
+| `@openelement/create`       | Current  | Version-coherent starter generation and consumer lifecycle                     |
+| `@openelement/ui`           | Optional | Optional, reusable and dogfood-proven Web Component primitives                 |
+
+Responsibility wording follows
+[`STACK_CONTRACT.md`](../current/STACK_CONTRACT.md), the source of truth for
+the five-package responsibility table.
 
 ## 0.41.0 stable gates
 

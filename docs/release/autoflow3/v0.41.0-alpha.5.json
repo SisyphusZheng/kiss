@@ -2,9 +2,9 @@
   "id": "approved-release-v0.41.0-alpha.5-2026-07-01T07-10-41-230Z",
   "kind": "approved-release",
   "policyVersion": "autoflow3-v0",
-  "currentVersion": "0.41.0-alpha.5",
+  "currentVersion": "0.41.0-alpha.4",
   "targetVersion": "0.41.0-alpha.5",
-  "status": "running",
+  "status": "completed",
   "startedAt": "2026-07-01T07:10:41.230Z",
   "approvalId": "ADR-0105/v0.40.x-cleanup-train",
   "steps": [
@@ -171,7 +171,7 @@
         "origin",
         "main"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "push main evidence",
@@ -181,11 +181,11 @@
         "origin",
         "main"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "tag release",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "push tag",
@@ -196,11 +196,12 @@
         "origin",
         "v0.41.0-alpha.5"
       ],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "name": "create GitHub release",
-      "status": "pending"
+      "status": "completed"
     }
-  ]
+  ],
+  "backfillNote": "Backfilled 2026-08-02 (round-6 audit, issue #822): git tag, GitHub release and npm publication are all verified; the tail steps completed after this snapshot was first committed. currentVersion corrected to the pre-bump line."
 }

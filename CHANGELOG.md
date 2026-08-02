@@ -442,7 +442,7 @@ evidence.
   and makes Create template generation asynchronous, deterministic, and bound
   to the five-package same-version release invariant.
 
-## 0.41.0-alpha.11 (release candidate)
+## 0.41.0-alpha.11
 
 - Restores frozen-install and changed-path/release workflow truth.
 - Fixes query decoding, SPA page-host data, dialog inert restoration, and
@@ -452,5 +452,5 @@ evidence.
 - Repairs clean Nitro Workers builds, semantic visual smoke, and package
   artifact allowlists.
 - Enforces publishable runtime coverage at 69% lines, 81% branches, and 72%
-  functions; tag and GitHub prerelease remain blocked until post-publish
-  consumers pass.
+  functions; published with tag, GitHub prerelease and post-publish consumer
+  evidence (see `docs/release/v0.41.0-alpha.11.md`).

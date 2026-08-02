@@ -3,9 +3,9 @@
 Read first: `docs/governance/PROJECT_WORKFLOW.md`.
 
 Before opening a contribution, read [SECURITY.md](./SECURITY.md),
-[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md), [SUPPORT.md](./SUPPORT.md), and
+[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md), and
 [MAINTAINERS.md](./MAINTAINERS.md). They define private reports, community
-expectations, support routing, and review ownership.
+expectations, and review ownership.
 
 openElement uses AutoWorkflow for project management. A change should identify
 the version SOP, ADR impact, NextVersion package, implementation evidence, and
@@ -33,21 +33,19 @@ build, and release toolchain.
 
 ```text
 packages/
-  app/            # JSX-first application authoring API
-  core/           # DSD renderer, DsdElement, JSX runtime
-  element/        # base custom-element class (open-element), themes, hydration
-  signal/         # reactive signal primitives and engine abstraction
-  ui/             # DSD-first open-* UI components
-  content/        # Markdown, MDX, nav, blog, sitemap
-  protocol/       # small structured contracts (types + tiny runtime)
-  router/         # route utilities
-  ssg/            # static-site generation pipeline (Hono-based)
-  adapter-vite/   # Vite plugin, SSG driver, generated entries
+  element/        # Custom Elements, JSX, DSD, hydration and signals
+  app/            # Pages, routing, islands and request/render semantics
+  adapter-vite/   # Vite, content, static builds and Nitro output
   create/         # npm:@openelement/create project scaffolder
+  ui/             # Optional, proven general-purpose primitives
 tools/            # release (AutoFlow), architecture/coverage/doc gates
 www/              # openelement.org website
 docs/             # ADR, SOP, NextVersion, status, roadmap, release docs
 ```
+
+The former `core`, `signal`, `router`, `protocol`, `content` and `ssg`
+packages are retired; see `docs/current/STACK_CONTRACT.md` for the current
+five-package contract.
 
 ## Before Submitting a PR
 
@@ -78,11 +76,10 @@ For release work, also run the release gates listed in
 - Use `createLogger()` for logging where package code already has logger
   access.
 - Reference ADR numbers when comments explain architectural decisions.
-- `no-sloppy-imports` is disabled in the root `deno.json`: Deno's rule
-  requires explicit `.ts` extensions on relative imports, and this repository
-  deliberately uses extension-less relative imports (Bundler-style resolution,
-  matching the published npm artifacts). Keep new imports extension-less;
-  do not re-enable the rule without an ADR.
+- Relative imports carry explicit `.ts`/`.tsx` extensions throughout the
+  repository (`no-sloppy-imports` stays disabled in the root `deno.json`, but
+  no extension-less relative imports exist). Keep new imports explicit;
+  do not introduce extension-less relative imports.
 
 ## Release Process
 

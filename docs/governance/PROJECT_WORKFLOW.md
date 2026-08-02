@@ -12,9 +12,9 @@ complete only when the repository contains the decision, the execution package,
 the implementation, and the gates that prove the claim.
 
 Current execution anchor: source package line `v0.42.0-alpha.11`,
-npm registry line `v0.42.0-alpha.11` (published), active train
-`v0.42.0-alpha.10` (TP-5.7), and `0.42.0` WC light fullstack planning
-under ADR-0120 and `docs/current/VERSION_PLAN.md`.
+npm registry line `v0.42.0-alpha.11` (published), next train
+`v0.42.0-alpha.12` (round-6 audit remediation), and `0.42.0` WC light
+fullstack planning under ADR-0120 and `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
 second product. The abandoned beta naming is retired; alpha releases
@@ -35,15 +35,15 @@ code. The workflow is part of the product contract.
 
 ## Document Roles
 
-| Layer       | Location                   | Purpose                                             |
-| ----------- | -------------------------- | --------------------------------------------------- |
-| Governance  | `docs/governance/`         | Mandatory process and release rules                 |
-| Status      | `docs/status/STATUS.md`    | Current truth, active line, and release gate order  |
-| Roadmap     | `docs/roadmap/`            | Version sequence and product direction              |
-| ADR         | `docs/adr/`                | Architectural decisions and irreversible trade-offs |
-| VersionPlan | `docs/current/`            | Active version contract: goals, tasks, verification |
-| Changelog   | `CHANGELOG.md` (repo root) | User-visible changes after implementation is proven |
-| Release     | `docs/release/`            | Release note after local and remote gates are green |
+| Layer       | Location                   | Purpose                                                                 |
+| ----------- | -------------------------- | ----------------------------------------------------------------------- |
+| Governance  | `docs/governance/`         | Mandatory process and release rules                                     |
+| Status      | `docs/status/STATUS.md`    | Current truth, active line, and release gate order                      |
+| Roadmap     | `docs/roadmap/`            | Version sequence and product direction                                  |
+| ADR         | `docs/adr/`                | Architectural decisions and irreversible trade-offs                     |
+| VersionPlan | `docs/current/`            | Active version contract: goals, tasks, verification                     |
+| Changelog   | `CHANGELOG.md` (repo root) | Aggregated history only; not re-synchronized release by release         |
+| Release     | `docs/release/`            | Authoritative per-release record after local and remote gates are green |
 
 ## Active Version Plan
 

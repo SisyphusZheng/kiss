@@ -11,8 +11,9 @@ Execution and release state follow the
 > 0.42 alphas through alpha.7 closed the light-fullstack floor (morph
 > residuals, start path, SSG fail-closed, CSRF default, honest tags);
 > alpha.9 shipped the cleanup train and the first fully completed AutoFlow3
-> five-package publish; alpha.10 is published to npm (2026-08-01) and
-> alpha.11 is the in-flight source line.\
+> five-package publish; alpha.10 shipped the audit round 4 remediation
+> trains; alpha.11 is published to npm (2026-08-01) and alpha.12 is the
+> next train.\
 > Planned line: `0.42.0` (WC light fullstack) under ADR-0120 and the active
 > version plan in `docs/current/VERSION_PLAN.md`.\
 > Maturity stage: stable (0.41.x interface freeze under ADR-0119); the
@@ -38,13 +39,17 @@ and deployable output around the same contract.
 
 The current product graph has five packages:
 
-| Package                     | Product role                                         |
-| --------------------------- | ---------------------------------------------------- |
-| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals     |
-| `@openelement/app`          | Pages, routing, islands and request/render semantics |
-| `@openelement/adapter-vite` | Vite, content, static builds and Nitro output        |
-| `@openelement/create`       | Installed starter and zero-context entrypoint        |
-| `@openelement/ui`           | Optional, proven general-purpose primitives          |
+| Package                     | Product role                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 |
+
+Responsibility wording follows
+[`STACK_CONTRACT.md`](../current/STACK_CONTRACT.md), the source of truth for
+the five-package responsibility table.
 
 `core`, `signal`, `router`, `protocol`, `content` and `ssg` are retired public
 packages. Their historical names remain in ADRs and release evidence only.
@@ -133,7 +138,7 @@ making the standard Custom Element contract span both layers. See the official
 was a release attempt whose npm publish failed (see CHANGELOG.md) and whose
 source changes were carried forward into alpha.9; the npm registry's `alpha`
 dist-tag therefore jumped straight to alpha.9 and has since advanced to
-alpha.10. The in-flight source line is alpha.11.
+alpha.11. The next train is alpha.12.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
 from the active release story. The planned beta name was cancelled so the
 version label honestly reflects that breaking architecture and interface
