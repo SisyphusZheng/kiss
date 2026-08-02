@@ -98,6 +98,29 @@ Nitro transitive dependency; the Cache API is unused; `cli/start.ts` and
     merging the two client paths into one runtime with two modes. Not
     scheduled.
 
+### Addendum (2026-08-02, second pass)
+
+13. **Action error protocol adopts RFC 9457 Problem Details**
+    (`application/problem+json`) in place of the bespoke
+    `{type, message}` failure JSON (#863). Timing note: the error format is
+    inside the ADR-0122 freeze surface, so it lands on the alpha.13 train
+    and is frozen as problem+json when ADR-0122 is accepted.
+14. **Form-facing components adopt ElementInternals form association**
+    (`formAssociated` + `setFormValue` + validity), making components true
+    native-form citizens — validation, formdata events, no-JS at component
+    granularity (#864, evaluation memo + open-input pilot first).
+15. **`open-dropdown` moves to the Popover API**, deleting hand-rolled
+    positioning/focus code (#865). Watch item: CSS Anchor Positioning for
+    placement once cross-engine stable.
+16. **The 0.44 ISR contract pairs Cache API with RFC 9110 conditional
+    requests** (ETag/If-None-Match) for revalidation semantics — no bespoke
+    staleness protocol (#866, design note first).
+17. **Site search adopts Pagefind** in place of the bespoke
+    `search-index.json` pipeline (#867).
+    Watch items recorded without issues: the W3C Sanitizer API (`setHTML`) as a
+    future replacement for hand-written HTML escaping, and CSS Anchor
+    Positioning for overlay placement.
+
 ## Consequences
 
 - Issues are filed for the alpha.13 items (1–5) and the watched items
