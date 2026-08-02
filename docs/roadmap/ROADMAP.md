@@ -4,9 +4,9 @@ Execution and release state follow the
 [`Project Workflow`](../governance/PROJECT_WORKFLOW.md).
 
 > Source of truth for forward product planning.\
-> Source package line: `v0.42.0-alpha.10`.\
-> npm registry line: `v0.42.0-alpha.10` (published 2026-08-01, dist-tag `alpha` — see Current release state).\
-> Active execution target: `v0.42.0-alpha.10`.\
+> Source package line: `v0.42.0-alpha.11`.\
+> npm registry line: `v0.42.0-alpha.11` (published 2026-08-01, dist-tag `alpha` — see Current release state).\
+> Active execution target: `v0.42.0-alpha.11`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.7 closed the light-fullstack floor (morph
 > residuals, start path, SSG fail-closed, CSRF default, honest tags);
@@ -129,7 +129,7 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.42.0-alpha.10` is the published package line (npm, 2026-08-01). Alpha.8
+`0.42.0-alpha.11` is the published package line (npm, 2026-08-01). Alpha.8
 was a release attempt whose npm publish failed (see CHANGELOG.md) and whose
 source changes were carried forward into alpha.9; the npm registry's `alpha`
 dist-tag therefore jumped straight to alpha.9 and has since advanced to

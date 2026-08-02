@@ -1,9 +1,9 @@
 # OpenElement Status
 
 > Updated: 2026-08-01\
-> Repository package line: `v0.42.0-alpha.10`\
-> npm registry line: `v0.42.0-alpha.10` (published 2026-08-01, dist-tag `alpha`)\
-> Active release target: `v0.42.0-alpha.10`\
+> Repository package line: `v0.42.0-alpha.11`\
+> npm registry line: `v0.42.0-alpha.11` (published 2026-08-01, dist-tag `alpha`)\
+> Active release target: `v0.42.0-alpha.11`\
 > Next release line: `v0.42.0` (WC light fullstack)\
 > Product graph: five packages\
 > Current maturity stage: stable (0.41.x); 0.42 alpha in flight
