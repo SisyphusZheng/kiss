@@ -25,44 +25,80 @@ routeSheet.replaceSync(
   `,
 );
 
+const railItems = {
+  en: '[{"id":"static-surface","label":"Static surface","level":3},{"id":"hydration-boundary","label":"Hydration boundary","level":3},{"id":"progressive-behavior","label":"Progressive behavior","level":3}]',
+  zh: '[{"id":"static-surface","label":"静态表面","level":3},{"id":"hydration-boundary","label":"Hydration 边界","level":3},{"id":"progressive-behavior","label":"渐进式行为","level":3}]',
+} as const;
+
+const content = {
+  en: {
+    titleAccent: 'Hydration',
+    subtitle:
+      'openElement keeps documents and Web Components server-rendered by default. Islands are reserved for client components that need runtime state or framework interop.',
+    panelLabel: 'activation boundary',
+    panelMeta: 'static → interactive',
+    staticSurfaceTitle: 'Static surface',
+    staticSurfaceBody: 'HTML and DSD render first, without forcing a client app shell.',
+    hydrationBoundaryTitle: 'Hydration boundary',
+    hydrationBoundaryBody: 'Client modules attach where the route metadata declares an island.',
+    progressiveBehaviorTitle: 'Progressive behavior',
+    progressiveBehaviorBody:
+      'Interactive pieces can load independently from the surrounding document.',
+  },
+  zh: {
+    titleAccent: 'Hydration',
+    subtitle:
+      'openElement 默认让文档与 Web Components 保持服务端渲染。island 只为需要运行时状态或框架互操作的客户端组件保留。',
+    panelLabel: '激活边界',
+    panelMeta: '静态 → 交互',
+    staticSurfaceTitle: '静态表面',
+    staticSurfaceBody: 'HTML 与 DSD 先行渲染，不强迫加载客户端应用外壳。',
+    hydrationBoundaryTitle: 'Hydration 边界',
+    hydrationBoundaryBody: '客户端模块挂载在路由 metadata 声明 island 的位置。',
+    progressiveBehaviorTitle: '渐进式行为',
+    progressiveBehaviorBody: '交互部分可以独立于周围文档加载。',
+  },
+} as const;
+
 export class IslandsPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
+    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const t = content[locale];
     return (
       <open-reading-shell rail>
         <open-page-rail
           slot='rail'
-          items='[{"id":"static-surface","label":"Static surface","level":3},{"id":"hydration-boundary","label":"Hydration boundary","level":3},{"id":"progressive-behavior","label":"Progressive behavior","level":3}]'
+          items={railItems[locale]}
         >
         </open-page-rail>
         <div class='container'>
           <h1 id='start'>
-            Island<span class='title-accent'>Hydration</span>
+            Island<span class='title-accent'>{t.titleAccent}</span>
           </h1>
           <p class='subtitle'>
-            openElement keeps documents and Web Components server-rendered by default. Islands are
-            reserved for client components that need runtime state or framework interop.
+            {t.subtitle}
           </p>
 
           <open-artifact-panel>
-            <span slot='label'>activation boundary</span>
-            <span slot='meta'>static → interactive</span>
+            <span slot='label'>{t.panelLabel}</span>
+            <span slot='meta'>{t.panelMeta}</span>
             <div class='island-grid'>
               <open-card>
-                <h3 id='static-surface'>Static surface</h3>
-                <p>HTML and DSD render first, without forcing a client app shell.</p>
+                <h3 id='static-surface'>{t.staticSurfaceTitle}</h3>
+                <p>{t.staticSurfaceBody}</p>
               </open-card>
               <open-card variant='artifact'>
-                <h3 id='hydration-boundary'>Hydration boundary</h3>
+                <h3 id='hydration-boundary'>{t.hydrationBoundaryTitle}</h3>
                 <p>
-                  Client modules attach where the route metadata declares an island.
+                  {t.hydrationBoundaryBody}
                 </p>
               </open-card>
               <open-card>
-                <h3 id='progressive-behavior'>Progressive behavior</h3>
+                <h3 id='progressive-behavior'>{t.progressiveBehaviorTitle}</h3>
                 <p>
-                  Interactive pieces can load independently from the surrounding document.
+                  {t.progressiveBehaviorBody}
                 </p>
               </open-card>
             </div>

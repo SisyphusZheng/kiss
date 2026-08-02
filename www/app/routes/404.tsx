@@ -9,6 +9,22 @@ import '@openelement/ui/open-button';
 const marqueeText =
   'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ 404 ✳ ';
 
+const content = {
+  en: {
+    serifLine: 'Lost in the shadow DOM.',
+    lede:
+      'This route never mounted. The page you want is probably one declarative template away.',
+    backHome: 'Back home',
+    readDocs: 'Read the docs',
+  },
+  zh: {
+    serifLine: '迷失在 shadow DOM 里。',
+    lede: '这个路由从未被挂载。你要找的页面，也许只差一个 declarative template。',
+    backHome: '回到首页',
+    readDocs: '阅读文档',
+  },
+} as const;
+
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host {
@@ -130,6 +146,7 @@ export default class Page404 extends OpenElement {
   static override styles = [styles];
   override render() {
     const locale = this._getLocale('en');
+    const t = content[locale === 'zh' ? 'zh' : 'en'];
     const homeHref = locale === 'en' ? '/' : '/zh/';
     const docsHref = locale === 'en' ? '/docs' : '/zh/docs';
     return (
@@ -140,16 +157,16 @@ export default class Page404 extends OpenElement {
             <span class='solid' aria-hidden='true'>0</span>
             <span aria-hidden='true'>4</span>
           </h1>
-          <p class='serif-line'>Lost in the shadow DOM.</p>
+          <p class='serif-line'>{t.serifLine}</p>
           <p class='lede'>
-            This route never mounted. The page you want is probably one declarative template away.
+            {t.lede}
           </p>
           <div class='actions'>
             <open-button variant='primary' href={homeHref}>
-              Back home
+              {t.backHome}
             </open-button>
             <open-button href={docsHref}>
-              Read the docs
+              {t.readDocs}
             </open-button>
           </div>
         </section>

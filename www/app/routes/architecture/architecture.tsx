@@ -54,172 +54,262 @@ pageSheet.replaceSync(`
   @media (max-width: 560px) { .nav-row{width:calc(100% - 2rem)} .gate { grid-template-columns: 1fr; display: grid; } }
 `);
 
+const content = {
+  en: {
+    heroTitle: 'Current',
+    heroTitleAccent: 'Architecture',
+    lede:
+      'OpenElement is a Web Components-native, static-first application framework. Custom Elements are the durable component contract; JSX and Basic Element are authoring modes; Vite and Nitro are the official build and output path.',
+    artifactLabel: 'package graph',
+    artifactMeta: 'published line',
+    graphAriaLabel:
+      'Package graph: app uses element, adapter-vite builds on app, ui is optional, create ships the starter; core, signal, router, protocol, content and ssg are retired.',
+    graphNote: 'Dependency direction — consumers point at what they use',
+    nodeElement: 'runtime · zero framework deps',
+    nodeApp: 'pages · routing',
+    nodeAdapter: 'the only host side',
+    edgeUses: 'uses',
+    edgeBuildsOn: 'builds on',
+    edgeOptional: 'optional',
+    nodeUi: 'optional primitives',
+    nodeCreate: 'starter · build time',
+    retired: 'retired: core · signal · router · protocol · content · ssg',
+    s1Index: '01 / ownership',
+    s1Title: 'Deep modules hide implementation complexity.',
+    s1Copy:
+      'Authors use product interfaces. Renderer, router, signal, content and build-phase details stay internal until real variation proves a public seam.',
+    layer1: 'One authoring surface for Custom Elements, JSX, DSD, hydration and signals.',
+    layer2: 'Pages, routes, islands and render semantics for complete applications.',
+    layer3:
+      'Vite integration, content, static generation and deployable Nitro output behind one build boundary.',
+    layer4:
+      'Starter-first adoption and optional primitives; neither exposes retired implementation packages.',
+    s2Index: '02 / strategic direction',
+    s2Title: 'Web Components are the application architecture.',
+    s2Copy:
+      'The roadmap earns WC fullstack leadership through compatibility evidence, complete application loops and portable operations—not a growing package count.',
+    card1Title: 'WC SSR',
+    card1Body:
+      'Builds will classify standard, Lit, FAST and Stencil elements for DSD, light DOM or client-only rendering with actionable diagnostics.',
+    card2Title: 'Application loop',
+    card2Body:
+      'Routes, data, progressive forms, actions, redirects and revalidation form one deep App interface rather than separate shallow packages.',
+    card3Title: 'Portable output',
+    card3Body:
+      'Node and Workers output is verified from packed public artifacts; cache intent and deployment diagnostics follow with the 0.43/0.44 line.',
+    s3Index: '03 / release gates',
+    s3Title: 'Current truth is checked mechanically.',
+    s3Copy:
+      'Package surface, docs truth, artifacts, critical paths and browser tests reject a return to the retired product graph.',
+    gate1Strong: '5 packages',
+    gate1Span: 'Current consumer surface, starter and docs agree.',
+    gate2Strong: 'ADR-0122',
+    gate2Span: '0.42.0 freeze proposal filed (PROPOSED); 0.41.x stays frozen under ADR-0119.',
+    gate3Strong: '3 browsers',
+    gate3Span: 'Candidate releases require Chromium, Firefox and WebKit proof.',
+    gate4Strong: 'packed proof',
+    gate4Span: 'Consumers build from public artifacts, not workspace aliases.',
+    navRoadmap: 'Roadmap truth',
+    navApi: 'Supported interfaces',
+    navStart: 'Start building',
+  },
+  zh: {
+    heroTitle: '当前',
+    heroTitleAccent: '架构',
+    lede:
+      'openElement 是一个 Web Components 原生、static-first 的应用框架。Custom Elements 是持久的组件契约；JSX 与 Basic Element 是创作模式；Vite 与 Nitro 是官方构建与输出路径。',
+    artifactLabel: '包依赖图',
+    artifactMeta: '发布线',
+    graphAriaLabel:
+      '包依赖图：app 使用 element，adapter-vite 构建于 app 之上，ui 为可选，create 提供 starter；core、signal、router、protocol、content 与 ssg 已退役。',
+    graphNote: '依赖方向——使用方指向其依赖',
+    nodeElement: '运行时 · 零框架依赖',
+    nodeApp: '页面 · 路由',
+    nodeAdapter: '唯一的宿主侧',
+    edgeUses: '使用',
+    edgeBuildsOn: '构建于',
+    edgeOptional: '可选',
+    nodeUi: '可选原语',
+    nodeCreate: 'starter · 构建期',
+    retired: '已退役：core · signal · router · protocol · content · ssg',
+    s1Index: '01 / 归属',
+    s1Title: '深模块隐藏实现复杂度。',
+    s1Copy:
+      '作者使用产品接口。renderer、router、signal、content 与构建期细节保持内部化，直到真实的变体需求证明需要公开接缝。',
+    layer1: 'Custom Elements、JSX、DSD、hydration 与 signals 的统一创作界面。',
+    layer2: '面向完整应用的页面、路由、islands 与渲染语义。',
+    layer3: 'Vite 集成、content、静态生成与可部署的 Nitro 输出，收敛在一个构建边界之内。',
+    layer4: '以 starter 为先的采用路径与可选原语；两者都不暴露已退役的实现包。',
+    s2Index: '02 / 战略方向',
+    s2Title: 'Web Components 就是应用架构。',
+    s2Copy:
+      '路线图以兼容性证据、完整的应用闭环与可移植的运维能力赢得 WC 全栈领导地位——而不是靠不断增长的包数量。',
+    card1Title: 'WC SSR',
+    card1Body:
+      '构建将把标准、Lit、FAST 与 Stencil 元素分类为 DSD、light DOM 或仅客户端渲染，并给出可操作的诊断。',
+    card2Title: '应用闭环',
+    card2Body:
+      '路由、数据、渐进式表单、action、重定向与重新校验构成一个深的 App 接口，而不是一堆浅包。',
+    card3Title: '可移植输出',
+    card3Body: 'Node 与 Workers 输出从打包后的公开产物验证；缓存意图与部署诊断随 0.43/0.44 线跟进。',
+    s3Index: '03 / 发布门禁',
+    s3Title: '当前真相由机器校验。',
+    s3Copy: '包表面、文档真相、产物、关键路径与浏览器测试，共同拒绝退回已退役的产品图。',
+    gate1Strong: '5 个包',
+    gate1Span: '当前消费面、starter 与文档保持一致。',
+    gate2Strong: 'ADR-0122',
+    gate2Span: '0.42.0 冻结提案已提交（PROPOSED）；0.41.x 在 ADR-0119 下保持冻结。',
+    gate3Strong: '3 个浏览器',
+    gate3Span: '候选版本发布需要 Chromium、Firefox 与 WebKit 的验证。',
+    gate4Strong: '打包产物验证',
+    gate4Span: '消费方从公开产物构建，而不是 workspace 别名。',
+    navRoadmap: '路线图真相',
+    navApi: '受支持的接口',
+    navStart: '开始构建',
+  },
+} as const;
+
 export class ArchitecturePage extends OpenElement {
   declare locale?: string;
   static override styles = [pageSheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     return (
       <main>
         <open-page-hero variant='technical'>
           <span slot='eyebrow'>ADR-0113 / {OPENELEMENT_VERSION}</span>
-          <span slot='title'>Current</span>
-          <span slot='title-accent'>Architecture</span>
-          <span slot='lede'>
-            OpenElement is a Web Components-native, static-first application framework. Custom
-            Elements are the durable component contract; JSX and Basic Element are authoring modes;
-            Vite and Nitro are the official build and output path.
-          </span>
+          <span slot='title'>{t.heroTitle}</span>
+          <span slot='title-accent'>{t.heroTitleAccent}</span>
+          <span slot='lede'>{t.lede}</span>
           <open-artifact-panel slot='artifact'>
-            <span slot='label'>package graph</span>
-            <span slot='meta'>{PUBLISHED_PACKAGE_VERSION} published line</span>
+            <span slot='label'>{t.artifactLabel}</span>
+            <span slot='meta'>
+              {PUBLISHED_PACKAGE_VERSION} {t.artifactMeta}
+            </span>
             <div
               class='pkg-graph'
               role='img'
-              aria-label='Package graph: app uses element, adapter-vite builds on app, ui is optional, create ships the starter; core, signal, router, protocol, content and ssg are retired.'
+              aria-label={t.graphAriaLabel}
             >
               <p class='graph-note' aria-hidden='true'>
-                Dependency direction — consumers point at what they use
+                {t.graphNote}
               </p>
               <div class='graph-main' aria-hidden='true'>
                 <div class='node core'>
                   <strong>element</strong>
-                  <small>runtime · zero framework deps</small>
+                  <small>{t.nodeElement}</small>
                 </div>
                 <span class='edge'>
-                  <i>uses</i>
+                  <i>{t.edgeUses}</i>
                 </span>
                 <div class='node'>
                   <strong>app</strong>
-                  <small>pages · routing</small>
+                  <small>{t.nodeApp}</small>
                 </div>
                 <span class='edge'>
-                  <i>builds on</i>
+                  <i>{t.edgeBuildsOn}</i>
                 </span>
                 <div class='node'>
                   <strong>adapter-vite</strong>
-                  <small>the only host side</small>
+                  <small>{t.nodeAdapter}</small>
                 </div>
               </div>
               <div class='graph-subs' aria-hidden='true'>
                 <div class='sub'>
                   <span class='v-edge'>
-                    <i>optional</i>
+                    <i>{t.edgeOptional}</i>
                   </span>
                   <div class='node optional'>
                     <strong>ui</strong>
-                    <small>optional primitives</small>
+                    <small>{t.nodeUi}</small>
                   </div>
                 </div>
                 <div class='sub'>
                   <span class='v-edge'></span>
                   <div class='node'>
                     <strong>create</strong>
-                    <small>starter · build time</small>
+                    <small>{t.nodeCreate}</small>
                   </div>
                 </div>
-                <p class='retired'>retired: core · signal · router · protocol · content · ssg</p>
+                <p class='retired'>{t.retired}</p>
               </div>
             </div>
           </open-artifact-panel>
         </open-page-hero>
 
         <open-section-frame>
-          <span slot='index'>01 / ownership</span>
-          <span slot='title'>Deep modules hide implementation complexity.</span>
-          <span slot='copy'>
-            Authors use product interfaces. Renderer, router, signal, content and build-phase
-            details stay internal until real variation proves a public seam.
-          </span>
+          <span slot='index'>{t.s1Index}</span>
+          <span slot='title'>{t.s1Title}</span>
+          <span slot='copy'>{t.s1Copy}</span>
           <div class='layer-map'>
             <div class='layer'>
               <span class='clause-num' aria-hidden='true'>§1</span>
               <strong>element</strong>
               <span>@openelement/element</span>
-              <p>One authoring surface for Custom Elements, JSX, DSD, hydration and signals.</p>
+              <p>{t.layer1}</p>
             </div>
             <div class='layer'>
               <span class='clause-num' aria-hidden='true'>§2</span>
               <strong>application</strong>
               <span>@openelement/app</span>
-              <p>Pages, routes, islands and render semantics for complete applications.</p>
+              <p>{t.layer2}</p>
             </div>
             <div class='layer'>
               <span class='clause-num' aria-hidden='true'>§3</span>
               <strong>build</strong>
               <span>@openelement/adapter-vite</span>
-              <p>
-                Vite integration, content, static generation and deployable Nitro output behind one
-                build boundary.
-              </p>
+              <p>{t.layer3}</p>
             </div>
             <div class='layer'>
               <span class='clause-num' aria-hidden='true'>§4</span>
               <strong>adoption</strong>
               <span>@openelement/create, optional ui</span>
-              <p>
-                Starter-first adoption and optional primitives; neither exposes retired
-                implementation packages.
-              </p>
+              <p>{t.layer4}</p>
             </div>
           </div>
         </open-section-frame>
 
         <open-section-frame>
-          <span slot='index'>02 / strategic direction</span>
-          <span slot='title'>Web Components are the application architecture.</span>
-          <span slot='copy'>
-            The roadmap earns WC fullstack leadership through compatibility evidence, complete
-            application loops and portable operations—not a growing package count.
-          </span>
+          <span slot='index'>{t.s2Index}</span>
+          <span slot='title'>{t.s2Title}</span>
+          <span slot='copy'>{t.s2Copy}</span>
           <div class='cards'>
             <open-card>
-              <h3 slot='header'>WC SSR</h3>
-              <p>
-                Builds will classify standard, Lit, FAST and Stencil elements for DSD, light DOM or
-                client-only rendering with actionable diagnostics.
-              </p>
+              <h3 slot='header'>{t.card1Title}</h3>
+              <p>{t.card1Body}</p>
             </open-card>
             <open-card>
-              <h3 slot='header'>Application loop</h3>
-              <p>
-                Routes, data, progressive forms, actions, redirects and revalidation become one deep
-                App interface rather than separate shallow packages.
-              </p>
+              <h3 slot='header'>{t.card2Title}</h3>
+              <p>{t.card2Body}</p>
             </open-card>
             <open-card>
-              <h3 slot='header'>Portable output</h3>
-              <p>
-                Node and Workers output, cache intent and deployment diagnostics are verified from
-                packed public artifacts.
-              </p>
+              <h3 slot='header'>{t.card3Title}</h3>
+              <p>{t.card3Body}</p>
             </open-card>
           </div>
         </open-section-frame>
 
         <open-section-frame>
-          <span slot='index'>03 / release gates</span>
-          <span slot='title'>Current truth is checked mechanically.</span>
-          <span slot='copy'>
-            Package surface, docs truth, artifacts, critical paths and browser tests reject a return
-            to the retired product graph.
-          </span>
+          <span slot='index'>{t.s3Index}</span>
+          <span slot='title'>{t.s3Title}</span>
+          <span slot='copy'>{t.s3Copy}</span>
           <div class='gate-grid'>
             <div class='gate'>
-              <strong>5 packages</strong>
-              <span>Current consumer surface, starter and docs agree.</span>
+              <strong>{t.gate1Strong}</strong>
+              <span>{t.gate1Span}</span>
             </div>
             <div class='gate'>
-              <strong>ADR-0119</strong>
-              <span>Stable freeze proceeds with the scoped interface contract.</span>
+              <strong>{t.gate2Strong}</strong>
+              <span>{t.gate2Span}</span>
             </div>
             <div class='gate'>
-              <strong>3 browsers</strong>
-              <span>Candidate releases require Chromium, Firefox and WebKit proof.</span>
+              <strong>{t.gate3Strong}</strong>
+              <span>{t.gate3Span}</span>
             </div>
             <div class='gate'>
-              <strong>packed proof</strong>
-              <span>Consumers build from public artifacts, not workspace aliases.</span>
+              <strong>{t.gate4Strong}</strong>
+              <span>{t.gate4Span}</span>
             </div>
           </div>
         </open-section-frame>
@@ -229,19 +319,19 @@ export class ArchitecturePage extends OpenElement {
             style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)'
             href='/roadmap'
           >
-            Roadmap truth {'->'}
+            {t.navRoadmap} {'->'}
           </a>
           <a
             style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)'
             href='/apilist'
           >
-            Supported interfaces {'->'}
+            {t.navApi} {'->'}
           </a>
           <a
             style='color:var(--text-secondary);text-decoration:none;font-size:var(--font-size-1)'
             href='/guide/getting-started'
           >
-            Start building {'->'}
+            {t.navStart} {'->'}
           </a>
         </nav>
       </main>

@@ -9,6 +9,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     title: 'Migrating to 0.41.0',
     lede: 'Every breaking change since 0.40.x, grouped by the version that shipped it.',
     outline: [
+      { id: 'to-0-42', label: '0.41.x → 0.42', level: 3 },
       { id: 'collapse', label: 'From 0.40.x', level: 3 },
       { id: 'alpha-17-19', label: 'Alpha.17–19', level: 3 },
       { id: 'freeze', label: 'The 0.41.0 freeze', level: 3 },
@@ -17,6 +18,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
     previous: { href: '/guide/configuration', label: 'Configuration' },
     next: { href: '/guide/error-handling', label: 'Error Handling' },
     cards: [
+      {
+        id: 'to-0-42',
+        title: '0.41.x → 0.42 (alpha)',
+        body:
+          'The 0.42 alpha line adds request-time surfaces — loaders, actions, progressive-enhancement forms, redirects and Nitro server output. Static-first sites upgrade at zero cost: the frozen 0.41 surface has no breaking change. Full TP-6 migration notes ship with 0.42.0 stable (ADR-0122 proposed).',
+      },
       {
         id: 'collapse',
         title: 'From 0.40.x',
@@ -48,6 +55,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     title: '迁移到 0.41.0',
     lede: '自 0.40.x 以来的全部 breaking change，按发布版本分组。',
     outline: [
+      { id: 'to-0-42', label: '0.41.x → 0.42', level: 3 },
       { id: 'collapse', label: '从 0.40.x 升级', level: 3 },
       { id: 'alpha-17-19', label: 'Alpha.17–19', level: 3 },
       { id: 'freeze', label: '0.41.0 冻结', level: 3 },
@@ -56,6 +64,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
     previous: { href: '/guide/configuration', label: '配置' },
     next: { href: '/guide/error-handling', label: '错误处理' },
     cards: [
+      {
+        id: 'to-0-42',
+        title: '0.41.x → 0.42（alpha）',
+        body:
+          '0.42 alpha 线新增 request-time 面——loader、action、渐进增强表单、redirect 与 Nitro 服务端输出。静态面零成本升级：0.41 冻结面无 breaking change。完整 TP-6 迁移说明随 0.42.0 stable 发布（ADR-0122 提案中）。',
+      },
       {
         id: 'collapse',
         title: '从 0.40.x 升级',

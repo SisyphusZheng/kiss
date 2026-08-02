@@ -1,7 +1,7 @@
 /** @jsxImportSource @openelement/element */
 /** The public WWW flagship: view-source editorial, v4 language. */
 import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
-import { OPENELEMENT_VERSION, PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
+import { PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
 import '@openelement/ui/open-code-block';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
@@ -239,7 +239,7 @@ export class HomePage extends OpenElement {
         <section class='hero'>
           <open-cinematic-atmosphere></open-cinematic-atmosphere>
           <span class='hero-ghost' aria-hidden='true'>&lt;/&gt;</span>
-          <span class='hero-stamp'>EST. 2026 / SPEC-041</span>
+          <span class='hero-stamp'>EST. 2026 / SPEC-042</span>
           <p class='eyebrow'>OpenElement — Web Standards Lab</p>
           <h1>
             <span class='mono-line'>THE WEB,</span>
@@ -255,8 +255,8 @@ export class HomePage extends OpenElement {
           <div class='spec-strip'>
             <div class='spec-cell'>
               <small>{t.specVersion}</small>
-              <strong>{PUBLISHED_PACKAGE_VERSION} — stable</strong>
-              <small>{OPENELEMENT_VERSION} source</small>
+              <strong>{PUBLISHED_PACKAGE_VERSION} — alpha line</strong>
+              <small>0.42.0 freeze proposed (ADR-0122)</small>
             </div>
             <div class='spec-cell'>
               <small>{t.specGraph}</small>

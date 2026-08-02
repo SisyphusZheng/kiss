@@ -26,7 +26,7 @@ export default class Benchmark extends OpenElement {
   static override styles = [styles];
 
   override render() {
-    return this._renderEn();
+    return this._getLocale('en') === 'zh' ? this._renderZh() : this._renderEn();
   }
 
   _renderEn() {
@@ -84,6 +84,66 @@ export default class Benchmark extends OpenElement {
             DSD components need no framework virtual DOM runtime. Client JS is emitted only when
             islands or enhanced forms exist; pure-static pages stay script-free. Islands load
             on-demand by strategy.
+          </p>
+        </div>
+      </open-reading-shell>
+    );
+  }
+
+  _renderZh() {
+    return (
+      <open-reading-shell rail>
+        <open-page-rail
+          slot='rail'
+          items='[{"id":"build-performance","label":"构建性能"},{"id":"rendering","label":"渲染"},{"id":"bundle-size","label":"Bundle 体积"}]'
+        >
+        </open-page-rail>
+        <div class='container'>
+          <h1 id='start'>
+            性能与<span class='title-accent'>基准测试</span>
+          </h1>
+          <p class='subtitle'>零噪音。只列我们实际测量的数据。</p>
+
+          <open-artifact-panel>
+            <span slot='label'>构建证据</span>
+            <span slot='meta'>确定性站点构建</span>
+            <h2 id='build-performance'>构建性能</h2>
+            <div class='metric'>
+              <span class='label'>SSG 构建（www）</span>
+              <span class='value'>30 个路由模块，205 条 sitemap URL</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>开发冷启动</span>
+              <span class='value'>由 CI 性能证据测量</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Vite 开发启动</span>
+              <span class='value'>由 CI 性能证据测量</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>客户端 bundle</span>
+              <span class='value'>island chunk 有预算约束；无强制页面运行时</span>
+            </div>
+
+            <h2 id='rendering'>渲染</h2>
+            <div class='metric'>
+              <span class='label'>DSD SSR</span>
+              <span class='value'>零 JS 解析成本（浏览器原生）</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>Island hydration</span>
+              <span class='value'>按组件粒度，由策略门控</span>
+            </div>
+            <div class='metric'>
+              <span class='label'>导航</span>
+              <span class='value'>浏览器原生导航，可选 View Transitions</span>
+            </div>
+          </open-artifact-panel>
+
+          <h2 id='bundle-size'>Bundle 体积</h2>
+          <p>
+            DSD 组件不需要框架的虚拟 DOM 运行时。仅当存在 island 或增强表单时才输出客户端
+            JS；纯静态页面保持无脚本。island 按策略按需加载。
           </p>
         </div>
       </open-reading-shell>

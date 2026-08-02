@@ -44,10 +44,75 @@ routeSheet.replaceSync(
 `,
 );
 
+const content = {
+  en: {
+    eyebrow: 'Changelog — release registry',
+    titleSerif: 'Every line,',
+    titleMono: 'EVIDENCED.',
+    lede: 'Published, candidate, withdrawn and historical release evidence for OpenElement.',
+    readRoadmap: 'Read roadmap',
+    metaLabel: 'Current truth',
+    metaPrefix: 'The currently published package line is',
+    metaSuffix: '.',
+    railItems:
+      '[{"id":"published","label":"Published"},{"id":"candidate","label":"Stable line"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]',
+    publishedIntro:
+      'The project follows Keep a Changelog and SemVer. Historical entries preserve older names where they describe older releases; current docs use the openElement contract.',
+    stampCurrent: 'Current',
+    regCurrentSummary:
+      'The published five-package line — unified product and website surface, sealed export seams.',
+    regArchiveNote: 'archive →',
+    regGhostSummary: 'The eleven-package era — JSR-only, before the collapse. Historical record.',
+    stableHeading: 'Stable line',
+    stableBody:
+      'is the published alpha line on the 0.42 track — it ships request-time surfaces that are not frozen yet, and the ADR-0122 freeze proposal is filed. The 0.41.x line is the stable line under the ADR-0119 scoped interface freeze; patches on 0.41.x carry tooling and hygiene fixes only, and the frozen surface changes only with a major-version ADR.',
+    withdrawnHeading: 'Withdrawn partial artifacts',
+    withdrawnBody:
+      'The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product lines or upgrade targets.',
+    footnote:
+      '※ Withdrawn partial artifacts (beta.1–beta.3) stay withdrawn from the active release story. History is kept, not rewritten.',
+    loadError:
+      '<p>Unable to load the changelog. Read it on <a href="https://github.com/open-element/openelement/blob/main/CHANGELOG.md">GitHub</a>.</p>',
+    navRoadmap: 'Roadmap',
+    navGettingStarted: 'Getting Started',
+  },
+  zh: {
+    eyebrow: 'Changelog — 发布登记册',
+    titleSerif: '每一行，',
+    titleMono: '皆有证据。',
+    lede: 'openElement 已发布、候选、已撤回与历史版本的发布证据。',
+    readRoadmap: '阅读 Roadmap',
+    metaLabel: '当前真相',
+    metaPrefix: '当前发布的包线版本为',
+    metaSuffix: '。',
+    railItems:
+      '[{"id":"published","label":"已发布"},{"id":"candidate","label":"稳定线"},{"id":"withdrawn","label":"已撤回"},{"id":"historical","label":"历史归档"}]',
+    publishedIntro:
+      '本项目遵循 Keep a Changelog 与 SemVer。历史条目在描述旧版本时保留旧名称；当前文档使用 openElement 契约。',
+    stampCurrent: '当前',
+    regCurrentSummary: '已发布的五包线——统一的产品与网站接口面，封口的导出边界。',
+    regArchiveNote: '归档 →',
+    regGhostSummary: '十一包时代——仅限 JSR，在收拢之前。历史记录。',
+    stableHeading: '稳定线',
+    stableBody:
+      '是 0.42 轨道上已发布的 alpha 线——它交付尚未冻结的请求时接口，ADR-0122 冻结提案已提交。0.41.x 线是 ADR-0119 限定范围接口冻结下的稳定线；0.41.x 的补丁只带工具与卫生性修复，冻结接口只有在 major 版本 ADR 下才会变更。',
+    withdrawnHeading: '已撤回的残缺产物',
+    withdrawnBody:
+      'npm 上的 beta.1–beta.3 产物是已撤回的残缺发布，不是受支持的产品线，也不是升级目标。',
+    footnote:
+      '※ 已撤回的残缺产物（beta.1–beta.3）在活跃发布叙事中保持撤回状态。历史被保留，不被改写。',
+    loadError:
+      '<p>无法加载 changelog。请到 <a href="https://github.com/open-element/openelement/blob/main/CHANGELOG.md">GitHub</a> 阅读。</p>',
+    navRoadmap: 'Roadmap',
+    navGettingStarted: '快速开始',
+  },
+} as const;
+
 export class ChangelogPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     // The module runs from www/app/routes in dev but from www/dist/server in
     // the SSG bundle, so locate CHANGELOG.md by walking up from import.meta.url.
     let changelogPath: URL | undefined;
@@ -76,93 +141,85 @@ export class ChangelogPage extends OpenElement {
         allowedAttributes: { a: ['href', 'target', 'rel'] },
       });
     } catch {
-      html =
-        '<p>Unable to load the changelog. Read it on <a href="https://github.com/open-element/openelement/blob/main/CHANGELOG.md">GitHub</a>.</p>';
+      html = t.loadError;
     }
 
     return (
       <main>
         <open-page-hero variant='timeline'>
-          <span slot='eyebrow'>Changelog — release registry</span>
+          <span slot='eyebrow'>{t.eyebrow}</span>
           <span slot='title'>
-            <span class='title-serif'>Every line,</span>
-            <span class='title-mono'>EVIDENCED.</span>
+            <span class='title-serif'>{t.titleSerif}</span>
+            <span class='title-mono'>{t.titleMono}</span>
           </span>
           <span slot='lede'>
-            Published, candidate, withdrawn and historical release evidence for OpenElement.
+            {t.lede}
           </span>
           <div slot='artifact'>
-            <open-button href='/roadmap'>Read roadmap</open-button>
+            <open-button href='/roadmap'>{t.readRoadmap}</open-button>
           </div>
         </open-page-hero>
         <open-reading-shell meta rail footer>
           <div slot='meta'>
-            <p class='section-label'>Current truth</p>
+            <p class='section-label'>{t.metaLabel}</p>
             <p class='subtitle'>
-              The currently published package line is <code>{PUBLISHED_PACKAGE_VERSION}</code>.
+              {t.metaPrefix} <code>{PUBLISHED_PACKAGE_VERSION}</code>{t.metaSuffix}
             </p>
           </div>
           <open-page-rail
             slot='rail'
-            items='[{"id":"published","label":"Published"},{"id":"candidate","label":"Stable line"},{"id":"withdrawn","label":"Withdrawn"},{"id":"historical","label":"Historical archive"}]'
+            items={t.railItems}
           >
           </open-page-rail>
           <p id='published'>
-            The project follows Keep a Changelog and SemVer. Historical entries preserve older names
-            where they describe older releases; current docs use the openElement contract.
+            {t.publishedIntro}
           </p>
           <div class='register' aria-label='Release register'>
             <div class='reg-row reg-current'>
               <div class='reg-head'>
                 <span class='reg-version'>{PUBLISHED_PACKAGE_VERSION}</span>
-                <span class='reg-stamp'>Current</span>
+                <span class='reg-stamp'>{t.stampCurrent}</span>
               </div>
               <p class='reg-summary'>
-                The published five-package line — unified product and website surface, sealed export
-                seams.
+                {t.regCurrentSummary}
               </p>
             </div>
             <div class='reg-row reg-ghost'>
               <div class='reg-head'>
                 <span class='reg-version'>0.40.x</span>
-                <span class='reg-note'>archive →</span>
+                <span class='reg-note'>{t.regArchiveNote}</span>
               </div>
               <p class='reg-summary'>
-                The eleven-package era — JSR-only, before the collapse. Historical record.
+                {t.regGhostSummary}
               </p>
             </div>
           </div>
           <section id='candidate'>
-            <h2>Stable line</h2>
+            <h2>{t.stableHeading}</h2>
             <p>
-              <code>{PUBLISHED_PACKAGE_VERSION}</code>{' '}
-              is the published stable line under the ADR-0119 scoped interface freeze. Patches on
-              the 0.41.x line carry tooling and hygiene fixes only; the frozen surface changes only
-              with a major-version ADR.
+              <code>{PUBLISHED_PACKAGE_VERSION}</code> {t.stableBody}
             </p>
           </section>
           <section id='withdrawn'>
-            <h2>Withdrawn partial artifacts</h2>
+            <h2>{t.withdrawnHeading}</h2>
             <p>
-              The npm beta.1–beta.3 artifacts are withdrawn partial releases, not supported product
-              lines or upgrade targets.
+              {t.withdrawnBody}
             </p>
           </section>
           <p class='reg-note'>
-            ※ Withdrawn partial artifacts (beta.1–beta.3) stay withdrawn from the active release
-            story. History is kept, not rewritten.
+            {t.footnote}
           </p>
           <div id='historical' class='changelog-content' innerHTML={html} trustedHtml />
           <div slot='footer' class='nav-row'>
             <open-button variant='ghost' size='sm' href='/roadmap'>
-              Roadmap
+              {t.navRoadmap}
             </open-button>
             <open-button
               variant='ghost'
               size='sm'
               href='/guide/getting-started'
             >
-              Getting Started
+              {t.navGettingStarted}
             </open-button>
           </div>
         </open-reading-shell>

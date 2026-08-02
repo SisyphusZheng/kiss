@@ -78,313 +78,623 @@ routeSheet.replaceSync(
   `,
 );
 
+const content = {
+  en: {
+    railItems:
+      '[{"id":"how-to-read","label":"How to read this"},{"id":"decision-criteria","label":"Decision criteria"},{"id":"sources","label":"Sources and review scope"}]',
+    titleAccent: 'vs Alternatives',
+    subtitle:
+      'A conservative comparison of product direction. This page describes what each framework optimizes for; it does not invent benchmark claims. Use it to understand fit, not to rank speed.',
+    panelLabel: 'framework decision surface',
+    panelMeta: 'reviewed 2026-07-11',
+    cards: [
+      {
+        label: 'openElement',
+        artifact: true,
+        title: 'WC-native application framework',
+        rows: [
+          {
+            k: 'Architecture',
+            v:
+              'Custom Elements + Declarative Shadow DOM are first-class; standard Custom Elements remain the application contract; App owns routes and rendering; Vite and Nitro are the official build path.',
+          },
+          {
+            k: 'Rendering',
+            v:
+              'SSG by default, DSD/shadow default, selective element upgrades, and static output with no framework JavaScript when interaction is unnecessary.',
+          },
+          {
+            k: 'DX',
+            v: 'JSX + Basic Element, defineElement / definePage / defineApp / buildApp.',
+          },
+          {
+            k: 'Fit',
+            v:
+              'Choose it when Custom Elements must span component libraries and application runtime; current scope is static-first, not general fullstack parity.',
+          },
+        ],
+      },
+      {
+        label: 'Next.js',
+        artifact: false,
+        title: 'React meta-framework',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'File-based routing, React Server Components, app router, server actions.',
+          },
+          {
+            k: 'Rendering',
+            v: 'SSR / SSG / ISR, RSC streaming, client components hydrated on the client.',
+          },
+          { k: 'DX', v: 'React/JSX, large ecosystem, first-class on Vercel.' },
+          {
+            k: 'Lock-in',
+            v: 'React runtime plus Next.js abstractions; platform affinity with Vercel.',
+          },
+        ],
+      },
+      {
+        label: 'Nuxt',
+        artifact: false,
+        title: 'Vue meta-framework',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'File routing, Vue Single-File Components, Nitro server engine.',
+          },
+          { k: 'Rendering', v: 'SSR / SSG / ISR, hybrid rendering, client hydration.' },
+          { k: 'DX', v: 'Vue SFCs, auto-imports, convention-driven.' },
+          { k: 'Lock-in', v: 'Vue runtime plus Nuxt and Nitro conventions.' },
+        ],
+      },
+      {
+        label: 'SvelteKit',
+        artifact: false,
+        title: 'Svelte meta-framework',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'File routing, Svelte components, Vite, adapter-based deployment.',
+          },
+          { k: 'Rendering', v: 'SSR / SSG / CSR, progressive hydration, no virtual DOM.' },
+          { k: 'DX', v: 'Svelte compiler, concise syntax, small runtime.' },
+          {
+            k: 'Lock-in',
+            v:
+              'Svelte compiler/runtime; deploy adapters are swappable (lower lock-in than Next.js).',
+          },
+        ],
+      },
+      {
+        label: 'Astro',
+        artifact: false,
+        title: 'Islands / content engine',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'File routing, multi-framework islands, content collections.',
+          },
+          {
+            k: 'Rendering',
+            v: 'Static-first, island hydration, server islands, View Transitions.',
+          },
+          {
+            k: 'DX',
+            v: '.astro components, framework-agnostic islands, Markdown/MDX.',
+          },
+          {
+            k: 'Lock-in',
+            v: 'Low — islands can be any framework; some Astro-specific component syntax.',
+          },
+        ],
+      },
+      {
+        label: 'Fresh',
+        artifact: false,
+        title: 'Deno + Preact',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'File routing, Preact islands, Deno-native, zero build step.',
+          },
+          {
+            k: 'Rendering',
+            v: 'SSR with Preact islands; minimal client JavaScript by default.',
+          },
+          { k: 'DX', v: 'Preact/TypeScript, Deno runtime, no bundler config.' },
+          { k: 'Lock-in', v: 'Deno runtime plus Preact; islands are Preact components.' },
+        ],
+      },
+      {
+        label: 'Lit',
+        artifact: false,
+        title: 'Web Components base',
+        rows: [
+          {
+            k: 'Architecture',
+            v:
+              'Base class for Custom Elements with reactive properties; application routing is deliberately outside its component model.',
+          },
+          {
+            k: 'Rendering',
+            v: 'Lit provides SSR tooling with server-specific authoring constraints.',
+          },
+          { k: 'DX', v: 'TypeScript, decorators, tagged-template rendering.' },
+          {
+            k: 'Lock-in',
+            v: 'Low — pure standards Web Components; no framework of its own.',
+          },
+        ],
+      },
+      {
+        label: 'Enhance',
+        artifact: false,
+        title: 'HTML-first Web Components fullstack',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'Custom Elements, file-based routes and server-side Custom Elements.',
+          },
+          {
+            k: 'Rendering',
+            v: 'SSR to Web Components, zero-JS by default, progressive enhancement.',
+          },
+          { k: 'DX', v: 'HTML-first, single-file components, minimal abstraction.' },
+          {
+            k: 'Lock-in',
+            v: 'Low — standards Web Components; Enhance adds helpers, not a runtime.',
+          },
+        ],
+      },
+      {
+        label: 'Stencil',
+        artifact: false,
+        title: 'Web Components compiler',
+        rows: [
+          {
+            k: 'Architecture',
+            v: 'Compiler that outputs standards Web Components; framework-agnostic output.',
+          },
+          {
+            k: 'Rendering',
+            v:
+              'Client Web Components with prerendering, lazy loading, internal virtual DOM.',
+          },
+          { k: 'DX', v: 'TSX, decorators, design-system oriented tooling.' },
+          {
+            k: 'Lock-in',
+            v: 'Output is lock-in-free Web Components; authoring uses the Stencil toolchain.',
+          },
+        ],
+      },
+      {
+        label: 'FAST / Web Awesome',
+        artifact: false,
+        title: 'Component systems',
+        rows: [
+          {
+            k: 'Architecture',
+            v:
+              'FAST provides Web Component authoring foundations; Web Awesome distributes a component library and design assets.',
+          },
+          {
+            k: 'Fit',
+            v:
+              'Choose either when your primary need is a component system. OpenElement does not replace an established design system and should be evaluated as an app framework around components.',
+          },
+        ],
+      },
+    ],
+    howToRead: {
+      title: 'How to read this',
+      items: [
+        {
+          term: 'Architecture',
+          body: ' — how routing, components, and the server are composed.',
+        },
+        {
+          term: 'Rendering',
+          body: ' — SSR/SSG/CSR defaults, hydration, and island strategy.',
+        },
+        { term: 'DX', body: ' — language, tooling, and learning curve.' },
+        {
+          term: 'Lock-in',
+          body:
+            ' — how tied you are to a proprietary runtime or platform versus open standards.',
+        },
+      ],
+    },
+    decision: {
+      title: 'Decision criteria',
+      items: [
+        {
+          lead: 'Choose',
+          name: 'openElement',
+          body:
+            'when Web Components are the public integration surface and SSR output should preserve browser-native component boundaries.',
+        },
+        {
+          lead: 'Choose',
+          name: 'Astro / Enhance / Lit / Stencil',
+          body:
+            'when a standards-first Web Components story matters and you want to avoid a heavy application runtime.',
+        },
+        {
+          lead: 'Choose',
+          name: 'Next.js / Nuxt / SvelteKit',
+          body:
+            'when your product is intentionally built around a React, Vue, or Svelte application model.',
+        },
+        {
+          lead: 'Choose',
+          name: 'Fresh',
+          body: 'when you want a Deno-native, near-zero-build Preact island experience.',
+        },
+        {
+          lead: 'Do not choose',
+          name: 'openElement',
+          body:
+            'when a mature ecosystem, a framework-specific UI runtime, or a ready-made enterprise design system is the main requirement. Alpha releases also require teams to validate the documented starter and deployment path themselves.',
+        },
+      ],
+    },
+    sources: {
+      title: 'Sources and review scope',
+      body:
+        'Reviewed 2026-07-11 against primary project documentation. This is a decision guide, not a benchmark or compatibility certification.',
+      links: [
+        { href: 'https://lit.dev/docs/', text: 'Lit documentation' },
+        { href: 'https://stenciljs.com/docs/introduction', text: 'Stencil documentation' },
+        {
+          href: 'https://www.fast.design/docs/fast-element/getting-started',
+          text: 'FAST documentation',
+        },
+        { href: 'https://enhance.dev/docs/', text: 'Enhance documentation' },
+        {
+          href: 'https://docs.astro.build/en/concepts/islands/',
+          text: 'Astro islands documentation',
+        },
+        { href: 'https://docs.deno.com/runtime/frameworks/fresh/', text: 'Fresh documentation' },
+        { href: 'https://webawesome.com/docs/', text: 'Web Awesome documentation' },
+      ],
+    },
+  },
+  zh: {
+    railItems:
+      '[{"id":"how-to-read","label":"如何阅读本页"},{"id":"decision-criteria","label":"决策标准"},{"id":"sources","label":"来源与评审范围"}]',
+    titleAccent: '对比主流框架',
+    subtitle:
+      '一份保守的产品方向对比。本页描述每个框架的优化目标，不编造 benchmark 数据。用它判断适配度，而不是给速度排名。',
+    panelLabel: '框架决策面',
+    panelMeta: '评审于 2026-07-11',
+    cards: [
+      {
+        label: 'openElement',
+        artifact: true,
+        title: 'WC 原生应用框架',
+        rows: [
+          {
+            k: '架构',
+            v:
+              'Custom Elements + Declarative Shadow DOM 是一等公民；标准 Custom Elements 即应用契约；App 掌管路由与渲染；Vite 和 Nitro 是官方构建路径。',
+          },
+          {
+            k: '渲染',
+            v:
+              '默认 SSG、默认 DSD/shadow、按需升级元素；无需交互时输出不含任何框架 JavaScript 的纯静态内容。',
+          },
+          {
+            k: 'DX',
+            v: 'JSX + Basic Element，defineElement / definePage / defineApp / buildApp。',
+          },
+          {
+            k: '适用',
+            v:
+              '当 Custom Elements 需要同时覆盖组件库与应用运行时的时候选它；当前范围是 static-first，而非通用全栈对齐。',
+          },
+        ],
+      },
+      {
+        label: 'Next.js',
+        artifact: false,
+        title: 'React 元框架',
+        rows: [
+          {
+            k: '架构',
+            v: '文件路由、React Server Components、app router、server action。',
+          },
+          {
+            k: '渲染',
+            v: 'SSR / SSG / ISR、RSC 流式渲染，client component 在客户端 hydration。',
+          },
+          { k: 'DX', v: 'React/JSX，生态庞大，在 Vercel 上是一等公民。' },
+          {
+            k: '锁定',
+            v: 'React 运行时加 Next.js 抽象；与 Vercel 平台亲和。',
+          },
+        ],
+      },
+      {
+        label: 'Nuxt',
+        artifact: false,
+        title: 'Vue 元框架',
+        rows: [
+          {
+            k: '架构',
+            v: '文件路由、Vue 单文件组件、Nitro 服务端引擎。',
+          },
+          { k: '渲染', v: 'SSR / SSG / ISR、混合渲染、客户端 hydration。' },
+          { k: 'DX', v: 'Vue SFC、自动导入、约定驱动。' },
+          { k: '锁定', v: 'Vue 运行时加 Nuxt 与 Nitro 约定。' },
+        ],
+      },
+      {
+        label: 'SvelteKit',
+        artifact: false,
+        title: 'Svelte 元框架',
+        rows: [
+          {
+            k: '架构',
+            v: '文件路由、Svelte 组件、Vite、基于 adapter 的部署。',
+          },
+          { k: '渲染', v: 'SSR / SSG / CSR、渐进 hydration、无虚拟 DOM。' },
+          { k: 'DX', v: 'Svelte 编译器、语法简洁、运行时小。' },
+          {
+            k: '锁定',
+            v: 'Svelte 编译器/运行时；部署 adapter 可替换（锁定程度低于 Next.js）。',
+          },
+        ],
+      },
+      {
+        label: 'Astro',
+        artifact: false,
+        title: 'Islands / 内容引擎',
+        rows: [
+          {
+            k: '架构',
+            v: '文件路由、多框架 island、内容集合。',
+          },
+          {
+            k: '渲染',
+            v: 'Static-first、island hydration、server island、View Transitions。',
+          },
+          {
+            k: 'DX',
+            v: '.astro 组件、框架无关的 island、Markdown/MDX。',
+          },
+          {
+            k: '锁定',
+            v: '低——island 可以用任何框架；有少量 Astro 特有的组件语法。',
+          },
+        ],
+      },
+      {
+        label: 'Fresh',
+        artifact: false,
+        title: 'Deno + Preact',
+        rows: [
+          {
+            k: '架构',
+            v: '文件路由、Preact island、Deno 原生、零构建步骤。',
+          },
+          {
+            k: '渲染',
+            v: 'SSR 加 Preact island；默认客户端 JavaScript 极少。',
+          },
+          { k: 'DX', v: 'Preact/TypeScript、Deno 运行时、无需配置 bundler。' },
+          { k: '锁定', v: 'Deno 运行时加 Preact；island 即 Preact 组件。' },
+        ],
+      },
+      {
+        label: 'Lit',
+        artifact: false,
+        title: 'Web Components 基座',
+        rows: [
+          {
+            k: '架构',
+            v:
+              '带响应式属性的 Custom Elements 基类；应用路由被刻意留在组件模型之外。',
+          },
+          {
+            k: '渲染',
+            v: 'Lit 提供 SSR 工具链，但有服务端特有的编写约束。',
+          },
+          { k: 'DX', v: 'TypeScript、decorator、tagged-template 渲染。' },
+          {
+            k: '锁定',
+            v: '低——纯标准 Web Components；自身不带框架。',
+          },
+        ],
+      },
+      {
+        label: 'Enhance',
+        artifact: false,
+        title: 'HTML-first 的 Web Components 全栈',
+        rows: [
+          {
+            k: '架构',
+            v: 'Custom Elements、文件路由与服务端 Custom Elements。',
+          },
+          {
+            k: '渲染',
+            v: 'SSR 输出 Web Components、默认零 JS、渐进增强。',
+          },
+          { k: 'DX', v: 'HTML-first、单文件组件、抽象极少。' },
+          {
+            k: '锁定',
+            v: '低——标准 Web Components；Enhance 只加 helper，不加运行时。',
+          },
+        ],
+      },
+      {
+        label: 'Stencil',
+        artifact: false,
+        title: 'Web Components 编译器',
+        rows: [
+          {
+            k: '架构',
+            v: '输出标准 Web Components 的编译器；产物框架无关。',
+          },
+          {
+            k: '渲染',
+            v: '客户端 Web Components，带预渲染、懒加载和内部虚拟 DOM。',
+          },
+          { k: 'DX', v: 'TSX、decorator、面向设计系统的工具链。' },
+          {
+            k: '锁定',
+            v: '产物是无锁定的 Web Components；编写时使用 Stencil 工具链。',
+          },
+        ],
+      },
+      {
+        label: 'FAST / Web Awesome',
+        artifact: false,
+        title: '组件体系',
+        rows: [
+          {
+            k: '架构',
+            v:
+              'FAST 提供 Web Component 编写基础设施；Web Awesome 分发组件库与设计资产。',
+          },
+          {
+            k: '适用',
+            v:
+              '当你的首要需求是组件体系时任选其一。openElement 并不替代成熟的设计系统，应作为围绕组件的应用框架来评估。',
+          },
+        ],
+      },
+    ],
+    howToRead: {
+      title: '如何阅读本页',
+      items: [
+        { term: '架构', body: '——路由、组件与服务端如何组合。' },
+        { term: '渲染', body: '——SSR/SSG/CSR 默认值、hydration 与 island 策略。' },
+        { term: 'DX', body: '——语言、工具链与学习曲线。' },
+        {
+          term: '锁定',
+          body: '——你与专有运行时或平台的绑定程度，对照开放标准。',
+        },
+      ],
+    },
+    decision: {
+      title: '决策标准',
+      items: [
+        {
+          lead: '选择',
+          name: 'openElement',
+          body:
+            '当 Web Components 是对外集成面，且 SSR 输出需要保留浏览器原生的组件边界时。',
+        },
+        {
+          lead: '选择',
+          name: 'Astro / Enhance / Lit / Stencil',
+          body: '当标准优先的 Web Components 方案很重要，且想避开沉重的应用运行时时。',
+        },
+        {
+          lead: '选择',
+          name: 'Next.js / Nuxt / SvelteKit',
+          body: '当你的产品明确围绕 React、Vue 或 Svelte 应用模型构建时。',
+        },
+        {
+          lead: '选择',
+          name: 'Fresh',
+          body: '当你想要 Deno 原生、近乎零构建的 Preact island 体验时。',
+        },
+        {
+          lead: '不要选择',
+          name: 'openElement',
+          body:
+            '当主要诉求是成熟生态、框架专属 UI 运行时或现成的企业级设计系统时。Alpha 版本还要求团队自行验证文档中的 starter 与部署路径。',
+        },
+      ],
+    },
+    sources: {
+      title: '来源与评审范围',
+      body:
+        '2026-07-11 依据各项目一手文档评审。这是一份决策指南，不是基准测试，也不是兼容性认证。',
+      links: [
+        { href: 'https://lit.dev/docs/', text: 'Lit 文档' },
+        { href: 'https://stenciljs.com/docs/introduction', text: 'Stencil 文档' },
+        {
+          href: 'https://www.fast.design/docs/fast-element/getting-started',
+          text: 'FAST 文档',
+        },
+        { href: 'https://enhance.dev/docs/', text: 'Enhance 文档' },
+        {
+          href: 'https://docs.astro.build/en/concepts/islands/',
+          text: 'Astro islands 文档',
+        },
+        { href: 'https://docs.deno.com/runtime/frameworks/fresh/', text: 'Fresh 文档' },
+        { href: 'https://webawesome.com/docs/', text: 'Web Awesome 文档' },
+      ],
+    },
+  },
+} as const;
+
 export default class ComparisonPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
+    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
     return (
       <open-reading-shell rail>
         <open-page-rail
           slot='rail'
-          items='[{"id":"how-to-read","label":"How to read this"},{"id":"decision-criteria","label":"Decision criteria"},{"id":"sources","label":"Sources and review scope"}]'
+          items={t.railItems}
         >
         </open-page-rail>
         <div class='container'>
           <h1 id='start'>
-            openElement<span class='title-accent'>vs Alternatives</span>
+            openElement<span class='title-accent'>{t.titleAccent}</span>
           </h1>
-          <p class='subtitle'>
-            A conservative comparison of product direction. This page describes what each framework
-            optimizes for; it does not invent benchmark claims. Use it to understand fit, not to
-            rank speed.
-          </p>
+          <p class='subtitle'>{t.subtitle}</p>
 
           <open-artifact-panel>
-            <span slot='label'>framework decision surface</span>
-            <span slot='meta'>reviewed 2026-07-11</span>
+            <span slot='label'>{t.panelLabel}</span>
+            <span slot='meta'>{t.panelMeta}</span>
             <div class='comparison-grid'>
-              <open-card variant='artifact'>
-                <span class='label'>openElement</span>
-                <h3>WC-native application framework</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  Custom Elements + Declarative Shadow DOM are first-class; standard Custom Elements
-                  remain the application contract; App owns routes and rendering; Vite and Nitro are
-                  the official build path.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSG by default, DSD/shadow default, selective element upgrades, and static output
-                  with no framework JavaScript when interaction is unnecessary.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span>{' '}
-                  JSX + Basic Element, defineElement / definePage / defineApp / buildApp.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Fit</span>{' '}
-                  Choose it when Custom Elements must span component libraries and application
-                  runtime; current scope is static-first, not general fullstack parity.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Next.js</span>
-                <h3>React meta-framework</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  File-based routing, React Server Components, app router, server actions.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSR / SSG / ISR, RSC streaming, client components hydrated on the client.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> React/JSX, large ecosystem, first-class on Vercel.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  React runtime plus Next.js abstractions; platform affinity with Vercel.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Nuxt</span>
-                <h3>Vue meta-framework</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  File routing, Vue Single-File Components, Nitro server engine.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSR / SSG / ISR, hybrid rendering, client hydration.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> Vue SFCs, auto-imports, convention-driven.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span> Vue runtime plus Nuxt and Nitro conventions.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>SvelteKit</span>
-                <h3>Svelte meta-framework</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  File routing, Svelte components, Vite, adapter-based deployment.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSR / SSG / CSR, progressive hydration, no virtual DOM.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> Svelte compiler, concise syntax, small runtime.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Svelte compiler/runtime; deploy adapters are swappable (lower lock-in than
-                  Next.js).
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Astro</span>
-                <h3>Islands / content engine</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  File routing, multi-framework islands, content collections.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  Static-first, island hydration, server islands, View Transitions.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span>{' '}
-                  .astro components, framework-agnostic islands, Markdown/MDX.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Low — islands can be any framework; some Astro-specific component syntax.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Fresh</span>
-                <h3>Deno + Preact</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  File routing, Preact islands, Deno-native, zero build step.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSR with Preact islands; minimal client JavaScript by default.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> Preact/TypeScript, Deno runtime, no bundler config.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Deno runtime plus Preact; islands are Preact components.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Lit</span>
-                <h3>Web Components base</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  Base class for Custom Elements with reactive properties; application routing is
-                  deliberately outside its component model.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  Lit provides SSR tooling with server-specific authoring constraints.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> TypeScript, decorators, tagged-template rendering.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Low — pure standards Web Components; no framework of its own.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Enhance</span>
-                <h3>HTML-first Web Components fullstack</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  Custom Elements, file-based routes and server-side Custom Elements.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  SSR to Web Components, zero-JS by default, progressive enhancement.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> HTML-first, single-file components, minimal abstraction.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Low — standards Web Components; Enhance adds helpers, not a runtime.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>Stencil</span>
-                <h3>Web Components compiler</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  Compiler that outputs standards Web Components; framework-agnostic output.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Rendering</span>{' '}
-                  Client Web Components with prerendering, lazy loading, internal virtual DOM.
-                </p>
-                <p class='dim'>
-                  <span class='k'>DX</span> TSX, decorators, design-system oriented tooling.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Lock-in</span>{' '}
-                  Output is lock-in-free Web Components; authoring uses the Stencil toolchain.
-                </p>
-              </open-card>
-
-              <open-card>
-                <span class='label'>FAST / Web Awesome</span>
-                <h3>Component systems</h3>
-                <p class='dim'>
-                  <span class='k'>Architecture</span>{' '}
-                  FAST provides Web Component authoring foundations; Web Awesome distributes a
-                  component library and design assets.
-                </p>
-                <p class='dim'>
-                  <span class='k'>Fit</span>{' '}
-                  Choose either when your primary need is a component system. OpenElement does not
-                  replace an established design system and should be evaluated as an app framework
-                  around components.
-                </p>
-              </open-card>
+              {t.cards.map((card) => (
+                <open-card {...(card.artifact ? { variant: 'artifact' } : {})}>
+                  <span class='label'>{card.label}</span>
+                  <h3>{card.title}</h3>
+                  {card.rows.map((row) => (
+                    <p class='dim'>
+                      <span class='k'>{row.k}</span> {row.v}
+                    </p>
+                  ))}
+                </open-card>
+              ))}
             </div>
           </open-artifact-panel>
 
-          <h2 id='how-to-read'>How to read this</h2>
+          <h2 id='how-to-read'>{t.howToRead.title}</h2>
           <ul>
-            <li>
-              <strong>Architecture</strong> — how routing, components, and the server are composed.
-            </li>
-            <li>
-              <strong>Rendering</strong> — SSR/SSG/CSR defaults, hydration, and island strategy.
-            </li>
-            <li>
-              <strong>DX</strong> — language, tooling, and learning curve.
-            </li>
-            <li>
-              <strong>Lock-in</strong>{' '}
-              — how tied you are to a proprietary runtime or platform versus open standards.
-            </li>
+            {t.howToRead.items.map((item) => (
+              <li>
+                <strong>{item.term}</strong>
+                {item.body}
+              </li>
+            ))}
           </ul>
 
-          <h2 id='decision-criteria'>Decision criteria</h2>
+          <h2 id='decision-criteria'>{t.decision.title}</h2>
           <ul>
-            <li>
-              Choose <strong>openElement</strong>{' '}
-              when Web Components are the public integration surface and SSR output should preserve
-              browser-native component boundaries.
-            </li>
-            <li>
-              Choose <strong>Astro / Enhance / Lit / Stencil</strong>{' '}
-              when a standards-first Web Components story matters and you want to avoid a heavy
-              application runtime.
-            </li>
-            <li>
-              Choose <strong>Next.js / Nuxt / SvelteKit</strong>{' '}
-              when your product is intentionally built around a React, Vue, or Svelte application
-              model.
-            </li>
-            <li>
-              Choose <strong>Fresh</strong>{' '}
-              when you want a Deno-native, near-zero-build Preact island experience.
-            </li>
-            <li>
-              Do not choose <strong>openElement</strong>{' '}
-              when a mature ecosystem, a framework-specific UI runtime, or a ready-made enterprise
-              design system is the main requirement. Alpha releases also require teams to validate
-              the documented starter and deployment path themselves.
-            </li>
+            {t.decision.items.map((item) => (
+              <li>
+                {item.lead} <strong>{item.name}</strong> {item.body}
+              </li>
+            ))}
           </ul>
 
-          <h2 id='sources'>Sources and review scope</h2>
-          <p>
-            Reviewed 2026-07-11 against primary project documentation. This is a decision guide, not
-            a benchmark or compatibility certification.
-          </p>
+          <h2 id='sources'>{t.sources.title}</h2>
+          <p>{t.sources.body}</p>
           <ul>
-            <li>
-              <a href='https://lit.dev/docs/'>Lit documentation</a>
-            </li>
-            <li>
-              <a href='https://stenciljs.com/docs/introduction'>Stencil documentation</a>
-            </li>
-            <li>
-              <a href='https://www.fast.design/docs/fast-element/getting-started'>
-                FAST documentation
-              </a>
-            </li>
-            <li>
-              <a href='https://enhance.dev/docs/'>Enhance documentation</a>
-            </li>
-            <li>
-              <a href='https://docs.astro.build/en/concepts/islands/'>
-                Astro islands documentation
-              </a>
-            </li>
-            <li>
-              <a href='https://docs.deno.com/runtime/frameworks/fresh/'>Fresh documentation</a>
-            </li>
-            <li>
-              <a href='https://webawesome.com/docs/'>Web Awesome documentation</a>
-            </li>
+            {t.sources.links.map((link) => (
+              <li>
+                <a href={link.href}>{link.text}</a>
+              </li>
+            ))}
           </ul>
         </div>
       </open-reading-shell>

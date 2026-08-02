@@ -82,151 +82,240 @@ routeSheet.replaceSync(`
   }
 `);
 
+type Locale = 'en' | 'zh';
+
 type ApiPackage = {
   id: string;
   name: string;
-  copy: string;
+  copy: Record<Locale, string>;
   importPath: string;
   exports: string[];
-  notes: string[];
+  notes: Record<Locale, string[]>;
   kind: 'core' | 'build' | 'optional';
 };
 
-const kindLabels = { core: 'CORE', build: 'BUILD', optional: 'OPTIONAL' } as const;
+const kindLabels = {
+  en: { core: 'CORE', build: 'BUILD', optional: 'OPTIONAL' },
+  zh: { core: '核心', build: '构建', optional: '可选' },
+} as const;
 
 const packages: ApiPackage[] = [
   {
     id: 'element',
     name: 'element',
-    copy:
-      'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
+    copy: {
+      en: 'The supported Custom Element authoring surface for JSX, DSD, hydration, signals and styles.',
+      zh: '受支持的 Custom Element 创作面，覆盖 JSX、DSD、hydration、signals 与样式。',
+    },
     importPath: '@openelement/element',
     exports: ['root', 'jsx-runtime', 'jsx-dev-runtime', 'build-utils'],
-    notes: [
-      'Start here for standalone element authoring.',
-      'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
-    ],
+    notes: {
+      en: [
+        'Start here for standalone element authoring.',
+        'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
+      ],
+      zh: [
+        '独立的元素创作从这里开始。',
+        '直接使用 `defineElement`、`OpenElement`、`StyleSheet` 与 signal 辅助函数，无需引入 renderer 内部实现。',
+      ],
+    },
     kind: 'core',
   },
   {
     id: 'app',
     name: 'app',
-    copy: 'The application surface for pages, routes, islands and request/render semantics.',
+    copy: {
+      en: 'The application surface for pages, routes, islands and request/render semantics.',
+      zh: '面向页面、路由、island 与请求/渲染语义的应用创作面。',
+    },
     importPath: '@openelement/app',
     exports: ['root', 'model', 'spa', 'i18n', 'preact'],
-    notes: [
-      'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
-      'The router and request-driver implementation are internal product knowledge.',
-    ],
+    notes: {
+      en: [
+        'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
+        'The router and request-driver implementation are internal product knowledge.',
+      ],
+      zh: [
+        '用 `definePage`、`defineIsland` 与 `defineApp` 进行应用创作。',
+        'router 与请求驱动的实现属于产品内部知识。',
+      ],
+    },
     kind: 'core',
   },
   {
     id: 'adapter-vite',
     name: 'adapter-vite',
-    copy: 'The official Vite, content, static-build and Nitro output adapter.',
+    copy: {
+      en: 'The official Vite, content, static-build and Nitro output adapter.',
+      zh: '官方的 Vite、内容、静态构建与 Nitro 输出 adapter。',
+    },
     importPath: '@openelement/adapter-vite',
     exports: ['root', 'nitro-mount', 'cli/build', 'cli/start', 'cli/preview', 'sitemap'],
-    notes: [
-      'Use `buildApp()` or the generated build task.',
-      'Plugin ordering, manifests and content scans are adapter implementation details.',
-    ],
+    notes: {
+      en: [
+        'Use `buildApp()` or the generated build task.',
+        'Plugin ordering, manifests and content scans are adapter implementation details.',
+      ],
+      zh: [
+        '使用 `buildApp()` 或生成的构建任务。',
+        '插件顺序、manifest 与内容扫描属于 adapter 的实现细节。',
+      ],
+    },
     kind: 'build',
   },
   {
     id: 'create',
     name: 'create',
-    copy: 'The installed starter and zero-context consumer entrypoint.',
+    copy: {
+      en: 'The installed starter and zero-context consumer entrypoint.',
+      zh: '安装即用的 starter，零上下文的使用者入口。',
+    },
     importPath: 'npm:@openelement/create',
     exports: ['root', 'CLI only'],
-    notes: [
-      'Generated projects expose `dev`, `check`, `test`, `build` and `preview`.',
-      'The starter imports product packages only.',
-    ],
+    notes: {
+      en: [
+        'Generated projects expose `dev`, `check`, `test`, `build` and `preview`.',
+        'The starter imports product packages only.',
+      ],
+      zh: [
+        '生成的项目暴露 `dev`、`check`、`test`、`build` 与 `preview`。',
+        'starter 只导入产品包。',
+      ],
+    },
     kind: 'build',
   },
   {
     id: 'ui',
     name: 'ui',
-    copy: 'Optional primitives retained only when they have demonstrated reusable behavior.',
+    copy: {
+      en: 'Optional primitives retained only when they have demonstrated reusable behavior.',
+      zh: '可选原语，仅在已证明行为可复用时保留。',
+    },
     importPath: '@openelement/ui',
     exports: ['root', 'retained primitive subpaths'],
-    notes: [
-      'UI is not required to use OpenElement.',
-      'Website-specific brand, hero, lab and layout artifacts are not UI package contracts.',
-    ],
+    notes: {
+      en: [
+        'UI is not required to use OpenElement.',
+        'Website-specific brand, hero, lab and layout artifacts are not UI package contracts.',
+      ],
+      zh: [
+        '使用 OpenElement 不依赖 UI 包。',
+        '网站特有的品牌、hero、lab 与布局工件不属于 UI 包的契约。',
+      ],
+    },
     kind: 'optional',
   },
 ];
 
+const content = {
+  en: {
+    eyebrow: 'API Reference — surface registry',
+    title: 'FIVE-PACKAGE',
+    titleAccent: 'surface.',
+    lede: (v: string) =>
+      `The ${v} current line documents only the five consumer packages. Retired alpha packages and internal subpaths are not authoring surfaces.`,
+    artifactLabel: 'five-package surface',
+    artifactCopy:
+      'Element, App and Build interfaces stay small so authors do not need renderer, protocol, router or build-phase internals.',
+    startBuilding: 'Start building',
+    s1Index: '01 / interface rule',
+    s1Title: 'Authoring starts at product packages.',
+    s1Copy:
+      'Current documentation, starters and dogfood use the five supported interfaces. Load, action, form and revalidation capabilities ship with the 0.42 alpha line (unfrozen; ADR-0122 freeze proposed) — session, cache and streaming remain 0.43/0.44 roadmap work.',
+    s2Index: '02 / supported surface',
+    s2Title: 'Five products, one application path.',
+    s2Copy:
+      'Each package owns a distinct consumer decision; absorbed implementation packages remain private.',
+    headPackage: 'Package',
+    headSubpaths: 'Supported subpaths',
+    headKind: 'Kind',
+    footnote: (v: string) =>
+      `※ Internal subpaths (adapter-vite build pipeline, element hydration modules) stay importable for tooling but carry no compatibility promise. The public type surface is explicit — no export-star seams on the ${v} line.`,
+    footnoteCheckPre: "Machine-checked against each package's exports map by ",
+    footnoteCheckPost: '.',
+  },
+  zh: {
+    eyebrow: 'API 参考 —— 产品面注册表',
+    title: '五包',
+    titleAccent: '产品面。',
+    lede: (v: string) =>
+      `${v} 当前线只记录五个面向使用者的包。已退役的 alpha 包与内部子路径都不是创作面。`,
+    artifactLabel: '五包产品面',
+    artifactCopy:
+      'Element、App 与 Build 的接口保持小巧，作者无需了解 renderer、protocol、router 或构建阶段的内部实现。',
+    startBuilding: '开始构建',
+    s1Index: '01 / 接口规则',
+    s1Title: '创作从产品包开始。',
+    s1Copy:
+      '当前文档、starter 与 dogfood 都使用这五个受支持的接口。Load、action、表单与 revalidation 能力随 0.42 alpha 线发布（未冻结；ADR-0122 已提议冻结）——session、cache 与 streaming 仍是 0.43/0.44 的 roadmap 工作。',
+    s2Index: '02 / 受支持的产品面',
+    s2Title: '五个产品，一条应用路径。',
+    s2Copy: '每个包对应一个明确的使用者决策；被吸收的实现包保持私有。',
+    headPackage: '包',
+    headSubpaths: '受支持的子路径',
+    headKind: '类别',
+    footnote: (v: string) =>
+      `※ 内部子路径（adapter-vite 构建管线、element hydration 模块）仍可被工具导入，但不携带兼容性承诺。公开类型面是显式的——${v} 线上没有 export-star 缝隙。`,
+    footnoteCheckPre: '由 ',
+    footnoteCheckPost: ' 对照每个包的 exports map 做机器校验。',
+  },
+} as const;
+
 export class ApiCorePage extends OpenElement {
   static override styles = [routeSheet];
   override render() {
+    const locale: Locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const t = content[locale];
+    const kinds = kindLabels[locale];
     return (
       <main>
         <open-page-hero variant='technical'>
-          <span slot='eyebrow'>API Reference — surface registry</span>
-          <span slot='title'>FIVE-PACKAGE</span>
-          <span slot='title-accent'>surface.</span>
-          <span slot='lede'>
-            The {OPENELEMENT_VERSION}{' '}
-            current line documents only the five consumer packages. Retired alpha packages and
-            internal subpaths are not authoring surfaces.
-          </span>
+          <span slot='eyebrow'>{t.eyebrow}</span>
+          <span slot='title'>{t.title}</span>
+          <span slot='title-accent'>{t.titleAccent}</span>
+          <span slot='lede'>{t.lede(OPENELEMENT_VERSION)}</span>
           <open-artifact-panel slot='artifact'>
-            <span slot='label'>five-package surface</span>
+            <span slot='label'>{t.artifactLabel}</span>
             <span slot='meta'>{OPENELEMENT_VERSION}</span>
-            <p>
-              Element, App and Build interfaces stay small so authors do not need renderer,
-              protocol, router or build-phase internals.
-            </p>
-            <open-button href='/guide/getting-started'>Start building</open-button>
+            <p>{t.artifactCopy}</p>
+            <open-button href='/guide/getting-started'>{t.startBuilding}</open-button>
           </open-artifact-panel>
         </open-page-hero>
         <open-section-frame>
-          <span slot='index'>01 / interface rule</span>
-          <span slot='title'>Authoring starts at product packages.</span>
-          <span slot='copy'>
-            Current documentation, starters and dogfood use the five supported interfaces. Future
-            load, action, form and revalidation capabilities are roadmap work, not current stable
-            claims.
-          </span>
+          <span slot='index'>{t.s1Index}</span>
+          <span slot='title'>{t.s1Title}</span>
+          <span slot='copy'>{t.s1Copy}</span>
         </open-section-frame>
         <open-section-frame>
-          <span slot='index'>02 / supported surface</span>
-          <span slot='title'>Five products, one application path.</span>
-          <span slot='copy'>
-            Each package owns a distinct consumer decision; absorbed implementation packages remain
-            private.
-          </span>
+          <span slot='index'>{t.s2Index}</span>
+          <span slot='title'>{t.s2Title}</span>
+          <span slot='copy'>{t.s2Copy}</span>
           <div class='registry'>
             <div class='registry-head' aria-hidden='true'>
-              <span>Package</span>
-              <span>Supported subpaths</span>
-              <span>Kind</span>
+              <span>{t.headPackage}</span>
+              <span>{t.headSubpaths}</span>
+              <span>{t.headKind}</span>
             </div>
             {packages.map((pkg) => (
               <div class='pkg-row' id={pkg.id} data-kind={pkg.kind}>
                 <div>
                   <span class='pkg-name'>{pkg.name}</span>
                   <span class='pkg-path'>{pkg.importPath}</span>
-                  <p class='pkg-copy'>{pkg.copy}</p>
-                  {pkg.notes.map((note) => <span class='pkg-note' key={note}>{note}</span>)}
+                  <p class='pkg-copy'>{pkg.copy[locale]}</p>
+                  {pkg.notes[locale].map((note) => <span class='pkg-note' key={note}>{note}</span>)}
                 </div>
                 <div class='pkg-chips'>
                   {pkg.exports.map((entry) => <span class='chip' key={entry}>{entry}</span>)}
                 </div>
-                <span class={`kind kind-${pkg.kind}`}>{kindLabels[pkg.kind]}</span>
+                <span class={`kind kind-${pkg.kind}`}>{kinds[pkg.kind]}</span>
               </div>
             ))}
             <footer class='footnote'>
+              <p>{t.footnote(OPENELEMENT_VERSION)}</p>
               <p>
-                ※ Internal subpaths (adapter-vite build pipeline, element hydration modules) stay
-                importable for tooling but carry no compatibility promise. The public type surface
-                is explicit — no export-star seams on the {OPENELEMENT_VERSION} line.
-              </p>
-              <p>
-                Machine-checked against each package's exports map by{' '}
-                <code>deno task package-surface:check</code>.
+                {t.footnoteCheckPre}
+                <code>deno task package-surface:check</code>
+                {t.footnoteCheckPost}
               </p>
             </footer>
           </div>

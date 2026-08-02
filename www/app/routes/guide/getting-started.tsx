@@ -18,12 +18,13 @@ const content: Record<'en' | 'zh', GuideContent> = {
     next: { href: '/guide/core-concepts', label: 'Core Concepts' },
     subtitleBefore: 'The current source line is',
     subtitleAfter:
-      'The five-package convergence is published; the stable 0.41.0 freeze plan is active under ADR-0119.',
+      'The published npm line is the same 0.42 alpha track; 0.41.x stable already shipped under the ADR-0119 freeze, and the 0.42.0 freeze proposal is ADR-0122 (PROPOSED).',
     cards: [
       {
         id: 'install',
         title: 'Install',
-        body: 'Use the npm-first create surface and Deno tasks for local development.',
+        body:
+          'Three commands to a running app: deno run -A npm:@openelement/create my-app, then cd my-app, then deno task dev.',
       },
       {
         id: 'explore',
@@ -48,13 +49,15 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'build', label: '构建', level: 3 },
     ],
     next: { href: '/guide/core-concepts', label: '核心概念' },
-    subtitleBefore: '当前发布的包线为',
-    subtitleAfter: 'five-package convergence 已发布；0.41.0 stable 冻结计划已在 ADR-0119 下启动。',
+    subtitleBefore: '当前源码线为',
+    subtitleAfter:
+      'npm 发布线同属 0.42 alpha 轨；0.41.x stable 已在 ADR-0119 冻结下发布，0.42.0 冻结提案为 ADR-0122（PROPOSED）。',
     cards: [
       {
         id: 'install',
         title: '安装',
-        body: '使用 npm-first 的 create 入口与 Deno tasks 进行本地开发。',
+        body:
+          '三条命令跑起应用：deno run -A npm:@openelement/create my-app，然后 cd my-app，再 deno task dev。',
       },
       {
         id: 'explore',

@@ -1,5 +1,5 @@
 ---
-title: 'The 0.42 architecture: an onion, two bloodlines, and a morph'
+title: '为什么是 0.42 这个样子：一个 WC 全栈框架的目标、参照与取舍'
 date: '2026-08-02'
 type: 'dispatch'
 tags: ['architecture', 'decision', 'release-truth']
@@ -7,101 +7,58 @@ draft: false
 hidden: false
 ---
 
-With the 0.42 line at alpha.12, the WC light-fullstack surface is complete
-enough to explain as one coherent design instead of a changelog. This post
-is that explanation: the three decisions that define 0.42, why we made
-them, and what they cost.
+每隔几年，前端就要换一轮框架，而上一轮写的组件跟着陪葬。0.42 立项时我们想回答的不是「怎么再造一个 Next」，而是一个更朴素的问题：**能不能造一个全栈框架，让组件沉淀在浏览器标准上，让页面协议轻到可以被证明？** 这篇文章讲这个目标如何从一连串参照与拒绝中长出现在的形状。
 
-## Decision 1: the stack is an onion
+## 总体目标
 
-OpenElement is five packages, but architecturally it is three shells:
+三件事，按优先级排。
 
-- **`element`** — the component model: Web Components + JSX + signals +
-  Declarative Shadow DOM + real DOM. No virtual DOM anywhere.
-- **`app`** — the page/data protocol: routes, loaders, actions, the
-  fail/redirect error algebra.
-- **`adapter-vite`** — the build/deploy shell: SSG, code generation, the
-  enhancement client, Nitro output, the CLI.
+第一，**组件必须是 Web Components**。不是编译目标，不是互操作层，是组件本身就是自定义元素——标准不过期、框架死了组件还在、任何宿主页都能直接用。这一条是不可谈判的，它是整个项目存在的理由。
 
-Dependencies point strictly inward: `element` knows nothing of `app`, and
-`app` knows nothing of the adapter. You can use the component model alone
-(it is a published package), and you can swap the build shell without
-touching a component.
+第二，**页面协议要轻到可证伪**。「支持 SSR」「支持渐进增强」这类话在任何框架的官网都能找到，且都无法验证。我们要的是每一条协议承诺都附带一个能跑给你看的证明——最好是 `javaScriptEnabled: false` 也能走通的那种。
 
-What makes the onion load-bearing is the material of its seams. The page
-layer composes components through **W3C standards only** — tag names,
-attributes, and DSD. Not through any framework-private component API. That
-is why a third-party Web Component off npm works as a page component with
-zero adapters, and why it survives page updates intact. The shell speaks
-the language every component already knows.
+第三，**先赢一个滩头，而不是宣称一个帝国**。内容站加轻交互（文档、博客、营销页、几个表单）是真实且庞大的需求，但今天服务它的工具要么太老（纯 SSG，没有服务端能力），要么太重（为 todo list 付出应用框架的全部复杂度）。这个空隙就是 0.42 的目标场景，我们给它起的名字叫 light fullstack。
 
-## Decision 2: two update mechanisms, each in its own shell
+## 参照一：React / RSC 路线——最成熟，所以最先被拒绝
 
-The question we get most: "you have signals — why not let signals drive
-the whole page?" Because state ownership differs by layer, and the update
-mechanism should follow ownership.
+把 vdom、hydration、客户端数据层、RSC 搬过来，是人才储备和生态上最舒服的选择。但它的组件模型是框架私有的：vdom 是内部表示，浏览器永远不认识你的组件，认识的是框架运行时替你操作的结果。走这条路，Web Components 会退化成「可选的编译输出格式」——那直接违背总体目标第一条。这不是技术判断，是目标判断：**我们要的是组件活在标准里，不是活在某个运行时里。**
 
-**Inside a component, the component owns the state.** Open/closed,
-draft text, playback position — this state is born in the browser and dies
-there. Fine-grained signals are the perfect tool: `signal`/`computed`/
-`effect` with `data-signal` bindings update exactly the DOM nodes that
-depend on them. This layer is philosophically SolidJS-shaped: JSX, real
-DOM, no vdom, surgical updates.
+## 参照二：Astro / Fresh——方向最近，所以只抄了一半
 
-**Across a page, the server owns the state.** Loader data comes from a
-database the browser cannot see. If the client held a reactive copy, we
-would owe you a cache, an invalidation policy, optimistic updates, race
-handling — an entire client data layer, plus a whole category of
-staleness bugs. So the page layer refuses to hold one. When an action
-completes, the server re-runs the loader and re-renders the page; the
-client's enhancement script **morphs** the returned HTML into the live
-tree, aligning elements by `id` and touching only what changed. Islands
-that were not touched keep their signal state, their scroll, their focus.
+静态优先、岛屿架构、服务端端点——这个方向和我们想要的几乎完全重合，0.42 的应用壳（app + adapter-vite）坦然承认欠它们的债。但有两样东西不能抄：Astro 的岛屿是 React/Vue/Svelte 组件，hydration 要在浏览器里重新执行整棵组件树；Fresh 的岛屿是 Preact，同样如此。我们要的岛屿是 WC，SSR 输出就是标准 DSD——浏览器原生解析 shadow tree，hydration 只是把 signal 绑定「接上」已有的 DOM，而不是把组件「重跑」一遍。所以是**取其形（静态优先 + 岛屿 + 端点），换其核（WC + DSD 原生）**。
 
-Two mechanisms, yes — but each is small because each only covers what it
-owns. The alternative is one mechanism that must cover everything, and
-"signals everywhere" is not smaller: it is a full client data layer, and
-it kills the property below.
+## 参照三：SolidJS——最心动的一集，也是我们自己反复争吵的一集
 
-## Decision 3: the no-JavaScript baseline is a hard requirement
+既然 element 有 signals，为什么不干脆让 signal 驱动整个页面、做 real DOM 的节点级更新？JSX + signals + 无 vdom，这不就是 SolidJS 吗，一套机制，多优雅。这个方案在内部被认真推进过，最后被三个论证否决。
 
-Every page path must work with JavaScript disabled — not as a slogan, as
-a test. The e2e suite runs the full load → DSD render → form → action →
-error/redirect → revalidation loop with `javaScriptEnabled: false`, in
-three browser engines. This is the decision that constrains all the
-others, and the reason the page layer cannot be signal-driven: if page
-updates required evaluating a signal graph, the baseline would die.
+**状态所有权。** 组件内部的状态（开关、草稿、播放进度）生在浏览器、死在浏览器，signal 管它是完美的。但页面级的数据，主人是服务端——loader 的数据在浏览器看不见的数据库里。让 signal 管页面，客户端就必须持有服务端数据的副本；而一旦有了副本，你就欠下缓存、失效策略、乐观更新与回滚、并发竞态、前进后退的状态恢复——「一套机制」是个幻觉，那套机制的名字叫客户端数据层，React 生态一半的复杂度住在里面。
 
-The upside is that progressive enhancement stops being a promise and
-becomes a construction. Without JS, a form is a native POST with a 303
-redirect — 1995, but it always works. With JS, the same form is a fetch
-plus a morph — same response, smarter landing. There is no second code
-path to keep honest, because the protocol is defined by the native path
-and the enhanced path merely negotiates a better encoding of it.
+**总体目标第二条。** 页面更新如果依赖 signal 求值，无 JS 时页面就是死的，「可证伪的渐进增强」从根上就不成立。
 
-A bonus constraint we did not expect to love: because the morph client
-aligns DOM by `id` and understands DSD templates, it treats a hand-written
-custom element and an element-authored component identically. The
-component-model-agnostic seam from Decision 1 holds under updates, not
-just at first render.
+**缝的材质。** 这一点最隐蔽也最致命：如果页面级更新说 signal 的方言，那么页面里每个组件都必须会 signal——第三方 WC（不带 signal、不用我们 JSX 的那些）立刻出局。而「任何 WC 都能当页面组件」恰恰是洋葱缝上最值钱的性质。
 
-## What 0.42 deliberately is not
+所以 signal 的疆域被刻意限定在组件内部——在那里它是全胜的。页面数据的更新交给了另一个血统的答案。
 
-Recorded here so the marketing never drifts ahead of the code: 0.42 has
-**no framework sessions or flash, no cache/ISR, no streaming SSR, no
-performance SLOs**. `renderIntent.revalidate` is forward-compat manifest
-data, inert by design. Signed-in apps are supported today through the
-better-auth recipe; framework-level session primitives are 0.44 scope.
-These are the TP-6 freeze boundaries, written down in ADR-0122, and they
-are what "light" means in "light fullstack".
+## 参照四：htmx / Turbo / LiveView——页面更新的答案在这里，但零件要自研
 
-## The honest scorecard
+「HTML-over-the-wire」这一脉的核心洞察是：**服务器永远渲染完整 HTML，客户端只负责聪明地落地**。不需要客户端数据层，因为客户端从不持有数据。这条血脉从 morphdom 流经 idiomorph 流到 Turbo 的 morphing，思想直接可用——但零件一个都不能用，因为现成实现都不认识 shadow root，而我们的页面内容恰恰住在 DSD 的 shadow tree 里。所以 morph 客户端是自研的：按 `id` 对齐新旧两棵 DOM 树，下降进 shadow root，把 `<template shadowrootmode>` 当作传入的 shadow 内容，未被触及的岛屿连滚动位置都不动。它是 0.42 里最特别的零件，也是让「缝」在更新时依然成立的东西——它只认 DOM 和 id，不认任何组件的内部机制。
 
-Six full-spectrum audits later (issues #539–#852, all closed), every
-ADR-0120 protocol rule has a mechanical gate or a contract test — none
-rests on prose. The CSRF floor has real deny/allow e2e. The static 0.41.x
-line upgrades with zero changes. What we do not have yet is the only
-evidence that cannot be manufactured in-repo: an external user. If this
-architecture sounds like your next site — content-heavy, a few forms,
-standards you can keep — the alpha line is on npm under the `alpha`
-dist-tag, and the onboarding gap report we want most is yours.
+顺带一提 Qwik 的 resumability：那是「signal 管全部」路线里做得最极致的，代价是复杂度全部转移到了序列化协议上，而且同样解决不了 DSD 场景。我们判断那条路的复杂度预算比 morph 高一个数量级。
+
+## 参照五：Lit / Enhance——血缘最近的两家，各自缺一半
+
+Lit 证明了 WC 组件模型有人要，但它是组件库，SSR 靠实验性外挂，页面层不存在。Enhance 的哲学几乎和我们一样——WC SSR + 渐进增强 + 标准优先——但它的组件 authoring 不是 JSX + signals，也没有把「静态冻结线 + 零成本升级」做成一等契约的纪律。我们的赌注就是这个交集存在且空着：Astro 验证过的市场，Lit 验证过的组件模型，加上一层 Remix/htmx 血统的表单协议，用 DSD 原生和可证伪性做差异化。
+
+## 目标如何长出形状
+
+把总体目标和这些取舍放在一起，架构几乎是必然的结果：
+
+组件模型和页面协议必须分层，因为它们变化的原因不同（交互复杂度 vs 数据与部署），于是有了洋葱——`element` 不知道 `app` 存在，`app` 不知道 `adapter-vite` 存在。层间必须说所有组件都懂的普通话，于是缝是 W3C 标准而不是私有 API。页面数据的真理必须在服务端，于是 signal 守组件内、morph 管页面级。承诺必须可证伪，于是无 JS 基线是硬要求，每条协议规则必须挂在机器门禁上——这条规矩的来源并不光彩：alpha.3 的 morph 增强从来没工作过，当时的测试一直在无意识地测量无 JS 兜底路径，两轮审计才挖出来。从那以后，「任何协议规则不得只靠文字存在」成了这个仓库的第一纪律。
+
+## 代价与边界
+
+这套形状是有明确价格的：高频实时数据（行情、协作、聊天）不是它的菜，那种场景请用岛内 signal + WebSocket 这条逃逸舱；页面很大而改动很小时，整页 HTML 过线是一笔带宽税，这是 htmx 路线共同的税。0.42 也刻意没有 session/flash、cache/ISR、streaming、性能 SLO——登录应用今天走 better-auth recipe，框架级原语是 0.44 的事。「light」的含义就是这个冻结边界（ADR-0122）：不是做不到，是在地基被门禁证明之前，不许往上盖。
+
+## 记分牌，以及目标还没完成的部分
+
+六轮全仓审计、850+ 个 issue 全部关闭之后：每条协议规则有机器证明，CSRF 地板有真 deny/allow e2e，0.41.x 静态项目升级零改动。但总体目标其实只完成了前两件半——组件在标准上了，协议可证伪了，滩头打赢没有还无法知道，因为**唯一造不出来的证据是一个外部用户**。如果这个框架听起来像你的下一个站，alpha 线在 npm 的 `alpha` dist-tag 上。我们最想读到的报告，是你上手时卡住的那个瞬间。

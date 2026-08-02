@@ -213,46 +213,77 @@ pageSheet.replaceSync(`
 const entrances = [
   [
     '01',
-    'Get started',
-    'Zero to a running application in three commands.',
+    { en: 'Get started', zh: '快速开始' },
+    { en: 'Zero to a running application in three commands.', zh: '三条命令，从零到可运行的应用。' },
     '/guide/getting-started',
   ],
-  ['02', 'API reference', 'The five-package surface, export by export.', '/apilist'],
+  [
+    '02',
+    { en: 'API reference', zh: 'API 参考' },
+    { en: 'The five-package surface, export by export.', zh: '五个包的接口面，逐个 export 列出。' },
+    '/apilist',
+  ],
   [
     '03',
-    'Architecture',
-    'Who owns what, and why the boundaries hold.',
+    { en: 'Architecture', zh: '架构' },
+    { en: 'Who owns what, and why the boundaries hold.', zh: '谁负责什么，以及边界为何成立。' },
     '/architecture/architecture',
   ],
-  ['04', 'Roadmap', 'Where the stable line goes next.', '/roadmap'],
+  [
+    '04',
+    { en: 'Roadmap', zh: '路线图' },
+    { en: 'Where the stable line goes next.', zh: 'stable 线的下一步走向。' },
+    '/roadmap',
+  ],
 ] as const;
+
+const content = {
+  en: {
+    sidenote: 'Spec-042 · Docs index',
+    eyebrow: 'Docs — The manual',
+    serifLine: 'Read the',
+    monoLine: 'MANUAL.',
+    lede: 'Four entrances. Everything else is a footnote.',
+    navLabel: 'Documentation entrances',
+  },
+  zh: {
+    sidenote: 'Spec-042 · 文档索引',
+    eyebrow: 'Docs — 手册',
+    serifLine: '通读',
+    monoLine: '手册。',
+    lede: '四个入口。其余皆是注脚。',
+    navLabel: '文档入口',
+  },
+} as const;
 
 export class DocsPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
+    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const t = content[locale];
     return (
       <main class='manual'>
         <header class='masthead'>
-          <span class='sidenote' aria-hidden='true'>Spec-041 · Docs index</span>
+          <span class='sidenote' aria-hidden='true'>{t.sidenote}</span>
           <div class='masthead-top'>
-            <p class='eyebrow'>Docs — The manual</p>
+            <p class='eyebrow'>{t.eyebrow}</p>
             <span class='stamp'>{OPENELEMENT_VERSION}</span>
           </div>
           <h1>
-            <span class='serif-line'>Read the</span>
-            <span class='mono-line'>MANUAL.</span>
+            <span class='serif-line'>{t.serifLine}</span>
+            <span class='mono-line'>{t.monoLine}</span>
           </h1>
-          <p class='lede'>Four entrances. Everything else is a footnote.</p>
+          <p class='lede'>{t.lede}</p>
         </header>
 
-        <nav class='entrances' aria-label='Documentation entrances'>
+        <nav class='entrances' aria-label={t.navLabel}>
           {entrances.map(([index, title, copy, href]) => (
             <a class='entrance' href={href}>
               <span class='entrance-index' aria-hidden='true'>{index}</span>
               <div>
-                <span class='entrance-title'>{title}</span>
-                <p class='entrance-copy'>{copy}</p>
+                <span class='entrance-title'>{title[locale]}</span>
+                <p class='entrance-copy'>{copy[locale]}</p>
               </div>
               <span class='entrance-arrow' aria-hidden='true'>→</span>
             </a>
