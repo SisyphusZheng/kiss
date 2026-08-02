@@ -15,7 +15,7 @@ on Chromium and the DSD/island-hydration/theme smoke subset
 default build emits no inline DSD fallback, so a strict CSP does not need
 `unsafe-inline` for DSD.
 
-Projects that intentionally support browsers outside this baseline may opt in
-to `legacyDsdPolyfill`. That fallback injects an inline script and therefore
-requires an explicit compatible CSP policy; it is not supported by the default
-security contract.
+There is no framework DSD polyfill: browsers without native `shadowrootmode`
+support are outside the supported baseline, and OpenElement host components
+fall back to their light-DOM/hydration paths only where the component itself
+provides one.

@@ -2,8 +2,8 @@
 
 > Current source package line: `v0.42.0-alpha.11`\
 > Current npm registry line: `v0.42.0-alpha.11` (published 2026-08-01, dist-tag `alpha`)\
-> Next alpha train: `v0.42.0-alpha.10` (post-TP-5.7 remediation — shipped; next is TP-6)\
-> Active release target: `v0.42.0-alpha.10`\
+> Next alpha train: `v0.42.0-alpha.11` (round-5 audit remediation — in flight; next is TP-6)\
+> Active release target: `v0.42.0-alpha.11`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Current maturity stage: stable (0.41.x line); 0.42.0 planned under ADR-0120

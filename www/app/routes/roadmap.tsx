@@ -333,9 +333,9 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     version: 'v0.42.0-alpha.11',
-    theme: 'release-chain integrity sweep',
+    theme: 'round-5 audit remediation',
     copy:
-      'The stabilization train closes eight audit findings (#646–#653): the autoflow3 evidence chain gains a version-hole guard and failed-evidence persistence, ISR is honestly demoted to @experimental with a documented KV adapter path, silent empty catches gain dev logging, and the changelog backfills a skipped prerelease version hole.',
+      'The fifth full-spectrum audit closes 56 issues (#753–#808): JSX ref callbacks are honored, Array/Object props JSON-sync across SSR and CSR, island config scanning goes fail-closed, head-injection URL validation strips tab/newline bypasses, desktop examples bind loopback, and the site-ui lab components actually render.',
     state: 'stable',
     stamp: 'CURRENT',
   },
