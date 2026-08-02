@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Markdown processing
+ * markdown.ts - Markdown processing
  *
  * Parses markdown files with frontmatter using gray-matter + marked.
  */

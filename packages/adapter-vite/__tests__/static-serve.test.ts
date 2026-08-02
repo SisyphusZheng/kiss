@@ -5,9 +5,14 @@
  * cli/start.ts and the request-time fixture server cannot drift apart again.
  */
 
-import { assert, assertEquals } from '@std/assert';
+import { assert, assertEquals, assertThrows } from '@std/assert';
 import { join } from 'node:path';
-import { contentTypeFor, staticFileCandidates, tryStatic } from '../src/internal/static-serve.ts';
+import {
+  contentTypeFor,
+  isMalformedUrlError,
+  staticFileCandidates,
+  tryStatic,
+} from '../src/internal/static-serve.ts';
 
 Deno.test('contentTypeFor covers the merged MIME table (#732)', () => {
   assertEquals(contentTypeFor('/d/index.html'), 'text/html; charset=utf-8');
@@ -55,6 +60,24 @@ Deno.test('tryStatic serves files and refuses path escape', async () => {
     assertEquals(tryStatic(root, '/missing'), null);
     // Path escape outside the static root must never be served.
     assertEquals(tryStatic(root, '/../secret.txt'), null);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('malformed percent-encoding is a defined 400, never a crash (#823)', async () => {
+  // decodeURIComponent throws URIError on input like /%zz; the serving layer
+  // converts it to a 400 so `start` and the fixture server stay alive.
+  const err = assertThrows(() => staticFileCandidates('/%zz'), URIError);
+  assert(isMalformedUrlError(err));
+  assert(!isMalformedUrlError(new Error('nope')));
+
+  const root = await Deno.makeTempDir();
+  try {
+    const response = tryStatic(root, '/%zz');
+    assert(response);
+    assertEquals(response.status, 400);
+    assertEquals(await response.text(), 'Bad Request');
   } finally {
     await Deno.remove(root, { recursive: true });
   }

@@ -18,6 +18,7 @@ import process from 'node:process';
 import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
 import {
   importRequestTimeServer,
+  isMalformedUrlError,
   type RequestTimeServerModule,
   tryStatic,
 } from '../internal/static-serve.ts';
@@ -125,8 +126,21 @@ async function handleRequest(
 ): Promise<Response> {
   const url = new URL(request.url);
 
+  // #823: matchRequestTimeRoute decodes params internally, so a malformed
+  // percent-encoded pathname (/%zz) throws URIError here — outside the
+  // handler try/catch. That is a client error, not a server crash.
   if (serverMod?.default) {
-    const match = serverMod.matchRequestTimeRoute?.(url.pathname);
+    let match:
+      | ReturnType<NonNullable<RequestTimeServerModule['matchRequestTimeRoute']>>
+      | undefined;
+    try {
+      match = serverMod.matchRequestTimeRoute?.(url.pathname);
+    } catch (err) {
+      if (isMalformedUrlError(err)) {
+        return new Response('Bad Request', { status: 400 });
+      }
+      throw err;
+    }
     const isMutating = request.method !== 'GET' && request.method !== 'HEAD';
     if (match || isMutating) {
       try {

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Route expansion
+ * ssg-dynamic.ts - Route expansion
  *
  * Handles dynamic route rendering using getStaticPaths() + renderRoute()
  * from the SSR bundle, and i18n locale expansion.

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Sitemap plugin
+ * plugin.ts - Sitemap plugin
  *
  * Build-time Vite plugin that records sitemap options on the shared build
  * context so the SSG render step can call generateSitemap() after the dist/

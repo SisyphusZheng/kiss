@@ -1,29 +1,8 @@
-export type { FileSystemAdapter } from './fs-adapter.ts';
-export { nodeFsAdapter } from './fs-adapter.ts';
-
-export type { BlogPost, BlogPostFrontmatter, OpenElementBlogOptions } from './blog/types.ts';
-export { parseMarkdownFile, slugFromFilename } from './blog/markdown.ts';
-export { generateBlogRoutes, scanPosts } from './blog/routes.ts';
-export { loadBlogData } from './blog/blog-data.ts';
-
-export { extractMeta, scanNavData } from './nav/scanner.ts';
-export type { NavData } from './nav/scanner.ts';
-export { writeNavModule, writeSearchIndex } from './nav/writer.ts';
-
-export type {
-  HeaderNavLink,
-  NavItem,
-  NavOptions,
-  NavSection,
-  OpenElementContentOptions,
-  RouteMeta,
-  SitemapOptions,
-  SitemapUrl,
-} from './types.ts';
-
-export {
-  generateSitemap,
-  renderRobotsTxt,
-  renderSitemapXml,
-  scanHtmlFiles,
-} from './sitemap/generator.ts';
+/**
+ * Narrow barrel for the content module (#834): only the two consumers that
+ * import through it remain — src/index.ts (generateSitemap) and app-vite.ts
+ * (OpenElementContentOptions). Everything else imports the concrete modules
+ * directly.
+ */
+export { generateSitemap } from './sitemap/generator.ts';
+export type { OpenElementContentOptions } from './types.ts';

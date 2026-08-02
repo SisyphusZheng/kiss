@@ -1,5 +1,5 @@
 /**
- * @openelement/element - Entry Renderer
+ * @openelement/adapter-vite - Entry Renderer
  *
  * Pure function: routes + options -> Hono entry virtual module code.
  *

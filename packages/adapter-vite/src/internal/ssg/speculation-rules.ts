@@ -54,6 +54,10 @@ export function buildSpeculationRulesJson(
   }
   addExclusions(
     rules,
+    // Defensive: the only production caller (internal/ssg/ssg-render.ts)
+    // passes page routes only, so this API-route exclusion currently never
+    // fires. Kept so future callers that hand in the full route table get
+    // correct behavior (#847).
     routes.filter((route) => route.type === 'api').map((route) => `${route.path}/*`),
   );
   return JSON.stringify(rules, null, 2);

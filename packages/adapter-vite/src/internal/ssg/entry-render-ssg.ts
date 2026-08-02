@@ -1,5 +1,5 @@
 /**
- * ./index.ts - SSG entry code generation
+ * entry-render-ssg.ts - SSG entry code generation
  *
  * Generates the SSG-specific sections of the virtual Hono entry module,
  * including routeInfo, renderRoute, getStaticPaths, and supporting helper

@@ -11,15 +11,18 @@
  * // Generated to `${outDir}/route-manifest.ts`; import from that generated
  * // module or alias it from your client entry.
  * import { routeManifest } from './route-manifest.ts';
- * import { createRouter } from '@openelement/app';
+ * import { defineApp } from '@openelement/app';
  *
- * const router = createRouter({
- *   mode: 'history',
- *   routes: Object.entries(routeManifest).map(([path, component]) => ({
- *     path,
- *     component,
- *   })),
+ * const app = defineApp({
+ *   mode: 'spa',
+ *   routes: await Promise.all(
+ *     Object.entries(routeManifest).map(async ([path, load]) => {
+ *       const mod = await load();
+ *       return { path, tagName: mod.tagName };
+ *     }),
+ *   ),
  * });
+ * app.mount('#root');
  * ```
  *
  * ## File System Convention
@@ -36,6 +39,7 @@
 import { scanRoutes } from './internal/ssg/index.ts';
 import { dirname, join, posix, sep, win32 } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { DEFAULT_ROUTES_DIR } from './internal/paths.ts';
 
 /**
  * Parameters for route manifest generation.
@@ -50,23 +54,6 @@ export interface GenerateRouteManifestOptions {
 interface RouteManifestGeneration {
   content: string;
   count: number;
-}
-
-/**
- * Generate a TypeScript module string for the route manifest.
- *
- * Scans the routes directory, filters to page routes, and produces
- * a `routeManifest` constant mapped to lazy import() calls.
- *
- * @param routesDir - Absolute path to the routes directory
- * @param manifestPath - Absolute path where the manifest file will be written
- * @returns Generated TypeScript source code
- */
-export async function generateRouteManifestContent(
-  routesDir: string,
-  manifestPath: string,
-): Promise<string> {
-  return (await generateRouteManifest(routesDir, manifestPath)).content;
 }
 
 async function generateRouteManifest(
@@ -159,7 +146,7 @@ function relativeToOutput(absSourcePath: string, fromDir: string): string {
 export async function writeRouteManifest(
   options: GenerateRouteManifestOptions,
 ): Promise<number> {
-  const { routesDir = 'app/routes', outDir } = options;
+  const { routesDir = DEFAULT_ROUTES_DIR, outDir } = options;
   const manifestPath = join(outDir, 'route-manifest.ts');
 
   await mkdir(outDir, { recursive: true });

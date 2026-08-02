@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Adapter-agnostic SSG build post-processing.
+ * build-postprocess.ts - Adapter-agnostic SSG build post-processing.
  *
  * Orchestrates client-script injection, island chunk/strategy/layer map
  * construction, and SSR artifact cleanup. This module has zero Vite

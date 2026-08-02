@@ -26,6 +26,11 @@
 import { build as viteBuild, type InlineConfig, type Plugin } from 'vite';
 import type { FrameworkOptions } from './internal/protocol/framework.ts';
 import { createOpenPlugin } from './plugin.ts';
+import {
+  DEFAULT_COMPONENTS_DIR,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_ROUTES_DIR,
+} from './internal/paths.ts';
 
 export interface OpenPipelineConfig {
   /** Build/dev mode. 'ssg' (default) enables SSR dev server + static generation. 'spa' produces a client-only app (no SSR). */
@@ -40,9 +45,9 @@ export interface OpenPipelineConfig {
 export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {
   const options: FrameworkOptions = {
     mode: config.mode,
-    routesDir: config.routes?.dir || 'app/routes',
-    islandsDir: config.island?.dir || 'app/islands',
-    componentsDir: 'app/components',
+    routesDir: config.routes?.dir || DEFAULT_ROUTES_DIR,
+    islandsDir: config.island?.dir || DEFAULT_ISLANDS_DIR,
+    componentsDir: DEFAULT_COMPONENTS_DIR,
     viewTransition: config.viewTransition ?? true,
     headExtras: config.headExtras,
     island: config.island as FrameworkOptions['island'],

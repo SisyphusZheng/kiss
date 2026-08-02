@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Blog plugin
+ * plugin.ts - Blog plugin
  *
  * Build-time Vite plugin that loads blog data and writes the generated
  * blog-data module to app/data/_generated-blog-data.ts.
@@ -13,6 +13,7 @@ import { nodeFsAdapter } from '../fs-adapter.ts';
 import { loadBlogData, writeBlogDataModule } from './blog-data.ts';
 import { createLogger } from '@openelement/element';
 import { join, relative, resolve } from 'node:path';
+import { DEFAULT_DATA_DIR } from '../../paths.ts';
 
 const log = createLogger('content:blog');
 
@@ -42,7 +43,7 @@ export function createBlogPlugin(
 
       // SOP-001: Write generated blog data module to disk.
       // Failing to write must fail the build: consumers import these files.
-      const dataDir = join(fs.cwd(), 'app', 'data');
+      const dataDir = join(fs.cwd(), DEFAULT_DATA_DIR);
       fs.mkdirSync(dataDir, { recursive: true });
       const blogModule = writeBlogDataModule(result.posts);
       fs.writeFileSync(join(dataDir, '_generated-blog-data.ts'), blogModule, 'utf-8');

@@ -21,7 +21,7 @@ import { createLogger } from '@openelement/element';
 import { DEFAULT_OUT_DIR } from './internal/paths.ts';
 import { walkFileEntries } from './internal/html-files.ts';
 
-const log = createLogger('ssg');
+const log = createLogger('build-manifest');
 
 /** File size info for a single artifact */
 export interface ArtifactInfo {

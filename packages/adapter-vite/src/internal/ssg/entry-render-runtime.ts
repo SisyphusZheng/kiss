@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Runtime helper code generation
+ * entry-render-runtime.ts - Runtime helper code generation
  *
  * Generates the JavaScript/TypeScript code for runtime helper functions
  * that are embedded in the generated Hono entry module.

@@ -26,7 +26,15 @@ import type {
 } from '../internal/protocol/framework.ts';
 import type { EntryDescriptor, IslandDecl } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
-import { buildEntryDescriptor, ssgRender } from '../internal/ssg/index.ts';
+import {
+  buildEntryDescriptor,
+  fileToTagName,
+  renderEntry,
+  scanIslandMeta,
+  scanIslands,
+  scanRoutes,
+  ssgRender,
+} from '../internal/ssg/index.ts';
 import { SsrRenderError } from '@openelement/element/build-utils';
 import { createLogger } from '@openelement/element';
 import { createSsgRenderEvidence } from './ssg-render.ts';
@@ -45,10 +53,12 @@ import {
 } from '../internal/ssg/index.ts';
 import { optionalPackageStubsPlugin } from '../plugin.ts';
 import { normalizeViteAliases } from '../alias-utils.ts';
-import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
-
-/** Chunk size warning limit (kB) for the SSR bundle build. */
-const SSR_CHUNK_SIZE_WARNING_LIMIT_KB = 1500;
+import {
+  CHUNK_SIZE_WARNING_LIMIT_KB,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_OUT_DIR,
+  DEFAULT_ROUTES_DIR,
+} from '../internal/paths.ts';
 
 const log = createLogger('ssg');
 
@@ -187,8 +197,8 @@ async function buildSSG(
 ): Promise<void> {
   const root = options.root || ctx.phase3.root || process.cwd();
   const outDir = options.outDir || ctx.phase3.outDir || DEFAULT_OUT_DIR;
-  const routesDir = options.routesDir || ctx.phase3.routesDir || 'app/routes';
-  const islandsDir = options.islandsDir || ctx.phase3.islandsDir || 'app/islands';
+  const routesDir = options.routesDir || ctx.phase3.routesDir || DEFAULT_ROUTES_DIR;
+  const islandsDir = options.islandsDir || ctx.phase3.islandsDir || DEFAULT_ISLANDS_DIR;
   const appShell = options.appShell ?? ctx.phase3.appShell;
   const layouts = options.layouts ?? ctx.phase3.layouts;
 
@@ -211,12 +221,8 @@ async function buildSSG(
   if (options.viewTransition === undefined) options.viewTransition = ctx.phase3.viewTransition;
   if (!options.speculation) options.speculation = ctx.phase3.speculation || undefined;
 
-  // Generate SSG entry code
-  const { scanRoutes, scanIslands, scanIslandMeta, fileToTagName } = await import(
-    '../internal/ssg/index.ts'
-  );
-  const { renderEntry } = await import('../internal/ssg/index.ts');
-
+  // Generate SSG entry code (all statically imported — no cycle with the
+  // internal/ssg barrel, #847).
   const routes = options.routes ?? await scanRoutes(routesDir);
 
   const islandsRoot = join(root, islandsDir);
@@ -268,21 +274,17 @@ async function buildSSG(
     // so module-level variables (Phase B) are shared across the entire graph.
     const ssrOutDir = join(root, outDir, 'server');
     log.info(`Building SSR bundle -> ${ssrOutDir}`);
-    const clientOnlyIslandIds = new Set(
-      Object.entries(ssgIslandMeta)
-        .filter(([, meta]) => meta.ssr === false)
-        .map(([tag]) => {
-          const file = ssgIslandFiles[ssgIslandTagNames.indexOf(tag)];
-          return file ? normalizePath(resolve(root, islandsDir, file)) : '';
-        })
-        .filter(Boolean),
-    );
-    // v0.21: Build filePath -> tagName map for client-only placeholder generation.
+    // v0.21: client-only islands get stub modules — collect the normalized
+    // module ids and the filePath -> tagName map in one pass (#847).
+    const clientOnlyIslandIds = new Set<string>();
     const clientOnlyTagMap = new Map<string, string>();
     for (const [tag, meta] of Object.entries(ssgIslandMeta)) {
       if (meta.ssr !== false) continue;
       const file = ssgIslandFiles[ssgIslandTagNames.indexOf(tag)];
-      if (file) clientOnlyTagMap.set(normalizePath(resolve(root, islandsDir, file)), tag);
+      if (!file) continue;
+      const moduleId = normalizePath(resolve(root, islandsDir, file));
+      clientOnlyIslandIds.add(moduleId);
+      clientOnlyTagMap.set(moduleId, tag);
     }
 
     // v0.21 SOP-004: Conflict detection: same tag must not be both SSR and client:only.
@@ -306,7 +308,7 @@ async function buildSSG(
       build: {
         ssr: true,
         outDir: ssrOutDir,
-        chunkSizeWarningLimit: SSR_CHUNK_SIZE_WARNING_LIMIT_KB,
+        chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
         rollupOptions: {
           input: { entry: VIRTUAL_SSG_ENTRY_ID },
           // v0.21: Suppress IMPORT_IS_UNDEFINED for revalidate; the generated

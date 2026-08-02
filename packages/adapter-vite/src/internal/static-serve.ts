@@ -41,6 +41,9 @@ export function contentTypeFor(filePath: string): string {
 /**
  * Candidate file paths (relative to the static root) for a request pathname:
  * the exact file, then `<path>/index.html`, then `<path>.html`.
+ *
+ * Throws URIError on malformed percent-encoding (e.g. `/%zz`) — callers
+ * answer 400 (see tryStatic).
  */
 export function staticFileCandidates(pathname: string): string[] {
   const decoded = decodeURIComponent(pathname.split('?')[0] || '/');
@@ -51,13 +54,29 @@ export function staticFileCandidates(pathname: string): string[] {
   return [...new Set(candidates)];
 }
 
+/** True for URIError thrown by decodeURIComponent on malformed percent-encoding. */
+export function isMalformedUrlError(err: unknown): boolean {
+  return err instanceof URIError;
+}
+
 /**
  * Serve a static file from `distDir` for `pathname`, or null when no
- * candidate exists. Paths escaping the root are refused.
+ * candidate exists. Paths escaping the root are refused. A malformed
+ * percent-encoded pathname is a client error, not a crash (#823): the
+ * caller receives a 400 Bad Request response.
  */
 export function tryStatic(distDir: string, pathname: string): Response | null {
+  let candidates: string[];
+  try {
+    candidates = staticFileCandidates(pathname);
+  } catch (err) {
+    if (isMalformedUrlError(err)) {
+      return new Response('Bad Request', { status: 400 });
+    }
+    throw err;
+  }
   const root = resolve(distDir);
-  for (const candidate of staticFileCandidates(pathname)) {
+  for (const candidate of candidates) {
     const filePath = resolve(join(root, candidate));
     if (!filePath.startsWith(root + sep)) continue;
     if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;

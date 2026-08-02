@@ -30,9 +30,13 @@ import { parseJsonc } from '../internal/jsonc.ts';
 import { sortAliasEntries } from '../alias-utils.ts';
 import { formatError } from '@openelement/element';
 import { createLogger } from '@openelement/element';
-import { DEFAULT_OUT_DIR } from '../internal/paths.ts';
+import {
+  CHUNK_SIZE_WARNING_LIMIT_KB,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_OUT_DIR,
+} from '../internal/paths.ts';
 
-const log = createLogger('ssg');
+const log = createLogger('build-client');
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
 const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
@@ -144,7 +148,7 @@ function convertImportMapTarget(target: string, denoJsonDir: string): string | n
 async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
   const root = ctx.phase3.root || process.cwd();
   const outDir = ctx.phase3.outDir || DEFAULT_OUT_DIR;
-  const islandsDir = ctx.phase3.islandsDir || 'app/islands';
+  const islandsDir = ctx.phase3.islandsDir || DEFAULT_ISLANDS_DIR;
   const localIslands = ctx.phase1.islandTagNames || [];
   const localIslandFiles = ctx.phase1.islandFiles || [];
   const packageIslandDecls = ctx.phase1.packageIslandDecls || [];
@@ -251,7 +255,7 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
     build: {
       outDir: clientOutDir,
       emptyOutDir: true,
-      chunkSizeWarningLimit: 1500,
+      chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
       minify: 'oxc',
       manifest: true,
       rollupOptions: {

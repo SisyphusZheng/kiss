@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Route scanner
+ * route-scanner.ts - Route scanner
  * Scans the routes directory and generates a route map.
  * Produces the virtual:routes module.
  *
@@ -36,7 +36,7 @@
  *
  * 4. Nested custom elements (from the VNode tree):
  *    - NOT handled in this file
- *    - See: `packages/core/src/jsx-render-string.ts` and `renderDsdTree()`
+ *    - See: `packages/element/src/internal/core/render-ir.ts` and `renderDsdTree()`
  *
  * Audit completed: 2026-05-17
  * Auditor: AI agent (openElement v0.17.4 SOP compliance check)

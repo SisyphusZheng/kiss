@@ -14,9 +14,6 @@ export interface AliasEntry {
   replacement: string;
 }
 
-// #708: shared JSONC reader (single implementation with cli/build-client.ts).
-const tryReadJson = readJsonc;
-
 /**
  * Walk up from startDir to find a deno.json with a "workspace" field.
  */
@@ -24,7 +21,7 @@ export function findWorkspaceRoot(startDir: string): string | null {
   let dir = resolve(startDir);
   const fsRoot = resolve('/');
   while (dir !== fsRoot && dir !== resolve(dir, '..')) {
-    const cfg = tryReadJson(resolve(dir, 'deno.json'));
+    const cfg = readJsonc(resolve(dir, 'deno.json'));
     if (cfg?.workspace && Array.isArray(cfg.workspace)) return dir;
     dir = resolve(dir, '..');
   }
@@ -36,7 +33,7 @@ export function findWorkspaceRoot(startDir: string): string | null {
  * Subpath aliases come before parent (Vite prefix matching rule).
  */
 export function generateWorkspaceAliases(workspaceRoot: string): AliasEntry[] {
-  const rootCfg = tryReadJson(resolve(workspaceRoot, 'deno.json'));
+  const rootCfg = readJsonc(resolve(workspaceRoot, 'deno.json'));
   if (!rootCfg) return [];
 
   const members: string[] = (rootCfg.workspace as string[]) || [];
@@ -44,7 +41,7 @@ export function generateWorkspaceAliases(workspaceRoot: string): AliasEntry[] {
 
   for (const member of members) {
     const memberDir = resolve(workspaceRoot, member);
-    const memberCfg = tryReadJson(resolve(memberDir, 'deno.json'));
+    const memberCfg = readJsonc(resolve(memberDir, 'deno.json'));
     if (!memberCfg) continue;
 
     const name = memberCfg.name as string | undefined;

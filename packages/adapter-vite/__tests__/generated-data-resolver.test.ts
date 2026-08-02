@@ -29,14 +29,8 @@ Deno.test('generatedDataPath maps generated namespace to app data files', () => 
   );
 });
 
-Deno.test('generatedDataPath keeps generated data location consumer-configurable', () => {
-  const normalized = (path: string | null) => path?.replaceAll('\\', '/');
-
-  assert(
-    normalized(generatedDataPath('/site', GENERATED_NAV_ID, '.openElement/generated'))?.endsWith(
-      '/site/.openElement/generated/_generated-nav.ts',
-    ),
-  );
+Deno.test('generatedDataPath resolves unknown ids to null', () => {
+  assertEquals(generatedDataPath('/site', '@openelement/generated/nope'), null);
 });
 
 Deno.test('generated data resolver resolves only @openelement/generated namespace', () => {

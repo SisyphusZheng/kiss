@@ -1,5 +1,5 @@
 /**
- * ./index.ts - SSG helper utilities
+ * ssg-helpers.ts - SSG helper utilities
  *
  * Pure utility functions used by the SSG render pipeline.
  * This module sits at the bottom of the dependency graph.

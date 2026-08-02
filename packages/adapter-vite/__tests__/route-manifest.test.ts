@@ -8,7 +8,7 @@
  */
 import { assertEquals, assertMatch, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
 import { join } from 'jsr:@std/path@^1.0.0';
-import { generateRouteManifestContent, writeRouteManifest } from '../src/route-manifest.ts';
+import { writeRouteManifest } from '../src/route-manifest.ts';
 
 /** Create a temp directory that auto-cleans up after each test. */
 function tempDir(): { path: string; cleanup: () => void } {
@@ -33,6 +33,15 @@ async function writeRoute(routesDir: string, relativePath: string, content = 'ex
   await Deno.writeTextFile(fullPath, content);
 }
 
+/**
+ * Generate a manifest through the production writeRouteManifest() path and
+ * read the file back (generateRouteManifestContent was test-only, #847).
+ */
+async function generateContent(routesDir: string, manifestPath: string): Promise<string> {
+  await writeRouteManifest({ routesDir, outDir: join(manifestPath, '..') });
+  return await Deno.readTextFile(manifestPath);
+}
+
 // ─── URL Pattern Mapping ─────────────────────────────────
 
 Deno.test({
@@ -45,7 +54,7 @@ Deno.test({
       await writeRoute(routesDir, 'index.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/': () => import(");
       assertMatch(content, /\/routes\/index\.tsx/);
@@ -65,7 +74,7 @@ Deno.test({
       await writeRoute(routesDir, 'products.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/products': () => import(");
     } finally {
@@ -84,7 +93,7 @@ Deno.test({
       await writeRoute(routesDir, 'products/[id].tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/products/:id': () => import(");
     } finally {
@@ -103,7 +112,7 @@ Deno.test({
       await writeRoute(routesDir, 'products/index.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/products': () => import(");
     } finally {
@@ -122,7 +131,7 @@ Deno.test({
       await writeRoute(routesDir, 'products/reviews.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/products/reviews': () => import(");
     } finally {
@@ -132,22 +141,20 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'route-manifest: catch-all [...slug].tsx → /* (optional)',
+  name: 'route-manifest: catch-all [...slug].tsx → /products/:slug{.+}',
   permissions: { read: true, write: true },
   async fn() {
     const dir = tempDir();
     try {
       const routesDir = join(dir.path, 'routes');
-      // [...] syntax is not natively handled by scanRoutes, so we test
-      // that the file is processed without errors.
       await writeRoute(routesDir, 'products/[...slug].tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
-      // scanRoutes converts [...] to :...slug (or similar), we just verify
-      // the file was picked up without errors
-      assertStringIncludes(content, 'import(');
+      // scanRoutes (#556) converts a catch-all segment to the Hono named
+      // regex parameter :slug{.+} (matches across '/').
+      assertStringIncludes(content, "'/products/:slug{.+}': () => import(");
     } finally {
       dir.cleanup();
     }
@@ -166,7 +173,7 @@ Deno.test({
       await Deno.mkdir(routesDir, { recursive: true });
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, 'export const routeManifest = {} as const;');
       assertStringIncludes(content, 'No page routes found');
@@ -185,7 +192,7 @@ Deno.test({
       const routesDir = join(dir.path, 'nonexistent');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, '{} as const;');
     } finally {
@@ -206,7 +213,7 @@ Deno.test({
       await writeRoute(routesDir, '_middleware.ts');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/': () => import(");
       assertEquals(content.includes('_renderer'), false);
@@ -228,7 +235,7 @@ Deno.test({
       await writeRoute(routesDir, 'api/posts.ts');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/': () => import(");
       assertEquals(content.includes('/api/posts'), false);
@@ -251,7 +258,7 @@ Deno.test({
       await writeRoute(routesDir, 'about.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       // Verify structural elements
       assertStringIncludes(content, 'Auto-generated');
@@ -276,7 +283,7 @@ Deno.test({
 
       // Manifest goes into a nested subdirectory
       const manifestPath = join(dir.path, '.openelement/generated/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       // Should contain ../ or ../..
       assertMatch(content, /import\('[.][.]/);
@@ -350,7 +357,7 @@ Deno.test({
       await writeRoute(routesDir, 'about.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/': () => import(");
       assertStringIncludes(content, "'/products': () => import(");
@@ -374,7 +381,7 @@ Deno.test({
       await writeRoute(routesDir, 'about.tsx');
 
       const manifestPath = join(dir.path, '.openelement/route-manifest.ts');
-      const content = await generateRouteManifestContent(routesDir, manifestPath);
+      const content = await generateContent(routesDir, manifestPath);
 
       assertStringIncludes(content, "'/about': () => import(");
     } finally {

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Route scanner file-system helpers
+ * route-scanner-fs.ts - Route scanner file-system helpers
  *
  * Thin wrappers around Node.js fs promises that treat ENOENT/ENOTDIR as
  * "not found" (returning `undefined`) but propagate real I/O errors

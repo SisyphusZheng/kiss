@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Entry renderer helper functions
+ * entry-render-helpers.ts - Entry renderer helper functions
  *
  * Shared code-generation helper functions used by entry-renderer.ts
  * and its sub-modules (entry-render-runtime.ts, entry-render-ssg.ts).
@@ -15,7 +15,7 @@ import type {
   PageRouteDecl,
   RendererDecl,
 } from '../protocol/ssg.ts';
-import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
 export function renderImport(imp: ImportDecl): string {
   const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');
@@ -41,7 +41,7 @@ export function routeRevalidateExpr(varName: string): string {
 }
 
 export function jsStringLiteral(value: string): string {
-  return quoteGeneratedJavaScriptStringLiteral(value);
+  return quoteGeneratedJavaScriptValue(value);
 }
 
 /**
@@ -128,22 +128,26 @@ export interface RenderRouteHandlerOptions {
   isSSG: boolean;
 }
 
-/** Generate a Hono route handler for a page route (GET) or its action (POST). */
-export function renderRouteHandler(
-  lines: string[],
-  { method, route, renderers, docConfig, isSSG }: RenderRouteHandlerOptions,
-): void {
-  const matchingRenderers = renderers.filter((r) => rendererScopeMatches(route.path, r.scope));
+/** Shared codegen state threaded through the route-handler emit helpers (#847). */
+interface RouteHandlerEmitContext {
+  isAction: boolean;
+  route: PageRouteDecl;
+  matchingRenderers: RendererDecl[];
+  docConfig: RouteHandlerDocConfig;
+  pathLiteral: string;
+  tagNameExpr: string;
+  pageDefExpr: string;
+  routeMeta: string;
+  routeContext: string;
+  headExtrasExpr: string;
+}
 
-  const pathLiteral = jsStringLiteral(route.path);
-  const tagNameExpr = routeTagNameExpr(route.tagName);
-  const pageDefExpr = pageDefinitionExpr(route.varName);
-  const routeMeta = routeMetaExpr(route.varName);
-  const routeContext = `{ path: ${jsStringLiteral(route.path)}, filePath: ${
-    jsStringLiteral(route.filePath)
-  } }`;
-  const headExtrasExpr = isSSG ? '__headExtras' : jsStringLiteral(docConfig.headExtras);
-  const isAction = method === 'post';
+/**
+ * Emit the handler opener: route registration, per-request declarations,
+ * cache headers, load context, and (GET only) the loader call.
+ */
+function renderRouteHandlerPreamble(lines: string[], ctx: RouteHandlerEmitContext): void {
+  const { isAction, route, pathLiteral, tagNameExpr, pageDefExpr, routeMeta, routeContext } = ctx;
 
   lines.push(`// ${isAction ? 'Action POST' : 'Page'}: ${route.path} (${route.filePath})`);
   if (!isAction) {
@@ -190,139 +194,155 @@ export function renderRouteHandler(
       `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
     );
   }
+}
 
-  if (isAction) {
-    // ADR-0120 action protocol (0.42.0-alpha.2), hardened by ADR-0121:
-    // - named actions: ?/name selects module.actions[name] (SvelteKit shape),
-    //   with an own-key lookup so prototype members are never callable;
-    // - the action runs BEFORE the loader so a mutation never renders stale
-    //   data (revalidation invariant);
-    // - fail() returns take the 422 re-render channel with the failure data
-    //   echoed; everything else succeeds;
-    // - a successful non-GET action never answers 200 with a rendered page:
-    //   303 back to the route (PRG, action marker stripped), or an
-    //   ActionResult for fetch callers; a returned Response is a contract
-    //   violation, not a response.
-    lines.push(`    const __url = new URL(c.req.url);`);
-    lines.push(
-      `    const __actionName = (() => { for (const key of __url.searchParams.keys()) { if (key.startsWith('/')) return key.slice(1); } return undefined; })();`,
-    );
-    lines.push(
-      `    const __namedActions = (typeof ${route.varName}.actions === 'object' && ${route.varName}.actions !== null) ? ${route.varName}.actions : {};`,
-    );
-    // ADR-0121 (#542): own-key lookup — ?/constructor and other prototype
-    // members are never callable as actions.
-    lines.push(
-      `    const __actionFn = __actionName !== undefined ? (Object.prototype.hasOwnProperty.call(__namedActions, __actionName) ? __namedActions[__actionName] : undefined) : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
-    );
-    // ADR-0121 section 1 (#540): one header, two values — 'true' selects the
-    // ActionResult JSON channel; 'enhance' marks the built-in morph client
-    // (HTML responses identical to the no-JS path).
-    lines.push(`    const __actionHeader = c.req.header(__actionFetchHeader);`);
-    lines.push(`    __isFetch = __actionHeader === 'true';`);
-    // #611 / ADR-0121 §12 (amended): default same-origin CSRF floor for
-    // browser POSTs. Non-browser clients that omit Origin and Sec-Fetch-Site
-    // are allowed. Opt out via runtime env on the request context:
-    // c.env.OPEN_ELEMENT_DISABLE_CSRF === '1' (Workers/Node bindings).
-    lines.push(`    {`);
-    lines.push(
-      `      const __csrfOff = __loadContext.env && __loadContext.env.OPEN_ELEMENT_DISABLE_CSRF === '1';`,
-    );
-    lines.push(`      if (!__csrfOff) {`);
-    lines.push(`        const __origin = c.req.header('origin');`);
-    lines.push(`        const __sfs = (c.req.header('sec-fetch-site') || '').toLowerCase();`);
-    lines.push(`        let __cross = __sfs === 'cross-site';`);
-    lines.push(
-      `        if (!__cross && __origin) { try { __cross = new URL(__origin).origin !== new URL(c.req.url).origin; } catch { __cross = true; } }`,
-    );
-    lines.push(`        if (__cross) {`);
-    lines.push(
-      `          if (__isFetch) return c.json({ type: 'error', status: 403, error: { message: 'Cross-site form submission rejected' } }, 403);`,
-    );
-    lines.push(`          return c.text('Forbidden', 403);`);
-    lines.push(`        }`);
-    lines.push(`      }`);
-    lines.push(`    }`);
-    lines.push(`    if (typeof __actionFn !== 'function') {`);
-    lines.push(
-      `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,
-    );
-    // ADR-0121 section 5 (#549): fetch callers always receive ActionResult
-    // JSON — the two channels never diverge in shape.
-    lines.push(`      if (__isFetch) {`);
-    lines.push(
-      `        return c.json({ type: 'error', status: 404, error: { message: __noActionMessage } }, 404);`,
-    );
-    lines.push(`      }`);
-    lines.push(
-      `      return c.html(wrapInDocument(__statusHtml('404 Not Found', __noActionMessage), { title: '404 Not Found', lang: ${
-        jsStringLiteral(docConfig.lang)
-      }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
-        JSON.stringify(docConfig.allowHeadExtrasScripts)
-      }, cspNonce: c.get('cspNonce') }), 404);`,
-    );
-    lines.push(`    }`);
-    lines.push(`    let __formData;`);
-    // ADR-0121 (#581): an unparseable body is a client error, not a 500.
-    lines.push(`    try {`);
-    lines.push(`      __formData = await c.req.raw.formData();`);
-    lines.push(`    } catch {`);
-    lines.push(`      if (__isFetch) {`);
-    lines.push(
-      `        return c.json({ type: 'error', status: 400, error: { message: 'Could not parse the form body.' } }, 400);`,
-    );
-    lines.push(`      }`);
-    lines.push(
-      `      return c.html(wrapInDocument(__statusHtml('400 Bad Request', 'Could not parse the form body.'), { title: '400 Bad Request', lang: ${
-        jsStringLiteral(docConfig.lang)
-      }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
-        JSON.stringify(docConfig.allowHeadExtrasScripts)
-      }, cspNonce: c.get('cspNonce') }), 400);`,
-    );
-    lines.push(`    }`);
-    lines.push(
-      `    const __actionResult = await __actionFn({ ...__loadContext, formData: __formData });`,
-    );
-    // ADR-0121 section 2 (#541): actions must not return a Response — the
-    // return channel is data or fail(), the redirect channel is redirect().
-    // A returned Response used to bypass every status rule; it is now a
-    // contract violation on both channels.
-    lines.push(`    if (__actionResult instanceof Response) {`);
-    lines.push(
-      `      throw new Error('[openElement] Actions must not return a Response object; return data, fail(status, data), or throw redirect() (ADR-0121).');`,
-    );
-    lines.push(`    }`);
-    // ADR-0121 section 4 (#548): the default PRG target strips the ?/name
-    // action marker; all other query parameters are preserved.
-    lines.push(`    const __prgParams = new URLSearchParams(__url.search);`);
-    lines.push(
-      `    for (const key of [...__prgParams.keys()]) { if (key.startsWith('/')) __prgParams.delete(key); }`,
-    );
-    lines.push(`    const __prgSearch = __prgParams.toString();`);
-    lines.push(
-      `    const __prgTarget = __url.pathname + (__prgSearch ? '?' + __prgSearch : '');`,
-    );
-    lines.push(`    if (__isFetch) {`);
-    lines.push(`      if (__isActionFailure(__actionResult)) {`);
-    lines.push(
-      `        return c.json({ type: 'failure', status: __actionResult.status, data: __actionResult.data }, __actionResult.status);`,
-    );
-    lines.push(`      }`);
-    // ADR-0121 section 3: HTTP 200 carrying a data message, not an HTTP
-    // redirect (fetch would follow a 3xx and the JSON would be unreadable).
-    lines.push(
-      `      return c.json({ type: 'redirect', status: 303, location: __prgTarget });`,
-    );
-    lines.push(`    }`);
-    lines.push(`    if (!__isActionFailure(__actionResult)) {`);
-    lines.push(`      return c.redirect(__prgTarget, 303);`);
-    lines.push(`    }`);
-    lines.push(
-      `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined;`,
-    );
-    lines.push(`    const __actionData = __actionResult.data;`);
-    lines.push(`    const __actionStatus = __actionResult.status;`);
-  }
+/**
+ * Emit the action POST protocol block (ADR-0120/ADR-0121): same-origin CSRF
+ * floor, named-action dispatch, form body parsing, the PRG/fetch response
+ * channels, and the 422 re-render data.
+ */
+function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): void {
+  const { route, docConfig, headExtrasExpr } = ctx;
+
+  // ADR-0120 action protocol (0.42.0-alpha.2), hardened by ADR-0121:
+  // - named actions: ?/name selects module.actions[name] (SvelteKit shape),
+  //   with an own-key lookup so prototype members are never callable;
+  // - the action runs BEFORE the loader so a mutation never renders stale
+  //   data (revalidation invariant);
+  // - fail() returns take the 422 re-render channel with the failure data
+  //   echoed; everything else succeeds;
+  // - a successful non-GET action never answers 200 with a rendered page:
+  //   303 back to the route (PRG, action marker stripped), or an
+  //   ActionResult for fetch callers; a returned Response is a contract
+  //   violation, not a response.
+  lines.push(`    const __url = new URL(c.req.url);`);
+  lines.push(
+    `    const __actionName = (() => { for (const key of __url.searchParams.keys()) { if (key.startsWith('/')) return key.slice(1); } return undefined; })();`,
+  );
+  lines.push(
+    `    const __namedActions = (typeof ${route.varName}.actions === 'object' && ${route.varName}.actions !== null) ? ${route.varName}.actions : {};`,
+  );
+  // ADR-0121 (#542): own-key lookup — ?/constructor and other prototype
+  // members are never callable as actions.
+  lines.push(
+    `    const __actionFn = __actionName !== undefined ? (Object.prototype.hasOwnProperty.call(__namedActions, __actionName) ? __namedActions[__actionName] : undefined) : (typeof ${route.varName}.action === 'function' ? ${route.varName}.action : undefined);`,
+  );
+  // ADR-0121 section 1 (#540): one header, two values — 'true' selects the
+  // ActionResult JSON channel; 'enhance' marks the built-in morph client
+  // (HTML responses identical to the no-JS path).
+  lines.push(`    const __actionHeader = c.req.header(__actionFetchHeader);`);
+  lines.push(`    __isFetch = __actionHeader === 'true';`);
+  // #611 / ADR-0121 §12 (amended): default same-origin CSRF floor for
+  // browser POSTs. Non-browser clients that omit Origin and Sec-Fetch-Site
+  // are allowed. Opt out via runtime env on the request context:
+  // c.env.OPEN_ELEMENT_DISABLE_CSRF === '1' (Workers/Node bindings).
+  lines.push(`    {`);
+  lines.push(
+    `      const __csrfOff = __loadContext.env && __loadContext.env.OPEN_ELEMENT_DISABLE_CSRF === '1';`,
+  );
+  lines.push(`      if (!__csrfOff) {`);
+  lines.push(`        const __origin = c.req.header('origin');`);
+  lines.push(`        const __sfs = (c.req.header('sec-fetch-site') || '').toLowerCase();`);
+  lines.push(`        let __cross = __sfs === 'cross-site';`);
+  lines.push(
+    `        if (!__cross && __origin) { try { __cross = new URL(__origin).origin !== new URL(c.req.url).origin; } catch { __cross = true; } }`,
+  );
+  lines.push(`        if (__cross) {`);
+  lines.push(
+    `          if (__isFetch) return c.json({ type: 'error', status: 403, error: { message: 'Cross-site form submission rejected' } }, 403);`,
+  );
+  lines.push(`          return c.text('Forbidden', 403);`);
+  lines.push(`        }`);
+  lines.push(`      }`);
+  lines.push(`    }`);
+  lines.push(`    if (typeof __actionFn !== 'function') {`);
+  lines.push(
+    `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,
+  );
+  // ADR-0121 section 5 (#549): fetch callers always receive ActionResult
+  // JSON — the two channels never diverge in shape.
+  lines.push(`      if (__isFetch) {`);
+  lines.push(
+    `        return c.json({ type: 'error', status: 404, error: { message: __noActionMessage } }, 404);`,
+  );
+  lines.push(`      }`);
+  lines.push(
+    `      return c.html(wrapInDocument(__statusHtml('404 Not Found', __noActionMessage), { title: '404 Not Found', lang: ${
+      jsStringLiteral(docConfig.lang)
+    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
+      JSON.stringify(docConfig.allowHeadExtrasScripts)
+    }, cspNonce: c.get('cspNonce') }), 404);`,
+  );
+  lines.push(`    }`);
+  lines.push(`    let __formData;`);
+  // ADR-0121 (#581): an unparseable body is a client error, not a 500.
+  lines.push(`    try {`);
+  lines.push(`      __formData = await c.req.raw.formData();`);
+  lines.push(`    } catch {`);
+  lines.push(`      if (__isFetch) {`);
+  lines.push(
+    `        return c.json({ type: 'error', status: 400, error: { message: 'Could not parse the form body.' } }, 400);`,
+  );
+  lines.push(`      }`);
+  lines.push(
+    `      return c.html(wrapInDocument(__statusHtml('400 Bad Request', 'Could not parse the form body.'), { title: '400 Bad Request', lang: ${
+      jsStringLiteral(docConfig.lang)
+    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
+      JSON.stringify(docConfig.allowHeadExtrasScripts)
+    }, cspNonce: c.get('cspNonce') }), 400);`,
+  );
+  lines.push(`    }`);
+  lines.push(
+    `    const __actionResult = await __actionFn({ ...__loadContext, formData: __formData });`,
+  );
+  // ADR-0121 section 2 (#541): actions must not return a Response — the
+  // return channel is data or fail(), the redirect channel is redirect().
+  // A returned Response used to bypass every status rule; it is now a
+  // contract violation on both channels.
+  lines.push(`    if (__actionResult instanceof Response) {`);
+  lines.push(
+    `      throw new Error('[openElement] Actions must not return a Response object; return data, fail(status, data), or throw redirect() (ADR-0121).');`,
+  );
+  lines.push(`    }`);
+  // ADR-0121 section 4 (#548): the default PRG target strips the ?/name
+  // action marker; all other query parameters are preserved.
+  lines.push(`    const __prgParams = new URLSearchParams(__url.search);`);
+  lines.push(
+    `    for (const key of [...__prgParams.keys()]) { if (key.startsWith('/')) __prgParams.delete(key); }`,
+  );
+  lines.push(`    const __prgSearch = __prgParams.toString();`);
+  lines.push(
+    `    const __prgTarget = __url.pathname + (__prgSearch ? '?' + __prgSearch : '');`,
+  );
+  lines.push(`    if (__isFetch) {`);
+  lines.push(`      if (__isActionFailure(__actionResult)) {`);
+  lines.push(
+    `        return c.json({ type: 'failure', status: __actionResult.status, data: __actionResult.data }, __actionResult.status);`,
+  );
+  lines.push(`      }`);
+  // ADR-0121 section 3: HTTP 200 carrying a data message, not an HTTP
+  // redirect (fetch would follow a 3xx and the JSON would be unreadable).
+  lines.push(
+    `      return c.json({ type: 'redirect', status: 303, location: __prgTarget });`,
+  );
+  lines.push(`    }`);
+  lines.push(`    if (!__isActionFailure(__actionResult)) {`);
+  lines.push(`      return c.redirect(__prgTarget, 303);`);
+  lines.push(`    }`);
+  lines.push(
+    `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined;`,
+  );
+  lines.push(`    const __actionData = __actionResult.data;`);
+  lines.push(`    const __actionStatus = __actionResult.status;`);
+}
+
+/**
+ * Emit the success path (jsx render, renderer tree, document wrap) and the
+ * catch block (redirect, not-found, nearest error boundary, 500 fallback).
+ */
+function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitContext): void {
+  const { isAction, matchingRenderers, docConfig, pathLiteral, headExtrasExpr } = ctx;
+
   lines.push(
     `    let node = jsx(__tag, ${
       pagePropsExpr({
@@ -451,6 +471,33 @@ export function renderRouteHandler(
   lines.push(`  }`);
   lines.push(`})`);
   lines.push('');
+}
+
+/** Generate a Hono route handler for a page route (GET) or its action (POST). */
+export function renderRouteHandler(
+  lines: string[],
+  { method, route, renderers, docConfig, isSSG }: RenderRouteHandlerOptions,
+): void {
+  const ctx: RouteHandlerEmitContext = {
+    isAction: method === 'post',
+    route,
+    matchingRenderers: renderers.filter((r) => rendererScopeMatches(route.path, r.scope)),
+    docConfig,
+    pathLiteral: jsStringLiteral(route.path),
+    tagNameExpr: routeTagNameExpr(route.tagName),
+    pageDefExpr: pageDefinitionExpr(route.varName),
+    routeMeta: routeMetaExpr(route.varName),
+    routeContext: `{ path: ${jsStringLiteral(route.path)}, filePath: ${
+      jsStringLiteral(route.filePath)
+    } }`,
+    headExtrasExpr: isSSG ? '__headExtras' : jsStringLiteral(docConfig.headExtras),
+  };
+
+  renderRouteHandlerPreamble(lines, ctx);
+  if (ctx.isAction) {
+    renderActionProtocol(lines, ctx);
+  }
+  renderRouteResponseAndCatch(lines, ctx);
 }
 
 /** Compatibility-facing focused entry points used by the entry orchestrator. */

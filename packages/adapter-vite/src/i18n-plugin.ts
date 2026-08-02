@@ -4,9 +4,10 @@
  *
  * Build-time Vite plugin, allowed to use node:*.
  *
- * This module uses node:process, node:path, node:fs and MUST NOT be imported
- * from the main @openelement/app entry to avoid pulling Node built-ins into
- * client island bundles.
+ * This module reaches node:* built-ins through the injected FileSystemAdapter
+ * (default: nodeFsAdapter) and MUST NOT be imported from the main
+ * @openelement/app entry to avoid pulling Node built-ins into client island
+ * bundles.
  *
  * Standalone usage requires explicit ctx parameter:
  * ```ts
@@ -17,9 +18,9 @@
 import type { Plugin } from 'vite';
 import type { OpenElementBuildContextLike } from './internal/protocol/framework.ts';
 import { createLogger } from '@openelement/element';
-import process from 'node:process';
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { type FileSystemAdapter, nodeFsAdapter } from './internal/content/fs-adapter.ts';
+import { DEFAULT_DATA_DIR } from './internal/paths.ts';
 import { loadI18nData } from '@openelement/app/i18n';
 import type { OpenElementI18nOptions } from '@openelement/app/i18n';
 
@@ -55,10 +56,13 @@ export function writeI18nDataModule(locales: string[], defaultLocale: string): s
  * Configures locale options for route-level i18n helpers.
  */
 export function openI18n(
-  options: OpenElementI18nOptions & { ctx?: OpenElementBuildContextLike },
+  options: OpenElementI18nOptions & { ctx?: OpenElementBuildContextLike; fs?: FileSystemAdapter },
 ): Plugin {
   // ctx must be explicitly provided (via openElement() umbrella or direct param)
   const ctx = options.ctx;
+  // File-system injection matches the blog/nav content plugins (#847): tests
+  // can pass an in-memory adapter instead of touching the real disk.
+  const fs = options.fs ?? nodeFsAdapter;
 
   return {
     name: 'open:i18n',
@@ -78,10 +82,10 @@ export function openI18n(
 
       // SOP-001: Write generated i18n data module to disk.
       // Failing to write must fail the build: consumers import these files.
-      const dataDir = join(process.cwd(), 'app', 'data');
-      mkdirSync(dataDir, { recursive: true });
+      const dataDir = join(fs.cwd(), DEFAULT_DATA_DIR);
+      fs.mkdirSync(dataDir, { recursive: true });
       const i18nModule = writeI18nDataModule(i18nData.locales, i18nData.defaultLocale);
-      writeFileSync(join(dataDir, '_generated-i18n-data.ts'), i18nModule, 'utf-8');
+      fs.writeFileSync(join(dataDir, '_generated-i18n-data.ts'), i18nModule, 'utf-8');
       log.info(`I18n: wrote _generated-i18n-data.ts (${i18nData.locales.join(', ')})`);
 
       log.info(`${options.locales.join(', ')} (default: ${options.defaultLocale})`);

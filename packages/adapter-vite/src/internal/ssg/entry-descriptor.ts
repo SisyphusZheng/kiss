@@ -23,6 +23,7 @@ import type {
 } from '../protocol/framework.ts';
 import type { SsrAdmissionDecision } from '@openelement/element';
 import { normalizeSeparators } from '@openelement/element/build-utils';
+import { DEFAULT_ISLANDS_DIR, DEFAULT_ROUTES_DIR } from '../paths.ts';
 import { fileToTagName } from './route-scanner.ts';
 import {
   buildPackageIslandDecls,
@@ -83,8 +84,8 @@ export function buildEntryDescriptor(
     layouts?: FrameworkOptions['layouts'];
   } = {},
 ): EntryDescriptor {
-  const routesDir = options.routesDir || 'app/routes';
-  const islandsDir = options.islandsDir || 'app/islands';
+  const routesDir = options.routesDir || DEFAULT_ROUTES_DIR;
+  const islandsDir = options.islandsDir || DEFAULT_ISLANDS_DIR;
   const isSSG = options.ssg === true;
 
   // --- Imports ---

@@ -24,7 +24,7 @@ import {
   createProductionBuildPlan,
   writeBuildEvidence,
 } from './build-plan.ts';
-import { DEFAULT_OUT_DIR } from './internal/paths.ts';
+import { DEFAULT_OUT_DIR, DEFAULT_ROUTES_DIR } from './internal/paths.ts';
 
 const log = createLogger('build');
 
@@ -178,14 +178,18 @@ export function buildPlugin(
         }
 
         // Generate route manifest for client-side routing
-        const absRoutesDir = join(root, ctx.phase3.routesDir || 'app/routes');
+        const absRoutesDir = join(root, ctx.phase3.routesDir || DEFAULT_ROUTES_DIR);
         const routeCount = await writeRouteManifest({
           routesDir: absRoutesDir,
           outDir: absOutDir,
         });
         log.info(`Route manifest written (${routeCount} page route(s))`);
 
-        // Phase 2: Client island bundle (only if islands exist)
+        // Phase 2: Client island bundle (only if islands exist). Unlike the
+        // SSG path below this intentionally skips the hasEnhancedForms check
+        // (#569): in SPA mode form submission is intercepted by the SPA
+        // bootstrap's own client entry, so the zero-island enhancement entry
+        // would never be loaded.
         if (totalIslands > 0) {
           await runClientIslandBuild(ctx);
         }

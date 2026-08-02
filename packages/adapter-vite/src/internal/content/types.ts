@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Type definitions
+ * types.ts - Type definitions
  *
  * Unified content plugin for openElement.
  * Blog + Nav + Sitemap - build-time only, zero runtime.

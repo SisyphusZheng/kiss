@@ -39,24 +39,31 @@ import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts'
 import {
   detectAndClassifyCemPackages,
   fileToTagName,
+  scanIslandMeta,
   scanIslands,
   scanPackageManifests,
   scanRoutes,
 } from './internal/ssg/index.ts';
 import { buildPackageIslandDecls } from './internal/ssg/island-scanner.ts';
 import { mdxPlugin } from './plugin-mdx.ts';
+import {
+  CHUNK_SIZE_WARNING_LIMIT_KB,
+  DEFAULT_COMPONENTS_DIR,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_ROUTES_DIR,
+} from './internal/paths.ts';
 
-type LessAliasOptions = Record<string, string> | Alias[] | null | undefined;
+type AliasOptionsInput = Record<string, string> | Alias[] | null | undefined;
 
 function mergeAliasOptions(
-  primary: LessAliasOptions,
-  fallback: LessAliasOptions,
+  primary: AliasOptionsInput,
+  fallback: AliasOptionsInput,
 ): Record<string, string> | Alias[] | null {
   if (!primary) return fallback ?? null;
   if (!fallback) return primary;
 
   const merged: Alias[] = [];
-  const append = (aliases: LessAliasOptions): void => {
+  const append = (aliases: AliasOptionsInput): void => {
     if (!aliases) return;
     if (Array.isArray(aliases)) {
       merged.push(...aliases);
@@ -119,9 +126,9 @@ export function createOpenPlugin(
     ssg?: SsgBehaviorOptions;
   } = {
     ...options,
-    routesDir: options.routesDir || 'app/routes',
-    islandsDir: options.islandsDir || 'app/islands',
-    componentsDir: options.componentsDir || 'app/components',
+    routesDir: options.routesDir || DEFAULT_ROUTES_DIR,
+    islandsDir: options.islandsDir || DEFAULT_ISLANDS_DIR,
+    componentsDir: options.componentsDir || DEFAULT_COMPONENTS_DIR,
     headExtras,
     allowHeadExtrasScripts,
   };
@@ -222,7 +229,7 @@ export function createOpenPlugin(
         build: {
           // The generated virtual entry intentionally contains the whole route graph.
           // Keep the budget explicit so Vite does not report it as an unexpected warning.
-          chunkSizeWarningLimit: 1500,
+          chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
           rollupOptions: {
             input: [VIRTUAL_BUILD_TRIGGER_ID],
           },
@@ -255,12 +262,11 @@ export function createOpenPlugin(
 
         const islandsRoot = join(
           process.cwd(),
-          resolvedOptions.islandsDir || 'app/islands',
+          resolvedOptions.islandsDir || DEFAULT_ISLANDS_DIR,
         );
         const islandFiles = await scanIslands(islandsRoot);
         ctx.phase1.islandTagNames = islandFiles.map((f) => fileToTagName(f));
         ctx.phase1.islandFiles = islandFiles;
-        const { scanIslandMeta } = await import('./internal/ssg/index.ts');
         ctx.phase1.islandMeta = await scanIslandMeta(islandsRoot, islandFiles);
 
         if (

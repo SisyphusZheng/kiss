@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Navigation plugin
+ * plugin.ts - Navigation plugin
  *
  * Build-time Vite plugin that scans route files for `meta` exports and writes
  * app/data/_generated-nav.ts and public/search-index.json.
@@ -14,6 +14,7 @@ import { scanNavData } from './scanner.ts';
 import { writeNavModule, writeSearchIndex } from './writer.ts';
 import { createLogger } from '@openelement/element';
 import { join } from 'node:path';
+import { DEFAULT_DATA_DIR, DEFAULT_ROUTES_DIR } from '../../paths.ts';
 
 const log = createLogger('content:nav');
 
@@ -28,7 +29,7 @@ export function createNavPlugin(
     async buildStart() {
       const resolvedNavOpts = {
         ...options,
-        routesDir: options.routesDir ?? 'app/routes',
+        routesDir: options.routesDir ?? DEFAULT_ROUTES_DIR,
       };
       const navSections = await scanNavData(resolvedNavOpts);
       const headerNav = resolvedNavOpts.headerNav || [];
@@ -39,7 +40,7 @@ export function createNavPlugin(
 
       // SOP-001: Write generated nav data module to disk.
       // Failing to write must fail the build: consumers import these files.
-      const dataDir = join(fs.cwd(), 'app', 'data');
+      const dataDir = join(fs.cwd(), DEFAULT_DATA_DIR);
       fs.mkdirSync(dataDir, { recursive: true });
       const navModule = writeNavModule({ headerNav, navSections });
       fs.writeFileSync(join(dataDir, '_generated-nav.ts'), navModule, 'utf-8');

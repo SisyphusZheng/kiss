@@ -12,21 +12,18 @@ import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { walkHtmlFileEntries } from '../src/internal/html-files.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(dirname(__dirname)));
 const WWW_DIR = join(ROOT, 'www');
 const WWW_DIST = join(WWW_DIR, 'dist');
 
-function hasSsrBundle(): boolean {
+function hasServerEntry(): boolean {
   // ADR 0011 + S2 fix: Phase 1 artifacts (_virtual_open-hono-entry-*.js)
   // are cleaned from dist/assets/ by closeBundle because they are build-time
   // only and must not be deployed to public static hosting.
   // The real SSR bundle is at dist/server/entry.js.
-  return hasServerEntry();
-}
-
-function hasServerEntry(): boolean {
   return existsSync(join(WWW_DIST, 'server', 'entry.js'));
 }
 
@@ -36,20 +33,11 @@ function hasIslandChunk(prefix: string): boolean {
   return readdirSync(islandsDir).some((file) => file.startsWith(prefix) && file.endsWith('.js'));
 }
 
-function findHtmlFiles(dir: string): string[] {
-  const results: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = join(dir, entry.name);
-    if (
-      entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'client' &&
-      entry.name !== 'server'
-    ) {
-      results.push(...findHtmlFiles(fullPath));
-    } else if (entry.name.endsWith('.html')) {
-      results.push(fullPath);
-    }
-  }
-  return results;
+/** Page HTML under dist/, excluding the client/ and server/ build artifacts. */
+function findPageHtmlFiles(dir: string): string[] {
+  return walkHtmlFileEntries(dir)
+    .map((entry) => entry.absolutePath)
+    .filter((path) => !/[\/\\](client|server)[\/\\]/.test(path));
 }
 
 async function ensureDocsBuild(): Promise<void> {
@@ -70,7 +58,6 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
   await ensureDocsBuild();
 
   await t.step('phase 1 output exists with SSR bundle and HTML', () => {
-    assert(hasSsrBundle(), 'SSR bundle should exist');
     assert(hasServerEntry(), 'Server entry bundle should exist');
 
     // ADR 0011: Build metadata is now in OpenElementBuildContext, not .openElement/build-metadata.json.
@@ -128,7 +115,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
   });
 
   await t.step('phase 3 output contains HTML, DSD, clean URLs', () => {
-    const htmlFiles = findHtmlFiles(WWW_DIST);
+    const htmlFiles = findPageHtmlFiles(WWW_DIST);
     assert(htmlFiles.length > 0, 'Should have generated HTML files');
 
     for (const filePath of htmlFiles) {

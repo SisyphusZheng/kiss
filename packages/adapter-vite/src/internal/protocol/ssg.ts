@@ -1,5 +1,5 @@
 /**
- * ./index.ts - SSG engine contracts.
+ * ssg.ts - SSG engine contracts.
  *
  * Runtime-free data contracts consumed by the SSG engine and build adapters.
  * These types keep the SSG engine adapter-agnostic.
@@ -8,7 +8,6 @@
 import type {
   CompatibilityClassification,
   HydrationStrategy,
-  OpenElementPackageManifest,
   RenderError,
   SsrAdmissionDecision,
 } from './framework.ts';
@@ -302,11 +301,8 @@ export interface SsgRenderEvidence {
     defaultLocale?: string;
     [key: string]: unknown;
   } | null;
-  localIslandMeta?: Record<string, { hydrate?: string }>;
-  packageIslandDecls?: IslandDecl[];
-  packageManifests?: OpenElementPackageManifest[];
+  /** SSR admission decisions from the plan that rendered the pages. */
   admissionDecisions?: SsrAdmissionDecision[];
-  cemClassifications?: CompatibilityClassification[];
   onPrintBuildManifest?: (input: {
     root: string;
     outDir: string;
@@ -412,8 +408,6 @@ export interface BuildPlan {
   i18n?: BuildI18nOptions;
   /** Package island discovery options. */
   packageIslands?: BuildPackageIslandOptions;
-  /** Extra evidence passed to the render pipeline. */
-  evidence?: SsgRenderEvidence;
 }
 
 /** A single generated HTML page artifact. */

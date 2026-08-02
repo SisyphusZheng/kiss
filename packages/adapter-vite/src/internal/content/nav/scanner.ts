@@ -1,5 +1,5 @@
 /**
- * ./index.ts navigation tools - Navigation scanner
+ * scanner.ts - Navigation scanner
  *
  * Scans route files, extracts `meta` exports, and aggregates NavSection[].
  * Build-time only - data stored in ctx.navSections (ADR 0010: no .openElement/ temp files).
@@ -10,6 +10,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import type { HeaderNavLink, NavItem, NavOptions, NavSection, RouteMeta } from '../types.ts';
 import { createLogger } from '@openelement/element';
 import { scanRoutes } from '../../ssg/index.ts';
+import { DEFAULT_ROUTES_DIR } from '../../paths.ts';
 import ts from 'typescript';
 
 /** Aggregated navigation data ready for module generation */
@@ -103,7 +104,7 @@ function isExcludedEntry(filePath: string, exclude: string[]): boolean {
  * scanning is used to extract `meta` exports without a second disk read.
  */
 export async function scanNavData(options: NavOptions): Promise<NavSection[]> {
-  const routesDir = resolve(options.routesDir ?? 'app/routes');
+  const routesDir = resolve(options.routesDir ?? DEFAULT_ROUTES_DIR);
   const exclude = options.exclude || [];
 
   // Default excludes: 404. Files starting with _ and dot-files are already

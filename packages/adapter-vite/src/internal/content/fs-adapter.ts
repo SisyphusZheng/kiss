@@ -1,5 +1,5 @@
 /**
- * ./index.ts - File-system adapter
+ * fs-adapter.ts - File-system adapter
  *
  * Thin abstraction over process.cwd() and synchronous file writes so that
  * plugin buildStart() logic can be unit-tested with an in-memory adapter.

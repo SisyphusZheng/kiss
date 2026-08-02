@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { DEFAULT_DATA_DIR } from './internal/paths.ts';
 
 export const GENERATED_NAV_ID = '@openelement/generated/nav';
 export const GENERATED_BLOG_DATA_ID = '@openelement/generated/blog-data';
@@ -26,7 +27,6 @@ const GENERATED_DATA_FALLBACKS: Record<string, string> = {
 
 export type GeneratedDataResolverOptions = {
   root: string;
-  dataDir?: string;
   name?: string;
   /**
    * When true (default), a missing generated data module resolves to an empty
@@ -47,17 +47,15 @@ export type GeneratedDataResolverOptions = {
 export function generatedDataPath(
   root: string,
   id: string,
-  dataDir = 'app/data',
 ): string | null {
   const fileName = GENERATED_DATA_FILES[id];
   if (!fileName) return null;
-  return resolve(root, dataDir, fileName);
+  return resolve(root, DEFAULT_DATA_DIR, fileName);
 }
 
 export function createGeneratedDataResolverPlugin(
   options: GeneratedDataResolverOptions,
 ): Plugin {
-  const dataDir = options.dataDir ?? 'app/data';
   const allowFallback = options.allowFallback ?? true;
 
   return {
@@ -66,7 +64,7 @@ export function createGeneratedDataResolverPlugin(
 
     resolveId(id) {
       if (!GENERATED_DATA_FILES[id]) return null;
-      const path = generatedDataPath(options.root, id, dataDir);
+      const path = generatedDataPath(options.root, id);
       if (path && existsSync(path)) return path;
       return '\0open:generated-data:' + id;
     },
@@ -76,7 +74,7 @@ export function createGeneratedDataResolverPlugin(
       if (!id.startsWith(prefix)) return null;
 
       const sourceId = id.slice(prefix.length);
-      const path = generatedDataPath(options.root, sourceId, dataDir);
+      const path = generatedDataPath(options.root, sourceId);
       if (path && existsSync(path)) return readFileSync(path, 'utf-8');
 
       if (options.required?.includes(sourceId)) {

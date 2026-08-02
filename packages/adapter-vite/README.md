@@ -61,10 +61,14 @@ import { createOpenElementNitroHandler } from '@openelement/adapter-vite/nitro-m
 
 ## SSG Pipeline
 
+The build executes in ADR-0023 order — SSG (Phase 3) runs before the client
+bundle (Phase 2), because client chunk hashes do not affect HTML content and
+script injection is a post-processing step:
+
 ```text
 Phase 1: route, API, middleware, and island scan
-Phase 2: client island entry and browser chunks
 Phase 3: SSR bundle, Hono toSSG(), HTML post-processing
+Phase 2: client island entry and browser chunks
 ```
 
 ## Build Utilities

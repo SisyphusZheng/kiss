@@ -195,12 +195,15 @@ Deno.test('createOpenPlugin() corePlugin.configResolved builds the placeholder e
   const plugins = createOpenPlugin();
   const corePlugin = plugins.find((p) => p.name === 'open:core')!;
   assertExists(corePlugin.configResolved);
-  // Should not throw when called with fake config
-  // Use type assertion to avoid TS2349 (ObjectHook may not be callable)
+  // Populate the placeholder entry descriptor via the configResolved hook.
   if (typeof corePlugin.configResolved === 'function') {
     (corePlugin.configResolved as (config: never) => void)({} as never);
   }
-  assertEquals(true, true);
+  // Behavior assertion (#847): the placeholder descriptor must let the
+  // virtual entry plugin load() render entry code without a buildStart().
+  const virtualPlugin = plugins.find((p) => p.name === 'open:virtual-entry')!;
+  const entryCode = (virtualPlugin.load as Function)('\0virtual:open-hono-entry');
+  assertStringIncludes(entryCode as string, "import 'virtual:open-ssr-polyfill';");
 });
 
 // ─── createOpenPlugin() virtualEntryPlugin hooks ────────────────────────

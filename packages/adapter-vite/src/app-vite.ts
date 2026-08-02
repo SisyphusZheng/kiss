@@ -16,6 +16,11 @@ import { createOpenPlugin } from './plugin.ts';
 import { openContent } from './internal/content/vite.ts';
 import { openI18n } from './i18n-plugin.ts';
 import { createLogger } from '@openelement/element';
+import {
+  DEFAULT_COMPONENTS_DIR,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_ROUTES_DIR,
+} from './internal/paths.ts';
 
 const log = createLogger('app');
 
@@ -33,9 +38,9 @@ export function openElement(options: OpenElementOptions = {}): Plugin[] {
   const { content: contentOpts, i18n: i18nOpts, ...coreOpts } = options;
   const ctx = new OpenElementBuildContext({
     ...coreOpts,
-    routesDir: coreOpts.routesDir || 'app/routes',
-    islandsDir: coreOpts.islandsDir || 'app/islands',
-    componentsDir: coreOpts.componentsDir || 'app/components',
+    routesDir: coreOpts.routesDir || DEFAULT_ROUTES_DIR,
+    islandsDir: coreOpts.islandsDir || DEFAULT_ISLANDS_DIR,
+    componentsDir: coreOpts.componentsDir || DEFAULT_COMPONENTS_DIR,
   });
 
   const plugins: Plugin[] = [...createOpenPlugin(coreOpts, ctx)];

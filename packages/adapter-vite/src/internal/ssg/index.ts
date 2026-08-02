@@ -55,7 +55,6 @@ export {
   injectCspMeta,
   injectSpeculationRules,
   injectViewTransitionMeta,
-  insertAfterHead,
 } from './postprocess.ts';
 
 export { cleanSsrArtifacts, postProcessClientIslandBuild } from './build-postprocess.ts';
@@ -88,7 +87,6 @@ export {
   writeIslandManifests,
 } from './island-manifest.ts';
 
-export { stableHash } from './ssg-helpers.ts';
 export type {
   IslandLayerMap,
   IslandManifestEntry,

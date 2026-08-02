@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Entry Generators
+ * entry-generators.ts - Entry Generators
  *
  * v0.21.0: manifest-driven hydration strategies.
  * Zero DOM interaction - cannot interfere with DSD rendering.
@@ -7,7 +7,7 @@
 
 import type { HydrationStrategy } from '../protocol/framework.ts';
 import type { ClientIslandEntry } from '../protocol/ssg.ts';
-import { quoteGeneratedJavaScriptStringLiteral } from './codegen-literals.ts';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import { ACTION_FETCH_HEADER, HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
@@ -47,7 +47,7 @@ function hasTraversalSegment(value: string): boolean {
  * while still prefixing messages with `[openElement]`.
  */
 function renderClientLogger(tag = 'openElement'): string {
-  const prefix = quoteGeneratedJavaScriptStringLiteral(`[${tag}]`);
+  const prefix = quoteGeneratedJavaScriptValue(`[${tag}]`);
   return `var log = {
   warn: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.warn.apply(console, a); },
   error: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.error.apply(console, a); },
@@ -84,14 +84,12 @@ function islandImportFactory(
   tagName: string,
   exportName?: string,
 ): string {
-  const nameLiteral = exportName ? quoteGeneratedJavaScriptStringLiteral(exportName) : 'undefined';
+  const nameLiteral = exportName ? quoteGeneratedJavaScriptValue(exportName) : 'undefined';
   return `() => import(${
-    quoteGeneratedJavaScriptStringLiteral(modulePath)
+    quoteGeneratedJavaScriptValue(modulePath)
   }).then(function(mod) { var _name = ${nameLiteral}; var Ctor = _name ? mod[_name] : mod.default; if (Ctor && !customElements.get(${
-    quoteGeneratedJavaScriptStringLiteral(tagName)
-  })) customElements.define(${
-    quoteGeneratedJavaScriptStringLiteral(tagName)
-  }, Ctor); return mod; })`;
+    quoteGeneratedJavaScriptValue(tagName)
+  })) customElements.define(${quoteGeneratedJavaScriptValue(tagName)}, Ctor); return mod; })`;
 }
 
 export function validateClientIslandEntry(entry: ClientIslandEntry): AdmittedClientIslandEntry {
@@ -136,30 +134,30 @@ export function generateClientEntry(
 
   const islandMap = admittedIslands
     .map((i) =>
-      `  ${quoteGeneratedJavaScriptStringLiteral(i.tagName)}: ${
+      `  ${quoteGeneratedJavaScriptValue(i.tagName)}: ${
         islandImportFactory(i.modulePath, i.tagName, i.exportName)
       }`
     )
     .join(',\n');
 
-  const tags = admittedIslands.map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName)).join(
+  const tags = admittedIslands.map((i) => quoteGeneratedJavaScriptValue(i.tagName)).join(
     ', ',
   );
   const loadTags = admittedIslands
     .filter((i) => i.strategy === 'load')
-    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
     .join(', ');
   const visibleTags = admittedIslands
     .filter((i) => i.strategy === 'visible')
-    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
     .join(', ');
   const idleTags = admittedIslands
     .filter((i) => i.strategy === 'idle')
-    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
     .join(', ');
   const onlyTags = admittedIslands
     .filter((i) => i.strategy === 'only')
-    .map((i) => quoteGeneratedJavaScriptStringLiteral(i.tagName))
+    .map((i) => quoteGeneratedJavaScriptValue(i.tagName))
     .join(', ');
 
   return `// openElement Client Entry (v0.21 - load/idle/visible/only)

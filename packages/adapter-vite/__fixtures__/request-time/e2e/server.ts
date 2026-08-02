@@ -20,6 +20,7 @@
 import { join, resolve } from 'node:path';
 import {
   importRequestTimeServer,
+  isMalformedUrlError,
   type RequestTimeRouteMatch,
   tryStatic,
 } from '../../../src/internal/static-serve.ts';
@@ -45,7 +46,16 @@ const matchRequestTimeRoute = serverEntry.matchRequestTimeRoute as (
 
 Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
   const url = new URL(request.url);
-  if (matchRequestTimeRoute(url.pathname) !== null) {
+  // #823: matchRequestTimeRoute decodes params internally — a malformed
+  // percent-encoded pathname (/%zz) is a client error, not a hung connection.
+  let match: RequestTimeRouteMatch | null;
+  try {
+    match = matchRequestTimeRoute(url.pathname);
+  } catch (err) {
+    if (isMalformedUrlError(err)) return new Response('Bad Request', { status: 400 });
+    throw err;
+  }
+  if (match !== null) {
     return await handleRequestTime({ request, env: Deno.env.toObject() });
   }
   const staticResponse = tryStatic(ROOT, url.pathname);

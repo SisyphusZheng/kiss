@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Route generation
+ * routes.ts - Route generation
  *
  * Scans content directory for .md files and generates route data.
  */

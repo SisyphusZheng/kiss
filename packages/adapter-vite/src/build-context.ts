@@ -35,7 +35,12 @@ import type {
   IslandDecl,
   SsrAdmissionPlan,
 } from './internal/protocol/ssg.ts';
-import { DEFAULT_OUT_DIR } from './internal/paths.ts';
+import {
+  DEFAULT_COMPONENTS_DIR,
+  DEFAULT_ISLANDS_DIR,
+  DEFAULT_OUT_DIR,
+  DEFAULT_ROUTES_DIR,
+} from './internal/paths.ts';
 
 export type Phase = 1 | 2 | 3;
 
@@ -117,13 +122,13 @@ export class Phase3Meta {
   ssrNoExternal: (string | { __type: 'RegExp'; source: string; flags: string })[] = [];
 
   /** Routes directory */
-  routesDir: string = 'app/routes';
+  routesDir: string = DEFAULT_ROUTES_DIR;
 
   /** Islands directory */
-  islandsDir: string = 'app/islands';
+  islandsDir: string = DEFAULT_ISLANDS_DIR;
 
   /** Components directory */
-  componentsDir: string = 'app/components';
+  componentsDir: string = DEFAULT_COMPONENTS_DIR;
 }
 
 export class OpenElementBuildContext {
@@ -202,9 +207,9 @@ export class OpenElementBuildContext {
     this.phase3.outDir = options.build?.outDir || DEFAULT_OUT_DIR;
     this.phase3.base = base;
     this.phase3.ssrNoExternal = ssrNoExternal;
-    this.phase3.routesDir = options.routesDir || 'app/routes';
-    this.phase3.islandsDir = options.islandsDir || 'app/islands';
-    this.phase3.componentsDir = options.componentsDir || 'app/components';
+    this.phase3.routesDir = options.routesDir || DEFAULT_ROUTES_DIR;
+    this.phase3.islandsDir = options.islandsDir || DEFAULT_ISLANDS_DIR;
+    this.phase3.componentsDir = options.componentsDir || DEFAULT_COMPONENTS_DIR;
     this.phase3.middleware = options.middleware || null;
     this.phase3.html = options.html || null;
     this.phase3.upgradeStrategy = options.island?.upgradeStrategy || 'idle';

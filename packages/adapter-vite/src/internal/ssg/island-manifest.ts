@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Island Upgrade Manifest
+ * island-manifest.ts - Island Upgrade Manifest
  *
  * Generates per-page island manifest JSON files during SSG post-processing.
  * Each manifest lists the islands found on a page with their chunk URLs and strategies.
@@ -169,5 +169,3 @@ export async function writeIslandManifests(
     writeFileSync(join(manifestDir, filename), formatJson(manifest), 'utf-8');
   }
 }
-
-// stableHash moved to ssg-helpers.ts — imported above

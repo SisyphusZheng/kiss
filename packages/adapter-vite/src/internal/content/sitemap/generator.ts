@@ -1,5 +1,5 @@
 /**
- * ./sitemap.ts - Sitemap generator
+ * generator.ts - Sitemap generator
  *
  * Scans dist/ directory for index.html files and generates sitemap.xml.
  * Also optionally generates robots.txt.
