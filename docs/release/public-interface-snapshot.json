@@ -38,11 +38,11 @@
           ]
         },
         "./jsx-dev-runtime": {
-          "sha256": "6d779eab2e125157ead5450932dea7424d8b7667524468218e6895dbe138f3dd",
+          "sha256": "62b06bb0437e576795732e75e9e4006d7464328a28f217ad3db183b906d5505a",
           "publicDeclarations": []
         },
         "./jsx-runtime": {
-          "sha256": "5ee78ec6010afefb6dd05e88076e6d9bf2edec382aca5a23bdfb89b24abb4094",
+          "sha256": "3b4f1cda9ec619e5ec89b3fcecdba9b1ee4412cc4ff53122e68bea9f3aee3abb",
           "publicDeclarations": []
         }
       }
