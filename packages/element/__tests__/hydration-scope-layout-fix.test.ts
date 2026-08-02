@@ -9,7 +9,7 @@
  * querySelectorAll() on the shadow root and a host to queue.
  */
 
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { HydrationScope } from '../src/internal/core/hydration-scope.ts';
 
 function fakeHost() {
@@ -86,6 +86,33 @@ Deno.test('a hydrate after the batch flushes schedules a fresh rAF', () => {
     new HydrationScope().hydrate(fakeShadowRoot(host));
     assertEquals(callbacks.length, 2);
     callbacks[1](0);
+    assertEquals(state.reflows, 2);
+  });
+});
+
+/** Run fn with requestAnimationFrame removed entirely, then restore. */
+function withoutRaf(fn: () => void): void {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'requestAnimationFrame');
+  Reflect.deleteProperty(globalThis, 'requestAnimationFrame');
+  try {
+    fn();
+  } finally {
+    if (original) {
+      Object.defineProperty(globalThis, 'requestAnimationFrame', original);
+    }
+  }
+}
+
+Deno.test('without rAF the layout fix flushes synchronously and the scheduling flag resets', () => {
+  withoutRaf(() => {
+    const { host, state } = fakeHost();
+
+    new HydrationScope().hydrate(fakeShadowRoot(host));
+    assertEquals(state.reflows, 1, 'no rAF: flush happens synchronously');
+
+    // The flag must not latch: a second hydrate flushes again instead of
+    // being swallowed by a stale "scheduled" flag (#845).
+    new HydrationScope().hydrate(fakeShadowRoot(host));
     assertEquals(state.reflows, 2);
   });
 });

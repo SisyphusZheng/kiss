@@ -5,7 +5,7 @@
  * browser DOM globals does not mutate the host global scope.
  */
 
-import { assertEquals } from 'jsr:@std/assert@1';
+import { assertEquals } from '@std/assert';
 
 Deno.test('importing @openelement/element in a no-DOM runtime does not create globalThis.HTMLElement', async () => {
   const script = `

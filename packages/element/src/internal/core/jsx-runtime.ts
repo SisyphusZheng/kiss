@@ -1,5 +1,5 @@
 /**
- * ./index.ts - JSX Runtime.
+ * ./jsx-runtime.ts - JSX Runtime.
  *
  * Implements the React-compatible jsx/jsxs/jsxDEV/Fragment interface.
  * Consumed by TypeScript/esbuild JSX transform when `jsxImportSource: "./index.ts"`.
@@ -48,10 +48,13 @@ export const HTML_TAG: unique symbol = Symbol.for('openelement.html');
  * directive. Centralized like `isFragment` (#740) so the three render paths
  * (render-ir, jsx-render-dom, event-hydration) share one check. The string
  * branch matches compiled JSX that emits the literal `show` tag instead of
- * the `Show()` factory symbol.
+ * the `Show()` factory symbol, and the symbol-description branch matches a
+ * non-canonical symbol with the same description (cross-bundle duplicate
+ * runtime), mirroring `isFragment` (#845).
  */
 export function isShowTag(tag: unknown): boolean {
-  return tag === SHOW_TAG || tag === 'show';
+  return tag === SHOW_TAG || tag === 'show' ||
+    (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.show)');
 }
 
 /**
@@ -59,7 +62,8 @@ export function isShowTag(tag: unknown): boolean {
  * directive. See `isShowTag` for why both the symbol and string forms match.
  */
 export function isForTag(tag: unknown): boolean {
-  return tag === FOR_TAG || tag === 'for';
+  return tag === FOR_TAG || tag === 'for' ||
+    (typeof tag === 'symbol' && String(tag) === 'Symbol(openelement.for)');
 }
 
 /**

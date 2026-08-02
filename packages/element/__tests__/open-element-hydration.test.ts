@@ -7,10 +7,11 @@
  * + hydrate). Uses a fake scope/element stand-in matching OpenElementLike.
  */
 
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { hydrateExistingDom } from '../src/open-element-hydration.ts';
 import type { OpenElementLike } from '../src/open-element-render.ts';
 import { hasPopulatedShadowRoot } from '../src/internal/core/dsd-shadow-root.ts';
+import { FakeScope } from './fake-scope.ts';
 
 Deno.test('DSD populated-root predicate accepts element, text, comment, and mixed content', () => {
   const nodeKinds = [
@@ -28,22 +29,6 @@ Deno.test('DSD populated-root predicate accepts element, text, comment, and mixe
     false,
   );
 });
-
-class FakeScope {
-  resetCount = 0;
-  cached: unknown = '__unset__';
-  hydrateRoots: unknown[] = [];
-
-  reset(): void {
-    this.resetCount++;
-  }
-  setCachedVNode(vnode: unknown): void {
-    this.cached = vnode;
-  }
-  hydrate(shadowRoot: ShadowRoot): void {
-    this.hydrateRoots.push(shadowRoot);
-  }
-}
 
 class FakeShadowRoot {
   host: unknown = null;

@@ -1,4 +1,4 @@
-import { assertEquals, assertInstanceOf } from 'jsr:@std/assert@1';
+import { assertEquals, assertInstanceOf } from '@std/assert';
 import { OpenElement } from '../src/index.ts';
 import * as elementSurface from '../src/index.ts';
 

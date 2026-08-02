@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Unified error architecture contracts.
+ * ./errors.ts - Unified error architecture contracts.
  */
 
 // ─── Well-known error codes ─────────────────────────────────────────

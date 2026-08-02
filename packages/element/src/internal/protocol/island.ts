@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Island contracts.
+ * ./island.ts - Island contracts.
  */
 
 import type { HydrationStrategy } from './framework.ts';
@@ -23,12 +23,19 @@ export interface IslandOptions {
 
   /**
    * Whether to use DSD for SSR rendering of this island.
+   *
+   * Honored by the build-side island scan (via `defineIslandConfig`), not by
+   * `defineIsland()` itself: passing it in `IslandOptions` has no runtime
+   * effect.
    * @default true
    */
   dsd?: boolean;
 
   /**
    * Whether this island may be admitted into server rendering.
+   *
+   * Like `dsd`, decided by the build-side island scan; inert when passed to
+   * `defineIsland()`.
    */
   ssr?: boolean;
 }

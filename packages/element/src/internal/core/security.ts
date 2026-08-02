@@ -1,5 +1,5 @@
 /**
- * ./index.ts - SSR Security Guards.
+ * ./security.ts - SSR Security Guards.
  *
  * Properties that MUST NOT be injected from untrusted SSR props.
  * These are Object.prototype internals and dangerous overrides that

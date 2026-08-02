@@ -353,5 +353,13 @@ function queueLayoutFixHost(host: Element | undefined): void {
   layoutFixHosts.add(host);
   if (layoutFixScheduled) return;
   layoutFixScheduled = true;
-  globalThis.requestAnimationFrame?.(flushLayoutFixHosts);
+  if (typeof globalThis.requestAnimationFrame === 'function') {
+    globalThis.requestAnimationFrame(flushLayoutFixHosts);
+  } else {
+    // No rAF (non-browser runtimes): flush synchronously. Without this
+    // fallback layoutFixScheduled would latch forever, the queued hosts would
+    // never drain (and stay strongly referenced), and the reflow fix would be
+    // permanently lost (#845).
+    flushLayoutFixHosts();
+  }
 }

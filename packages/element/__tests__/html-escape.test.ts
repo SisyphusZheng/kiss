@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert@1';
+import { assertEquals } from '@std/assert';
 import { escapeAttr, escapeAttrValue, escapeHtml } from '../src/internal/core/html-escape.ts';
 
 Deno.test('escapeHtml and escapeAttr share one ESCAPE_MAP and identical output', () => {

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Request Context
+ * ./context.ts - Request Context
  * Provides a per-request context object that flows through SSR rendering
  * and is accessible to islands and layout components.
  *

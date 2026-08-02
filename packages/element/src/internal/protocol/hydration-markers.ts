@@ -1,5 +1,5 @@
 /**
- * ./index.ts - DSD hydration marker contract.
+ * ./hydration-markers.ts - DSD hydration marker contract.
  *
  * These constants and helpers define the canonical shape of the markers used
  * to re-connect signals and events between SSR output and client-side hydration.
@@ -22,6 +22,12 @@ export const DATA_SIGNAL_RENDER = 'data-signal-render';
 
 /** Marker that identifies an element carrying serialized event bindings. */
 export const DATA_EID = 'data-eid';
+
+/**
+ * Marker carrying the JSON-serialized public props of an SSR-rendered host,
+ * read back on client upgrade to restore component state (#836).
+ */
+export const DATA_SSR_PROPS = 'data-ssr-props';
 
 /**
  * HTML comment prefix recording the SSR-evaluated branch state of `<Show>`/`<For>`.

@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Unified Error Architecture (ADR-0053 / SOP-011).
+ * ./errors.ts — Unified Error Architecture (ADR-0053 / SOP-011).
  *
  * ERROR_PREFIX and ErrorCode are re-exported from ../protocol/errors.ts.
  * They are pure string constants (no runtime side effects), so importing them

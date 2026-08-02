@@ -1,15 +1,16 @@
 /**
- * ./index.ts - route-level ISR cache primitives.
+ * ./isr.ts - route-level ISR cache primitives.
  *
- * v0.22: Platform adapters (CF Workers KV, Deno KV).
+ * v0.44: Platform adapters (CF Workers KV, Deno KV).
  *
  * Architecture:
  *   1. Build: SSG produces static HTML + isr-manifest.json
  *   2. Runtime: Edge handler checks cache before serving static
+ *   3. Hit: serve fresh cached HTML directly
  *   4. Stale: serve cached HTML + async background regeneration
  *
  * MemoryIsrCache is the reference in-memory implementation. Production adapters
- * (Cloudflare Workers KV, Deno KV) are v0.22 scope.
+ * (Cloudflare Workers KV, Deno KV) are v0.44 scope.
  */
 
 import type {

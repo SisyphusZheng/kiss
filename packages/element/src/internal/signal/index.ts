@@ -23,8 +23,3 @@ export { isSignalLike, resolveSignalProp, unwrapSignalLike } from './types.ts';
 
 // ─── Framework layer ────────────────────────────────────────────
 export { computed, effect, signal } from './framework.ts';
-
-// ─── Default export (convenience aggregate) ─────────────────────
-import { computed, effect, signal } from './framework.ts';
-
-export default { signal, computed, effect };

@@ -12,7 +12,7 @@
  * registry lookup, which is stubbed per test and restored afterwards.
  */
 
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { renderDsdTree } from '../src/internal/core/render-ir.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';
 import { forBranchMarker } from '../src/internal/core/event-marker.ts';

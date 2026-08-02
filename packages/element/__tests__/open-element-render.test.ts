@@ -8,35 +8,15 @@
  * fake scope/element stand-ins (matching the OpenElementLike structural type).
  */
 
-import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertThrows } from '@std/assert';
 import {
   type OpenElementLike,
   renderErrorFallback,
   renderIntoLightDom,
   renderIntoShadowRoot,
 } from '../src/open-element-render.ts';
+import { FakeScope } from './fake-scope.ts';
 import type { VNode } from '@openelement/element';
-
-class FakeScope {
-  resetCount = 0;
-  cached: unknown = '__unset__';
-  lifecycleCreated = 0;
-  hydrateRoots: unknown[] = [];
-
-  reset(): void {
-    this.resetCount++;
-  }
-  setCachedVNode(vnode: unknown): void {
-    this.cached = vnode;
-  }
-  createLifecycle(): { disposers: Set<() => void> } {
-    this.lifecycleCreated++;
-    return { disposers: new Set() };
-  }
-  hydrate(shadowRoot: ShadowRoot): void {
-    this.hydrateRoots.push(shadowRoot);
-  }
-}
 
 class FakeShadowRoot {
   firstChild: unknown = null;

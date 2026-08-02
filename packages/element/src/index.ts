@@ -77,6 +77,12 @@ export {
 } from './internal/core/index.ts';
 export type { IslandOptions } from './internal/protocol/island.ts';
 
+// ─── Hydration markers (protocol) ───────────────────────
+
+// Shared by SSR writers (render-dsd) and client readers (island, app, www) so
+// the attribute name has a single typed source (#836).
+export { DATA_SSR_PROPS } from './internal/protocol/hydration-markers.ts';
+
 // ─── StyleSheet (re-export from core) ────────────────────
 
 export { StyleSheet } from './internal/core/style-sheet.ts';

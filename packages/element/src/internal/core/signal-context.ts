@@ -1,5 +1,5 @@
 /**
- * ./index.ts - SignalContext DOM-tree-based cross-component signal sharing.
+ * ./signal-context.ts - SignalContext DOM-tree-based cross-component signal sharing.
  *
  * v0.29.6: WeakMap replaces symbol-keyed DOM property stamping.
  * Consumer walks parentElement / shadowRoot.host upward to find signals.

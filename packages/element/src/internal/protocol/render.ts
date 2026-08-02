@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Render pipeline types.
+ * ./render.ts — Render pipeline types.
  *
  * Types for the DSD rendering pipeline: component models, render inputs/outputs,
  * metrics, diagnostics, build reports, ISR records, and DOM simulation.

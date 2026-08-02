@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Signal contracts.
+ * ./signal.ts - Signal contracts.
  *
  * Minimal signal protocol types shared across openElement packages.
  */

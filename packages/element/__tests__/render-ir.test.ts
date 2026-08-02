@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertRejects, assertStringIncludes } from '@std/assert';
 import { jsx } from '../src/jsx-runtime.ts';
 import { renderDsdTree, serializeAttrs } from '../src/internal/core/render-ir.ts';
 import { collectEventBindings } from '../src/internal/core/event-hydration.ts';

@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Reactive property declaration types.
+ * ./prop.ts - Reactive property declaration types.
  *
  * ADR-0052 / SOP-010 / ADR-0057: static props + Signal model.
  */

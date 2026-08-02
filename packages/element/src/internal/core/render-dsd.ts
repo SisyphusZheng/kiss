@@ -1,5 +1,5 @@
 /**
- * ./index.ts - DSD Renderer.
+ * ./render-dsd.ts - DSD Renderer.
  *
  * Declarative Shadow DOM SSR renderer.
  * Framework-agnostic: no Lit dependency and no TemplateResult knowledge.
@@ -39,6 +39,7 @@ import {
 } from './render-ir.ts';
 import { injectPropsSafe } from './security.ts';
 import { collectPublicProps } from './props-utils.ts';
+import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
 
 const log = createLogger('render-dsd');
 export const MAX_SSR_NESTING_DEPTH = 50;
@@ -157,7 +158,7 @@ function wrapDsdOutput(params: {
   const { tagName, props, content, styleCss, layer, sourceStr, dsdOptions, lightDom } = params;
   const publicProps = collectPublicProps(props);
   const ssrPropsAttr = Object.keys(publicProps).length > 0
-    ? ` data-ssr-props="${escapeAttrValue(JSON.stringify(publicProps))}"`
+    ? ` ${DATA_SSR_PROPS}="${escapeAttrValue(JSON.stringify(publicProps))}"`
     : '';
 
   return serializeRenderNode(

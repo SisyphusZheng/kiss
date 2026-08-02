@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Island transform core logic.
+ * ./island-transform.ts — Island transform core logic.
  *
  * Pure function: injects island metadata markers into source code.
  * Zero Vite dependency. Usable with any build tool.

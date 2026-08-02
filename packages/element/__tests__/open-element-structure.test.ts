@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { OpenElementThemeManager } from '../src/open-element-theme.ts';
 
 Deno.test('OpenElement public module stays a pure re-export seam', async () => {

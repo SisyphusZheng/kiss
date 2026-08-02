@@ -21,12 +21,7 @@
  * exercise the same contract in both Deno and a browser-capable runtime.
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertInstanceOf,
-  assertStringIncludes,
-} from 'jsr:@std/assert@1';
+import { assertEquals, assertExists, assertInstanceOf, assertStringIncludes } from '@std/assert';
 import type { OpenElement as OpenElementBase } from '@openelement/element';
 import type { VNode } from '@openelement/element';
 import type { Signal } from '@openelement/element';

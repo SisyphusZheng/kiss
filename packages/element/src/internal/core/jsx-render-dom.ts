@@ -291,13 +291,15 @@ function renderNode(
   signalRegistry: Map<string, Signal<unknown>> | undefined,
   descriptors: BindingDescriptor[],
 ): Node {
-  if (node == null || node === false) {
+  // Booleans render nothing, matching the SSR path (render-ir.ts), so a
+  // hand-built children array cannot emit the text "true"/"false" (#845).
+  if (node == null || typeof node === 'boolean') {
     return document.createTextNode('');
   }
   if (typeof node === 'string') {
     return document.createTextNode(node);
   }
-  if (typeof node === 'number' || typeof node === 'boolean') {
+  if (typeof node === 'number') {
     return document.createTextNode(String(node));
   }
 

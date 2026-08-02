@@ -1,5 +1,5 @@
 /**
- * ./index.ts - Route-level ISR cache contracts.
+ * ./isr.ts - Route-level ISR cache contracts.
  */
 
 /** Generic cache entry metadata shared by ISR and runtime adapters. */

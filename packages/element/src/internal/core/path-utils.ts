@@ -1,5 +1,5 @@
 /**
- * ./index.ts — Path normalization utilities.
+ * ./path-utils.ts — Path normalization utilities.
  *
  * These helpers are framework-agnostic string operations used by the app model
  * and SSG drivers. They intentionally avoid `node:path` so they stay safe in

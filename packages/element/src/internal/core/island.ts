@@ -1,7 +1,7 @@
 import { ERROR_PREFIX } from '../protocol/errors.ts';
 import { formatError } from './errors.ts';
 /**
- * ./index.ts - defineIsland() wrapper
+ * ./island.ts - defineIsland() wrapper
  *
  * v0.6.2: defineIsland() wraps any Custom Element class to provide:
  *   - Automatic registration via customElements.define()
@@ -21,6 +21,7 @@ import { createLogger } from './logger.ts';
 import { injectPropsSafe } from './security.ts';
 import { assertValidTagName } from './tag-utils.ts';
 import { HYDRATION_STRATEGIES, type HydrationStrategy } from '../protocol/framework.ts';
+import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
 import type { IslandMeta, IslandOptions } from '../protocol/island.ts';
 export type { IslandMeta, IslandOptions };
 
@@ -63,7 +64,7 @@ const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
  * ```
  */
 export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
-  const raw = el.getAttribute('data-ssr-props');
+  const raw = el.getAttribute(DATA_SSR_PROPS);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as Record<string, unknown>;
@@ -85,13 +86,10 @@ export function getSsrProps(el: HTMLElement): Record<string, unknown> | null {
  *
  * v0.14.3: Prototype pollution fix - filters dangerous keys
  * (__proto__, constructor, prototype) from parsed SSR props.
- *
- * @param el - The upgraded custom element
- */
-
-/** Keys that could cause prototype pollution if assigned to an object instance.
  * v0.14.7: Extended to cover all Object.prototype methods that could be
  * exploited via arbitrary property assignment (C-03 fix).
+ *
+ * @param el - The upgraded custom element
  */
 export function bindSsrProps(el: HTMLElement): void {
   const props = getSsrProps(el);
@@ -255,11 +253,10 @@ export function defineIsland<T extends CustomElementConstructor>(
   // Single rule source shared with defineElement() (tag-utils.ts).
   assertValidTagName(tagName);
 
-  // v0.6': Mixin pattern for connectedCallback - replaces monkey-patch.
-  // Instead of modifying the prototype directly, we create a wrapper
-  // that calls the original callback + auto-binds SSR props.
-  // This is safer than monkey-patching because it doesn't interfere
-  // with Lit's own connectedCallback chain.
+  // v0.6': connectedCallback wrapper - the prototype's connectedCallback is
+  // replaced with a wrapper that calls the original callback + auto-binds SSR
+  // props. The original is captured first, so the wrapped chain still runs the
+  // component's own (and Lit's) connectedCallback logic.
   //
   // v0.14.3: Added __ssrPropsBound idempotency guard to prevent
   // double bindSsrProps() calls when a subclass island inherits from a
@@ -276,7 +273,7 @@ export function defineIsland<T extends CustomElementConstructor>(
       }
       // Auto-bind SSR props on upgrade (idempotent - only once per element)
       if (
-        this.hasAttribute('data-ssr-props') &&
+        this.hasAttribute(DATA_SSR_PROPS) &&
         !ssrPropsBoundSet.has(this)
       ) {
         ssrPropsBoundSet.add(this);

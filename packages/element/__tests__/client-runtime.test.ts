@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from 'jsr:@std/assert@1';
+import { assertEquals, assertThrows } from '@std/assert';
 import { hydrateOpenElement } from '../src/internal/core/client-runtime.ts';
 import { HydrationScope, markSelfHydrated } from '../src/internal/core/hydration-scope.ts';
 import { signal } from '../src/internal/signal/index.ts';

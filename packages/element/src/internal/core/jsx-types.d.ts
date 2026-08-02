@@ -1,5 +1,5 @@
 /**
- * ./index.ts - JSX type declarations.
+ * ./jsx-types.d.ts - JSX type declarations.
  *
  * Required by TypeScript's `jsx: "react-jsx"` mode.
  * Defines JSX.Element as VNode so function components returning VNode

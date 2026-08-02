@@ -157,19 +157,9 @@ export function handleStaticPropAttributeChange(
     const sig = sigMap.get(propName);
     if (!sig) continue;
     const { type, default: defaultValue } = normalizePropDecl(decl);
-    let next: unknown;
-    if (newValue === null) {
-      next = defaultValue;
-    } else if (type === Boolean) {
-      next = true;
-    } else if (type === Number) {
-      const n = Number(newValue);
-      next = Number.isNaN(n) ? 0 : n;
-    } else if (type === Array || type === Object) {
-      next = parseJsonAttribute(newValue, defaultValue);
-    } else {
-      next = newValue;
-    }
+    const next: unknown = newValue === null
+      ? defaultValue
+      : parseAttributeValue(type, newValue, defaultValue);
     // Equality short-circuit: reflect subscribers mirror signal writes into
     // this same attribute. Re-writing an identical parsed value would
     // re-notify the subscriber and loop the write back into setAttribute.
@@ -203,16 +193,7 @@ export function syncStaticPropsFromAttributes(instance: HTMLElement): void {
     if (el.hasAttribute(attrName)) {
       const { type, default: defaultValue } = normalizePropDecl(decl);
       const raw = el.getAttribute(attrName);
-      if (type === Boolean) {
-        sig.value = true;
-      } else if (type === Number) {
-        const n = Number(raw);
-        sig.value = Number.isNaN(n) ? 0 : n;
-      } else if (type === Array || type === Object) {
-        sig.value = parseJsonAttribute(raw ?? '', defaultValue);
-      } else {
-        sig.value = raw;
-      }
+      sig.value = parseAttributeValue(type, raw ?? '', defaultValue);
     }
   }
 }
@@ -230,6 +211,26 @@ function parseJsonAttribute(raw: string, defaultValue: unknown): unknown {
   } catch {
     return defaultValue;
   }
+}
+
+/**
+ * Shared attribute→signal parsing for a non-null raw attribute value, used by
+ * both handleStaticPropAttributeChange and syncStaticPropsFromAttributes. The
+ * null/absent case stays with the caller: removal restores the declared
+ * default, while sync only runs when hasAttribute() is true.
+ */
+function parseAttributeValue(
+  type: NormalizedPropDecl['type'],
+  raw: string,
+  defaultValue: unknown,
+): unknown {
+  if (type === Boolean) return true;
+  if (type === Number) {
+    const n = Number(raw);
+    return Number.isNaN(n) ? 0 : n;
+  }
+  if (type === Array || type === Object) return parseJsonAttribute(raw, defaultValue);
+  return raw;
 }
 
 export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
