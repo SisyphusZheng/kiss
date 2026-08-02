@@ -5,14 +5,15 @@ Execution and release state follow the
 
 > Source of truth for forward product planning.\
 > Source package line: `v0.42.0-alpha.12`.\
-> npm registry line: `v0.42.0-alpha.12` (published 2026-08-01, dist-tag `alpha` — see Current release state).\
+> npm registry line: `v0.42.0-alpha.12` (published 2026-08-02, dist-tag `alpha` — see Current release state).\
 > Active execution target: `v0.42.0-alpha.12`.\
 > Current implementation state: five-package convergence is published;
 > 0.42 alphas through alpha.7 closed the light-fullstack floor (morph
 > residuals, start path, SSG fail-closed, CSRF default, honest tags);
 > alpha.9 shipped the cleanup train and the first fully completed AutoFlow3
 > five-package publish; alpha.10 shipped the audit round 4 remediation
-> trains; alpha.11 is published to npm (2026-08-01) and alpha.12 is the
+> trains; alpha.11 shipped the audit round 5 remediation trains;
+> alpha.12 is published to npm (2026-08-02) and alpha.13 (TP-6) is the
 > next train.\
 > Planned line: `0.42.0` (WC light fullstack) under ADR-0120 and the active
 > version plan in `docs/current/VERSION_PLAN.md`.\
@@ -134,11 +135,11 @@ making the standard Custom Element contract span both layers. See the official
 
 ## Current release state
 
-`0.42.0-alpha.12` is the published package line (npm, 2026-08-01). Alpha.8
+`0.42.0-alpha.12` is the published package line (npm, 2026-08-02). Alpha.8
 was a release attempt whose npm publish failed (see CHANGELOG.md) and whose
 source changes were carried forward into alpha.9; the npm registry's `alpha`
 dist-tag therefore jumped straight to alpha.9 and has since advanced to
-alpha.11. The next train is alpha.12.
+alpha.12. The next train is alpha.13.
 npm beta.1 through beta.3 are immutable partial artifacts and remain withdrawn
 from the active release story. The planned beta name was cancelled so the
 version label honestly reflects that breaking architecture and interface

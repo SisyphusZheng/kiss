@@ -13,7 +13,7 @@ the implementation, and the gates that prove the claim.
 
 Current execution anchor: source package line `v0.42.0-alpha.12`,
 npm registry line `v0.42.0-alpha.12` (published), next train
-`v0.42.0-alpha.12` (round-6 audit remediation), and `0.42.0` WC light
+`v0.42.0-alpha.13` (TP-6 stable freeze preparation), and `0.42.0` WC light
 fullstack planning under ADR-0120 and `docs/current/VERSION_PLAN.md`.
 OpenElement is one Web Components-native,
 static-first application framework: Basic Element is an authoring mode, not a
