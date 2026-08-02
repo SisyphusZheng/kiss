@@ -7,8 +7,7 @@
  */
 export function getStr(host: Element, attr: string, def: string): string {
   const camel = attr.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-  const props = host as unknown as Record<string, unknown>;
-  const prop = props[camel] ?? props[attr];
+  const prop = Reflect.get(host, camel) ?? Reflect.get(host, attr);
   if (prop !== undefined && prop !== null) return String(prop);
   return host.getAttribute(attr) || def;
 }

@@ -129,7 +129,7 @@
           "publicDeclarations": []
         },
         "./cli/preview": {
-          "sha256": "df30b110860f95ea1918e8f45576f5e1eea9744d3737d81c6d95c2f0f6f8a081",
+          "sha256": "583c9b3ddf1ae2603c3d08d86e3f5c63dacb047101d031b59691365f3118dbb1",
           "publicDeclarations": []
         },
         "./cli/start": {
