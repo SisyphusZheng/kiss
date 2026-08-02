@@ -2,7 +2,7 @@
  * 404 Not Found Page - v4 recovery scene: outlined giant code with one solid
  * digit, serif accent line, square actions, and a standards marquee.
  */
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 
@@ -161,5 +161,5 @@ export default class Page404 extends OpenElement {
   }
 }
 
-customElements.define('page-404', Page404);
+defineCustomElement('page-404', Page404);
 export const tagName = 'page-404';

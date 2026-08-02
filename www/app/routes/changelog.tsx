@@ -2,7 +2,7 @@
  * Changelog Page - openElement Framework Version History.
  */
 export const meta = { section: '', label: 'Changelog', order: 20 };
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
@@ -171,6 +171,6 @@ export class ChangelogPage extends OpenElement {
   }
 }
 
-customElements.define('page-changelog', ChangelogPage);
+defineCustomElement('page-changelog', ChangelogPage);
 export default ChangelogPage;
 export const tagName = 'page-changelog';

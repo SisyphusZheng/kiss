@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Comparison', order: 25 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 // Guide card, not a second copy: the full, dated comparison lives under
@@ -87,6 +88,6 @@ export class GuideComparisonPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-comparison-page', GuideComparisonPage);
+defineCustomElement('guide-comparison-page', GuideComparisonPage);
 export default GuideComparisonPage;
 export const tagName = 'guide-comparison-page';

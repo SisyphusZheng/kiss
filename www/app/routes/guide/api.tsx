@@ -1,5 +1,6 @@
 export const meta = { section: 'Core', label: 'API Routes', order: 60 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -70,6 +71,6 @@ export class GuideApiPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-api-page', GuideApiPage);
+defineCustomElement('guide-api-page', GuideApiPage);
 export default GuideApiPage;
 export const tagName = 'guide-api-page';

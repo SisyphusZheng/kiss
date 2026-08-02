@@ -5,13 +5,14 @@
  * The `slug` param is set by openElement dynamic routing: /blog/:slug
  * Data comes from generated site data rather than module-level runtime state.
  */
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 import { pageStyles } from '../../components/page-styles.js';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
+import { serializeOutline } from '@openelement/site-ui/page-contract.ts';
 
 export const tagName = 'page-blog-slug';
 
@@ -138,7 +139,7 @@ export default class BlogPostPage extends OpenElement {
             {tags.map((tag: string) => <span key={tag}>· {tag}</span>)}
           </p>
         </div>
-        <open-page-rail slot='rail' items={JSON.stringify(article.outline)}></open-page-rail>
+        <open-page-rail slot='rail' items={serializeOutline(article.outline)}></open-page-rail>
         <div class='blog-content' innerHTML={article.html} trustedHtml>
         </div>
         <nav class='next-dispatch' aria-label='Next dispatch'>
@@ -156,4 +157,4 @@ export default class BlogPostPage extends OpenElement {
   }
 }
 
-customElements.define(tagName, BlogPostPage);
+defineCustomElement(tagName, BlogPostPage);

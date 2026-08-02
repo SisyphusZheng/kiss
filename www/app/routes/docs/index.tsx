@@ -5,7 +5,7 @@
 export const meta = { section: 'Quick Start', label: 'Docs', order: 0 };
 export const tagName = 'page-docs';
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 
@@ -263,8 +263,6 @@ export class DocsPage extends OpenElement {
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, DocsPage);
-}
+defineCustomElement(tagName, DocsPage);
 
 export default DocsPage;

@@ -4,7 +4,6 @@
  * Scope: docs typography, prose width, code, tables, callouts, and simple
  * content navigation. Product components still come from @openelement/ui.
  */
-import { StyleSheet } from '@openelement/element';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
@@ -362,6 +361,3 @@ export const pageStyles = `
     }
   }
 `;
-
-export const pageStylesSheet = new StyleSheet();
-pageStylesSheet.replaceSync(pageStyles);

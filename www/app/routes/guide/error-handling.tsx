@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Error Handling', order: 80 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -68,6 +69,6 @@ export class GuideErrorHandlingPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-error-handling-page', GuideErrorHandlingPage);
+defineCustomElement('guide-error-handling-page', GuideErrorHandlingPage);
 export default GuideErrorHandlingPage;
 export const tagName = 'guide-error-handling-page';

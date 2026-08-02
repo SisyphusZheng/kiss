@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** A private WWW frame for inspectable product evidence, never a UI export. */
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 
 export const tagName = 'open-artifact-panel';
 const sheet = new StyleSheet();
@@ -27,4 +27,4 @@ export default class OpenArtifactPanel extends OpenElement {
     );
   }
 }
-customElements.define(tagName, OpenArtifactPanel);
+defineCustomElement(tagName, OpenArtifactPanel);

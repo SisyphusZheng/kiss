@@ -1,6 +1,6 @@
 export const meta = { section: 'Reference', label: 'Package Compatibility', order: 90 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
@@ -79,6 +79,6 @@ export class PackageCompatibilityPage extends OpenElement {
   }
 }
 
-customElements.define('package-compatibility-page', PackageCompatibilityPage);
+defineCustomElement('package-compatibility-page', PackageCompatibilityPage);
 export default PackageCompatibilityPage;
 export const tagName = 'package-compatibility-page';

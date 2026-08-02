@@ -1,12 +1,12 @@
 /**
- * @openelement/docs - Comparison: openElement vs Alternatives
+ * WWW comparison page: openElement vs alternatives.
  *
  * Honest, benchmark-free comparison of openElement against the frameworks
  * teams commonly evaluate. Each card covers architecture, rendering model,
  * developer experience, and lock-in. No invented performance numbers.
  */
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
@@ -392,4 +392,4 @@ export default class ComparisonPage extends OpenElement {
   }
 }
 
-customElements.define(tagName, ComparisonPage);
+defineCustomElement(tagName, ComparisonPage);

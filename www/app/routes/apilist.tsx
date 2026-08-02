@@ -1,5 +1,5 @@
-/** @openelement/docs - supported API reference */
-import { OpenElement, StyleSheet } from '@openelement/element';
+/** WWW supported API reference page. */
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
@@ -236,7 +236,5 @@ export class ApiCorePage extends OpenElement {
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, ApiCorePage);
-}
+defineCustomElement(tagName, ApiCorePage);
 export default ApiCorePage;

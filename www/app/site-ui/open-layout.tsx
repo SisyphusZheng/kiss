@@ -40,9 +40,6 @@ import '@openelement/ui/open-theme-toggle';
 
 export const tagName = 'open-layout';
 const SAFE_URL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
-// Locale path prefix. www/public/logo-home.js mirrors this pattern — public
-// scripts are static assets and cannot import app modules.
-const LOCALE_PREFIX_RE = /^\/(en|zh)(?:\/|$)/;
 const log = createLogger('ui');
 
 function isSafeLayoutUrl(url: string): boolean {
@@ -681,7 +678,11 @@ export class OpenLayout extends OpenElement {
   private _homeHref(): string {
     try {
       const pathname = globalThis.location?.pathname || getStr(this, 'current-path', '/');
-      const locale = pathname.match(LOCALE_PREFIX_RE)?.[1];
+      // Built from the injected `locales` attribute so newly added locales
+      // keep working. www/public/logo-home.js mirrors this pattern — public
+      // scripts are static assets and cannot import app modules.
+      const localePrefixRe = new RegExp(`^/(${this._locales.join('|')})(?:/|$)`);
+      const locale = pathname.match(localePrefixRe)?.[1];
       return locale ? `/${locale}/` : '/';
     } catch {
       return '/';

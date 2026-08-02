@@ -2,9 +2,9 @@
  * @openelement/ui - Web Standards Lab design system page.
  */
 export const meta = { section: 'Reference', label: 'Design System', order: 10 };
-export const tagName = 'ui-showcase';
+export const tagName = 'design-system-page';
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-button';
@@ -221,7 +221,7 @@ const principles = [
   ],
 ];
 
-export class UIShowcase extends OpenElement {
+export class DesignSystemPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
@@ -363,8 +363,6 @@ export class UIShowcase extends OpenElement {
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, UIShowcase);
-}
+defineCustomElement(tagName, DesignSystemPage);
 
-export default UIShowcase;
+export default DesignSystemPage;

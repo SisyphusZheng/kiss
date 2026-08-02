@@ -1,6 +1,7 @@
 export const meta = { section: 'Guide', label: 'Getting Started', order: 1 };
 
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -82,6 +83,6 @@ export class GuideGettingStartedPage extends GuidePage {
   }
 }
 
-customElements.define('guide-getting-started-page', GuideGettingStartedPage);
+defineCustomElement('guide-getting-started-page', GuideGettingStartedPage);
 export default GuideGettingStartedPage;
 export const tagName = 'guide-getting-started-page';

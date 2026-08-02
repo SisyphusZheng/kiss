@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW hero: a short technical, editorial, timeline, or error scene. */
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 
 export const tagName = 'open-page-hero';
 
@@ -42,4 +42,4 @@ export default class OpenPageHero extends OpenElement {
     );
   }
 }
-customElements.define(tagName, OpenPageHero);
+defineCustomElement(tagName, OpenPageHero);

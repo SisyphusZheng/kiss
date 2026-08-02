@@ -5,8 +5,7 @@
  * Run: deno test www/__tests__/build-output.test.ts --allow-read
  * (must run after `deno task build`)
  */
-// deno-lint-ignore no-unversioned-import
-import { assert, assertEquals } from 'jsr:@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 

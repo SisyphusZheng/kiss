@@ -1,5 +1,11 @@
 # Migration Guide: Web Standards Lab v3
 
+> **Retired 2026-08-02.** This was the v3 implementation contract. The v3
+> mockup set was retired on 2026-07-26 and v4 is now the only maintained set
+> (see `design/mockups/v4/README.md`); the symbols this guide references
+> (`linearTokenSheet`, `packages/ui/src/open-layout.tsx`) no longer exist.
+> Kept as a historical snapshot under `design/archive/`.
+
 ## Goal
 
 Move `www` to a strict Open Props, UI-package-first Web Standards Lab design.

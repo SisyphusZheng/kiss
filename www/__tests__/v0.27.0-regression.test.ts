@@ -14,7 +14,7 @@
  * Prerequisite: `deno task build`
  */
 
-import { assert, assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@1';
+import { assert, assertEquals, assertFalse, assertStringIncludes } from '@std/assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 

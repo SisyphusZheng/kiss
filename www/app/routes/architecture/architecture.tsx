@@ -1,7 +1,7 @@
 export const meta = { section: 'Principles', label: 'Architecture', order: 10 };
 export const tagName = 'engine-architecture';
 
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-badge';
 import '@openelement/ui/open-card';
 import { OPENELEMENT_VERSION, PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
@@ -249,5 +249,5 @@ export class ArchitecturePage extends OpenElement {
   }
 }
 
-customElements.define(tagName, ArchitecturePage);
+defineCustomElement(tagName, ArchitecturePage);
 export default ArchitecturePage;

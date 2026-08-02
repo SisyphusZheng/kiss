@@ -18,13 +18,14 @@
  *      the outer <form> as a composed submit event.
  *
  * Probe elements are defined inline from the OpenElement base class, walked
- * from an already-registered island component (same technique as
- * static-props-observed.spec.ts). A DSD upgrade is simulated with
+ * from an already-registered island component via the shared probe in
+ * base-class-probe.ts. A DSD upgrade is simulated with
  * attachShadow() + innerHTML before connect — exactly the state the browser
  * produces when a <template shadowrootmode> element upgrades.
  */
 
 import { expect, type Page, test } from '@playwright/test';
+import { FIND_OPEN_ELEMENT_BASE_SOURCE, type FindOpenElementBase } from './base-class-probe.ts';
 
 /** Structural view of the signal objects stored in an element's signalRegistry. */
 interface WritableSignalLike {
@@ -66,16 +67,13 @@ test.describe('data-signal bindings', () => {
   test('text binding patches DOM text in place when the signal changes', async ({ page }) => {
     await waitForHydratedSearch(page);
 
-    const result = await page.evaluate(() => {
+    const result = await page.evaluate((probeSource) => {
       // Walk from the registered island component up to the direct HTMLElement
-      // subclass — that is the OpenElement base class.
-      let base = customElements.get('open-search') as CustomElementConstructor;
-      for (let i = 0; i < 10 && Object.getPrototypeOf(base) !== HTMLElement; i++) {
-        base = Object.getPrototypeOf(base) as CustomElementConstructor;
-      }
-      if (Object.getPrototypeOf(base) !== HTMLElement) {
-        return { error: 'OpenElement base class not found' };
-      }
+      // subclass — that is the OpenElement base class (shared probe).
+      const findBase = new Function(`return (${probeSource})`)() as FindOpenElementBase;
+      const found = findBase('open-search');
+      if ('error' in found) return found;
+      const base = found.base;
 
       // Borrow a real signal from a fresh, unconnected island instance. The
       // constructor registers its signals without touching the live page DOM.
@@ -109,7 +107,7 @@ test.describe('data-signal bindings', () => {
 
       el.remove();
       return { initialText, updatedText, sameNode };
-    });
+    }, FIND_OPEN_ELEMENT_BASE_SOURCE);
 
     if (isProbeError(result)) throw new Error(result.error);
 
@@ -156,14 +154,11 @@ test.describe('SSR/hydration mismatch degradation', () => {
 
     await waitForHydratedSearch(page);
 
-    const result = await page.evaluate(() => {
-      let base = customElements.get('open-search') as CustomElementConstructor;
-      for (let i = 0; i < 10 && Object.getPrototypeOf(base) !== HTMLElement; i++) {
-        base = Object.getPrototypeOf(base) as CustomElementConstructor;
-      }
-      if (Object.getPrototypeOf(base) !== HTMLElement) {
-        return { error: 'OpenElement base class not found' };
-      }
+    const result = await page.evaluate((probeSource) => {
+      const findBase = new Function(`return (${probeSource})`)() as FindOpenElementBase;
+      const found = findBase('open-search');
+      if ('error' in found) return found;
+      const base = found.base;
 
       interface ProbeOutcome {
         sentinelPresent: boolean | null;
@@ -265,7 +260,7 @@ test.describe('SSR/hydration mismatch degradation', () => {
       );
 
       return { tampered, drift, matched };
-    });
+    }, FIND_OPEN_ELEMENT_BASE_SOURCE);
 
     if (isProbeError(result)) throw new Error(result.error);
 

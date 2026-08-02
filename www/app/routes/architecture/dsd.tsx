@@ -1,6 +1,6 @@
 export const meta = { section: 'Principles', label: 'DSD Rendering', order: 30 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
@@ -97,6 +97,6 @@ export class DsdGuidePage extends OpenElement {
   }
 }
 
-customElements.define('dsd-guide-page', DsdGuidePage);
+defineCustomElement('dsd-guide-page', DsdGuidePage);
 export default DsdGuidePage;
 export const tagName = 'dsd-guide-page';

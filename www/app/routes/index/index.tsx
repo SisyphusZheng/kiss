@@ -163,7 +163,11 @@ const strategies = [
 
 const outputs = [
   ['BROWSER', 'Pure static HTML + DSD. CDN-ready, no runtime.', false],
-  ['NODE', 'Nitro server output with ISR manifests baked in.', true],
+  [
+    'NODE',
+    'Nitro server output. ISR manifests are forward-compat only — caching is 0.44 scope.',
+    true,
+  ],
   ['WORKERS', 'Edge deploys from the same page model. Proof gate per release.', false],
 ] as const;
 
@@ -224,7 +228,7 @@ const content = {
   },
 } as const;
 
-export class DocsHome extends OpenElement {
+export class HomePage extends OpenElement {
   static override styles = [sheet];
 
   override render() {
@@ -424,5 +428,5 @@ export const Counter = defineElement('open-counter', {
   }
 }
 
-defineCustomElement(tagName, DocsHome);
-export default DocsHome;
+defineCustomElement(tagName, HomePage);
+export default HomePage;

@@ -1,14 +1,5 @@
 import { assert, assertEquals, assertExists } from '@std/assert';
 
-// The guide routes register their custom elements at module top level; Deno
-// has no custom elements registry, so tests stub one before importing.
-if (!('customElements' in globalThis)) {
-  (globalThis as Record<string, unknown>).customElements = {
-    define: () => {},
-    get: () => undefined,
-  };
-}
-
 const { GuidePage } = await import('../app/site-ui/guide-page.tsx');
 
 // The fourteen guide routes share the site-ui guide shell (#749): each route

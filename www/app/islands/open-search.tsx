@@ -1,5 +1,5 @@
 /**
- * @openelement/docs - Search island
+ * WWW search island.
  *
  * Full-text search using FlexSearch.
  * Loads a pre-built search index JSON and performs client-side search.

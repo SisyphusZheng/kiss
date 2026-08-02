@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW long-form reading shell. */
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import type { ReadingMetadata, ReadingNavigation } from './page-contract.ts';
 
 /** Optional v4 editorial accent rendered in Instrument Serif after the title. */
@@ -114,4 +114,4 @@ export default class OpenReadingShell extends OpenElement {
     );
   }
 }
-customElements.define(tagName, OpenReadingShell);
+defineCustomElement(tagName, OpenReadingShell);

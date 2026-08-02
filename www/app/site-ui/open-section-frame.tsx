@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW section frame for headings and evidence. */
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 export const tagName = 'open-section-frame';
 const sheet = new StyleSheet();
 sheet.replaceSync(
@@ -31,4 +31,4 @@ export default class OpenSectionFrame extends OpenElement {
     );
   }
 }
-customElements.define(tagName, OpenSectionFrame);
+defineCustomElement(tagName, OpenSectionFrame);

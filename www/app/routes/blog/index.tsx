@@ -4,7 +4,7 @@
  */
 export const meta = { section: 'History', label: 'Blog', order: 10 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { posts } from '@openelement/generated/blog-data';
 
@@ -286,9 +286,7 @@ export class BlogIndexPage extends OpenElement {
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get('blog-index-page')) {
-  customElements.define('blog-index-page', BlogIndexPage);
-}
+defineCustomElement('blog-index-page', BlogIndexPage);
 
 export default BlogIndexPage;
 export const tagName = 'blog-index-page';

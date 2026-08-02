@@ -11,6 +11,7 @@
 import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { pageStyles } from '../components/page-styles.js';
 import { guideSectionStyles } from './guide-section-styles.ts';
+import { serializeOutline } from './page-contract.ts';
 import '@openelement/ui/open-card';
 
 export type GuideNav = Readonly<{ href: string; label: string }>;
@@ -111,7 +112,7 @@ export class GuidePage extends OpenElement {
         next={t.next?.href}
         next-label={t.next?.label}
       >
-        <open-page-rail slot='rail' items={JSON.stringify(t.outline)}></open-page-rail>
+        <open-page-rail slot='rail' items={serializeOutline(t.outline)}></open-page-rail>
         <div class='container guide-sections'>
           {this.renderBeforeCards(t)}
           <div class='guide-grid'>

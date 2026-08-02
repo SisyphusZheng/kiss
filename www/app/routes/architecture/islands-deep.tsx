@@ -1,7 +1,7 @@
 export const meta = { section: 'Principles', label: 'Island Deep Dive', order: 50 };
 export const tagName = 'page-islands-deep-guide';
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
@@ -142,5 +142,5 @@ export class IslandsDeepGuidePage extends OpenElement {
   }
 }
 
-customElements.define(tagName, IslandsDeepGuidePage);
+defineCustomElement(tagName, IslandsDeepGuidePage);
 export default IslandsDeepGuidePage;

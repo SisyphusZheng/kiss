@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Architecture', order: 20 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 // Guide card, not a second copy: the full architecture page lives under
@@ -87,6 +88,6 @@ export class GuideArchitecturePage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-architecture-page', GuideArchitecturePage);
+defineCustomElement('guide-architecture-page', GuideArchitecturePage);
 export default GuideArchitecturePage;
 export const tagName = 'guide-architecture-page';

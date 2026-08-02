@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Islands and SSR', order: 90 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -69,6 +70,6 @@ export class GuideIslandsAndSsrPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-islands-and-ssr-page', GuideIslandsAndSsrPage);
+defineCustomElement('guide-islands-and-ssr-page', GuideIslandsAndSsrPage);
 export default GuideIslandsAndSsrPage;
 export const tagName = 'guide-islands-and-ssr-page';

@@ -3,7 +3,7 @@
  * PR checklist, numbered help rows, and a questions-first callout.
  */
 export const meta = { section: '', label: 'Contributing', order: 30 };
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-code-block';
 import '@openelement/ui/open-button';
@@ -444,6 +444,6 @@ deno task dev`}</code></pre>
   }
 }
 
-customElements.define('page-contributing', ContributingPage);
+defineCustomElement('page-contributing', ContributingPage);
 export default ContributingPage;
 export const tagName = 'page-contributing';

@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Deployment', order: 100 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -83,6 +84,6 @@ export class GuideDeploymentPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-deployment-page', GuideDeploymentPage);
+defineCustomElement('guide-deployment-page', GuideDeploymentPage);
 export default GuideDeploymentPage;
 export const tagName = 'guide-deployment-page';

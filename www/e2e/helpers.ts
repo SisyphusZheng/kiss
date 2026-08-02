@@ -53,8 +53,3 @@ export function getCustomElementTags(page: Page): Promise<string[]> {
     return [...tags];
   });
 }
-
-/**
- * Re-export common assertions for convenience.
- */
-export { expect } from '@playwright/test';

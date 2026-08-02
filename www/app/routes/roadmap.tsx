@@ -3,7 +3,7 @@ export const tagName = 'page-roadmap';
 
 // Strategic anchors: Web Components-native, static-first application framework.
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { PUBLISHED_PACKAGE_VERSION } from '../data/version.ts';
 import '@openelement/ui/open-badge';
@@ -578,8 +578,6 @@ export class RoadmapPage extends OpenElement {
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-  customElements.define(tagName, RoadmapPage);
-}
+defineCustomElement(tagName, RoadmapPage);
 
 export default RoadmapPage;

@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Routing and Data', order: 40 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -110,6 +111,6 @@ export class GuideRoutingAndDataPage extends GuidePage {
   static override guide = { content };
 }
 
-customElements.define('guide-routing-and-data-page', GuideRoutingAndDataPage);
+defineCustomElement('guide-routing-and-data-page', GuideRoutingAndDataPage);
 export default GuideRoutingAndDataPage;
 export const tagName = 'guide-routing-and-data-page';

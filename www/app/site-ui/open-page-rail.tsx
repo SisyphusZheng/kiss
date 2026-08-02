@@ -1,6 +1,6 @@
 /** @jsxImportSource @openelement/element */
 /** Private WWW table of contents with progressive enhancement for active state. */
-import { OpenElement, StyleSheet } from '@openelement/element';
+import { DATA_SSR_PROPS, defineCustomElement, OpenElement, StyleSheet } from '@openelement/element';
 import type { PageOutlineItem } from './page-contract.ts';
 
 export const tagName = 'open-page-rail';
@@ -80,7 +80,7 @@ export default class OpenPageRail extends OpenElement {
     let raw = typeof host.items === 'string' ? host.items : this.getAttribute('items');
     if (!raw) {
       try {
-        const props = JSON.parse(this.getAttribute('data-ssr-props') ?? '{}') as {
+        const props = JSON.parse(this.getAttribute(DATA_SSR_PROPS) ?? '{}') as {
           items?: unknown;
         };
         raw = typeof props.items === 'string' ? props.items : null;
@@ -122,4 +122,4 @@ export default class OpenPageRail extends OpenElement {
     );
   }
 }
-customElements.define(tagName, OpenPageRail);
+defineCustomElement(tagName, OpenPageRail);

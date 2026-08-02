@@ -1,6 +1,6 @@
 export const meta = { section: 'Reference', label: 'WC Standards Contract', order: 80 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
@@ -79,6 +79,6 @@ export class StandardsRegistryPage extends OpenElement {
   }
 }
 
-customElements.define('standards-registry-page', StandardsRegistryPage);
+defineCustomElement('standards-registry-page', StandardsRegistryPage);
 export default StandardsRegistryPage;
 export const tagName = 'standards-registry-page';

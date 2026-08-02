@@ -1,5 +1,6 @@
 export const meta = { section: 'Guide', label: 'Migration', order: 75 };
 
+import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 
 const content: Record<'en' | 'zh', GuideContent> = {
@@ -112,4 +113,6 @@ export class GuideMigrationPage extends GuidePage {
   }
 }
 
+defineCustomElement('guide-migration-page', GuideMigrationPage);
 export default GuideMigrationPage;
+export const tagName = 'guide-migration-page';

@@ -6,7 +6,7 @@
  */
 export const meta = { section: 'Reference', label: 'Performance', order: 100 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
@@ -90,5 +90,5 @@ export default class Benchmark extends OpenElement {
     );
   }
 }
-customElements.define('benchmark-page', Benchmark);
+defineCustomElement('benchmark-page', Benchmark);
 export const tagName = 'benchmark-page';

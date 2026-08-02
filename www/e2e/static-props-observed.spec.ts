@@ -7,16 +7,19 @@
  * so merging must happen no later than class definition time.
  *
  * No shipped www component uses `static props`, so the spec defines a probe
- * element inline: it walks from an already-registered island component
- * (open-theme-toggle and friends are defined lazily by the island loader) to
- * the OpenElement base class and extends it directly. Pre-fix, the browser
- * observes nothing (base declared no list) and the attribute set below never
- * fires attributeChangedCallback.
+ * element inline: it extends the OpenElement base class walked from an
+ * already-registered island component via the shared probe in
+ * base-class-probe.ts (open-theme-toggle and friends are defined lazily by
+ * the island loader). Pre-fix, the browser observes nothing (base declared no
+ * list) and the attribute set below never fires attributeChangedCallback.
  */
 
 import { expect, test } from '@playwright/test';
-
-const ISLAND_CANDIDATES = ['open-theme-toggle', 'open-card', 'open-button', 'open-search'];
+import {
+  FIND_OPEN_ELEMENT_BASE_SOURCE,
+  type FindOpenElementBase,
+  ISLAND_CANDIDATES,
+} from './base-class-probe.ts';
 
 test.describe('static props attribute observation', () => {
   test('attribute changes drive signal-backed DOM updates without hand-written observedAttributes', async ({ page }) => {
@@ -31,16 +34,13 @@ test.describe('static props attribute observation', () => {
       return null;
     }, ISLAND_CANDIDATES).then((handle) => handle.jsonValue() as Promise<string>);
 
-    const result = await page.evaluate((tag) => {
+    const result = await page.evaluate(([tag, probeSource]) => {
       // Walk from a registered component up to the direct HTMLElement
-      // subclass — that is the OpenElement base class.
-      let base = customElements.get(tag) as CustomElementConstructor;
-      for (let i = 0; i < 10 && Object.getPrototypeOf(base) !== HTMLElement; i++) {
-        base = Object.getPrototypeOf(base) as CustomElementConstructor;
-      }
-      if (Object.getPrototypeOf(base) !== HTMLElement) {
-        return { error: 'OpenElement base class not found' } as const;
-      }
+      // subclass — that is the OpenElement base class (shared probe).
+      const findBase = new Function(`return (${probeSource})`)() as FindOpenElementBase;
+      const found = findBase(tag);
+      if ('error' in found) return found;
+      const base = found.base;
 
       class StaticPropsProbe extends base {
         static props = {
@@ -85,7 +85,7 @@ test.describe('static props attribute observation', () => {
 
       el.remove();
       return { observedBeforeDefine, initialText, afterSet, signalValue, afterRemove } as const;
-    }, hostTag);
+    }, [hostTag, FIND_OPEN_ELEMENT_BASE_SOURCE]);
 
     if ('error' in result) throw new Error(result.error);
 

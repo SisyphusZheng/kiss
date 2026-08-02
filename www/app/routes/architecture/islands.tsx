@@ -1,6 +1,6 @@
 export const meta = { section: 'Principles', label: 'Islands', order: 40 };
 
-import { OpenElement } from '@openelement/element';
+import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
@@ -25,7 +25,7 @@ routeSheet.replaceSync(
   `,
 );
 
-export class IslandsGuidePage extends OpenElement {
+export class IslandsPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
@@ -73,6 +73,6 @@ export class IslandsGuidePage extends OpenElement {
   }
 }
 
-customElements.define('islands-guide-page', IslandsGuidePage);
-export default IslandsGuidePage;
+defineCustomElement('islands-guide-page', IslandsPage);
+export default IslandsPage;
 export const tagName = 'islands-guide-page';

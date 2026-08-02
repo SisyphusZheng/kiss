@@ -20,12 +20,16 @@
  *
  * Probe technique identical to static-props-observed.spec.ts: no shipped www
  * component uses reflect props, so the spec extends the OpenElement base
- * class walked from an already-registered island component.
+ * class walked from an already-registered island component via the shared
+ * probe in base-class-probe.ts.
  */
 
 import { expect, test } from '@playwright/test';
-
-const ISLAND_CANDIDATES = ['open-theme-toggle', 'open-card', 'open-button', 'open-search'];
+import {
+  FIND_OPEN_ELEMENT_BASE_SOURCE,
+  type FindOpenElementBase,
+  ISLAND_CANDIDATES,
+} from './base-class-probe.ts';
 
 test.describe('reflect: true static props', () => {
   test('reflected SSR attributes survive connect, logical writes do not loop, round trip stays consistent', async ({ page }) => {
@@ -40,16 +44,13 @@ test.describe('reflect: true static props', () => {
       return null;
     }, ISLAND_CANDIDATES).then((handle) => handle.jsonValue() as Promise<string>);
 
-    const result = await page.evaluate((tag) => {
+    const result = await page.evaluate(([tag, probeSource]) => {
       // Walk from a registered component up to the direct HTMLElement
-      // subclass — that is the OpenElement base class.
-      let base = customElements.get(tag) as CustomElementConstructor;
-      for (let i = 0; i < 10 && Object.getPrototypeOf(base) !== HTMLElement; i++) {
-        base = Object.getPrototypeOf(base) as CustomElementConstructor;
-      }
-      if (Object.getPrototypeOf(base) !== HTMLElement) {
-        return { error: 'OpenElement base class not found' } as const;
-      }
+      // subclass — that is the OpenElement base class (shared probe).
+      const findBase = new Function(`return (${probeSource})`)() as FindOpenElementBase;
+      const found = findBase(tag);
+      if ('error' in found) return found;
+      const base = found.base;
 
       interface SignalLike {
         value: unknown;
@@ -164,7 +165,7 @@ test.describe('reflect: true static props', () => {
         boolOff,
         boolOn,
       } as const;
-    }, hostTag);
+    }, [hostTag, FIND_OPEN_ELEMENT_BASE_SOURCE]);
 
     if ('error' in result) throw new Error(result.error);
 
