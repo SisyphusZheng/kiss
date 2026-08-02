@@ -2,7 +2,6 @@ import pdfParse from 'pdf-parse';
 
 export interface SearchResult {
   bookId: string;
-  fileName: string;
   page: number;
   snippet: string;
 }
@@ -70,11 +69,10 @@ export function search(
       const start = Math.max(0, pos - 40);
       const end = Math.min(lowerText.length, pos + query.length + 40);
       const snippet = text.substring(start, end).trim();
-      // ponytail: rough page estimate — 3000 chars per page
+      // TODO(#852): rough page estimate — 3000 chars per page
       const page = Math.floor(pos / 3000) + 1;
       results.push({
         bookId,
-        fileName: bookId, // ponytail: bookId as fileName, real mapping in full index
         page,
         snippet,
       });

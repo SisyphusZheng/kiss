@@ -8,7 +8,7 @@ import { assert, assertEquals } from '@std/assert';
 import type { VNode } from '@openelement/element';
 
 // ─── Minimal DOM mock for Deno test environment ──────────────────
-// ponytail: inline mock covering only the DOM APIs used by route components.
+// TODO(#852): inline mock covering only the DOM APIs used by route components.
 
 class MockNode {
   childNodes: MockNode[] = [];

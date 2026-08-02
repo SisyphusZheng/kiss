@@ -139,7 +139,9 @@ export async function getStatus(
   const params = new URLSearchParams();
   params.set('instance', request.instance);
 
-  const result = await fetchJson<MastodonStatus>(`/api/status/${id}?${params.toString()}`);
+  const result = await fetchJson<MastodonStatus>(
+    `/api/status/${encodeURIComponent(id)}?${params.toString()}`,
+  );
   if (result.ok) setCache(cacheKey, result.data);
   return result;
 }
@@ -160,7 +162,7 @@ export async function getStatusContext(
   params.set('instance', request.instance);
 
   const result = await fetchJson<{ ancestors: MastodonStatus[]; descendants: MastodonStatus[] }>(
-    `/api/status/${id}/context?${params.toString()}`,
+    `/api/status/${encodeURIComponent(id)}/context?${params.toString()}`,
   );
   if (result.ok) setCache(cacheKey, result.data);
   return result;

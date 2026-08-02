@@ -130,7 +130,7 @@ export interface ApiError {
 }
 
 export type ApiResult<T> =
-  | { ok: true; data: T; headers?: Record<string, string> }
+  | { ok: true; data: T }
   | { ok: false; error: ApiError };
 
 export interface AppSettings {

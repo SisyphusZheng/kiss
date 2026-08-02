@@ -2,6 +2,7 @@
 import { defineApp } from '@openelement/app/spa';
 import { OpenElement } from '@openelement/element';
 import { setRouter } from './router.ts';
+import { createTopNav, installTopNavLayout, updateActiveNav } from '../lib/topnav.ts';
 import { pdfMaxWidth } from './app/pdf-measure.ts';
 
 // Register all @openelement/ui custom elements + design tokens
@@ -77,7 +78,9 @@ globalThis.addEventListener('pagehide', notifyDesktopClose, { once: true });
 // selectors stay in sync. No hand-rolled MutationObserver needed.
 
 const SHADOW_STYLE_CSS = `
-  /* === Theme tokens (mirrored from styles.css) === */
+  /* === Theme tokens (mirrored from app/styles.css :root / [data-theme]) === */
+  /* DRIFT: this token block (down to "=== Page shell ===") mirrors           */
+  /* app/styles.css:21-135 value-for-value. Edit both together.               */
   :host {
     --brand: #07c160;
     --brand-hover: #06ad56;
@@ -112,11 +115,13 @@ const SHADOW_STYLE_CSS = `
     --font-serif: 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, 'Times New Roman', serif;
     --font-mono: 'SF Mono', Menlo, Consolas, monospace;
     /* Reader preferences are set on document.documentElement and inherit into */
-    /* shadow roots; keep the defaults here as fallbacks only. */
+    /* shadow roots; keep the defaults here as fallbacks only. They mirror     */
+    /* app/storage.ts DEFAULTS (single source): lineHeight 1.6, measure 65 →   */
+    /* pdfMaxWidth(65) = 910.                                                  */
     --reader-font-size: 16px;
-    --reader-line-height: 1.7;
+    --reader-line-height: 1.6;
     --reader-measure: 65ch;
-    --reader-pdf-max-width: 960px;
+    --reader-pdf-max-width: 910px;
 
     display: block;
     font-family: var(--font-sans);
@@ -179,6 +184,7 @@ const SHADOW_STYLE_CSS = `
     --error-fg: #8a3a28;
   }
 
+  /* === End of mirrored theme tokens (see app/styles.css) === */
   /* === Page shell === */
   .reader-main {
     box-sizing: border-box;
@@ -1141,76 +1147,29 @@ const routes = [
   { path: '/wc-interop', tagName: wcInteropTag },
 ];
 
-// ─── Top Navigation (replaces left sidebar) ────────────────
-
-const NAV_ITEMS = [
-  { path: '/', label: '书架' },
-  { path: '/notes', label: '笔记' },
-  { path: '/search', label: '搜索' },
-  { path: '/settings', label: '设置' },
-];
-
-function createTopNav() {
-  const nav = document.createElement('nav');
-  nav.className = 'reader-topnav';
-  nav.innerHTML = `
-    <a class="reader-brand" href="/" data-nav="/" data-open-brand aria-label="OpenReader home">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      OpenReader
-    </a>
-    <div class="reader-nav-menu">
-      ${
-    NAV_ITEMS.map((item) => `
-        <button class="reader-nav-item" data-nav="${item.path}">
-          ${item.label}
-        </button>
-      `).join('')
-  }
-    </div>
-    <div class="reader-nav-right">
-      <open-theme-toggle></open-theme-toggle>
-    </div>
-  `;
-
-  nav.querySelectorAll('.reader-nav-item[data-nav], .reader-brand[data-nav]').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const path = (link as HTMLElement).dataset.nav;
-      if (path) app.router?.navigate(path);
-    });
-  });
-
-  return nav;
-}
-
-function updateActiveNav(path: string) {
-  document.querySelectorAll('.reader-nav-item').forEach((link) => {
-    const navPath = (link as HTMLElement).dataset.nav;
-    if (!navPath) return;
-    if (navPath === '/' ? path === '/' : path.startsWith(navPath)) {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
-  });
-}
-
-// ─── Boot ───────────────────────────────────────────────────
+// ─── Top Navigation (replaces left sidebar) + boot ──────────
 
 const app = defineApp({ mode: 'spa', routes });
 
-const root = document.querySelector('#root');
-if (root) {
-  // Top navigation sits above #root; #root holds route content full-width.
-  const layout = document.createElement('div');
-  layout.className = 'reader-layout';
-  root.parentNode?.insertBefore(layout, root);
-  layout.appendChild(createTopNav());
-  const content = document.createElement('div');
-  content.className = 'reader-content';
-  content.appendChild(root);
-  layout.appendChild(content);
-}
+installTopNavLayout(
+  'reader',
+  createTopNav({
+    prefix: 'reader',
+    brand: {
+      label: 'OpenReader',
+      svg:
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      ariaLabel: 'OpenReader home',
+    },
+    items: [
+      { path: '/', label: '书架' },
+      { path: '/notes', label: '笔记' },
+      { path: '/search', label: '搜索' },
+      { path: '/settings', label: '设置' },
+    ],
+    onNavigate: (path) => app.router?.navigate(path),
+  }),
+);
 
 app.mount('#root');
 setRouter(app.router);
@@ -1221,7 +1180,7 @@ setRouter(app.router);
 // connectedCallback(), and the theme observer is installed on first connect.
 
 function updateActiveNavFromUrl() {
-  updateActiveNav(globalThis.location.pathname);
+  updateActiveNav('reader', globalThis.location.pathname);
 }
 globalThis.addEventListener('popstate', updateActiveNavFromUrl);
 updateActiveNavFromUrl();
@@ -1230,7 +1189,7 @@ globalThis.addEventListener('reader-navigate', (event: Event) => {
   const detail = (event as CustomEvent<{ path?: string }>).detail;
   if (!detail?.path) return;
   void app.router?.navigate(detail.path);
-  updateActiveNav(detail.path);
+  updateActiveNav('reader', detail.path);
 });
 
 // Keyboard shortcuts

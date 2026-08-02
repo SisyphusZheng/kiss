@@ -52,6 +52,30 @@ function normalizeInstance(instance: string): string {
   return url.replace(/\/$/, '');
 }
 
+// Same fetch-or-error shape as api-client.ts fetchJson.
+async function fetchJson<T>(url: string): Promise<ApiResult<T>> {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: { type: 'http', status: res.status, message: await res.text() },
+      };
+    }
+    return { ok: true, data: await res.json() as T };
+  } catch (err) {
+    return {
+      ok: false,
+      error: {
+        type: 'network',
+        message: err instanceof Error ? err.message : String(err),
+      },
+    };
+  }
+}
+
 export async function fetchPublicTimeline(
   req: TimelineRequest,
 ): Promise<ApiResult<MastodonStatus[]>> {
@@ -68,26 +92,7 @@ export async function fetchPublicTimeline(
   if (req.sinceId) url.searchParams.set('since_id', req.sinceId);
   if (req.limit) url.searchParams.set('limit', String(req.limit));
 
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return { ok: true, data: await res.json() as MastodonStatus[] };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
+  return await fetchJson<MastodonStatus[]>(url.toString());
 }
 
 export async function fetchAccount(
@@ -100,26 +105,7 @@ export async function fetchAccount(
   const base = normalizeInstance(req.instance);
   const url = new URL(`/api/v1/accounts/lookup?acct=${encodeURIComponent(req.acct)}`, base);
 
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return { ok: true, data: await res.json() as MastodonAccount };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
+  return await fetchJson<MastodonAccount>(url.toString());
 }
 
 export async function fetchAccountStatuses(
@@ -134,26 +120,7 @@ export async function fetchAccountStatuses(
   if (!lookup.ok) return lookup;
 
   const url = new URL(`/api/v1/accounts/${lookup.data.id}/statuses`, base);
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return { ok: true, data: await res.json() as MastodonStatus[] };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
+  return await fetchJson<MastodonStatus[]>(url.toString());
 }
 
 export async function fetchStatus(
@@ -166,26 +133,7 @@ export async function fetchStatus(
   const base = normalizeInstance(req.instance);
   const url = new URL(`/api/v1/statuses/${encodeURIComponent(req.id)}`, base);
 
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return { ok: true, data: await res.json() as MastodonStatus };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
+  return await fetchJson<MastodonStatus>(url.toString());
 }
 
 export async function fetchStatusContext(
@@ -200,27 +148,7 @@ export async function fetchStatusContext(
   const base = normalizeInstance(req.instance);
   const url = new URL(`/api/v1/statuses/${encodeURIComponent(req.id)}/context`, base);
 
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: { type: 'http', status: res.status, message: await res.text() },
-      };
-    }
-    return {
-      ok: true,
-      data: await res.json() as { ancestors: MastodonStatus[]; descendants: MastodonStatus[] },
-    };
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        type: 'network',
-        message: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
+  return await fetchJson<{ ancestors: MastodonStatus[]; descendants: MastodonStatus[] }>(
+    url.toString(),
+  );
 }

@@ -243,9 +243,13 @@ const server: Deno.HttpServer = Deno.serve(
       ) {
         const file = await readFileSafe(new URL(`.${pathname}`, DIST_DIR));
         if (!file) {
-          // Also try from project root for non-built assets (CSS, JSON)
-          const rootFile = await readFileSafe(new URL(`.${pathname}`, import.meta.url));
-          return rootFile ? serveFile(rootFile, ext) : notFound();
+          // Fall back to the project root only for non-built asset types
+          // (CSS, JSON) — never serve source files (.ts/.tsx) over loopback.
+          if (ext === '.css' || ext === '.json') {
+            const rootFile = await readFileSafe(new URL(`.${pathname}`, import.meta.url));
+            return rootFile ? serveFile(rootFile, ext) : notFound();
+          }
+          return notFound();
         }
         return serveFile(file, ext);
       }

@@ -129,7 +129,7 @@ function loadFixtureBooks(paths: ReaderStorePaths): LibraryBook[] {
   }).filter((book) => book.fileName.endsWith('.pdf'));
 }
 
-export function loadState(paths: ReaderStorePaths): ReaderState {
+function loadState(paths: ReaderStorePaths): ReaderState {
   const state = readJsonFile<Partial<ReaderState>>(stateFile(paths), {});
   const sources = state.sources?.length ? state.sources : [{ ...DEFAULT_SOURCE }];
   const storedBooks = state.books ?? [];
@@ -146,7 +146,7 @@ export function loadState(paths: ReaderStorePaths): ReaderState {
   };
 }
 
-export function saveState(paths: ReaderStorePaths, state: ReaderState): void {
+function saveState(paths: ReaderStorePaths, state: ReaderState): void {
   writeJsonFile(stateFile(paths), state);
 }
 

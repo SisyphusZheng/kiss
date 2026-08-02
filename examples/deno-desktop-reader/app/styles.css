@@ -14,14 +14,18 @@
  * ============================================================ */
 
 /* ─── Tokens ──────────────────────────────────────────────── */
+/* DRIFT: the theme token values below are mirrored into the shadow-DOM      */
+/* stylesheet in ../reader.tsx (SHADOW_STYLE_CSS). Edit both together.       */
 :root {
   --reader-nav-h: 56px;
   --reader-content-max: 1080px;
   --reader-reading-max: 1280px;
+  /* Defaults mirror app/storage.ts DEFAULTS (the single source of truth):    */
+  /* lineHeight 1.6, measure 65 → pdfMaxWidth(65) = 910. Fallbacks only.      */
   --reader-font-size: 16px;
-  --reader-line-height: 1.7;
+  --reader-line-height: 1.6;
   --reader-measure: 65ch;
-  --reader-pdf-max-width: 960px;
+  --reader-pdf-max-width: 910px;
 
   /* Brand — only used for primary CTA, never decoration */
   --brand: #07c160;

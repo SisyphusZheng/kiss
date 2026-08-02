@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: Example: v0.40.0
+      description: Example: vX.Y.Z — use the active line from docs/current/VERSION_PLAN.md
     validations:
       required: true
   - type: input

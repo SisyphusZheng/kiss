@@ -21,13 +21,15 @@ official build path = Vite + Nitro
 
 当前消费者包图为五包：
 
-| 包                          | 角色                                            |
-| --------------------------- | ----------------------------------------------- |
-| `@openelement/element`      | Custom Elements、JSX、DSD、hydration 与 signals |
-| `@openelement/app`          | 页面、路由、islands 与 request/render 语义      |
-| `@openelement/adapter-vite` | Vite、content、静态构建与 Nitro 输出            |
-| `@openelement/create`       | 已安装 starter 与零上下文入口                   |
-| `@openelement/ui`           | 可选、经过证明的通用 primitives                 |
+| 包                          | 角色                                                           |
+| --------------------------- | -------------------------------------------------------------- |
+| `@openelement/element`      | JSX、Custom Elements、DSD、hydration、signals 与组件运行时契约 |
+| `@openelement/app`          | 页面、路由、loaders、actions、islands 与规范化 request 语义    |
+| `@openelement/adapter-vite` | Vite、content、SSG、生成数据、Hono 与 Nitro 构建/部署实现      |
+| `@openelement/create`       | 版本一致的 starter 生成与消费者生命周期                        |
+| `@openelement/ui`           | 可选、可复用、经 dogfood 验证的 Web Component primitives       |
+
+（角色措辞以 `docs/current/STACK_CONTRACT.md` 为唯一权威。）
 
 旧的 `core`、`signal`、`router`、`protocol`、`content` 与 `ssg` 是实现历史，
 不再是受支持的消费者导入。
@@ -47,8 +49,8 @@ official build path = Vite + Nitro
 不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
-request-time data、forms、sessions 与 cache 在 0.42/0.44 前显式不冻结，
-仍是后续产品工作；当前承诺是具有
+request-time data 与 forms 已随 `0.42.0` alpha 线发布（动态 loader/action、
+no-JS + 增强表单）；sessions 与 cache 仍是后续产品工作（0.44）。当前承诺是具有
 fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
 
 `1.0.0` 路径是在 Application Loop、WC SSR、Production Runtime 与外部采用证据完成后，

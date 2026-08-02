@@ -28,13 +28,15 @@ official build path = Vite + Nitro
 
 The current consumer graph has five packages:
 
-| Package                     | Role                                                |
-| --------------------------- | --------------------------------------------------- |
-| `@openelement/element`      | Custom Elements, JSX, DSD, hydration and signals    |
-| `@openelement/app`          | Pages, routes, islands and request/render semantics |
-| `@openelement/adapter-vite` | Vite, content, static builds and Nitro output       |
-| `@openelement/create`       | Installed starter and zero-context entrypoint       |
-| `@openelement/ui`           | Optional, proven general-purpose primitives         |
+| Package                     | Role                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 |
+
+(Role wording follows `docs/current/STACK_CONTRACT.md`, the source of truth.)
 
 The former `core`, `signal`, `router`, `protocol`, `content` and `ssg` packages
 are implementation history, not supported consumer imports.
@@ -60,9 +62,10 @@ baselines. The third audit sweep completed in alpha.19 (see
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
-Request-time data, forms, sessions and cache remain future product work
-(explicitly unfrozen until 0.42/0.44), so the current promise is static-first
-applications with fullstack output paths—not broad fullstack parity.
+Request-time data and forms are shipping on the `0.42.0` alpha line (dynamic
+loader/action, no-JS + enhanced forms). Sessions and cache remain future
+product work (0.44), so the current promise is static-first applications with
+fullstack output paths—not broad fullstack parity.
 
 The `1.0.0` path is a stable five-package product after the application loop, WC SSR,
 production runtime and external-adoption evidence are complete.

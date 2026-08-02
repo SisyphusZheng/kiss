@@ -48,7 +48,7 @@ export default defineConfig({
       },
     },
   ],
-  // ponytail: predictable css output name for server-side reference
+  // TODO(#852): predictable css output name for server-side reference
   build: {
     cssCodeSplit: false,
     target: 'esnext',

@@ -15,8 +15,10 @@ on the active release line whenever practical.
 
 ## Dependency policy
 
-GitHub Dependabot alerts are enabled for this repository and Dependabot opens
-weekly update proposals. Pull requests that change dependencies run immutable
-`actions/dependency-review-action`; high or critical findings fail the check.
-An open high/critical alert blocks a release until it is remediated or a
-maintainer records a time-bounded exception in the release evidence.
+GitHub Dependabot alerts are enabled for this repository, and Dependabot opens
+weekly update proposals for GitHub Actions. Deno dependencies
+(`deno.json`/`deno.lock`) have no automated update channel; they are bumped
+manually and guarded by CI checks. Pull requests that change dependencies run
+immutable `actions/dependency-review-action`; high or critical findings fail
+the check. An open high/critical alert blocks a release until it is remediated
+or a maintainer records a time-bounded exception in the release evidence.
