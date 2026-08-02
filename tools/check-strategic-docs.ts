@@ -4,6 +4,7 @@ import {
   PACKAGE_VERSION_TAG,
 } from './project-constants.ts';
 import { staleClaimsAlternation } from './check-version-anchors.ts';
+import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
 
 export type Check = {
   name: string;
@@ -139,21 +140,14 @@ export function strategicChecks(): Check[] {
         /Gate currently passes at threshold Infinity/i,
         /681<\/strong><span>tests/i,
         /v0\.37\.0\s*\|\s*Server\/Data\/UI Product Closure/i,
-        /v0\.37\.6 package\s+line current/i,
-        /active execution target is\s+v0\.38\.0/i,
-        /JSR publish is a best-effort distribution step/i,
+        ...STALE_HISTORY_CLAIM_PATTERNS,
         /JSR package visibility and post-publish JSR consumer smoke do not block version\s+exit/i,
         /dual npm\/JSR publishing/i,
-        /to JSR as a secondary channel/i,
-        /Vue adapter proof/i,
-        /Vue is .*heavy-framework island/i,
-        /Vue 是.*heavy-framework island/i,
         /Web Components Fullstack Framework \+ Basic Element/i,
         /supporting packages = Protocols \+ UI/i,
         /11-package graph/i,
         /11 packages expose/i,
         ...staleCurrencyClaimPatterns(),
-        /v0\.41 beta/i,
       ],
     },
     {

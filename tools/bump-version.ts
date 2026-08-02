@@ -2,7 +2,8 @@
 /**
  * bump-version — openElement release tooling
  *
- * Updates version across all workspace packages and root deno.json imports.
+ * Updates version across all workspace packages and their cross-package
+ * import ranges.
  *
  * WARNING (#687): this tool intentionally performs only HALF of a version
  * bump. It does NOT touch www/app/data/version.ts, roadmap.tsx,
@@ -13,9 +14,9 @@
  * release flow (`deno task autoflow:release-prepare`), never by hand.
  *
  * Usage:
- *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.41.0-alpha.7
- *   deno run --allow-read --allow-write tools/bump-version.ts --from 0.41.0-alpha.6 --to 0.41.0-beta.1
- *   deno run --allow-read --allow-write tools/bump-version.ts --to 0.41.0 --dry-run
+ *   deno run --allow-read --allow-write tools/bump-version.ts --to <x.y.z-alpha.N>
+ *   deno run --allow-read --allow-write tools/bump-version.ts --from <x.y.z-alpha.N> --to <x.y.z-beta.1>
+ *   deno run --allow-read --allow-write tools/bump-version.ts --to <x.y.z> --dry-run
  */
 
 const PACKAGES_DIR = 'packages';
@@ -149,33 +150,6 @@ function updateVersion(
   return { updated: false, name, oldVersion };
 }
 
-function updateRootImports(
-  root: string,
-  fromVersion: string,
-  toVersion: string,
-  dryRun: boolean,
-): number {
-  const rootDeno = `${root}/deno.json`;
-  const text = Deno.readTextFileSync(rootDeno);
-  const fromPattern = `@^${fromVersion}`;
-  const toPattern = `@^${toVersion}`;
-
-  let count = 0;
-  let updated = text;
-
-  // Replace all @openelement/* imports
-  while (updated.includes(fromPattern)) {
-    updated = updated.replace(fromPattern, toPattern);
-    count++;
-  }
-
-  if (count > 0 && !dryRun) {
-    Deno.writeTextFileSync(rootDeno, updated);
-  }
-
-  return count;
-}
-
 function updatePackageImports(
   packageDenos: string[],
   fromVersion: string,
@@ -288,13 +262,9 @@ function main(): void {
   console.log('');
   console.log(`Updated ${updatedCount}/${packageDenos.length} packages.`);
 
-  // Update root deno.json imports
-  const importCount = updateRootImports(root, resolvedFrom, toVersion, dryRun);
-  if (importCount > 0) {
-    console.log(`Updated ${importCount} import(s) in root deno.json.`);
-  }
-
-  // Update cross-package imports in each package's deno.json
+  // Update cross-package imports in each package's deno.json. (Root deno.json
+  // is deliberately not touched: check-package-graph bans @openelement/*
+  // aliases there, so there is nothing to rewrite.)
   const pkgImportCount = updatePackageImports(packageDenos, resolvedFrom, toVersion, dryRun);
   if (pkgImportCount > 0) {
     console.log(`Updated ${pkgImportCount} cross-package import(s).`);

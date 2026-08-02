@@ -33,14 +33,98 @@ export function stripCommentsLine(
 }
 
 /**
- * Strip comments from an entire source string.
- * Block comments are replaced with spaces to preserve line numbers.
- * Useful for pattern scanning against a whole file.
+ * Strip comments from an entire source string, aware of string literals
+ * (#826): `//` and `/*` inside a single/double-quoted string or a template
+ * literal do not open a comment, so a URL string before a host token on the
+ * same line no longer swallows the rest of the line. Block comments are
+ * blanked to spaces (newlines preserved) so line numbers survive; line
+ * comments are dropped up to the newline. Template-literal `${ }`
+ * interpolations switch back to code mode, so comments inside them are
+ * stripped too. Regex literals are NOT parsed (same limitation as before).
  */
 export function stripComments(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
-    .replace(/\/\/.*/g, '');
+  let out = '';
+  let i = 0;
+  const n = source.length;
+  let mode: 'code' | 'single' | 'double' | 'template' | 'line' | 'block' = 'code';
+  // Brace depth at which each open template-literal `${` sits; a `}` in code
+  // mode at exactly that depth closes the interpolation.
+  const interpolationDepths: number[] = [];
+  let braceDepth = 0;
+
+  while (i < n) {
+    const ch = source[i];
+    const next = source[i + 1];
+    if (mode === 'line') {
+      if (ch === '\n') {
+        out += ch;
+        mode = 'code';
+      }
+      i++;
+      continue;
+    }
+    if (mode === 'block') {
+      if (ch === '*' && next === '/') {
+        out += '  ';
+        i += 2;
+        mode = 'code';
+        continue;
+      }
+      out += ch === '\n' ? '\n' : ' ';
+      i++;
+      continue;
+    }
+    if (mode === 'single' || mode === 'double' || mode === 'template') {
+      if (ch === '\\') {
+        out += ch + (next ?? '');
+        i += 2;
+        continue;
+      }
+      out += ch;
+      i++;
+      if (mode === 'template' && ch === '$' && next === '{') {
+        out += next;
+        i++;
+        braceDepth++;
+        interpolationDepths.push(braceDepth);
+        mode = 'code';
+        continue;
+      }
+      const quote = mode === 'single' ? "'" : mode === 'double' ? '"' : '`';
+      if (ch === quote || (mode !== 'template' && ch === '\n')) mode = 'code';
+      continue;
+    }
+    // code mode
+    if (ch === '/' && next === '/') {
+      mode = 'line';
+      i += 2;
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      out += '  ';
+      mode = 'block';
+      i += 2;
+      continue;
+    }
+    if (ch === "'") mode = 'single';
+    else if (ch === '"') mode = 'double';
+    else if (ch === '`') mode = 'template';
+    else if (ch === '{') braceDepth++;
+    else if (ch === '}') {
+      if (
+        interpolationDepths.length > 0 &&
+        braceDepth === interpolationDepths[interpolationDepths.length - 1]
+      ) {
+        interpolationDepths.pop();
+        mode = 'template';
+      } else {
+        braceDepth--;
+      }
+    }
+    out += ch;
+    i++;
+  }
+  return out;
 }
 
 /** Escape a literal string so it can be embedded in a RegExp source. */

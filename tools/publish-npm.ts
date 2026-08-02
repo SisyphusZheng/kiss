@@ -8,6 +8,7 @@
 import {
   extractOpenImports,
   type PackageInfo,
+  packagesByVersion,
   readPackages,
   releasePublishOrder,
 } from './lib/package-graph.ts';
@@ -268,12 +269,7 @@ export function npmPublishTag(version: string): string {
 }
 
 function assertVersionConsistency(packages: PackageInfo[]): void {
-  const versions = new Map<string, string[]>();
-  for (const pkg of packages) {
-    const list = versions.get(pkg.version) ?? [];
-    list.push(pkg.name);
-    versions.set(pkg.version, list);
-  }
+  const versions = packagesByVersion(packages);
   if (versions.size <= 1) return;
   const lines = [...versions.entries()].map(([version, names]) =>
     `  ${version || '<missing>'}: ${names.join(', ')}`

@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run --allow-run
 
 import { NpmViewError, verifyNpmRelease } from './lib/npm-release-verifier.ts';
+import { RETAINED_PACKAGE_NAMES } from './project-constants.ts';
 
 async function npmView(specifier: string, field: string): Promise<string> {
   const output = await new Deno.Command('npm', {
@@ -32,7 +33,7 @@ if (import.meta.main) {
   }
   await verifyNpmRelease({
     version,
-    packages: ['element', 'app', 'adapter-vite', 'ui', 'create'],
+    packages: RETAINED_PACKAGE_NAMES.map((name) => name.slice('@openelement/'.length)),
     query: npmView,
     log: console.log,
   });

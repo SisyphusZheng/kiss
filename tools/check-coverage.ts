@@ -22,15 +22,6 @@ function getNumberArg(flag: string, fallback: number): number {
 
 async function runCoverage(): Promise<string> {
   const coverageDir = '.coverage-check';
-  // Snapshot-and-restore guards against `deno test` rewriting tracked files
-  // during the coverage run; entries must point at files that exist (#738
-  // removed the workspace-member locks this list used to preserve).
-  const preservedFiles: string[] = [];
-  const snapshots = new Map(
-    await Promise.all(
-      preservedFiles.map(async (path) => [path, await Deno.readFile(path)] as const),
-    ),
-  );
   try {
     const test = await new Deno.Command(Deno.execPath(), {
       args: [
@@ -59,7 +50,6 @@ async function runCoverage(): Promise<string> {
     return new TextDecoder().decode(report.stdout);
   } finally {
     await Deno.remove(coverageDir, { recursive: true }).catch(() => undefined);
-    for (const [path, bytes] of snapshots) await Deno.writeFile(path, bytes);
   }
 }
 

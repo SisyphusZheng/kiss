@@ -26,7 +26,8 @@ Deno.test('release evidence closure accepts an immutable running tag snapshot fi
       steps: [{ name: 'publish npm packages', status: 'passed' }],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14' +
+      '\n- Previous package line: `0.41.0-alpha.13`\n- Released package line: `0.41.0-alpha.14`',
   });
 
   assertEquals(failures, []);
@@ -57,7 +58,8 @@ Deno.test('release evidence closure rejects mismatched ids and unfinished final 
       steps: [{ name: 'create GitHub release', status: 'running' }],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14' +
+      '\n- Previous package line: `0.41.0-alpha.13`\n- Released package line: `0.41.0-alpha.14`',
   });
 
   assertEquals(failures, [
@@ -100,6 +102,7 @@ Deno.test('release evidence closure requires durable final commit and workflow r
     'release note does not reference the final evidence commit',
     'release note does not reference the successful release run',
     'release note does not reference the GitHub release',
+    'release note does not record the Previous/Released package lines',
   ]);
 });
 
@@ -133,7 +136,8 @@ Deno.test('release evidence closure accepts the two-phase patch-release tag flow
       steps: [{ name: 'create GitHub release', status: 'passed' }],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/2\nRelease: https://github.com/example/releases/tag/v0.41.2',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/2\nRelease: https://github.com/example/releases/tag/v0.41.2' +
+      '\n- Previous package line: `0.41.1`\n- Released package line: `0.41.2`',
   });
 
   assertEquals(failures, []);
@@ -168,7 +172,8 @@ Deno.test('release evidence closure rejects a prerelease release snapshot withou
       steps: [{ name: 'merge release pull request', status: 'passed' }],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9' +
+      '\n- Previous package line: `0.42.0-alpha.8`\n- Released package line: `0.42.0-alpha.9`',
   });
 
   assert(
@@ -206,7 +211,8 @@ Deno.test('release evidence closure accepts a release snapshot that records npm 
       steps: [{ name: 'publish npm packages', status: 'passed' }],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9' +
+      '\n- Previous package line: `0.42.0-alpha.8`\n- Released package line: `0.42.0-alpha.9`',
   });
 
   assertEquals(failures, []);
@@ -245,8 +251,73 @@ Deno.test('release evidence closure accepts the release -> publish-existing two-
       ],
     },
     releaseNote:
-      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/2\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9',
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/2\nRelease: https://github.com/example/releases/tag/v0.42.0-alpha.9' +
+      '\n- Previous package line: `0.42.0-alpha.8`\n- Released package line: `0.42.0-alpha.9`',
   });
 
   assertEquals(failures, []);
+});
+
+Deno.test('release evidence closure rejects a note whose Previous line equals the Released line', () => {
+  const failures = validateReleaseEvidenceClosure({
+    version: '0.41.0-alpha.14',
+    record: {
+      tagCommit: 'tag-sha',
+      finalEvidenceCommit: 'final-sha',
+      successfulReleaseRun: 'https://github.com/example/actions/runs/1',
+      releaseUrl: 'https://github.com/example/releases/tag/v0.41.0-alpha.14',
+    },
+    tagIsAncestorOfFinal: true,
+    finalIsAncestorOfHead: true,
+    tagEvidence: {
+      id: 'release-id',
+      targetVersion: '0.41.0-alpha.14',
+      status: 'running',
+      steps: [{ name: 'publish npm packages', status: 'passed' }],
+    },
+    finalEvidence: {
+      id: 'release-id',
+      targetVersion: '0.41.0-alpha.14',
+      status: 'completed',
+      completedAt: '2026-07-15T16:50:58.805Z',
+      steps: [{ name: 'publish npm packages', status: 'passed' }],
+    },
+    releaseNote:
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14' +
+      '\n- Previous package line: `0.41.0-alpha.14`\n- Released package line: `0.41.0-alpha.14`',
+  });
+
+  assertEquals(failures, ['Previous package line must differ from Released package line']);
+});
+
+Deno.test('release evidence closure rejects a Released line that does not match the version', () => {
+  const failures = validateReleaseEvidenceClosure({
+    version: '0.41.0-alpha.14',
+    record: {
+      tagCommit: 'tag-sha',
+      finalEvidenceCommit: 'final-sha',
+      successfulReleaseRun: 'https://github.com/example/actions/runs/1',
+      releaseUrl: 'https://github.com/example/releases/tag/v0.41.0-alpha.14',
+    },
+    tagIsAncestorOfFinal: true,
+    finalIsAncestorOfHead: true,
+    tagEvidence: {
+      id: 'release-id',
+      targetVersion: '0.41.0-alpha.14',
+      status: 'running',
+      steps: [{ name: 'publish npm packages', status: 'passed' }],
+    },
+    finalEvidence: {
+      id: 'release-id',
+      targetVersion: '0.41.0-alpha.14',
+      status: 'completed',
+      completedAt: '2026-07-15T16:50:58.805Z',
+      steps: [{ name: 'publish npm packages', status: 'passed' }],
+    },
+    releaseNote:
+      'Final evidence: final-sha\nRun: https://github.com/example/actions/runs/1\nRelease: https://github.com/example/releases/tag/v0.41.0-alpha.14' +
+      '\n- Previous package line: `0.41.0-alpha.12`\n- Released package line: `0.41.0-alpha.13`',
+  });
+
+  assertEquals(failures, ['Released package line 0.41.0-alpha.13 does not match 0.41.0-alpha.14']);
 });

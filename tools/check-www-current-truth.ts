@@ -1,10 +1,11 @@
 import { exists, walk } from './lib/fs.ts';
-import { stripComments } from './lib/text.ts';
+import { MOJIBAKE_CHARS, stripComments } from './lib/text.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_RELEASE_THEME,
+  REMOVED_PACKAGE_NAMES,
 } from './project-constants.ts';
 import { roadmapEntryTheme } from './autoflow/release.ts';
 
@@ -40,11 +41,16 @@ const retiredShortForm = allowedAlphaNumbers
   : `\\balpha\\.\\d+(?!\\d)`;
 const activeRetiredPattern = new RegExp(`(?:${retiredFullForm}|${retiredShortForm})`, 'iu');
 
+// The mojibake table derives from the canonical MOJIBAKE_CHARS (#827) and the
+// retired package names from REMOVED_PACKAGE_NAMES (#849) — no private copies.
+const removedPackageAlternation = REMOVED_PACKAGE_NAMES
+  .map((name) => name.slice(name.lastIndexOf('/') + 1))
+  .join('|');
 const forbidden: Array<{ name: string; re: RegExp }> = [
-  { name: 'mojibake', re: /(?:鏂|鈫|鍗|杩|鏈)/ },
+  { name: 'mojibake', re: new RegExp(`[${MOJIBAKE_CHARS.join('')}]`) },
   {
     name: 'retired product package',
-    re: /@openelement\/(?:core|signal|router|protocol|content|ssg)(?:[/'"`\s]|$)/,
+    re: new RegExp(`@openelement/(?:${removedPackageAlternation})(?:[/'"\`\s]|$)`),
   },
   {
     name: 'retired two-product doctrine',
@@ -132,7 +138,7 @@ async function checkFile(file: string): Promise<void> {
 }
 
 for (const root of sourceRoots) {
-  const skip = ['dist', '_generated-*'];
+  const skip = ['dist'];
   for await (const file of walk(root, { skip })) {
     if (/\.(?:ts|tsx|md)$/.test(file)) await checkFile(file);
   }

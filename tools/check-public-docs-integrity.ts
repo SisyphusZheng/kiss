@@ -4,6 +4,8 @@ import {
   PREVIOUS_PACKAGE_VERSION,
 } from './project-constants.ts';
 import { staleCurrencyClaimPatterns } from './check-strategic-docs.ts';
+import { MOJIBAKE_CHARS } from './lib/text.ts';
+import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
 
 // Prerelease tag of the superseded line (e.g. "alpha.9"). The
 // "active release target" stale guard below is bound to this tag instead of a
@@ -40,31 +42,22 @@ const productDoctrinePatterns = [
   'current proven scope = static-first applications with fullstack output paths',
 ];
 
+// Derived from the canonical mojibake table (#827); the `???` rule is a
+// docs-specific supplement on top of it.
 const mojibakePatterns: RegExp[] = [
-  /\uFFFD/,
-  new RegExp('\\u7BA0'),
-  new RegExp('\\u9286'),
-  new RegExp('\\u9225'),
-  new RegExp('\\u9422'),
-  new RegExp('\\u8930'),
+  new RegExp(`[${MOJIBAKE_CHARS.join('')}]`),
   /\?\?\?/,
 ];
 
 const staleCurrentClaims: RegExp[] = [
-  /v0\.37\.6 package\s+line current/i,
-  /active execution target is\s+v0\.38\.0/i,
+  ...STALE_HISTORY_CLAIM_PATTERNS,
   /v0\.37\.6 is the current workspace package line/i,
   /All 20 workspace packages are currently aligned together at\s+\*\*v0\.37\.6\*\*/i,
   /活动执行目标是\s+v0\.38\.0/i,
-  /JSR publish .*best-effort/i,
   /JSR publish .*telemetry/i,
-  /to JSR as a secondary channel/i,
   /not (?:a )?(?:version-)?exit gate/i,
   /do not block version\s+exit/i,
   /distribution telemetry/i,
-  /Vue adapter proof/i,
-  /Vue is .*heavy-framework island/i,
-  /Vue 是.*heavy-framework island/i,
   // 0.41-era leftover guard; must not collide with a real 0.42.0-alpha.6.
   /npm registry (?:line|baseline).*0\.41\.0-alpha\.6/i,
   // Bound to the superseded line's prerelease tag (see top of file) so a
@@ -78,7 +71,6 @@ const staleCurrentClaims: RegExp[] = [
   // hardcoded alpha — the same generated set check-strategic-docs.ts enforces,
   // so the two gates no longer drift apart (#742).
   ...staleCurrencyClaimPatterns(),
-  /v0\.41 beta/i,
 ];
 
 const requiredCommunityFiles = [

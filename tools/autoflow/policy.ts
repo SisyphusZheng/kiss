@@ -246,16 +246,17 @@ export const GATES: readonly GateDefinition[] = [
   },
   {
     // Cross-browser smoke (#685): the main E2E gate is Chromium-only; these
-    // run the core DSD/island-hydration/theme specs on Firefox and WebKit.
+    // run the core DSD/island-hydration/theme specs on Firefox and WebKit via
+    // the single browser-smoke task (deno.json) with the project as argument.
     // They need www/dist, which the earlier build gate produces.
     name: 'test:e2e:firefox-smoke',
-    command: ['deno', 'task', 'test:e2e:firefox-smoke'],
+    command: ['deno', 'task', 'test:e2e:browser-smoke', 'firefox'],
     tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },
   {
     name: 'test:e2e:webkit-smoke',
-    command: ['deno', 'task', 'test:e2e:webkit-smoke'],
+    command: ['deno', 'task', 'test:e2e:browser-smoke', 'webkit'],
     tiers: ['ci', 'release'],
     triggers: [/^packages\//, /^www\//, /^deno\.json$/],
   },

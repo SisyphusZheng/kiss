@@ -10,8 +10,15 @@ const retainedPackages = [...RETAINED_PACKAGE_NAMES].sort();
 const removedPackages = [...REMOVED_PACKAGE_NAMES].sort();
 
 const failures: string[] = [];
-const retiredImport =
-  /(?:^|\n)\s*(?:(?:import|export)[^\n]*from\s+['"]|import\s*\(\s*['"]|\/\*\*?\s*@jsxImportSource\s+)@openelement\/(?:core|signal|router|protocol|content|ssg)(?:\/|['"])/;
+// Retired import surfaces derive from the canonical removed-package list
+// (#849) so a re-retired package cannot silently escape the gate.
+const removedPackageAlternation = REMOVED_PACKAGE_NAMES
+  .map((name) => name.slice(name.lastIndexOf('/') + 1))
+  .join('|');
+const retiredImport = new RegExp(
+  `(?:^|\\n)\\s*(?:(?:import|export)[^\\n]*from\\s+['"]|import\\s*\\(\\s*['"]|` +
+    `\\/\\*\\*?\\s*@jsxImportSource\\s+)@openelement/(?:${removedPackageAlternation})(?:\\/|['"])`,
+);
 
 async function rejectRetiredImports(dir: string): Promise<void> {
   for await (const entry of Deno.readDir(dir)) {

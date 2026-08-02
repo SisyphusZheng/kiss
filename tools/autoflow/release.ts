@@ -916,6 +916,19 @@ export function buildVersionAnchorReplacements(
       'Current npm registry line: `$PREV_PVT`',
       'Current npm registry line: `$TAG`',
     ],
+    // Interop example version anchor (check-version-anchors governs it with
+    // the registry-style lag allowance): cover both the source-line form and
+    // the lagging npm-published form so the bump advances it mechanically.
+    [
+      'examples/open-element-in-fresh/README.md',
+      'current framework source line (`$PV`)',
+      'current framework source line (`$VER`)',
+    ],
+    [
+      'examples/open-element-in-fresh/README.md',
+      'current framework source line (`$PREV_PV`)',
+      'current framework source line (`$VER`)',
+    ],
     [
       'www/app/data/version.ts',
       "export const OPENELEMENT_VERSION = '$PVT';",
@@ -990,6 +1003,7 @@ export function buildVersionAnchorReplacements(
   const resolve = (s: string): string =>
     s
       .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)
+      .replaceAll('$PREV_PV', PREVIOUS_PACKAGE_VERSION)
       .replaceAll('$PVT', pvTag)
       .replaceAll('$PV', pv)
       .replaceAll('$TAG', tag)

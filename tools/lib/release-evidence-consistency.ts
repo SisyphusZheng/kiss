@@ -83,5 +83,21 @@ export function validateReleaseEvidenceClosure(input: ReleaseEvidenceClosureInpu
   if (!input.releaseNote.includes(input.record.releaseUrl)) {
     failures.push('release note does not reference the GitHub release');
   }
+  // The note's from/to package lines must reflect a real bump: Released names
+  // the target version and Previous names a different (superseded) line. A
+  // note where both lines name the released version hid the actual pre-bump
+  // state of the release.
+  const previousLine = input.releaseNote.match(/Previous package line:\*{0,2}\s*`([^`]+)`/);
+  const releasedLine = input.releaseNote.match(/Released package line:\*{0,2}\s*`([^`]+)`/);
+  if (!previousLine || !releasedLine) {
+    failures.push('release note does not record the Previous/Released package lines');
+  } else {
+    if (releasedLine[1] !== input.version) {
+      failures.push(`Released package line ${releasedLine[1]} does not match ${input.version}`);
+    }
+    if (previousLine[1] === releasedLine[1]) {
+      failures.push('Previous package line must differ from Released package line');
+    }
+  }
   return failures;
 }

@@ -24,6 +24,7 @@ import {
   extractOpenImports,
   normalizeDep,
   type PackageInfo,
+  packagesByVersion,
   readPackages,
   releasePublishOrder,
   topologicalSort,
@@ -109,12 +110,7 @@ async function validateRootImportMap(
 }
 
 function validateVersionConsistency(packages: PackageInfo[], failures: string[]): string | null {
-  const versions = new Map<string, string[]>();
-  for (const pkg of packages) {
-    const list = versions.get(pkg.version) ?? [];
-    list.push(pkg.name);
-    versions.set(pkg.version, list);
-  }
+  const versions = packagesByVersion(packages);
 
   if (versions.size !== 1) {
     for (const [version, names] of versions) {
@@ -162,7 +158,14 @@ async function main(): Promise<void> {
   const failures: string[] = [];
 
   const packages = await readPackages();
-  const publishSteps = releasePublishOrder(packages);
+  // releasePublishOrder throws on a dependency-order violation; format it as
+  // a gate failure instead of an uncaught stack trace (#825).
+  let publishSteps: PackageInfo[] = [];
+  try {
+    publishSteps = releasePublishOrder(packages);
+  } catch (err) {
+    failures.push(err instanceof Error ? err.message : String(err));
+  }
   const publishOrder = publishSteps.map((pkg) => pkg.name);
 
   console.log(`Publish order (${publishOrder.length} packages):`);
@@ -247,61 +250,13 @@ async function main(): Promise<void> {
   }
 
   console.log('\n--- Topological Sort ---');
-  let topoOrder: string[] = [];
   try {
-    topoOrder = topologicalSort(graph);
+    const topoOrder = topologicalSort(graph);
     console.log(`  Order: ${topoOrder.join(' -> ')}`);
   } catch (err) {
     const msg = `Topological sort failed: ${err instanceof Error ? err.message : String(err)}`;
     console.error(`  FAIL: ${msg}`);
     failures.push(msg);
-  }
-
-  if (topoOrder.length > 0) {
-    console.log('\n--- Publish Order Validation ---');
-    const pkgDeps = new Map(packages.map((pkg) => [pkg.name, pkg.deps]));
-    const publishPos = new Map<string, number>();
-    publishOrder.forEach((pkg, index) => publishPos.set(pkg, index));
-
-    for (let i = 0; i < publishOrder.length; i++) {
-      const pkg = publishOrder[i];
-      const normalizedDeps = (pkgDeps.get(pkg) ?? [])
-        .map((dep) => normalizeDep(dep, pkg))
-        .filter((dep): dep is string => dep !== null);
-
-      for (const dep of normalizedDeps) {
-        const depPos = publishPos.get(dep);
-        if (depPos !== undefined && depPos > i) {
-          const msg = `Publish order violation: "${pkg}" (pos ${i + 1}) depends on ` +
-            `"${dep}" (pos ${depPos + 1}), but "${dep}" is published after "${pkg}".`;
-          console.error(`  FAIL: ${msg}`);
-          failures.push(msg);
-        }
-      }
-    }
-
-    const graphNames = new Set(packages.map((pkg) => pkg.name));
-    for (const pkg of publishOrder) {
-      if (!graphNames.has(pkg)) {
-        const msg = `"${pkg}" is in the derived publish order but not found in packages/.`;
-        console.error(`  FAIL: ${msg}`);
-        failures.push(msg);
-      }
-    }
-
-    const publishNames = new Set(publishOrder);
-    for (const pkg of packages) {
-      if (!publishNames.has(pkg.name)) {
-        const msg =
-          `"${pkg.name}" exists in packages/ but is missing from the derived publish order.`;
-        console.error(`  FAIL: ${msg}`);
-        failures.push(msg);
-      }
-    }
-
-    if (failures.length === 0) {
-      console.log('  PASS: Publish order is consistent with dependency graph.');
-    }
   }
 
   console.log('\n--- Package Versions ---');

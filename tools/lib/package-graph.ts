@@ -258,7 +258,29 @@ export function sortPackages(packages: PackageInfo[]): PackageInfo[] {
   return order.map((name) => byName.get(name)!);
 }
 
+/**
+ * Group workspace packages by version (#849). The single-release-line checks
+ * in check-package-graph.ts and publish-npm.ts both aggregate this map; a
+ * size > 1 means the workspace is not on one release line.
+ */
+export function packagesByVersion(packages: PackageInfo[]): Map<string, string[]> {
+  const versions = new Map<string, string[]>();
+  for (const pkg of packages) {
+    const list = versions.get(pkg.version) ?? [];
+    list.push(pkg.name);
+    versions.set(pkg.version, list);
+  }
+  return versions;
+}
+
 export function releasePublishOrder(packages: PackageInfo[]): PackageInfo[] {
+  // Publish-priority ranking of the canonical retained package line
+  // (RETAINED_PACKAGE_NAMES in tools/project-constants.ts), dependency-lean
+  // packages first. The order is a deliberate permutation, not derivable
+  // from the canonical list's ordering; a new retained package must be
+  // inserted here by rank — unranked packages publish last, and the
+  // dependency check below still throws if that puts a dependent before
+  // its dependency (#828).
   const releasePriority = [
     '@openelement/element',
     '@openelement/app',

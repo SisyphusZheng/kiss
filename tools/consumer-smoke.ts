@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net
 /**
- * consumer-smoke — v0.41.0
+ * consumer-smoke
  *
  * Post-publish npm smoke test: creates temporary consumer projects and
  * verifies @openelement/element can be consumed from npm in Deno and Node.
@@ -9,8 +9,8 @@
  * Usage:
  *   deno run -A tools/consumer-smoke.ts
  *   deno run -A tools/consumer-smoke.ts --local
- *   deno run -A tools/consumer-smoke.ts --version 0.41.0
- *   deno run -A tools/consumer-smoke.ts --version 0.41.0 --jsdelivr --nitro
+ *   deno run -A tools/consumer-smoke.ts --version <x.y.z>
+ *   deno run -A tools/consumer-smoke.ts --version <x.y.z> --jsdelivr --nitro
  */
 
 import { runWithOutput } from './lib/process.ts';

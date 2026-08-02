@@ -44,11 +44,12 @@ async function main(): Promise<void> {
       publish?: { include?: unknown };
     };
 
-    if (config.name !== pkg.name) {
-      failures.push(`${configPath}: name does not match package graph`);
-    }
-    if (config.version !== pkg.version) {
-      failures.push(`${configPath}: version does not match package graph`);
+    if (config.version !== PACKAGE_VERSION) {
+      failures.push(
+        `${configPath}: version ${
+          typeof config.version === 'string' ? config.version : '<missing>'
+        } does not match PACKAGE_VERSION ${PACKAGE_VERSION}`,
+      );
     }
     if (!config.exports) failures.push(`${configPath}: missing public exports`);
 

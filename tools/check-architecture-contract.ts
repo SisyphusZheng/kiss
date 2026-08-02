@@ -1,5 +1,5 @@
 /**
- * v0.30.1 architecture contract gate.
+ * Architecture contract gate.
  *
  * This gate checks current source and current documentation only. Historical ADRs,
  * old release notes, generated data, fixtures, and tests are intentionally not
@@ -47,6 +47,13 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment:
       "ctx.registerPlugin('sitemapOptions', options as unknown as Record<string, unknown>);",
     reason: 'Plugin option bag crosses a protocol boundary via registerPlugin.',
+  },
+  {
+    file: 'packages/adapter-vite/src/cli/ssg-render.ts',
+    fragment:
+      'generateSitemap(outputDir, ctx.plugins.sitemapOptions as unknown as SitemapOptions);',
+    reason:
+      'Read-back of the sitemap plugin option bag registered via registerPlugin (the write-side cast above).',
   },
   {
     file: 'packages/element/src/internal/core/style-sheet.ts',

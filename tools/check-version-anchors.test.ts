@@ -1,5 +1,6 @@
 import { assert, assertEquals } from '@std/assert';
 import {
+  findInflightVersionClaimFailures,
   findStaleAnchorFailures,
   findVersionAnchorFailures,
   headAnchorZone,
@@ -36,6 +37,8 @@ function goodFiles(): Record<string, string> {
       `package line \`${PACKAGE_VERSION_TAG}\`, npm registry line \`${PACKAGE_VERSION_TAG}\`, done`,
     'docs/current/VERSION_PLAN.md':
       `Current source package line: \`${PACKAGE_VERSION_TAG}\`\nCurrent npm registry line: \`${PACKAGE_VERSION_TAG}\``,
+    'examples/open-element-in-fresh/README.md':
+      `Maintained against the current framework source line (\`${PACKAGE_VERSION}\`).`,
   };
 }
 
@@ -136,4 +139,40 @@ Deno.test('version anchors: real repo docs are in sync with project constants', 
   const read = (path: string) => Deno.readTextFileSync(path);
   assertEquals(findVersionAnchorFailures(read), []);
   assertEquals(findStaleAnchorFailures(read), []);
+});
+
+Deno.test('in-flight claims: the interop example may lag to the npm-published line', () => {
+  const files = goodFiles();
+  files['examples/open-element-in-fresh/README.md'] =
+    `Maintained against the current framework source line (\`${PREVIOUS_PACKAGE_VERSION}\`).`;
+  assertEquals(findVersionAnchorFailures(readerFrom(files)), []);
+  assertEquals(findStaleAnchorFailures(readerFrom(files)), []);
+});
+
+Deno.test('in-flight claims: published line bound to in-flight wording fails (#813)', () => {
+  const currentAlpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1] ?? '0';
+  const cases = [
+    `alpha.${currentAlpha} is the in-flight source line.`,
+    `The in-flight source line is alpha.${currentAlpha}.`,
+    `Next alpha train: \`${PACKAGE_VERSION_TAG}\` (some theme — in flight; next is TP-9)`,
+    `active train \`${PACKAGE_VERSION_TAG}\``,
+  ];
+  for (const prose of cases) {
+    const files = goodFiles();
+    files['docs/roadmap/ROADMAP.md'] += `\n${prose}\n`;
+    const failures = findInflightVersionClaimFailures(readerFrom(files));
+    assert(failures.length >= 1, `expected a failure for: ${prose}`);
+    assert(failures.every((f) => f.startsWith('docs/roadmap/ROADMAP.md:')));
+  }
+});
+
+Deno.test('in-flight claims: naming the NEXT train beside the published line is legal', () => {
+  const files = goodFiles();
+  // The healthy steady state: current line published, next version in flight.
+  files['docs/roadmap/ROADMAP.md'] +=
+    `\n${PACKAGE_VERSION} is published to npm and the next alpha is the in-flight source line.\n`;
+  files['docs/status/STATUS.md'] += '\nCurrent maturity stage: stable; the next alpha in flight\n';
+  files['docs/governance/PROJECT_WORKFLOW.md'] +=
+    `\nnpm registry line \`${PACKAGE_VERSION_TAG}\` (published), active train \`v9.9.9-alpha.1\``;
+  assertEquals(findInflightVersionClaimFailures(readerFrom(files)), []);
 });

@@ -4,27 +4,6 @@ const ROOT = new URL('../', import.meta.url);
 const CSS_SOURCE = new URL('packages/ui/src/open-props-tokens.css', ROOT);
 const TARGET = new URL('packages/ui/src/open-props-tokens.ts', ROOT);
 const check = Deno.args.includes('--check');
-const bootstrap = Deno.args.includes('--bootstrap');
-
-function extractLegacyCss(source: string): string {
-  const prefix = 'const tokenCss = `';
-  const start = source.indexOf(prefix);
-  const end = source.indexOf('\n`;\n\nsheet.replaceSync', start);
-  if (start < 0 || end < 0) throw new Error('Could not extract legacy tokenCss template');
-  return source.slice(start + prefix.length, end)
-    .replaceAll('\\`', '`')
-    .replaceAll('\\${', '${');
-}
-
-if (bootstrap) {
-  try {
-    await Deno.stat(CSS_SOURCE);
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
-    const legacy = await Deno.readTextFile(TARGET);
-    await Deno.writeTextFile(CSS_SOURCE, extractLegacyCss(legacy));
-  }
-}
 
 const css = await Deno.readTextFile(CSS_SOURCE);
 const cssTemplate = css

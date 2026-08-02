@@ -1,11 +1,12 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { formatJson } from '@openelement/element/build-utils';
-import { PACKAGE_VERSION } from './project-constants.ts';
+import { PACKAGE_VERSION, RETAINED_PACKAGE_NAMES } from './project-constants.ts';
 import { readJson } from './lib/fs.ts';
+import { readPackages } from './lib/package-graph.ts';
+import { tarballPath } from './lib/npm-tarball.ts';
 
 const repoRoot = resolve(import.meta.dirname, '..');
-const packageNames = ['element', 'app', 'adapter-vite', 'ui', 'create'];
 // Generous ceiling for the starter's real SSG build (vite + nitro); a hung
 // packed adapter must fail the tool instead of stalling CI forever.
 const BUILD_TIMEOUT_MS = 10 * 60_000;
@@ -48,9 +49,14 @@ async function run(
 
 const tmp = await Deno.makeTempDir({ prefix: 'openelement-packaged-starter-' });
 try {
-  const tarballs = packageNames.map((name) =>
-    join(repoRoot, 'packages', name, `openelement-${name}-${PACKAGE_VERSION}.tgz`)
-  );
+  // Cover the canonical retained package line (#828) with the shared tarball
+  // naming helper (#793) so a new package cannot escape the smoke.
+  const workspacePackages = await readPackages();
+  const tarballs = RETAINED_PACKAGE_NAMES.map((name) => {
+    const pkg = workspacePackages.find((candidate) => candidate.name === name);
+    if (!pkg) throw new Error(`Retained package missing from workspace graph: ${name}`);
+    return join(repoRoot, tarballPath(pkg));
+  });
   for (const tarball of tarballs) {
     if (!existsSync(tarball)) {
       throw new Error(`Missing packed release artifact: ${tarball}`);

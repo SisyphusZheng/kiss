@@ -1,5 +1,5 @@
 /**
- * Type-safety gate for the v0.40.x Ultimate Clean Plan.
+ * Type-safety gate for the current source tree.
  *
  * Scans active TypeScript/TSX source and tests for explicit `any` type escapes.
  * Allowed: `unknown`, `unknown[]`, structured interfaces, generic constraints.

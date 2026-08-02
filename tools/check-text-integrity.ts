@@ -32,11 +32,12 @@ const currentTruthForbidden = [
   {
     re:
       /20-package v0\.40 graph|is a 20-package|20-package layered|20 packages in packages\/|20 current packages/,
-    message: 'current truth must use the 11-package v0.40 graph',
+    message:
+      'current truth must use the current five-package graph, not the retired 20-package graph',
   },
   {
     re: /standalone (runtime\/style-sheet\/ssg|`@openelement\/ssg`)/,
-    message: 'current truth must not say standalone SSG was removed',
+    message: 'current truth must not describe runtime/style-sheet/ssg as standalone packages',
   },
   {
     re: /default remains `alien-signals`|alien-signals remains the default/,

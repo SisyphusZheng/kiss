@@ -17,12 +17,19 @@
  *    and the enumerable pre-release history before it). A bump that forgets
  *    a head anchor leaves the zone stale and fails here, instead of shipping
  *    a red main CI after the release.
+ * 3. findInflightVersionClaimFailures rejects half-updated closeout prose
+ *    (#813): the published package line must not be described as in-flight
+ *    or as the active/next train. Only tight bindings count (the version as
+ *    the subject/object of the in-flight phrase, or immediately trailed by a
+ *    parenthetical carrying in-flight wording), so a paragraph that marks
+ *    the current line published while naming the NEXT train stays legal.
  */
 
 import {
   ACTIVE_EXECUTION_VERSION,
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
+  PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
   stalePackageVersionClaims,
 } from './project-constants.ts';
@@ -112,6 +119,14 @@ export function versionAnchors(): VersionAnchor[] {
       snippet: `Current npm registry line: \`${PACKAGE_VERSION_TAG}\``,
       // The registry publishes at release time, one alpha after the source bump.
       alternatives: [`Current npm registry line: \`${PREVIOUS_PACKAGE_VERSION_TAG}\``],
+    },
+    {
+      path: 'examples/open-element-in-fresh/README.md',
+      snippet: `current framework source line (\`${PACKAGE_VERSION}\`)`,
+      // The interop example is re-verified against the npm-published line,
+      // which lags the source line by one alpha between bump and release
+      // (same lag allowance as the registry-line anchors).
+      alternatives: [`current framework source line (\`${PREVIOUS_PACKAGE_VERSION}\`)`],
     },
   ];
 }
@@ -215,6 +230,45 @@ export function findStaleAnchorFailures(read: (path: string) => string): string[
   return failures;
 }
 
+/**
+ * Half-update guard (#813): the published package line must not be described
+ * as in-flight or as the active/next train. The binding must be tight — the
+ * current version as the subject or object of the in-flight/train phrase, or
+ * immediately trailed by a parenthetical carrying in-flight wording — so a
+ * paragraph that marks the current line published while naming the NEXT
+ * train stays legal. Runs over the governed docs (the versionAnchors paths).
+ */
+export function findInflightVersionClaimFailures(read: (path: string) => string): string[] {
+  const version = escapeRegExp(PACKAGE_VERSION);
+  const alpha = PACKAGE_VERSION.match(/-alpha\.(\d+)$/u)?.[1];
+  const ver = alpha ? `(?:v?${version}|\\balpha\\.${alpha}\\b)` : `v?${version}`;
+  const bindings = [
+    new RegExp(`${ver}[^.\\n]{0,30}?is the in[- ]flight`, 'i'),
+    new RegExp(`in[- ]flight[^.\\n]{0,30}?line is ${ver}`, 'i'),
+    new RegExp(`(?:active|next)[^\\n]{0,20}?train:?\\s*\`?${ver}(?![\\d.])`, 'i'),
+    new RegExp(`${ver}\`?\\s*\\([^)\\n]*in[- ]flight`, 'i'),
+  ];
+  const failures: string[] = [];
+  for (const path of new Set(versionAnchors().map((anchor) => anchor.path))) {
+    let text: string;
+    try {
+      text = read(path);
+    } catch {
+      // Unreadable files are reported by findVersionAnchorFailures.
+      continue;
+    }
+    for (const pattern of bindings) {
+      const match = text.match(pattern);
+      if (match) {
+        failures.push(
+          `${path}: published package line bound to in-flight/train wording: ${match[0]}`,
+        );
+      }
+    }
+  }
+  return failures;
+}
+
 function main(): void {
   const texts = new Map<string, string>();
   const read = (path: string): string => {
@@ -224,7 +278,11 @@ function main(): void {
     texts.set(path, text);
     return text;
   };
-  const failures = [...findVersionAnchorFailures(read), ...findStaleAnchorFailures(read)];
+  const failures = [
+    ...findVersionAnchorFailures(read),
+    ...findStaleAnchorFailures(read),
+    ...findInflightVersionClaimFailures(read),
+  ];
   if (failures.length > 0) {
     console.error('Version anchor check failed:');
     for (const failure of failures) console.error(`- ${failure}`);

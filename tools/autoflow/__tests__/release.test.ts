@@ -49,19 +49,24 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // anchors (doc drift) are intentionally omitted, so this count reflects the
   // files that currently carry the previous package line. Registry-line
   // anchors appear twice: once for the current-tag form and once for the
-  // lag-state previous-tag form (#754).
-  assertEquals(reps.length, 29);
+  // lag-state previous-tag form (#754). The interop example anchor likewise
+  // covers the source-line and lagging npm-published forms.
+  assertEquals(reps.length, 31);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
     assert(existsSync(path), `versioned file must exist: ${path}`);
     const text = Deno.readTextFileSync(path);
     // Either the from-anchor is present (will be replaced on bump) or the file
-    // already carries the target (idempotent re-run is safe).
+    // already carries the target (idempotent re-run is safe). A file that
+    // carries only the previous line is fine too: the bump has something to
+    // replace (the lag-form from-anchor).
     assert(
       text.includes(from) || text.includes(to) ||
         (text.includes(version) && text.includes(tag)) ||
-        text.includes(PACKAGE_VERSION) || text.includes(PACKAGE_VERSION_TAG),
+        text.includes(PACKAGE_VERSION) || text.includes(PACKAGE_VERSION_TAG) ||
+        text.includes(PREVIOUS_PACKAGE_VERSION) ||
+        text.includes(PREVIOUS_PACKAGE_VERSION_TAG),
       `${path} must contain anchor or already be at target: ${from}`,
     );
     assert(
@@ -123,6 +128,19 @@ Deno.test('buildVersionAnchorReplacements: registry anchors cover current and la
         t === `export const PUBLISHED_PACKAGE_VERSION = '${tag}';`
       ),
       `missing PUBLISHED_PACKAGE_VERSION replacement from ${fromTag}`,
+    );
+  }
+
+  // The interop example anchor joins the bump in both accepted states too
+  // (source-line form and lagging npm-published form).
+  for (const fromVersion of [PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION]) {
+    assert(
+      reps.some(([p, f, t]) =>
+        p === 'examples/open-element-in-fresh/README.md' &&
+        f === `current framework source line (\`${fromVersion}\`)` &&
+        t === `current framework source line (\`${version}\`)`
+      ),
+      `missing fresh-example anchor replacement from ${fromVersion}`,
     );
   }
 });
