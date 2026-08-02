@@ -6,7 +6,7 @@
  * loader/render error paths (redirect, 404, 500 + errors collection) are
  * exercised for real, not just string-matched.
  */
-import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { buildEntryDescriptor } from '../src/internal/ssg/entry-descriptor.ts';
 import { renderSsgSection } from '../src/internal/ssg/entry-render-ssg.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';

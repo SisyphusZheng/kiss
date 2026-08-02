@@ -6,7 +6,7 @@
  *   2. renderEntry - renders data to code string
  */
 
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 

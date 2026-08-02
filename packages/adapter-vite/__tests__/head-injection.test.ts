@@ -4,7 +4,7 @@
  * Tests for HTML head injection safety: script tag validation,
  * URL safety checks, and headExtras serialization.
  */
-import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { assertNoScriptTags, buildHeadExtras, validateSafeUrl } from '../src/head-injection.ts';
 
 // ─── assertNoScriptTags ───────────────────────────────────────

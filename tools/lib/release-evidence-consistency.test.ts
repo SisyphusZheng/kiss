@@ -1,4 +1,4 @@
-import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals } from '@std/assert';
 import { validateReleaseEvidenceClosure } from './release-evidence-consistency.ts';
 
 Deno.test('release evidence closure accepts an immutable running tag snapshot finalized on main', () => {

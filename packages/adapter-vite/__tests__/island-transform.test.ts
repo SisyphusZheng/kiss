@@ -1,7 +1,7 @@
 /**
  * @openelement/adapter-vite - island-transform.ts tests (Deno)
  */
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { islandTransformPlugin } from '../src/island-transform.ts';
 import { generateClientEntry } from '../src/internal/ssg/index.ts';
 

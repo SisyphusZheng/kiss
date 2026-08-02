@@ -4,8 +4,9 @@
  *
  * Build-time Vite plugin, allowed to use node:*.
  *
- * This module reaches node:* built-ins through the injected FileSystemAdapter
- * (default: nodeFsAdapter) and MUST NOT be imported from the main
+ * File-system access (cwd / mkdirSync / writeFileSync) goes through the
+ * injected FileSystemAdapter (default: nodeFsAdapter); path joining still
+ * uses node:path directly. This module MUST NOT be imported from the main
  * @openelement/app entry to avoid pulling Node built-ins into client island
  * bundles.
  *

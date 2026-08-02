@@ -5,7 +5,7 @@
  * proving the static/hydrate/csr subpath split is usable for a real UI component.
  */
 
-import { assert } from 'jsr:@std/assert@^1.0.0';
+import { assert } from '@std/assert';
 import { renderDsd } from '@openelement/element';
 import { OpenButton } from '../src/open-button.tsx';
 

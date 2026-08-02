@@ -3,13 +3,7 @@
  *
  * Tests the SSG post-processing functions using temp directories.
  */
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  assertFalse,
-  assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import {
   buildIslandChunkMap,
   buildSpeculationRulesJson,

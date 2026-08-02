@@ -58,7 +58,7 @@ const WORKSPACE_ROOT: string | null = (() => {
     if (!existsSync(join(root, 'packages', 'element', 'deno.json'))) return null;
     return root;
   } catch (e) {
-    log.warn('[build-client] Unable to resolve workspace root, falling back to null', e);
+    log.warn('Unable to resolve workspace root, falling back to null', e);
     return null;
   }
 })();
@@ -106,7 +106,7 @@ function tryDenoJsonDir(
   // Handles mid-line // comments, /* */ blocks, string literals, and trailing commas.
   const denoJson = parseJsonc(raw);
   if (!denoJson) {
-    log.warn('[build-client] Invalid deno.json JSON, skipping');
+    log.warn('Invalid deno.json JSON, skipping');
     return null; // Invalid JSON — skip this deno.json
   }
   const imports = denoJson.imports as Record<string, string> | undefined;
@@ -133,7 +133,7 @@ function convertImportMapTarget(target: string, denoJsonDir: string): string | n
     try {
       return fileURLToPath(target).replace(/\\/g, '/');
     } catch (e) {
-      log.warn('[build-client] Unable to convert file:// import-map target, skipping', e);
+      log.warn('Unable to convert file:// import-map target, skipping', e);
       return null;
     }
   }

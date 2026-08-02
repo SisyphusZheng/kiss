@@ -11,7 +11,7 @@
  *   - K+I (Knowledge + Isolated): Islands are the only JS
  */
 
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { join } from 'jsr:@std/path@^1.0.0';
 import {
   buildIslandChunkMap,

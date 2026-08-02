@@ -5,7 +5,7 @@
  * components.test.ts harness ordering. open-button is imported dynamically after
  * the harness is installed so OpenElement captures the fake HTMLElement base.
  */
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 
 function installMinimalDom(): void {
   if (typeof (globalThis as { HTMLElement?: unknown }).HTMLElement !== 'undefined') return;

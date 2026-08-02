@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse } from '@std/assert';
 
 Deno.test('token layer exposes semantic component recipes', async () => {
   const { openPropsRootSheet, openPropsTokenSheet } = await import('../src/open-props-tokens.ts');

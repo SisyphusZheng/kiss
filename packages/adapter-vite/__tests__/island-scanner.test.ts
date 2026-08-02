@@ -4,7 +4,7 @@
  * #771: known keys (ssr/dsd/hydrate) with non-literal values must throw
  * (fail closed) instead of being silently skipped and treated as defaults.
  */
-import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertThrows } from '@std/assert';
 import { readIslandConfig } from '../src/internal/ssg/route-scanner.ts';
 
 Deno.test('readIslandConfig: returns null without openElement export', () => {

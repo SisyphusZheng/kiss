@@ -7,9 +7,9 @@
  */
 
 import type { EntryDescriptor } from '../protocol/ssg.ts';
+import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 import {
   documentWrapOptionsLines,
-  jsStringLiteral,
   pagePropsExpr,
   renderMatchingRenderersFn,
   routeRevalidateExpr,
@@ -43,11 +43,11 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   for (const r of desc.pageRoutes) {
     const tagNameExpr = routeTagNameExpr(r.tagName);
     lines.push(
-      `  { path: ${jsStringLiteral(r.path)}, filePath: ${
-        jsStringLiteral(r.filePath)
+      `  { path: ${quoteGeneratedJavaScriptValue(r.path)}, filePath: ${
+        quoteGeneratedJavaScriptValue(r.filePath)
       }, tagName: ${tagNameExpr}, module: ${r.varName}, isDynamic: ${!!r
         .isDynamic}, paramNames: [${
-        (r.paramNames || []).map(jsStringLiteral).join(', ')
+        (r.paramNames || []).map(quoteGeneratedJavaScriptValue).join(', ')
       }], revalidate: ${
         routeRevalidateExpr(r.varName)
       }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto"), hasAction: (typeof ${r.varName}.action === "function" || (typeof ${r.varName}.actions === "object" && ${r.varName}.actions !== null)) },`,
@@ -140,8 +140,10 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   for (
     const optionLine of documentWrapOptionsLines({
       pageExpr: 'page',
-      titleExpr: `title || page.head?.title || ${jsStringLiteral(desc.document.title)}`,
-      langExpr: `lang || locale || ${jsStringLiteral(desc.document.lang)}`,
+      titleExpr: `title || page.head?.title || ${
+        quoteGeneratedJavaScriptValue(desc.document.title)
+      }`,
+      langExpr: `lang || locale || ${quoteGeneratedJavaScriptValue(desc.document.lang)}`,
       headExtrasExpr: 'headExtrasValue',
       allowHeadExtrasScripts: desc.document.allowHeadExtrasScripts,
     })
@@ -161,7 +163,9 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '      const html = wrapInDocument(__statusHtml("Redirect", "Redirecting to " + error.location), {',
   );
   lines.push('        title: "Redirect",');
-  lines.push(`        lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push(
+    `        lang: lang || locale || ${quoteGeneratedJavaScriptValue(desc.document.lang)},`,
+  );
   lines.push('        headExtras: headExtrasValue,');
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
@@ -176,7 +180,9 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '      const html = wrapInDocument(__statusHtml("404 Not Found", error.message || "Not Found"), {',
   );
   lines.push('        title: "404 Not Found",');
-  lines.push(`        lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push(
+    `        lang: lang || locale || ${quoteGeneratedJavaScriptValue(desc.document.lang)},`,
+  );
   lines.push('        headExtras: headExtrasValue,');
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
@@ -218,8 +224,10 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   for (
     const optionLine of documentWrapOptionsLines({
       pageExpr: 'page',
-      titleExpr: `title || page.head?.title || ${jsStringLiteral(desc.document.title)}`,
-      langExpr: `lang || locale || ${jsStringLiteral(desc.document.lang)}`,
+      titleExpr: `title || page.head?.title || ${
+        quoteGeneratedJavaScriptValue(desc.document.title)
+      }`,
+      langExpr: `lang || locale || ${quoteGeneratedJavaScriptValue(desc.document.lang)}`,
       headExtrasExpr: 'headExtrasValue',
       allowHeadExtrasScripts: desc.document.allowHeadExtrasScripts,
     })
@@ -246,7 +254,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
     '    const html = wrapInDocument(__statusHtml("500 Internal Server Error", detail), {',
   );
   lines.push('      title: "500 Internal Server Error",');
-  lines.push(`      lang: lang || locale || ${jsStringLiteral(desc.document.lang)},`);
+  lines.push(`      lang: lang || locale || ${quoteGeneratedJavaScriptValue(desc.document.lang)},`);
   lines.push('      headExtras: headExtrasValue,');
   lines.push(
     `      allowHeadExtrasScripts: ${JSON.stringify(desc.document.allowHeadExtrasScripts)},`,
@@ -271,7 +279,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
   if (dynamicRoutes.length > 0) {
     lines.push("  // Dispatch to the route module's getStaticPaths()");
     for (const r of dynamicRoutes) {
-      lines.push(`  if (routePath === ${jsStringLiteral(r.path)}) {`);
+      lines.push(`  if (routePath === ${quoteGeneratedJavaScriptValue(r.path)}) {`);
       lines.push(
         `    if (typeof ${r.varName}.getStaticPaths === 'function') {`,
       );

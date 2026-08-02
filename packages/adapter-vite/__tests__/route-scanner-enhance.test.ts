@@ -1,7 +1,7 @@
 /**
  * route-scanner: enhanced-form detection follows relative imports (#577).
  */
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { join } from 'jsr:@std/path@^1.0.0';
 import { scanRoutes } from '../src/internal/ssg/index.ts';
 

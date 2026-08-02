@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertThrows } from '@std/assert';
 import { fsPathToModuleSpecifier } from '../src/internal/ssg/module-specifier.ts';
 import { validateIslandModuleSpecifier } from '../src/internal/ssg/entry-generators.ts';
 import { scanIslands } from '../src/internal/ssg/island-scanner.ts';

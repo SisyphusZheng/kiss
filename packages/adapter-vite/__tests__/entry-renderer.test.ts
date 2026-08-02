@@ -9,12 +9,7 @@
 // Code structure validation
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertFalse,
-  assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 

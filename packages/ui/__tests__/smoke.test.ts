@@ -4,7 +4,7 @@
  * Minimal tests to verify components can be imported and registered.
  * CI should never use continue-on-error - if tests fail, the build fails.
  */
-import { assertEquals, assertExists } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists } from '@std/assert';
 
 Deno.test('open-ui - index exports manifest (WC Package Protocol)', async () => {
   const mod = await import('../src/index.ts');

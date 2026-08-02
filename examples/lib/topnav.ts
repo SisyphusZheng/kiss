@@ -30,7 +30,7 @@ export function createTopNav(options: TopNavOptions): HTMLElement {
   nav.className = `${prefix}-topnav`;
   const ariaAttr = brand.ariaLabel ? ` aria-label="${brand.ariaLabel}"` : '';
   nav.innerHTML = `
-    <a class="${prefix}-brand" href="/" data-nav="/"${ariaAttr}>
+    <a class="${prefix}-brand" href="/" data-nav="/" data-open-brand${ariaAttr}>
       ${brand.svg}
       ${brand.label}
     </a>

@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertRejects } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertRejects } from '@std/assert';
 import {
   commitIfStaged,
   createReleaseEvidence,

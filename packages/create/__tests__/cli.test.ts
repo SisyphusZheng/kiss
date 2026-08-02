@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertFalse, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertThrows } from '@std/assert';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

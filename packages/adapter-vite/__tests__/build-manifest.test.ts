@@ -3,7 +3,7 @@
  *
  * Tests build manifest scanning and formatting using temp directories.
  */
-import { assert, assertEquals, assertExists, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertExists, assertStringIncludes } from '@std/assert';
 import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build-manifest.ts';
 
 import { join } from 'node:path';

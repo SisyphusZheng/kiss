@@ -1,10 +1,4 @@
-import {
-  assert,
-  assertEquals,
-  assertFalse,
-  assertRejects,
-  assertThrows,
-} from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse, assertRejects, assertThrows } from '@std/assert';
 import { existsSync } from 'node:fs';
 import {
   buildVersionAnchorReplacements,

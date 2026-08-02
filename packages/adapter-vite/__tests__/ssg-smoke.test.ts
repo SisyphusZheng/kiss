@@ -8,7 +8,7 @@
  * should experience it as a single production build.
  */
 
-import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

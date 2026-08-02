@@ -5,31 +5,47 @@
 /**
  * Strip comments from a single source line while tracking block-comment state.
  * Suitable for line-by-line scanning where line numbers must be preserved.
+ * Both `//` and `/*` inside a same-line string literal do not open a comment
+ * (#826); template-literal `${ }` interpolation is not parsed (string mode
+ * continues through it), matching the limitation documented on stripComments.
  */
 export function stripCommentsLine(
   line: string,
   inBlock: boolean,
 ): { line: string; inBlock: boolean } {
-  let text = line;
-
   if (inBlock) {
-    const end = text.indexOf('*/');
+    const end = line.indexOf('*/');
     if (end === -1) return { line: '', inBlock: true };
-    text = text.slice(end + 2);
-    return stripCommentsLine(text, false);
+    return stripCommentsLine(line.slice(end + 2), false);
   }
 
-  for (;;) {
-    const start = text.indexOf('/*');
-    if (start === -1) break;
-    const end = text.indexOf('*/', start + 2);
-    if (end === -1) {
-      return { line: text.slice(0, start).replace(/\/\/.*/, ''), inBlock: true };
+  // Single pass: track same-line string literals and cut at the first comment
+  // opener outside of them. Strings never carry across lines here — the
+  // caller's line-oriented contract cannot represent an unterminated string,
+  // and the scanned inputs (configs, gates) do not span strings over lines.
+  let quote: string | undefined;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quote !== undefined) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = undefined;
+      continue;
     }
-    text = text.slice(0, start) + text.slice(end + 2);
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '/' && line[i + 1] === '/') {
+      return { line: line.slice(0, i), inBlock: false };
+    }
+    if (ch === '/' && line[i + 1] === '*') {
+      const end = line.indexOf('*/', i + 2);
+      if (end === -1) return { line: line.slice(0, i), inBlock: true };
+      return stripCommentsLine(line.slice(0, i) + line.slice(end + 2), false);
+    }
   }
 
-  return { line: text.replace(/\/\/.*/, ''), inBlock: false };
+  return { line, inBlock: false };
 }
 
 /**

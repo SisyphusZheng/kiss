@@ -1,7 +1,7 @@
 /**
  * @openelement/adapter-vite - build-context.ts tests (Deno)
  */
-import { assertEquals, assertExists, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertThrows } from '@std/assert';
 import { OpenElementBuildContext } from '../src/build-context.ts';
 
 Deno.test('OpenElementBuildContext creates instance without error', () => {

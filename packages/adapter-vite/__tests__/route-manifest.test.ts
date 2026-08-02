@@ -6,7 +6,7 @@
  * - Manifest content generation
  * - Edge cases: empty routes, nested routes, params, catch-all
  */
-import { assertEquals, assertMatch, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertMatch, assertStringIncludes } from '@std/assert';
 import { join } from 'jsr:@std/path@^1.0.0';
 import { writeRouteManifest } from '../src/route-manifest.ts';
 

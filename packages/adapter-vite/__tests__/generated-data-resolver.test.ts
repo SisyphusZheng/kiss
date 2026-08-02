@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {

@@ -4,7 +4,7 @@
  * The single directory walker shared by SSG post-processing, sitemap
  * generation, island manifests, and build artifact collection.
  */
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import {
   visitHtmlFiles,
   walkFileEntries,

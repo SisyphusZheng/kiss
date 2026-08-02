@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertFalse } from '@std/assert';
 import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../cli.ts';
 import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {

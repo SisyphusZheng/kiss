@@ -24,7 +24,7 @@ export function renderImport(imp: ImportDecl): string {
 
 export function routeTagNameExpr(varNameOrFallback: string, fallback?: string): string {
   const tagName = fallback ?? varNameOrFallback;
-  return jsStringLiteral(tagName);
+  return quoteGeneratedJavaScriptValue(tagName);
 }
 
 export function pageDefinitionExpr(varName: string): string {
@@ -38,10 +38,6 @@ export function routeMetaExpr(varName: string): string {
 export function routeRevalidateExpr(varName: string): string {
   const pageDef = pageDefinitionExpr(varName);
   return `(${pageDef}.renderIntent?.revalidate ?? false)`;
-}
-
-export function jsStringLiteral(value: string): string {
-  return quoteGeneratedJavaScriptValue(value);
 }
 
 /**
@@ -67,8 +63,10 @@ export function renderMatchingRenderersFn(lines: string[], renderers: RendererDe
       lines.push(`  renderers.push(${renderer.varName}.default);`);
     } else {
       lines.push(
-        `  if (routePath === ${jsStringLiteral(renderer.scope)} || routePath.startsWith(${
-          jsStringLiteral(renderer.scope + '/')
+        `  if (routePath === ${
+          quoteGeneratedJavaScriptValue(renderer.scope)
+        } || routePath.startsWith(${
+          quoteGeneratedJavaScriptValue(renderer.scope + '/')
         })) renderers.push(${renderer.varName}.default);`,
       );
     }
@@ -268,7 +266,7 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(`      }`);
   lines.push(
     `      return c.html(wrapInDocument(__statusHtml('404 Not Found', __noActionMessage), { title: '404 Not Found', lang: ${
-      jsStringLiteral(docConfig.lang)
+      quoteGeneratedJavaScriptValue(docConfig.lang)
     }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
       JSON.stringify(docConfig.allowHeadExtrasScripts)
     }, cspNonce: c.get('cspNonce') }), 404);`,
@@ -286,7 +284,7 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(`      }`);
   lines.push(
     `      return c.html(wrapInDocument(__statusHtml('400 Bad Request', 'Could not parse the form body.'), { title: '400 Bad Request', lang: ${
-      jsStringLiteral(docConfig.lang)
+      quoteGeneratedJavaScriptValue(docConfig.lang)
     }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
       JSON.stringify(docConfig.allowHeadExtrasScripts)
     }, cspNonce: c.get('cspNonce') }), 400);`,
@@ -370,8 +368,8 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   for (
     const optionLine of documentWrapOptionsLines({
       pageExpr: '__page',
-      titleExpr: `__page.head?.title || ${jsStringLiteral(docConfig.title)}`,
-      langExpr: jsStringLiteral(docConfig.lang),
+      titleExpr: `__page.head?.title || ${quoteGeneratedJavaScriptValue(docConfig.title)}`,
+      langExpr: quoteGeneratedJavaScriptValue(docConfig.lang),
       headExtrasExpr,
       allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
       cspNonce: true,
@@ -403,7 +401,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     `      return c.html(wrapInDocument(__statusHtml("404 Not Found", err.message || "Not Found"), {`,
   );
   lines.push(`        title: "404 Not Found",`);
-  lines.push(`        lang: ${jsStringLiteral(docConfig.lang)},`);
+  lines.push(`        lang: ${quoteGeneratedJavaScriptValue(docConfig.lang)},`);
   lines.push(`        headExtras: ${headExtrasExpr},`);
   lines.push(
     `        allowHeadExtrasScripts: ${JSON.stringify(docConfig.allowHeadExtrasScripts)},`,
@@ -440,8 +438,8 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     for (
       const optionLine of documentWrapOptionsLines({
         pageExpr: '__page',
-        titleExpr: `__page.head?.title || ${jsStringLiteral(docConfig.title)}`,
-        langExpr: jsStringLiteral(docConfig.lang),
+        titleExpr: `__page.head?.title || ${quoteGeneratedJavaScriptValue(docConfig.title)}`,
+        langExpr: quoteGeneratedJavaScriptValue(docConfig.lang),
         headExtrasExpr,
         allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
         cspNonce: true,
@@ -483,14 +481,14 @@ export function renderRouteHandler(
     route,
     matchingRenderers: renderers.filter((r) => rendererScopeMatches(route.path, r.scope)),
     docConfig,
-    pathLiteral: jsStringLiteral(route.path),
+    pathLiteral: quoteGeneratedJavaScriptValue(route.path),
     tagNameExpr: routeTagNameExpr(route.tagName),
     pageDefExpr: pageDefinitionExpr(route.varName),
     routeMeta: routeMetaExpr(route.varName),
-    routeContext: `{ path: ${jsStringLiteral(route.path)}, filePath: ${
-      jsStringLiteral(route.filePath)
+    routeContext: `{ path: ${quoteGeneratedJavaScriptValue(route.path)}, filePath: ${
+      quoteGeneratedJavaScriptValue(route.filePath)
     } }`,
-    headExtrasExpr: isSSG ? '__headExtras' : jsStringLiteral(docConfig.headExtras),
+    headExtrasExpr: isSSG ? '__headExtras' : quoteGeneratedJavaScriptValue(docConfig.headExtras),
   };
 
   renderRouteHandlerPreamble(lines, ctx);
@@ -525,7 +523,7 @@ export function renderActionRoute(
   // GET/POST/HEAD. no-store/Vary apply to the 405 as well (#586).
   lines.push(
     `app.all(${
-      jsStringLiteral(route.path)
+      quoteGeneratedJavaScriptValue(route.path)
     }, (c) => { c.header('Cache-Control', 'no-store'); c.header('Vary', __actionFetchHeader); return c.text('Method Not Allowed', 405, { Allow: 'GET, POST' }); });`,
   );
   lines.push('');
@@ -539,7 +537,7 @@ export function renderDataRouteMap(
   lines.push('// Route-to-module map for /_data endpoint (SPA client navigation)');
   lines.push('const __dataRouteMap = {');
   for (const r of pageRoutes) {
-    lines.push(`  ${jsStringLiteral(r.path)}: ${r.varName},`);
+    lines.push(`  ${quoteGeneratedJavaScriptValue(r.path)}: ${r.varName},`);
   }
   lines.push('};');
   lines.push('');
@@ -548,7 +546,7 @@ export function renderDataRouteMap(
 /** Generate the /_data GET endpoint for SPA navigation data fetching. */
 export function renderDataEndpoint(lines: string[]): void {
   lines.push('// /_data endpoint - returns JSON loader data for SPA navigation');
-  lines.push(`app.get(${jsStringLiteral('/_data')}, async (c) => {`);
+  lines.push(`app.get(${quoteGeneratedJavaScriptValue('/_data')}, async (c) => {`);
   lines.push(`  const routePath = c.req.query('route');`);
   lines.push(`  if (!routePath) return c.json({ error: 'Missing route query' }, 400);`);
   lines.push(`  const mod = __dataRouteMap[routePath];`);
@@ -576,9 +574,9 @@ export function renderDataEndpoint(lines: string[]): void {
 function renderCorsOrigin(origin: CorsOriginConfig): string {
   if (typeof origin === 'object' && !Array.isArray(origin)) return origin.body;
   if (Array.isArray(origin)) {
-    return `[${origin.map((o) => jsStringLiteral(o)).join(', ')}]`;
+    return `[${origin.map((o) => quoteGeneratedJavaScriptValue(o)).join(', ')}]`;
   }
-  return jsStringLiteral(origin);
+  return quoteGeneratedJavaScriptValue(origin);
 }
 
 const CORS_ALLOW =
@@ -655,7 +653,7 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
           lines.push(`  c.set('cspNonce', nonce)`);
           lines.push(
             `  const policy = ${
-              jsStringLiteral(policyTemplate)
+              quoteGeneratedJavaScriptValue(policyTemplate)
             }.replace('NONCE_PLACEHOLDER', nonce)`,
           );
           lines.push(`  await next()`);
@@ -665,7 +663,7 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
           lines.push(`app.use('*', async (c, next) => {`);
           lines.push(`  await next()`);
           lines.push(
-            `  c.header('${headerName}', ${jsStringLiteral(cspConfig.policy ?? '')})`,
+            `  c.header('${headerName}', ${quoteGeneratedJavaScriptValue(cspConfig.policy ?? '')})`,
           );
           lines.push(`})`);
         }
@@ -681,7 +679,7 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
  * Render an API route using Hono's standard app.route().
  */
 export function renderApiRoute(lines: string[], route: ApiRouteDecl): void {
-  const pathLiteral = jsStringLiteral(route.path);
+  const pathLiteral = quoteGeneratedJavaScriptValue(route.path);
   lines.push(`// API: ${route.path} (${route.filePath})`);
   lines.push(
     `if (${route.varName}.default && typeof ${route.varName}.default.fetch === 'function') {`,

@@ -7,7 +7,7 @@ import {
   assertRejects,
   assertStringIncludes,
   assertThrows,
-} from 'jsr:@std/assert@^1.0.0';
+} from '@std/assert';
 import { Hono } from 'hono';
 import { ssgRender } from '../src/internal/ssg/index.ts';
 import { resolveDynamicRoutePath } from '../src/internal/ssg/ssg-helpers.ts';

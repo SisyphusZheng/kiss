@@ -1,4 +1,4 @@
-import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals } from '@std/assert';
 import { isCodeLine, type Issue, scanSourcesForAnyIssues } from './check-type-safety.ts';
 
 const SAMPLE = 'packages/core/src/example.ts';

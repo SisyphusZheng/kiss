@@ -4,12 +4,7 @@
  * ADR 0011: closeBundle writes metadata to ctx, not .openElement/build-metadata.json.
  * Tests verify OpenElementBuildContext fields instead of filesystem.
  */
-import {
-  assertEquals,
-  assertExists,
-  assertFalse,
-  assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import { generateClientEntry } from '../src/internal/ssg/index.ts';
 import { buildPlugin } from '../src/build.ts';
 import { OpenElementBuildContext } from '../src/build-context.ts';

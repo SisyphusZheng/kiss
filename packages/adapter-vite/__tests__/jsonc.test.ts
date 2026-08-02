@@ -4,7 +4,7 @@
  * Single JSONC implementation shared by workspace-alias.ts and
  * cli/build-client.ts. Locks the unified comment/trailing-comma behavior.
  */
-import { assert, assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals } from '@std/assert';
 import { parseJsonc, readJsonc } from '../src/internal/jsonc.ts';
 
 Deno.test('parseJsonc - keeps // inside string literals (URLs)', () => {

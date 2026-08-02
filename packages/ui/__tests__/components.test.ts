@@ -1,12 +1,7 @@
 /**
  * @openelement/ui public contract tests.
  */
-import {
-  assertEquals,
-  assertExists,
-  assertFalse,
-  assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import type { VNode } from '@openelement/element';
 
 type TestAttributeStore = WeakMap<object, Map<string, string>>;

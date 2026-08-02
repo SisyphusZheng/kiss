@@ -10,7 +10,7 @@ import {
   assertExists,
   assertRejects,
   assertStringIncludes,
-} from 'jsr:@std/assert@^1.0.0';
+} from '@std/assert';
 import { join } from 'node:path';
 import { openElement } from '../src/app-vite.ts';
 

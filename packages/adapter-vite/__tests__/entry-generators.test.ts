@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@^1.0.0';
+import { assert, assertEquals, assertThrows } from '@std/assert';
 import { generateClientEntry, validateClientIslandEntry } from '../src/internal/ssg/index.ts';
 
 const REJECTED_ISLAND_MODULE_PATHS = [

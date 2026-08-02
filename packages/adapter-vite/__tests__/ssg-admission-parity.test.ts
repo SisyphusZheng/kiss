@@ -8,7 +8,7 @@
  * same decisions that produced the emitted HTML.
  */
 
-import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals, assertStringIncludes } from '@std/assert';
 import { OpenElementBuildContext } from '../src/build-context.ts';
 import { buildSsgEntryDescriptor } from '../src/cli/build-ssg.ts';
 import { createSsgRenderEvidence } from '../src/cli/ssg-render.ts';

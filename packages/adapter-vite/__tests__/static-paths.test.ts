@@ -7,7 +7,7 @@
  * 3. Backward compatibility (no getStaticPaths = skip)
  */
 
-import { assertEquals } from 'jsr:@std/assert@^1.0.0';
+import { assertEquals } from '@std/assert';
 import { buildEntryDescriptor } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
