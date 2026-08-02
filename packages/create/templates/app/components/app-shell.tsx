@@ -4,6 +4,17 @@ import { StyleSheet } from '@openelement/element';
 
 export const tagName = 'app-shell';
 
+interface HeaderNavLink {
+  href: string;
+  label: string;
+}
+
+// Fallback when vite.config.ts content.nav.headerNav is not configured.
+const defaultNav: HeaderNavLink[] = [
+  { href: '/freshness', label: 'Freshness' },
+  { href: '/api/health', label: 'API health' },
+];
+
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host { display: block; min-height: 100vh; background: var(--gray-1); }
@@ -15,14 +26,14 @@ styles.replaceSync(`
 
 export default defineElement(tagName, {
   styles,
-  render(props: { siteName?: string }) {
+  render(props: { siteName?: string; headerNav?: HeaderNavLink[] }) {
+    const nav = props.headerNav?.length ? props.headerNav : defaultNav;
     return (
       <>
         <header data-open-layout='app-shell'>
           <a href='/'>{props.siteName ?? 'openElement'}</a>
           <nav>
-            <a href='/freshness'>Freshness</a>
-            <a href='/api/health'>API health</a>
+            {nav.map((link) => <a key={link.href} href={link.href}>{link.label}</a>)}
           </nav>
         </header>
         <main>

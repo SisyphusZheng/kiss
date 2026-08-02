@@ -15,16 +15,21 @@
  *
  * Usage:
  * ```html
- * <open-dialog>
+ * <open-dialog label="Dialog title">
  *   <button slot="trigger">Open Dialog</button>
  *   <div>Dialog content here</div>
  * </open-dialog>
  * ```
+ *
+ * Attributes:
+ * - `open` - Presence opens the dialog (reflected into :state(open))
+ * - `label` - Title text and aria-label of the dialog
+ * - `mode` - `modal` (default, showModal()) or `non-modal` (show()); read at open time
  */
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { overlayRecipe, recipe } from './component-recipes.ts';
+import { overlayRecipe, recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-dialog';
 
@@ -119,7 +124,7 @@ export class OpenDialog extends OpenElement {
   // was a dead listener (nothing synced on change).
   static override observedAttributes = ['open'];
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     // Keep the custom state in sync on every render. When the `open`
     // attribute arrives via SSR markup, attributeChangedCallback fires at
     // upgrade time — before ElementInternals and the shadow DOM exist — so
@@ -131,7 +136,7 @@ export class OpenDialog extends OpenElement {
         <slot name='trigger' onClick={() => this._handleTrigger()}></slot>
         <dialog
           open={this.hasAttribute('open') ? true : undefined}
-          aria-label={this.getAttribute('label') || ''}
+          aria-label={label}
           part='overlay'
           onCancel={(e: Event) => this._handleCancel(e)}
           onClose={() => this._handleClose()}

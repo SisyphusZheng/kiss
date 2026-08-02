@@ -1,5 +1,20 @@
-/** Shared visual recipes for the public UI primitives. */
-import { StyleSheet, type StyleSheetLike } from '@openelement/element';
+/** Shared helpers and visual recipes for the public UI primitives. */
+import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/element';
+
+/** Shared render() return type for the UI primitives. */
+export type RenderResult = ReturnType<typeof OpenElement.prototype.render>;
+
+// Instance-unique ids so multiple instances of one component on a page never
+// collide on id/htmlFor/aria-*. The module-level counter is SSR-safe: SSR
+// instantiates components in document order and DSD hydration upgrades them
+// in the same document order, so both sides assign identical ids to the same
+// instance.
+let instanceCount = 0;
+
+/** Return the next SSR-safe instance-unique id suffix. */
+export function nextInstanceId(): number {
+  return instanceCount++;
+}
 
 /**
  * Build a StyleSheetLike from a CSS string. Shared by the component-local

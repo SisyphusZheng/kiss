@@ -50,6 +50,12 @@ primitives and tokens. Application routing and document navigation belongs to
 `@openelement/app`; the site layout component (`OpenLayout`) lives in the
 reference site (`www/app/site-ui/open-layout.tsx`).
 
+The package vendors an audited subset of Open Props scales at build time —
+dead scales are deleted, so only tokens with a live consumer survive. The
+token gates require `--surface-glass`, `--ui-control-bg`, `--focus-ring` and
+`--motion-standard`. `daisyClassSheet`, modal and step-card are retired and
+must not reappear in exports, manifests, docs or packed artifacts.
+
 Existing per-component imports remain stable across this layering change.
 
 ## Package Manifest

@@ -381,6 +381,7 @@ const COMPONENT_FILES = [
   'open-card',
   'open-input',
   'open-code-block',
+  'open-badge',
   'open-theme-toggle',
   'open-dialog',
   'open-callout',
@@ -1726,11 +1727,9 @@ Deno.test('open-tabs: ids are instance-unique across multiple tab sets', async (
 
 Deno.test('manifest: declares metadata for manifest-registered components', async () => {
   const { manifest } = await import('../src/index.ts') as ManifestModule;
-  const registeredTagNames = new Set(manifest.declarations.map((d) => d.tagName));
 
   for (const name of COMPONENT_FILES) {
-    if (!registeredTagNames.has(name)) continue;
-    const decl = manifest.declarations.find((d) => d.tagName === name) as ManifestDeclaration;
+    const decl = manifest.declarations.find((d) => d.tagName === name);
     assertExists(decl, `manifest should declare ${name}`);
     assertEquals(decl.tagName, name);
     assertExists(decl.openElement?.module, `${name} should declare openElement.module`);

@@ -25,7 +25,7 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { recipe, surfaceRecipe } from './component-recipes.ts';
+import { recipe, type RenderResult, surfaceRecipe } from './component-recipes.ts';
 export const tagName = 'open-card';
 
 const sheet: StyleSheetLike = recipe(`
@@ -90,7 +90,7 @@ export class OpenCard extends OpenElement {
   static override styles = [surfaceRecipe, sheet];
   static override observedAttributes = ['variant'];
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     return (
       <article className='surface' part='container'>
         <slot name='header'></slot>

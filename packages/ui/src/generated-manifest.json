@@ -247,7 +247,7 @@
         },
         {
           "name": "control",
-          "description": "The input/textarea/select element"
+          "description": "The input element"
         },
         {
           "name": "error",

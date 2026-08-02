@@ -7,7 +7,7 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { recipe } from './component-recipes.ts';
+import { recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-badge';
 
@@ -69,7 +69,7 @@ export class OpenBadge extends OpenElement {
   static override styles = [sheet];
   static override observedAttributes = ['tone', 'size'];
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     const tone = this._getStr('tone', 'neutral');
     const size = this._getStr('size', 'md');
     return (

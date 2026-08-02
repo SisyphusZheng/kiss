@@ -14,7 +14,7 @@
  *
  * @csspart wrapper -The outer input-wrapper div
  * @csspart label -The label element
- * @csspart control -The input/textarea/select element
+ * @csspart control -The input element
  * @csspart error -The error message small element
  *
  * Usage:
@@ -30,16 +30,15 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
+import {
+  controlRecipe,
+  nextInstanceId,
+  recipe,
+  type RenderResult,
+  syncDisabledState,
+} from './component-recipes.ts';
 
 export const tagName = 'open-input';
-
-// Instance-unique id suffix for the input/error elements so multiple
-// <open-input> instances on one page never collide on id/htmlFor/
-// aria-describedby. The module-level counter is SSR-safe: SSR instantiates
-// components in document order and DSD hydration upgrades them in the same
-// document order, so both sides assign identical ids to the same instance.
-let inputInstanceCount = 0;
 
 const sheet: StyleSheetLike = recipe(`
   :host {
@@ -126,9 +125,9 @@ export class OpenInput extends OpenElement {
     'error',
   ];
 
-  private _uid = inputInstanceCount++;
+  private _uid = nextInstanceId();
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     const type = this.getAttribute('type') || 'text';
     const placeholder = this.getAttribute('placeholder') || '';
     const label = this.getAttribute('label') || '';
@@ -202,7 +201,7 @@ export class OpenInput extends OpenElement {
   }
 
   private _syncDOM(): void {
-    const input = this.shadowRoot?.querySelector('input, textarea, select') as
+    const input = this.shadowRoot?.querySelector('input') as
       | HTMLInputElement
       | null;
     if (!input) return;

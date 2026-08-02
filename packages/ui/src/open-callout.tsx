@@ -1,10 +1,11 @@
 /** @jsxImportSource @openelement/element */
 /**
- * @openelement/ui - OpenCallout Component
+ * @openelement/ui - open-callout
  *
  * Callout/notice box for inline documentation alerts.
  * Supports 4 types: info, warning, danger, tip.
- * All colors use semantic tokens and respond to theme changes.
+ * Colors use semantic tokens and respond to theme changes; the light-theme
+ * warn/danger/tip backgrounds use tuned rgba tints on top of them.
  *
  * Usage:
  * ```html
@@ -16,7 +17,7 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { recipe } from './component-recipes.ts';
+import { recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-callout';
 
@@ -59,7 +60,7 @@ export class OpenCallout extends OpenElement {
   static override styles = [sheet];
   static override observedAttributes = ['type', 'label'];
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     const type = this.getAttribute('type') || 'info';
     const label = this.getAttribute('label') || '';
     const config = TYPE_CONFIG[type] || TYPE_CONFIG.info;
@@ -81,10 +82,6 @@ export class OpenCallout extends OpenElement {
 
   override attributeChangedCallback(_name: string, old: string | null, val: string | null): void {
     if (old === val) return;
-    this._syncDOM();
-  }
-
-  private _syncDOM(): void {
     this.update();
   }
 }

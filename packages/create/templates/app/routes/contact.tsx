@@ -7,8 +7,6 @@ import {
   useActionData,
 } from '@openelement/app';
 
-export const tagName = 'contact-page';
-
 interface ContactActionData {
   error?: string;
   email?: string;

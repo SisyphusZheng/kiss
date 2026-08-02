@@ -22,7 +22,12 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
-import { controlRecipe, recipe, syncDisabledState } from './component-recipes.ts';
+import {
+  controlRecipe,
+  recipe,
+  type RenderResult,
+  syncDisabledState,
+} from './component-recipes.ts';
 
 export const tagName = 'open-button';
 
@@ -143,7 +148,7 @@ export class OpenButton extends OpenElement {
   static override formAssociated = true;
   static override observedAttributes = ['variant', 'size', 'disabled', 'href', 'target', 'type'];
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     const v = this.getAttribute('variant') || 'default';
     const s = this.getAttribute('size') || 'md';
     const d = this.hasAttribute('disabled');

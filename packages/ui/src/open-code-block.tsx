@@ -23,7 +23,7 @@
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
 import { createLogger } from '@openelement/element';
-import { recipe } from './component-recipes.ts';
+import { recipe, type RenderResult } from './component-recipes.ts';
 export const tagName = 'open-code-block';
 
 const log = createLogger('ui');
@@ -135,8 +135,9 @@ export class OpenCodeBlock extends OpenElement {
   private _highlightedInShadow = false;
   private _highlightRetries = 0;
   private static MAX_HIGHLIGHT_RETRIES = 120;
+  private static COPY_FEEDBACK_MS = 2000;
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     return (
       <>
         <slot></slot>
@@ -164,11 +165,8 @@ export class OpenCodeBlock extends OpenElement {
   private _tryHighlight(): void {
     const p = this._prismGlobal();
     if (typeof p === 'undefined') {
-      if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
-        // Exponential backoff: 10, 20, 40, 80, 160, 320, 500ms cap
-        const delay = Math.min(10 * Math.pow(2, Math.min(this._highlightRetries, 6)), 500);
-        this._setTimeout(() => this._tryHighlight(), delay);
-      }
+      // Prism not loaded yet: backoff 10, 20, 40, ..., 500ms cap.
+      this._scheduleRetry(10, 500);
       return;
     }
 
@@ -192,10 +190,8 @@ export class OpenCodeBlock extends OpenElement {
       | Record<string, unknown>
       | undefined;
     if (!grammar) {
-      if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
-        const delay = Math.min(20 * Math.pow(2, Math.min(this._highlightRetries, 6)), 1000);
-        this._setTimeout(() => this._tryHighlight(), delay);
-      }
+      // Grammar not registered yet: backoff 20, 40, 80, ..., 1000ms cap.
+      this._scheduleRetry(20, 1000);
       return;
     }
     this._highlightRetries = 0;
@@ -206,6 +202,14 @@ export class OpenCodeBlock extends OpenElement {
         lang,
       );
     this._injectHighlighted(highlightedHtml, lang);
+  }
+
+  /** Retry _tryHighlight with exponential backoff (base×2ⁿ, 6 steps max, capped). */
+  private _scheduleRetry(base: number, cap: number): void {
+    if (this._highlightRetries++ < OpenCodeBlock.MAX_HIGHLIGHT_RETRIES) {
+      const delay = Math.min(base * Math.pow(2, Math.min(this._highlightRetries, 6)), cap);
+      this._setTimeout(() => this._tryHighlight(), delay);
+    }
   }
 
   private _injectHighlighted(html: string, lang: string): void {
@@ -246,7 +250,7 @@ export class OpenCodeBlock extends OpenElement {
         this._copyState = 'idle';
         this._internals?.states.delete('copied');
         this._updateCopyButtonDOM();
-      }, 2000);
+      }, OpenCodeBlock.COPY_FEEDBACK_MS);
     } catch (e) {
       log.warn('Clipboard write failed:', e);
       this._internals?.states.add('failed');
@@ -256,7 +260,7 @@ export class OpenCodeBlock extends OpenElement {
         this._copyState = 'idle';
         this._internals?.states.delete('failed');
         this._updateCopyButtonDOM();
-      }, 2000);
+      }, OpenCodeBlock.COPY_FEEDBACK_MS);
     }
   }
 
@@ -264,8 +268,6 @@ export class OpenCodeBlock extends OpenElement {
     if (!this.shadowRoot) return;
     const btn = this.shadowRoot.querySelector('button.copy-btn');
     if (!btn) return;
-    btn.classList.toggle('copied', this._copyState === 'copied');
-    btn.classList.toggle('failed', this._copyState === 'failed');
     if (this._copyState === 'copied') btn.textContent = 'Copied!';
     else if (this._copyState === 'failed') btn.textContent = 'Failed';
     else btn.textContent = 'Copy';

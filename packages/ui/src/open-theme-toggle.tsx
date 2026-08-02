@@ -19,9 +19,12 @@
 
 import { OpenElement } from '@openelement/element';
 import type { StyleSheetLike } from '@openelement/element';
+import { createLogger } from '@openelement/element';
 import { signal } from '@openelement/element';
-import { recipe } from './component-recipes.ts';
+import { recipe, type RenderResult } from './component-recipes.ts';
 export const tagName = 'open-theme-toggle';
+
+const log = createLogger('ui');
 
 const sheet: StyleSheetLike = recipe(`
   :host {
@@ -122,7 +125,7 @@ export class OpenThemeToggle extends OpenElement {
             resolved = true;
           }
         } catch (e) {
-          console.debug('[open-theme-toggle] localStorage read unavailable:', e);
+          log.debug('localStorage read unavailable:', e);
         }
         if (!resolved && globalThis.matchMedia) {
           this._theme.value = globalThis.matchMedia('(prefers-color-scheme: light)').matches
@@ -148,7 +151,7 @@ export class OpenThemeToggle extends OpenElement {
         root.host.setAttribute('data-theme', theme);
       }
     } catch (e) {
-      console.debug('[open-theme-toggle] root theme propagation unavailable:', e);
+      log.debug('root theme propagation unavailable:', e);
     }
 
     // Apply + dispatch only. Persistence to localStorage happens exclusively
@@ -164,7 +167,7 @@ export class OpenThemeToggle extends OpenElement {
     try {
       localStorage.setItem('open-theme', theme);
     } catch (e) {
-      console.debug('[open-theme-toggle] theme persistence unavailable:', e);
+      log.debug('theme persistence unavailable:', e);
     }
   }
 
@@ -173,7 +176,7 @@ export class OpenThemeToggle extends OpenElement {
     this._requestAnimationFrame(() => this._initTheme());
   }
 
-  override render(): ReturnType<typeof OpenElement.prototype.render> {
+  override render(): RenderResult {
     // Zero signal.value reads in render (ADR-0062).
     // effect binding that updates the attribute when theme changes.
     // CSS selectors ([data-theme="light"]) handle icon visibility.
@@ -233,7 +236,7 @@ export class OpenThemeToggle extends OpenElement {
         globalThis.dispatchEvent(new CustomEvent('open:theme-change', { detail: { theme } }));
       }
     } catch (e) {
-      console.debug('[open-theme-toggle] theme event dispatch unavailable:', e);
+      log.debug('theme event dispatch unavailable:', e);
     }
   }
 

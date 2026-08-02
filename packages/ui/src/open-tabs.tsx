@@ -13,47 +13,71 @@
  * @slot tab - Tab label element (one per panel)
  * @slot panel - Panel shown while its tab is active
  */
-import { OpenElement, type StyleSheetLike, type VNode } from '@openelement/element';
+import { OpenElement, type StyleSheetLike } from '@openelement/element';
 import { signal } from '@openelement/element';
-import { recipe } from './component-recipes.ts';
+import { nextInstanceId, recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-tabs';
 
-// Instance-unique id prefix for the tab/panel aria wiring. The module-level
-// counter is SSR-safe: SSR instantiates components in document order and DSD
-// hydration upgrades them in the same document order, so both sides assign
-// identical ids to the same instance.
-let tabsInstanceCount = 0;
-
 const sheet: StyleSheetLike = recipe(`
-  :host{display:block}.tabs{display:flex;gap:var(--size-1);padding:var(--size-1);border-bottom:1px solid var(--surface-border)}
-  ::slotted([slot="tab"]){padding:var(--size-2) var(--size-4);border-color:transparent;background:transparent;color:var(--text-secondary);cursor:pointer}
-  ::slotted([slot="tab"]:hover){color:var(--text-primary)}::slotted(.tab-active){color:var(--text-primary);background:var(--brand-subtle);border-color:var(--surface-border-strong)}
-  ::slotted([slot="panel"]){padding-block:var(--size-4);color:var(--text-secondary)}
+  :host {
+    display: block;
+  }
+
+  .tabs {
+    display: flex;
+    gap: var(--size-1);
+    padding: var(--size-1);
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  ::slotted([slot="tab"]) {
+    padding: var(--size-2) var(--size-4);
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  ::slotted([slot="tab"]:hover) {
+    color: var(--text-primary);
+  }
+
+  ::slotted(.tab-active) {
+    color: var(--text-primary);
+    background: var(--brand-subtle);
+    border-color: var(--surface-border-strong);
+  }
+
+  ::slotted([slot="panel"]) {
+    padding-block: var(--size-4);
+    color: var(--text-secondary);
+  }
 `);
 
 export class OpenTabs extends OpenElement {
   static override styles = [sheet];
-  #active = signal(0);
-  #wiredTabs = new WeakSet<HTMLElement>();
-  #uid = tabsInstanceCount++;
 
-  #tabs(): HTMLElement[] {
+  private _active = signal(0);
+  private _wiredTabs = new WeakSet<HTMLElement>();
+  private _uid = nextInstanceId();
+
+  private _tabs(): HTMLElement[] {
     return [...this.querySelectorAll<HTMLElement>('[slot="tab"]')];
   }
 
-  #count(): number {
-    return Math.min(this.#tabs().length, this.querySelectorAll('[slot="panel"]').length);
+  private _count(): number {
+    return Math.min(this._tabs().length, this.querySelectorAll('[slot="panel"]').length);
   }
 
-  #select(idx: number): void {
-    this.#active.value = idx;
+  private _select(idx: number): void {
+    this._active.value = idx;
     this.update();
   }
 
   /** WAI-ARIA tabs keyboard pattern: ArrowLeft/ArrowRight/Home/End. */
-  #onKeydown(e: KeyboardEvent): void {
-    const count = this.#count();
+  private _onKeydown(e: KeyboardEvent): void {
+    const count = this._count();
     if (count === 0) return;
     const key = e.key;
     const next = key === 'Home'
@@ -61,15 +85,15 @@ export class OpenTabs extends OpenElement {
       : key === 'End'
       ? count - 1
       : key === 'ArrowLeft'
-      ? (this.#active.value - 1 + count) % count
+      ? (this._active.value - 1 + count) % count
       : key === 'ArrowRight'
-      ? (this.#active.value + 1) % count
+      ? (this._active.value + 1) % count
       : undefined;
     if (next === undefined) return;
     e.preventDefault();
-    this.#select(next);
+    this._select(next);
     // Selection follows focus: move DOM focus onto the newly active tab.
-    const tab = this.#tabs()[next];
+    const tab = this._tabs()[next];
     if (tab && typeof tab.focus === 'function') tab.focus();
   }
 
@@ -78,9 +102,9 @@ export class OpenTabs extends OpenElement {
    * every render so aria-selected/hidden track the active index; click
    * listeners are attached only once per tab element.
    */
-  #decorate(tabs: HTMLElement[], panels: HTMLElement[], count: number): void {
-    const active = this.#active.value;
-    const prefix = `${tagName}-${this.#uid}`;
+  private _decorate(tabs: HTMLElement[], panels: HTMLElement[], count: number): void {
+    const active = this._active.value;
+    const prefix = `${tagName}-${this._uid}`;
     tabs.forEach((tab, i) => {
       const enabled = i < count;
       tab.setAttribute('role', 'tab');
@@ -91,11 +115,11 @@ export class OpenTabs extends OpenElement {
       tab.classList.toggle('tab-active', i === active);
       if (enabled) tab.removeAttribute('aria-disabled');
       else tab.setAttribute('aria-disabled', 'true');
-      if (!this.#wiredTabs.has(tab)) {
-        this.#wiredTabs.add(tab);
+      if (!this._wiredTabs.has(tab)) {
+        this._wiredTabs.add(tab);
         tab.addEventListener('click', () => {
-          const idx = this.#tabs().indexOf(tab);
-          if (idx >= 0 && idx < this.#count()) this.#select(idx);
+          const idx = this._tabs().indexOf(tab);
+          if (idx >= 0 && idx < this._count()) this._select(idx);
         });
       }
     });
@@ -108,17 +132,17 @@ export class OpenTabs extends OpenElement {
     });
   }
 
-  override render(): VNode {
-    const tabs = this.#tabs();
+  override render(): RenderResult {
+    const tabs = this._tabs();
     const panels = [...this.querySelectorAll<HTMLElement>('[slot="panel"]')];
     const count = Math.min(tabs.length, panels.length);
-    this.#decorate(tabs, panels, count);
+    this._decorate(tabs, panels, count);
     return (
       <div>
         <div
-          class='tabs'
+          className='tabs'
           role='tablist'
-          onKeydown={(e: KeyboardEvent) => this.#onKeydown(e)}
+          onKeydown={(e: KeyboardEvent) => this._onKeydown(e)}
         >
           <slot name='tab'></slot>
         </div>

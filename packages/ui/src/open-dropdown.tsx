@@ -8,35 +8,55 @@
  * @csspart trigger - Trigger wrapper
  * @csspart content - Popover content
  */
-import { OpenElement, type StyleSheetLike, type VNode } from '@openelement/element';
-import { overlayRecipe, recipe } from './component-recipes.ts';
+import { OpenElement, type StyleSheetLike } from '@openelement/element';
+import { overlayRecipe, recipe, type RenderResult } from './component-recipes.ts';
 
 export const tagName = 'open-dropdown';
 
 const sheet: StyleSheetLike = recipe(`
-  :host { display:inline-block; position:relative; }
-  .trigger { display:contents; }
-  .content {
-    position:absolute;
-    inset:calc(100% + var(--size-2)) auto auto 0;
-    z-index:1000;
-    min-width:12rem;
-    margin:0;
-    padding:var(--size-2);
-    font-family:var(--font-sans);
+  :host {
+    display: inline-block;
+    position: relative;
   }
-  .content:not(:popover-open) { display:none; }
-  :host([data-open]) .content { display:block; }
+
+  .trigger {
+    display: contents;
+  }
+
+  .content {
+    position: absolute;
+    inset: calc(100% + var(--size-2)) auto auto 0;
+    z-index: 1000;
+    min-width: 12rem;
+    margin: 0;
+    padding: var(--size-2);
+    font-family: var(--font-sans);
+  }
+
+  .content:not(:popover-open) {
+    display: none;
+  }
+
+  :host([data-open]) .content {
+    display: block;
+  }
+
   @supports (position-anchor: --open-dropdown-trigger) {
-    .trigger { anchor-name:--open-dropdown-trigger; }
-    .content { position-anchor:--open-dropdown-trigger; top:anchor(bottom); left:anchor(left); }
+    .trigger {
+      anchor-name: --open-dropdown-trigger;
+    }
+    .content {
+      position-anchor: --open-dropdown-trigger;
+      top: anchor(bottom);
+      left: anchor(left);
+    }
   }
 `);
 
 export class OpenDropdown extends OpenElement {
   static override styles = [overlayRecipe, sheet];
 
-  #toggle(): void {
+  private _toggle(): void {
     const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
     if (!content) return;
     if (typeof content.togglePopover === 'function') {
@@ -47,7 +67,7 @@ export class OpenDropdown extends OpenElement {
     this.toggleAttribute('data-open');
   }
 
-  #close(): void {
+  private _close(): void {
     const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
     if (content && typeof content.hidePopover === 'function' && content.matches(':popover-open')) {
       content.hidePopover();
@@ -55,14 +75,14 @@ export class OpenDropdown extends OpenElement {
     this.removeAttribute('data-open');
   }
 
-  override render(): VNode {
+  override render(): RenderResult {
     return (
       <div>
-        <span class='trigger' part='trigger' onClick={() => this.#toggle()}>
+        <span className='trigger' part='trigger' onClick={() => this._toggle()}>
           <slot name='trigger'></slot>
         </span>
         <div
-          class='overlay content'
+          className='overlay content'
           part='content'
           popover='auto'
           onToggle={(event: Event) => {
@@ -70,7 +90,7 @@ export class OpenDropdown extends OpenElement {
             this.toggleAttribute('data-open', state === 'open');
           }}
           onKeyDown={(event: KeyboardEvent) => {
-            if (event.key === 'Escape') this.#close();
+            if (event.key === 'Escape') this._close();
           }}
         >
           <slot></slot>

@@ -16,7 +16,12 @@ defineElement(tagName, {
     return (
       <>
         <h1>Freshness proof</h1>
-        <p>This page records ISR/cache intent with a 300 second revalidate window.</p>
+        <p>
+          This page records ISR/cache intent with a 300 second revalidate window. In 0.42 the
+          revalidate value is a forward-compatible record only — no cache is wired to it yet
+          (targeted for 0.44), so this page renders statically at build time like any other static
+          route.
+        </p>
       </>
     );
   },
@@ -30,6 +35,8 @@ export default definePage({
   },
   renderIntent: {
     mode: 'static',
+    // Forward-compatible record only — not wired to any cache in 0.42
+    // (0.44 target); the page is prerendered once at build time.
     revalidate: 300,
   },
   render() {
