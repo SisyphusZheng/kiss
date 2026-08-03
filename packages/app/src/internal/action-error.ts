@@ -1,5 +1,5 @@
 /** Compatible with console.error and the tagged Logger from createLogger(). */
-export type ActionErrorLogger = (msg: string, ...args: unknown[]) => void;
+type ActionErrorLogger = (msg: string, ...args: unknown[]) => void;
 
 /** The failure channel a normalized error rides: action data or page error. */
 type FailureChannel = 'action' | 'loader';

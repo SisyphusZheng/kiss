@@ -22,8 +22,7 @@ Deno.test('policy: patch docs fix can be automated', () => {
 
 Deno.test('policy: public package source changes require review for patch release', () => {
   const decision = evaluatePatchEligibility({
-    changedPaths: ['docs/guide/example.md'],
-    publicApiChanged: true,
+    changedPaths: ['packages/element/src/index.ts'],
   });
   assertFalse(decision.allowed);
   assert(decision.reason.includes('public API impact'));
@@ -31,8 +30,7 @@ Deno.test('policy: public package source changes require review for patch releas
 
 Deno.test('policy: package topology changes require human review', () => {
   const decision = evaluatePatchEligibility({
-    changedPaths: ['docs/guide/example.md'],
-    packageTopologyChanged: true,
+    changedPaths: ['packages/element/deno.json'],
   });
   assertFalse(decision.allowed);
   assert(decision.reason.includes('package topology'));
@@ -90,23 +88,9 @@ Deno.test('cli: parse approved plan for release command', () => {
   assertEquals(parseArgs(['release', '--approved-plan', 'ADR-0101/v0.40', '--dry-run']), {
     command: 'release',
     dryRun: true,
-    dispatch: false,
     approvedPlan: 'ADR-0101/v0.40',
     targetVersion: undefined,
   });
-});
-
-Deno.test('cli: parse dispatch flag for release command', () => {
-  assertEquals(
-    parseArgs(['release-dispatch', '--approved-plan', 'ADR-0101/v0.40', '--to', '0.41.0-alpha.1']),
-    {
-      command: 'release-dispatch',
-      dryRun: false,
-      dispatch: true,
-      approvedPlan: 'ADR-0101/v0.40',
-      targetVersion: '0.41.0-alpha.1',
-    },
-  );
 });
 
 Deno.test('cli: normalizes compact prerelease version input', () => {
@@ -168,7 +152,6 @@ Deno.test('cli: parses two-phase release commands', () => {
     {
       command: 'release-prepare',
       dryRun: true,
-      dispatch: false,
       approvedPlan: 'docs/current/VERSION_PLAN.md',
       targetVersion: '0.41.0-alpha.11',
     },
@@ -178,7 +161,6 @@ Deno.test('cli: parses two-phase release commands', () => {
     {
       command: 'publish-existing',
       dryRun: false,
-      dispatch: false,
       approvedPlan: undefined,
       targetVersion: '0.41.0-alpha.11',
     },

@@ -37,7 +37,7 @@ export interface RouteConfig {
   guard?: () => Promise<boolean | string>;
 }
 
-export interface RouterOptions {
+interface RouterOptions {
   mode: RouterMode;
   routes: RouteConfig[];
   /** Called after navigation or browser history/hash changes update the current match. */
@@ -63,7 +63,7 @@ interface RouteTrieNode {
   routeIndexes: number[];
 }
 
-export interface CompiledRouteMatcher {
+interface CompiledRouteMatcher {
   match(
     pathname: string,
     search: string,

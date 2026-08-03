@@ -45,10 +45,6 @@ import { renderRuntimeHelpers } from './entry-render-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
-// Re-export the canonical descriptor type for consumers that need it.
-export type { EntryDescriptor } from '../protocol/ssg.ts';
-export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
-
 /**
  * Render an EntryDescriptor into a complete virtual module string.
  *

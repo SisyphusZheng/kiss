@@ -28,8 +28,8 @@ import { injectPropsSafe } from './security.ts';
 import { assertValidTagName } from './tag-utils.ts';
 import { HYDRATION_STRATEGIES, type HydrationStrategy } from '../protocol/framework.ts';
 import { DATA_SSR_PROPS } from '../protocol/hydration-markers.ts';
-import type { IslandMeta, IslandOptions } from '../protocol/island.ts';
-export type { IslandMeta, IslandOptions };
+import type { IslandOptions } from '../protocol/island.ts';
+export type { IslandOptions };
 
 /** WeakSet to track elements that have already had SSR props bound (idempotent). */
 const ssrPropsBoundSet = new WeakSet<HTMLElement>();

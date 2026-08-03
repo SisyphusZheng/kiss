@@ -25,7 +25,7 @@ const GENERATED_DATA_FALLBACKS: Record<string, string> = {
   ].join('\n'),
 };
 
-export type GeneratedDataResolverOptions = {
+type GeneratedDataResolverOptions = {
   root: string;
   name?: string;
   /**

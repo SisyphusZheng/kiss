@@ -1,4 +1,5 @@
 import { PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { runGit } from './lib/git.ts';
 
 // Replay the durable release state machine for a released tag from git
 // history: every recorded state of the autoflow3 evidence file plus the
@@ -7,18 +8,6 @@ import { PACKAGE_VERSION_TAG } from './project-constants.ts';
 // chain that a degraded release documents.
 //
 // Usage: deno run -A tools/check-release-state-machine.ts [--to <version>]
-
-async function git(args: string[]): Promise<string> {
-  const result = await new Deno.Command('git', {
-    args,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  if (!result.success) {
-    throw new Error(new TextDecoder().decode(result.stderr).trim());
-  }
-  return new TextDecoder().decode(result.stdout).trim();
-}
 
 const toIndex = Deno.args.indexOf('--to');
 const version = (toIndex === -1 ? PACKAGE_VERSION_TAG : Deno.args[toIndex + 1])
@@ -36,7 +25,7 @@ type EvidenceState = {
 
 const states: EvidenceState[] = [];
 for (
-  const line of (await git([
+  const line of (await runGit([
     'log',
     '--format=%H %s',
     '--follow',
@@ -46,8 +35,8 @@ for (
 ) {
   const [commit, ...rest] = line.split(' ');
   const message = rest.join(' ');
-  if (!(await git(['ls-tree', '--name-only', commit, '--', evidencePath])).trim()) continue;
-  const raw = await git(['show', `${commit}:${evidencePath}`]);
+  if (!(await runGit(['ls-tree', '--name-only', commit, '--', evidencePath])).trim()) continue;
+  const raw = await runGit(['show', `${commit}:${evidencePath}`]);
   const parsed = JSON.parse(raw) as { kind?: string; status?: string };
   states.push({
     commit,

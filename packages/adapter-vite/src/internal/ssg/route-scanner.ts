@@ -92,14 +92,9 @@ async function sourceTreeHasEnhancedForms(
 const log = createLogger('scanner');
 
 /** Read a static route tagName export from source text. */
-export function readRouteTagName(source: string): string | undefined {
+function readRouteTagName(source: string): string | undefined {
   const match = source.match(/export\s+const\s+tagName\s*=\s*(["'`])([^"'`]+)\1/);
   return match?.[2];
-}
-
-export interface ParseRouteFilePathOptions {
-  /** Dynamic segment syntax. ':' produces Hono/URLPattern params; 'bracket' keeps `[param]`. */
-  paramSyntax: ':' | 'bracket';
 }
 
 /**
@@ -109,28 +104,20 @@ export interface ParseRouteFilePathOptions {
  * v0.6': Uses URLPattern-compatible syntax where possible.
  * URLPattern is the WHATWG standard for URL matching (section7.2).
  * Pattern :param is compatible with both Hono and URLPattern.
- *
- * With `paramSyntax: 'bracket'`, dynamic segments stay as `[param]` to match the
- * file-system convention (used by the route type generator).
  */
-export function parseRouteFilePath(
-  filePath: string,
-  options: ParseRouteFilePathOptions = { paramSyntax: ':' },
-): string {
+export function parseRouteFilePath(filePath: string): string {
   // Normalize separators - handle Windows backslash paths
   let p = normalizeSeparators(filePath);
 
   // v0.25: AST-verified — path utility, regex is the appropriate tool
   p = p.replace(/\.[^.]+$/, '');
 
-  if (options.paramSyntax === ':') {
-    // v0.25: AST-verified — path utility, converts [param] to :param
-    // 0.42.0-alpha.5 (#556): a catch-all segment [...path] becomes the Hono
-    // named regex parameter :path{.+} (matches across '/'), not the literal
-    // single-segment ':...path' the naive replacement produced.
-    p = p.replace(/\[\.\.\.([^\]]+)\]/g, ':$1{.+}');
-    p = p.replace(/\[([^\]]+)\]/g, ':$1');
-  }
+  // v0.25: AST-verified — path utility, converts [param] to :param
+  // 0.42.0-alpha.5 (#556): a catch-all segment [...path] becomes the Hono
+  // named regex parameter :path{.+} (matches across '/'), not the literal
+  // single-segment ':...path' the naive replacement produced.
+  p = p.replace(/\[\.\.\.([^\]]+)\]/g, ':$1{.+}');
+  p = p.replace(/\[([^\]]+)\]/g, ':$1');
 
   // Handle index
   if (p === 'index') return '/';
@@ -194,7 +181,7 @@ function isIgnoredFile(fileName: string): boolean {
  * Recursively scan a directory for route files.
  * Also collects _renderer.ts and _middleware.ts special files.
  */
-export interface ScanRoutesOptions {
+interface ScanRoutesOptions {
   /** Capture source text for page routes so consumers can extract metadata. */
   includeSource?: boolean;
 }
@@ -237,7 +224,7 @@ export async function scanRoutes(
       if (specialType) {
         // Add as a special entry - not a route handler, but loadable
         entries.push({
-          path: parseRouteFilePath(relativePath, { paramSyntax: ':' }),
+          path: parseRouteFilePath(relativePath),
           filePath: normalizeSeparators(relativePath),
           type: 'special', // Not a page or API route - renderer/middleware only
           varName: `Special_${specialType}_${baseDir.replace(/[\\/]/g, '_') || 'root'}`,
@@ -245,7 +232,7 @@ export async function scanRoutes(
         });
       } else if (!file.startsWith('_')) {
         // Regular route file
-        const routePath = parseRouteFilePath(relativePath, { paramSyntax: ':' });
+        const routePath = parseRouteFilePath(relativePath);
         const routeType = getRouteType(relativePath);
         // v0.25: AST-verified — path utility, extracts [param] patterns
         // 0.42.0-alpha.5 (#556): a catch-all [...path] contributes the bare

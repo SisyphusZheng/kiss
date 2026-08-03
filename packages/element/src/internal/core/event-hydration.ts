@@ -11,7 +11,7 @@
  */
 
 import { isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
-import { isSignalLike, resolveSignalProp } from '../signal/index.ts';
+import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
@@ -37,7 +37,7 @@ export interface EventBindingRecord {
 }
 
 /** Hydration-time event binding contract (mirrors BindingDescriptor). */
-export type EventBinding = EventBindingDescriptor;
+type EventBinding = EventBindingDescriptor;
 
 /**
  * Walk a VNode tree in the exact order the SSR renderer (renderToNode) uses and
@@ -76,7 +76,7 @@ export function collectEventBindings(
     }
 
     if (isShowTag(tag)) {
-      const whenVal = resolveSignalProp(props?.when);
+      const whenVal = unwrapSignalLike(props?.when);
       branches?.push(showBranchMarker(Boolean(whenVal)));
       const target = whenVal ? children[0] : children[1];
       visit(target);
@@ -84,7 +84,7 @@ export function collectEventBindings(
     }
 
     if (isForTag(tag)) {
-      const items = resolveSignalProp(props?.each) as unknown[];
+      const items = unwrapSignalLike(props?.each) as unknown[];
       const renderFn = children[0] as RenderFn;
       branches?.push(forBranchMarker(items));
       if (Array.isArray(items) && typeof renderFn === 'function') {
@@ -141,7 +141,7 @@ export function collectEventBindings(
   return bindings;
 }
 
-export function eventRecordsToDescriptors(
+function eventRecordsToDescriptors(
   el: Element,
   records: EventBindingRecord[],
   owner?: unknown,

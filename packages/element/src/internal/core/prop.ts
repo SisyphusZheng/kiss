@@ -233,7 +233,7 @@ function parseAttributeValue(
   return raw;
 }
 
-export function normalizePropDecl(decl: unknown): NormalizedPropDecl {
+function normalizePropDecl(decl: unknown): NormalizedPropDecl {
   if (typeof decl === 'function') {
     return {
       type: decl as NormalizedPropDecl['type'],

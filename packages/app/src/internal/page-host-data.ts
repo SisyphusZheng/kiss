@@ -1,6 +1,6 @@
 import type { PageMeta, PageRouteContext } from '../authoring.ts';
 
-export interface PageHostData {
+interface PageHostData {
   data: unknown;
   actionData?: unknown;
   params: Record<string, string>;

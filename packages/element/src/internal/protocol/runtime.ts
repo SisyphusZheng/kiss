@@ -15,7 +15,7 @@ export interface RuntimeContext<Env extends Record<string, unknown> = Record<str
   params?: Record<string, string>;
 }
 
-export interface RuntimePrerenderResult {
+interface RuntimePrerenderResult {
   path: string;
   html: string;
   status?: number;

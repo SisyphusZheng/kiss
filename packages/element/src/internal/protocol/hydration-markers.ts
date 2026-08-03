@@ -41,7 +41,7 @@ export const DATA_SSR_PROPS = 'data-ssr-props';
 export const BRANCH_MARKER_PREFIX = 'oe-branch:';
 
 /** Parsed value of a `data-signal-attr` attribute: a list of attribute names. */
-export type SignalAttrSpec = string[];
+type SignalAttrSpec = string[];
 
 /**
  * Parse a `data-signal-attr` marker value into individual attribute names.

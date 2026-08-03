@@ -40,11 +40,11 @@ export function routeTagNameExpr(varNameOrFallback: string, fallback?: string): 
   return quoteGeneratedJavaScriptValue(tagName);
 }
 
-export function pageDefinitionExpr(varName: string): string {
+function pageDefinitionExpr(varName: string): string {
   return `__pageDefinition(${varName})`;
 }
 
-export function routeMetaExpr(varName: string): string {
+function routeMetaExpr(varName: string): string {
   return `__routeMeta(${varName})`;
 }
 
@@ -59,7 +59,7 @@ export function routeRevalidateExpr(varName: string): string {
  * renderRouteHandler; the runtime __matchingRenderers function emitted by
  * renderMatchingRenderersFn() must mirror these semantics exactly.
  */
-export function rendererScopeMatches(routePath: string, scope: string): boolean {
+function rendererScopeMatches(routePath: string, scope: string): boolean {
   if (scope === '/') return true;
   return routePath === scope || routePath.startsWith(scope + '/');
 }
@@ -124,14 +124,14 @@ export function documentWrapOptionsLines(options: {
   return lines;
 }
 
-export interface RouteHandlerDocConfig {
+interface RouteHandlerDocConfig {
   title: string;
   lang: string;
   headExtras: string;
   allowHeadExtrasScripts: boolean;
 }
 
-export interface RenderRouteHandlerOptions {
+interface RenderRouteHandlerOptions {
   method: 'get' | 'post';
   route: PageRouteDecl;
   renderers: RendererDecl[];

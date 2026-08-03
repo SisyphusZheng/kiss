@@ -78,113 +78,15 @@ globalThis.addEventListener('pagehide', notifyDesktopClose, { once: true });
 // selectors stay in sync. No hand-rolled MutationObserver needed.
 
 const SHADOW_STYLE_CSS = `
-  /* === Theme tokens (mirrored from app/styles.css :root / [data-theme]) === */
-  /* DRIFT: this token block (down to "=== Page shell ===") mirrors           */
-  /* app/styles.css:21-135 value-for-value. Edit both together.               */
+  /* Theme tokens live in app/styles.css (document-level :root/[data-theme]) and
+  inherit into shadow trees; keep only non-token host layout here. */
   :host {
-    --brand: #07c160;
-    --brand-hover: #06ad56;
-    --brand-soft: rgba(7, 193, 96, 0.08);
-    --brand-ring: rgba(7, 193, 96, 0.18);
-    --bg-base: #ffffff;
-    --bg-card: #ffffff;
-    --bg-muted: #f6f6f4;
-    --bg-inset: #fafaf8;
-    --bg-hover: #f0f0ed;
-    --bg-reading: #faf8f3;
-    --border: #ececea;
-    --border-strong: #d8d8d4;
-    --border-hover: #b8b8b4;
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a4a48;
-    --text-muted: #888884;
-    --text-faint: #b0b0ac;
-    --text-on-brand: #ffffff;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --success-bg: #e8f8ef;
-    --success-fg: #04984c;
-    --error-bg: #fdeee9;
-    --error-fg: #c8392a;
-    --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    --font-serif: 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, 'Times New Roman', serif;
-    --font-mono: 'SF Mono', Menlo, Consolas, monospace;
-    /* Reader preferences are set on document.documentElement and inherit into */
-    /* shadow roots; keep the defaults here as fallbacks only. They mirror     */
-    /* app/storage.ts DEFAULTS (single source): lineHeight 1.6, measure 65 →   */
-    /* pdfMaxWidth(65) = 910.                                                  */
-    --reader-font-size: 16px;
-    --reader-line-height: 1.6;
-    --reader-measure: 65ch;
-    --reader-pdf-max-width: 910px;
-
     display: block;
     font-family: var(--font-sans);
     color: var(--text-primary);
     font-size: var(--reader-font-size);
     line-height: var(--reader-line-height);
   }
-  :host([data-theme='dark']) {
-    --brand: #1ad06a;
-    --brand-hover: #34dc7c;
-    --brand-soft: rgba(26, 208, 106, 0.12);
-    --brand-ring: rgba(26, 208, 106, 0.22);
-    --bg-base: #1a1a1a;
-    --bg-card: #242424;
-    --bg-muted: #2c2c2c;
-    --bg-inset: #1f1f1f;
-    --bg-hover: #343434;
-    --bg-reading: #2a2620;
-    --border: #383838;
-    --border-strong: #484848;
-    --border-hover: #5c5c5c;
-    --text-primary: #ebe7e0;
-    --text-secondary: #b8b2a8;
-    --text-muted: #8a847a;
-    --text-faint: #6a645c;
-    --text-on-brand: #0a0a0a;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --success-bg: rgba(26, 208, 106, 0.14);
-    --success-fg: #34dc7c;
-    --error-bg: rgba(216, 80, 60, 0.16);
-    --error-fg: #e89486;
-  }
-  :host([data-theme='sepia']) {
-    --brand: #5a7a3a;
-    --brand-hover: #4a6a2a;
-    --brand-soft: rgba(90, 122, 58, 0.10);
-    --brand-ring: rgba(90, 122, 58, 0.20);
-    --bg-base: #f4ecd8;
-    --bg-card: #faf3e0;
-    --bg-muted: #ece2c8;
-    --bg-inset: #f0e6cc;
-    --bg-hover: #e6dcc0;
-    --bg-reading: #f8efdb;
-    --border: #d8caa0;
-    --border-strong: #c4b486;
-    --border-hover: #a89868;
-    --text-primary: #3a2f1c;
-    --text-secondary: #5a4d34;
-    --text-muted: #8a7d5e;
-    --text-faint: #b0a380;
-    --text-on-brand: #faf3e0;
-    --shadow-sm: 0 1px 2px rgba(58, 47, 28, 0.06);
-    --shadow-md: 0 2px 8px rgba(58, 47, 28, 0.08);
-    --shadow-lg: 0 8px 24px rgba(58, 47, 28, 0.12);
-    --success-bg: rgba(90, 122, 58, 0.14);
-    --success-fg: #4a6a2a;
-    --error-bg: rgba(168, 80, 60, 0.14);
-    --error-fg: #8a3a28;
-  }
-
-  /* === End of mirrored theme tokens (see app/styles.css) === */
   /* === Page shell === */
   .reader-main {
     box-sizing: border-box;

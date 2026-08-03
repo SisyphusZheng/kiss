@@ -7,14 +7,6 @@
  */
 
 /** Fetch and enumerate data by key without owning storage implementation. */
-export interface DataAdapter<T = unknown> {
-  /** Adapter name for diagnostics and logging. */
-  name: string;
-  /** Fetch data by key. Returns undefined when not found. */
-  get(key: string): Promise<T | undefined>;
-  /** List available keys when route generation needs enumeration. */
-  keys?(): Promise<string[]>;
-}
 
 // ─── Route data layer types (v0.40.0) ──────────────────────────────
 

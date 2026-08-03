@@ -45,7 +45,7 @@ export interface BuildManifest {
   warnings: string[];
 }
 
-export interface BuildManifestBudget {
+interface BuildManifestBudget {
   islandKB?: number;
   totalJsKB?: number;
   pageKB?: number;

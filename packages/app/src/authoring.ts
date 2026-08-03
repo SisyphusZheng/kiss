@@ -38,28 +38,28 @@ import type { PageHostElement } from './internal/page-host-data.ts';
  * The former `'auto'` value collapsed into `'static'`: it never had distinct
  * behavior — an unset or `'auto'` mode always meant prerender-at-build.
  */
-export type PageRenderingMode = 'static' | 'dynamic';
+type PageRenderingMode = 'static' | 'dynamic';
 /**
  * @experimental ISR is not active in 0.42 (see `docs/current/VERSION_PLAN.md`).
  * `revalidate` is recorded on the route but does NOT enable caching in this
  * release line; it is reserved for the 0.44 ISR work. Treat it as unstable.
  */
-export type PageRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
+type PageRevalidate = false | number | `${number}s` | `${number}m` | `${number}h`;
 export type PageMeta = Record<string, unknown>;
 
-export interface PageRouteIntent {
+interface PageRouteIntent {
   path?: string;
   id?: string;
   params?: readonly string[];
 }
 
-export interface PageRenderIntent {
+interface PageRenderIntent {
   mode?: PageRenderingMode;
   /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
   revalidate?: PageRevalidate;
 }
 
-export interface NormalizedPageRenderIntent {
+interface NormalizedPageRenderIntent {
   mode: PageRenderingMode;
   /** @experimental ISR is not wired in 0.42; recorded but inactive (0.44 target). */
   revalidate: PageRevalidate;
@@ -173,14 +173,14 @@ export function isActionFailure(error: unknown): error is OpenElementActionFailu
     );
 }
 
-export interface PageHead {
+interface PageHead {
   title?: string;
   description?: string;
   meta?: Array<Record<string, string | number | boolean>>;
   dangerouslyHeadFragments?: string[];
 }
 
-export interface PageRenderContext<
+interface PageRenderContext<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > {
@@ -192,24 +192,24 @@ export interface PageRenderContext<
   props: Record<string, unknown>;
 }
 
-export interface PageErrorContext<
+interface PageErrorContext<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > extends PageRenderContext<Data, Params> {
   error: unknown;
 }
 
-export type PageRenderFunction<
+type PageRenderFunction<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > = (context: PageRenderContext<Data, Params>) => VNode | null;
 
-export type PageErrorFunction<
+type PageErrorFunction<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > = (context: PageErrorContext<Data, Params>) => VNode | null;
 
-export interface PageDefinition<
+interface PageDefinition<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > {
@@ -220,7 +220,7 @@ export interface PageDefinition<
   error?: PageErrorFunction<Data, Params>;
 }
 
-export interface OpenElementPageDescriptor<
+interface OpenElementPageDescriptor<
   Data = unknown,
   Params extends Record<string, string> = Record<string, string>,
 > extends Omit<PageDefinition<Data, Params>, 'render' | 'renderIntent'> {
@@ -353,7 +353,7 @@ export function definePage<
   return OpenElementPage;
 }
 
-export interface IslandConfig {
+interface IslandConfig {
   ssr?: boolean;
   dsd?: boolean;
   hydrate?: HydrationStrategy;

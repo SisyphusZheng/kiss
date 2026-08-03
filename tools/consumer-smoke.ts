@@ -13,14 +13,8 @@
  *   deno run -A tools/consumer-smoke.ts --version <x.y.z> --jsdelivr --nitro
  */
 
-import { runWithOutput } from './lib/process.ts';
+import { getArg, runWithOutput } from './lib/process.ts';
 import { readJson } from './lib/fs.ts';
-
-function getArg(flag: string): string | null {
-  const idx = Deno.args.indexOf(flag);
-  if (idx !== -1 && idx + 1 < Deno.args.length) return Deno.args[idx + 1];
-  return null;
-}
 
 function getArgFlag(flag: string): boolean {
   return Deno.args.includes(flag);
