@@ -1,7 +1,9 @@
 /** @jsxImportSource @openelement/element */
 /**
  * @openelement/ui - open-dropdown
- * Native Popover-first dropdown with a small fallback state.
+ * Popover-API dropdown with CSS Anchor Positioning placement.
+ * The content is a native popover (top layer, built-in light dismiss and
+ * focus return); placement anchors to the host, no hand-rolled fallback.
  *
  * @slot trigger - Control used to toggle the dropdown
  * @slot - Dropdown content
@@ -16,7 +18,7 @@ export const tagName = 'open-dropdown';
 const sheet: StyleSheetLike = recipe(`
   :host {
     display: inline-block;
-    position: relative;
+    anchor-name: --open-dropdown-trigger;
   }
 
   .trigger {
@@ -24,75 +26,57 @@ const sheet: StyleSheetLike = recipe(`
   }
 
   .content {
+    /* The base inset is the placement fallback for engines without CSS Anchor
+       Positioning; it must stay present because Firefox's anchor resolution
+       only applies anchor() longhands on top of an explicit inset. */
     position: absolute;
-    inset: calc(100% + var(--size-2)) auto auto 0;
-    z-index: 1000;
+    inset: 100% auto auto 0;
+    position-anchor: --open-dropdown-trigger;
+    top: anchor(bottom);
+    left: anchor(left);
     min-width: 12rem;
-    margin: 0;
+    /* The gap rides on margin-top: calc(anchor() + length) resolves without
+       the added length in Firefox. */
+    margin: var(--size-2) 0 0;
     padding: var(--size-2);
     font-family: var(--font-sans);
-  }
-
-  .content:not(:popover-open) {
-    display: none;
-  }
-
-  :host([data-open]) .content {
-    display: block;
-  }
-
-  @supports (position-anchor: --open-dropdown-trigger) {
-    .trigger {
-      anchor-name: --open-dropdown-trigger;
-    }
-    .content {
-      position-anchor: --open-dropdown-trigger;
-      top: anchor(bottom);
-      left: anchor(left);
-    }
   }
 `);
 
 export class OpenDropdown extends OpenElement {
   static override styles = [overlayRecipe, sheet];
 
-  private _toggle(): void {
+  // A mouse click on the trigger is preceded by a pointerdown that natively
+  // light-dismisses an open popover; the click that follows must not re-open
+  // it. Keyboard/programmatic clicks have no pointerdown and toggle normally.
+  private _openAtTriggerPointerDown = false;
+
+  private _onTriggerPointerDown(): void {
     const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
-    if (!content) return;
-    if (typeof content.togglePopover === 'function') {
-      content.togglePopover();
-      this.toggleAttribute('data-open', content.matches(':popover-open'));
-      return;
-    }
-    this.toggleAttribute('data-open');
+    this._openAtTriggerPointerDown = content?.matches(':popover-open') ?? false;
   }
 
-  private _close(): void {
-    const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
-    if (content && typeof content.hidePopover === 'function' && content.matches(':popover-open')) {
-      content.hidePopover();
+  private _toggle(): void {
+    if (this._openAtTriggerPointerDown) {
+      this._openAtTriggerPointerDown = false;
+      return;
     }
-    this.removeAttribute('data-open');
+    const content = this.shadowRoot?.querySelector<HTMLElement>('.content');
+    content?.togglePopover();
   }
 
   override render(): RenderResult {
     return (
       <div>
-        <span className='trigger' part='trigger' onClick={() => this._toggle()}>
+        <span
+          className='trigger'
+          part='trigger'
+          onPointerDown={() => this._onTriggerPointerDown()}
+          onClick={() => this._toggle()}
+        >
           <slot name='trigger'></slot>
         </span>
-        <div
-          className='overlay content'
-          part='content'
-          popover='auto'
-          onToggle={(event: Event) => {
-            const state = (event as ToggleEvent).newState;
-            this.toggleAttribute('data-open', state === 'open');
-          }}
-          onKeyDown={(event: KeyboardEvent) => {
-            if (event.key === 'Escape') this._close();
-          }}
-        >
+        <div className='overlay content' part='content' popover='auto'>
           <slot></slot>
         </div>
       </div>

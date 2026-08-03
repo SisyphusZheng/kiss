@@ -18,7 +18,7 @@
     "test": "deno test --config deno.json --permit-no-files",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/build",
     "start": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/start",
-    "preview": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/preview"
+    "preview": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/start --mode=preview"
   },
   "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "jsxImportSource": "@openelement/element" }
 }

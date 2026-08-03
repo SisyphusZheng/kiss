@@ -880,6 +880,109 @@ Deno.test('open-input: value change still syncs in place without re-render (#770
   assertEquals(formValues, ['typed']);
 });
 
+// FACE pilot (ADR-0123 item 14, #864): the tests below pin the
+// ElementInternals contract — what enters FormData on submit, validity
+// basics, and graceful degradation where ElementInternals is absent.
+
+Deno.test('open-input: connectedCallback is overridden to sync initial form state', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  // attributeChangedCallback for a pre-upgrade `value` fires before
+  // connectedCallback, so only an own connectedCallback override can push the
+  // initial value into the internals attached there. Without it the field
+  // would submit empty.
+  assertEquals(
+    Object.prototype.hasOwnProperty.call(OpenInput.prototype, 'connectedCallback'),
+    true,
+  );
+});
+
+Deno.test('open-input: submission contract — value reaches FormData under name', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  instance.setAttribute('name', 'username');
+  instance.setAttribute('value', 'jane');
+
+  // What the browser hands FormData on submit: the latest setFormValue
+  // payload of each form-associated element, keyed by its name attribute.
+  const formData = new Map<string, string>();
+  (instance as unknown as { _internals: unknown })._internals = {
+    setFormValue: (v: string) => formData.set(instance.getAttribute('name') || '', v),
+    setValidity: () => {},
+  };
+
+  // The base-class connectedCallback attachShadow path is unavailable in
+  // this harness; invoke the same sync the override performs after super.
+  const sync = instance as unknown as { _syncFormValue(): void; _syncValidity(): void };
+  sync._syncFormValue();
+  sync._syncValidity();
+  assertEquals(formData.get('username'), 'jane');
+
+  // Typing replaces the submission value.
+  const input = findByPart(instance.render() as VNode, 'control') as VNode;
+  (input.props.onInput as (e: Event) => void)?.(fakeInputEvent('jane-doe'));
+  assertEquals(formData.get('username'), 'jane-doe');
+});
+
+Deno.test('open-input: required + empty value reports valueMissing, clears when filled', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  const validityCalls: Array<{ flags: Record<string, unknown>; message: string }> = [];
+  (instance as unknown as { _internals: unknown })._internals = {
+    setFormValue: () => {},
+    setValidity: (flags: Record<string, unknown>, message?: string) =>
+      validityCalls.push({ flags, message: message || '' }),
+  };
+  (instance as unknown as { update: () => void }).update = () => {};
+
+  instance.setAttribute('required', '');
+  instance.attributeChangedCallback('required', null, '');
+  assertEquals(validityCalls.length, 1);
+  assertEquals(validityCalls[0].flags.valueMissing, true);
+  // A non-empty message is required by the platform when any flag is set.
+  assertEquals(validityCalls[0].message.length > 0, true);
+
+  instance.setAttribute('value', 'filled');
+  instance.attributeChangedCallback('value', null, 'filled');
+  assertEquals(validityCalls.length, 2);
+  assertEquals(validityCalls[1].flags.valueMissing, undefined);
+});
+
+Deno.test('open-input: internals without setValidity degrade gracefully (SSR/test envs)', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  // jsdom/happy-dom-style environments may expose internals without
+  // setValidity; the required/value paths must not throw.
+  (instance as unknown as { _internals: unknown })._internals = {
+    setFormValue: () => {},
+  };
+  (instance as unknown as { update: () => void }).update = () => {};
+
+  instance.setAttribute('required', '');
+  instance.attributeChangedCallback('required', null, '');
+  instance.setAttribute('value', 'x');
+  instance.attributeChangedCallback('value', null, 'x');
+});
+
+Deno.test('open-input: formResetCallback clears submission value and re-syncs validity', async () => {
+  const { OpenInput } = await import('../src/open-input.tsx');
+  const instance = new OpenInput();
+  const formValues: string[] = [];
+  const validityCalls: Array<Record<string, unknown>> = [];
+  (instance as unknown as { _internals: unknown })._internals = {
+    setFormValue: (v: string) => formValues.push(v),
+    setValidity: (flags: Record<string, unknown>) => validityCalls.push(flags),
+  };
+
+  instance.setAttribute('required', '');
+  instance.setAttribute('value', 'filled');
+  instance.formResetCallback();
+
+  assertEquals(instance.getAttribute('value'), '');
+  assertEquals(formValues.at(-1), '');
+  // required is still set and the value is now empty → valueMissing again.
+  assertEquals(validityCalls.at(-1)?.valueMissing, true);
+});
+
 Deno.test('open-code-block: has correct tagName and copy button', async () => {
   const module = asComponentModule(await import('../src/open-code-block.tsx'));
   assertEquals(module.tagName, 'open-code-block');
@@ -1439,6 +1542,85 @@ Deno.test('open-dropdown: has correct tagName and toggle structure', async () =>
   const vnode = instance.render() as VNode;
   assertExists(findByPart(vnode, 'trigger'));
   assertExists(findByPart(vnode, 'content'));
+});
+
+// ─── #865: open-dropdown on the Popover API ──────────────────────────────────
+// The content element is a native popover (top layer, light dismiss, focus
+// return); the component must not re-implement any of that by hand.
+
+Deno.test('open-dropdown: content is a native popover without hand-rolled dismiss or state', async () => {
+  const module = asComponentModule(await import('../src/open-dropdown.tsx'));
+  const instance = new (exportedConstructor(module))();
+  const content = findByPart(instance.render() as VNode, 'content') as VNode;
+  assertExists(content);
+
+  // popover='auto' gives top layer + Esc/outside-click light dismiss natively,
+  // so no manual key handling or toggle-event state mirroring may remain.
+  assertEquals(content.props.popover, 'auto');
+  assertEquals(content.props.onKeyDown, undefined);
+  assertEquals(content.props.onToggle, undefined);
+
+  // Placement relies on CSS Anchor Positioning, not z-index stacking or the
+  // deleted data-open fallback attribute.
+  const Component = exportedConstructor(module);
+  const css = (Component as unknown as { styles: Array<{ cssRules: Array<{ cssText: string }> }> })
+    .styles.map((sheet) => sheet.cssRules.map((rule) => rule.cssText).join('\n')).join('\n');
+  assertStringIncludes(css, 'position-anchor');
+  assertStringIncludes(css, 'anchor-name');
+  assertFalse(css.includes('data-open'));
+  assertFalse(css.includes('z-index'));
+});
+
+Deno.test('open-dropdown: trigger click toggles the native popover', async () => {
+  const module = asComponentModule(await import('../src/open-dropdown.tsx'));
+  const instance = new (exportedConstructor(module))();
+
+  let toggles = 0;
+  let popoverOpen = false;
+  const content = {
+    matches: (selector: string) => selector === ':popover-open' && popoverOpen,
+    togglePopover: () => {
+      toggles++;
+      popoverOpen = !popoverOpen;
+    },
+  };
+  Object.defineProperty(instance, 'shadowRoot', {
+    configurable: true,
+    value: { querySelector: (selector: string) => (selector === '.content' ? content : null) },
+  });
+
+  const trigger = findByPart(instance.render() as VNode, 'trigger') as VNode;
+  assertExists(trigger);
+  const pointerDown = () => (trigger.props.onPointerDown as () => void)();
+  const click = () => (trigger.props.onClick as () => void)();
+
+  // Keyboard/programmatic activation (no pointerdown) toggles directly.
+  click();
+  assertEquals(toggles, 1);
+  assertEquals(popoverOpen, true);
+  click();
+  assertEquals(toggles, 2);
+  assertEquals(popoverOpen, false);
+
+  // Mouse activation while open: the pointerdown light-dismisses natively, so
+  // the following click must NOT toggle (re-open) the popover.
+  popoverOpen = true;
+  pointerDown();
+  popoverOpen = false; // native light dismiss runs between pointerdown and click
+  click();
+  assertEquals(toggles, 2);
+  assertEquals(popoverOpen, false);
+
+  // Mouse activation while closed: pointerdown records closed, click toggles.
+  pointerDown();
+  click();
+  assertEquals(toggles, 3);
+  assertEquals(popoverOpen, true);
+
+  // The consumed pointerdown guard resets: a later keyboard click toggles.
+  click();
+  assertEquals(toggles, 4);
+  assertEquals(popoverOpen, false);
 });
 
 // ─── #726: no double-escaping of attribute text ─────────────────────────────

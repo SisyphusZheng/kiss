@@ -438,7 +438,7 @@
       "tagName": "open-dropdown",
       "className": "OpenDropdown",
       "superclassName": "OpenElement",
-      "description": "Native Popover-first dropdown with a small fallback state.",
+      "description": "Popover-API dropdown with CSS Anchor Positioning placement.",
       "slots": [
         {
           "name": "trigger",

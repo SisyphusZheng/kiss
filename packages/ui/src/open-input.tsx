@@ -8,7 +8,11 @@
  * v0.24.1: Migrated from html`` template to JSX (ADR-0057).
  *
  * Features:
- * - Form-associated: participates in native <form> submission
+ * - Form-associated: participates in native <form> submission via
+ *   ElementInternals (setFormValue), including the initial `value`
+ *   attribute synced on connect
+ * - Native constraint validation: required + empty value maps to
+ *   valueMissing via internals.setValidity
  * - Supports label, placeholder, error, disabled, required
  * - Dispatches 'open-input' custom event on value change
  *
@@ -127,6 +131,15 @@ export class OpenInput extends OpenElement {
 
   private _uid = nextInstanceId();
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    // Pre-upgrade attributes fire attributeChangedCallback before
+    // connectedCallback, so the initial `value` never reaches the internals
+    // there. Sync form value + validity here or the field submits empty.
+    this._syncFormValue();
+    this._syncValidity();
+  }
+
   override render(): RenderResult {
     const type = this.getAttribute('type') || 'text';
     const placeholder = this.getAttribute('placeholder') || '';
@@ -182,9 +195,8 @@ export class OpenInput extends OpenElement {
       // back on every keystroke, and a re-render would replace the focused
       // <input> mid-typing.
       this._syncDOM();
-      if (this._internals) {
-        this._internals.setFormValue(val || '');
-      }
+      this._syncFormValue();
+      this._syncValidity();
       return;
     }
     if (name === 'disabled' || name === 'error') {
@@ -197,6 +209,9 @@ export class OpenInput extends OpenElement {
       // label/error/type/placeholder/name/required change the rendered tree
       // (label and error elements appear or disappear), so re-render (#770).
       this.update();
+    }
+    if (name === 'required') {
+      this._syncValidity();
     }
   }
 
@@ -222,10 +237,41 @@ export class OpenInput extends OpenElement {
     }
   }
 
+  private _syncFormValue(): void {
+    this._internals?.setFormValue(this.getAttribute('value') || '');
+  }
+
+  /**
+   * Validity basics (pilot scope): required + empty value → valueMissing.
+   * The inner native <input> is inside the shadow root, so its own
+   * constraints never reach the outer form; mirroring them onto the host
+   * internals is what makes the custom element a real form citizen.
+   * Full constraint mirroring (type=email, minlength, …) is future work.
+   */
+  private _syncValidity(): void {
+    const internals = this._internals;
+    // Feature-checked: test stubs and older engines may lack setValidity.
+    if (!internals || typeof internals.setValidity !== 'function') return;
+    if (this.hasAttribute('required') && !(this.getAttribute('value') || '')) {
+      // No anchor: bubble placement is UA-dependent, and the inner <input>
+      // gets replaced on re-render. Reuse its localized message when present.
+      const inner = this.shadowRoot?.querySelector('input') as
+        | HTMLInputElement
+        | null;
+      internals.setValidity(
+        { valueMissing: true },
+        inner?.validationMessage || 'Please fill out this field.',
+      );
+    } else {
+      internals.setValidity({});
+    }
+  }
+
   private _handleInput(e: Event): void {
     const input = e.target as HTMLInputElement;
     this.setAttribute('value', input.value);
-    this._internals?.setFormValue(input.value);
+    this._syncFormValue();
+    this._syncValidity();
     this.dispatchEvent(
       new CustomEvent('open-input', {
         detail: { value: input.value },
@@ -257,7 +303,8 @@ export class OpenInput extends OpenElement {
   formResetCallback(): void {
     this.setAttribute('value', '');
     this.removeAttribute('error');
-    this._internals?.setFormValue('');
+    this._syncFormValue();
+    this._syncValidity();
     this._syncDOM();
   }
 
