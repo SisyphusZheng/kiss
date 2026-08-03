@@ -45,12 +45,7 @@ export {
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '../protocol/errors.ts';
 export { wrapInDocument } from './html-escape.ts';
 export { createIsrCacheKey } from './isr.ts';
-export type {
-  CacheAdapter,
-  CacheEntry,
-  IsrCacheEntry,
-  IsrCacheResult,
-} from '../protocol/isr.ts';
+export type { CacheAdapter, CacheEntry, IsrCacheEntry, IsrCacheResult } from '../protocol/isr.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
 export { renderDsd } from './render-dsd.ts';

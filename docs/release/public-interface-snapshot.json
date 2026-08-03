@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "14eb94948b0015edc371866c408d43083589f0ca883553783ac5881892a341ae",
+          "sha256": "14b8b4dba26303236f81815506e73d7b063192d47409d5eea17b3a0e85bae5ef",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -58,12 +58,11 @@
       },
       "declarations": {
         ".": {
-          "sha256": "78dc1397236bfb89909862da27cf19eae613d6f036ad53a8b319290d16d9b121",
+          "sha256": "ec7899fa9bea137946773e0873cb389a828f121442c92f591dc15f494a7b6abb",
           "publicDeclarations": [
             "export type {",
-            "export type {",
             "export type { ElementDefinition } from '@openelement/element';",
-            "export type { SpaAppInstance, SpaAppOptions } from './spa.ts';",
+            "export type { SpaAppInstance } from './spa.ts';",
             "export type { CreateRequestContextOptions, OpenElementRequestContext } from './model.ts';"
           ]
         },
@@ -83,18 +82,15 @@
           ]
         },
         "./preact": {
-          "sha256": "c240ec9bed54c5badee0984b0895b68ba0a21e2113a030b69b8d0b995b51b7bd",
+          "sha256": "dd2ae9324c6826103f7bc836a8356cd841b2c2ecf8fe8f7e77f2fb2a682283ba",
           "publicDeclarations": [
-            "export type PreactIslandProps = Record<string, unknown>;",
-            "export type PreactIslandComponent<",
             "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
           ]
         },
         "./spa": {
-          "sha256": "a44c21a0369a67b47ffaf139e50b36beaf562c85c3bc297ddf942d15f34ccefb",
+          "sha256": "177847ec114b48693cfb5ba979700fc1fe0b4de77b31afef1e5057be72af3bae",
           "publicDeclarations": [
-            "export interface SpaAppOptions {",
             "export interface SpaAppInstance {",
             "export function defineApp(options: SpaAppOptions): SpaAppInstance {"
           ]
@@ -112,7 +108,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "ab33f14b137e47af691f586c0d34424f03ae770e1f924f19564a2597ae7a26b0",
+          "sha256": "d3a00f6ecff8b736709f51424c67a10e19389f0a85f89e24c81cef68ae51dd64",
           "publicDeclarations": [
             "export interface OpenPipelineConfig {",
             "export function openPipeline(config: OpenPipelineConfig = {}): Plugin[] {",
@@ -128,9 +124,8 @@
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "27285aa876866f6e381413c8a869ea6f4d96a06499fa5d5cb45e50d42205fdaf",
+          "sha256": "8910a6f0d8930ba29eed34fff5d02264a5276dca032db062b01c3c681a74d9c0",
           "publicDeclarations": [
-            "export type ServeMode = 'start' | 'preview';",
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ]
         },

@@ -15,12 +15,7 @@
  */
 
 import { exists } from './lib/fs.ts';
-import {
-  gitTagExists,
-  gitTrackedFiles,
-  isAncestorCommit,
-  runGit,
-} from './lib/git.ts';
+import { gitTagExists, gitTrackedFiles, isAncestorCommit, runGit } from './lib/git.ts';
 import { normalizeSlashes } from './lib/path.ts';
 import { MOJIBAKE_CHARS, stripComments } from './lib/text.ts';
 import {

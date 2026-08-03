@@ -76,7 +76,11 @@ export interface LocalePath {
   isDefaultLocalePath: boolean;
 }
 
-export type AppShellConfig = false | 'default' | { tagName: string; import: string; props?: Record<string, unknown> };
+export type AppShellConfig = false | 'default' | {
+  tagName: string;
+  import: string;
+  props?: Record<string, unknown>;
+};
 type LayoutsConfig = Record<string, AppShellConfig | undefined>;
 
 export interface RouteEntry {

@@ -8,7 +8,6 @@
  *   2. Runtime: Edge handler checks cache before serving static
  *   3. Hit: serve fresh cached HTML directly
  *   4. Stale: serve cached HTML + async background regeneration
- *
  */
 
 export function createIsrCacheKey(

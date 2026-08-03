@@ -13,10 +13,7 @@ import type {
   RuntimeContext,
 } from '../protocol/runtime.ts';
 import type { Middleware } from '../protocol/framework.ts';
-export type {
-  OpenElementRequestHandler,
-  RuntimeContext,
-};
+export type { OpenElementRequestHandler, RuntimeContext };
 
 export function createRuntimeAdapter<
   Env extends Record<string, unknown> = Record<string, unknown>,
