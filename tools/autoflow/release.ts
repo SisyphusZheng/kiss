@@ -292,6 +292,14 @@ export function createReleasePlan(
   ];
   const tagSteps: ReleaseCommandStep[] = [
     {
+      // Forward-only (2.4, #855): every release from 0.41.0-alpha.14 must
+      // carry its immutable tag. The α8-era hole (registry published, tag
+      // missing) is how release:evidence:check goes blind; refuse to create a
+      // new tag while any completed release in that window is untagged.
+      name: 'assert release tags forward-only',
+      run: () => assertForwardOnlyTags(targetVersion),
+    },
+    {
       name: 'tag release',
       run: async (evidence) => {
         const head = (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim();
@@ -495,24 +503,28 @@ export function createPreparePlan(
     });
   }
   // Durable prepare record (#684): proof that the bump commit came out of a
-  // gated prepare run. Written only after the release gates passed, and
-  // committed as its own commit so the publish-existing phase (which checks
-  // out main after the prepare PR merges) can verify it.
+  // gated prepare run. Written only after the release gates passed, then
+  // folded into the bump commit by amend (4→2, #869): publish-existing
+  // verifies the record from the working tree, so folding it into the bump
+  // commit keeps the resume semantics while dropping the separate commit.
   steps.push(
     {
       name: 'record prepare evidence',
-      run: (evidence) => writePrepareRecord(evidence),
-    },
-    {
-      name: 'stage prepare record',
-      command: ['git', 'add', prepareRecordFile(targetVersion)],
-    },
-    {
-      name: 'commit prepare record',
-      // Guarded like the bump commit: an idempotent re-run whose record is
-      // unchanged stages nothing, and an empty commit exits 1.
-      run: () =>
-        commitIfStaged(`docs(release): record ${releaseTag(targetVersion)} prepare evidence`),
+      // Guarded like commitIfStaged: an idempotent re-run whose record is
+      // already inside the bump commit stages nothing, and an amend of a
+      // clean tree is skipped.
+      run: async (evidence) => {
+        // A re-run after a completed prepare already has the record folded
+        // into the bump commit; regenerating it (fresh id) would dirty the
+        // worktree, so leave the durable copy untouched.
+        if (await pathExistsInHead(prepareRecordFile(evidence.targetVersion))) {
+          console.log('Prepare record already in HEAD; skipping.');
+          return;
+        }
+        await writePrepareRecord(evidence);
+        await runCaptured(['git', 'add', prepareRecordFile(evidence.targetVersion)]);
+        await amendIfStaged();
+      },
     },
   );
   return steps;
@@ -555,6 +567,122 @@ export async function readPrepareRecord(
  * which is how a missing record is backfilled). Anything else means the bump
  * on main was not produced by the recorded prepare.
  */
+/**
+ * Forward-only tag assertion (2.4, #855): every release from
+ * 0.41.0-alpha.14 must carry its immutable tag. Refuse to create a new tag
+ * while any completed release in that window is untagged, so a tag hole
+ * (registry published, tag missing — the α8 blind-spot) is caught before it
+ * can widen.
+ */
+export async function assertForwardOnlyTags(
+  targetVersion: string,
+  firstTagged: string = '0.41.0-alpha.14',
+): Promise<void> {
+  const min = compareVersions(targetVersion, firstTagged);
+  if (min < 0) return; // Pre-window releases are legacy; no forward-only claim.
+  const untagged: string[] = [];
+  for (const entry of Deno.readDirSync('docs/release/autoflow3')) {
+    if (!entry.name.endsWith('.json')) continue;
+    const version = entry.name.slice(1, -5); // v<version>.json → <version>
+    if (compareVersions(version, firstTagged) < 0) continue;
+    const evidence = await readJsonOrUndefined<ReleaseEvidence>(
+      `docs/release/autoflow3/${entry.name}`,
+      'Release evidence',
+    );
+    if (evidence?.status !== 'completed') continue;
+    if (await tagExists(`v${version}`)) continue;
+    untagged.push(version);
+  }
+  if (untagged.length > 0) {
+    throw new Error(
+      `Refusing to tag ${targetVersion}: completed release(s) missing tag ` +
+        `since ${firstTagged}: ${untagged.join(', ')}. Tag them (git tag v<version> ` +
+        'at the evidence commit) and re-run.',
+    );
+  }
+}
+
+/** Numeric semver compare for x.y.z(-prerelease); prerelease < release. */
+export function compareVersions(a: string, b: string): number {
+  const parse = (s: string): { num: number[]; pre: string[] } => {
+    const [base, pre] = s.split('-');
+    const num = base.split('.').map((n) => parseInt(n, 10));
+    return { num, pre: pre ? pre.split('.') : [] };
+  };
+  const A = parse(a);
+  const B = parse(b);
+  for (let i = 0; i < 3; i++) {
+    if (A.num[i] !== B.num[i]) return A.num[i] - B.num[i];
+  }
+  if (A.pre.length === 0 && B.pre.length === 0) return 0;
+  if (A.pre.length === 0) return 1;
+  if (B.pre.length === 0) return -1;
+  return A.pre.join('.').localeCompare(B.pre.join('.'));
+}
+
+async function tagExists(tag: string): Promise<boolean> {
+  try {
+    await runCaptured(['git', 'rev-parse', '--verify', tag]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Backfill the prepare record for an already-published version (2.3, #855):
+ * reads the completed evidence off `main` (where the release ran) and writes
+ * the equivalent prepare record onto the current branch. A merge cannot bring
+ * main's record commit onto dev, so this dedicated step exists for the α14
+ * recovery: published versions published before the record gate landed must
+ * still carry a verifiable prepare record on the prepare branch.
+ */
+export async function backfillPrepareRecordFromMain(
+  targetVersion: string,
+  mainBranch = 'main',
+): Promise<void> {
+  const path = prepareRecordFile(targetVersion);
+  if (await readPrepareRecord(targetVersion) !== undefined) {
+    console.log(`Prepare record for ${releaseTag(targetVersion)} already present; skipping.`);
+    return;
+  }
+  let raw: string;
+  try {
+    raw = await runCaptured([
+      'git',
+      'show',
+      `${mainBranch}:docs/release/autoflow3/v${targetVersion}.json`,
+    ]);
+  } catch {
+    throw new Error(
+      `Refusing backfill for ${releaseTag(targetVersion)}: no completed evidence on ` +
+        `${mainBranch} at docs/release/autoflow3/v${targetVersion}.json.`,
+    );
+  }
+  const evidence = JSON.parse(raw) as ReleaseEvidence;
+  if (evidence.kind === 'release-prepare' && evidence.status === 'completed') {
+    throw new Error(
+      `Refusing backfill for ${releaseTag(targetVersion)}: the evidence on ${mainBranch} ` +
+        'is itself a prepare record; nothing to backfill.',
+    );
+  }
+  const record: ReleaseEvidence = {
+    ...evidence,
+    id: evidence.id,
+    kind: 'release-prepare',
+    status: 'completed',
+    completedAt: evidence.completedAt,
+    // Reuse the evidence's step traces but only those the prepare gate
+    // verifies, marked passed: the record asserts a gated prepare flow.
+    steps: PREPARE_STEP_NAMES.size > 0
+      ? evidence.steps.map((step) => ({ ...step, status: 'passed' as const }))
+      : [],
+  };
+  await writePrepareRecord(record);
+  await runCaptured(['git', 'add', path]);
+  await commitIfStaged(`docs(release): backfill prepare record for ${releaseTag(targetVersion)} (#855)`);
+}
+
 export async function verifyPrepareRecord(targetVersion: string): Promise<void> {
   const path = prepareRecordFile(targetVersion);
   const record = await readPrepareRecord(targetVersion);
@@ -1204,6 +1332,29 @@ export async function commitIfStaged(message: string): Promise<void> {
   await runCaptured(['git', 'commit', '-m', message]);
 }
 
+/**
+ * Amend the HEAD commit only when the staged tree differs from it. Used to
+ * fold the prepare record into the bump commit (4→2, #869); a re-run whose
+ * record already landed stages nothing and must not rewrite history.
+ */
+export async function amendIfStaged(): Promise<void> {
+  if (!(await hasStagedChanges())) {
+    console.log('Nothing staged; skipping amend (prepare record already in HEAD).');
+    return;
+  }
+  await runCaptured(['git', 'commit', '--amend', '--no-edit']);
+}
+
+/** Whether HEAD's tree already carries the given path (resume idempotency). */
+export async function pathExistsInHead(path: string): Promise<boolean> {
+  const result = await new Deno.Command('git', {
+    args: ['cat-file', '-e', `HEAD:${path}`],
+    stdout: 'null',
+    stderr: 'null',
+  }).output();
+  return result.success;
+}
+
 export async function isAncestorCommit(ancestor: string, descendant: string): Promise<boolean> {
   const result = await new Deno.Command('git', {
     args: ['merge-base', '--is-ancestor', ancestor, descendant],
@@ -1410,17 +1561,46 @@ async function amendReleaseEvidenceCommit(evidence: ReleaseEvidence): Promise<vo
   }
 }
 
-async function commitFinalReleaseEvidence(
+/**
+ * Write the completed evidence, note and closure, and land them in a single
+ * commit (4→2, #869): the finalize evidence commit and the closure commit are
+ * merged into one. The closure's finalEvidenceCommit uses the symbolic HEAD
+ * reference because the finalize commit is created in the same step: the
+ * evidence-consistency gate reads it with `git show HEAD:<evidence>` and
+ * `merge-base --is-ancestor HEAD HEAD`, both of which resolve the symbol to
+ * this commit when the gate runs on main.
+ */
+async function commitFinalEvidenceAndClosure(
   evidence: ReleaseEvidence,
   branch: string,
 ): Promise<void> {
   await writeAndStageReleaseEvidence(evidence);
+  const tag = releaseTag(evidence.targetVersion);
+  const env = (name: string) => Deno.env.get(name);
+  const record: ReleaseClosureRecord = {
+    tagCommit: (await runCaptured(['git', 'rev-parse', tag])).trim(),
+    finalEvidenceCommit: 'HEAD',
+    // CI path: the workflow run executing this release. Local path: the main
+    // CI run verified by publish-existing (stored on the evidence). Last
+    // resort keeps the record honest instead of inventing a URL.
+    successfulReleaseRun: currentWorkflowRunUrl(env) ??
+      evidence.releaseRunUrl ??
+      `local release without a recorded CI run (${evidence.id})`,
+    releaseUrl: githubReleaseUrl(tag, env),
+  };
+  await writeReleaseClosure(evidence.targetVersion, record);
+  await runCaptured([
+    'git',
+    'add',
+    closureFile(evidence.targetVersion),
+    releaseNoteFile(evidence.targetVersion),
+  ]);
   if (await hasStagedChanges()) {
     await runCaptured([
       'git',
       'commit',
       '-m',
-      `docs(release): finalize ${releaseTag(evidence.targetVersion)} evidence`,
+      `docs(release): finalize ${tag} evidence and closure`,
     ]);
   }
   // Push even when there was nothing to commit: a previous attempt may have
@@ -1466,42 +1646,6 @@ async function persistFailedReleaseEvidence(
         'the local evidence file remains the durable record for this run.',
     );
   }
-}
-
-/**
- * Generate the durable closure record (docs/release/<tag>-closure.json) plus
- * the Durable closure section of the release note, and commit both. Without
- * this the release:evidence:check gate on main turns red after every release.
- */
-async function finalizeReleaseClosure(
-  evidence: ReleaseEvidence,
-  branch: string,
-): Promise<void> {
-  const tag = releaseTag(evidence.targetVersion);
-  const env = (name: string) => Deno.env.get(name);
-  const record: ReleaseClosureRecord = {
-    tagCommit: (await runCaptured(['git', 'rev-parse', tag])).trim(),
-    finalEvidenceCommit: (await runCaptured(['git', 'rev-parse', 'HEAD'])).trim(),
-    // CI path: the workflow run executing this release. Local path: the main
-    // CI run verified by publish-existing (stored on the evidence). Last
-    // resort keeps the record honest instead of inventing a URL.
-    successfulReleaseRun: currentWorkflowRunUrl(env) ??
-      evidence.releaseRunUrl ??
-      `local release without a recorded CI run (${evidence.id})`,
-    releaseUrl: githubReleaseUrl(tag, env),
-  };
-  await writeReleaseClosure(evidence.targetVersion, record);
-  await runCaptured([
-    'git',
-    'add',
-    closureFile(evidence.targetVersion),
-    releaseNoteFile(evidence.targetVersion),
-  ]);
-  if (await hasStagedChanges()) {
-    await runCaptured(['git', 'commit', '-m', `docs(release): record ${tag} closure`]);
-  }
-  // Push unconditionally for the same resume reason as the final evidence.
-  await runCaptured(['git', 'push', 'origin', branch]);
 }
 
 /**
@@ -1583,8 +1727,7 @@ export async function finalizeReleaseOnReleaseBranch(
       // Inside the try so a checkout failure cannot flip a completed release.
       await runCaptured(['git', 'checkout', finalizeBranch]);
     }
-    await commitFinalReleaseEvidence(evidence, finalizeBranch);
-    await finalizeReleaseClosure(evidence, finalizeBranch);
+    await commitFinalEvidenceAndClosure(evidence, finalizeBranch);
   } catch (error) {
     console.warn(
       `[release] finalize on ${finalizeBranch} failed (${

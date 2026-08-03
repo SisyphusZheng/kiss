@@ -9,6 +9,7 @@ import {
 } from './policy.ts';
 import {
   assertBranch,
+  backfillPrepareRecordFromMain,
   createPreparePlan,
   createPublishExistingPlan,
   executeReleasePlan,
@@ -200,6 +201,20 @@ async function runPublishExisting(
   );
 }
 
+async function runReleaseRecord(
+  targetVersion: string | undefined,
+  dryRun: boolean,
+): Promise<void> {
+  if (!targetVersion) throw new Error('release-record requires --to');
+  if (dryRun) {
+    console.log(
+      `release-record dry-run: backfill prepare record for ${targetVersion} from main evidence.`,
+    );
+    return;
+  }
+  await backfillPrepareRecordFromMain(targetVersion);
+}
+
 async function executePatchRelease(dryRun: boolean): Promise<void> {
   // Re-derive the target from recorded evidence first: a previous attempt
   // that already bumped the package line must resume at the same target
@@ -347,9 +362,12 @@ export async function main(args: string[]): Promise<void> {
     case 'publish-existing':
       await runPublishExisting(options.targetVersion, options.dryRun);
       break;
+    case 'release-record':
+      await runReleaseRecord(options.targetVersion, options.dryRun);
+      break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-dispatch|release-prepare|publish-existing> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
+        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-dispatch|release-prepare|publish-existing|release-record> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
       );
       Deno.exit(1);
   }

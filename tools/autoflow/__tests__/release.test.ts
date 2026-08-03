@@ -1,9 +1,12 @@
 import { assert, assertEquals, assertFalse, assertRejects, assertThrows } from '@std/assert';
 import { existsSync } from 'node:fs';
 import {
+  assertForwardOnlyTags,
+  backfillPrepareRecordFromMain,
   buildVersionAnchorReplacements,
   bumpProjectConstantsText,
   commitIfStaged,
+  compareVersions,
   createPreparePlan,
   createPublishExistingPlan,
   createReleaseEvidence,
@@ -18,6 +21,7 @@ import {
   planStartBranches,
   prepareRecordFile,
   publishEvidencePassed,
+  readPrepareRecord,
   type ReleaseCommandStep,
   type ReleaseEvidence,
   renderClosureSection,
@@ -245,18 +249,19 @@ Deno.test('two-phase release: publish-existing never bumps and verifies main CI 
   }
 });
 
-Deno.test('two-phase release: prepare leaves a durable gated prepare record (#684)', () => {
+Deno.test('two-phase release: prepare folds the gated record into the bump commit (#684, #869)', () => {
   const steps = createPreparePlan('0.41.0-alpha.11', 'docs/current/VERSION_PLAN.md');
   const names = steps.map((step) => step.name);
   const gates = names.indexOf('run release gates after bump');
-  // The record is written only after the release gates passed, then staged and
-  // committed so publish-existing can verify it from a main checkout.
+  // The record is written only after the release gates passed, then folded
+  // into the bump commit by amend (4→2, #869) so publish-existing can verify
+  // it from a main checkout without a separate prepare commit.
   assert(gates !== -1);
   assert(names.indexOf('record prepare evidence') > gates);
-  assert(names.indexOf('stage prepare record') > names.indexOf('record prepare evidence'));
-  assert(names.indexOf('commit prepare record') > names.indexOf('stage prepare record'));
-  const stage = steps.find((step) => step.name === 'stage prepare record');
-  assertEquals(stage?.command, ['git', 'add', prepareRecordFile('0.41.0-alpha.11')]);
+  assert(!names.includes('stage prepare record'));
+  assert(!names.includes('commit prepare record'));
+  const record = steps.find((step) => step.name === 'record prepare evidence');
+  assert(record?.run !== undefined);
 });
 
 Deno.test('two-phase release: publish-existing verifies the prepare record before publishing (#684)', () => {
@@ -827,14 +832,16 @@ Deno.test('local release finalize: evidence and closure land on main, dev is syn
     const closure = JSON.parse(
       await git(work, ['show', 'main:docs/release/v9.9.9-closure.json']),
     ) as { tagCommit: string; finalEvidenceCommit: string };
-    // The final evidence commit is on main's ancestry; the tag is an ancestor
-    // of the final evidence commit (the release closure validator's contract).
-    await git(work, ['merge-base', '--is-ancestor', closure.finalEvidenceCommit, 'main']);
+    // 4→2 (#869): the closure's final evidence reference is the symbolic HEAD
+    // of the single finalize commit, which is main's HEAD when the validator
+    // runs. The tag is an ancestor of that commit (the release closure
+    // validator's contract).
+    assertEquals(closure.finalEvidenceCommit, 'HEAD');
     await git(work, [
       'merge-base',
       '--is-ancestor',
       closure.tagCommit,
-      closure.finalEvidenceCommit,
+      await git(work, ['rev-parse', 'main']),
     ]);
     // The evidence on main is the completed record, not a running snapshot.
     const mainEvidence = JSON.parse(
@@ -870,6 +877,115 @@ Deno.test('commitIfStaged: an empty stage is skipped instead of failing (resume 
   }
 });
 
+Deno.test('compareVersions: window threshold semantics (#855)', () => {
+  assertEquals(compareVersions('0.41.0-alpha.13', '0.41.0-alpha.14'), -1);
+  assertEquals(compareVersions('0.41.0-alpha.14', '0.41.0-alpha.14'), 0);
+  assertEquals(compareVersions('0.42.0-alpha.1', '0.41.0-alpha.14'), 1);
+  assertEquals(compareVersions('0.41.0', '0.41.0-alpha.14'), 1); // release > prerelease
+});
+
+Deno.test('assertForwardOnlyTags: refuses when a completed release is untagged (#855)', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'forward-only-tags-' });
+  const work = `${root}/work`;
+  const previousCwd = Deno.cwd();
+  try {
+    await git(root, ['init', work]);
+    await git(work, ['config', 'user.email', 'release-test@example.com']);
+    await git(work, ['config', 'user.name', 'Release Test']);
+    await Deno.writeTextFile(`${work}/seed.txt`, 'seed\n');
+    await git(work, ['add', 'seed.txt']);
+    await git(work, ['commit', '-m', 'seed']);
+    Deno.chdir(work);
+    await Deno.mkdir('docs/release/autoflow3', { recursive: true });
+    // A completed release inside the window with no tag: the refusal trigger.
+    await Deno.writeTextFile(
+      'docs/release/autoflow3/v0.41.0-alpha.14.json',
+      JSON.stringify({ status: 'completed' }),
+    );
+    await assertRejects(
+      () => assertForwardOnlyTags('0.42.0-alpha.1'),
+      Error,
+      'missing tag',
+    );
+    // Tag it: the assertion passes.
+    await git(work, ['tag', 'v0.41.0-alpha.14']);
+    await assertForwardOnlyTags('0.42.0-alpha.1');
+    // Pre-window releases are ignored.
+    await Deno.writeTextFile(
+      'docs/release/autoflow3/v0.40.0.json',
+      JSON.stringify({ status: 'completed' }),
+    );
+    await assertForwardOnlyTags('0.41.0-alpha.14');
+    // Non-completed evidence is ignored.
+    await Deno.writeTextFile(
+      'docs/release/autoflow3/v0.41.0-alpha.15.json',
+      JSON.stringify({ status: 'running' }),
+    );
+    await assertForwardOnlyTags('0.41.0-alpha.15');
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('backfillPrepareRecordFromMain: writes a verifiable record from main evidence (#855)', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'backfill-record-' });
+  const work = `${root}/work`;
+  const previousCwd = Deno.cwd();
+  try {
+    await git(root, ['init', '-b', 'dev', work]);
+    await git(work, ['config', 'user.email', 'release-test@example.com']);
+    await git(work, ['config', 'user.name', 'Release Test']);
+    await Deno.writeTextFile(`${work}/seed.txt`, 'seed\n');
+    await git(work, ['add', 'seed.txt']);
+    await git(work, ['commit', '-m', 'seed']);
+    await git(work, ['branch', 'main']);
+    await git(work, ['checkout', 'main']);
+    // Completed release evidence lives on main only (the publish ran there).
+    const evidence: ReleaseEvidence = {
+      id: 'release-v0.41.0-alpha.14-2026-07-01T00-00-00-000Z',
+      kind: 'approved-release',
+      policyVersion: 'autoflow3-v0',
+      currentVersion: '0.41.0-alpha.13',
+      targetVersion: '0.41.0-alpha.14',
+      status: 'completed',
+      startedAt: '2026-07-01T00:00:00.000Z',
+      completedAt: '2026-07-01T00:05:00.000Z',
+      steps: [
+        { name: 'bump patch version', status: 'passed' },
+        { name: 'run release gates after bump', status: 'passed' },
+      ],
+    };
+    await Deno.mkdir(`${work}/docs/release/autoflow3`, { recursive: true });
+    await Deno.writeTextFile(
+      `${work}/docs/release/autoflow3/v0.41.0-alpha.14.json`,
+      JSON.stringify(evidence),
+    );
+    await git(work, ['add', 'docs/release/autoflow3/v0.41.0-alpha.14.json']);
+    await git(work, ['commit', '-m', 'docs(release): evidence for alpha.14']);
+    await git(work, ['checkout', 'dev']);
+    Deno.chdir(work);
+
+    await backfillPrepareRecordFromMain('0.41.0-alpha.14');
+
+    const record = await readPrepareRecord('0.41.0-alpha.14');
+    assert(record !== undefined);
+    assertEquals(record.kind, 'release-prepare');
+    assertEquals(record.status, 'completed');
+    assertEquals(record.targetVersion, '0.41.0-alpha.14');
+    assertEquals(record.currentVersion, '0.41.0-alpha.13');
+    // The backfill commits onto the prepare branch.
+    assert((await git(work, ['log', '-1', '--format=%s'])).includes('backfill prepare record'));
+    // Idempotent: a second run finds the record and skips.
+    const headBefore = await git(work, ['rev-parse', 'HEAD']);
+    await backfillPrepareRecordFromMain('0.41.0-alpha.14');
+    assertEquals(await git(work, ['rev-parse', 'HEAD']), headBefore);
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test('finalize failure keeps the release completed and only warns (resume breakpoint 3)', async () => {
   const { root, work } = await initReleaseRepo();
   const previousCwd = Deno.cwd();
@@ -889,7 +1005,7 @@ Deno.test('finalize failure keeps the release completed and only warns (resume b
     assertEquals(await git(work, ['rev-parse', '--abbrev-ref', 'HEAD']), 'dev');
     assertEquals(await git(work, ['rev-parse', 'main']), await git(work, ['rev-parse', 'dev']));
     const subject = await git(work, ['log', '-1', '--format=%s', 'main']);
-    assert(subject.includes('finalize v9.9.9 evidence'));
+    assert(subject.includes('finalize v9.9.9 evidence and closure'));
   } finally {
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });
