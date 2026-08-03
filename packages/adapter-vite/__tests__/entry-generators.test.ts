@@ -28,6 +28,19 @@ function assertEntrySyntax(code: string): void {
   }
 }
 
+// #868 budget: the client entry must stay a thin wiring shell. Before the
+// virtual-module refactor the runtime was inlined via toString() (client.js
+// 13.7KB -> 10.5KB); this pins the entry generator so the runtime cannot
+// creep back inline. 2KB covers the wiring plus the ADR-0120 enhance layer.
+const CLIENT_ENTRY_BUDGET_BYTES = 2048;
+
+Deno.test('#868 client entry stays within the wiring budget', () => {
+  const code = generateClientEntry([
+    { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
+  ]);
+  assert(code.length < CLIENT_ENTRY_BUDGET_BYTES, `client entry ${code.length}B exceeds ${CLIENT_ENTRY_BUDGET_BYTES}B budget`);
+});
+
 Deno.test('empty -> zero JS', () => {
   assert(generateClientEntry([]).includes('zero client JS needed'));
 });

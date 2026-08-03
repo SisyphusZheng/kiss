@@ -11,6 +11,7 @@
   "imports": {
     "@mdx-js/rollup": "npm:@mdx-js/rollup@^3.1.1",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
     "gray-matter": "npm:gray-matter@^4.0.3",
     "marked": "npm:marked@^15.0.0",
     "sanitize-html": "npm:sanitize-html@^2.17.4",

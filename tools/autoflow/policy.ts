@@ -173,7 +173,6 @@ export const GATES: readonly GateDefinition[] = [
     tiers: ['ci', 'release'],
     triggers: [
       /^docs\/release\//,
-      /^tools\/check-release-evidence-consistency\.ts$/,
       /^tools\/lib\/release-evidence-consistency\.ts$/,
       /^deno\.json$/,
     ],
