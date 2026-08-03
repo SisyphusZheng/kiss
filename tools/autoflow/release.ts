@@ -1232,13 +1232,18 @@ const EVIDENCE_HEADER_MARKER = 'AutoFlow3 patch release evidence:';
 /**
  * Extract the hand-written sections of an existing release note: everything
  * between the `# <tag>` title and the evidence header line. Returns '' when
- * the note carries no manual content.
+ * the note carries no manual content. #855: a note without an evidence header
+ * yet (pre-seeded prose) treats everything after the title as manual.
  */
 export function extractManualNoteSections(noteText: string): string {
   const lines = noteText.split('\n');
   const titleIndex = lines.findIndex((line) => line.startsWith('# '));
+  if (titleIndex === -1) return '';
   const headerIndex = lines.findIndex((line) => line.startsWith(EVIDENCE_HEADER_MARKER));
-  if (titleIndex === -1 || headerIndex === -1 || headerIndex <= titleIndex + 1) return '';
+  if (headerIndex === -1) {
+    return lines.slice(titleIndex + 1).join('\n').trim();
+  }
+  if (headerIndex <= titleIndex + 1) return '';
   return lines.slice(titleIndex + 1, headerIndex).join('\n').trim();
 }
 

@@ -354,3 +354,22 @@ Deno.test('extractManualNoteSections: only the block before the evidence header 
     '',
   );
 });
+
+Deno.test('extractManualNoteSections: pre-seeded prose without an evidence header survives (#855)', () => {
+  // A note seeded by the operator before the first evidence write has no
+  // evidence header yet; everything after the title is manual and must not
+  // be dropped when the evidence header is later prepended.
+  const seeded = [
+    '# v9.9.9',
+    '',
+    '## Migration note',
+    '',
+    '- pre-seeded prose survives the rewrite',
+    '',
+  ].join('\n');
+  const manual = extractManualNoteSections(seeded);
+  assert(manual.includes('## Migration note'));
+  assert(manual.includes('- pre-seeded prose survives the rewrite'));
+  // An empty title-only note yields no manual content.
+  assertEquals(extractManualNoteSections('# v9.9.9\n'), '');
+});
