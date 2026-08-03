@@ -44,7 +44,7 @@ import {
 
 export type Phase = 1 | 2 | 3;
 
-export class Phase1Meta {
+class Phase1Meta {
   /** Cached routes from buildStart() for virtual entry regeneration */
   cachedRoutes: RouteEntry[] = [];
 
@@ -76,7 +76,7 @@ export class Phase1Meta {
   userResolveAlias: Record<string, string> | Alias[] | null = null;
 }
 
-export class Phase3Meta {
+class Phase3Meta {
   /** Project root directory */
   root: string = '';
 

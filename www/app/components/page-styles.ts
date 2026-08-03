@@ -5,7 +5,6 @@
  * content navigation. Product components still come from @openelement/ui.
  */
 import '@openelement/site-ui/open-reading-shell.tsx';
-import '@openelement/site-ui/open-page-rail.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '../islands/open-page-rail.tsx';
 

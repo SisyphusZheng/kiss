@@ -41,7 +41,7 @@ const serverEntry = join(distDir, 'server', 'index.js');
 const port = Number(process.env.OPEN_ELEMENT_PORT || process.env.PORT || 4173);
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
 
-export type ServeMode = 'start' | 'preview';
+type ServeMode = 'start' | 'preview';
 
 /**
  * Splits `--mode=start|preview` (or `--mode start|preview`) off the CLI args;

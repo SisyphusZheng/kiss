@@ -90,19 +90,19 @@ Only the open milestone TP-6 keeps its full plan below.
 
 ### Shipped milestones (archive)
 
-| Milestone | Release | Status |
-|---|---|---|
-| TP-0 — Release tooling self-repair | `0.41.2` patch line | shipped |
-| TP-1 — 0.42 governance landing | — | shipped |
-| TP-2 — request-time rendering foundation | `0.42.0-alpha.1` | shipped |
-| TP-3 — form/action loop | `0.42.0-alpha.2` | shipped |
-| TP-4 — revalidation continuity | `0.42.0-alpha.3` | shipped |
-| TP-5 — hardening, recipes and starter | `0.42.0-alpha.4` | shipped |
-| TP-5.5 — audit round 1 remediation | `0.42.0-alpha.5` | shipped |
-| TP-5.6 — audit round 2 remediation (morph client) | `0.42.0-alpha.6` | shipped |
-| TP-5.7 — light-fullstack floor + audit round 3 | `0.42.0-alpha.9` (alpha.8 skipped, never published) | shipped |
-| TP-5.8 — code hygiene train | commit `1041431f` (#619–#623) | shipped |
-| TP-5.9 — TP-6 freeze preparation + standards-as-seams train | `0.42.0-alpha.13` | in flight |
+| Milestone                                                   | Release                                             | Status    |
+| ----------------------------------------------------------- | --------------------------------------------------- | --------- |
+| TP-0 — Release tooling self-repair                          | `0.41.2` patch line                                 | shipped   |
+| TP-1 — 0.42 governance landing                              | —                                                   | shipped   |
+| TP-2 — request-time rendering foundation                    | `0.42.0-alpha.1`                                    | shipped   |
+| TP-3 — form/action loop                                     | `0.42.0-alpha.2`                                    | shipped   |
+| TP-4 — revalidation continuity                              | `0.42.0-alpha.3`                                    | shipped   |
+| TP-5 — hardening, recipes and starter                       | `0.42.0-alpha.4`                                    | shipped   |
+| TP-5.5 — audit round 1 remediation                          | `0.42.0-alpha.5`                                    | shipped   |
+| TP-5.6 — audit round 2 remediation (morph client)           | `0.42.0-alpha.6`                                    | shipped   |
+| TP-5.7 — light-fullstack floor + audit round 3              | `0.42.0-alpha.9` (alpha.8 skipped, never published) | shipped   |
+| TP-5.8 — code hygiene train                                 | commit `1041431f` (#619–#623)                       | shipped   |
+| TP-5.9 — TP-6 freeze preparation + standards-as-seams train | `0.42.0-alpha.13`                                   | in flight |
 
 ### TP-6 — `0.42.0` stable decision (freeze light fullstack)
 

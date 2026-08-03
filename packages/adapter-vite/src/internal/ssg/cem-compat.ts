@@ -35,7 +35,7 @@ interface CemModule {
   exports?: { declaration?: unknown }[];
 }
 
-export interface CustomElementsManifest {
+interface CustomElementsManifest {
   schemaVersion?: string;
   packageName?: string;
   version?: string;
@@ -43,26 +43,26 @@ export interface CustomElementsManifest {
   [key: string]: unknown;
 }
 
-export interface CemParseError {
+interface CemParseError {
   code: string;
   message: string;
   path?: string;
 }
 
-export interface CemParseWarning {
+interface CemParseWarning {
   code: string;
   message: string;
   path?: string;
 }
 
-export interface CemParseResult {
+interface CemParseResult {
   success: boolean;
   manifest?: CustomElementsManifest;
   errors: CemParseError[];
   warnings: CemParseWarning[];
 }
 
-export interface CemClassificationResult {
+interface CemClassificationResult {
   classifications: CompatibilityClassification[];
   rejectedTags: string[];
   ssrCapableTags: string[];

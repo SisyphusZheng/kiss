@@ -4,8 +4,11 @@ import {
   PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
   PREVIOUS_PACKAGE_VERSION_TAG,
+  RETAINED_PACKAGE_NAMES,
 } from '../project-constants.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
+import { gitTagExists, isAncestorCommit } from '../lib/git.ts';
+import { npmView, verifyNpmRelease } from '../lib/npm-release-verifier.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
 
@@ -277,7 +280,14 @@ export function createReleasePlan(
         },
         {
           name: 'verify npm versions and dist-tags',
-          command: ['deno', 'run', '-A', 'tools/verify-npm-release.ts', targetVersion],
+          run: async () => {
+            await verifyNpmRelease({
+              version: targetVersion,
+              packages: RETAINED_PACKAGE_NAMES.map((name) => name.slice('@openelement/'.length)),
+              query: npmView,
+              log: console.log,
+            });
+          },
         },
         {
           name: 'post-publish npm consumer smoke',
@@ -574,10 +584,8 @@ export async function readPrepareRecord(
  * (registry published, tag missing — the α8 blind-spot) is caught before it
  * can widen.
  */
-export async function assertForwardOnlyTags(
-  targetVersion: string,
-  firstTagged: string = '0.41.0-alpha.14',
-): Promise<void> {
+export async function assertForwardOnlyTags(targetVersion: string): Promise<void> {
+  const firstTagged = '0.41.0-alpha.14';
   const min = compareVersions(targetVersion, firstTagged);
   if (min < 0) return; // Pre-window releases are legacy; no forward-only claim.
   const untagged: string[] = [];
@@ -590,7 +598,7 @@ export async function assertForwardOnlyTags(
       'Release evidence',
     );
     if (evidence?.status !== 'completed') continue;
-    if (await tagExists(`v${version}`)) continue;
+    if (await gitTagExists(`v${version}`)) continue;
     untagged.push(version);
   }
   if (untagged.length > 0) {
@@ -620,15 +628,6 @@ export function compareVersions(a: string, b: string): number {
   return A.pre.join('.').localeCompare(B.pre.join('.'));
 }
 
-async function tagExists(tag: string): Promise<boolean> {
-  try {
-    await runCaptured(['git', 'rev-parse', '--verify', tag]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Backfill the prepare record for an already-published version (2.3, #855):
  * reads the completed evidence off `main` (where the release ran) and writes
@@ -637,10 +636,8 @@ async function tagExists(tag: string): Promise<boolean> {
  * recovery: published versions published before the record gate landed must
  * still carry a verifiable prepare record on the prepare branch.
  */
-export async function backfillPrepareRecordFromMain(
-  targetVersion: string,
-  mainBranch = 'main',
-): Promise<void> {
+export async function backfillPrepareRecordFromMain(targetVersion: string): Promise<void> {
+  const mainBranch = 'main';
   const path = prepareRecordFile(targetVersion);
   if (await readPrepareRecord(targetVersion) !== undefined) {
     console.log(`Prepare record for ${releaseTag(targetVersion)} already present; skipping.`);
@@ -674,9 +671,7 @@ export async function backfillPrepareRecordFromMain(
     completedAt: evidence.completedAt,
     // Reuse the evidence's step traces but only those the prepare gate
     // verifies, marked passed: the record asserts a gated prepare flow.
-    steps: PREPARE_STEP_NAMES.size > 0
-      ? evidence.steps.map((step) => ({ ...step, status: 'passed' as const }))
-      : [],
+    steps: evidence.steps.map((step) => ({ ...step, status: 'passed' as const })),
   };
   await writePrepareRecord(record);
   await runCaptured(['git', 'add', path]);
@@ -1362,15 +1357,6 @@ export async function pathExistsInHead(path: string): Promise<boolean> {
   return result.success;
 }
 
-export async function isAncestorCommit(ancestor: string, descendant: string): Promise<boolean> {
-  const result = await new Deno.Command('git', {
-    args: ['merge-base', '--is-ancestor', ancestor, descendant],
-    stdout: 'null',
-    stderr: 'null',
-  }).output();
-  return result.success;
-}
-
 /** Branch the worktree is on, with a sane fallback for detached CI checkouts. */
 export async function currentBranchName(fallback: string): Promise<string> {
   const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
@@ -1522,11 +1508,6 @@ export function decideTagAction(input: TagDecisionInput): TagAction {
   throw new Error(
     `Refusing to overwrite existing tag ${input.tag} at ${input.existing}; HEAD is ${input.head}.`,
   );
-}
-
-/** Evidence id recorded at a tag's commit, if the tag carries an evidence file. */
-export async function tagEvidenceId(tag: string, version: string): Promise<string | undefined> {
-  return (await tagEvidenceProvenance(tag, version)).id;
 }
 
 /** Evidence id and release kind recorded at a tag's commit, if it carries one. */

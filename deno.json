@@ -110,7 +110,6 @@
     "autoflow:ci": "deno run --allow-read --allow-run --allow-env tools/autoflow/cli.ts ci",
     "autoflow:patch-release": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts patch-release",
     "autoflow:release": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release",
-    "autoflow:release-dispatch": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release-dispatch",
     "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release-prepare",
     "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts publish-existing",
     "autoflow:release-record": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release-record",

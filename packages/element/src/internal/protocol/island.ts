@@ -4,14 +4,6 @@
 
 import type { HydrationStrategy } from './framework.ts';
 
-export interface IslandMeta {
-  tagName: string;
-  layer: string;
-  isIsland: boolean;
-  ssr?: boolean;
-  dsd: boolean;
-}
-
 export interface IslandOptions {
   /** Hydration strategy:
    *   - 'load': load immediately when module is imported

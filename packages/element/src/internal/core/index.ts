@@ -20,30 +20,18 @@
 
 export type {
   AppShellConfig,
-  AppShellDefinition,
   ComponentLayer,
   FrameworkOptions,
-  HydrateEventDescriptor,
   HydrationStrategy,
   IsrManifestEntry,
-  LayoutsConfig,
   LocalePath,
-  OpenElementApiContext,
   OpenElementBuildContextLike,
-  OpenElementMiddleware,
-  OpenElementMiddlewareContext,
-  RegistryIndex,
-  RegistryIndexEntry,
   RouteEntry,
   SafeHtml,
   SpecialFileType,
   StrategySource,
   UnsafeHtml,
-  ValidationError,
-  ValidationResult,
-  ValidationWarning,
 } from '../protocol/framework.ts';
-export type { IslandDescriptor, SsrContext } from '../protocol/context.ts';
 
 export {
   ERROR_PREFIX,
@@ -55,26 +43,14 @@ export {
   SsrRenderError,
 } from './errors.ts';
 export type { ErrorPhase, ErrorSeverity, ErrorTelemetryHook } from '../protocol/errors.ts';
-export { createSsrContext, extractParams, parseQuery } from './context.ts';
 export { wrapInDocument } from './html-escape.ts';
-export { createIsrCacheKey, isIsrRouteConfig, MemoryIsrCache } from './isr.ts';
+export { createIsrCacheKey } from './isr.ts';
 export type {
   CacheAdapter,
   CacheEntry,
   IsrCacheEntry,
   IsrCacheResult,
-  IsrCacheState,
-  IsrRouteConfig,
 } from '../protocol/isr.ts';
-export { findIsrManifestEntry, renderIsrResponse } from './isr-runtime.ts';
-export type {
-  IsrRuntimeCache,
-  IsrRuntimeOptions,
-  IsrRuntimeRenderContext,
-  IsrRuntimeRenderResult,
-  IsrRuntimeResult,
-  IsrRuntimeState,
-} from './isr-runtime.ts';
 export { StyleSheet } from './style-sheet.ts';
 export type { StyleSheetLike, StyleSheetRule } from '../protocol/style-sheet.ts';
 export { renderDsd } from './render-dsd.ts';
@@ -82,20 +58,11 @@ export type { RenderDsdOptions } from './render-dsd.ts';
 export { serializeAttrs } from './render-ir.ts';
 export { camelToKebab } from './tag-utils.ts';
 export type {
-  DomSimulationAttempt,
-  DomSimulationReport,
-  DsdBuildReport,
   DsdComponent,
   DsdComponentConstructor,
-  DsdHydrationHintSummary,
-  DsdHydrationStrategySummary,
-  DsdMetricsSummary,
   DsdOptions,
-  DsdPageDiagnostics,
   DsdRenderMetrics,
   HydrationHint,
-  IsrRouteRecord,
-  ManifestDecision,
   RenderErrorCode,
   RenderHooks,
   RenderInput,
@@ -108,7 +75,6 @@ export type {
   OpenElementCssPart,
   OpenElementDeclaration,
   OpenElementEvent,
-  OpenElementExtensions,
   OpenElementPackageManifest,
   OpenElementSlot,
 } from '../protocol/manifest.ts';
@@ -129,7 +95,7 @@ export { createLogger } from './logger.ts';
 export { assertValidTagName, isValidTagName } from './tag-utils.ts';
 export { normalizeSeparators, pathToTagName } from './path-utils.ts';
 export { bindSsrProps, defineCustomElement, defineIsland, getSsrProps } from './island.ts';
-export type { IslandMeta, IslandOptions } from '../protocol/island.ts';
+export type { IslandOptions } from '../protocol/island.ts';
 export { transformIslandSource } from './island-transform.ts';
 export type { IslandTransformOptions, IslandTransformResult } from '../protocol/island.ts';
 
@@ -161,7 +127,6 @@ export type {
 export type {
   Action,
   ActionContext,
-  DataAdapter,
   Loader,
   LoaderContext,
   SpaAction,
@@ -169,8 +134,6 @@ export type {
   SpaLoader,
   SpaLoaderContext,
 } from '../protocol/data.ts';
-// ADR-0095: reference in-memory implementation
-export { MemoryDataAdapter } from './data-adapter.ts';
 
 // v0.24.1 (ADR-0057): JSX + Signal component model
 // VNode & jsx-runtime
@@ -193,7 +156,6 @@ export {
   hydrateEventMarkers,
 } from './event-hydration.ts';
 export { hasSelfHydrated, HydrationScope, markSelfHydrated } from './hydration-scope.ts';
-export type { HydrationScopeDebug, HydrationScopeOptions } from './hydration-scope.ts';
 // static props runtime
 export {
   disposeStaticProps,

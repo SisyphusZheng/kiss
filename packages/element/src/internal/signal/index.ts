@@ -19,7 +19,7 @@ export type {
   Unsubscribe,
   WritableSignal,
 } from '../protocol/signal.ts';
-export { isSignalLike, resolveSignalProp, unwrapSignalLike } from './types.ts';
+export { isSignalLike, unwrapSignalLike } from './types.ts';
 
 // ─── Framework layer ────────────────────────────────────────────
 export { computed, effect, signal } from './framework.ts';

@@ -11,15 +11,11 @@ import type {
   RuntimeAdapter,
   RuntimeAdapterOptions,
   RuntimeContext,
-  RuntimePrerenderResult,
 } from '../protocol/runtime.ts';
 import type { Middleware } from '../protocol/framework.ts';
 export type {
   OpenElementRequestHandler,
-  RuntimeAdapter,
-  RuntimeAdapterOptions,
   RuntimeContext,
-  RuntimePrerenderResult,
 };
 
 export function createRuntimeAdapter<

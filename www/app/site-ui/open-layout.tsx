@@ -31,7 +31,6 @@
 
 import { OpenElement } from '@openelement/element';
 import { StyleSheet, type StyleSheetLike } from '@openelement/element';
-import { type Context, createContext, provideContext } from '@openelement/element';
 import { createLogger } from '@openelement/element';
 import { defineCustomElement } from '@openelement/element';
 import { normalizeLocalePath } from '@openelement/app/i18n';
@@ -105,24 +104,19 @@ function switchScopeNote(currentLocale: string): string {
     : '中文翻译目前覆盖 Guide 层；其他层的页面仍为英文。';
 }
 
-/** SignalContext key: theme state shared across all components */
-export const THEME_CTX: Context<'dark' | 'light'> = createContext<'dark' | 'light'>(
-  Symbol('theme'),
-  'dark',
-);
-
-export interface NavItem {
+/** NavItem metadata for the layout render. */
+interface NavItem {
   path?: string;
   href?: string;
   label: string;
 }
 
-export interface NavSection {
+interface NavSection {
   section: string;
   items: NavItem[];
 }
 
-export interface HeaderNavLink {
+interface HeaderNavLink {
   href: string;
   label: string;
 }
@@ -1175,22 +1169,18 @@ export class OpenLayout extends OpenElement {
     if (docTheme) {
       this.setAttribute('data-theme', docTheme);
     }
-    // SignalContext: provide theme state to all child components
-    const initialTheme = (docTheme as 'dark' | 'light') || 'dark';
-    provideContext(this, THEME_CTX, initialTheme);
 
     // Listen for theme change events from open-theme-toggle
     this._themeHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.theme) {
         this.setAttribute('data-theme', detail.theme);
-        provideContext(this, THEME_CTX, detail.theme);
         this._propagateTheme(detail.theme);
       }
     };
     globalThis.addEventListener?.('open:theme-change', this._themeHandler);
 
-    this._propagateTheme(initialTheme);
+    this._propagateTheme((docTheme as 'dark' | 'light') || 'dark');
 
     if (this.shadowRoot && this.shadowRoot.childNodes.length > 0) {
       this._setupDetailsToggle();

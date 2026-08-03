@@ -12,23 +12,6 @@ export {
   OpenElementRedirect,
   redirect,
 } from './authoring.ts';
-export type {
-  IslandConfig,
-  NormalizedPageRenderIntent,
-  OpenElementPageDescriptor,
-  PageDefinition,
-  PageErrorContext,
-  PageErrorFunction,
-  PageHead,
-  PageMeta,
-  PageRenderContext,
-  PageRenderFunction,
-  PageRenderingMode,
-  PageRenderIntent,
-  PageRevalidate,
-  PageRouteContext,
-  PageRouteIntent,
-} from './authoring.ts';
 
 // Re-export route data types from protocol for convenience
 export type {
@@ -51,7 +34,7 @@ export type { ElementDefinition } from '@openelement/element';
 
 // SPA bootstrap
 export { defineApp } from './spa.ts';
-export type { SpaAppInstance, SpaAppOptions } from './spa.ts';
+export type { SpaAppInstance } from './spa.ts';
 export { useActionData, useLoaderData } from './internal/router/data-context.ts';
 
 // OpenElement-owned request context contract and convenience constructor.

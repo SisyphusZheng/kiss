@@ -27,13 +27,7 @@ interface PackageJson {
   [key: string]: unknown;
 }
 
-function getArg(flag: string): string | null {
-  const idx = Deno.args.indexOf(flag);
-  if (idx !== -1 && idx + 1 < Deno.args.length) {
-    return Deno.args[idx + 1];
-  }
-  return null;
-}
+import { getArg } from './lib/process.ts';
 
 interface ParsedVersion {
   major: number;

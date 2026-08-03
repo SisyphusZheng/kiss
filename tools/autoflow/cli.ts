@@ -4,11 +4,9 @@ import {
   evaluatePatchEligibility,
   evaluateVersionAuthority,
   type GateDefinition,
-  isCI,
   selectGates,
 } from './policy.ts';
 import {
-  assertBranch,
   backfillPrepareRecordFromMain,
   createPreparePlan,
   createPublishExistingPlan,
@@ -17,13 +15,11 @@ import {
   releaseTag,
   resolvePatchTargetVersion,
 } from './release.ts';
-import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
 import { PACKAGE_VERSION } from '../project-constants.ts';
 
 export interface CliOptions {
   command: string;
   dryRun: boolean;
-  dispatch: boolean;
   approvedPlan?: string;
   targetVersion?: string;
 }
@@ -42,14 +38,13 @@ export function normalizeReleaseVersion(version: string | undefined): string | u
 export function parseArgs(args: string[]): CliOptions {
   const command = args[0] ?? 'dev';
   const dryRun = args.includes('--dry-run');
-  const dispatch = args.includes('--dispatch') || command === 'release-dispatch';
   const approvalIndex = args.indexOf('--approved-plan');
   const approvedPlan = approvalIndex === -1 ? undefined : args[approvalIndex + 1];
   const targetIndex = args.indexOf('--to');
   const targetVersion = targetIndex === -1
     ? undefined
     : normalizeReleaseVersion(args[targetIndex + 1]);
-  return { command, dryRun, dispatch, approvedPlan, targetVersion };
+  return { command, dryRun, approvedPlan, targetVersion };
 }
 
 export type GitOutput = (args: string[]) => Promise<string | undefined>;
@@ -267,69 +262,6 @@ async function runApprovedRelease(
   await executeReleasePlan('approved-release', targetVersion, approvedPlan, dryRun);
 }
 
-async function runReleaseDispatch(
-  approvedPlan: string | undefined,
-  targetVersion: string | undefined,
-): Promise<void> {
-  if (!targetVersion) {
-    console.error('Release dispatch requires a target version: --to <version>');
-    Deno.exit(1);
-  }
-  if (!approvedPlan) {
-    console.error('Release dispatch requires an approved plan: --approved-plan <id>');
-    Deno.exit(1);
-  }
-
-  // gates and release plan validation happen in dry-run mode first.
-  // Only when --dispatch is given and the local repo is on a clean main branch
-  // do we push and trigger the real workflow.
-  await runApprovedRelease(approvedPlan, targetVersion, true);
-
-  if (isCI()) {
-    console.error(
-      'Release dispatch is not supported inside CI; use the autoflow-release workflow directly.',
-    );
-    Deno.exit(1);
-  }
-
-  await assertBranch('main');
-  await assertCleanWorktree('Refusing release from a dirty worktree');
-
-  console.log('Pushing main and dispatching AutoFlow Release workflow...');
-  const push = new Deno.Command('git', { args: ['push', 'origin', 'main'] });
-  const pushResult = await push.output();
-  if (pushResult.code !== 0) {
-    console.error(new TextDecoder().decode(pushResult.stderr));
-    Deno.exit(1);
-  }
-
-  // Send only the inputs .github/workflows/autoflow-release.yml declares
-  // (version, dry_run); undeclared inputs make the API reject the dispatch
-  // with 422 after main was already pushed. workflow_dispatch booleans are
-  // passed as string fields.
-  const dispatch = new Deno.Command('gh', {
-    args: [
-      'workflow',
-      'run',
-      'autoflow-release.yml',
-      '-R',
-      'open-element/openelement',
-      '-f',
-      `version=${targetVersion}`,
-      '-f',
-      'dry_run=false',
-    ],
-  });
-  const dispatchResult = await dispatch.output();
-  const dispatchOutput = new TextDecoder().decode(dispatchResult.stdout);
-  if (dispatchResult.code !== 0) {
-    console.error(new TextDecoder().decode(dispatchResult.stderr));
-    Deno.exit(1);
-  }
-  console.log(dispatchOutput.trim());
-  console.log(`Release dispatch triggered for ${releaseTag(targetVersion)}.`);
-}
-
 export async function main(args: string[]): Promise<void> {
   const options = parseArgs(args);
 
@@ -347,14 +279,7 @@ export async function main(args: string[]): Promise<void> {
       await runPatchRelease(options.dryRun, options.approvedPlan);
       break;
     case 'release':
-      if (options.dispatch) {
-        await runReleaseDispatch(options.approvedPlan, options.targetVersion);
-      } else {
-        await runApprovedRelease(options.approvedPlan, options.targetVersion, options.dryRun);
-      }
-      break;
-    case 'release-dispatch':
-      await runReleaseDispatch(options.approvedPlan, options.targetVersion);
+      await runApprovedRelease(options.approvedPlan, options.targetVersion, options.dryRun);
       break;
     case 'release-prepare':
       await runReleasePrepare(options.approvedPlan, options.targetVersion, options.dryRun);
@@ -367,7 +292,7 @@ export async function main(args: string[]): Promise<void> {
       break;
     default:
       console.error(
-        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-dispatch|release-prepare|publish-existing|release-record> [--dry-run] [--dispatch] [--approved-plan ID] [--to VERSION]',
+        'Usage: deno run tools/autoflow/cli.ts <dev|push|ci|patch-release|release|release-prepare|publish-existing|release-record> [--dry-run] [--approved-plan ID] [--to VERSION]',
       );
       Deno.exit(1);
   }

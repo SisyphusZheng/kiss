@@ -77,7 +77,7 @@ export {
 
 export { classifyCemManifest, parseCem } from './cem-compat.ts';
 
-export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-renderer.ts';
+export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
 
 export { renderEntry } from './entry-renderer.ts';
 

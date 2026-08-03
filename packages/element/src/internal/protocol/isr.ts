@@ -23,7 +23,7 @@ export interface CacheAdapter<T = unknown> {
   purgeTag?(tag: string): Promise<number>;
 }
 
-export type IsrCacheState = 'miss' | 'hit' | 'stale' | 'error';
+type IsrCacheState = 'miss' | 'hit' | 'stale' | 'error';
 
 export interface IsrCacheEntry {
   html: string;
@@ -36,9 +36,4 @@ export interface IsrCacheResult {
   state: IsrCacheState;
   entry?: IsrCacheEntry;
   error?: Error;
-}
-
-/** @experimental ISR route config — not active in 0.42 (targeting 0.44). */
-export interface IsrRouteConfig {
-  revalidate: number;
 }

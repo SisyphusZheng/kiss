@@ -15,7 +15,12 @@
  */
 
 import { exists } from './lib/fs.ts';
-import { gitTrackedFiles } from './lib/git.ts';
+import {
+  gitTagExists,
+  gitTrackedFiles,
+  isAncestorCommit,
+  runGit,
+} from './lib/git.ts';
 import { normalizeSlashes } from './lib/path.ts';
 import { MOJIBAKE_CHARS, stripComments } from './lib/text.ts';
 import {
@@ -536,26 +541,6 @@ import { readJson } from './lib/fs.ts';
 const EVIDENCE_DIR = 'docs/release/autoflow3';
 const FIRST_TAGGED_VERSION = '0.41.0-alpha.14';
 
-async function evidenceGit(args: string[]): Promise<string> {
-  const result = await new Deno.Command('git', {
-    args,
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  if (!result.success) {
-    throw new Error(new TextDecoder().decode(result.stderr).trim());
-  }
-  return new TextDecoder().decode(result.stdout).trim();
-}
-
-async function evidenceTagExists(tagName: string): Promise<boolean> {
-  return (await new Deno.Command('git', {
-    args: ['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`],
-    stdout: 'null',
-    stderr: 'null',
-  }).output()).success;
-}
-
 export const evidenceCheck: DocsTruthCheck = {
   name: 'evidence',
   run: async () => {
@@ -571,7 +556,7 @@ export const evidenceCheck: DocsTruthCheck = {
         status?: string;
       };
       if (snapshot.status !== 'completed') continue;
-      if (!await evidenceTagExists(tagName)) {
+      if (!await gitTagExists(tagName)) {
         failures.push({
           file: `${EVIDENCE_DIR}/${entry.name}`,
           message: `completed release ${version} is missing its immutable tag ${tagName}`,
@@ -583,7 +568,7 @@ export const evidenceCheck: DocsTruthCheck = {
     const evidencePath = `docs/release/autoflow3/${tag}.json`;
     const closurePath = `docs/release/${tag}-closure.json`;
     const releaseNotePath = `docs/release/${tag}.md`;
-    const currentTagExists = await evidenceTagExists(tag);
+    const currentTagExists = await gitTagExists(tag);
 
     let closureRecord: ReleaseClosureRecord | undefined;
     try {
@@ -600,7 +585,7 @@ export const evidenceCheck: DocsTruthCheck = {
     }
 
     try {
-      const actualTagCommit = await evidenceGit(['rev-parse', tag]);
+      const actualTagCommit = await runGit(['rev-parse', tag]);
       if (actualTagCommit !== closureRecord.tagCommit) {
         failures.push({
           file: closurePath,
@@ -608,38 +593,22 @@ export const evidenceCheck: DocsTruthCheck = {
             `release tag ${tag} moved: expected ${closureRecord.tagCommit}, got ${actualTagCommit}`,
         });
       }
-      await evidenceGit(['cat-file', '-e', `${closureRecord.finalEvidenceCommit}^{commit}`]);
+      await runGit(['cat-file', '-e', `${closureRecord.finalEvidenceCommit}^{commit}`]);
 
       const tagEvidence = JSON.parse(
-        await evidenceGit(['show', `${closureRecord.tagCommit}:${evidencePath}`]),
+        await runGit(['show', `${closureRecord.tagCommit}:${evidencePath}`]),
       ) as ReleaseEvidenceSnapshot;
       const finalEvidence = JSON.parse(
-        await evidenceGit(['show', `${closureRecord.finalEvidenceCommit}:${evidencePath}`]),
+        await runGit(['show', `${closureRecord.finalEvidenceCommit}:${evidencePath}`]),
       ) as ReleaseEvidenceSnapshot;
       const validationFailures = validateReleaseEvidenceClosure({
         version: PACKAGE_VERSION,
         record: closureRecord,
-        tagIsAncestorOfFinal: await (async () => {
-          const r = await new Deno.Command('git', {
-            args: [
-              'merge-base',
-              '--is-ancestor',
-              closureRecord.tagCommit,
-              closureRecord.finalEvidenceCommit,
-            ],
-            stdout: 'null',
-            stderr: 'null',
-          }).output();
-          return r.success;
-        })(),
-        finalIsAncestorOfHead: await (async () => {
-          const r = await new Deno.Command('git', {
-            args: ['merge-base', '--is-ancestor', closureRecord.finalEvidenceCommit, 'HEAD'],
-            stdout: 'null',
-            stderr: 'null',
-          }).output();
-          return r.success;
-        })(),
+        tagIsAncestorOfFinal: await isAncestorCommit(
+          closureRecord.tagCommit,
+          closureRecord.finalEvidenceCommit,
+        ),
+        finalIsAncestorOfHead: await isAncestorCommit(closureRecord.finalEvidenceCommit, 'HEAD'),
         tagEvidence,
         finalEvidence,
         releaseNote: await Deno.readTextFile(releaseNotePath),

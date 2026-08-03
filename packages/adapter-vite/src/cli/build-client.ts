@@ -23,6 +23,7 @@ import {
   resolveIslandSsrDsd,
 } from '../internal/ssg/index.ts';
 import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
+import { VIRTUAL_RUNTIME_SPECIFIERS } from '../internal/ssg/entry-generators.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
@@ -46,11 +47,6 @@ const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
 // imports them, so there is no toString() serialization, no import-free
 // constraint, and no string copy to drift. Resolution maps each specifier to
 // the module's own source file inside this package.
-const VIRTUAL_RUNTIME_IDS = {
-  scheduler: 'virtual:open-client-runtime/scheduler',
-  enhance: 'virtual:open-client-runtime/enhance',
-} as const;
-
 function runtimeModulePath(relative: string): string {
   return fileURLToPath(new URL(relative, import.meta.url));
 }
@@ -331,10 +327,10 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
           if (id === VIRTUAL_CLIENT_ENTRY_ID) return RESOLVED_CLIENT_ENTRY_ID;
           // #868: the client runtimes resolve to their real source modules,
           // so they typecheck, bundle and minify like any other module.
-          if (id === VIRTUAL_RUNTIME_IDS.scheduler) {
+          if (id === VIRTUAL_RUNTIME_SPECIFIERS.scheduler) {
             return runtimeModulePath('../internal/ssg/island-scheduler.ts');
           }
-          if (id === VIRTUAL_RUNTIME_IDS.enhance) {
+          if (id === VIRTUAL_RUNTIME_SPECIFIERS.enhance) {
             return runtimeModulePath('../internal/ssg/enhance-client.ts');
           }
           return null;

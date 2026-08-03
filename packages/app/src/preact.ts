@@ -16,9 +16,9 @@ import { h, hydrate as preactHydrate, render as preactRender } from 'preact';
 import type { ComponentChild } from 'preact';
 import { renderToString } from 'preact-render-to-string';
 
-export type PreactIslandProps = Record<string, unknown>;
+type PreactIslandProps = Record<string, unknown>;
 
-export type PreactIslandComponent<
+type PreactIslandComponent<
   Props extends PreactIslandProps = PreactIslandProps,
 > = (
   props: Props,

@@ -39,13 +39,42 @@ export function gitTrackedIgnoredFiles(): Promise<string[]> {
 /** Return true if `path` is tracked by git. */
 export async function gitIsTracked(path: string): Promise<boolean> {
   const command = new Deno.Command('git', {
-    args: ['-c', 'core.quotepath=false', 'ls-files', path],
+    args: ['ls-files', '--error-unmatch', '--', path],
+    stdout: 'null',
+    stderr: 'null',
+  });
+  return (await command.output()).success;
+}
+
+/** Run git capturing stdout; throws with stderr on failure. */
+export async function runGit(args: string[]): Promise<string> {
+  const result = await new Deno.Command('git', {
+    args,
     stdout: 'piped',
     stderr: 'piped',
-  });
-  const output = await command.output();
-  if (!output.success) {
-    throw new Error(new TextDecoder().decode(output.stderr).trim() || 'git ls-files failed');
+  }).output();
+  if (!result.success) {
+    throw new Error(new TextDecoder().decode(result.stderr).trim());
   }
-  return new TextDecoder().decode(output.stdout).trim().length > 0;
+  return new TextDecoder().decode(result.stdout).trim();
+}
+
+/** True if the tag exists locally. */
+export async function gitTagExists(tag: string): Promise<boolean> {
+  const result = await new Deno.Command('git', {
+    args: ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}`],
+    stdout: 'null',
+    stderr: 'null',
+  }).output();
+  return result.success;
+}
+
+/** True if `ancestor` is an ancestor of (or equal to) `descendant`. */
+export async function isAncestorCommit(ancestor: string, descendant: string): Promise<boolean> {
+  const result = await new Deno.Command('git', {
+    args: ['merge-base', '--is-ancestor', ancestor, descendant],
+    stdout: 'null',
+    stderr: 'null',
+  }).output();
+  return result.success;
 }

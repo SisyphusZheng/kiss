@@ -16,7 +16,7 @@ import {
 } from './event-marker.ts';
 import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
-import { isSignalLike, resolveSignalProp, unwrapSignalLike } from '../signal/index.ts';
+import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { RenderFn, VNode } from '../protocol/vnode.ts';
 import { renderDsd } from './render-dsd.ts';
@@ -51,7 +51,7 @@ export type RenderNode =
     layer: string;
   };
 
-export const VOID_ELEMENTS = new Set([
+const VOID_ELEMENTS = new Set([
   'area',
   'base',
   'br',
@@ -77,7 +77,7 @@ export function textNode(value: unknown): RenderNode {
  * by showBranchMarker/forBranchMarker and contain only `[a-z0-9:-]`, so they
  * are safe to serialize verbatim inside an HTML comment.
  */
-export function branchCommentNode(value: string): RenderNode {
+function branchCommentNode(value: string): RenderNode {
   return { kind: 'comment', value };
 }
 
@@ -85,7 +85,7 @@ export function trustedHtmlNode(value: unknown): RenderNode {
   return { kind: 'trusted-html', value: trustRenderHtml(String(value)) };
 }
 
-export function fragmentNode(children: RenderNode[]): RenderNode {
+function fragmentNode(children: RenderNode[]): RenderNode {
   return { kind: 'fragment', children };
 }
 
@@ -223,7 +223,7 @@ export async function renderToNode(
 
   // Show
   if (isShowTag(tag)) {
-    const whenVal = resolveSignalProp(props?.when);
+    const whenVal = unwrapSignalLike(props?.when);
     const target = whenVal ? children[0] : children[1];
     // Record the branch taken so hydration can detect signal drift between SSR
     // and hydration (a flipped branch shifts every subsequent data-eid).
@@ -234,7 +234,7 @@ export async function renderToNode(
 
   // For
   if (isForTag(tag)) {
-    const items = resolveSignalProp(props?.each) as unknown[];
+    const items = unwrapSignalLike(props?.each) as unknown[];
     const renderFn = children[0] as RenderFn;
     const branch = branchCommentNode(forBranchMarker(items));
     if (!Array.isArray(items) || typeof renderFn !== 'function') {

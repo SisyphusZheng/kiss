@@ -6,10 +6,10 @@ The npm `alpha` dist-tag and the `v0.41.0-alpha.x` tags are immutable. The
 published line advances only via AutoFlow3; each version below is the durable
 state after its release run:
 
-| Version           | State     | Evidence                                                                 | Degraded event                                  |
-| ----------------- | --------- | ------------------------------------------------------------------------ | ----------------------------------------------- |
-| `0.41.0-alpha.14` | published | `docs/release/autoflow3/v0.41.0-alpha.14.json` (`completed`)              | none                                            |
-| `0.41.0-alpha.15` | published | `docs/release/autoflow3/v0.41.0-alpha.15.json` (`completed`)              | Windows starter build failure, tracked by #460  |
+| Version           | State     | Evidence                                                     | Degraded event                                 |
+| ----------------- | --------- | ------------------------------------------------------------ | ---------------------------------------------- |
+| `0.41.0-alpha.14` | published | `docs/release/autoflow3/v0.41.0-alpha.14.json` (`completed`) | none                                           |
+| `0.41.0-alpha.15` | published | `docs/release/autoflow3/v0.41.0-alpha.15.json` (`completed`) | Windows starter build failure, tracked by #460 |
 
 Both versions shipped the five npm packages and their `alpha` dist-tags.
 `0.41.0-alpha.15`'s degraded finding (#460) was discovered post-publish and is

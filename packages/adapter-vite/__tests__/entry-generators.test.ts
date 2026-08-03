@@ -38,7 +38,10 @@ Deno.test('#868 client entry stays within the wiring budget', () => {
   const code = generateClientEntry([
     { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
   ]);
-  assert(code.length < CLIENT_ENTRY_BUDGET_BYTES, `client entry ${code.length}B exceeds ${CLIENT_ENTRY_BUDGET_BYTES}B budget`);
+  assert(
+    code.length < CLIENT_ENTRY_BUDGET_BYTES,
+    `client entry ${code.length}B exceeds ${CLIENT_ENTRY_BUDGET_BYTES}B budget`,
+  );
 });
 
 Deno.test('empty -> zero JS', () => {
