@@ -680,7 +680,9 @@ export async function backfillPrepareRecordFromMain(
   };
   await writePrepareRecord(record);
   await runCaptured(['git', 'add', path]);
-  await commitIfStaged(`docs(release): backfill prepare record for ${releaseTag(targetVersion)} (#855)`);
+  await commitIfStaged(
+    `docs(release): backfill prepare record for ${releaseTag(targetVersion)} (#855)`,
+  );
 }
 
 export async function verifyPrepareRecord(targetVersion: string): Promise<void> {
