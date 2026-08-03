@@ -1,8 +1,4 @@
-import {
-  PACKAGE_VERSION,
-  PACKAGE_VERSION_TAG,
-  PREVIOUS_PACKAGE_VERSION,
-} from './project-constants.ts';
+import { PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
 import { staleCurrencyClaimPatterns } from './check-strategic-docs.ts';
 import { MOJIBAKE_CHARS } from './lib/text.ts';
 import { STALE_HISTORY_CLAIM_PATTERNS } from './lib/stale-claims.ts';
@@ -18,7 +14,7 @@ export type Failure = {
   message: string;
 };
 
-const currentPublicDocs = [
+export const currentPublicDocs = [
   'README.md',
   'README.zh.md',
   'docs/governance/PROJECT_WORKFLOW.md',
@@ -27,29 +23,29 @@ const currentPublicDocs = [
   'docs/status/STATUS.md',
 ];
 
-const currentContractDocs = [
+export const currentContractDocs = [
   'docs/current/PACKAGE_SURFACE.md',
   'docs/current/HYDRATION_CONTRACT.md',
   'docs/current/STACK_CONTRACT.md',
 ];
 
-const packageSurfaceDoc = 'docs/current/PACKAGE_SURFACE.md';
-const integrationsDocsDir = 'docs/integrations';
+export const packageSurfaceDoc = 'docs/current/PACKAGE_SURFACE.md';
+export const integrationsDocsDir = 'docs/integrations';
 
-const readmeDocs = ['README.md', 'README.zh.md'];
-const productDoctrinePatterns = [
+export const readmeDocs = ['README.md', 'README.zh.md'];
+export const productDoctrinePatterns = [
   'OpenElement = Web Components-native fullstack application framework',
   'current proven scope = static-first applications with fullstack output paths',
 ];
 
 // Derived from the canonical mojibake table (#827); the `???` rule is a
 // docs-specific supplement on top of it.
-const mojibakePatterns: RegExp[] = [
+export const mojibakePatterns: RegExp[] = [
   new RegExp(`[${MOJIBAKE_CHARS.join('')}]`),
   /\?\?\?/,
 ];
 
-const staleCurrentClaims: RegExp[] = [
+export const staleCurrentClaims: RegExp[] = [
   ...STALE_HISTORY_CLAIM_PATTERNS,
   /v0\.37\.6 is the current workspace package line/i,
   /All 20 workspace packages are currently aligned together at\s+\*\*v0\.37\.6\*\*/i,
@@ -73,7 +69,7 @@ const staleCurrentClaims: RegExp[] = [
   ...staleCurrencyClaimPatterns(),
 ];
 
-const requiredCommunityFiles = [
+export const requiredCommunityFiles = [
   'SECURITY.md',
   'CODE_OF_CONDUCT.md',
   'MAINTAINERS.md',
@@ -156,107 +152,3 @@ export function findIntegrationSpecifierFailures(
   }
   return failures;
 }
-
-async function read(file: string, failures: Failure[]): Promise<string> {
-  try {
-    return await Deno.readTextFile(file);
-  } catch (error) {
-    failures.push({
-      file,
-      message: `cannot read file: ${error instanceof Error ? error.message : String(error)}`,
-    });
-    return '';
-  }
-}
-
-async function main(): Promise<void> {
-  const failures: Failure[] = [];
-
-  for (const file of currentPublicDocs) {
-    const text = await read(file, failures);
-    if (!text) continue;
-
-    if (!text.includes(PACKAGE_VERSION_TAG)) {
-      failures.push({ file, message: `missing package version tag ${PACKAGE_VERSION_TAG}` });
-    }
-
-    if (!text.includes(PACKAGE_VERSION)) {
-      failures.push({ file, message: `missing package version ${PACKAGE_VERSION}` });
-    }
-
-    for (const pattern of staleCurrentClaims) {
-      const match = text.match(pattern);
-      if (match) {
-        failures.push({ file, message: `stale current-line claim: ${match[0]}` });
-      }
-    }
-  }
-
-  for (const file of currentContractDocs) {
-    const text = await read(file, failures);
-    if (!text) continue;
-    const staleMaturity = text.match(/v0\.41 beta/i);
-    if (staleMaturity) {
-      failures.push({ file, message: `stale current maturity claim: ${staleMaturity[0]}` });
-    }
-  }
-
-  for (const file of readmeDocs) {
-    const text = await read(file, failures);
-    if (!text) continue;
-
-    for (const doctrine of productDoctrinePatterns) {
-      if (!text.includes(doctrine)) {
-        failures.push({ file, message: `missing product doctrine formula: ${doctrine}` });
-      }
-    }
-
-    for (const pattern of mojibakePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        failures.push({ file, message: `mojibake/replacement text matched: ${match[0]}` });
-      }
-    }
-  }
-
-  for (const file of requiredCommunityFiles) {
-    const text = await read(file, failures);
-    if (!text) continue;
-    if (text.trim().length < 80) {
-      failures.push({ file, message: 'public entry point is unexpectedly empty' });
-    }
-  }
-
-  const contributing = await read('CONTRIBUTING.md', failures);
-  for (const file of requiredCommunityFiles) {
-    if (!contributing.includes(file)) {
-      failures.push({ file: 'CONTRIBUTING.md', message: `missing link to ${file}` });
-    }
-  }
-
-  const integrationDocs: string[] = [];
-  for await (const entry of Deno.readDir(integrationsDocsDir)) {
-    if (entry.isFile && entry.name.endsWith('.md')) {
-      integrationDocs.push(`${integrationsDocsDir}/${entry.name}`);
-    }
-  }
-  failures.push(
-    ...findIntegrationSpecifierFailures((path) => Deno.readTextFileSync(path), integrationDocs),
-  );
-
-  if (failures.length > 0) {
-    console.error('Public docs integrity check failed:');
-    for (const failure of failures) {
-      console.error(`- ${failure.file}: ${failure.message}`);
-    }
-    Deno.exit(1);
-  }
-
-  console.log(
-    `Public docs integrity check passed (${currentPublicDocs.length} docs, ` +
-      `${integrationDocs.length} integration docs, package ${PACKAGE_VERSION_TAG}, ` +
-      'alpha maturity).',
-  );
-}
-
-if (import.meta.main) await main();
