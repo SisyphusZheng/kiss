@@ -1,7 +1,6 @@
 import { createOpenElementNitroHandler } from '../../../../src/nitro-mount.ts';
 
 const openElementHandler = createOpenElementNitroHandler({
-  baseUrl: 'http://localhost',
   env: { OPEN_ELEMENT_PROOF: 'nitro' },
   handler: (request, context) => {
     const url = new URL(request.url);
@@ -89,20 +88,11 @@ function html(body: string, headers: Headers, status = 200): Response {
   });
 }
 
-type NitroProofEvent = {
-  request?: Request;
-  url?: URL;
-};
-
-export default async function openElementNitroProofRoute(
-  event: NitroProofEvent,
-): Promise<Response> {
-  const request = event.request ?? new Request(event.url ?? 'http://localhost/');
-  const result = await openElementHandler({
-    request,
-    env: { OPEN_ELEMENT_PROOF: 'nitro' },
-    platform: { nitro: true },
-  });
-
-  return result.response;
+// Nitro v3 (h3 v2) is fetch-native: the route event's `req` is already a
+// standard Request, so the route is a pure pass-through to the mounted
+// handler (#857). The per-request env arrives via the handler options above.
+export default function openElementNitroProofRoute(event: {
+  req: Request;
+}): Promise<Response> {
+  return openElementHandler(event);
 }

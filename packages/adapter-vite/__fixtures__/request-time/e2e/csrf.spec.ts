@@ -111,9 +111,13 @@ test.describe('CSRF same-origin floor (#811)', () => {
       maxRedirects: 0,
     });
     expect(json.status()).toBe(403);
+    // #863: the CSRF rejection is an RFC 9457 problem document.
+    expect(json.headers()['content-type']).toContain('application/problem+json');
     const body = await json.json();
-    expect(body.type).toBe('error');
-    expect(body.error.message).toBe('Cross-site form submission rejected');
+    expect(body.type).toBe('about:blank');
+    expect(body.title).toBe('Forbidden');
+    expect(body.status).toBe(403);
+    expect(body.detail).toBe('Cross-site form submission rejected');
   });
 
   test('same-origin POST passes the floor (303 PRG)', async ({ request }) => {

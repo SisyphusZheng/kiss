@@ -216,6 +216,14 @@ export interface EntryDescriptor {
   isSSG: boolean;
   imports: ImportDecl[];
   middleware: MiddlewareDecl[];
+  /**
+   * Serialized `middleware.use` fetch middleware sources (ADR-0123 item 2,
+   * #858), in user-configured order. The entry renderer inlines them into the
+   * generated entry and composes them around the exported handler in onion
+   * order. Absent/empty when the app configures no fetch middleware, keeping
+   * the generated entry byte-identical to pre-#858 output.
+   */
+  fetchMiddleware?: string[];
   apiRoutes: ApiRouteDecl[];
   pageRoutes: PageRouteDecl[];
   islands: IslandDecl[];
@@ -277,7 +285,7 @@ export interface RouteInfoEntry {
    * is never a bare `undefined` at runtime.
    */
   revalidate?: number | false;
-  /** Rendering mode declared via renderIntent.mode ("auto" when unset). */
+  /** Rendering mode declared via renderIntent.mode ("static" when unset; the former "auto" alias was removed in alpha.13, #609). */
   rendering?: string;
   /** True when the route module exports an action (request-time form POST). */
   hasAction?: boolean;

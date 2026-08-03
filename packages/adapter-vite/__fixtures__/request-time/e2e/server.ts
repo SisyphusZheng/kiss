@@ -6,7 +6,7 @@
  *   - request-time routes are delegated to the generated dist/server/index.js:
  *     the named matchRequestTimeRoute export (generated from the route table,
  *     #556) decides whether a pathname hits a request-time route, and the
- *     default export takes a nitro-like event ({ request }) and returns a
+ *     default export takes a Nitro v3 event ({ req }) and returns a
  *     Response.
  *
  * The MIME table, static candidate rules, and the server-entry contract come
@@ -34,7 +34,7 @@ const PORT = Number(args.port ?? '4180');
 const ROOT = resolve(Deno.cwd(), args.dir ?? '../dist');
 
 const serverEntry = await importRequestTimeServer(join(ROOT, 'server/index.js'));
-type RequestTimeEvent = { request: Request; env?: Record<string, string> };
+type RequestTimeEvent = { req: Request; env?: Record<string, string> };
 const handleRequestTime = serverEntry.default as (
   event: RequestTimeEvent,
 ) => Promise<Response>;
@@ -56,7 +56,7 @@ Deno.serve({ port: PORT, hostname: '127.0.0.1' }, async (request) => {
     throw err;
   }
   if (match !== null) {
-    return await handleRequestTime({ request, env: Deno.env.toObject() });
+    return await handleRequestTime({ req: request, env: Deno.env.toObject() });
   }
   const staticResponse = tryStatic(ROOT, url.pathname);
   if (staticResponse) return staticResponse;

@@ -94,12 +94,12 @@ export type RequestTimeRouteMatch = { path: string; params: Record<string, strin
 
 /**
  * Contract of the generated dist/server/index.js entry (#556): the default
- * export takes a nitro-like event ({ request, env? }) and resolves to the
+ * export takes a Nitro v3 event ({ req, env? }) and resolves to the
  * Response; the named matchRequestTimeRoute export maps a concrete pathname
  * ('/item/42') to a request-time route pattern ('/item/:id'), or null.
  */
 export interface RequestTimeServerModule {
-  default?: (event: { request: Request; env?: Record<string, string> }) => Promise<Response>;
+  default?: (event: { req: Request; env?: Record<string, string> }) => Promise<Response>;
   matchRequestTimeRoute?: (pathname: string) => RequestTimeRouteMatch | null;
 }
 

@@ -87,8 +87,11 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`import { jsx } from '@openelement/element';`);
   lines.push(`import { createLogger } from '@openelement/element';`);
   lines.push(`import { createRuntimeAdapter } from '@openelement/element/build-utils';`);
+  if (desc.fetchMiddleware?.length) {
+    lines.push(`import { composeFetchMiddleware } from '@openelement/element/build-utils';`);
+  }
   lines.push(
-    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader } from '@openelement/app';`,
+    `import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';`,
   );
   lines.push(
     `import { headerNav as __headerNav, navSections as __navSections } from '@openelement/generated/nav';`,
@@ -241,9 +244,37 @@ export function renderEntry(desc: EntryDescriptor): string {
   renderDataEndpoint(lines);
 
   // --- Export ---
-  lines.push('export const openElementHandler = (request, context = {}) => {');
-  lines.push('  return app.fetch(request, context.env || {}, context.platform)');
-  lines.push('}');
+  if (desc.fetchMiddleware?.length) {
+    // ADR-0123 item 2 (#858): fetch middleware composed at the handler
+    // boundary in onion order (use[0] outermost), outside the Hono app, so
+    // the dev server, the start CLI, the e2e fixture server, and the Nitro
+    // production entry share one composed handler.
+    lines.push('// ADR-0123 (#858): fetch middleware contract (WinterCG shape)');
+    lines.push('const __openElementFetchMiddleware = [');
+    for (const source of desc.fetchMiddleware) {
+      lines.push(`  ${source},`);
+    }
+    lines.push('];');
+    lines.push('const __openElementBaseHandler = (request, context = {}) => {');
+    lines.push('  return app.fetch(request, context.env || {}, context.platform)');
+    lines.push('}');
+    lines.push(
+      'export const openElementHandler = composeFetchMiddleware(__openElementFetchMiddleware, __openElementBaseHandler)',
+    );
+    lines.push('');
+    // The dev server (@hono/vite-dev-server) reads this named export instead of
+    // the default Hono app when middleware.use is configured (see plugin.ts);
+    // it adapts the (request, env, executionCtx) call shape onto the same
+    // composed handler every other runtime uses.
+    lines.push('export const openElementDevFetch = {');
+    lines.push('  fetch: (request, env, executionContext) =>');
+    lines.push('    openElementHandler(request, { env: env || {}, platform: executionContext }),');
+    lines.push('}');
+  } else {
+    lines.push('export const openElementHandler = (request, context = {}) => {');
+    lines.push('  return app.fetch(request, context.env || {}, context.platform)');
+    lines.push('}');
+  }
   lines.push('');
   lines.push('export const openElementRuntimeAdapter = {');
   lines.push("  ...createRuntimeAdapter({ name: 'openelement-hono', fetch: openElementHandler }),");

@@ -1,4 +1,4 @@
-/** Static home page (default renderIntent mode 'auto') — prerendered at build time. */
+/** Static home page (default renderIntent mode 'static') — prerendered at build time. */
 import { definePage } from '@openelement/app';
 
 export const tagName = 'page-home';

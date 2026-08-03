@@ -125,7 +125,8 @@ Deno.test('entry-generators - generateClientEntry (v0.5.0 CE upgrade)', async (t
     ];
     const code = generateClientEntry(islands);
     assertEquals(code.includes('requestIdleCallback'), true);
-    assertEquals(code.includes('function __load'), true);
+    // #610: the scheduler module (inlined verbatim) owns load dispatch.
+    assertEquals(code.includes('function load('), true);
   });
 
   await t.step('dispatches open:ready event after upgrade', () => {

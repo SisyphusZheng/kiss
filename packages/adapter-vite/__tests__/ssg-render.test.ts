@@ -527,11 +527,15 @@ Deno.test('request-time server entry serves the SSR bundle at request time', asy
   try {
     // A minimal stand-in for the built SSR bundle: one request-time route
     // whose output depends on the live request (unlike a prerendered page).
+    // The openElementHandler named export mirrors the real entry's handler
+    // contract (#858) that the generated server module imports.
     await Deno.writeTextFile(
       join(dir, 'entry.js'),
       `import { Hono } from 'hono';
 const app = new Hono();
 app.get('/live', (c) => c.html('<h1>live ' + new URL(c.req.url).searchParams.get('x') + '</h1>'));
+export const openElementHandler = (request, context = {}) =>
+  app.fetch(request, context.env || {}, context.platform);
 export default app;
 `,
     );
@@ -539,9 +543,9 @@ export default app;
     await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
 
     const mod = await import(pathToFileURL(join(dir, 'index.js')).href) as {
-      default: (event: { request: Request }) => Promise<Response>;
+      default: (event: { req: Request }) => Promise<Response>;
     };
-    const response = await mod.default({ request: new Request('http://localhost/live?x=42') });
+    const response = await mod.default({ req: new Request('http://localhost/live?x=42') });
     assertEquals(response.status, 200);
     const html = await response.text();
     assert(html.includes('live 42'));
@@ -565,6 +569,8 @@ Deno.test('request-time server entry injects the island client script into HTML 
       `import { Hono } from 'hono';
 const app = new Hono();
 app.get('/live', (c) => c.html('<html><body><h1>live</h1></body></html>'));
+export const openElementHandler = (request, context = {}) =>
+  app.fetch(request, context.env || {}, context.platform);
 export default app;
 `,
     );
@@ -575,9 +581,9 @@ export default app;
     );
 
     const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?with-script') as {
-      default: (event: { request: Request }) => Promise<Response>;
+      default: (event: { req: Request }) => Promise<Response>;
     };
-    const response = await mod.default({ request: new Request('http://localhost/live') });
+    const response = await mod.default({ req: new Request('http://localhost/live') });
     const html = await response.text();
     assert(
       html.includes('<script type="module" src="/client/entry-abc123.js"></script>'),
@@ -599,7 +605,12 @@ Deno.test('request-time server entry matchRequestTimeRoute dispatches param rout
   try {
     await Deno.writeTextFile(
       join(dir, 'entry.js'),
-      `import { Hono } from 'hono';\nconst app = new Hono();\nexport default app;\n`,
+      `import { Hono } from 'hono';
+const app = new Hono();
+export const openElementHandler = (request, context = {}) =>
+  app.fetch(request, context.env || {}, context.platform);
+export default app;
+`,
     );
     await Deno.writeTextFile(
       join(dir, 'index.js'),
@@ -623,12 +634,20 @@ Deno.test('request-time server entry matchRequestTimeRoute dispatches param rout
     });
     // The exact route wins over any parameterized pattern.
     assertEquals(mod.matchRequestTimeRoute('/item'), null);
+    // URLPattern groups are raw; the matcher decodes them exactly once.
+    assertEquals(mod.matchRequestTimeRoute('/item/hello%20world'), {
+      path: '/item/:id',
+      params: { id: 'hello world' },
+    });
     // Catch-all matches across segments and keeps the param name.
     assertEquals(mod.matchRequestTimeRoute('/docs/a/b/c'), {
       path: '/docs/:path{.+}',
       params: { path: 'a/b/c' },
     });
     assertEquals(mod.matchRequestTimeRoute('/nope'), null);
+    // #823 survives the URLPattern migration (#856): a malformed
+    // percent-encoded pathname throws URIError so hosts answer 400.
+    assertThrows(() => mod.matchRequestTimeRoute('/item/%zz'), URIError);
   } finally {
     await Deno.remove(dir, { recursive: true }).catch(() => {});
   }

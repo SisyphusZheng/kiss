@@ -50,7 +50,7 @@ export function renderSsgSection(desc: EntryDescriptor): string {
         (r.paramNames || []).map(quoteGeneratedJavaScriptValue).join(', ')
       }], revalidate: ${
         routeRevalidateExpr(r.varName)
-      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "auto"), hasAction: (typeof ${r.varName}.action === "function" || (typeof ${r.varName}.actions === "object" && ${r.varName}.actions !== null)) },`,
+      }, rendering: (__pageDefinition(${r.varName}).renderIntent?.mode || "static"), hasAction: (typeof ${r.varName}.action === "function" || (typeof ${r.varName}.actions === "object" && ${r.varName}.actions !== null)) },`,
     );
   }
   lines.push('];');

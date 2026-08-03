@@ -1,13 +1,25 @@
 /**
- * @openelement/adapter-vite - CLI: start built app (static + request-time)
+ * @openelement/adapter-vite - CLI: serve built output (start | preview)
  *
  * #601: one-command path after `build` so dynamic routes are reachable
  * without tribal Nitro wiring.
  * #622: cross-runtime — works in Node 18+, Deno, and Bun via node:http.
+ * #859 (ADR-0123 item 4): `cli/start` and `cli/preview` merged into one
+ * command with a mode flag; one entry, one doc.
+ *
+ * Modes:
+ *   start (default)  — serve dist/ statically via node:http and, when
+ *                      dist/server/index.js exists, dispatch dynamic routes
+ *                      and mutations to it.
+ *   preview          — static-only `vite preview`; refuses to run when
+ *                      dist/server exists because `vite preview` is silently
+ *                      wrong for dynamic routes (#601). Preview delegates to
+ *                      `vite preview` spawned via `deno run -A npm:vite`, so
+ *                      this mode requires the Deno runtime on PATH.
  *
  * Usage:
  *   node packages/adapter-vite/src/cli/start.ts   (Node with --experimental-strip-types or tsx)
- *   deno run -A npm:@openelement/adapter-vite/cli/start
+ *   deno run -A npm:@openelement/adapter-vite/cli/start [--mode=start|preview] [-- vite preview args]
  *   OPEN_ELEMENT_PORT=4173 deno task start
  */
 
@@ -29,14 +41,87 @@ const serverEntry = join(distDir, 'server', 'index.js');
 const port = Number(process.env.OPEN_ELEMENT_PORT || process.env.PORT || 4173);
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
 
+export type ServeMode = 'start' | 'preview';
+
+/**
+ * Splits `--mode=start|preview` (or `--mode start|preview`) off the CLI args;
+ * the remaining args pass through to `vite preview` in preview mode.
+ */
+export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {
+  const rest: string[] = [];
+  let mode: ServeMode = 'start';
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const inline = arg.match(/^--mode=(.+)$/);
+    if (inline) {
+      mode = parseMode(inline[1]);
+    } else if (arg === '--mode') {
+      const value = argv[++i];
+      if (value === undefined) {
+        throw new Error('[openElement start] --mode requires a value: start or preview.');
+      }
+      mode = parseMode(value);
+    } else {
+      rest.push(arg);
+    }
+  }
+  return { mode, rest };
+}
+
+function parseMode(value: string): ServeMode {
+  if (value === 'start' || value === 'preview') return value;
+  throw new Error(`[openElement start] unknown --mode "${value}"; expected start or preview.`);
+}
+
 async function main(): Promise<void> {
+  let parsed: { mode: ServeMode; rest: string[] };
+  try {
+    parsed = extractServeMode(process.argv.slice(2));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+
   if (!existsSync(distDir)) {
     console.error(
-      '[openElement start] dist/ not found. Run `deno task build` first.',
+      `[openElement ${parsed.mode}] ${DEFAULT_OUT_DIR}/ not found. Run \`deno task build\` first.`,
     );
     process.exit(1);
   }
 
+  if (parsed.mode === 'preview') {
+    await runPreview(parsed.rest);
+    return;
+  }
+  await runStart();
+}
+
+async function runPreview(viteArgs: string[]): Promise<void> {
+  if (existsSync(serverEntry)) {
+    console.error(
+      `[openElement preview] This project has request-time routes (${DEFAULT_OUT_DIR}/server).\n` +
+        '  `vite preview` cannot serve dynamic loader/action routes.\n' +
+        '  Use: deno task start\n' +
+        '  (or: deno run -A npm:@openelement/adapter-vite/cli/start)',
+    );
+    process.exit(1);
+  }
+  // Static-only: delegate to vite preview
+  const { spawn } = await import('node:child_process');
+  const child = spawn('deno', ['run', '-A', 'npm:vite', 'preview', ...viteArgs], {
+    stdio: 'inherit',
+    shell: false,
+  });
+  child.on('error', (err) => {
+    console.error(
+      `[openElement preview] Failed to launch vite preview (requires Deno on PATH): ${err.message}`,
+    );
+    process.exit(1);
+  });
+  child.on('exit', (code) => process.exit(code ?? 1));
+}
+
+async function runStart(): Promise<void> {
   let serverMod: RequestTimeServerModule | null = null;
   if (existsSync(serverEntry)) {
     serverMod = await importRequestTimeServer(serverEntry);
@@ -144,7 +229,9 @@ async function handleRequest(
     const isMutating = request.method !== 'GET' && request.method !== 'HEAD';
     if (match || isMutating) {
       try {
-        return await serverMod.default({ request });
+        // #857: the generated server entry takes the Nitro v3 event shape —
+        // `{ req }` wrapping the standard Request.
+        return await serverMod.default({ req: request });
       } catch (err) {
         console.error('[openElement start] request-time handler error:', err);
         return new Response('Internal Server Error', { status: 500 });
@@ -157,7 +244,7 @@ async function handleRequest(
 
   if (serverMod?.default) {
     try {
-      return await serverMod.default({ request });
+      return await serverMod.default({ req: request });
     } catch (err) {
       console.error('[openElement start] request-time handler error:', err);
       return new Response('Internal Server Error', { status: 500 });

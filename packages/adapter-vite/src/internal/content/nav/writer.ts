@@ -1,14 +1,12 @@
 /**
  * writer.ts - Navigation writer modules
  *
- * Pure serialization helpers that turn scanned NavData into TypeScript /
- * JSON source strings. Extracted from index.ts so the nav plugin can be
+ * Pure serialization helpers that turn scanned NavData into TypeScript
+ * source strings. Extracted from index.ts so the nav plugin can be
  * tested with an in-memory file-system adapter.
  */
 
-import type { HeaderNavLink, NavSection } from '../types.ts';
 import type { NavData } from './scanner.ts';
-import { formatJson } from '../write-json.ts';
 
 /**
  * Generate TypeScript module source code for navigation data.
@@ -24,47 +22,4 @@ export function writeNavModule(data: NavData): string {
     `export const headerNav = ${JSON.stringify(data.headerNav, null, 2)};`,
     `export const navSections = ${JSON.stringify(data.navSections, null, 2)};`,
   ].join('\n') + '\n';
-}
-
-interface SearchIndexEntry {
-  path: string;
-  title: string;
-  section: string;
-  text: string;
-}
-
-export function writeSearchIndex(
-  navSections: NavSection[],
-  headerNav: HeaderNavLink[] = [],
-): string {
-  // Serialization helpers are inlined here. Re-extract when writer logic gets
-  // complex enough to dominate this module.
-  const entries = new Map<string, SearchIndexEntry>();
-  const add = (entry: SearchIndexEntry) => {
-    if (!entry.path.includes(':')) entries.set(entry.path, entry);
-  };
-
-  for (const section of navSections) {
-    for (const item of section.items) {
-      add({
-        path: item.path,
-        title: item.label,
-        section: section.section || item.label,
-        text: `${item.label} ${section.section}`.trim(),
-      });
-    }
-  }
-
-  for (const item of headerNav) {
-    if (!entries.has(item.href)) {
-      add({
-        path: item.href,
-        title: item.label,
-        section: item.label,
-        text: item.label,
-      });
-    }
-  }
-
-  return formatJson([...entries.values()]);
 }

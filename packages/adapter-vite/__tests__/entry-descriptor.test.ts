@@ -6,7 +6,7 @@
  *   2. renderEntry - renders data to code string
  */
 
-import { assertEquals, assertStringIncludes } from '@std/assert';
+import { assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
@@ -313,4 +313,38 @@ Deno.test('buildEntryDescriptor: client:only is excluded from SSR admission', ()
   assertEquals(desc.islands[0].dsd, false);
   assertEquals(desc.ssrAdmissionPlan.clientOnlyTags, ['client-only-widget']);
   assertEquals(desc.ssrAdmissionPlan.renderableTags, []);
+});
+
+// Fetch middleware contract (ADR-0123 item 2, #858)
+
+Deno.test('buildEntryDescriptor: middleware.use functions are serialized in order (#858)', () => {
+  const first = async (_request: Request, next: () => Promise<Response>) => {
+    const response = await next();
+    response.headers.set('x-first', '1');
+    return response;
+  };
+  const second = (_request: Request, next: () => Promise<Response>) => next();
+  const desc = buildEntryDescriptor(sampleRoutes, { middleware: { use: [first, second] } });
+
+  assertEquals(desc.fetchMiddleware?.length, 2);
+  assertStringIncludes(desc.fetchMiddleware?.[0] ?? '', 'x-first');
+  // Serialized sources must evaluate back to self-contained functions.
+  const revived = (desc.fetchMiddleware ?? []).map((source) => (0, eval)(`(${source})`) as unknown);
+  assertEquals(revived.every((fn) => typeof fn === 'function'), true);
+});
+
+Deno.test('buildEntryDescriptor: middleware.use rejects non-functions (#858)', () => {
+  assertThrows(
+    () =>
+      buildEntryDescriptor(sampleRoutes, {
+        middleware: { use: ['nope' as never] },
+      }),
+    Error,
+    'middleware.use[0] must be a function',
+  );
+});
+
+Deno.test('buildEntryDescriptor: no middleware.use leaves fetchMiddleware absent (#858)', () => {
+  const desc = buildEntryDescriptor(sampleRoutes);
+  assertEquals(desc.fetchMiddleware, undefined);
 });

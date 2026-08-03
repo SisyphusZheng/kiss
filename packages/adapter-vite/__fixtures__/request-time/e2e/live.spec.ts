@@ -6,6 +6,7 @@
  * exactly like on static pages, and that static routes are untouched.
  */
 import { expect, test } from '@playwright/test';
+import { createIslandScheduler } from '../../../src/internal/ssg/island-scheduler.ts';
 
 test.describe('request-time rendering', () => {
   test('GET /live renders loader data per request', async ({ request }) => {
@@ -221,30 +222,34 @@ test.describe('protocol hardening (ADR-0121, 0.42.0-alpha.5)', () => {
     expect(toString.status()).toBe(404);
   });
 
-  test('fetch callers receive an ActionResult JSON 404 for unknown named actions (#549)', async ({ request }) => {
+  test('fetch callers receive an RFC 9457 problem+json 404 for unknown named actions (#549, #863)', async ({ request }) => {
     const response = await request.post('/form?/nope', {
       form: { message: 'x' },
       headers: { 'x-openelement-action': 'true' },
     });
     expect(response.status()).toBe(404);
-    expect(response.headers()['content-type']).toContain('application/json');
+    // #863: the action error channel speaks RFC 9457 problem+json.
+    expect(response.headers()['content-type']).toContain('application/problem+json');
     expect(await response.json()).toEqual({
-      type: 'error',
+      type: 'about:blank',
+      title: 'Not Found',
       status: 404,
-      error: { message: 'No action named "nope" on this route.' },
+      detail: 'No action named "nope" on this route.',
     });
   });
 
-  test('fetch callers receive an ActionResult JSON 404 for action-less routes (#549)', async ({ request }) => {
+  test('fetch callers receive an RFC 9457 problem+json 404 for action-less routes (#549, #863)', async ({ request }) => {
     const response = await request.post('/live', {
       form: { x: '1' },
       headers: { 'x-openelement-action': 'true' },
     });
     expect(response.status()).toBe(404);
+    expect(response.headers()['content-type']).toContain('application/problem+json');
     expect(await response.json()).toEqual({
-      type: 'error',
+      type: 'about:blank',
+      title: 'Not Found',
       status: 404,
-      error: { message: 'This route does not accept submissions.' },
+      detail: 'This route does not accept submissions.',
     });
   });
 
@@ -276,8 +281,10 @@ test.describe('protocol hardening (ADR-0121, 0.42.0-alpha.5)', () => {
       headers: { 'x-openelement-action': 'true' },
     });
     expect(fetchResponse.status()).toBe(500);
+    expect(fetchResponse.headers()['content-type']).toContain('application/problem+json');
     const body = await fetchResponse.json();
-    expect(body.type).toBe('error');
+    expect(body.type).toBe('about:blank');
+    expect(body.status).toBe(500);
   });
 
   test('request-time responses carry no-store; the POST endpoint varies on the action header (#550)', async ({ request }) => {
@@ -319,10 +326,12 @@ test.describe('protocol hardening (ADR-0121, 0.42.0-alpha.5)', () => {
       headers: { 'x-openelement-action': 'true' },
     });
     expect(response.status()).toBe(500);
+    expect(response.headers()['content-type']).toContain('application/problem+json');
     const body = await response.json();
-    expect(body.type).toBe('error');
+    expect(body.type).toBe('about:blank');
+    expect(body.title).toBe('Internal Server Error');
     // The fixture is a production build: internals never leak.
-    expect(body.error.message).toBe('Internal Server Error');
+    expect(body.detail).toBe('Internal Server Error');
   });
 
   test('a thrown action renders the error boundary on the HTML channel (#551)', async ({ request }) => {
@@ -568,7 +577,12 @@ test.describe('round-2 morph client fixes (0.42.0-alpha.6)', () => {
       data: '{"x":1}',
     });
     expect(json.status()).toBe(400);
-    expect((await json.json()).type).toBe('error');
+    expect(json.headers()['content-type']).toContain('application/problem+json');
+    const problem = await json.json();
+    expect(problem.type).toBe('about:blank');
+    expect(problem.title).toBe('Bad Request');
+    expect(problem.status).toBe(400);
+    expect(problem.detail).toBe('Could not parse the form body.');
   });
 
   test('405 carries no-store (#586)', async ({ request }) => {
@@ -590,5 +604,254 @@ test.describe('round-2 morph client fixes (0.42.0-alpha.6)', () => {
     expect(await page.evaluate(() => (window as never as { __stillHere?: number }).__stillHere))
       .toBe(1);
     await expect(page.locator('#error')).toHaveText('message is required');
+  });
+});
+
+test.describe('morph/enhance robustness (0.42.0-alpha.13, #603-#606)', () => {
+  test('a focused input keeps focus across a 422 morph (#603)', async ({ page }) => {
+    await page.goto('/form');
+    await page.locator('#message').click();
+    // Enter submits implicitly WITHOUT moving focus to a button.
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#error')).toHaveText('message is required');
+    const activeId = await page.evaluate(() => {
+      let active = document.activeElement;
+      while (active && active.shadowRoot && active.shadowRoot.activeElement) {
+        active = active.shadowRoot.activeElement;
+      }
+      return active ? active.id : null;
+    });
+    expect(activeId).toBe('message');
+  });
+
+  test('focus is restored by id when the focused control is replaced (#603)', async ({ page, request }) => {
+    const html = await (await request.get('/form')).text();
+    // The server "re-renders" the message field as a textarea (same id): the
+    // morph must replace the input, then refocus the successor by id.
+    const swapped = html.replace(
+      '<input id="message" name="message" type="text" value="">',
+      '<textarea id="message" name="message">draft</textarea>',
+    );
+    expect(swapped).not.toBe(html);
+    await page.route('**/form**', async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      await route.fulfill({ status: 200, contentType: 'text/html', body: swapped });
+    });
+    await page.goto('/form');
+    await page.locator('#message').click();
+    await page.keyboard.type('draft');
+    await page.keyboard.press('Enter');
+    // The morph replaced the input with the textarea (async fetch round trip).
+    await expect(page.locator('textarea#message')).toBeAttached();
+    // Focus followed the id to the replacement control.
+    const active = await page.evaluate(() => {
+      let el = document.activeElement;
+      while (el && el.shadowRoot && el.shadowRoot.activeElement) {
+        el = el.shadowRoot.activeElement;
+      }
+      return el ? { id: el.id, tag: el.tagName } : null;
+    });
+    expect(active).toEqual({ id: 'message', tag: 'TEXTAREA' });
+    // The text selection (caret at end of 'draft') was restored too.
+    const caret = await page.evaluate(() => {
+      const el = document.querySelector('page-form')!.shadowRoot!.querySelector(
+        '#message',
+      ) as HTMLTextAreaElement;
+      return el.selectionStart;
+    });
+    expect(caret).toBe(5);
+  });
+
+  test('user-touched form controls keep their live state across a morph (#603)', async ({ page, request }) => {
+    const html = await (await request.get('/form')).text();
+    // Live page (injected below): checkbox WITHOUT checked, server-set with
+    // value v1. Server response: checkbox WITH checked (it echoed the form
+    // data), server-set bumped to v2, message re-rendered with an echo value.
+    let intercepted = html.replace(
+      '<form method="post" data-open-enhance>',
+      '<form method="post" data-open-enhance><input type="checkbox" id="agree" name="agree" checked><input id="server-set" name="server-set" type="text" value="from-server-v2">',
+    );
+    expect(intercepted).not.toBe(html);
+    intercepted = intercepted.replace(
+      '<input id="message" name="message" type="text" value="">',
+      '<input id="message" name="message" type="text" value="server-echo">',
+    );
+    await page.route('**/form**', async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      await route.fulfill({ status: 200, contentType: 'text/html', body: intercepted });
+    });
+    await page.goto('/form');
+    await page.evaluate(() => {
+      const form = document.querySelector('page-form')!.shadowRoot!.querySelector('form')!;
+      form.insertAdjacentHTML(
+        'afterbegin',
+        '<input type="checkbox" id="agree" name="agree"><input id="server-set" name="server-set" type="text" value="from-server-v1">',
+      );
+    });
+    // Touch: check the box, type into #message; leave #server-set untouched.
+    await page.locator('#agree').check();
+    await page.locator('#message').fill('draft');
+    await page.keyboard.press('Enter');
+    // Wait for the morph to land (server-set follows the server: untouched).
+    await expect(page.locator('#server-set')).toHaveValue('from-server-v2');
+    const state = await page.evaluate(() => {
+      const root = document.querySelector('page-form')!.shadowRoot!;
+      const agree = root.querySelector('#agree') as HTMLInputElement;
+      const message = root.querySelector('#message') as HTMLInputElement;
+      const serverSet = root.querySelector('#server-set') as HTMLInputElement;
+      return {
+        agreeChecked: agree.checked,
+        agreeHasAttr: agree.hasAttribute('checked'),
+        messageValue: message.value,
+        messageAttr: message.getAttribute('value'),
+        serverSetAttr: serverSet.getAttribute('value'),
+      };
+    });
+    // Touched controls: live property wins, the attribute is left alone.
+    expect(state.agreeChecked).toBe(true);
+    expect(state.agreeHasAttr).toBe(false);
+    expect(state.messageValue).toBe('draft');
+    expect(state.messageAttr).toBe('');
+    // Untouched control: the server render wins (attribute AND property).
+    expect(state.serverSetAttr).toBe('from-server-v2');
+  });
+
+  test('window scroll position survives an enhanced morph (#603)', async ({ page, request }) => {
+    // The tall-page style must live on BOTH sides of the morph (the morph
+    // syncs attributes away otherwise), so the response is intercepted and
+    // carries the same <style> the live page gets injected below.
+    const html = await (await request.get('/form')).text();
+    const tallStyle = '<style>main{min-height:5000px}</style>';
+    const intercepted = html.replace('<main>', '<main>' + tallStyle + '<p id="morph-landed">m</p>');
+    expect(intercepted).not.toBe(html);
+    await page.route('**/form**', async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      await route.fulfill({ status: 200, contentType: 'text/html', body: intercepted });
+    });
+    await page.goto('/form');
+    // Wait for island hydration to settle (a late CSR re-render would drop
+    // the injected style node and clamp the scroll mid-test).
+    await page.locator('live-counter #increment').click();
+    await expect(page.locator('live-counter #count')).toHaveText('1');
+    await page.evaluate(() => {
+      const main = document.querySelector('page-form')!.shadowRoot!.querySelector('main')!;
+      main.insertAdjacentHTML('afterbegin', '<style>main{min-height:5000px}</style>');
+      globalThis.scrollTo(0, 800);
+    });
+    expect(Math.abs((await page.evaluate(() => globalThis.scrollY)) - 800)).toBeLessThan(2);
+    // requestSubmit, not click: any pointer/keyboard interaction auto-scrolls
+    // the submit button (top of the page) into view and ruins the setup.
+    await page.evaluate(() => {
+      const form = document.querySelector('page-form')!.shadowRoot!.querySelector('form')!;
+      form.requestSubmit();
+    });
+    await expect(page.locator('#morph-landed')).toBeAttached();
+    // Firefox reports fractional scroll positions (devicePixelRatio rounding).
+    expect(Math.abs((await page.evaluate(() => globalThis.scrollY)) - 800)).toBeLessThan(2);
+  });
+
+  test('a morph instantiates nested DSD templates recursively (#604)', async ({ page, request }) => {
+    const html = await (await request.get('/form')).text();
+    // Island-in-island: an outer DSD host whose shadow content carries a
+    // live-counter with its own DSD template (the island's real markup, so
+    // post-instantiation hydration aligns). The inner template is invisible
+    // to querySelectorAll; without recursion it stays inert.
+    const islandMatch = html.match(/<live-counter>[\s\S]*?<\/live-counter>/);
+    expect(islandMatch).toBeTruthy();
+    const nested = '<nested-host><template shadowrootmode="open"><p id="outer-marker">outer</p>' +
+      islandMatch![0] +
+      '</template></nested-host>';
+    const intercepted = html.replace('<live-counter>', nested + '<live-counter>');
+    expect(intercepted).not.toBe(html);
+    await page.route('**/form**', async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      await route.fulfill({ status: 200, contentType: 'text/html', body: intercepted });
+    });
+    await page.goto('/form');
+    await page.click('#submit');
+    await expect(page.locator('#outer-marker')).toHaveText('outer');
+    const innerState = await page.evaluate(() => {
+      const outer = document.querySelector('page-form')!.shadowRoot!.querySelector('nested-host')!;
+      const inner = outer.shadowRoot!.querySelector('live-counter')!;
+      return {
+        outerShadow: !!outer.shadowRoot,
+        innerShadow: !!inner.shadowRoot,
+        inertTemplate: !!inner.querySelector('template[shadowrootmode]'),
+      };
+    });
+    // The inner template was consumed by recursive instantiation (it would
+    // sit inert in the light DOM without #604), and the island hydrated the
+    // server-instantiated shadow root.
+    expect(innerState).toEqual({ outerShadow: true, innerShadow: true, inertTemplate: false });
+    const nestedCounter = page.locator('nested-host live-counter');
+    await nestedCounter.locator('#increment').click();
+    await expect(nestedCounter.locator('#count')).toHaveText('1');
+  });
+
+  test('open:ready fires for the load strategy bucket (#605)', async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __ready: string[] }).__ready = [];
+      document.addEventListener('open:ready', (event) => {
+        (window as unknown as { __ready: string[] }).__ready.push(
+          (event as CustomEvent).detail.strategy,
+        );
+      });
+    });
+    await page.goto('/form');
+    await expect(page.locator('live-counter #increment')).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => (window as never as { __ready: string[] }).__ready))
+      .toContain('load');
+  });
+
+  test('client:visible island inside page DSD loads on intersection (#606)', async ({ page }) => {
+    // The REAL scheduler module, inlined exactly the way generateClientEntry
+    // inlines it, drives this handcrafted page — no fixture rebuild needed.
+    const schedulerSource = createIslandScheduler.toString();
+    let islandFetches = 0;
+    await page.route('**/virtual-entry.js', (route) =>
+      route.fulfill({
+        contentType: 'text/javascript',
+        body: `var __scheduler = (${schedulerSource})({
+  log: { warn: function () {} },
+  win: window,
+  doc: document,
+  map: { 'x-vis': function () { return import('/virtual-island.js'); } },
+  strategies: { load: [], idle: [], visible: ['x-vis'], only: [] },
+  onIslandLoaded: null,
+});`,
+      }));
+    await page.route('**/virtual-island.js', (route) => {
+      islandFetches++;
+      return route.fulfill({
+        contentType: 'text/javascript',
+        body: `customElements.define('x-vis', class extends HTMLElement {
+  connectedCallback() { this.setAttribute('data-hydrated', '1'); }
+});`,
+      });
+    });
+    await page.route('**/sandbox', (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: `<!doctype html><html><body>
+<x-page><template shadowrootmode="open">
+  <div style="height:5000px">spacer</div>
+  <x-vis></x-vis>
+</template></x-page>
+<script>window.__ready = []; document.addEventListener('open:ready', function (e) { window.__ready.push(e.detail.strategy); });</script>
+<script type="module" src="/virtual-entry.js"></script>
+</body></html>`,
+      }));
+    await page.goto('/sandbox');
+    // The island lives inside the page host's DSD shadow root — a light-DOM
+    // querySelectorAll (the removed defineIsland path) never found it.
+    await expect(page.locator('x-vis')).toBeAttached();
+    expect(islandFetches).toBe(0);
+    await page.evaluate(() => globalThis.scrollTo(0, 5000));
+    await expect.poll(() => islandFetches).toBe(1);
+    await expect(page.locator('x-vis')).toHaveAttribute('data-hydrated', '1');
+    await expect
+      .poll(() => page.evaluate(() => (window as never as { __ready: string[] }).__ready))
+      .toContain('visible');
   });
 });

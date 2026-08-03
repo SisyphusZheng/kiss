@@ -14,6 +14,10 @@
  * in dev-only details (client script injection, stack traces) — the test
  * asserts shape, not bytes.
  *
+ * The fixture also configures `middleware.use` (ADR-0123 item 2, #858): the
+ * last step asserts the fetch middleware chain runs in onion order with
+ * identical short-circuit semantics on both runtimes.
+ *
  * Prerequisite: the fixture must be built first —
  *   deno task fixture:request-time:build
  */
@@ -32,8 +36,11 @@ type ServerHandle = { base: string; close: () => Promise<void> };
 
 async function bootBuildServer(): Promise<ServerHandle> {
   const entry = await import(pathToFileURL(serverEntryPath).href);
-  const handle = entry.default as (event: { request: Request }) => Promise<Response>;
-  const server = Deno.serve({ port: 0, hostname: '127.0.0.1' }, (request) => handle({ request }));
+  const handle = entry.default as (event: { req: Request }) => Promise<Response>;
+  const server = Deno.serve(
+    { port: 0, hostname: '127.0.0.1' },
+    (request) => handle({ req: request }),
+  );
   const addr = server.addr as Deno.NetAddr;
   return {
     base: `http://127.0.0.1:${addr.port}`,
@@ -180,7 +187,7 @@ Deno.test({
         }
       });
 
-      await t.step('fetch-header unknown action → ActionResult JSON 404', async () => {
+      await t.step('fetch-header unknown action → RFC 9457 problem+json 404 (#863)', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form?/nope`, {
             method: 'POST',
@@ -193,11 +200,23 @@ Deno.test({
           assertEquals(response.status, 404, `${name}: JSON 404 status`);
           assertStringIncludes(
             response.headers.get('content-type') ?? '',
-            'application/json',
+            'application/problem+json',
             `${name}: JSON 404 content-type`,
           );
-          const body = await response.json() as { type?: string; status?: number };
-          assertEquals(body.type, 'error', `${name}: JSON 404 type`);
+          const body = await response.json() as {
+            type?: string;
+            title?: string;
+            status?: number;
+            detail?: string;
+          };
+          assertEquals(body.type, 'about:blank', `${name}: JSON 404 problem type`);
+          assertEquals(body.title, 'Not Found', `${name}: JSON 404 problem title`);
+          assertEquals(body.status, 404, `${name}: JSON 404 problem status`);
+          assertEquals(
+            body.detail,
+            'No action named "nope" on this route.',
+            `${name}: JSON 404 problem detail`,
+          );
         }
       });
 
@@ -226,8 +245,8 @@ Deno.test({
           assertEquals(json.status, 400, `${name}: JSON body (fetch channel) status`);
           assertStringIncludes(
             json.headers.get('content-type') ?? '',
-            'application/json',
-            `${name}: fetch channel speaks JSON`,
+            'application/problem+json',
+            `${name}: fetch channel errors speak problem+json`,
           );
         }
       });
@@ -242,6 +261,34 @@ Deno.test({
           const get = await fetch(`${base}${post.headers.get('location')}`);
           assertEquals(get.status, 200, `${name}: PRG target status`);
           assertStringIncludes(await get.text(), 'echo=chain', `${name}: PRG target body`);
+        }
+      });
+
+      // ADR-0123 item 2 (#858): the fixture configures middleware.use with an
+      // outer post-processor and an inner short-circuit. Both runtimes must
+      // run the chain in onion order at the handler boundary.
+      await t.step('fetch middleware: onion order + short-circuit parity (#858)', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/live?x=mw`);
+          assertEquals(response.status, 200, `${name}: GET /live status`);
+          // Onion order: the inner middleware post-processes the response
+          // first, so 'inner' precedes 'outer'.
+          assertEquals(
+            response.headers.get('x-fixture-middleware'),
+            'inner, outer',
+            `${name}: middleware onion order`,
+          );
+          await response.body?.cancel();
+
+          const short = await fetch(`${base}/live?mw-short=1`);
+          assertEquals(short.status, 418, `${name}: short-circuit status`);
+          assertEquals(await short.text(), 'fixture short-circuit', `${name}: short-circuit body`);
+          // The outer middleware still wraps the short-circuit response.
+          assertEquals(
+            short.headers.get('x-fixture-middleware'),
+            'outer',
+            `${name}: short-circuit still passes the outer middleware`,
+          );
         }
       });
     } finally {

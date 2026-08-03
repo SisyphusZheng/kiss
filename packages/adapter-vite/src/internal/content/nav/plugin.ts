@@ -2,7 +2,8 @@
  * plugin.ts - Navigation plugin
  *
  * Build-time Vite plugin that scans route files for `meta` exports and writes
- * app/data/_generated-nav.ts and public/search-index.json.
+ * app/data/_generated-nav.ts. Site search is handled separately by Pagefind
+ * (ADR-0123 item 17, #867) — see www/build-pagefind.ts.
  */
 
 import type { Plugin } from 'vite';
@@ -11,7 +12,7 @@ import type { OpenElementBuildContextLike } from '../../protocol/framework.ts';
 import type { FileSystemAdapter } from '../fs-adapter.ts';
 import { nodeFsAdapter } from '../fs-adapter.ts';
 import { scanNavData } from './scanner.ts';
-import { writeNavModule, writeSearchIndex } from './writer.ts';
+import { writeNavModule } from './writer.ts';
 import { createLogger } from '@openelement/element';
 import { join } from 'node:path';
 import { DEFAULT_DATA_DIR, DEFAULT_ROUTES_DIR } from '../../paths.ts';
@@ -45,15 +46,6 @@ export function createNavPlugin(
       const navModule = writeNavModule({ headerNav, navSections });
       fs.writeFileSync(join(dataDir, '_generated-nav.ts'), navModule, 'utf-8');
       log.info(`Nav: wrote _generated-nav.ts (${navSections.length} section(s))`);
-
-      const publicDir = join(fs.cwd(), 'public');
-      fs.mkdirSync(publicDir, { recursive: true });
-      fs.writeFileSync(
-        join(publicDir, 'search-index.json'),
-        writeSearchIndex(navSections, headerNav),
-        'utf-8',
-      );
-      log.info('Search: wrote search-index.json from route metadata');
 
       log.info(`Nav: ${navSections.length} section(s) configured`);
     },

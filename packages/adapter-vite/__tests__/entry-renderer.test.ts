@@ -400,7 +400,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'function __pageDefinition(module) {');
   assertStringIncludes(
     code,
-    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader } from '@openelement/app';",
+    "import { isOpenElementRedirect as __isOpenElementRedirect, isOpenElementNotFound as __isOpenElementNotFound, isActionFailure as __isActionFailure, ACTION_FETCH_HEADER as __actionFetchHeader, PROBLEM_JSON_MEDIA_TYPE as __problemJsonMediaType } from '@openelement/app';",
   );
   assertFalse(code.includes('function __isOpenElementRedirect(error) {'));
   assertFalse(code.includes('function __isOpenElementNotFound(error) {'));
@@ -413,7 +413,7 @@ Deno.test('renderEntry: definePage descriptor feeds load, metadata, and revalida
   assertStringIncludes(code, 'filePath: "index.ts"');
   assertStringIncludes(
     code,
-    'rendering: (__pageDefinition($pageIndex).renderIntent?.mode || "auto")',
+    'rendering: (__pageDefinition($pageIndex).renderIntent?.mode || "static")',
   );
   assertStringIncludes(code, 'title: title || page.head?.title || "openElement"');
   assertStringIncludes(
@@ -846,11 +846,13 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   // #548: the default PRG target strips the ?/name action marker.
   assertStringIncludes(code, '__prgParams.delete(key)');
   assertStringIncludes(code, "{ type: 'redirect', status: 303, location: __prgTarget }");
-  // #549: fetch callers receive an ActionResult JSON 404, not an HTML page.
+  // #549 + #863: fetch callers receive an RFC 9457 problem+json 404, not an
+  // HTML page.
   assertStringIncludes(
     code,
-    "{ type: 'error', status: 404, error: { message: __noActionMessage } }",
+    '{ type: \'about:blank\', title: "Not Found", status: 404, detail: __noActionMessage }',
   );
+  assertStringIncludes(code, "{ 'Content-Type': __problemJsonMediaType }");
   // #550: request-time responses are never cacheable; POST is negotiated.
   assertStringIncludes(code, "c.header('Cache-Control', 'no-store');");
   assertStringIncludes(code, "c.header('Vary', __actionFetchHeader);");
@@ -872,7 +874,7 @@ Deno.test('renderEntry: hasAction codegen covers named `actions` exports (#539)'
   assertStringIncludes(code, '.actions === "object" &&');
 });
 
-Deno.test('renderEntry: action catch paths speak ActionResult to fetch callers', () => {
+Deno.test('renderEntry: action catch paths answer fetch callers (redirect as ActionResult, errors as problem+json)', () => {
   const desc = buildEntryDescriptor(basicRoutes, {});
   const code = renderEntry(desc);
 
@@ -884,5 +886,52 @@ Deno.test('renderEntry: action catch paths speak ActionResult to fetch callers',
     code,
     "{ type: 'redirect', status: __redirectStatus, location: err.location }",
   );
-  assertStringIncludes(code, "{ type: 'error', status: 500, error: { message:");
+  assertStringIncludes(
+    code,
+    '{ type: \'about:blank\', title: "Internal Server Error", status: 500, detail: import.meta.env.PROD',
+  );
+});
+
+// Fetch middleware contract (ADR-0123 item 2, #858)
+
+Deno.test('renderEntry: middleware.use composes at the handler boundary (#858)', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {
+    middleware: {
+      use: [
+        async (_request, next) => {
+          const response = await next();
+          response.headers.set('x-outer', '1');
+          return response;
+        },
+      ],
+    },
+  });
+  const code = renderEntry(desc);
+
+  assertStringIncludes(
+    code,
+    "import { composeFetchMiddleware } from '@openelement/element/build-utils';",
+  );
+  assertStringIncludes(code, 'const __openElementFetchMiddleware = [');
+  // The user middleware source is inlined into the generated entry.
+  assertStringIncludes(code, "response.headers.set('x-outer', '1')");
+  assertStringIncludes(
+    code,
+    'export const openElementHandler = composeFetchMiddleware(' +
+      '__openElementFetchMiddleware, __openElementBaseHandler)',
+  );
+  // Dev-server boundary export (@hono/vite-dev-server reads it via the
+  // `export` option when middleware.use is configured).
+  assertStringIncludes(code, 'export const openElementDevFetch = {');
+  // The raw Hono app stays the default export — SSG prerender is unchanged.
+  assertStringIncludes(code, 'export default app');
+});
+
+Deno.test('renderEntry: no middleware.use keeps the pre-#858 handler shape', () => {
+  const desc = buildEntryDescriptor(basicRoutes);
+  const code = renderEntry(desc);
+
+  assertFalse(code.includes('composeFetchMiddleware'));
+  assertFalse(code.includes('openElementDevFetch'));
+  assertStringIncludes(code, 'export const openElementHandler = (request, context = {}) => {');
 });

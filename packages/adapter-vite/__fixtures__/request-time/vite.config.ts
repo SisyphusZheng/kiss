@@ -26,6 +26,28 @@ export default defineConfig({
       html: {
         title: 'request-time fixture',
       },
+      // ADR-0123 item 2 (#858): fetch middleware contract proof. Both
+      // middlewares are self-contained (their sources are inlined into the
+      // generated entry). The parity contract test asserts the onion order
+      // and the short-circuit behave identically in dev and in the built
+      // server entry.
+      middleware: {
+        use: [
+          async (_request, next) => {
+            const response = await next();
+            response.headers.append('x-fixture-middleware', 'outer');
+            return response;
+          },
+          async (request, next) => {
+            if (new URL(request.url).searchParams.has('mw-short')) {
+              return new Response('fixture short-circuit', { status: 418 });
+            }
+            const response = await next();
+            response.headers.append('x-fixture-middleware', 'inner');
+            return response;
+          },
+        ],
+      },
     }),
   ],
 });

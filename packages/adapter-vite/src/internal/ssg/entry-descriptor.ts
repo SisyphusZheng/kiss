@@ -161,6 +161,20 @@ export function buildEntryDescriptor(
     });
   }
 
+  // --- Fetch middleware (ADR-0123 item 2, #858) ---
+  // Serialized like a function-valued middleware.corsOrigin: the source is
+  // inlined into the generated entry, so each middleware must be
+  // self-contained (no closures over vite.config.ts scope).
+  const fetchMiddleware = (mw?.use ?? []).map((fn, index) => {
+    if (typeof fn !== 'function') {
+      throw new Error(
+        `[openElement] middleware.use[${index}] must be a function ` +
+          `(request: Request, next: () => Promise<Response>) => Promise<Response>; got ${typeof fn}.`,
+      );
+    }
+    return fn.toString();
+  });
+
   // --- Routes ---
   const apiRoutes: ApiRouteDecl[] = routes
     .filter((r) => r.type === 'api' && !r.special)
@@ -263,6 +277,7 @@ export function buildEntryDescriptor(
     isSSG,
     imports,
     middleware,
+    ...(fetchMiddleware.length > 0 ? { fetchMiddleware } : {}),
     apiRoutes,
     pageRoutes,
     islands,

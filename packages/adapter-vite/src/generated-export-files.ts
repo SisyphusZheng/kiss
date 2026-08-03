@@ -5,7 +5,6 @@ export const OPENELEMENT_EXPORT_FILES: Record<string, Record<string, string>> = 
   'adapter-vite': {
     '.': 'src/index.ts',
     'cli/build': 'src/cli/build.ts',
-    'cli/preview': 'src/cli/preview.ts',
     'cli/start': 'src/cli/start.ts',
     'nitro-mount': 'src/nitro-mount.ts',
     'sitemap': 'src/sitemap.ts',

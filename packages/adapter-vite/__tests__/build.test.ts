@@ -132,7 +132,8 @@ Deno.test('build - generateClientEntry', async (t) => {
     const code = generateClientEntry(islands);
     assertStringIncludes(code, 'requestIdleCallback');
     assertStringIncludes(code, 'open:ready');
-    assertStringIncludes(code, 'function __load');
+    // #610: the scheduler module (inlined verbatim) owns load dispatch.
+    assertStringIncludes(code, 'function load(');
   });
 });
 

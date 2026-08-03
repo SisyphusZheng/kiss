@@ -17,6 +17,19 @@ import type {
 } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
 
+/**
+ * #863 / ADR-0123 addendum item 13: the action error channel speaks RFC 9457
+ * Problem Details — application/problem+json with type/title/status/detail —
+ * in place of the bespoke { type: 'error', error: { message } } JSON.
+ * 'about:blank' carries the HTTP reason phrase as the title (RFC 9457 §4.2).
+ * `detailExpr` is emitted verbatim (a quoted literal or a runtime expression).
+ */
+function problemJsonLine(status: number, title: string, detailExpr: string): string {
+  return `c.json({ type: 'about:blank', title: ${
+    JSON.stringify(title)
+  }, status: ${status}, detail: ${detailExpr} }, ${status}, { 'Content-Type': __problemJsonMediaType })`;
+}
+
 export function renderImport(imp: ImportDecl): string {
   const names = imp.alias ? `${imp.names[0]} as ${imp.alias}` : imp.names.join(', ');
   return `import { ${names} } from '${imp.from}'`;
@@ -247,7 +260,9 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   );
   lines.push(`        if (__cross) {`);
   lines.push(
-    `          if (__isFetch) return c.json({ type: 'error', status: 403, error: { message: 'Cross-site form submission rejected' } }, 403);`,
+    `          if (__isFetch) return ${
+      problemJsonLine(403, 'Forbidden', `'Cross-site form submission rejected'`)
+    };`,
   );
   lines.push(`          return c.text('Forbidden', 403);`);
   lines.push(`        }`);
@@ -257,11 +272,12 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(
     `      const __noActionMessage = __actionName !== undefined ? 'No action named "' + __actionName + '" on this route.' : 'This route does not accept submissions.';`,
   );
-  // ADR-0121 section 5 (#549): fetch callers always receive ActionResult
-  // JSON — the two channels never diverge in shape.
+  // ADR-0121 section 5 (#549): fetch callers always receive a defined JSON
+  // answer (problem+json for errors) — the two channels never diverge in
+  // semantics.
   lines.push(`      if (__isFetch) {`);
   lines.push(
-    `        return c.json({ type: 'error', status: 404, error: { message: __noActionMessage } }, 404);`,
+    `        return ${problemJsonLine(404, 'Not Found', '__noActionMessage')};`,
   );
   lines.push(`      }`);
   lines.push(
@@ -279,7 +295,7 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(`    } catch {`);
   lines.push(`      if (__isFetch) {`);
   lines.push(
-    `        return c.json({ type: 'error', status: 400, error: { message: 'Could not parse the form body.' } }, 400);`,
+    `        return ${problemJsonLine(400, 'Bad Request', `'Could not parse the form body.'`)};`,
   );
   lines.push(`      }`);
   lines.push(
@@ -411,15 +427,21 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   lines.push(`    }`);
 
   // ADR-0121 (#558): the JSON error channel scrubs internals in production,
-  // matching the HTML channel. Fetch callers get ActionResult JSON, never
-  // the boundary page.
+  // matching the HTML channel. Fetch callers get RFC 9457 problem+json
+  // (#863), never the boundary page.
   if (isAction) {
     lines.push(`    if (__isFetch) {`);
     lines.push(
       `      console.error('[openElement] Action POST failed for ' + ${pathLiteral} + ':', err)`,
     );
     lines.push(
-      `      return c.json({ type: 'error', status: 500, error: { message: import.meta.env.PROD ? 'Internal Server Error' : String(err && err.message ? err.message : err) } }, 500);`,
+      `      return ${
+        problemJsonLine(
+          500,
+          'Internal Server Error',
+          `import.meta.env.PROD ? 'Internal Server Error' : String(err && err.message ? err.message : err)`,
+        )
+      };`,
     );
     lines.push(`    }`);
   }

@@ -413,6 +413,12 @@ export function createOpenPlugin(
     plugins.push(
       honoDevServer({
         entry: VIRTUAL_ENTRY_ID,
+        // ADR-0123 item 2 (#858): with middleware.use configured, the entry
+        // exposes openElementDevFetch — the dev-server-shaped adapter over the
+        // same composed fetch-middleware handler that the start CLI, the e2e
+        // fixture server, and the Nitro entry use. Without it, keep the
+        // default export (the bare Hono app) so the dev path is unchanged.
+        ...(resolvedOptions.middleware?.use?.length ? { export: 'openElementDevFetch' } : {}),
         injectClientScript: true,
       }) as Plugin,
     );

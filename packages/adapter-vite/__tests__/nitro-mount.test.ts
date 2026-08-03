@@ -2,16 +2,18 @@ import { assertEquals } from '@std/assert';
 import { createRequestContext } from '@openelement/app/model';
 import { createOpenElementNitroHandler } from '../src/nitro-mount.ts';
 
-Deno.test('nitro mount: converts Nitro-like event to Web Request and returns Web Response data', async () => {
+Deno.test('nitro mount: passes the event req through to the handler and returns its Response', async () => {
+  let seen: Request | undefined;
   const handler = createOpenElementNitroHandler({
-    baseUrl: 'https://example.test',
     handler: async (request, context) => {
+      seen = request;
       const body = await request.text();
 
       return new Response(
         JSON.stringify({
           url: request.url,
           method: request.method,
+          contentType: request.headers.get('content-type'),
           body,
           envName: context?.env?.name,
           platform: context?.platform,
@@ -26,37 +28,46 @@ Deno.test('nitro mount: converts Nitro-like event to Web Request and returns Web
     platform: 'node',
   });
 
-  const result = await handler({
+  // Nitro v3 (h3 v2) events carry a srvx ServerRequest, which IS a standard
+  // Request — the mount must not reconstruct it (#857).
+  const req = new Request('https://example.test/api/hello?x=1', {
     method: 'POST',
-    path: '/api/hello?x=1',
     headers: { 'content-type': 'text/plain' },
     body: 'payload',
   });
+  const response = await handler({ req });
 
-  assertEquals(result.status, 201);
-  assertEquals(result.headers.get('content-type'), 'application/json');
-  assertEquals(await result.response.json(), {
+  assertEquals(seen, req);
+  assertEquals(response.status, 201);
+  assertEquals(response.headers.get('content-type'), 'application/json');
+  assertEquals(await response.json(), {
     url: 'https://example.test/api/hello?x=1',
     method: 'POST',
+    contentType: 'text/plain',
     body: 'payload',
     envName: 'test-env',
     platform: 'node',
   });
 });
 
-Deno.test('nitro mount: preserves an existing Web Request from the event', async () => {
+Deno.test('nitro mount: event env/platform override the mount options', async () => {
   const handler = createOpenElementNitroHandler({
-    handler: (request) => new Response(request.url),
+    handler: (_request, context) =>
+      new Response(JSON.stringify({ env: context?.env, platform: context?.platform })),
+    env: { name: 'option-env' },
+    platform: 'option-platform',
   });
 
-  const result = await handler({
-    request: new Request('https://worker.test/from-request'),
+  const response = await handler({
+    req: new Request('https://worker.test/from-request'),
+    env: { name: 'event-env' },
+    platform: 'event-platform',
   });
 
-  assertEquals(await result.response.text(), 'https://worker.test/from-request');
+  assertEquals(await response.json(), { env: { name: 'event-env' }, platform: 'event-platform' });
 });
 
-Deno.test('nitro mount: exposes params through runtime and request contexts', async () => {
+Deno.test('nitro mount: exposes h3 v2 context.params through runtime and request contexts', async () => {
   const contexts: Array<{
     path: string;
     method: string;
@@ -65,7 +76,6 @@ Deno.test('nitro mount: exposes params through runtime and request contexts', as
     platform?: unknown;
   }> = [];
   const handler = createOpenElementNitroHandler({
-    baseUrl: 'https://deploy.test',
     handler: (_request, context) => new Response(context?.params?.slug ?? 'missing'),
     onBeforeRequestContext: (context) => {
       contexts.push({
@@ -80,13 +90,12 @@ Deno.test('nitro mount: exposes params through runtime and request contexts', as
     platform: 'workers',
   });
 
-  const result = await handler({
-    method: 'PUT',
-    path: '/reader/notes?draft=1',
-    params: { slug: 'notes' },
+  const response = await handler({
+    req: new Request('https://deploy.test/reader/notes?draft=1', { method: 'PUT' }),
+    context: { params: { slug: 'notes' } },
   });
 
-  assertEquals(await result.response.text(), 'notes');
+  assertEquals(await response.text(), 'notes');
 
   assertEquals(contexts, [{
     path: '/reader/notes',
@@ -109,7 +118,6 @@ Deno.test('nitro mount: request context shape matches app/model createRequestCon
   let nitroContext: ReturnType<typeof createRequestContext> | undefined;
 
   const handler = createOpenElementNitroHandler({
-    baseUrl: 'https://shape.test',
     onBeforeRequestContext: (context) => {
       nitroContext = context;
     },
@@ -117,9 +125,8 @@ Deno.test('nitro mount: request context shape matches app/model createRequestCon
   });
 
   await handler({
-    method: 'GET',
-    path: '/a/b?x=1&y=2',
-    params: { b: 'b-value' },
+    req: new Request('https://shape.test/a/b?x=1&y=2'),
+    context: { params: { b: 'b-value' } },
     env: { name: 'env' },
     platform: 'node',
   });

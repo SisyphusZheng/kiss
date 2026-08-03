@@ -1,52 +1,34 @@
 import type { OpenElementRequestHandler, RuntimeContext } from '@openelement/element/build-utils';
 import type { OpenElementRequestContext } from '@openelement/app/model';
 
-export interface NitroLikeRequestEvent<
+/**
+ * Minimal Nitro v3 route event shape (#857). Nitro v3 is fetch-native: its h3
+ * v2 event carries `req`, a srvx ServerRequest that already IS a standard
+ * Request, so the pre-v3 method/path/headers/body translation layer is gone.
+ * The mount only wires the OpenElement runtime context around the standard
+ * Request → Response seam.
+ */
+export interface NitroRequestEvent<
   Env extends Record<string, unknown> = Record<string, unknown>,
 > {
-  request?: Request;
-  method?: string;
-  path?: string;
-  url?: string;
-  headers?: HeadersInit;
-  body?: BodyInit | null;
-  params?: Record<string, string>;
+  req: Request;
+  context?: { params?: Record<string, string> };
   env?: Env;
   platform?: unknown;
-}
-
-export interface NitroLikeResponse {
-  status: number;
-  headers: Headers;
-  body: BodyInit | null;
-  response: Response;
 }
 
 export interface OpenElementNitroMountOptions<
   Env extends Record<string, unknown> = Record<string, unknown>,
 > {
   handler: OpenElementRequestHandler<Env>;
-  baseUrl?: string;
   env?: Env;
   platform?: unknown;
   /**
    * Observes the normalized OpenElement request context before the application
-   * handler runs. Route params are empty here unless a future driver supplies
-   * them before dispatch.
+   * handler runs. Route params are empty here unless the host supplies them on
+   * `event.context.params` before dispatch.
    */
   onBeforeRequestContext?: (context: OpenElementRequestContext<Env>) => void | Promise<void>;
-}
-
-function toRequest(event: NitroLikeRequestEvent, baseUrl: string): Request {
-  if (event.request) return event.request;
-
-  const url = event.url ? new URL(event.url, baseUrl) : new URL(event.path || '/', baseUrl);
-
-  return new Request(url, {
-    method: event.method || 'GET',
-    headers: event.headers,
-    body: event.body,
-  });
 }
 
 function createNitroRequestContext<Env extends Record<string, unknown>>(
@@ -71,30 +53,26 @@ function createNitroRequestContext<Env extends Record<string, unknown>>(
   };
 }
 
+/**
+ * Mounts an OpenElement request handler on a Nitro v3 route. Near pass-through:
+ * the event's standard `req` goes in, the handler's Response comes out — h3 v2
+ * serves a returned Response as-is.
+ */
 export function createOpenElementNitroHandler<
   Env extends Record<string, unknown> = Record<string, unknown>,
 >(
   options: OpenElementNitroMountOptions<Env>,
-): (event: NitroLikeRequestEvent<Env>) => Promise<NitroLikeResponse> {
-  const baseUrl = options.baseUrl || 'http://localhost';
-
-  return async (event: NitroLikeRequestEvent<Env>): Promise<NitroLikeResponse> => {
-    const request = toRequest(event, baseUrl);
+): (event: NitroRequestEvent<Env>) => Promise<Response> {
+  return async (event: NitroRequestEvent<Env>): Promise<Response> => {
+    const request = event.req;
     const context: RuntimeContext<Env> = {
-      env: event.env || options.env,
-      platform: event.platform || options.platform,
-      params: event.params,
+      env: event.env ?? options.env,
+      platform: event.platform ?? options.platform,
+      params: event.context?.params,
     };
     await options.onBeforeRequestContext?.(
       createNitroRequestContext(request, context),
     );
-    const response = await options.handler(request, context);
-
-    return {
-      status: response.status,
-      headers: response.headers,
-      body: response.body,
-      response,
-    };
+    return options.handler(request, context);
   };
 }
