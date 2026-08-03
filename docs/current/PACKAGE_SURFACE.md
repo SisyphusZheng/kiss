@@ -12,13 +12,13 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package                     | Responsibility                                                                 | Supported public interface                                              |
-| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`                   |
-| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                                          |
-| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview`, `sitemap` |
-| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                                       |
-| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                                    |
+| Package                     | Responsibility                                                                 | Supported public interface                               |
+| --------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`    |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                           |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `sitemap` |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                        |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                     |
 
 Responsibility wording follows [`STACK_CONTRACT.md`](./STACK_CONTRACT.md),
 the source of truth for the five-package responsibility table.
@@ -58,7 +58,7 @@ promise and are not application-authoring surface.
     "internal": ["i18n"]
   },
   "@openelement/adapter-vite": {
-    "supported": [".", "nitro-mount", "cli/build", "cli/start", "cli/preview", "sitemap"],
+    "supported": [".", "nitro-mount", "cli/build", "cli/start", "sitemap"],
     "internal": []
   },
   "@openelement/create": {
@@ -100,8 +100,10 @@ promise and are not application-authoring surface.
   `plugin-mdx`, `route-manifest`, `cli/build-client`, `cli/build-ssg`) were
   pruned at the 0.41.0 freeze (ADR-0119): they had zero consumer specifiers —
   the build pipeline and generated code import only relatively or through the
-  supported root, `nitro-mount`, `cli/build`, `cli/start`, `cli/preview` and
-  `sitemap` subpaths. The module
+  supported root, `nitro-mount`, `cli/build`, `cli/start` and
+  `sitemap` subpaths. `cli/start` carries a `--mode=start|preview` flag
+  (alpha.13, ADR-0123 item 4): the former standalone `cli/preview` subpath
+  merged into it as preview mode. The module
   files remain inside the package for internal relative imports only.
 - `@openelement/ui` supported subpaths: `open-badge`, `open-button`,
   `open-callout`, `open-card`, `open-code-block`, `open-dialog`,
@@ -126,7 +128,7 @@ a major-version ADR.
 
 ### 0.42 line additions (unfrozen until the 0.42.0 stable decision)
 
-- `definePage({ renderIntent: { mode } })`: `'auto'`/`'static'`/`'dynamic'`
+- `definePage({ renderIntent: { mode } })`: `'static'` (default, prerendered) / `'dynamic'` (per-request; the `'auto'` alias was removed in alpha.13, #609)
   rendering modes; `'dynamic'` routes render per request through the
   generated `dist/server/index.js` (0.42.0-alpha.1). `renderIntent.revalidate`
   declares the ISR revalidate window in seconds for static routes — on the
@@ -143,6 +145,16 @@ a major-version ADR.
 - `ActionResult` / `ACTION_FETCH_HEADER` wire types and the
   `data-open-enhance` / `data-open-preserve` / `data-open-region`
   enhancement attributes with morph-based continuity (0.42.0-alpha.3).
+  Fetch-channel **error** outcomes are RFC 9457 `ProblemDetails` answered as
+  `application/problem+json` (`PROBLEM_JSON_MEDIA_TYPE`) since
+  0.42.0-alpha.13 (#863, ADR-0123 addendum item 13).
+
+- alpha.13 additions (ADR-0123 train): `Middleware` /
+  `composeFetchMiddleware` (element root + `./build-utils`) — the
+  WinterCG-shaped `(request, next) => Response` middleware contract wired
+  through `middleware.use` (#858); `cli/preview` merged into
+  `cli/start --mode=preview` (#859); `PageRenderingMode` narrowed to
+  `'static' | 'dynamic'` (#609).
 
 ## Removed from current graph
 

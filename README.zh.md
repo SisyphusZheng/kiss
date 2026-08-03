@@ -49,9 +49,14 @@ official build path = Vite + Nitro
 不完整历史产物，不构成兼容基线。第三轮审计清扫于 alpha.19 完成（ADR-0118），
 #390 试点在零招募后由 maintainer 决策退役（ADR-0119）。
 
-request-time data 与 forms 已随 `0.42.0` alpha 线发布（动态 loader/action、
-no-JS + 增强表单）；sessions 与 cache 仍是后续产品工作（0.44）。当前承诺是具有
-fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
+`0.42 = WC 轻量全栈（WC light fullstack）`。`0.42.0` alpha 线交付 request-time
+Application Loop：动态 loader/action 路由、no-JS + 增强表单、`build → start`、
+fail-closed 静态预渲染，以及生成 action POST 上的默认同源 CSRF 检查。登录应用通过
+better-auth recipe（基于 Web 标准 `Request` 头）获得支持。
+
+明确**不在** 0.42 宣称范围内（ADR-0122 §5）：框架自有 session/flash、cache/ISR、
+流式 SSR、性能 SLO、第三方 WC SSR 语料（0.43）、生产运行时恢复（0.44）与 auth 包。
+当前承诺是具有 fullstack 输出路径的 static-first 应用，不是泛全栈能力对等宣称。
 
 `1.0.0` 路径是在 Application Loop、WC SSR、Production Runtime 与外部采用证据完成后，
 形成稳定的五包产品。

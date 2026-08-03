@@ -24,7 +24,7 @@
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@preact/signals": "npm:@preact/signals@^2.9.0",
-    "flexsearch": "npm:flexsearch@^0.7",
+    "pagefind": "npm:pagefind@1.5.2",
     "@shoelace-style/shoelace": "npm:@shoelace-style/shoelace@^2.19.0",
     "@material/web/checkbox/checkbox.js": "npm:@material/web@^2.0.0/checkbox/checkbox.js",
     "nitro": "npm:nitro@3.0.0",
@@ -36,7 +36,8 @@
   "nodeModulesDir": "manual",
   "tasks": {
     "dev": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys npm:vite --config vite.config.ts",
-    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:check-artifact-truth",
+    "build": "deno task generate:ui-manifest && (cd www && deno run --config ../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../packages/adapter-vite/src/cli/build.ts) && deno task www:pagefind && deno task www:check-artifact-truth",
+    "www:pagefind": "cd www && deno run --config ../deno.json --allow-read --allow-write --allow-run --allow-env --allow-net --allow-ffi --allow-sys build-pagefind.ts",
     "preview": "cd www && deno run --allow-read --allow-write --allow-net --allow-env --allow-ffi npm:vite preview --config vite.config.ts",
     "workflow:check": "deno run --allow-read --allow-run=git tools/check-project-workflow.ts",
     "workflow:check-slimming": "deno run --allow-read tools/check-workflow-slimming.ts",

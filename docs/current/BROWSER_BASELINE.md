@@ -20,3 +20,15 @@ There is no framework DSD polyfill: browsers without native `shadowrootmode`
 support are outside the supported baseline, and OpenElement host components
 fall back to their light-DOM/hydration paths only where the component itself
 provides one.
+
+## Popover and CSS Anchor Positioning (#865)
+
+Checked 2026-08-03 against the gated engines (Chromium 147, Firefox 148,
+WebKit 26.4, via Playwright smoke): the Popover API (`popover` attribute,
+`togglePopover()`, `:popover-open`, top layer, light dismiss) and CSS Anchor
+Positioning (`anchor-name`/`position-anchor`/`anchor()`) are supported in all
+three. `open-dropdown` therefore carries no fallback path: the content element
+is a native `popover='auto'` and placement relies on anchor positioning, with
+only a static `inset` declaration retained as the out-of-baseline degradation
+(and as the explicit inset Firefox's anchor resolution requires). Browsers
+older than the gated stable line are outside the supported baseline.

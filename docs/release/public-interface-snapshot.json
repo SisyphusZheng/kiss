@@ -11,7 +11,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "04a8245f779866206482fb51bcfaba48938f0973d0ebcfe6cab4b80749027444",
+          "sha256": "14eb94948b0015edc371866c408d43083589f0ca883553783ac5881892a341ae",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -32,7 +32,7 @@
           ]
         },
         "./build-utils": {
-          "sha256": "4e91519fd61f053a8e50898ae89e99385023d15dc81c9a04494c1690643ca8d4",
+          "sha256": "9b69174f14bac84f567c3ab3e2ed6a9e65bb373099da1bf114cbbcfed165802c",
           "publicDeclarations": [
             "export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';"
           ]
@@ -58,7 +58,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "ee22c66426af88ae64af6ca434beda5cc2a251a9dd9620a542811ef00242a02a",
+          "sha256": "78dc1397236bfb89909862da27cf19eae613d6f036ad53a8b319290d16d9b121",
           "publicDeclarations": [
             "export type {",
             "export type {",
@@ -106,7 +106,6 @@
       "exports": {
         ".": "./src/index.ts",
         "./cli/build": "./src/cli/build.ts",
-        "./cli/preview": "./src/cli/preview.ts",
         "./cli/start": "./src/cli/start.ts",
         "./nitro-mount": "./src/nitro-mount.ts",
         "./sitemap": "./src/sitemap.ts"
@@ -128,19 +127,17 @@
           "sha256": "19b817d8d114f0b107b7708675754de3fdc12c76c85c4dd3333814b6643894bd",
           "publicDeclarations": []
         },
-        "./cli/preview": {
-          "sha256": "583c9b3ddf1ae2603c3d08d86e3f5c63dacb047101d031b59691365f3118dbb1",
-          "publicDeclarations": []
-        },
         "./cli/start": {
-          "sha256": "660da179148dc17dcf7123ad68d7a188982aca778ad32369e80d9e474d02ff66",
-          "publicDeclarations": []
+          "sha256": "27285aa876866f6e381413c8a869ea6f4d96a06499fa5d5cb45e50d42205fdaf",
+          "publicDeclarations": [
+            "export type ServeMode = 'start' | 'preview';",
+            "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
+          ]
         },
         "./nitro-mount": {
-          "sha256": "33056a4b4e9c291ea90532ad68268aaa9ad7be1a7f4897986847bd4e54926c47",
+          "sha256": "0ed56d2df8d75bab95dca1cf821332111eea18b1923cfae4f41e9f813d5f45ae",
           "publicDeclarations": [
-            "export interface NitroLikeRequestEvent<",
-            "export interface NitroLikeResponse {",
+            "export interface NitroRequestEvent<",
             "export interface OpenElementNitroMountOptions<",
             "export function createOpenElementNitroHandler<"
           ]
@@ -218,14 +215,14 @@
           ]
         },
         "./open-dropdown": {
-          "sha256": "66af6688d7cd3403afd2726be8e7c0d596f05815daad939563886658d855070c",
+          "sha256": "6d9bca5f0b20cc4c1e1f9f2e08da1cb4ba50b5f6126220de47df157c3d7610a1",
           "publicDeclarations": [
             "export const tagName = 'open-dropdown';",
             "export class OpenDropdown extends OpenElement {"
           ]
         },
         "./open-input": {
-          "sha256": "0fcdd930a6108a66ebfe8f52c76779a871f1f205f30788847ebf1f29d4ffced0",
+          "sha256": "62f244829015a5abac45ff678f48b6b4a6404d734e1ae55a542d398547d0d07a",
           "publicDeclarations": [
             "export const tagName = 'open-input';",
             "export class OpenInput extends OpenElement {"

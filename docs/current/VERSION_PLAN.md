@@ -2,7 +2,8 @@
 
 > Current source package line: `v0.42.0-alpha.12`\
 > Current npm registry line: `v0.42.0-alpha.12` (published 2026-08-02, dist-tag `alpha`)\
-> Next alpha train: `v0.42.0-alpha.13` (TP-6 stable freeze preparation — in flight)\
+> Next alpha train: `v0.42.0-alpha.13` (TP-6 stable freeze preparation +
+> ADR-0123 standards-as-seams train — in flight, TP-5.9)\
 > Active release target: `v0.42.0-alpha.12`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
@@ -25,7 +26,9 @@ request time without touching the ADR-0119 freeze surface.
 OpenElement = Web Components-native fullstack application framework
 0.42 product promise = WC light fullstack
 0.42 scope = request-time application loop + first-mile + CSRF floor
-0.42 does NOT ship = framework session/flash, cache/ISR, auth packages
+0.42 does NOT ship = framework session/flash, cache/ISR, streaming SSR,
+  performance SLOs, third-party WC SSR corpus (0.43), production runtime
+  recovery (0.44), auth packages (ADR-0122 §5)
 login apps = supported via recipes (better-auth) on Web-standard Request
 component contract = standard Custom Elements (unchanged)
 official build path = Vite + Nitro (unchanged)
@@ -36,9 +39,11 @@ no-JS and enhanced form loops; honest npm tags; runnable server artifact;
 fail-closed static prerender; default CSRF same-origin on generated POST;
 documented login via third-party session on `Request` headers.
 
-**Light fullstack does not mean:** framework-owned session store, flash
-across redirects, OAuth package, or production cache/ISR — those remain
-`0.44.0` (or stay recipes forever if a library already owns them).
+**Light fullstack does not mean (the ADR-0122 §5 non-goals):** framework-owned
+session store, flash across redirects, OAuth/auth packages, production
+cache/ISR, streaming SSR, performance SLOs, the third-party WC SSR corpus
+(`0.43.0`), or production runtime recovery — those remain `0.44.0` (or stay
+recipes forever if a library already owns them).
 
 > **ISR status (0.42):** `cache/ISR` is explicitly out of scope for the 0.42 line
 > (it is a 0.44 topic). The `revalidate` page option and the build-time
@@ -396,6 +401,49 @@ scope. Landed 2026-07-30 as commit `1041431f`
   (done 2026-07-30); no frozen-surface change. Note the numbering split:
   #619–#623 is this TP-5.8 train; #632–#644 is the separate alpha.9 cleanup
   train shipped under TP-5.7's version-hole replacement release.
+
+### TP-5.9 — `0.42.0-alpha.13` TP-6 freeze preparation + standards-as-seams train
+
+Goal: land every TP-6 prerequisite that does not require the stable cut
+itself — the migration note, the byte-level upgrade proof, the ADR-0122
+product wording — and run the ADR-0123 standards-as-seams train: seventeen
+issues, all internal/seam changes or additive options that leave both frozen
+surfaces (ADR-0119, ADR-0122 proposal) untouched.
+
+- 准入: TP-5.7 closed; ADR-0122 and ADR-0123 proposed in-repo (done
+  2026-08-02); the alpha.7 in-train-if-capacity items still open.
+- 执行步骤:
+  1. **TP-6 freeze preparation (docs and evidence):** migration note —
+     zero-cost upgrade for static-only 0.41.x users, prose for SPA users,
+     better-auth note (`docs/release/v0.42.0-migration.md`); byte-level
+     upgrade proof with honest normalization record
+     (`docs/release/v0.42.0-alpha.13-static-upgrade-proof.md`); product
+     wording final review — README/STATUS/this plan say
+     `0.42 = WC light fullstack`
+     with the ADR-0122 §5 non-goals; #866 ETag/If-None-Match design note
+     (`docs/design/isr-etag-conditional-requests.md`).
+  2. **ADR-0123 near-term train (items 1–5):** #856 route matching on
+     URLPattern (absorbs the alpha.7 leftover #609 — `PageRenderingMode`
+     placeholder collapse ships under it); #857 slim nitro-mount against
+     Nitro v3 fetch-native handlers; #858 formalize the fetch middleware
+     contract; #859 merge `cli/start` and `cli/preview`; #860 retire the
+     custom ISR runtime instead of wiring it.
+  3. **ADR-0123 addendum train:** #863 RFC 9457 problem+json action error
+     protocol (lands on this train so ADR-0122 freezes it as problem+json);
+     #864 ElementInternals form-association evaluation memo + pilot; #865
+     `open-dropdown` on the Popover API; #867 Pagefind site search.
+  4. **Alpha.7 leftovers (morph/enhance hardening):** #603 focus/scroll/
+     form-control continuity, #604 recursive nested-DSD instantiation, #605
+     consistent `open:ready`, #606 single island scheduler owner, #610
+     extract the morph/enhance client runtime into a testable module.
+  5. **Watched evaluation items (no API change promised):** #861 TC39
+     Signals alignment memo; #862 h3 unification decision point (blocked on
+     h3 v2 stable; may close as a recorded decision).
+- 准出: the four TP-6 preparation deliverables land and `docs:truth` +
+  version anchors stay green; each closed train issue carries its
+  parity/contract test per ADR-0123 ("each alpha.13 item ships with its
+  parity/contract tests first"); no frozen-surface change without an
+  amendment; deferred items keep explicit target lines.
 
 ### TP-6 — `0.42.0` stable decision (freeze light fullstack)
 

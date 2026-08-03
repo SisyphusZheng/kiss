@@ -32,6 +32,15 @@ static, hydrate, or CSR implementation packages.
 - Third-party custom elements are hydrated only according to validated package
   or Custom Elements Manifest metadata.
 
+## Island scheduling events
+
+`open:ready` fires once per non-empty strategy bucket when the generated
+island scheduler starts loading that bucket's islands — consistently for
+`load`, `only`, `idle`, and `visible` strategies (#605, alpha.13). A
+morph-replaced island is a new element and receives a fresh observer, so
+`open:ready` can fire again for the same strategy after an enhanced update
+(#562).
+
 ## Known limitations
 
 - Islands located outside the project root are emitted through the Vite

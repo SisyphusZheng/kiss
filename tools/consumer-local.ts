@@ -323,30 +323,17 @@ writeFileSync(
   `import { createOpenElementNitroHandler } from '${
     pathToFileURL(join(repoRoot, 'packages', 'adapter-vite', 'src', 'nitro-mount.ts')).href
   }';
-import { eventHandler, getMethod, getRequestHeaders, getRequestURL, readRawBody } from 'h3';
+import { eventHandler } from 'h3';
 import { openElementHandler } from '../../dist/server/entry.js';
 
 const handler = createOpenElementNitroHandler({
-  baseUrl: 'http://localhost',
   handler: openElementHandler,
 });
 
-export default eventHandler(async (event) => {
-  const url = getRequestURL(event);
-  const method = getMethod(event);
-  const result = await handler({
-    method,
-    path: url.pathname + url.search,
-    headers: getRequestHeaders(event),
-    // Form actions need the POST body forwarded (#571 starter smoke).
-    body: method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event),
-    platform: {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  });
-  return result.response;
-});
+// Nitro v3 hands over a standard Request via event.req; the mount is a
+// near pass-through (#857). Platform fallbacks keep the starter smoke
+// independent of the preset runtime.
+export default eventHandler((event) => handler(event));
 `,
 );
 

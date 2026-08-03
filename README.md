@@ -62,10 +62,17 @@ baselines. The third audit sweep completed in alpha.19 (see
 and the #390 pilot was retired by maintainer decision after zero recruitment
 (see [ADR-0119](./docs/adr/ADR-0119-stable-0-41-0-scoped-interface-freeze.md)).
 
-Request-time data and forms are shipping on the `0.42.0` alpha line (dynamic
-loader/action, no-JS + enhanced forms). Sessions and cache remain future
-product work (0.44), so the current promise is static-first applications with
-fullstack output paths—not broad fullstack parity.
+`0.42 = WC light fullstack`. The `0.42.0` alpha line ships the request-time
+Application Loop: dynamic loader/action routes, no-JS + enhanced forms,
+`build → start`, fail-closed static prerender and a default same-origin CSRF
+check on generated action POSTs. Login apps are supported via the better-auth
+recipe on Web-standard `Request` headers.
+
+Explicitly **not** in the 0.42 claim (ADR-0122 §5): framework session/flash,
+cache/ISR, streaming SSR, performance SLOs, the third-party WC SSR corpus
+(0.43), production runtime recovery (0.44) and auth packages. The current
+promise is static-first applications with fullstack output paths—not broad
+fullstack parity.
 
 The `1.0.0` path is a stable five-package product after the application loop, WC SSR,
 production runtime and external-adoption evidence are complete.

@@ -76,10 +76,13 @@ with alpha.9; the active line is alpha.10, post-TP-5.7 remediation toward
 **TP-6**). Protocol evidence:
 [`docs/audit/2026-07-27-application-loop-framework-research/`](../audit/2026-07-27-application-loop-framework-research/README.md).
 
-Product promise at `0.42.0`: dynamic loader/action, no-JS + enhanced forms,
-`build → start`, fail-closed static prerender, default same-origin CSRF,
-login via recipe on `Request`. **Not** in 0.42: framework session/flash,
-cache/ISR, auth packages (0.44 or recipes).
+`0.42 = WC light fullstack`. Product promise at `0.42.0`: dynamic
+loader/action, no-JS + enhanced forms, `build → start`, fail-closed static
+prerender, default same-origin CSRF, login via recipe on `Request`.
+Explicitly **not** in the 0.42 claim (ADR-0122 §5): framework session/flash,
+cache/ISR, streaming SSR, performance SLOs, the third-party WC SSR corpus
+(0.43), production runtime recovery (0.44) and auth packages (0.44 or
+recipes).
 
 ## Release direction
 

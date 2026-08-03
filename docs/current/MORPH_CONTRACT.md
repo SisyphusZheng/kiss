@@ -42,6 +42,32 @@ carries a host's shadow content in its `<template shadowrootmode>` child).
 6. A second submit while one is in flight is ignored; cross-form
    responses are ordered by sequence.
 
+## Fetch-channel error protocol (RFC 9457)
+
+Programmatic action callers (`x-openelement-action: true`) receive the
+`ActionResult` union for success/failure/redirect outcomes. **Error**
+outcomes — the CSRF floor 403, an unknown named action 404, an unparseable
+form body 400, and unexpected 500s — answer RFC 9457 Problem Details
+(#863, ADR-0123 addendum item 13): content type `application/problem+json`
+with the members `type` (`about:blank`), `title` (the HTTP reason phrase),
+`status`, and `detail` (the specific explanation). This replaces the bespoke
+`{ type: 'error', status, error: { message } }` envelope shipped in
+alpha.2–alpha.12. Example, a named action that does not exist:
+
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+
+{ "type": "about:blank", "title": "Not Found", "status": 404,
+  "detail": "No action named \"nope\" on this route." }
+```
+
+The enhanced (`enhance`) and native channels are untouched: they keep the
+equivalent semantics as full-HTML responses (403 text, 404/400 status pages,
+500 error boundary), so both channels stay symmetric. The wire shape is
+alpha-unfrozen; it lands on the alpha.13 train so that ADR-0122 acceptance
+freezes it in this problem+json form rather than amending the freeze later.
+
 ## Morph scope
 
 | Scope                                 | Selected by                                                  |
@@ -67,7 +93,16 @@ never touched.
   replacements) have their `<template shadowrootmode>` instantiated
   manually before insertion — the HTML parser is the only other place DSD
   activates — so morphed-in islands show the server render, not a
-  client-initial one.
+  client-initial one. Instantiation is **recursive** (#604): a template
+  nested inside another template's content is invisible to
+  `querySelectorAll` (template content is a separate tree). Nested levels
+  are finished **after** insertion: WebKit permanently skips upgrading an
+  element that was moved into a shadow root while the subtree still
+  belonged to the parser-inert document (not even
+  `customElements.upgrade()` reaches it), so post-insertion the morph
+  recurses into the queued shadow roots and re-inserts any still-
+  unupgraded defined element, which upgrades naturally in every engine.
+  Island-in-island markup is fully upgraded to the server intent.
 - **Island survival**: a hydrated island (live shadow root) survives when
   its light-DOM surface serializes identically (`__islandIntact`):
   attributes equal, and child nodes equal after recursively skipping DSD
@@ -79,6 +114,23 @@ never touched.
   a changed `src` is left stale by design).
 - **State-mirroring attributes**: `open` on `<details>` and `src` on
   `<video>`/`<audio>` are not synced — user state wins.
+- **Form-control properties** (#603): `checked`/`value` on `<input>`,
+  `value` on `<textarea>`, and `selected` on `<option>` are synced **only
+  while the control still mirrors its last server-rendered state**. Once
+  the user (or page script) touches the control — the live property no
+  longer matches the attribute — the attribute is left alone and the live
+  state wins; an untouched control follows the server render. A control
+  can still be replaced outright by a structural morph, in which case the
+  server-rendered state applies (same rule as every other node).
+- **Focus** (#603): a morph is not a navigation. The deep active element
+  is captured before the morph; if the focused control survives (matched
+  or moved), focus is untouched; if it was replaced, the same-`id`
+  successor in the live tree is refocused and a text selection is
+  restored. Controls without an `id` that get replaced lose focus — give
+  inputs stable `id`s, the same rule as dynamic-list rows.
+- **Scroll** (#603): the window scroll position is captured before the
+  morph and restored after it; an enhanced submit never jumps the
+  viewport.
 - **`client:only` and light-DOM islands** have no shadow root and are
   never survival candidates; wrap them in `data-open-preserve` to keep
   their state.
@@ -102,8 +154,16 @@ Every cell is pinned by the request-time fixture e2e (three engines):
 | Fragment preserved on same-page morph                       | `the URL fragment survives a 422 morph`                         |
 | id-keyed islands survive a list prepend                     | `id-keyed islands survive a list prepend`                       |
 | Whitespace-only text around the DSD template                | covered by all survival cells (alpha.4 fix)                     |
+| Focused input keeps focus across a 422 morph                | `a focused input keeps focus across a 422 morph`                |
+| Focus restored by id when the control is replaced           | `focus is restored by id when the focused control is replaced`  |
+| Touched controls keep live state; untouched follow server   | `user-touched form controls keep their live state …`            |
+| Window scroll survives a morph                              | `window scroll position survives an enhanced morph`             |
+| Nested DSD (island-in-island) instantiated recursively      | `a morph instantiates nested DSD templates recursively`         |
+| `open:ready` fires for the `load` bucket                    | `open:ready fires for the load strategy bucket`                 |
+| `client:visible` island inside page DSD loads on scroll     | `client:visible island inside page DSD loads on intersection`   |
 
 Known-uncovered cells (accepted, documented here until a later line):
 island surface change resets state (by design, no e2e); nested islands;
 `client:visible` island replaced before intersecting (re-observation
-code shipped, no e2e); double-submit ordering (code shipped, no e2e).
+code shipped, no e2e); double-submit ordering (code shipped, unit-tested
+in `__tests__/enhance-client.test.ts`).

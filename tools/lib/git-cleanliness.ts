@@ -3,7 +3,6 @@ import { normalize } from 'node:path';
 export const RELEASE_EVIDENCE_PATHS = Object.freeze({
   prefixes: ['docs/release/', 'vendor/', 'www/app/data/_generated-'],
   exact: [
-    'www/public/search-index.json',
     'deno.lock',
   ],
 });
