@@ -1,7 +1,7 @@
 # v0.42.0 — WC Application Loop (light fullstack) release plan
 
-> Current source package line: `v0.42.0-alpha.12`\
-> Current npm registry line: `v0.42.0-alpha.12` (published 2026-08-02, dist-tag `alpha`)\
+> Current source package line: `v0.42.0-alpha.13`\
+> Current npm registry line: `v0.42.0-alpha.13` (published 2026-08-02, dist-tag `alpha`)\
 > Next alpha train: `v0.42.0-alpha.13` (TP-6 stable freeze preparation +
 > ADR-0123 standards-as-seams train — in flight, TP-5.9)\
 > Active release target: `v0.42.0-alpha.12`\

@@ -333,7 +333,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.12',
+      version: 'v0.42.0-alpha.13',
       theme: 'round-6 audit remediation',
       copy:
         'The sixth full-spectrum audit closes 43 issues (#810–#852): a guard-vetoed post-action redirect no longer wipes page data, the CSRF same-origin floor gains real deny/allow e2e proof, malformed URLs are a defined 400, ISR and CSRF claims match shipped behavior, tautological gates are replaced with real ones, and 23 dead icons plus the dead token palette are gone.',
@@ -635,7 +635,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.12' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.13' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
