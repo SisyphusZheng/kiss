@@ -55,9 +55,10 @@ Deno.test('www search island metadata schedules immediate client hydration', asy
   });
 
   const code = generateClientEntry(entries);
-  const loadTags = code.match(/\/\/ client:load islands - import immediately\s*\[(.*?)\]\.filter/s)
-    ?.[1] ?? '';
-  const idleTags = code.match(/var __idleTags = \[(.*?)\];/s)?.[1] ?? '';
+  // #606/#610 (alpha.13): strategy buckets live in the generated scheduler
+  // config — `strategies: { load: [...], idle: [...] }`.
+  const loadTags = code.match(/strategies:\s*\{\s*load:\s*\[(.*?)\]/s)?.[1] ?? '';
+  const idleTags = code.match(/idle:\s*\[(.*?)\]/s)?.[1] ?? '';
 
   assertStringIncludes(
     loadTags,

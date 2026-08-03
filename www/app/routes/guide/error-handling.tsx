@@ -33,7 +33,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'error-definition',
         title: 'The error definition',
         body:
-          'definePage({ error }) is the page-level PageErrorFunction: it receives the render context plus error and renders the failure UI. notFound() and unexpected loader/action throws land here; on the SPA chain a throw is normalized into the same channel instead of silently replacing loader data.',
+          'definePage({ error }) is the page-level PageErrorFunction: it receives the render context plus error and renders the failure UI. notFound() and unexpected loader/action throws land here; on the SPA chain a throw is normalized into the same channel instead of silently replacing loader data. On the programmatic action channel (x-openelement-action: true), error outcomes answer RFC 9457 Problem Details (application/problem+json with type/title/status/detail) instead of a bespoke JSON envelope (#863, ADR-0123) — an alpha-unfrozen wire shape that ADR-0122 acceptance will freeze in this problem+json form.',
       },
     ],
     recipeTitle: 'app/routes/posts/[id].tsx',
@@ -68,7 +68,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'error-definition',
         title: 'error 定义',
         body:
-          'definePage({ error }) 是页面级 PageErrorFunction：它接收渲染上下文外加 error，渲染失败 UI。notFound() 与意外的 loader/action 抛出都会落到这里；SPA 链上 throw 会被规整进同一通道，而不是悄悄替换 loader 数据。',
+          'definePage({ error }) 是页面级 PageErrorFunction：它接收渲染上下文外加 error，渲染失败 UI。notFound() 与意外的 loader/action 抛出都会落到这里；SPA 链上 throw 会被规整进同一通道，而不是悄悄替换 loader 数据。在程序化 action 通道（x-openelement-action: true）上，错误结果以 RFC 9457 Problem Details 应答（application/problem+json，字段 type/title/status/detail），取代此前的自定义 JSON 封装（#863，ADR-0123）——该线格式在 alpha 阶段未冻结，ADR-0122 接受时将以此 problem+json 形态冻结。',
       },
     ],
     recipeTitle: 'app/routes/posts/[id].tsx',

@@ -12,6 +12,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'pipeline-config', label: 'openPipeline()', level: 3 },
       { id: 'full-entry', label: 'openElement() umbrella', level: 3 },
+      { id: 'fetch-middleware', label: 'middleware.use', level: 3 },
       { id: 'spa-mode', label: "mode: 'spa'", level: 3 },
       { id: 'spa-vs-ssg', label: 'SPA vs SSG chains', level: 3 },
     ],
@@ -29,6 +30,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'openElement() umbrella',
         body:
           'Apps that need the content (blog/nav/sitemap) or i18n modules use openElement() from the same package root: it wraps openPipeline and takes the flat option names — routesDir, islandsDir, componentsDir, packageIslands, html, inject, middleware — plus content and i18n module options; omit either module to disable it.',
+      },
+      {
+        id: 'fetch-middleware',
+        title: 'middleware.use — fetch middleware',
+        body:
+          'middleware.use (ADR-0123, #858) registers fetch middleware with the WinterCG shape (request, next) => Promise<Response> — no HTTP-framework dialect. The chain is composed around the generated handler in onion order (use[0] is outermost: first to see the request, last to see the response), outside the built-in requestId/logger/cors/securityHeaders/csp middleware, and runs with identical semantics in the dev server, the start CLI, the e2e fixture server, and the Nitro production entry (locked by the request-time parity contract test). A middleware may short-circuit by returning a Response without calling next(). One constraint: middleware sources are inlined into the generated server entry (same mechanism as a function-valued corsOrigin), so each middleware must be self-contained — no closures over the vite.config.ts module scope. Route-scoped _middleware.ts files keep the Hono dialect and remain available inside the app.',
       },
       {
         id: 'spa-mode',
@@ -51,6 +58,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'pipeline-config', label: 'openPipeline()', level: 3 },
       { id: 'full-entry', label: 'openElement() 伞入口', level: 3 },
+      { id: 'fetch-middleware', label: 'middleware.use', level: 3 },
       { id: 'spa-mode', label: "mode: 'spa'", level: 3 },
       { id: 'spa-vs-ssg', label: 'SPA 与 SSG 两链', level: 3 },
     ],
@@ -68,6 +76,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'openElement() 伞入口',
         body:
           '需要 content（blog/nav/sitemap）或 i18n 模块的应用使用同一包根导出的 openElement()：它包装 openPipeline，采用扁平选项名——routesDir、islandsDir、componentsDir、packageIslands、html、inject、middleware——外加 content 与 i18n 模块选项；省略对应模块即禁用。',
+      },
+      {
+        id: 'fetch-middleware',
+        title: 'middleware.use —— fetch 中间件',
+        body:
+          'middleware.use（ADR-0123，#858）注册 WinterCG 形态的 fetch 中间件：(request, next) => Promise<Response>——不含任何 HTTP 框架方言。中间件链在生成的 handler 边界按洋葱序组合（use[0] 最外层：最先看到请求，最后看到响应），位于内置 requestId/logger/cors/securityHeaders/csp 中间件之外，并在 dev server、start CLI、e2e fixture server 与 Nitro 生产入口四个运行时中保持完全一致的语义（由 request-time parity 契约测试锁定）。中间件可以不调用 next() 直接返回 Response 来短路。一个约束：中间件源码会被内联进生成的 server entry（与函数形态的 corsOrigin 同一机制），因此每个中间件必须自包含——不能闭包引用 vite.config.ts 模块作用域的变量。路由级 _middleware.ts 文件保留 Hono 方言，在应用内部依然可用。',
       },
       {
         id: 'spa-mode',
@@ -106,6 +120,40 @@ export default defineConfig({
       island: { dir: 'app/islands', upgradeStrategy: 'visible' },
       output: { outDir: 'dist' },
       viewTransition: true,
+    }),
+  ],
+});`}</code></pre>
+        </open-code-block>
+        <h3>
+          {zh
+            ? 'vite.config.ts —— middleware.use（#858）'
+            : 'vite.config.ts — middleware.use (#858)'}
+        </h3>
+        <open-code-block>
+          <pre><code>{`import type { Middleware } from '@openelement/element';
+
+// Self-contained: the source is inlined into the generated server entry,
+// so it cannot close over vite.config.ts module scope.
+const responseTime: Middleware = async (request, next) => {
+  const started = Date.now();
+  const response = await next();
+  response.headers.set('x-response-time', String(Date.now() - started));
+  return response;
+};
+
+const guard: Middleware = (request, next) => {
+  // Short-circuit: skip next() and return a Response directly.
+  if (new URL(request.url).pathname.startsWith('/internal')) {
+    return Promise.resolve(new Response('Forbidden', { status: 403 }));
+  }
+  return next();
+};
+
+export default defineConfig({
+  plugins: [
+    ...openElement({
+      // Onion order: responseTime wraps guard wraps the app handler.
+      middleware: { use: [responseTime, guard] },
     }),
   ],
 });`}</code></pre>

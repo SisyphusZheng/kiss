@@ -1,8 +1,9 @@
 /**
  * WWW search island.
  *
- * Full-text search using FlexSearch.
- * Loads a pre-built search index JSON and performs client-side search.
+ * Full-text search using Pagefind (ADR-0123 item 17, #867).
+ * Loads the build-time Pagefind index emitted to /pagefind by
+ * www/build-pagefind.ts and performs client-side search.
  * Triggered by Cmd+K or clicking the search icon.
  *
  * v0.30.1 (ADR-0081): dynamic results are VNodes, and events are JSX handlers.
@@ -29,8 +30,19 @@ interface SearchEntry {
   text: string;
 }
 
-interface FlexSearchDocumentConstructor {
-  Document: new (opts: Record<string, unknown>) => unknown;
+interface PagefindResultData {
+  url: string;
+  meta?: { title?: string };
+  excerpt?: string;
+}
+
+interface PagefindSearchResult {
+  data: () => Promise<PagefindResultData>;
+}
+
+interface PagefindModule {
+  init?: () => Promise<void>;
+  search: (query: string) => Promise<{ results: PagefindSearchResult[] }>;
 }
 
 export const tagName = 'open-search';
@@ -178,6 +190,7 @@ export default class OpenSearch extends OpenElement {
   #open = signal(false);
   #query = signal('');
   #results = signal<SearchEntry[]>([]);
+  #indexMissing = signal(false);
 
   /** v0.28: Computed overlay class string for data-signal-attr binding. */
   #overlayClass = computed(() => this.#open.value ? 'overlay open' : 'overlay');
@@ -187,9 +200,9 @@ export default class OpenSearch extends OpenElement {
 
   // ── Internal state ───────────────────────────────────────────────────────
 
-  private _index: unknown = null;
-  private _entries: SearchEntry[] = [];
+  private _pagefind: PagefindModule | null = null;
   private _loaded = false;
+  private _searchSeq = 0;
   private _inputRef: HTMLInputElement | null = null;
 
   constructor() {
@@ -225,7 +238,7 @@ export default class OpenSearch extends OpenElement {
 
   private _open(): void {
     this.#open.value = true;
-    this._loadIndex();
+    this._loadPagefind();
     requestAnimationFrame(() => this._focusInput());
   }
 
@@ -260,45 +273,77 @@ export default class OpenSearch extends OpenElement {
     this._inputRef?.focus();
   }
 
-  private _runSearch(): void {
-    if (this.#query.value.length < 2 || !this._index) {
+  // ── Search ───────────────────────────────────────────────────────────────
+
+  private async _runSearch(): Promise<void> {
+    const query = this.#query.value.trim();
+    const pagefind = this._pagefind;
+    if (query.length < 2 || !pagefind) {
       this.#results.value = [];
-    } else {
-      const index = this._index as {
-        search: (q: string, opts: { limit: number }) => Array<{ field: string; result: string[] }>;
-      };
-      const paths = new Set<string>();
-      for (const field of index.search(this.#query.value, { limit: 10 })) {
-        field.result.forEach((p) => paths.add(p));
-      }
-      this.#results.value = this._entries
-        .filter((entry) => paths.has(entry.path))
-        .slice(0, 10);
+      return;
     }
+    // Out-of-order guard: only the latest keystroke may publish results.
+    const seq = ++this._searchSeq;
+    try {
+      const response = await pagefind.search(query);
+      const hits = await Promise.all(response.results.slice(0, 10).map((r) => r.data()));
+      if (seq !== this._searchSeq) return;
+      this.#results.value = hits.map((hit) => ({
+        path: hit.url,
+        title: hit.meta?.title || hit.url,
+        section: this._sectionFor(hit.url),
+        text: this._plainExcerpt(hit.excerpt ?? ''),
+      }));
+    } catch {
+      // A failed chunk fetch keeps the previous result list rather than
+      // blanking the overlay mid-typing.
+    }
+  }
+
+  /** '/zh/guide/routing-and-data/' -> 'Guide'; '/' -> 'Home'. */
+  private _sectionFor(url: string): string {
+    const segments = url.split('/').filter(Boolean);
+    if (segments[0] && /^[a-z]{2}$/.test(segments[0])) segments.shift();
+    const first = segments[0] ?? '';
+    return first ? first.charAt(0).toUpperCase() + first.slice(1) : 'Home';
+  }
+
+  /**
+   * Pagefind excerpts are HTML-escaped text plus <mark> highlight tags.
+   * Strip the marks and decode entities so JSX can render plain text safely.
+   */
+  private _plainExcerpt(excerpt: string): string {
+    const entities: Record<string, string> = {
+      lt: '<',
+      gt: '>',
+      amp: '&',
+      quot: '"',
+      '#39': "'",
+    };
+    return excerpt
+      .replace(/<\/?mark>/g, '')
+      .replace(/&(lt|gt|amp|quot|#39);/g, (_, name: string) => entities[name] ?? _);
   }
 
   // ── Index loading ────────────────────────────────────────────────────────
 
-  private async _loadIndex(): Promise<void> {
+  private async _loadPagefind(): Promise<void> {
     if (this._loaded) return;
     this._loaded = true;
     try {
-      const [res, FlexSearchModule] = await Promise.all([
-        fetch('/search-index.json'),
-        import('flexsearch') as Promise<{ default: unknown }>,
-      ]);
-      const FlexSearch = (FlexSearchModule as { default?: unknown }).default || FlexSearchModule;
-      this._entries = await res.json() as SearchEntry[];
-      this._index = new (FlexSearch as FlexSearchDocumentConstructor).Document({
-        document: { id: 'path', index: ['title', 'section', 'text'] },
-        tokenize: 'forward',
-      });
-      for (const entry of this._entries) {
-        (this._index as Record<string, (entry: SearchEntry) => void>).add(entry);
-      }
-      this._runSearch();
+      // The Pagefind assets are emitted post-build into /pagefind, outside
+      // Vite's module graph, so the specifier must stay runtime-dynamic.
+      const pagefindUrl = '/pagefind/pagefind.js';
+      const module = (await import(/* @vite-ignore */ pagefindUrl)) as PagefindModule;
+      await module.init?.();
+      this._pagefind = module;
+      this.#indexMissing.value = false;
+      await this._runSearch();
     } catch {
+      // Dev mode (no built index) or a missing/corrupt index: keep the
+      // overlay usable and surface the empty-state hint instead.
       this._loaded = false;
+      this.#indexMissing.value = true;
     }
   }
 
@@ -321,6 +366,14 @@ export default class OpenSearch extends OpenElement {
           <div class='item-text'>{r.text}</div>
         </a>
       ));
+    }
+
+    if (this.#indexMissing.value) {
+      return [
+        <div key='empty-index-missing' class='empty'>
+          Search index not found — run deno task build to generate it
+        </div>,
+      ];
     }
 
     if (this.#query.value.length >= 2) {

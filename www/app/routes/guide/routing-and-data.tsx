@@ -41,7 +41,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'rendering-modes',
         title: 'Rendering modes',
         body:
-          "renderIntent.mode selects where a page renders: 'auto' (default) and 'static' prerender at build; 'dynamic' skips prerendering and renders per request through the generated dist/server entry, running the route loader on every request. Pages that export an action must declare 'dynamic' — the build rejects prerendered action pages (0.42 line, unfrozen).",
+          "renderIntent.mode selects where a page renders: 'static' (default) prerenders at build; 'dynamic' skips prerendering and renders per request through the generated dist/server entry, running the route loader on every request. Pages that export an action must declare 'dynamic' — the build rejects prerendered action pages (0.42 line, unfrozen).",
       },
       {
         id: 'isr-revalidate',
@@ -59,7 +59,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'action-negotiation',
         title: 'Action fetch negotiation',
         body:
-          'Fetch-based action posts are recognized by the x-openelement-action header (exported as ACTION_FETCH_HEADER from @openelement/app): the built-in morph enhancement sends enhance and receives the same full-HTML responses as the no-JS path; a programmatic caller sends true and receives the serialized ActionResult union — success / failure / redirect / error with status and data. No header means a plain browser form post.',
+          'Fetch-based action posts are recognized by the x-openelement-action header (exported as ACTION_FETCH_HEADER from @openelement/app): the built-in morph enhancement sends enhance and receives the same full-HTML responses as the no-JS path; a programmatic caller sends true and receives the serialized ActionResult union — success / failure / redirect with status and data — while error outcomes answer RFC 9457 problem+json (type/title/status/detail, #863). No header means a plain browser form post.',
       },
       {
         id: 'two-chains',
@@ -105,7 +105,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'rendering-modes',
         title: '渲染模式',
         body:
-          "renderIntent.mode 决定页面在哪里渲染:'auto'(默认)与 'static' 在构建时预渲染;'dynamic' 跳过预渲染,通过生成的 dist/server 入口按请求渲染,每次请求都会运行路由 loader。导出 action 的页面必须声明 'dynamic'——构建会拒绝预渲染的 action 页面(0.42 版本线,未冻结)。",
+          "renderIntent.mode 决定页面在哪里渲染:'static'(默认)在构建时预渲染;'dynamic' 跳过预渲染,通过生成的 dist/server 入口按请求渲染,每次请求都会运行路由 loader。导出 action 的页面必须声明 'dynamic'——构建会拒绝预渲染的 action 页面(0.42 版本线,未冻结)。",
       },
       {
         id: 'isr-revalidate',
@@ -123,7 +123,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'action-negotiation',
         title: 'Action fetch 协商',
         body:
-          '基于 fetch 的 action 提交通过 x-openelement-action 头识别（从 @openelement/app 导出为 ACTION_FETCH_HEADER）：内置 morph 增强发送 enhance，收到与无 JS 路径相同的完整 HTML 响应；编程调用方发送 true，收到序列化的 ActionResult 联合类型——success / failure / redirect / error，带 status 与 data。没有该头即视为普通浏览器表单提交。',
+          '基于 fetch 的 action 提交通过 x-openelement-action 头识别（从 @openelement/app 导出为 ACTION_FETCH_HEADER）：内置 morph 增强发送 enhance，收到与无 JS 路径相同的完整 HTML 响应；编程调用方发送 true，收到序列化的 ActionResult 联合类型——success / failure / redirect，带 status 与 data；错误结果则以 RFC 9457 problem+json 应答（type/title/status/detail，#863）。没有该头即视为普通浏览器表单提交。',
       },
       {
         id: 'two-chains',

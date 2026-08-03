@@ -24,7 +24,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'build-tasks',
         title: 'Build, start, preview',
         body:
-          'A generated project wires three Deno tasks to the adapter CLI subpaths: deno task build runs @openelement/adapter-vite/cli/build; deno task start runs cli/start — one command that serves dist/ statically and, when dist/server/index.js exists, dispatches dynamic routes and mutations to it (port OPEN_ELEMENT_PORT or PORT, default 4173; host OPEN_ELEMENT_HOST). deno task preview is static-only and refuses to run when dist/server exists, pointing at start instead.',
+          'A generated project wires its Deno tasks to the adapter CLI subpaths: deno task build runs @openelement/adapter-vite/cli/build; deno task start runs cli/start — one command that serves dist/ statically and, when dist/server/index.js exists, dispatches dynamic routes and mutations to it (port OPEN_ELEMENT_PORT or PORT, default 4173; host OPEN_ELEMENT_HOST). The same command with --mode=preview is static-only and refuses to run when dist/server exists, pointing at start mode instead.',
       },
       {
         id: 'static-output',
@@ -41,7 +41,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'nitro-presets',
         title: 'Nitro presets',
         body:
-          'Nitro is the first-party production deployment adapter. Bridge the built handler into a Nitro event with createOpenElementNitroHandler from @openelement/adapter-vite/nitro-mount; both supported presets — node-server and cloudflare_module (Workers) — are proven against real Nitro output by the deno task nitro:proof:node / nitro:proof:workers gates.',
+          "Nitro is the first-party production deployment adapter. Bridge the built handler into a Nitro v3 event with createOpenElementNitroHandler from @openelement/adapter-vite/nitro-mount — a near pass-through over the fetch-native seam: the event's standard Request (event.req) goes in, the handler's Response comes out; both supported presets — node-server and cloudflare_module (Workers) — are proven against real Nitro output by the deno task nitro:proof:node / nitro:proof:workers gates.",
       },
       {
         id: 'dev-server',
@@ -75,7 +75,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'build-tasks',
         title: 'Build、start、preview',
         body:
-          '脚手架生成的项目把三个 Deno task 接到 adapter CLI 子路径：deno task build 运行 @openelement/adapter-vite/cli/build；deno task start 运行 cli/start——一条命令伺服构建产物：静态文件来自 dist/，当 dist/server/index.js 存在时，dynamic 路由与变更请求分派给它（端口取 OPEN_ELEMENT_PORT 或 PORT，默认 4173；主机取 OPEN_ELEMENT_HOST）。deno task preview 只伺服静态产物，发现 dist/server 时会拒绝运行并指向 start。',
+          '脚手架生成的项目把 Deno task 接到 adapter CLI 子路径：deno task build 运行 @openelement/adapter-vite/cli/build；deno task start 运行 cli/start——一条命令伺服构建产物：静态文件来自 dist/，当 dist/server/index.js 存在时，dynamic 路由与变更请求分派给它（端口取 OPEN_ELEMENT_PORT 或 PORT，默认 4173；主机取 OPEN_ELEMENT_HOST）。同一条命令加 --mode=preview 即只伺服静态产物，发现 dist/server 时会拒绝运行并指向 start 模式。',
       },
       {
         id: 'static-output',
@@ -92,7 +92,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'nitro-presets',
         title: 'Nitro 预设',
         body:
-          'Nitro 是第一方生产部署 adapter。用 @openelement/adapter-vite/nitro-mount 的 createOpenElementNitroHandler 把构建出的 handler 桥接进 Nitro event；两个受支持的预设——node-server 与 cloudflare_module（Workers）——都由 deno task nitro:proof:node / nitro:proof:workers 门禁对真实 Nitro 产物背书。',
+          'Nitro 是第一方生产部署 adapter。用 @openelement/adapter-vite/nitro-mount 的 createOpenElementNitroHandler 把构建出的 handler 桥接进 Nitro v3 event——在 fetch 原生接缝上近乎透传：event 的标准 Request（event.req）进，handler 的 Response 出；两个受支持的预设——node-server 与 cloudflare_module（Workers）——都由 deno task nitro:proof:node / nitro:proof:workers 门禁对真实 Nitro 产物背书。',
       },
       {
         id: 'dev-server',

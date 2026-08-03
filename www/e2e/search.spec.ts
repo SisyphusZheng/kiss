@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Search', () => {
-  test('generated search index has only live route paths', async ({ request }) => {
-    const res = await request.get('/search-index.json');
+  test('pagefind index is generated and non-empty', async ({ request }) => {
+    const res = await request.get('/pagefind/pagefind-entry.json');
     expect(res.ok()).toBe(true);
-    const entries = await res.json() as Array<{ path: string }>;
-    const stale = ['/guide/routing', '/guide/ssg', '/guide/dsd', '/guide/islands'];
-    expect(entries.map((entry) => entry.path)).not.toEqual(expect.arrayContaining(stale));
-
-    for (const entry of entries.slice(0, 20)) {
-      const route = await request.get(entry.path);
-      expect(route.status(), `${entry.path} should be generated`).toBeLessThan(400);
-    }
+    const entry = await res.json() as {
+      languages?: Record<string, { page_count: number }>;
+    };
+    // The index derives from the built HTML, so stale/removed routes cannot
+    // appear by construction; assert coverage instead of path liveness.
+    const pageCount = Object.values(entry.languages ?? {})
+      .reduce((total, lang) => total + lang.page_count, 0);
+    expect(pageCount).toBeGreaterThan(0);
   });
 
   test('search island returns a live routing result', async ({ page, request }) => {
@@ -24,7 +24,10 @@ test.describe('Search', () => {
       input?.focus();
     });
     await page.keyboard.type('routing');
-    await expect(page.locator('open-search').locator('.result').first()).toBeVisible();
+    // First search pays the Pagefind wasm/index load; allow extra time.
+    await expect(page.locator('open-search').locator('.result').first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     const href = await page.locator('open-search').evaluate((el) => {
       const link = el.shadowRoot?.querySelector('.result') as HTMLAnchorElement | null;
@@ -51,7 +54,8 @@ test.describe('Search', () => {
     await expect(input).toHaveValue('routing');
 
     const firstResult = search.locator('.result').first();
-    await expect(firstResult).toBeVisible();
+    // First search pays the Pagefind wasm/index load; allow extra time.
+    await expect(firstResult).toBeVisible({ timeout: 15_000 });
     const firstHref = await firstResult.getAttribute('href');
     expect(firstHref).toBeTruthy();
     expect(firstHref).not.toBe('/guide/routing');

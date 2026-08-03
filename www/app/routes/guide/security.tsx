@@ -39,7 +39,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     ],
     recipeTitle: 'app/routes/_middleware.ts',
     recipeNote:
-      'middleware.corsOrigin (openElement() option) governs cross-origin resource sharing only — it is not a CSRF check. The two compose: CORS for reads, this guard for writes.',
+      'middleware.corsOrigin (openElement() option) governs cross-origin resource sharing only — it is not a CSRF check. The two compose: CORS for reads, this guard for writes. Guards that do not need the Hono context can also ride middleware.use — the dialect-free fetch middleware chain composed at the handler boundary with identical dev/start/Nitro semantics (see Configuration → middleware.use, /guide/configuration#fetch-middleware).',
   },
   zh: {
     breadcrumb: '指南',
@@ -74,7 +74,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
     ],
     recipeTitle: 'app/routes/_middleware.ts',
     recipeNote:
-      'middleware.corsOrigin（openElement() 选项）只管跨域资源共享，不是 CSRF 校验。两者组合使用：CORS 管读取，这个守卫管写入。',
+      'middleware.corsOrigin（openElement() 选项）只管跨域资源共享，不是 CSRF 校验。两者组合使用：CORS 管读取，这个守卫管写入。不需要 Hono context 的守卫也可以挂在 middleware.use 上——在 handler 边界组合的无方言 fetch 中间件链，dev/start/Nitro 语义一致（见「配置 → middleware.use」，/guide/configuration#fetch-middleware）。',
   },
 };
 

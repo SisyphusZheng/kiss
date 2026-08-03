@@ -151,7 +151,7 @@ const packages: ApiPackage[] = [
       zh: '官方的 Vite、内容、静态构建与 Nitro 输出 adapter。',
     },
     importPath: '@openelement/adapter-vite',
-    exports: ['root', 'nitro-mount', 'cli/build', 'cli/start', 'cli/preview', 'sitemap'],
+    exports: ['root', 'nitro-mount', 'cli/build', 'cli/start', 'sitemap'],
     notes: {
       en: [
         'Use `buildApp()` or the generated build task.',
