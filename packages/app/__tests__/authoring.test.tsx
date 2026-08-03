@@ -56,6 +56,34 @@ Deno.test('definePage() rejects legacy top-level metadata fields', () => {
   );
 });
 
+Deno.test("definePage() defaults renderIntent.mode to 'static' (#609)", () => {
+  const Page = definePage({
+    render() {
+      return <main>default mode</main>;
+    },
+  });
+
+  // The collapsed 'auto' placeholder: an unset mode is 'static' (prerender).
+  assertEquals(Page.openElementPage.renderIntent.mode, 'static');
+});
+
+Deno.test("definePage() rejects the collapsed 'auto' mode and invalid modes (#609)", () => {
+  for (const mode of ['auto', 'dynmaic']) {
+    assertThrows(
+      () => {
+        definePage({
+          renderIntent: { mode: mode as never },
+          render() {
+            return <main>nope</main>;
+          },
+        });
+      },
+      Error,
+      "renderIntent.mode must be 'static' or 'dynamic'",
+    );
+  }
+});
+
 Deno.test('definePage() canonical descriptor exposes metadata and load data to render()', async () => {
   const Page = definePage({
     route: { path: '/', id: 'home' },

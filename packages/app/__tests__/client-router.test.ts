@@ -105,6 +105,27 @@ Deno.test('client router matches Hono-style `:param{.+}` catch-all patterns (#81
   );
 });
 
+Deno.test('client router semantics are WHATWG URLPattern semantics (#856, ADR-0123)', () => {
+  const fixtures: RouteConfig[] = [
+    { path: '/assets/:path*', tagName: 'asset-page' },
+    { path: '/products/:slug{.+}', tagName: 'product-page' },
+    { path: '/docs/new', tagName: 'new-page' },
+  ];
+
+  // `:param*` is zero-or-more segments: the bare prefix matches, with the
+  // param absent (URLPattern reports an unmatched repeat as undefined).
+  assertEquals(matchRoute('/assets', '', fixtures)?.route.tagName, 'asset-page');
+  assertEquals(matchRoute('/assets', '', fixtures)?.params.path, undefined);
+  // Multi-segment captures decode percent-encoded input exactly once.
+  assertEquals(matchRoute('/assets/a%20b/c', '', fixtures)?.params.path, 'a b/c');
+  // `:param{.+}` is the URLPattern `:param(.+)` regex group: one or more
+  // segments, decoded under the plain param name.
+  assertEquals(matchRoute('/products/a%20b/c', '', fixtures)?.params.slug, 'a b/c');
+  // URLPattern pathname matching is strict about trailing slashes — the old
+  // hand-written matcher silently ignored them.
+  assertEquals(matchRoute('/docs/new/', '', fixtures), null);
+});
+
 Deno.test('client router dispose removes event listeners and double dispose is safe', () => {
   const original = {
     location: Object.getOwnPropertyDescriptor(globalThis, 'location'),

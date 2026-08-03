@@ -5,6 +5,13 @@
  * Route patterns use `:param` for named params, `:param?` for optional params,
  * and `:param{.+}` for a multi-segment catch-all (Hono-style, as emitted by the
  * SSG route scanner — #812).
+ *
+ * Matching semantics are the WHATWG URLPattern standard (#856, ADR-0123):
+ * patterns are translated to URLPattern (`:param{.+}` -> `:param(.+)`) and
+ * matched through the native implementation, same as the element context's
+ * extractParams. The route trie survives purely as a candidate-narrowing
+ * performance index; every candidate is confirmed by URLPattern, and the
+ * linear matcher remains as the equivalence oracle in tests.
  */
 // SPA loader/action contexts are deliberately narrower than the request-time
 // LoaderContext/ActionContext: the client-side chain supplies only params
@@ -75,60 +82,56 @@ function resolveMode(mode: RouterMode): 'history' | 'hash' {
   return mode;
 }
 
+/**
+ * Translate a route path to a URLPattern pathname (#856, ADR-0123). The
+ * framework dialect is already URLPattern-shaped (`:param`, `:param?`,
+ * `:param*`, `*` are native); only the Hono-style `:name{regex}` catch-all
+ * emitted by the SSG route scanner (#812) needs rewriting to the URLPattern
+ * `:name(regex)` form.
+ */
+function routePathToURLPatternPath(path: string): string {
+  return path
+    .split('/')
+    .map((segment) => {
+      const brace = segment.startsWith(':') ? segment.indexOf('{') : -1;
+      if (brace === -1 || !segment.endsWith('}')) return segment;
+      return `${segment.slice(0, brace)}(${segment.slice(brace + 1, -1)})`;
+    })
+    .join('/');
+}
+
+const urlPatternCache = new Map<string, URLPattern>();
+
+function compiledPatternFor(pattern: string): URLPattern {
+  let compiled = urlPatternCache.get(pattern);
+  if (!compiled) {
+    // An invalid pattern fails fast at construction instead of silently
+    // never matching — same contract as the element context's extractParams.
+    compiled = new URLPattern({ pathname: routePathToURLPatternPath(pattern) });
+    urlPatternCache.set(pattern, compiled);
+  }
+  return compiled;
+}
+
 function matchPattern(
   pattern: string,
   pathname: string,
 ): ParamMap | null {
-  const patternParts = pattern === '/' ? [] : pattern.split('/').filter(Boolean);
-  const pathParts = pathname === '/' ? [] : pathname.split('/').filter(Boolean);
+  const match = compiledPatternFor(pattern).exec({
+    protocol: 'https',
+    hostname: 'localhost',
+    pathname,
+  });
+  if (match === null) return null;
 
   const params: ParamMap = new Map();
-  let pi = 0;
-
-  for (let i = 0; i < patternParts.length; i++) {
-    const part = patternParts[i];
-    if (part === '*') {
-      pi = pathParts.length;
-      break;
-    }
-    if (part.startsWith(':') && part.endsWith('*')) {
-      const name = part.slice(1, -1);
-      setParam(params, name, decodePathComponent(pathParts.slice(pi).join('/')));
-      pi = pathParts.length;
-      break;
-    }
-    if (part.startsWith(':') && part.endsWith('{.+}')) {
-      // Hono-style catch-all emitted by the SSG route scanner (#812): captures
-      // one or more remaining segments into the named param.
-      if (pi >= pathParts.length) return null; // `{.+}` requires at least one segment
-      const name = part.slice(1, -'{.+}'.length);
-      setParam(params, name, decodePathComponent(pathParts.slice(pi).join('/')));
-      pi = pathParts.length;
-      break;
-    }
-    const isOptional = part.endsWith('?');
-    const clean = isOptional ? part.slice(0, -1) : part;
-
-    if (clean.startsWith(':')) {
-      const name = clean.slice(1);
-      if (pi < pathParts.length) {
-        setParam(params, name, decodePathComponent(pathParts[pi]));
-        pi++;
-      } else if (!isOptional) {
-        return null; // required param missing
-      }
-      // optional param missing → ok, not added to params
-    } else {
-      if (pi >= pathParts.length || pathParts[pi] !== clean) {
-        return null; // literal mismatch
-      }
-      pi++;
-    }
+  for (const [name, value] of Object.entries(match.pathname.groups)) {
+    // Absent optional params surface as undefined; unnamed wildcards (`*`)
+    // surface under numeric keys and are not exposed as params.
+    if (value === undefined || /^\d+$/.test(name)) continue;
+    // URLPattern groups are raw percent-encoded text; decode exactly once.
+    setParam(params, name, decodePathComponent(value));
   }
-
-  // Must consume all path segments
-  if (pi < pathParts.length) return null;
-
   return params;
 }
 

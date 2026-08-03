@@ -26,7 +26,19 @@ import {
 import type { HydrationStrategy } from '@openelement/element';
 import type { PageHostElement } from './internal/page-host-data.ts';
 
-export type PageRenderingMode = 'auto' | 'static' | 'dynamic';
+/**
+ * Where a page renders (#609, ADR-0123):
+ * - `'static'` (default when renderIntent.mode is unset): prerendered at
+ *   build time by SSG; pages exporting an action must NOT use this mode —
+ *   the build rejects prerendered action pages (ADR-0120).
+ * - `'dynamic'`: skipped by prerendering and rendered per request through
+ *   the generated `dist/server` entry, running the route loader on every
+ *   request.
+ *
+ * The former `'auto'` value collapsed into `'static'`: it never had distinct
+ * behavior — an unset or `'auto'` mode always meant prerender-at-build.
+ */
+export type PageRenderingMode = 'static' | 'dynamic';
 /**
  * @experimental ISR is not active in 0.42 (see `docs/current/VERSION_PLAN.md`).
  * `revalidate` is recorded on the route but does NOT enable caching in this
@@ -284,10 +296,10 @@ export function definePage<
   const definition = input;
   // ADR-0121 (#572): validate the mode at definition time — a typo like
   // 'dynmaic' must not silently prerender a request-time page.
-  const renderMode = definition.renderIntent?.mode ?? 'auto';
-  if (renderMode !== 'auto' && renderMode !== 'static' && renderMode !== 'dynamic') {
+  const renderMode = definition.renderIntent?.mode ?? 'static';
+  if (renderMode !== 'static' && renderMode !== 'dynamic') {
     throw new Error(
-      `${ERROR_PREFIX} renderIntent.mode must be 'auto', 'static' or 'dynamic' ` +
+      `${ERROR_PREFIX} renderIntent.mode must be 'static' or 'dynamic' ` +
         `(got "${String(definition.renderIntent?.mode)}").`,
     );
   }

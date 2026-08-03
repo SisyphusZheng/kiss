@@ -37,12 +37,13 @@ export type {
   ActionResult,
   Loader,
   LoaderContext,
+  ProblemDetails,
   SpaAction,
   SpaActionContext,
   SpaLoader,
   SpaLoaderContext,
 } from '@openelement/element';
-export { ACTION_FETCH_HEADER } from '@openelement/element';
+export { ACTION_FETCH_HEADER, PROBLEM_JSON_MEDIA_TYPE } from '@openelement/element';
 
 // Re-export from @openelement/element for convenience
 export { defineElement } from '@openelement/element';
