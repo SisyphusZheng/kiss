@@ -334,9 +334,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.42.0-alpha.13',
-      theme: 'round-6 audit remediation',
+      theme: 'standards as seams + TP-6 freeze preparation',
       copy:
-        'The sixth full-spectrum audit closes 43 issues (#810–#852): a guard-vetoed post-action redirect no longer wipes page data, the CSRF same-origin floor gains real deny/allow e2e proof, malformed URLs are a defined 400, ISR and CSRF claims match shipped behavior, tautological gates are replaced with real ones, and 23 dead icons plus the dead token palette are gone.',
+        'The standards-as-seams train closes 16 issues (#603–#610, #856–#860, #863–#867): the morph client becomes a real tested module and keeps focus, scroll and form state across enhances, nested DSD instantiates recursively, route matching standardizes on URLPattern, action errors speak RFC 9457 problem+json, a WinterCG fetch middleware contract lands, nitro-mount thins to a Nitro v3 pass-through, open-dropdown moves to the Popover API, open-input becomes a real form citizen via ElementInternals, and search goes full-text with Pagefind.',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -382,10 +382,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.12',
-      theme: '第六轮审计整改',
+      version: 'v0.42.0-alpha.13',
+      theme: '标准化缝合 + TP-6 冻结准备',
       copy:
-        '第六轮全谱审计关闭 43 个 issue（#810–#852）：被守卫否决的 post-action 重定向不再清空页面数据，CSRF 同源地板获得真实的 deny/allow e2e 证据，畸形 URL 是明确的 400，ISR 与 CSRF 的表述与已发布行为一致，同义反复的门禁被替换为真实门禁，23 个死图标连同死 token 调色板一并移除。',
+        'standards-as-seams 列车关闭 16 个 issue（#603–#610、#856–#860、#863–#867）：morph 客户端成为真实可测模块，增强更新跨 focus/scroll/表单状态存活，嵌套 DSD 递归实例化，路由匹配统一到 URLPattern，action 错误改说 RFC 9457 problem+json，WinterCG fetch 中间件契约落地，nitro-mount 瘦成 Nitro v3 透传，open-dropdown 迁移到 Popover API，open-input 经 ElementInternals 成为真正的表单公民，搜索换成 Pagefind 全文检索。',
       state: 'stable',
       stamp: 'CURRENT',
     },
