@@ -4,7 +4,7 @@
 > Current npm registry line: `v0.42.0-alpha.13` (published 2026-08-02, dist-tag `alpha`)\
 > Next alpha train: `v0.42.0-alpha.13` (TP-6 stable freeze preparation +
 > ADR-0123 standards-as-seams train — in flight, TP-5.9)\
-> Active release target: `v0.42.0-alpha.12`\
+> Active release target: `v0.42.0-alpha.13`\
 > Planning release target: `v0.42.0` (WC light fullstack / Application Loop)\
 > Next release line: `v0.43.0` (Universal WC SSR)\
 > Current maturity stage: stable (0.41.x line); 0.42.0 planned under ADR-0120

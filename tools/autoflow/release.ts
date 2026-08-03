@@ -986,6 +986,11 @@ export function buildVersionAnchorReplacements(
       'Active release target: `$TAG`',
     ],
     [
+      'docs/current/VERSION_PLAN.md',
+      'Active release target: `$PVT`',
+      'Active release target: `$TAG`',
+    ],
+    [
       'docs/roadmap/ROADMAP.md',
       'Active execution target: `$PVT`.',
       'Active execution target: `$TAG`.',

@@ -45,7 +45,7 @@ Deno.test('buildVersionAnchorReplacements: covers all live versioned files', () 
   // anchors appear twice: once for the current-tag form and once for the
   // lag-state previous-tag form (#754). The interop example anchor likewise
   // covers the source-line and lagging npm-published forms.
-  assertEquals(reps.length, 31);
+  assertEquals(reps.length, 32);
 
   const seen = new Set<string>();
   for (const [path, from, to] of reps) {
@@ -475,11 +475,12 @@ Deno.test('buildVersionAnchorReplacements: bump updates the VERSION_PLAN head li
   const version = '9.9.9';
   const reps = buildVersionAnchorReplacements(version)
     .filter(([path]) => path === 'docs/current/VERSION_PLAN.md');
-  // Source line + registry line in both accepted states (#754).
-  assertEquals(reps.length, 3);
+  // Source line + registry line in both accepted states (#754), plus the
+  // active release target line (alpha.13).
+  assertEquals(reps.length, 4);
 
   // Simulate the bump against the plan's real head shape: the two header
-  // lines move to the target while the active release target is untouched.
+  // lines and the active release target all move to the target.
   const head = [
     `# v${version} — plan`,
     '',
