@@ -9,6 +9,30 @@ export class NpmViewError extends Error {
 
 export type NpmReleaseQuery = (specifier: string, field: string) => Promise<string>;
 
+/** Run `npm view <specifier> <field> --json` and parse the JSON string value. */
+export async function npmView(specifier: string, field: string): Promise<string> {
+  const output = await new Deno.Command('npm', {
+    args: ['view', specifier, field, '--json'],
+    stdout: 'piped',
+    stderr: 'piped',
+  }).output();
+  const stderr = new TextDecoder().decode(output.stderr);
+  if (!output.success) {
+    const retryable = !/\b(?:E401|E403)\b/u.test(stderr);
+    throw new NpmViewError(`npm view ${specifier} ${field} failed: ${stderr.trim()}`, retryable);
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(new TextDecoder().decode(output.stdout)) as unknown;
+  } catch (error) {
+    throw new NpmViewError(`Invalid npm JSON for ${specifier} ${field}: ${error}`, false);
+  }
+  if (typeof value !== 'string') {
+    throw new NpmViewError(`Unexpected npm value for ${specifier} ${field}`, false);
+  }
+  return value;
+}
+
 export interface VerifyNpmReleaseOptions {
   version: string;
   packages: string[];

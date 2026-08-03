@@ -160,7 +160,7 @@ export const publicCheck: DocsTruthCheck = {
 };
 
 // ─── current: legacy API references ────────────────────────────────────────
-import { walk } from './lib/fs.ts';
+import { walk } from '@std/fs/walk';
 
 const LEGACY: Array<{ re: RegExp; name: string }> = [
   { re: /\bhtml\s*`(?=[^`]*\$\{)/u, name: 'html tagged template' },
@@ -220,19 +220,26 @@ export const currentCheck: DocsTruthCheck = {
     }
 
     for (const dir of ['www/app/routes', 'docs']) {
-      for await (const file of walk(dir, { skip: ['node_modules', 'dist', '.git'] })) {
+      for await (
+        const { path: file } of walk(dir, {
+          includeDirs: false,
+          skip: [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)\.git(\/|$)/],
+        })
+      ) {
         await check(file);
       }
     }
-    for (const file of [
-      'packages/element/README.md',
-      'packages/app/README.md',
-      'packages/adapter-vite/README.md',
-      'packages/create/README.md',
-      'packages/ui/README.md',
-      'README.md',
-      'README.zh.md',
-    ]) {
+    for (
+      const file of [
+        'packages/element/README.md',
+        'packages/app/README.md',
+        'packages/adapter-vite/README.md',
+        'packages/create/README.md',
+        'packages/ui/README.md',
+        'README.md',
+        'README.zh.md',
+      ]
+    ) {
       await check(file);
     }
 
@@ -349,7 +356,12 @@ export const wwwCheck: DocsTruthCheck = {
     }
 
     for (const root of sourceRoots) {
-      for await (const file of walk(root, { skip: ['dist'] })) {
+      for await (
+        const { path: file } of walk(root, {
+          includeDirs: false,
+          skip: [/(^|\/)dist(\/|$)/],
+        })
+      ) {
         if (/\.(?:ts|tsx|md)$/.test(file)) await wwwCheckFile(file, issues);
       }
     }
@@ -369,7 +381,12 @@ export const wwwCheck: DocsTruthCheck = {
     }
 
     if (opts.artifacts) {
-      for await (const file of walk('www/dist', { skip: ['blog'] })) {
+      for await (
+        const { path: file } of walk('www/dist', {
+          includeDirs: false,
+          skip: [/(^|\/)blog(\/|$)/],
+        })
+      ) {
         if (
           /(?:^|\/)(?:(?:blog|changelog)(?:\.html|\/index\.html)|guide\/migration\/index\.html)$/
             .test(file)
@@ -587,7 +604,8 @@ export const evidenceCheck: DocsTruthCheck = {
       if (actualTagCommit !== closureRecord.tagCommit) {
         failures.push({
           file: closurePath,
-          message: `release tag ${tag} moved: expected ${closureRecord.tagCommit}, got ${actualTagCommit}`,
+          message:
+            `release tag ${tag} moved: expected ${closureRecord.tagCommit}, got ${actualTagCommit}`,
         });
       }
       await evidenceGit(['cat-file', '-e', `${closureRecord.finalEvidenceCommit}^{commit}`]);
@@ -603,7 +621,12 @@ export const evidenceCheck: DocsTruthCheck = {
         record: closureRecord,
         tagIsAncestorOfFinal: await (async () => {
           const r = await new Deno.Command('git', {
-            args: ['merge-base', '--is-ancestor', closureRecord.tagCommit, closureRecord.finalEvidenceCommit],
+            args: [
+              'merge-base',
+              '--is-ancestor',
+              closureRecord.tagCommit,
+              closureRecord.finalEvidenceCommit,
+            ],
             stdout: 'null',
             stderr: 'null',
           }).output();
@@ -685,9 +708,7 @@ function parseArgs(args: string[]): { name?: string; artifacts: boolean } {
 
 if (import.meta.main) {
   const { name, artifacts } = parseArgs(Deno.args);
-  const checks = name
-    ? docsTruthChecks.filter((check) => check.name === name)
-    : docsTruthChecks;
+  const checks = name ? docsTruthChecks.filter((check) => check.name === name) : docsTruthChecks;
   if (name && checks.length === 0) {
     console.error(`Unknown docs-truth check: ${name}`);
     Deno.exit(1);

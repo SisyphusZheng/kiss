@@ -17,6 +17,7 @@ import { assertCleanWorktree } from './lib/git-cleanliness.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { extractStaticModuleSpecifiers } from './lib/typescript-ast.ts';
 import { npmTarballName, tarballPath } from './lib/npm-tarball.ts';
+import { npmView } from './lib/npm-release-verifier.ts';
 
 const COMMANDS = new Set(['pack', 'pack:dry-run', 'publish:npm', 'publish:npm:dry-run']);
 
@@ -202,13 +203,13 @@ async function packPackage(
 }
 
 async function npmPackageVersionExists(name: string, version: string): Promise<boolean> {
-  const command = new Deno.Command('npm', {
-    args: ['view', `${name}@${version}`, 'version'],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  return output.success && new TextDecoder().decode(output.stdout).trim() === version;
+  try {
+    return await npmView(`${name}@${version}`, 'version') === version;
+  } catch {
+    // #875: keep the lazy semantics — a failed registry query must not block
+    // publish; the publish step itself retries/propagates real failures.
+    return false;
+  }
 }
 
 export interface PublishPackageIo {
