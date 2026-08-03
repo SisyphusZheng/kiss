@@ -5,6 +5,7 @@ import {
   assertMojibake,
   assertStructuredMetadata,
   failMatches,
+  isAtOrAfter,
   isCurrentDocOrExample,
   isProductionSource,
   type Issue,
@@ -171,4 +172,17 @@ Deno.test('arch: isTextPath recognizes text extensions only', () => {
   assert(isTextPath('a.json'));
   assert(!isTextPath('a.png'));
   assert(!isTextPath('a.png'));
+});
+
+Deno.test('arch: isAtOrAfter orders release and prerelease versions', () => {
+  assert(isAtOrAfter('0.44.0', '0.44.0'));
+  assert(isAtOrAfter('0.45.0', '0.44.0'));
+  assert(isAtOrAfter('0.44.0-alpha.5', '0.44.0-alpha.4'));
+  assert(isAtOrAfter('0.44.0', '0.44.0-alpha.99'));
+  assert(!isAtOrAfter('0.42.0-alpha.13', '0.44.0'));
+  assert(!isAtOrAfter('0.43.9', '0.44.0'));
+  assert(!isAtOrAfter('0.44.0-alpha.4', '0.44.0-alpha.5'));
+  assert(!isAtOrAfter('0.44.0-alpha.1', '0.44.0'));
+  assert(isAtOrAfter('0.44.0-beta.1', '0.44.0-alpha.9'));
+  assert(isAtOrAfter('0.44.0-rc.1', '0.44.0-beta.9'));
 });
