@@ -63,6 +63,22 @@ const NORMALIZERS: Array<{ match: RegExp; description: string; apply: (text: str
         return JSON.stringify(data);
       },
     },
+    {
+      match: /(^|\/)pagefind\/pagefind-entry\.json$/,
+      description: 'strip per-language index hashes from pagefind-entry.json',
+      apply: (text) => {
+        // The hash is a fingerprint of the staged HTML (which is itself
+        // compared byte-for-byte), so normalizing it loses no signal — and
+        // pagefind's parallel indexer is not bit-stable across runs (#867).
+        const data = JSON.parse(text) as {
+          languages?: Record<string, Record<string, unknown>>;
+        };
+        for (const lang of Object.values(data.languages ?? {})) {
+          delete lang.hash;
+        }
+        return JSON.stringify(data);
+      },
+    },
   ];
 
 function normalize(relPath: string, bytes: Uint8Array): Uint8Array {

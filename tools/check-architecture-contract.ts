@@ -56,6 +56,49 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
       'Read-back of the sitemap plugin option bag registered via registerPlugin (the write-side cast above).',
   },
   {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: '(oldKids[k] as unknown as { remove(): void }).remove();',
+    reason:
+      'ChildNode.remove() does not exist on the Node type; the morph walk holds mixed Node lists and only reaches this branch for element children.',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: '(oldEl as unknown as Text).data',
+    reason:
+      'nodeType === 3 narrowing that TypeScript cannot follow through the custom morph walk; both sides are text nodes by construction.',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment:
+      'return Boolean((el as unknown as Record<string, unknown>)[name]) !== el.hasAttribute(name);',
+    reason:
+      'Property-vs-attribute comparison for mirrored form controls; the property side is untyped by DOM design (any-valued expandos like checked/value).',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: 'return n as unknown as HTMLTemplateElement;',
+    reason:
+      'DSD template lookup: the walk filters by tagName === "TEMPLATE" before returning, a narrowing TypeScript cannot express through Node.',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: '(n as unknown as Text).data.trim()',
+    reason:
+      'Same nodeType === 3 narrowing; whitespace-only text-node filter in the nested-DSD comparison (#582).',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: '(o as unknown as Text).data === (nn as unknown as Text).data',
+    reason:
+      'Same nodeType === 3 narrowing; nested-DSD comparison only reaches this branch for text nodes (#582).',
+  },
+  {
+    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    fragment: 'const formState = form as unknown as {',
+    reason:
+      'Expando per-form state bag (__openElementBusy/__openElementSeq) attached by the enhance client itself; HTMLFormElement has no such fields by design (#564/#599).',
+  },
+  {
     file: 'packages/element/src/internal/core/style-sheet.ts',
     fragment: 'globalThis.CSSStyleSheet as unknown as new () => StyleSheetLike',
     reason:
