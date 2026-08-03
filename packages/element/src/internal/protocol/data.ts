@@ -75,12 +75,39 @@ export type SpaAction<T = unknown> = (ctx: SpaActionContext) => T | Promise<T>;
  * ADR-0120). The no-JS path never sees this: it gets the equivalent semantics
  * as plain HTTP (303 on success, 422 with the re-rendered form on validation
  * failure, redirect/error as status codes).
+ *
+ * Error outcomes (CSRF 403, unknown action 404, unparseable body 400,
+ * unexpected 500) are NOT part of this union: since 0.42.0-alpha.13 (#863,
+ * ADR-0123 addendum item 13) they answer RFC 9457 Problem Details with the
+ * PROBLEM_JSON_MEDIA_TYPE content type — see ProblemDetails.
  */
 export type ActionResult<Success = unknown, Failure = unknown> =
   | { type: 'success'; status: number; data?: Success }
   | { type: 'failure'; status: number; data?: Failure }
-  | { type: 'redirect'; status: number; location: string }
-  | { type: 'error'; status: number; error: { message: string } };
+  | { type: 'redirect'; status: number; location: string };
+
+/**
+ * RFC 9457 Problem Details document (0.42.0-alpha.13, #863, ADR-0123 addendum
+ * item 13): the action error channel answers `application/problem+json`
+ * instead of the bespoke `{ type: 'error', error: { message } }` JSON, so
+ * HTTP tooling recognizes failures natively. With `type: 'about:blank'`,
+ * `title` is the HTTP reason phrase and `detail` carries the specific
+ * explanation. The wire shape is alpha-unfrozen; ADR-0122 acceptance freezes
+ * it in this problem+json form.
+ */
+export interface ProblemDetails {
+  /** URI reference identifying the problem type; 'about:blank' when none applies. */
+  type: string;
+  /** Short human-readable summary (the HTTP reason phrase for 'about:blank'). */
+  title: string;
+  /** The HTTP status code generated for this occurrence. */
+  status: number;
+  /** Human-readable explanation specific to this occurrence. */
+  detail?: string;
+}
+
+/** Media type of the RFC 9457 action error channel (#863). */
+export const PROBLEM_JSON_MEDIA_TYPE = 'application/problem+json';
 
 /**
  * Request header selecting the action response channel (ADR-0121, amends

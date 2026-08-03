@@ -119,6 +119,23 @@ export interface RouteEntry {
 
 // --- Framework Options --------------------------------------------
 
+/**
+ * Fetch middleware contract (ADR-0123 item 2, #858): WinterCG shape,
+ * dialect-free — no Hono/h3 context object. Composed at the handler boundary
+ * in onion order (`use[0]` is outermost: it sees the request first and the
+ * response last), so it runs with identical semantics in the dev server, the
+ * `start` CLI, the e2e fixture server, and the Nitro production entry.
+ *
+ * A middleware may short-circuit by returning a Response without calling
+ * `next()`, or post-process the Response that `next()` returns.
+ *
+ * Serialization constraint: middleware sources are inlined into the generated
+ * server entry (same mechanism as a function-valued `middleware.corsOrigin`),
+ * so each middleware must be self-contained — it cannot close over variables
+ * from the vite.config.ts module scope.
+ */
+export type Middleware = (request: Request, next: () => Promise<Response>) => Promise<Response>;
+
 export interface FrameworkOptions {
   routesDir?: string;
   islandsDir?: string;
@@ -191,6 +208,13 @@ export interface FrameworkOptions {
       nonce?: boolean;
       reportOnly?: boolean;
     };
+    /**
+     * Fetch middleware chain (ADR-0123 item 2, #858), composed around the
+     * framework handler in onion order (`use[0]` outermost), outside all
+     * built-in middleware above. See {@link Middleware} for the contract and
+     * the self-containment constraint.
+     */
+    use?: Middleware[];
   };
 }
 

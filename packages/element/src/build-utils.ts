@@ -15,4 +15,4 @@ export { createIsrCacheKey } from './internal/core/isr.ts';
 export { SsrRenderError } from './internal/core/errors.ts';
 export { transformIslandSource } from './internal/core/island-transform.ts';
 export type { OpenElementRequestHandler, RuntimeContext } from './internal/core/runtime.ts';
-export { createRuntimeAdapter } from './internal/core/runtime.ts';
+export { composeFetchMiddleware, createRuntimeAdapter } from './internal/core/runtime.ts';

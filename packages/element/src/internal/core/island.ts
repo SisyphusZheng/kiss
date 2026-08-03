@@ -15,6 +15,12 @@ import { formatError } from './errors.ts';
  * directly; adapters handle framework-specific update triggers.
  *
  * v0.29.1: defineCustomElement helper inlined from custom-element.ts.
+ *
+ * 0.42.0-alpha.13 (#606): strategy scheduling has a single owner — the
+ * generated client entry (island-scheduler.ts in @openelement/adapter-vite).
+ * defineIsland() no longer observes visibility itself; when an island module
+ * evaluates, the scheduler already decided to load it, so load/only/visible
+ * register immediately (idle still defers registration for standalone use).
  */
 
 import { createLogger } from './logger.ts';
@@ -100,83 +106,6 @@ export function bindSsrProps(el: HTMLElement): void {
 }
 
 /**
- * Create an IntersectionObserver-based upgrade strategy.
- * v0.6': Uses querySelectorAll to observe ALL instances of the tag,
- * not just the first one. Per WHATWG IntersectionObserver spec.
- */
-function createVisibleStrategy(
-  tagName: string,
-  registerFn: () => void,
-): void {
-  let registered = false;
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          observer.disconnect();
-          if (!registered) {
-            registered = true;
-            clearTimeout(timeoutId);
-            registerFn();
-          }
-          return;
-        }
-      }
-    },
-    { rootMargin: '200px' }, // Start loading 200px before visible
-  );
-
-  // We need to wait for elements to be in the DOM first
-  const observeAll = () => {
-    const elements = document.querySelectorAll(tagName);
-    if (elements.length > 0) {
-      elements.forEach((el) => observer.observe(el));
-      return true;
-    }
-    return false;
-  };
-
-  const mo = new MutationObserver((_mutations, mutObs) => {
-    if (observeAll()) {
-      mutObs.disconnect();
-    } else {
-      // v0.14.5: If elements were removed from DOM, disconnect all observers
-      const elements = document.querySelectorAll(tagName);
-      if (elements.length === 0 && !registered) {
-        mutObs.disconnect();
-        observer.disconnect();
-        clearTimeout(timeoutId);
-      }
-    }
-  });
-
-  // v0.14.3: Timeout guard - if the target element never appears
-  // (e.g., route changed after island was registered), disconnect
-  // both observers after 30 seconds to prevent memory/perf leaks.
-  const VISIBILITY_TIMEOUT = 30_000; // 30s
-  const timeoutId = setTimeout(() => {
-    if (!registered) {
-      mo.disconnect();
-      observer.disconnect();
-      log.debug(`Visibility strategy for <${tagName}> timed out after ${VISIBILITY_TIMEOUT}ms`);
-    }
-  }, VISIBILITY_TIMEOUT);
-
-  // Start observing after DOM content loaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!observeAll()) {
-        mo.observe(document.body, { childList: true, subtree: true });
-      }
-    });
-  } else {
-    if (!observeAll()) {
-      mo.observe(document.body, { childList: true, subtree: true });
-    }
-  }
-}
-
-/**
  * Create an idle (requestIdleCallback-based) hydration strategy.
  * v0.6': Improved fallback chain:
  *   1. requestIdleCallback (optimal, progressive)
@@ -225,7 +154,7 @@ function createIdleStrategy(registerFn: () => void): void {
  * // Pure Island - no DSD, full framework reactivity
  * export default defineIsland('my-counter', MyCounter, { dsd: false });
  *
- * // With visible strategy (IntersectionObserver)
+ * // With visible strategy (loaded on viewport entry by the client entry)
  * export default defineIsland('my-counter', MyCounter, { strategy: 'visible' });
  *
  * // With load strategy (immediate upgrade)
@@ -298,23 +227,27 @@ export function defineIsland<T extends CustomElementConstructor>(
     }
   };
 
-  // SSR guard: browser-specific strategy scheduling is a no-op during SSR.
-  // IntersectionObserver, MutationObserver etc. are browser-only APIs.
+  // SSR guard: browser-specific strategy handling is a no-op during SSR.
   // During SSR we just define the custom element and let the generated
   // client entry handle strategy dispatch in the browser.
   const isBrowser = typeof IntersectionObserver !== 'undefined';
 
   if (isBrowser) {
     switch (strategy) {
-      case 'load': // Fall through: both load and only register immediately.
+      case 'load': // Fall through: load/only/visible all register on evaluation.
       case 'only':
+      case 'visible':
+        // #606: the generated client entry (island-scheduler.ts in
+        // @openelement/adapter-vite) is the single owner of strategy
+        // scheduling — an island module only evaluates after the scheduler
+        // decided to import it, so registration here is immediate. The old
+        // defineIsland-side IntersectionObserver queried the light DOM only
+        // and never found islands inside page DSD shadow roots; that dual
+        // path is removed.
         register();
         break;
       case 'idle':
         createIdleStrategy(register);
-        break;
-      case 'visible':
-        createVisibleStrategy(tagName, register);
         break;
     }
   } else {
