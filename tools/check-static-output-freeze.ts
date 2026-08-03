@@ -65,18 +65,35 @@ const NORMALIZERS: Array<{ match: RegExp; description: string; apply: (text: str
     },
     {
       match: /(^|\/)pagefind\/pagefind-entry\.json$/,
-      description: 'strip per-language index hashes from pagefind-entry.json',
+      description: 'canonicalize pagefind-entry.json (index hash + set ordering)',
       apply: (text) => {
         // The hash is a fingerprint of the staged HTML (which is itself
-        // compared byte-for-byte), so normalizing it loses no signal — and
-        // pagefind's parallel indexer is not bit-stable across runs (#867).
+        // compared byte-for-byte), and include_characters comes from a set
+        // whose iteration order is not bit-stable across pagefind's parallel
+        // indexer runs (#867). Canonicalizing loses no signal: the indexed
+        // content is compared in the HTML files themselves.
         const data = JSON.parse(text) as {
+          version?: unknown;
           languages?: Record<string, Record<string, unknown>>;
+          include_characters?: unknown[];
         };
         for (const lang of Object.values(data.languages ?? {})) {
           delete lang.hash;
         }
-        return JSON.stringify(data);
+        const canonical: Record<string, unknown> = {};
+        if (data.version !== undefined) canonical.version = data.version;
+        // Language key order follows pagefind's Rust HashMap iteration,
+        // which is randomized per process — sort it (this was the actual
+        // intermittent freeze-gate failure: same content, different order).
+        const languages: Record<string, unknown> = {};
+        for (const key of Object.keys(data.languages ?? {}).sort()) {
+          languages[key] = data.languages![key];
+        }
+        canonical.languages = languages;
+        if (data.include_characters !== undefined) {
+          canonical.include_characters = [...data.include_characters].sort();
+        }
+        return JSON.stringify(canonical);
       },
     },
   ];
