@@ -8,16 +8,16 @@
 import type { HydrationStrategy } from '../protocol/framework.ts';
 import type { ClientIslandEntry } from '../protocol/ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
-import { createEnhanceClient } from './enhance-client.ts';
-import { createIslandScheduler } from './island-scheduler.ts';
 import { ACTION_FETCH_HEADER, HYDRATION_STRATEGIES, isValidTagName } from '@openelement/element';
 
-// #610: the browser runtimes live in real modules (island-scheduler.ts,
-// enhance-client.ts) with normal unit tests; the generated entry inlines
-// them verbatim — Deno compiles the TypeScript away, so toString() yields
-// plain JavaScript. There is no hand-maintained parallel string copy.
-const ISLAND_SCHEDULER_SOURCE = createIslandScheduler.toString();
-const ENHANCE_CLIENT_SOURCE = createEnhanceClient.toString();
+// #868: the browser runtimes are real modules (island-scheduler.ts,
+// enhance-client.ts) bundled via the virtual:open-client-runtime specifiers
+// resolved by build-client.ts. The generated entry only wires them; no
+// toString() serialization, no import-free constraint, no string copy.
+export const VIRTUAL_RUNTIME_SPECIFIERS = {
+  scheduler: 'virtual:open-client-runtime/scheduler',
+  enhance: 'virtual:open-client-runtime/enhance',
+} as const;
 
 const URL_OR_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[A-Za-z0-9_./@-]+$/;
@@ -48,19 +48,6 @@ function hasControlCharacter(value: string): boolean {
 
 function hasTraversalSegment(value: string): boolean {
   return value.split('/').includes('..');
-}
-
-/**
- * Zero-dependency shared logger micro-implementation for the generated
- * client entry. Keeps the browser bundle free of external logger imports
- * while still prefixing messages with `[openElement]`.
- */
-function renderClientLogger(tag = 'openElement'): string {
-  const prefix = quoteGeneratedJavaScriptValue(`[${tag}]`);
-  return `var log = {
-  warn: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.warn.apply(console, a); },
-  error: function() { var a = [${prefix}]; a.push.apply(a, arguments); console.error.apply(console, a); },
-};`;
 }
 
 export function validateIslandModuleSpecifier(modulePath: string): void {
@@ -177,17 +164,26 @@ export function generateClientEntry(
 // Zero DOM interaction - safe with DSD rendering.
 //
 // #606: island-scheduler.ts is the single owner of strategy scheduling
-// (defineIsland() registers on module evaluation). #610: both runtimes are
-// real modules inlined verbatim below — no hand-maintained string copy.
+// (defineIsland() registers on module evaluation). #868: both runtimes are
+// real modules bundled via the virtual:open-client-runtime specifiers — the
+// entry only wires them, there is no inline string copy.
 
-${renderClientLogger()}
+import { createLogger } from '@openelement/element';
+import { createIslandScheduler } from '${VIRTUAL_RUNTIME_SPECIFIERS.scheduler}';
+${
+    options.enhancedForms === true
+      ? `import { createEnhanceClient } from '${VIRTUAL_RUNTIME_SPECIFIERS.enhance}';
+`
+      : ''
+  }
+var log = createLogger('openElement');
 
 var __map = {
 ${islandMap}
 };
 var __tags = [${tags}];
 
-var __scheduler = (${ISLAND_SCHEDULER_SOURCE})({
+var __scheduler = createIslandScheduler({
   log: log,
   win: window,
   doc: document,
@@ -214,8 +210,8 @@ ${
 // is morphed into the live tree — INSIDE the page element's shadow root,
 // which is where page content lives under DSD. Without JavaScript the same
 // form is a native POST (303/422 HTML), so behavior degrades to the browser
-// by construction. Runtime: enhance-client.ts (inlined verbatim, #610).
-var __enhance = (${ENHANCE_CLIENT_SOURCE})({
+// by construction. Runtime: enhance-client.ts (bundled via #868).
+var __enhance = createEnhanceClient({
   log: log,
   tags: __tags,
   actionHeader: ${quoteGeneratedJavaScriptValue(ACTION_FETCH_HEADER)},

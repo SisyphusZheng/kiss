@@ -11,11 +11,12 @@
  * this scheduler decided to import it, so defineIsland() registers on
  * evaluation.
  *
- * The generated client entry inlines this module verbatim via
- * createIslandScheduler.toString() (#610): there is no parallel string copy
- * to drift, and the logic carries normal unit tests
- * (__tests__/island-scheduler.test.ts). The module is therefore import-free
- * and touches browser globals only through the injected deps.
+ * The generated client entry imports this module through the
+ * virtual:open-client-runtime specifier (resolved by build-client.ts) and the
+ * bundler wires it in: there is no parallel string copy to drift, and the
+ * logic carries normal unit tests (__tests__/island-scheduler.test.ts). The
+ * module stays import-free and touches browser globals only through the
+ * injected deps, so it bundles into any consumer build unchanged.
  */
 
 /** Minimal logger surface shared with the generated client entry. */

@@ -16,6 +16,18 @@ const REJECTED_ISLAND_MODULE_PATHS = [
   '',
 ] as const;
 
+// #868: the generated entry is a real ESM module now (static imports for the
+// bundled runtimes), so `new Function` cannot parse it directly. Strip the
+// single-line import prologue and syntax-check the remaining wiring.
+function assertEntrySyntax(code: string): void {
+  const body = code.replace(/^import .*;\n/gm, '');
+  try {
+    new Function(body);
+  } catch (e) {
+    assertEquals(true, false, `Syntax error: ${String(e)}`);
+  }
+}
+
 Deno.test('empty -> zero JS', () => {
   assert(generateClientEntry([]).includes('zero client JS needed'));
 });
@@ -23,9 +35,11 @@ Deno.test('empty -> zero JS', () => {
 Deno.test('zero islands + enhancedForms emits the enhancement layer (#569)', () => {
   const code = generateClientEntry([], { enhancedForms: true });
   assert(!code.includes('zero client JS needed'));
-  assert(code.includes('data-open-enhance'), 'enhancement submit handler is emitted');
-  assert(code.includes('onSubmit'), 'submit interception is emitted');
-  assert(code.includes('morphDocument'), 'document morph is emitted');
+  // #868: the runtime is a real bundled module — the entry wires it.
+  assert(code.includes('createEnhanceClient'), 'enhancement runtime is wired');
+  assert(code.includes('virtual:open-client-runtime/enhance'), 'enhance import emitted');
+  assert(code.includes('scanSubmitRoots'), 'submit interception wiring is emitted');
+  assertEntrySyntax(code);
 });
 
 Deno.test('zero islands without enhancedForms keeps the stub (#569)', () => {
@@ -41,25 +55,17 @@ Deno.test('client:load island loads immediately', () => {
     },
   ]);
   assert(code.includes('import("@openelement/ui/open-theme-toggle")'));
-  assert(code.includes('client:load islands'));
-  try {
-    new Function(code);
-  } catch (e) {
-    assertEquals(true, false, `Syntax error: ${String(e)}`);
-  }
+  assert(code.includes('load: ["open-theme-toggle"]'));
+  assertEntrySyntax(code);
 });
 
 Deno.test('client:idle island deferred to idle', () => {
   const code = generateClientEntry([
     { tagName: 'open-hero-ping', modulePath: './ping.ts', strategy: 'idle' },
   ]);
-  assert(code.includes('requestIdleCallback'));
+  assert(code.includes('idle: ["open-hero-ping"]'));
   assert(code.includes('import("./ping.ts")'));
-  try {
-    new Function(code);
-  } catch (e) {
-    assertEquals(true, false, `Syntax error: ${String(e)}`);
-  }
+  assertEntrySyntax(code);
 });
 
 Deno.test('mixed load+idle', () => {
@@ -71,13 +77,9 @@ Deno.test('mixed load+idle', () => {
     },
     { tagName: 'open-hero-ping', modulePath: '@openelement/ui/open-hero-ping', strategy: 'idle' },
   ]);
-  assert(code.includes('requestIdleCallback'));
-  assert(code.includes('open:ready'));
-  try {
-    new Function(code);
-  } catch (e) {
-    assertEquals(true, false, `Syntax error: ${String(e)}`);
-  }
+  assert(code.includes('load: ["open-theme-toggle"]'));
+  assert(code.includes('idle: ["open-hero-ping"]'));
+  assertEntrySyntax(code);
 });
 
 Deno.test('no legacy SSR client runtime', () => {
@@ -92,12 +94,8 @@ Deno.test('open:ready event', () => {
   const code = generateClientEntry([
     { tagName: 'my-island', modulePath: './island.ts', strategy: 'idle' },
   ]);
-  assert(code.includes('open:ready'));
-  try {
-    new Function(code);
-  } catch (e) {
-    assertEquals(true, false, `Syntax error: ${String(e)}`);
-  }
+  assert(code.includes('idle: ["my-island"]'));
+  assertEntrySyntax(code);
 });
 
 Deno.test('client:only islands are scheduled with immediate load (not idle)', () => {
@@ -111,11 +109,11 @@ Deno.test('client:only islands are scheduled with immediate load (not idle)', ()
     },
   ]);
 
-  assert(code.includes('client:only islands - import immediately'));
+  assert(code.includes('only: ["client-only-widget"]'));
   assert(code.includes('"client-only-widget"'));
   // v0.21: only uses immediate load, NOT idle deferral
   assertEquals(code.includes('client:idle and client:only'), false);
-  new Function(code);
+  assertEntrySyntax(code);
 });
 
 Deno.test('legacy eager/lazy strategies are not emitted by v0.21 runtime', () => {
@@ -166,7 +164,7 @@ Deno.test('client entry safely escapes tag names and module paths', () => {
   ]);
 
   assert(code.includes('"x-safe": () => import("./safe-module.ts")'));
-  new Function(code);
+  assertEntrySyntax(code);
 });
 
 Deno.test('client entry admits only validated module specifiers before code generation', () => {
@@ -256,44 +254,31 @@ Deno.test('client entry includes the ADR-0120 form enhancement layer', () => {
     [{ tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' }],
     { enhancedForms: true },
   );
-  // #610: the runtime is the real enhance-client.ts module, inlined verbatim.
+  // #868: the runtime is the real enhance-client.ts module, bundled via the
+  // virtual specifier — the entry wires it (behavior is unit-tested against
+  // the module in __tests__/enhance-client.test.ts).
   assert(code.includes('createEnhanceClient'));
-  // ADR-0121: submit is not reliably composed across engines, so listeners
-  // attach per shadow root, not only on the document.
-  assert(code.includes('attachSubmit'));
-  assert(code.includes('scanSubmitRoots'));
-  assert(code.includes('data-open-enhance'));
-  assert(code.includes('"x-openelement-action"'));
-  // Morph continuity: preserve escape hatch, intact-island survival and the
-  // no-re-execute rule for the client entry script.
-  assert(code.includes('data-open-preserve'));
-  assert(code.includes('islandIntact'));
-  assert(code.includes("tagName === 'SCRIPT'"));
-  assert(code.includes('history.pushState'));
-  // ADR-0121 hardening: shadow-content morph, region scoping, failure hook,
-  // submitter-preserving body, popstate reload, response gating.
-  assert(code.includes('shadowTemplate'));
-  assert(code.includes('data-open-region-target'));
-  assert(code.includes('open:action-failure'));
-  assert(code.includes('FormData(form, submitter'));
-  assert(code.includes("addEventListener('popstate'"));
-  assert(code.includes('result.status === 200 || result.status === 422'));
-  // #599: per-form sequence, not global last-wins
-  assert(code.includes('__openElementSeq'));
-  assert(!code.includes('var __submitSeq'));
-  // H1/#576/#598 (action URL resolution) is covered by REAL unit tests
-  // driving the module in __tests__/enhance-client.test.ts — no string
-  // assertions here.
+  assert(code.includes('virtual:open-client-runtime/enhance'));
+  assert(code.includes('actionHeader: "x-openelement-action"'));
+  // Wiring for ADR-0121: submit listeners attach per shadow root, late-hydrate
+  // rescan after island loads, and the scheduler hook.
+  assert(code.includes('scanSubmitRoots(document)'));
+  assert(code.includes('observeVisible: __scheduler.observeVisible'));
+  // The entry must NOT carry the runtime internals inline any more (#868).
+  assert(!code.includes('attachSubmit'));
+  assert(!code.includes('history.pushState'));
+  assert(!code.includes('__openElementSeq'));
 });
 
-Deno.test('#610 client entry inlines the real scheduler module (#606 single owner)', () => {
+Deno.test('#868 client entry bundles the real scheduler module (#606 single owner)', () => {
   const code = generateClientEntry([
     { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
   ]);
   assert(code.includes('createIslandScheduler'));
-  // The visible-strategy deep query lives in the scheduler module.
-  assert(code.includes('queryAllDeep'));
-  new Function(code);
+  assert(code.includes('virtual:open-client-runtime/scheduler'));
+  // The visible-strategy deep query lives in the scheduler module, not inline.
+  assert(!code.includes('queryAllDeep'));
+  assertEntrySyntax(code);
 });
 
 Deno.test('islands without enhancedForms omit the enhancement layer (#569 complement)', () => {
@@ -304,8 +289,8 @@ Deno.test('islands without enhancedForms omit the enhancement layer (#569 comple
     { tagName: 'x-counter', modulePath: './counter.ts', strategy: 'load' },
   ]);
   assert(code.includes('live-counter') === false); // sanity: only x-counter
-  assert(!code.includes('attachSubmit'));
-  assert(!code.includes("addEventListener('popstate'"));
+  assert(!code.includes('createEnhanceClient'));
+  assert(!code.includes('virtual:open-client-runtime/enhance'));
   assert(code.includes('the form enhancement layer is omitted'));
   // #597: the scheduler must not reference scanSubmitRoots when the enhance
   // layer is omitted — that symbol only exists in the enhance module.
