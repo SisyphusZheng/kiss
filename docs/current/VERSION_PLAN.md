@@ -62,6 +62,9 @@ recipes forever if a library already owns them).
   five-package graph is unchanged by this plan, and alpha naming for the
   0.42 line remains governed by
   [`ADR-0114`](../adr/ADR-0114-continue-alpha-after-five-package-convergence.md).
+  The supported package contract (root, `nitro-mount`, `cli/build`,
+  `cli/start` and `sitemap` exports) is
+  [`PACKAGE_SURFACE.md`](./PACKAGE_SURFACE.md).
 - Request-time **data and forms** are the 0.42 unfrozen surface this plan
   freezes at TP-6. **Framework session and cache semantics** stay with
   `0.44.0`. **Login is not blocked on 0.44**: apps attach better-auth (or

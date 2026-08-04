@@ -2,11 +2,12 @@
  * Shared JSONC reader for deno.json-style config files (#708).
  *
  * Single implementation used by workspace-alias.ts and cli/build-client.ts.
- * Delegates to @std/jsonc (#870-3.2): deno.json files may contain comments
- * and trailing commas; the std parser handles string literals correctly.
+ * Uses the vendored @std/jsonc parser (#886): deno.json files may contain
+ * comments and trailing commas; the std parser handles string literals
+ * correctly.
  */
 
-import { parse } from '@std/jsonc';
+import { parse } from './jsonc-vendored.ts';
 import { readFileSync } from 'node:fs';
 
 /**

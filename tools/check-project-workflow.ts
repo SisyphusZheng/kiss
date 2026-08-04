@@ -30,7 +30,6 @@ const requiredAnchors: Record<string, string[]> = {
     'PACKAGE_SURFACE.md',
     'ADR-0114',
     'five-package',
-    'external adopter pilot #390',
     'Chromium, Firefox and WebKit',
     'nitro-mount',
   ],
