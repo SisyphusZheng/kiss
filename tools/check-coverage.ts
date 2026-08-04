@@ -63,10 +63,10 @@ async function main(): Promise<void> {
   const lcov = await runCoverage();
   const profiledFiles = lcovFilePaths(lcov);
 
-  // Threshold baseline: 2026-07-24 (v0.41.0-alpha.17 cycle), measured with the
+  // Threshold baseline: 2026-08-04 (v0.42.0-alpha.14 cycle), measured with the
   // full-denominator logic below on a local `deno task test:coverage` run:
-  //   packages/*/src: lines 74.37%, branches 83.12%, functions 78.71%
-  //   tools/lib:      lines 57.03%, branches 77.97%, functions 67.44%
+  //   packages/*/src: lines 81.46%, branches 85.24%, functions 87.66%
+  //   tools/lib:      lines 72.97%, branches 83.47%, functions 70.31%
   // Thresholds sit one point under the measured floor to absorb platform
   // variance between local runs and CI. Raise them only after re-measuring.
   const scopes: Array<{
@@ -87,9 +87,9 @@ async function main(): Promise<void> {
       label: 'tools/lib',
       include: isToolsLibSource,
       thresholds: {
-        lines: getNumberArg('--tools-threshold', 56),
-        branches: getNumberArg('--tools-branch-threshold', 76),
-        functions: getNumberArg('--tools-function-threshold', 66),
+        lines: getNumberArg('--tools-threshold', 72),
+        branches: getNumberArg('--tools-branch-threshold', 82),
+        functions: getNumberArg('--tools-function-threshold', 69),
       },
     },
   ];

@@ -1,12 +1,12 @@
-import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync } from '@std/fs';
+import { join, resolve } from '@std/path';
 import { formatJson } from '@openelement/element/build-utils';
 import { PACKAGE_VERSION, RETAINED_PACKAGE_NAMES } from './project-constants.ts';
 import { readJson } from './lib/fs.ts';
 import { readPackages } from './lib/package-graph.ts';
 import { tarballPath } from './lib/npm-tarball.ts';
 
-const repoRoot = resolve(import.meta.dirname, '..');
+const repoRoot = resolve(import.meta.dirname!, '..');
 // Generous ceiling for the starter's real SSG build (vite + nitro); a hung
 // packed adapter must fail the tool instead of stalling CI forever.
 const BUILD_TIMEOUT_MS = 10 * 60_000;
@@ -64,9 +64,10 @@ try {
   }
 
   // @jsr/* packages are served by JSR's npm compatibility layer at
-  // https://npm.jsr.io, not by registry.npmjs.org. Without a scope-level
-  // registry mapping the packed install 404s on any jsr: dependency (e.g.
-  // @std/jsonc in adapter-vite) — #886.
+  // https://npm.jsr.io, not by registry.npmjs.org. The openElement packages
+  // themselves are @jsr-free; the mapping is required by the starter's
+  // upstream dependency @deno/vite-plugin, whose npm manifest depends on
+  // @jsr/deno__loader and @jsr/std__jsonc — #886.
   Deno.writeTextFileSync(
     join(tmp, '.npmrc'),
     '@jsr:registry=https://npm.jsr.io\n',
@@ -99,6 +100,31 @@ try {
   for (const [key, expected] of Object.entries(expectedImports)) {
     if (config.imports[key] !== expected) {
       throw new Error(`Packed starter import ${key}=${config.imports[key]}, expected=${expected}`);
+    }
+  }
+
+  // Provision the starter's external npm deps (@deno/vite-plugin, vite, hono)
+  // explicitly: the packed tarballs only cover @openelement/*, and scavenging
+  // the repo's node_modules is not hermetic — a fresh checkout (or a CI cache
+  // miss) has no @deno/vite-plugin and the starter build fails to resolve it.
+  // Already-installed transitive deps of the tarballs (vite, hono) are skipped.
+  const missingExternals = Object.values(config.imports)
+    .filter((spec) => spec.startsWith('npm:') && !spec.startsWith('npm:@openelement/'))
+    .map((spec) => spec.slice('npm:'.length))
+    .filter((spec) => {
+      const name = spec.startsWith('@')
+        ? spec.split('/').slice(0, 2).join('/').replace(/@[^/]*$/u, '')
+        : spec.split('@')[0];
+      return !existsSync(join(tmp, 'node_modules', ...name.split('/')));
+    });
+  if (missingExternals.length > 0) {
+    const provision = await run(
+      'npm',
+      ['install', '--ignore-scripts', '--no-audit', '--no-fund', ...missingExternals],
+      tmp,
+    );
+    if (!provision.success) {
+      throw new Error(`Starter external dependency install failed:\n${provision.output}`);
     }
   }
 

@@ -1,7 +1,7 @@
 import { exists } from './lib/fs.ts';
 
 const failures: string[] = [];
-const MAX_WORKFLOWS = 6;
+const MAX_WORKFLOWS = 8;
 
 for (
   const removed of [
