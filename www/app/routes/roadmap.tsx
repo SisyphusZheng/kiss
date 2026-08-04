@@ -334,9 +334,9 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
       version: 'v0.42.0-alpha.14',
-      theme: 'standards as seams + TP-6 freeze preparation',
+      theme: 'TP-5.9 close-out: tooling convergence, deletion and release hardening',
       copy:
-        'The standards-as-seams train closes 16 issues (#603–#610, #856–#860, #863–#867): the morph client becomes a real tested module and keeps focus, scroll and form state across enhances, nested DSD instantiates recursively, route matching standardizes on URLPattern, action errors speak RFC 9457 problem+json, a WinterCG fetch middleware contract lands, nitro-mount thins to a Nitro v3 pass-through, open-dropdown moves to the Popover API, open-input becomes a real form citizen via ElementInternals, and search goes full-text with Pagefind.',
+        'The TP-5.9 close-out hardens the release train and thins the tree: docs-truth consolidates into a five-in-one registry with consumer-qualify tiers (#870), jsonc parsing delegates to @std/jsonc (#870, #868), audit round 2 cleanup shares @std walk and drops the consumer-qualify dispatcher (#874–#876), simplify-scan rounds 1+2 delete dead files, exports and flags (#879–#884), release continuity gains no-skip version bumping and pre-seeded note survival (#869, #855), and packed-package consumers of jsr dependencies are unblocked with a repaired consumer smoke (#886, #887).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -382,10 +382,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.13',
-      theme: '标准化缝合 + TP-6 冻结准备',
+      version: 'v0.42.0-alpha.14',
+      theme: 'TP-5.9 收尾:工具收敛、删繁就简与发布硬化',
       copy:
-        'standards-as-seams 列车关闭 16 个 issue（#603–#610、#856–#860、#863–#867）：morph 客户端成为真实可测模块，增强更新跨 focus/scroll/表单状态存活，嵌套 DSD 递归实例化，路由匹配统一到 URLPattern，action 错误改说 RFC 9457 problem+json，WinterCG fetch 中间件契约落地，nitro-mount 瘦成 Nitro v3 透传，open-dropdown 迁移到 Popover API，open-input 经 ElementInternals 成为真正的表单公民，搜索换成 Pagefind 全文检索。',
+        'TP-5.9 收尾夯实发布链并精简代码树:docs-truth 收敛为五合一注册表并分级 consumer-qualify(#870),jsonc 解析委托给 @std/jsonc(#870、#868),第二轮审计整改共用 @std walk 并移除 consumer-qualify 分发器(#874–#876),simplify-scan 第一、二轮删除死文件、死导出与死开关(#879–#884),发布连续性支持 no-skip 版本递增与预置 note 存活(#869、#855),打包产物中 jsr 依赖的消费者解禁并修复 consumer smoke(#886、#887)。',
       state: 'stable',
       stamp: 'CURRENT',
     },
