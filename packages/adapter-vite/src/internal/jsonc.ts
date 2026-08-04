@@ -2,23 +2,22 @@
  * Shared JSONC reader for deno.json-style config files (#708).
  *
  * Single implementation used by workspace-alias.ts and cli/build-client.ts.
- * Uses the vendored @std/jsonc parser (#886): deno.json files may contain
- * comments and trailing commas; the std parser handles string literals
- * correctly.
+ * Parsing is delegated to the `jsonc-parser` npm package (#886): deno.json
+ * files may contain comments and trailing commas; a real parser handles
+ * string literals correctly. The dependency is externalized by `deno pack`
+ * like any other npm dependency — no vendored sources in this package.
  */
 
-import { parse } from './jsonc-vendored.ts';
+import { parse, type ParseError } from 'jsonc-parser';
 import { readFileSync } from 'node:fs';
 
 /**
  * Parse JSONC text. Returns null on invalid JSON.
  */
 export function parseJsonc(content: string): Record<string, unknown> | null {
-  try {
-    return parse(content) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
+  const errors: ParseError[] = [];
+  const result = parse(content, errors, { allowTrailingComma: true });
+  return errors.length > 0 ? null : (result as Record<string, unknown>);
 }
 
 /**

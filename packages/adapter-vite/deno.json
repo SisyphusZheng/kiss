@@ -12,6 +12,7 @@
     "@mdx-js/rollup": "npm:@mdx-js/rollup@^3.1.1",
     "@hono/vite-dev-server": "npm:@hono/vite-dev-server@^0.25.3",
     "gray-matter": "npm:gray-matter@^4.0.3",
+    "jsonc-parser": "npm:jsonc-parser@^3.3.1",
     "marked": "npm:marked@^15.0.0",
     "sanitize-html": "npm:sanitize-html@^2.17.4",
     "@types/sanitize-html": "npm:@types/sanitize-html@^2",
