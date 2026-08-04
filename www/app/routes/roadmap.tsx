@@ -333,7 +333,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.13',
+      version: 'v0.42.0-alpha.14',
       theme: 'standards as seams + TP-6 freeze preparation',
       copy:
         'The standards-as-seams train closes 16 issues (#603–#610, #856–#860, #863–#867): the morph client becomes a real tested module and keeps focus, scroll and form state across enhances, nested DSD instantiates recursively, route matching standardizes on URLPattern, action errors speak RFC 9457 problem+json, a WinterCG fetch middleware contract lands, nitro-mount thins to a Nitro v3 pass-through, open-dropdown moves to the Popover API, open-input becomes a real form citizen via ElementInternals, and search goes full-text with Pagefind.',
@@ -635,7 +635,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.13' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.14' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
