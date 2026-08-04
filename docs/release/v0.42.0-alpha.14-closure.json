@@ -1,6 +1,6 @@
 {
   "tagCommit": "6b64245a6a179151fad8ac65468d272ac0e14c35",
-  "finalEvidenceCommit": "7c0a6d3ae16ec2c0101edca3b724065557bc0763",
-  "successfulReleaseRun": "https://github.com/open-element/openelement/actions/runs/30871704330",
+  "finalEvidenceCommit": "HEAD",
+  "successfulReleaseRun": "https://github.com/open-element/openelement/actions/runs/30875977935",
   "releaseUrl": "https://github.com/open-element/openelement/releases/tag/v0.42.0-alpha.14"
 }

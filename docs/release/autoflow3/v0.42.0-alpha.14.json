@@ -4,7 +4,7 @@
   "policyVersion": "autoflow3-v0",
   "currentVersion": "0.42.0-alpha.13",
   "targetVersion": "0.42.0-alpha.14",
-  "status": "failed",
+  "status": "completed",
   "startedAt": "2026-08-04T03:10:41.202Z",
   "steps": [
     {
@@ -54,8 +54,10 @@
     },
     {
       "name": "verify npm versions and dist-tags",
-      "status": "pending",
-      "startedAt": "2026-08-04T03:22:39.459Z"
+      "status": "passed",
+      "startedAt": "2026-08-04T04:01:45.733Z",
+      "completedAt": "2026-08-04T04:01:48.976Z",
+      "exitCode": 0
     },
     {
       "name": "post-publish npm consumer smoke",
@@ -67,7 +69,10 @@
         "--version",
         "0.42.0-alpha.14"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-04T04:01:48.977Z",
+      "completedAt": "2026-08-04T04:01:59.203Z",
+      "exitCode": 0
     },
     {
       "name": "post-publish third-party Web Component smoke",
@@ -76,7 +81,10 @@
         "task",
         "third-party-wc:smoke"
       ],
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-04T04:01:59.203Z",
+      "completedAt": "2026-08-04T04:02:02.893Z",
+      "exitCode": 0
     },
     {
       "name": "stage release evidence",
@@ -120,9 +128,12 @@
     },
     {
       "name": "create GitHub release",
-      "status": "pending"
+      "status": "passed",
+      "startedAt": "2026-08-04T04:02:02.901Z",
+      "completedAt": "2026-08-04T04:02:04.294Z",
+      "exitCode": 0
     }
   ],
   "releaseRunUrl": "https://github.com/open-element/openelement/actions/runs/30871704330",
-  "completedAt": "2026-08-04T03:22:39.766Z"
+  "completedAt": "2026-08-04T04:02:04.295Z"
 }
