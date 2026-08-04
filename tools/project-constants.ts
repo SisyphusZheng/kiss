@@ -1,4 +1,6 @@
-import { parse as parseSemver, type SemVer } from '@std/semver';
+// NOTE: this module is also loaded by Nitro/jiti under Node
+// (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts) — keep it
+// free of jsr:/npm: imports.
 
 export const PACKAGE_VERSION = '0.42.0-alpha.14';
 export const PACKAGE_VERSION_TAG = `v${PACKAGE_VERSION}`;
@@ -75,18 +77,13 @@ export const PREVIOUS_RELEASE_THEME = 'standards as seams + TP-6 freeze preparat
  */
 export function stalePackageVersionClaims(): string[] {
   const claims = [PREVIOUS_PACKAGE_VERSION, PREVIOUS_PACKAGE_VERSION_TAG];
-  let parsed: SemVer | undefined;
-  try {
-    parsed = parseSemver(PREVIOUS_PACKAGE_VERSION);
-  } catch {
-    // A stable (non-prerelease) previous line enumerates no earlier history.
-    parsed = undefined;
-  }
-  const prerelease = parsed?.prerelease ?? [];
-  const [preName, preNum] = prerelease;
-  if (parsed && prerelease.length === 2 && typeof preNum === 'number') {
-    const base = `${parsed.major}.${parsed.minor}.${parsed.patch}`;
-    for (let n = preNum - 1; n >= 1; n--) {
+  // Hand-rolled parse on purpose: this module is also loaded by Nitro/jiti
+  // under Node (packages/adapter-vite/__fixtures__/nitro-proof/nitro.config.ts),
+  // so it must stay free of jsr:/npm: imports — no @std/semver here.
+  const match = PREVIOUS_PACKAGE_VERSION.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/u);
+  if (match) {
+    const [, base, preName, preNum] = match;
+    for (let n = Number(preNum) - 1; n >= 1; n--) {
       claims.push(`${base}-${preName}.${n}`, `v${base}-${preName}.${n}`);
     }
   }
