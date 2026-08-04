@@ -6,11 +6,10 @@
  */
 
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from '@std/path';
 import { extractServeMode } from '../src/cli/start.ts';
 
-const startCli = join(dirname(fileURLToPath(import.meta.url)), '../src/cli/start.ts');
+const startCli = join(import.meta.dirname!, '../src/cli/start.ts');
 
 Deno.test('start cli: extractServeMode defaults to start and passes args through', () => {
   assertEquals(extractServeMode([]), { mode: 'start', rest: [] });

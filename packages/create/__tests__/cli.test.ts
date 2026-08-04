@@ -1,18 +1,16 @@
 import { assert, assertEquals, assertFalse, assertThrows } from '@std/assert';
-import { existsSync, readFileSync, rmSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync } from '@std/fs';
+import { join } from '@std/path';
 import {
   assertUnifiedProductVersions,
   buildTemplates,
   resolveVersions,
 } from '../src/template-builder.ts';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const packageDir = join(__dirname, '..');
+const packageDir = join(import.meta.dirname!, '..');
 
 function readTemplate(path: string): string {
-  return readFileSync(join(packageDir, 'templates', path), 'utf-8');
+  return Deno.readTextFileSync(join(packageDir, 'templates', path));
 }
 
 async function runCreate(executable: string, cwd: string, name: string) {
@@ -69,14 +67,14 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
 });
 
 Deno.test('embedded CLI version matches its package manifest', () => {
-  const manifest = JSON.parse(readFileSync(join(packageDir, 'deno.json'), 'utf-8'));
-  const versionSource = readFileSync(join(packageDir, 'src', 'version.ts'), 'utf-8');
+  const manifest = JSON.parse(Deno.readTextFileSync(join(packageDir, 'deno.json')));
+  const versionSource = Deno.readTextFileSync(join(packageDir, 'src', 'version.ts'));
   assert(versionSource.includes(`'${manifest.version}'`));
 });
 
 Deno.test('Create and all five packages share one release version', () => {
   const versions = ['adapter-vite', 'app', 'create', 'element', 'ui'].map((name) =>
-    JSON.parse(readFileSync(join(packageDir, '..', name, 'deno.json'), 'utf-8')).version as string
+    JSON.parse(Deno.readTextFileSync(join(packageDir, '..', name, 'deno.json'))).version as string
   );
   assertEquals([...new Set(versions)], [resolveVersions().app]);
 });
@@ -129,7 +127,7 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   assert(/^npm:@deno\/vite-plugin@\d+\.\d+\.\d+$/.test(vitePlugin), vitePlugin);
   // #681: starter vite version must stay aligned with packages/adapter-vite.
   const adapterViteImports = JSON.parse(
-    readFileSync(join(packageDir, '..', 'adapter-vite', 'deno.json'), 'utf-8'),
+    Deno.readTextFileSync(join(packageDir, '..', 'adapter-vite', 'deno.json')),
   ).imports;
   assertEquals(denoJson.imports.vite, adapterViteImports.vite);
   assert(/^npm:vite@\d+\.\d+\.\d+$/.test(String(denoJson.imports.vite)), denoJson.imports.vite);
@@ -158,9 +156,8 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
 Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#804)', () => {
   const viteConfig = readTemplate('vite.config.ts');
   const brand = viteConfig.match(/--brand:(#[0-9a-fA-F]{3,8})/)?.[1];
-  const uiTokens = readFileSync(
+  const uiTokens = Deno.readTextFileSync(
     join(packageDir, '..', 'ui', 'src', 'open-props-tokens.css'),
-    'utf-8',
   );
   const violet6 = uiTokens.match(/--violet-6:\s*(#[0-9a-fA-F]{3,8})/)?.[1];
   assert(brand, 'starter vite.config.ts must define a --brand token');
@@ -174,9 +171,9 @@ Deno.test('source CLI generates a complete, token-free starter', async () => {
     const appDir = join(tmpRoot, 'sample-app');
     assert(existsSync(join(appDir, '.gitignore')));
     assertFalse(existsSync(join(appDir, 'gitignore.tmpl')));
-    assertFalse(readFileSync(join(appDir, 'deno.json'), 'utf-8').includes('${v.'));
+    assertFalse(Deno.readTextFileSync(join(appDir, 'deno.json')).includes('${v.'));
   } finally {
-    rmSync(tmpRoot, { recursive: true, force: true });
+    Deno.removeSync(tmpRoot, { recursive: true });
   }
 });
 
@@ -201,6 +198,6 @@ Deno.test('packed CLI retains every starter template, including dotfiles', async
     assert(existsSync(join(tmpRoot, 'sample-app', '.gitignore')));
     assert(existsSync(join(tmpRoot, 'sample-app', 'content', 'blog', 'welcome.md')));
   } finally {
-    rmSync(tmpRoot, { recursive: true, force: true });
+    Deno.removeSync(tmpRoot, { recursive: true });
   }
 });

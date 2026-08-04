@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from '@std/assert';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import { expandDynamicRoutes, expandI18nLocales } from '../src/internal/ssg/ssg-dynamic.ts';
 import type { SsgPageOutput } from '../src/internal/protocol/ssg.ts';
 

@@ -6,8 +6,7 @@
 import { assert, assertEquals, assertExists, assertStringIncludes } from '@std/assert';
 import { printBuildManifest, scanClientBuild, scanSSGOutput } from '../src/build-manifest.ts';
 
-import { join } from 'node:path';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from '@std/path';
 
 function makeTempDir(): string {
   return Deno.makeTempDirSync({ prefix: 'open-test-' });
@@ -15,7 +14,7 @@ function makeTempDir(): string {
 
 function cleanup(dir: string) {
   try {
-    rmSync(dir, { recursive: true });
+    Deno.removeSync(dir, { recursive: true });
   } catch { /* ignore */ }
 }
 
@@ -32,19 +31,17 @@ Deno.test('scanClientBuild finds island chunks', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
+    Deno.mkdirSync(islandsDir, { recursive: true });
 
-    writeFileSync(
+    Deno.writeTextFileSync(
       join(islandsDir, 'island-counter-abc123.js'),
       '// counter chunk 1024 bytes'.padEnd(1024, ' '),
-      'utf-8',
     );
-    writeFileSync(
+    Deno.writeTextFileSync(
       join(islandsDir, 'island-theme-def456.js'),
       '// theme chunk 512 bytes'.padEnd(512, ' '),
-      'utf-8',
     );
-    writeFileSync(join(islandsDir, 'client.js'), '// client entry'.padEnd(100, ' '), 'utf-8');
+    Deno.writeTextFileSync(join(islandsDir, 'client.js'), '// client entry'.padEnd(100, ' '));
 
     const result = scanClientBuild(tmp);
 
@@ -63,11 +60,11 @@ Deno.test('scanClientBuild skips non-js files', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
+    Deno.mkdirSync(islandsDir, { recursive: true });
 
-    writeFileSync(join(islandsDir, 'island-counter-a1b2.js'), '// js file', 'utf-8');
-    writeFileSync(join(islandsDir, 'counter.css'), '.css { }', 'utf-8');
-    writeFileSync(join(islandsDir, 'README.md'), '# readme', 'utf-8');
+    Deno.writeTextFileSync(join(islandsDir, 'island-counter-a1b2.js'), '// js file');
+    Deno.writeTextFileSync(join(islandsDir, 'counter.css'), '.css { }');
+    Deno.writeTextFileSync(join(islandsDir, 'README.md'), '# readme');
 
     const result = scanClientBuild(tmp);
     assertEquals(result.islands.length, 1);
@@ -87,12 +84,12 @@ Deno.test('scanSSGOutput finds HTML files recursively', () => {
   const tmp = makeTempDir();
   try {
     const distDir = join(tmp, 'dist');
-    mkdirSync(distDir, { recursive: true });
-    mkdirSync(join(distDir, 'blog'));
-    writeFileSync(join(distDir, 'index.html'), '<html></html>', 'utf-8');
-    writeFileSync(join(distDir, 'about.html'), '<html></html>', 'utf-8');
-    writeFileSync(join(distDir, 'blog', 'post.html'), '<html></html>', 'utf-8');
-    writeFileSync(join(distDir, 'style.css'), '{}', 'utf-8');
+    Deno.mkdirSync(distDir, { recursive: true });
+    Deno.mkdirSync(join(distDir, 'blog'));
+    Deno.writeTextFileSync(join(distDir, 'index.html'), '<html></html>');
+    Deno.writeTextFileSync(join(distDir, 'about.html'), '<html></html>');
+    Deno.writeTextFileSync(join(distDir, 'blog', 'post.html'), '<html></html>');
+    Deno.writeTextFileSync(join(distDir, 'style.css'), '{}');
 
     const result = scanSSGOutput(tmp);
 
@@ -126,9 +123,9 @@ Deno.test('printBuildManifest: Phase 3 with HTML pages', () => {
   const tmp = makeTempDir();
   try {
     const distDir = join(tmp, 'dist');
-    mkdirSync(distDir, { recursive: true });
-    writeFileSync(join(distDir, 'index.html'), '<html>hi</html>', 'utf-8');
-    writeFileSync(join(distDir, 'about.html'), '<html>about</html>', 'utf-8');
+    Deno.mkdirSync(distDir, { recursive: true });
+    Deno.writeTextFileSync(join(distDir, 'index.html'), '<html>hi</html>');
+    Deno.writeTextFileSync(join(distDir, 'about.html'), '<html>about</html>');
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
     assertEquals(manifest.phase, 3);
@@ -160,11 +157,10 @@ Deno.test('printBuildManifest: island budget warning', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(
       join(islandsDir, 'island-big-a1b2.js'),
       'x'.repeat(51 * 1024),
-      'utf-8',
     );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
@@ -178,9 +174,9 @@ Deno.test('printBuildManifest: total JS budget warning', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'chunk1.js'), 'x'.repeat(150 * 1024), 'utf-8');
-    writeFileSync(join(islandsDir, 'chunk2.js'), 'x'.repeat(60 * 1024), 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'chunk1.js'), 'x'.repeat(150 * 1024));
+    Deno.writeTextFileSync(join(islandsDir, 'chunk2.js'), 'x'.repeat(60 * 1024));
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
     assertExists(manifest.warnings.find((w) => w.includes('Total JS')));
@@ -193,9 +189,9 @@ Deno.test('printBuildManifest: custom budget suppresses expected large reader ch
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'pdf-reader.js'), 'x'.repeat(309 * 1024), 'utf-8');
-    writeFileSync(join(islandsDir, 'reader-shell.js'), 'x'.repeat(40 * 1024), 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'pdf-reader.js'), 'x'.repeat(309 * 1024));
+    Deno.writeTextFileSync(join(islandsDir, 'reader-shell.js'), 'x'.repeat(40 * 1024));
 
     const manifest = printBuildManifest({
       root: tmp,
@@ -213,11 +209,10 @@ Deno.test('printBuildManifest: HTML page budget warning', () => {
   const tmp = makeTempDir();
   try {
     const distDir = join(tmp, 'dist');
-    mkdirSync(distDir, { recursive: true });
-    writeFileSync(
+    Deno.mkdirSync(distDir, { recursive: true });
+    Deno.writeTextFileSync(
       join(distDir, 'huge.html'),
       '<html>' + 'x'.repeat(201 * 1024) + '</html>',
-      'utf-8',
     );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
@@ -235,12 +230,12 @@ Deno.test('printBuildManifest: no warnings when within budget', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'small.js'), 'x'.repeat(1024), 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'small.js'), 'x'.repeat(1024));
 
     const distDir = join(tmp, 'dist');
-    mkdirSync(distDir, { recursive: true });
-    writeFileSync(join(distDir, 'index.html'), '<html>small</html>', 'utf-8');
+    Deno.mkdirSync(distDir, { recursive: true });
+    Deno.writeTextFileSync(join(distDir, 'index.html'), '<html>small</html>');
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
     assertEquals(manifest.warnings.length, 0);
@@ -267,9 +262,9 @@ Deno.test('printBuildManifest: Phase 2 with islands and client entry', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'island-counter-abc.js'), 'x'.repeat(2048), 'utf-8');
-    writeFileSync(join(islandsDir, 'client.js'), '// entry'.padEnd(256, ' '), 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'island-counter-abc.js'), 'x'.repeat(2048));
+    Deno.writeTextFileSync(join(islandsDir, 'client.js'), '// entry'.padEnd(256, ' '));
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
     assertEquals(manifest.islands.length, 1);
@@ -286,11 +281,11 @@ Deno.test('scanClientBuild: shared chunks counted in totalJsBytes', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'island-counter-a1b2.js'), 'x'.repeat(1024), 'utf-8');
-    writeFileSync(join(islandsDir, 'client.js'), '// entry'.padEnd(100, ' '), 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'island-counter-a1b2.js'), 'x'.repeat(1024));
+    Deno.writeTextFileSync(join(islandsDir, 'client.js'), '// entry'.padEnd(100, ' '));
     // A shared chunk (not an island prefix, not client.js)
-    writeFileSync(join(islandsDir, 'vendor-abc.js'), 'x'.repeat(2048), 'utf-8');
+    Deno.writeTextFileSync(join(islandsDir, 'vendor-abc.js'), 'x'.repeat(2048));
 
     const result = scanClientBuild(tmp);
     assertEquals(result.islands.length, 1);
@@ -306,10 +301,10 @@ Deno.test('printBuildManifest: many HTML pages (>15) triggers "... more" display
   const tmp = makeTempDir();
   try {
     const distDir = join(tmp, 'dist');
-    mkdirSync(distDir, { recursive: true });
+    Deno.mkdirSync(distDir, { recursive: true });
     // Create 20 HTML files to exceed maxShow (15)
     for (let i = 0; i < 20; i++) {
-      writeFileSync(join(distDir, `page-${i}.html`), `<html>Page ${i}</html>`, 'utf-8');
+      Deno.writeTextFileSync(join(distDir, `page-${i}.html`), `<html>Page ${i}</html>`);
     }
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 3 });
@@ -324,12 +319,11 @@ Deno.test('formatSize: large file displays in MB range', () => {
   const tmp = makeTempDir();
   try {
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
+    Deno.mkdirSync(islandsDir, { recursive: true });
     // 2MB file to trigger MB display format
-    writeFileSync(
+    Deno.writeTextFileSync(
       join(islandsDir, 'island-huge-a1b2.js'),
       'x'.repeat(2 * 1024 * 1024),
-      'utf-8',
     );
 
     const manifest = printBuildManifest({ root: tmp, outDir: 'dist', phase: 2 });
@@ -346,7 +340,7 @@ Deno.test('scanClientBuild: non-existent islands directory', () => {
   try {
     // Create dist/client but no islands/ subdirectory
     const clientDir = join(tmp, 'dist', 'client');
-    mkdirSync(clientDir, { recursive: true });
+    Deno.mkdirSync(clientDir, { recursive: true });
 
     const result = scanClientBuild(tmp);
     assertEquals(result.islands.length, 0);

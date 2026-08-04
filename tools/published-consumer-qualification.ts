@@ -6,7 +6,7 @@
  * exact failed command rather than a truncated Actions log alone.
  */
 
-import { dirname, join } from 'node:path';
+import { dirname, join } from '@std/path';
 import { formatJson } from '@openelement/element/build-utils';
 import { PACKAGE_VERSION } from './project-constants.ts';
 import { runWithOutput } from './lib/process.ts';

@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse, assertRejects, assertThrows } from '@std/assert';
-import { existsSync } from 'node:fs';
+import { existsSync } from '@std/fs';
 import {
   assertForwardOnlyTags,
   backfillPrepareRecordFromMain,

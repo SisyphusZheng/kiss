@@ -5,7 +5,7 @@
  */
 
 import { walkSync } from '@std/fs/walk';
-import { dirname } from 'node:path';
+import { dirname } from '@std/path';
 import { stripComments } from './lib/text.ts';
 import { runCommand } from './lib/process.ts';
 import { type PackageInfo, readPackages, releasePublishOrder } from './lib/package-graph.ts';

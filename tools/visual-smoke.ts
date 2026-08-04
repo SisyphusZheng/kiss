@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env --allow-run
 import { chromium, type Page } from 'npm:playwright@1.59.1';
-import { join } from 'node:path';
-import { ensureDir } from 'jsr:@std/fs@^1.0.0/ensure-dir';
+import { join } from '@std/path';
+import { ensureDir } from '@std/fs';
 import { serveStatic } from './lib/static-server.ts';
 import { deepQueryFirstInPage } from './lib/shadow-walker.ts';
 

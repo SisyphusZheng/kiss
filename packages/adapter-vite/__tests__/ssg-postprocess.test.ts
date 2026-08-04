@@ -13,8 +13,7 @@ import {
   injectViewTransitionMeta,
 } from '../src/internal/ssg/index.ts';
 
-import { join } from 'node:path';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from '@std/path';
 
 function makeTempDir(): string {
   return Deno.makeTempDirSync({ prefix: 'open-test-' });
@@ -22,7 +21,7 @@ function makeTempDir(): string {
 
 function cleanup(dir: string) {
   try {
-    rmSync(dir, { recursive: true });
+    Deno.removeSync(dir, { recursive: true });
   } catch { /* ignore */ }
 }
 
@@ -37,7 +36,7 @@ Deno.test('buildIslandChunkMap returns empty map when no client dir', async () =
   const tmp = makeTempDir();
   try {
     const outDir = join(tmp, 'dist');
-    mkdirSync(outDir);
+    Deno.mkdirSync(outDir);
     // No client/ subdir
     const result = await buildIslandChunkMap(tmp, outDir, ['counter-island']);
     assertEquals(Object.keys(result).length, 0);
@@ -51,8 +50,8 @@ Deno.test('buildIslandChunkMap returns empty map when no manifest', async () => 
   try {
     // Create islands/ dir with chunk files but no manifest
     const islandsDir = join(tmp, 'dist', 'client', 'islands');
-    mkdirSync(islandsDir, { recursive: true });
-    writeFileSync(join(islandsDir, 'island-counter-island-abc123.js'), '// counter', 'utf-8');
+    Deno.mkdirSync(islandsDir, { recursive: true });
+    Deno.writeTextFileSync(join(islandsDir, 'island-counter-island-abc123.js'), '// counter');
 
     const result = await buildIslandChunkMap(tmp, 'dist', ['counter-island']);
     // Without manifest, returns empty (no fallback scan)
@@ -66,14 +65,14 @@ Deno.test('buildIslandChunkMap scans manifest.json for island chunks', async () 
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
 
     const manifest = {
       'src/islands/counter-island.ts': { file: 'islands/island-counter-island-abc123.js' },
       'src/islands/open-theme-toggle.ts': { file: 'islands/island-open-theme-toggle-def456.js' },
       '.openElement-client-entry.ts': { file: 'islands/client.js' },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const result = await buildIslandChunkMap(
       tmp,
@@ -94,11 +93,11 @@ Deno.test('buildIslandChunkMap respects basePath option', async () => {
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
     const manifest = {
       'src/islands/counter-island.ts': { file: 'islands/island-counter-island-abc.js' },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const result = await buildIslandChunkMap(tmp, 'dist', ['counter-island'], '/my-app/');
     assert(result['counter-island'].startsWith('/my-app/'));
@@ -111,8 +110,8 @@ Deno.test('buildIslandChunkMap handles malformed manifest.json', async () => {
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
-    writeFileSync(join(viteDir, 'manifest.json'), '{invalid json', 'utf-8');
+    Deno.mkdirSync(viteDir, { recursive: true });
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), '{invalid json');
 
     const result = await buildIslandChunkMap(tmp, 'dist', ['counter-island']);
     // Malformed manifest returns empty map
@@ -126,12 +125,12 @@ Deno.test('buildIslandChunkMap skips manifest entries without file field', async
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
     const manifest = {
       'src/something.ts': { css: ['style.css'] },
       'src/islands/counter.ts': { file: 'islands/island-counter-abc123.js' },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const result = await buildIslandChunkMap(tmp, 'dist', ['counter']);
     assertExists(result['counter']);
@@ -146,12 +145,12 @@ Deno.test(
     const tmp = makeTempDir();
     try {
       const viteDir = join(tmp, 'dist', 'client', '.vite');
-      mkdirSync(viteDir, { recursive: true });
+      Deno.mkdirSync(viteDir, { recursive: true });
 
       const manifest = {
         'app/islands/my-counter.ts': { file: 'islands/island-my-counter-abc123.js' },
       };
-      writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+      Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
       const result = await buildIslandChunkMap(tmp, 'dist', ['my-counter']);
 
@@ -181,7 +180,7 @@ Deno.test('buildIslandChunkMap matches base64url hashes with trailing dash via m
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
 
     // Mirrors the real www/dist/client/.vite/manifest.json shape.
     const manifest = {
@@ -201,7 +200,7 @@ Deno.test('buildIslandChunkMap matches base64url hashes with trailing dash via m
         name: 'flexsearch.bundle.module.min',
       },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const origWarn = console.warn;
     const warnings: string[] = [];
@@ -238,7 +237,7 @@ Deno.test('buildIslandChunkMap falls back to filename matching when manifest has
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
 
     const manifest = {
       // manualChunks naming: island-<tag>-<hash>.js, hash contains `-`/`_`.
@@ -246,7 +245,7 @@ Deno.test('buildIslandChunkMap falls back to filename matching when manifest has
       'app/islands/open-tabs.ts': { file: 'islands/island-open-tabs-CcG-LXBP.js' },
       'app/islands/flex-search.ts': { file: 'islands/island-flex-search-BKwbD_Kx.js' },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const result = await buildIslandChunkMap(
       tmp,
@@ -266,7 +265,7 @@ Deno.test('buildIslandChunkMap warns on unmatched island chunks instead of dropp
   const tmp = makeTempDir();
   try {
     const viteDir = join(tmp, 'dist', 'client', '.vite');
-    mkdirSync(viteDir, { recursive: true });
+    Deno.mkdirSync(viteDir, { recursive: true });
 
     const manifest = {
       'app/islands/ghost-widget.ts': {
@@ -274,7 +273,7 @@ Deno.test('buildIslandChunkMap warns on unmatched island chunks instead of dropp
         name: 'island-ghost-widget',
       },
     };
-    writeFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
+    Deno.writeTextFileSync(join(viteDir, 'manifest.json'), JSON.stringify(manifest));
 
     const origWarn = console.warn;
     const warnings: string[] = [];
@@ -308,11 +307,11 @@ Deno.test('injectClientScript adds script tag to HTML files', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body><p>Hello</p></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body><p>Hello</p></body></html>');
 
     injectClientScript(tmp, '/client/islands/client.js');
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, '/client/islands/client.js');
     assertStringIncludes(content, '<script type="module"');
   } finally {
@@ -325,15 +324,14 @@ Deno.test('injectClientScript does not duplicate existing injection', () => {
   try {
     const scriptTag = '<script type="module" src="/client/islands/client.js"></script>';
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(
+    Deno.writeTextFileSync(
       htmlPath,
       `<html><head></head><body>${scriptTag}<p>Hello</p></body></html>`,
-      'utf-8',
     );
 
     injectClientScript(tmp, '/client/islands/client.js');
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     const count = (content.match(/client\.js/g) || []).length;
     assertEquals(count <= 1, true);
   } finally {
@@ -344,14 +342,14 @@ Deno.test('injectClientScript does not duplicate existing injection', () => {
 Deno.test('injectClientScript recurses into subdirectories', () => {
   const tmp = makeTempDir();
   try {
-    mkdirSync(join(tmp, 'blog'));
-    writeFileSync(join(tmp, 'index.html'), '<html><body></body></html>', 'utf-8');
-    writeFileSync(join(tmp, 'blog', 'post.html'), '<html><body></body></html>', 'utf-8');
+    Deno.mkdirSync(join(tmp, 'blog'));
+    Deno.writeTextFileSync(join(tmp, 'index.html'), '<html><body></body></html>');
+    Deno.writeTextFileSync(join(tmp, 'blog', 'post.html'), '<html><body></body></html>');
 
     injectClientScript(tmp, '/client.js');
 
-    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), '/client.js');
-    assertStringIncludes(readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8'), '/client.js');
+    assertStringIncludes(Deno.readTextFileSync(join(tmp, 'index.html')), '/client.js');
+    assertStringIncludes(Deno.readTextFileSync(join(tmp, 'blog', 'post.html')), '/client.js');
   } finally {
     cleanup(tmp);
   }
@@ -363,11 +361,11 @@ Deno.test('injectCspMeta adds CSP meta tag to HTML files', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectCspMeta(tmp, "default-src 'self'");
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'Content-Security-Policy');
     assertStringIncludes(content, "default-src 'self'");
   } finally {
@@ -379,11 +377,11 @@ Deno.test('injectCspMeta uses Report-Only header in report-only mode', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectCspMeta(tmp, "default-src 'self'", true);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'Content-Security-Policy-Report-Only');
     assertFalse(content.includes('"Content-Security-Policy"'));
   } finally {
@@ -395,11 +393,11 @@ Deno.test('injectCspMeta escapes double quotes in policy', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectCspMeta(tmp, `default-src 'self'; script-src "unsafe-inline"`);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, '&quot;');
   } finally {
     cleanup(tmp);
@@ -410,12 +408,12 @@ Deno.test('injectCspMeta does not duplicate on repeated calls', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectCspMeta(tmp, "default-src 'self'");
     injectCspMeta(tmp, "default-src 'self'");
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     const count = (content.match(/Content-Security-Policy/g) || []).length;
     assertEquals(count, 1);
   } finally {
@@ -427,11 +425,11 @@ Deno.test('injectClientScript handles HTML without </body> tag', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'no-body.html');
-    writeFileSync(htmlPath, '<html><head></head><p>No body close', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><p>No body close');
 
     injectClientScript(tmp, '/client.js');
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, '/client.js');
   } finally {
     cleanup(tmp);
@@ -442,11 +440,11 @@ Deno.test('injectCspMeta handles HTML without <head> tag', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'no-head.html');
-    writeFileSync(htmlPath, '<html><body><p>No head</p></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><body><p>No head</p></body></html>');
 
     injectCspMeta(tmp, "default-src 'self'");
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'Content-Security-Policy');
   } finally {
     cleanup(tmp);
@@ -457,11 +455,11 @@ Deno.test('injectCspMeta handles HTML starting with <!DOCTYPE>', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'doctype.html');
-    writeFileSync(htmlPath, '<!DOCTYPE html><html><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<!DOCTYPE html><html><body></body></html>');
 
     injectCspMeta(tmp, "default-src 'self'");
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'Content-Security-Policy');
   } finally {
     cleanup(tmp);
@@ -472,7 +470,7 @@ Deno.test('injectCspMeta warns when nonce=true', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'nonce.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     const origWarn = console.warn;
     let warnMsg = '';
@@ -494,12 +492,12 @@ Deno.test('injectCspMeta skips non-HTML files', () => {
   try {
     const htmlPath = join(tmp, 'index.html');
     const txtPath = join(tmp, 'readme.txt');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
-    writeFileSync(txtPath, 'Not HTML', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
+    Deno.writeTextFileSync(txtPath, 'Not HTML');
 
     injectCspMeta(tmp, "default-src 'self'");
 
-    const txtContent = readFileSync(txtPath, 'utf-8');
+    const txtContent = Deno.readTextFileSync(txtPath);
     assertEquals(txtContent, 'Not HTML', 'Non-HTML files should not be modified');
   } finally {
     cleanup(tmp);
@@ -511,12 +509,12 @@ Deno.test('injectClientScript skips non-HTML files', () => {
   try {
     const htmlPath = join(tmp, 'index.html');
     const jsPath = join(tmp, 'app.js');
-    writeFileSync(htmlPath, '<html><body></body></html>', 'utf-8');
-    writeFileSync(jsPath, 'console.log("hi")', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><body></body></html>');
+    Deno.writeTextFileSync(jsPath, 'console.log("hi")');
 
     injectClientScript(tmp, '/client.js');
 
-    const jsContent = readFileSync(jsPath, 'utf-8');
+    const jsContent = Deno.readTextFileSync(jsPath);
     assertEquals(jsContent, 'console.log("hi")', 'JS files should not be modified');
   } finally {
     cleanup(tmp);
@@ -529,11 +527,11 @@ Deno.test('injectViewTransitionMeta adds meta tag to HTML files', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body><p>Hello</p></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body><p>Hello</p></body></html>');
 
     injectViewTransitionMeta(tmp);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'view-transition');
     assertStringIncludes(content, 'same-origin');
   } finally {
@@ -545,12 +543,12 @@ Deno.test('injectViewTransitionMeta does not duplicate on repeated calls', () =>
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectViewTransitionMeta(tmp);
     injectViewTransitionMeta(tmp);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     const count = (content.match(/view-transition/g) || []).length;
     assertEquals(count, 1);
   } finally {
@@ -561,19 +559,18 @@ Deno.test('injectViewTransitionMeta does not duplicate on repeated calls', () =>
 Deno.test('injectViewTransitionMeta recurses into subdirectories', () => {
   const tmp = makeTempDir();
   try {
-    mkdirSync(join(tmp, 'guide'));
-    writeFileSync(join(tmp, 'index.html'), '<html><head></head><body></body></html>', 'utf-8');
-    writeFileSync(
+    Deno.mkdirSync(join(tmp, 'guide'));
+    Deno.writeTextFileSync(join(tmp, 'index.html'), '<html><head></head><body></body></html>');
+    Deno.writeTextFileSync(
       join(tmp, 'guide', 'page.html'),
       '<html><head></head><body></body></html>',
-      'utf-8',
     );
 
     injectViewTransitionMeta(tmp);
 
-    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), 'view-transition');
+    assertStringIncludes(Deno.readTextFileSync(join(tmp, 'index.html')), 'view-transition');
     assertStringIncludes(
-      readFileSync(join(tmp, 'guide', 'page.html'), 'utf-8'),
+      Deno.readTextFileSync(join(tmp, 'guide', 'page.html')),
       'view-transition',
     );
   } finally {
@@ -586,12 +583,12 @@ Deno.test('injectViewTransitionMeta skips non-HTML files', () => {
   try {
     const htmlPath = join(tmp, 'index.html');
     const txtPath = join(tmp, 'readme.txt');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
-    writeFileSync(txtPath, 'Not HTML', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
+    Deno.writeTextFileSync(txtPath, 'Not HTML');
 
     injectViewTransitionMeta(tmp);
 
-    const txtContent = readFileSync(txtPath, 'utf-8');
+    const txtContent = Deno.readTextFileSync(txtPath);
     assertEquals(txtContent, 'Not HTML');
   } finally {
     cleanup(tmp);
@@ -602,11 +599,11 @@ Deno.test('injectViewTransitionMeta handles HTML without <head> tag', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'no-head.html');
-    writeFileSync(htmlPath, '<html><body><p>No head</p></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><body><p>No head</p></body></html>');
 
     injectViewTransitionMeta(tmp);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'view-transition');
   } finally {
     cleanup(tmp);
@@ -620,15 +617,14 @@ Deno.test('injectViewTransitionMeta still injects when body text mentions view-t
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'changelog.html');
-    writeFileSync(
+    Deno.writeTextFileSync(
       htmlPath,
       '<html><head></head><body><p>We added view-transition support in v0.9.2</p></body></html>',
-      'utf-8',
     );
 
     injectViewTransitionMeta(tmp);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     // Should have the meta tag injected (not skipped because of body text)
     const matchCount = (content.match(/<meta name="view-transition"/g) || []).length;
     assertEquals(matchCount, 1);
@@ -773,7 +769,7 @@ Deno.test('injectSpeculationRules adds script tag to HTML files', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     const rulesJson = JSON.stringify(
       { prefetch: [{ where: { href_matches: '/about/*' } }] },
@@ -782,7 +778,7 @@ Deno.test('injectSpeculationRules adds script tag to HTML files', () => {
     );
     injectSpeculationRules(tmp, rulesJson);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertStringIncludes(content, 'speculationrules');
     assertStringIncludes(content, '/about/*');
   } finally {
@@ -794,11 +790,11 @@ Deno.test('injectSpeculationRules does nothing with empty rules', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     injectSpeculationRules(tmp, '');
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     assertFalse(content.includes('speculationrules'));
   } finally {
     cleanup(tmp);
@@ -809,13 +805,13 @@ Deno.test('injectSpeculationRules does not duplicate on repeated calls', () => {
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'index.html');
-    writeFileSync(htmlPath, '<html><head></head><body></body></html>', 'utf-8');
+    Deno.writeTextFileSync(htmlPath, '<html><head></head><body></body></html>');
 
     const rulesJson = JSON.stringify({ prefetch: [{ where: { href_matches: '/' } }] }, null, 2);
     injectSpeculationRules(tmp, rulesJson);
     injectSpeculationRules(tmp, rulesJson);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     const count = (content.match(/speculationrules/g) || []).length;
     assertEquals(count, 1);
   } finally {
@@ -826,20 +822,19 @@ Deno.test('injectSpeculationRules does not duplicate on repeated calls', () => {
 Deno.test('injectSpeculationRules recurses into subdirectories', () => {
   const tmp = makeTempDir();
   try {
-    mkdirSync(join(tmp, 'blog'));
-    writeFileSync(join(tmp, 'index.html'), '<html><body></body></html>', 'utf-8');
-    writeFileSync(
+    Deno.mkdirSync(join(tmp, 'blog'));
+    Deno.writeTextFileSync(join(tmp, 'index.html'), '<html><body></body></html>');
+    Deno.writeTextFileSync(
       join(tmp, 'blog', 'post.html'),
       '<html><body></body></html>',
-      'utf-8',
     );
 
     const rulesJson = JSON.stringify({ prefetch: [{ where: { href_matches: '/*' } }] }, null, 2);
     injectSpeculationRules(tmp, rulesJson);
 
-    assertStringIncludes(readFileSync(join(tmp, 'index.html'), 'utf-8'), 'speculationrules');
+    assertStringIncludes(Deno.readTextFileSync(join(tmp, 'index.html')), 'speculationrules');
     assertStringIncludes(
-      readFileSync(join(tmp, 'blog', 'post.html'), 'utf-8'),
+      Deno.readTextFileSync(join(tmp, 'blog', 'post.html')),
       'speculationrules',
     );
   } finally {
@@ -854,16 +849,15 @@ Deno.test('injectSpeculationRules still injects when body text mentions speculat
   const tmp = makeTempDir();
   try {
     const htmlPath = join(tmp, 'changelog.html');
-    writeFileSync(
+    Deno.writeTextFileSync(
       htmlPath,
       '<html><head></head><body><p>We added speculationrules support in v0.9.2</p></body></html>',
-      'utf-8',
     );
 
     const rulesJson = JSON.stringify({ prefetch: [{ where: { href_matches: '/*' } }] }, null, 2);
     injectSpeculationRules(tmp, rulesJson);
 
-    const content = readFileSync(htmlPath, 'utf-8');
+    const content = Deno.readTextFileSync(htmlPath);
     // Should have the script tag injected (not skipped because of body text)
     const matchCount = (content.match(/<script type="speculationrules"/g) || []).length;
     assertEquals(matchCount, 1);

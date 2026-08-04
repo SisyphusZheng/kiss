@@ -1,5 +1,4 @@
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
 import { CREATE_VERSION } from './version.ts';
 
 export interface ProductVersions {
@@ -63,7 +62,7 @@ function versionTokens(v: ProductVersions): Record<string, string> {
 
 export async function buildTemplates(v: ProductVersions): Promise<Record<string, string>> {
   assertUnifiedProductVersions(v);
-  const templatesDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
+  const templatesDir = resolve(import.meta.dirname!, '..', 'templates');
   const tokens = versionTokens(v);
   const entries = await Promise.all(TEMPLATE_FILES.map(async ([source, target]) => {
     let content = await Deno.readTextFile(join(templatesDir, source));

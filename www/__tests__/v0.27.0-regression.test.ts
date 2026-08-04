@@ -15,8 +15,8 @@
  */
 
 import { assert, assertEquals, assertFalse, assertStringIncludes } from '@std/assert';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync } from '@std/fs';
+import { join } from '@std/path';
 
 const DIST = join(import.meta.dirname ?? '.', '..', 'dist');
 const DOCS_PAGE = join(DIST, 'zh', 'guide', 'getting-started', 'index.html');
@@ -28,7 +28,7 @@ const REGISTRY_PAGE = join(DIST, 'zh', 'registry', 'index.html');
 
 function readPage(path: string): string {
   if (!existsSync(path)) throw new Error(`Page not found: ${path}`);
-  return readFileSync(path, 'utf-8');
+  return Deno.readTextFileSync(path);
 }
 
 // ─── Bug 1: Sidebar not missing ─────────────────────────────────────
@@ -96,7 +96,7 @@ Deno.test('alpha.10 surface: JSX is exported from @openelement/element root', ()
     'src',
     'index.ts',
   );
-  const src = readFileSync(indexPath, 'utf-8');
+  const src = Deno.readTextFileSync(indexPath);
   for (const name of ['Fragment', 'jsx', 'jsxDEV', 'jsxs']) {
     assert(src.includes(name), `${name} should be exported from Element root`);
   }

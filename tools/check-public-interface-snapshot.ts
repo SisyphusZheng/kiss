@@ -1,9 +1,13 @@
 /** Generate/check the deterministic five-package public-interface baseline. */
-import { createHash } from 'node:crypto';
 import { formatJson } from '@openelement/element/build-utils';
 import { readPackages, releasePublishOrder } from './lib/package-graph.ts';
 
 const SNAPSHOT = 'docs/release/public-interface-snapshot.json';
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return new Uint8Array(digest).toHex();
+}
 const write = Deno.args.includes('--write');
 const packages = releasePublishOrder(await readPackages());
 const snapshot = {
@@ -19,7 +23,7 @@ const snapshot = {
           )
         ).map((line) => line.trim());
         return [path, {
-          sha256: createHash('sha256').update(text).digest('hex'),
+          sha256: await sha256Hex(text),
           publicDeclarations,
         }] as const;
       }),

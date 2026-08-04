@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from '@std/assert';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import { createOpenPlugin } from '../src/plugin.ts';
 
 import { openPipeline } from '../src/index.ts';

@@ -520,8 +520,7 @@ Deno.test('request-time server entry serves the SSR bundle at request time', asy
   const { renderRequestTimeServerModule } = await import(
     '../src/internal/ssg/ssg-helpers.ts'
   );
-  const { join } = await import('node:path');
-  const { pathToFileURL } = await import('node:url');
+  const { join, toFileUrl } = await import('@std/path');
 
   const dir = await Deno.makeTempDir();
   try {
@@ -542,7 +541,7 @@ export default app;
     await Deno.writeTextFile(join(dir, 'index.js'), renderRequestTimeServerModule());
     await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
 
-    const mod = await import(pathToFileURL(join(dir, 'index.js')).href) as {
+    const mod = await import(toFileUrl(join(dir, 'index.js')).href) as {
       default: (event: { req: Request }) => Promise<Response>;
     };
     const response = await mod.default({ req: new Request('http://localhost/live?x=42') });
@@ -559,8 +558,7 @@ Deno.test('request-time server entry injects the island client script into HTML 
   const { renderRequestTimeServerModule } = await import(
     '../src/internal/ssg/ssg-helpers.ts'
   );
-  const { join } = await import('node:path');
-  const { pathToFileURL } = await import('node:url');
+  const { join, toFileUrl } = await import('@std/path');
 
   const dir = await Deno.makeTempDir();
   try {
@@ -580,7 +578,7 @@ export default app;
       `export const clientScriptSrc = '/client/entry-abc123.js';\n`,
     );
 
-    const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?with-script') as {
+    const mod = await import(toFileUrl(join(dir, 'index.js')).href + '?with-script') as {
       default: (event: { req: Request }) => Promise<Response>;
     };
     const response = await mod.default({ req: new Request('http://localhost/live') });
@@ -598,8 +596,7 @@ Deno.test('request-time server entry matchRequestTimeRoute dispatches param rout
   const { renderRequestTimeServerModule } = await import(
     '../src/internal/ssg/ssg-helpers.ts'
   );
-  const { join } = await import('node:path');
-  const { pathToFileURL } = await import('node:url');
+  const { join, toFileUrl } = await import('@std/path');
 
   const dir = await Deno.makeTempDir();
   try {
@@ -622,7 +619,7 @@ export default app;
     );
     await Deno.writeTextFile(join(dir, 'client-script.js'), `export const clientScriptSrc = '';\n`);
 
-    const mod = await import(pathToFileURL(join(dir, 'index.js')).href + '?matcher') as {
+    const mod = await import(toFileUrl(join(dir, 'index.js')).href + '?matcher') as {
       matchRequestTimeRoute: (
         pathname: string,
       ) => { path: string; params: Record<string, string> } | null;

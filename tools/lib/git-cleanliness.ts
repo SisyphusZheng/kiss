@@ -1,4 +1,5 @@
-import { normalize } from 'node:path';
+import { normalize } from '@std/path';
+import { normalizeSlashes } from './path.ts';
 
 export const RELEASE_EVIDENCE_PATHS = Object.freeze({
   prefixes: ['docs/release/', 'vendor/', 'www/app/data/_generated-'],
@@ -8,7 +9,7 @@ export const RELEASE_EVIDENCE_PATHS = Object.freeze({
 });
 
 function normalizeGitPath(path: string): string {
-  return normalize(path).replace(/\\/g, '/').replace(/^\.\//, '');
+  return normalizeSlashes(normalize(path)).replace(/^\.\//, '');
 }
 
 export function parsePorcelainPath(line: string): string {

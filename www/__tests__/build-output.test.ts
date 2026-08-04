@@ -6,8 +6,9 @@
  * (must run after `deno task build`)
  */
 import { assert, assertEquals } from '@std/assert';
-import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync } from '@std/fs';
+import { walkSync } from '@std/fs/walk';
+import { join } from '@std/path';
 
 const DIST = join(import.meta.dirname ?? '.', '..', 'dist');
 
@@ -16,7 +17,7 @@ Deno.test('build output: no Hono virtual entry in public assets', () => {
   const assetsDir = join(DIST, 'assets');
   assert(existsSync(assetsDir), `Build assets directory is missing: ${assetsDir}`);
 
-  const files = readdirSync(assetsDir);
+  const files = [...Deno.readDirSync(assetsDir)].map((entry) => entry.name);
   const honoEntry = files.find((f) => f.startsWith('_virtual_less-hono-entry'));
   assertEquals(
     honoEntry,
@@ -40,7 +41,7 @@ Deno.test('build output: client island JS stays within core budget and ships no 
     'island-reactive-showcase',
     'island-scroll-reveal',
   ];
-  const files = readdirSync(clientDir, { recursive: true }) as string[];
+  const files = [...walkSync(clientDir, { includeDirs: false })].map((entry) => entry.path);
   let coreBytes = 0;
   const emittedShowcase: string[] = [];
   for (const f of files) {
@@ -48,7 +49,7 @@ Deno.test('build output: client island JS stays within core budget and ships no 
       if (removedShowcaseChunks.some((prefix) => f.includes(prefix))) {
         emittedShowcase.push(f);
       } else {
-        coreBytes += statSync(join(clientDir, f)).size;
+        coreBytes += Deno.statSync(f).size;
       }
     }
   }

@@ -4,9 +4,7 @@
  * directly inside an openElement app.
  */
 
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, fromFileUrl, join } from '@std/path';
 
 import type { Page } from 'npm:playwright@1.59.1';
 import { formatJson } from '@openelement/element/build-utils';
@@ -15,7 +13,7 @@ import { readJson } from './lib/fs.ts';
 import { normalizeSlashes } from './lib/path.ts';
 import { serveStatic } from './lib/static-server.ts';
 
-const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const repoRoot = dirname(dirname(fromFileUrl(import.meta.url)));
 const PROJECT_NAME = 'third-party-wc-smoke-app';
 
 const THIRD_PARTY_IMPORTS = {
@@ -50,8 +48,11 @@ async function run(
 
 async function patchDenoJson(appDir: string): Promise<void> {
   const denoJsonPath = join(appDir, 'deno.json');
-  const denoJson = await readJson(denoJsonPath);
-  const imports = denoJson.imports as Record<string, string>;
+  const denoJson = await readJson<{
+    imports: Record<string, string>;
+    tasks: Record<string, string>;
+  }>(denoJsonPath);
+  const imports = denoJson.imports;
 
   Object.assign(imports, THIRD_PARTY_IMPORTS);
 
@@ -72,7 +73,7 @@ async function patchViteConfig(appDir: string): Promise<void> {
 
   const aliasText = [...allPackageAliases(repoRoot)]
     .map(([find, url]) =>
-      `{ find: '${find}', replacement: '${normalizeSlashes(fileURLToPath(url))}' }`
+      `{ find: '${find}', replacement: '${normalizeSlashes(fromFileUrl(url))}' }`
     )
     .join(',\n        ');
 
@@ -253,7 +254,7 @@ async function main(): Promise<void> {
     await patchDenoJson(appDir);
     await patchViteConfig(appDir);
 
-    const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'third-party-wc-smoke');
+    const fixtureDir = join(dirname(fromFileUrl(import.meta.url)), 'third-party-wc-smoke');
     for (
       const src of [
         'app/routes/third-party-wc.tsx',
@@ -261,8 +262,8 @@ async function main(): Promise<void> {
         'app/client/alpha3-wc-client.ts',
       ]
     ) {
-      mkdirSync(dirname(join(appDir, src)), { recursive: true });
-      copyFileSync(join(fixtureDir, src), join(appDir, src));
+      Deno.mkdirSync(dirname(join(appDir, src)), { recursive: true });
+      Deno.copyFileSync(join(fixtureDir, src), join(appDir, src));
     }
 
     await run(['task', 'build'], appDir);

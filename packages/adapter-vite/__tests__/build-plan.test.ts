@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from '@std/assert';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import { OpenElementBuildContext } from '../src/build-context.ts';
 import {
   collectBuildArtifacts,

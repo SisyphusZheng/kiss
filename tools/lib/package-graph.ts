@@ -5,8 +5,7 @@
  * topological sorting / cycle detection used by graph:check and release tasks.
  */
 
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, toFileUrl } from '@std/path';
 import { walkSync } from '@std/fs/walk';
 import { extractStaticModuleSpecifiers } from './typescript-ast.ts';
 
@@ -338,7 +337,7 @@ export function allPackageAliases(repoRoot: string): Map<string, string> {
     if (!packageName) continue;
 
     if (typeof exportsField === 'string') {
-      entries.push([packageName, pathToFileURL(join(pkgDir, exportsField)).href]);
+      entries.push([packageName, toFileUrl(join(pkgDir, exportsField)).href]);
     } else if (exportsField && typeof exportsField === 'object') {
       for (
         const [subpath, target] of Object.entries(
@@ -346,7 +345,7 @@ export function allPackageAliases(repoRoot: string): Map<string, string> {
         )
       ) {
         const specifier = subpath === '.' ? packageName : `${packageName}${subpath.slice(1)}`;
-        entries.push([specifier, pathToFileURL(join(pkgDir, target)).href]);
+        entries.push([specifier, toFileUrl(join(pkgDir, target)).href]);
       }
     }
   }

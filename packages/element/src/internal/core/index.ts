@@ -79,11 +79,6 @@ export type {
   CompatibilityTier,
 } from '../protocol/manifest.ts';
 export { escapeAttr, escapeAttrValue, escapeHtml } from './html-escape.ts';
-export {
-  // v0.24.3: Neutral signal utilities — no template dependency
-  isSignalLike,
-  unwrapSignalLike,
-} from '../signal/index.ts';
 export type { SignalLike, Unsubscribe } from '../protocol/signal.ts';
 export { consumeContext, type Context, createContext, provideContext } from './signal-context.ts';
 export { createLogger } from './logger.ts';

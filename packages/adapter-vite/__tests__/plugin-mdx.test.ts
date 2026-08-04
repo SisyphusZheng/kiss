@@ -1,7 +1,5 @@
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import { join } from 'node:path';
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { join } from '@std/path';
 import { mdxPlugin } from '../src/plugin-mdx.ts';
 
 Deno.test('mdxPlugin exposes a pre-transform Vite plugin', () => {
@@ -34,16 +32,16 @@ Deno.test({
     // Regression for the Phase 3 (build-ssg) break: .mdx routes were
     // imported by the generated SSG entry but the Phase 3 plugin table had
     // no mdxPlugin, so esbuild parsed .mdx as JS and the build failed.
-    const dir = mkdtempSync(join(tmpdir(), 'openelement-mdx-ssg-'));
+    const dir = Deno.makeTempDirSync({ prefix: 'openelement-mdx-ssg-' });
     const entry = join(dir, 'entry.ts');
-    writeFileSync(entry, `import Page from './page.mdx';\nconsole.log(Page);\n`);
-    writeFileSync(
+    Deno.writeTextFileSync(entry, `import Page from './page.mdx';\nconsole.log(Page);\n`);
+    Deno.writeTextFileSync(
       join(dir, 'page.mdx'),
       `# Title\n\n<open-callout>Hello</open-callout>\n`,
     );
     // Stand-in for the Deno import-map plugin used by real Phase 3 builds:
     // the MDX JSX runtime resolves to @openelement/element/jsx-runtime.
-    writeFileSync(
+    Deno.writeTextFileSync(
       join(dir, 'jsx-runtime-stub.ts'),
       `export const jsx = () => null;\nexport const jsxs = () => null;\nexport const Fragment = Symbol('Fragment');\n`,
     );

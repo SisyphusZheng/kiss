@@ -1,4 +1,5 @@
 import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
+import { compare as compareSemver, parse as parseSemver, type SemVer } from '@std/semver';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,
@@ -8,6 +9,7 @@ import {
 } from '../project-constants.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
 import { gitTagExists, isAncestorCommit } from '../lib/git.ts';
+import { runWithOutput } from '../lib/process.ts';
 import { npmView, verifyNpmRelease } from '../lib/npm-release-verifier.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
@@ -60,19 +62,29 @@ export interface ReleaseCommandStep {
 }
 
 export function nextPatchVersion(version: string): string {
-  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$/);
-  if (!match) throw new Error(`Invalid semver version: ${version}`);
-  const major = Number(match[1]);
-  const minor = Number(match[2]);
-  const patch = Number(match[3]);
-  const preName = match[4];
-  const preNum = match[5];
+  let parsed: SemVer;
+  try {
+    parsed = parseSemver(version);
+  } catch {
+    throw new Error(`Invalid semver version: ${version}`);
+  }
+  // Strict x.y.z(-label.n) only: reject the v/= prefixes and build metadata
+  // that @std/semver otherwise tolerates.
+  if (!/^\d/u.test(version) || (parsed.build ?? []).length > 0) {
+    throw new Error(`Invalid semver version: ${version}`);
+  }
+  const { major, minor, patch } = parsed;
+  const prerelease = parsed.prerelease ?? [];
 
   // Pre-release line: bump the pre-release counter, not the patch, so a
   // version like 0.41.0-alpha.6 advances to 0.41.0-alpha.7 instead of
   // the stable 0.41.1 (which would silently leave pre-release scope).
-  if (preName !== undefined && preNum !== undefined) {
-    return `${major}.${minor}.${patch}-${preName}.${Number(preNum) + 1}`;
+  if (prerelease.length > 0) {
+    const [preName, preNum] = prerelease;
+    if (prerelease.length !== 2 || typeof preName !== 'string' || typeof preNum !== 'number') {
+      throw new Error(`Invalid semver version: ${version}`);
+    }
+    return `${major}.${minor}.${patch}-${preName}.${preNum + 1}`;
   }
 
   return `${major}.${minor}.${patch + 1}`;
@@ -612,20 +624,7 @@ export async function assertForwardOnlyTags(targetVersion: string): Promise<void
 
 /** Numeric semver compare for x.y.z(-prerelease); prerelease < release. */
 export function compareVersions(a: string, b: string): number {
-  const parse = (s: string): { num: number[]; pre: string[] } => {
-    const [base, pre] = s.split('-');
-    const num = base.split('.').map((n) => parseInt(n, 10));
-    return { num, pre: pre ? pre.split('.') : [] };
-  };
-  const A = parse(a);
-  const B = parse(b);
-  for (let i = 0; i < 3; i++) {
-    if (A.num[i] !== B.num[i]) return A.num[i] - B.num[i];
-  }
-  if (A.pre.length === 0 && B.pre.length === 0) return 0;
-  if (A.pre.length === 0) return 1;
-  if (B.pre.length === 0) return -1;
-  return A.pre.join('.').localeCompare(B.pre.join('.'));
+  return compareSemver(parseSemver(a), parseSemver(b));
 }
 
 /**
@@ -1299,17 +1298,13 @@ export async function runReleaseStep(
 }
 
 export async function runCaptured(command: string[]): Promise<string> {
-  const output = await new Deno.Command(command[0], {
-    args: command.slice(1),
-    stdout: 'piped',
-    stderr: 'piped',
-  }).output();
-  const stdout = new TextDecoder().decode(output.stdout);
-  const stderr = new TextDecoder().decode(output.stderr);
-  if (!output.success) {
-    throw new Error(`${command.join(' ')} failed with exit ${output.code}\n${stdout}${stderr}`);
+  const result = await runWithOutput(command[0], command.slice(1));
+  if (!result.success) {
+    throw new Error(
+      `${command.join(' ')} failed with exit ${result.code}\n${result.stdout}${result.stderr}`,
+    );
   }
-  return stdout;
+  return result.stdout;
 }
 
 export async function hasStagedChanges(): Promise<boolean> {

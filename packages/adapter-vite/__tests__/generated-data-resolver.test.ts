@@ -1,6 +1,5 @@
 import { assert, assertEquals, assertStringIncludes, assertThrows } from '@std/assert';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import {
   createGeneratedDataResolverPlugin,
   GENERATED_BLOG_DATA_ID,
@@ -87,11 +86,10 @@ Deno.test('generated data resolver loads a required id from disk when the write 
   const root = Deno.makeTempDirSync();
   try {
     const dataDir = join(root, 'app', 'data');
-    mkdirSync(dataDir, { recursive: true });
-    writeFileSync(
+    Deno.mkdirSync(dataDir, { recursive: true });
+    Deno.writeTextFileSync(
       join(dataDir, '_generated-i18n-data.ts'),
       'export const locales = ["en"];',
-      'utf-8',
     );
 
     const plugin = createGeneratedDataResolverPlugin({

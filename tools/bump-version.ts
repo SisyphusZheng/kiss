@@ -27,6 +27,7 @@ interface PackageJson {
   [key: string]: unknown;
 }
 
+import { parse as parseSemver, type SemVer } from '@std/semver';
 import { getArg } from './lib/process.ts';
 
 interface ParsedVersion {
@@ -38,26 +39,29 @@ interface ParsedVersion {
 }
 
 export function parseVersion(version: string): ParsedVersion {
-  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
-  if (!match) {
+  let parsed: SemVer;
+  try {
+    parsed = parseSemver(version);
+  } catch {
     throw new Error(`Invalid semver version: ${version}`);
   }
-  const [, major, minor, patch, pre] = match;
-  if (!pre) {
-    return {
-      major: Number(major),
-      minor: Number(minor),
-      patch: Number(patch),
-      prereleaseNumber: 0,
-    };
+  // The bump line is strict x.y.z(-label.n): reject the v/= prefixes and
+  // build metadata that @std/semver otherwise tolerates.
+  if (!/^\d/u.test(version) || (parsed.build ?? []).length > 0) {
+    throw new Error(`Invalid semver version: ${version}`);
   }
-  const [label, numStr] = pre.split('.');
+  const { major, minor, patch } = parsed;
+  const prerelease = parsed.prerelease ?? [];
+  if (prerelease.length === 0) {
+    return { major, minor, patch, prereleaseNumber: 0 };
+  }
+  const [label, num] = prerelease;
   return {
-    major: Number(major),
-    minor: Number(minor),
-    patch: Number(patch),
-    prerelease: label,
-    prereleaseNumber: numStr ? Number(numStr) : 0,
+    major,
+    minor,
+    patch,
+    prerelease: String(label),
+    prereleaseNumber: num === undefined ? 0 : Number(num),
   };
 }
 

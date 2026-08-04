@@ -1,6 +1,5 @@
 import { assertEquals } from '@std/assert';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join } from '@std/path';
 
 /**
  * Audit gate: boolean expressions must not be passed to assertExists.
@@ -86,7 +85,7 @@ Deno.test('audit gate: no boolean expressions passed to assertExists', () => {
   const offenders: string[] = [];
 
   for (const file of listTestFiles()) {
-    const content = readFileSync(file, 'utf-8');
+    const content = Deno.readTextFileSync(file);
     for (const { text, line } of directArguments(content)) {
       if (BOOLEAN_PATTERN.test(text)) {
         offenders.push(`${file}:${line}: ${text.trim().replaceAll(/\s+/g, ' ').slice(0, 80)}`);

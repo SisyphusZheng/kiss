@@ -1,6 +1,6 @@
 import { assertEquals, assertExists } from '@std/assert';
-import { join } from 'node:path';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync } from '@std/fs';
+import { join } from '@std/path';
 import {
   extractCustomElementTags,
   generateIslandManifests,
@@ -11,12 +11,12 @@ import {
 const TMP_DIR = join(import.meta.dirname!, '__tmp_manifest_test__');
 
 function setup() {
-  if (existsSync(TMP_DIR)) rmSync(TMP_DIR, { recursive: true });
-  mkdirSync(TMP_DIR, { recursive: true });
+  if (existsSync(TMP_DIR)) Deno.removeSync(TMP_DIR, { recursive: true });
+  Deno.mkdirSync(TMP_DIR, { recursive: true });
 }
 
 function cleanup() {
-  if (existsSync(TMP_DIR)) rmSync(TMP_DIR, { recursive: true });
+  if (existsSync(TMP_DIR)) Deno.removeSync(TMP_DIR, { recursive: true });
 }
 
 Deno.test('extractCustomElementTags: extracts hyphenated tags', () => {
@@ -64,7 +64,7 @@ Deno.test('extractCustomElementTags: ignores false positives outside real markup
 
 Deno.test('generateIslandManifests: produces manifests with known islands', () => {
   setup();
-  writeFileSync(join(TMP_DIR, 'index.html'), '<open-theme-toggle></open-theme-toggle>');
+  Deno.writeTextFileSync(join(TMP_DIR, 'index.html'), '<open-theme-toggle></open-theme-toggle>');
 
   const chunkMap = { 'open-theme-toggle': '/client/islands/island-open-theme-toggle-abc.js' };
   const strategyMap = { 'open-theme-toggle': 'idle' as const };
@@ -87,7 +87,7 @@ Deno.test('generateIslandManifests: produces manifests with known islands', () =
 
 Deno.test('generateIslandManifests: empty islands for pages without custom elements', () => {
   setup();
-  writeFileSync(join(TMP_DIR, 'about.html'), '<div><span>hello</span></div>');
+  Deno.writeTextFileSync(join(TMP_DIR, 'about.html'), '<div><span>hello</span></div>');
 
   const manifests = generateIslandManifests(TMP_DIR, {});
   assertEquals(manifests.length, 1);
@@ -98,7 +98,7 @@ Deno.test('generateIslandManifests: empty islands for pages without custom eleme
 
 Deno.test('generateIslandManifests: defaults strategy to idle and layer to dsd-static', () => {
   setup();
-  writeFileSync(join(TMP_DIR, 'guide.html'), '<open-button>Click</open-button>');
+  Deno.writeTextFileSync(join(TMP_DIR, 'guide.html'), '<open-button>Click</open-button>');
 
   const chunkMap = { 'open-button': '/client/islands/island-open-button-xyz.js' };
   const manifests = generateIslandManifests(TMP_DIR, chunkMap);
@@ -110,8 +110,11 @@ Deno.test('generateIslandManifests: defaults strategy to idle and layer to dsd-s
 
 Deno.test('generateIslandManifests: nested routes use one POSIX slash', () => {
   setup();
-  mkdirSync(join(TMP_DIR, 'guide', 'start'), { recursive: true });
-  writeFileSync(join(TMP_DIR, 'guide', 'start', 'index.html'), '<open-button></open-button>');
+  Deno.mkdirSync(join(TMP_DIR, 'guide', 'start'), { recursive: true });
+  Deno.writeTextFileSync(
+    join(TMP_DIR, 'guide', 'start', 'index.html'),
+    '<open-button></open-button>',
+  );
   const manifests = generateIslandManifests(TMP_DIR, {
     'open-button': '/client/islands/island-open-button-a1b2.js',
   });
@@ -143,7 +146,7 @@ Deno.test('writeIslandManifests: creates JSON files in island-manifests dir', as
   const files = Array.from(Deno.readDirSync(manifestDir));
   assertEquals(files.length, 1);
 
-  const content = JSON.parse(readFileSync(join(manifestDir, files[0].name), 'utf-8'));
+  const content = JSON.parse(Deno.readTextFileSync(join(manifestDir, files[0].name)));
   assertEquals(content.route, '/');
   assertEquals(content.islands.length, 1);
   assertEquals(content.islands[0].tagName, 'open-toggle');

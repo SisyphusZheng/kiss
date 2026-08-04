@@ -23,19 +23,15 @@
  */
 
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, toFileUrl } from '@std/path';
 
-const fixtureDir = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '../__fixtures__/request-time',
-);
+const fixtureDir = join(import.meta.dirname!, '../__fixtures__/request-time');
 const serverEntryPath = join(fixtureDir, 'dist/server/index.js');
 
 type ServerHandle = { base: string; close: () => Promise<void> };
 
 async function bootBuildServer(): Promise<ServerHandle> {
-  const entry = await import(pathToFileURL(serverEntryPath).href);
+  const entry = await import(toFileUrl(serverEntryPath).href);
   const handle = entry.default as (event: { req: Request }) => Promise<Response>;
   const server = Deno.serve(
     { port: 0, hostname: '127.0.0.1' },

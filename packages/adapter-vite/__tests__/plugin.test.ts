@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from '@std/assert';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import { createOpenPlugin } from '../src/plugin.ts';
 
 type PluginOptions = Parameters<typeof createOpenPlugin>[0];

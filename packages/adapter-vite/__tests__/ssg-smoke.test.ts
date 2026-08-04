@@ -9,12 +9,11 @@
  */
 
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync } from '@std/fs';
+import { dirname, join, toFileUrl } from '@std/path';
 import { walkHtmlFileEntries } from '../src/internal/html-files.ts';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname!;
 const ROOT = dirname(dirname(dirname(__dirname)));
 const WWW_DIR = join(ROOT, 'www');
 const WWW_DIST = join(WWW_DIR, 'dist');
@@ -30,7 +29,9 @@ function hasServerEntry(): boolean {
 function hasIslandChunk(prefix: string): boolean {
   const islandsDir = join(WWW_DIST, 'client', 'islands');
   if (!existsSync(islandsDir)) return false;
-  return readdirSync(islandsDir).some((file) => file.startsWith(prefix) && file.endsWith('.js'));
+  return [...Deno.readDirSync(islandsDir)].some((entry) =>
+    entry.name.startsWith(prefix) && entry.name.endsWith('.js')
+  );
 }
 
 /** Page HTML under dist/, excluding the client/ and server/ build artifacts. */
@@ -67,7 +68,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
 
   await t.step('server SSR bundle exports route metadata and renderRoute', async () => {
     const serverEntry = join(WWW_DIST, 'server', 'entry.js');
-    const serverBundle = readFileSync(serverEntry, 'utf-8');
+    const serverBundle = Deno.readTextFileSync(serverEntry);
     assertEquals(
       /from\s+["']sanitize-html["']/.test(serverBundle),
       false,
@@ -79,7 +80,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       'SSR bundle must be portable to Node and must not leak npm: imports',
     );
 
-    const mod = await import(`${pathToFileURL(serverEntry).href}?t=${Date.now()}`) as Record<
+    const mod = await import(`${toFileUrl(serverEntry).href}?t=${Date.now()}`) as Record<
       string,
       unknown
     >;
@@ -109,7 +110,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assert(existsSync(manifestPath), 'Client manifest should exist');
     assert(existsSync(clientEntry), 'Client entry should exist');
 
-    const content = readFileSync(clientEntry, 'utf-8');
+    const content = Deno.readTextFileSync(clientEntry);
     assertEquals(content.includes('@lit-labs/ssr-client'), false);
     assertEquals(content.includes('defer-hydration'), false);
   });
@@ -119,11 +120,11 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assert(htmlFiles.length > 0, 'Should have generated HTML files');
 
     for (const filePath of htmlFiles) {
-      const content = readFileSync(filePath, 'utf-8');
+      const content = Deno.readTextFileSync(filePath);
       assertStringIncludes(content.toLowerCase(), '<!doctype html>');
     }
 
-    const indexHtml = readFileSync(join(WWW_DIST, 'index.html'), 'utf-8');
+    const indexHtml = Deno.readTextFileSync(join(WWW_DIST, 'index.html'));
     assert(
       indexHtml.includes('shadowrootmode="open"') || indexHtml.includes('<template shadowroot'),
       'SSG output should preserve Declarative Shadow DOM',
@@ -140,7 +141,7 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
       false,
       'default locale must not overwrite or duplicate the canonical output',
     );
-    const roadmapHtml = readFileSync(join(WWW_DIST, 'roadmap', 'index.html'), 'utf-8');
+    const roadmapHtml = Deno.readTextFileSync(join(WWW_DIST, 'roadmap', 'index.html'));
     assertStringIncludes(roadmapHtml, 'Web Components-native');
     assertStringIncludes(roadmapHtml, '<open-layout');
   });

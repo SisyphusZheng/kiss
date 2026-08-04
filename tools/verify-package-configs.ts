@@ -1,6 +1,6 @@
 /** Verify release-critical workspace package configuration before packing. */
 
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join } from '@std/path';
 import { readPackages } from './lib/package-graph.ts';
 import { readJson } from './lib/fs.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';

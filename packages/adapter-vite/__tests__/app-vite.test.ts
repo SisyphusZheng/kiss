@@ -11,7 +11,7 @@ import {
   assertRejects,
   assertStringIncludes,
 } from '@std/assert';
-import { join } from 'node:path';
+import { join } from '@std/path';
 import { openElement } from '../src/app-vite.ts';
 
 // ─── Plugin structure ──────────────────────────────────────────

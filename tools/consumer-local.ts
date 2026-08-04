@@ -10,9 +10,8 @@
  * Exit code 1 = consumer project build failed.
  */
 
-import { dirname, join } from 'node:path';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { dirname, fromFileUrl, join, toFileUrl } from '@std/path';
+import { existsSync } from '@std/fs';
 
 import { allPackageAliases } from './lib/package-graph.ts';
 import { assertCompatibilityDate } from './lib/compatibility-date.ts';
@@ -57,7 +56,7 @@ function isMappedSpecifier(
   return Object.keys(importMap).some((key) => key.endsWith('/') && specifier.startsWith(key));
 }
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fromFileUrl(import.meta.url));
 const repoRoot = join(__dirname, '..');
 
 const tmpRoot = Deno.makeTempDirSync({ prefix: 'openelement-consumer-local-' });
@@ -71,7 +70,7 @@ function cleanup(): void {
     console.log(`Keeping temp project at ${tmpRoot}`);
     return;
   }
-  rmSync(tmpRoot, { recursive: true, force: true });
+  Deno.removeSync(tmpRoot, { recursive: true });
 }
 
 console.log(`Generating test project from local workspace...`);
@@ -96,7 +95,7 @@ console.log(`Project generated at ${appDir}`);
 
 // Step 2: Patch deno.json imports to point to local workspace source
 const denoJsonPath = join(appDir, 'deno.json');
-const denoJson = JSON.parse(readFileSync(denoJsonPath, 'utf-8'));
+const denoJson = JSON.parse(Deno.readTextFileSync(denoJsonPath));
 const generatedImportMap = { ...denoJson.imports } as Record<string, string>;
 const productImports = [
   '@deno/vite-plugin',
@@ -131,7 +130,7 @@ denoJson.tasks.build = `deno run -A ${
   join(repoRoot, 'packages', 'adapter-vite', 'src', 'cli', 'build.ts')
 }`;
 
-writeFileSync(denoJsonPath, JSON.stringify(denoJson, null, 2));
+Deno.writeTextFileSync(denoJsonPath, JSON.stringify(denoJson, null, 2));
 
 // Step 3: Patch Vite only with workspace aliases needed to execute the local
 // implementation. The generated app itself remains limited to product imports.
@@ -139,17 +138,17 @@ const aliases = [...allPackageAliases(repoRoot)]
   .filter(([find]) => find !== '@openelement/ui/')
   .map(([find, url]) => ({
     find,
-    replacement: normalizeSlashes(fileURLToPath(url)),
+    replacement: normalizeSlashes(fromFileUrl(url)),
   }));
 
 const viteConfigPath = join(appDir, 'vite.config.ts');
-let viteConfig = readFileSync(viteConfigPath, 'utf-8');
+let viteConfig = Deno.readTextFileSync(viteConfigPath);
 
 viteConfig = viteConfig.replace(
   'plugins: [',
   `resolve: { alias: ${JSON.stringify(aliases, null, 4)} },\n  plugins: [`,
 );
-writeFileSync(viteConfigPath, viteConfig);
+Deno.writeTextFileSync(viteConfigPath, viteConfig);
 
 // Step 4: Symlink node_modules from repo root
 try {
@@ -181,7 +180,7 @@ if (!existsSync(buildEvidencePath)) {
   cleanup();
   Deno.exit(1);
 }
-const buildEvidence = JSON.parse(readFileSync(buildEvidencePath, 'utf-8')) as {
+const buildEvidence = JSON.parse(Deno.readTextFileSync(buildEvidencePath)) as {
   success?: boolean;
   manifest?: { routes?: Array<{ kind?: string; path?: string }> };
   pages?: Array<{ path?: string; errors?: string[] }>;
@@ -228,7 +227,7 @@ if (!existsSync(assetPath)) {
   Deno.exit(1);
 }
 
-const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
+const indexHtml = Deno.readTextFileSync(indexHtmlPath);
 if (!indexHtml.includes('Hello from openElement')) {
   console.error('dist/index.html does not contain expected content');
   console.error('Last 300 chars:', indexHtml.substring(indexHtml.length - 300));
@@ -250,7 +249,7 @@ if (!indexHtml.includes('/openelement-mark.svg')) {
   Deno.exit(1);
 }
 
-const freshnessHtml = readFileSync(freshnessHtmlPath, 'utf-8');
+const freshnessHtml = Deno.readTextFileSync(freshnessHtmlPath);
 if (!freshnessHtml.includes('Freshness proof')) {
   console.error('dist/freshness/index.html does not contain expected ISR intent content');
   console.error('Last 300 chars:', freshnessHtml.substring(freshnessHtml.length - 300));
@@ -267,7 +266,7 @@ if (!existsSync(serverEntryPath)) {
   Deno.exit(1);
 }
 
-const serverEntry = readFileSync(serverEntryPath, 'utf-8');
+const serverEntry = Deno.readTextFileSync(serverEntryPath);
 const missingGeneratedImports = findMissingGeneratedImports(serverEntry, generatedImportMap);
 const missingProductImports = missingGeneratedImports.filter((specifier) =>
   specifier.startsWith('@openelement/')
@@ -304,7 +303,7 @@ console.log(
 // Step 7: Mount the generated server entry in a real Nitro node output.
 console.log('Building generated app through Nitro node preset...');
 assertCompatibilityDate(NITRO_COMPATIBILITY_DATE);
-writeFileSync(
+Deno.writeTextFileSync(
   join(appDir, 'nitro.config.ts'),
   `export default defineNitroConfig({
   srcDir: 'server',
@@ -318,10 +317,10 @@ writeFileSync(
 
 const nitroRouteDir = join(appDir, 'server', 'routes');
 await Deno.mkdir(nitroRouteDir, { recursive: true });
-writeFileSync(
+Deno.writeTextFileSync(
   join(nitroRouteDir, '[...path].ts'),
   `import { createOpenElementNitroHandler } from '${
-    pathToFileURL(join(repoRoot, 'packages', 'adapter-vite', 'src', 'nitro-mount.ts')).href
+    toFileUrl(join(repoRoot, 'packages', 'adapter-vite', 'src', 'nitro-mount.ts')).href
   }';
 import { eventHandler } from 'h3';
 import { openElementHandler } from '../../dist/server/entry.js';

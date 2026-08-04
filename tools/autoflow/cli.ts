@@ -16,6 +16,7 @@ import {
   resolvePatchTargetVersion,
 } from './release.ts';
 import { PACKAGE_VERSION } from '../project-constants.ts';
+import { runWithOutput } from '../lib/process.ts';
 
 export interface CliOptions {
   command: string;
@@ -50,14 +51,9 @@ export function parseArgs(args: string[]): CliOptions {
 export type GitOutput = (args: string[]) => Promise<string | undefined>;
 
 async function gitOutput(args: string[]): Promise<string | undefined> {
-  const command = new Deno.Command('git', {
-    args,
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
+  const output = await runWithOutput('git', args);
   if (output.code !== 0) return undefined;
-  return new TextDecoder().decode(output.stdout);
+  return output.stdout;
 }
 
 export function addPaths(paths: Set<string>, output: string | undefined): void {
@@ -119,16 +115,8 @@ async function runGate(gate: GateDefinition, dryRun: boolean): Promise<GateResul
     return { name: gate.name, passed: true, output: `[dry-run] ${gate.command.join(' ')}` };
   }
 
-  const command = new Deno.Command(gate.command[0], {
-    args: gate.command.slice(1),
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-  const output = await command.output();
-  const text = `${new TextDecoder().decode(output.stdout)}${
-    new TextDecoder().decode(output.stderr)
-  }`
-    .trim();
+  const output = await runWithOutput(gate.command[0], gate.command.slice(1));
+  const text = `${output.stdout}${output.stderr}`.trim();
   return { name: gate.name, passed: output.code === 0, output: text };
 }
 

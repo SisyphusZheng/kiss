@@ -9,6 +9,9 @@ import { formatError } from '@openelement/element';
 export interface OpenElementExtensions {
   ssr?: boolean;
   dsd?: boolean;
+  // Intentionally wider than the canonical ComponentLayer in
+  // @openelement/element: this shapes unvalidated third-party CEM JSON,
+  // where `layer` may be any string.
   layer?: string;
   hydrate?: HydrationStrategy;
   module?: string;

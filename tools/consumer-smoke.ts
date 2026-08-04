@@ -15,6 +15,7 @@
 
 import { getArg, runWithOutput } from './lib/process.ts';
 import { readJson } from './lib/fs.ts';
+import { normalizeSlashes } from './lib/path.ts';
 
 function getArgFlag(flag: string): boolean {
   return Deno.args.includes(flag);
@@ -279,7 +280,7 @@ async function main(): Promise<void> {
   const versionArg = getArg('--version');
   const version = versionArg ?? PACKAGE_VERSION;
   const versionProvided = versionArg !== null;
-  const projectRoot = Deno.cwd().replace(/\\/g, '/');
+  const projectRoot = normalizeSlashes(Deno.cwd());
 
   const runJsDelivr = getArgFlag('--jsdelivr') || (versionProvided && !local);
   const runNitro = getArgFlag('--nitro') || (versionProvided && !local);

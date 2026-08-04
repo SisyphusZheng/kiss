@@ -19,7 +19,7 @@
  */
 
 import { walk } from '@std/fs/walk';
-import { join, relative } from 'node:path';
+import { join, relative } from '@std/path';
 import { close, createIndex } from 'pagefind';
 
 const WWW_ROOT = import.meta.dirname ?? '.';

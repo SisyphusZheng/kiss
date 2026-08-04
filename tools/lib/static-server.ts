@@ -6,7 +6,7 @@
  * root index fallback). Path traversal (`..`, NUL) is rejected with 403.
  */
 
-import { join } from 'node:path';
+import { join } from '@std/path';
 
 export interface StaticServer {
   origin: string;

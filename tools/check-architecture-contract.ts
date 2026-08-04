@@ -6,7 +6,7 @@
  * used as regressions for the active public contract.
  */
 
-import { extname } from 'node:path';
+import { extname } from '@std/path';
 import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
 import { gitTrackedFiles } from './lib/git.ts';
 import { PACKAGE_VERSION } from './project-constants.ts';

@@ -1,3 +1,5 @@
+import { parse as parseSemver, type SemVer } from '@std/semver';
+
 export const DEFAULT_REGISTRY_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000, 15_000] as const;
 
 export class NpmViewError extends Error {
@@ -45,21 +47,46 @@ export interface VerifyNpmReleaseOptions {
   log?: (message: string) => void;
 }
 
+function parseLineVersion(version: string): SemVer | null {
+  // Strict x.y.z(-label.n) only: reject the v/= prefixes and build metadata
+  // that @std/semver otherwise tolerates.
+  if (!/^\d/u.test(version)) return null;
+  try {
+    const parsed = parseSemver(version);
+    return (parsed.build ?? []).length > 0 ? null : parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function prereleaseTag(version: string): 'alpha' | 'beta' | 'rc' | null {
-  const match = version.match(/^\d+\.\d+\.\d+-(alpha|beta|rc)\.\d+$/u);
-  if (match) return match[1] as 'alpha' | 'beta' | 'rc';
-  if (/^\d+\.\d+\.\d+$/u.test(version)) return null;
+  const parsed = parseLineVersion(version);
+  const prerelease = parsed?.prerelease ?? [];
+  if (parsed && prerelease.length === 0) return null;
+  const [name, num] = prerelease;
+  if (
+    parsed && prerelease.length === 2 && typeof num === 'number' &&
+    (name === 'alpha' || name === 'beta' || name === 'rc')
+  ) {
+    return name;
+  }
   throw new Error(`Expected version x.y.z or x.y.z-alpha|beta|rc.n, got: ${version}`);
 }
 
 // #869-2.5: the version immediately before the target on the same line, so a
 // release can never skip a number (alpha.8-style hole).
 export function previousPrerelease(version: string): string | null {
-  const match = version.match(/^(\d+\.\d+\.\d+)-(alpha|beta|rc)\.(\d+)$/u);
-  if (!match) return null;
-  const n = Number(match[3]);
-  if (n <= 1) return null;
-  return `${match[1]}-${match[2]}.${n - 1}`;
+  const parsed = parseLineVersion(version);
+  const prerelease = parsed?.prerelease ?? [];
+  const [name, num] = prerelease;
+  if (
+    !parsed || prerelease.length !== 2 || typeof num !== 'number' ||
+    (name !== 'alpha' && name !== 'beta' && name !== 'rc')
+  ) {
+    return null;
+  }
+  if (num <= 1) return null;
+  return `${parsed.major}.${parsed.minor}.${parsed.patch}-${name}.${num - 1}`;
 }
 
 async function verifyField(
