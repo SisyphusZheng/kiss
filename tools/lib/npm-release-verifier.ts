@@ -28,6 +28,9 @@ export async function npmView(specifier: string, field: string): Promise<string>
     throw new NpmViewError(`Invalid npm JSON for ${specifier} ${field}: ${error}`, false);
   }
   if (typeof value !== 'string') {
+    // Array-valued fields (e.g. `versions`) keep their JSON encoding so the
+    // string contract holds; callers JSON.parse it back (predecessor check).
+    if (Array.isArray(value)) return JSON.stringify(value);
     throw new NpmViewError(`Unexpected npm value for ${specifier} ${field}`, false);
   }
   return value;
