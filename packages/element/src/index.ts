@@ -96,7 +96,6 @@ export type {
   Action,
   ActionContext,
   ActionResult,
-  DataAdapter,
   Loader,
   LoaderContext,
   ProblemDetails,
@@ -106,8 +105,6 @@ export type {
   SpaLoaderContext,
 } from './internal/protocol/data.ts';
 export { ACTION_FETCH_HEADER, PROBLEM_JSON_MEDIA_TYPE } from './internal/protocol/data.ts';
-// ADR-0095: reference in-memory DataAdapter implementation
-export { MemoryDataAdapter } from './internal/core/data-adapter.ts';
 export type {
   AppShellConfig,
   CompatibilityClassification,

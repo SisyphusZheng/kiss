@@ -12,12 +12,6 @@ export interface GateDefinition {
 export interface PatchEligibilityInput {
   changedPaths: string[];
   approvedPlanId?: string;
-  publicApiChanged?: boolean;
-  packageTopologyChanged?: boolean;
-  releasePolicyChanged?: boolean;
-  runtimeDefaultChanged?: boolean;
-  securityAuthDatabaseChanged?: boolean;
-  minorMajorRoadmapChanged?: boolean;
 }
 
 export interface PolicyDecision {
@@ -173,7 +167,6 @@ export const GATES: readonly GateDefinition[] = [
     tiers: ['ci', 'release'],
     triggers: [
       /^docs\/release\//,
-      /^tools\/check-release-evidence-consistency\.ts$/,
       /^tools\/lib\/release-evidence-consistency\.ts$/,
       /^deno\.json$/,
     ],
@@ -396,14 +389,10 @@ export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDe
   const requiredEvidence = ['release-state:auto-classification'];
 
   const blockers: string[] = [];
-  if (
-    input.publicApiChanged ||
-    input.changedPaths.some((path) => /^packages\/[^/]+\/src\//.test(path))
-  ) {
+  if (input.changedPaths.some((path) => /^packages\/[^/]+\/src\//.test(path))) {
     blockers.push('public API impact must be reviewed unless explicitly classified as internal');
   }
   if (
-    input.packageTopologyChanged ||
     input.changedPaths.some((path) =>
       /^packages\/[^/]+\/deno\.json$/.test(path) || path === 'deno.json' ||
       path === 'tools/lib/package-graph.ts'
@@ -411,18 +400,10 @@ export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDe
   ) {
     blockers.push('package topology or release graph changed');
   }
-  if (
-    input.releasePolicyChanged ||
-    input.changedPaths.some((path) => path.startsWith('docs/governance/'))
-  ) {
+  if (input.changedPaths.some((path) => path.startsWith('docs/governance/'))) {
     blockers.push('release policy or governance changed');
   }
-  if (input.runtimeDefaultChanged) blockers.push('runtime or default engine changed');
-  if (input.securityAuthDatabaseChanged) {
-    blockers.push('security, auth, or database ownership changed');
-  }
   if (
-    input.minorMajorRoadmapChanged ||
     input.changedPaths.some((path) =>
       path === 'docs/roadmap/ROADMAP.md' || path.startsWith('docs/adr/') ||
       path === 'docs/current/VERSION_PLAN.md'

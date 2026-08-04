@@ -5,10 +5,10 @@ import {
   PREVIOUS_PACKAGE_VERSION,
 } from './project-constants.ts';
 
-// Drives tools/check-www-current-truth.ts as a subprocess against a minimal
-// fixture tree so the gate's pass/fail behavior is tested in isolation.
+// Drives tools/check-docs-truth.ts (www gate) as a subprocess against a
+// minimal fixture tree so the gate's pass/fail behavior is tested in isolation.
 
-const CHECK_SCRIPT = new URL('./check-www-current-truth.ts', import.meta.url);
+const CHECK_SCRIPT = new URL('./check-docs-truth.ts', import.meta.url);
 
 async function writeFixture(root: string, routeSource: string): Promise<void> {
   await Deno.mkdir(`${root}/www/app/routes`, { recursive: true });
@@ -19,7 +19,7 @@ async function writeFixture(root: string, routeSource: string): Promise<void> {
 
 async function runGate(root: string): Promise<{ code: number; stderr: string }> {
   const command = new Deno.Command(Deno.execPath(), {
-    args: ['run', '--allow-read', CHECK_SCRIPT.pathname],
+    args: ['run', '--allow-read', CHECK_SCRIPT.pathname, '--check=www'],
     cwd: root,
     stdout: 'piped',
     stderr: 'piped',

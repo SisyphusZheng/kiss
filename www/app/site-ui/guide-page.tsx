@@ -10,12 +10,11 @@
  */
 import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { pageStyles } from '../components/page-styles.js';
-import { guideSectionStyles } from './guide-section-styles.ts';
 import { serializeOutline } from './page-contract.ts';
 import '@openelement/ui/open-card';
 
-export type GuideNav = Readonly<{ href: string; label: string }>;
-export type GuideCard = Readonly<{ id: string; title: string; body: string }>;
+type GuideNav = Readonly<{ href: string; label: string }>;
+type GuideCard = Readonly<{ id: string; title: string; body: string }>;
 
 /** Bilingual content record for one guide page. */
 export type GuideContent = Readonly<{
@@ -36,7 +35,7 @@ export type GuideContent = Readonly<{
   fullPage?: Readonly<{ href: string; label: string; note: string }>;
 }>;
 
-export type GuidePageConfig = Readonly<{
+type GuidePageConfig = Readonly<{
   content: Record<'en' | 'zh', GuideContent>;
 }>;
 
@@ -68,6 +67,42 @@ function guideGridStyles(columns: 2 | 3): string {
 }
 
 /** Route stylesheet for a guide page: shared docs styles plus the card grid. */
+const guideSectionStyles = `
+  .guide-sections {
+    counter-reset: guide-section;
+  }
+
+  .guide-sections :is(h2, h3)[id]::before {
+    counter-increment: guide-section;
+    content: "§" counter(guide-section) " — ";
+    color: var(--violet-8);
+  }
+
+  .sidenote {
+    margin: var(--size-4) 0 var(--size-6);
+    padding-inline-start: var(--size-3);
+    border-inline-start: var(--border-size-2) solid var(--violet-8);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-00);
+    line-height: 1.6;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 1600px) {
+    .sidenote {
+      float: inline-start;
+      clear: inline-start;
+      width: clamp(6.5rem, 8vw, 8rem);
+      margin-block: var(--size-1) 0;
+      margin-inline-start: calc(-1 * (clamp(6.5rem, 8vw, 8rem) + var(--size-6)));
+      padding-inline-start: 0;
+      border-inline-start: none;
+    }
+  }
+`;
+
 export function guideStyles(options: { columns?: 2 | 3; extra?: string } = {}): StyleSheetLike {
   const sheet = new StyleSheet();
   sheet.replaceSync(

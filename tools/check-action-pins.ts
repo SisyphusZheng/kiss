@@ -2,7 +2,7 @@
 
 import { parse } from 'yaml';
 
-import { walk } from './lib/fs.ts';
+import { walk } from '@std/fs/walk';
 
 const WORKFLOW_ROOTS = ['.github/workflows', '.github/actions'];
 const SHA_PATTERN = /@[0-9a-f]{40}$/i;
@@ -80,7 +80,8 @@ async function main(): Promise<void> {
   const failures: string[] = [];
   let hasDependencyReview = false;
   for (const root of WORKFLOW_ROOTS) {
-    for await (const file of walk(root, { extensions: /\.ya?ml$/ })) {
+    for await (const entry of walk(root, { includeDirs: false, match: [/\.ya?ml$/] })) {
+      const file = entry.path;
       const result = inspectWorkflowSource(file, await Deno.readTextFile(file));
       failures.push(...result.failures);
       if (file === '.github/workflows/autoflow-ci.yml') {

@@ -2,11 +2,12 @@
  * enhance-client.ts - data-open-enhance browser runtime (ADR-0120/0121).
  *
  * Single source of truth for the form-enhancement and morph client (#610):
- * the generated client entry inlines this module verbatim via
- * createEnhanceClient.toString() — there is no parallel string copy to
- * drift, and the logic carries normal unit tests
- * (__tests__/enhance-client.test.ts). The module is therefore import-free
- * and touches browser globals only through the injected deps.
+ * the generated client entry imports this module through the
+ * virtual:open-client-runtime specifier (resolved by build-client.ts) and the
+ * bundler wires it in — there is no string copy to drift, and the logic
+ * carries normal unit tests (__tests__/enhance-client.test.ts). The module
+ * stays import-free and touches browser globals only through the injected
+ * deps, so it bundles into any consumer build unchanged.
  *
  * Forms marked data-open-enhance submit via fetch and the returned document
  * is morphed into the live tree — INSIDE the page element's shadow root,
@@ -24,6 +25,24 @@
  * behavior degrades to the browser by construction.
  *
  * The wire/attribute surface is documented in docs/current/MORPH_CONTRACT.md.
+ *
+ * ─── KNOWN-BROWSER-QUIRKS (anti-rot ledger; each entry names a removal
+ * condition — delete the entry AND the workaround it documents when the
+ * condition is met) ─────────────────────────────────────────────────────────
+ * 1. DSD instantiation timing (#579): DSD is only instantiated by the HTML
+ *    parser; DOMParser-parsed nodes keep an inert <template shadowrootmode>
+ *    child, so instantiateDsd() must run before insertion.
+ *    → Delete when all engines instantiate DSD for DOMParser-parsed trees.
+ * 2. WebKit upgrade skip (#604): an element moved into a shadow root while
+ *    its subtree still belonged to the parser-inert document is permanently
+ *    skipped by WebKit's registry; repairShadowUpgrades() re-inserts it after
+ *    adoption.
+ *    → Delete when WebKit upgrades such elements on adoption.
+ * 3. Non-composed submit (#610): the submit event is not composed in every
+ *    engine, so a document-level listener never sees forms inside page DSD;
+ *    attachSubmit() attaches to every shadow root.
+ *    → Delete when submit is composed in every engine (or forms stop living
+ *      in shadow roots).
  */
 
 /** Minimal logger surface shared with the generated client entry. */

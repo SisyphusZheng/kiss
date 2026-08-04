@@ -28,28 +28,28 @@ export type BindingDispose = () => void;
 
 // ─── Static descriptors ─────────────────────────────────────────────────────
 
-export interface StaticAttrBindingDescriptor {
+interface StaticAttrBindingDescriptor {
   kind: 'static-attr';
   el: Element;
   attrName: string;
   value: unknown;
 }
 
-export interface StaticPropBindingDescriptor {
+interface StaticPropBindingDescriptor {
   kind: 'static-prop';
   el: Element;
   propName: string;
   value: unknown;
 }
 
-export interface StaticBooleanBindingDescriptor {
+interface StaticBooleanBindingDescriptor {
   kind: 'static-boolean';
   el: Element;
   attrName: string;
   value: boolean;
 }
 
-export interface StaticStyleBindingDescriptor {
+interface StaticStyleBindingDescriptor {
   kind: 'static-style';
   el: Element;
   value: Record<string, string | number>;
@@ -57,42 +57,42 @@ export interface StaticStyleBindingDescriptor {
 
 // ─── Signal descriptors ─────────────────────────────────────────────────────
 
-export interface SignalTextBindingDescriptor {
+interface SignalTextBindingDescriptor {
   kind: 'signal-text';
   el: Element | Text;
   signal: Signal<unknown>;
 }
 
 /** @internal DSD-only descriptor emitted by hydration-scope, never by CSR collectPropBindings. */
-export interface SignalClassBindingDescriptor {
+interface SignalClassBindingDescriptor {
   kind: 'signal-class';
   el: Element;
   className: string;
   signal: Signal<unknown>;
 }
 
-export interface SignalAttrBindingDescriptor {
+interface SignalAttrBindingDescriptor {
   kind: 'signal-attr';
   el: Element;
   attrNames: string[];
   signal: Signal<unknown>;
 }
 
-export interface SignalHtmlBindingDescriptor {
+interface SignalHtmlBindingDescriptor {
   kind: 'signal-html';
   el: Element;
   signal: Signal<unknown>;
   trusted: boolean;
 }
 
-export interface SignalRenderBindingDescriptor {
+interface SignalRenderBindingDescriptor {
   kind: 'signal-render';
   el: Element;
   signal: Signal<unknown>;
   lifecycle?: BindingLifecycle;
 }
 
-export interface ConditionalBindingDescriptor {
+interface ConditionalBindingDescriptor {
   kind: 'conditional';
   anchor: ChildNode;
   condition: Signal<unknown> | unknown;
@@ -100,7 +100,7 @@ export interface ConditionalBindingDescriptor {
   renderFalsy?: () => unknown;
 }
 
-export interface ListBindingDescriptor {
+interface ListBindingDescriptor {
   kind: 'list';
   anchor: ChildNode;
   items: Signal<unknown> | unknown;
@@ -117,7 +117,7 @@ export interface EventBindingDescriptor {
   options?: AddEventListenerOptions | boolean;
 }
 
-export interface RefBindingDescriptor {
+interface RefBindingDescriptor {
   kind: 'ref';
   el: Element;
   callback: (el: Element) => void;

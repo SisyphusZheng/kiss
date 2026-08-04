@@ -1,14 +1,17 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import {
+  amendIfStaged,
   commitIfStaged,
   createReleaseEvidence,
   executeReleasePlan,
   extractManualNoteSections,
+  pathExistsInHead,
   prepareRecordFile,
   readPrepareRecord,
   readPriorReleaseEvidence,
   type ReleaseCommandStep,
   type ReleaseEvidence,
+  runCaptured,
   writePrepareRecord,
   writeReleaseEvidence,
   writeReleaseNote,
@@ -182,16 +185,27 @@ Deno.test('executeReleasePlan: release-prepare lands a durable gated prepare rec
   try {
     Deno.chdir(work);
     // The record tail of createPreparePlan, wired the same way: gates first,
-    // then record, stage, commit. release-prepare persists no executor
-    // evidence, so the record commit is the only durable output.
+    // then record + amend into the bump commit (4→2, #869). release-prepare
+    // persists no executor evidence, so the amended bump commit is the only
+    // durable output.
     const plan: ReleaseCommandStep[] = [
-      { name: 'bump patch version', run: () => Promise.resolve() },
-      { name: 'run release gates after bump', run: () => Promise.resolve() },
-      { name: 'record prepare evidence', run: (evidence) => writePrepareRecord(evidence) },
-      { name: 'stage prepare record', command: ['git', 'add', prepareRecordFile('9.9.9')] },
       {
-        name: 'commit prepare record',
-        run: () => commitIfStaged('docs(release): record v9.9.9 prepare evidence'),
+        name: 'bump patch version',
+        run: async () => {
+          await Deno.writeTextFile('version.txt', '9.9.9\n');
+          await runCaptured(['git', 'add', 'version.txt']);
+        },
+      },
+      { name: 'commit release bump', run: () => commitIfStaged('chore(release): v9.9.9') },
+      { name: 'run release gates after bump', run: () => Promise.resolve() },
+      {
+        name: 'record prepare evidence',
+        run: async (evidence) => {
+          if (await pathExistsInHead(prepareRecordFile('9.9.9'))) return;
+          await writePrepareRecord(evidence);
+          await runCaptured(['git', 'add', prepareRecordFile('9.9.9')]);
+          await amendIfStaged();
+        },
       },
     ];
 
@@ -211,12 +225,70 @@ Deno.test('executeReleasePlan: release-prepare lands a durable gated prepare rec
         step.name === 'run release gates after bump' && step.status === 'passed'
       ),
     );
-    // The record is committed and the worktree is clean behind it.
+    // The record lives inside the bump commit and the worktree is clean
+    // behind it.
     assertEquals(
       await git(work, ['log', '-1', '--format=%s']),
-      'docs(release): record v9.9.9 prepare evidence',
+      'chore(release): v9.9.9',
+    );
+    assertEquals(
+      await git(work, ['show', 'HEAD:docs/release/autoflow3/v9.9.9-prepare.json']),
+      (await Deno.readTextFile(prepareRecordFile('9.9.9'))).trim(),
     );
     assertEquals(await git(work, ['status', '--porcelain']), '');
+  } finally {
+    Deno.chdir(previousCwd);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test('release-prepare resume simulation: kill after prepare, re-run verifies the record (#869)', async () => {
+  const { root, work } = await initWorkRepo();
+  const previousCwd = Deno.cwd();
+  try {
+    Deno.chdir(work);
+    const preparePlan = (): ReleaseCommandStep[] => [
+      {
+        name: 'bump patch version',
+        run: async () => {
+          await Deno.writeTextFile('version.txt', '9.9.9\n');
+          await runCaptured(['git', 'add', 'version.txt']);
+        },
+      },
+      { name: 'commit release bump', run: () => commitIfStaged('chore(release): v9.9.9') },
+      { name: 'run release gates after bump', run: () => Promise.resolve() },
+      {
+        name: 'record prepare evidence',
+        run: async (evidence) => {
+          if (await pathExistsInHead(prepareRecordFile('9.9.9'))) return;
+          await writePrepareRecord(evidence);
+          await runCaptured(['git', 'add', prepareRecordFile('9.9.9')]);
+          await amendIfStaged();
+        },
+      },
+    ];
+
+    // First run: the full prepare lands the record inside the bump commit.
+    await executeReleasePlan('release-prepare', '9.9.9', undefined, false, preparePlan(), 'dev');
+    const headAfterPrepare = await git(work, ['rev-parse', 'HEAD']);
+    assertEquals(await git(work, ['log', '-1', '--format=%s']), 'chore(release): v9.9.9');
+    const record = await readPrepareRecord('9.9.9');
+    assert(record !== undefined);
+    assertEquals(record.status, 'completed');
+
+    // Kill after prepare: the record file and its bump commit are the only
+    // durable state. A re-run resumes (skips passed steps, stages nothing)
+    // and must not create another commit or rewrite the bump.
+    await executeReleasePlan('release-prepare', '9.9.9', undefined, false, preparePlan(), 'dev');
+    assertEquals(await git(work, ['rev-parse', 'HEAD']), headAfterPrepare);
+    assertEquals(await git(work, ['log', '-1', '--format=%s']), 'chore(release): v9.9.9');
+    assertEquals(await git(work, ['status', '--porcelain']), '');
+    // The resumed record still verifies (same checks as publish-existing).
+    assertEquals(record.status, 'completed');
+    assertEquals(
+      record.steps.find((step) => step.name === 'run release gates after bump')?.status,
+      'passed',
+    );
   } finally {
     Deno.chdir(previousCwd);
     await Deno.remove(root, { recursive: true });
@@ -281,4 +353,23 @@ Deno.test('extractManualNoteSections: only the block before the evidence header 
     extractManualNoteSections('# v9.9.9\n\nAutoFlow3 patch release evidence: `id`.'),
     '',
   );
+});
+
+Deno.test('extractManualNoteSections: pre-seeded prose without an evidence header survives (#855)', () => {
+  // A note seeded by the operator before the first evidence write has no
+  // evidence header yet; everything after the title is manual and must not
+  // be dropped when the evidence header is later prepended.
+  const seeded = [
+    '# v9.9.9',
+    '',
+    '## Migration note',
+    '',
+    '- pre-seeded prose survives the rewrite',
+    '',
+  ].join('\n');
+  const manual = extractManualNoteSections(seeded);
+  assert(manual.includes('## Migration note'));
+  assert(manual.includes('- pre-seeded prose survives the rewrite'));
+  // An empty title-only note yields no manual content.
+  assertEquals(extractManualNoteSections('# v9.9.9\n'), '');
 });

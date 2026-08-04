@@ -55,7 +55,7 @@ export function hasSelfHydrated(el: Element): boolean {
 }
 
 /** Options for creating a HydrationScope. */
-export interface HydrationScopeOptions {
+interface HydrationScopeOptions {
   /** Signal registry used to resolve data-signal markers. */
   signalRegistry?: Map<string, Signal<unknown>>;
   /** Renderer used for signal-render and event-marker VNode rendering. */
@@ -65,7 +65,7 @@ export interface HydrationScopeOptions {
 }
 
 /** Read-only observables exposed for debugging. */
-export interface HydrationScopeDebug {
+interface HydrationScopeDebug {
   isActive: boolean;
   effectCount: number;
   eventCleanupCount: number;

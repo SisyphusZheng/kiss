@@ -16,10 +16,9 @@
  *
  * Site: `www` is the designated vehicle (VERSION_PLAN TP-4 amendment: "www
  * deploys to Cloudflare Pages as a pure-static site and doubles as the
- * byte-identical regression vehicle"). `--site` accepts only `www` today —
- * there is no smaller pure-static fixture under packages/adapter-vite/
- * __fixtures__/ (request-time and nitro-proof both carry request-time
- * routes). If one is added later, extend SITES below.
+ * byte-identical regression vehicle"). There is no smaller pure-static
+ * fixture under packages/adapter-vite/__fixtures__/ (request-time and
+ * nitro-proof both carry request-time routes).
  *
  * The baseline worktree is prepared by symlinking the current tree's
  * `node_modules/` and `vendor/` into it (both are gitignored); the build at
@@ -30,7 +29,6 @@
  *
  * CLI:
  *   --baseline <ref>   baseline git ref (default: v0.41.2)
- *   --site <www>       site to build (default: www; only www exists today)
  *   --self-check       run only the current-tree determinism check
  *
  * Exit codes: 0 = identical, 1 = byte difference or build/environment failure.
@@ -108,11 +106,9 @@ function normalize(relPath: string, bytes: Uint8Array): Uint8Array {
   return bytes;
 }
 
-const SITES: Record<string, { dir: string; outDir: string; buildTask: string }> = {
-  www: { dir: 'www', outDir: 'www/dist', buildTask: 'build' },
-};
+const SITE = { dir: 'www', outDir: 'www/dist', buildTask: 'build' } as const;
 
-function parseArgs(): { baseline: string; site: string; selfCheck: boolean } {
+function parseArgs(): { baseline: string; selfCheck: boolean } {
   const args: Record<string, string> = {};
   const flags = new Set<string>();
   for (let i = 0; i < Deno.args.length; i++) {
@@ -130,7 +126,6 @@ function parseArgs(): { baseline: string; site: string; selfCheck: boolean } {
   }
   return {
     baseline: args.baseline ?? 'v0.41.2',
-    site: args.site ?? 'www',
     selfCheck: flags.has('self-check'),
   };
 }
@@ -194,24 +189,17 @@ function fail(message: string): never {
   Deno.exit(1);
 }
 
-const { baseline, site, selfCheck } = parseArgs();
-const siteConfig = SITES[site];
-if (!siteConfig) {
-  fail(
-    `unknown --site '${site}'. Only 'www' exists today: there is no pure-static fixture under ` +
-      `packages/adapter-vite/__fixtures__/ (request-time and nitro-proof carry request-time routes).`,
-  );
-}
+const { baseline, selfCheck } = parseArgs();
 
 const root = Deno.cwd();
 
 // Phase 1: determinism self-check — build the current tree twice.
 for (const n of NORMALIZERS) console.log(`static-output-freeze: normalizing — ${n.description}`);
-console.log(`static-output-freeze: building current tree (${site}) — run 1/2`);
-const run1 = await buildAndSnapshot(root, siteConfig);
+console.log('static-output-freeze: building current tree (www) — run 1/2');
+const run1 = await buildAndSnapshot(root, SITE);
 if (run1.error) fail(`current-tree build (run 1) failed:\n${run1.error}`);
 console.log('static-output-freeze: building current tree — run 2/2');
-const run2 = await buildAndSnapshot(root, siteConfig);
+const run2 = await buildAndSnapshot(root, SITE);
 if (run2.error) fail(`current-tree build (run 2) failed:\n${run2.error}`);
 
 const selfDiffs = diffSnapshots(run1.snapshot!, run2.snapshot!, 'run 1', 'run 2');
@@ -264,7 +252,7 @@ try {
   }
 
   console.log(`static-output-freeze: building baseline ${baseline} in ${worktreeDir}`);
-  const base = await buildAndSnapshot(worktreeDir, siteConfig);
+  const base = await buildAndSnapshot(worktreeDir, SITE);
   if (base.error) {
     fail(
       `baseline build failed at '${baseline}' (environmental — old toolchain or missing deps):\n${base.error}\n` +

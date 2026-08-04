@@ -23,6 +23,7 @@ import {
   resolveIslandSsrDsd,
 } from '../internal/ssg/index.ts';
 import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
+import { VIRTUAL_RUNTIME_SPECIFIERS } from '../internal/ssg/entry-generators.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
 import { createNpmSpecifierPlugin } from '../npm-specifier-plugin.ts';
@@ -40,6 +41,15 @@ const log = createLogger('build-client');
 
 const VIRTUAL_CLIENT_ENTRY_ID = 'virtual:open-client-entry';
 const RESOLVED_CLIENT_ENTRY_ID = '\0' + VIRTUAL_CLIENT_ENTRY_ID;
+
+// #868: the browser runtimes (island-scheduler.ts, enhance-client.ts) are real
+// modules bundled through these virtual specifiers — the generated entry
+// imports them, so there is no toString() serialization, no import-free
+// constraint, and no string copy to drift. Resolution maps each specifier to
+// the module's own source file inside this package.
+function runtimeModulePath(relative: string): string {
+  return fileURLToPath(new URL(relative, import.meta.url));
+}
 
 type ViteBuildOptionsWithManifest = NonNullable<InlineConfig['build']> & {
   manifest?: boolean;
@@ -315,6 +325,15 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
         name: 'open:virtual-client-entry',
         resolveId(id) {
           if (id === VIRTUAL_CLIENT_ENTRY_ID) return RESOLVED_CLIENT_ENTRY_ID;
+          // #868: the client runtimes resolve to their real source modules,
+          // so they typecheck, bundle and minify like any other module.
+          if (id === VIRTUAL_RUNTIME_SPECIFIERS.scheduler) {
+            return runtimeModulePath('../internal/ssg/island-scheduler.ts');
+          }
+          if (id === VIRTUAL_RUNTIME_SPECIFIERS.enhance) {
+            return runtimeModulePath('../internal/ssg/enhance-client.ts');
+          }
+          return null;
         },
         load(id) {
           if (id === RESOLVED_CLIENT_ENTRY_ID) return clientEntryCode;

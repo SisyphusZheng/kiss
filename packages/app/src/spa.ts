@@ -23,7 +23,7 @@ const development = isDevMode();
 
 // ─── Public types ──────────────────────────────────────────────
 
-export interface SpaAppOptions {
+interface SpaAppOptions {
   mode: 'spa';
   /** Route definitions. If omitted, no routes are registered. */
   routes?: RouteConfig[];

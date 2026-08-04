@@ -219,10 +219,7 @@ async function verifyTarball(pkg: PackageInfo): Promise<PackageScanResult> {
 }
 
 async function main(): Promise<void> {
-  const skipPack = Deno.args.includes('--skip-pack');
-  if (!skipPack) {
-    await runCommand(Deno.execPath(), ['task', 'pack:dry-run']);
-  }
+  await runCommand(Deno.execPath(), ['task', 'pack:dry-run']);
 
   const packages = releasePublishOrder(await readPackages());
   const results: PackageScanResult[] = [];

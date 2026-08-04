@@ -15,11 +15,16 @@ release-document impact before it is merged.
 
 openElement is developed with Deno. The repository pins the Deno version in
 `.dvmrc` so that local formatting, linting, and type-checking match CI.
+This is not advisory: `deno fmt` output differs between Deno patch versions
+(notably around CJK line folding), so a newer local Deno produces fmt:check
+failures in both directions — use the pinned version.
 
 ```bash
 git clone https://github.com/open-element/openelement.git
 cd openelement
-# Install the Deno version listed in .dvmrc (e.g. via dvm, mise, or asdf)
+# Install the Deno version listed in .dvmrc (dvm reads it automatically;
+# mise/asdf users: point the tool at .dvmrc)
+dvm install   # or: mise install
 deno task dev
 deno task build
 deno task test

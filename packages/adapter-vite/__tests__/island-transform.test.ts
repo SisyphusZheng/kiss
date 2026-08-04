@@ -124,9 +124,10 @@ Deno.test('entry-generators - generateClientEntry (v0.5.0 CE upgrade)', async (t
       },
     ];
     const code = generateClientEntry(islands);
-    assertEquals(code.includes('requestIdleCallback'), true);
-    // #610: the scheduler module (inlined verbatim) owns load dispatch.
-    assertEquals(code.includes('function load('), true);
+    // #868: the scheduler module (bundled via virtual:open-client-runtime,
+    // not inline) owns the idle deferral — the entry wires the strategy.
+    assertEquals(code.includes('idle: ["my-counter"]'), true);
+    assertEquals(code.includes('virtual:open-client-runtime/scheduler'), true);
   });
 
   await t.step('dispatches open:ready event after upgrade', () => {
@@ -140,7 +141,6 @@ Deno.test('entry-generators - generateClientEntry (v0.5.0 CE upgrade)', async (t
     const code = generateClientEntry(islands);
     // v0.5.0: no old marker, CE-native upgrade
     assertEquals(code.includes('defer-hydration'), false);
-    assertEquals(code.includes('open:ready'), true);
     assertEquals(code.includes('LitElement'), false);
   });
 

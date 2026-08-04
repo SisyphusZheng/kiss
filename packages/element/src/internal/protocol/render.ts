@@ -6,15 +6,13 @@
  */
 
 import type { VNode } from './vnode.ts';
-import type { ComponentLayer, HydrationStrategy, StrategySource } from './framework.ts';
-import type { CemCompatibilityReport } from './manifest.ts';
+import type { ComponentLayer, HydrationStrategy } from './framework.ts';
 
 export type RenderPhase = 'instantiate' | 'render' | 'nested' | 'style' | 'serialize';
-export type RenderErrorSeverity = 'error' | 'warning';
 
 export interface RenderError {
   code: string;
-  severity: RenderErrorSeverity;
+  severity: 'error' | 'warning';
   phase: string;
   tagName: string;
   message: string;
@@ -95,105 +93,10 @@ export interface DsdComponent {
   [key: string]: unknown;
 }
 
-// --- DSD diagnostics & summaries ---------------------------------
-
-export interface DsdPageDiagnostics {
-  path: string;
-  errors: RenderError[];
-  hydrationHints: HydrationHint[];
-  componentCount: number;
-  renderTimeMs: number;
-}
-
-export interface DsdMetricsSummary {
-  totalComponents: number;
-  totalRenderTimeMs: number;
-  avgRenderTimeMs: number;
-  totalTemplateSize: number;
-  maxNestingDepth: number;
-  errorComponentCount: number;
-}
-
-export interface DsdHydrationHintSummary {
-  totalHints: number;
-  interactiveCount: number;
-  pureIslandCount: number;
-}
-
-export interface DsdHydrationStrategySummary {
-  load: number;
-  idle: number;
-  visible: number;
-  only: number;
-  clientOnlyExcluded: number;
-}
-
-// --- Manifest decisions ------------------------------------------
-
-export interface ManifestDecision {
-  tagName: string;
-  packageName: string;
-  ssr: boolean;
-  dsd: boolean;
-  hydrate?: string;
-  strategySource?: StrategySource;
-  renderPath: 'ssr+client' | 'client-only';
-  reason?: string;
-  source?: 'local' | 'package' | 'nested';
-}
-
 export interface SsrAdmissionDecision {
   tagName: string;
   modulePath: string;
   source: 'local' | 'package' | 'nested';
   renderPath: 'ssr+client' | 'client-only' | 'rejected';
   reason: string;
-}
-
-// --- Build report ------------------------------------------------
-
-export interface DsdBuildReport {
-  reportVersion: string;
-  timestamp: string;
-  totalPages: number;
-  totalErrors: number;
-  renderErrors: DsdPageDiagnostics[];
-  metricsSummary: DsdMetricsSummary;
-  hydrationHintSummary: DsdHydrationHintSummary;
-  hydrationStrategySummary?: DsdHydrationStrategySummary;
-  manifestDecisions?: ManifestDecision[];
-  admissionDecisions?: SsrAdmissionDecision[];
-  cemCompatibility?: CemCompatibilityReport;
-  domSimulation?: DomSimulationReport;
-  isrRoutes?: IsrRouteRecord[];
-}
-
-// --- ISR record --------------------------------------------------
-
-export interface IsrRouteRecord {
-  path: string;
-  revalidate: number;
-  cacheKey: string;
-}
-
-// --- DOM simulation ----------------------------------------------
-
-export interface DomSimulationReport {
-  enabled: boolean;
-  strategy: string;
-  attemptedCount: number;
-  succeededCount: number;
-  failedCount: number;
-  timeoutCount: number;
-  attempts: DomSimulationAttempt[];
-}
-
-export interface DomSimulationAttempt {
-  tagName: string;
-  success: boolean;
-  renderTimeMs: number;
-  byteSize?: number;
-  error?: string;
-  timedOut: boolean;
-  fallback: 'client-only' | 'none';
 }

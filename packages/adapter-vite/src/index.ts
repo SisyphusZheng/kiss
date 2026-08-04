@@ -103,7 +103,7 @@ export { mdxPlugin } from './plugin-mdx.ts';
 export type { OpenMdxPluginOptions } from './plugin-mdx.ts';
 
 // Content/build utilities owned by the adapter implementation.
-export { generateSitemap } from './internal/content/core.ts';
+export { generateSitemap } from './internal/content/sitemap/generator.ts';
 
 // Default export
 export { openPipeline as default };

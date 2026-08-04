@@ -39,7 +39,7 @@ export function formatError(e: unknown): string {
 
 // ─── Base Error ─────────────────────────────────────────────────────
 
-export interface OpenElementErrorOptions {
+interface OpenElementErrorOptions {
   cause?: Error;
   code?: string;
   statusCode?: number;

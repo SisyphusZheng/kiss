@@ -29,7 +29,8 @@ import {
   releasePublishOrder,
   topologicalSort,
 } from './lib/package-graph.ts';
-import { readJson, walk } from './lib/fs.ts';
+import { walk } from '@std/fs/walk';
+import { readJson } from './lib/fs.ts';
 
 /**
  * Explicit dependency-direction rules: each package may only depend on the
@@ -52,7 +53,13 @@ async function collectTsFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
 
   try {
-    for await (const path of walk(dir, { skip: ['node_modules', 'dist'], extensions: /\.ts$/ })) {
+    for await (
+      const { path } of walk(dir, {
+        includeDirs: false,
+        skip: [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/],
+        exts: ['ts'],
+      })
+    ) {
       files.push(path);
     }
   } catch {

@@ -108,7 +108,7 @@ export function buildIsrManifestEntries(
 // ─── Request-time server entry module (0.42.0-alpha.1, ADR-0120) ──────────
 
 /** One request-time route as recorded in server-manifest.json. */
-export interface RequestTimeRoutePattern {
+interface RequestTimeRoutePattern {
   path: string;
   paramNames: string[];
 }
@@ -135,7 +135,7 @@ export function routePatternToURLPatternPath(path: string): string {
 }
 
 /** Serialize the request-time route table embedded in the generated server entry. */
-export function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string {
+function renderRequestTimeRouteTable(routes: RequestTimeRoutePattern[]): string {
   // Exact paths first, then parameterized, then catch-alls: the first match
   // wins, so the most specific pattern must be consulted first.
   const rank = (path: string): number => path.includes('{.+}') ? 2 : path.includes(':') ? 1 : 0;

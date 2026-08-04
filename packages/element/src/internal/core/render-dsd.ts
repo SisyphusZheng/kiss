@@ -47,7 +47,7 @@ export const MAX_SSR_NESTING_DEPTH = 50;
 // ─── Error Classification ──────────────────────────────────────
 // RenderPhase and RenderErrorCode are imported from ../protocol/render.ts.
 
-export function classifyError(
+function classifyError(
   phase: RenderPhase,
   tagName: string,
   err: unknown,
@@ -421,7 +421,7 @@ export async function renderDsd(
 }
 
 /** Safe high-resolution timestamp with SSR/environment fallback. */
-export function safeNow(): number {
+function safeNow(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 

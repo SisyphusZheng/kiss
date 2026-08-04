@@ -114,7 +114,7 @@ interface BuildSSGOptions {
 }
 
 /** Resolved inputs for the SSG entry descriptor (Phase 1 discoveries + Phase 3 options). */
-export interface SsgEntryDescriptorInputs {
+interface SsgEntryDescriptorInputs {
   routes: RouteEntry[];
   routesDir: string;
   islandsDir: string;

@@ -34,7 +34,7 @@ export function scanHtmlFiles(dir: string, baseDir: string = ''): string[] {
 /**
  * Generate sitemap XML content.
  */
-export function renderSitemapXml(urls: SitemapUrl[]): string {
+function renderSitemapXml(urls: SitemapUrl[]): string {
   const urlsXml = urls.map((url) => {
     let xml = '  <url>\n';
     xml += `    <loc>${escapeXml(url.loc)}</loc>\n`;
@@ -60,7 +60,7 @@ ${urlsXml}
 /**
  * Generate robots.txt content.
  */
-export function renderRobotsTxt(hostname: string): string {
+function renderRobotsTxt(hostname: string): string {
   return `User-agent: *
 Allow: /
 

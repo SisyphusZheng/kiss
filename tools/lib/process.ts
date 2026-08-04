@@ -2,6 +2,13 @@
  * Shared process/command helpers for openElement tooling.
  */
 
+/** Read the value of a `--flag value` pair from Deno.args, or null. */
+export function getArg(flag: string): string | null {
+  const idx = Deno.args.indexOf(flag);
+  if (idx !== -1 && idx + 1 < Deno.args.length) return Deno.args[idx + 1];
+  return null;
+}
+
 export interface RunCommandOptions {
   cwd?: string | URL;
   env?: Record<string, string>;

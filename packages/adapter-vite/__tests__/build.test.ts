@@ -130,10 +130,10 @@ Deno.test('build - generateClientEntry', async (t) => {
       },
     ];
     const code = generateClientEntry(islands);
-    assertStringIncludes(code, 'requestIdleCallback');
-    assertStringIncludes(code, 'open:ready');
-    // #610: the scheduler module (inlined verbatim) owns load dispatch.
-    assertStringIncludes(code, 'function load(');
+    // #868: the scheduler module (bundled via virtual:open-client-runtime,
+    // not inline) owns idle deferral — the entry wires the strategy.
+    assertStringIncludes(code, 'idle: ["my-counter"]');
+    assertStringIncludes(code, 'virtual:open-client-runtime/scheduler');
   });
 });
 

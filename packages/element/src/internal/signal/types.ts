@@ -33,13 +33,3 @@ export function unwrapSignalLike<T>(value: T): T extends SignalLike<infer V> ? V
   }
   return value as T extends SignalLike<infer V> ? V : T;
 }
-
-/**
- * Resolve a property that may hold a signal to its current value.
- *
- * Used by `show`/`for` control-flow bindings: a prop like `when` or `each`
- * can be either a plain value or a signal. Alias of `unwrapSignalLike` —
- * the two helpers were byte-identical, so this keeps the intent-revealing
- * name at control-flow call sites without a duplicate implementation (#740).
- */
-export const resolveSignalProp: typeof unwrapSignalLike = unwrapSignalLike;

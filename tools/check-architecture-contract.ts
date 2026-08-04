@@ -9,6 +9,7 @@
 import { extname } from 'node:path';
 import { MOJIBAKE_CHARS, stripCommentsLine } from './lib/text.ts';
 import { gitTrackedFiles } from './lib/git.ts';
+import { PACKAGE_VERSION } from './project-constants.ts';
 
 export interface Issue {
   check: string;
@@ -26,6 +27,8 @@ interface TypeEscapeAllow {
   file: string;
   fragment: string;
   reason: string;
+  /** Version at which the entry must be revisited (removed or bumped, #871-4.2). */
+  revisitBy: string;
 }
 
 const TEXT_EXTENSIONS = new Set([
@@ -47,6 +50,8 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     fragment:
       "ctx.registerPlugin('sitemapOptions', options as unknown as Record<string, unknown>);",
     reason: 'Plugin option bag crosses a protocol boundary via registerPlugin.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/cli/ssg-render.ts',
@@ -54,18 +59,24 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
       'generateSitemap(outputDir, ctx.plugins.sitemapOptions as unknown as SitemapOptions);',
     reason:
       'Read-back of the sitemap plugin option bag registered via registerPlugin (the write-side cast above).',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: '(oldKids[k] as unknown as { remove(): void }).remove();',
     reason:
       'ChildNode.remove() does not exist on the Node type; the morph walk holds mixed Node lists and only reaches this branch for element children.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: '(oldEl as unknown as Text).data',
     reason:
       'nodeType === 3 narrowing that TypeScript cannot follow through the custom morph walk; both sides are text nodes by construction.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
@@ -73,86 +84,117 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
       'return Boolean((el as unknown as Record<string, unknown>)[name]) !== el.hasAttribute(name);',
     reason:
       'Property-vs-attribute comparison for mirrored form controls; the property side is untyped by DOM design (any-valued expandos like checked/value).',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: 'return n as unknown as HTMLTemplateElement;',
     reason:
       'DSD template lookup: the walk filters by tagName === "TEMPLATE" before returning, a narrowing TypeScript cannot express through Node.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: '(n as unknown as Text).data.trim()',
     reason:
       'Same nodeType === 3 narrowing; whitespace-only text-node filter in the nested-DSD comparison (#582).',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: '(o as unknown as Text).data === (nn as unknown as Text).data',
     reason:
       'Same nodeType === 3 narrowing; nested-DSD comparison only reaches this branch for text nodes (#582).',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
     fragment: 'const formState = form as unknown as {',
     reason:
       'Expando per-form state bag (__openElementBusy/__openElementSeq) attached by the enhance client itself; HTMLFormElement has no such fields by design (#564/#599).',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/style-sheet.ts',
     fragment: 'globalThis.CSSStyleSheet as unknown as new () => StyleSheetLike',
     reason:
       'Native CSSStyleSheet has CSSRuleList while the SSR facade exposes an array-like rule contract.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/island.ts',
     fragment: 'el as unknown as Record<string, unknown>',
     reason: 'Custom element prop assignment by dynamic prop name.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/binding-activation.ts',
     fragment: 'desc.el as unknown as Record<string, unknown>',
     reason: 'Direct DOM property assignment by dynamic prop name.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/island.ts',
     fragment: '} as unknown as typeof componentClass.prototype.connectedCallback',
     reason: 'Preserve original connectedCallback signature after wrapping.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/prop.ts',
     fragment: 'instance as unknown as {',
     reason: 'Static prop runtime writes element attributes and properties.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/open-element-implementation.ts',
     fragment: '} as unknown as typeof HTMLElement)',
     reason: 'SSR HTMLElement stub for environments without DOM.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/open-element-theme.ts',
     fragment: 'styles as unknown as CSSStyleSheet[]',
     reason: 'adoptedStyleSheets may not be in the configured DOM lib.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/define-element.ts',
     fragment: 'this as unknown as Record<string, unknown>',
     reason: 'Custom element prop collection by dynamic prop name.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/open-element-render.ts',
     fragment: 'instance as unknown as HTMLElement',
     reason: 'Cycle-break: OpenElementLike does not extend HTMLElement.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/open-element-render.ts',
     fragment: 'instance.constructor as unknown as OpenElementLikeConstructor',
     reason: 'Cycle-break: OpenElementLike constructor typed as ObjectConstructor.',
+
+    revisitBy: '0.44.0',
   },
   {
     file: 'packages/element/src/internal/core/render-dsd.ts',
     fragment: 'instance as unknown as Record<string, unknown>',
     reason: 'injectPropsSafe writes element props by dynamic name across the DSD boundary.',
+    revisitBy: '0.44.0',
   },
 ];
 
@@ -258,6 +300,69 @@ export function assertAllowedTypeEscapes(files: TextFile[], issues: Issue[]): vo
       );
     }
   }
+
+  // #871-4.2: an allowlist entry is a debt record, not a permanent exemption.
+  // Once the package line reaches the entry's revisitBy version the gate
+  // fails until the entry is removed or its revisitBy is bumped after review.
+  for (const entry of TYPE_ESCAPE_ALLOWLIST) {
+    const key = `${entry.file}\0${entry.fragment}`;
+    if (found.has(key) && isAtOrAfter(PACKAGE_VERSION, entry.revisitBy)) {
+      addIssue(
+        issues,
+        'type-escape',
+        entry.file,
+        `allowlist entry is due for revisit (v${entry.revisitBy} reached): ` +
+          `${entry.reason} — remove the workaround or bump revisitBy after review`,
+      );
+    }
+  }
+}
+
+/**
+ * Compare x.y.z(-pre.n) version strings; returns true when current is at or
+ * past the target version. Prereleases sort before their release (0.43.0-alpha
+ * < 0.43.0).
+ */
+export function isAtOrAfter(current: string, target: string): boolean {
+  const parse = (v: string): { core: number[]; pre: string[] } => {
+    const [core, pre] = v.split('-', 2);
+    return {
+      core: core.split('.').map((n) => Number(n)),
+      pre: pre ? pre.split('.') : [],
+    };
+  };
+  const c = parse(current);
+  const t = parse(target);
+  for (let i = 0; i < 3; i++) {
+    const a = c.core[i] ?? 0;
+    const b = t.core[i] ?? 0;
+    if (a !== b) return a > b;
+  }
+  // Release (no prerelease) is newer than any prerelease.
+  if (c.pre.length === 0 && t.pre.length === 0) return true;
+  if (t.pre.length === 0) return false;
+  if (c.pre.length === 0) return true;
+  const preRank = { alpha: 0, beta: 1, rc: 2 } as Record<string, number>;
+  for (let i = 0; i < Math.max(c.pre.length, t.pre.length); i++) {
+    const a = c.pre[i];
+    const b = t.pre[i];
+    if (a === undefined) return false;
+    if (b === undefined) return true;
+    const aNum = Number(a);
+    const bNum = Number(b);
+    if (Number.isNaN(aNum) && Number.isNaN(bNum)) {
+      const ra = preRank[a] ?? 3;
+      const rb = preRank[b] ?? 3;
+      if (ra !== rb) return ra > rb;
+      continue;
+    }
+    if (Number.isNaN(aNum) !== Number.isNaN(bNum)) {
+      // Identifier vs number: numeric identifiers sort below non-numeric.
+      return !Number.isNaN(bNum);
+    }
+    if (aNum !== bNum) return aNum > bNum;
+  }
+  return true;
 }
 
 export function assertDuplicateCounts(files: TextFile[], issues: Issue[]): void {

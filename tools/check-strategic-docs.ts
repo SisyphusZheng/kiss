@@ -209,21 +209,3 @@ export function findStrategicDocFailures(read: (path: string) => string): Failur
 
   return failures;
 }
-
-function main(): void {
-  const failures = findStrategicDocFailures((path) => Deno.readTextFileSync(path));
-
-  if (failures.length > 0) {
-    console.error('Strategic docs check failed:');
-    for (const failure of failures) {
-      console.error(`- [${failure.check}] ${failure.file}: ${failure.message}`);
-    }
-    Deno.exit(1);
-  }
-
-  console.log(
-    `Strategic docs check passed (${strategicChecks().length} checks, ${publicDocs.length} files).`,
-  );
-}
-
-if (import.meta.main) main();

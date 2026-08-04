@@ -9,6 +9,30 @@ export class NpmViewError extends Error {
 
 export type NpmReleaseQuery = (specifier: string, field: string) => Promise<string>;
 
+/** Run `npm view <specifier> <field> --json` and parse the JSON string value. */
+export async function npmView(specifier: string, field: string): Promise<string> {
+  const output = await new Deno.Command('npm', {
+    args: ['view', specifier, field, '--json'],
+    stdout: 'piped',
+    stderr: 'piped',
+  }).output();
+  const stderr = new TextDecoder().decode(output.stderr);
+  if (!output.success) {
+    const retryable = !/\b(?:E401|E403)\b/u.test(stderr);
+    throw new NpmViewError(`npm view ${specifier} ${field} failed: ${stderr.trim()}`, retryable);
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(new TextDecoder().decode(output.stdout)) as unknown;
+  } catch (error) {
+    throw new NpmViewError(`Invalid npm JSON for ${specifier} ${field}: ${error}`, false);
+  }
+  if (typeof value !== 'string') {
+    throw new NpmViewError(`Unexpected npm value for ${specifier} ${field}`, false);
+  }
+  return value;
+}
+
 export interface VerifyNpmReleaseOptions {
   version: string;
   packages: string[];
@@ -23,6 +47,16 @@ export function prereleaseTag(version: string): 'alpha' | 'beta' | 'rc' | null {
   if (match) return match[1] as 'alpha' | 'beta' | 'rc';
   if (/^\d+\.\d+\.\d+$/u.test(version)) return null;
   throw new Error(`Expected version x.y.z or x.y.z-alpha|beta|rc.n, got: ${version}`);
+}
+
+// #869-2.5: the version immediately before the target on the same line, so a
+// release can never skip a number (alpha.8-style hole).
+export function previousPrerelease(version: string): string | null {
+  const match = version.match(/^(\d+\.\d+\.\d+)-(alpha|beta|rc)\.(\d+)$/u);
+  if (!match) return null;
+  const n = Number(match[3]);
+  if (n <= 1) return null;
+  return `${match[1]}-${match[2]}.${n - 1}`;
 }
 
 async function verifyField(
@@ -67,6 +101,35 @@ export async function verifyNpmRelease(options: VerifyNpmReleaseOptions): Promis
   };
   if (runtime.delaysMs.length === 0 || runtime.delaysMs[0] !== 0) {
     throw new Error('Registry retry schedule must start with an immediate attempt.');
+  }
+
+  // #869-2.5: no version skips — the predecessor on the same line must already
+  // be published before this release can proceed.
+  const predecessor = previousPrerelease(options.version);
+  if (predecessor) {
+    const packageName = `@openelement/${options.packages[0]}`;
+    let published: string[] = [];
+    for (let attempt = 0; attempt < runtime.delaysMs.length; attempt++) {
+      const delay = runtime.delaysMs[attempt];
+      if (delay > 0) await runtime.sleep(delay);
+      try {
+        const raw = await runtime.query(packageName, 'versions');
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) {
+          published = parsed.filter((v): v is string => typeof v === 'string');
+          break;
+        }
+      } catch (error) {
+        if (!(error instanceof NpmViewError) || !error.retryable) throw error;
+      }
+    }
+    if (!published.includes(predecessor)) {
+      throw new Error(
+        `Continuity check failed for ${options.version}: predecessor ${predecessor} ` +
+          `is not among published versions of ${packageName}.`,
+      );
+    }
+    options.log?.(`Continuity verified: ${predecessor} precedes ${options.version}.`);
   }
 
   for (const name of options.packages) {

@@ -3,16 +3,6 @@
  * metadata contracts.
  */
 
-// --- API context --------------------------------------------------
-
-/** API route context passed to simple handlers */
-export interface OpenElementApiContext {
-  request: Request;
-  params: Record<string, string>;
-  env: Record<string, string | undefined>;
-  platform?: unknown;
-}
-
 // --- Safe/Unsafe HTML Contract ------------------------------------
 
 /** Branded type: a string that has been HTML-escaped (safe for text content) */
@@ -74,18 +64,6 @@ export interface OpenElementBuildContextLike {
   registerPlugin(name: string, instance: unknown): void;
 }
 
-// --- App Shell types ----------------------------------------------
-
-export interface AppShellDefinition {
-  tagName: string;
-  import: string;
-  props?: Record<string, unknown>;
-}
-
-export type AppShellConfig = false | 'default' | AppShellDefinition;
-
-export type LayoutsConfig = Record<string, AppShellConfig | undefined>;
-
 // --- Routing types ------------------------------------------------
 
 export type SpecialFileType = 'renderer' | 'middleware';
@@ -97,6 +75,13 @@ export interface LocalePath {
   localizedPath: string;
   isDefaultLocalePath: boolean;
 }
+
+export type AppShellConfig = false | 'default' | {
+  tagName: string;
+  import: string;
+  props?: Record<string, unknown>;
+};
+type LayoutsConfig = Record<string, AppShellConfig | undefined>;
 
 export interface RouteEntry {
   path: string;
@@ -245,47 +230,9 @@ export interface CompatibilityClassification {
   hydrate?: string;
 }
 
-// --- Validation ---------------------------------------------------
-
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationWarning[];
-}
-
-export interface ValidationError {
-  code: string;
-  message: string;
-  path?: string;
-}
-
-export interface ValidationWarning {
-  code: string;
-  message: string;
-  path?: string;
-}
-
-// --- Registry -----------------------------------------------------
-
-export interface RegistryIndexEntry {
-  tagName: string;
-  packageName: string;
-  version: string;
-  module?: string;
-  ssr?: boolean;
-  dsd?: boolean;
-  hydrate?: string;
-}
-
-export interface RegistryIndex {
-  totalPackages: number;
-  totalDeclarations: number;
-  entries: RegistryIndexEntry[];
-}
-
 // --- Routing & Middleware -----------------------------------------
 
-export interface OpenElementMiddlewareContext {
+interface OpenElementMiddlewareContext {
   req: {
     raw?: Request;
     path?: string;
@@ -305,15 +252,7 @@ export interface OpenElementMiddlewareContext {
   [key: string]: unknown;
 }
 
-export type OpenElementMiddleware = (
+type OpenElementMiddleware = (
   c: OpenElementMiddlewareContext,
   next: () => Promise<void>,
 ) => Promise<void> | void;
-
-// --- Hydration events ---------------------------------------------
-
-export interface HydrateEventDescriptor {
-  selector: string;
-  event: string;
-  method: string;
-}

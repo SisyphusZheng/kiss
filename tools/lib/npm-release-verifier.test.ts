@@ -1,5 +1,12 @@
 import { assertEquals, assertRejects } from '@std/assert';
-import { NpmViewError, prereleaseTag, verifyNpmRelease } from './npm-release-verifier.ts';
+import {
+  NpmViewError,
+  prereleaseTag,
+  previousPrerelease,
+  verifyNpmRelease,
+} from './npm-release-verifier.ts';
+
+const VERSIONS_FIELD = (versions: string[]) => JSON.stringify(versions);
 
 Deno.test('verifyNpmRelease retries transient registry misses and verifies the matching tag', async () => {
   const calls: string[] = [];
@@ -16,6 +23,7 @@ Deno.test('verifyNpmRelease retries transient registry misses and verifies the m
     },
     query: (specifier, field) => {
       calls.push(`${specifier}:${field}`);
+      if (field === 'versions') return Promise.resolve(VERSIONS_FIELD(['0.41.0-alpha.12']));
       if (misses-- > 0) {
         throw new NpmViewError('registry returned 404', true);
       }
@@ -24,6 +32,7 @@ Deno.test('verifyNpmRelease retries transient registry misses and verifies the m
   });
 
   assertEquals(calls, [
+    '@openelement/element:versions',
     '@openelement/element@0.41.0-alpha.13:version',
     '@openelement/element@0.41.0-alpha.13:version',
     '@openelement/element@0.41.0-alpha.13:version',
@@ -39,11 +48,31 @@ Deno.test('verifyNpmRelease does not require latest === prerelease (#607)', asyn
     packages: ['element'],
     delaysMs: [0],
     sleep: () => Promise.resolve(),
-    query: (_specifier, field) =>
-      Promise.resolve(
+    query: (_specifier, field) => {
+      if (field === 'versions') return Promise.resolve(VERSIONS_FIELD(['0.41.0-alpha.12']));
+      return Promise.resolve(
         field === 'dist-tags.latest' ? '0.41.2' : '0.41.0-alpha.13',
-      ),
+      );
+    },
   });
+});
+
+Deno.test('verifyNpmRelease rejects a release whose predecessor is unpublished (#869-2.5)', async () => {
+  await assertRejects(
+    () =>
+      verifyNpmRelease({
+        version: '0.41.0-alpha.13',
+        packages: ['adapter-vite'],
+        delaysMs: [0, 1, 2],
+        sleep: () => Promise.resolve(),
+        query: (_specifier, field) =>
+          field === 'versions'
+            ? Promise.resolve(VERSIONS_FIELD(['0.41.0-alpha.10', '0.41.0-alpha.11']))
+            : Promise.resolve('0.41.0-alpha.13'),
+      }),
+    Error,
+    'Continuity check failed for 0.41.0-alpha.13: predecessor 0.41.0-alpha.12 is not among published versions',
+  );
 });
 
 Deno.test('verifyNpmRelease reports the final observed state after exhausting retries', async () => {
@@ -59,7 +88,7 @@ Deno.test('verifyNpmRelease reports the final observed state after exhausting re
         },
       }),
     Error,
-    '@openelement/adapter-vite version verification failed after 3 attempts',
+    'Continuity check failed for 0.41.0-alpha.13: predecessor 0.41.0-alpha.12 is not among published versions',
   );
 });
 
@@ -110,4 +139,11 @@ Deno.test('verifyNpmRelease verifies stable releases against latest only', async
     '@openelement/element@0.41.0:version',
     '@openelement/element:dist-tags.latest',
   ]);
+});
+
+Deno.test('previousPrerelease returns the predecessor on the same line', () => {
+  assertEquals(previousPrerelease('0.41.0-alpha.15'), '0.41.0-alpha.14');
+  assertEquals(previousPrerelease('0.41.0-rc.2'), '0.41.0-rc.1');
+  assertEquals(previousPrerelease('0.41.0-alpha.1'), null);
+  assertEquals(previousPrerelease('0.41.0'), null);
 });

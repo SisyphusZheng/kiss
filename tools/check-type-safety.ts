@@ -6,7 +6,7 @@
  * Forbidden: \x60as any\x60, \x60: any\x60, \x60any[]\x60 in active code.
  */
 
-import { walk } from './lib/fs.ts';
+import { walk } from '@std/fs/walk';
 import { normalizeSlashes } from './lib/path.ts';
 import { stripCommentsLine } from './lib/text.ts';
 
@@ -36,10 +36,6 @@ const EXCLUDED_FILES = new Set([
   'tools/check-type-safety.test.ts',
   'tools/check-architecture-contract.test.ts',
 ]);
-
-const EXTENSIONS = /\.(ts|tsx)$/;
-
-const WALK_SKIP = ['node_modules', 'dist', 'vendor'];
 
 export function isCodeLine(line: string): boolean {
   const trimmed = line.trim();
@@ -84,7 +80,13 @@ export async function collectActiveSourceFiles(): Promise<SourceFile[]> {
   const files: SourceFile[] = [];
   for (const root of ACTIVE_ROOTS) {
     try {
-      for await (const path of walk(root, { skip: WALK_SKIP, extensions: EXTENSIONS })) {
+      for await (
+        const { path } of walk(root, {
+          includeDirs: false,
+          skip: [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)vendor(\/|$)/],
+          exts: ['ts', 'tsx'],
+        })
+      ) {
         const normalized = normalizeSlashes(path);
         if (EXCLUDED_FILES.has(normalized)) continue;
         files.push({ path: normalized, text: await Deno.readTextFile(normalized) });
