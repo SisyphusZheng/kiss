@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export interface StaticModuleSpecifier {
+interface StaticModuleSpecifier {
   value: string;
   line: number;
 }
@@ -41,7 +41,7 @@ export function extractStaticModuleSpecifiers(
   return found;
 }
 
-export interface DenoAccess {
+interface DenoAccess {
   member: string;
   line: number;
 }

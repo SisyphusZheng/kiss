@@ -11,6 +11,7 @@ import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 export const tagName = 'comparison-page';
 export const meta = { section: 'Principles', label: 'Comparison', order: 20 };
@@ -619,7 +620,7 @@ export default class ComparisonPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    const t = content[contentLocale(this._getLocale('en'))];
     return (
       <open-reading-shell rail>
         <open-page-rail

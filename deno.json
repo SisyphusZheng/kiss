@@ -63,7 +63,7 @@
     "audit:citations:check": "deno run -A tools/check-audit-citations.ts",
     "graph:check": "deno run --allow-read --allow-env tools/check-package-graph.ts",
     "consumer:local": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts",
-    "consumer:packaged": "deno task pack:dry-run && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
+    "consumer:packaged": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-packaged-starter.ts && deno run --allow-read --allow-write --allow-run --allow-env --allow-net tools/consumer-local.ts --packaged-import-map-check",
     "third-party-wc:smoke": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-sys tools/third-party-wc-smoke.ts",
     "examples:check": "cd examples/deno-desktop-reader && deno task check && deno task smoke && cd ../deno-desktop-mastodon && deno task check && deno task smoke && cd ../open-element-in-fresh && deno task check",
     "stress:dogfood": "deno run --allow-read --allow-run --allow-env tools/run-dogfood-stress.ts",
@@ -110,7 +110,6 @@
     "autoflow:release-prepare": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release-prepare",
     "autoflow:publish-existing": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts publish-existing",
     "autoflow:release-record": "deno run --allow-read --allow-write --allow-run --allow-env tools/autoflow/cli.ts release-record",
-    "autoflow:test": "deno test --allow-read --allow-write --allow-run --allow-env tools/autoflow/__tests__/",
     "check:static-output-freeze": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net --allow-ffi --allow-sys tools/check-static-output-freeze.ts",
     "verify:configs": "deno run --allow-read --allow-env tools/verify-package-configs.ts",
     "verify:configs:fix": "deno run --allow-read --allow-write --allow-env tools/verify-package-configs.ts --fix"

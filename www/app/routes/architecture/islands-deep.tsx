@@ -6,6 +6,7 @@ import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -112,7 +113,7 @@ export class IslandsDeepGuidePage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     return (
       <open-reading-shell rail>

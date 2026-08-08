@@ -1,7 +1,7 @@
 import { join, resolve } from 'node:path';
 import { CREATE_VERSION } from './version.ts';
 
-export interface ProductVersions {
+interface ProductVersions {
   app: string;
   adapterVite: string;
   element: string;
@@ -36,7 +36,7 @@ export function assertUnifiedProductVersions(versions: ProductVersions): Product
 // [sourceTemplate, targetRelativePath] pairs. The starter manifest is stored
 // as deno.json.tmpl so deno does not treat the templates/ directory as a
 // nested workspace config; it is renamed to deno.json when written.
-export const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
+const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
   // npm tarballs omit dotfiles even when a directory is included. Keep the
   // template non-hidden and write the expected dotfile into generated apps.
   ['gitignore.tmpl', '.gitignore'],

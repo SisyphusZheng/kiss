@@ -2,6 +2,7 @@ export const meta = { section: 'Guide', label: 'Migration', order: 75 };
 
 import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const content: Record<'en' | 'zh', GuideContent> = {
   en: {
@@ -105,7 +106,7 @@ export class GuideMigrationPage extends GuidePage {
   protected override renderAfterCards(_t: GuideContent): unknown {
     return (
       <p class='full-guide'>
-        {this._getLocale('en') === 'zh'
+        {contentLocale(this._getLocale('en')) === 'zh'
           ? (
             <>
               完整的逐条迁移指南（含 before/after 导入对照）见仓库

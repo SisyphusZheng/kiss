@@ -1,7 +1,7 @@
 import { normalize } from '@std/path';
 import { normalizeSlashes } from './path.ts';
 
-export const RELEASE_EVIDENCE_PATHS = Object.freeze({
+const RELEASE_EVIDENCE_PATHS = Object.freeze({
   prefixes: ['docs/release/', 'vendor/', 'www/app/data/_generated-'],
   exact: [
     'deno.lock',
@@ -18,7 +18,7 @@ export function parsePorcelainPath(line: string): string {
   return normalizeGitPath(renamed.replace(/^"|"$/g, ''));
 }
 
-export function isReleaseEvidencePath(path: string): boolean {
+function isReleaseEvidencePath(path: string): boolean {
   const normalized = normalizeGitPath(path);
   return RELEASE_EVIDENCE_PATHS.exact.includes(normalized) ||
     RELEASE_EVIDENCE_PATHS.prefixes.some((prefix) => normalized.startsWith(prefix));

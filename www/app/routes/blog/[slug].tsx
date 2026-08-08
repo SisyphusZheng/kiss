@@ -13,6 +13,7 @@ import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
 import { serializeOutline } from '@openelement/site-ui/page-contract.ts';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 export const tagName = 'page-blog-slug';
 

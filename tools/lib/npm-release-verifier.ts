@@ -1,6 +1,6 @@
 import { parse as parseSemver, type SemVer } from '@std/semver';
 
-export const DEFAULT_REGISTRY_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000, 15_000] as const;
+const DEFAULT_REGISTRY_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000, 15_000] as const;
 
 export class NpmViewError extends Error {
   constructor(message: string, readonly retryable: boolean) {
@@ -9,7 +9,7 @@ export class NpmViewError extends Error {
   }
 }
 
-export type NpmReleaseQuery = (specifier: string, field: string) => Promise<string>;
+type NpmReleaseQuery = (specifier: string, field: string) => Promise<string>;
 
 /** Run `npm view <specifier> <field> --json` and parse the JSON string value. */
 export async function npmView(specifier: string, field: string): Promise<string> {

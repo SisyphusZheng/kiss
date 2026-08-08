@@ -4,6 +4,7 @@ import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -91,7 +92,7 @@ export class StandardsRegistryPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    const t = content[contentLocale(this._getLocale('en'))];
     return (
       <open-reading-shell rail>
         <open-page-rail

@@ -3,6 +3,7 @@ export const meta = { section: 'Guide', label: 'Configuration', order: 70 };
 import { defineCustomElement } from '@openelement/element';
 import { type GuideContent, GuidePage, guideStyles } from '@openelement/site-ui/guide-page.tsx';
 import '@openelement/ui/open-code-block';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const content: Record<'en' | 'zh', GuideContent> = {
   en: {
@@ -104,7 +105,7 @@ export class GuideConfigurationPage extends GuidePage {
   static override guide = { content };
 
   protected override renderAfterCards(_t: GuideContent): unknown {
-    const zh = this._getLocale('en') === 'zh';
+    const zh = contentLocale(this._getLocale('en')) === 'zh';
     return (
       <>
         <h3>vite.config.ts</h3>

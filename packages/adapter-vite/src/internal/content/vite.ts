@@ -6,7 +6,7 @@ import { createNavPlugin } from './nav/plugin.ts';
 import { createSitemapPlugin } from './sitemap/plugin.ts';
 import type { OpenElementContentOptions } from './types.ts';
 
-export interface OpenContentOptions extends OpenElementContentOptions {
+interface OpenContentOptions extends OpenElementContentOptions {
   ctx?: OpenElementBuildContextLike;
   fs?: FileSystemAdapter;
 }

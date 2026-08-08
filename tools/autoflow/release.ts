@@ -2,21 +2,36 @@ import { AUTOFLOW3_POLICY_VERSION, isCI } from './policy.ts';
 import { compare as compareSemver, parse as parseSemver, type SemVer } from '@std/semver';
 import {
   PACKAGE_VERSION,
-  PACKAGE_VERSION_TAG,
   PREVIOUS_PACKAGE_VERSION,
-  PREVIOUS_PACKAGE_VERSION_TAG,
   RETAINED_PACKAGE_NAMES,
 } from '../project-constants.ts';
 import { assertCleanWorktree } from '../lib/git-cleanliness.ts';
-import { gitTagExists, isAncestorCommit } from '../lib/git.ts';
-import { runWithOutput } from '../lib/process.ts';
+import {
+  amendIfStaged,
+  commitIfStaged,
+  currentBranchName,
+  gitTagExists,
+  hasStagedChanges,
+  isAncestorCommit,
+  pathExistsInHead,
+} from '../lib/git.ts';
+import { runCaptured } from '../lib/process.ts';
 import { npmView, verifyNpmRelease } from '../lib/npm-release-verifier.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import type { ReleaseClosureRecord } from '../lib/release-evidence-consistency.ts';
+import {
+  releaseTag,
+  updateCurrentVersionAnchors,
+  updateProjectConstants,
+} from './version-anchors.ts';
+
+// Re-exported for cli.ts (releaseTag) and tools/check-docs-truth.ts
+// (roadmapEntryTheme), which import these from release.ts.
+export { releaseTag, roadmapEntryTheme } from './version-anchors.ts';
 
 export type { ReleaseClosureRecord };
 
-export interface ReleaseStepEvidence {
+interface ReleaseStepEvidence {
   name: string;
   command?: string[];
   cwd?: string;
@@ -146,10 +161,6 @@ export async function readReleaseEvidenceForVersion(
   return await readJsonOrUndefined(evidenceFile(version), 'Release evidence');
 }
 
-export function releaseTag(version: string): string {
-  return `v${version}`;
-}
-
 export function githubReleaseCreateCommand(tag: string, note: string): string[] {
   const command = ['gh', 'release', 'create', tag, '--title', tag, '--notes-file', note];
   if (/^v?\d+\.\d+\.\d+-/u.test(tag)) {
@@ -172,15 +183,15 @@ export function prepareRecordFile(version: string): string {
   return `docs/release/autoflow3/${releaseTag(version)}-prepare.json`;
 }
 
-export function releaseNoteFile(version: string): string {
+function releaseNoteFile(version: string): string {
   return `docs/release/${releaseTag(version)}.md`;
 }
 
-export function closureFile(version: string): string {
+function closureFile(version: string): string {
   return `docs/release/${releaseTag(version)}-closure.json`;
 }
 
-export type EnvLookup = (name: string) => string | undefined;
+type EnvLookup = (name: string) => string | undefined;
 
 /** URL of the workflow run currently executing the release (CI path only). */
 export function currentWorkflowRunUrl(env: EnvLookup): string | undefined {
@@ -220,7 +231,7 @@ export function mergeClosureSection(noteText: string, record: ReleaseClosureReco
 }
 
 /** Write the closure record JSON and fold its section into the release note. */
-export async function writeReleaseClosure(
+async function writeReleaseClosure(
   version: string,
   record: ReleaseClosureRecord,
 ): Promise<void> {
@@ -581,15 +592,6 @@ export async function readPrepareRecord(
 }
 
 /**
- * Prove the bump commit publish-existing is about to publish came out of a
- * gated release-prepare run for the same source transition (#684). The
- * recorded prepare evidence must match the current source version: either the
- * line the bump replaced (a prepare run before the bump, the normal flow) or
- * the bumped line itself (a prepare re-run against an already-bumped source,
- * which is how a missing record is backfilled). Anything else means the bump
- * on main was not produced by the recorded prepare.
- */
-/**
  * Forward-only tag assertion (2.4, #855): every release from
  * 0.41.0-alpha.14 must carry its immutable tag. Refuse to create a new tag
  * while any completed release in that window is untagged, so a tag hole
@@ -679,6 +681,15 @@ export async function backfillPrepareRecordFromMain(targetVersion: string): Prom
   );
 }
 
+/**
+ * Prove the bump commit publish-existing is about to publish came out of a
+ * gated release-prepare run for the same source transition (#684). The
+ * recorded prepare evidence must match the current source version: either the
+ * line the bump replaced (a prepare run before the bump, the normal flow) or
+ * the bumped line itself (a prepare re-run against an already-bumped source,
+ * which is how a missing record is backfilled). Anything else means the bump
+ * on main was not produced by the recorded prepare.
+ */
 export async function verifyPrepareRecord(targetVersion: string): Promise<void> {
   const path = prepareRecordFile(targetVersion);
   const record = await readPrepareRecord(targetVersion);
@@ -853,334 +864,10 @@ async function pullLatestMainWithRecovery(): Promise<void> {
   }
 }
 
-export async function assertBranch(expected: string): Promise<void> {
+async function assertBranch(expected: string): Promise<void> {
   const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
   if (branch !== expected) {
     throw new Error(`Refusing release from branch ${branch}; expected ${expected}.`);
-  }
-}
-
-/**
- * Apply a version bump to the project-constants source text. Returns
- * `undefined` when the file is already at the target (idempotent re-run:
- * PREVIOUS_PACKAGE_VERSION must keep recording the true previous line).
- *
- * ACTIVE_EXECUTION_VERSION is maintained mechanically: the active execution
- * target is the version the active plan is delivering, so after bumping the
- * package line to X it equals X. It only advances past X when a new version
- * plan is written, which is a deliberate human act — setting it to the patch
- * successor here left every post-bump document anchor failing the gates.
- */
-export function bumpProjectConstantsText(text: string, version: string): string | undefined {
-  const m = text.match(/PACKAGE_VERSION = '([^']+)'/u);
-  const current = m ? m[1] : version;
-  if (current === version) return undefined;
-  let updated = text.replace(/PACKAGE_VERSION = '[^']+'/u, `PACKAGE_VERSION = '${version}'`);
-  // Preserve the previous line for historical diagnostics. Anchor replacement
-  // uses the module-loaded PACKAGE_VERSION so it always matches the source.
-  updated = updated.replace(
-    /PREVIOUS_PACKAGE_VERSION = '[^']+'/u,
-    `PREVIOUS_PACKAGE_VERSION = '${current}'`,
-  );
-  updated = updated.replace(
-    /ACTIVE_EXECUTION_VERSION = '[^']+'/u,
-    `ACTIVE_EXECUTION_VERSION = '${releaseTag(version)}'`,
-  );
-  return updated;
-}
-
-export async function updateProjectConstants(version: string): Promise<void> {
-  const path = 'tools/project-constants.ts';
-  const text = await Deno.readTextFile(path);
-  const updated = bumpProjectConstantsText(text, version);
-  if (updated === undefined) {
-    // Already at target version; keep reruns idempotent but make the no-op visible.
-    // release can be re-run or dispatched after the bump is already merged.
-    console.warn(`[release] ${path}: version anchor already equals ${version}; no change made.`);
-    return;
-  }
-  await Deno.writeTextFile(path, updated);
-}
-
-/**
- * Extract the theme of the www roadmap timeline entry for a version tag.
- * The entry keeps `version` and `theme` on adjacent lines; anything else
- * means the file shape changed and the release line-prose gate needs an
- * update too, so no match is a loud undefined for the bump side to warn on.
- */
-export function roadmapEntryTheme(text: string, versionTag: string): string | undefined {
-  const escaped = versionTag.replaceAll('.', '\\.');
-  return text.match(new RegExp(`version:\\s*'${escaped}',\\s*theme:\\s*'([^']+)'`, 'u'))?.[1];
-}
-
-/**
- * The theme a roadmap version-anchor bump supersedes, if any. Only a real
- * version change (from tag ≠ to tag) supersedes a theme: an idempotent
- * re-run after the bump finds from === to, and re-recording the
- * already-written new theme would make the line-prose gate reject correct
- * prose (the 0.42.0-alpha.1 resume loop).
- */
-export function supersededThemeForBump(
-  text: string,
-  from: string,
-  to: string,
-): string | undefined {
-  const oldTag = from.match(/version: '([^']+)'/u)?.[1];
-  const newTag = to.match(/version: '([^']+)'/u)?.[1];
-  if (!oldTag || oldTag === newTag) return undefined;
-  return roadmapEntryTheme(text, oldTag);
-}
-
-/**
- * Record the superseded current-line theme into the project-constants
- * source text. Returns `undefined` when already recorded (idempotent).
- */
-export function bumpPreviousReleaseThemeText(text: string, theme: string): string | undefined {
-  const m = text.match(/PREVIOUS_RELEASE_THEME = '([^']+)'/u);
-  if (!m) throw new Error('tools/project-constants.ts: PREVIOUS_RELEASE_THEME anchor missing.');
-  if (m[1] === theme) return undefined;
-  return text.replace(
-    /PREVIOUS_RELEASE_THEME = '[^']+'/u,
-    `PREVIOUS_RELEASE_THEME = '${theme}'`,
-  );
-}
-
-export function buildVersionAnchorReplacements(
-  version: string,
-): Array<[string, string, string]> {
-  const tag = releaseTag(version);
-  // The module is loaded before updateProjectConstants() writes the target.
-  // PACKAGE_VERSION is therefore the actual source line being replaced.
-  const pv = PACKAGE_VERSION;
-  const pvTag = PACKAGE_VERSION_TAG;
-  // Placeholders keep these entries as plain single-quoted strings (the
-  // previous line is a single source of truth via PREVIOUS_*). Resolved below.
-  // Entries are kept in sync with the real anchor text in each target file.
-  // README.md wraps `**<pv>** (<pvTag>)` across a line break, so that anchor
-  // carries an embedded newline. Anchors that no longer exist in a file (e.g.
-  // the legacy "removed the legacy" line) are intentionally omitted so the
-  // bump never throws on documentation drift. Currency claims that are not
-  // head anchors (README/Roadmap "published as" lines, the workflow
-  // implementation anchor) are listed here too: the bump must maintain every
-  // line the version-anchor and strategic-docs gates enforce, or the gates
-  // fail on the release's own post-bump gate run.
-  const raw: Array<[string, string, string]> = [
-    ['README.md', '`$PV` (`$PVT`', '`$VER` (`$TAG`'],
-    [
-      'README.md',
-      'convergence is published as `$PV`',
-      'convergence is published as `$VER`',
-    ],
-    // Registry-line anchors (#754): the registry line may name the current
-    // source tag ($PVT) or, during the post-bump lag, the previous tag
-    // ($PREV_PVT) — check-version-anchors accepts both. Cover both from-forms
-    // so the bump advances the registry line mechanically in either state;
-    // updateCurrentVersionAnchors skips the from-form that is absent.
-    [
-      'README.md',
-      'npm registry line: `$PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'README.md',
-      'npm registry line: `$PREV_PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'README.zh.md',
-      '源码包行为 `$PV`（`$PVT`）',
-      '源码包行为 `$VER`（`$TAG`）',
-    ],
-    [
-      'README.zh.md',
-      'npm registry 行为 `$PVT`',
-      'npm registry 行为 `$TAG`',
-    ],
-    [
-      'README.zh.md',
-      'npm registry 行为 `$PREV_PVT`',
-      'npm registry 行为 `$TAG`',
-    ],
-    [
-      'README.zh.md',
-      '五包收敛已作为 `$PV` 发布',
-      '五包收敛已作为 `$VER` 发布',
-    ],
-    [
-      'docs/governance/PROJECT_WORKFLOW.md',
-      'package line `$PVT`',
-      'package line `$TAG`',
-    ],
-    [
-      'docs/governance/PROJECT_WORKFLOW.md',
-      'npm registry line `$PVT`',
-      'npm registry line `$TAG`',
-    ],
-    [
-      'docs/governance/PROJECT_WORKFLOW.md',
-      'npm registry line `$PREV_PVT`',
-      'npm registry line `$TAG`',
-    ],
-    [
-      'docs/governance/PROJECT_WORKFLOW.md',
-      'implementation anchor `$PVT`',
-      'implementation anchor `$TAG`',
-    ],
-    [
-      'docs/current/VERSION_PLAN.md',
-      'Current source package line: `$PVT`',
-      'Current source package line: `$TAG`',
-    ],
-    [
-      'docs/current/VERSION_PLAN.md',
-      'Current npm registry line: `$PVT`',
-      'Current npm registry line: `$TAG`',
-    ],
-    [
-      'docs/current/VERSION_PLAN.md',
-      'Current npm registry line: `$PREV_PVT`',
-      'Current npm registry line: `$TAG`',
-    ],
-    // Interop example version anchor (check-version-anchors governs it with
-    // the registry-style lag allowance): cover both the source-line form and
-    // the lagging npm-published form so the bump advances it mechanically.
-    [
-      'examples/open-element-in-fresh/README.md',
-      'current framework source line (`$PV`)',
-      'current framework source line (`$VER`)',
-    ],
-    [
-      'examples/open-element-in-fresh/README.md',
-      'current framework source line (`$PREV_PV`)',
-      'current framework source line (`$VER`)',
-    ],
-    [
-      'www/app/data/version.ts',
-      "export const OPENELEMENT_VERSION = '$PVT';",
-      "export const OPENELEMENT_VERSION = '$TAG';",
-    ],
-    [
-      'www/app/data/version.ts',
-      "export const PUBLISHED_PACKAGE_VERSION = '$PVT';",
-      "export const PUBLISHED_PACKAGE_VERSION = '$TAG';",
-    ],
-    [
-      'www/app/data/version.ts',
-      "export const PUBLISHED_PACKAGE_VERSION = '$PREV_PVT';",
-      "export const PUBLISHED_PACKAGE_VERSION = '$TAG';",
-    ],
-    [
-      'docs/roadmap/ROADMAP.md',
-      'Source package line: `$PVT`',
-      'Source package line: `$TAG`',
-    ],
-    [
-      'docs/roadmap/ROADMAP.md',
-      'npm registry line: `$PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'docs/roadmap/ROADMAP.md',
-      'npm registry line: `$PREV_PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'docs/roadmap/ROADMAP.md',
-      '`$PV` is the published package line',
-      '`$VER` is the published package line',
-    ],
-    [
-      'docs/status/STATUS.md',
-      'Repository package line: `$PVT`',
-      'Repository package line: `$TAG`',
-    ],
-    [
-      'docs/status/STATUS.md',
-      'npm registry line: `$PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'docs/status/STATUS.md',
-      'npm registry line: `$PREV_PVT`',
-      'npm registry line: `$TAG`',
-    ],
-    [
-      'docs/status/STATUS.md',
-      'Active release target: `$PVT`',
-      'Active release target: `$TAG`',
-    ],
-    [
-      'docs/current/VERSION_PLAN.md',
-      'Active release target: `$PVT`',
-      'Active release target: `$TAG`',
-    ],
-    [
-      'docs/roadmap/ROADMAP.md',
-      'Active execution target: `$PVT`.',
-      'Active execution target: `$TAG`.',
-    ],
-    [
-      'www/app/routes/roadmap.tsx',
-      "version: '$PVT'",
-      "version: '$TAG'",
-    ],
-    [
-      'www/app/routes/roadmap.tsx',
-      "phase.version === '$PVT'",
-      "phase.version === '$TAG'",
-    ],
-  ];
-  const resolve = (s: string): string =>
-    s
-      .replaceAll('$PREV_PVT', PREVIOUS_PACKAGE_VERSION_TAG)
-      .replaceAll('$PREV_PV', PREVIOUS_PACKAGE_VERSION)
-      .replaceAll('$PVT', pvTag)
-      .replaceAll('$PV', pv)
-      .replaceAll('$TAG', tag)
-      .replaceAll('$VER', version);
-  return raw.map(([path, from, to]) => [path, resolve(from), resolve(to)]);
-}
-
-export async function updateCurrentVersionAnchors(version: string): Promise<void> {
-  const replacements = buildVersionAnchorReplacements(version);
-
-  for (const [path, from, to] of replacements) {
-    const text = await Deno.readTextFile(path);
-    if (text.includes(from)) {
-      // Replace the first occurrence only: it is the head-zone declaration the
-      // gates enforce. Later occurrences are historical quotes (release notes,
-      // roadmap tables) that must keep the old version string.
-      if (path === 'www/app/routes/roadmap.tsx' && from.startsWith('version: ')) {
-        // The bump rewrites the current-line entry's version but cannot
-        // invent the new release's theme. Record the superseded theme so
-        // check-www-current-truth fails until a human writes the new one
-        // (the 0.41.1 bump shipped alpha.19's theme under the v0.41.1 entry).
-        const supersededTheme = supersededThemeForBump(text, from, to);
-        if (supersededTheme) {
-          const constantsPath = 'tools/project-constants.ts';
-          const constants = await Deno.readTextFile(constantsPath);
-          const bumped = bumpPreviousReleaseThemeText(constants, supersededTheme);
-          if (bumped !== undefined) await Deno.writeTextFile(constantsPath, bumped);
-        }
-      }
-      await Deno.writeTextFile(path, text.replace(from, to));
-      continue;
-    }
-    if (text.includes(to)) {
-      // Already at target - skip. Note there is deliberately no looser
-      // "file mentions the version anywhere" skip: that heuristic let a head
-      // anchor stay stale whenever the new version appeared elsewhere in the
-      // file (e.g. a release-notes link), which is exactly the drift the
-      // stale-anchor gate now rejects.
-      continue;
-    }
-    // Anchor drifted (doc no longer carries the expected from-string). Rather
-    // than abort the whole release, skip with a warning so a release is never
-    // blocked by stale documentation references.
-    console.warn(
-      `updateCurrentVersionAnchors: ${path} does not contain expected anchor ` +
-        `"${from}"; skipping (version bump continues).`,
-    );
   }
 }
 
@@ -1257,7 +944,7 @@ export async function writeReleaseNote(evidence: ReleaseEvidence): Promise<void>
   await Deno.writeTextFile(path, renderReleaseNote(evidence, manual));
 }
 
-export async function runReleaseStep(
+async function runReleaseStep(
   evidence: ReleaseEvidence,
   step: ReleaseCommandStep,
 ): Promise<void> {
@@ -1297,69 +984,6 @@ export async function runReleaseStep(
   }
 }
 
-export async function runCaptured(command: string[]): Promise<string> {
-  const result = await runWithOutput(command[0], command.slice(1));
-  if (!result.success) {
-    throw new Error(
-      `${command.join(' ')} failed with exit ${result.code}\n${result.stdout}${result.stderr}`,
-    );
-  }
-  return result.stdout;
-}
-
-export async function hasStagedChanges(): Promise<boolean> {
-  const status = await new Deno.Command('git', {
-    args: ['diff', '--cached', '--quiet'],
-  }).spawn().status;
-  if (status.code === 0) return false;
-  if (status.code === 1) return true;
-  throw new Error(`git diff --cached --quiet failed with exit ${status.code}`);
-}
-
-/**
- * Commit only when the staged tree differs from HEAD. A re-run whose earlier
- * attempt already created the commit stages nothing; an empty `git commit`
- * exits 1 and would block the resume.
- */
-export async function commitIfStaged(message: string): Promise<void> {
-  if (!(await hasStagedChanges())) {
-    console.log('Nothing staged; skipping commit (already committed or unchanged).');
-    return;
-  }
-  await runCaptured(['git', 'commit', '-m', message]);
-}
-
-/**
- * Amend the HEAD commit only when the staged tree differs from it. Used to
- * fold the prepare record into the bump commit (4→2, #869); a re-run whose
- * record already landed stages nothing and must not rewrite history.
- */
-export async function amendIfStaged(): Promise<void> {
-  if (!(await hasStagedChanges())) {
-    console.log('Nothing staged; skipping amend (prepare record already in HEAD).');
-    return;
-  }
-  await runCaptured(['git', 'commit', '--amend', '--no-edit']);
-}
-
-/** Whether HEAD's tree already carries the given path (resume idempotency). */
-export async function pathExistsInHead(path: string): Promise<boolean> {
-  const result = await new Deno.Command('git', {
-    args: ['cat-file', '-e', `HEAD:${path}`],
-    stdout: 'null',
-    stderr: 'null',
-  }).output();
-  return result.success;
-}
-
-/** Branch the worktree is on, with a sane fallback for detached CI checkouts. */
-export async function currentBranchName(fallback: string): Promise<string> {
-  const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
-  // A release plan checks out branches explicitly when it switches, so a
-  // detached HEAD means the plan never switched: the expected branch applies.
-  return branch === 'HEAD' ? fallback : branch;
-}
-
 function stepCheckoutTarget(step: ReleaseCommandStep): string | undefined {
   const command = step.command;
   if (command && command[0] === 'git' && command[1] === 'checkout') return command[2];
@@ -1367,7 +991,7 @@ function stepCheckoutTarget(step: ReleaseCommandStep): string | undefined {
 }
 
 /** Branches a plan checks out, in plan order. */
-export function planCheckoutTargets(plan: ReleaseCommandStep[]): string[] {
+function planCheckoutTargets(plan: ReleaseCommandStep[]): string[] {
   const targets: string[] = [];
   for (const step of plan) {
     const target = stepCheckoutTarget(step);
@@ -1468,7 +1092,7 @@ export function publishEvidencePassed(evidence: ReleaseEvidence): boolean {
 
 export type TagAction = 'create' | 'skip-at-head' | 'keep-existing';
 
-export interface TagDecisionInput {
+interface TagDecisionInput {
   tag: string;
   head: string;
   existing: string | undefined;
@@ -1506,7 +1130,7 @@ export function decideTagAction(input: TagDecisionInput): TagAction {
 }
 
 /** Evidence id and release kind recorded at a tag's commit, if it carries one. */
-export async function tagEvidenceProvenance(
+async function tagEvidenceProvenance(
   tag: string,
   version: string,
 ): Promise<{ id?: string; kind?: string }> {
@@ -1665,7 +1289,7 @@ async function syncGitHubReleaseNotes(evidence: ReleaseEvidence): Promise<void> 
  * (main already has every release commit); warn with the manual recovery
  * instead of failing.
  */
-export async function syncBackToStartBranch(
+async function syncBackToStartBranch(
   startBranch: string,
   releaseBranch: string,
 ): Promise<void> {

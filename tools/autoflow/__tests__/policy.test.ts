@@ -2,16 +2,18 @@ import { assert, assertEquals, assertFalse } from '@std/assert';
 import { addPaths, gitChangedPaths, normalizeReleaseVersion, parseArgs } from '../cli.ts';
 import { evaluatePatchEligibility, evaluateVersionAuthority, selectGates } from '../policy.ts';
 import {
-  bumpPreviousReleaseThemeText,
   createReleasePlan,
   evidenceFile,
   githubReleaseCreateCommand,
   nextPatchVersion,
-  releaseTag,
   resolvePatchTargetVersion,
+} from '../release.ts';
+import {
+  bumpPreviousReleaseThemeText,
+  releaseTag,
   roadmapEntryTheme,
   supersededThemeForBump,
-} from '../release.ts';
+} from '../version-anchors.ts';
 
 Deno.test('policy: patch docs fix can be automated', () => {
   const decision = evaluatePatchEligibility({
@@ -74,14 +76,23 @@ Deno.test('policy: ci tier includes architecture check for tool and hook changes
   assert(hookGates.includes('arch:check'));
 });
 
-Deno.test('policy: release tier includes pack dry-run and nitro proofs', () => {
+Deno.test('policy: release tier includes publish dry-run and nitro proofs', () => {
   const gates = selectGates('release', ['packages/element/src/index.ts']).map((gate) => gate.name);
   assert(gates.includes('package-artifacts:check'));
-  assert(gates.includes('pack:dry-run'));
+  // publish:npm:dry-run always packs all five packages first, so pack:dry-run
+  // is not gated separately.
+  assert(gates.includes('publish:npm:dry-run'));
+  assertFalse(gates.includes('pack:dry-run'));
+  assert(gates.includes('release:state-machine:check'));
   assert(gates.includes('nitro:proof:node'));
   assert(gates.includes('nitro:proof:workers'));
   assert(gates.includes('consumer:element-smoke'));
   assert(gates.includes('third-party-wc:smoke'));
+});
+
+Deno.test('policy: package artifacts gate packs before the packaged consumer runs', () => {
+  const gates = selectGates('ci', ['packages/element/src/index.ts']).map((gate) => gate.name);
+  assert(gates.indexOf('package-artifacts:check') < gates.indexOf('consumer:packaged'));
 });
 
 Deno.test('cli: parse approved plan for release command', () => {

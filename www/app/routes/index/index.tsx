@@ -5,6 +5,7 @@ import { PUBLISHED_PACKAGE_VERSION } from '../../data/version.ts';
 import '@openelement/ui/open-code-block';
 import '../../islands/cinematic-atmosphere.tsx';
 import '../../islands/cinematic-scroll.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 export const tagName = 'open-home-page';
 
@@ -232,7 +233,7 @@ export class HomePage extends OpenElement {
   static override styles = [sheet];
 
   override render() {
-    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    const t = content[contentLocale(this._getLocale('en'))];
     return (
       <main class='home'>
         <open-cinematic-scroll></open-cinematic-scroll>

@@ -14,7 +14,7 @@ export interface ReleaseEvidenceSnapshot {
   steps: Array<{ name: string; status: string }>;
 }
 
-export interface ReleaseEvidenceClosureInput {
+interface ReleaseEvidenceClosureInput {
   version: string;
   record: ReleaseClosureRecord;
   tagIsAncestorOfFinal: boolean;

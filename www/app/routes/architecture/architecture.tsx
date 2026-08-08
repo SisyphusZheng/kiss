@@ -8,6 +8,7 @@ import { OPENELEMENT_VERSION, PUBLISHED_PACKAGE_VERSION } from '../../data/versi
 import '@openelement/site-ui/open-section-frame.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -175,7 +176,7 @@ export class ArchitecturePage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
-    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    const t = content[contentLocale(this._getLocale('en'))];
     return (
       <main>
         <open-page-hero variant='technical'>

@@ -46,11 +46,11 @@
  */
 
 /** Minimal logger surface shared with the generated client entry. */
-export interface EnhanceLogger {
+interface EnhanceLogger {
   warn: (...args: unknown[]) => void;
 }
 
-export interface EnhanceClientDeps {
+interface EnhanceClientDeps {
   log: EnhanceLogger;
   /** Island tag names (lowercase) — survival checks treat them specially. */
   tags: readonly string[];
@@ -65,7 +65,7 @@ export interface EnhanceClientDeps {
   observeVisible: () => void;
 }
 
-export interface EnhanceClient {
+interface EnhanceClient {
   /**
    * Attach the submit interceptor to every current shadow root. Idempotent;
    * runs at ready time, after every morph (new hosts may appear), and after

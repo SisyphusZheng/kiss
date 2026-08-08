@@ -2,6 +2,7 @@ export const meta = { section: 'Reference', label: 'Package Compatibility', orde
 
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-card';
 
@@ -73,7 +74,7 @@ export class PackageCompatibilityPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     return (
       <open-reading-shell rail>

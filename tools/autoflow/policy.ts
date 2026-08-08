@@ -1,6 +1,6 @@
 export type AutoFlowTier = 'dev' | 'push' | 'ci' | 'release';
 
-export type ChangeLevel = 'patch' | 'minor' | 'major';
+type ChangeLevel = 'patch' | 'minor' | 'major';
 
 export interface GateDefinition {
   name: string;
@@ -9,12 +9,12 @@ export interface GateDefinition {
   triggers?: RegExp[];
 }
 
-export interface PatchEligibilityInput {
+interface PatchEligibilityInput {
   changedPaths: string[];
   approvedPlanId?: string;
 }
 
-export interface PolicyDecision {
+interface PolicyDecision {
   allowed: boolean;
   reason: string;
   requiredEvidence: string[];
@@ -25,7 +25,7 @@ export function isCI(): boolean {
   return Deno.env.get('CI') === 'true';
 }
 
-export const GATES: readonly GateDefinition[] = [
+const GATES: readonly GateDefinition[] = [
   {
     name: 'fmt:check',
     command: ['deno', 'task', 'fmt:check'],
@@ -172,6 +172,19 @@ export const GATES: readonly GateDefinition[] = [
     ],
   },
   {
+    // Replays the durable autoflow3 release state machine recorded under
+    // docs/release/autoflow3/<tag>.json from git history and fails unless the
+    // final recorded state is completed.
+    name: 'release:state-machine:check',
+    command: ['deno', 'task', 'release:state-machine:check'],
+    tiers: ['release'],
+    triggers: [
+      /^docs\/release\//,
+      /^tools\/check-release-state-machine\.ts$/,
+      /^deno\.json$/,
+    ],
+  },
+  {
     name: 'arch:check',
     command: ['deno', 'task', 'arch:check'],
     tiers: ['ci', 'release'],
@@ -306,6 +319,21 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/create\//, /^packages\/app\//, /^packages\/adapter-vite\//],
   },
   {
+    // Packs all five tarballs (tools/check-package-artifacts.ts) at the
+    // deterministic tools/lib/npm-tarball.ts paths that consumer:packaged
+    // consumes, so it runs before consumer:packaged to avoid a double-pack.
+    name: 'package-artifacts:check',
+    command: ['deno', 'task', 'package-artifacts:check'],
+    tiers: ['ci', 'release'],
+    triggers: [
+      /^packages\//,
+      /^deno\.json$/,
+      /^tools\/check-package-artifacts\.ts$/,
+      /^tools\/publish-npm\.ts$/,
+      /^tools\/lib\/package-graph\.ts$/,
+    ],
+  },
+  {
     name: 'consumer:packaged',
     command: ['deno', 'task', 'consumer:packaged'],
     tiers: ['ci', 'release'],
@@ -341,29 +369,9 @@ export const GATES: readonly GateDefinition[] = [
     triggers: [/^examples\//, /^deno\.json$/],
   },
   {
-    name: 'package-artifacts:check',
-    command: ['deno', 'task', 'package-artifacts:check'],
-    tiers: ['ci', 'release'],
-    triggers: [
-      /^packages\//,
-      /^deno\.json$/,
-      /^tools\/check-package-artifacts\.ts$/,
-      /^tools\/publish-npm\.ts$/,
-      /^tools\/lib\/package-graph\.ts$/,
-    ],
-  },
-  {
-    name: 'pack:dry-run',
-    command: ['deno', 'task', 'pack:dry-run'],
-    tiers: ['release'],
-    triggers: [
-      /^packages\//,
-      /^deno\.json$/,
-      /^tools\/publish-npm\.ts$/,
-      /^tools\/lib\/package-graph\.ts$/,
-    ],
-  },
-  {
+    // pack:dry-run is not gated separately: publish:npm:dry-run always packs
+    // all five packages first (tools/publish-npm.ts main), making it a strict
+    // superset. The pack:dry-run deno.json task stays for the gates above.
     name: 'publish:npm:dry-run',
     command: ['deno', 'task', 'publish:npm:dry-run'],
     tiers: ['release'],
@@ -388,28 +396,32 @@ export function selectGates(tier: AutoFlowTier, changedPaths: string[]): GateDef
 export function evaluatePatchEligibility(input: PatchEligibilityInput): PolicyDecision {
   const requiredEvidence = ['release-state:auto-classification'];
 
+  const blockerRules: Array<[(path: string) => boolean, string]> = [
+    [
+      (path) => /^packages\/[^/]+\/src\//.test(path),
+      'public API impact must be reviewed unless explicitly classified as internal',
+    ],
+    [
+      (path) =>
+        /^packages\/[^/]+\/deno\.json$/.test(path) || path === 'deno.json' ||
+        path === 'tools/lib/package-graph.ts',
+      'package topology or release graph changed',
+    ],
+    [
+      (path) => path.startsWith('docs/governance/'),
+      'release policy or governance changed',
+    ],
+    [
+      (path) =>
+        path === 'docs/roadmap/ROADMAP.md' || path.startsWith('docs/adr/') ||
+        path === 'docs/current/VERSION_PLAN.md',
+      'minor/major roadmap or ADR scope changed',
+    ],
+  ];
+
   const blockers: string[] = [];
-  if (input.changedPaths.some((path) => /^packages\/[^/]+\/src\//.test(path))) {
-    blockers.push('public API impact must be reviewed unless explicitly classified as internal');
-  }
-  if (
-    input.changedPaths.some((path) =>
-      /^packages\/[^/]+\/deno\.json$/.test(path) || path === 'deno.json' ||
-      path === 'tools/lib/package-graph.ts'
-    )
-  ) {
-    blockers.push('package topology or release graph changed');
-  }
-  if (input.changedPaths.some((path) => path.startsWith('docs/governance/'))) {
-    blockers.push('release policy or governance changed');
-  }
-  if (
-    input.changedPaths.some((path) =>
-      path === 'docs/roadmap/ROADMAP.md' || path.startsWith('docs/adr/') ||
-      path === 'docs/current/VERSION_PLAN.md'
-    )
-  ) {
-    blockers.push('minor/major roadmap or ADR scope changed');
+  for (const [matches, message] of blockerRules) {
+    if (input.changedPaths.some(matches)) blockers.push(message);
   }
 
   if (blockers.length > 0) {

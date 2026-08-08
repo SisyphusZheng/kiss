@@ -9,6 +9,7 @@ import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { OPENELEMENT_VERSION } from '../../data/version.ts';
 import { mastheadStyles } from '../../components/page-styles.js';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -248,7 +249,7 @@ export class DocsPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
-    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     return (
       <main class='manual'>

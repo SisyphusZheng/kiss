@@ -16,7 +16,7 @@ const log = createLogger('blog');
  * Scan the content directory and parse all blog posts.
  * Draft posts are included but marked.
  */
-export async function scanPosts(options?: OpenElementBlogOptions): Promise<BlogPost[]> {
+async function scanPosts(options?: OpenElementBlogOptions): Promise<BlogPost[]> {
   const contentDir = options?.contentDir ?? 'posts';
   const posts: BlogPost[] = [];
 

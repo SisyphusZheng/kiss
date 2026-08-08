@@ -13,6 +13,7 @@ import sanitizeHtml from 'npm:sanitize-html@^2.17.4';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-reading-shell.tsx';
 import '@openelement/site-ui/open-page-rail.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const routeSheet = new StyleSheet();
 routeSheet.replaceSync(
@@ -112,7 +113,7 @@ export class ChangelogPage extends OpenElement {
   static override styles = [routeSheet];
 
   override render() {
-    const t = content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    const t = content[contentLocale(this._getLocale('en'))];
     // The module runs from www/app/routes in dev but from www/dist/server in
     // the SSG bundle, so locate CHANGELOG.md by walking up from import.meta.url.
     let changelogPath: URL | undefined;

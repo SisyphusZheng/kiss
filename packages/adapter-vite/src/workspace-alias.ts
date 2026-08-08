@@ -9,7 +9,7 @@
 import { resolve } from 'node:path';
 import { readJsonc } from './internal/jsonc.ts';
 
-export interface AliasEntry {
+interface AliasEntry {
   find: string;
   replacement: string;
 }

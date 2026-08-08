@@ -4,6 +4,7 @@ import '@openelement/ui/open-button';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 import { OPENELEMENT_VERSION } from '../data/version.ts';
 
 export const tagName = 'api-core-page';
@@ -265,7 +266,7 @@ const content = {
 export class ApiCorePage extends OpenElement {
   static override styles = [routeSheet];
   override render() {
-    const locale: Locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const locale: Locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     const kinds = kindLabels[locale];
     return (

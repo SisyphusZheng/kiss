@@ -8,7 +8,7 @@
 
 import { join } from '@std/path';
 
-export interface StaticServer {
+interface StaticServer {
   origin: string;
   close(): Promise<void>;
 }
@@ -61,7 +61,7 @@ async function readCandidate(root: string, pathname: string): Promise<Response |
   return null;
 }
 
-export interface ServeStaticOptions {
+interface ServeStaticOptions {
   /** Preferred port; defaults to 0 (OS-assigned). */
   port?: number;
 }

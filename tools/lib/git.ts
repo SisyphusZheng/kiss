@@ -3,6 +3,7 @@
  */
 
 import { normalizeSlashes } from './path.ts';
+import { runCaptured } from './process.ts';
 
 async function gitLsFiles(extraArgs: string[] = []): Promise<string[]> {
   const command = new Deno.Command('git', {
@@ -77,4 +78,57 @@ export async function isAncestorCommit(ancestor: string, descendant: string): Pr
     stderr: 'null',
   }).output();
   return result.success;
+}
+
+export async function hasStagedChanges(): Promise<boolean> {
+  const status = await new Deno.Command('git', {
+    args: ['diff', '--cached', '--quiet'],
+  }).spawn().status;
+  if (status.code === 0) return false;
+  if (status.code === 1) return true;
+  throw new Error(`git diff --cached --quiet failed with exit ${status.code}`);
+}
+
+/**
+ * Commit only when the staged tree differs from HEAD. A re-run whose earlier
+ * attempt already created the commit stages nothing; an empty `git commit`
+ * exits 1 and would block the resume.
+ */
+export async function commitIfStaged(message: string): Promise<void> {
+  if (!(await hasStagedChanges())) {
+    console.log('Nothing staged; skipping commit (already committed or unchanged).');
+    return;
+  }
+  await runCaptured(['git', 'commit', '-m', message]);
+}
+
+/**
+ * Amend the HEAD commit only when the staged tree differs from it. Used to
+ * fold the prepare record into the bump commit (4→2, #869); a re-run whose
+ * record already landed stages nothing and must not rewrite history.
+ */
+export async function amendIfStaged(): Promise<void> {
+  if (!(await hasStagedChanges())) {
+    console.log('Nothing staged; skipping amend (prepare record already in HEAD).');
+    return;
+  }
+  await runCaptured(['git', 'commit', '--amend', '--no-edit']);
+}
+
+/** Whether HEAD's tree already carries the given path (resume idempotency). */
+export async function pathExistsInHead(path: string): Promise<boolean> {
+  const result = await new Deno.Command('git', {
+    args: ['cat-file', '-e', `HEAD:${path}`],
+    stdout: 'null',
+    stderr: 'null',
+  }).output();
+  return result.success;
+}
+
+/** Branch the worktree is on, with a sane fallback for detached CI checkouts. */
+export async function currentBranchName(fallback: string): Promise<string> {
+  const branch = (await runCaptured(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).trim();
+  // A release plan checks out branches explicitly when it switches, so a
+  // detached HEAD means the plan never switched: the expected branch applies.
+  return branch === 'HEAD' ? fallback : branch;
 }

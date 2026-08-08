@@ -30,7 +30,7 @@ const SAFE_BARE_SPECIFIER_RE =
 const VALID_STRATEGIES = new Set<HydrationStrategy>(HYDRATION_STRATEGIES);
 
 declare const admittedIslandModuleSpecifier: unique symbol;
-export type AdmittedIslandModuleSpecifier = string & {
+type AdmittedIslandModuleSpecifier = string & {
   readonly [admittedIslandModuleSpecifier]: true;
 };
 
@@ -70,7 +70,7 @@ export function validateIslandModuleSpecifier(modulePath: string): void {
   }
 }
 
-export function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
+function admitIslandModuleSpecifier(modulePath: string): AdmittedIslandModuleSpecifier {
   validateIslandModuleSpecifier(modulePath);
   return modulePath as AdmittedIslandModuleSpecifier;
 }

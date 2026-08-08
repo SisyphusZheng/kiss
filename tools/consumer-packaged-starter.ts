@@ -59,7 +59,9 @@ try {
   });
   for (const tarball of tarballs) {
     if (!existsSync(tarball)) {
-      throw new Error(`Missing packed release artifact: ${tarball}`);
+      throw new Error(
+        `Missing packed release artifact: ${tarball} (run \`deno task pack:dry-run\` first)`,
+      );
     }
   }
 

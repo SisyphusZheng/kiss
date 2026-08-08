@@ -12,6 +12,7 @@ import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -593,7 +594,7 @@ export class RoadmapPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
-    const locale = this._getLocale('en') === 'zh' ? 'zh' : 'en';
+    const locale = contentLocale(this._getLocale('en'));
     const t = content[locale];
     const timeline = entries[locale];
     return (

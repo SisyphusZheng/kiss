@@ -50,7 +50,7 @@ function matchIslandChunkFile(file: string, tagName: string): boolean {
 // ─── HTML Insertion Helpers ────────────────────────────────────────────
 
 /** Insert content immediately after <head> opening tag (handles attributes) */
-export function insertAfterHead(html: string, content: string): string {
+function insertAfterHead(html: string, content: string): string {
   // M-11 fix: Use [^>]* instead of [\s\S]*? to prevent backtracking
   const headMatch = html.match(/<head(\s[^>]*)?>/i);
   if (!headMatch) {

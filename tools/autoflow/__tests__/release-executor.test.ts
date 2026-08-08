@@ -1,21 +1,19 @@
 import { assert, assertEquals, assertRejects } from '@std/assert';
 import {
-  amendIfStaged,
-  commitIfStaged,
   createReleaseEvidence,
   executeReleasePlan,
   extractManualNoteSections,
-  pathExistsInHead,
   prepareRecordFile,
   readPrepareRecord,
   readPriorReleaseEvidence,
   type ReleaseCommandStep,
   type ReleaseEvidence,
-  runCaptured,
   writePrepareRecord,
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
+import { amendIfStaged, commitIfStaged, pathExistsInHead } from '../../lib/git.ts';
+import { runCaptured } from '../../lib/process.ts';
 
 async function git(cwd: string, args: string[]): Promise<string> {
   const output = await new Deno.Command('git', {

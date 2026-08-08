@@ -1,6 +1,6 @@
 import type { SpeculationRulesOptions } from '../protocol/ssg.ts';
 
-export interface SpeculationRoute {
+interface SpeculationRoute {
   path: string;
   type: string;
 }

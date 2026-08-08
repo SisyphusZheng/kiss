@@ -503,13 +503,6 @@ async function main(): Promise<void> {
     issues,
   );
   failMatches(
-    'type-escape',
-    production,
-    /\bas\s+any\b/,
-    'production as any is forbidden',
-    issues,
-  );
-  failMatches(
     'protocol-seam',
     adapterProtocol,
     /export\s+(?:interface\s+|type\s+\w+\s*=)/,

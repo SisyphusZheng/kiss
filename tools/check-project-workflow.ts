@@ -46,8 +46,6 @@ const requiredAnchors: Record<string, string[]> = {
   '.github/agents/README.md': ['docs/governance/PROJECT_WORKFLOW.md'],
 };
 
-import { gitIsTracked } from './lib/git.ts';
-
 const failures: Failure[] = [];
 
 async function read(file: string): Promise<string | undefined> {
@@ -61,19 +59,6 @@ async function read(file: string): Promise<string | undefined> {
 
 for (const file of requiredFiles) {
   await read(file);
-}
-
-for (const forbidden of ['docs/sop/v0.40.0', 'docs/next/v0.40.0']) {
-  try {
-    if (await gitIsTracked(forbidden)) {
-      failures.push({
-        file: forbidden,
-        message: 'v0.40 must use docs/current/VERSION_PLAN.md instead of SOP/NextVersion docs',
-      });
-    }
-  } catch {
-    failures.push({ file: forbidden, message: 'could not inspect git tracking state' });
-  }
 }
 
 for (const [file, anchors] of Object.entries(requiredAnchors)) {

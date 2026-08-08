@@ -44,7 +44,7 @@ import { DEFAULT_ROUTES_DIR } from './internal/paths.ts';
 /**
  * Parameters for route manifest generation.
  */
-export interface GenerateRouteManifestOptions {
+interface GenerateRouteManifestOptions {
   /** Project routes directory (default: 'app/routes') */
   routesDir?: string;
   /** Output directory for the generated manifest file */

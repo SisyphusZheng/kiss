@@ -3,9 +3,6 @@ import { existsSync } from '@std/fs';
 import {
   assertForwardOnlyTags,
   backfillPrepareRecordFromMain,
-  buildVersionAnchorReplacements,
-  bumpProjectConstantsText,
-  commitIfStaged,
   compareVersions,
   createPreparePlan,
   createPublishExistingPlan,
@@ -31,6 +28,8 @@ import {
   writeReleaseEvidence,
   writeReleaseNote,
 } from '../release.ts';
+import { buildVersionAnchorReplacements, bumpProjectConstantsText } from '../version-anchors.ts';
+import { commitIfStaged } from '../../lib/git.ts';
 import {
   PACKAGE_VERSION,
   PACKAGE_VERSION_TAG,

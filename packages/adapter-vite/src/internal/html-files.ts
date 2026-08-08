@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-export interface HtmlFileEntry {
+interface HtmlFileEntry {
   absolutePath: string;
   relativePath: string;
 }

@@ -73,3 +73,19 @@ export async function runWithOutput(
     stderr: decoder.decode(result.stderr),
   };
 }
+
+/**
+ * Run a command (git, gh, ...) capturing stdout; returns stdout on success.
+ * Throws with the command line, exit code, and captured stdout+stderr on
+ * failure. Kept distinct from lib/git.ts runGit, which throws stderr only —
+ * the release flow's diagnostics rely on this exact error shape.
+ */
+export async function runCaptured(command: string[]): Promise<string> {
+  const result = await runWithOutput(command[0], command.slice(1));
+  if (!result.success) {
+    throw new Error(
+      `${command.join(' ')} failed with exit ${result.code}\n${result.stdout}${result.stderr}`,
+    );
+  }
+  return result.stdout;
+}

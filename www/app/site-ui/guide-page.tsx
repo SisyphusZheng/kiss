@@ -11,6 +11,7 @@
 import { OpenElement, StyleSheet, type StyleSheetLike } from '@openelement/element';
 import { pageStyles } from '../components/page-styles.js';
 import { serializeOutline } from './page-contract.ts';
+import { contentLocale } from './locale.ts';
 import '@openelement/ui/open-card';
 
 type GuideNav = Readonly<{ href: string; label: string }>;
@@ -122,7 +123,7 @@ export class GuidePage extends OpenElement {
   /** Locale-selected content; zh coverage is scoped to the guide layer (#749). */
   protected get _t(): GuideContent {
     const content = (this.constructor as typeof GuidePage).guide.content;
-    return content[this._getLocale('en') === 'zh' ? 'zh' : 'en'];
+    return content[contentLocale(this._getLocale('en'))];
   }
 
   /** Page-specific block rendered between the lede and the card grid. */

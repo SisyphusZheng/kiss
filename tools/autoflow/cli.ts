@@ -18,14 +18,14 @@ import {
 import { PACKAGE_VERSION } from '../project-constants.ts';
 import { runWithOutput } from '../lib/process.ts';
 
-export interface CliOptions {
+interface CliOptions {
   command: string;
   dryRun: boolean;
   approvedPlan?: string;
   targetVersion?: string;
 }
 
-export interface GateResult {
+interface GateResult {
   name: string;
   passed: boolean;
   output: string;
@@ -48,7 +48,7 @@ export function parseArgs(args: string[]): CliOptions {
   return { command, dryRun, approvedPlan, targetVersion };
 }
 
-export type GitOutput = (args: string[]) => Promise<string | undefined>;
+type GitOutput = (args: string[]) => Promise<string | undefined>;
 
 async function gitOutput(args: string[]): Promise<string | undefined> {
   const output = await runWithOutput('git', args);

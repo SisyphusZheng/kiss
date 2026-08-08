@@ -10,6 +10,7 @@ import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import { pageStyles } from '../../components/page-styles.js';
 import '@openelement/ui/open-code-block';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const styles = new StyleSheet();
 styles.replaceSync(
@@ -26,7 +27,7 @@ export default class Benchmark extends OpenElement {
   static override styles = [styles];
 
   override render() {
-    return this._getLocale('en') === 'zh' ? this._renderZh() : this._renderEn();
+    return contentLocale(this._getLocale('en')) === 'zh' ? this._renderZh() : this._renderEn();
   }
 
   _renderEn() {

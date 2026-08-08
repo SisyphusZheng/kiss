@@ -27,16 +27,16 @@ import {
 } from './project-constants.ts';
 import { roadmapEntryTheme } from './autoflow/release.ts';
 
-export type CheckResult = {
+type CheckResult = {
   passed: boolean;
   failures: { file: string; message: string }[];
 };
 
-export type CheckContext = {
+type CheckContext = {
   artifacts?: boolean;
 };
 
-export type DocsTruthCheck = {
+type DocsTruthCheck = {
   name: string;
   run: (opts: CheckContext) => Promise<CheckResult> | CheckResult;
 };
@@ -44,7 +44,7 @@ export type DocsTruthCheck = {
 // ─── strategic: anchors + stale claims ─────────────────────────────────────
 import { findStrategicDocFailures } from './check-strategic-docs.ts';
 
-export const strategicCheck: DocsTruthCheck = {
+const strategicCheck: DocsTruthCheck = {
   name: 'strategic',
   run: () => {
     const failures = findStrategicDocFailures((path) => Deno.readTextFileSync(path));
@@ -71,7 +71,7 @@ import {
   staleCurrentClaims,
 } from './check-public-docs-integrity.ts';
 
-export const publicCheck: DocsTruthCheck = {
+const publicCheck: DocsTruthCheck = {
   name: 'public',
   run: async () => {
     const failures: { file: string; message: string }[] = [];
@@ -201,7 +201,7 @@ function legacyCss(line: string): boolean {
   return /grid-template|repeat\(.*,\s*\d/.test(line);
 }
 
-export const currentCheck: DocsTruthCheck = {
+const currentCheck: DocsTruthCheck = {
   name: 'current',
   run: async () => {
     const issues: { file: string; line: number; text: string }[] = [];
@@ -343,7 +343,7 @@ async function wwwCheckFile(file: string, issues: { file: string; text: string }
   }
 }
 
-export const wwwCheck: DocsTruthCheck = {
+const wwwCheck: DocsTruthCheck = {
   name: 'www',
   run: async (opts) => {
     const issues: { file: string; text: string }[] = [];
@@ -484,7 +484,7 @@ function isCurrentTruth(file: string): boolean {
     file === 'www/app/routes/guide/architecture.tsx';
 }
 
-export const textCheck: DocsTruthCheck = {
+const textCheck: DocsTruthCheck = {
   name: 'text',
   run: async () => {
     const issues: { file: string; message: string }[] = [];
@@ -536,7 +536,7 @@ import { readJson } from './lib/fs.ts';
 const EVIDENCE_DIR = 'docs/release/autoflow3';
 const FIRST_TAGGED_VERSION = '0.41.0-alpha.14';
 
-export const evidenceCheck: DocsTruthCheck = {
+const evidenceCheck: DocsTruthCheck = {
   name: 'evidence',
   run: async () => {
     const failures: { file: string; message: string }[] = [];
@@ -627,7 +627,7 @@ export const evidenceCheck: DocsTruthCheck = {
 };
 
 // ─── registry ──────────────────────────────────────────────────────────────
-export const docsTruthChecks: DocsTruthCheck[] = [
+const docsTruthChecks: DocsTruthCheck[] = [
   strategicCheck,
   publicCheck,
   currentCheck,
@@ -636,7 +636,7 @@ export const docsTruthChecks: DocsTruthCheck[] = [
   evidenceCheck,
 ];
 
-export async function runDocsTruthChecks(
+async function runDocsTruthChecks(
   checks: DocsTruthCheck[],
   opts: CheckContext = {},
 ): Promise<{ passed: boolean; failures: { file: string; message: string }[] }> {

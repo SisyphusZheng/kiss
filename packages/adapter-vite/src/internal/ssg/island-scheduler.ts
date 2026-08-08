@@ -20,11 +20,11 @@
  */
 
 /** Minimal logger surface shared with the generated client entry. */
-export interface SchedulerLogger {
+interface SchedulerLogger {
   warn: (...args: unknown[]) => void;
 }
 
-export interface IslandSchedulerDeps {
+interface IslandSchedulerDeps {
   log: SchedulerLogger;
   win: Window & typeof globalThis;
   doc: Document;
@@ -45,7 +45,7 @@ export interface IslandSchedulerDeps {
   onIslandLoaded: (() => void) | null;
 }
 
-export interface IslandScheduler {
+interface IslandScheduler {
   /**
    * Re-scan for client:visible island elements and observe any new ones.
    * The enhance layer calls this after every morph: a replaced island is a

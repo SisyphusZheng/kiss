@@ -16,6 +16,7 @@ import '@openelement/site-ui/open-standards-visual.tsx';
 import '@openelement/site-ui/open-page-hero.tsx';
 import '@openelement/site-ui/open-artifact-panel.tsx';
 import '@openelement/site-ui/open-section-frame.tsx';
+import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const pageSheet = new StyleSheet();
 pageSheet.replaceSync(`
@@ -346,7 +347,7 @@ export class DesignSystemPage extends OpenElement {
   static override styles = [pageSheet];
 
   override render() {
-    const isZh = this._getLocale('en') === 'zh';
+    const isZh = contentLocale(this._getLocale('en')) === 'zh';
     const t = content[isZh ? 'zh' : 'en'];
     const rows = isZh ? tokenRowsZh : tokenRows;
     const principleCards = isZh ? principlesZh : principles;

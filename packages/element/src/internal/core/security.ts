@@ -16,7 +16,7 @@ import { createLogger, warnOnce } from './logger.ts';
 import { formatError } from './errors.ts';
 
 /** Object prototype keys that must never be injected as SSR props. */
-export const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
+const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
   '__proto__',
   'constructor',
   'prototype',
