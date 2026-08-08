@@ -115,6 +115,12 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^docs\//, /^README/],
   },
   {
+    name: 'docs:check-claims',
+    command: ['deno', 'task', 'docs:check-claims'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\//, /^docs\//, /^tools\//],
+  },
+  {
     name: 'docs:check-strategy',
     command: ['deno', 'task', 'docs:check-strategy'],
     tiers: ['ci', 'release'],

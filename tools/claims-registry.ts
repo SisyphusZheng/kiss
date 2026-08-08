@@ -43,6 +43,24 @@ export const CODE_CLAIMS: CodeClaim[] = [
     targetFile: 'packages/adapter-vite/src/plugin.ts',
     pattern: "import '\\$\\{VIRTUAL_POLYFILL_ID\\}';",
   },
+  {
+    id: 'adr-0126-colon-smuggling',
+    claimFile: 'docs/adr/ADR-0126-sanitize-html-allow-list.md',
+    claimLine: '61-75',
+    description:
+      'isSafeUrl must conceptually decode the &colon; named entity (case-insensitive) so colon-free input cannot smuggle an executable scheme (audit #911).',
+    targetFile: 'packages/element/src/sanitize.ts',
+    pattern: 'replace\\(/&colon;/gi',
+  },
+  {
+    id: 'adr-0124-dup-key-dispose',
+    claimFile: 'docs/adr/ADR-0124-keyed-for-reconciliation.md',
+    claimLine: '23-35',
+    description:
+      'Keyed <For> must dispose the displaced first occurrence on duplicate keys, so no orphaned DOM or leaked item effects survive (audit #911).',
+    targetFile: 'packages/element/src/internal/core/binding-activation.ts',
+    pattern: 'if \\(seen\\.has\\(entryKey\\)\\)',
+  },
 ];
 
 /**

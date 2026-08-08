@@ -43,6 +43,7 @@
     "docs:check-public": "deno run --allow-read tools/check-docs-truth.ts --check=public",
     "docs:check-strategy": "deno run --allow-read tools/check-docs-truth.ts --check=strategic",
     "docs:check-current": "deno run --allow-read tools/check-docs-truth.ts --check=current",
+    "docs:check-claims": "deno run --allow-read tools/check-docs-truth.ts --check=claims",
     "release:evidence:check": "deno run --allow-read --allow-run=git tools/check-docs-truth.ts --check=evidence",
     "release:state-machine:check": "deno run --allow-read --allow-run=git tools/check-release-state-machine.ts",
     "docs:check-version-anchors": "deno run --allow-read tools/check-version-anchors.ts",
