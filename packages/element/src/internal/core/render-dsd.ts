@@ -207,56 +207,14 @@ export async function renderDsd(
   input: string | CustomElementConstructor,
   options: RenderDsdOptions = {},
 ): Promise<RenderOutput> {
-  let tagName: string;
-  let componentClass: CustomElementConstructor;
   const props = options.props ?? {};
-
-  if (typeof input === 'string') {
-    tagName = input;
-    if (options?.componentClass) {
-      componentClass = options.componentClass;
-    } else {
-      const cls = globalThis.customElements?.get(tagName) as CustomElementConstructor | undefined;
-      if (!cls) {
-        log.warn(`<${tagName}> is not registered - rendering as void element`);
-        const attrs = serializeAttrs(tagName, props);
-        const html = `<${tagName}${attrs}></${tagName}>`;
-        return {
-          html,
-          errors: [],
-          metrics: {
-            tagName,
-            renderTimeMs: 0,
-            templateSize: 0,
-            layer: 'dsd-static',
-            hasError: false,
-            nestingDepth: 0,
-          },
-          hydrationHints: [],
-        };
-      }
-      componentClass = cls;
-    }
-  } else {
-    componentClass = input;
-    const resolvedName = (input as DsdComponentConstructor).tagName;
-    if (!resolvedName) {
-      throw new OpenElementError(
-        'renderDsd: component constructor is missing a static `tagName`; ' +
-          'pass the registered tag name as the first argument instead.',
-        { code: 'DSD_MISSING_TAG_NAME', phase: 'ssr' },
-      );
-    }
-    tagName = resolvedName;
-  }
-
-  const sourceInfo = options.sourceInfo;
-  const dsdOptions = options.dsdOptions;
-  const nestingDepth = options.nestingDepth;
+  const resolved = resolveComponent(input, options);
+  if ('html' in resolved) return resolved;
+  const { tagName, componentClass } = resolved;
   const hooks = options.hooks;
 
-  const _nestingDepth = nestingDepth ?? 0;
-  if (_nestingDepth > MAX_SSR_NESTING_DEPTH) {
+  const nestingDepth = options.nestingDepth ?? 0;
+  if (nestingDepth > MAX_SSR_NESTING_DEPTH) {
     throw new OpenElementError(
       `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>`,
       {
@@ -266,22 +224,21 @@ export async function renderDsd(
     );
   }
   const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
-  const sourceStr = sourceInfo
-    ? `${sourceInfo.route ? ` route="${sourceInfo.route}"` : ''}${
-      sourceInfo.source ? ` source="${sourceInfo.source}"` : ''
+  const sourceStr = options.sourceInfo
+    ? `${options.sourceInfo.route ? ` route="${options.sourceInfo.route}"` : ''}${
+      options.sourceInfo.source ? ` source="${options.sourceInfo.source}"` : ''
     }`
     : '';
 
   const collectedErrors: RenderError[] = [];
   const collectedHints: HydrationHint[] = [];
-  let hasError = false;
 
   const renderInput: RenderInput = {
     tagName,
     componentClass,
     props,
-    dsdOptions,
-    nestingDepth: _nestingDepth,
+    dsdOptions: options.dsdOptions,
+    nestingDepth,
   };
 
   if (hooks?.beforeRender) {
@@ -294,105 +251,44 @@ export async function renderDsd(
 
   const instance = instantiateComponent(tagName, componentClass);
   if (!instance) {
-    const errMsg = 'Failed to instantiate';
-    const err = classifyError('instantiate', tagName, errMsg, false);
-    collectedErrors.push(err);
-    hasError = true;
-    dispatchRenderError(err, hooks);
-
-    const html = instantiationErrorHtml(tagName);
-
-    const result: RenderOutput = {
-      html,
-      errors: collectedErrors,
-      metrics: {
-        tagName,
-        renderTimeMs: 0,
-        templateSize: 0,
-        layer: 'dsd-static',
-        hasError: true,
-        nestingDepth: _nestingDepth,
-      },
-      hydrationHints: collectedHints,
-    };
-    hooks?.afterRender?.(result);
-    return result;
+    return instantiationFailureOutput(
+      tagName,
+      nestingDepth,
+      collectedErrors,
+      collectedHints,
+      hooks,
+    );
   }
 
   injectPropsSafe(instance as unknown as Record<string, unknown>, props, tagName, log);
 
-  let content = '';
-  try {
-    const result: unknown = instance.render();
-    if (result == null) {
-      content = '';
-    } else if (isVNode(result)) {
-      content = await renderDsdTree(result, undefined, _nestingDepth);
-    } else {
-      log.debug(`Unsupported render() return for <${tagName}>: ${describeRenderValue(result)}`);
-      const errDetail = `Components must return a VNode from render(), got ${typeof result}.`;
-      const err = classifyError('render', tagName, errDetail, false);
-      collectedErrors.push(err);
-      hasError = true;
-      dispatchRenderError(err, hooks);
-      content = '';
-    }
-  } catch (err) {
-    const classifiedErr = classifyError('render', tagName, err, true);
-    collectedErrors.push(classifiedErr);
-    hasError = true;
-    dispatchRenderError(classifiedErr, hooks);
-
-    const attrs = serializeAttrs(tagName, props);
-    const renderEndFallback = safeNow();
-    const fallbackResult: RenderOutput = {
-      html: `<${tagName}${attrs}></${tagName}>`,
-      errors: collectedErrors,
-      metrics: {
-        tagName,
-        renderTimeMs: renderEndFallback - startTime,
-        templateSize: 0,
-        layer: 'dsd-static',
-        hasError,
-        nestingDepth: _nestingDepth,
-      },
-      hydrationHints: collectedHints,
-    };
-    hooks?.afterRender?.(fallbackResult);
-    return fallbackResult;
-  }
-
-  let styleCss = '';
+  const outcome = await renderComponentContent(
+    tagName,
+    props,
+    instance,
+    nestingDepth,
+    hooks,
+    collectedErrors,
+    collectedHints,
+    startTime,
+  );
+  if (outcome.earlyReturn) return outcome.earlyReturn;
+  const hasError = outcome.hasError;
 
   const ctor = componentClass as DsdComponentConstructor;
-  if (ctor.styles) {
-    const sheets = Array.isArray(ctor.styles) ? ctor.styles : [ctor.styles];
-    for (const sheet of sheets) {
-      try {
-        for (const rule of [...sheet.cssRules]) {
-          styleCss += rule.cssText + '\n';
-        }
-      } catch {
-        // Cross-origin stylesheet or empty sheet - skip silently
-      }
-    }
-  }
-
+  const styleCss = collectStyleCss(ctor);
   const renderMode = ctor.renderMode ?? 'shadow';
   const resolvedLayer = renderMode === 'light'
     ? 'light-dom'
-    : dsdOptions?.layer || instance.layer || 'dsd-static';
-
-  const renderEnd = safeNow();
-  const renderTimeMs = renderEnd - startTime;
+    : options.dsdOptions?.layer || instance.layer || 'dsd-static';
 
   const metrics: DsdRenderMetrics = {
     tagName,
-    renderTimeMs,
-    templateSize: content.length,
+    renderTimeMs: safeNow() - startTime,
+    templateSize: outcome.content.length,
     layer: resolvedLayer,
     hasError,
-    nestingDepth: _nestingDepth,
+    nestingDepth,
   };
 
   if (resolvedLayer !== 'dsd-static') {
@@ -405,11 +301,11 @@ export async function renderDsd(
   const html = wrapDsdOutput({
     tagName,
     props,
-    content,
+    content: outcome.content,
     styleCss,
     layer: resolvedLayer,
     sourceStr,
-    dsdOptions,
+    dsdOptions: options.dsdOptions,
     lightDom: options.lightDom,
     hostEventAttrs: options.hostEventAttrs,
   });
@@ -421,15 +317,158 @@ export async function renderDsd(
     hydrationHints: collectedHints,
   };
 
-  if (hooks?.afterRender) {
-    try {
-      hooks.afterRender(output);
-    } catch (e) {
-      log.debug(`afterRender hook threw: ${formatError(e)}`);
-    }
-  }
+  callAfterRenderHook(hooks, output);
 
   return output;
+}
+
+// ─── Render Sub-functions (#900) ────────────────────────────────
+
+/** Input parsing + component class resolution. */
+function resolveComponent(
+  input: string | CustomElementConstructor,
+  options: RenderDsdOptions,
+): { tagName: string; componentClass: CustomElementConstructor } | RenderOutput {
+  if (typeof input === 'string') {
+    const tagName = input;
+    if (options.componentClass) {
+      return { tagName, componentClass: options.componentClass };
+    }
+    const cls = globalThis.customElements?.get(tagName) as CustomElementConstructor | undefined;
+    if (!cls) {
+      log.warn(`<${tagName}> is not registered - rendering as void element`);
+      const attrs = serializeAttrs(tagName, options.props ?? {});
+      return {
+        html: `<${tagName}${attrs}></${tagName}>`,
+        errors: [],
+        metrics: {
+          tagName,
+          renderTimeMs: 0,
+          templateSize: 0,
+          layer: 'dsd-static',
+          hasError: false,
+          nestingDepth: 0,
+        },
+        hydrationHints: [],
+      };
+    }
+    return { tagName, componentClass: cls };
+  }
+  const componentClass = input;
+  const resolvedName = (input as DsdComponentConstructor).tagName;
+  if (!resolvedName) {
+    throw new OpenElementError(
+      'renderDsd: component constructor is missing a static `tagName`; ' +
+        'pass the registered tag name as the first argument instead.',
+      { code: 'DSD_MISSING_TAG_NAME', phase: 'ssr' },
+    );
+  }
+  return { tagName: resolvedName, componentClass };
+}
+
+/** Error-fallback output when instantiation fails. */
+function instantiationFailureOutput(
+  tagName: string,
+  nestingDepth: number,
+  collectedErrors: RenderError[],
+  collectedHints: HydrationHint[],
+  hooks: RenderHooks | undefined,
+): RenderOutput {
+  const err = classifyError('instantiate', tagName, 'Failed to instantiate', false);
+  collectedErrors.push(err);
+  dispatchRenderError(err, hooks);
+
+  const result: RenderOutput = {
+    html: instantiationErrorHtml(tagName),
+    errors: collectedErrors,
+    metrics: {
+      tagName,
+      renderTimeMs: 0,
+      templateSize: 0,
+      layer: 'dsd-static',
+      hasError: true,
+      nestingDepth,
+    },
+    hydrationHints: collectedHints,
+  };
+  callAfterRenderHook(hooks, result);
+  return result;
+}
+
+/** render() dispatch + DSD tree serialization + render-failure fallback. */
+async function renderComponentContent(
+  tagName: string,
+  props: Record<string, unknown>,
+  instance: DsdComponent,
+  nestingDepth: number,
+  hooks: RenderHooks | undefined,
+  collectedErrors: RenderError[],
+  collectedHints: HydrationHint[],
+  startTime: number,
+): Promise<{ content: string; hasError: boolean; earlyReturn?: RenderOutput }> {
+  try {
+    const result: unknown = instance.render();
+    if (result == null) {
+      return { content: '', hasError: false };
+    }
+    if (isVNode(result)) {
+      return { content: await renderDsdTree(result, undefined, nestingDepth), hasError: false };
+    }
+    log.debug(`Unsupported render() return for <${tagName}>: ${describeRenderValue(result)}`);
+    const errDetail = `Components must return a VNode from render(), got ${typeof result}.`;
+    const err = classifyError('render', tagName, errDetail, false);
+    collectedErrors.push(err);
+    dispatchRenderError(err, hooks);
+    return { content: '', hasError: true };
+  } catch (err) {
+    const classifiedErr = classifyError('render', tagName, err, true);
+    collectedErrors.push(classifiedErr);
+    dispatchRenderError(classifiedErr, hooks);
+
+    const attrs = serializeAttrs(tagName, props);
+    const fallbackResult: RenderOutput = {
+      html: `<${tagName}${attrs}></${tagName}>`,
+      errors: collectedErrors,
+      metrics: {
+        tagName,
+        renderTimeMs: safeNow() - startTime,
+        templateSize: 0,
+        layer: 'dsd-static',
+        hasError: true,
+        nestingDepth,
+      },
+      hydrationHints: collectedHints,
+    };
+    callAfterRenderHook(hooks, fallbackResult);
+    return { content: '', hasError: true, earlyReturn: fallbackResult };
+  }
+}
+
+/** Static stylesheet rules → CSS text for the DSD template. */
+function collectStyleCss(ctor: DsdComponentConstructor): string {
+  if (!ctor.styles) return '';
+  const sheets = Array.isArray(ctor.styles) ? ctor.styles : [ctor.styles];
+  let styleCss = '';
+  for (const sheet of sheets) {
+    try {
+      for (const rule of [...sheet.cssRules]) {
+        styleCss += rule.cssText + '\n';
+      }
+    } catch {
+      // Cross-origin stylesheet or empty sheet - skip silently
+    }
+  }
+  return styleCss;
+}
+
+/** Guarded afterRender hook dispatch, shared by all output paths. */
+function callAfterRenderHook(hooks: RenderHooks | undefined, output: RenderOutput): void {
+  if (!hooks?.afterRender) return;
+  try {
+    hooks.afterRender(output);
+  } catch (e) {
+    log.debug(`afterRender hook threw: ${formatError(e)}`);
+  }
 }
 
 /** Safe high-resolution timestamp with SSR/environment fallback. */
