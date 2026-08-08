@@ -12,13 +12,13 @@ authoring modes = Basic Element standalone + full application
 
 ## Current five-package surface
 
-| Package                     | Responsibility                                                                 | Supported public interface                               |
-| --------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Package                     | Responsibility                                                                 | Supported public interface                                        |
+| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
 | `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`, `sanitize` |
-| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                           |
-| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `sitemap` |
-| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                        |
-| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                     |
+| `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                                    |
+| `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `sitemap`          |
+| `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                                 |
+| `@openelement/ui`           | Optional, reusable and dogfood-proven Web Component primitives                 | root and retained primitive subpaths                              |
 
 Responsibility wording follows [`STACK_CONTRACT.md`](./STACK_CONTRACT.md),
 the source of truth for the five-package responsibility table.
