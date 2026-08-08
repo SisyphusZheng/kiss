@@ -40,6 +40,13 @@ export interface RenderOutput {
   hydrationHints: HydrationHint[];
 }
 
+/**
+ * SSR render hooks. All three are guarded: a throwing hook is caught and
+ * logged (debug level), never propagated — a failing telemetry/analytics
+ * hook must not corrupt SSR output or take the render down. This guard is
+ * the documented behavior change over earlier versions where a hook throw
+ * aborted the render.
+ */
 export interface RenderHooks {
   beforeRender?: (input: RenderInput) => void;
   afterRender?: (output: RenderOutput) => void;
