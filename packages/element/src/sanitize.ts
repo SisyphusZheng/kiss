@@ -10,7 +10,12 @@
  * `&`, `<`, `>` escaped. Because no untrusted byte reaches the output
  * unescaped, the browser's re-parse of the result cannot construct markup
  * the sanitizer did not emit — even for inputs that tokenize differently in
- * a browser than they do here.
+ * a browser than they do here. Two allow-listed shapes are hardened beyond
+ * the raw lists: URL-valued attributes (`href`/`src`/`cite`) pass the
+ * ADR-0126 scheme policy (which conceptually decodes `&colon;` so a
+ * colon-free string cannot smuggle an executable scheme), and a surviving
+ * `target="_blank"` always carries a `rel` merged to include
+ * `noopener noreferrer` (`opener` is dropped).
  *
  * Runs without a DOM: usable in SSR (Deno/Node) and browsers alike.
  *
@@ -191,7 +196,11 @@ function decodeNumericEntities(value: string): string {
  *   parser strips tabs/newlines before resolving — we stay conservative).
  */
 export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): boolean {
-  const decoded = decodeNumericEntities(value);
+  // Named entity for the colon (case-insensitive): browsers decode &colon;
+  // in attribute values before URL resolution, so a colon-free string can
+  // still become `javascript:...`. Conceptually decode it — the prefix guard
+  // below then rejects any remaining entity forge attempts.
+  const decoded = decodeNumericEntities(value).replace(/&colon;/gi, ':');
   const colon = decoded.indexOf(':');
   if (colon === -1) return true;
   const prefix = decoded.slice(0, colon);
@@ -383,6 +392,8 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
 
     // Allowed tag: emit with allow-listed attributes.
     let attrsOut = '';
+    const blankTarget = tag.name === 'a' && tag.attrs.get('target') === '_blank';
+    let forcedRel: string | null = null;
     for (const [attrName, rawValue] of tag.attrs) {
       const lower = attrName.toLowerCase();
       const perTag = attrPolicy[tag.name];
@@ -392,11 +403,18 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
         if (!isSafeUrl(rawValue, allowedSchemes)) continue;
       }
       if (lower === 'target' && rawValue !== '_blank') continue;
+      // rel is allow-listed, so `rel="opener"` would survive verbatim and
+      // defeat the forced noopener below; on _blank merge instead.
+      if (lower === 'rel' && blankTarget) {
+        const tokens = rawValue.split(/\s+/).filter(Boolean).filter((t) => t !== 'opener');
+        forcedRel = [...new Set([...tokens, 'noopener', 'noreferrer'])].join(' ');
+        continue;
+      }
       attrsOut += ` ${lower}="${escapeAttr(rawValue)}"`;
     }
-    const closeRel = tag.name === 'a' && tag.attrs.get('target') === '_blank' &&
-      !tag.attrs.has('rel');
-    if (closeRel) attrsOut += ` rel="noopener noreferrer"`;
+    if (blankTarget) {
+      attrsOut += ` rel="${forcedRel ?? 'noopener noreferrer'}"`;
+    }
     out += `<${tag.name}${attrsOut}>`;
     i = tag.end;
   }

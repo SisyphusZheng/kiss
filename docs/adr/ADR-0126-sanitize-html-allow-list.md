@@ -59,8 +59,11 @@ route:
      sanitize-html/DOMPurify defaults); `options.disallowedTagsMode:
      'discard'` also drops the content.
 3. **URL scheme policy** (`href/src/cite`): numeric-entity-decode the
-   value first; a value containing any entity reference (named or raw
-   `&`) before the first `:` is rejected (a named entity could forge a
+   value first; the named entity `&colon;` (case-insensitive) is then
+   conceptually decoded to `:` — browsers decode it in attribute values
+   before URL resolution, so a colon-free string must not bypass the
+   scheme check (a value containing any entity reference (named or raw
+   `&`) before the first `:` is rejected — a named entity could forge a
    scheme after browser-side decoding); otherwise the prefix before the
    first `:` must be a scheme in `{http, https, mailto, tel, sms}` or
    `data:image/(png|jpe?g|gif|webp)` — everything else (javascript:,
@@ -68,7 +71,11 @@ route:
    with entity tricks) is dropped. The prefix regex also rejects
    control characters, matching the WHATWG URL parser's tolerance
    strictly on the conservative side.
-4. **Safety by construction**: output is produced only from allow-listed
+4. **`target="_blank"` forces safe `rel`**: `rel` is allow-listed, so
+   the sanitizer merges any surviving `rel` with `noopener noreferrer`
+   and drops `opener` — the navigation cannot carry an opener even when
+   the input explicitly sets one.
+5. **Safety by construction**: output is produced only from allow-listed
    tags (balanced or void) and text with `&`, `<`, `>` escaped; the
    tokenizer mirrors WHATWG tokenization rules for the boundary cases
    that matter (`<` inside a tag name re-tokenizes; comments/CDATA/
@@ -76,7 +83,7 @@ route:
    Because no untrusted byte can reach the output unescaped, browser
    re-parse of the result cannot construct markup the sanitizer did not
    emit.
-5. `trustRenderHtml` and the security guide stay: "use `sanitizeHtml` by
+6. `trustRenderHtml` and the security guide stay: "use `sanitizeHtml` by
    default; `trustRenderHtml` only when you sanitized upstream."
 
 ## Consequences

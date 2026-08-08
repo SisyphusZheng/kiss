@@ -102,6 +102,27 @@ Deno.test('sanitizeHtml: rejects named-entity forged schemes', () => {
   assertEquals(sanitizeHtml('<a href="java&NewLine;script:alert(1)">x</a>'), '<a>x</a>');
 });
 
+Deno.test('sanitizeHtml: rejects sole-&colon; scheme forging (colon-free input)', () => {
+  const hrefPayloads = [
+    'javascript&colon;alert(document.domain)',
+    'data&colon;text/html;base64,PGI+',
+    'vbscript&colon;msgbox(1)',
+    'java&colon;script&colon;alert(1)',
+    'java&COLON;script:alert(1)',
+  ];
+  for (const value of hrefPayloads) {
+    assertEquals(sanitizeHtml(`<a href="${value}">x</a>`), '<a>x</a>', value);
+  }
+  assertEquals(
+    sanitizeHtml('<img src="java&colon;script:alert(1)">'),
+    '<img>',
+  );
+  assertEquals(
+    sanitizeHtml('<q cite="java&colon;script:alert(1)">q</q>'),
+    '<q>q</q>',
+  );
+});
+
 Deno.test('sanitizeHtml: rejects raw control-character smuggling', () => {
   assertEquals(sanitizeHtml('<a href="\njavascript:alert(1)">x</a>'), '<a>x</a>');
   assertEquals(sanitizeHtml('<a href="\tjava\tscript:alert(1)">x</a>'), '<a>x</a>');
@@ -183,6 +204,25 @@ Deno.test('sanitizeHtml: only allows _blank targets and forces noopener rel', ()
   );
 });
 
+Deno.test('sanitizeHtml: rel=opener on _blank is neutralized, not passed through', () => {
+  assertEquals(
+    sanitizeHtml('<a href="https://x" target="_blank" rel="opener">l</a>'),
+    '<a href="https://x" target="_blank" rel="noopener noreferrer">l</a>',
+  );
+  assertEquals(
+    sanitizeHtml('<a href="https://x" target="_blank" rel="nofollow opener">l</a>'),
+    '<a href="https://x" target="_blank" rel="nofollow noopener noreferrer">l</a>',
+  );
+  assertEquals(
+    sanitizeHtml('<a href="https://x" target="_blank" rel="noopener">l</a>'),
+    '<a href="https://x" target="_blank" rel="noopener noreferrer">l</a>',
+  );
+  assertEquals(
+    sanitizeHtml('<a href="https://x" rel="opener">l</a>'),
+    '<a href="https://x" rel="opener">l</a>',
+  );
+});
+
 Deno.test('sanitizeHtml: escapes attribute values', () => {
   assertEquals(
     sanitizeHtml('<p title="a&quot;onload=alert(1)">x</p>'),
@@ -231,6 +271,9 @@ Deno.test('isSafeUrl: rejects executable schemes and smuggling', () => {
   assertEquals(isSafeUrl('javascript:alert(1)', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('&#106;avascript:alert(1)', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('java&colon;script:alert(1)', SAFE_SCHEMES), false);
+  assertEquals(isSafeUrl('javascript&colon;alert(1)', SAFE_SCHEMES), false);
+  assertEquals(isSafeUrl('data&colon;text/html;base64,PGI+', SAFE_SCHEMES), false);
+  assertEquals(isSafeUrl('java&COLON;script:alert(1)', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('data:text/html,<b>x</b>', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('data:image/svg+xml,<svg/>', SAFE_SCHEMES), false);
   assertEquals(isSafeUrl('\njavascript:alert(1)', SAFE_SCHEMES), false);
