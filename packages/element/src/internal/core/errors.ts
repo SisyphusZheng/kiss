@@ -140,9 +140,10 @@ export function setErrorTelemetryHook(hook: ErrorTelemetryHook): void {
   // an accidental second set surfaces immediately instead of silently
   // overwriting the previous hook.
   if (_telemetryHook) {
-    throw new Error(
+    throw new OpenElementError(
       '[openElement] setErrorTelemetryHook() was already called. ' +
         'Configure the error telemetry hook exactly once at application startup.',
+      { code: 'TELEMETRY_HOOK_ALREADY_SET', phase: 'build' },
     );
   }
   _telemetryHook = hook;

@@ -10,7 +10,7 @@ import { effect, unwrapSignalLike } from '../signal/index.ts';
 import { trustRenderHtml } from './security.ts';
 import { Fragment } from './jsx-runtime.ts';
 import { createLogger } from './logger.ts';
-import { formatError } from './errors.ts';
+import { formatError, OpenElementError } from './errors.ts';
 import type {
   BindingDescriptor,
   BindingDispose,
@@ -350,7 +350,10 @@ function applySignalRender(
     const raw = unwrapSignalLike(signal.value);
     if (raw == null) return;
     if (!renderer) {
-      throw new Error('signal-render binding requires a renderer');
+      throw new OpenElementError('signal-render binding requires a renderer', {
+        code: 'MISSING_RENDERER',
+        phase: 'render',
+      });
     }
 
     // Render into a fresh child lifecycle so nested signal effects can be
@@ -389,7 +392,10 @@ function applyConditional(
     const target = show ? renderTruthy() : renderFalsy?.();
     if (target == null) return;
     if (!renderer) {
-      throw new Error('conditional binding requires a renderer');
+      throw new OpenElementError('conditional binding requires a renderer', {
+        code: 'MISSING_RENDERER',
+        phase: 'render',
+      });
     }
 
     const renderLifecycle: BindingLifecycle = {
@@ -426,7 +432,10 @@ function applyList(
     const list = unwrapSignalLike(items);
     if (!Array.isArray(list)) return;
     if (!renderer) {
-      throw new Error('list binding requires a renderer');
+      throw new OpenElementError('list binding requires a renderer', {
+        code: 'MISSING_RENDERER',
+        phase: 'render',
+      });
     }
 
     const ref: ChildNode | null = anchor.nextSibling;

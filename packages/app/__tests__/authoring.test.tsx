@@ -1,5 +1,5 @@
-import { assertEquals, assertExists, assertThrows } from '@std/assert';
-import { renderDsd } from '@openelement/element';
+import { assertEquals, assertExists, assertInstanceOf, assertThrows } from '@std/assert';
+import { OpenElementError, renderDsd } from '@openelement/element';
 import {
   defineApp,
   defineElement,
@@ -197,6 +197,7 @@ Deno.test('redirect() and notFound() expose typed lifecycle control errors', () 
   assertEquals(isOpenElementRedirect(redirectError), true);
   assertEquals((redirectError as { location: string }).location, '/login');
   assertEquals((redirectError as { status: number }).status, 307);
+  assertInstanceOf(redirectError, OpenElementError);
 
   let notFoundError: unknown;
   try {
@@ -207,6 +208,29 @@ Deno.test('redirect() and notFound() expose typed lifecycle control errors', () 
 
   assertEquals(isOpenElementNotFound(notFoundError), true);
   assertEquals((notFoundError as { status: number }).status, 404);
+  assertInstanceOf(notFoundError, OpenElementError);
+});
+
+Deno.test('framework error boundary catches redirect/notFound via OpenElementError (ADR-0053)', () => {
+  // #898: one `catch (e: OpenElementError)` must be the single boundary for
+  // the exception-channel error classes.
+  let caught: OpenElementError | null = null;
+  try {
+    redirect('/teapot', 302);
+  } catch (error) {
+    if (error instanceof OpenElementError) caught = error;
+  }
+  assertEquals(caught !== null, true);
+  assertEquals(caught?.code, 'REDIRECT');
+
+  let caughtNotFound: OpenElementError | null = null;
+  try {
+    notFound('missing');
+  } catch (error) {
+    if (error instanceof OpenElementError) caughtNotFound = error;
+  }
+  assertEquals(caughtNotFound !== null, true);
+  assertEquals(caughtNotFound?.code, 'NOT_FOUND');
 });
 
 Deno.test('redirect() validates the 3xx whitelist at construction (ADR-0121 §3)', () => {

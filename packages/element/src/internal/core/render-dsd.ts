@@ -26,7 +26,12 @@ import {
 import { type DsdComponentConstructor } from '../protocol/render.ts';
 import type { ComponentLayer } from '../protocol/framework.ts';
 import { createLogger } from './logger.ts';
-import { formatError, RenderError as RenderErrorClass, reportError } from './errors.ts';
+import {
+  formatError,
+  OpenElementError,
+  RenderError as RenderErrorClass,
+  reportError,
+} from './errors.ts';
 import { escapeAttrValue } from './html-escape.ts';
 import { isVNode } from './vnode.ts';
 import { renderDsdTree } from './render-ir.ts';
@@ -236,9 +241,10 @@ export async function renderDsd(
     componentClass = input;
     const resolvedName = (input as DsdComponentConstructor).tagName;
     if (!resolvedName) {
-      throw new Error(
+      throw new OpenElementError(
         'renderDsd: component constructor is missing a static `tagName`; ' +
           'pass the registered tag name as the first argument instead.',
+        { code: 'DSD_MISSING_TAG_NAME', phase: 'ssr' },
       );
     }
     tagName = resolvedName;
@@ -251,7 +257,13 @@ export async function renderDsd(
 
   const _nestingDepth = nestingDepth ?? 0;
   if (_nestingDepth > MAX_SSR_NESTING_DEPTH) {
-    throw new Error(`SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>`);
+    throw new OpenElementError(
+      `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH} at <${tagName}>`,
+      {
+        code: 'SSR_NESTING_DEPTH_EXCEEDED',
+        phase: 'ssr',
+      },
+    );
   }
   const startTime = typeof performance !== 'undefined' ? performance.now() : 0;
   const sourceStr = sourceInfo

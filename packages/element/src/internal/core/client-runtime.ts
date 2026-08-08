@@ -10,6 +10,7 @@
 import type { Signal } from '../protocol/signal.ts';
 import { hasSelfHydrated, HydrationScope } from './hydration-scope.ts';
 import { hasPopulatedShadowRoot } from './dsd-shadow-root.ts';
+import { OpenElementError } from './errors.ts';
 
 const hostDisposers = new WeakMap<Element, () => void>();
 
@@ -168,7 +169,11 @@ export function hydrateOpenElement(
       registry.upgrade(host);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to upgrade <${tagName}>: ${message}`, { cause: error });
+      throw new OpenElementError(`Failed to upgrade <${tagName}>: ${message}`, {
+        code: 'ELEMENT_UPGRADE_FAILED',
+        phase: 'csr',
+        cause: error instanceof Error ? error : undefined,
+      });
     }
 
     if (hasSelfHydrated(host)) {

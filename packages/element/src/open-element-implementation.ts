@@ -47,7 +47,7 @@
  * @module @openelement/element/open-element
  */
 
-import { formatError } from './internal/core/errors.ts';
+import { formatError, OpenElementError } from './internal/core/errors.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import {
   declareObservedAttributes,
@@ -386,7 +386,10 @@ export class OpenElement extends _Base {
     if (attrParams) {
       try {
         if (new TextEncoder().encode(attrParams).byteLength > MAX_PARAMS_ATTRIBUTE_BYTES) {
-          throw new Error('params attribute exceeds the 64 KiB limit');
+          throw new OpenElementError('params attribute exceeds the 64 KiB limit', {
+            code: 'PARAMS_ATTRIBUTE_TOO_LARGE',
+            phase: 'csr',
+          });
         }
         this.#params.value = JSON.parse(attrParams);
       } catch (err) {

@@ -12,6 +12,7 @@ import {
   defineElement,
   type ElementDefinition,
   OpenElement,
+  OpenElementError,
   type VNode,
 } from '@openelement/element';
 import { defineIsland as defineRuntimeIsland, HYDRATION_STRATEGIES } from '@openelement/element';
@@ -72,7 +73,7 @@ export interface PageRouteContext {
 
 const REDIRECT_STATUSES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
 
-export class OpenElementRedirect extends Error {
+export class OpenElementRedirect extends OpenElementError {
   readonly location: string;
   readonly status: number;
 
@@ -80,23 +81,36 @@ export class OpenElementRedirect extends Error {
     // ADR-0121 §3: only real redirect statuses — a non-3xx "redirect" is a
     // response the browser never follows, silently stranding the mutation.
     if (!REDIRECT_STATUSES.has(status)) {
-      throw new Error(
+      throw new OpenElementError(
         `${ERROR_PREFIX} redirect() status must be one of 301/302/303/307/308 (got ${status}). ` +
           'In the POST action context every 3xx is coerced to 303 (PRG).',
+        { code: 'INVALID_REDIRECT_STATUS', phase: 'validation' },
       );
     }
-    super(`Redirect to ${String(location)}`);
+    super(`Redirect to ${String(location)}`, {
+      code: 'REDIRECT',
+      severity: 'error',
+      phase: 'navigation',
+      recoverable: false,
+      statusCode: status,
+    });
     this.name = 'OpenElementRedirect';
     this.location = String(location);
     this.status = status;
   }
 }
 
-export class OpenElementNotFound extends Error {
+export class OpenElementNotFound extends OpenElementError {
   readonly status = 404;
 
   constructor(message = 'Not Found') {
-    super(message);
+    super(message, {
+      code: 'NOT_FOUND',
+      severity: 'error',
+      phase: 'navigation',
+      recoverable: false,
+      statusCode: 404,
+    });
     this.name = 'OpenElementNotFound';
   }
 }
@@ -148,9 +162,10 @@ export class OpenElementActionFailure<Data = unknown> {
 
   constructor(status: number, data: Data) {
     if (status < 400 || status > 499) {
-      throw new Error(
+      throw new OpenElementError(
         `${ERROR_PREFIX} fail() status must be a 4xx code (got ${status}); ` +
           'validation failures are client errors, use 400/422.',
+        { code: 'INVALID_FAIL_STATUS', phase: 'validation' },
       );
     }
     this.status = status;

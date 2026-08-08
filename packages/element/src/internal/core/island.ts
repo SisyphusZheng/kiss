@@ -1,5 +1,5 @@
 import { ERROR_PREFIX } from '../protocol/errors.ts';
-import { formatError } from './errors.ts';
+import { formatError, OpenElementError } from './errors.ts';
 /**
  * island.ts - defineIsland() wrapper
  *
@@ -168,9 +168,10 @@ export function defineIsland<T extends CustomElementConstructor>(
 ): T {
   const strategy = options.strategy || 'idle';
   if (!VALID_STRATEGIES.has(strategy)) {
-    throw new Error(
+    throw new OpenElementError(
       `${ERROR_PREFIX} Invalid island hydration strategy "${String(strategy)}". ` +
         'Use one of: load, idle, visible, only.',
+      { code: 'INVALID_ISLAND_STRATEGY', phase: 'validation' },
     );
   }
   // `options.dsd` / `options.ssr` have no runtime effect in defineIsland():

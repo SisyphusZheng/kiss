@@ -11,7 +11,7 @@
  * @module ./tag-utils.ts
  */
 
-import { ERROR_PREFIX } from './errors.ts';
+import { ERROR_PREFIX, OpenElementError } from './errors.ts';
 
 /**
  * Convert a camelCase prop/attribute name to kebab-case.
@@ -55,9 +55,10 @@ export function isValidTagName(tagName: string): boolean {
  */
 export function assertValidTagName(tagName: string): void {
   if (!isValidTagName(tagName)) {
-    throw new Error(
+    throw new OpenElementError(
       `${ERROR_PREFIX} "${tagName}" is not a valid custom element name. ` +
         'Use lowercase ASCII letters, digits, dots, underscores, and at least one hyphen.',
+      { code: 'INVALID_TAG_NAME', phase: 'validation' },
     );
   }
 }
