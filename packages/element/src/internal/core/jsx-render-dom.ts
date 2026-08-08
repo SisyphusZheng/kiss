@@ -361,15 +361,15 @@ function renderNode(
   }
 
   if (isShowTag(tag)) {
-    return renderShowNode(props, children, lifecycle, signalRegistry, descriptors);
+    return renderShowNode(props, children, descriptors);
   }
 
   if (isForTag(tag)) {
-    return renderForNode(props, children, lifecycle, signalRegistry, descriptors);
+    return renderForNode(props, children, descriptors);
   }
 
   if (isComponentCtor(tag)) {
-    return renderComponentNode(tag, props, children, lifecycle, signalRegistry, descriptors);
+    return renderComponentNode(tag, props, lifecycle, signalRegistry, descriptors);
   }
 
   if (isComponentFn(tag)) {
@@ -411,8 +411,6 @@ function renderTrustedHtmlNode(
 function renderShowNode(
   props: Record<string, unknown> | undefined,
   children: unknown[],
-  lifecycle: BindingLifecycle,
-  signalRegistry: Map<string, Signal<unknown>> | undefined,
   descriptors: BindingDescriptor[],
 ): Node {
   const whenSig = props?.when;
@@ -433,8 +431,6 @@ function renderShowNode(
 function renderForNode(
   props: Record<string, unknown> | undefined,
   children: unknown[],
-  lifecycle: BindingLifecycle,
-  signalRegistry: Map<string, Signal<unknown>> | undefined,
   descriptors: BindingDescriptor[],
 ): Node {
   const eachSig = props?.each;
@@ -454,7 +450,6 @@ function renderForNode(
 function renderComponentNode(
   tag: ComponentCtor,
   props: Record<string, unknown> | undefined,
-  children: unknown[],
   lifecycle: BindingLifecycle,
   signalRegistry: Map<string, Signal<unknown>> | undefined,
   descriptors: BindingDescriptor[],

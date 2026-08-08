@@ -1,4 +1,4 @@
-import { assert, assertEquals } from 'jsr:@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import { ElementParams } from '../src/open-element-params.ts';
 import { ElementLifecycle } from '../src/open-element-lifecycle.ts';
 import { attachFormInternals } from '../src/open-element-form.ts';
