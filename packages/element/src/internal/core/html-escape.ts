@@ -11,6 +11,7 @@
 // ─── L1: Safe/Unsafe HTML Contract ──────────────────────────────
 
 import { createLogger, createWarnScope, warnOnce } from './logger.ts';
+import type { WarnScope } from './logger.ts';
 
 const log = createLogger('core');
 
@@ -103,61 +104,9 @@ export function wrapInDocument(
   if (cspNonce && !validNonce) {
     log.warn(`Invalid CSP nonce format: "${cspNonce}". Nonce should be a base64-encoded value.`);
   }
-  // v0.14.8: C-02 fix - Runtime enforcement for headExtras.
-  // If headExtras contains <script> tags and allowHeadExtrasScripts is false,
-  // strip them to prevent XSS. Developer should use inject.scripts for safe injection.
-  let safeHeadExtras = headExtras;
-  if (!allowHeadExtrasScripts && headExtras) {
-    // Strip <script> tags and their content
-    safeHeadExtras = headExtras.replace(/<script[\s>][\s\S]*?<\/script\s*>/gi, '');
-    if (safeHeadExtras !== headExtras) {
-      warnOnce(
-        'headExtrasScripts',
-        log,
-        'headExtras contained <script> tags which were stripped for security. ' +
-          'Use inject.scripts for safe script injection, or set allowHeadExtrasScripts: true.',
-        warnScope,
-      );
-    }
-    // Strip on* event handler attributes (strong XSS indicator)
-    if (/\s+on\w+\s*=/i.test(safeHeadExtras)) {
-      safeHeadExtras = safeHeadExtras.replace(
-        /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
-        '',
-      );
-      log.warn(
-        'headExtras contained on* event handler attributes which were stripped for security.',
-      );
-    }
-  }
-
-  // v0.14.3: Basic HTML tag balance validation for headExtras.
-  // Checks that opening and closing tag counts match for major HTML elements.
-  // This catches obviously malformed HTML (e.g., unclosed <!-- comments).
-  if (headExtras) {
-    // Check for unclosed HTML comments: <!-- without matching -->
-    const commentOpens = (headExtras.match(/<!--/g) || []).length;
-    const commentCloses = (headExtras.match(/-->/g) || []).length;
-    if (commentOpens !== commentCloses) {
-      log.warn(
-        'headExtras has unbalanced HTML comments (<!-- vs -->). ' +
-          'This may cause HTML parsing issues.',
-      );
-    }
-  }
-  const metaTags: string[] = [];
-  if (meta?.description) {
-    const safeDesc = escapeAttrValue(meta.description);
-    metaTags.push(`  <meta name="description" content="${safeDesc}">`);
-  }
-  if (Array.isArray(meta?.tags)) {
-    for (const tag of meta.tags) {
-      const attrs = Object.entries(tag)
-        .map(([key, value]) => `${escapeAttr(key)}="${escapeAttrValue(value)}"`)
-        .join(' ');
-      if (attrs) metaTags.push(`  <meta ${attrs}>`);
-    }
-  }
+  const safeHeadExtras = sanitizeHeadExtras(headExtras, allowHeadExtrasScripts, warnScope);
+  validateHeadExtrasBalance(headExtras);
+  const metaTags = buildMetaTags(meta);
   const metaBlock = metaTags.length > 0 ? '\n' + metaTags.join('\n') + '\n' : '';
   const dangerousHeadBlock = dangerouslyHeadFragments.length > 0
     ? '\n  ' + dangerouslyHeadFragments.join('\n  ')
@@ -179,4 +128,77 @@ export function wrapInDocument(
   ${clientScript}${devScripts}
 </body>
 </html>`;
+}
+
+/**
+ * v0.14.8: C-02 fix - Runtime enforcement for headExtras.
+ * If headExtras contains <script> tags and allowHeadExtrasScripts is false,
+ * strip them to prevent XSS. Developer should use inject.scripts for safe injection.
+ */
+function sanitizeHeadExtras(
+  headExtras: string,
+  allowHeadExtrasScripts: boolean,
+  warnScope: WarnScope,
+): string {
+  if (allowHeadExtrasScripts || !headExtras) return headExtras;
+  // Strip <script> tags and their content
+  let safeHeadExtras = headExtras.replace(/<script[\s>][\s\S]*?<\/script\s*>/gi, '');
+  if (safeHeadExtras !== headExtras) {
+    warnOnce(
+      'headExtrasScripts',
+      log,
+      'headExtras contained <script> tags which were stripped for security. ' +
+        'Use inject.scripts for safe script injection, or set allowHeadExtrasScripts: true.',
+      warnScope,
+    );
+  }
+  // Strip on* event handler attributes (strong XSS indicator)
+  if (/\s+on\w+\s*=/i.test(safeHeadExtras)) {
+    safeHeadExtras = safeHeadExtras.replace(
+      /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
+      '',
+    );
+    log.warn(
+      'headExtras contained on* event handler attributes which were stripped for security.',
+    );
+  }
+  return safeHeadExtras;
+}
+
+/**
+ * v0.14.3: Basic HTML tag balance validation for headExtras.
+ * Checks that opening and closing tag counts match for major HTML elements.
+ * This catches obviously malformed HTML (e.g., unclosed <!-- comments).
+ */
+function validateHeadExtrasBalance(headExtras: string): void {
+  if (!headExtras) return;
+  // Check for unclosed HTML comments: <!-- without matching -->
+  const commentOpens = (headExtras.match(/<!--/g) || []).length;
+  const commentCloses = (headExtras.match(/-->/g) || []).length;
+  if (commentOpens !== commentCloses) {
+    log.warn(
+      'headExtras has unbalanced HTML comments (<!-- vs -->). ' +
+        'This may cause HTML parsing issues.',
+    );
+  }
+}
+
+/** Serialize the meta description and arbitrary meta tags. */
+function buildMetaTags(
+  meta?: { description?: string; tags?: Array<Record<string, string | number | boolean>> },
+): string[] {
+  const metaTags: string[] = [];
+  if (meta?.description) {
+    const safeDesc = escapeAttrValue(meta.description);
+    metaTags.push(`  <meta name="description" content="${safeDesc}">`);
+  }
+  if (Array.isArray(meta?.tags)) {
+    for (const tag of meta.tags) {
+      const attrs = Object.entries(tag)
+        .map(([key, value]) => `${escapeAttr(key)}="${escapeAttrValue(value)}"`)
+        .join(' ');
+      if (attrs) metaTags.push(`  <meta ${attrs}>`);
+    }
+  }
+  return metaTags;
 }

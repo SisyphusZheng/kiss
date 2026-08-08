@@ -183,50 +183,10 @@ export function defineIsland<T extends CustomElementConstructor>(
   // Single rule source shared with defineElement() (tag-utils.ts).
   assertValidTagName(tagName);
 
-  // v0.6': connectedCallback wrapper - the prototype's connectedCallback is
-  // replaced with a wrapper that calls the original callback + auto-binds SSR
-  // props. The original is captured first, so the wrapped chain still runs the
-  // component's own (and Lit's) connectedCallback logic.
-  //
-  // v0.14.3: Added __ssrPropsBound idempotency guard to prevent
-  // double bindSsrProps() calls when a subclass island inherits from a
-  // parent island (both registered via defineIsland()). Without this guard,
-  // the parent's wrapped connectedCallback and the subclass's both
-  // call bindSsrProps on the same element.
-  const origConnected = componentClass.prototype.connectedCallback;
-  if (!componentClass.prototype.__openIslandWrapped) {
-    componentClass.prototype.__openIslandWrapped = true;
-    componentClass.prototype.connectedCallback = function (this: HTMLElement) {
-      // Call original connectedCallback first (super.connectedCallback)
-      if (typeof origConnected === 'function') {
-        origConnected.call(this);
-      }
-      // Auto-bind SSR props on upgrade (idempotent - only once per element)
-      if (
-        this.hasAttribute(DATA_SSR_PROPS) &&
-        !ssrPropsBoundSet.has(this)
-      ) {
-        ssrPropsBoundSet.add(this);
-        Promise.resolve().then(() => bindSsrProps(this));
-      }
-    } as unknown as typeof componentClass.prototype.connectedCallback;
-  }
+  wrapIslandConnectedCallback(componentClass);
 
   // Define a registration function that's idempotent
-  const register = () => {
-    const registry = globalThis.customElements;
-    if (!registry) return;
-    if (!registry.get(tagName)) {
-      try {
-        registry.define(tagName, componentClass);
-      } catch (e) {
-        // Already defined - safe to ignore in SSR contexts
-        log.debug(
-          `customElements.define("${tagName}") skipped: ${formatError(e)}`,
-        );
-      }
-    }
-  };
+  const register = createIslandRegister(tagName, componentClass);
 
   // SSR guard: browser-specific strategy handling is a no-op during SSR.
   // During SSR we just define the custom element and let the generated
@@ -257,6 +217,60 @@ export function defineIsland<T extends CustomElementConstructor>(
   }
 
   return componentClass;
+}
+
+/**
+ * v0.6': connectedCallback wrapper - the prototype's connectedCallback is
+ * replaced with a wrapper that calls the original callback + auto-binds SSR
+ * props. The original is captured first, so the wrapped chain still runs the
+ * component's own (and Lit's) connectedCallback logic.
+ *
+ * v0.14.3: Added __ssrPropsBound idempotency guard to prevent
+ * double bindSsrProps() calls when a subclass island inherits from a
+ * parent island (both registered via defineIsland()). Without this guard,
+ * the parent's wrapped connectedCallback and the subclass's both
+ * call bindSsrProps on the same element.
+ */
+function wrapIslandConnectedCallback<T extends CustomElementConstructor>(componentClass: T): void {
+  const origConnected = componentClass.prototype.connectedCallback;
+  if (!componentClass.prototype.__openIslandWrapped) {
+    componentClass.prototype.__openIslandWrapped = true;
+    componentClass.prototype.connectedCallback = function (this: HTMLElement) {
+      // Call original connectedCallback first (super.connectedCallback)
+      if (typeof origConnected === 'function') {
+        origConnected.call(this);
+      }
+      // Auto-bind SSR props on upgrade (idempotent - only once per element)
+      if (
+        this.hasAttribute(DATA_SSR_PROPS) &&
+        !ssrPropsBoundSet.has(this)
+      ) {
+        ssrPropsBoundSet.add(this);
+        Promise.resolve().then(() => bindSsrProps(this));
+      }
+    } as unknown as typeof componentClass.prototype.connectedCallback;
+  }
+}
+
+/** Idempotent customElements.define wrapper safe for SSR contexts. */
+function createIslandRegister(
+  tagName: string,
+  componentClass: CustomElementConstructor,
+): () => void {
+  return () => {
+    const registry = globalThis.customElements;
+    if (!registry) return;
+    if (!registry.get(tagName)) {
+      try {
+        registry.define(tagName, componentClass);
+      } catch (e) {
+        // Already defined - safe to ignore in SSR contexts
+        log.debug(
+          `customElements.define("${tagName}") skipped: ${formatError(e)}`,
+        );
+      }
+    }
+  };
 }
 
 /**

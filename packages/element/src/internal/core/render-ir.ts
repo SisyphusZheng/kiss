@@ -18,7 +18,7 @@ import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
-import type { RenderFn, VNode } from '../protocol/vnode.ts';
+import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
 import { renderDsd } from './render-dsd.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
@@ -223,45 +223,115 @@ export async function renderToNode(
 
   // Show
   if (isShowTag(tag)) {
-    const whenVal = unwrapSignalLike(props?.when);
-    const target = whenVal ? children[0] : children[1];
-    // Record the branch taken so hydration can detect signal drift between SSR
-    // and hydration (a flipped branch shifts every subsequent data-eid).
-    const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
-    const rendered = target ? await renderToNode(target, eventContext, nestingDepth) : null;
-    return fragmentNode(rendered ? [branch, rendered] : [branch]);
+    return await renderShowBranch(props, children, eventContext, nestingDepth);
   }
 
   // For
   if (isForTag(tag)) {
-    const items = unwrapSignalLike(props?.each) as unknown[];
-    const renderFn = children[0] as RenderFn;
-    const branch = branchCommentNode(forBranchMarker(items));
-    if (!Array.isArray(items) || typeof renderFn !== 'function') {
-      return fragmentNode([branch]);
-    }
-    const parts: RenderNode[] = [branch];
-    for (let index = 0; index < items.length; index++) {
-      parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
-    }
-    return fragmentNode(parts);
+    return await renderForBranch(props, children, eventContext, nestingDepth);
   }
 
   // Component function/class
   if (isComponentCtor(tag) || isComponentFn(tag)) {
-    try {
-      return await renderToNode(callComponent(tag, props, children), eventContext, nestingDepth);
-    } catch (err) {
-      createLogger('render').error(
-        `render failed for <${String(tag)}>:` +
-          ` ${formatError(err)}`,
-      );
-      throw err;
-    }
+    return await renderComponentBranch(tag, props, children, eventContext, nestingDepth);
   }
 
   // HTML / SVG element
   const tagName = String(tag);
+  const childNodes = await renderElementChildren(props, children, eventContext, nestingDepth);
+
+  if (
+    typeof customElements !== 'undefined' &&
+    customElements.get &&
+    customElements.get(tagName)
+  ) {
+    return await renderRegisteredCeBranch(
+      tagName,
+      props,
+      childNodes,
+      eventContext,
+      nestingDepth,
+    );
+  }
+
+  return {
+    kind: 'element',
+    tag: tagName,
+    attrs: props,
+    eventAttrs: serializeEventMarkers(props, eventContext),
+    children: childNodes,
+    voidElement: VOID_ELEMENTS.has(tagName),
+  };
+}
+
+/**
+ * `<Show>`: record the branch taken so hydration can detect signal drift
+ * between SSR and hydration (a flipped branch shifts every subsequent
+ * data-eid), then render the active child.
+ */
+async function renderShowBranch(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  eventContext: EventMarkerContext,
+  nestingDepth: number,
+): Promise<RenderNode> {
+  const whenVal = unwrapSignalLike(props?.when);
+  const target = whenVal ? children[0] : children[1];
+  const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
+  const rendered = target ? await renderToNode(target, eventContext, nestingDepth) : null;
+  return fragmentNode(rendered ? [branch, rendered] : [branch]);
+}
+
+/** `<For>`: record the branch token, then render each item in order. */
+async function renderForBranch(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  eventContext: EventMarkerContext,
+  nestingDepth: number,
+): Promise<RenderNode> {
+  const items = unwrapSignalLike(props?.each) as unknown[];
+  const renderFn = children[0] as RenderFn;
+  const branch = branchCommentNode(forBranchMarker(items));
+  if (!Array.isArray(items) || typeof renderFn !== 'function') {
+    return fragmentNode([branch]);
+  }
+  const parts: RenderNode[] = [branch];
+  for (let index = 0; index < items.length; index++) {
+    parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
+  }
+  return fragmentNode(parts);
+}
+
+/** Component class/function: invoke, then render the returned node. */
+async function renderComponentBranch(
+  tag: ComponentCtor | ComponentFn,
+  props: Record<string, unknown> | undefined,
+  children: VNode['children'],
+  eventContext: EventMarkerContext,
+  nestingDepth: number,
+): Promise<RenderNode> {
+  try {
+    return await renderToNode(
+      callComponent(tag, props ?? {}, children),
+      eventContext,
+      nestingDepth,
+    );
+  } catch (err) {
+    createLogger('render').error(
+      `render failed for <${String(tag)}>:` +
+        ` ${formatError(err)}`,
+    );
+    throw err;
+  }
+}
+
+/** Element children: innerHTML / textContent override, else render children. */
+async function renderElementChildren(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  eventContext: EventMarkerContext,
+  nestingDepth: number,
+): Promise<RenderNode[]> {
   const childNodes: RenderNode[] = [];
 
   if (props?.innerHTML !== undefined) {
@@ -275,44 +345,44 @@ export async function renderToNode(
     }
   }
 
-  if (
-    typeof customElements !== 'undefined' &&
-    customElements.get &&
-    customElements.get(tagName)
-  ) {
-    try {
-      // Host-level event props on a registered custom element are dropped by
-      // serializeAttrs, so emit the data-eid marker explicitly and thread it
-      // onto the serialized host tag. Without this, hydration still counts an
-      // eid for the host and every following sibling binding shifts by one.
-      // Children are already rendered above, preserving the SSR/hydration
-      // children-first eid ordering.
-      const hostEventAttrs = serializeEventMarkers(props, eventContext);
-      const dsdResult = await renderDsd(tagName, {
-        componentClass: customElements.get(tagName) as CustomElementConstructor,
-        props,
-        lightDom: childNodes,
-        nestingDepth: nestingDepth + 1,
-        hostEventAttrs,
-      });
-      return trustedHtmlNode(dsdResult.html);
-    } catch (err) {
-      createLogger('render').error(
-        `renderDsd failed for registered CE <${tagName}>:` +
-          ` ${formatError(err)}`,
-      );
-      throw err;
-    }
-  }
+  return childNodes;
+}
 
-  return {
-    kind: 'element',
-    tag: tagName,
-    attrs: props,
-    eventAttrs: serializeEventMarkers(props, eventContext),
-    children: childNodes,
-    voidElement: VOID_ELEMENTS.has(tagName),
-  };
+/**
+ * Registered custom element: delegate to renderDsd with the already-rendered
+ * light DOM children and host-level event markers.
+ *
+ * Host-level event props on a registered custom element are dropped by
+ * serializeAttrs, so emit the data-eid marker explicitly and thread it onto
+ * the serialized host tag. Without this, hydration still counts an eid for
+ * the host and every following sibling binding shifts by one. Children are
+ * already rendered above, preserving the SSR/hydration children-first eid
+ * ordering.
+ */
+async function renderRegisteredCeBranch(
+  tagName: string,
+  props: Record<string, unknown> | undefined,
+  childNodes: RenderNode[],
+  eventContext: EventMarkerContext,
+  nestingDepth: number,
+): Promise<RenderNode> {
+  try {
+    const hostEventAttrs = serializeEventMarkers(props, eventContext);
+    const dsdResult = await renderDsd(tagName, {
+      componentClass: customElements.get(tagName) as CustomElementConstructor,
+      props,
+      lightDom: childNodes,
+      nestingDepth: nestingDepth + 1,
+      hostEventAttrs,
+    });
+    return trustedHtmlNode(dsdResult.html);
+  } catch (err) {
+    createLogger('render').error(
+      `renderDsd failed for registered CE <${tagName}>:` +
+        ` ${formatError(err)}`,
+    );
+    throw err;
+  }
 }
 
 // ─── Public API ─────────────────────────────────────────────────

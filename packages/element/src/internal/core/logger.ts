@@ -33,7 +33,7 @@ export function createLogger(tag: string): Logger {
  * behavior where `warnOnce` permanently muted a key across all requests/SSG
  * pages (v0.42.0-alpha.9, #643).
  */
-interface WarnScope {
+export interface WarnScope {
   warned: Set<string>;
 }
 

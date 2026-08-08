@@ -16,7 +16,7 @@
  */
 
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
-import type { RenderFn, VNode } from '../protocol/vnode.ts';
+import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
 import type { Signal } from '../protocol/signal.ts';
 import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
@@ -188,62 +188,90 @@ export function collectPropBindings(
 
     if (value == null) continue;
 
-    // innerHTML maps to signal-html / static text injection.
     if (key === 'innerHTML') {
-      if (isSignalLike(value)) {
-        descriptors.push(bindHtml(el, value as Signal<unknown>, trustedHtml));
-      } else {
-        const resolved = String(unwrapSignalLike(value));
-        if (trustedHtml) {
-          (el as HTMLElement).innerHTML = trustRenderHtml(resolved);
-        } else {
-          (el as HTMLElement).textContent = resolved;
-        }
-      }
+      descriptors.push(...innerHtmlDescriptors(el, value, trustedHtml));
       continue;
     }
 
     // Signal binding — emit data-signal marker when we can resolve a name.
     if (isSignalLike(value)) {
-      const sig = value as Signal<unknown>;
-      const name = signalNameFor(sig, signalRegistry);
-
-      if (name) {
-        el.setAttribute(DATA_SIGNAL, name);
-      }
-
-      // Use signal-attr for all signal-driven props; signal-class toggling
-      // (single class) is reserved for explicit data-signal-class markers.
-      descriptors.push(bindAttr(el, [attrNameFor(el, key)], sig));
+      descriptors.push(...signalDescriptors(el, key, value as Signal<unknown>, signalRegistry));
       continue;
     }
 
     const resolved = unwrapSignalLike(value);
 
     if (key === 'style' && typeof resolved === 'object' && resolved !== null) {
-      const styleObj: Record<string, string | number> = {};
-      for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
-        styleObj[sk] = unwrapSignalLike(sv) as string | number;
-      }
-      descriptors.push(bindStaticStyle(el, styleObj));
+      descriptors.push(bindStaticStyle(el, resolveStyleObject(resolved)));
       continue;
     }
 
-    // DOM properties that are NOT HTML attributes
-    if (key === 'textContent') {
-      descriptors.push(bindStaticProp(el, 'textContent', resolved));
-      continue;
-    }
-
-    if (typeof resolved === 'boolean') {
-      descriptors.push(bindStaticBoolean(el, attrNameFor(el, key), resolved));
-      continue;
-    }
-
-    descriptors.push(bindStaticAttr(el, attrNameFor(el, key), resolved));
+    descriptors.push(staticDescriptor(el, key, resolved));
   }
 
   return descriptors;
+}
+
+/**
+ * innerHTML prop: signal-html binding, or direct trusted/text injection when
+ * the value is static.
+ */
+function innerHtmlDescriptors(
+  el: Element,
+  value: unknown,
+  trustedHtml: boolean,
+): BindingDescriptor[] {
+  if (isSignalLike(value)) {
+    return [bindHtml(el, value as Signal<unknown>, trustedHtml)];
+  }
+  const resolved = String(unwrapSignalLike(value));
+  if (trustedHtml) {
+    (el as HTMLElement).innerHTML = trustRenderHtml(resolved);
+  } else {
+    (el as HTMLElement).textContent = resolved;
+  }
+  return [];
+}
+
+/** Signal prop: emit the data-signal marker when nameable, bind signal-attr. */
+function signalDescriptors(
+  el: Element,
+  key: string,
+  sig: Signal<unknown>,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+): BindingDescriptor[] {
+  const name = signalNameFor(sig, signalRegistry);
+
+  if (name) {
+    el.setAttribute(DATA_SIGNAL, name);
+  }
+
+  // Use signal-attr for all signal-driven props; signal-class toggling
+  // (single class) is reserved for explicit data-signal-class markers.
+  return [bindAttr(el, [attrNameFor(el, key)], sig)];
+}
+
+/** style object prop: unwrap nested signals into a static style map. */
+function resolveStyleObject(resolved: unknown): Record<string, string | number> {
+  const styleObj: Record<string, string | number> = {};
+  for (const [sk, sv] of Object.entries(resolved as Record<string, unknown>)) {
+    styleObj[sk] = unwrapSignalLike(sv) as string | number;
+  }
+  return styleObj;
+}
+
+/** Static value: textContent DOM property, boolean attribute, or plain attribute. */
+function staticDescriptor(el: Element, key: string, resolved: unknown): BindingDescriptor {
+  // DOM properties that are NOT HTML attributes
+  if (key === 'textContent') {
+    return bindStaticProp(el, 'textContent', resolved);
+  }
+
+  if (typeof resolved === 'boolean') {
+    return bindStaticBoolean(el, attrNameFor(el, key), resolved);
+  }
+
+  return bindStaticAttr(el, attrNameFor(el, key), resolved);
 }
 
 /**
@@ -318,81 +346,156 @@ function renderNode(
   const { tag, props, children } = node as VNode;
 
   if (isFragment(tag)) {
-    const frag = document.createDocumentFragment();
-    for (const child of children) {
-      frag.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
-    }
-    return frag;
+    return renderFragmentNode(children, lifecycle, signalRegistry, descriptors);
   }
 
-  // Trusted HTML — parse raw HTML string into real DOM nodes
   if (tag === HTML_TAG) {
-    const container = document.createElement('div');
-    const html = props?.html ?? '';
-    container.innerHTML = trustRenderHtml(String(html));
-    const frag = document.createDocumentFragment();
-    while (container.firstChild) {
-      frag.appendChild(container.firstChild);
-    }
-    return frag;
+    return renderTrustedHtmlNode(props);
   }
 
   if (isShowTag(tag)) {
-    const whenSig = props?.when;
-    const ch = children as VNode[];
-    const truthy: unknown = ch[0];
-    const falsy: unknown = ch[1];
-    const marker = document.createComment('show');
-    descriptors.push(bindConditional(
-      marker as ChildNode,
-      whenSig,
-      () => truthy,
-      () => falsy,
-    ));
-    return marker;
+    return renderShowNode(props, children, lifecycle, signalRegistry, descriptors);
   }
 
   if (isForTag(tag)) {
-    const eachSig = props?.each;
-    const renderFn = (children[0] as RenderFn) ?? EMPTY_RENDER;
-
-    const marker = document.createComment('for');
-    descriptors.push(
-      bindList(marker as ChildNode, eachSig, renderFn),
-    );
-    return marker;
+    return renderForNode(props, children, lifecycle, signalRegistry, descriptors);
   }
 
   if (isComponentCtor(tag)) {
-    try {
-      const instance = new tag();
-      injectPropsSafe(instance, props ?? {}, `renderToDom<${String(tag)}>`);
-      const result = instance.render();
-      return renderNode(result, lifecycle, signalRegistry, descriptors);
-    } catch (err) {
-      // Re-throw so the unified render path (open-element-implementation.ts
-      // _renderOrHydrate) can route to onRenderError, mirroring the SSR
-      // render-ir.ts contract — swallowing here would hide the failure as an
-      // empty text node with no fallback.
-      createLogger('dom-render').error(
-        `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
-      );
-      throw err;
-    }
-  }
-  if (isComponentFn(tag)) {
-    try {
-      const result = tag({ ...props, children });
-      return renderNode(result, lifecycle, signalRegistry, descriptors);
-    } catch (err) {
-      createLogger('dom-render').error(
-        `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
-      );
-      throw err;
-    }
+    return renderComponentNode(tag, props, children, lifecycle, signalRegistry, descriptors);
   }
 
-  const el = createElementForTag(tag as string);
+  if (isComponentFn(tag)) {
+    return renderFunctionNode(tag, props, children, lifecycle, signalRegistry, descriptors);
+  }
+
+  return renderHostElement(node, props, children, lifecycle, signalRegistry, descriptors);
+}
+
+/** Fragment: render every child into one DocumentFragment. */
+function renderFragmentNode(
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  const frag = document.createDocumentFragment();
+  for (const child of children) {
+    frag.appendChild(renderNode(child, lifecycle, signalRegistry, descriptors));
+  }
+  return frag;
+}
+
+/** Trusted HTML — parse raw HTML string into real DOM nodes. */
+function renderTrustedHtmlNode(
+  props: Record<string, unknown> | undefined,
+): Node {
+  const container = document.createElement('div');
+  const html = props?.html ?? '';
+  container.innerHTML = trustRenderHtml(String(html));
+  const frag = document.createDocumentFragment();
+  while (container.firstChild) {
+    frag.appendChild(container.firstChild);
+  }
+  return frag;
+}
+
+/** `<Show>`: anchor comment with a conditional binding on the branch values. */
+function renderShowNode(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  const whenSig = props?.when;
+  const ch = children as VNode[];
+  const truthy: unknown = ch[0];
+  const falsy: unknown = ch[1];
+  const marker = document.createComment('show');
+  descriptors.push(bindConditional(
+    marker as ChildNode,
+    whenSig,
+    () => truthy,
+    () => falsy,
+  ));
+  return marker;
+}
+
+/** `<For>`: anchor comment with a list binding on the items signal. */
+function renderForNode(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  const eachSig = props?.each;
+  const renderFn = (children[0] as RenderFn) ?? EMPTY_RENDER;
+
+  const marker = document.createComment('for');
+  descriptors.push(
+    bindList(marker as ChildNode, eachSig, renderFn),
+  );
+  return marker;
+}
+
+/** Component class: instantiate with props, render its subtree. */
+function renderComponentNode(
+  tag: ComponentCtor,
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  try {
+    const instance = new tag();
+    injectPropsSafe(instance, props ?? {}, `renderToDom<${String(tag)}>`);
+    const result = instance.render();
+    return renderNode(result, lifecycle, signalRegistry, descriptors);
+  } catch (err) {
+    // Re-throw so the unified render path (open-element-implementation.ts
+    // _renderOrHydrate) can route to onRenderError, mirroring the SSR
+    // render-ir.ts contract — swallowing here would hide the failure as an
+    // empty text node with no fallback.
+    createLogger('dom-render').error(
+      `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
+    );
+    throw err;
+  }
+}
+
+/** Function component: invoke with props + children, render the result. */
+function renderFunctionNode(
+  tag: ComponentFn,
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  try {
+    const result = (tag as (props: Record<string, unknown>) => unknown)({ ...props, children });
+    return renderNode(result, lifecycle, signalRegistry, descriptors);
+  } catch (err) {
+    createLogger('dom-render').error(
+      `renderToDom() failed for <${String(tag)}>: ${formatError(err)}`,
+    );
+    throw err;
+  }
+}
+
+/** Host element: create, collect prop bindings, consume vnode.ref, render children. */
+function renderHostElement(
+  node: VNode,
+  props: Record<string, unknown>,
+  children: unknown[],
+  lifecycle: BindingLifecycle,
+  signalRegistry: Map<string, Signal<unknown>> | undefined,
+  descriptors: BindingDescriptor[],
+): Node {
+  const el = createElementForTag(String(node.tag));
   const propDescriptors = collectPropBindings(el, props, signalRegistry);
   descriptors.push(...propDescriptors);
   // vnode.ref is stripped from props by createVNode (jsx-runtime.ts), so the

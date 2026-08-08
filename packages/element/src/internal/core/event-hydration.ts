@@ -13,7 +13,7 @@
 import { isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
-import type { RenderFn, VNode } from '../protocol/vnode.ts';
+import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
 import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
 import { applyBindingDescriptor } from './binding-activation.ts';
 import { bindEvent } from './binding-descriptor.ts';
@@ -71,66 +71,31 @@ export function collectEventBindings(
     const { tag, props, children } = value as VNode;
 
     if (isFragment(tag)) {
-      for (const child of children) visit(child);
+      visitChildren(children, visit);
       return;
     }
 
     if (isShowTag(tag)) {
-      const whenVal = unwrapSignalLike(props?.when);
-      branches?.push(showBranchMarker(Boolean(whenVal)));
-      const target = whenVal ? children[0] : children[1];
-      visit(target);
+      visitShowBranch(props, children, branches, visit);
       return;
     }
 
     if (isForTag(tag)) {
-      const items = unwrapSignalLike(props?.each) as unknown[];
-      const renderFn = children[0] as RenderFn;
-      branches?.push(forBranchMarker(items));
-      if (Array.isArray(items) && typeof renderFn === 'function') {
-        items.forEach((item, i) => visit(renderFn(item, i)));
-      }
+      visitForBranch(props, children, branches, visit);
       return;
     }
 
     if (isComponentCtor(tag)) {
-      try {
-        const instance = new tag();
-        injectPropsSafe(instance, props, `hydrate<${String(tag)}>`, hydrationLog);
-        visit(instance.render());
-      } catch (err) {
-        hydrationLog.error(`Hydration component instantiation failed: ${formatError(err)}`);
-        return;
-      }
+      visitComponentBranch(tag, props, visit);
       return;
     }
 
     if (typeof tag === 'function') {
-      try {
-        visit((tag as (props: Record<string, unknown>) => unknown)({ ...props, children }));
-      } catch (err) {
-        hydrationLog.error(`Hydration function component invocation failed: ${formatError(err)}`);
-        return;
-      }
+      visitFunctionBranch(tag, props, children, visit);
       return;
     }
 
-    const records: EventBindingRecord[] = [];
-    for (const [key, value] of Object.entries(props ?? {})) {
-      const type = eventTypeFromProp(key);
-      if (type && typeof value === 'function') {
-        records.push({
-          id: '',
-          type,
-          handler: value as EventListener,
-        });
-      }
-    }
-
-    // Visit children before assigning an ID to this element so the order
-    // matches SSR (renderToNode serializes children first).
-    for (const child of children) visit(child);
-
+    const records = visitHostElement(props, children, visit);
     if (records.length > 0) {
       const id = eventMarkerId(count++);
       bindings.set(id, records.map((record) => ({ ...record, id })));
@@ -139,6 +104,93 @@ export function collectEventBindings(
 
   visit(node);
   return bindings;
+}
+
+/** Fragment: visit children in traversal order. */
+function visitChildren(children: unknown[], visit: (value: unknown) => void): void {
+  for (const child of children) visit(child);
+}
+
+/** `<Show>`: push the resolved branch token, then visit the active child. */
+function visitShowBranch(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  branches: string[] | undefined,
+  visit: (value: unknown) => void,
+): void {
+  const whenVal = unwrapSignalLike(props?.when);
+  branches?.push(showBranchMarker(Boolean(whenVal)));
+  const target = whenVal ? children[0] : children[1];
+  visit(target);
+}
+
+/** `<For>`: push the resolved branch token, then visit each rendered item. */
+function visitForBranch(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  branches: string[] | undefined,
+  visit: (value: unknown) => void,
+): void {
+  const items = unwrapSignalLike(props?.each) as unknown[];
+  const renderFn = children[0] as RenderFn;
+  branches?.push(forBranchMarker(items));
+  if (Array.isArray(items) && typeof renderFn === 'function') {
+    items.forEach((item, i) => visit(renderFn(item, i)));
+  }
+}
+
+/** Component constructor: instantiate with SSR props, then visit its render(). */
+function visitComponentBranch(
+  tag: ComponentCtor,
+  props: Record<string, unknown> | undefined,
+  visit: (value: unknown) => void,
+): void {
+  try {
+    const instance = new tag();
+    injectPropsSafe(instance, props ?? {}, `hydrate<${String(tag)}>`, hydrationLog);
+    visit(instance.render());
+  } catch (err) {
+    hydrationLog.error(`Hydration component instantiation failed: ${formatError(err)}`);
+  }
+}
+
+/** Function component: invoke with props + children, then visit the result. */
+function visitFunctionBranch(
+  tag: ComponentFn,
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  visit: (value: unknown) => void,
+): void {
+  try {
+    visit(tag({ ...props, children }));
+  } catch (err) {
+    hydrationLog.error(`Hydration function component invocation failed: ${formatError(err)}`);
+  }
+}
+
+/** Host element: collect handler records, visit children (SSR order), return records. */
+function visitHostElement(
+  props: Record<string, unknown> | undefined,
+  children: unknown[],
+  visit: (value: unknown) => void,
+): EventBindingRecord[] {
+  const records: EventBindingRecord[] = [];
+  for (const [key, value] of Object.entries(props ?? {})) {
+    const type = eventTypeFromProp(key);
+    if (type && typeof value === 'function') {
+      records.push({
+        id: '',
+        type,
+        handler: value as EventListener,
+      });
+    }
+  }
+
+  // Visit children before assigning an ID to this element so the order
+  // matches SSR (renderToNode serializes children first).
+  for (const child of children) visit(child);
+
+  return records;
 }
 
 function eventRecordsToDescriptors(
