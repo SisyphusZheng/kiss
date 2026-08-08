@@ -5,7 +5,6 @@
 import { defineCustomElement, OpenElement } from '@openelement/element';
 import { StyleSheet } from '@openelement/element';
 import '@openelement/ui/open-button';
-import { contentLocale } from '@openelement/site-ui/locale.ts';
 
 const marqueeText =
   'CUSTOM ELEMENTS ✳ SHADOW DOM ✳ DECLARATIVE SHADOW DOM ✳ ES MODULES ✳ SIGNALS ✳ HTML FIRST ✳ 404 ✳ ';
