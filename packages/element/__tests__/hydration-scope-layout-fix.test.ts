@@ -103,6 +103,38 @@ function withoutRaf(fn: () => void): void {
   }
 }
 
+Deno.test('mass hydration drains in chunks of 100 per frame, not one giant frame (#896)', () => {
+  withCountingRaf((callbacks) => {
+    const hosts = Array.from({ length: 5000 }, () => fakeHost());
+
+    for (const { host } of hosts) {
+      const scope = new HydrationScope();
+      scope.hydrate(fakeShadowRoot(host));
+    }
+
+    assertEquals(callbacks.length, 1, 'one rAF for the whole frame batch');
+
+    // Fire frames one at a time; each chunk-flush schedules the next frame.
+    let frames = 0;
+    while (frames < callbacks.length) {
+      callbacks[frames](0);
+      frames++;
+    }
+
+    const totalReflows = hosts.reduce((sum, h) => sum + h.state.reflows, 0);
+    assertEquals(totalReflows, 5000, 'every queued host is reflowed exactly once');
+    assertEquals(
+      hosts.every((h) => h.state.reflows === 1),
+      true,
+      'no host reflows twice',
+    );
+    // Each flush drains at most LAYOUT_FIX_CHUNK_SIZE (100) hosts, so the
+    // whole batch needs exactly ceil(5000/100) = 50 frames — a per-frame
+    // budget proxy for the <100ms assertion in #896.
+    assertEquals(frames, 50, 'one chunk of 100 per frame');
+  });
+});
+
 Deno.test('without rAF the layout fix flushes synchronously and the scheduling flag resets', () => {
   withoutRaf(() => {
     const { host, state } = fakeHost();

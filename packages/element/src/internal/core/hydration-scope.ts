@@ -333,23 +333,50 @@ export class HydrationScope {
   }
 }
 
-// ─── Module-wide batched Chromium DSD layout fix ──────────────
-// ponytail: single rAF for all queued hosts; per-frame window if a page ever
-// hydrates thousands of hosts in one frame (measure, then split batches).
+// ─── Module-wide batched Chromium DSD layout fix ──────────────────────
+// #896: chunked per-frame flush — a mass hydration (thousands of hosts in
+// one frame) must not force thousands of synchronous reflows in a single
+// rAF callback. Each frame drains at most LAYOUT_FIX_CHUNK_SIZE hosts and
+// schedules the next chunk; small batches still flush in one frame.
+const LAYOUT_FIX_CHUNK_SIZE = 100;
+const LAYOUT_FIX_WARN_THRESHOLD = 500;
 const layoutFixHosts = new Set<Element>();
 let layoutFixScheduled = false;
+let layoutFixWarned = false;
 
 function flushLayoutFixHosts(): void {
   layoutFixScheduled = false;
+  const chunk: Element[] = [];
   for (const host of layoutFixHosts) {
+    chunk.push(host);
+    if (chunk.length >= LAYOUT_FIX_CHUNK_SIZE) break;
+  }
+  for (const host of chunk) {
+    layoutFixHosts.delete(host);
     void (host as HTMLElement).offsetHeight;
   }
-  layoutFixHosts.clear();
+  if (layoutFixHosts.size === 0) return;
+  if (typeof globalThis.requestAnimationFrame === 'function') {
+    layoutFixScheduled = true;
+    globalThis.requestAnimationFrame(flushLayoutFixHosts);
+  } else {
+    // No rAF (non-browser runtimes): drain the remaining chunks
+    // synchronously. Without this, the queued hosts would never drain (and
+    // stay strongly referenced) and the reflow fix would be lost (#845).
+    flushLayoutFixHosts();
+  }
 }
 
 function queueLayoutFixHost(host: Element | undefined): void {
   if (!host) return;
   layoutFixHosts.add(host);
+  if (layoutFixHosts.size > LAYOUT_FIX_WARN_THRESHOLD && !layoutFixWarned) {
+    layoutFixWarned = true;
+    console.warn(
+      `[openElement] ${layoutFixHosts.size} hosts queued for the DSD layout fix in one frame; ` +
+        'a hydration pathology is likely (thousands of elements per frame).',
+    );
+  }
   if (layoutFixScheduled) return;
   layoutFixScheduled = true;
   if (typeof globalThis.requestAnimationFrame === 'function') {
