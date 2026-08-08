@@ -47,7 +47,7 @@
  * @module @openelement/element/open-element
  */
 
-import { formatError, OpenElementError } from './internal/core/errors.ts';
+import { formatError } from './internal/core/errors.ts';
 import type { StyleSheetLike } from './internal/protocol/style-sheet.ts';
 import {
   declareObservedAttributes,
@@ -60,7 +60,6 @@ import {
 import type { VNode } from './internal/protocol/vnode.ts';
 import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
-import { signal } from './internal/signal/index.ts';
 import { createLogger } from './internal/core/logger.ts';
 import { HydrationScope, markSelfHydrated } from './internal/core/index.ts';
 import {
@@ -69,10 +68,10 @@ import {
   renderIntoShadowRoot,
 } from './open-element-render.ts';
 import { hydrateExistingDom } from './open-element-hydration.ts';
-import { OpenElementThemeManager } from './open-element-theme.ts';
-
-const themeManager = new OpenElementThemeManager();
-const MAX_PARAMS_ATTRIBUTE_BYTES = 64 * 1024;
+import { themeManager } from './open-element-styles.ts';
+import { ElementParams } from './open-element-params.ts';
+import { ElementLifecycle } from './open-element-lifecycle.ts';
+import { attachFormInternals } from './open-element-form.ts';
 
 /**
  * SSR-safe base class for OpenElement.
@@ -236,6 +235,15 @@ export class OpenElement extends _Base {
    */
   #hydrationScope!: HydrationScope;
 
+  /**
+   * v0.42.0-alpha.15 (#904): Abort lifecycle moved into ElementLifecycle
+   * (open-element-lifecycle.ts); the class keeps the protected surface.
+   */
+  #lifecycle = new ElementLifecycle();
+
+  /** v0.42.0-alpha.15 (#904): route params box (open-element-params.ts). */
+  #params = new ElementParams();
+
   constructor() {
     super();
     this.#hydrationScope = new HydrationScope({
@@ -243,38 +251,26 @@ export class OpenElement extends _Base {
     });
   }
 
-  /** AbortController tied to element lifecycle. Aborted in disconnectedCallback. */
-  #lifecycleAbort?: AbortController;
-
   /**
    * Returns an AbortSignal that is aborted when the element is disconnected.
    * Useful for tying async work (fetch, event listeners) to element lifecycle.
    */
   protected _lifecycleSignal(): AbortSignal {
-    if (!this.#lifecycleAbort) this.#lifecycleAbort = new AbortController();
-    return this.#lifecycleAbort.signal;
+    return this.#lifecycle.signal;
   }
 
   /**
    * setTimeout wrapper that auto-clears when the element disconnects.
    */
   protected _setTimeout(handler: TimerHandler, timeout?: number): number {
-    const id = globalThis.setTimeout(handler, timeout);
-    this._lifecycleSignal().addEventListener('abort', () => globalThis.clearTimeout(id), {
-      once: true,
-    });
-    return id;
+    return this.#lifecycle.setTimeout(handler, timeout);
   }
 
   /**
    * requestAnimationFrame wrapper that auto-cancels when the element disconnects.
    */
   protected _requestAnimationFrame(callback: FrameRequestCallback): number {
-    const id = globalThis.requestAnimationFrame(callback);
-    this._lifecycleSignal().addEventListener('abort', () => globalThis.cancelAnimationFrame(id), {
-      once: true,
-    });
-    return id;
+    return this.#lifecycle.requestAnimationFrame(callback);
   }
 
   /**
@@ -285,16 +281,13 @@ export class OpenElement extends _Base {
     this.signalRegistry.set(name, sig);
   }
 
-  /** Reactive route parameters Signal. Updates automatically on SPA navigation. */
-  #params = signal<Record<string, string>>({});
-
   /** Reactive route parameters. Updates automatically on SPA navigation. */
   get params(): Record<string, string> {
     return this.#params.value;
   }
 
   set params(value: Record<string, string>) {
-    this.#params.value = { ...value };
+    this.#params.value = value;
   }
 
   /** ElementInternals for form-associated custom elements */
@@ -322,7 +315,7 @@ export class OpenElement extends _Base {
 
     // DSD pre-populated shadow root detection
     if (this.shadowRoot) {
-      this._applyStyles(ctor, this.shadowRoot);
+      themeManager.applyStyles(this.shadowRoot, ctor.styles);
       return this.shadowRoot;
     }
 
@@ -331,24 +324,9 @@ export class OpenElement extends _Base {
     const root = this.attachShadow({ mode: 'open', delegatesFocus });
 
     // Apply static styles via adoptedStyleSheets
-    this._applyStyles(ctor, root);
+    themeManager.applyStyles(root, ctor.styles);
 
     return root;
-  }
-
-  /**
-   * Apply styles to the shadow root via adoptedStyleSheets.
-   * Shared between CSR (createRenderRoot) and DSD (connectedCallback) paths.
-   *
-   * v0.41.0: Global stylesheets registered via `OpenElement.registerGlobalStyles()`
-   * are merged in **first**, ahead of component-level `static styles`. This lets
-   * a shared design system (tokens, theme rules) reach every shadow root without
-   * each component re-declaring it.
-   */
-  private _applyStyles(ctor: typeof OpenElement, root?: ShadowRoot): void {
-    const target = root ?? this.shadowRoot;
-    if (!target) return;
-    themeManager.applyStyles(target, ctor.styles);
   }
 
   /**
@@ -375,31 +353,14 @@ export class OpenElement extends _Base {
       this.createRenderRoot();
     } else if (this.shadowRoot) {
       // DSD path: shadow root already populated.
-      this._applyStyles(ctor);
+      themeManager.applyStyles(this.shadowRoot, ctor.styles);
     }
 
     themeManager.connect(this);
 
     // TG-01: Read route params from attribute if present.
     // (SSR/SSG injects params as JS property via injectProps — setter handles it)
-    const attrParams = this.getAttribute('params');
-    if (attrParams) {
-      try {
-        if (new TextEncoder().encode(attrParams).byteLength > MAX_PARAMS_ATTRIBUTE_BYTES) {
-          throw new OpenElementError('params attribute exceeds the 64 KiB limit', {
-            code: 'PARAMS_ATTRIBUTE_TOO_LARGE',
-            phase: 'csr',
-          });
-        }
-        this.#params.value = JSON.parse(attrParams);
-      } catch (err) {
-        createLogger('element').error(
-          `Failed to parse params attribute on <${this.tagName.toLowerCase()}>: ${
-            formatError(err)
-          }`,
-        );
-      }
-    }
+    this.#params.syncFromAttribute(this);
 
     // v0.25.0 (SOP-012): Unified render path — DSD and CSR both go through
     // _renderOrHydrate(). The _dsdHydrated flag and _bindCurrentRenderTemplate()
@@ -411,9 +372,7 @@ export class OpenElement extends _Base {
     this.clientActivate();
 
     // Attach ElementInternals for form-associated custom elements
-    if (ctor.formAssociated && typeof this.attachInternals === 'function') {
-      this._internals = this.attachInternals();
-    }
+    this._internals = attachFormInternals(this, ctor);
   }
 
   /**
@@ -524,8 +483,7 @@ export class OpenElement extends _Base {
   disconnectedCallback(): void {
     this.#hydrationScope.dispose();
     disposeStaticProps(this);
-    this.#lifecycleAbort?.abort();
-    this.#lifecycleAbort = undefined;
+    this.#lifecycle.dispose();
     // v0.41.0: Stop receiving theme broadcasts.
     themeManager.disconnect(this);
   }
