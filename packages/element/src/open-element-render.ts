@@ -13,6 +13,7 @@
 import type { VNode } from './internal/protocol/vnode.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { renderToDom } from './internal/core/index.ts';
+import { clearChildren } from './internal/core/dom-utils.ts';
 import { formatError } from './internal/core/errors.ts';
 import { createLogger } from './internal/core/logger.ts';
 import type { HydrationScope } from './internal/core/index.ts';
@@ -52,9 +53,7 @@ export function renderIntoLightDom(
   scope.setCachedVNode(result);
 
   const self = instance as unknown as HTMLElement;
-  while (self.firstChild) {
-    self.removeChild(self.firstChild);
-  }
+  clearChildren(self);
 
   if (result != null) {
     // Event listeners registered during render use the scope's explicit dispose
@@ -87,9 +86,7 @@ export function renderIntoShadowRoot(
 
   const result = instance.render();
   scope.setCachedVNode(result);
-  while (root.firstChild) {
-    root.removeChild(root.firstChild);
-  }
+  clearChildren(root);
 
   if (result != null) {
     root.appendChild(
@@ -137,9 +134,7 @@ export function renderErrorFallback(
   scope.reset();
 
   if (fallback != null) {
-    while (target.firstChild) {
-      target.removeChild(target.firstChild);
-    }
+    clearChildren(target);
     target.appendChild(
       renderToDom(
         fallback,

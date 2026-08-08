@@ -25,6 +25,10 @@ class FakeShadowRoot {
     this.removeCount++;
     this.firstChild = null;
   }
+  replaceChildren(): void {
+    this.removeCount++;
+    this.firstChild = null;
+  }
 }
 
 class FakeElement implements OpenElementLike {
@@ -47,6 +51,9 @@ class FakeElement implements OpenElementLike {
     this.shadowRoot = new FakeShadowRoot() as unknown as ShadowRoot;
   }
   removeChild(_node: unknown): void {
+    this.firstChild = null;
+  }
+  replaceChildren(): void {
     this.firstChild = null;
   }
   appendChild(_node: unknown): void {

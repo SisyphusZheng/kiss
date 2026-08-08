@@ -172,6 +172,15 @@ class TestNodeBase {
     this.parentNode?.removeChild(this as unknown as TestNode);
   }
 
+  replaceChildren(...children: TestNode[]): void {
+    for (const child of [...this.childNodes]) {
+      this.removeChild(child);
+    }
+    for (const child of children) {
+      this.appendChild(child);
+    }
+  }
+
   insertBefore(newChild: TestNode, refChild: TestNode | null): TestNode {
     if (newChild.parentNode) {
       newChild.parentNode.removeChild(newChild);

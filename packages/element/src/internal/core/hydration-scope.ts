@@ -31,6 +31,7 @@ import {
   parseSignalAttrSpec,
 } from '../protocol/hydration-markers.ts';
 import { createLogger } from './logger.ts';
+import { clearChildren } from './dom-utils.ts';
 
 const scopeLog = createLogger('hydration');
 
@@ -222,7 +223,7 @@ export class HydrationScope {
       if (desc.kind === 'signal-render') {
         // Preserve the original DSD hydration contract: replace any SSR content
         // with the client-rendered VNode tree on first activation.
-        while (desc.el.firstChild) desc.el.removeChild(desc.el.firstChild);
+        clearChildren(desc.el);
       }
       applyBindingDescriptor(desc, lifecycle, this.#renderer);
     }
@@ -257,9 +258,7 @@ export class HydrationScope {
     vnode: unknown,
     lifecycle: BindingLifecycle,
   ): void {
-    while (shadowRoot.firstChild) {
-      shadowRoot.removeChild(shadowRoot.firstChild);
-    }
+    clearChildren(shadowRoot);
     shadowRoot.appendChild(this.#renderer.render(vnode, lifecycle));
   }
 
