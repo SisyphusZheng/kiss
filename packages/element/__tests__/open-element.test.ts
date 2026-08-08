@@ -2893,6 +2893,155 @@ Deno.test('keyed For: removal disposes only the vanished item', () => {
   assertEquals(after[0], surviving, 'surviving node must be the same DOM node');
 });
 
+Deno.test('keyed For: duplicate keys keep last occurrence, dispose the displaced entry', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 1 }]);
+  const clicks: number[] = [];
+  const warns: string[] = [];
+  const origWarn = console.warn;
+  console.warn = (msg: string) => warns.push(msg);
+
+  try {
+    const root = renderToDom(
+      jsx('ul', {
+        children: [
+          For({
+            each: items,
+            key: (item: { id: number }) => item.id,
+            children: (item: { id: number }) =>
+              jsx('li', {
+                id: `item-${item.id}`,
+                onClick: () => clicks.push(item.id),
+                children: String(item.id),
+              }),
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    container.appendChild(root);
+    const list = container.querySelector('ul') as unknown as TestElement;
+    assertEquals(list.querySelectorAll('li').length, 1, 'duplicate key collapses to one item');
+    assertEquals(warns.length, 1, 'duplicate-key warning fires exactly once per binding');
+
+    items.value = [{ id: 1 }];
+    const kept = list.querySelectorAll('li').find(
+      (node) => node.getAttribute('id') === 'item-1',
+    ) as HTMLElement | undefined;
+    assertExists(kept);
+    assertEquals(list.querySelectorAll('li').length, 1);
+
+    items.value = [{ id: 2 }];
+    const after = list.querySelectorAll('li');
+    assertEquals(after.length, 1, 'replaced entry must not survive as an orphan');
+    assertEquals(after[0].getAttribute('id'), 'item-2');
+    assertEquals(warns.length, 1, 'warning stays exactly-once across renders');
+
+    // The displaced item's event binding must be disposed with it.
+    kept.dispatchEvent(new Event('click'));
+    assertEquals(clicks, [], 'displaced entry effects must be disposed');
+
+    items.value = [{ id: 1 }];
+    list.querySelectorAll('li').find((node) => node.getAttribute('id') === 'item-1')
+      ?.dispatchEvent(new Event('click'));
+    assertEquals(clicks, [1], 'fresh items still bind events (guard against false pass)');
+  } finally {
+    console.warn = origWarn;
+  }
+});
+
+Deno.test('keyed For: reorder preserves DOM node identity for surviving items', () => {
+  if (!hasDOM) return;
+
+  const items = signal([
+    { id: 1, name: 'one' },
+    { id: 2, name: 'two' },
+    { id: 3, name: 'three' },
+  ]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number; name: string }) =>
+            jsx('li', { id: `item-${item.id}`, children: item.name }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const byId = new Map(
+    list.querySelectorAll('li').map((node) => [node.getAttribute('id'), node]),
+  );
+
+  items.value = [
+    { id: 3, name: 'three' },
+    { id: 1, name: 'one' },
+    { id: 2, name: 'two' },
+  ];
+
+  const after = list.querySelectorAll('li');
+  assertEquals(after.length, 3);
+  for (const id of ['item-1', 'item-2', 'item-3']) {
+    assertEquals(
+      after.find((node) => node.getAttribute('id') === id),
+      byId.get(id),
+      `${id} must be the same DOM node after reorder`,
+    );
+  }
+  assertEquals(after.map((node) => node.textContent), ['three', 'one', 'two']);
+});
+
+Deno.test('keyed For: removed item effects are disposed, survivors keep theirs', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 2 }]);
+  const clicks: number[] = [];
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number }) =>
+            jsx('li', {
+              id: `item-${item.id}`,
+              onClick: () => clicks.push(item.id),
+              children: String(item.id),
+            }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const removed = list.querySelectorAll('li').find(
+    (node) => node.getAttribute('id') === 'item-2',
+  ) as HTMLElement | undefined;
+  const kept = list.querySelectorAll('li').find(
+    (node) => node.getAttribute('id') === 'item-1',
+  ) as HTMLElement | undefined;
+  assertExists(removed);
+  assertExists(kept);
+
+  items.value = [{ id: 1 }];
+
+  removed.dispatchEvent(new Event('click'));
+  assertEquals(clicks, [], 'vanished item effects must be disposed');
+  kept.dispatchEvent(new Event('click'));
+  assertEquals(clicks, [1], 'surviving item effects must stay bound');
+});
+
 Deno.test('unkeyed For: behavior unchanged (full re-render)', () => {
   if (!hasDOM) return;
 

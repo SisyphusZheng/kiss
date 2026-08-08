@@ -449,6 +449,8 @@ function applyList(
     }
   };
 
+  let dupKeyWarned = false;
+
   const render = () => {
     const list = unwrapSignalLike(items);
     if (!Array.isArray(list)) {
@@ -487,6 +489,29 @@ function applyList(
 
       for (let i = 0; i < list.length; i++) {
         const entryKey = String(keyFn(list[i], i));
+        if (seen.has(entryKey)) {
+          // Duplicate key in one render: last occurrence wins, but the
+          // displaced first occurrence must leave the DOM and have its
+          // effects disposed — otherwise it becomes an unreachable orphan
+          // (nodes leak forever, disposers never fire).
+          const displaced = next.get(entryKey);
+          if (displaced) {
+            for (const node of displaced.nodes) {
+              node.remove();
+              const at = ordered.indexOf(node);
+              if (at !== -1) ordered.splice(at, 1);
+            }
+            disposeEntry(displaced);
+            next.delete(entryKey);
+          }
+          if (!dupKeyWarned) {
+            dupKeyWarned = true;
+            console.warn(
+              `[openElement] duplicate key "${entryKey}" in a keyed <For>; ` +
+                'only the last occurrence is kept and the replaced entry is disposed.',
+            );
+          }
+        }
         const existing = prev.get(entryKey);
         if (existing && !seen.has(entryKey)) {
           for (const node of existing.nodes) {

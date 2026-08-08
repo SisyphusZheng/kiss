@@ -23,10 +23,14 @@ option.
 2. Reconciliation strategy: **move-then-create, single anchor pass**.
    Previous entries are kept in a key → { nodes, disposers } map. Each new
    key is matched against the previous map once (`seen` guard — duplicate
-   keys render fresh, React semantics); surviving keys keep their exact DOM
-   nodes (moved via `insertBefore(anchor)`) and their disposers untouched;
-   vanished keys are disposed; new keys render through the normal
-   `renderToChildren` path.
+   keys render fresh, last occurrence wins, React semantics; the displaced
+   first occurrence is disposed — nodes removed, effects fired — so no
+   orphaned DOM can leak, and a dev-mode warning fires once per binding);
+   surviving keys keep their exact DOM nodes (moved via
+   `insertBefore(node, placed?.nextSibling)` — each node is placed right
+   after the previously placed node, which preserves relative order even
+   for moved nodes) and their disposers untouched; vanished keys are
+   disposed; new keys render through the normal `renderToChildren` path.
 3. **Lifecycle preservation**: each keyed item renders with its own
    disposer set, so removal disposes only that item's effects. A
    `combinedDispose` wrapper disposes leftover keyed entries on full
