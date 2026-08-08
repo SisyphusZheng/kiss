@@ -627,6 +627,21 @@ const evidenceCheck: DocsTruthCheck = {
 };
 
 // ─── registry ──────────────────────────────────────────────────────────────
+// ─── claims: code/claim alignment (#893) ──────────────────────────────────
+import { checkClaim, CODE_CLAIMS } from './claims-registry.ts';
+
+const claimsCheck: DocsTruthCheck = {
+  name: 'claims',
+  run: () => {
+    const failures: { file: string; message: string }[] = [];
+    for (const claim of CODE_CLAIMS) {
+      const failure = checkClaim(claim);
+      if (failure) failures.push({ file: claim.id, message: failure });
+    }
+    return { passed: failures.length === 0, failures };
+  },
+};
+
 const docsTruthChecks: DocsTruthCheck[] = [
   strategicCheck,
   publicCheck,
@@ -634,6 +649,7 @@ const docsTruthChecks: DocsTruthCheck[] = [
   wwwCheck,
   textCheck,
   evidenceCheck,
+  claimsCheck,
 ];
 
 async function runDocsTruthChecks(
