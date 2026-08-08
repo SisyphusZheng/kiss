@@ -105,6 +105,8 @@ interface ListBindingDescriptor {
   anchor: ChildNode;
   items: Signal<unknown> | unknown;
   renderItem: (item: unknown, index: number) => unknown;
+  /** Optional key extractor (ADR-0124): enables keyed reconciliation. */
+  key?: (item: unknown, index: number) => string | number;
 }
 
 // ─── Event / ref descriptors ──────────────────────────────────────────────────
@@ -210,8 +212,9 @@ export function bindList(
   anchor: ChildNode,
   items: Signal<unknown> | unknown,
   renderItem: (item: unknown, index: number) => unknown,
+  key?: (item: unknown, index: number) => string | number,
 ): ListBindingDescriptor {
-  return { kind: 'list', anchor, items, renderItem };
+  return { kind: 'list', anchor, items, renderItem, key };
 }
 
 /** Create a static attribute binding descriptor. */

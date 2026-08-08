@@ -439,10 +439,13 @@ function renderForNode(
 ): Node {
   const eachSig = props?.each;
   const renderFn = (children[0] as RenderFn) ?? EMPTY_RENDER;
+  const keyFn = typeof props?.key === 'function'
+    ? (props.key as (item: unknown, index: number) => string | number)
+    : undefined;
 
   const marker = document.createComment('for');
   descriptors.push(
-    bindList(marker as ChildNode, eachSig, renderFn),
+    bindList(marker as ChildNode, eachSig, renderFn, keyFn),
   );
   return marker;
 }

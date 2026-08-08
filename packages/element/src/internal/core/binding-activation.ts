@@ -424,19 +424,109 @@ function applyList(
   lifecycle: BindingLifecycle,
   renderer?: BindingRenderer,
 ): BindingDispose {
-  const { anchor, items, renderItem } = desc;
+  const { anchor, items, renderItem, key } = desc;
+  const keyFn = key; // ADR-0124: reconciliation mode is fixed per binding
   const cleanup = createRenderCleanup('list');
 
+  // ADR-0124: keyed mode state. Each entry owns its nodes and its own
+  // disposer set, so a vanished key disposes only that item's effects.
+  interface KeyedEntry {
+    nodes: ChildNode[];
+    disposers: Set<() => void>;
+  }
+  let keyed: Map<string, KeyedEntry> | null = null;
+
+  const disposeEntry = (entry: KeyedEntry) => {
+    for (const dispose of entry.disposers) {
+      try {
+        dispose();
+      } catch (err) {
+        bindingLog.error(`list item dispose failed: ${formatError(err)}`);
+      }
+    }
+    for (const node of entry.nodes) {
+      node.remove();
+    }
+  };
+
   const render = () => {
-    cleanup.clearRender();
     const list = unwrapSignalLike(items);
-    if (!Array.isArray(list)) return;
+    if (!Array.isArray(list)) {
+      if (keyed) {
+        for (const entry of keyed.values()) disposeEntry(entry);
+        keyed = null;
+      }
+      cleanup.clearRender();
+      return;
+    }
     if (!renderer) {
       throw new OpenElementError('list binding requires a renderer', {
         code: 'MISSING_RENDERER',
         phase: 'render',
       });
     }
+
+    if (keyFn) {
+      // Keyed reconciliation: move surviving nodes, dispose vanished keys,
+      // render only new keys (ADR-0124). Each node is placed right after the
+      // previously placed node (`prev` chain), which keeps relative order
+      // even for moved nodes — a fixed insertion ref would reverse them.
+      const prev = keyed ?? new Map<string, KeyedEntry>();
+      const next = new Map<string, KeyedEntry>();
+      const seen = new Set<string>();
+      const ordered: ChildNode[] = [];
+      let placed: ChildNode | null = anchor;
+
+      const previousSiblingOf = (node: ChildNode): ChildNode | null => {
+        const parent = anchor.parentNode;
+        if (!parent) return null;
+        const siblings = parent.childNodes;
+        const idx = Array.prototype.indexOf.call(siblings, node);
+        return idx <= 0 ? null : (siblings[idx - 1] as ChildNode);
+      };
+
+      for (let i = 0; i < list.length; i++) {
+        const entryKey = String(keyFn(list[i], i));
+        const existing = prev.get(entryKey);
+        if (existing && !seen.has(entryKey)) {
+          for (const node of existing.nodes) {
+            if (previousSiblingOf(node) !== placed) {
+              anchor.parentNode?.insertBefore(node, placed?.nextSibling ?? null);
+            }
+            placed = node;
+          }
+          ordered.push(...existing.nodes);
+          seen.add(entryKey);
+          next.set(entryKey, existing);
+          continue;
+        }
+        const itemDisposers = new Set<() => void>();
+        const renderLifecycle: BindingLifecycle = { disposers: itemDisposers };
+        if (lifecycle.signal) {
+          renderLifecycle.signal = lifecycle.signal;
+        }
+        const vn = renderItem(list[i], i);
+        const node = Array.isArray(vn) ? { tag: Fragment, props: {}, children: vn } : vn;
+        const children = renderToChildren(node, renderer, renderLifecycle);
+        for (const child of children) {
+          anchor.parentNode?.insertBefore(child, placed?.nextSibling ?? null);
+          placed = child;
+        }
+        ordered.push(...children);
+        seen.add(entryKey);
+        next.set(entryKey, { nodes: children, disposers: itemDisposers });
+      }
+
+      for (const [entryKey, entry] of prev) {
+        if (!seen.has(entryKey)) disposeEntry(entry);
+      }
+      keyed = next;
+      cleanup.setChildren(ordered);
+      return;
+    }
+
+    // Unkeyed: previous behavior verbatim (clear + full re-render).
+    cleanup.clearRender();
 
     const ref: ChildNode | null = anchor.nextSibling;
     const rendered: ChildNode[] = [];
@@ -464,8 +554,15 @@ function applyList(
   const dispose = wrapBindingEffect('list', render);
 
   const fullDispose = cleanup.fullDispose(dispose);
-  registerDispose(fullDispose, lifecycle);
-  return fullDispose;
+  const combinedDispose: BindingDispose = () => {
+    fullDispose();
+    if (keyed) {
+      for (const entry of keyed.values()) disposeEntry(entry);
+      keyed = null;
+    }
+  };
+  registerDispose(combinedDispose, lifecycle);
+  return combinedDispose;
 }
 
 function applyEvent(

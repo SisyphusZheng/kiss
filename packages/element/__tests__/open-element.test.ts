@@ -2798,3 +2798,130 @@ Deno.test('multiple connected instances all receive theme broadcasts', () => {
   document.body.removeChild(el2);
   delete docEl.dataset.theme;
 });
+
+// ─── 8e. Keyed <For> reconciliation (ADR-0124, #890) ──────────────
+//
+// With `key`, applyList must move surviving DOM nodes (state preservation)
+// and render only new keys; without `key` behavior is unchanged (full
+// re-render). The harness's matchesSelector only knows tag/class/[attr]
+// selectors, so identity is tracked via getAttribute('id').
+
+Deno.test('keyed For: head insertion moves surviving nodes, creates only the new one', () => {
+  if (!hasDOM) return;
+
+  const items = signal([
+    { id: 1, name: 'one' },
+    { id: 2, name: 'two' },
+    { id: 3, name: 'three' },
+  ]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number; name: string }) =>
+            jsx('li', { id: `item-${item.id}`, children: item.name }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const byId = new Map(
+    list.querySelectorAll('li').map((node) => [node.getAttribute('id'), node]),
+  );
+
+  items.value = [
+    { id: 0, name: 'zero' },
+    { id: 1, name: 'one' },
+    { id: 2, name: 'two' },
+    { id: 3, name: 'three' },
+  ];
+
+  const after = list.querySelectorAll('li');
+  for (const id of ['item-1', 'item-2', 'item-3']) {
+    assertEquals(
+      after.find((node) => node.getAttribute('id') === id),
+      byId.get(id),
+      `${id} must be the same DOM node (state preserved)`,
+    );
+  }
+  assertEquals(after.length, 4);
+  assertEquals(after[0].getAttribute('id'), 'item-0');
+  assertEquals(
+    after.map((node) => node.textContent),
+    ['zero', 'one', 'two', 'three'],
+  );
+});
+
+Deno.test('keyed For: removal disposes only the vanished item', () => {
+  if (!hasDOM) return;
+
+  const items = signal([
+    { id: 1, name: 'one' },
+    { id: 2, name: 'two' },
+  ]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number; name: string }) =>
+            jsx('li', { id: `item-${item.id}`, children: item.name }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const surviving = list.querySelectorAll('li').find(
+    (node) => node.getAttribute('id') === 'item-2',
+  );
+
+  items.value = [{ id: 2, name: 'two' }];
+
+  const after = list.querySelectorAll('li');
+  assertEquals(after.length, 1);
+  assertEquals(after[0], surviving, 'surviving node must be the same DOM node');
+});
+
+Deno.test('unkeyed For: behavior unchanged (full re-render)', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 2 }]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          children: (item: { id: number }) =>
+            jsx('li', { id: `item-${item.id}`, children: String(item.id) }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const oldNode = list.querySelectorAll('li').find(
+    (node) => node.getAttribute('id') === 'item-1',
+  );
+
+  items.value = [{ id: 1 }, { id: 2 }, { id: 3 }];
+
+  const newNode = list.querySelectorAll('li').find(
+    (node) => node.getAttribute('id') === 'item-1',
+  );
+  assertEquals(newNode !== oldNode, true, 'unkeyed list must re-render items');
+  assertEquals(list.querySelectorAll('li').length, 3);
+});
