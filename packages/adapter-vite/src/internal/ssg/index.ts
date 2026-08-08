@@ -79,7 +79,7 @@ export { classifyCemManifest, parseCem } from './cem-compat.ts';
 
 export { buildEntryDescriptor, buildSsrAdmissionPlan } from './entry-descriptor.ts';
 
-export { renderEntry } from './entry-renderer.ts';
+export { renderEntry } from './entry-orchestrator.ts';
 
 export {
   extractCustomElementTags,
@@ -94,6 +94,7 @@ export type {
   PageIslandManifest,
 } from './island-manifest.ts';
 
-export { generateClientEntry, validateClientIslandEntry } from './entry-generators.ts';
+export { generateClientEntry } from './entry-codegen.ts';
+export { validateClientIslandEntry } from './entry-generators.ts';
 
 export { fsPathToModuleSpecifier } from './module-specifier.ts';

@@ -1,5 +1,10 @@
 /**
- * @openelement/adapter-vite - Entry Renderer
+ * @openelement/adapter-vite - Entry Orchestrator
+ *
+ * Top-level composition axis of the entry-* family (#901): renderEntry()
+ * composes the codegen fragments (entry-codegen.ts), the runtime helper
+ * emission (entry-render-runtime.ts) and the SSG section
+ * (entry-render-ssg.ts) into the complete virtual Hono entry module.
  *
  * Pure function: routes + options -> Hono entry virtual module code.
  *
@@ -20,7 +25,7 @@
  * so consumer import maps can be checked.
  *
  * Thin orchestrator: delegates code generation to focused sub-modules:
- *   - entry-render-helpers.ts  — individual code fragment generators
+ *   - entry-codegen.ts         — entry code string generation (#901)
  *   - entry-render-runtime.ts  — runtime helper function code generation
  *   - entry-render-ssg.ts      — SSG re-export & routeInfo/renderRoute/getStaticPaths
  *
@@ -40,7 +45,7 @@ import {
   renderMiddleware,
   renderPageRoute,
   routeTagNameExpr,
-} from './entry-render-helpers.ts';
+} from './entry-codegen.ts';
 import { renderRuntimeHelpers } from './entry-render-runtime.ts';
 import { renderSsgSection } from './entry-render-ssg.ts';
 import { quoteGeneratedJavaScriptValue } from './codegen-literals.ts';
