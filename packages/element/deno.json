@@ -5,6 +5,7 @@
     ".": "./src/index.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
+    "./sanitize": "./src/sanitize.ts",
     "./build-utils": "./src/build-utils.ts"
   },
   "publish": {

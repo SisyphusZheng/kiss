@@ -14,6 +14,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'standing-assumption', label: 'Standing assumption', level: 3 },
       { id: 'ambient-auth', label: 'Ambient authentication', level: 3 },
       { id: 'middleware-recipe', label: 'Middleware recipe', level: 3 },
+      { id: 'safe-html', label: 'Safe HTML by default', level: 3 },
     ],
     previous: { href: '/guide/islands-and-ssr', label: 'Islands and SSR' },
     next: { href: '/guide/deployment', label: 'Deployment' },
@@ -36,6 +37,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         body:
           'The built-in floor guards generated action handlers only. For custom API routes — and as defense in depth for ambient-auth apps — drop the middleware below into app/routes/_middleware.ts. A root _middleware.ts default-exports a Hono middleware scoped to /*, in front of every page action and API route. It allows safe methods and same-site Fetch Metadata, and falls back to an Origin allowlist for older browsers.',
       },
+      {
+        id: 'safe-html',
+        title: 'Safe HTML by default',
+        body:
+          'Render untrusted HTML fragments (markdown output, CMS content, third-party HTML) through sanitizeHtml from @openelement/element/sanitize — an allow-list sanitizer with a decode-then-revalidate URL scheme policy (ADR-0126). Use trustRenderHtml only when you sanitized upstream; it is a trust boundary, not a sanitizer.',
+      },
     ],
     recipeTitle: 'app/routes/_middleware.ts',
     recipeNote:
@@ -49,6 +56,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       { id: 'standing-assumption', label: '基本假设', level: 3 },
       { id: 'ambient-auth', label: '隐式身份验证', level: 3 },
       { id: 'middleware-recipe', label: 'Middleware 配方', level: 3 },
+      { id: 'safe-html', label: '默认安全 HTML', level: 3 },
     ],
     previous: { href: '/guide/islands-and-ssr', label: 'Islands 与 SSR' },
     next: { href: '/guide/deployment', label: '部署' },
@@ -70,6 +78,12 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'Middleware 配方',
         body:
           '内置地板只守卫生成的 action 处理器。对于自定义 API 路由——以及作为隐式凭据应用的纵深防御——把下面的 middleware 放入 app/routes/_middleware.ts。根级 _middleware.ts 默认导出一个作用于 /* 的 Hono middleware，位于每个页面 action 与 API 路由之前。它放行安全方法与 same-site Fetch Metadata，并为旧浏览器回退到 Origin 白名单。',
+      },
+      {
+        id: 'safe-html',
+        title: '默认安全 HTML',
+        body:
+          '渲染不可信 HTML 片段（markdown 输出、CMS 内容、第三方 HTML）时，先经过 @openelement/element/sanitize 的 sanitizeHtml——基于 allow-list 的消毒器，带「先解码再校验」的 URL scheme 策略（ADR-0126）。只有上游已消毒时才使用 trustRenderHtml：它是信任边界，不是消毒器。',
       },
     ],
     recipeTitle: 'app/routes/_middleware.ts',

@@ -7,7 +7,8 @@
         ".": "./src/index.ts",
         "./build-utils": "./src/build-utils.ts",
         "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts",
-        "./jsx-runtime": "./src/jsx-runtime.ts"
+        "./jsx-runtime": "./src/jsx-runtime.ts",
+        "./sanitize": "./src/sanitize.ts"
       },
       "declarations": {
         ".": {
@@ -44,6 +45,14 @@
         "./jsx-runtime": {
           "sha256": "3b4f1cda9ec619e5ec89b3fcecdba9b1ee4412cc4ff53122e68bea9f3aee3abb",
           "publicDeclarations": []
+        },
+        "./sanitize": {
+          "sha256": "8cf4d49439ed5d630eaae6df921c8d87a29ccaceff16a3eb5956d4df4e61d18f",
+          "publicDeclarations": [
+            "export interface SanitizeOptions {",
+            "export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): boolean {",
+            "export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {"
+          ]
         }
       }
     },
