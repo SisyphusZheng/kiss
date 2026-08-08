@@ -20,6 +20,7 @@ import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vn
 import type { Signal } from '../protocol/signal.ts';
 import { HTML_TAG, isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
+import { normalizePublicProps } from './props-utils.ts';
 import { eventTypeFromProp } from './event-marker.ts';
 import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { createLogger } from './logger.ts';
@@ -164,6 +165,12 @@ export function collectPropBindings(
 ): BindingDescriptor[] {
   const descriptors: BindingDescriptor[] = [];
   const trustedHtml = props.trustedHtml === true;
+
+  // #903: shared normalization core — framework-internal and
+  // prototype-dangerous keys never become bindings, identical to the SSR
+  // path. (The injection path warns; the attribute path has no pollution
+  // surface, so the skip here is silent.)
+  props = normalizePublicProps(props);
 
   for (const [key, value] of Object.entries(props)) {
     if (key === 'children' || key === 'key' || key === 'trustedHtml') continue;

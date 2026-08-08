@@ -33,6 +33,17 @@ const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Shared dangerous-key predicate (#903). Prototype-internal keys must never
+ * be injected from untrusted props on ANY path: SSR injection
+ * (injectPropsSafe), SSR serialization (collectPublicProps), and CSR element
+ * binding (collectPropBindings) all filter through this single source so a
+ * new dangerous pattern cannot be missed on one path.
+ */
+export function isDangerousKey(key: string): boolean {
+  return DANGEROUS_KEYS.has(key);
+}
+
+/**
  * Mark caller-supplied HTML as trusted before injection into a DOM/string render path.
  *
  * `trustedHtml` is an explicit trust boundary, not a sanitizer. Core escapes
@@ -72,7 +83,7 @@ export function injectPropsSafe(
   log: { warn(message: string): void; debug(message: string): void } = _securityLog,
 ): void {
   for (const [key, value] of Object.entries(props)) {
-    if (DANGEROUS_KEYS.has(key)) {
+    if (isDangerousKey(key)) {
       log.warn(
         `Skipping dangerous prop key "${key}" on <${tagName}> - potential prototype pollution`,
       );
