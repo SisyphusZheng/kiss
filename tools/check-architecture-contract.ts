@@ -63,7 +63,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/morph-align.ts',
     fragment: '(oldKids[k] as unknown as { remove(): void }).remove();',
     reason:
       'ChildNode.remove() does not exist on the Node type; the morph walk holds mixed Node lists and only reaches this branch for element children.',
@@ -71,7 +71,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/morph-align.ts',
     fragment: '(oldEl as unknown as Text).data',
     reason:
       'nodeType === 3 narrowing that TypeScript cannot follow through the custom morph walk; both sides are text nodes by construction.',
@@ -79,7 +79,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/morph-align.ts',
     fragment:
       'return Boolean((el as unknown as Record<string, unknown>)[name]) !== el.hasAttribute(name);',
     reason:
@@ -88,7 +88,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/morph-align.ts',
     fragment: 'return n as unknown as HTMLTemplateElement;',
     reason:
       'DSD template lookup: the walk filters by tagName === "TEMPLATE" before returning, a narrowing TypeScript cannot express through Node.',
@@ -96,7 +96,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/island-lifecycle.ts',
     fragment: '(n as unknown as Text).data.trim()',
     reason:
       'Same nodeType === 3 narrowing; whitespace-only text-node filter in the nested-DSD comparison (#582).',
@@ -104,7 +104,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/island-lifecycle.ts',
     fragment: '(o as unknown as Text).data === (nn as unknown as Text).data',
     reason:
       'Same nodeType === 3 narrowing; nested-DSD comparison only reaches this branch for text nodes (#582).',
@@ -112,7 +112,7 @@ const TYPE_ESCAPE_ALLOWLIST: TypeEscapeAllow[] = [
     revisitBy: '0.44.0',
   },
   {
-    file: 'packages/adapter-vite/src/internal/ssg/enhance-client.ts',
+    file: 'packages/adapter-vite/src/internal/ssg/form-enhance.ts',
     fragment: 'const formState = form as unknown as {',
     reason:
       'Expando per-form state bag (__openElementBusy/__openElementSeq) attached by the enhance client itself; HTMLFormElement has no such fields by design (#564/#599).',

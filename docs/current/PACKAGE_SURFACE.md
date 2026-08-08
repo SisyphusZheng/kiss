@@ -14,7 +14,7 @@ authoring modes = Basic Element standalone + full application
 
 | Package                     | Responsibility                                                                 | Supported public interface                               |
 | --------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`    |
+| `@openelement/element`      | JSX, Custom Elements, DSD, hydration, signals and component runtime contracts  | root, `jsx-runtime`, `jsx-dev-runtime`, `build-utils`, `sanitize` |
 | `@openelement/app`          | Pages, routes, loaders, actions, islands and normalized request semantics      | root, `model`, `spa`, `preact`                           |
 | `@openelement/adapter-vite` | Vite, content, SSG, generated data, Hono and Nitro build/deploy implementation | root, `nitro-mount`, `cli/build`, `cli/start`, `sitemap` |
 | `@openelement/create`       | Version-coherent starter generation and consumer lifecycle                     | CLI binary (root)                                        |
@@ -50,7 +50,7 @@ promise and are not application-authoring surface.
 <!-- package-surface-map
 {
   "@openelement/element": {
-    "supported": [".", "jsx-runtime", "jsx-dev-runtime", "build-utils"],
+    "supported": [".", "jsx-runtime", "jsx-dev-runtime", "build-utils", "sanitize"],
     "internal": []
   },
   "@openelement/app": {

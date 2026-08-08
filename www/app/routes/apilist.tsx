@@ -110,7 +110,7 @@ const packages: ApiPackage[] = [
       zh: '受支持的 Custom Element 创作面，覆盖 JSX、DSD、hydration、signals 与样式。',
     },
     importPath: '@openelement/element',
-    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime', 'build-utils'],
+    exports: ['root', 'jsx-runtime', 'jsx-dev-runtime', 'build-utils', 'sanitize'],
     notes: {
       en: [
         'Start here for standalone element authoring.',
