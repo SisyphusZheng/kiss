@@ -31,6 +31,14 @@ static, hydrate, or CSR implementation packages.
   entries.
 - Third-party custom elements are hydrated only according to validated package
   or Custom Elements Manifest metadata.
+- `render()` (and nested component branches reachable from it) must be a pure
+  function of declared props, attributes, and declared signals — no
+  `Date.now()`/`Math.random()`/async-init state in the render path
+  (ADR-0125). The SSR and hydration passes each construct their own
+  component instances; the DSD DOM serializes the SSR result, so render
+  impurity is the one thing the mismatch guard cannot reconcile. Violations
+  degrade the shadow root to a client-side re-render (correct, but hydration
+  is lost for that component).
 
 ## Island scheduling events
 
