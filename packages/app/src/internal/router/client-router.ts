@@ -19,6 +19,7 @@
 // frozen semantics — types clarified, runtime unchanged).
 import type { SpaActionContext, SpaLoaderContext } from '@openelement/element';
 import { createLogger, ERROR_PREFIX } from '@openelement/element';
+import { isDevMode } from '../dev-mode.ts';
 
 const log = createLogger('router');
 
@@ -113,10 +114,142 @@ function compiledPatternFor(pattern: string): URLPattern {
   return compiled;
 }
 
-function matchPattern(
-  pattern: string,
-  pathname: string,
-): ParamMap | null {
+// ─── URLPattern fallback (#897) ────────────────────────────────────
+//
+// Firefox (and older Chromium/Safari) lack URLPattern. When it is absent,
+// route patterns are compiled to an equivalent RegExp instead. The compiled
+// fragment per segment carries its own leading slash, so optional segments
+// and the repeat can be skipped as a unit:
+//   static      -> escaped literal
+//   :name       -> /([^/]+)
+//   :name?      -> (?:/([^/]+))?
+//   :name*      -> (?:/(.*))?     (zero-or-more non-empty segments)
+//   :name(re)   -> /(re)          (custom regex, matches across slashes)
+//   *           -> (.*)           (unnamed wildcard, matches across slashes)
+// Anything outside this dialect throws at compile time, mirroring
+// URLPattern's fail-fast on unparseable patterns.
+
+interface LinearPattern {
+  regex: RegExp;
+  /** Param name per capture group; numeric keys for unnamed wildcards. */
+  names: Array<string | number>;
+  /** True per capture group when the group is a zero-or-more repeat. */
+  repeats: boolean[];
+}
+
+const linearPatternCache = new Map<string, LinearPattern>();
+
+function compiledLinearPatternFor(pattern: string): LinearPattern {
+  let compiled = linearPatternCache.get(pattern);
+  if (!compiled) {
+    compiled = compileLinearPattern(routePathToURLPatternPath(pattern));
+    linearPatternCache.set(pattern, compiled);
+  }
+  return compiled;
+}
+
+function compileLinearPattern(pattern: string): LinearPattern {
+  const names: Array<string | number> = [];
+  const repeats: boolean[] = [];
+  const segments = pattern.split('/');
+  if (segments[0] === '') segments.shift();
+  let source = '^';
+  for (const segment of segments) {
+    if (segment === '*') {
+      names.push(0);
+      repeats.push(false);
+      source += '(.*)';
+      continue;
+    }
+    const colon = segment.startsWith(':') ? 1 : -1;
+    if (colon === -1) {
+      source += '/' + segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      continue;
+    }
+    const nameMatch = /^:([^?*(]+)(.*)$/.exec(segment);
+    if (!nameMatch) {
+      // Unparseable dialect token: fail fast like an invalid URLPattern.
+      throw new TypeError(`Invalid route pattern segment "${segment}"`);
+    }
+    const name = nameMatch[1];
+    const rest = nameMatch[2];
+    if (rest === '') {
+      names.push(name);
+      repeats.push(false);
+      source += `/([^/]+)`;
+    } else if (rest === '?') {
+      names.push(name);
+      repeats.push(false);
+      source += `(?:/([^/]+))?`;
+    } else if (rest === '*') {
+      names.push(name);
+      repeats.push(true);
+      source += `(?:/(.*))?`;
+    } else if (rest.startsWith('(')) {
+      const end = rest.indexOf(')');
+      if (end === -1 || rest.slice(end + 1) !== '') {
+        throw new TypeError(`Invalid route pattern segment "${segment}"`);
+      }
+      names.push(name);
+      repeats.push(false);
+      source += `/(${rest.slice(1, end)})`;
+    } else {
+      throw new TypeError(`Invalid route pattern segment "${segment}"`);
+    }
+  }
+  source += '$';
+  return { regex: new RegExp(source, 'u'), names, repeats };
+}
+
+/**
+ * URLPattern reports a zero-segment `:name*` repeat as absent; an empty or
+ * empty-segment remainder (`/assets/`, `/a//b`) does not match at all.
+ */
+function repeatCapture(value: string): string | null {
+  if (value === '' || value.startsWith('/') || value.endsWith('/') || value.includes('//')) {
+    return null;
+  }
+  return value;
+}
+
+/** RegExp-based declaration-order matcher used when URLPattern is absent. */
+function matchPatternLinear(pattern: string, pathname: string): ParamMap | null {
+  const compiled = compiledLinearPatternFor(pattern);
+  const match = compiled.regex.exec(pathname);
+  if (match === null) return null;
+
+  const params: ParamMap = new Map();
+  for (let index = 1; index < match.length; index++) {
+    const name = compiled.names[index - 1];
+    // Unnamed wildcards are not exposed as params, mirroring URLPattern's
+    // numeric group keys (skipped by the native path below).
+    if (typeof name === 'number') continue;
+    const value = match[index];
+    if (value === undefined) continue;
+    if (compiled.repeats[index - 1] && repeatCapture(value) === null) return null;
+    setParam(params, name, decodePathComponent(value));
+  }
+  return params;
+}
+
+let warnedFallback = false;
+
+function matchPattern(pattern: string, pathname: string): ParamMap | null {
+  // Feature-detected per call (cheap) so the absence of URLPattern can be
+  // exercised in tests and so engines that gain it later pick it up.
+  if (typeof URLPattern === 'undefined') {
+    if (!warnedFallback) {
+      warnedFallback = true;
+      if (isDevMode()) {
+        log.warn(
+          'URLPattern is not available in this browser — falling back to the RegExp matcher. ' +
+            'Some pattern features may behave differently (#897).',
+        );
+      }
+    }
+    return matchPatternLinear(pattern, pathname);
+  }
+
   const match = compiledPatternFor(pattern).exec({
     protocol: 'https',
     hostname: 'localhost',
@@ -216,16 +349,16 @@ export function matchRoute(
   return matcherFor(routes).match(pathname, search);
 }
 
-/** Declaration-order matcher retained as an equivalence oracle for trie tests. */
-export function matchRouteLinearForTests(
+function matchRoutesInOrder(
   pathname: string,
   search: string,
   routes: RouteConfig[],
+  patternMatch: (pattern: string, pathname: string) => ParamMap | null,
 ): { route: RouteConfig; params: Record<string, string> } | null {
   const queryParams = parseQuery(search);
 
   for (const route of routes) {
-    const pathParams = matchPattern(route.path, pathname);
+    const pathParams = patternMatch(route.path, pathname);
     if (pathParams !== null) {
       return {
         route,
@@ -234,6 +367,31 @@ export function matchRouteLinearForTests(
     }
   }
   return null;
+}
+
+/**
+ * Declaration-order matcher retained as an equivalence oracle for trie
+ * tests (URLPattern-backed when the API is present).
+ */
+export function matchRouteLinearForTests(
+  pathname: string,
+  search: string,
+  routes: RouteConfig[],
+): { route: RouteConfig; params: Record<string, string> } | null {
+  return matchRoutesInOrder(pathname, search, routes, matchPattern);
+}
+
+/**
+ * RegExp-backed declaration-order matcher — the runtime fallback used when
+ * URLPattern is unavailable (#897). Exported so tests can assert parity with
+ * the URLPattern path on identical fixtures.
+ */
+export function matchRouteLinear(
+  pathname: string,
+  search: string,
+  routes: RouteConfig[],
+): { route: RouteConfig; params: Record<string, string> } | null {
+  return matchRoutesInOrder(pathname, search, routes, matchPatternLinear);
 }
 
 function createTrieNode(): RouteTrieNode {

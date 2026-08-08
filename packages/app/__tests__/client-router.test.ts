@@ -3,6 +3,7 @@ import {
   compileRouteMatcher,
   createRouter,
   matchRoute,
+  matchRouteLinear,
   matchRouteLinearForTests,
   type RouteConfig,
 } from '../src/internal/router/client-router.ts';
@@ -124,6 +125,111 @@ Deno.test('client router semantics are WHATWG URLPattern semantics (#856, ADR-01
   // URLPattern pathname matching is strict about trailing slashes — the old
   // hand-written matcher silently ignored them.
   assertEquals(matchRoute('/docs/new/', '', fixtures), null);
+});
+
+// ─── URLPattern fallback parity (#897) ─────────────────────────────
+
+const fallbackFixtures: RouteConfig[] = [
+  { path: '/', tagName: 'home-page' },
+  { path: '/docs/new', tagName: 'new-page' },
+  { path: '/docs/:slug', tagName: 'doc-page' },
+  { path: '/:locale?/guide/:page?', tagName: 'guide-page' },
+  { path: '/assets/:path*', tagName: 'asset-page' },
+  { path: '/products/:slug{.+}', tagName: 'product-page' },
+  { path: '/items/:id', tagName: 'item-page' },
+  { path: '/a/:x?/b', tagName: 'optional-mid-page' },
+  { path: '/mixed/:path*/tail', tagName: 'repeat-mid-page' },
+  { path: '*', tagName: 'fallback-page' },
+];
+
+const fallbackCases: Array<[string, string]> = [
+  ['/', ''],
+  ['/docs/new', '?preview=yes'],
+  ['/docs/new/', ''],
+  ['/docs/start', ''],
+  ['/guide', ''],
+  ['/zh/guide/api', ''],
+  ['/assets', ''],
+  ['/assets/', ''],
+  ['/assets/a/b', ''],
+  ['/assets/a//b', ''],
+  ['/assets/a%20b/c', ''],
+  ['/products/a/b', ''],
+  ['/products/a', ''],
+  ['/products', ''],
+  ['/products/', ''],
+  ['/items/hello%20world', '?id=query'],
+  ['/items/id', '?value=%25'],
+  ['/a/b', ''],
+  ['/a//b', ''],
+  ['/mixed/tail', ''],
+  ['/mixed/x/tail', ''],
+  ['/mixed/x/y/tail', ''],
+  ['/mixed//tail', ''],
+  ['/unknown/path', ''],
+];
+
+Deno.test('regex fallback matches the URLPattern path on identical fixtures', () => {
+  for (const [pathname, search] of fallbackCases) {
+    assertEquals(
+      matchRouteLinear(pathname, search, fallbackFixtures),
+      matchRouteLinearForTests(pathname, search, fallbackFixtures),
+      `fallback mismatch for ${pathname}${search}`,
+    );
+  }
+});
+
+Deno.test('regex fallback drives the compiled trie matcher identically', () => {
+  const compiled = compileRouteMatcher(fallbackFixtures);
+  for (const [pathname, search] of fallbackCases) {
+    assertEquals(
+      compiled.match(pathname, search),
+      matchRouteLinear(pathname, search, fallbackFixtures),
+      `trie mismatch for ${pathname}${search}`,
+    );
+  }
+});
+
+Deno.test('router falls back to the regex matcher when URLPattern is absent', () => {
+  const original = globalThis.URLPattern;
+  // @ts-expect-error removing a browser global to simulate Firefox (#897)
+  delete globalThis.URLPattern;
+  try {
+    for (const [pathname, search] of fallbackCases) {
+      const viaFallback = matchRoute(pathname, search, fallbackFixtures);
+      const viaLinear = matchRouteLinear(pathname, search, fallbackFixtures);
+      assertEquals(viaFallback, viaLinear, `dispatch mismatch for ${pathname}${search}`);
+    }
+  } finally {
+    globalThis.URLPattern = original;
+  }
+});
+
+Deno.test('regex fallback rejects empty segments and trailing slashes like URLPattern', () => {
+  const original = globalThis.URLPattern;
+  // @ts-expect-error removing a browser global to simulate Firefox (#897)
+  delete globalThis.URLPattern;
+  const routes: RouteConfig[] = [
+    { path: '/assets/:path*', tagName: 'asset-page' },
+    { path: '/mixed/:path*/tail', tagName: 'repeat-mid-page' },
+    { path: '/docs/new', tagName: 'new-page' },
+    { path: '/products/:slug{.+}', tagName: 'product-page' },
+  ];
+  try {
+    // Repeat `:path*` does not match empty remainders.
+    assertEquals(matchRoute('/assets/', '', routes), null);
+    assertEquals(matchRoute('/assets/a/', '', routes), null);
+    assertEquals(matchRoute('/assets/a//b', '', routes), null);
+    assertEquals(matchRoute('/mixed//tail', '', routes), null);
+    // Trailing-slash strictness holds in fallback mode too.
+    assertEquals(matchRoute('/docs/new/', '', routes), null);
+    // Regex groups still match across slashes.
+    assertEquals(matchRoute('/products/a%20b/c', '', routes)?.params.slug, 'a b/c');
+    // Zero-segment repeat is absent, like URLPattern.
+    assertEquals(matchRoute('/assets', '', routes)?.params.path, undefined);
+  } finally {
+    globalThis.URLPattern = original;
+  }
 });
 
 Deno.test('client router dispose removes event listeners and double dispose is safe', () => {
