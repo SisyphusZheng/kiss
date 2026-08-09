@@ -1,27 +1,33 @@
 /** @jsxImportSource @openelement/element */
-import { defineIsland, defineIslandConfig } from '@openelement/app';
-import { signal, StyleSheet } from '@openelement/element';
+import { defineIslandConfig } from '@openelement/app';
+import { OpenElement, signal, StyleSheet } from '@openelement/element';
 
 export const tagName = 'my-counter';
 export const openElement = defineIslandConfig({ hydrate: 'idle', ssr: true, dsd: true });
 
-const styles = new StyleSheet();
-styles.replaceSync(`
+const sheet = new StyleSheet();
+sheet.replaceSync(`
   :host { display: inline-flex; gap: 0.5rem; align-items: center; margin-top: 1rem; }
   button { padding: 0.25rem 0.75rem; cursor: pointer; }
 `);
 
-const count = signal(0);
+export default class MyCounter extends OpenElement {
+  static override styles = [sheet];
 
-export default defineIsland(tagName, {
-  styles,
-  render() {
+  #count = signal(0);
+
+  constructor() {
+    super();
+    this.registerSignal('count', this.#count);
+  }
+
+  override render() {
     return (
       <>
-        <button type='button' onClick={() => count.value--}>-</button>
-        <span>{count.value}</span>
-        <button type='button' onClick={() => count.value++}>+</button>
+        <button type='button' onClick={() => this.#count.value--}>-</button>
+        <span data-signal='count'></span>
+        <button type='button' onClick={() => this.#count.value++}>+</button>
       </>
     );
-  },
-}, { hydrate: openElement.hydrate, dsd: openElement.dsd, ssr: openElement.ssr });
+  }
+}

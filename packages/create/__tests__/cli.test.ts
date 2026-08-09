@@ -171,6 +171,15 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
   assert(readTemplate('gitignore.tmpl').includes('dist/'));
 });
 
+Deno.test('starter island binds its signal through hydration markers', () => {
+  const island = readTemplate('app/islands/my-counter.tsx');
+  // A plain `{count.value}` render output is static text: hydration only
+  // rewires data-signal markers, so the starter island must register its
+  // signal and reference it by name to stay interactive after load.
+  assert(island.includes("registerSignal('count'"), island);
+  assert(island.includes("data-signal='count'"), island);
+});
+
 Deno.test('starter blog routes consume the generated blog-data module', () => {
   const index = readTemplate('app/routes/blog/index.tsx');
   const slug = readTemplate('app/routes/blog/[slug].tsx');
