@@ -334,10 +334,10 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.14',
-      theme: 'TP-5.9 close-out: tooling convergence, deletion and release hardening',
+      version: 'v0.42.0-alpha.15',
+      theme: 'backlog zero: correctness fixes, structural splits and executable claims',
       copy:
-        'The TP-5.9 close-out hardens the release train and thins the tree: docs-truth consolidates into a five-in-one registry with consumer-qualify tiers (#870), jsonc parsing delegates to @std/jsonc (#870, #868), audit round 2 cleanup shares @std walk and drops the consumer-qualify dispatcher (#874–#876), simplify-scan rounds 1+2 delete dead files, exports and flags (#879–#884), release continuity gains no-skip version bumping and pre-seeded note survival (#869, #855), and packed-package consumers of jsr dependencies are unblocked with a repaired consumer smoke (#886, #887).',
+        'The alpha.15 train clears the post-sweep backlog: the SPA router gains a URLPattern fallback so Firefox navigation works (#897), child clearing and framework throws unify behind clearChildren and OpenElementError (#895, #902, #898, #899), the DSD layout-fix flush chunks across frames (#896), long functions and monoliths split across element and adapter-vite (#900, #906, #903, #908, #904, #901), <For> learns keyed reconciliation (ADR-0124, #890), hydration instance purity is decided (ADR-0125, #891), a built-in allow-list sanitizer ships for trustRenderHtml callers (ADR-0126, #894), docs-truth gains an executable code-claim registry wired into CI (#893), and e2e stops depending on third-party analytics reachability.',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +383,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.14',
-      theme: 'TP-5.9 收尾:工具收敛、删繁就简与发布硬化',
+      version: 'v0.42.0-alpha.15',
+      theme: '积压清零:正确性修复、结构拆分与可执行声明',
       copy:
-        'TP-5.9 收尾夯实发布链并精简代码树:docs-truth 收敛为五合一注册表并分级 consumer-qualify(#870),jsonc 解析委托给 @std/jsonc(#870、#868),第二轮审计整改共用 @std walk 并移除 consumer-qualify 分发器(#874–#876),simplify-scan 第一、二轮删除死文件、死导出与死开关(#879–#884),发布连续性支持 no-skip 版本递增与预置 note 存活(#869、#855),打包产物中 jsr 依赖的消费者解禁并修复 consumer smoke(#886、#887)。',
+        'alpha.15 列车清空大扫除后的积压:SPA 路由获得 URLPattern 回退,Firefox 导航恢复可用(#897);子节点清理与框架抛错统一到 clearChildren 与 OpenElementError(#895、#902、#898、#899);DSD 布局修复冲刷按帧分块(#896);element 与 adapter-vite 的长函数和单体文件完成拆分(#900、#906、#903、#908、#904、#901);<For> 学会键控协调(ADR-0124、#890);hydration 实例纯洁性完成决策(ADR-0125、#891);内建白名单消毒器为 trustRenderHtml 调用方落地(ADR-0126、#894);docs-truth 获得接入 CI 的可执行代码声明注册表(#893);e2e 不再依赖第三方 analytics 的可达性。',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -636,7 +636,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.14' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.15' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
