@@ -84,10 +84,6 @@ function codeForRenderError(phase: RenderPhase, message: string): RenderErrorCod
   return ERROR_CODES[phase] ?? 'OPEN_ELEMENT_RENDER_RENDER_FAILED';
 }
 
-function instantiationErrorHtml(tagName: string): string {
-  return `<${tagName}></${tagName}>`;
-}
-
 /**
  * Route a classified render error to the onError hook (guarded like
  * beforeRender/afterRender) and to the error telemetry chain (#780), so
@@ -253,6 +249,7 @@ export async function renderDsd(
   if (!instance) {
     return instantiationFailureOutput(
       tagName,
+      props,
       nestingDepth,
       collectedErrors,
       collectedHints,
@@ -369,17 +366,21 @@ function resolveComponent(
 /** Error-fallback output when instantiation fails. */
 function instantiationFailureOutput(
   tagName: string,
+  props: Record<string, unknown>,
   nestingDepth: number,
   collectedErrors: RenderError[],
   collectedHints: HydrationHint[],
   hooks: RenderHooks | undefined,
 ): RenderOutput {
-  const err = classifyError('instantiate', tagName, 'Failed to instantiate', false);
+  // Recoverable, like a render() throw: the rest of the page still renders.
+  const err = classifyError('instantiate', tagName, 'Failed to instantiate', true);
   collectedErrors.push(err);
   dispatchRenderError(err, hooks);
 
+  // Align with the render()-failure fallback: bare tag with serialized props.
+  const attrs = serializeAttrs(tagName, props);
   const result: RenderOutput = {
-    html: instantiationErrorHtml(tagName),
+    html: `<${tagName}${attrs}></${tagName}>`,
     errors: collectedErrors,
     metrics: {
       tagName,

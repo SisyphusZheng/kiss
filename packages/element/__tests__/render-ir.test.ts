@@ -89,3 +89,56 @@ Deno.test('SSR rejects rendering beyond the nesting-depth limit', async () => {
     `SSR nesting depth exceeded ${MAX_SSR_NESTING_DEPTH}`,
   );
 });
+
+Deno.test('SSR instantiate failure falls back to a bare tag with serialized props (#892)', async () => {
+  class ThrowingElement {
+    constructor() {
+      throw new Error('ctor boom');
+    }
+  }
+
+  const output = await renderDsd('x-throwing', {
+    componentClass: ThrowingElement as unknown as CustomElementConstructor,
+    props: { someProp: 'value', count: 3 },
+  });
+
+  assertEquals(output.metrics.hasError, true);
+  assertStringIncludes(output.html, 'some-prop="value"');
+  assertStringIncludes(output.html, 'count="3"');
+  assertEquals(output.html.startsWith('<x-throwing '), true);
+  assertStringIncludes(output.html, '</x-throwing>');
+});
+
+Deno.test('SSR instantiate failure is classified recoverable like render() failures (#892)', async () => {
+  class NotAComponent {
+    // No render(): instantiation succeeds but is rejected as non-DSD.
+  }
+
+  const output = await renderDsd('x-missing-render', {
+    componentClass: NotAComponent as unknown as CustomElementConstructor,
+  });
+
+  assertEquals(output.errors.length, 1);
+  assertEquals(output.errors[0].code, 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED');
+  assertEquals(output.errors[0].recoverable, true);
+  assertEquals(output.errors[0].severity, 'warning');
+  assertEquals(output.html, '<x-missing-render></x-missing-render>');
+});
+
+Deno.test('SSR render() failure fallback keeps the same bare-tag-with-props shape (#892)', async () => {
+  class BrokenRender {
+    render(): unknown {
+      throw new Error('boom');
+    }
+  }
+
+  const output = await renderDsd('x-broken-render', {
+    componentClass: BrokenRender as unknown as CustomElementConstructor,
+    props: { label: 'hi' },
+  });
+
+  assertEquals(output.errors.length, 1);
+  assertEquals(output.errors[0].recoverable, true);
+  assertEquals(output.errors[0].severity, 'warning');
+  assertEquals(output.html, '<x-broken-render label="hi"></x-broken-render>');
+});
