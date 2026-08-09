@@ -179,11 +179,11 @@ const packages: ApiPackage[] = [
     exports: ['root', 'CLI only'],
     notes: {
       en: [
-        'Generated projects expose `dev`, `check`, `test`, `build` and `preview`.',
+        'Generated projects expose `dev`, `check`, `test`, `build`, `start` and `preview`.',
         'The starter imports product packages only.',
       ],
       zh: [
-        '生成的项目暴露 `dev`、`check`、`test`、`build` 与 `preview`。',
+        '生成的项目暴露 `dev`、`check`、`test`、`build`、`start` 与 `preview`。',
         'starter 只导入产品包。',
       ],
     },

@@ -90,7 +90,7 @@ The `@alpha` dist-tag pins the current 0.42 alpha line (untagged
 `--minimum-dependency-age 0` is needed because Deno's default
 minimumDependencyAge (~24h) refuses packages published within the last day.
 
-The generated application exposes `dev`, `check`, `test`, `build` and `preview`.
+The generated application exposes `dev`, `check`, `test`, `build`, `start` and `preview`.
 
 ## Documentation
 

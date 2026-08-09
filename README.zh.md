@@ -73,7 +73,7 @@ deno task dev
 解析到 0.41.x stable 线）；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。
 
-生成项目提供 `dev`、`check`、`test`、`build` 和 `preview`。
+生成项目提供 `dev`、`check`、`test`、`build`、`start` 和 `preview`。
 
 ## 文档
 
