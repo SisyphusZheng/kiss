@@ -21,6 +21,7 @@ async function runCreate(executable: string, cwd: string, name: string) {
     stderr: 'piped',
   }).output();
   assertEquals(result.code, 0, new TextDecoder().decode(result.stderr));
+  return new TextDecoder().decode(result.stdout);
 }
 
 Deno.test('starter exposes only product imports and the standard lifecycle', () => {
@@ -142,6 +143,13 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   // #679: the check task must cover the app-shell component template.
   const checkTask = String(denoJson.tasks.check || '');
   assert(checkTask.includes('app/components/app-shell.tsx'), checkTask);
+  // The check task must cover every shipped route (including the dynamic blog
+  // route and the API route) plus vite.config.ts, so template regressions
+  // surface in the generated app's own `deno task check`.
+  assert(checkTask.includes('app/routes/blog/index.tsx'), checkTask);
+  assert(checkTask.includes('app/routes/blog/[slug].tsx'), checkTask);
+  assert(checkTask.includes('app/routes/api/health.ts'), checkTask);
+  assert(checkTask.includes('vite.config.ts'), checkTask);
 });
 
 Deno.test('starter templates use the supported Element JSX entrypoint', () => {
@@ -189,7 +197,7 @@ Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#
 Deno.test('source CLI generates a complete, token-free starter', async () => {
   const tmpRoot = Deno.makeTempDirSync({ prefix: 'open-create-source-' });
   try {
-    await runCreate(join(packageDir, 'src', 'cli.ts'), tmpRoot, 'sample-app');
+    const stdout = await runCreate(join(packageDir, 'src', 'cli.ts'), tmpRoot, 'sample-app');
     const appDir = join(tmpRoot, 'sample-app');
     assert(existsSync(join(appDir, '.gitignore')));
     assertFalse(existsSync(join(appDir, 'gitignore.tmpl')));
@@ -200,6 +208,8 @@ Deno.test('source CLI generates a complete, token-free starter', async () => {
     assert(existsSync(join(appDir, 'app', 'routes', 'blog', 'index.tsx')));
     assert(existsSync(join(appDir, 'app', 'routes', 'blog', '[slug].tsx')));
     assert(existsSync(join(appDir, 'app', 'data', '_generated-blog-data.d.ts')));
+    // Success output points at the README for the full task list.
+    assert(stdout.includes('README.md'), stdout);
   } finally {
     Deno.removeSync(tmpRoot, { recursive: true });
   }

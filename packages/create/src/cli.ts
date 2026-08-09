@@ -74,6 +74,7 @@ async function main() {
   console.info(`\nopenElement project created at ./${relativeTarget}/`);
   console.info(`\n  cd ${relativeTarget}`);
   console.info('  deno task dev');
+  console.info('  See README.md for all tasks (check/build/start/preview)');
 }
 
 main();
