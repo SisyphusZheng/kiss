@@ -23,6 +23,14 @@ The `@alpha` dist-tag pins the current 0.42 alpha line (untagged
 `--minimum-dependency-age 0` is needed because Deno's default
 minimumDependencyAge (~24h) refuses packages published within the last day.
 
+## Requirements
+
+**Deno 2.8+.** The generated starter writes the `minimumDependencyAge` config
+key into its `deno.json` (a key introduced in Deno 2.5.5) and is exercised
+against the same toolchain the repo pins in CI (2.9.x, see `.dvmrc`); 2.8 is
+the declared support floor. Older Deno versions do not understand the key and
+will warn or error.
+
 ## What It Creates
 
 - `deno.json` - starter authoring imports and build tasks

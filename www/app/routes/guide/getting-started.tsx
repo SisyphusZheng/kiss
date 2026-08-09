@@ -24,7 +24,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'install',
         title: 'Install',
         body:
-          "Three commands to a running app: deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app, then cd my-app, then deno task dev. The @alpha dist-tag pins the 0.42 alpha line, and --minimum-dependency-age 0 is needed because Deno's default minimumDependencyAge (~24h) refuses packages published within the last day.",
+          "Three commands to a running app: deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app, then cd my-app, then deno task dev. The @alpha dist-tag pins the 0.42 alpha line, and --minimum-dependency-age 0 is needed because Deno's default minimumDependencyAge (~24h) refuses packages published within the last day. Deno 2.8+ is required — the generated starter writes the minimumDependencyAge config key, which older Deno versions do not understand.",
       },
       {
         id: 'explore',
@@ -57,7 +57,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'install',
         title: '安装',
         body:
-          '三条命令跑起应用：deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app，然后 cd my-app，再 deno task dev。@alpha dist-tag 锁定 0.42 alpha 线；--minimum-dependency-age 0 是必须的，因为 Deno 默认的 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。',
+          '三条命令跑起应用：deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app，然后 cd my-app，再 deno task dev。@alpha dist-tag 锁定 0.42 alpha 线；--minimum-dependency-age 0 是必须的，因为 Deno 默认的 minimumDependencyAge（约 24h）会拒绝发布未满一天的包。需要 Deno 2.8+——生成的 starter 会写入 minimumDependencyAge 配置键，更旧的 Deno 版本不认识该键。',
       },
       {
         id: 'explore',
