@@ -33,9 +33,17 @@ Deno.test('starter exposes only product imports and the standard lifecycle', () 
     '@openelement/element',
     '@openelement/element/jsx-dev-runtime',
     '@openelement/element/jsx-runtime',
+    '@openelement/generated/blog-data',
     'hono',
     'vite',
   ]);
+  // The blog routes import the adapter-generated data module; the import map
+  // points at the local type stub so `deno task check` passes before the
+  // first dev/build generates the runtime module.
+  assertEquals(
+    denoJson.imports['@openelement/generated/blog-data'],
+    './app/data/_generated-blog-data.d.ts',
+  );
   assertEquals(
     denoJson.imports['@openelement/element/jsx-runtime'],
     'npm:@openelement/element@${v.element}/jsx-runtime',
@@ -142,6 +150,8 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
       'app/routes/index.tsx',
       'app/routes/freshness.tsx',
       'app/routes/contact.tsx',
+      'app/routes/blog/index.tsx',
+      'app/routes/blog/[slug].tsx',
       'app/components/app-shell.tsx',
       'app/islands/my-counter.tsx',
     ]
@@ -151,6 +161,18 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
     assertFalse(source.includes('@openelement/core'), path);
   }
   assert(readTemplate('gitignore.tmpl').includes('dist/'));
+});
+
+Deno.test('starter blog routes consume the generated blog-data module', () => {
+  const index = readTemplate('app/routes/blog/index.tsx');
+  const slug = readTemplate('app/routes/blog/[slug].tsx');
+  assert(index.includes('@openelement/generated/blog-data'), index);
+  assert(slug.includes('@openelement/generated/blog-data'), slug);
+  // Dynamic post page: prerender one page per post and render trusted
+  // markdown HTML (pattern mirrors the www site blog routes).
+  assert(slug.includes('getStaticPaths'), slug);
+  assert(slug.includes('getPostBySlug'), slug);
+  assert(slug.includes('trustedHtml'), slug);
 });
 
 Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#804)', () => {
@@ -172,6 +194,12 @@ Deno.test('source CLI generates a complete, token-free starter', async () => {
     assert(existsSync(join(appDir, '.gitignore')));
     assertFalse(existsSync(join(appDir, 'gitignore.tmpl')));
     assertFalse(Deno.readTextFileSync(join(appDir, 'deno.json')).includes('${v.'));
+    // Starter ships the blog routes wired to content/blog, the blog-data type
+    // stub, and a README explaining tasks/conventions.
+    assert(existsSync(join(appDir, 'README.md')));
+    assert(existsSync(join(appDir, 'app', 'routes', 'blog', 'index.tsx')));
+    assert(existsSync(join(appDir, 'app', 'routes', 'blog', '[slug].tsx')));
+    assert(existsSync(join(appDir, 'app', 'data', '_generated-blog-data.d.ts')));
   } finally {
     Deno.removeSync(tmpRoot, { recursive: true });
   }
@@ -197,6 +225,9 @@ Deno.test('packed CLI retains every starter template, including dotfiles', async
     await runCreate(join(tmpRoot, 'package', 'src', 'cli.js'), tmpRoot, 'sample-app');
     assert(existsSync(join(tmpRoot, 'sample-app', '.gitignore')));
     assert(existsSync(join(tmpRoot, 'sample-app', 'content', 'blog', 'welcome.md')));
+    assert(existsSync(join(tmpRoot, 'sample-app', 'README.md')));
+    assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'routes', 'blog', '[slug].tsx')));
+    assert(existsSync(join(tmpRoot, 'sample-app', 'app', 'data', '_generated-blog-data.d.ts')));
   } finally {
     Deno.removeSync(tmpRoot, { recursive: true });
   }

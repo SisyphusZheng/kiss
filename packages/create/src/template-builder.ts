@@ -40,14 +40,18 @@ const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
   // npm tarballs omit dotfiles even when a directory is included. Keep the
   // template non-hidden and write the expected dotfile into generated apps.
   ['gitignore.tmpl', '.gitignore'],
+  ['README.tmpl', 'README.md'],
   ['public/openelement-mark.svg', 'public/openelement-mark.svg'],
   ['content/blog/welcome.md', 'content/blog/welcome.md'],
   ['deno.json.tmpl', 'deno.json'],
   ['vite.config.ts', 'vite.config.ts'],
   ['app/components/app-shell.tsx', 'app/components/app-shell.tsx'],
+  ['app/data/_generated-blog-data.d.ts', 'app/data/_generated-blog-data.d.ts'],
   ['app/routes/index.tsx', 'app/routes/index.tsx'],
   ['app/routes/freshness.tsx', 'app/routes/freshness.tsx'],
   ['app/routes/contact.tsx', 'app/routes/contact.tsx'],
+  ['app/routes/blog/index.tsx', 'app/routes/blog/index.tsx'],
+  ['app/routes/blog/[slug].tsx', 'app/routes/blog/[slug].tsx'],
   ['app/routes/api/health.ts', 'app/routes/api/health.ts'],
   ['app/islands/my-counter.tsx', 'app/islands/my-counter.tsx'],
 ];
@@ -74,6 +78,9 @@ export async function buildTemplates(v: ProductVersions): Promise<Record<string,
     }
     return [target, content] as const;
   }));
-  entries.sort(([a], [b]) => a.localeCompare(b));
+  // Code-unit comparison (not localeCompare): deterministic across host
+  // locales and matches the test's toSorted() expectation, including
+  // uppercase targets like README.md.
+  entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   return Object.fromEntries(entries);
 }
