@@ -611,6 +611,16 @@ function renderCorsOrigin(origin: CorsOriginConfig): string {
 const CORS_ALLOW =
   "allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowHeaders: ['Content-Type', 'Authorization'], credentials: true, maxAge: 86400";
 
+// The entry is generated twice per process (configResolved placeholder pass
+// with empty routes, then buildStart with real routes). Warn once (#925).
+let corsOriginWarningShown = false;
+
+// Test-only reset: the flag is process-global by design, tests restore it
+// between cases (see entry-renderer.test.ts).
+export function resetCorsOriginWarningForTests(): void {
+  corsOriginWarningShown = false;
+}
+
 export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
   if (mw.comment) {
     lines.push(`// ${mw.comment}`);
@@ -639,11 +649,14 @@ export function renderMiddleware(lines: string[], mw: MiddlewareDecl): void {
           `app.use('*', cors({ origin: ${originStr}, ${CORS_ALLOW} }))`,
         );
       } else {
-        console.warn(
-          '[openElement] middleware.corsOrigin is not configured. The generated server only ' +
-            'reflects localhost origins; configure middleware.corsOrigin in openElement() before ' +
-            'production deployment to avoid unintended cross-origin access.',
-        );
+        if (!corsOriginWarningShown) {
+          corsOriginWarningShown = true;
+          console.warn(
+            '[openElement] middleware.corsOrigin is not configured. The generated server only ' +
+              'reflects localhost origins; configure middleware.corsOrigin in openElement() before ' +
+              'production deployment to avoid unintended cross-origin access.',
+          );
+        }
         lines.push("app.use('*', cors({ origin: (origin) => {");
         lines.push(
           '  if (origin && /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin)) return origin',

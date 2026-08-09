@@ -11,6 +11,7 @@
 
 import { assertEquals, assertExists, assertFalse, assertStringIncludes } from '@std/assert';
 import { buildEntryDescriptor, renderEntry } from '../src/internal/ssg/index.ts';
+import { resetCorsOriginWarningForTests } from '../src/internal/ssg/entry-codegen.ts';
 import type { RouteEntry } from '../src/internal/protocol/framework.ts';
 
 // Fixtures
@@ -603,6 +604,7 @@ Deno.test('renderEntry: CORS default (no corsOrigin) generates localhost regex',
 });
 
 Deno.test('renderEntry: default CORS warns with config entry and security impact', () => {
+  resetCorsOriginWarningForTests();
   const warnings: string[] = [];
   const originalWarn = console.warn;
   console.warn = (...values: unknown[]) => warnings.push(values.map(String).join(' '));
@@ -617,6 +619,7 @@ Deno.test('renderEntry: default CORS warns with config entry and security impact
 });
 
 Deno.test('renderEntry: explicit CORS config is silent', () => {
+  resetCorsOriginWarningForTests();
   const warnings: string[] = [];
   const originalWarn = console.warn;
   console.warn = (...values: unknown[]) => warnings.push(values.map(String).join(' '));
@@ -934,4 +937,24 @@ Deno.test('renderEntry: no middleware.use keeps the pre-#858 handler shape', () 
   assertFalse(code.includes('composeFetchMiddleware'));
   assertFalse(code.includes('openElementDevFetch'));
   assertStringIncludes(code, 'export const openElementHandler = (request, context = {}) => {');
+});
+
+Deno.test('renderEntry: corsOrigin warning is emitted once per process (#925)', () => {
+  resetCorsOriginWarningForTests();
+  const desc = buildEntryDescriptor(basicRoutes);
+  const calls: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (msg: string) => calls.push(String(msg));
+  try {
+    renderEntry(desc);
+    renderEntry(desc);
+  } finally {
+    console.warn = originalWarn;
+  }
+  const warnings = calls.filter((c) => c.includes('middleware.corsOrigin is not configured'));
+  assertEquals(
+    warnings.length,
+    1,
+    'configResolved + buildStart both render the entry; warning must dedupe',
+  );
 });
