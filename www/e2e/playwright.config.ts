@@ -41,14 +41,6 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
-    // E2E must not depend on third-party analytics availability: resolve the
-    // GoatCounter endpoints to nowhere so the page load event never waits on
-    // an external fetch (hangs on networks where the domain is unreachable).
-    launchOptions: {
-      args: [
-        '--host-resolver-rules=MAP gc.zgo.at ~NOTFOUND, MAP openelement.goatcounter.com ~NOTFOUND',
-      ],
-    },
   },
 
   // Auto-start a Deno static file server for www/dist/.
@@ -66,7 +58,19 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { browserName: 'chromium' },
+      use: {
+        browserName: 'chromium',
+        // E2E must not depend on third-party analytics availability: resolve
+        // the GoatCounter endpoints to nowhere so the page load event never
+        // waits on an external fetch (hangs on networks where the domain is
+        // unreachable). Chromium-only switch — WebKit rejects unknown launch
+        // args at browserType.launch, so this must not live in the shared use.
+        launchOptions: {
+          args: [
+            '--host-resolver-rules=MAP gc.zgo.at ~NOTFOUND, MAP openelement.goatcounter.com ~NOTFOUND',
+          ],
+        },
+      },
     },
     {
       name: 'firefox',
