@@ -56,10 +56,22 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
   allowProtocolRelative: false,
 };
 
+/** Fold CSS escapes and strip comments so the blacklist below cannot be
+ *  bypassed by `@\69mport`, `@im/**\/port`, or `u\72l(...)`. */
+function foldCssForCheck(css: string): string {
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\\([0-9a-fA-F]{1,6})\s?/g, (_m, hex: string) => {
+      const code = Number.parseInt(hex, 16);
+      return code === 0 || code > 0x10FFFF ? '\uFFFD' : String.fromCodePoint(code);
+    })
+    .replace(/\\(.)/g, '$1');
+}
+
 function sanitizeStyleTag(attributes: string, css: string, context: string): string {
   if (
     /(?:@import|expression\s*\(|url\s*\(\s*["']?\s*(?:javascript|data|vbscript|file)\s*:)/i.test(
-      css,
+      foldCssForCheck(css),
     )
   ) {
     throw new OpenElementError(`Unsafe CSS in ${context}`, {

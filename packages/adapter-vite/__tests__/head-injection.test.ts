@@ -571,6 +571,36 @@ Deno.test('buildHeadExtras: keeps charset and viewport metas', () => {
   assertStringIncludes(result.headExtras!, 'name="viewport"');
 });
 
+Deno.test('buildHeadExtras: rejects CSS escape and comment blacklist bypasses', () => {
+  assertThrows(
+    () =>
+      buildHeadExtras({ headExtras: '<style>@\\69mport url(https://evil.example/x.css)</style>' }),
+    Error,
+    'Unsafe CSS',
+  );
+  assertThrows(
+    () =>
+      buildHeadExtras({ headExtras: '<style>@im/**/port url(https://evil.example/x.css)</style>' }),
+    Error,
+    'Unsafe CSS',
+  );
+  assertThrows(
+    () =>
+      buildHeadExtras({
+        headExtras: '<style>body{background:u\\72l(javascript:alert(1))}</style>',
+      }),
+    Error,
+    'Unsafe CSS',
+  );
+});
+
+Deno.test('buildHeadExtras: keeps benign CSS escapes in style content', () => {
+  const result = buildHeadExtras({
+    headExtras: '<style>.a::before{content:"\\201C"}</style>',
+  });
+  assertEquals(result.headExtras, '<style>.a::before{content:"\\201C"}</style>');
+});
+
 // ─── Regression: headExtras takes precedence ──────────────────
 
 Deno.test('buildHeadExtras: headExtras takes precedence over inject', () => {
