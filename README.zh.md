@@ -64,10 +64,14 @@ better-auth recipe（基于 Web 标准 `Request` 头）获得支持。
 ## 开始使用
 
 ```sh
-deno run -A npm:@openelement/create my-app
+deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app
 cd my-app
 deno task dev
 ```
+
+`@alpha` dist-tag 锁定当前 0.42 alpha 线（不带 tag 的 `npm:@openelement/create`
+解析到 0.41.x stable 线）；`--minimum-dependency-age 0` 是必须的，因为 Deno 默认的
+minimumDependencyAge（约 24h）会拒绝发布未满一天的包。
 
 生成项目提供 `dev`、`check`、`test`、`build` 和 `preview`。
 

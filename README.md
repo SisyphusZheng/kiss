@@ -80,10 +80,15 @@ production runtime and external-adoption evidence are complete.
 ## Start
 
 ```sh
-deno run -A npm:@openelement/create my-app
+deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app
 cd my-app
 deno task dev
 ```
+
+The `@alpha` dist-tag pins the current 0.42 alpha line (untagged
+`npm:@openelement/create` resolves to the 0.41.x stable line), and
+`--minimum-dependency-age 0` is needed because Deno's default
+minimumDependencyAge (~24h) refuses packages published within the last day.
 
 The generated application exposes `dev`, `check`, `test`, `build` and `preview`.
 

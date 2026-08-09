@@ -34,9 +34,13 @@ Pilot target release: `0.41.0-alpha.16` (or the current `alpha` dist-tag).
 
 Work through these in order and time each stage separately.
 
-1. **Start.** Run `deno run -A npm:@openelement/create my-app`, then
-   `cd my-app && deno task dev`. Note the time from first command to a
-   serving page.
+1. **Start.** Run
+   `deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app`,
+   then `cd my-app && deno task dev`. Note the time from first command to a
+   serving page. (The pilot tracks the 0.42 alpha line: `@alpha` pins that
+   dist-tag, and `--minimum-dependency-age 0` bypasses Deno's default ~24h
+   minimumDependencyAge, which refuses packages published within the last
+   day.)
 2. **Author.** Create a small custom element of your choice and use it on a
    page. Note anything you had to look up.
 3. **Render.** Confirm the page renders server-side (view-source shows the

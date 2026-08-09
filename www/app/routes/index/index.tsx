@@ -95,6 +95,7 @@ sheet.replaceSync(`
   .begin h2 { font-family:var(--font-serif); font-style:italic; font-weight:400; font-size:clamp(4rem,8vw,7rem); color:var(--violet-8); }
   .begin .command { display:inline-flex; align-items:center; gap:var(--size-4); margin-block-start:var(--size-6); padding:var(--size-3) var(--size-5); border:var(--border-size-1) solid var(--border); border-radius:var(--radius-2); background:var(--surface-code); color:var(--text-primary); font-size:var(--font-size-0); }
   .begin .command code { color:var(--success); }
+  .begin .command-note { max-width:32rem; margin:var(--size-3) auto 0; color:var(--text-muted); font-size:var(--font-size-00); line-height:1.6; }
   .begin .actions { justify-content:center; margin-block-end:0; }
 
   /* ── reference links ── */
@@ -206,6 +207,8 @@ const content = {
     specDeps: 'Framework deps',
     specOutput: 'Server output',
     begin: 'Begin.',
+    beginNote:
+      "@alpha pins the 0.42 alpha line; --minimum-dependency-age 0 bypasses Deno's default ~24h minimumDependencyAge, which refuses same-day publishes.",
     facts: 'Facts behind the feeling',
     continueComposition: 'Continue the composition.',
     referenceCopy:
@@ -223,6 +226,8 @@ const content = {
     specDeps: '框架依赖',
     specOutput: '服务端输出',
     begin: '开始。',
+    beginNote:
+      '@alpha 锁定 0.42 alpha 线；--minimum-dependency-age 0 绕过 Deno 默认约 24h 的 minimumDependencyAge——默认会拒绝当天发布的包。',
     facts: '感觉背后的事实',
     continueComposition: '继续这场组合。',
     referenceCopy: '每一个场景都立足于公开产品面、架构与发布真相——不是装饰性的虚构。',
@@ -398,8 +403,9 @@ export const Counter = defineElement('open-counter', {
           <h2>{t.begin}</h2>
           <div class='command'>
             <code>$</code>
-            <span>deno run -A npm:@openelement/create my-app</span>
+            <span>deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app</span>
           </div>
+          <p class='command-note'>{t.beginNote}</p>
           <div class='actions'>
             <a class='action primary' href='/guide/getting-started'>{t.getStarted}</a>
             <a class='action' href='/docs'>{t.readGuide}</a>
