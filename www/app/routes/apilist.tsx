@@ -91,6 +91,8 @@ type ApiPackage = {
   copy: Record<Locale, string>;
   importPath: string;
   exports: string[];
+  /** Subpaths importable for tooling but carrying no compatibility promise (marked ※). */
+  internalExports?: string[];
   notes: Record<Locale, string[]>;
   kind: 'core' | 'build' | 'optional';
 };
@@ -132,6 +134,7 @@ const packages: ApiPackage[] = [
     },
     importPath: '@openelement/app',
     exports: ['root', 'model', 'spa', 'i18n', 'preact'],
+    internalExports: ['i18n'],
     notes: {
       en: [
         'Use `definePage`, `defineIsland` and `defineApp` for application authoring.',
@@ -232,7 +235,7 @@ const content = {
     headSubpaths: 'Supported subpaths',
     headKind: 'Kind',
     footnote: (v: string) =>
-      `※ Internal subpaths (adapter-vite build pipeline, element hydration modules) stay importable for tooling but carry no compatibility promise. The public type surface is explicit — no export-star seams on the ${v} line.`,
+      `※ Internal subpaths (app/i18n, adapter-vite build pipeline, element hydration modules) stay importable for tooling but carry no compatibility promise. The public type surface is explicit — no export-star seams on the ${v} line.`,
     footnoteCheckPre: "Machine-checked against each package's exports map by ",
     footnoteCheckPost: '.',
   },
@@ -257,7 +260,7 @@ const content = {
     headSubpaths: '受支持的子路径',
     headKind: '类别',
     footnote: (v: string) =>
-      `※ 内部子路径（adapter-vite 构建管线、element hydration 模块）仍可被工具导入，但不携带兼容性承诺。公开类型面是显式的——${v} 线上没有 export-star 缝隙。`,
+      `※ 内部子路径（app/i18n、adapter-vite 构建管线、element hydration 模块）仍可被工具导入，但不携带兼容性承诺。公开类型面是显式的——${v} 线上没有 export-star 缝隙。`,
     footnoteCheckPre: '由 ',
     footnoteCheckPost: ' 对照每个包的 exports map 做机器校验。',
   },
@@ -307,7 +310,12 @@ export class ApiCorePage extends OpenElement {
                   {pkg.notes[locale].map((note) => <span class='pkg-note' key={note}>{note}</span>)}
                 </div>
                 <div class='pkg-chips'>
-                  {pkg.exports.map((entry) => <span class='chip' key={entry}>{entry}</span>)}
+                  {pkg.exports.map((entry) => (
+                    <span class='chip' key={entry}>
+                      {entry}
+                      {pkg.internalExports?.includes(entry) ? '※' : ''}
+                    </span>
+                  ))}
                 </div>
                 <span class={`kind kind-${pkg.kind}`}>{kinds[pkg.kind]}</span>
               </div>
