@@ -1,7 +1,7 @@
 /**
  * sanitize.ts - Dependency-free allow-list HTML sanitizer (ADR-0126).
  *
- * `trustRenderHtml` is a trust boundary, not a sanitizer; this module is the
+ * `trustedHtml` is a trust boundary, not a sanitizer; this module is the
  * safe-by-default alternative for rendering untrusted HTML fragments
  * (markdown output, CMS content, third-party HTML).
  *
