@@ -51,7 +51,7 @@
 import type { RouteEntry, SpecialFileType } from '../protocol/framework.ts';
 import { createLogger } from '@openelement/element';
 import { normalizeSeparators, pathToTagName } from '@openelement/element/build-utils';
-import { dirname, join, posix, sep } from 'node:path';
+import { dirname, join, posix, resolve, sep } from 'node:path';
 import { safeReadDir, safeReadFile, safeStat } from './route-scanner-fs.ts';
 
 /** data-open-enhance in attribute form (= or >), so prose never triggers (#569). */
@@ -90,6 +90,21 @@ async function sourceTreeHasEnhancedForms(
 }
 
 const log = createLogger('scanner');
+
+/**
+ * definePage-style routes never need a `tagName` export — the generated
+ * server entry registers their default export itself (entry-orchestrator.ts)
+ * with a fallback name — so a missing tagName on them is not noteworthy.
+ */
+const DEFINE_PAGE_RE = /\bdefinePage\s*\(/;
+
+/**
+ * Missing-tagName notes fire at most once per file per process. scanRoutes()
+ * is invoked by several build phases with different routesDir spellings
+ * (relative vs absolute); keying on the resolved path keeps each file to a
+ * single note.
+ */
+const notedMissingTagName = new Set<string>();
 
 /** Read a static route tagName export from source text. */
 function readRouteTagName(source: string): string | undefined {
@@ -250,9 +265,15 @@ export async function scanRoutes(
             log.debug(`Unable to read route module: ${fullPath}`);
           } else {
             tagName = readRouteTagName(source);
-            if (tagName === undefined) {
-              // tagName not found is normal — not all page routes define one
-              log.debug(`No tagName export found in route module: ${fullPath}`);
+            if (tagName === undefined && !DEFINE_PAGE_RE.test(source)) {
+              // tagName not found is normal — not all page routes define one.
+              // Dedupe by resolved path: multiple scan passes spell the same
+              // routesDir differently (relative vs absolute).
+              const resolvedPath = resolve(fullPath);
+              if (!notedMissingTagName.has(resolvedPath)) {
+                notedMissingTagName.add(resolvedPath);
+                log.debug(`No tagName export found in route module: ${resolvedPath}`);
+              }
             }
           }
         }
