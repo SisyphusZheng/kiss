@@ -38,7 +38,7 @@ export default definePage({
         <article>
           <h1>{post.frontmatter.title}</h1>
           <p>
-            <time>{post.frontmatter.date}</time>
+            <time>{post.frontmatter.date.slice(0, 10)}</time>
           </p>
           <div innerHTML={post.html} trustedHtml></div>
         </article>

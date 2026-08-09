@@ -27,7 +27,7 @@ defineElement(tagName, {
           {sortedPosts.map((post) => (
             <li key={post.slug}>
               <a href={'/blog/' + post.slug}>{post.frontmatter.title}</a>
-              <time>{post.frontmatter.date}</time>
+              <time>{post.frontmatter.date.slice(0, 10)}</time>
             </li>
           ))}
         </ul>

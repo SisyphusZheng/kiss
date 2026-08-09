@@ -20,8 +20,10 @@ styles.replaceSync(`
   :host { display: block; min-height: 100vh; background: var(--gray-1); }
   header, main, footer { max-width: 860px; margin: 0 auto; padding: 1rem; }
   header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-3); }
+  nav { display: flex; gap: 1.25rem; }
   footer { color: var(--gray-7); font-size: 0.875rem; border-top: 1px solid var(--gray-3); }
   a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
 `);
 
 export default defineElement(tagName, {
