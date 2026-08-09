@@ -2952,6 +2952,54 @@ Deno.test('keyed For: duplicate keys keep last occurrence, dispose the displaced
   }
 });
 
+Deno.test('keyed For: duplicate-key displacement keeps new items before static siblings', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }]);
+  const origWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    const root = renderToDom(
+      jsx('div', {
+        children: [
+          For({
+            each: items,
+            key: (item: { id: number }) => item.id,
+            children: (item: { id: number }) =>
+              jsx('li', { id: `item-${item.id}`, children: String(item.id) }),
+          }),
+          jsx('span', { children: 'tail' }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    container.appendChild(root);
+    const list = container.querySelector('div') as unknown as TestElement;
+
+    // Duplicate key in an update: the first occurrence is displaced while the
+    // insertion cursor (`placed`) still points at the detached node — the
+    // replacement must not degrade to appending after the static sibling.
+    items.value = [{ id: 1 }, { id: 1 }];
+
+    const lis = list.querySelectorAll('li');
+    assertEquals(lis.length, 1, 'duplicate key collapses to one item');
+    const tail = list.querySelector('span');
+    assertExists(tail);
+    const liIndex = list.childNodes.indexOf(lis[0]);
+    const tailIndex = list.childNodes.indexOf(tail);
+    assertEquals(liIndex !== -1 && tailIndex !== -1, true);
+    assertEquals(
+      liIndex < tailIndex,
+      true,
+      'replacement item must be inserted before the static tail sibling',
+    );
+  } finally {
+    console.warn = origWarn;
+  }
+});
+
 Deno.test('keyed For: reorder preserves DOM node identity for surviving items', () => {
   if (!hasDOM) return;
 

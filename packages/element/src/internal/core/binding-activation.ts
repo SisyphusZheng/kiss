@@ -496,6 +496,13 @@ function applyList(
           // (nodes leak forever, disposers never fire).
           const displaced = next.get(entryKey);
           if (displaced) {
+            // If the insertion cursor sits on a displaced node, rewind it to
+            // the displaced entry's predecessor (or the anchor) before
+            // detaching — otherwise `placed?.nextSibling` below degrades to
+            // appending at the parent's end.
+            if (placed && displaced.nodes.includes(placed)) {
+              placed = previousSiblingOf(displaced.nodes[0]) ?? anchor;
+            }
             for (const node of displaced.nodes) {
               node.remove();
               const at = ordered.indexOf(node);
