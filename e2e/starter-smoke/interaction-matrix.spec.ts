@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test';
 test.describe('form loop', () => {
   // #937/#938 repros — RED on the published alpha.15 stack. Wave 1 turns
   // these green by removing the test.fixme() marks.
-  test.fixme('enhanced submit morphs #thanks without a full reload (#937)', async ({ page }) => {
+  test("enhanced submit morphs #thanks without a full reload (#937)", async ({ page }) => {
     await page.goto('/contact');
     await page.evaluate(() => {
       (window as unknown as { __morphDoc?: number }).__morphDoc = 1;
@@ -24,7 +24,7 @@ test.describe('form loop', () => {
     expect(marker).toBe(1);
   });
 
-  test.fixme('validation failure morphs #error without a full reload (#937)', async ({ page }) => {
+  test("validation failure morphs #error without a full reload (#937)", async ({ page }) => {
     await page.goto('/contact');
     await page.evaluate(() => {
       (window as unknown as { __morphDoc2?: number }).__morphDoc2 = 1;
@@ -38,7 +38,7 @@ test.describe('form loop', () => {
     expect(marker).toBe(1);
   });
 
-  test.fixme('no-JS native POST is accepted, PRG lands on #thanks (#938)', async ({ browser }) => {
+  test('no-JS native POST is accepted, PRG lands on #thanks (#938)', async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/contact');

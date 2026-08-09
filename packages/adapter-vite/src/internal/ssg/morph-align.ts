@@ -217,6 +217,11 @@ export function createMorphAlign(deps: MorphAlignDeps): MorphAlign {
       const newTemplate = shadowTemplate(newElement);
       if ((oldElement as HTMLElement).shadowRoot && newTemplate) {
         morphChildren((oldElement as HTMLElement).shadowRoot as ShadowRoot, newTemplate.content);
+        // #937: a slot-based shell keeps its pages as light-DOM children
+        // (e.g. <app-shell><page-x>...</page-x></app-shell>); the shadow morph
+        // alone leaves slotted content stale, so descend into non-empty light
+        // DOM too. An empty light DOM means the template was the whole story.
+        if (oldElement.childNodes.length > 0) morphChildren(oldElement, newElement);
         return;
       }
     }

@@ -250,10 +250,27 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   // (HTML responses identical to the no-JS path).
   lines.push(`    const __actionHeader = c.req.header(__actionFetchHeader);`);
   lines.push(`    __isFetch = __actionHeader === 'true';`);
-  // #611 / ADR-0121 §12 (amended): default same-origin CSRF floor for
-  // browser POSTs. Non-browser clients that omit Origin and Sec-Fetch-Site
-  // are allowed. Opt out via runtime env on the request context:
-  // c.env.OPEN_ELEMENT_DISABLE_CSRF === '1' (Workers/Node bindings).
+  // #611 / ADR-0121 §12 (amended #938/#921/#937): the CSRF floor is a
+  // coherent origin policy matrix over (Sec-Fetch-Site × Origin):
+  //
+  //   SFS                Origin present  Origin 'null'  Origin missing
+  //   cross-site         reject          reject         reject (fail closed)
+  //   same-site          origin compare  reject (#921)  reject (#921)
+  //   same-origin        origin compare  allow (#938)   allow (non-browser)
+  //   none/absent        origin compare  allow          allow (non-browser)
+  //
+  // - origin compare: literal origin match, except loopback hostname aliases
+  //   (localhost / 127.0.0.1 / [::1]) on http: count as the same site — dev
+  //   servers bind one spelling while the browser may use another (#937).
+  // - Origin 'null' (no-referrer pages) with Sec-Fetch-Site same-origin is
+  //   the progressive-enhancement no-JS form post (#938) — allowed, because
+  //   only the browser can claim same-origin.
+  // - same-site without a usable Origin is a forged header (browsers always
+  //   send Origin on POST): reject so a compromised sibling subdomain cannot
+  //   pass (#921).
+  // Non-browser clients that omit both headers are allowed. Opt out via
+  // runtime env on the request context: c.env.OPEN_ELEMENT_DISABLE_CSRF === '1'
+  // (Workers/Node bindings).
   lines.push(`    {`);
   lines.push(
     `      const __csrfOff = __loadContext.env && __loadContext.env.OPEN_ELEMENT_DISABLE_CSRF === '1';`,
@@ -263,7 +280,18 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   lines.push(`        const __sfs = (c.req.header('sec-fetch-site') || '').toLowerCase();`);
   lines.push(`        let __cross = __sfs === 'cross-site';`);
   lines.push(
-    `        if (!__cross && __origin) { try { __cross = new URL(__origin).origin !== new URL(c.req.url).origin; } catch { __cross = true; } }`,
+    `        if (!__cross && __origin && __origin !== 'null') { try {`,
+  );
+  lines.push(`          const __o1 = new URL(__origin);`);
+  lines.push(`          const __o2 = new URL(c.req.url);`);
+  lines.push(
+    `          const __loop = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';`,
+  );
+  lines.push(
+    `          __cross = __o1.origin !== __o2.origin && !(__o1.protocol === 'http:' && __o2.protocol === 'http:' && __loop(__o1.hostname) && __loop(__o2.hostname));`,
+  );
+  lines.push(
+    `        } catch { __cross = true; } } else if (!__cross && __sfs === 'same-site') { __cross = true; }`,
   );
   lines.push(`        if (__cross) {`);
   lines.push(

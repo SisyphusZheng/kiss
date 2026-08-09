@@ -146,4 +146,49 @@ test.describe('CSRF same-origin floor (#811)', () => {
     expect(response.status()).toBe(303);
     expect(response.headers()['location']).toBe('/form?echoed=opt-out-ok');
   });
+
+  // #938: a no-referrer page (referrer-policy: no-referrer) submits the
+  // native form POST with Origin: null + Sec-Fetch-Site: same-origin — the
+  // progressive-enhancement fallback must not be rejected as cross-site.
+  test('Origin null + Sec-Fetch-Site same-origin passes the floor (#938)', async ({ request }) => {
+    const response = await request.post(csrfOnBase + '/form', {
+      form: { message: 'opaque-origin-ok' },
+      headers: { origin: 'null', 'sec-fetch-site': 'same-origin' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    expect(response.headers()['location']).toBe('/form?echoed=opaque-origin-ok');
+  });
+
+  // #921: Sec-Fetch-Site alone is not proof — a browser always sends Origin
+  // with it, so same-site without a usable Origin is a forged header.
+  test('Sec-Fetch-Site same-site without Origin is rejected (#921)', async ({ request }) => {
+    const response = await request.post(csrfOnBase + '/form', {
+      form: { message: 'forged' },
+      headers: { 'sec-fetch-site': 'same-site' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(403);
+
+    const opaque = await request.post(csrfOnBase + '/form', {
+      form: { message: 'forged-opaque' },
+      headers: { origin: 'null', 'sec-fetch-site': 'same-site' },
+      maxRedirects: 0,
+    });
+    expect(opaque.status()).toBe(403);
+  });
+
+  // #937: dev servers present themselves as localhost while the browser may
+  // hit 127.0.0.1 — a literal origin compare would reject a same-site post.
+  // Playwright's request client sends the csrfOnBase origin verbatim, so hit
+  // the server through a loopback alias of the same host.
+  test('loopback hostname alias counts as same-origin (#937)', async ({ request }) => {
+    const response = await request.post(csrfOnBase + '/form', {
+      form: { message: 'alias-ok' },
+      headers: { origin: 'http://localhost:' + CSRF_ON_PORT, 'sec-fetch-site': 'same-origin' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    expect(response.headers()['location']).toBe('/form?echoed=alias-ok');
+  });
 });
