@@ -19,10 +19,10 @@ export default definePage({
 });
 ```
 
-Use the Vite facade from `@openelement/adapter-vite/app-vite` in `vite.config.ts`:
+Use the Vite facade from `@openelement/adapter-vite` in `vite.config.ts`:
 
 ```ts
-import { openElement } from '@openelement/adapter-vite/app-vite';
+import { openElement } from '@openelement/adapter-vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -58,7 +58,8 @@ parameters, and wildcards remain supported.
 authors should start from this package.
 
 Build configuration is owned by `@openelement/adapter-vite`; generated projects
-and docs import its `app-vite` facade rather than an app-package Vite subpath.
+and docs import its `openElement()` facade from the package root rather than an
+app-package Vite subpath.
 
 ## Install
 
