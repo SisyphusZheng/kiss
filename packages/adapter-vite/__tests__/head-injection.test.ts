@@ -541,6 +541,36 @@ Deno.test('buildHeadExtras: returns empty string for inject with no items', () =
   assertEquals(result.headExtras, '');
 });
 
+Deno.test('buildHeadExtras: strips meta http-equiv (blocks refresh open redirect)', () => {
+  const result = buildHeadExtras({
+    headExtras: '<meta http-equiv="refresh" content="0;url=https://evil.example/">',
+  });
+  // The http-equiv attribute must not survive; the leftover meta is inert.
+  assertEquals(result.headExtras!.includes('http-equiv'), false);
+});
+
+Deno.test('buildHeadExtras: removes <base> tags entirely (relative-URL hijack)', () => {
+  const result = buildHeadExtras({
+    headExtras: '<base href="https://evil.example/"><meta charset="utf-8">',
+  });
+  assertEquals(result.headExtras!.includes('<base'), false);
+  assertEquals(result.headExtras!.includes('evil.example'), false);
+  assertStringIncludes(result.headExtras!, '<meta charset="utf-8" />');
+});
+
+Deno.test('buildHeadExtras: keeps charset and viewport metas', () => {
+  const result = buildHeadExtras({
+    inject: {
+      headFragments: [
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      ],
+    },
+  });
+  assertStringIncludes(result.headExtras!, '<meta charset="utf-8" />');
+  assertStringIncludes(result.headExtras!, 'name="viewport"');
+});
+
 // ─── Regression: headExtras takes precedence ──────────────────
 
 Deno.test('buildHeadExtras: headExtras takes precedence over inject', () => {

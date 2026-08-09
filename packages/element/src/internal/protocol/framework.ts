@@ -158,7 +158,11 @@ export interface FrameworkOptions {
         attrs?: Record<string, string | number | boolean>;
       }
     >;
-    /** @dangerous fragments injected as-is */
+    /**
+     * @dangerous fragments injected as-is. Trust boundary: never concatenate
+     * unsanitized user-controlled content into these fragments; they are
+     * sanitized against a <head> allow-list, not a general HTML sanitizer.
+     */
     headFragments?: string[];
   };
   ssr?: {

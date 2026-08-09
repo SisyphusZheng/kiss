@@ -22,9 +22,9 @@ const log = createLogger('adapter-vite:head-injection');
 
 const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel', 'sms'];
 const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
-  allowedTags: ['base', 'link', 'meta', 'noscript', 'title'],
+  // <base> is excluded: it can hijack every relative URL in the document.
+  allowedTags: ['link', 'meta', 'noscript', 'title'],
   allowedAttributes: {
-    base: ['href', 'target'],
     link: [
       'as',
       'crossorigin',
@@ -40,14 +40,17 @@ const HEAD_SANITIZE_OPTIONS: SanitizeHtmlOptions = {
       'title',
       'type',
     ],
-    meta: ['charset', 'content', 'http-equiv', 'name', 'property'],
+    // http-equiv is excluded: sanitize-html cannot filter by attribute value,
+    // and http-equiv="refresh" enables open redirects. charset/viewport/name/
+    // property metas do not need it; CSP metas are emitted by the SSG
+    // postprocess, not through this allow-list.
+    meta: ['charset', 'content', 'name', 'property'],
     noscript: [],
     title: [],
   },
   allowedSchemes: SAFE_SCHEMES,
   allowedSchemesByTag: {
     link: SAFE_SCHEMES,
-    base: ['http', 'https'],
   },
   allowedSchemesAppliedToAttributes: ['href', 'src', 'action', 'formaction', 'xlink:href'],
   allowProtocolRelative: false,

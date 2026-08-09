@@ -75,7 +75,11 @@ export function wrapInDocument(
     /** Raw HTML script tags to inject after rendered HTML (e.g. Vite client, route module registration). */
     devScripts?: string;
     headExtras?: string;
-    /** Raw route-local head fragments from explicit dangerous page metadata. */
+    /**
+     * Raw route-local head fragments from explicit dangerous page metadata.
+     * Trust boundary: injected verbatim into <head>; never concatenate
+     * unsanitized user-controlled content into these fragments.
+     */
     dangerouslyHeadFragments?: string[];
     /** Trust script tags that were produced by structured framework injection APIs. */
     allowHeadExtrasScripts?: boolean;
