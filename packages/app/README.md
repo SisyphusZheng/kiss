@@ -2,7 +2,8 @@
 
 JSX-first application authoring API for openElement.
 
-> v0.39 surface: Framework product. Use this package for first-run pages,
+> 0.42 alpha surface (v0.42.0-alpha.15, unfrozen; ADR-0122 freeze proposed):
+> Framework product. Use this package for first-run pages,
 > layouts, islands, route metadata, and the Vite facade.
 
 Use the package root in route, island, and component modules:

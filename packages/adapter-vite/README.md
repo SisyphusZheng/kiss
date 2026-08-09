@@ -2,7 +2,8 @@
 
 openElement build orchestration for Vite.
 
-> v0.39 surface: advanced Framework infrastructure. First-run apps should use
+> 0.42 alpha surface (v0.42.0-alpha.15, unfrozen; ADR-0122 freeze proposed):
+> advanced Framework infrastructure. First-run apps should use
 > `openElement()` from this package's root export or generated `@openelement/create`
 > tasks instead of wiring the internal plugins by hand.
 
