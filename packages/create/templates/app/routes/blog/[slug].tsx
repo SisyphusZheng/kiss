@@ -23,18 +23,17 @@ export function getStaticPaths(): Array<Record<string, string>> {
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host { display: block; }
-  h1 { letter-spacing: -0.02em; margin-bottom: 0.35rem; }
-  .meta { color: var(--gray-7); font-size: 0.875rem; margin-top: 0; display: flex; gap: 0.5rem; align-items: center; }
-  .pill { display: inline-block; background: #8262db14; color: var(--brand); border-radius: 999px; padding: 0.15em 0.7em; font-size: 0.75rem; font-weight: 600; }
-  a { color: var(--brand); text-decoration: none; font-weight: 600; }
-  .post-body { background: #fff; border: 1px solid var(--gray-3); border-radius: var(--radius-3); box-shadow: var(--shadow-1); padding: 2rem 2.5rem; line-height: 1.75; font-size: 1.02rem; }
-  .post-body h2 { margin: 2.25rem 0 0.75rem; letter-spacing: -0.01em; }
-  .post-body p { margin: 0.9rem 0; }
-  .post-body pre { background: #17171f; color: #e9e9f2; padding: 1rem 1.25rem; border-radius: 10px; overflow-x: auto; font-size: 0.875rem; line-height: 1.6; }
-  .post-body code { font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.875em; }
-  .post-body :not(pre) > code { background: #8262db14; color: var(--brand); padding: 0.15em 0.45em; border-radius: 6px; font-weight: 600; }
-  .post-body img { max-width: 100%; border-radius: 10px; border: 1px solid var(--gray-3); }
-  .post-body blockquote { margin-left: 0; padding-left: 1rem; border-left: 3px solid var(--brand); color: var(--gray-7); }
+  h1 { font-family: var(--font-serif); font-size: 2.4rem; line-height: 1.15; letter-spacing: -0.015em; margin: 0.5rem 0; }
+  .meta { color: var(--ink-2); font-size: 0.9rem; margin-top: 0; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line); }
+  a { color: var(--brand); text-decoration: none; }
+  .post-body { line-height: 1.8; font-size: 1.05rem; }
+  .post-body h2 { font-family: var(--font-serif); margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
+  .post-body p { margin: 1rem 0; }
+  .post-body pre { background: #f4f2ec; border: 1px solid var(--line); padding: 1rem 1.25rem; border-radius: 8px; overflow-x: auto; font-size: 0.875rem; line-height: 1.65; }
+  .post-body code { font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.85em; background: #f1efe8; border: 1px solid var(--line); padding: 0.1em 0.4em; border-radius: 5px; }
+  .post-body pre code { background: none; border: none; padding: 0; }
+  .post-body img { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
+  .post-body blockquote { margin-left: 0; padding-left: 1rem; border-left: 2px solid var(--brand); color: var(--ink-2); }
 `);
 
 defineElement(tagName, {
@@ -59,7 +58,9 @@ defineElement(tagName, {
         <h1>{post.frontmatter.title}</h1>
         <p class='meta'>
           <time>{post.frontmatter.date.slice(0, 10)}</time>
-          {(post.frontmatter.tags ?? []).map((tag) => <span class='pill' key={tag}>{tag}</span>)}
+          {(post.frontmatter.tags ?? []).length
+            ? ' · ' + (post.frontmatter.tags ?? []).join(', ')
+            : ''}
         </p>
         <article class='post-body' innerHTML={post.html} trustedHtml></article>
       </>

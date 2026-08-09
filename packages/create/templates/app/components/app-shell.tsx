@@ -18,22 +18,18 @@ const defaultNav: HeaderNavLink[] = [
 const styles = new StyleSheet();
 styles.replaceSync(`
   :host { display: block; min-height: 100vh; }
-  header {
-    position: sticky; top: 0; z-index: 10;
-    background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--gray-3);
-  }
-  .bar { max-width: 920px; margin: 0 auto; padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
-  .brand { display: flex; align-items: center; gap: 0.55rem; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; color: var(--gray-9); }
-  .brand::before { content: ''; width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); }
-  nav { display: flex; gap: 0.25rem; }
-  nav a { padding: 0.4rem 0.8rem; border-radius: 999px; color: var(--gray-7); font-size: 0.925rem; }
-  nav a:hover { background: #8262db14; color: var(--brand); text-decoration: none; }
-  main { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.25rem; }
-  footer { border-top: 1px solid var(--gray-3); color: var(--gray-7); font-size: 0.875rem; }
-  .foot { max-width: 920px; margin: 0 auto; padding: 1.25rem; display: flex; justify-content: space-between; gap: 1rem; }
-  a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  header { border-bottom: 1px solid var(--line); }
+  .bar { max-width: 740px; margin: 0 auto; padding: 1.15rem 1.25rem; display: flex; justify-content: space-between; align-items: baseline; }
+  .brand { font-family: var(--font-serif); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; color: var(--ink); }
+  .brand:hover { text-decoration: none; color: var(--brand); }
+  nav { display: flex; gap: 1.5rem; }
+  nav a { color: var(--ink-2); font-size: 0.95rem; font-weight: 500; }
+  nav a:hover { color: var(--brand); text-decoration: none; }
+  main { max-width: 740px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+  footer { border-top: 1px solid var(--line); color: var(--ink-2); font-size: 0.85rem; }
+  .foot { max-width: 740px; margin: 0 auto; padding: 1.25rem; display: flex; justify-content: space-between; gap: 1rem; }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
 `);
 
 export default defineElement(tagName, {
