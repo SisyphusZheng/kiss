@@ -334,7 +334,7 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.14',
+      version: 'v0.42.0-alpha.15',
       theme: 'TP-5.9 close-out: tooling convergence, deletion and release hardening',
       copy:
         'The TP-5.9 close-out hardens the release train and thins the tree: docs-truth consolidates into a five-in-one registry with consumer-qualify tiers (#870), jsonc parsing delegates to @std/jsonc (#870, #868), audit round 2 cleanup shares @std walk and drops the consumer-qualify dispatcher (#874–#876), simplify-scan rounds 1+2 delete dead files, exports and flags (#879–#884), release continuity gains no-skip version bumping and pre-seeded note survival (#869, #855), and packed-package consumers of jsr dependencies are unblocked with a repaired consumer smoke (#886, #887).',
@@ -636,7 +636,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.14' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.15' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>
