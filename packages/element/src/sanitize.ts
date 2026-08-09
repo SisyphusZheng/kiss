@@ -270,9 +270,15 @@ function parseStartTag(input: string, p: number): ParsedTag | null {
           i += unquoted[0].length;
         }
       }
-      if (!attrs.has(attrName)) attrs.set(attrName, value);
+      // Attribute names are ASCII case-insensitive and browsers keep the
+      // first occurrence of a name regardless of case, so keys are stored
+      // lowercased with first-wins semantics (matches emission below and
+      // keeps `target` detection in sanitizeHtml case-insensitive too).
+      const key = attrName.toLowerCase();
+      if (!attrs.has(key)) attrs.set(key, value);
     } else if (attrName !== '/') {
-      if (!attrs.has(attrName)) attrs.set(attrName, '');
+      const key = attrName.toLowerCase();
+      if (!attrs.has(key)) attrs.set(key, '');
     }
   }
   return { name, attrs, selfClosing, end: n };

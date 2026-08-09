@@ -223,6 +223,27 @@ Deno.test('sanitizeHtml: rel=opener on _blank is neutralized, not passed through
   );
 });
 
+Deno.test('sanitizeHtml: uppercase TARGET="_blank" still forces noopener rel', () => {
+  assertEquals(
+    sanitizeHtml('<a href="https://x" TARGET="_blank">l</a>'),
+    '<a href="https://x" target="_blank" rel="noopener noreferrer">l</a>',
+  );
+  assertEquals(
+    sanitizeHtml('<a href="https://x" TaRgEt="_blank" REL="opener">l</a>'),
+    '<a href="https://x" target="_blank" rel="noopener noreferrer">l</a>',
+  );
+  // First case-insensitive occurrence wins, matching browser semantics.
+  assertEquals(
+    sanitizeHtml('<a href="https://x" TARGET="_self" target="_blank">l</a>'),
+    '<a href="https://x">l</a>',
+  );
+});
+
+Deno.test('sanitizeHtml: uppercase TARGET result is idempotent', () => {
+  const once = sanitizeHtml('<a href="https://x" TARGET="_blank">l</a>');
+  assertEquals(sanitizeHtml(once), once);
+});
+
 Deno.test('sanitizeHtml: escapes attribute values', () => {
   assertEquals(
     sanitizeHtml('<p title="a&quot;onload=alert(1)">x</p>'),
