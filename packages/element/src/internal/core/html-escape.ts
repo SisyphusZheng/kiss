@@ -145,8 +145,13 @@ function sanitizeHeadExtras(
   warnScope: WarnScope,
 ): string {
   if (allowHeadExtrasScripts || !headExtras) return headExtras;
-  // Strip <script> tags and their content
-  let safeHeadExtras = headExtras.replace(/<script[\s>][\s\S]*?<\/script\s*>/gi, '');
+  // Strip <script> tags and their content. The delimiter class includes `/`
+  // (`<script/src=...>` is still a script tag to the browser), and a second
+  // pass strips an unclosed `<script ...>` to end-of-input (browsers treat
+  // the rest of the document as script raw text).
+  let safeHeadExtras = headExtras
+    .replace(/<script[\s>/][\s\S]*?<\/script\s*>/gi, '')
+    .replace(/<script[\s>/][\s\S]*$/gi, '');
   if (safeHeadExtras !== headExtras) {
     warnOnce(
       'headExtrasScripts',
