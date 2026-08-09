@@ -283,6 +283,16 @@ const GATES: readonly GateDefinition[] = [
     triggers: [/^packages\/adapter-vite\/(src|__fixtures__)\//, /^deno\.json$/],
   },
   {
+    // Packed-starter smoke (#934/#936): pack the create CLI, generate a
+    // fresh starter, build it against the monorepo framework sources, and
+    // run the visual/interaction matrix in the browser. The #937/#938/#943
+    // repros live here and must stay red until Wave 1 lands.
+    name: 'test:starter-smoke',
+    command: ['deno', 'task', 'test:starter-smoke'],
+    tiers: ['ci', 'release'],
+    triggers: [/^packages\/(create|app|adapter-vite|element|ui)\//, /^e2e\//, /^deno\.json$/],
+  },
+  {
     // Static-output determinism (#560): the release-tier form of the
     // byte-identical freeze proof. Builds www twice and requires
     // byte-identical output (builtAt-normalized). The full baseline
