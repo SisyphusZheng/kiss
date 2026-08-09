@@ -1,4 +1,4 @@
-import { PACKAGE_VERSION_TAG } from './project-constants.ts';
+import { PACKAGE_VERSION_TAG, PREVIOUS_PACKAGE_VERSION } from './project-constants.ts';
 import { runGit } from './lib/git.ts';
 
 // Replay the durable release state machine for a released tag from git
@@ -10,8 +10,22 @@ import { runGit } from './lib/git.ts';
 // Usage: deno run -A tools/check-release-state-machine.ts [--to <version>]
 
 const toIndex = Deno.args.indexOf('--to');
-const version = (toIndex === -1 ? PACKAGE_VERSION_TAG : Deno.args[toIndex + 1])
+let version = (toIndex === -1 ? PACKAGE_VERSION_TAG : Deno.args[toIndex + 1])
   .replace(/^v/u, '');
+if (toIndex === -1) {
+  // A release in flight has no evidence for the current line yet — the bump
+  // commit precedes the publish evidence, and every release-tier run
+  // (prepare, publish-existing) gates before the publish plan writes it.
+  // Replay the previous completed line instead; the in-flight line is
+  // verified separately by release:evidence:check once it exists.
+  const currentEvidence = `docs/release/autoflow3/v${version}.json`;
+  if (!(await runGit(['log', '--format=%H', '--', currentEvidence])).trim()) {
+    console.log(
+      `No evidence for v${version} yet (release in flight); replaying the previous line.`,
+    );
+    version = PREVIOUS_PACKAGE_VERSION;
+  }
+}
 const tag = `v${version}`;
 const evidencePath = `docs/release/autoflow3/${tag}.json`;
 const notePath = `docs/release/${tag}.md`;
