@@ -41,7 +41,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'safe-html',
         title: 'Safe HTML by default',
         body:
-          'Render untrusted HTML fragments (markdown output, CMS content, third-party HTML) through sanitizeHtml from @openelement/element/sanitize — an allow-list sanitizer with a decode-then-revalidate URL scheme policy (ADR-0126). Use trustRenderHtml only when you sanitized upstream; it is a trust boundary, not a sanitizer.',
+          'Render untrusted HTML fragments (markdown output, CMS content, third-party HTML) through sanitizeHtml from @openelement/element/sanitize — an allow-list sanitizer with a decode-then-revalidate URL scheme policy (ADR-0126). Use trustedHtml only when you sanitized upstream; it is a trust boundary, not a sanitizer.',
       },
     ],
     recipeTitle: 'app/routes/_middleware.ts',
@@ -83,7 +83,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'safe-html',
         title: '默认安全 HTML',
         body:
-          '渲染不可信 HTML 片段（markdown 输出、CMS 内容、第三方 HTML）时，先经过 @openelement/element/sanitize 的 sanitizeHtml——基于 allow-list 的消毒器，带「先解码再校验」的 URL scheme 策略（ADR-0126）。只有上游已消毒时才使用 trustRenderHtml：它是信任边界，不是消毒器。',
+          '渲染不可信 HTML 片段（markdown 输出、CMS 内容、第三方 HTML）时，先经过 @openelement/element/sanitize 的 sanitizeHtml——基于 allow-list 的消毒器，带「先解码再校验」的 URL scheme 策略（ADR-0126）。只有上游已消毒时才使用 trustedHtml：它是信任边界，不是消毒器。',
       },
     ],
     recipeTitle: 'app/routes/_middleware.ts',

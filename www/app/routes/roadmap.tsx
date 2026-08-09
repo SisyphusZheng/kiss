@@ -337,7 +337,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       version: 'v0.42.0-alpha.15',
       theme: 'backlog zero: correctness fixes, structural splits and executable claims',
       copy:
-        'The alpha.15 train clears the post-sweep backlog: the SPA router gains a URLPattern fallback so Firefox navigation works (#897), child clearing and framework throws unify behind clearChildren and OpenElementError (#895, #902, #898, #899), the DSD layout-fix flush chunks across frames (#896), long functions and monoliths split across element and adapter-vite (#900, #906, #903, #908, #904, #901), <For> learns keyed reconciliation (ADR-0124, #890), hydration instance purity is decided (ADR-0125, #891), a built-in allow-list sanitizer ships for trustRenderHtml callers (ADR-0126, #894), docs-truth gains an executable code-claim registry wired into CI (#893), and e2e stops depending on third-party analytics reachability.',
+        'The alpha.15 train clears the post-sweep backlog: the SPA router gains a URLPattern fallback so Firefox navigation works (#897), child clearing and framework throws unify behind clearChildren and OpenElementError (#895, #902, #898, #899), the DSD layout-fix flush chunks across frames (#896), long functions and monoliths split across element and adapter-vite (#900, #906, #903, #908, #904, #901), <For> learns keyed reconciliation (ADR-0124, #890), hydration instance purity is decided (ADR-0125, #891), a built-in allow-list sanitizer ships for trustedHtml callers (ADR-0126, #894), docs-truth gains an executable code-claim registry wired into CI (#893), and e2e stops depending on third-party analytics reachability.',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -386,7 +386,7 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
       version: 'v0.42.0-alpha.15',
       theme: '积压清零:正确性修复、结构拆分与可执行声明',
       copy:
-        'alpha.15 列车清空大扫除后的积压:SPA 路由获得 URLPattern 回退,Firefox 导航恢复可用(#897);子节点清理与框架抛错统一到 clearChildren 与 OpenElementError(#895、#902、#898、#899);DSD 布局修复冲刷按帧分块(#896);element 与 adapter-vite 的长函数和单体文件完成拆分(#900、#906、#903、#908、#904、#901);<For> 学会键控协调(ADR-0124、#890);hydration 实例纯洁性完成决策(ADR-0125、#891);内建白名单消毒器为 trustRenderHtml 调用方落地(ADR-0126、#894);docs-truth 获得接入 CI 的可执行代码声明注册表(#893);e2e 不再依赖第三方 analytics 的可达性。',
+        'alpha.15 列车清空大扫除后的积压:SPA 路由获得 URLPattern 回退,Firefox 导航恢复可用(#897);子节点清理与框架抛错统一到 clearChildren 与 OpenElementError(#895、#902、#898、#899);DSD 布局修复冲刷按帧分块(#896);element 与 adapter-vite 的长函数和单体文件完成拆分(#900、#906、#903、#908、#904、#901);<For> 学会键控协调(ADR-0124、#890);hydration 实例纯洁性完成决策(ADR-0125、#891);内建白名单消毒器为 trustedHtml 调用方落地(ADR-0126、#894);docs-truth 获得接入 CI 的可执行代码声明注册表(#893);e2e 不再依赖第三方 analytics 的可达性。',
       state: 'stable',
       stamp: 'CURRENT',
     },
