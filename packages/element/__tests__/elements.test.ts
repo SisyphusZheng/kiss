@@ -20,3 +20,9 @@ Deno.test('@openelement/element exposes one functional authoring helper', () => 
   assertEquals(typeof elementSurface.defineElement, 'function');
   assertEquals('defineLayout' in elementSurface, false);
 });
+
+Deno.test('@openelement/element exports keyed For from the root (#941)', () => {
+  assertEquals(typeof elementSurface.For, 'function');
+  const vnode = elementSurface.For({ each: [] });
+  assertEquals(typeof vnode, 'object');
+});

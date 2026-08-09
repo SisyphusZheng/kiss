@@ -37,7 +37,11 @@ and `create`; `ui` is optional.
 
 The Element/App root surface exposes one functional element authoring helper:
 `defineElement`. The alpha-only `defineLayout` alias was removed in alpha.13;
-layouts use `defineElement` with the same definition object.
+layouts use `defineElement` with the same definition object. The signal
+control-flow factory `For` (`<For each={items} key={...}>`, ADR-0059/
+ADR-0124) is exported from the element root since 0.42.0-alpha.16 (#941);
+`Show` stays internal (jsx-runtime) — open an issue if a public consumer
+surface is needed.
 
 ## Subpath inventory
 

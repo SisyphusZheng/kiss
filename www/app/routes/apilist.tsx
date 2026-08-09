@@ -117,10 +117,12 @@ const packages: ApiPackage[] = [
       en: [
         'Start here for standalone element authoring.',
         'Use `defineElement`, `OpenElement`, `StyleSheet` and signal helpers without importing renderer internals.',
+        'Keyed lists: `<For each={items} key={fn}>{(item) => ...}</For>` is exported from the root (alpha.16).',
       ],
       zh: [
         '独立的元素创作从这里开始。',
         '直接使用 `defineElement`、`OpenElement`、`StyleSheet` 与 signal 辅助函数，无需引入 renderer 内部实现。',
+        '键控列表：`<For each={items} key={fn}>{(item) => ...}</For>` 自 alpha.16 起从根导出。',
       ],
     },
     kind: 'core',

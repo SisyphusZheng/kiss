@@ -29,7 +29,7 @@ export type {
 
 // ─── JSX runtime (re-export from core) ───────────────────
 
-export { Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
+export { For, Fragment, jsx, jsxDEV, jsxs } from './internal/core/jsx-runtime.ts';
 export type { VNode } from './internal/protocol/vnode.ts';
 // Explicit type-only surface for build adapters (#488): no star seams, so the
 // public type surface is exactly the names listed here. SafeHtml, UnsafeHtml

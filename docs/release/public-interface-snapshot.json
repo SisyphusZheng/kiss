@@ -12,7 +12,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "14b8b4dba26303236f81815506e73d7b063192d47409d5eea17b3a0e85bae5ef",
+          "sha256": "4d60efa8adb8b4258a0e468acb924385098f323474b17d63327d9a32c2a421a8",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
@@ -47,7 +47,7 @@
           "publicDeclarations": []
         },
         "./sanitize": {
-          "sha256": "30bcc78d6b9bfe36e1cc0010d94e16bd14bd1720b900ac69abc8cf263566ac04",
+          "sha256": "896ba7948c15f339433861aacbd6952daf1c7964a7df0cb2733ae9ceeb83af6f",
           "publicDeclarations": [
             "export interface SanitizeOptions {",
             "export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): boolean {",
@@ -269,7 +269,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "bc38985ce6cbd8211e29424d4bb70080e281264ba3f011c80fc0d83cdc244ad0",
+          "sha256": "f409a7e2e8052e58e4d3f606eae87d6e21467def8674b13b51994e61f5178b7f",
           "publicDeclarations": []
         }
       }
