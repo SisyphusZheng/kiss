@@ -721,9 +721,15 @@ function parseElement(
     }
 
     if (nextTag.startsWith('!--')) {
-      const data = nextTag.endsWith('--') ? nextTag.slice(3, -2) : nextTag.slice(3);
-      el.appendChild(new TestCommentNode(data));
+      if (nextTag.endsWith('--')) {
+        // Comment fully terminated within this segment: advance past its '>'
+        // instead of searching for a later '-->' (which would drop siblings).
+        el.appendChild(new TestCommentNode(nextTag.slice(3, -2)));
+        i = nextClose + 1;
+        continue;
+      }
       const end = html.indexOf('-->', nextClose);
+      el.appendChild(new TestCommentNode(nextTag.slice(3)));
       i = end === -1 ? html.length : end + 3;
       continue;
     }
