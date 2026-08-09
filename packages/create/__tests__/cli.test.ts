@@ -180,6 +180,13 @@ Deno.test('starter island binds its signal through hydration markers', () => {
   assert(island.includes("data-signal='count'"), island);
 });
 
+Deno.test('starter global style block scopes tokens under :root', () => {
+  const config = readTemplate('vite.config.ts');
+  // Bare `--token:value` declarations at stylesheet top level are dropped by
+  // CSS error recovery and take the following body rule down with them.
+  assert(config.includes('<style>:root{--gray-0:'), config);
+});
+
 Deno.test('starter blog routes consume the generated blog-data module', () => {
   const index = readTemplate('app/routes/blog/index.tsx');
   const slug = readTemplate('app/routes/blog/[slug].tsx');
