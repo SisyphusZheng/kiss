@@ -7,7 +7,9 @@ test.describe('Cinematic homepage', () => {
     await expect(page.getByText('THE WEB,', { exact: true })).toBeVisible();
     await expect(page.getByText('Start building', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('The server writes HTML.')).toBeVisible();
-    await expect(page.getByText('deno run -A npm:@openelement/create my-app')).toBeVisible();
+    await expect(
+      page.getByText('deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app')
+    ).toBeVisible();
   });
 
   test('loads atmosphere as an optional enhancement', async ({ page }) => {
