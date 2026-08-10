@@ -105,6 +105,8 @@ const productImports = [
   '@openelement/element',
   '@openelement/element/jsx-dev-runtime',
   '@openelement/element/jsx-runtime',
+  // The starter maps the app's virtual blog-data module to a local type stub.
+  '@openelement/generated/blog-data',
   // Hono is the explicit public runtime dependency of the generated SSG entry.
   'hono',
   'vite',
