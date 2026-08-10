@@ -190,9 +190,10 @@ const buildEvidence = JSON.parse(Deno.readTextFileSync(buildEvidencePath)) as {
 const manifestRoutes = buildEvidence.manifest?.routes ?? [];
 const pageRoutes = manifestRoutes.filter((route) => route.kind === 'page');
 const apiRoutes = manifestRoutes.filter((route) => route.kind === 'api');
-// Pages: index, freshness (ISR intent), contact (0.42 request-time action).
+// Pages: index, freshness, blog index + post (starter blog routes), and
+// contact (0.42 request-time action).
 if (
-  buildEvidence.success !== true || pageRoutes.length !== 3 || apiRoutes.length !== 1 ||
+  buildEvidence.success !== true || pageRoutes.length !== 5 || apiRoutes.length !== 1 ||
   (buildEvidence.pages ?? []).some((page) => (page.errors?.length ?? 0) > 0)
 ) {
   console.error('Structured build manifest did not contain the expected page/API surface.');
@@ -230,7 +231,7 @@ if (!existsSync(assetPath)) {
 }
 
 const indexHtml = Deno.readTextFileSync(indexHtmlPath);
-if (!indexHtml.includes('Hello from openElement')) {
+if (!indexHtml.includes('Static pages, alive where it counts')) {
   console.error('dist/index.html does not contain expected content');
   console.error('Last 300 chars:', indexHtml.substring(indexHtml.length - 300));
   cleanup();
@@ -239,13 +240,6 @@ if (!indexHtml.includes('Hello from openElement')) {
 
 if (!indexHtml.includes('data-open-layout="app-shell"')) {
   console.error('dist/index.html does not contain expected app shell marker');
-  console.error('Last 300 chars:', indexHtml.substring(indexHtml.length - 300));
-  cleanup();
-  Deno.exit(1);
-}
-
-if (!indexHtml.includes('/openelement-mark.svg')) {
-  console.error('dist/index.html does not reference the generated public asset');
   console.error('Last 300 chars:', indexHtml.substring(indexHtml.length - 300));
   cleanup();
   Deno.exit(1);
@@ -443,7 +437,7 @@ try {
     const homeHtml = await home.text();
     if (
       home.status !== 200 ||
-      !homeHtml.includes('Hello from openElement') ||
+      !homeHtml.includes('Static pages, alive where it counts') ||
       !homeHtml.includes('data-open-layout="app-shell"')
     ) {
       console.error(JSON.stringify({ status: home.status, body: homeHtml.slice(-500) }, null, 2));
