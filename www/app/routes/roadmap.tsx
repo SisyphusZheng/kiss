@@ -334,10 +334,11 @@ type TimelineEntry = {
 const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   en: [
     {
-      version: 'v0.42.0-alpha.15',
-      theme: 'backlog zero: correctness fixes, structural splits and executable claims',
+      version: 'v0.42.0-alpha.16',
+      theme:
+        'packed-starter verification spine: interaction matrix, CSRF floor and hydration fixes',
       copy:
-        'The alpha.15 train clears the post-sweep backlog: the SPA router gains a URLPattern fallback so Firefox navigation works (#897), child clearing and framework throws unify behind clearChildren and OpenElementError (#895, #902, #898, #899), the DSD layout-fix flush chunks across frames (#896), long functions and monoliths split across element and adapter-vite (#900, #906, #903, #908, #904, #901), <For> learns keyed reconciliation (ADR-0124, #890), hydration instance purity is decided (ADR-0125, #891), a built-in allow-list sanitizer ships for trustedHtml callers (ADR-0126, #894), docs-truth gains an executable code-claim registry wired into CI (#893), and e2e stops depending on third-party analytics reachability.',
+        'The alpha.16 train closes the round-3 audit loop with a packed-starter verification spine: an e2e smoke gate on the generated starter (#934) and the client interaction matrix as permanent CI guards (#936). The enhanced form now morphs slotted light-DOM pages (#937), the CSRF floor accepts native no-JS same-origin posts under a coherent Origin policy (#938, #921), keyed <For> is exported from the package root (#941), the starter island, visuals and nav were fixed (#940, restyle), and the corsOrigin warning is emitted once per process (#925).',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -383,10 +384,10 @@ const entries: Record<'en' | 'zh', TimelineEntry[]> = {
   ],
   zh: [
     {
-      version: 'v0.42.0-alpha.15',
-      theme: '积压清零:正确性修复、结构拆分与可执行声明',
+      version: 'v0.42.0-alpha.16',
+      theme: '打包启动器验证骨架:交互矩阵、CSRF 底线与水合修复',
       copy:
-        'alpha.15 列车清空大扫除后的积压:SPA 路由获得 URLPattern 回退,Firefox 导航恢复可用(#897);子节点清理与框架抛错统一到 clearChildren 与 OpenElementError(#895、#902、#898、#899);DSD 布局修复冲刷按帧分块(#896);element 与 adapter-vite 的长函数和单体文件完成拆分(#900、#906、#903、#908、#904、#901);<For> 学会键控协调(ADR-0124、#890);hydration 实例纯洁性完成决策(ADR-0125、#891);内建白名单消毒器为 trustedHtml 调用方落地(ADR-0126、#894);docs-truth 获得接入 CI 的可执行代码声明注册表(#893);e2e 不再依赖第三方 analytics 的可达性。',
+        'alpha.16 列车以打包启动器验证骨架闭环 round-3 审计:生成型启动器的 e2e 冒烟门禁(#934)与客户端交互矩阵成为永久 CI 守卫(#936)。增强表单开始 morph 插槽轻 DOM 页面(#937);CSRF 底线在连贯的 Origin 策略下放行无 JS 同源原生 POST(#938、#921);键控 <For> 从包根导出(#941);启动器岛屿、视觉与导航修复(#940、重设计);corsOrigin 警告每进程仅一次(#925)。',
       state: 'stable',
       stamp: 'CURRENT',
     },
@@ -636,7 +637,7 @@ export class RoadmapPage extends OpenElement {
               {timeline.map((phase) => {
                 // The current-line stamp follows the bump-maintained anchor so a
                 // release bump re-marks the timeline without manual edits.
-                const stamp = phase.version === 'v0.42.0-alpha.15' ? 'CURRENT' : phase.stamp;
+                const stamp = phase.version === 'v0.42.0-alpha.16' ? 'CURRENT' : phase.stamp;
                 return (
                   <div class={`tl-row tl-${phase.state}`}>
                     <span class='tl-node' aria-hidden='true'></span>

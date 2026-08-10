@@ -1,6 +1,6 @@
 {
   "name": "@openelement/adapter-vite",
-  "version": "0.42.0-alpha.15",
+  "version": "0.42.0-alpha.16",
   "exports": {
     ".": "./src/index.ts",
     "./nitro-mount": "./src/nitro-mount.ts",
