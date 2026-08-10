@@ -8,7 +8,7 @@ test.describe('Cinematic homepage', () => {
     await expect(page.getByText('Start building', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('The server writes HTML.')).toBeVisible();
     await expect(
-      page.getByText('deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app')
+      page.getByText('deno run -A --minimum-dependency-age 0 npm:@openelement/create@alpha my-app'),
     ).toBeVisible();
   });
 
