@@ -239,6 +239,14 @@ Deno.test('release: previous release theme bump records the superseded theme ide
   assertEquals(bumpPreviousReleaseThemeText(constants, 'old theme'), undefined);
 });
 
+Deno.test('release: previous release theme bump tolerates the fmt-wrapped anchor form', () => {
+  const constants = "export const PREVIOUS_RELEASE_THEME =\n  'old theme';\n";
+  assertEquals(
+    bumpPreviousReleaseThemeText(constants, 'new theme'),
+    "export const PREVIOUS_RELEASE_THEME = 'new theme';\n",
+  );
+});
+
 Deno.test('release: superseded theme is only recorded on a real version change', () => {
   const text =
     "  {\n    version: 'v0.42.0-alpha.1',\n    theme: 'request-time rendering foundation',\n";

@@ -93,11 +93,13 @@ export function supersededThemeForBump(
  * source text. Returns `undefined` when already recorded (idempotent).
  */
 export function bumpPreviousReleaseThemeText(text: string, theme: string): string | undefined {
-  const m = text.match(/PREVIOUS_RELEASE_THEME = '([^']+)'/u);
+  // deno fmt wraps the long single-line form, leaving a newline between `=`
+  // and the quote; accept both so a wrapped anchor does not abort the release.
+  const m = text.match(/PREVIOUS_RELEASE_THEME =\s*'([^']+)'/u);
   if (!m) throw new Error('tools/project-constants.ts: PREVIOUS_RELEASE_THEME anchor missing.');
   if (m[1] === theme) return undefined;
   return text.replace(
-    /PREVIOUS_RELEASE_THEME = '[^']+'/u,
+    /PREVIOUS_RELEASE_THEME =\s*'[^']+'/u,
     `PREVIOUS_RELEASE_THEME = '${theme}'`,
   );
 }
