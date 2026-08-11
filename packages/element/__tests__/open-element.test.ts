@@ -888,6 +888,7 @@ installDomHarness();
 // Imports must happen after the harness is installed: OpenElement captures its
 // HTMLElement base class at module evaluation time.
 const { OpenElement, ErrorBoundary } = await import('@openelement/element');
+const { defineElement } = await import('@openelement/element');
 const { jsx } = await import('@openelement/element/jsx-runtime');
 const { signal } = await import('@openelement/element');
 const { StyleSheet } = await import('@openelement/element');
@@ -916,6 +917,33 @@ function createHydratedElement(tagName: string, html: string): HTMLElement {
   document.body.appendChild(element as unknown as Node);
   return element;
 }
+
+Deno.test('defineElement function-mode render reacts to signal reads (#940)', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('fn-reactive');
+  const count = signal(0);
+  defineElement(tagName, {
+    render: () => jsx('output', { children: String(count.value) }),
+  });
+
+  const el = document.createElement(tagName) as HTMLElement;
+  document.body.appendChild(el);
+
+  const shadowRoot = el.shadowRoot as unknown as TestShadowRoot;
+  assertStringIncludes(shadowRoot.innerHTML, '0');
+
+  count.value = 7;
+  await flushEffects();
+  assertStringIncludes(shadowRoot.innerHTML, '7');
+
+  // The tracking effect must be disposed on disconnect: a later signal change
+  // must not re-render a detached element.
+  document.body.removeChild(el);
+  count.value = 9;
+  await flushEffects();
+  assertStringIncludes(shadowRoot.innerHTML, '7');
+});
 
 // ─── 1. Instantiation and base properties ──────────────────────────
 

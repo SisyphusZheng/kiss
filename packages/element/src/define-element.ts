@@ -5,6 +5,7 @@
  */
 import { assertValidTagName } from './internal/core/index.ts';
 import { collectPublicProps } from './internal/core/props-utils.ts';
+import { effect } from './internal/signal/framework.ts';
 import { OpenElement } from './open-element.ts';
 import type { ElementDefinition } from './types.ts';
 import type { VNode } from './internal/protocol/vnode.ts';
@@ -25,10 +26,38 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
   class OpenElementComponent extends OpenElement {
     static override styles = definition.styles;
 
+    #disposeReactiveRender: (() => void) | null = null;
+
     override render(): VNode | null {
       return definition.render(
         collectPublicProps(this as unknown as Record<string, unknown>) as Props,
       );
+    }
+
+    // #940: function-mode render output is plain static text — no data-signal
+    // markers and no signal props — so `count.value` reads inside render() are
+    // invisible to the binding system and the island renders dead. Wrap the
+    // render in a tracking effect: every signal read during render() subscribes
+    // to a full re-render (update()).
+    #installReactiveRender(): void {
+      if (this.#disposeReactiveRender) return;
+      this.#disposeReactiveRender = effect(() => {
+        if (this.isConnected) this.update();
+      });
+    }
+
+    protected override onCsrRendered(): void {
+      this.#installReactiveRender();
+    }
+
+    protected override onDsdHydrated(): void {
+      this.#installReactiveRender();
+    }
+
+    override disconnectedCallback(): void {
+      this.#disposeReactiveRender?.();
+      this.#disposeReactiveRender = null;
+      super.disconnectedCallback();
     }
   }
 
