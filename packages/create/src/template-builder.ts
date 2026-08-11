@@ -54,6 +54,7 @@ const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
   ['app/routes/blog/[slug].tsx', 'app/routes/blog/[slug].tsx'],
   ['app/routes/api/health.ts', 'app/routes/api/health.ts'],
   ['app/islands/my-counter.tsx', 'app/islands/my-counter.tsx'],
+  ['app/islands/only-ticker.tsx', 'app/islands/only-ticker.tsx'],
 ];
 
 function versionTokens(v: ProductVersions): Record<string, string> {

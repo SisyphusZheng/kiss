@@ -162,6 +162,7 @@ Deno.test('starter templates use the supported Element JSX entrypoint', () => {
       'app/routes/blog/[slug].tsx',
       'app/components/app-shell.tsx',
       'app/islands/my-counter.tsx',
+      'app/islands/only-ticker.tsx',
     ]
   ) {
     const source = readTemplate(path);
@@ -178,6 +179,16 @@ Deno.test('starter island binds its signal through hydration markers', () => {
   // signal and reference it by name to stay interactive after load.
   assert(island.includes("registerSignal('count'"), island);
   assert(island.includes("data-signal='count'"), island);
+});
+
+Deno.test('client-only starter island declares a data-signal marker (#939)', () => {
+  const island = readTemplate('app/islands/only-ticker.tsx');
+  // hydrate:'only' ships no DSD template; the CSR render must still activate
+  // the manual data-signal marker, so the island must register its signal and
+  // reference it by name — same contract as the DSD path.
+  assert(island.includes("hydrate: 'only'"), island);
+  assert(island.includes("registerSignal('tick'"), island);
+  assert(island.includes("data-signal='tick'"), island);
 });
 
 Deno.test('starter global style block scopes tokens under :root', () => {

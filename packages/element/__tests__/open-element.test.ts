@@ -1255,6 +1255,40 @@ Deno.test('OpenElement signal hydration binds data-signal-render markers', async
 
 // ─── 8. Event binding and hydration ────────────────────────────────
 
+Deno.test('CSR-only island binds data-signal markers and click events (#939)', async () => {
+  if (!hasDOM) return;
+
+  const tagName = uniqueTag('csr-only');
+  const count = signal(0);
+  class CsrOnlyElement extends OpenElement {
+    constructor() {
+      super();
+      this.registerSignal('count', count as Signal<unknown>);
+    }
+
+    override render(): VNode | null {
+      return jsx('span', {
+        'data-signal': 'count',
+        children: String(count.value),
+      });
+    }
+  }
+  customElements.define(tagName, CsrOnlyElement);
+
+  const el = document.createElement(tagName) as CsrOnlyElement;
+  document.body.appendChild(el); // no DSD template — hydrate:'only' CSR path
+
+  const span = el.shadowRoot?.querySelector('span') as TestElement | null;
+  assertExists(span);
+  assertEquals(span.textContent, '0');
+
+  count.value = 5;
+  await flushEffects();
+  assertEquals(span.textContent, '5');
+
+  document.body.removeChild(el);
+});
+
 Deno.test('OpenElement binds click events in CSR render', () => {
   if (!hasDOM) return;
 

@@ -51,6 +51,15 @@ test.describe('form loop', () => {
 });
 
 test.describe('hydration timing', () => {
+  test('client-only island renders and binds signals without DSD (#939)', async ({ page }) => {
+    await page.goto('/');
+    const ticker = page.locator('only-ticker');
+    await expect(ticker).toBeVisible();
+    const span = ticker.locator('[data-signal="tick"]');
+    await expect(span).toHaveText('0');
+    await ticker.getByRole('button', { name: 'tick' }).click();
+    await expect(span).toHaveText('1');
+  });
   test.skip('click before idle hydration is not lost (capture/replay eval #942)', async ({ page }) => {
     await page.goto('/');
     const counter = page.locator('my-counter');

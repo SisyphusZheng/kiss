@@ -54,6 +54,10 @@ defineElement(tagName, {
           <p class='label'>Live island — hydrates on idle</p>
           <my-counter></my-counter>
         </section>
+        <section class='demo'>
+          <p class='label'>Client-only island — renders without SSR</p>
+          <only-ticker></only-ticker>
+        </section>
         <section class='recent'>
           <h2>Recent posts</h2>
           <p class='sub'>

@@ -29,6 +29,7 @@ import { commitBindings } from './binding-activation.ts';
 import { camelToKebab } from './tag-utils.ts';
 import {
   bindAttr,
+  bindClass,
   bindConditional,
   bindEvent,
   bindHtml,
@@ -41,7 +42,12 @@ import {
   bindText,
 } from './binding-descriptor.ts';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
-import { DATA_SIGNAL } from '../protocol/hydration-markers.ts';
+import {
+  DATA_SIGNAL,
+  DATA_SIGNAL_ATTR,
+  DATA_SIGNAL_CLASS,
+  parseSignalAttrSpec,
+} from '../protocol/hydration-markers.ts';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -214,6 +220,36 @@ export function collectPropBindings(
     }
 
     descriptors.push(staticDescriptor(el, key, resolved));
+  }
+
+  // #939: manual data-signal markers (class pattern) must activate in the CSR
+  // path exactly like the DSD hydration path (collectHydrationBindings): a
+  // data-signal name declared in the props and registered in the registry is a
+  // marker — class toggle, attr binding, or text binding — not a static
+  // attribute. Signal-prop bindings (signalDescriptors) set the marker
+  // attribute programmatically, so the props-declared check below never
+  // double-binds them.
+  const markerName = props[DATA_SIGNAL];
+  if (typeof markerName === 'string' && signalRegistry) {
+    const markerSig = signalRegistry.get(markerName);
+    if (markerSig) {
+      const className = props[DATA_SIGNAL_CLASS];
+      const attrSpec = props[DATA_SIGNAL_ATTR];
+      const hasClass = typeof className === 'string';
+      const hasAttr = typeof attrSpec === 'string';
+      if (hasClass && hasAttr) {
+        descriptors.push(bindClass(el, className, markerSig));
+        const attrNames = parseSignalAttrSpec(attrSpec);
+        if (attrNames.length > 0) descriptors.push(bindAttr(el, attrNames, markerSig));
+      } else if (hasClass) {
+        descriptors.push(bindClass(el, className as string, markerSig));
+      } else if (hasAttr) {
+        const attrNames = parseSignalAttrSpec(attrSpec);
+        if (attrNames.length > 0) descriptors.push(bindAttr(el, attrNames, markerSig));
+      } else {
+        descriptors.push(bindText(el, markerSig));
+      }
+    }
   }
 
   return descriptors;
