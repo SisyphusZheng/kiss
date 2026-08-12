@@ -65,9 +65,10 @@ test.describe('hydration timing', () => {
     // click: the click lands in the pre-hydration window and must be replayed
     // by the capture/replay mechanism once the island hydrates.
     await page.addInitScript(() => {
-      const original = window.requestIdleCallback;
-      window.requestIdleCallback = ((fn: unknown) =>
-        window.setTimeout(() => (fn as () => void)(), 2500)) as typeof original;
+      const original = globalThis.requestIdleCallback;
+      globalThis.requestIdleCallback = ((fn: unknown) =>
+        globalThis.setTimeout(() =>
+          (fn as () => void)(), 2500)) as typeof original;
     });
     await page.goto('/');
     const counter = page.locator('my-counter');

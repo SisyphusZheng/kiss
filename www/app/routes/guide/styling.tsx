@@ -105,7 +105,7 @@ export class GuideStylingPage extends GuidePage {
   static override styles = [guideStyles()];
   static override guide = { content };
 
-  protected override renderAfterCards(t: GuideContent): unknown {
+  protected override renderAfterCards(_t: GuideContent): unknown {
     const zh = contentLocale(this._getLocale('en')) === 'zh';
     return (
       <>
