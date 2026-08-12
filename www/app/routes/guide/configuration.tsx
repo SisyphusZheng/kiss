@@ -13,6 +13,8 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'pipeline-config', label: 'openPipeline()', level: 3 },
       { id: 'full-entry', label: 'openElement() umbrella', level: 3 },
+      { id: 'blog-data', label: 'The blog-data module', level: 3 },
+      { id: 'highlighting', label: 'Code highlighting', level: 3 },
       { id: 'fetch-middleware', label: 'middleware.use', level: 3 },
       { id: 'spa-mode', label: "mode: 'spa'", level: 3 },
       { id: 'spa-vs-ssg', label: 'SPA vs SSG chains', level: 3 },
@@ -31,6 +33,18 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'openElement() umbrella',
         body:
           'Apps that need the content (blog/nav/sitemap) or i18n modules use openElement() from the same package root: it wraps openPipeline and takes the flat option names — routesDir, islandsDir, componentsDir, packageIslands, html, inject, middleware — plus content and i18n module options; omit either module to disable it.',
+      },
+      {
+        id: 'blog-data',
+        title: 'The generated blog-data module',
+        body:
+          "content: { blog: { contentDir, basePath } } compiles every markdown post into a virtual module: import { posts, getPostBySlug } from '@openelement/generated/blog-data'. The runtime module is generated at build/dev time; a checked-in .d.ts stub plus an import-map entry keep deno task check green. frontmatter supports title, date, draft, tags, excerpt, type.",
+      },
+      {
+        id: 'highlighting',
+        title: 'Code-block highlighting (optional)',
+        body:
+          'The blog pipeline renders fenced blocks as <pre><code class="language-x"> with no token-level colors. Wire your own highlighter through the content.blog.markdown hook — the recipe below keeps the default marked behavior and adds hljs spans, which pass the sanitizer allowlist untouched.',
       },
       {
         id: 'fetch-middleware',
@@ -59,6 +73,8 @@ const content: Record<'en' | 'zh', GuideContent> = {
     outline: [
       { id: 'pipeline-config', label: 'openPipeline()', level: 3 },
       { id: 'full-entry', label: 'openElement() 伞入口', level: 3 },
+      { id: 'blog-data', label: 'blog-data 模块', level: 3 },
+      { id: 'highlighting', label: '代码高亮', level: 3 },
       { id: 'fetch-middleware', label: 'middleware.use', level: 3 },
       { id: 'spa-mode', label: "mode: 'spa'", level: 3 },
       { id: 'spa-vs-ssg', label: 'SPA 与 SSG 两链', level: 3 },
@@ -77,6 +93,18 @@ const content: Record<'en' | 'zh', GuideContent> = {
         title: 'openElement() 伞入口',
         body:
           '需要 content（blog/nav/sitemap）或 i18n 模块的应用使用同一包根导出的 openElement()：它包装 openPipeline，采用扁平选项名——routesDir、islandsDir、componentsDir、packageIslands、html、inject、middleware——外加 content 与 i18n 模块选项；省略对应模块即禁用。',
+      },
+      {
+        id: 'blog-data',
+        title: '生成的 blog-data 虚拟模块',
+        body:
+          "content: { blog: { contentDir, basePath } } 把每篇 markdown 文章编译进一个虚拟模块：import { posts, getPostBySlug } from '@openelement/generated/blog-data'。运行时模块在 build/dev 时生成；仓库内一份 .d.ts stub 加 import-map 条目保证 deno task check 通过。frontmatter 支持 title、date、draft、tags、excerpt、type。",
+      },
+      {
+        id: 'highlighting',
+        title: '代码块语法高亮（可选）',
+        body:
+          'blog 管线把围栏代码块渲染为 <pre><code class="language-x">，无 token 级着色。可通过 content.blog.markdown 钩子接入你自己的高亮器——下方配方保留默认 marked 行为并追加 hljs span，这些 span 原样通过 sanitizer 白名单。',
       },
       {
         id: 'fetch-middleware',
@@ -191,6 +219,117 @@ app.mount('#app');`}</code></pre>
           {zh
             ? 'SPA 链上 redirect()/notFound() 仍然有效：redirect 交给 client router 导航，notFound 走页面 error 定义；其余 throw 会被规整为 action 数据。'
             : 'redirect()/notFound() still work on the SPA chain: a redirect navigates the client router, a notFound rides the page error definition; any other throw is normalized into action data.'}
+        </p>
+        <h3>
+          {zh ? 'vite.config.ts —— blog-data 模块' : 'vite.config.ts — the blog-data module (#924)'}
+        </h3>
+        <open-code-block>
+          <pre><code>{`import { defineConfig } from 'vite';
+import { openElement } from '@openelement/adapter-vite';
+
+export default defineConfig({
+  plugins: [
+    openElement({
+      content: {
+        blog: { contentDir: 'content/blog', basePath: '/blog' },
+      },
+    }),
+  ],
+});`}</code></pre>
+        </open-code-block>
+        <p>
+          {zh
+            ? '启动 openElement()（content 模块必需；openPipeline() 不生成 blog-data）。每篇 content/blog/*.md 编译为一个 post；draft 文章在 production 构建中被排除。'
+            : 'openElement() is required (the content module is not part of openPipeline()). Every content/blog/*.md compiles to one post; draft posts are excluded from production builds.'}
+        </p>
+        <h3>
+          {zh ? 'deno.json —— .d.ts stub 与 import-map 条目' : 'deno.json — the .d.ts stub and import-map entry (#924)'}
+        </h3>
+        <open-code-block>
+          <pre><code>{`{
+  "imports": {
+    "@openelement/generated/blog-data": "./app/data/_generated-blog-data.d.ts"
+  }
+}`}</code></pre>
+        </open-code-block>
+        <p>
+          {zh
+            ? '运行时模块由 adapter-vite 在 build/dev 时生成；stub 让 deno task check 在生成文件缺席时仍能类型检查。'
+            : 'The runtime module is generated by adapter-vite during build/dev; the stub keeps deno task check type-correct before the generated file exists.'}
+        </p>
+        <h3>
+          {zh ? 'app/routes/blog/[slug].tsx —— 使用模式' : 'app/routes/blog/[slug].tsx — usage pattern (#924)'}
+        </h3>
+        <open-code-block>
+          <pre><code>{`import { defineElement, definePage, notFound } from '@openelement/app';
+import { getPostBySlug, posts } from '@openelement/generated/blog-data';
+
+export function getStaticPaths(): Array<Record<string, string>> {
+  return posts.map((post) => ({ slug: post.slug }));
+}
+
+defineElement('blog-post-page', {
+  render(props: { slug: string }) {
+    const post = getPostBySlug(props.slug);
+    if (!post) notFound(\`Post not found: \${props.slug}\`);
+    return (
+      <>
+        <h1>{post.frontmatter.title}</h1>
+        {/* post.html is markdown authored in this repo — explicit trust boundary */}
+        <article class='post-body' innerHTML={post.html} trustedHtml></article>
+      </>
+    );
+  },
+});
+
+export default definePage({
+  route: { path: '/blog/:slug' },
+  renderIntent: { mode: 'static', revalidate: false },
+  render({ params }) {
+    return <blog-post-page slug={params.slug} />;
+  },
+});`}</code></pre>
+        </open-code-block>
+        <p>
+          {zh
+            ? 'getStaticPaths() 预渲染每个 slug；innerHTML + trustedHtml 是渲染 markdown HTML 的显式信任边界。'
+            : 'getStaticPaths() pre-renders every slug; innerHTML + trustedHtml is the explicit trust boundary for markdown HTML.'}
+        </p>
+        <h3>
+          {zh ? 'vite.config.ts —— 语法高亮配方（可选，#930）' : 'vite.config.ts — syntax highlighting recipe (optional, #930)'}
+        </h3>
+        <open-code-block>
+          <pre><code>{`import { defineConfig } from 'vite';
+import { openElement } from '@openelement/adapter-vite';
+import { marked } from 'npm:marked@^15';
+import hljs from 'npm:highlight.js@^11';
+
+// Default marked behavior + hljs token spans. hljs output only adds class
+// attributes to <code>, which the sanitizer allowlist keeps.
+const markdown = (content: string) =>
+  marked(content, {
+    async: true,
+    renderer: {
+      code(code: string, lang: string | undefined) {
+        const language = hljs.getLanguage(lang ?? '') ? lang : 'plaintext';
+        const html = hljs.highlight(code, { language }).value;
+        return \`<pre><code class="language-\${language}">\${html}</code></pre>\`;
+      },
+    },
+  });
+
+export default defineConfig({
+  plugins: [
+    openElement({
+      content: { blog: { contentDir: 'content/blog', markdown } },
+    }),
+  ],
+});`}</code></pre>
+        </open-code-block>
+        <p>
+          {zh
+            ? '自定义 renderer 的输出仍会经过同一道 sanitizer 白名单（class 属性保留）。'
+            : 'Custom renderer output still passes the same sanitizer allowlist (class attributes are kept).'}
         </p>
       </>
     );
