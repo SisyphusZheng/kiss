@@ -3429,7 +3429,9 @@ Deno.test('keyed For: fragment items reorder as a unit, order preserved (#918)',
   items.value = [{ id: 2 }, { id: 1 }];
 
   const ids = list.childNodes
-    .filter((n): n is TestElement => 'tagName' in n && n.tagName === 'SPAN' || 'tagName' in n && n.tagName === 'EM')
+    .filter((n): n is TestElement =>
+      'tagName' in n && n.tagName === 'SPAN' || 'tagName' in n && n.tagName === 'EM'
+    )
     .map((n) => n.getAttribute('id') ?? '');
   assertEquals(ids, ['s-2', 'e-2', 's-1', 'e-1'], 'both roots of an item must move together');
   assertEquals(
