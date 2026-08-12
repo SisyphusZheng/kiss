@@ -66,16 +66,70 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
     assert(existsSync(join(WWW_DIST, 'index.html')), 'index.html should exist after build');
   });
 
+  /**
+   * Collect the string literals that immediately follow an import statement
+   * (`import("...")` / `from "..."`) — real module specifiers. Data strings
+   * (e.g. code samples in doc pages like `import { marked } from 'npm:marked@^15'`)
+   * never sit right after `import(`/`from`, so they are not collected; any other
+   * string literal is skipped over whole, so its contents are never scanned.
+   */
+  function importSpecifierStrings(source: string): string[] {
+    const found: string[] = [];
+    let i = 0;
+    while (i < source.length) {
+      const ch = source[i];
+      if (ch !== '"' && ch !== "'" && ch !== '`') {
+        i++;
+        continue;
+      }
+      let j = i - 1;
+      while (j >= 0 && /\s/.test(source[j])) j--;
+      const prefix = source.slice(Math.max(0, j - 8), j + 1);
+      const quote = ch;
+      if (!/import\($/.test(prefix) && !/\bfrom$/.test(prefix)) {
+        i++;
+        while (i < source.length) {
+          if (source[i] === '\\') {
+            i += 2;
+          } else if (source[i] === quote) {
+            i++;
+            break;
+          } else {
+            i++;
+          }
+        }
+        continue;
+      }
+      let k = i + 1;
+      let value = '';
+      while (k < source.length) {
+        if (source[k] === '\\') {
+          value += source[k + 1] ?? '';
+          k += 2;
+        } else if (source[k] === quote) {
+          break;
+        } else {
+          value += source[k];
+          k++;
+        }
+      }
+      found.push(value);
+      i = k + 1;
+    }
+    return found;
+  }
+
   await t.step('server SSR bundle exports route metadata and renderRoute', async () => {
     const serverEntry = join(WWW_DIST, 'server', 'entry.js');
     const serverBundle = Deno.readTextFileSync(serverEntry);
+    const specifiers = importSpecifierStrings(serverBundle);
     assertEquals(
-      /from\s+["']sanitize-html["']/.test(serverBundle),
+      specifiers.includes('sanitize-html'),
       false,
       'SSR bundle must not leak a bare sanitize-html import',
     );
     assertEquals(
-      /(?:from\s+|import\s*\()["']npm:/.test(serverBundle),
+      specifiers.some((s) => s.startsWith('npm:')),
       false,
       'SSR bundle must be portable to Node and must not leak npm: imports',
     );
