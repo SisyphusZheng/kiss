@@ -65,7 +65,16 @@ this at the architecture level.
 6. **Caching (implements the rule-7 no-cache promise).** Every
    request-time response kind (200/422/303/404/500) carries
    `Cache-Control: no-store`; the POST endpoint additionally carries
-   `Vary: x-openelement-action` per item 1.
+   `Vary: x-openelement-action` per item 1. Amended 0.42.0-alpha.16 /
+   #943: a successful GET page response (HTTP 200) is served with
+   `Cache-Control: private, no-cache` instead. The blanket `no-store`
+   made every request-time page ineligible for the back/forward cache,
+   defeating bfcache restore and the UA's native scroll restoration in
+   MPA mode. `private` keeps shared caches out (request-time HTML embeds
+   a per-request CSP nonce when enabled and may embed loader data), and
+   `no-cache` still forces revalidation before any reuse; every
+   error/redirect response (404/500/303/422) and every POST response
+   keeps `no-store`.
 7. **Error-channel parity (amends rule 4).** Thrown values on POST take
    the same nearest-error-boundary channel as GET: the page's `error`
    component renders with status 500, with the bare 500 page as fallback.

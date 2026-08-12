@@ -86,14 +86,24 @@ test.describe('navigation', () => {
     await expect(page.locator('my-counter [data-signal="count"]')).toHaveText('2');
   });
 
-  test.fixme('scroll position is restored on back navigation (#943)', async ({ page }) => {
-    await page.goto('/blog');
-    await page.evaluate(() => globalThis.scrollTo(0, 600));
+  // #943: was fixme-red against alpha.15 — the original repro page was too
+  // short to scroll at the default 720px viewport (max scrollY=0), so the
+  // test could never pass. The framework-side fix is the entry-codegen
+  // relaxation of request-time GET 200s from no-store to private,no-cache
+  // (covered by the adapter-vite request-time parity gate); this test gates
+  // the user-visible outcome — back/forward restores the scroll position —
+  // on a genuinely scrollable starter page (narrow viewport).
+  test('scroll position is restored on back navigation (#943)', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 420 });
+    await page.goto('/blog/welcome');
+    await page.evaluate(() => globalThis.scrollTo(0, 9999));
     await page.waitForTimeout(300);
+    const yBefore = await page.evaluate(() => globalThis.scrollY);
+    expect(yBefore).toBeGreaterThan(100);
     await page.goto('/');
     await page.goBack();
-    await page.waitForLoadState('load');
+    await page.waitForTimeout(300);
     const y = await page.evaluate(() => globalThis.scrollY);
-    expect(y).toBeGreaterThan(400);
+    expect(y).toBeGreaterThan(100);
   });
 });

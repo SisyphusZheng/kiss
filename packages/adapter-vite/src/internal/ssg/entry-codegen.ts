@@ -412,6 +412,12 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
       lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
     }
   }
+  if (!isAction) {
+    // #943: successful GET pages relax no-store to private,no-cache so the UA
+    // can bfcache/scroll-restore them (ADR-0121 section 6 amendment). Every
+    // error/redirect response and every POST response keeps no-store.
+    lines.push(`    c.header('Cache-Control', 'private, no-cache');`);
+  }
   lines.push(
     `    const content = await __renderAppShell(node, c.req.path || ${pathLiteral}, { routeMeta: __routeMetaValue })`,
   );

@@ -859,6 +859,9 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   // #550: request-time responses are never cacheable; POST is negotiated.
   assertStringIncludes(code, "c.header('Cache-Control', 'no-store');");
   assertStringIncludes(code, "c.header('Vary', __actionFetchHeader);");
+  // #943: successful GET pages relax to private,no-cache (bfcache/scroll
+  // restoration); the no-store baseline above still guards every other kind.
+  assertStringIncludes(code, "c.header('Cache-Control', 'private, no-cache');");
   // #558: the JSON error channel scrubs internals in production.
   assertStringIncludes(code, "import.meta.env.PROD ? 'Internal Server Error' : String(err");
   // #568: action POSTs carry a default body limit.

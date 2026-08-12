@@ -113,19 +113,22 @@ Deno.test({
     try {
       const both = { dev: dev.base, build: build.base };
 
-      await t.step('GET /live → 200, loader data present, Cache-Control: no-store', async () => {
-        for (const [name, base] of Object.entries(both)) {
-          const response = await fetch(`${base}/live?x=parity`);
-          assertEquals(response.status, 200, `${name}: GET /live status`);
-          assertEquals(
-            response.headers.get('cache-control'),
-            'no-store',
-            `${name}: GET /live cache-control`,
-          );
-          const body = await response.text();
-          assertStringIncludes(body, 'x=parity', `${name}: GET /live loader data`);
-        }
-      });
+      await t.step(
+        'GET /live → 200, loader data present, Cache-Control: private,no-cache (#943)',
+        async () => {
+          for (const [name, base] of Object.entries(both)) {
+            const response = await fetch(`${base}/live?x=parity`);
+            assertEquals(response.status, 200, `${name}: GET /live status`);
+            assertEquals(
+              response.headers.get('cache-control'),
+              'private, no-cache',
+              `${name}: GET /live cache-control`,
+            );
+            const body = await response.text();
+            assertStringIncludes(body, 'x=parity', `${name}: GET /live loader data`);
+          }
+        },
+      );
 
       await t.step('POST /form empty → 422 + Vary: x-openelement-action', async () => {
         for (const [name, base] of Object.entries(both)) {
