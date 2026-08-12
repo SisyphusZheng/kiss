@@ -69,6 +69,24 @@ function classifyError(
   };
 }
 
+// #922: OpenElementRedirect / OpenElementNotFound (app package) are protocol
+// control flow, not render failures — a notFound() thrown from a page
+// element's render() must reach the request-time handler so it can answer
+// 404. Duck-typed here (same contract as app's isOpenElementRedirect /
+// isOpenElementNotFound) to avoid an element → app dependency.
+export function isControlFlowThrow(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const name = (err as { name?: unknown }).name;
+  if (name === 'OpenElementNotFound') {
+    return (err as { status?: unknown }).status === 404;
+  }
+  if (name === 'OpenElementRedirect') {
+    const status = (err as { status?: unknown }).status;
+    return typeof status === 'number' && status >= 300 && status < 400;
+  }
+  return false;
+}
+
 // Lookup table replaces a multi-branch error-code chain.
 const ERROR_CODES: Record<string, RenderErrorCode> = {
   instantiate: 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED',
@@ -422,6 +440,9 @@ async function renderComponentContent(
     dispatchRenderError(err, hooks);
     return { content: '', hasError: true };
   } catch (err) {
+    // #922: control-flow exceptions (notFound/redirect from a page element's
+    // render) propagate instead of degrading to the empty-element fallback.
+    if (isControlFlowThrow(err)) throw err;
     const classifiedErr = classifyError('render', tagName, err, true);
     collectedErrors.push(classifiedErr);
     dispatchRenderError(classifiedErr, hooks);

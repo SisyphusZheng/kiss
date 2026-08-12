@@ -1,5 +1,5 @@
 /** @jsxImportSource @openelement/element */
-import { defineElement, definePage } from '@openelement/app';
+import { defineElement, definePage, notFound } from '@openelement/app';
 import { StyleSheet } from '@openelement/element';
 import { getPostBySlug, posts } from '@openelement/generated/blog-data';
 
@@ -40,15 +40,11 @@ defineElement(tagName, {
   styles,
   render(props: { slug: string }) {
     const post = getPostBySlug(props.slug);
+    // #922: an unknown slug is a 404, not a 200 "Post not found" page — the
+    // request-time server entry translates the thrown notFound() into the
+    // status code (SEO + cache semantics).
     if (!post) {
-      return (
-        <>
-          <h1>Post not found</h1>
-          <p>
-            <a href='/blog'>← Back to the blog</a>
-          </p>
-        </>
-      );
+      notFound(`Post not found: ${props.slug}`);
     }
     return (
       <>

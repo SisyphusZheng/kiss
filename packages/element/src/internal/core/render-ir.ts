@@ -19,7 +19,7 @@ import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
-import { renderDsd } from './render-dsd.ts';
+import { isControlFlowThrow, renderDsd } from './render-dsd.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { camelToKebab } from './tag-utils.ts';
@@ -377,10 +377,14 @@ async function renderRegisteredCeBranch(
     });
     return trustedHtmlNode(dsdResult.html);
   } catch (err) {
-    createLogger('render').error(
-      `renderDsd failed for registered CE <${tagName}>:` +
-        ` ${formatError(err)}`,
-    );
+    // #922: notFound()/redirect() are expected control flow (the request-time
+    // handler answers 404/3xx) — no error log for them.
+    if (!isControlFlowThrow(err)) {
+      createLogger('render').error(
+        `renderDsd failed for registered CE <${tagName}>:` +
+          ` ${formatError(err)}`,
+      );
+    }
     throw err;
   }
 }

@@ -209,6 +209,8 @@ Deno.test('starter blog routes consume the generated blog-data module', () => {
   assert(slug.includes('getStaticPaths'), slug);
   assert(slug.includes('getPostBySlug'), slug);
   assert(slug.includes('trustedHtml'), slug);
+  // #922: unknown slugs signal 404 through notFound(), not a 200 page.
+  assert(slug.includes('notFound'), slug);
 });
 
 Deno.test('starter --brand token stays aligned with the ui package --violet-6 (#804)', () => {

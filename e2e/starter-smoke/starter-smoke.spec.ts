@@ -48,3 +48,9 @@ test('blog post page renders exactly one H1', async ({ page }) => {
   await page.goto('/blog/welcome');
   await expect(page.locator('h1')).toHaveCount(1);
 });
+
+test('unknown blog slug is a 404 status, not a 200 fallback (#922)', async ({ page }) => {
+  const response = await page.goto('/blog/definitely-not-a-post');
+  expect(response?.status()).toBe(404);
+  await expect(page.locator('h1')).toContainText('404');
+});

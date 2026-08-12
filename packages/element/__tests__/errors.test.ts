@@ -67,3 +67,24 @@ Deno.test('renderDsd routes classified render errors through the telemetry hook 
     resetErrorTelemetryHookForTests();
   }
 });
+
+Deno.test('renderDsd rethrows control-flow throws (notFound/redirect) instead of falling back (#922)', async () => {
+  class NotFoundComponent {
+    static tagName = 'x-notfound';
+    render(): unknown {
+      // Duck-typed OpenElementNotFound (app package class; element must not
+      // depend on app) — same shape the request-time handler recognizes.
+      const err = new Error('nope') as unknown as { name: string; status: number };
+      err.name = 'OpenElementNotFound';
+      err.status = 404;
+      throw err;
+    }
+  }
+
+  try {
+    await renderDsd(NotFoundComponent as unknown as CustomElementConstructor);
+    assertEquals(true, false, 'expected control-flow throw to propagate');
+  } catch (err) {
+    assertEquals((err as { name?: unknown }).name, 'OpenElementNotFound');
+  }
+});

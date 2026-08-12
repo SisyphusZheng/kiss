@@ -395,6 +395,11 @@ evidence.
 
 ## 0.41.0-alpha.16
 
+- Fixes unknown dynamic-route params serving 200: a `notFound()` thrown from
+  a page element's render now propagates through the DSD render chain as
+  protocol control flow (duck-typed alongside redirect) so the request-time
+  server entry answers 404 (#922). The starter blog route now signals
+  not-found this way instead of rendering a 200 "Post not found" page.
 - Aligns SSR and hydration event markers for custom-element hosts and
   `Show`/`For` branches; hydration validates marker counts and branch tokens
   and falls back to client re-render on mismatch.
