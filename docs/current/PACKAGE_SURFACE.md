@@ -41,7 +41,9 @@ layouts use `defineElement` with the same definition object. The signal
 control-flow factory `For` (`<For each={items} key={...}>`, ADR-0059/
 ADR-0124) is exported from the element root since 0.42.0-alpha.16 (#941);
 `Show` stays internal (jsx-runtime) — open an issue if a public consumer
-surface is needed.
+surface is needed. Keyed reconciliation is Solid-style: a surviving key
+keeps its DOM node and its content is frozen per key (item content must be
+signal-driven to update; see ADR-0124 Consequences, #915).
 
 ## Subpath inventory
 

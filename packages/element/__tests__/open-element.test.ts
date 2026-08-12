@@ -2961,6 +2961,47 @@ Deno.test('keyed For: removal disposes only the vanished item', () => {
   assertEquals(after[0], surviving, 'surviving node must be the same DOM node');
 });
 
+// #915: same-key replacement pins Solid-style freeze semantics — a
+// surviving key keeps its exact DOM node and its rendered content is NOT
+// re-rendered from the new item object. Item content must be signal-driven
+// (or driven by key-unique state) to update; this is documented in
+// ADR-0124 Consequences.
+Deno.test('keyed For: same-key replacement keeps frozen per-key content (#915)', () => {
+  if (!hasDOM) return;
+
+  const items = signal([
+    { id: 1, name: 'one' },
+  ]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number; name: string }) =>
+            jsx('li', { id: `item-${item.id}`, children: item.name }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const node = list.querySelector('li');
+
+  items.value = [{ id: 1, name: 'two' }];
+
+  assertEquals(list.querySelectorAll('li').length, 1);
+  assertEquals(list.querySelector('li'), node, 'same-key item must keep its DOM node');
+  assertEquals(
+    node?.textContent,
+    'one',
+    'per-key content is frozen; the replacement object is not re-rendered',
+  );
+});
+
 Deno.test('keyed For: duplicate keys keep last occurrence, dispose the displaced entry', () => {
   if (!hasDOM) return;
 

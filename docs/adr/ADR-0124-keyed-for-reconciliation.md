@@ -46,6 +46,17 @@ option.
 
 - O(n) worst-case (all keys changed) equals today's cost; common edits are
   O(delta) DOM operations with state preservation.
+- **Per-key content freeze (Solid-style)**: a surviving key keeps its exact
+  DOM node and its rendered content is never re-rendered from a replacement
+  object at the same key. `[{id:1,name:'a'}]` → `[{id:1,name:'b'}]` leaves
+  the DOM showing "a". Item content that must update on data change has to
+  be signal-driven (or driven by key-unique state). (#915 locked semantics.)
+- Branch-token signing accepts a related limitation: `forItemSignature`
+  signs items by their `id`/`key` fields (or type+index), not by the
+  `keyFn`. Replacing an item with a same-shaped object that carries no
+  `id`/`key` yields the same SSR branch token, which can mis-bind event
+  markers positionally after a matched hydrate — the SSR/hydration degrade
+  guard catches divergent tokens but not identical ones (#915).
 - Duplicate keys are tolerated (fresh render per duplicate) but
   discouraged; the ADR does not attempt duplicate-key diffing, which
   React-class reconciliation abandoned for the same cost/benefit reason.
