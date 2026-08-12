@@ -133,6 +133,17 @@ Deno.test('sanitizeHtml: rejects vbscript and data:text', () => {
   assertEquals(sanitizeHtml('<a href="data:text/html;base64,PGI+">x</a>'), '<a>x</a>');
 });
 
+Deno.test('sanitizeHtml: data: images only survive on img src', () => {
+  assertEquals(
+    sanitizeHtml('<a href="data:image/png;base64,AAA">x</a>'),
+    '<a>x</a>',
+  );
+  assertEquals(
+    sanitizeHtml('<img src="data:image/png;base64,AAA">'),
+    '<img src="data:image/png;base64,AAA">',
+  );
+});
+
 Deno.test('sanitizeHtml: rejects data:image/svg+xml but keeps raster data URIs', () => {
   assertEquals(
     sanitizeHtml('<img src="data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg==">'),
@@ -285,7 +296,13 @@ Deno.test('isSafeUrl: accepts allowed schemes and relatives', () => {
   assertEquals(isSafeUrl('https://x', SAFE_SCHEMES), true);
   assertEquals(isSafeUrl('/path', SAFE_SCHEMES), true);
   assertEquals(isSafeUrl('mailto:a@b', SAFE_SCHEMES), true);
-  assertEquals(isSafeUrl('data:image/png;base64,AAA', SAFE_SCHEMES), true);
+  assertEquals(isSafeUrl('data:image/png;base64,AAA', SAFE_SCHEMES, true), true);
+});
+
+Deno.test('isSafeUrl: data: images are opt-in per tag', () => {
+  assertEquals(isSafeUrl('data:image/png;base64,AAA', SAFE_SCHEMES), false);
+  assertEquals(isSafeUrl('data:image/png;base64,AAA', SAFE_SCHEMES, true), true);
+  assertEquals(isSafeUrl('data:text/html,<b>x</b>', SAFE_SCHEMES, true), false);
 });
 
 Deno.test('isSafeUrl: rejects executable schemes and smuggling', () => {

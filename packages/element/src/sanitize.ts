@@ -195,7 +195,11 @@ function decodeNumericEntities(value: string): string {
  *   scheme; control characters in the prefix are rejected (the WHATWG URL
  *   parser strips tabs/newlines before resolving — we stay conservative).
  */
-export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): boolean {
+export function isSafeUrl(
+  value: string,
+  allowedSchemes: ReadonlySet<string>,
+  allowDataImages = false,
+): boolean {
   // Named entity for the colon (case-insensitive): browsers decode &colon;
   // in attribute values before URL resolution, so a colon-free string can
   // still become `javascript:...`. Conceptually decode it — the prefix guard
@@ -207,7 +211,7 @@ export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): b
   if (prefix.includes('&')) return false;
   if (!/^[a-zA-Z][a-zA-Z0-9+.-]*$/.test(prefix)) return false;
   if (allowedSchemes.has(prefix)) return true;
-  return prefix === 'data' && DATA_IMAGE_RE.test(decoded);
+  return allowDataImages && DATA_IMAGE_RE.test(decoded);
 }
 
 interface ParsedTag {
@@ -406,7 +410,9 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
       const allowed = perTag?.has(lower) || globalAttrs.has(lower);
       if (!allowed) continue;
       if (lower === 'href' || lower === 'src' || lower === 'cite') {
-        if (!isSafeUrl(rawValue, allowedSchemes)) continue;
+        // data: URIs stay allowed only where browsers render them as images —
+        // an <a href="data:..."> would otherwise be clickable content.
+        if (!isSafeUrl(rawValue, allowedSchemes, tag.name === 'img' && lower === 'src')) continue;
       }
       if (lower === 'target' && rawValue !== '_blank') continue;
       // rel is allow-listed, so `rel="opener"` would survive verbatim and
