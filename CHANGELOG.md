@@ -16,7 +16,37 @@ Current truth lives in:
 Historical changelog details remain available through git history and release
 evidence.
 
-## 0.42.0-alpha.10
+## 0.42.0-alpha.16
+
+Starter-first remediation train (issues #915–#943, final wave): the remaining
+headline gaps from the round-3 audit close, with e2e gates pinning each fix.
+
+- **Island runtime**: `hydrate: 'only'` islands now bind events and signals
+  instead of rendering inert (#939); function-mode `defineIsland` islands
+  re-render on signal change (#940).
+- **Routing/SSR semantics**: `notFound()` from a page render propagates to a
+  real 404 status (#922); unmatched request-time paths render the styled 404
+  page with `Cache-Control: no-store` (#923). Successful GET pages relax from
+  `no-store` to `private, no-cache` so the UA can restore scroll position and
+  use bfcache (#943); POST responses keep `no-store`.
+- **element runtime**: `<style>`/`<script>` text children serialize as raw
+  text — CSS selectors with `>` no longer corrupt (#932); `data:` URIs are
+  allowed on `img src` only, not `href` (#929); keyed `For` semantics locked
+  (a data change without a key change does not re-render, #915), its
+  AbortSignal teardown leak fixed (#916), and the coverage matrix landed
+  (#918).
+- **Breaking (unfrozen alpha surface)**: head-injection sanitization is
+  tightened — `<base>` and `<meta http-equiv=...>` are now stripped from
+  `headExtras`/head fragments (#931). Apps injecting a CSP meta or base tag
+  through `headExtras` must move those into the document shell / SSG
+  postprocess directly.
+- **Starter surface**: the dev task pins the same vite version as the import
+  map (#927); the template ships working blog routes (`content/blog`,
+  `@openelement/generated/blog-data`, styled 404 `app/routes/404.tsx`) — a
+  copyable example for the documented virtual module and the shadow-DOM
+  styling constraint.
+
+
 
 - Cleanup and hardening train (milestone #17, 97/97 issues closed): the
   evidence-chain batch (#646–#653), the P1 correctness batch, the P2 batch and
