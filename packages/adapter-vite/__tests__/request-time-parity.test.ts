@@ -130,6 +130,21 @@ Deno.test({
         },
       );
 
+      await t.step('GET /missing → styled 404 page with a 404 status (#923)', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/missing/route`);
+          assertEquals(response.status, 404, `${name}: GET unmatched status`);
+          assertEquals(
+            response.headers.get('cache-control'),
+            'no-store',
+            `${name}: GET unmatched cache-control`,
+          );
+          const body = await response.text();
+          assertStringIncludes(body, 'styled not found', `${name}: styled 404 page rendered`);
+          assertStringIncludes(body, '404', `${name}: 404 title present`);
+        }
+      });
+
       await t.step('POST /form empty → 422 + Vary: x-openelement-action', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, formBody({ message: '' }));

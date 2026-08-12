@@ -152,6 +152,7 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   // The check task must cover every shipped route (including the dynamic blog
   // route and the API route) plus vite.config.ts, so template regressions
   // surface in the generated app's own `deno task check`.
+  assert(checkTask.includes('app/routes/404.tsx'), checkTask);
   assert(checkTask.includes('app/routes/blog/index.tsx'), checkTask);
   assert(checkTask.includes('app/routes/blog/[slug].tsx'), checkTask);
   assert(checkTask.includes('app/routes/api/health.ts'), checkTask);

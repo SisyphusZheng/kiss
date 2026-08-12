@@ -43,6 +43,7 @@ import {
   renderDataRouteMap,
   renderImport,
   renderMiddleware,
+  renderNotFoundRoute,
   renderPageRoute,
   routeTagNameExpr,
 } from './entry-codegen.ts';
@@ -238,6 +239,12 @@ export function renderEntry(desc: EntryDescriptor): string {
   // --- Action POST handlers ---
   for (const route of desc.pageRoutes) {
     renderActionRoute(lines, route, desc.renderers, docConfig, desc.isSSG);
+  }
+
+  // --- Styled 404 (#923): unmatched paths render the /404 page ---
+  const notFoundPage = desc.pageRoutes.find((r) => r.path === '/404');
+  if (notFoundPage) {
+    renderNotFoundRoute(lines, notFoundPage, desc.renderers, docConfig, desc.isSSG);
   }
 
   // --- /_data endpoint for SPA navigation ---

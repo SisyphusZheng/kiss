@@ -592,6 +592,90 @@ export function renderActionRoute(
   lines.push('');
 }
 
+/**
+ * Generate the Hono notFound fallback (#923): unmatched paths render the
+ * /404 page with a 404 status. Any failure inside the fallback degrades to
+ * the plain status page — the fallback itself never 500s.
+ */
+export function renderNotFoundRoute(
+  lines: string[],
+  route: PageRouteDecl,
+  renderers: RendererDecl[],
+  docConfig: RouteHandlerDocConfig,
+  isSSG: boolean,
+): void {
+  const headExtrasExpr = isSSG
+    ? '__headExtras'
+    : quoteGeneratedJavaScriptValue(docConfig.headExtras);
+  lines.push('// Styled 404 (#923): unmatched paths render the /404 page with a 404 status');
+  lines.push('app.notFound(async (c) => {');
+  lines.push(`  let __tag = ${routeTagNameExpr(route.tagName)};`);
+  lines.push(`  let __page = ${pageDefinitionExpr(route.varName)};`);
+  lines.push(`  let __params = {};`);
+  lines.push(`  let __routeMetaValue = ${routeMetaExpr(route.varName)};`);
+  lines.push(
+    `  const __routeContext = { path: ${quoteGeneratedJavaScriptValue(route.path)}, filePath: ${
+      quoteGeneratedJavaScriptValue(route.filePath)
+    } };`,
+  );
+  lines.push(`  c.header('Cache-Control', 'no-store');`);
+  lines.push(`  try {`);
+  lines.push(`    const __loadContext = {`);
+  lines.push(`      params: __params,`);
+  lines.push(`      request: c.req.raw,`);
+  lines.push(`      env: c.env || {},`);
+  lines.push(
+    `      platform: (() => { try { return c.executionCtx } catch { return undefined } })(),`,
+  );
+  lines.push(`      route: __routeContext,`);
+  lines.push(`    }`);
+  lines.push(
+    `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
+  );
+  lines.push(`    let node = jsx(__tag, ${pagePropsExpr({
+    paramsExpr: '__params',
+    dataExpr: '__data',
+    actionDataExpr: 'undefined',
+    requestExpr: 'c.req.raw',
+    routeExpr: '__routeContext',
+    metaExpr: '__routeMetaValue',
+  })})`);
+  lines.push('');
+  for (const renderer of renderers.filter((r) => rendererScopeMatches(route.path, r.scope))) {
+    lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
+  }
+  lines.push(
+    `    const content = await __renderAppShell(node, ${quoteGeneratedJavaScriptValue(route.path)}, { routeMeta: __routeMetaValue })`,
+  );
+  lines.push(`    return c.html(wrapInDocument(content, {`);
+  for (
+    const optionLine of documentWrapOptionsLines({
+      pageExpr: '__page',
+      titleExpr: `__page.head?.title || ${quoteGeneratedJavaScriptValue(docConfig.title)}`,
+      langExpr: quoteGeneratedJavaScriptValue(docConfig.lang),
+      headExtrasExpr,
+      allowHeadExtrasScripts: docConfig.allowHeadExtrasScripts,
+      cspNonce: true,
+    })
+  ) {
+    lines.push(`      ${optionLine}`);
+  }
+  lines.push(`    }), 404)`);
+  lines.push(`  } catch (err) {`);
+  lines.push(`    if (__isOpenElementRedirect(err)) return c.redirect(err.location, err.status);`);
+  lines.push(`    console.error('[openElement] 404 page render failed:', err);`);
+  lines.push(
+    `    return c.html(wrapInDocument(__statusHtml("404 Not Found", "Not Found"), { title: "404 Not Found", lang: ${
+      quoteGeneratedJavaScriptValue(docConfig.lang)
+    }, headExtras: ${headExtrasExpr}, allowHeadExtrasScripts: ${
+      JSON.stringify(docConfig.allowHeadExtrasScripts)
+    }, cspNonce: c.get('cspNonce') }), 404);`,
+  );
+  lines.push(`  }`);
+  lines.push(`});`);
+  lines.push('');
+}
+
 /** Generate the route-to-module map for /_data endpoint. */
 export function renderDataRouteMap(
   lines: string[],

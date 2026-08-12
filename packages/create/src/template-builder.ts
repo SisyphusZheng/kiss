@@ -47,6 +47,7 @@ const TEMPLATE_FILES: readonly (readonly [string, string])[] = [
   ['vite.config.ts', 'vite.config.ts'],
   ['app/components/app-shell.tsx', 'app/components/app-shell.tsx'],
   ['app/data/_generated-blog-data.d.ts', 'app/data/_generated-blog-data.d.ts'],
+  ['app/routes/404.tsx', 'app/routes/404.tsx'],
   ['app/routes/index.tsx', 'app/routes/index.tsx'],
   ['app/routes/freshness.tsx', 'app/routes/freshness.tsx'],
   ['app/routes/contact.tsx', 'app/routes/contact.tsx'],

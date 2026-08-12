@@ -961,3 +961,25 @@ Deno.test('renderEntry: corsOrigin warning is emitted once per process (#925)', 
     'configResolved + buildStart both render the entry; warning must dedupe',
   );
 });
+
+Deno.test('renderEntry: /404 page route emits the styled notFound fallback (#923)', () => {
+  const routes: RouteEntry[] = [
+    { path: '/', filePath: 'index.ts', type: 'page', varName: 'pageIndex' },
+    { path: '/404', filePath: '404.tsx', type: 'page', varName: 'page404' },
+  ];
+  const code = renderEntry(buildEntryDescriptor(routes));
+  assertStringIncludes(code, 'app.notFound(async (c) => {');
+  assertStringIncludes(code, '// Styled 404 (#923)');
+  assertStringIncludes(code, 'page404.loader === "function"');
+  assertStringIncludes(code, '__renderAppShell(node, c.req.path || "/404",');
+  // Fallback renders with a forced 404 status and degrades to the plain
+  // status page on failure — never a 500 from the fallback itself.
+  assertStringIncludes(code, "wrapInDocument(content, {");
+  assertStringIncludes(code, '}), 404)');
+  assertStringIncludes(code, "__statusHtml(\"404 Not Found\", \"Not Found\")");
+});
+
+Deno.test('renderEntry: no /404 route keeps the bare 404 fallback (#923)', () => {
+  const code = renderEntry(buildEntryDescriptor(basicRoutes));
+  assertFalse(code.includes('app.notFound('));
+});
