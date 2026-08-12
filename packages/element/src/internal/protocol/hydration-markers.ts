@@ -29,16 +29,19 @@ export const DATA_EID = 'data-eid';
  */
 export const DATA_SSR_PROPS = 'data-ssr-props';
 
-/**
- * HTML comment prefix recording the SSR-evaluated branch state of `<Show>`/`<For>`.
- *
- * SSR emits one `<!--oe-branch:...-->` comment per Show/For vnode, ahead of the
- * rendered branch content. Hydration replays the same traversal over the cached
- * VNode and compares token sequences; a divergence means runtime signal values
- * changed between SSR and hydration, so event-marker alignment can no longer be
- * trusted and the scope must fall back to client-side rendering.
- */
+/** HTML comment prefix recording the SSR-evaluated branch state of `<Show>`/`<For>`. */
 export const BRANCH_MARKER_PREFIX = 'oe-branch:';
+
+/**
+ * HTML comment prefix emitted by SSR before each `<For>` item, in traversal
+ * order (value = item ordinal). Hydration (matched path) slices the seeded
+ * list regions between consecutive markers so keyed reconciliation can take
+ * over the existing SSR DOM instead of re-rendering it (#917).
+ */
+export const FOR_ITEM_PREFIX = 'oe-for-item:';
+
+/** HTML comment emitted by SSR after a `<For>`'s last item (region terminator). */
+export const FOR_END_PREFIX = 'oe-for-end';
 
 /** Parsed value of a `data-signal-attr` attribute: a list of attribute names. */
 type SignalAttrSpec = string[];

@@ -11,6 +11,8 @@ import {
   createEventMarkerContext,
   type EventMarkerContext,
   forBranchMarker,
+  forEndMarker,
+  forItemBoundaryMarker,
   serializeEventMarkers,
   showBranchMarker,
 } from './event-marker.ts';
@@ -312,8 +314,12 @@ async function renderForBranch(
   }
   const parts: RenderNode[] = [branch];
   for (let index = 0; index < items.length; index++) {
+    // Per-item boundary marker (protocol: oe-for-item:N) so matched hydration
+    // can seed a keyed list binding over the existing SSR DOM (#917).
+    parts.push(branchCommentNode(forItemBoundaryMarker(index)));
     parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
   }
+  parts.push(branchCommentNode(forEndMarker()));
   return fragmentNode(parts);
 }
 

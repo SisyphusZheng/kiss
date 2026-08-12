@@ -447,6 +447,24 @@ function applyList(
   }
   let keyed: Map<string, KeyedEntry> | null = null;
 
+  // Matched DSD hydration seed (#917): the SSR DOM is already in place, so the
+  // first activation must not render or clear anything. Keyed seeds become
+  // the reconciliation map; unkeyed seeds are tracked for the first clear.
+  let seeded = false;
+  const seed = desc.seed;
+  if (seed) {
+    const flat = seed.flatMap((entry) => entry.nodes);
+    if (keyFn) {
+      keyed = new Map();
+      for (const entry of seed) {
+        if (entry.key === undefined) continue;
+        keyed.set(entry.key, { nodes: entry.nodes, disposers: new Set() });
+      }
+    }
+    if (flat.length > 0) cleanup.setChildren(flat);
+    seeded = true;
+  }
+
   const disposeEntry = (entry: KeyedEntry) => {
     for (const dispose of entry.disposers) {
       try {
@@ -464,6 +482,15 @@ function applyList(
 
   const render = () => {
     const list = unwrapSignalLike(items);
+    if (seeded) {
+      // First activation after matched hydration: the SSR DOM is already in
+      // place and recorded — leave it untouched until the items change. The
+      // signal read above still registers the effect's reactive dependency,
+      // so the first later write re-runs this render.
+      seeded = false;
+      return;
+    }
+    console.log('[dbg917] list render fired, items:', JSON.stringify(list));
     if (!Array.isArray(list)) {
       if (keyed) {
         for (const entry of keyed.values()) disposeEntry(entry);

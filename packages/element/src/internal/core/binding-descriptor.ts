@@ -107,6 +107,13 @@ interface ListBindingDescriptor {
   renderItem: (item: unknown, index: number) => unknown;
   /** Optional key extractor (ADR-0124): enables keyed reconciliation. */
   key?: (item: unknown, index: number) => string | number;
+  /**
+   * DOM nodes already in place at activation (matched DSD hydration, #917).
+   * Keyed bindings seed their reconciliation map from it; unkeyed bindings
+   * skip the initial render and clear the seeded nodes on the first change.
+   * Keyed seeds carry their key; unkeyed seeds are one flat entry.
+   */
+  seed?: Array<{ key?: string; nodes: ChildNode[] }>;
 }
 
 // ─── Event / ref descriptors ──────────────────────────────────────────────────
@@ -213,8 +220,9 @@ export function bindList(
   items: Signal<unknown> | unknown,
   renderItem: (item: unknown, index: number) => unknown,
   key?: (item: unknown, index: number) => string | number,
+  seed?: Array<{ key?: string; nodes: ChildNode[] }>,
 ): ListBindingDescriptor {
-  return { kind: 'list', anchor, items, renderItem, key };
+  return { kind: 'list', anchor, items, renderItem, key, seed };
 }
 
 /** Create a static attribute binding descriptor. */

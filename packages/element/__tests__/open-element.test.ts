@@ -1561,6 +1561,118 @@ Deno.test('DSD hydration degrades when For items change content at the same leng
   document.body.removeChild(el);
 });
 
+// ─── 8b5. Matched hydration keeps keyed/unkeyed lists reactive (#917) ────────
+//
+// The matched path used to bind event markers only — pushing to a For items
+// signal after a successful hydrate did nothing until the scope degraded to a
+// client re-render. SSR now emits per-item boundary markers (oe-for-item:N +
+// oe-for-end) and hydration seeds a list binding over the existing DOM.
+
+Deno.test('keyed For stays reactive after matched hydration (SSR DOM reconciled in place)', async () => {
+  if (!hasDOM) return;
+
+  const items = signal([
+    { id: 'a', label: 'alpha' },
+    { id: 'b', label: 'beta' },
+  ]);
+  const fired: string[] = [];
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: string }) => item.id,
+          children: (item: { id: string; label: string }) =>
+            jsx('button', {
+              onClick: () => fired.push(item.label),
+              children: item.label,
+            }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  assertStringIncludes(ssrHtml, '<!--oe-for-item:0-->');
+  assertStringIncludes(ssrHtml, '<!--oe-for-item:1-->');
+  assertStringIncludes(ssrHtml, '<!--oe-for-end-->');
+  assertStringIncludes(ssrHtml, 'alpha');
+
+  const tagName = uniqueTag('for-keyed-hydrate');
+  class ForKeyedHydrateElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ForKeyedHydrateElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  // Matched hydration must keep the SSR DOM untouched.
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['alpha', 'beta']);
+
+  // Append: only the new key is rendered, survivors are reused in place.
+  items.value = [
+    { id: 'a', label: 'alpha' },
+    { id: 'b', label: 'beta' },
+    { id: 'c', label: 'gamma' },
+  ];
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), [
+    'alpha',
+    'beta',
+    'gamma',
+  ]);
+  const buttons = root.querySelectorAll('button');
+  buttons[2].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['gamma']);
+
+  // Remove the first key: only that item leaves the DOM.
+  items.value = [
+    { id: 'b', label: 'beta' },
+    { id: 'c', label: 'gamma' },
+  ];
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['beta', 'gamma']);
+  root.querySelectorAll('button')[0].dispatchEvent(new Event('click'));
+  assertEquals(fired, ['gamma', 'beta']);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('unkeyed For stays reactive after matched hydration (clear + re-render on change)', async () => {
+  if (!hasDOM) return;
+
+  const items = signal(['one', 'two']);
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          children: (item: string) => jsx('button', { children: item }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+  assertStringIncludes(ssrHtml, '<!--oe-for-item:0-->');
+
+  const tagName = uniqueTag('for-unkeyed-hydrate');
+  class ForUnkeyedHydrateElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ForUnkeyedHydrateElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['one', 'two']);
+
+  items.value = ['three'];
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['three']);
+
+  document.body.removeChild(el);
+});
+
 // ─── 8c. Root-level <Show>/<For> CSR (carried-over edge) ─────────
 //
 // renderToDom() commits binding descriptors before the caller attaches the

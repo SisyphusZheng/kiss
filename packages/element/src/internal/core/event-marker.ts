@@ -10,7 +10,12 @@
  * @module ./event-marker.ts
  */
 
-import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
+import {
+  BRANCH_MARKER_PREFIX,
+  DATA_EID,
+  FOR_END_PREFIX,
+  FOR_ITEM_PREFIX,
+} from '../protocol/hydration-markers.ts';
 
 const EVENT_PROP_RE = /^on[A-Z]/;
 const DASHED_EVENT_PROP_RE = /^on-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -92,6 +97,22 @@ export function forBranchMarker(items: unknown): string {
     signature += `${forItemSignature(items[i], i)};`;
   }
   return `${BRANCH_MARKER_PREFIX}for:${items.length}:${hashBranchSignature(signature)}`;
+}
+
+/**
+ * Per-item boundary marker for a `<For>` list (value = item ordinal). Emitted
+ * by SSR ahead of each item's content; hydration slices seeded list regions
+ * between consecutive markers. Deliberately carries no key material — the
+ * branch token above already guards content parity, and keys are recomputed
+ * client-side from the resolved items + key fn.
+ */
+export function forItemBoundaryMarker(index: number): string {
+  return `${FOR_ITEM_PREFIX}${index}`;
+}
+
+/** Region terminator emitted by SSR after a `<For>`'s last item. */
+export function forEndMarker(): string {
+  return FOR_END_PREFIX;
 }
 
 /**

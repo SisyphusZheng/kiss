@@ -15,12 +15,15 @@ import { applyBindingDescriptor } from './binding-activation.ts';
 import {
   collectDomBranchMarkers,
   collectEventBindings,
+  collectListGroups,
   type EventBindingRecord,
   hydrateEventMarkers,
+  type ListTarget,
 } from './event-hydration.ts';
 import { renderToDom } from './jsx-render-dom.ts';
 import { isVNode } from './vnode.ts';
-import { bindAttr, bindClass, bindRender, bindText } from './binding-descriptor.ts';
+import { bindAttr, bindClass, bindList, bindRender, bindText } from './binding-descriptor.ts';
+import { unwrapSignalLike } from '../signal/index.ts';
 import type { BindingDescriptor, BindingLifecycle, BindingRenderer } from './binding-descriptor.ts';
 import {
   DATA_EID,
@@ -179,7 +182,8 @@ export class HydrationScope {
     const vnode = this.#resolveVNode();
     if (isVNode(vnode)) {
       const expectedBranches: string[] = [];
-      const eventBindings = collectEventBindings(vnode, expectedBranches);
+      const listTargets: ListTarget[] = [];
+      const eventBindings = collectEventBindings(vnode, expectedBranches, listTargets);
       if (!this.#matchesSsrDom(shadowRoot, eventBindings, expectedBranches)) {
         // The SSR DOM cannot be trusted to line up with the VNode-derived
         // bindings (eid count drift or Show/For branch flip between SSR and
@@ -195,6 +199,7 @@ export class HydrationScope {
       }
 
       this.#activateSignalBindings(shadowRoot, registry, lifecycle);
+      this.#activateListBindings(shadowRoot, listTargets, lifecycle);
       hydrateEventMarkers(
         shadowRoot,
         eventBindings,
@@ -226,6 +231,45 @@ export class HydrationScope {
         clearChildren(desc.el);
       }
       applyBindingDescriptor(desc, lifecycle, this.#renderer);
+    }
+  }
+
+  /**
+   * Establish list bindings over the matched SSR DOM (#917): for each `<For>`
+   * the VNode walk found, pair it with its DOM group (anchor comment + per-item
+   * ranges from the oe-for-item markers) and seed a keyed/unkeyed list binding
+   * so later item-signal writes reconcile the existing nodes instead of being
+   * ignored. Without this, lists were inert after matched hydration and only
+   * the degrade path restored reactivity.
+   */
+  #activateListBindings(
+    shadowRoot: ShadowRoot,
+    listTargets: ListTarget[],
+    lifecycle: BindingLifecycle,
+  ): void {
+    if (listTargets.length === 0) return;
+    const groups = collectListGroups(shadowRoot);
+    for (const group of groups) {
+      const target = listTargets[group.branchOrdinal];
+      if (!target) continue;
+      const items = unwrapSignalLike(target.items);
+      const seed: Array<{ key?: string; nodes: ChildNode[] }> = [];
+      if (Array.isArray(items)) {
+        if (target.keyFn) {
+          for (let i = 0; i < items.length; i++) {
+            const range = group.itemRanges[i];
+            if (!range) continue;
+            seed.push({ key: String(target.keyFn(items[i], i)), nodes: range });
+          }
+        } else {
+          seed.push({ nodes: group.itemRanges.flat() });
+        }
+      }
+      applyBindingDescriptor(
+        bindList(group.anchor, target.items, target.renderItem, target.keyFn, seed),
+        lifecycle,
+        this.#renderer,
+      );
     }
   }
 

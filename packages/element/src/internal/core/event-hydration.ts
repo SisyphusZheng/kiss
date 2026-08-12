@@ -12,9 +12,15 @@
 
 import { isForTag, isFragment, isShowTag } from './jsx-runtime.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
+import type { Signal } from '../protocol/signal.ts';
 import { isComponentCtor, isVNode } from './vnode.ts';
 import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
-import { BRANCH_MARKER_PREFIX, DATA_EID } from '../protocol/hydration-markers.ts';
+import {
+  BRANCH_MARKER_PREFIX,
+  DATA_EID,
+  FOR_END_PREFIX,
+  FOR_ITEM_PREFIX,
+} from '../protocol/hydration-markers.ts';
 import { applyBindingDescriptor } from './binding-activation.ts';
 import { bindEvent } from './binding-descriptor.ts';
 import type { EventBindingDescriptor } from './binding-descriptor.ts';
@@ -40,6 +46,29 @@ export interface EventBindingRecord {
 type EventBinding = EventBindingDescriptor;
 
 /**
+ * A `<For>` encountered during the matched VNode walk. `branchOrdinal` is the
+ * position of its branch token in the `branches` array — the same ordinal the
+ * DOM group (collectListGroups) gets, so the two sides can be paired up.
+ */
+export interface ListTarget {
+  branchOrdinal: number;
+  items: Signal<unknown> | unknown;
+  renderItem: RenderFn;
+  keyFn?: (item: unknown, index: number) => string | number;
+}
+
+/**
+ * A parsed `<For>` region in the SSR DOM: the branch comment anchor plus the
+ * per-item boundary marker comments, in order (see collectListGroups).
+ */
+export interface ListDomGroup {
+  branchOrdinal: number;
+  anchor: Comment;
+  /** One node range per item, in order (nested group markers live inside their item's range). */
+  itemRanges: ChildNode[][];
+}
+
+/**
  * Walk a VNode tree in the exact order the SSR renderer (renderToNode) uses and
  * collect event bindings keyed by deterministic marker id (`e0`, `e1`, ...).
  *
@@ -52,6 +81,7 @@ type EventBinding = EventBindingDescriptor;
 export function collectEventBindings(
   node: unknown,
   branches?: string[],
+  listTargets?: ListTarget[],
 ): Map<string, EventBindingRecord[]> {
   const bindings = new Map<string, EventBindingRecord[]>();
   let count = 0;
@@ -81,7 +111,7 @@ export function collectEventBindings(
     }
 
     if (isForTag(tag)) {
-      visitForBranch(props, children, branches, visit);
+      visitForBranch(props, children, branches, listTargets, visit);
       return;
     }
 
@@ -129,11 +159,22 @@ function visitForBranch(
   props: Record<string, unknown> | undefined,
   children: unknown[],
   branches: string[] | undefined,
+  listTargets: ListTarget[] | undefined,
   visit: (value: unknown) => void,
 ): void {
   const items = unwrapSignalLike(props?.each) as unknown[];
   const renderFn = children[0] as RenderFn;
-  branches?.push(forBranchMarker(items));
+  const branchOrdinal = branches?.push(forBranchMarker(items)) ?? 0;
+  if (listTargets && typeof renderFn === 'function') {
+    listTargets.push({
+      branchOrdinal: branchOrdinal - 1,
+      items: props?.each,
+      renderItem: renderFn,
+      keyFn: typeof props?.key === 'function'
+        ? (props.key as (item: unknown, index: number) => string | number)
+        : undefined,
+    });
+  }
   if (Array.isArray(items) && typeof renderFn === 'function') {
     items.forEach((item, i) => visit(renderFn(item, i)));
   }
@@ -244,4 +285,83 @@ export function collectDomBranchMarkers(root: Element | ShadowRoot): string[] {
   };
   walk(root);
   return tokens;
+}
+
+/**
+ * Parse `<For>` regions out of the SSR DOM (matched-hydration path, #917).
+ *
+ * SSR emits one group per For branch: the branch comment anchor, a
+ * `oe-for-item:N` marker ahead of each item's content, and a `oe-for-end`
+ * terminator. Nested For groups (and Show branches, which carry no markers)
+ * are consumed by recursive descent over the flat comment sequence, so each
+ * group's item ranges are self-delimiting — nested markers live inside the
+ * item range that contains them. The branch ordinal (position among ALL
+ * branch tokens, Show included) matches the ordinal ListTarget got from
+ * collectEventBindings, pairing each DOM group with its VNode-side target.
+ */
+export function collectListGroups(root: Element | ShadowRoot): ListDomGroup[] {
+  const flat: Array<{ node: Comment; kind: 'branch' | 'item' | 'end' }> = [];
+  const walk = (node: Element | ShadowRoot | ChildNode): void => {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 8) {
+        const data = (child as Comment).data;
+        if (data.startsWith(BRANCH_MARKER_PREFIX)) {
+          flat.push({ node: child as Comment, kind: 'branch' });
+        } else if (data.startsWith(FOR_ITEM_PREFIX)) {
+          flat.push({ node: child as Comment, kind: 'item' });
+        } else if (data.startsWith(FOR_END_PREFIX)) {
+          flat.push({ node: child as Comment, kind: 'end' });
+        }
+        continue;
+      }
+      walk(child);
+    }
+  };
+  walk(root);
+
+  const groups: ListDomGroup[] = [];
+  let ordinal = 0;
+  let i = 0;
+
+  const sliceBetween = (a: Comment, b: Comment | null): ChildNode[] => {
+    const out: ChildNode[] = [];
+    let n = a.nextSibling;
+    while (n && n !== b) {
+      out.push(n);
+      n = n.nextSibling;
+    }
+    return out;
+  };
+
+  const parseGroup = (): void => {
+    if (i >= flat.length) return;
+    const head = flat[i];
+    const isFor = head.node.data.startsWith(`${BRANCH_MARKER_PREFIX}for:`);
+    ordinal++;
+    i++;
+    if (!isFor) return; // Show branch: no list region; its content parses as the loop continues
+    const anchor = head.node;
+    const markers: Comment[] = [];
+    let end: Comment | null = null;
+    while (i < flat.length) {
+      const inner = flat[i];
+      if (inner.kind === 'item') {
+        markers.push(inner.node);
+        i++;
+      } else if (inner.kind === 'branch') {
+        parseGroup(); // nested group consumed wholly; its nodes stay inside the current item
+      } else {
+        end = inner.node;
+        i++;
+        break;
+      }
+    }
+    const itemRanges = markers.map((marker, index) =>
+      sliceBetween(marker, markers[index + 1] ?? end)
+    );
+    groups.push({ branchOrdinal: ordinal - 1, anchor, itemRanges });
+  };
+
+  while (i < flat.length) parseGroup();
+  return groups;
 }
