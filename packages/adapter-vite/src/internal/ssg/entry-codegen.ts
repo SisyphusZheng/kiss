@@ -940,7 +940,7 @@ export function generateClientEntry(
 // real modules bundled via the virtual:open-client-runtime specifiers — the
 // entry only wires them, there is no inline string copy.
 
-import { createLogger } from '@openelement/element';
+import { createLogger, ensurePreHydrationClickCapture } from '@openelement/element';
 import { createIslandScheduler } from '${VIRTUAL_RUNTIME_SPECIFIERS.scheduler}';
 ${
     options.enhancedForms === true
@@ -949,6 +949,10 @@ ${
       : ''
   }
 var log = createLogger('openElement');
+
+// #942: install the pre-hydration click capture before any island module
+// loads — clicks landing in the hydration window are replayed after hydration.
+ensurePreHydrationClickCapture();
 
 var __map = {
 ${islandMap}

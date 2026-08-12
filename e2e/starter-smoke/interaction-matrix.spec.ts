@@ -60,16 +60,39 @@ test.describe('hydration timing', () => {
     await ticker.getByRole('button', { name: 'tick' }).click();
     await expect(span).toHaveText('1');
   });
-  test.skip('click before idle hydration is not lost (capture/replay eval #942)', async ({ page }) => {
+  test('click before idle hydration is replayed after hydration (#942)', async ({ page }) => {
+    // Hold the idle callback so the island module cannot evaluate before the
+    // click: the click lands in the pre-hydration window and must be replayed
+    // by the capture/replay mechanism once the island hydrates.
+    await page.addInitScript(() => {
+      const original = window.requestIdleCallback;
+      window.requestIdleCallback = ((fn: unknown) =>
+        window.setTimeout(() => (fn as () => void)(), 2500)) as typeof original;
+    });
     await page.goto('/');
     const counter = page.locator('my-counter');
-    // Fire the click before the idle callback has a chance to run.
-    await page.evaluate(async () => {
-      const el = document.querySelector('my-counter')!;
-      el.shadowRoot!.querySelectorAll('button')[1].click();
-      await new Promise((r) => setTimeout(r, 100));
+    await expect(counter).toBeVisible();
+    await page.evaluate(() => {
+      // Islands live inside the page element's DSD shadow root (#562) — a
+      // light-DOM querySelector never sees them.
+      const deep = (root: Document | ShadowRoot): Element | null => {
+        const direct = root.querySelector('my-counter');
+        if (direct) return direct;
+        for (const el of root.querySelectorAll('*')) {
+          const shadow = (el as HTMLElement).shadowRoot;
+          if (shadow) {
+            const found = deep(shadow);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      const el = deep(document);
+      el!.shadowRoot!.querySelectorAll('button')[1].click();
     });
-    await expect(counter.locator('[data-signal="count"]')).toHaveText('1');
+    await expect(counter.locator('[data-signal="count"]')).toHaveText('1', {
+      timeout: 10_000,
+    });
   });
 });
 

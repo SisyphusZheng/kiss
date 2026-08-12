@@ -146,6 +146,12 @@ export {
   hydrateEventMarkers,
 } from './event-hydration.ts';
 export { hasSelfHydrated, HydrationScope, markSelfHydrated } from './hydration-scope.ts';
+// #942: pre-hydration click capture/replay
+export {
+  ensurePreHydrationClickCapture,
+  flushPendingClicks,
+  isPreHydrationClickCaptureInstalled,
+} from './pre-hydration-click.ts';
 // static props runtime
 export {
   disposeStaticProps,

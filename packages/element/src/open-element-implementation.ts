@@ -61,7 +61,7 @@ import type { VNode } from './internal/protocol/vnode.ts';
 import { hasPopulatedShadowRoot } from './internal/core/dsd-shadow-root.ts';
 import type { Signal } from './internal/protocol/signal.ts';
 import { createLogger } from './internal/core/logger.ts';
-import { HydrationScope, markSelfHydrated } from './internal/core/index.ts';
+import { flushPendingClicks, HydrationScope, markSelfHydrated } from './internal/core/index.ts';
 import {
   renderErrorFallback,
   renderIntoLightDom,
@@ -386,6 +386,8 @@ export class OpenElement extends _Base {
         // The element now owns its bindings; client-runtime must not stack a
         // second HydrationScope onto it (double hydration, M4).
         markSelfHydrated(this);
+        // #942: replay clicks that landed in the pre-hydration window.
+        flushPendingClicks(this);
         this.onCsrRendered();
         return;
       }
@@ -395,11 +397,15 @@ export class OpenElement extends _Base {
         // DSD: DOM already correct — bind events via VNode walk
         this._hydrateExistingDom();
         markSelfHydrated(this);
+        // #942: replay clicks that landed in the pre-hydration window.
+        flushPendingClicks(this);
         this.onDsdHydrated();
       } else if (this.shadowRoot) {
         // CSR: full render from VNode
         this._renderIntoShadowRoot();
         markSelfHydrated(this);
+        // #942: replay clicks that landed in the pre-hydration window.
+        flushPendingClicks(this);
         this.onCsrRendered();
       }
     } catch (err) {

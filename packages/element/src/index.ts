@@ -166,4 +166,6 @@ export type {
  * (e.g. innerHTML).
  */
 export { disposeOpenElement, hydrateOpenElement } from './internal/core/client-runtime.ts';
+// #942: click capture/replay across the pre-hydration window (generated client entry).
+export { ensurePreHydrationClickCapture } from './internal/core/pre-hydration-click.ts';
 export type { ClientRuntimeOptions } from './internal/core/client-runtime.ts';
