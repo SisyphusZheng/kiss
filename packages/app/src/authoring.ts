@@ -371,6 +371,11 @@ export function definePage<
 interface IslandConfig {
   ssr?: boolean;
   dsd?: boolean;
+  /**
+   * Hydration strategy — same values as `IslandOptions.strategy` on the
+   * element package (`packages/element/src/internal/protocol/island.ts`):
+   * 'load' | 'idle' | 'visible' | 'only'.
+   */
   hydrate?: HydrationStrategy;
 }
 

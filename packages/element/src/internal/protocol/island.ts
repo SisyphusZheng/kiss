@@ -10,6 +10,10 @@ export interface IslandOptions {
    *   - 'idle': defer to requestIdleCallback (default)
    *   - 'visible': use IntersectionObserver to defer until element is visible
    *   - 'only': client-only render, no DSD/SSR output
+   *
+   * The app package names the same concept `hydrate` in
+   * `defineIslandConfig()` (`packages/app/src/authoring.ts`); both take the
+   * same `HydrationStrategy` values and map to the same runtime option.
    */
   strategy?: HydrationStrategy;
 
