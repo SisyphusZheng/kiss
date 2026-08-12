@@ -632,20 +632,24 @@ export function renderNotFoundRoute(
   lines.push(
     `    const __data = typeof ${route.varName}.loader === "function" ? await ${route.varName}.loader(__loadContext) : undefined`,
   );
-  lines.push(`    let node = jsx(__tag, ${pagePropsExpr({
-    paramsExpr: '__params',
-    dataExpr: '__data',
-    actionDataExpr: 'undefined',
-    requestExpr: 'c.req.raw',
-    routeExpr: '__routeContext',
-    metaExpr: '__routeMetaValue',
-  })})`);
+  lines.push(`    let node = jsx(__tag, ${
+    pagePropsExpr({
+      paramsExpr: '__params',
+      dataExpr: '__data',
+      actionDataExpr: 'undefined',
+      requestExpr: 'c.req.raw',
+      routeExpr: '__routeContext',
+      metaExpr: '__routeMetaValue',
+    })
+  })`);
   lines.push('');
   for (const renderer of renderers.filter((r) => rendererScopeMatches(route.path, r.scope))) {
     lines.push(`    node = await ${renderer.varName}.default.wrap(node, c)`);
   }
   lines.push(
-    `    const content = await __renderAppShell(node, ${quoteGeneratedJavaScriptValue(route.path)}, { routeMeta: __routeMetaValue })`,
+    `    const content = await __renderAppShell(node, ${
+      quoteGeneratedJavaScriptValue(route.path)
+    }, { routeMeta: __routeMetaValue })`,
   );
   lines.push(`    return c.html(wrapInDocument(content, {`);
   for (
