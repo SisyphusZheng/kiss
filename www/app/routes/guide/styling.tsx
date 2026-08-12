@@ -12,7 +12,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
       'Every page renders inside a custom element with declarative shadow DOM — a global stylesheet alone will not reach it.',
     outline: [
       { id: 'boundary', label: 'The shadow boundary', level: 3 },
-      { id: 'crosses', label: "What crosses the boundary", level: 3 },
+      { id: 'crosses', label: 'What crosses the boundary', level: 3 },
       { id: 'blocked', label: 'What does not', level: 3 },
       { id: 'patterns', label: 'The two supported patterns', level: 3 },
       { id: 'custom-props', label: 'Custom properties in practice', level: 3 },
@@ -55,7 +55,8 @@ const content: Record<'en' | 'zh', GuideContent> = {
   zh: {
     breadcrumb: '指南',
     title: '样式',
-    lede: '每个页面都渲染在带 declarative shadow DOM 的 custom element 内部——单靠全局样式表无法触及页面内容。',
+    lede:
+      '每个页面都渲染在带 declarative shadow DOM 的 custom element 内部——单靠全局样式表无法触及页面内容。',
     outline: [
       { id: 'boundary', label: 'shadow 边界', level: 3 },
       { id: 'crosses', label: '什么能穿过边界', level: 3 },
