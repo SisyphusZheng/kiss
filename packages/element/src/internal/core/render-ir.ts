@@ -68,6 +68,15 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ]);
 
+// #932: raw-text elements whose text children are never entity-decoded by
+// the HTML parser. Escape-free serialization is safe for <script> only as
+// long as the content has no `</script` sequence — the author is trusted.
+const RAW_TEXT_ELEMENTS = new Set(['style', 'script']);
+
+function isRawTextElement(tag: string): boolean {
+  return RAW_TEXT_ELEMENTS.has(tag.toLowerCase());
+}
+
 export function textNode(value: unknown): RenderNode {
   return { kind: 'text', value: String(value) };
 }
@@ -171,9 +180,15 @@ export function serializeRenderNode(node: RenderNode): string {
       if (node.voidElement || VOID_ELEMENTS.has(node.tag)) {
         return `<${node.tag}${attrs}${events}>`;
       }
-      return `<${node.tag}${attrs}${events}>${
-        node.children.map(serializeRenderNode).join('')
-      }</${node.tag}>`;
+      // #932: <style>/<script> are raw-text elements — the browser does not
+      // decode entities there, so escaping would corrupt CSS selectors such
+      // as `a > b` and `&`. Their text children serialize verbatim.
+      const children = isRawTextElement(node.tag)
+        ? node.children
+          .map((child) => (child.kind === 'text' ? child.value : serializeRenderNode(child)))
+          .join('')
+        : node.children.map(serializeRenderNode).join('');
+      return `<${node.tag}${attrs}${events}>${children}</${node.tag}>`;
     }
     case 'dsd-host': {
       const attrs = serializeAttrs(node.tag, node.attrs);

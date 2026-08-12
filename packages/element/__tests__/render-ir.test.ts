@@ -142,3 +142,18 @@ Deno.test('SSR render() failure fallback keeps the same bare-tag-with-props shap
   assertEquals(output.errors[0].severity, 'warning');
   assertEquals(output.html, '<x-broken-render label="hi"></x-broken-render>');
 });
+
+Deno.test('raw-text elements serialize text children verbatim (#932)', async () => {
+  const css = '.post-body :not(pre) > code { color: #ff0; } .a & .b { color: red; }';
+  const html = await renderDsdTree(jsx('style', { children: css }));
+  assertEquals(html, `<style>${css}</style>`);
+
+  const script = "const s = 'a < b && c > d';";
+  const scriptHtml = await renderDsdTree(jsx('script', { children: script }));
+  assertEquals(scriptHtml, `<script>${script}</script>`);
+
+  const mixed = await renderDsdTree(
+    jsx('div', { children: [jsx('style', { children: 'a > b' }), 'text > escaped'] }),
+  );
+  assertEquals(mixed, `<div><style>a > b</style>text &gt; escaped</div>`);
+});
