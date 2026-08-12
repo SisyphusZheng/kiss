@@ -47,10 +47,10 @@
           "publicDeclarations": []
         },
         "./sanitize": {
-          "sha256": "896ba7948c15f339433861aacbd6952daf1c7964a7df0cb2733ae9ceeb83af6f",
+          "sha256": "428e91328021179108f53de40ef4cedec0d77fb1059a20830377c693a68e3b06",
           "publicDeclarations": [
             "export interface SanitizeOptions {",
-            "export function isSafeUrl(value: string, allowedSchemes: ReadonlySet<string>): boolean {",
+            "export function isSafeUrl(",
             "export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {"
           ]
         }

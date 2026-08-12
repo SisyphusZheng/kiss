@@ -289,7 +289,9 @@ test.describe('protocol hardening (ADR-0121, 0.42.0-alpha.5)', () => {
 
   test('request-time responses carry no-store; the POST endpoint varies on the action header (#550)', async ({ request }) => {
     const get = await request.get('/live?x=cache');
-    expect(get.headers()['cache-control']).toBe('no-store');
+    // #943: GET 200s are revalidatable (private, no-cache) for bfcache/scroll
+    // restore; no-store is reserved for the POST/error channels below.
+    expect(get.headers()['cache-control']).toBe('private, no-cache');
 
     const post = await request.post('/form', { form: { message: '' } });
     expect(post.status()).toBe(422);

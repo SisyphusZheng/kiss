@@ -190,10 +190,10 @@ const buildEvidence = JSON.parse(Deno.readTextFileSync(buildEvidencePath)) as {
 const manifestRoutes = buildEvidence.manifest?.routes ?? [];
 const pageRoutes = manifestRoutes.filter((route) => route.kind === 'page');
 const apiRoutes = manifestRoutes.filter((route) => route.kind === 'api');
-// Pages: index, freshness, blog index + post (starter blog routes), and
-// contact (0.42 request-time action).
+// Pages: index, freshness, blog index + post (starter blog routes), the
+// contact action page, and the styled 404 (#923).
 if (
-  buildEvidence.success !== true || pageRoutes.length !== 5 || apiRoutes.length !== 1 ||
+  buildEvidence.success !== true || pageRoutes.length !== 6 || apiRoutes.length !== 1 ||
   (buildEvidence.pages ?? []).some((page) => (page.errors?.length ?? 0) > 0)
 ) {
   console.error('Structured build manifest did not contain the expected page/API surface.');

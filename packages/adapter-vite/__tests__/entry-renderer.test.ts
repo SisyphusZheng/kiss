@@ -974,9 +974,9 @@ Deno.test('renderEntry: /404 page route emits the styled notFound fallback (#923
   assertStringIncludes(code, '__renderAppShell(node, c.req.path || "/404",');
   // Fallback renders with a forced 404 status and degrades to the plain
   // status page on failure — never a 500 from the fallback itself.
-  assertStringIncludes(code, "wrapInDocument(content, {");
+  assertStringIncludes(code, 'wrapInDocument(content, {');
   assertStringIncludes(code, '}), 404)');
-  assertStringIncludes(code, "__statusHtml(\"404 Not Found\", \"Not Found\")");
+  assertStringIncludes(code, '__statusHtml("404 Not Found", "Not Found")');
 });
 
 Deno.test('renderEntry: no /404 route keeps the bare 404 fallback (#923)', () => {
