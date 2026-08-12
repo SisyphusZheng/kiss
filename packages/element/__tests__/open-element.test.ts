@@ -3248,6 +3248,197 @@ Deno.test('keyed For: removed item stops reacting even with an abort-signal life
   );
 });
 
+// #918 coverage matrix: nested lists, reorder+bindings, transitions, fragments.
+
+// #918: nested keyed For — inner re-render must stay within its own list,
+// and removing an outer key must cascade disposal into the inner bindings.
+Deno.test('keyed For: nested lists isolate re-renders and cascade disposal (#918)', () => {
+  if (!hasDOM) return;
+
+  const counter = signal(0);
+  const innerA = signal([{ id: 1 }, { id: 2 }]);
+  const innerB = signal([{ id: 2 }]);
+  const groups = signal([
+    { id: 'a', items: innerA },
+    { id: 'b', items: innerB },
+  ]);
+
+  const root = renderToDom(
+    jsx('div', {
+      children: [
+        For({
+          each: groups,
+          key: (g: { id: string }) => g.id,
+          children: (g: { id: string; items: typeof innerA }) =>
+            jsx('ul', {
+              id: `group-${g.id}`,
+              children: [
+                For({
+                  each: g.items,
+                  key: (i: { id: number }) => i.id,
+                  children: () => jsx('li', { children: [jsx('span', { children: counter })] }),
+                }),
+              ],
+            }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  assertEquals(container.querySelectorAll('li').length, 3);
+
+  innerA.value = [{ id: 1 }];
+  const containerEl = container as unknown as TestElement;
+  const groupA = containerEl.querySelectorAll('ul').find(
+    (node) => node.getAttribute('id') === 'group-a',
+  );
+  const groupB = containerEl.querySelectorAll('ul').find(
+    (node) => node.getAttribute('id') === 'group-b',
+  );
+  assertExists(groupA);
+  assertExists(groupB);
+  assertEquals(groupA.querySelectorAll('li').length, 1);
+  assertEquals(
+    groupB.querySelectorAll('li').length,
+    1,
+    'inner re-render must not touch the sibling inner list',
+  );
+
+  const detachedSpan = groupB.querySelector('span');
+  assertExists(detachedSpan);
+  groups.value = [{ id: 'a', items: innerA }];
+  counter.value = 99;
+  assertEquals(
+    detachedSpan.textContent,
+    '0',
+    'outer key removal must cascade disposal into the inner list binding',
+  );
+});
+
+// #918: reorder must preserve per-item signal bindings, not just node
+// identity — the existing reorder test only asserts the DOM node objects.
+Deno.test('keyed For: reorder keeps signal bindings attached to their nodes (#918)', () => {
+  if (!hasDOM) return;
+
+  const item1 = { id: 1, n: signal('one') };
+  const item2 = { id: 2, n: signal('two') };
+  const items = signal([item1, item2]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number; n: typeof item1.n }) =>
+            jsx('li', { id: `item-${item.id}`, children: item.n }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const secondBefore = list.querySelector('#item-2');
+
+  items.value = [item2, item1];
+  item2.n.value = 'TWO';
+
+  const firstAfter = list.querySelectorAll('li')[0];
+  assertEquals(firstAfter.textContent, 'TWO', 'signal binding must move with its node');
+  assertEquals(
+    list.querySelector('#item-2'),
+    secondBefore,
+    'node identity preserved across reorder',
+  );
+});
+
+// #918: empty and non-array transitions must dispose all keyed entries.
+Deno.test('keyed For: empty and non-array transitions clean up fully (#918)', () => {
+  if (!hasDOM) return;
+
+  const counter = signal(0);
+  const items = signal([{ id: 1 }, { id: 2 }]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: () => jsx('li', { children: [jsx('span', { children: counter })] }),
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const detachedSpan = list.querySelectorAll('span')[1];
+
+  items.value = [];
+  assertEquals(list.querySelectorAll('li').length, 0, 'empty list must clear');
+
+  items.value = [{ id: 1 }];
+  assertEquals(list.querySelectorAll('li').length, 1, 're-populate after empty must render');
+
+  items.value = null as never;
+  assertEquals(list.querySelectorAll('li').length, 0, 'non-array value must clear');
+
+  counter.value = 99;
+  assertEquals(
+    detachedSpan.textContent,
+    '0',
+    'entries disposed by the empty transition must not react to later pushes',
+  );
+});
+
+// #918: fragment (multi-root) items must move as a unit on reorder.
+Deno.test('keyed For: fragment items reorder as a unit, order preserved (#918)', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 2 }]);
+
+  const root = renderToDom(
+    jsx('ul', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number }) => [
+            jsx('span', { id: `s-${item.id}` }),
+            jsx('em', { id: `e-${item.id}` }),
+          ],
+        }),
+      ],
+    }),
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const list = container.querySelector('ul') as unknown as TestElement;
+  const span1Before = list.querySelectorAll('span').find(
+    (node) => node.getAttribute('id') === 's-1',
+  );
+  assertExists(span1Before);
+
+  items.value = [{ id: 2 }, { id: 1 }];
+
+  const ids = list.childNodes
+    .filter((n): n is TestElement => 'tagName' in n && n.tagName === 'SPAN' || 'tagName' in n && n.tagName === 'EM')
+    .map((n) => n.getAttribute('id') ?? '');
+  assertEquals(ids, ['s-2', 'e-2', 's-1', 'e-1'], 'both roots of an item must move together');
+  assertEquals(
+    list.querySelectorAll('span').find((node) => node.getAttribute('id') === 's-1'),
+    span1Before,
+    'fragment roots keep node identity across reorder',
+  );
+});
+
 Deno.test('unkeyed For: behavior unchanged (full re-render)', () => {
   if (!hasDOM) return;
 
