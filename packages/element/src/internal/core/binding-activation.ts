@@ -490,7 +490,6 @@ function applyList(
       seeded = false;
       return;
     }
-    console.log('[dbg917] list render fired, items:', JSON.stringify(list));
     if (!Array.isArray(list)) {
       if (keyed) {
         for (const entry of keyed.values()) disposeEntry(entry);
