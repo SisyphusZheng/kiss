@@ -141,6 +141,11 @@ export const navSections = [
         "order": 1
       },
       {
+        "path": "/guide/styling",
+        "label": "Styling",
+        "order": 5
+      },
+      {
         "path": "/guide/core-concepts",
         "label": "Core Concepts",
         "order": 10
