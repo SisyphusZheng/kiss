@@ -140,6 +140,12 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   ).imports;
   assertEquals(denoJson.imports.vite, adapterViteImports.vite);
   assert(/^npm:vite@\d+\.\d+\.\d+$/.test(String(denoJson.imports.vite)), denoJson.imports.vite);
+  // #927: the dev task must pin the same exact vite version as the import
+  // map — a bare npm:vite resolves to latest independently of import maps,
+  // which would run a second vite copy next to the pinned one.
+  const devTask = String(denoJson.tasks.dev || '');
+  const pinnedVite = String(denoJson.imports.vite).match(/@([^@]+)$/)?.[1] ?? '';
+  assert(devTask.includes(`npm:vite@${pinnedVite}`), devTask);
   // #679: the check task must cover the app-shell component template.
   const checkTask = String(denoJson.tasks.check || '');
   assert(checkTask.includes('app/components/app-shell.tsx'), checkTask);

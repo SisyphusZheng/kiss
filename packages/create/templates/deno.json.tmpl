@@ -14,7 +14,7 @@
   "nodeModulesDir": "auto",
   "minimumDependencyAge": 0,
   "tasks": {
-    "dev": "deno run --config deno.json -A npm:vite",
+    "dev": "deno run --config deno.json -A npm:vite@8.0.16",
     "check": "deno check --config deno.json app/routes/index.tsx app/routes/freshness.tsx app/routes/contact.tsx app/routes/blog/index.tsx \"app/routes/blog/[slug].tsx\" app/routes/api/health.ts app/islands/my-counter.tsx app/components/app-shell.tsx vite.config.ts",
     "test": "deno test --config deno.json --permit-no-files",
     "build": "deno run --config deno.json -A npm:@openelement/adapter-vite@${v.adapterVite}/cli/build",
