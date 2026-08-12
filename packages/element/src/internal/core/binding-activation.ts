@@ -22,12 +22,23 @@ const bindingLog = createLogger('binding');
 
 const noop: BindingDispose = () => {};
 
-/** Register a dispose function with the lifecycle. */
+/**
+ * Register a dispose function with the lifecycle.
+ *
+ * #916: register in BOTH places — the abort hook alone orphaned every
+ * effect inside keyed/unkeyed/conditional/signal-render branches whenever
+ * the lifecycle carried a signal: their disposers never landed in the
+ * branch's disposer set, so removing a keyed item (or re-rendering a
+ * branch) disposed nothing and the detached DOM kept reacting to signal
+ * updates. Disposers are idempotent (unsubscribe / removeEventListener /
+ * preact effect dispose), so the eventual double-fire on abort is harmless.
+ */
 function registerDispose(dispose: BindingDispose, lifecycle: BindingLifecycle): void {
   if (lifecycle.signal) {
     lifecycle.signal.addEventListener('abort', dispose, { once: true });
-  } else {
-    lifecycle.disposers?.add(dispose);
+  }
+  if (lifecycle.disposers) {
+    lifecycle.disposers.add(dispose);
   }
 }
 

@@ -895,7 +895,7 @@ const { StyleSheet } = await import('@openelement/element');
 const { renderDsdTree } = await import('@openelement/element');
 const { Show, For } = await import('../src/internal/core/jsx-runtime.ts');
 const { renderToDom } = await import('../src/internal/core/jsx-render-dom.ts');
-
+import type { BindingLifecycle } from '../src/internal/core/binding-descriptor.ts';
 // Deliberately evaluate this after installing the Deno harness. Evaluating it
 // at module load used to make every DOM lifecycle test silently return early.
 const hasDOM = typeof customElements !== 'undefined';
@@ -3197,6 +3197,55 @@ Deno.test('keyed For: removed item effects are disposed, survivors keep theirs',
   assertEquals(clicks, [], 'vanished item effects must be disposed');
   kept.dispatchEvent(new Event('click'));
   assertEquals(clicks, [1], 'surviving item effects must stay bound');
+});
+
+// #916: with a signal-bearing lifecycle, item effects must still land in
+// the item's disposer set — before the fix, registerDispose hooked them to
+// the abort signal ONLY, so disposeEntry ran an empty set on key removal
+// and the detached item DOM kept reacting to signal updates.
+Deno.test('keyed For: removed item stops reacting even with an abort-signal lifecycle (#916)', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 2 }]);
+  const counter = signal(0);
+  const controller = new AbortController();
+  const lifecycle: BindingLifecycle = {
+    disposers: new Set<() => void>(),
+    signal: controller.signal,
+  };
+
+  const root = renderToDom(
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: () => jsx('span', { children: counter }),
+        }),
+      ],
+    }),
+    lifecycle,
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const spans = container.querySelectorAll('span');
+  assertEquals(spans.length, 2);
+  const detached = spans[1] as HTMLElement;
+
+  items.value = [{ id: 1 }];
+  counter.value = 99;
+
+  assertEquals(
+    detached.textContent,
+    '0',
+    'detached item DOM must stop reacting to signal updates after key removal',
+  );
+  assertEquals(
+    lifecycle.disposers?.size ?? -1,
+    1,
+    'only the list binding remains registered',
+  );
 });
 
 Deno.test('unkeyed For: behavior unchanged (full re-render)', () => {
