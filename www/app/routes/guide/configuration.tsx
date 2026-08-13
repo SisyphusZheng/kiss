@@ -26,7 +26,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'pipeline-config',
         title: 'openPipeline()',
         body:
-          'The lean Vite plugin entry, configured in vite.config.ts: openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras }). Defaults: routes app/routes, islands app/islands, components app/components, viewTransition on. headExtras is injected into the document head as-is — controlled content only (0.42 line, unfrozen).',
+          'The lean Vite plugin entry, configured in vite.config.ts: openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras }). Defaults: routes app/routes, islands app/islands, components app/components, viewTransition on. headExtras is sanitized on injection against a head allowlist — only link/meta/noscript/title survive, base and meta http-equiv are stripped, and script tags are rejected outright (use inject.scripts for scripts) (#931; 0.42 line, unfrozen).',
       },
       {
         id: 'full-entry',
@@ -86,7 +86,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'pipeline-config',
         title: 'openPipeline()',
         body:
-          '精简的 Vite 插件入口，在 vite.config.ts 中配置：openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })。默认值：routes 为 app/routes，islands 为 app/islands，components 为 app/components，viewTransition 开启。headExtras 原样注入文档 head——仅限可控内容（0.42 版本线，未冻结）。',
+          '精简的 Vite 插件入口，在 vite.config.ts 中配置：openPipeline({ mode, routes: { dir }, island: { dir, upgradeStrategy }, output: { outDir }, viewTransition, headExtras })。默认值：routes 为 app/routes，islands 为 app/islands，components 为 app/components，viewTransition 开启。headExtras 注入前按 head allowlist 消毒——仅放行 link/meta/noscript/title,base 与 meta http-equiv 被剔除,script 标签直接拒绝(脚本请走 inject.scripts)(#931,0.42 版本线,未冻结)。',
       },
       {
         id: 'full-entry',
