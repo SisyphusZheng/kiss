@@ -36,6 +36,10 @@ will warn or error.
 - `deno.json` - starter authoring imports and build tasks
 - `vite.config.ts` - Vite build configuration with the openElement plugin
 - `app/` - application directory with starter pages and islands
+- `content/blog/` - a sample markdown post wired into the generated blog-data
+  module
+- `public/` - static assets
+- `README.md` and `.gitignore` - starter docs and ignore rules
 
 The generated import map intentionally keeps protocol and build internals out of
 the starter surface. Advanced contracts remain available through the published
