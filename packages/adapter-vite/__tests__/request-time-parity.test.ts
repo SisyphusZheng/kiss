@@ -145,6 +145,57 @@ Deno.test({
         }
       });
 
+      // #943 amendment: the private,no-cache relaxation applies ONLY to a
+      // successful 200 GET. notFound()/redirect()/a throw out of render()
+      // (inside __renderAppShell) must keep the no-store baseline — the
+      // override used to be emitted before the render, leaking onto every
+      // error/redirect response.
+      await t.step('GET /unstable → notFound() during render: 404 keeps no-store', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/unstable`);
+          assertEquals(response.status, 404, `${name}: GET /unstable status`);
+          assertEquals(
+            response.headers.get('cache-control'),
+            'no-store',
+            `${name}: GET /unstable cache-control`,
+          );
+          const body = await response.text();
+          assertStringIncludes(body, 'unstable gone', `${name}: 404 body carries the message`);
+        }
+      });
+
+      await t.step('GET /unstable?kind=redirect → 3xx during render keeps no-store', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/unstable?kind=redirect`, { redirect: 'manual' });
+          assertEquals(response.status, 302, `${name}: GET /unstable?kind=redirect status`);
+          assertEquals(
+            response.headers.get('location'),
+            '/live',
+            `${name}: GET /unstable?kind=redirect location`,
+          );
+          assertEquals(
+            response.headers.get('cache-control'),
+            'no-store',
+            `${name}: GET /unstable?kind=redirect cache-control`,
+          );
+          await response.body?.cancel();
+        }
+      });
+
+      await t.step('GET /boom → 500 error boundary keeps no-store', async () => {
+        for (const [name, base] of Object.entries(both)) {
+          const response = await fetch(`${base}/boom`);
+          assertEquals(response.status, 500, `${name}: GET /boom status`);
+          assertEquals(
+            response.headers.get('cache-control'),
+            'no-store',
+            `${name}: GET /boom cache-control`,
+          );
+          const body = await response.text();
+          assertStringIncludes(body, 'boom boundary', `${name}: error boundary rendered`);
+        }
+      });
+
       await t.step('POST /form empty → 422 + Vary: x-openelement-action', async () => {
         for (const [name, base] of Object.entries(both)) {
           const response = await fetch(`${base}/form`, formBody({ message: '' }));

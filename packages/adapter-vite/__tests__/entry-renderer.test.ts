@@ -870,6 +870,21 @@ Deno.test('renderEntry: ADR-0121 hardening is present in the action codegen', ()
   assertStringIncludes(code, "c.text('Method Not Allowed', 405, { Allow: 'GET, POST' })");
 });
 
+Deno.test('renderEntry: private,no-cache is emitted only after a successful render (#943 amendment)', () => {
+  const desc = buildEntryDescriptor(basicRoutes, {});
+  const code = renderEntry(desc);
+
+  // The Cache-Control relaxation must sit between the shell render and the
+  // response return: emitted BEFORE __renderAppShell it leaks onto the
+  // redirect/notFound/error responses produced by the catch block below.
+  const renderIndex = code.indexOf('await __renderAppShell(node,');
+  const relaxIndex = code.indexOf("c.header('Cache-Control', 'private, no-cache');");
+  const returnIndex = code.indexOf('return c.html(wrapInDocument(content, {', relaxIndex);
+  assertEquals(renderIndex > 0, true, 'shell render must be emitted');
+  assertEquals(relaxIndex > renderIndex, true, 'private,no-cache must follow the shell render');
+  assertEquals(returnIndex > relaxIndex, true, 'private,no-cache must precede the 200 return');
+});
+
 Deno.test('renderEntry: hasAction codegen covers named `actions` exports (#539)', () => {
   const desc = buildEntryDescriptor(basicRoutes, { ssg: true });
   const code = renderEntry(desc);
