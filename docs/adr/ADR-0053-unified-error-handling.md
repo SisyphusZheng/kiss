@@ -339,6 +339,55 @@ The 2026-05-27 audit found 5 empty `catch {}` blocks. All 5 were symptoms of
 - The error flows to the `onError` telemetry hook
 - The component renders a defined fallback (bare tag or `onError()` override)
 
+## Amendment 2026-08-13: Layer 2 — Automatic Capture and Bubbling (#919)
+
+Layer 2 as first shipped (v0.36.0) provided only the explicit half of this
+design: `ErrorBoundary.catchError()` let application code report errors, but
+nothing propagated render failures to a boundary on its own. This amendment
+implements the original Layer 2 design above: `static isErrorBoundary = true`
+(now carried by the `ErrorBoundary` base class, and declarable on any
+`OpenElement`) opts a component into automatic capture of subtree render
+failures, on SSR and on the client.
+
+Semantic decision points:
+
+- **SSR bubbling in a synchronous tree.** The SSR pipeline renders children
+  before the host (children-first `data-eid` ordering), so a boundary's
+  light-DOM subtree is rendered by the boundary's _parent_ render pass, not
+  by the boundary itself. `renderToNode` therefore threads a `boundaryActive`
+  scope: while it is active, a nested `renderDsd()` failure throws a
+  `BoundaryRenderError` (carrying the already-classified, already-dispatched
+  `RenderError`, so telemetry fires exactly once at the origin) instead of
+  emitting the #892 bare tag. The boundary's element branch is the catch
+  point: it aborts child rendering and re-renders the boundary in
+  captured-error state (`renderDsd` with `boundaryError`), substituting the
+  `onError()` fallback for the whole failed subtree. The same scope covers
+  failures inside the boundary's own shadow output. A boundary's fallback
+  renders with the scope closed — if the fallback itself fails, the error
+  bubbles to the next outer boundary, or degrades to the bare tag at the
+  root. `notFound()`/`redirect()` control flow (#922) and the
+  `SSR_NESTING_DEPTH_EXCEEDED` safety limit are never captured; both
+  propagate through boundary scopes unchanged.
+
+- **CSR boundary = composed-tree ancestor walk.** On the client there is no
+  render tree to thread a scope through, so `_renderErrorFallback` walks from
+  the failing element up through `parentNode`, crossing shadow roots via
+  `ShadowRoot.host`, to the nearest ancestor with `isErrorBoundary` and calls
+  its `catchError(error, source)`. The boundary records the failing `source`
+  element; `retry()` clears the error state, re-renders the boundary, and
+  then re-renders the source — a repeated failure bubbles back into
+  `catchError`, so the fallback returns with the retry counted. When no
+  boundary ancestor exists, the per-element `onRenderError()` fallback
+  contract (#662) applies unchanged, and `client-runtime.ts` keeps rethrowing
+  `ELEMENT_UPGRADE_FAILED`.
+
+- **Relationship to the #892 bare-tag fallback.** The bare-tag degradation is
+  the terminal fallback, not a competing one: with no boundary in the
+  ancestor chain, SSR output is byte-for-byte the #892 shape (bare tag with
+  serialized props, `errors[]` entry, recoverable warning). A boundary only
+  changes _where_ the degradation lands — its fallback replaces the failed
+  subtree, and siblings outside the boundary render normally.
+
 ## Related
 
 - ADR-0035: SSG Resilient Rendering (bare-tag fallback precedent)
