@@ -21,7 +21,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'return-channel',
         title: 'fail(): the return channel',
         body:
-          'Expected action failures return, never throw: fail(status, data) requires a 4xx status and produces an OpenElementActionFailure. The server answers 422 with the page re-rendered and the submitted values echoed; the page reads the failure via useActionData(). isActionFailure() is the duck-typed guard (ADR-0120).',
+          'Expected action failures return, never throw: fail(status, data) requires a 4xx status and produces an OpenElementActionFailure. The server answers with the fail() status (conventionally 422), the page re-rendered and the submitted values echoed; the page reads the failure via useActionData(). isActionFailure() is the duck-typed guard (ADR-0120).',
       },
       {
         id: 'throw-channel',
@@ -56,7 +56,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'return-channel',
         title: 'fail()：返回通道',
         body:
-          '预期内的 action 失败走返回而不是抛出：fail(status, data) 要求 4xx 状态码，产出 OpenElementActionFailure。服务器以 422 应答并重渲染页面、回显已提交的值；页面通过 useActionData() 读取失败。isActionFailure() 是鸭子类型守卫（ADR-0120）。',
+          '预期内的 action 失败走返回而不是抛出：fail(status, data) 要求 4xx 状态码，产出 OpenElementActionFailure。服务器以 fail() 的状态码（惯例为 422）应答并重渲染页面、回显已提交的值；页面通过 useActionData() 读取失败。isActionFailure() 是鸭子类型守卫（ADR-0120）。',
       },
       {
         id: 'throw-channel',
