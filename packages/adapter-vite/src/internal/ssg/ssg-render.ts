@@ -273,7 +273,11 @@ export async function ssgRender(
     const urlBaseName = baseName.replace(/\\/g, '/');
     const dirPath = join(outputDir, baseName);
     const indexPath = join(dirPath, 'index.html');
-    if (existsSync(dirPath)) continue;
+    // #956: an existing directory is not a conflict — /blog coexists with the
+    // /blog/<article> pages under it. Skipping on the directory left index
+    // routes flat (blog.html), which dropped them from the sitemap. Only an
+    // existing index.html is a real clash.
+    if (existsSync(indexPath)) continue;
     mkdirSync(dirPath, { recursive: true });
     renameSync(filePath, indexPath);
     log.info(`Clean URL: /${urlBaseName} -> ${urlBaseName}/index.html`);

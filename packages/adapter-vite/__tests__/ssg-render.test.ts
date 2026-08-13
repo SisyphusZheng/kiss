@@ -11,6 +11,7 @@ import {
 import { Hono } from 'hono';
 import { ssgRender } from '../src/internal/ssg/index.ts';
 import { resolveDynamicRoutePath } from '../src/internal/ssg/ssg-helpers.ts';
+import { generateSitemap } from '../src/internal/content/sitemap/generator.ts';
 import type { SsgPageOutput, SsgRenderOptions, SsrBundle } from '../src/internal/ssg/index.ts';
 
 async function pathExists(path: string): Promise<boolean> {
@@ -404,6 +405,44 @@ Deno.test('ssgRender - request-time routes skip prerender and emit server artifa
   assert(serverEntry.includes('createOpenElementNitroHandler'));
   assert(serverEntry.includes("from './entry.js'"));
 
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+});
+
+Deno.test('ssgRender - index route under a directory prefix gets a clean URL and sitemap entry (#956)', async () => {
+  const outDir = './dist-test-ssg-render-blog-index';
+  await Deno.remove(outDir, { recursive: true }).catch(() => {});
+  const app = new Hono();
+  app.get('/', (c) => c.html('<html><body>home</body></html>'));
+  app.get('/blog', (c) => c.html('<html><body>blog index</body></html>'));
+  app.get('/blog/first-post', (c) => c.html('<html><body>first post</body></html>'));
+  const bundle = createMockBundle({
+    default: app,
+    routeInfo: [
+      { path: '/', tagName: 'index-page', isDynamic: false, paramNames: [] },
+      { path: '/blog', tagName: 'blog-index-page', isDynamic: false, paramNames: [] },
+      { path: '/blog/first-post', tagName: 'blog-post-page', isDynamic: false, paramNames: [] },
+    ],
+  });
+
+  await ssgRender(bundle, { ...defaultOptions, outDir }, {
+    onGenerateSitemap: (outputDir) => {
+      generateSitemap(outputDir, { hostname: 'https://example.com' });
+    },
+  });
+
+  // /blog must become blog/index.html even though blog/ already exists for
+  // the article pages — before #956 the flat blog.html survived, which kept
+  // /blog out of the sitemap while /blog/* articles were listed.
+  assert(await pathExists(`${outDir}/blog/index.html`), 'blog index must use a clean URL');
+  assert(!(await pathExists(`${outDir}/blog.html`)), 'flat blog.html must be moved');
+  assert(
+    await pathExists(`${outDir}/blog/first-post/index.html`),
+    'article page must use a clean URL',
+  );
+
+  const sitemap = await Deno.readTextFile(`${outDir}/sitemap.xml`);
+  assertStringIncludes(sitemap, '<loc>https://example.com/blog</loc>');
+  assertStringIncludes(sitemap, '<loc>https://example.com/blog/first-post</loc>');
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 
