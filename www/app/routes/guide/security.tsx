@@ -23,7 +23,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'standing-assumption',
         title: 'Standing assumption',
         body:
-          'Generated action POST handlers ship with a fail-closed same-origin floor (ADR-0121 §12 amendment): a request is rejected when Sec-Fetch-Site is cross-site, or when Origin is present and does not match the request URL origin. Clients that omit both headers (typical non-browser tools) are allowed. Set OPEN_ELEMENT_DISABLE_CSRF=1 on the request env binding (c.env / Nitro runtime env) to opt out. First-party cookie sessions remain 0.44 scope; until then the form/action loop assumes the browser SameSite=Lax default.',
+          'Generated action POST handlers ship with a fail-closed same-origin floor (ADR-0121 §12 amendment): a request is rejected when Sec-Fetch-Site is cross-site, when Origin is present and does not match the request URL origin, or when Sec-Fetch-Site is same-site but Origin is missing or null — a forged header, since browsers always send Origin on POST (#921). Loopback hostname aliases (localhost / 127.0.0.1 / [::1]) count as the same origin (#937). Clients that omit both headers (typical non-browser tools) are allowed. Set OPEN_ELEMENT_DISABLE_CSRF=1 on the request env binding (c.env / Nitro runtime env) to opt out. First-party cookie sessions remain 0.44 scope; until then the form/action loop assumes the browser SameSite=Lax default.',
       },
       {
         id: 'ambient-auth',
@@ -65,7 +65,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'standing-assumption',
         title: '基本假设',
         body:
-          '生成的 action POST 处理器内置 fail-closed 同源地板（ADR-0121 §12 修订文）：当 Sec-Fetch-Site 为 cross-site，或 Origin 存在且与请求 URL 的源不一致时拒绝请求；两个头都省略的客户端（典型的非浏览器工具）放行。在请求 env 绑定（c.env / Nitro runtime env）上设置 OPEN_ELEMENT_DISABLE_CSRF=1 可选择退出。第一方 cookie 会话仍属 0.44 范围；在此之前表单/action 循环假定浏览器 SameSite=Lax 默认值。',
+          '生成的 action POST 处理器内置 fail-closed 同源地板（ADR-0121 §12 修订文）：当 Sec-Fetch-Site 为 cross-site、Origin 存在且与请求 URL 的源不一致,或 Sec-Fetch-Site 为 same-site 但 Origin 缺失或为 null 时拒绝请求——最后一种是伪造头,因为浏览器 POST 总会带 Origin(#921);loopback 主机别名(localhost / 127.0.0.1 / [::1])视同同源(#937)。两个头都省略的客户端（典型的非浏览器工具）放行。在请求 env 绑定（c.env / Nitro runtime env）上设置 OPEN_ELEMENT_DISABLE_CSRF=1 可选择退出。第一方 cookie 会话仍属 0.44 范围；在此之前表单/action 循环假定浏览器 SameSite=Lax 默认值。',
       },
       {
         id: 'ambient-auth',
