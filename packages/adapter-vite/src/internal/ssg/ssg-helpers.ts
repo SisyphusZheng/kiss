@@ -266,7 +266,15 @@ import process from 'node:process';
 import openElementServer, { matchRequestTimeRoute } from './index.js';
 
 const distDir = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
-const port = Number(process.env.OPEN_ELEMENT_PORT || process.env.PORT || 4173);
+const rawPort = process.env.OPEN_ELEMENT_PORT || process.env.PORT || '4173';
+const port = Number(rawPort);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  console.error(
+    'Invalid port "' + rawPort + '": expected an integer between 1 and 65535 ' +
+      '(OPEN_ELEMENT_PORT / PORT).',
+  );
+  process.exit(1);
+}
 const hostname = process.env.OPEN_ELEMENT_HOST || '0.0.0.0';
 
 const MIME = {

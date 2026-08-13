@@ -22,24 +22,28 @@ import { join } from '@std/path';
 const fixtureDir = join(import.meta.dirname!, '../__fixtures__/request-time');
 const serveEntryPath = join(fixtureDir, 'dist/server/serve.mjs');
 
+/** The fixture dist is gitignored — build it on demand (same pattern as
+ *  request-time-parity.test.ts). */
+async function ensureFixtureBuilt(): Promise<void> {
+  try {
+    await Deno.stat(serveEntryPath);
+  } catch {
+    const build = await new Deno.Command(Deno.execPath(), {
+      args: ['task', 'fixture:request-time:build'],
+      cwd: join(fixtureDir, '../../../..'),
+      stdout: 'inherit',
+      stderr: 'inherit',
+    }).output();
+    if (!build.success) throw new Error('fixture build failed');
+  }
+}
+
 Deno.test({
   name: 'standalone serve.mjs: dynamic + static channels over HTTP (#959)',
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
-    // The fixture dist is gitignored — build it on demand (same pattern as
-    // request-time-parity.test.ts).
-    try {
-      await Deno.stat(serveEntryPath);
-    } catch {
-      const build = await new Deno.Command(Deno.execPath(), {
-        args: ['task', 'fixture:request-time:build'],
-        cwd: join(fixtureDir, '../../../..'),
-        stdout: 'inherit',
-        stderr: 'inherit',
-      }).output();
-      if (!build.success) throw new Error('fixture build failed');
-    }
+    await ensureFixtureBuilt();
 
     const probe = Deno.listen({ hostname: '127.0.0.1', port: 0 });
     const freePort = (probe.addr as Deno.NetAddr).port;
@@ -89,5 +93,34 @@ Deno.test({
       }
       await server?.status.catch(() => undefined);
     }
+  },
+});
+
+Deno.test({
+  name: 'standalone serve.mjs: a malformed PORT fails fast with a friendly error',
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    await ensureFixtureBuilt();
+
+    const run = new Deno.Command(Deno.execPath(), {
+      args: [
+        'run',
+        '--config',
+        join(fixtureDir, '../../../../deno.json'),
+        '-A',
+        serveEntryPath,
+      ],
+      cwd: fixtureDir,
+      env: { OPEN_ELEMENT_PORT: 'not-a-port' },
+      stdout: 'null',
+      stderr: 'piped',
+    }).output();
+    const { code, stderr } = await run;
+    assertEquals(code, 1, 'malformed PORT must exit non-zero');
+    assertStringIncludes(
+      new TextDecoder().decode(stderr),
+      'Invalid port "not-a-port"',
+    );
   },
 });
