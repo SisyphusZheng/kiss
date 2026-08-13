@@ -156,6 +156,8 @@ Deno.test('starter pins vite exactly, pins @deno/vite-plugin, and type-checks ap
   assert(checkTask.includes('app/routes/blog/index.tsx'), checkTask);
   assert(checkTask.includes('app/routes/blog/[slug].tsx'), checkTask);
   assert(checkTask.includes('app/routes/api/health.ts'), checkTask);
+  assert(checkTask.includes('app/islands/my-counter.tsx'), checkTask);
+  assert(checkTask.includes('app/islands/only-ticker.tsx'), checkTask);
   assert(checkTask.includes('vite.config.ts'), checkTask);
 });
 
