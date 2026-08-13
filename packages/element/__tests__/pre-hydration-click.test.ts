@@ -125,6 +125,37 @@ Deno.test('click inside an unhydrated shadow host is recorded and replayed once'
   });
 });
 
+Deno.test(
+  'a second flush replays nothing, and replay re-entering the capture listener cannot re-queue',
+  () => {
+    withStubDocument(() => {
+      ensurePreHydrationClickCapture();
+      const host = markerHost();
+      const events = { n: 0 };
+      // Re-entrant fake: the replayed dispatch flows back through the capture
+      // listener, as a real composed event would. Only the flushedHosts guard
+      // stops it from being recorded again — this kills the mutation where
+      // flushPendingClicks drops its flushedHosts.add(host).
+      const button: FakeElementLike = {
+        nodeType: 1,
+        hasAttribute: () => false,
+        dispatchEvent: (event) => {
+          events.n++;
+          captured.captureHandler?.(event);
+          return true;
+        },
+      };
+      captured.captureHandler?.(fakeEvent(button, [button, host]));
+      assertEquals(events.n, 0, 'no replay before hydration');
+
+      flushPendingClicks(host as unknown as Element);
+      assertEquals(events.n, 1, 'replayed exactly once after hydration');
+      flushPendingClicks(host as unknown as Element);
+      assertEquals(events.n, 1, 'second flush has no queue left to replay');
+    });
+  },
+);
+
 Deno.test('clicks after flush are not recorded or replayed', () => {
   withStubDocument(() => {
     ensurePreHydrationClickCapture();
