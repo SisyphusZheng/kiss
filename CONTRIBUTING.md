@@ -72,6 +72,12 @@ deno task build
 For release work, also run the release gates listed in
 `docs/status/STATUS.md`.
 
+A few root tasks are manual tools that no CI job or other task invokes:
+`audit:citations:check` (re-scan archived audit report citations) and
+`test:visual-smoke` / `test:visual-baselines` (opt-in browser visual checks
+via `tools/visual-smoke.ts` and `www/e2e/visual-baselines.spec.ts`). Run
+them by hand when a change touches rendering output or archived audit docs.
+
 ## Code Style
 
 - TypeScript with Deno.
