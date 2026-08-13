@@ -20,18 +20,18 @@ npm install @openelement/ui
 
 ## Components
 
-| Component         | Tag                 | Notes                          |
-| ----------------- | ------------------- | ------------------------------ |
-| `OpenButton`      | `open-button`       | Button component.              |
-| `OpenInput`       | `open-input`        | Input component.               |
-| `OpenCard`        | `open-card`         | Content card.                  |
-| `OpenCodeBlock`   | `open-code-block`   | Code block with copy behavior. |
-| `OpenBadge`       | `open-badge`        | Status/content badge.          |
-| `OpenThemeToggle` | `open-theme-toggle` | Theme switch island.           |
-| `OpenDialog`      | `open-dialog`       | Modal/non-modal dialog.        |
-| `OpenCallout`     | `open-callout`      | Callout/notice box.            |
-| `OpenDropdown`    | `open-dropdown`     | Popover-first dropdown.        |
-| `OpenTabs`        | `open-tabs`         | Accessible tab interface.      |
+| Component         | Tag                 | Notes                                                            |
+| ----------------- | ------------------- | ---------------------------------------------------------------- |
+| `OpenButton`      | `open-button`       | Button component.                                                |
+| `OpenInput`       | `open-input`        | Input component.                                                 |
+| `OpenCard`        | `open-card`         | Content card.                                                    |
+| `OpenCodeBlock`   | `open-code-block`   | Code block with copy behavior; Prism highlighting (host-loaded). |
+| `OpenBadge`       | `open-badge`        | Status/content badge.                                            |
+| `OpenThemeToggle` | `open-theme-toggle` | Theme switch island.                                             |
+| `OpenDialog`      | `open-dialog`       | Modal/non-modal dialog.                                          |
+| `OpenCallout`     | `open-callout`      | Callout/notice box.                                              |
+| `OpenDropdown`    | `open-dropdown`     | Popover-first dropdown.                                          |
+| `OpenTabs`        | `open-tabs`         | Accessible tab interface.                                        |
 
 ## Layering contract
 
@@ -49,6 +49,29 @@ Primitives may consume tokens but never composites. Composites may compose
 primitives and tokens. Application routing and document navigation belongs to
 `@openelement/app`; the site layout component (`OpenLayout`) lives in the
 reference site (`www/app/site-ui/open-layout.tsx`).
+
+## `open-code-block` syntax highlighting
+
+`open-code-block` ships the copy button and Prism token styles, but **no
+tokenizer** — the package is dependency-free and cross-runtime, so the host
+page must load Prism (core plus each language grammar) as a global script.
+On hydration the component looks for `globalThis.Prism`, tokenizes the
+slotted `<pre><code class="language-x">`, and swaps in the highlighted copy
+inside the shadow root. Without Prism it renders plain text with the copy
+button (and retries briefly while deferred scripts load).
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+
+<open-code-block>
+  <pre><code class="language-typescript">const x: number = 1;</code></pre>
+</open-code-block>
+```
+
+The reference site wires the same scripts through the `inject` option in
+`www/vite.config.ts`.
 
 The package vendors an audited subset of Open Props scales at build time —
 dead scales are deleted, so only tokens with a live consumer survive. The

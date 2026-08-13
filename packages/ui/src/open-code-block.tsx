@@ -4,6 +4,12 @@
  *
  * Code block with copy button AND syntax highlighting via Prism.
  *
+ * Highlighting contract: the component does NOT bundle a tokenizer. It
+ * tokenizes the slotted <pre><code> only when the host page has loaded a
+ * global `Prism` (core + the matching language grammar, e.g. from a CDN
+ * <script>). Without Prism the block degrades to plain text with the copy
+ * button — that is expected, not a bug. See README.md for the script recipe.
+ *
  * v0.20.0: Migrated to openElement (Ocean component).
  *   - Self-contained Prism highlighting injected into shadow root
  *   - Copy button uses ElementInternals :state(copied) for CSS feedback

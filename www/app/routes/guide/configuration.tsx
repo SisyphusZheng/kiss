@@ -44,7 +44,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'highlighting',
         title: 'Code-block highlighting (optional)',
         body:
-          'The blog pipeline renders fenced blocks as <pre><code class="language-x"> with no token-level colors. Wire your own highlighter through the content.blog.markdown hook — the recipe below keeps the default marked behavior and adds hljs spans, which pass the sanitizer allowlist untouched.',
+          'The blog pipeline renders fenced blocks as <pre><code class="language-x"> with no token-level colors. Wire your own highlighter through the content.blog.markdown hook — the recipe below keeps the default marked behavior and adds hljs spans, which pass the sanitizer allowlist untouched. For code blocks in routes/pages, wrap them in <open-code-block> (@openelement/ui) — it highlights via a global Prism that your page must load (core + language grammars, e.g. the CDN scripts this site injects in www/vite.config.ts); without Prism you get the copy button but no token spans.',
       },
       {
         id: 'fetch-middleware',
@@ -104,7 +104,7 @@ const content: Record<'en' | 'zh', GuideContent> = {
         id: 'highlighting',
         title: '代码块语法高亮（可选）',
         body:
-          'blog 管线把围栏代码块渲染为 <pre><code class="language-x">，无 token 级着色。可通过 content.blog.markdown 钩子接入你自己的高亮器——下方配方保留默认 marked 行为并追加 hljs span，这些 span 原样通过 sanitizer 白名单。',
+          'blog 管线把围栏代码块渲染为 <pre><code class="language-x">，无 token 级着色。可通过 content.blog.markdown 钩子接入你自己的高亮器——下方配方保留默认 marked 行为并追加 hljs span，这些 span 原样通过 sanitizer 白名单。路由/页面里的代码块则用 <open-code-block>（@openelement/ui）包裹——它通过全局 Prism 高亮，页面必须自行加载 Prism（core + 语言 grammar，参考本站在 www/vite.config.ts 注入的 CDN script）；不加载 Prism 就只有 copy 按钮、没有 token 着色。',
       },
       {
         id: 'fetch-middleware',
