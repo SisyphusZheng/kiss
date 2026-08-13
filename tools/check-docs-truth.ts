@@ -420,7 +420,6 @@ const textScanRoots = [
 ];
 
 const textIgnoredPathParts = [
-  '/__tests__/fixtures/',
   'www/app/data/_generated-blog-data.ts',
   'www/content/blog/',
 ];
