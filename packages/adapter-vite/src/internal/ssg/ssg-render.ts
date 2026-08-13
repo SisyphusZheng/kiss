@@ -29,6 +29,7 @@ import {
   buildIsrManifestEntries,
   findHtmlFiles,
   renderRequestTimeServerModule,
+  renderStandaloneServerModule,
 } from './ssg-helpers.ts';
 import { formatJson } from '@openelement/element/build-utils';
 import { DEFAULT_OUT_DIR } from './../paths.ts';
@@ -207,11 +208,21 @@ export async function ssgRender(
       `export const clientScriptSrc = '';\n`,
       'utf-8',
     );
+    // #959: standalone server entry so the built output runs without the
+    // CLI or a hand-written Nitro bootstrap.
+    writeFileSync(
+      join(serverDir, 'serve.mjs'),
+      renderStandaloneServerModule(),
+      'utf-8',
+    );
     log.info(
       `Request-time server -> ${join(serverDir, 'index.js')} ` +
         `(${requestTimeRoutes.length} route(s): ${
           requestTimeRoutes.map((r) => r.path).join(', ')
         })`,
+    );
+    log.info(
+      `Standalone server -> ${join(serverDir, 'serve.mjs')} (run: node dist/server/serve.mjs)`,
     );
   }
 

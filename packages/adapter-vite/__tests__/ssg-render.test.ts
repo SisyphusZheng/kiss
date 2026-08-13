@@ -405,6 +405,12 @@ Deno.test('ssgRender - request-time routes skip prerender and emit server artifa
   assert(serverEntry.includes('createOpenElementNitroHandler'));
   assert(serverEntry.includes("from './entry.js'"));
 
+  // #959: the standalone server entry is emitted alongside the request-time
+  // entry so the build output runs without the CLI or Nitro wiring.
+  const serveEntry = await Deno.readTextFile(`${outDir}/server/serve.mjs`);
+  assert(serveEntry.includes("from './index.js'"), 'serve.mjs must mount the generated entry');
+  assert(serveEntry.includes("from 'node:http'"), 'serve.mjs must be runtime-self-contained');
+
   await Deno.remove(outDir, { recursive: true }).catch(() => {});
 });
 
