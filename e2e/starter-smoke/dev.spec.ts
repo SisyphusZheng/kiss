@@ -1,5 +1,5 @@
 /**
- * Dev-mode smoke (#951) — runs against `deno task dev` (vite dev server),
+ * Dev-mode smoke (#951/#952) — runs against `deno task dev` (vite dev server),
  * not the production build:
  *
  * #951: dev used to 500 on /client/islands/client.js (the URL was treated as
@@ -7,12 +7,22 @@
  * the generated client entry at that URL and the SSR entry injects the
  * matching <script> tag.
  *
+ * #952: editing a route logged "(ssr) page reload" but SSR kept rendering
+ * the pre-edit module — the dev customElements stub registry outlived module
+ * re-evaluation and every define() guard kept the first class. Re-definition
+ * now wins under the stub, so the next request renders the edited module.
+ *
  * Prerequisites:
  *   deno run -A e2e/starter-smoke/setup.ts
  *
  * Run: deno task test:starter-smoke:dev
  */
 import { expect, test } from '@playwright/test';
+import { readFile, writeFile } from 'node:fs/promises';
+
+const ROUTE_FILE = new URL('./work/my-blog/app/routes/index.tsx', import.meta.url).pathname;
+const H1_ORIGINAL = 'Static pages, alive where it counts';
+const H1_EDITED = 'Static pages, edited in dev mode';
 
 test('dev serves the island client entry (#951)', async ({ request }) => {
   const response = await request.get('/client/islands/client.js');
@@ -32,4 +42,30 @@ test('dev island hydrates and handles clicks (#951)', async ({ page }) => {
   await expect(counter.locator('[data-signal="count"]')).toHaveText('0');
   await counter.getByRole('button', { name: '+' }).click();
   await expect(counter.locator('[data-signal="count"]')).toHaveText('1');
+});
+
+test('route edit invalidates dev SSR output (#952)', async ({ request }) => {
+  const original = await readFile(ROUTE_FILE, 'utf-8');
+  if (!original.includes(H1_ORIGINAL)) {
+    throw new Error(
+      `fixture route does not contain the expected H1 — was setup.ts changed? ` +
+        `Looking for: ${H1_ORIGINAL}`,
+    );
+  }
+  try {
+    await writeFile(ROUTE_FILE, original.replace(H1_ORIGINAL, H1_EDITED));
+    // Vite's watcher + SSR module re-evaluation is asynchronous; poll until
+    // the edited text renders (well beyond the 3s target from the issue).
+    await expect
+      .poll(
+        async () => {
+          const response = await request.get('/');
+          return (await response.text()).includes(H1_EDITED);
+        },
+        { timeout: 15_000, intervals: [250, 500, 1000] },
+      )
+      .toBe(true);
+  } finally {
+    await writeFile(ROUTE_FILE, original);
+  }
 });

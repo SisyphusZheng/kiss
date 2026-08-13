@@ -156,26 +156,50 @@ export function renderEntry(desc: EntryDescriptor): string {
       '// The SSR dom-shim does not make define() idempotent, so we patch it.',
     );
     lines.push(
+      '// #952: under the dev SSR stub (__openElementSsrStub) re-definition must',
+    );
+    lines.push(
+      '// WIN instead — the registry outlives module re-evaluation, so route',
+    );
+    lines.push(
+      '// edits only reach SSR output when define() overwrites the stale class.',
+    );
+    lines.push(
       'const _origDefine = customElements.define.bind(customElements);',
     );
     lines.push('customElements.define = (name, ctor, options) => {');
-    lines.push('  if (customElements.get(name)) return;');
+    lines.push('  if (!customElements.__openElementSsrStub && customElements.get(name)) return;');
     lines.push('  try { _origDefine(name, ctor, options); } catch (e) {');
     lines.push('    if (e && e.name === "NotSupportedError") return;');
     lines.push('    throw e;');
     lines.push('  }');
     lines.push('};');
     lines.push('');
+    // #952: entry-side registration ownership tracking. A route module can
+    // self-register a DIFFERENT class for its tag via defineElement at module
+    // top level (the starter pattern: defineElement('home-page', …) plus a
+    // definePage default export whose render() returns <home-page/>). On dev
+    // re-evaluation that fresh self-registered class must win; overwriting it
+    // with the page class would recurse (its render emits the same tag). The
+    // entry therefore only overwrites registrations it made itself.
+    lines.push('const __entryDefined = customElements.__openEntryDefined ||= new Map();');
+    lines.push('function __registerSsrComponent(tag, ctor) {');
+    lines.push('  const current = customElements.get(tag);');
+    lines.push('  if (customElements.__openElementSsrStub) {');
+    lines.push('    if (current && __entryDefined.get(tag) !== current) return;');
+    lines.push('    customElements.define(tag, ctor);');
+    lines.push('    __entryDefined.set(tag, ctor);');
+    lines.push('    return;');
+    lines.push('  }');
+    lines.push('  if (!current) customElements.define(tag, ctor);');
+    lines.push('}');
+    lines.push('');
   }
   for (const route of desc.pageRoutes) {
     const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
     lines.push(
-      `if (!customElements.get(${tagNameExpr})) {`,
+      `try { __registerSsrComponent(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
     );
-    lines.push(
-      `  try { customElements.define(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
-    );
-    lines.push(`}`);
   }
   lines.push('');
 
@@ -191,12 +215,10 @@ export function renderEntry(desc: EntryDescriptor): string {
     const componentVar = `__island_component_${island.tagName.replace(/-/g, '_')}`;
     lines.push(`const ${componentVar} = ${varName}?.default`);
     lines.push(
-      `if (${componentVar} && !customElements.get(${
-        quoteGeneratedJavaScriptValue(island.tagName)
-      })) {`,
+      `if (${componentVar}) {`,
     );
     lines.push(
-      `  try { customElements.define(${
+      `  try { __registerSsrComponent(${
         quoteGeneratedJavaScriptValue(island.tagName)
       }, ${componentVar}); } catch (err) { console.error('[ssg] Failed to register island custom element <${island.tagName}>:', err); throw err; }`,
     );

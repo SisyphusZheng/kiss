@@ -93,8 +93,16 @@ export function definePreactIsland<
     }
   }
 
-  if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-    customElements.define(tagName, OpenElementPreactIsland);
+  // #952: same dev-SSR re-define semantics as defineElement — the marked SSR
+  // stub registry outlives module re-evaluation, so island edits must
+  // overwrite the stale class; browser registries keep the duplicate guard.
+  const registry = typeof customElements !== 'undefined' ? customElements : undefined;
+  if (
+    registry &&
+    ((registry as { __openElementSsrStub?: boolean }).__openElementSsrStub === true ||
+      !registry.get(tagName))
+  ) {
+    registry.define(tagName, OpenElementPreactIsland);
   }
 
   return OpenElementPreactIsland;

@@ -703,8 +703,8 @@ Deno.test('renderEntry: local island with ssr===true is registered in SSR', () =
   desc.islands[0].ssr = true;
   const code = renderEntry(desc);
 
-  // SSR registration should happen
-  assertStringIncludes(code, 'customElements.define("my-counter"');
+  // SSR registration should happen (#952: via the ownership-tracked helper)
+  assertStringIncludes(code, '__registerSsrComponent("my-counter"');
 });
 
 Deno.test('renderEntry: local island with ssr===false is excluded from SSR registration', () => {
@@ -719,7 +719,7 @@ Deno.test('renderEntry: local island with ssr===false is excluded from SSR regis
   const code = renderEntry(desc);
 
   // SSR registration should NOT happen for ssr:false islands
-  assertFalse(code.includes('customElements.define("client-only-widget"'));
+  assertFalse(code.includes('__registerSsrComponent("client-only-widget"'));
   assertFalse(code.includes('import * as __island_client_only_widget from'));
   // But it should still be in the island map for client-side upgrade
   assertStringIncludes(code, 'client-only-widget');
@@ -751,9 +751,10 @@ Deno.test('renderEntry: package island with ssr===false excluded from SSR but in
   const code = renderEntry(desc);
 
   // v0.17.4: Package islands with ssr:true are now SSR-registered
-  assertStringIncludes(code, 'customElements.define("open-layout"');
+  // (#952: via the ownership-tracked helper)
+  assertStringIncludes(code, '__registerSsrComponent("open-layout"');
   // Package islands with ssr:false remain client-only
-  assertFalse(code.includes('customElements.define("open-widget"'));
+  assertFalse(code.includes('__registerSsrComponent("open-widget"'));
   // But both should be in the island map
   assertStringIncludes(code, '"open-layout": "@openelement/ui/open-layout"');
   assertStringIncludes(code, '"open-widget": "@openelement/ui/open-widget"');

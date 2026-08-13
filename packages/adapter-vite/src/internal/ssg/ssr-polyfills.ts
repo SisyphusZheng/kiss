@@ -40,6 +40,11 @@ export function generateCustomElementsPolyfill(): string {
 if (typeof globalThis.customElements === 'undefined') {
   const __openCeRegistry = new Map();
   globalThis.customElements = {
+    // #952: marks the SSR stub so define() call sites allow re-definition.
+    // The stub persists on globalThis across vite dev module-runner
+    // re-evaluations; without the marker, idempotent-define guards keep the
+    // FIRST registered class forever and route edits never reach SSR output.
+    __openElementSsrStub: true,
     define(name, ctor, _opts) { __openCeRegistry.set(name, ctor); },
     get(name) { return __openCeRegistry.get(name); },
     whenDefined(name) { return Promise.resolve(__openCeRegistry.get(name)); },

@@ -91,7 +91,7 @@
           ]
         },
         "./preact": {
-          "sha256": "dd2ae9324c6826103f7bc836a8356cd841b2c2ecf8fe8f7e77f2fb2a682283ba",
+          "sha256": "0c93ad5f43b172fdebcbbbe86f2853321e2891be80053a44ec158762aa030d70",
           "publicDeclarations": [
             "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
@@ -133,7 +133,7 @@
           "publicDeclarations": []
         },
         "./cli/start": {
-          "sha256": "8910a6f0d8930ba29eed34fff5d02264a5276dca032db062b01c3c681a74d9c0",
+          "sha256": "7e1af051f221f48a97cedcc7cc61b1d6a6634ada97fad0209fc7e8186c552cc3",
           "publicDeclarations": [
             "export function extractServeMode(argv: string[]): { mode: ServeMode; rest: string[] } {"
           ]
@@ -205,7 +205,7 @@
           ]
         },
         "./open-code-block": {
-          "sha256": "1d9ebfeba419e74bcbf24fb98387a6f58e245bb5069ae000d3ac040570663347",
+          "sha256": "2224a14c37727c12c5265d567738aa0b615bc33adb6c14e4c80d4d3c87ffeca7",
           "publicDeclarations": [
             "export const tagName = 'open-code-block';",
             "export class OpenCodeBlock extends OpenElement {"

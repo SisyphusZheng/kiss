@@ -61,8 +61,17 @@ export function defineElement<Props extends Record<string, unknown> = Record<str
     }
   }
 
-  if (typeof customElements !== 'undefined' && !customElements.get(tagName)) {
-    customElements.define(tagName, OpenElementComponent);
+  // #952: the dev SSR registry (adapter-vite's customElements stub, marked
+  // __openElementSsrStub) persists on globalThis across vite module-runner
+  // re-evaluations; re-define so route edits take effect on the next request.
+  // Real browser registries keep the guard: a duplicate define() throws.
+  const registry = typeof customElements !== 'undefined' ? customElements : undefined;
+  if (
+    registry &&
+    ((registry as { __openElementSsrStub?: boolean }).__openElementSsrStub === true ||
+      !registry.get(tagName))
+  ) {
+    registry.define(tagName, OpenElementComponent);
   }
 
   return OpenElementComponent;
