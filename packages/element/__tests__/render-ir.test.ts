@@ -143,6 +143,59 @@ Deno.test('SSR render() failure fallback keeps the same bare-tag-with-props shap
   assertEquals(output.html, '<x-broken-render label="hi"></x-broken-render>');
 });
 
+Deno.test('SSR unserializable public props degrade like a render() failure', async () => {
+  class NullRender {
+    render(): null {
+      return null;
+    }
+  }
+  const circular: Record<string, unknown> = { label: 'hi' };
+  circular.self = circular;
+
+  const circularOutput = await renderDsd('x-circular-props', {
+    componentClass: NullRender as unknown as CustomElementConstructor,
+    props: { circular },
+  });
+  assertEquals(circularOutput.errors.length, 1);
+  assertEquals(circularOutput.errors[0].recoverable, true);
+  assertEquals(circularOutput.metrics.hasError, true);
+  // The unserializable attribute is skipped; the bare tag still renders.
+  assertEquals(circularOutput.html, '<x-circular-props></x-circular-props>');
+
+  const bigintOutput = await renderDsd('x-bigint-props', {
+    componentClass: NullRender as unknown as CustomElementConstructor,
+    props: { count: 1n },
+  });
+  assertEquals(bigintOutput.errors.length, 1);
+  assertEquals(bigintOutput.metrics.hasError, true);
+  assertEquals(bigintOutput.html, '<x-bigint-props count="1"></x-bigint-props>');
+});
+
+Deno.test('SSR a throwing getter prop is skipped, not crashed on', async () => {
+  class NullRender {
+    render(): null {
+      return null;
+    }
+  }
+  const props: Record<string, unknown> = { label: 'hi' };
+  Object.defineProperty(props, 'exploding', {
+    enumerable: true,
+    get() {
+      throw new Error('getter boom');
+    },
+  });
+
+  const output = await renderDsd('x-getter-props', {
+    componentClass: NullRender as unknown as CustomElementConstructor,
+    props,
+  });
+
+  assertEquals(output.errors.length, 0);
+  assertEquals(output.metrics.hasError, false);
+  assertStringIncludes(output.html, '<x-getter-props');
+  assertEquals(output.html.includes('exploding'), false);
+});
+
 Deno.test('raw-text elements serialize text children verbatim (#932)', async () => {
   const css = '.post-body :not(pre) > code { color: #ff0; } .a & .b { color: red; }';
   const html = await renderDsdTree(jsx('style', { children: css }));

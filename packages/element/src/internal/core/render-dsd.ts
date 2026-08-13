@@ -357,17 +357,46 @@ export async function renderDsd(
     });
   }
 
-  const html = wrapDsdOutput({
-    tagName,
-    props,
-    content: outcome.content,
-    styleCss,
-    layer: resolvedLayer,
-    sourceStr,
-    dsdOptions: options.dsdOptions,
-    lightDom: options.lightDom,
-    hostEventAttrs: options.hostEventAttrs,
-  });
+  let html: string;
+  try {
+    html = wrapDsdOutput({
+      tagName,
+      props,
+      content: outcome.content,
+      styleCss,
+      layer: resolvedLayer,
+      sourceStr,
+      dsdOptions: options.dsdOptions,
+      lightDom: options.lightDom,
+      hostEventAttrs: options.hostEventAttrs,
+    });
+  } catch (err) {
+    // Public-prop serialization failures (circular structure, BigInt): the
+    // island could never hydrate, so this is a render failure — take the
+    // same path as a render() throw: bubble to an active boundary scope,
+    // else degrade to the bare tag.
+    if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
+    const classifiedErr = recordCaughtError(err, tagName, collectedErrors, hooks);
+    if (options.throwOnRenderError) {
+      throw err instanceof BoundaryRenderError ? err : new BoundaryRenderError(classifiedErr);
+    }
+    const attrs = serializeAttrs(tagName, props);
+    const fallbackResult: RenderOutput = {
+      html: `<${tagName}${attrs}></${tagName}>`,
+      errors: collectedErrors,
+      metrics: {
+        tagName,
+        renderTimeMs: safeNow() - startTime,
+        templateSize: 0,
+        layer: 'dsd-static',
+        hasError: true,
+        nestingDepth,
+      },
+      hydrationHints: collectedHints,
+    };
+    callAfterRenderHook(hooks, fallbackResult);
+    return fallbackResult;
+  }
 
   const output: RenderOutput = {
     html,

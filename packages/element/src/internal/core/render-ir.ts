@@ -161,7 +161,14 @@ export function serializeAttrs(tag: string, props: Record<string, unknown>): str
     }
 
     if (typeof resolved === 'object') {
-      result += ` ${attrName}="${escapeAttr(JSON.stringify(resolved))}"`;
+      // Unserializable values (circular structure, BigInt) must not take the
+      // serializer down — serializeAttrs is also the render-failure fallback
+      // path. Skip the attribute; the caller's error reporting already ran.
+      try {
+        result += ` ${attrName}="${escapeAttr(JSON.stringify(resolved))}"`;
+      } catch {
+        continue;
+      }
     } else {
       result += ` ${attrName}="${escapeAttr(String(resolved))}"`;
     }

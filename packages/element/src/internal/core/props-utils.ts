@@ -16,17 +16,26 @@
  */
 
 import { isDangerousKey } from './security.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
+
+const log = createLogger('props-utils');
 
 /**
  * Collect all public (non-internal) own properties from a host object.
  * Keys starting with `__openElement` are framework-internal and excluded.
- * Uses Reflect.get for safe access (respects getters without throwing).
+ * Uses Reflect.get for safe access (respects getters); a getter that throws
+ * is skipped with a warning so one bad prop cannot take the tree down.
  */
 export function collectPublicProps(host: object): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   for (const key of Object.keys(host)) {
     if (key.startsWith('__openElement')) continue;
-    props[key] = Reflect.get(host, key);
+    try {
+      props[key] = Reflect.get(host, key);
+    } catch (err) {
+      log.warn(`Skipping throwing getter prop "${key}": ${formatError(err)}`);
+    }
   }
   return normalizePublicProps(props);
 }

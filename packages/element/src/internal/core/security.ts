@@ -82,11 +82,18 @@ export function injectPropsSafe(
   tagName: string,
   log: { warn(message: string): void; debug(message: string): void } = _securityLog,
 ): void {
-  for (const [key, value] of Object.entries(props)) {
+  for (const key of Object.keys(props)) {
     if (isDangerousKey(key)) {
       log.warn(
         `Skipping dangerous prop key "${key}" on <${tagName}> - potential prototype pollution`,
       );
+      continue;
+    }
+    let value: unknown;
+    try {
+      value = Reflect.get(props, key);
+    } catch (e) {
+      log.debug(`Skipping throwing getter prop "${key}" on <${tagName}>: ${formatError(e)}`);
       continue;
     }
     try {
