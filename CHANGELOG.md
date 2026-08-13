@@ -40,6 +40,11 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
   `headExtras`/head fragments (#931). Apps injecting a CSP meta or base tag
   through `headExtras` must move those into the document shell / SSG
   postprocess directly.
+- **Breaking (alpha surface, ADR-0127)**: element's `IslandOptions.strategy`
+  is renamed to `hydrate` (#920), matching the app-side
+  `defineIslandConfig({ hydrate })` name; the old name is deleted with no
+  alias. Migration: rename `strategy` → `hydrate` at each element
+  `defineIsland()` call site. App-side authoring is unaffected.
 - **Starter surface**: the dev task pins the same vite version as the import
   map (#927); the template ships working blog routes (`content/blog`,
   `@openelement/generated/blog-data`, styled 404 `app/routes/404.tsx`) — a

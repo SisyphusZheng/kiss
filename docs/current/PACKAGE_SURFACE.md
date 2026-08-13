@@ -132,6 +132,12 @@ semantics (0.42 WC Application Loop and 0.44 Production Runtime scope), the
 internal in the map above. Post-freeze changes to the frozen surface require
 a major-version ADR.
 
+Frozen-surface change on the alpha line (ADR-0127, #920): element's
+`IslandOptions.strategy` was renamed to `hydrate` in 0.42.0-alpha.16,
+matching the app-side `defineIslandConfig({ hydrate })` name; the old name
+was deleted with no alias. Migration: rename the option at each
+`defineIsland()` call site (`strategy` → `hydrate`).
+
 ### 0.42 line additions (unfrozen until the 0.42.0 stable decision)
 
 - `definePage({ renderIntent: { mode } })`: `'static'` (default, prerendered) / `'dynamic'` (per-request; the `'auto'` alias was removed in alpha.13, #609)
