@@ -21,6 +21,9 @@ const baseURL = `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   testDir: '.',
   testMatch: '*.spec.ts',
+  // dev.spec.ts targets the vite dev server (playwright.dev.config.ts), not
+  // the production `start` server this config boots.
+  testIgnore: 'dev.spec.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

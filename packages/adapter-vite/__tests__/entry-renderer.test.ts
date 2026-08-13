@@ -879,7 +879,10 @@ Deno.test('renderEntry: private,no-cache is emitted only after a successful rend
   // redirect/notFound/error responses produced by the catch block below.
   const renderIndex = code.indexOf('await __renderAppShell(node,');
   const relaxIndex = code.indexOf("c.header('Cache-Control', 'private, no-cache');");
-  const returnIndex = code.indexOf('return c.html(wrapInDocument(content, {', relaxIndex);
+  const returnIndex = code.indexOf(
+    'return c.html(__withDevClientScript(wrapInDocument(content, {',
+    relaxIndex,
+  );
   assertEquals(renderIndex > 0, true, 'shell render must be emitted');
   assertEquals(relaxIndex > renderIndex, true, 'private,no-cache must follow the shell render');
   assertEquals(returnIndex > relaxIndex, true, 'private,no-cache must precede the 200 return');

@@ -424,7 +424,10 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
     // no-store baseline.
     lines.push(`    c.header('Cache-Control', 'private, no-cache');`);
   }
-  lines.push(`    return c.html(wrapInDocument(content, {`);
+  // #951: in dev the island client script is injected here (prod injects the
+  // built entry post-build); __withDevClientScript is a no-op when
+  // import.meta.env.DEV is false.
+  lines.push(`    return c.html(__withDevClientScript(wrapInDocument(content, {`);
   for (
     const optionLine of documentWrapOptionsLines({
       pageExpr: '__page',
@@ -437,7 +440,7 @@ function renderRouteResponseAndCatch(lines: string[], ctx: RouteHandlerEmitConte
   ) {
     lines.push(`      ${optionLine}`);
   }
-  lines.push(`    })${isAction ? ', __actionStatus' : ''})`);
+  lines.push(`    }))${isAction ? ', __actionStatus' : ''})`);
 
   lines.push(`  } catch (err) {`);
   lines.push(`    if (__isOpenElementRedirect(err)) {`);

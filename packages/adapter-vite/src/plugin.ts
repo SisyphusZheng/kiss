@@ -22,7 +22,7 @@ import { createLogger } from '@openelement/element';
 
 const log = createLogger('adapter-vite');
 
-import honoDevServer from '@hono/vite-dev-server';
+import honoDevServer, { defaultOptions as honoDevServerDefaults } from '@hono/vite-dev-server';
 import { OpenElementBuildContext } from './build-context.ts';
 import { findWorkspaceRoot, generateWorkspaceAliases } from './workspace-alias.ts';
 import { normalizeViteAliases } from './alias-utils.ts';
@@ -35,6 +35,7 @@ import {
 } from './internal/ssg/index.ts';
 import { buildHeadExtras } from './head-injection.ts';
 import { islandTransformPlugin } from './island-transform.ts';
+import { devIslandClientPlugin } from './dev-island-client.ts';
 import { createGeneratedDataResolverPlugin } from './generated-data-resolver.ts';
 import {
   detectAndClassifyCemPackages,
@@ -420,6 +421,12 @@ export function createOpenPlugin(
         // default export (the bare Hono app) so the dev path is unchanged.
         ...(resolvedOptions.middleware?.use?.length ? { export: 'openElementDevFetch' } : {}),
         injectClientScript: true,
+        // #951: the upstream exclude regexes test req.url WITH its query
+        // string, so vite's versioned module URLs (/.vite/deps/x.js?v=hash —
+        // the optimized-dependency form of every bare import in the dev island
+        // client graph) fell through to the Hono app and 404'd. Extend the
+        // defaults to let versioned module requests reach Vite.
+        exclude: [...honoDevServerDefaults.exclude, /\?v=[A-Za-z0-9]+$/],
       }) as Plugin,
     );
   }
@@ -427,6 +434,9 @@ export function createOpenPlugin(
   plugins.push(
     islandTransformPlugin(resolvedOptions.islandsDir!),
     buildPlugin(resolvedOptions, ctx),
+    // #951: dev-only serving of the island client entry at the same public
+    // URL the production build emits (<base>client/islands/client.js).
+    devIslandClientPlugin(resolvedOptions, ctx),
   );
 
   return plugins;

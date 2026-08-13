@@ -227,6 +227,12 @@ export interface EntryDescriptor {
   apiRoutes: ApiRouteDecl[];
   pageRoutes: PageRouteDecl[];
   islands: IslandDecl[];
+  /**
+   * True when any page route carries data-open-enhance forms (#569). Drives
+   * the dev island client script injection (#951): an island-free app with
+   * enhanced forms still needs the client entry in dev HTML.
+   */
+  hasEnhancedForms?: boolean;
   ssrAdmissionPlan: SsrAdmissionPlan;
   cemClassifications?: CompatibilityClassification[];
   renderers: RendererDecl[];

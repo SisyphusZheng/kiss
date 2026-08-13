@@ -281,6 +281,11 @@ export function buildEntryDescriptor(
     apiRoutes,
     pageRoutes,
     islands,
+    // #569: data-open-enhance forms need the client entry even with zero
+    // islands; #951: the dev script injection keys on the same condition.
+    hasEnhancedForms: routes.some((route) =>
+      route.type === 'page' && route.hasEnhancedForms === true
+    ),
     ssrAdmissionPlan,
     cemClassifications,
     renderers,

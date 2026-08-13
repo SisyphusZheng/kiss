@@ -84,6 +84,33 @@ export function renderEntry(desc: EntryDescriptor): string {
   lines.push(`const __islandMap = ${quoteGeneratedJavaScriptValue(islandLookup, 2)}`);
   lines.push('');
 
+  // --- Dev island client script (#951) ---
+  // Production injects the built client entry into HTML post-build
+  // (postprocess.ts); in dev there is no build, so the entry injects the tag
+  // itself and the open:dev-island-client plugin serves the module at the
+  // same public URL. import.meta.env.DEV/BASE_URL are compile-time constants
+  // in both the dev module runner and the build, so the built bundle keeps
+  // this as dead code.
+  {
+    const hasClientEntry = desc.islands.length > 0 || desc.hasEnhancedForms === true;
+    lines.push('// #951: dev-only island client script injection (prod injects post-build)');
+    lines.push(
+      `const __devClientScriptSrc = import.meta.env.DEV && ${
+        JSON.stringify(hasClientEntry)
+      } ? import.meta.env.BASE_URL + 'client/islands/client.js' : null;`,
+    );
+    lines.push('function __withDevClientScript(html) {');
+    lines.push('  if (!__devClientScriptSrc) return html;');
+    lines.push(
+      `  const tag = '<script type="module" src="' + __devClientScriptSrc + '"></script>';`,
+    );
+    lines.push(
+      `  return html.includes('</body>') ? html.replace('</body>', '  ' + tag + '\\n</body>') : html + tag;`,
+    );
+    lines.push('}');
+    lines.push('');
+  }
+
   // --- Document wrapper ---
   lines.push(`import { wrapInDocument } from '@openelement/element';`);
   lines.push(`import { jsx } from '@openelement/element';`);

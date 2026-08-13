@@ -53,7 +53,7 @@ function callLoad(plugin: unknown, id: string): unknown {
 
 Deno.test('openPlugin: returns retained plugins in correct order', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
 
   const names = plugins.map((p) => p.name);
   assertEquals(names, [
@@ -65,6 +65,8 @@ Deno.test('openPlugin: returns retained plugins in correct order', () => {
     '@hono/vite-dev-server',
     'open:island-transform',
     'open:build',
+    // #951: dev-only (apply: 'serve') island client entry serving.
+    'open:dev-island-client',
   ]);
 });
 
@@ -153,8 +155,8 @@ Deno.test('openPlugin: respects custom islandsDir', async () => {
 Deno.test('openPlugin: accepts default and custom componentsDir', () => {
   // componentsDir is only consumed by the build closeBundle phase; here we can
   // only assert both forms construct a valid pipeline.
-  assertEquals(createOpenPlugin({}).length, 8);
-  assertEquals(createOpenPlugin({ componentsDir: 'src/ui' }).length, 8);
+  assertEquals(createOpenPlugin({}).length, 9);
+  assertEquals(createOpenPlugin({ componentsDir: 'src/ui' }).length, 9);
 });
 
 // ─── Upgrade Strategy ─────────────────────────────────────────
@@ -172,8 +174,8 @@ Deno.test('openPlugin: island.upgradeStrategy flows into the SSR admission plan'
   assertStringIncludes(onlyCode, 'client-only');
 
   // 'load' / 'visible' remain valid construction options.
-  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'load' } }).length, 8);
-  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'visible' } }).length, 8);
+  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'load' } }).length, 9);
+  assertEquals(createOpenPlugin({ island: { upgradeStrategy: 'visible' } }).length, 9);
 });
 
 // ─── Invalid Options ──────────────────────────────────────────
@@ -196,12 +198,12 @@ Deno.test('openPlugin: rejects script tags in inject.headFragments', () => {
 
 Deno.test('openPlugin: handles empty options object', () => {
   const plugins = createOpenPlugin({});
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: handles undefined options', () => {
   const plugins = createOpenPlugin();
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
 });
 
 // ─── Virtual Entry Plugin Behaviors ───────────────────────────
@@ -367,9 +369,9 @@ Deno.test('openPlugin: dev server plugin is @hono/vite-dev-server', () => {
 // which crashes in a server context. SPA is client-only, so the @hono/vite-dev-server
 // middleware (which SSR-imports route modules) must NOT be registered.
 
-Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (7 plugins)', () => {
+Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (8 plugins)', () => {
   const plugins = createOpenPlugin({ mode: 'spa' });
-  assertEquals(plugins.length, 7);
+  assertEquals(plugins.length, 8);
 
   const names = plugins.map((p) => p.name);
   assertEquals(
@@ -382,6 +384,8 @@ Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (7 plugins)', () => 
       'open:virtual-entry',
       'open:island-transform',
       'open:build',
+      // #951: dev-only (apply: 'serve') island client entry serving.
+      'open:dev-island-client',
     ],
   );
 
@@ -394,15 +398,15 @@ Deno.test('openPlugin: SPA mode omits @hono/vite-dev-server (7 plugins)', () => 
   );
 });
 
-Deno.test('openPlugin: SSG mode (default) includes @hono/vite-dev-server (8 plugins)', () => {
+Deno.test('openPlugin: SSG mode (default) includes @hono/vite-dev-server (9 plugins)', () => {
   const plugins = createOpenPlugin({});
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
   assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
 });
 
 Deno.test('openPlugin: explicit SSG mode includes @hono/vite-dev-server', () => {
   const plugins = createOpenPlugin({ mode: 'ssg' });
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
   assertExists(plugins.find((p) => p.name === '@hono/vite-dev-server'));
 });
 
@@ -411,13 +415,13 @@ Deno.test('openPlugin: explicit SSG mode includes @hono/vite-dev-server', () => 
 Deno.test('openPlugin: accepts packageIslands option', () => {
   const plugins = createOpenPlugin({ packageIslands: ['@openelement/ui'] });
   assertExists(plugins);
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: accepts empty packageIslands', () => {
   const plugins = createOpenPlugin({ packageIslands: [] });
   assertExists(plugins);
-  assertEquals(plugins.length, 8);
+  assertEquals(plugins.length, 9);
 });
 
 Deno.test('openPlugin: accepts multiple packageIslands', () => {

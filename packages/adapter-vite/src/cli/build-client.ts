@@ -17,12 +17,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
-import {
-  generateClientEntry,
-  resolveIslandHydrate,
-  resolveIslandSsrDsd,
-} from '../internal/ssg/index.ts';
-import { fsPathToModuleSpecifier } from '../internal/ssg/module-specifier.ts';
+import { generateClientEntry } from '../internal/ssg/index.ts';
+import { buildClientIslandEntries } from '../internal/ssg/client-island-entries.ts';
 import { VIRTUAL_RUNTIME_SPECIFIERS } from '../internal/ssg/entry-generators.ts';
 import type { ClientIslandEntry } from '../internal/protocol/ssg.ts';
 import type { OpenElementBuildContext } from '../build-context.ts';
@@ -194,43 +190,17 @@ async function buildClient(ctx: OpenElementBuildContext): Promise<void> {
       (enhancedForms ? ' + data-open-enhance form enhancement' : '') + '...',
   );
 
-  // Generate client entry code
-  const islandEntries: ClientIslandEntry[] = [
-    ...localIslands.map((tagName: string, i: number) => {
-      const meta = ctx.phase1.islandMeta[tagName];
-      return {
-        tagName,
-        // #460: resolve() emits drive-letter backslash paths on Windows; convert
-        // to a Vite-resolvable specifier (root-relative or /@fs/).
-        modulePath: fsPathToModuleSpecifier(
-          resolve(
-            root,
-            localIslandFiles[i]
-              ? `${islandsDir}/${localIslandFiles[i]}`
-              : `${islandsDir}/${tagName}.ts`,
-          ),
-          root,
-        ),
-        isPackage: false,
-        strategy: resolveIslandHydrate(meta?.hydrate, ctx.phase3.upgradeStrategy),
-        ...resolveIslandSsrDsd(meta ?? {}),
-        reason: meta?.reason,
-      };
-    }),
-    ...packageIslandDecls.map(
-      (island) => ({
-        tagName: island.tagName,
-        modulePath: island.modulePath,
-        isPackage: true,
-        // #638: forward the named export so the client factory reads
-        // mod[exportName] (UI package chunks dropped `export default`).
-        exportName: island.exportName,
-        strategy: resolveIslandHydrate(island.hydrate, ctx.phase3.upgradeStrategy),
-        ...resolveIslandSsrDsd(island),
-        reason: island.reason,
-      }),
-    ),
-  ];
+  // Generate client entry code (#951: entry list built by the shared helper,
+  // identical to what the dev island client plugin serves).
+  const islandEntries: ClientIslandEntry[] = buildClientIslandEntries({
+    root,
+    islandsDir,
+    islandTagNames: localIslands,
+    islandFiles: localIslandFiles,
+    islandMeta: ctx.phase1.islandMeta,
+    packageIslandDecls,
+    upgradeStrategy: ctx.phase3.upgradeStrategy,
+  });
 
   const clientEntryCode = generateClientEntry(islandEntries, { enhancedForms });
 
