@@ -241,3 +241,28 @@ Deno.test(
     });
   },
 );
+
+Deno.test('a throwing replay target does not starve the rest of the queue', () => {
+  withStubDocument(() => {
+    ensurePreHydrationClickCapture();
+    const host = markerHost();
+    const first = { n: 0 };
+    const third = { n: 0 };
+    const goodBefore = fakeTarget(first);
+    const bad: FakeElementLike = {
+      nodeType: 1,
+      hasAttribute: () => false,
+      dispatchEvent: () => {
+        throw new Error('target boom');
+      },
+    };
+    const goodAfter = fakeTarget(third);
+    captured.captureHandler?.(fakeEvent(goodBefore, [goodBefore, host]));
+    captured.captureHandler?.(fakeEvent(bad, [bad, host]));
+    captured.captureHandler?.(fakeEvent(goodAfter, [goodAfter, host]));
+
+    flushPendingClicks(host as unknown as Element);
+    assertEquals(first.n, 1, 'target before the throwing one replayed');
+    assertEquals(third.n, 1, 'target after the throwing one still replayed');
+  });
+});

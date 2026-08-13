@@ -34,6 +34,10 @@ import {
   DATA_SIGNAL_CLASS,
   DATA_SIGNAL_RENDER,
 } from '../protocol/hydration-markers.ts';
+import { createLogger } from './logger.ts';
+import { formatError } from './errors.ts';
+
+const log = createLogger('pre-hydration-click');
 
 interface PendingClick {
   event: Event;
@@ -149,7 +153,14 @@ export function flushPendingClicks(host: Element): void {
     // the outermost shadow host, so dispatching there would never reach the
     // island's own handler.
     if (isNodeLike(pending.target)) {
-      pending.target.dispatchEvent(pending.event);
+      try {
+        pending.target.dispatchEvent(pending.event);
+      } catch (err) {
+        // A throwing target (e.g. the event is already being dispatched, or
+        // a hostile EventTarget) must not starve the rest of the queue nor
+        // break the hydration path that called flush.
+        log.warn(`pre-hydration click replay dropped: ${formatError(err)}`);
+      }
     }
   }
 }
