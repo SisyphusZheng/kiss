@@ -51,6 +51,8 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
   copyable example for the documented virtual module and the shadow-DOM
   styling constraint.
 
+## 0.42.0-alpha.10
+
 - Cleanup and hardening train (milestone #17, 97/97 issues closed): the
   evidence-chain batch (#646–#653), the P1 correctness batch, the P2 batch and
   the P3/P4 hygiene sweep land together. No new product surface; the ADR-0119
