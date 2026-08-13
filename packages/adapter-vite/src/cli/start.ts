@@ -12,8 +12,11 @@
  *                      dist/server/index.js exists, dispatch dynamic routes
  *                      and mutations to it.
  *   preview          — static-only `vite preview`; refuses to run when
- *                      dist/server exists because `vite preview` is silently
- *                      wrong for dynamic routes (#601). Preview delegates to
+ *                      dist/server/index.js exists (real request-time routes,
+ *                      #601) because `vite preview` is silently wrong for
+ *                      dynamic routes. Pure-static builds produce no
+ *                      dist/server at all (#953), so preview always runs
+ *                      for them. Preview delegates to
  *                      `vite preview` spawned via `deno run -A npm:vite`, so
  *                      this mode requires the Deno runtime on PATH.
  *

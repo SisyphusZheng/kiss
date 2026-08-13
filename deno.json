@@ -88,6 +88,7 @@
     "test:e2e:browser-smoke": "deno run -A npm:@playwright/test@1.59.1 test --config www/e2e/playwright.config.ts --grep \"DSD Layers|Layout Island Shell|Island Script Loading|Theme Toggle|Theme initialization|data-signal bindings|SSR/hydration mismatch degradation|router guards on browser history traversal|reflect: true static props\" --project",
     "test:e2e:browsers:install": "deno run -A npm:playwright@1.59.1 install chromium firefox webkit",
     "fixture:request-time:build": "cd packages/adapter-vite/__fixtures__/request-time && deno run --config ../../../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../src/cli/build.ts",
+    "fixture:static-only:build": "cd packages/adapter-vite/__fixtures__/static-only && rm -rf dist && deno run --config ../../../../deno.json --allow-read --allow-write --allow-net --allow-env --allow-ffi --allow-sys --allow-run ../../src/cli/build.ts",
     "fixture:request-time:e2e": "deno run -A npm:@playwright/test@1.59.1 test --config packages/adapter-vite/__fixtures__/request-time/e2e/playwright.config.ts --project=chromium",
     "fixture:request-time:e2e:browsers": "deno run -A npm:@playwright/test@1.59.1 test --config packages/adapter-vite/__fixtures__/request-time/e2e/playwright.config.ts",
     "fixture:request-time:gate": "deno task fixture:request-time:build && deno task fixture:request-time:e2e:browsers",

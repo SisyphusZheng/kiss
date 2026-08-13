@@ -17,13 +17,15 @@ const __dirname = import.meta.dirname!;
 const ROOT = dirname(dirname(dirname(__dirname)));
 const WWW_DIR = join(ROOT, 'www');
 const WWW_DIST = join(WWW_DIR, 'dist');
+const REQUEST_TIME_FIXTURE = join(__dirname, '../__fixtures__/request-time');
 
-function hasServerEntry(): boolean {
-  // ADR 0011 + S2 fix: Phase 1 artifacts (_virtual_open-hono-entry-*.js)
-  // are cleaned from dist/assets/ by closeBundle because they are build-time
-  // only and must not be deployed to public static hosting.
-  // The real SSR bundle is at dist/server/entry.js.
-  return existsSync(join(WWW_DIST, 'server', 'entry.js'));
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function hasIslandChunk(prefix: string): boolean {
@@ -58,8 +60,18 @@ async function ensureDocsBuild(): Promise<void> {
 Deno.test('SSG smoke: one-command build produces trusted www output', async (t) => {
   await ensureDocsBuild();
 
-  await t.step('phase 1 output exists with SSR bundle and HTML', () => {
-    assert(hasServerEntry(), 'Server entry bundle should exist');
+  await t.step('phase 1 output exists with HTML and no leftover SSR bundle (#953)', async () => {
+    // ADR 0011 + S2 fix: Phase 1 artifacts (_virtual_open-hono-entry-*.js)
+    // are cleaned from dist/assets/ by closeBundle because they are build-time
+    // only and must not be deployed to public static hosting.
+    // #953: www declares no renderIntent 'dynamic' routes, so the build-time
+    // SSR bundle (dist/server/entry.js) must be removed entirely — a
+    // pure-static deployable tree has no dist/server.
+    assertEquals(
+      await pathExists(join(WWW_DIST, 'server')),
+      false,
+      'pure-static www build must not ship dist/server',
+    );
 
     // ADR 0011: Build metadata is now in OpenElementBuildContext, not .openElement/build-metadata.json.
     // Verify the build produced real output instead.
@@ -120,7 +132,19 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
   }
 
   await t.step('server SSR bundle exports route metadata and renderRoute', async () => {
-    const serverEntry = join(WWW_DIST, 'server', 'entry.js');
+    // #953: the pure-static www tree no longer keeps its SSR bundle, so this
+    // introspection runs against the request-time fixture instead — a project
+    // with 'dynamic' routes, where dist/server is deployable output.
+    const serverEntry = join(REQUEST_TIME_FIXTURE, 'dist/server/entry.js');
+    if (!(await pathExists(serverEntry))) {
+      const build = await new Deno.Command(Deno.execPath(), {
+        args: ['task', 'fixture:request-time:build'],
+        cwd: ROOT,
+        stdout: 'inherit',
+        stderr: 'inherit',
+      }).output();
+      assert(build.success, 'request-time fixture build failed');
+    }
     const serverBundle = Deno.readTextFileSync(serverEntry);
     const specifiers = importSpecifierStrings(serverBundle);
     assertEquals(
@@ -152,10 +176,9 @@ Deno.test('SSG smoke: one-command build produces trusted www output', async (t) 
         componentCount: number;
         renderTimeMs: number;
       }
-    >)('/roadmap', { lang: 'en' });
+    >)('/', { lang: 'en' });
     assertStringIncludes(result.html, '<!DOCTYPE html>');
-    assertStringIncludes(result.html, 'Web Components-native');
-    assertStringIncludes(result.html, '<open-layout');
+    assertStringIncludes(result.html, 'request-time fixture home');
   });
 
   await t.step('phase 2 output exists without legacy SSR client runtime', () => {

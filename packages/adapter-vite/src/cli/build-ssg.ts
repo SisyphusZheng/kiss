@@ -15,6 +15,8 @@
  */
 
 import { join, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { normalizePath } from 'vite';
 import process from 'node:process';
 import type {
@@ -305,6 +307,10 @@ async function buildSSG(
       configFile: false,
       root,
       logLevel: 'error',
+      // The SSR bundle is a build-time artifact, not a deployable tree:
+      // copying public/ into dist/server would duplicate every static asset
+      // under /server/ (observed in www: CNAME, favicon, search-index).
+      publicDir: false,
       build: {
         ssr: true,
         outDir: ssrOutDir,
@@ -445,6 +451,16 @@ async function buildSSG(
       },
       createSsgRenderEvidence(ctx),
     );
+
+    // #953: the SSR bundle in dist/server is a build-time-only artifact.
+    // ssgRender() adds the request-time entry (dist/server/index.js) only
+    // when the project declares renderIntent 'dynamic' routes; for a
+    // pure-static project nothing under dist/server is deployable, so remove
+    // the directory instead of shipping the server bundle to static hosting.
+    if (!existsSync(join(ssrOutDir, 'index.js'))) {
+      await rm(ssrOutDir, { recursive: true, force: true });
+      log.info('Pure-static build: removed build-time SSR bundle (dist/server)');
+    }
 
     log.info('Static site generated -> ' + join(root, outDir));
   } catch (err) {
