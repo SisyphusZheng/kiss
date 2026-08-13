@@ -653,10 +653,12 @@ function applyEvent(
     el.removeEventListener(type, handler, listenerOptions);
   };
 
-  // When no AbortSignal was provided we still want an explicit dispose path.
-  if (!lifecycle.signal) {
-    registerDispose(dispose, lifecycle);
-  }
+  // #916 residual: register in both places even when an AbortSignal was
+  // provided — the signal removes the listener on root abort, but branch
+  // lifecycles (keyed list items, conditionals) dispose through their
+  // disposer set; skipping it left the listener live on detached DOM.
+  // removeEventListener is idempotent, so the double-fire on abort is safe.
+  registerDispose(dispose, lifecycle);
   return dispose;
 }
 

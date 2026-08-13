@@ -3476,6 +3476,54 @@ Deno.test('keyed For: removed item stops reacting even with an abort-signal life
   );
 });
 
+// #916 residual: applyEvent skipped registerDispose entirely when the
+// lifecycle carried a signal, so the listener never landed in the item's
+// disposer set — key removal left it live on the detached DOM until the
+// root abort.
+Deno.test('keyed For: removed item event listeners are disposed with an abort-signal lifecycle (#916 residual)', () => {
+  if (!hasDOM) return;
+
+  const items = signal([{ id: 1 }, { id: 2 }]);
+  const clicks: number[] = [];
+  const controller = new AbortController();
+  const lifecycle: BindingLifecycle = {
+    disposers: new Set<() => void>(),
+    signal: controller.signal,
+  };
+
+  const root = renderToDom(
+    jsx('div', {
+      children: [
+        For({
+          each: items,
+          key: (item: { id: number }) => item.id,
+          children: (item: { id: number }) =>
+            jsx('button', {
+              onClick: () => clicks.push(item.id),
+              children: String(item.id),
+            }),
+        }),
+      ],
+    }),
+    lifecycle,
+  );
+
+  const container = document.createElement('div');
+  container.appendChild(root);
+  const buttons = container.querySelectorAll('button');
+  assertEquals(buttons.length, 2);
+  const detached = buttons[1] as HTMLElement;
+
+  items.value = [{ id: 1 }];
+
+  detached.dispatchEvent(new Event('click'));
+  assertEquals(clicks, [], 'removed item listener must be disposed with its entry');
+
+  const kept = container.querySelectorAll('button')[0] as HTMLElement;
+  kept.dispatchEvent(new Event('click'));
+  assertEquals(clicks, [1], 'surviving item listener must stay bound');
+});
+
 // #918 coverage matrix: nested lists, reorder+bindings, transitions, fragments.
 
 // #918: nested keyed For — inner re-render must stay within its own list,
