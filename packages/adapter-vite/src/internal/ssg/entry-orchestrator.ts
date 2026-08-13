@@ -194,11 +194,28 @@ export function renderEntry(desc: EntryDescriptor): string {
     lines.push('  if (!current) customElements.define(tag, ctor);');
     lines.push('}');
     lines.push('');
+    // #954: MDX routes default-export a plain function component, not an
+    // element class with a render() method. Wrap it in a minimal class whose
+    // render() mounts the function's VNode, so .mdx pages render through the
+    // same custom-element path as definePage routes. The check keys on
+    // prototype.render because the SSR bundle has no global HTMLElement to
+    // instanceof against (the element base class falls back to a local stub).
+    lines.push('const __asRouteElementClass = (component) => {');
+    lines.push(
+      '  if (typeof component === "function" && typeof component.prototype?.render !== "function") {',
+    );
+    lines.push('    return class {');
+    lines.push('      render() { return component({}); }');
+    lines.push('    };');
+    lines.push('  }');
+    lines.push('  return component;');
+    lines.push('};');
+    lines.push('');
   }
   for (const route of desc.pageRoutes) {
     const tagNameExpr = routeTagNameExpr(route.varName, route.tagName);
     lines.push(
-      `try { __registerSsrComponent(${tagNameExpr}, ${route.varName}.default); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
+      `try { __registerSsrComponent(${tagNameExpr}, __asRouteElementClass(${route.varName}.default)); } catch (err) { console.error('[ssg] Failed to register route custom element ${tagNameExpr}:', err); throw err; }`,
     );
   }
   lines.push('');

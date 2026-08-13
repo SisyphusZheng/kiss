@@ -25,14 +25,14 @@ export function normalizeSeparators(path: string, sep: '/' | '-' = '/'): string 
  * Convert a file path into a kebab-cased custom element tag name.
  *
  * - Removes a leading `./` or `/`.
- * - Strips known file extensions (`ts`, `tsx`, `js`, `jsx`, `mjs`).
+ * - Strips known file extensions (`ts`, `tsx`, `js`, `jsx`, `mjs`, `mdx`).
  * - Replaces directory separators with hyphens.
  * - Ensures the result starts with a letter and contains at least one hyphen.
  */
 export function pathToTagName(filePath: string): string {
   if (!filePath) return '';
   const withoutPrefix = filePath.replace(/^(\.\/|\/)/, '');
-  const withoutExt = withoutPrefix.replace(/\.(tsx?|jsx?|mjs)$/i, '');
+  const withoutExt = withoutPrefix.replace(/\.(tsx?|jsx?|mjs|mdx)$/i, '');
   const tagName = normalizeSeparators(withoutExt, '-')
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')

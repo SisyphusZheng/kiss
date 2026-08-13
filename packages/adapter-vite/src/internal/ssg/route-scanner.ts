@@ -233,7 +233,10 @@ export async function scanRoutes(
       // Recurse into subdirectories
       const subEntries = await scanRoutes(fullPath, relativePath, options);
       entries.push(...subEntries);
-    } else if (/\.(ts|tsx|js|jsx)$/.test(file)) {
+    } else if (/\.(ts|tsx|js|jsx|mdx)$/.test(file)) {
+      // #954: .mdx pages are routes too — the dev entry and the Phase 3 SSR
+      // build both carry mdxPlugin, and the generated importPath keeps the
+      // real extension, so a discovered .mdx file imports cleanly.
       // Check for special files
       const specialType = getSpecialFileType(file);
       if (specialType) {

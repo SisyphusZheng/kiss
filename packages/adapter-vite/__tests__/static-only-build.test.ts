@@ -1,5 +1,5 @@
 /**
- * @openelement/adapter-vite — static-only build output contract (#953).
+ * @openelement/adapter-vite — static-only build output contract (#953, #954).
  *
  * Builds the static-only fixture (no renderIntent 'dynamic' routes) and pins
  * the deployable tree:
@@ -7,12 +7,14 @@
  *     `cli/start --mode=preview` gate accepts the output and vite preview
  *     actually serves it (previously the leftover SSR bundle directory made
  *     preview look unsupported).
+ *   - #954: an app/routes/*.mdx page is discovered by the route scanner and
+ *     prerendered with real content.
  *
  * The fixture dist is gitignored; build it on demand (a no-op when present):
  *   deno task fixture:static-only:build
  */
 
-import { assert, assertEquals } from '@std/assert';
+import { assert, assertEquals, assertStringIncludes } from '@std/assert';
 import { join } from '@std/path';
 
 const fixtureDir = join(import.meta.dirname!, '../__fixtures__/static-only');
@@ -39,7 +41,7 @@ async function ensureFixtureBuild(): Promise<void> {
   assertEquals(build.code, 0, `static-only fixture build failed:\n${logs}`);
 }
 
-Deno.test('static-only build: no dist/server (#953)', async () => {
+Deno.test('static-only build: no dist/server, mdx route prerendered (#953, #954)', async () => {
   await ensureFixtureBuild();
 
   assertEquals(
@@ -53,6 +55,10 @@ Deno.test('static-only build: no dist/server (#953)', async () => {
     false,
     'pure-static build must not emit dist/server',
   );
+
+  // #954: the .mdx route is discovered and prerendered with real content.
+  const mdxHtml = await Deno.readTextFile(join(distDir, 'mdx-page', 'index.html'));
+  assertStringIncludes(mdxHtml, 'MDX route page');
 });
 
 Deno.test({
