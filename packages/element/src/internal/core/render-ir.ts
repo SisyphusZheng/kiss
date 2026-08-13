@@ -485,7 +485,12 @@ async function renderRegisteredCeBranch(
     // #922: notFound()/redirect() are expected control flow (the request-time
     // handler answers 404/3xx) — no error log for them. BoundaryRenderError
     // is already reported at its origin; it bubbles to the nearest boundary.
-    if (!isControlFlowThrow(err) && !(err instanceof BoundaryRenderError)) {
+    // Depth-limit errors are typed safety trips that bubble through every
+    // frame — logging here would repeat the same line once per level.
+    if (
+      !isControlFlowThrow(err) && !(err instanceof BoundaryRenderError) &&
+      !isDepthLimitError(err)
+    ) {
       createLogger('render').error(
         `renderDsd failed for registered CE <${tagName}>:` +
           ` ${formatError(err)}`,
