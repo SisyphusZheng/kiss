@@ -50,6 +50,35 @@ headline gaps from the round-3 audit close, with e2e gates pinning each fix.
   `@openelement/generated/blog-data`, styled 404 `app/routes/404.tsx`) — a
   copyable example for the documented virtual module and the shadow-DOM
   styling constraint.
+- **CSRF and enhanced forms**: request-time mutation endpoints enforce a
+  coherent Origin policy matrix — cross-site POSTs are rejected while
+  same-origin native form posts (`Origin: null` + `Sec-Fetch-Site:
+  same-origin`) pass (#921, #938); enhanced forms morph correctly into
+  slotted light-DOM pages (#937).
+- **keyed For hydration**: matched DSD hydration keeps keyed `For` lists
+  reactive — per-item boundary markers pair hydrated list groups with their
+  `For` target by branch ordinal (#917).
+- **ErrorBoundary**: render failures inside a subtree are auto-captured by
+  the nearest `ErrorBoundary` (ADR-0053 Layer 2) and bubble outward when a
+  fallback itself throws (#919); a subclass `render()` must branch on
+  `hasError` (#958).
+- **Pre-hydration clicks**: clicks landing between first paint and island
+  hydration are captured and replayed once when the island hydrates (#942).
+  Capture starts when the generated client entry executes — clicks that
+  land before the client script loads are still lost; replayed events carry
+  `isTrusted=false` and native default actions (anchors, checkboxes) may
+  run twice.
+- **Dev chain**: dev serves the island client entry and injects its script
+  tag (#951); dev SSR re-definition overwrites stale classes in the
+  customElements stub (#952).
+- **Build output**: pure-static dist drops the build-time SSR bundle
+  (#953); `.mdx` route files are discovered and rendered (#954); index
+  routes keep clean URLs when a same-named sibling directory exists (#956);
+  request-time builds emit a standalone `dist/server/serve.mjs` entry
+  (#959); the `corsOrigin` misconfiguration warning is emitted once per
+  process (#925).
+- **Docs**: minimum Deno version declared and the markdown post-title H1
+  rule documented (#928, #935).
 
 ## 0.42.0-alpha.10
 
