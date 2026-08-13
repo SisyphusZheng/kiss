@@ -1,7 +1,7 @@
 /**
  * Packed-starter visual + interaction smoke (#934).
  *
- * Guards the six starter regression classes that round-3 blog e2e caught:
+ * Guards the five starter regression classes that round-3 blog e2e caught:
  * unstyled page (no :root baseline), dead island, jammed nav, clipped
  * assets, duplicate H1. Every assertion here targets the *computed* surface,
  * the layer curl-level checks cannot see.

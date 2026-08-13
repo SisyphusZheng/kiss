@@ -262,6 +262,12 @@ function renderActionProtocol(lines: string[], ctx: RouteHandlerEmitContext): vo
   // - origin compare: literal origin match, except loopback hostname aliases
   //   (localhost / 127.0.0.1 / [::1]) on http: count as the same site — dev
   //   servers bind one spelling while the browser may use another (#937).
+  //   The alias ignores the port and ships in the production entry too (this
+  //   generated server is not dev-only). That is safe: a browser post from a
+  //   non-loopback origin arrives with Sec-Fetch-Site: cross-site and is
+  //   rejected before the origin compare runs, so the alias only ever relaxes
+  //   requests that already claim a loopback Origin — and a non-browser
+  //   client can forge Origin regardless, with or without the alias.
   // - Origin 'null' (no-referrer pages) with Sec-Fetch-Site same-origin is
   //   the progressive-enhancement no-JS form post (#938) — allowed, because
   //   only the browser can claim same-origin.

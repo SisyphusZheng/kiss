@@ -16,6 +16,16 @@ function normalizeElementDefinition<Props extends Record<string, unknown>>(
   return typeof input === 'function' ? { render: input } : input;
 }
 
+/**
+ * Define an OpenElement from a function-mode render or a full definition.
+ *
+ * Function-mode render behavior (#940): signal reads inside render() are
+ * tracked by a wrapping effect, and every signal write triggers a full
+ * synchronous re-render of the element (no batching, no per-node updates).
+ * Consequently DSD hydration's DOM reuse is effectively void for
+ * function-mode islands: the effect re-renders CSR output immediately after
+ * hydration instead of patching the SSR'd nodes in place.
+ */
 export function defineElement<Props extends Record<string, unknown> = Record<string, unknown>>(
   tagName: string,
   input: ((props: Props) => VNode | null) | ElementDefinition<Props>,

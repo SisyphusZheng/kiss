@@ -79,7 +79,19 @@ function main(): void {
   };
 
   for (const [key, target] of Object.entries(sourceMap)) {
-    if (imports[key]?.startsWith('npm:')) imports[key] = relativeSource(...target.split('/'));
+    if (imports[key]?.startsWith('npm:')) {
+      imports[key] = relativeSource(...target.split('/'));
+    } else if (key in imports) {
+      // The mapping exists but changed shape — never skip silently (#944):
+      // an unwarned skip would leave the gate testing the published package
+      // instead of the monorepo source. Keys absent from the template's
+      // import map are fine and stay silent.
+      console.warn(
+        `[starter-smoke setup] import-map entry "${key}" not rewired to monorepo source (current value: ${
+          imports[key]
+        }); the gate may be testing the published package`,
+      );
+    }
   }
 
   for (const [name, command] of Object.entries(denoJson.tasks as Record<string, string>)) {

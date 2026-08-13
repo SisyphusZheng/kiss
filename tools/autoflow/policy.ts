@@ -286,7 +286,8 @@ const GATES: readonly GateDefinition[] = [
     // Packed-starter smoke (#934/#936): pack the create CLI, generate a
     // fresh starter, build it against the monorepo framework sources, and
     // run the visual/interaction matrix in the browser. The #937/#938/#943
-    // repros live here and must stay red until Wave 1 lands.
+    // repros live here and gate the Wave 1 fixes — they run green; a
+    // regression turns them red.
     name: 'test:starter-smoke',
     command: ['deno', 'task', 'test:starter-smoke'],
     tiers: ['ci', 'release'],
