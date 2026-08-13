@@ -30,7 +30,7 @@ export interface RenderInput {
 export interface HydrationHint {
   tagName: string;
   layer: ComponentLayer;
-  strategy?: HydrationStrategy;
+  hydrate?: HydrationStrategy;
 }
 
 export interface RenderOutput {

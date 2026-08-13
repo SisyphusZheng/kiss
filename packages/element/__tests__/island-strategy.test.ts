@@ -68,7 +68,7 @@ Deno.test('#606 visible strategy registers immediately on module evaluation', ()
   withBrowserGlobals((registry) => {
     class VisibleIsland {}
     defineIsland(freshTag(), VisibleIsland as unknown as CustomElementConstructor, {
-      strategy: 'visible',
+      hydrate: 'visible',
     });
     // Synchronous: no observer, no light-DOM query, no 30s timeout fallback.
     assertEquals(registry.defined.length, 1);
@@ -80,10 +80,10 @@ Deno.test('load and only strategies register immediately', () => {
     class LoadIsland {}
     class OnlyIsland {}
     defineIsland(freshTag(), LoadIsland as unknown as CustomElementConstructor, {
-      strategy: 'load',
+      hydrate: 'load',
     });
     defineIsland(freshTag(), OnlyIsland as unknown as CustomElementConstructor, {
-      strategy: 'only',
+      hydrate: 'only',
     });
     assertEquals(registry.defined.length, 2);
   });
@@ -101,7 +101,7 @@ Deno.test('idle strategy defers registration to idle time', () => {
     try {
       class IdleIsland {}
       defineIsland(freshTag(), IdleIsland as unknown as CustomElementConstructor, {
-        strategy: 'idle',
+        hydrate: 'idle',
       });
       assertEquals(registry.defined.length, 0);
       assert(idle !== null);
@@ -135,7 +135,7 @@ Deno.test('SSR (no IntersectionObserver) registers immediately regardless of str
   try {
     class VisibleIsland {}
     defineIsland(freshTag(), VisibleIsland as unknown as CustomElementConstructor, {
-      strategy: 'visible',
+      hydrate: 'visible',
     });
     assertEquals(defined.length, 1);
   } finally {

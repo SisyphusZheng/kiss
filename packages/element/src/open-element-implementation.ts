@@ -173,7 +173,7 @@ export class OpenElement extends _Base {
   static head?: { title?: string; description?: string; ogImage?: string };
 
   /** @internal — use openPipeline({ island: { upgradeStrategy } }) instead */
-  static client?: { strategy?: 'load' | 'idle' | 'visible' | 'only' };
+  static client?: { hydrate?: 'load' | 'idle' | 'visible' | 'only' };
 
   /**
    * Attributes that trigger attributeChangedCallback.

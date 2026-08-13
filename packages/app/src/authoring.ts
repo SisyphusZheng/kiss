@@ -372,7 +372,7 @@ interface IslandConfig {
   ssr?: boolean;
   dsd?: boolean;
   /**
-   * Hydration strategy — same values as `IslandOptions.strategy` on the
+   * Hydration strategy — same values as `IslandOptions.hydrate` on the
    * element package (`packages/element/src/internal/protocol/island.ts`):
    * 'load' | 'idle' | 'visible' | 'only'.
    */
@@ -409,7 +409,7 @@ export function defineIsland<Props extends Record<string, unknown> = Record<stri
     ? input as CustomElementConstructor
     : defineElement(tagName, input as ((props: Props) => VNode | null) | ElementDefinition<Props>);
   return defineRuntimeIsland(tagName, componentClass, {
-    strategy: options.hydrate,
+    hydrate: options.hydrate,
     dsd: options.dsd,
     ssr: options.ssr,
   });

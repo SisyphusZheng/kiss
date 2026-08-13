@@ -155,10 +155,10 @@ function createIdleStrategy(registerFn: () => void): void {
  * export default defineIsland('my-counter', MyCounter, { dsd: false });
  *
  * // With visible strategy (loaded on viewport entry by the client entry)
- * export default defineIsland('my-counter', MyCounter, { strategy: 'visible' });
+ * export default defineIsland('my-counter', MyCounter, { hydrate: 'visible' });
  *
  * // With load strategy (immediate upgrade)
- * export default defineIsland('my-counter', MyCounter, { strategy: 'load' });
+ * export default defineIsland('my-counter', MyCounter, { hydrate: 'load' });
  * ```
  */
 export function defineIsland<T extends CustomElementConstructor>(
@@ -166,7 +166,7 @@ export function defineIsland<T extends CustomElementConstructor>(
   componentClass: T,
   options: IslandOptions = {},
 ): T {
-  const strategy = options.strategy || 'idle';
+  const strategy = options.hydrate || 'idle';
   if (!VALID_STRATEGIES.has(strategy)) {
     throw new OpenElementError(
       `${ERROR_PREFIX} Invalid island hydration strategy "${String(strategy)}". ` +

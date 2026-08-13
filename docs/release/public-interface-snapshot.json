@@ -91,7 +91,7 @@
           ]
         },
         "./preact": {
-          "sha256": "0c93ad5f43b172fdebcbbbe86f2853321e2891be80053a44ec158762aa030d70",
+          "sha256": "8b981d9850458b4209b677274270e80b7cb9f725b3d49bb0d4a4c5638cd80405",
           "publicDeclarations": [
             "export interface PreactIslandOptions {",
             "export function definePreactIsland<"
