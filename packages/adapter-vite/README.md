@@ -72,6 +72,41 @@ Phase 3: SSR bundle, Hono toSSG(), HTML post-processing
 Phase 2: client island entry and browser chunks
 ```
 
+## SPA Mode (`mode: 'spa'`)
+
+`mode: 'spa'` skips SSG (Phase 3) entirely — no SSR HTML is rendered. The
+`index.html` contract:
+
+- If your project root has its own `index.html`, Vite emits it and the
+  adapter **preserves** it (it never overwrites an existing file). This is
+  how you attach a custom client entry.
+- Otherwise the adapter writes a _fallback shell_: a bare `<div id="root">`
+  plus a `console.info` placeholder script. It is a build marker so the
+  output directory is servable — not a runnable app. Either way, a route
+  manifest module (`route-manifest.ts`, exporting `routeManifest`) is
+  written next to it for client-side routing.
+
+A minimal custom entry is your own `index.html` plus a bootstrap module:
+
+```html
+<!-- index.html (project root) -->
+<body>
+  <div id="app"></div>
+  <script type="module" src="/app/main.ts"></script>
+</body>
+```
+
+```ts
+// app/main.ts — see the SPA bootstrap recipe in the www configuration guide
+import { defineApp } from '@openelement/app';
+
+const app = defineApp({
+  mode: 'spa',
+  routes: [{ path: '/', tagName: 'page-home' }],
+});
+app.mount('#app');
+```
+
 ## Build Utilities
 
 ```ts
