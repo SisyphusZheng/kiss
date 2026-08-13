@@ -158,6 +158,11 @@ function escapeText(text: string): string {
   });
 }
 
+/** Attribute-value escape for sanitized output. NOTE: intentionally NOT the
+ *  `escapeAttr` from internal/core/html-escape.ts — that one fully escapes
+ *  every `&`, while this one (like escapeText above) keeps well-formed
+ *  entity references verbatim so sanitized markup round-trips. Same name,
+ *  different contract; do not consolidate. */
 function escapeAttr(value: string): string {
   return value.replace(/[&<>"]/g, (ch, offset, str) => {
     if (ch === '&' && ENTITY_RE.test(str.slice(offset))) return '&';
