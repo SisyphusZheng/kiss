@@ -50,10 +50,13 @@ export function devIslandClientPlugin(
     resolveId(id) {
       // The browser requests the same public URL the build emits; map it to
       // the virtual client entry before Vite tries (and fails) to resolve it
-      // as a file under root.
+      // as a file under root. Strip the query first: after HMR invalidates
+      // the module the browser re-requests it with `?t=` (and Vite may add
+      // `?import`), which must still hit this mapping.
+      const cleanId = id.split('?', 1)[0].split('#', 1)[0];
       if (
-        id === `/${CLIENT_ENTRY_PUBLIC_PATH}` ||
-        id === `${base}${CLIENT_ENTRY_PUBLIC_PATH}`
+        cleanId === `/${CLIENT_ENTRY_PUBLIC_PATH}` ||
+        cleanId === `${base}${CLIENT_ENTRY_PUBLIC_PATH}`
       ) {
         return RESOLVED_CLIENT_ENTRY_ID;
       }
