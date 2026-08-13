@@ -37,6 +37,42 @@ interface OpenElementLikeConstructor {
   renderMode?: 'shadow' | 'light';
 }
 
+/** Structural view of an error-boundary host (avoids an ErrorBoundary import). */
+export interface ErrorBoundaryHostLike {
+  catchError(error: Error, source?: unknown): void;
+}
+
+/**
+ * ADR-0053 Layer 2: walk the composed tree (light-DOM ancestors, crossing
+ * shadow roots via ShadowRoot.host) to the nearest ancestor marked as an
+ * error boundary (`static isErrorBoundary = true`). Returns null when no
+ * boundary exists — the caller keeps the per-element onRenderError contract.
+ */
+export function findErrorBoundaryHost(el: HTMLElement): ErrorBoundaryHostLike | null {
+  let current: Node | null = el;
+  while (current) {
+    const parent: Node | null = current.parentNode;
+    if (parent) {
+      current = parent;
+    } else {
+      // A ShadowRoot has no parentNode; cross to its host. Any other
+      // parentless node (document, detached root) ends the walk.
+      current = ((current as ShadowRoot).host as Node | undefined) ?? null;
+      if (!current) return null;
+    }
+    if (current.nodeType !== 1) continue;
+    const ctor = (current as HTMLElement).constructor as { isErrorBoundary?: boolean };
+    const candidate = current as unknown;
+    if (
+      ctor.isErrorBoundary === true &&
+      typeof (candidate as ErrorBoundaryHostLike).catchError === 'function'
+    ) {
+      return candidate as ErrorBoundaryHostLike;
+    }
+  }
+  return null;
+}
+
 /**
  * CSR render path for light-DOM components.
  *

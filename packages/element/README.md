@@ -8,7 +8,7 @@ is the default render mode; light DOM remains explicit opt-in.
 
 Also includes:
 
-- `ErrorBoundary` — hold render-error state reported via `catchError()`; a subclass `render()` branches on `hasError` to swap in the `onError()` fallback UI
+- `ErrorBoundary` — error boundary (`static isErrorBoundary = true`) that automatically captures subtree render failures: on SSR the boundary renders its `onError()` fallback in place of the failed subtree, and on the client a failing descendant's render/update bubbles to the nearest boundary's `catchError()`. A subclass `render()` branches on `hasError` to swap in the `onError()` fallback UI; `retry()` re-renders both the boundary and the captured source element, `reset()` clears the state entirely. Without a boundary, SSR keeps the bare-tag degradation and CSR keeps the per-element `onRenderError()` fallback
 - `defineElement` — functional component-style authoring for elements and layouts
 - Prop system: `PropDecl`, `PropsFrom`, `PropType`
 - Full re-export of JSX, VNode, context, signals, StyleSheet, and island utilities

@@ -87,6 +87,25 @@ export function isControlFlowThrow(err: unknown): boolean {
   return false;
 }
 
+// SSR_NESTING_DEPTH_EXCEEDED is a safety limit, not a render failure — an
+// error boundary scope must never swallow it.
+export function isDepthLimitError(err: unknown): boolean {
+  return err instanceof OpenElementError && err.code === 'SSR_NESTING_DEPTH_EXCEEDED';
+}
+
+/**
+ * ADR-0053 Layer 2: thrown in place of the bare-tag fallback while an
+ * ancestor error-boundary scope is active (`throwOnRenderError`), so the
+ * nearest boundary can substitute its own fallback for the failed subtree.
+ * Carries the already-classified (and already-dispatched) RenderError.
+ */
+export class BoundaryRenderError extends Error {
+  constructor(public readonly renderError: RenderError) {
+    super(renderError.message);
+    this.name = 'BoundaryRenderError';
+  }
+}
+
 // Lookup table replaces a multi-branch error-code chain.
 const ERROR_CODES: Record<string, RenderErrorCode> = {
   instantiate: 'OPEN_ELEMENT_RENDER_INSTANTIATE_FAILED',
@@ -215,6 +234,19 @@ export interface RenderDsdOptions {
    * collectEventBindings traversal. Internal use only; ignored when empty.
    */
   hostEventAttrs?: string;
+  /**
+   * ADR-0053 Layer 2 (internal): render this component — which must be an
+   * error boundary — in captured-error state, substituting its onError
+   * fallback for the normal render output. Passed by render-ir when a
+   * boundary's light-DOM subtree failed.
+   */
+  boundaryError?: unknown;
+  /**
+   * ADR-0053 Layer 2 (internal): an ancestor error-boundary scope is active.
+   * Render/instantiate failures throw BoundaryRenderError instead of
+   * degrading to the bare-tag fallback, so the nearest boundary captures them.
+   */
+  throwOnRenderError?: boolean;
 }
 
 export async function renderDsd(
@@ -265,6 +297,12 @@ export async function renderDsd(
 
   const instance = instantiateComponent(tagName, componentClass);
   if (!instance) {
+    if (options.throwOnRenderError) {
+      // An ancestor boundary scope is active: bubble instead of bare-tagging.
+      const err = classifyError('instantiate', tagName, 'Failed to instantiate', true);
+      dispatchRenderError(err, hooks);
+      throw new BoundaryRenderError(err);
+    }
     return instantiationFailureOutput(
       tagName,
       props,
@@ -277,6 +315,7 @@ export async function renderDsd(
 
   injectPropsSafe(instance as unknown as Record<string, unknown>, props, tagName, log);
 
+  const isBoundary = (componentClass as DsdComponentConstructor).isErrorBoundary === true;
   const outcome = await renderComponentContent(
     tagName,
     props,
@@ -286,6 +325,11 @@ export async function renderDsd(
     collectedErrors,
     collectedHints,
     startTime,
+    {
+      isBoundary,
+      boundaryError: options.boundaryError,
+      throwOnRenderError: options.throwOnRenderError,
+    },
   );
   if (outcome.earlyReturn) return outcome.earlyReturn;
   const hasError = outcome.hasError;
@@ -414,6 +458,16 @@ function instantiationFailureOutput(
   return result;
 }
 
+/** Boundary behavior for one renderComponentContent call (ADR-0053 Layer 2). */
+interface BoundaryScope {
+  /** This component is an error boundary (static isErrorBoundary = true). */
+  isBoundary: boolean;
+  /** Render in captured-error state: substitute the onError fallback. */
+  boundaryError?: unknown;
+  /** An ancestor boundary scope is active: bubble failures instead of bare-tagging. */
+  throwOnRenderError?: boolean;
+}
+
 /** render() dispatch + DSD tree serialization + render-failure fallback. */
 async function renderComponentContent(
   tagName: string,
@@ -424,14 +478,34 @@ async function renderComponentContent(
   collectedErrors: RenderError[],
   collectedHints: HydrationHint[],
   startTime: number,
+  boundary: BoundaryScope,
 ): Promise<{ content: string; hasError: boolean; earlyReturn?: RenderOutput }> {
+  const captured = boundary.boundaryError !== undefined;
+  // A boundary renders its own shadow output inside a fresh boundary scope,
+  // so failures there come back to its own catch below; other components
+  // only forward the scope they were called with.
+  const subtreeScope = captured ? false : boundary.throwOnRenderError === true ||
+    boundary.isBoundary;
   try {
-    const result: unknown = instance.render();
+    const result: unknown = captured
+      ? renderBoundaryFallbackContent(
+        instance,
+        boundary.boundaryError,
+        tagName,
+        collectedErrors,
+        hooks,
+      )
+      : instance.render();
     if (result == null) {
-      return { content: '', hasError: false };
+      return { content: '', hasError: captured };
     }
     if (isVNode(result)) {
-      return { content: await renderDsdTree(result, undefined, nestingDepth), hasError: false };
+      // Captured fallback content renders with an inactive scope: a failing
+      // component inside the fallback degrades in place instead of looping.
+      return {
+        content: await renderDsdTree(result, undefined, nestingDepth, subtreeScope),
+        hasError: captured,
+      };
     }
     log.debug(`Unsupported render() return for <${tagName}>: ${describeRenderValue(result)}`);
     const errDetail = `Components must return a VNode from render(), got ${typeof result}.`;
@@ -442,10 +516,20 @@ async function renderComponentContent(
   } catch (err) {
     // #922: control-flow exceptions (notFound/redirect from a page element's
     // render) propagate instead of degrading to the empty-element fallback.
-    if (isControlFlowThrow(err)) throw err;
-    const classifiedErr = classifyError('render', tagName, err, true);
-    collectedErrors.push(classifiedErr);
-    dispatchRenderError(classifiedErr, hooks);
+    if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
+
+    const classifiedErr = recordCaughtError(err, tagName, collectedErrors, hooks);
+
+    // An error boundary captures its own render failure and substitutes its
+    // fallback — exactly once; a failing fallback bubbles outward / degrades.
+    if (boundary.isBoundary && !captured) {
+      const fallback = await tryBoundaryFallback(instance, err, nestingDepth);
+      if (fallback) return fallback;
+    }
+
+    if (boundary.throwOnRenderError) {
+      throw err instanceof BoundaryRenderError ? err : new BoundaryRenderError(classifiedErr);
+    }
 
     const attrs = serializeAttrs(tagName, props);
     const fallbackResult: RenderOutput = {
@@ -463,6 +547,84 @@ async function renderComponentContent(
     };
     callAfterRenderHook(hooks, fallbackResult);
     return { content: '', hasError: true, earlyReturn: fallbackResult };
+  }
+}
+
+/**
+ * Push a caught error into the render output, dispatching telemetry exactly
+ * once. A BoundaryRenderError was already classified and dispatched at its
+ * origin renderDsd call — carry it without double-reporting.
+ */
+function recordCaughtError(
+  err: unknown,
+  tagName: string,
+  collectedErrors: RenderError[],
+  hooks: RenderHooks | undefined,
+): RenderError {
+  if (err instanceof BoundaryRenderError) {
+    collectedErrors.push(err.renderError);
+    return err.renderError;
+  }
+  const classified = classifyError('render', tagName, err, true);
+  collectedErrors.push(classified);
+  dispatchRenderError(classified, hooks);
+  return classified;
+}
+
+/** Record a captured subtree error, then invoke the boundary fallback. */
+function renderBoundaryFallbackContent(
+  instance: DsdComponent,
+  boundaryError: unknown,
+  tagName: string,
+  collectedErrors: RenderError[],
+  hooks: RenderHooks | undefined,
+): unknown {
+  recordCaughtError(boundaryError, tagName, collectedErrors, hooks);
+  // Pass the original throw (a BoundaryRenderError is itself an Error carrying
+  // the origin message), not the classified RenderError metadata object.
+  return callBoundaryFallback(instance, boundaryError);
+}
+
+/**
+ * Invoke a boundary instance's fallback. ErrorBoundary subclasses expose
+ * `_captureSsrError` (sets error state so render() swaps in onError); any
+ * other isErrorBoundary component needs an `onError(error): VNode` method.
+ */
+function callBoundaryFallback(instance: DsdComponent, error: unknown): unknown {
+  const target = instance as unknown as Record<string, unknown>;
+  if (typeof target._captureSsrError === 'function') {
+    (target._captureSsrError as (this: unknown, e: unknown) => void).call(instance, error);
+    return instance.render();
+  }
+  if (typeof target.onError === 'function') {
+    return (target.onError as (this: unknown, e: unknown) => unknown).call(instance, error);
+  }
+  return null;
+}
+
+/**
+ * Render a boundary's fallback for its own render failure. Returns null when
+ * the fallback itself fails — the caller then bubbles / bare-tags.
+ */
+async function tryBoundaryFallback(
+  instance: DsdComponent,
+  err: unknown,
+  nestingDepth: number,
+): Promise<{ content: string; hasError: boolean } | null> {
+  try {
+    const result = callBoundaryFallback(instance, err);
+    if (result == null) return { content: '', hasError: true };
+    if (isVNode(result)) {
+      return {
+        content: await renderDsdTree(result, undefined, nestingDepth, false),
+        hasError: true,
+      };
+    }
+    return null;
+  } catch (fallbackErr) {
+    if (isControlFlowThrow(fallbackErr) || isDepthLimitError(fallbackErr)) throw fallbackErr;
+    log.debug(`error boundary fallback render failed: ${formatError(fallbackErr)}`);
+    return null;
   }
 }
 

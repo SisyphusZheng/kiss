@@ -23,6 +23,7 @@
 
 import { assertEquals, assertExists, assertInstanceOf, assertStringIncludes } from '@std/assert';
 import type { OpenElement as OpenElementBase } from '@openelement/element';
+import type { OpenElementError } from '@openelement/element';
 import type { VNode } from '@openelement/element';
 import type { Signal } from '@openelement/element';
 
@@ -2706,6 +2707,188 @@ Deno.test('ErrorBoundary default retry control clears the captured error', () =>
   onClick();
   assertEquals(boundary.hasError, false);
   assertEquals(boundary.retryCount, 1);
+});
+
+// ─── 10b. ErrorBoundary automatic capture / bubbling (ADR-0053 Layer 2, #919) ──
+
+Deno.test('ErrorBoundary auto-captures a descendant CSR render failure (#919)', () => {
+  if (!hasDOM) return;
+
+  const boundaryTag = uniqueTag('auto-boundary');
+  const childTag = uniqueTag('auto-child');
+  class AutoBoundary extends ErrorBoundary {
+    override render(): VNode | null {
+      if (this.hasError) return this.onError(this.error!);
+      return jsx('slot', {});
+    }
+  }
+  class AutoChild extends OpenElement {
+    override render(): VNode | null {
+      throw new Error('csr boom');
+    }
+
+    protected override onRenderError(_error: unknown): VNode | null {
+      return jsx('div', { children: 'child own fallback' });
+    }
+  }
+  customElements.define(boundaryTag, AutoBoundary);
+  customElements.define(childTag, AutoChild);
+
+  const boundary = document.createElement(boundaryTag) as AutoBoundary;
+  document.body.appendChild(boundary);
+  const child = document.createElement(childTag) as AutoChild;
+  boundary.appendChild(child);
+
+  assertEquals(boundary.hasError, true);
+  assertStringIncludes(boundary.error!.message, 'csr boom');
+  assertStringIncludes(
+    (boundary.shadowRoot as unknown as TestShadowRoot).innerHTML,
+    'Something went wrong: csr boom',
+  );
+  // The boundary captured the error, so the child's own onRenderError
+  // fallback never rendered.
+  assertEquals((child.shadowRoot as unknown as TestShadowRoot).innerHTML, '');
+
+  document.body.removeChild(boundary);
+});
+
+Deno.test('ErrorBoundary retry re-renders the auto-captured source element (#919)', () => {
+  if (!hasDOM) return;
+
+  let broken = true;
+  const boundaryTag = uniqueTag('retry-boundary');
+  const childTag = uniqueTag('retry-child');
+  class RetryBoundary extends ErrorBoundary {
+    override render(): VNode | null {
+      if (this.hasError) return this.onError(this.error!);
+      return jsx('slot', {});
+    }
+  }
+  class RetryChild extends OpenElement {
+    override render(): VNode | null {
+      if (broken) throw new Error('still broken');
+      return jsx('div', { children: 'recovered' });
+    }
+  }
+  customElements.define(boundaryTag, RetryBoundary);
+  customElements.define(childTag, RetryChild);
+
+  const boundary = document.createElement(boundaryTag) as RetryBoundary;
+  document.body.appendChild(boundary);
+  const child = document.createElement(childTag) as RetryChild;
+  boundary.appendChild(child);
+  assertEquals(boundary.hasError, true);
+
+  broken = false;
+  boundary.retry();
+
+  assertEquals(boundary.hasError, false);
+  assertEquals(boundary.retryCount, 1);
+  // Back to normal content: the fallback is gone (the harness serializes a
+  // shadow root's top-level elements by their inner content, so a childless
+  // <slot> shows up as an empty string).
+  assertEquals(
+    (boundary.shadowRoot as unknown as TestShadowRoot).innerHTML.includes('Something went wrong'),
+    false,
+  );
+  assertStringIncludes((child.shadowRoot as unknown as TestShadowRoot).innerHTML, 'recovered');
+
+  document.body.removeChild(boundary);
+});
+
+Deno.test('ErrorBoundary retry with a still-broken source recaptures the error (#919)', () => {
+  if (!hasDOM) return;
+
+  const boundaryTag = uniqueTag('rethrow-boundary');
+  const childTag = uniqueTag('rethrow-child');
+  class RethrowBoundary extends ErrorBoundary {
+    override render(): VNode | null {
+      if (this.hasError) return this.onError(this.error!);
+      return jsx('slot', {});
+    }
+  }
+  class RethrowChild extends OpenElement {
+    override render(): VNode | null {
+      throw new Error('permanently broken');
+    }
+  }
+  customElements.define(boundaryTag, RethrowBoundary);
+  customElements.define(childTag, RethrowChild);
+
+  const boundary = document.createElement(boundaryTag) as RethrowBoundary;
+  document.body.appendChild(boundary);
+  const child = document.createElement(childTag) as RethrowChild;
+  boundary.appendChild(child);
+  assertEquals(boundary.hasError, true);
+
+  // The source fails again during retry: the failure bubbles back into
+  // catchError and the fallback is restored with the retry counted.
+  boundary.retry();
+
+  assertEquals(boundary.hasError, true);
+  assertEquals(boundary.retryCount, 1);
+  assertStringIncludes(
+    (boundary.shadowRoot as unknown as TestShadowRoot).innerHTML,
+    'Something went wrong: permanently broken',
+  );
+
+  document.body.removeChild(boundary);
+});
+
+Deno.test('Nested error boundaries: the inner boundary captures first (#919)', () => {
+  if (!hasDOM) return;
+
+  const outerTag = uniqueTag('outer-boundary');
+  const innerTag = uniqueTag('inner-boundary');
+  const childTag = uniqueTag('nested-child');
+  class OuterBoundary extends ErrorBoundary {
+    override onError(error: OpenElementError): VNode {
+      return jsx('p', { children: `outer fallback: ${error.message}` });
+    }
+
+    override render(): VNode | null {
+      if (this.hasError) return this.onError(this.error!);
+      return jsx('slot', {});
+    }
+  }
+  class InnerBoundary extends ErrorBoundary {
+    override onError(error: OpenElementError): VNode {
+      return jsx('p', { children: `inner fallback: ${error.message}` });
+    }
+
+    override render(): VNode | null {
+      if (this.hasError) return this.onError(this.error!);
+      return jsx('slot', {});
+    }
+  }
+  class NestedChild extends OpenElement {
+    override render(): VNode | null {
+      throw new Error('nested boom');
+    }
+  }
+  customElements.define(outerTag, OuterBoundary);
+  customElements.define(innerTag, InnerBoundary);
+  customElements.define(childTag, NestedChild);
+
+  const outer = document.createElement(outerTag) as OuterBoundary;
+  document.body.appendChild(outer);
+  const inner = document.createElement(innerTag) as InnerBoundary;
+  outer.appendChild(inner);
+  const child = document.createElement(childTag) as NestedChild;
+  inner.appendChild(child);
+
+  assertEquals(inner.hasError, true);
+  assertEquals(outer.hasError, false);
+  assertStringIncludes((inner.shadowRoot as unknown as TestShadowRoot).innerHTML, 'inner fallback');
+  // The error does not bubble past the inner boundary: the outer boundary
+  // keeps its normal content (a childless <slot> serializes as an empty
+  // string under the harness's shadow-root innerHTML).
+  assertEquals(
+    (outer.shadowRoot as unknown as TestShadowRoot).innerHTML.includes('outer fallback'),
+    false,
+  );
+
+  document.body.removeChild(outer);
 });
 
 // ─── 11. formAssociated / ElementInternals ─────────────────────────

@@ -21,7 +21,13 @@ import { injectPropsSafe, trustRenderHtml } from './security.ts';
 import { isSignalLike, unwrapSignalLike } from '../signal/index.ts';
 import { isComponentCtor, isComponentFn, isVNode } from './vnode.ts';
 import type { ComponentCtor, ComponentFn, RenderFn, VNode } from '../protocol/vnode.ts';
-import { isControlFlowThrow, renderDsd } from './render-dsd.ts';
+import type { DsdComponentConstructor } from '../protocol/render.ts';
+import {
+  BoundaryRenderError,
+  isControlFlowThrow,
+  isDepthLimitError,
+  renderDsd,
+} from './render-dsd.ts';
 import { createLogger } from './logger.ts';
 import { formatError } from './errors.ts';
 import { camelToKebab } from './tag-utils.ts';
@@ -212,15 +218,26 @@ ${node.light.map(serializeRenderNode).join('')}</${node.tag}>`;
 
 // ─── Single async render path ───────────────────────────────────
 
+/**
+ * @param boundaryActive ADR-0053 Layer 2: an ancestor error-boundary scope is
+ * active — registered custom elements below this node throw on render failure
+ * instead of bare-tagging, so the nearest boundary can capture the error.
+ */
 export async function renderToNode(
   node: unknown,
   eventContext: EventMarkerContext = createEventMarkerContext(),
   nestingDepth = 0,
+  boundaryActive = false,
 ): Promise<RenderNode> {
   if (node == null || typeof node === 'boolean') return fragmentNode([]);
   if (typeof node === 'string' || typeof node === 'number') return textNode(node);
   if (isSignalLike(node)) {
-    return await renderToNode((node as { value: unknown }).value, eventContext, nestingDepth);
+    return await renderToNode(
+      (node as { value: unknown }).value,
+      eventContext,
+      nestingDepth,
+      boundaryActive,
+    );
   }
   if (!isVNode(node)) return textNode(String(node));
 
@@ -229,7 +246,9 @@ export async function renderToNode(
   // Fragment
   if (isFragment(tag)) {
     const parts: RenderNode[] = [];
-    for (const child of children) parts.push(await renderToNode(child, eventContext, nestingDepth));
+    for (const child of children) {
+      parts.push(await renderToNode(child, eventContext, nestingDepth, boundaryActive));
+    }
     return fragmentNode(parts);
   }
 
@@ -240,36 +259,54 @@ export async function renderToNode(
 
   // Show
   if (isShowTag(tag)) {
-    return await renderShowBranch(props, children, eventContext, nestingDepth);
+    return await renderShowBranch(props, children, eventContext, nestingDepth, boundaryActive);
   }
 
   // For
   if (isForTag(tag)) {
-    return await renderForBranch(props, children, eventContext, nestingDepth);
+    return await renderForBranch(props, children, eventContext, nestingDepth, boundaryActive);
   }
 
   // Component function/class
   if (isComponentCtor(tag) || isComponentFn(tag)) {
-    return await renderComponentBranch(tag, props, children, eventContext, nestingDepth);
+    return await renderComponentBranch(
+      tag,
+      props,
+      children,
+      eventContext,
+      nestingDepth,
+      boundaryActive,
+    );
   }
 
-  // HTML / SVG element
+  // Registered custom element host: delegate to renderDsd. The CE check runs
+  // before children rendering so an error boundary can wrap its light-DOM
+  // subtree in a boundary scope (children-first eid ordering is preserved
+  // inside renderRegisteredCeBranch).
   const tagName = String(tag);
-  const childNodes = await renderElementChildren(props, children, eventContext, nestingDepth);
-
-  if (
-    typeof customElements !== 'undefined' &&
-    customElements.get &&
-    customElements.get(tagName)
-  ) {
+  const ceCtor = typeof customElements !== 'undefined' && customElements.get
+    ? customElements.get(tagName)
+    : undefined;
+  if (ceCtor) {
     return await renderRegisteredCeBranch(
       tagName,
       props,
-      childNodes,
+      children,
       eventContext,
       nestingDepth,
+      boundaryActive,
+      ceCtor,
     );
   }
+
+  // HTML / SVG element
+  const childNodes = await renderElementChildren(
+    props,
+    children,
+    eventContext,
+    nestingDepth,
+    boundaryActive,
+  );
 
   return {
     kind: 'element',
@@ -291,11 +328,14 @@ async function renderShowBranch(
   children: unknown[],
   eventContext: EventMarkerContext,
   nestingDepth: number,
+  boundaryActive: boolean,
 ): Promise<RenderNode> {
   const whenVal = unwrapSignalLike(props?.when);
   const target = whenVal ? children[0] : children[1];
   const branch = branchCommentNode(showBranchMarker(Boolean(whenVal)));
-  const rendered = target ? await renderToNode(target, eventContext, nestingDepth) : null;
+  const rendered = target
+    ? await renderToNode(target, eventContext, nestingDepth, boundaryActive)
+    : null;
   return fragmentNode(rendered ? [branch, rendered] : [branch]);
 }
 
@@ -305,6 +345,7 @@ async function renderForBranch(
   children: unknown[],
   eventContext: EventMarkerContext,
   nestingDepth: number,
+  boundaryActive: boolean,
 ): Promise<RenderNode> {
   const items = unwrapSignalLike(props?.each) as unknown[];
   const renderFn = children[0] as RenderFn;
@@ -317,7 +358,9 @@ async function renderForBranch(
     // Per-item boundary marker (protocol: oe-for-item:N) so matched hydration
     // can seed a keyed list binding over the existing SSR DOM (#917).
     parts.push(branchCommentNode(forItemBoundaryMarker(index)));
-    parts.push(await renderToNode(renderFn(items[index], index), eventContext, nestingDepth));
+    parts.push(
+      await renderToNode(renderFn(items[index], index), eventContext, nestingDepth, boundaryActive),
+    );
   }
   parts.push(branchCommentNode(forEndMarker()));
   return fragmentNode(parts);
@@ -330,18 +373,22 @@ async function renderComponentBranch(
   children: VNode['children'],
   eventContext: EventMarkerContext,
   nestingDepth: number,
+  boundaryActive: boolean,
 ): Promise<RenderNode> {
   try {
     return await renderToNode(
       callComponent(tag, props ?? {}, children),
       eventContext,
       nestingDepth,
+      boundaryActive,
     );
   } catch (err) {
-    createLogger('render').error(
-      `render failed for <${String(tag)}>:` +
-        ` ${formatError(err)}`,
-    );
+    if (!isControlFlowThrow(err) && !(err instanceof BoundaryRenderError)) {
+      createLogger('render').error(
+        `render failed for <${String(tag)}>:` +
+          ` ${formatError(err)}`,
+      );
+    }
     throw err;
   }
 }
@@ -352,6 +399,7 @@ async function renderElementChildren(
   children: unknown[],
   eventContext: EventMarkerContext,
   nestingDepth: number,
+  boundaryActive: boolean,
 ): Promise<RenderNode[]> {
   const childNodes: RenderNode[] = [];
 
@@ -362,7 +410,7 @@ async function renderElementChildren(
     childNodes.push(textNode(unwrapSignalLike(props.textContent)));
   } else {
     for (const child of children) {
-      childNodes.push(await renderToNode(child, eventContext, nestingDepth));
+      childNodes.push(await renderToNode(child, eventContext, nestingDepth, boundaryActive));
     }
   }
 
@@ -377,30 +425,67 @@ async function renderElementChildren(
  * serializeAttrs, so emit the data-eid marker explicitly and thread it onto
  * the serialized host tag. Without this, hydration still counts an eid for
  * the host and every following sibling binding shifts by one. Children are
- * already rendered above, preserving the SSR/hydration children-first eid
- * ordering.
+ * rendered before the host marker, preserving the SSR/hydration
+ * children-first eid ordering.
+ *
+ * ADR-0053 Layer 2: when the host is an error boundary
+ * (`static isErrorBoundary = true`), its light-DOM children render inside a
+ * boundary scope — the first subtree failure aborts child rendering and the
+ * boundary re-renders in captured-error state (its onError fallback) instead
+ * of emitting the failed child's bare tag.
  */
 async function renderRegisteredCeBranch(
   tagName: string,
   props: Record<string, unknown> | undefined,
-  childNodes: RenderNode[],
+  children: unknown[],
   eventContext: EventMarkerContext,
   nestingDepth: number,
+  boundaryActive: boolean,
+  componentClass: CustomElementConstructor,
 ): Promise<RenderNode> {
+  const isBoundary = (componentClass as DsdComponentConstructor).isErrorBoundary === true;
+
+  let childNodes: RenderNode[];
+  if (isBoundary) {
+    try {
+      childNodes = await renderElementChildren(props, children, eventContext, nestingDepth, true);
+    } catch (err) {
+      if (isControlFlowThrow(err) || isDepthLimitError(err)) throw err;
+      const captured = await renderDsd(tagName, {
+        componentClass,
+        props,
+        nestingDepth: nestingDepth + 1,
+        boundaryError: err,
+        throwOnRenderError: boundaryActive,
+      });
+      return trustedHtmlNode(captured.html);
+    }
+  } else {
+    childNodes = await renderElementChildren(
+      props,
+      children,
+      eventContext,
+      nestingDepth,
+      boundaryActive,
+    );
+  }
+
   try {
     const hostEventAttrs = serializeEventMarkers(props, eventContext);
     const dsdResult = await renderDsd(tagName, {
-      componentClass: customElements.get(tagName) as CustomElementConstructor,
+      componentClass,
       props,
       lightDom: childNodes,
       nestingDepth: nestingDepth + 1,
       hostEventAttrs,
+      throwOnRenderError: boundaryActive,
     });
     return trustedHtmlNode(dsdResult.html);
   } catch (err) {
     // #922: notFound()/redirect() are expected control flow (the request-time
-    // handler answers 404/3xx) — no error log for them.
-    if (!isControlFlowThrow(err)) {
+    // handler answers 404/3xx) — no error log for them. BoundaryRenderError
+    // is already reported at its origin; it bubbles to the nearest boundary.
+    if (!isControlFlowThrow(err) && !(err instanceof BoundaryRenderError)) {
       createLogger('render').error(
         `renderDsd failed for registered CE <${tagName}>:` +
           ` ${formatError(err)}`,
@@ -416,8 +501,9 @@ export async function renderDsdTree(
   node: unknown,
   eventContext: EventMarkerContext = createEventMarkerContext(),
   nestingDepth = 0,
+  boundaryActive = false,
 ): Promise<string> {
-  return serializeRenderNode(await renderToNode(node, eventContext, nestingDepth));
+  return serializeRenderNode(await renderToNode(node, eventContext, nestingDepth, boundaryActive));
 }
 
 // ─── Helpers ────────────────────────────────────────────────────

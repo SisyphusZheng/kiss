@@ -89,6 +89,8 @@ export interface DsdComponentConstructor extends CustomElementConstructor {
   tagName?: string;
   renderMode?: 'shadow' | 'light';
   observedAttributes?: string[];
+  /** ADR-0053 Layer 2: this component captures render errors from its subtree. */
+  isErrorBoundary?: boolean;
 }
 
 // --- DSD component model ------------------------------------------

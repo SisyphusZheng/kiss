@@ -63,6 +63,7 @@ import type { Signal } from './internal/protocol/signal.ts';
 import { createLogger } from './internal/core/logger.ts';
 import { flushPendingClicks, HydrationScope, markSelfHydrated } from './internal/core/index.ts';
 import {
+  findErrorBoundaryHost,
   renderErrorFallback,
   renderIntoLightDom,
   renderIntoShadowRoot,
@@ -160,6 +161,14 @@ export class OpenElement extends _Base {
 
   /** Rendering mode. Defaults to shadow/DSD; light DOM is explicit opt-in. */
   static renderMode?: 'shadow' | 'light';
+
+  /**
+   * ADR-0053 Layer 2: mark this component as an error boundary. Render
+   * failures in its subtree bubble to it — SSR renders the boundary's
+   * fallback in place of the failed subtree; CSR/hydration failures call the
+   * boundary's catchError(). ErrorBoundary sets this to true.
+   */
+  static isErrorBoundary?: boolean;
 
   /**
    * Locale hint for the element, e.g. 'en' or 'zh-CN'.
@@ -474,6 +483,19 @@ export class OpenElement extends _Base {
   }
 
   private _renderErrorFallback(error: unknown): void {
+    // ADR-0053 Layer 2: bubble to the nearest ancestor error boundary
+    // (composed-tree walk). Without one, keep the per-element onRenderError
+    // fallback contract (#662).
+    const boundary = findErrorBoundaryHost(this);
+    if (boundary) {
+      createLogger('dsd').error(
+        `<${this.tagName.toLowerCase()}> render/hydrate failed: ${
+          formatError(error)
+        } — captured by nearest error boundary`,
+      );
+      boundary.catchError(error instanceof Error ? error : new Error(formatError(error)), this);
+      return;
+    }
     renderErrorFallback(
       this,
       error,
