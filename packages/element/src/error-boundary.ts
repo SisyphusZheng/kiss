@@ -3,18 +3,19 @@
  *
  * Holds render-error state and displays fallback UI instead of a bare tag
  * or broken DOM. There is no automatic catch or bubbling: application code
- * reports errors explicitly via catchError(), and render() swaps in the
- * onError() fallback while error state is set.
+ * reports errors explicitly via catchError(). The base-class render() swaps
+ * in the onError() fallback while error state is set — but overriding
+ * render() replaces that swap, so a subclass render() MUST branch on
+ * hasError itself (see below).
  *
  * v0.36.0: Added retry mechanism and degraded rendering fallback.
  *
  * Usage:
  * ```tsx
  * class MyBoundary extends ErrorBoundary {
- *   onError(error: OpenElementError) {
- *     return <error-panel message={error.message} />;
- *   }
- *   render() {
+ *   override render() {
+ *     // Your override shadows ErrorBoundary.render(), so branch yourself:
+ *     if (this.hasError) return this.onError(this.error!);
  *     return <slot />;
  *   }
  * }
@@ -110,7 +111,12 @@ export abstract class ErrorBoundary extends OpenElement {
     super.connectedCallback();
   }
 
-  /** Render the captured fallback or the boundary's normal content. */
+  /**
+   * Render the captured fallback or the boundary's normal content.
+   *
+   * NOTE: a subclass that overrides render() shadows this swap — its
+   * override must branch on hasError/onError itself.
+   */
   override render(): VNode | null {
     if (this._error) {
       return this.onError(this._error);
