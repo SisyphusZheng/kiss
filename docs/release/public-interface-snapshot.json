@@ -47,7 +47,7 @@
           "publicDeclarations": []
         },
         "./sanitize": {
-          "sha256": "428e91328021179108f53de40ef4cedec0d77fb1059a20830377c693a68e3b06",
+          "sha256": "e8d93e36882380bcee071edaa8743c7e043b3ff33c400bd4087714963af5912a",
           "publicDeclarations": [
             "export interface SanitizeOptions {",
             "export function isSafeUrl(",
