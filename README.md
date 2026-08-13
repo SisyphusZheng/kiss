@@ -115,7 +115,8 @@ as evidence, not current product documentation.
 
 The canonical compact mark is the dark `<open/>` SVG in
 [`www/public/favicon.svg`](./www/public/favicon.svg)
-(`open-favicon-inverted.svg` is the maintained light-surface variant). Brand
+([`open-favicon-inverted.svg`](./www/public/assets/open-favicon-inverted.svg)
+is the maintained light-surface variant). Brand
 SVGs are distributed under the repository MIT license; forks may reuse them
 with attribution but should not imply endorsement.
 
