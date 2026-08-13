@@ -1673,6 +1673,122 @@ Deno.test('unkeyed For stays reactive after matched hydration (clear + re-render
   document.body.removeChild(el);
 });
 
+// #917 residual: branch ordinals count ALL branches (Show included) on both
+// the VNode and the DOM side, but listTargets is a compact For-only array —
+// indexing it by branchOrdinal mis-pairs whenever a Show precedes a For.
+
+Deno.test('matched hydration keeps a For reactive when a Show branch precedes it (#917 residual)', async () => {
+  if (!hasDOM) return;
+
+  const when = signal(true);
+  const items = signal(['one', 'two']);
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        Show({
+          when,
+          children: [
+            jsx('span', { children: 'visible' }),
+            jsx('span', { children: 'hidden' }),
+          ],
+        }),
+        For({
+          each: items,
+          children: (item: string) => jsx('button', { children: item }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+
+  const tagName = uniqueTag('show-for-hydrate');
+  class ShowForHydrateElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ShowForHydrateElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['one', 'two']);
+
+  // Pre-fix: listTargets[branchOrdinal] indexed past the For-only array (the
+  // Show consumed ordinal 0), so the lookup missed and the list was never
+  // seeded — signal writes left the hydrated list inert.
+  items.value = ['one', 'two', 'three'];
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), [
+    'one',
+    'two',
+    'three',
+  ]);
+
+  document.body.removeChild(el);
+});
+
+Deno.test('matched hydration keeps each For bound to its own items when a Show precedes them (#917 residual)', async () => {
+  if (!hasDOM) return;
+
+  const when = signal(true);
+  const listA = signal(['a1']);
+  const listB = signal(['b1']);
+  const buildVNode = (): VNode =>
+    jsx('div', {
+      children: [
+        Show({
+          when,
+          children: [
+            jsx('span', { children: 'visible' }),
+            jsx('span', { children: 'hidden' }),
+          ],
+        }),
+        For({
+          each: listA,
+          children: (item: string) => jsx('button', { children: item }),
+        }),
+        For({
+          each: listB,
+          children: (item: string) => jsx('button', { children: item }),
+        }),
+      ],
+    });
+
+  const ssrHtml = await renderDsdTree(buildVNode());
+
+  const tagName = uniqueTag('show-for-for-hydrate');
+  class ShowForForHydrateElement extends OpenElement {
+    override render(): VNode | null {
+      return buildVNode();
+    }
+  }
+  customElements.define(tagName, ShowForForHydrateElement);
+
+  const el = createHydratedElement(tagName, ssrHtml);
+  const root = el.shadowRoot as unknown as TestShadowRoot;
+
+  assertEquals(root.querySelectorAll('button').map((b) => b.textContent), ['a1', 'b1']);
+
+  // Pre-fix: the first For's DOM group paired with the SECOND For's target
+  // (listTargets[1]), so listA writes did nothing and listB writes rewrote
+  // the first group's DOM with the second list's items.
+  listA.value = ['a1', 'a2'];
+  assertEquals(
+    root.querySelectorAll('button').map((b) => b.textContent),
+    ['a1', 'a2', 'b1'],
+    'listA writes must reconcile the first list region',
+  );
+
+  listB.value = ['b1', 'b2'];
+  assertEquals(
+    root.querySelectorAll('button').map((b) => b.textContent),
+    ['a1', 'a2', 'b1', 'b2'],
+    'listB writes must reconcile the second list region, not the first',
+  );
+
+  document.body.removeChild(el);
+});
+
 // ─── 8c. Root-level <Show>/<For> CSR (carried-over edge) ─────────
 //
 // renderToDom() commits binding descriptors before the caller attaches the

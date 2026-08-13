@@ -250,7 +250,11 @@ export class HydrationScope {
     if (listTargets.length === 0) return;
     const groups = collectListGroups(shadowRoot);
     for (const group of groups) {
-      const target = listTargets[group.branchOrdinal];
+      // Pair by branchOrdinal, not position: the ordinal counts ALL branches
+      // (Show included) on both sides, while listTargets is a compact
+      // For-only array — a Show preceding a For would shift a positional
+      // lookup off by one (inert list or cross-wired items).
+      const target = listTargets.find((t) => t.branchOrdinal === group.branchOrdinal);
       if (!target) continue;
       const items = unwrapSignalLike(target.items);
       const seed: Array<{ key?: string; nodes: ChildNode[] }> = [];
