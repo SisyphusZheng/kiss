@@ -91,10 +91,15 @@ export function createMorphAlign(deps: MorphAlignDeps): MorphAlign {
     }
   }
 
+  function isShadowRootTemplate(n: Node): boolean {
+    return n.nodeType === 1 && (n as Element).tagName === 'TEMPLATE' &&
+      (n as Element).hasAttribute('shadowrootmode');
+  }
+
   function shadowTemplate(el: Element): HTMLTemplateElement | null {
     for (let i = 0; i < el.childNodes.length; i++) {
       const n = el.childNodes[i] as Element;
-      if (n.nodeType === 1 && n.tagName === 'TEMPLATE' && n.hasAttribute('shadowrootmode')) {
+      if (isShadowRootTemplate(n)) {
         return n as unknown as HTMLTemplateElement;
       }
     }
@@ -125,6 +130,15 @@ export function createMorphAlign(deps: MorphAlignDeps): MorphAlign {
     let ref = oldParent.firstChild;
     for (let j = 0; j < newKids.length; j++) {
       const n = newKids[j] as HTMLElement;
+      // A <template shadowrootmode> child is never light DOM: it carries the
+      // incoming shadow tree and is consumed by morphNode's DSD branch
+      // (shadowTemplate). Inserting it as a plain child would leave an inert
+      // template in the live host forever — instantiateDsd's querySelectorAll
+      // does not match the node itself, so it never upgrades and never gets
+      // removed (it also pollutes slot assignment). Skipping it here also
+      // lets the deletion pass below collect a stale inert template left by
+      // an earlier buggy morph.
+      if (isShadowRootTemplate(n)) continue;
       let o: Node | null = null;
       if (
         n.nodeType === 1 && n.id && oldById[n.id] && usedOld.indexOf(oldById[n.id]) === -1 &&
