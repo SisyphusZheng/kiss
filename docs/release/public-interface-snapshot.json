@@ -12,7 +12,7 @@
       },
       "declarations": {
         ".": {
-          "sha256": "4d60efa8adb8b4258a0e468acb924385098f323474b17d63327d9a32c2a421a8",
+          "sha256": "90dc02eec71752f2b342abe786e16cbda0f150690085244bd114c048ca479280",
           "publicDeclarations": [
             "export type { ElementDefinition } from './types.ts';",
             "export type {",
